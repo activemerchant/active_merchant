@@ -9,7 +9,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     @check_amount = 2000
     @declined_amount = 1034
     @credit_card =   credit_card('4000100011112224')
-    @check = check(account_number: '1357902468', routing_number: '122000030', number: '1234', account_type: 'SAVINGS')
+    @check = check(account_number: '24413815', routing_number: '490000018', number: '1234', account_type: 'SAVINGS')
 
     @options = {
       order_id: '1',
@@ -66,7 +66,7 @@ class RemoteHpsTest < Test::Unit::TestCase
       description: 'Store Purchase'
     }
     response = @gateway.purchase(@amount, @credit_card, options)
-    assert_instance_of Response, response
+    assert_instance_of MultiResponse, response
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -100,7 +100,7 @@ class RemoteHpsTest < Test::Unit::TestCase
       description: 'Store Authorize'
     }
     response = @gateway.authorize(@amount, @credit_card, options)
-    assert_instance_of Response, response
+    assert_instance_of MultiResponse, response
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -325,7 +325,7 @@ class RemoteHpsTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_truncated_invoicenbr
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(order_id: '04863692e6b56aaed85760b3d0879afd18b980da0521f6454c007a838435e561'))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(order_id: '04863692e6b56aaed85760b3d0879afd18b980da0521f6454c007a838435e56'[0..59]))
 
     assert_success response
     assert_equal 'Success', response.message
@@ -348,6 +348,7 @@ class RemoteHpsTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
+    @credit_card.verification_value = '321'
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
     end
@@ -356,6 +357,83 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:secret_api_key], transcript)
+  end
+
+  def test_successful_purchase_with_level_two_data_and_tax_type_notused
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(card_holder_PONbr: '326598852', tax_type: 'NOTUSED'))
+    assert_success response
+    assert_equal 'Success', response.message
+    assert_equal 'APPROVAL', response.params['RspText']
+  end
+
+  def test_successful_purchase_with_level_two_data_and_tax_type_salestax
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(card_holder_PONbr: '78445125', tax_type: 'SALESTAX', tax_amt: '1.1'))
+    assert_success response
+    assert_equal 'Success', response.message
+    assert_equal 'APPROVAL', response.params['RspText']
+  end
+
+  def test_successful_purchase_with_level_two_data_and_tax_type_taxempt
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(card_holder_PONbr: '78445125', tax_type: 'TAXEXEMPT'))
+    assert_success response
+    assert_equal 'Success', response.message
+    assert_equal 'APPROVAL', response.params['RspText']
+  end
+
+  def test_successful_purchase_with_stored_credentials_with_level_two_data
+    initial_options = @options.merge(
+      card_holder_PONbr: '78445125',
+      tax_type: 'SALESTAX',
+      tax_amt: '12.1',
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring'
+      }
+    )
+    initial_response = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_response
+    assert_equal 'Success', initial_response.message
+    assert_equal 'APPROVAL', initial_response.params['RspText']
+    assert_not_nil initial_response.params['CardBrandTxnId']
+    network_transaction_id = initial_response.params['CardBrandTxnId']
+
+    used_options = @options.merge(
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled',
+        network_transaction_id: network_transaction_id
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_transcript_scrubbing_level_two_data
+    options = @options.merge(customer_id: '654321', card_holder_PONbr: '326598852')
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@check.account_number, clean_transcript)
+  end
+
+  def test_successful_authorize_with_level_three_data_and_visa
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(level_3_data: true, item_description: 'Product Description', product_code: '5321456', quantity: '1', card_holder_PONbr: '326598852'))
+    assert_success response
+    assert_equal 'Success', response.params['GatewayRspMsg']
+  end
+
+  def test_successful_purchase_with_level_three_data_and_tax_type_notused
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_3_data: true, item_description: 'Product Description', product_code: '5321456', quantity: '1', card_holder_PONbr: '326598852', tax_type: 'NOTUSED'))
+    assert_success response
+    assert_equal 'Success', response.params['GatewayRspMsg']
+  end
+
+  def test_successful_purchase_with_level_three_data_and_tax_type_taxempt
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_3_data: true, item_description: 'Product Description', product_code: '5321456', quantity: '1', card_holder_PONbr: '78445125', tax_type: 'TAXEXEMPT'))
+    assert_success response
+    assert_equal 'Success', response.params['GatewayRspMsg']
   end
 
   def test_transcript_scrubbing_with_cryptogram

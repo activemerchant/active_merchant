@@ -16,13 +16,33 @@ class HpsTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @level_two_data = {
+      card_holder_PONbr: '326598852',
+      tax_type:          'NOTUSED',
+      tax_amt:           '1.1'
+    }
+
+    @level_three_data = {
+      level_3_data:        true,
+      item_description:    'Item Description',
+      product_code:        '23456',
+      quantity:            '2',
+      item_total_amt:      '2.0',
+      unit_of_measure:     '0',
+      item_commodity_code: 'asd21',
+      unit_cost:           '1.0',
+      vat_tax_amt:         '0',
+      vat_tax_rate:        '0',
+      discount_amt:        '0'
+    }
   end
 
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_charge_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of Response, response
+    assert_instance_of MultiResponse, response
     assert_success response
   end
 
@@ -34,7 +54,7 @@ class HpsTest < Test::Unit::TestCase
       description: 'Store Purchase'
     }
     response = @gateway.purchase(@amount, @credit_card, options)
-    assert_instance_of Response, response
+    assert_instance_of MultiResponse, response
     assert_success response
   end
 
@@ -58,6 +78,35 @@ class HpsTest < Test::Unit::TestCase
     end.respond_with(successful_check_purchase_response)
 
     assert_success response
+  end
+
+  def test_level_two_data
+    options = @options.merge(@level_two_data)
+    stub_comms do
+      @gateway.purchase(50, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<hps:CardHolderPONbr>326598852<\/hps:CardHolderPONbr>/, data)
+      assert_match(/<hps:TaxType>NOTUSED<\/hps:TaxType>/, data)
+      assert_match(/<hps:TaxAmt>1.1<\/hps:TaxAmt>/, data)
+    end.respond_with(successful_level_two_purchase_response)
+  end
+
+  def test_level_three_data
+    options = @options.merge(@level_three_data)
+    stub_comms do
+      @gateway.commit_level_three_data('1679374340', @credit_card.brand, options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match(/<hps:ItemDescription>Item Description<\/hps:ItemDescription>/, data)
+      assert_match(/<hps:ProductCode>23456<\/hps:ProductCode>/, data)
+      assert_match(/<hps:Quantity>2<\/hps:Quantity>/, data)
+      assert_match(/<hps:ItemTotalAmt>2.0<\/hps:ItemTotalAmt>/, data)
+      assert_match(/<hps:UnitOfMeasure>0<\/hps:UnitOfMeasure>/, data)
+      assert_match(/<hps:ItemCommodityCode>asd21<\/hps:ItemCommodityCode>/, data)
+      assert_match(/<hps:UnitCost>1.0<\/hps:UnitCost>/, data)
+      assert_match(/<hps:VATTaxAmt>0<\/hps:VATTaxAmt>/, data)
+      assert_match(/<hps:VATTaxRate>0<\/hps:VATTaxRate>/, data)
+      assert_match(/<hps:DiscountAmt>0<\/hps:DiscountAmt>/, data)
+    end
   end
 
   def test_check_purchase_does_not_raise_no_method_error_when_account_type_missing
@@ -88,7 +137,7 @@ class HpsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_charge_response)
 
     response = @gateway.purchase(10.34, @credit_card, @options)
-    assert_instance_of Response, response
+    assert_instance_of MultiResponse, response
     assert_failure response
   end
 
@@ -96,7 +145,7 @@ class HpsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_instance_of Response, response
+    assert_instance_of MultiResponse, response
     assert_success response
   end
 
@@ -108,7 +157,7 @@ class HpsTest < Test::Unit::TestCase
       description: 'Store Authorize'
     }
     response = @gateway.authorize(@amount, @credit_card, options)
-    assert_instance_of Response, response
+    assert_instance_of MultiResponse, response
     assert_success response
   end
 
@@ -116,7 +165,7 @@ class HpsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
     response = @gateway.authorize(10.34, @credit_card, @options)
-    assert_instance_of Response, response
+    assert_instance_of MultiResponse, response
     assert_failure response
   end
 
@@ -202,7 +251,7 @@ class HpsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_charge_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
-    assert_instance_of Response, response
+    assert_instance_of MultiResponse, response
     assert_success response
   end
 
@@ -752,6 +801,86 @@ class HpsTest < Test::Unit::TestCase
   end
 
   private
+
+  def successful_level_two_purchase_response
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+          <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+            <Ver1.0>
+              <Header>
+                <LicenseId>95878</LicenseId>
+                <SiteId>95881</SiteId>
+                <DeviceId>2409000</DeviceId>
+                <GatewayTxnId>1678969161</GatewayTxnId>
+                <GatewayRspCode>0</GatewayRspCode>
+                <GatewayRspMsg>Success</GatewayRspMsg>
+                <RspDT>2022-02-28T11:54:43.585101</RspDT>
+              </Header>
+              <Transaction>
+                <CreditSale>
+                    <RspCode>00</RspCode>
+                    <RspText>APPROVAL</RspText>
+                    <AuthCode>43288A</AuthCode>
+                    <AVSRsltCode>0</AVSRsltCode>
+                    <CVVRsltCode>M</CVVRsltCode>
+                    <RefNbr>205912767581</RefNbr>
+                    <AVSResultCodeAction>ACCEPT</AVSResultCodeAction>
+                    <CVVResultCodeAction>ACCEPT</CVVResultCodeAction>
+                    <CardType>Visa</CardType>
+                    <AVSRsltText>AVS Not Requested.</AVSRsltText>
+                    <CVVRsltText>Match.</CVVRsltText>
+                    <CardBrandTxnId>002059644830561</CardBrandTxnId>
+                </CreditSale>
+              </Transaction>
+            </Ver1.0>
+          </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
+  end
+
+  def successful_level_three_response
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <SOAP:Envelope xmlns:SOAP="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hps="http://Hps.Exchange.PosGateway">
+        <SOAP:Body>
+            <hps:PosRequest>
+              <hps:Ver1.0>
+                  <hps:Header>
+                    <hps:SecretAPIKey>12</hps:SecretAPIKey>
+                  </hps:Header>
+                  <hps:Transaction>
+                    <hps:CreditCPCEdit>
+                        <hps:GatewayTxnId>1679374340</hps:GatewayTxnId>
+                        <hps:CPCData />
+                        <hps:CorporateData>
+                          <hps:Visa>
+                              <hps:LineItems>
+                                <hps:LineItemDetail>
+                                    <hps:ItemDescription>Item Description</hps:ItemDescription>
+                                    <hps:ProductCode>23456</hps:ProductCode>
+                                    <hps:Quantity>2</hps:Quantity>
+                                    <hps:ItemTotalAmt>2.0</hps:ItemTotalAmt>
+                                    <hps:UnitOfMeasure>0</hps:UnitOfMeasure>
+                                    <hps:ItemCommodityCode>asd21</hps:ItemCommodityCode>
+                                    <hps:UnitCost>1.0</hps:UnitCost>
+                                    <hps:VATTaxAmt>0</hps:VATTaxAmt>
+                                    <hps:VATTaxRate>0</hps:VATTaxRate>
+                                    <hps:DiscountAmt>0</hps:DiscountAmt>
+                                </hps:LineItemDetail>
+                              </hps:LineItems>
+                          </hps:Visa>
+                        </hps:CorporateData>
+                    </hps:CreditCPCEdit>
+                  </hps:Transaction>
+              </hps:Ver1.0>
+            </hps:PosRequest>
+        </SOAP:Body>
+      </SOAP:Envelope>
+    XML
+  end
 
   def successful_charge_response
     <<~XML

@@ -31,15 +31,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, card_or_token, options = {})
-        commit('CreditAuth') do |xml|
-          add_amount(xml, money)
-          add_allow_dup(xml)
-          add_card_or_token_customer_data(xml, card_or_token, options)
-          add_details(xml, options)
-          add_descriptor_name(xml, options)
-          add_card_or_token_payment(xml, card_or_token, options)
-          add_three_d_secure(xml, card_or_token, options)
-          add_stored_credentials(xml, options)
+        MultiResponse.run do |r|
+          r.process {
+            commit('CreditAuth') do |xml|
+              add_amount(xml, money)
+              add_allow_dup(xml)
+              add_card_or_token_customer_data(xml, card_or_token, options)
+              add_level_two_data(xml, options)
+              add_details(xml, options)
+              add_descriptor_name(xml, options)
+              add_card_or_token_payment(xml, card_or_token, options)
+              add_three_d_secure(xml, card_or_token, options)
+              add_stored_credentials(xml, options)
+            end
+          }
+          r.process { commit_level_three_data(r.authorization, card_or_token.brand, options) } if options[:level_3_data]
         end
       end
 
@@ -51,12 +57,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options = {})
-        if payment_method.is_a?(Check)
-          commit_check_sale(money, payment_method, options)
-        elsif options.dig(:stored_credential, :reason_type) == 'recurring'
-          commit_recurring_billing_sale(money, payment_method, options)
-        else
-          commit_credit_sale(money, payment_method, options)
+        MultiResponse.run do |r|
+          r.process {
+            if payment_method.is_a?(Check)
+              commit_check_sale(money, payment_method, options)
+            elsif options.dig(:stored_credential, :reason_type) == 'recurring'
+              commit_recurring_billing_sale(money, payment_method, options)
+            else
+              commit_credit_sale(money, payment_method, options)
+            end
+          }
+          r.process { commit_level_three_data(r.authorization, payment_method.brand, options) } if options[:level_3_data]
         end
       end
 
@@ -110,7 +121,39 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<hps:SecretAPIKey>)[^<]*(<\/hps:SecretAPIKey>))i, '\1[FILTERED]\2').
           gsub(%r((<hps:PaymentData>)[^<]*(<\/hps:PaymentData>))i, '\1[FILTERED]\2').
           gsub(%r((<hps:RoutingNumber>)[^<]*(<\/hps:RoutingNumber>))i, '\1[FILTERED]\2').
-          gsub(%r((<hps:AccountNumber>)[^<]*(<\/hps:AccountNumber>))i, '\1[FILTERED]\2')
+          gsub(%r((<hps:AccountNumber>)[^<]*(<\/hps:AccountNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:CardHolderPONbr>)[^<]*(<\/hps:CardHolderPONbr>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:CustomerID>)[^<]*(<\/hps:CustomerID>))i, '\1[FILTERED]\2')
+      end
+
+      def commit_level_three_data(transaction_id, card_type, options = {})
+        commit('CreditCPCEdit') do |xml|
+          add_reference(xml, transaction_id)
+          xml.hps :CPCData do
+            add_fields_to_xml_if_present(xml, options, %i[CardHolderPONbr TaxType TaxAmt])
+          end
+          xml.hps :CorporateData do
+            if card_type.casecmp('VISA').zero?
+              xml.hps :Visa do
+                xml.hps :LineItems do
+                  xml.hps :LineItemDetail do
+                    fields = %i[ItemDescription ProductCode Quantity ItemTotalAmt UnitOfMeasure ItemCommodityCode UnitCost VATTaxAmt VATTaxRate DiscountAmt ItemTaxTreatment]
+                    add_fields_to_xml_if_present(xml, options, fields)
+                  end
+                end
+              end
+            else
+              xml.hps :MC do
+                xml.hps :LineItems do
+                  xml.hps :LineItemDetail do
+                    fields = %i[ItemDescription ProductCode Quantity ItemTotalAmt UnitOfMeasure]
+                    add_fields_to_xml_if_present(xml, options, fields)
+                  end
+                end
+              end
+            end
+          end
+        end
       end
 
       private
@@ -130,6 +173,7 @@ module ActiveMerchant #:nodoc:
           add_amount(xml, money)
           add_allow_dup(xml)
           add_card_or_token_customer_data(xml, card_or_token, options)
+          add_level_two_data(xml, options)
           add_details(xml, options)
           add_descriptor_name(xml, options)
           add_card_or_token_payment(xml, card_or_token, options)
@@ -143,6 +187,7 @@ module ActiveMerchant #:nodoc:
           add_amount(xml, money)
           add_allow_dup(xml)
           add_card_or_token_customer_data(xml, card_or_token, options)
+          add_level_two_data(xml, options)
           add_details(xml, options)
           add_descriptor_name(xml, options)
           add_card_or_token_payment(xml, card_or_token, options)
@@ -254,6 +299,12 @@ module ActiveMerchant #:nodoc:
         xml.hps :TxnDescriptor, options[:descriptor_name] if options[:descriptor_name]
       end
 
+      def add_level_two_data(xml, options)
+        xml.hps :CPCData do
+          add_fields_to_xml_if_present(xml, options, %i[CardHolderPONbr TaxType TaxAmt])
+        end
+      end
+
       def add_three_d_secure(xml, card_or_token, options)
         if card_or_token.is_a?(NetworkTokenizationCreditCard)
           build_three_d_secure(xml, {
@@ -321,6 +372,39 @@ module ActiveMerchant #:nodoc:
         value[1, 1]
       end
 
+      def add_fields_to_xml_if_present(xml, options, fields)
+        fields.each do |field|
+          add_field_to_xml_if_present(xml, options, field)
+        end
+      end
+
+      def add_field_to_xml_if_present(xml, options, field)
+        custom_field = map_fields_level_two_and_three(field).reject(&:empty?).first
+        xml.hps field, options[custom_field] if options[custom_field]
+      end
+
+      def map_fields_level_two_and_three(key)
+        fields = {
+          Description:       :description,
+          InvoiceNbr:        :order_id,
+          CustomerID:        :customer_id,
+          CardHolderPONbr:   :card_holder_PONbr,
+          TaxType:           :tax_type,
+          TaxAmt:            :tax_amt,
+          ItemDescription:   :item_description,
+          ProductCode:       :product_code,
+          Quantity:          :quantity,
+          ItemTotalAmt:      :item_total_amt,
+          UnitOfMeasure:     :unit_of_measure,
+          ItemCommodityCode: :item_commodity_code,
+          UnitCost:          :unit_cost,
+          VATTaxAmt:         :vat_tax_amt,
+          VATTaxRate:        :vat_tax_rate,
+          DiscountAmt:       :discount_amt
+        }
+        fields.keys.map { |f| f == key ? fields[key] : '' }
+      end
+
       def build_request(action)
         xml = Builder::XmlMarkup.new(encoding: 'UTF-8')
         xml.instruct!(:xml, encoding: 'UTF-8')
@@ -339,7 +423,7 @@ module ActiveMerchant #:nodoc:
                 end
                 xml.hps :Transaction do
                   xml.hps action.to_sym do
-                    if %w(CreditVoid CreditAddToBatch).include?(action)
+                    if %w(CreditVoid CreditAddToBatch CreditCPCEdit).include?(action)
                       yield(xml)
                     else
                       xml.hps :Block1 do
