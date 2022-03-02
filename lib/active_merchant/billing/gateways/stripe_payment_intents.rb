@@ -471,7 +471,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shipping_address(post, options = {})
-        return unless shipping = options[:shipping]
+        return unless shipping = options[:shipping_address]
 
         post[:shipping] = {}
         post[:shipping][:address] = {}
