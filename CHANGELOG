@@ -33,6 +33,7 @@
 * DLocal: add support for `force_type` field [dsmcclain] #4336
 * Barclaycard SmartPay: Support more nonstandard currencies [jherreraa] #4335
 * DecidirPlus: `name_override` option on `store` [naashton] #4338
+* Priority: Update `add_purchases_data` to return if `options[:purchases]` is empty [drkjc] #4349
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173

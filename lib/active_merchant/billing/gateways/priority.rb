@@ -301,7 +301,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_purchases_data(params, options)
-        return if options[:purchases].empty?
+        return unless options[:purchases]
 
         params['purchases'] = []
         options[:purchases].each do |purchase|
