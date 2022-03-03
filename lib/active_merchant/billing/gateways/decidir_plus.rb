@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AR']
       self.default_currency = 'ARS'
-      self.supported_cardtypes = %i[visa master american_express discover]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club naranja cabal]
 
       self.homepage_url = 'http://decidir.com.ar/home'
       self.display_name = 'Decidir Plus'
@@ -120,7 +120,7 @@ module ActiveMerchant #:nodoc:
 
       def add_purchase_data(post, money, payment, options = {})
         post[:site_transaction_id] = options[:site_transaction_id] || SecureRandom.hex
-        post[:payment_method_id] = 1
+        post[:payment_method_id] = add_payment_method_id(options)
         post[:amount] = money
         post[:currency] = options[:currency] || self.default_currency
         post[:installments] = options[:installments] || 1
@@ -141,6 +141,35 @@ module ActiveMerchant #:nodoc:
             amount: sub_payment[:amount].to_i
           }
           post[:sub_payments] << sub_payment_hash
+        end
+      end
+
+      def add_payment_method_id(options)
+        return 1 unless options[:card_brand]
+
+        case options[:card_brand]
+        when 'visa'
+          1
+        when 'master'
+          104
+        when 'american_express'
+          65
+        when 'american_express_prisma'
+          111
+        when 'cabal'
+          63
+        when 'diners_club'
+          8
+        when 'visa_debit'
+          31
+        when 'master_debit'
+          105
+        when 'maestro_debit'
+          106
+        when 'cabal_debit'
+          108
+        else
+          1
         end
       end
 

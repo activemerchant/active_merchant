@@ -8,10 +8,13 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4484590159923090')
+    @american_express = credit_card('376414000000009')
+    @cabal = credit_card('5896570000000008')
     @declined_card = credit_card('4000300011112220')
     @options = {
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      card_brand: 'visa'
     }
     @sub_payments = [
       {
@@ -184,6 +187,17 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     response = @gateway_purchase.purchase(@amount, payment_reference, options)
     assert_success response
     assert_equal({ 'status' => nil }, response.params['fraud_detection'])
+  end
+
+  def test_successful_purchase_with_card_brand
+    options = @options.merge(card_brand: 'cabal')
+
+    assert response = @gateway_purchase.store(@cabal)
+    payment_reference = response.authorization
+
+    response = @gateway_purchase.purchase(@amount, payment_reference, options)
+    assert_success response
+    assert_equal 63, response.params['payment_method_id']
   end
 
   def test_invalid_login
