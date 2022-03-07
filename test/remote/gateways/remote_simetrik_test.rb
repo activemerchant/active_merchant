@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'securerandom'
 
 class RemoteSimetrikTest < Test::Unit::TestCase
   def setup
@@ -13,19 +12,152 @@ class RemoteSimetrikTest < Test::Unit::TestCase
       year: 2022,
       verification_value: '111'
     )
+    @credit_card_invalid = CreditCard.new(
+      first_name: 'Joe',
+      last_name: 'Doe',
+      number: '2440605262758053',
+      month: 7,
+      year: 2022,
+      verification_value: '111'
+    )
     @amount = 100
+    @sub_merchant = {
+      address: 'None',
+      extra_params: {
+      },
+      mcc: '5816',
+      merchant_id: '400000008',
+      name: '885.519.237',
+      phone_number: '3434343',
+      postal_code: 'None',
+      url: 'string'
+    }
+    @psp_info = {
+      id: '0123',
+      name: 'mci',
+      sub_merchant: {
+        id: 'string',
+        name: 'string'
+      }
 
-    setup_options()
+    }
+    @authorize_void_options_success = {
+      acquire_extra_options: {},
+      trace_id: SecureRandom.uuid,
+      user: {
+        id: '123',
+        email: 's@example.com'
+      },
+      order: {
+        id: rand(100000000000..999999999999).to_s,
+        description: 'apopsicle',
+        installments: 1,
+        datetime_local_transaction: Time.new.strftime('%Y-%m-%dT%H:%M:%S.%L%:z'),
+        amount: {
+          currency: 'USD',
+          vat: 19
+        }
+      },
+      authentication: {
+        three_ds_fields: {
+          version: '2.1.0',
+          eci: '05',
+          cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
+          ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+          acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
+          cavv_algorithm: '1',
+          xid: '333333333',
+          directory_response_status: 'Y',
+          authentication_response_status: 'Y',
+          enrolled: 'test',
+          three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
+        }
+      },
+      sub_merchant: @sub_merchant,
+      psp_info: @psp_info,
+      token_acquirer: @token_acquirer
+    }
+
+    @authorize_capture_options_failed = {
+      acquire_extra_options: {},
+      trace_id: SecureRandom.uuid,
+      user: {},
+      order: {
+        id: rand(100000000000..999999999999).to_s,
+        description: 'apopsicle',
+        installments: 1,
+        datetime_local_transaction: Time.new.strftime('%Y-%m-%dT%H:%M:%S.%L%:z'),
+        amount: {
+          currency: 'USD',
+          vat: 19
+        }
+      },
+      authentication: {
+        three_ds_fields: {
+          version: '2.1.0',
+          eci: '05',
+          cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
+          ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+          acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
+          cavv_algorithm: '1',
+          xid: '333333333',
+          directory_response_status: 'Y',
+          authentication_response_status: 'Y',
+          enrolled: 'test',
+          three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
+        }
+      },
+      sub_merchant: @sub_merchant,
+      psp_info: @psp_info,
+      token_acquirer: @token_acquirer
+    }
+
+    @authorize_capture_options_success = {
+      acquire_extra_options: {},
+      trace_id: SecureRandom.uuid,
+      user: {
+        id: '123',
+        email: 's@example.com'
+      },
+      order: {
+        id: rand(100000000000..999999999999).to_s,
+        datetime_local_transaction: Time.new.strftime('%Y-%m-%dT%H:%M:%S.%L%:z'),
+        description: 'apopsicle',
+        installments: 1,
+        amount: {
+          currency: 'USD',
+          vat: 19
+        }
+      },
+      authentication: {
+        three_ds_fields: {
+          version: '2.1.0',
+          eci: '05',
+          cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
+          ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+          acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
+          cavv_algorithm: '1',
+          xid: '333333333',
+          directory_response_status: 'Y',
+          authentication_response_status: 'Y',
+          enrolled: 'test',
+          three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
+        }
+      },
+      sub_merchant: @sub_merchant,
+      psp_info: @psp_info,
+      token_acquirer: @token_acquirer
+    }
   end
 
   def test_success_authorize
     response = @gateway.authorize(@amount, @credit_card, @authorize_capture_options_success)
     assert_success response
     assert_instance_of Response, response
-    assert_equal response.params['message'], 'successful authorize'
-    assert_equal response.params['code'][0], 'S', 'Should expected code like Sxxx'
-    assert_equal response.avs_result.to_hash['code'], 'G'
-    assert_equal response.cvv_result.to_hash['code'], 'P'
+    assert_equal response.message, 'successful authorize'
+    assert_equal response.error_code, nil, 'Should expected error code equal to nil'
+    assert_equal response.avs_result['code'], 'G'
+    assert_equal response.cvv_result['code'], 'P'
     assert response.test?
   end
 
@@ -33,10 +165,19 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @authorize_capture_options_failed)
     assert_failure response
     assert_instance_of Response, response
-    # assert_equal response.message, 'Successful authorize'
-    assert_equal response.params['code'][0], 'R', 'Should expected code like Rxxx'
-    assert_equal response.avs_result.to_hash['code'], 'I'
-    assert_equal response.cvv_result.to_hash['code'], 'P'
+    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil'
+    assert_equal response.avs_result['code'], 'I'
+    assert_equal response.cvv_result['code'], 'P'
+    assert response.test?
+  end
+
+  def test_failed_authorize_by_invalid_card
+    response = @gateway.authorize(@amount, @credit_card_invalid, @authorize_capture_options_success)
+    assert_failure response
+    assert_instance_of Response, response
+    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil'
+    assert_equal response.avs_result['code'], 'G'
+    assert_equal response.cvv_result['code'], 'P'
     assert response.test?
   end
 
@@ -44,10 +185,10 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @authorize_capture_options_success)
     assert_success response
     assert_instance_of Response, response
-    assert_equal response.params['message'], 'successful charge'
-    assert_equal response.params['code'][0], 'S', 'Should expected code like Sxxx'
-    assert_equal response.avs_result.to_hash['code'], 'G'
-    assert_equal response.cvv_result.to_hash['code'], 'P'
+    assert_equal response.message, 'successful charge'
+    assert_equal response.error_code, nil, 'Should expected error code equal to nil'
+    assert_equal response.avs_result['code'], 'G'
+    assert_equal response.cvv_result['code'], 'P'
     assert response.test?
   end
 
@@ -55,9 +196,19 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @authorize_capture_options_failed)
     assert_failure response
     assert_instance_of Response, response
-    assert_equal response.params['code'][0], 'R', 'Should expected code like Rxxx'
-    assert_equal response.avs_result.to_hash['code'], 'I'
-    assert_equal response.cvv_result.to_hash['code'], 'P'
+    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil'
+    assert_equal response.avs_result['code'], 'I'
+    assert_equal response.cvv_result['code'], 'P'
+    assert response.test?
+  end
+
+  def test_failed_purchase_by_invalid_card
+    response = @gateway.purchase(@amount, @credit_card_invalid, @authorize_capture_options_success)
+    assert_failure response
+    assert_instance_of Response, response
+    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil'
+    assert_equal response.avs_result['code'], 'G'
+    assert_equal response.cvv_result['code'], 'P'
     assert response.test?
   end
 
@@ -75,7 +226,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, auth.authorization, option)
     assert_success capture
-    assert_equal 'successful capture', capture.params['message']
+    assert_equal 'successful capture', capture.message
   end
 
   def test_failed_capture
@@ -90,7 +241,6 @@ class RemoteSimetrikTest < Test::Unit::TestCase
       trace_id: @authorize_capture_options_success[:trace_id]
     }
     sleep(3)
-    # First successful capture
     capture = @gateway.capture(@amount, auth.authorization, option)
     assert_success capture
     option = {
@@ -103,7 +253,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, auth.authorization, option)
     assert_failure capture
-    assert_equal 'CAPTURE_REJECTED', capture.params['message']
+    assert_equal 'CAPTURE_REJECTED', capture.message
   end
 
   def test_successful_void
@@ -118,7 +268,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     sleep(3)
     assert void = @gateway.void(auth.authorization, option)
     assert_success void
-    assert_equal 'successful void', void.params['message']
+    assert_equal 'successful void', void.message
   end
 
   def test_failed_void
@@ -134,7 +284,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     sleep(3)
     assert void = @gateway.void(auth.authorization, option)
     assert_success void
-    assert_equal 'successful void', void.params['message']
+    assert_equal 'successful void', void.message
 
     # Second failed void
     option = {
@@ -143,7 +293,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     }
     void = @gateway.void(auth.authorization, option)
     assert_failure void
-    assert_equal 'VOID_REJECTED', void.params['message']
+    assert_equal 'VOID_REJECTED', void.message
   end
 
   def test_successful_refund
@@ -176,7 +326,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     sleep(3)
     refund = @gateway.refund(@amount, response.authorization, option)
     assert_failure refund
-    assert_equal('REFUND_REJECTED', refund.params['message'])
+    assert_equal 'REFUND_REJECTED', refund.message
   end
 
   def test_transcript_scrubbing
@@ -186,242 +336,5 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     transcript = @gateway.scrub(transcript)
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, transcript)
-  end
-
-  private
-
-  def setup_options
-    setup_authorize_void_success_options()
-    @authorize_capture_options_failed = {
-      acquire_extra_options: {},
-      trace_id: SecureRandom.uuid,
-      user: {
-        id: '123',
-        email: 's@example.com'
-      },
-      order: {
-        id: rand(100000000000..999999999999).to_s,
-        description: 'a popsicle',
-        installments: 1,
-        amount: {
-          currency: 'USD',
-          vat: 19
-        },
-        shipping_address: {
-          name: 'string',
-          company: 'string',
-          address1: 'string',
-          address2: 'string',
-          city: 'string',
-          state: 'string',
-          country: 'string',
-          zip: 'string',
-          phone: 'string'
-        }
-      },
-      payment_method: {
-        card: {
-          name: 'string',
-          company: 'string',
-          address1: 'string',
-          address2: 'string',
-          city: 'string',
-          state: 'string',
-          country: 'string',
-          zip: 'string',
-          phone: 'string'
-        }
-      },
-      authentication: {
-        three_d_secure: {
-          version: '2.1.0',
-          eci: '05',
-          cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
-          ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
-          acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
-          xid: '00000000000000000501',
-          enrolled: 'string',
-          cavv_algorithm: '1',
-          directory_response_status: 'Y',
-          authentication_response_status: 'Y',
-          three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
-        }
-      },
-      sub_merchant: {
-        "merchant_id": 'string',
-        "extra_params": {},
-        "mcc": 'string',
-        "name": 'string',
-        "address": 'string',
-        "postal_code": 'string',
-        "url": 'string',
-        "phone_number": 'string'
-      },
-      token_acquirer: @token_acquirer
-    }
-
-    @authorize_capture_options_success = {
-      acquire_extra_options: {},
-      trace_id: SecureRandom.uuid,
-      user: {
-        id: '123',
-        email: 's@example.com'
-      },
-      order: {
-        id: rand(100000000000..999999999999).to_s,
-        datetime_local_transaction: Time.new.strftime('%Y-%m-%dT%H:%M:%S.%L%:z'),
-        description: 'apopsicle',
-        installments: 1,
-        amount: {
-          currency: 'USD',
-          vat: 19
-        },
-        shipping_address: {
-          name: 'string',
-          company: 'string',
-          address1: 'string',
-          address2: 'string',
-          city: 'string',
-          state: 'string',
-          country: 'string',
-          zip: 'string',
-          phone: 'string'
-        }
-      },
-      payment_method: {
-        card: {
-          billing_address: {
-            name: 'string',
-            company: 'string',
-            address1: 'string',
-            address2: 'string',
-            city: 'string',
-            state: 'string',
-            country: 'string',
-            zip: 'string',
-            phone: 'string'
-          }
-        }
-      },
-      authentication: {
-        three_ds_fields: {
-          version: '2.1.0',
-          eci: '05',
-          cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
-          ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
-          acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
-          cavv_algorithm: '1',
-          xid: '333333333',
-          directory_response_status: 'Y',
-          authentication_response_status: 'Y',
-          enrolled: 'test',
-          three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
-        }
-      },
-      sub_merchant: {
-        address: 'None',
-        extra_params: {
-        },
-        mcc: '5816',
-        merchant_id: '400000008',
-        name: '885.519.237',
-        phone_number: '3434343',
-        postal_code: 'None',
-        url: 'string'
-      },
-      psp_info: {
-        id: '0123',
-        name: 'mci',
-        sub_merchant: {
-          id: 'string',
-          name: 'string'
-        }
-
-      },
-      token_acquirer: @token_acquirer
-    }
-  end
-
-  def setup_authorize_void_success_options
-    @authorize_void_options_success = {
-      acquire_extra_options: {},
-      trace_id: SecureRandom.uuid,
-      user: {
-        id: '123',
-        email: 's@example.com'
-      },
-      order: {
-        id: rand(100000000000..999999999999).to_s,
-        description: 'apopsicle',
-        installments: 1,
-        datetime_local_transaction: Time.new.strftime('%Y-%m-%dT%H:%M:%S.%L%:z'),
-        amount: {
-          currency: 'USD',
-          vat: 19
-        },
-        shipping_address: {
-          name: 'string',
-          company: 'string',
-          address1: 'string',
-          address2: 'string',
-          city: 'string',
-          state: 'string',
-          country: 'string',
-          zip: 'string',
-          phone: 'string'
-        }
-      },
-      payment_method: {
-        card: {
-          billing_address: {
-            name: 'string',
-            company: 'string',
-            address1: 'string',
-            address2: 'string',
-            city: 'string',
-            state: 'string',
-            country: 'string',
-            zip: 'string',
-            phone: 'string'
-          }
-        }
-      },
-      authentication: {
-        three_ds_fields: {
-          version: '2.1.0',
-          eci: '05',
-          cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
-          ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
-          acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
-          cavv_algorithm: '1',
-          xid: '333333333',
-          directory_response_status: 'Y',
-          authentication_response_status: 'Y',
-          enrolled: 'test',
-          three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
-        }
-      },
-      sub_merchant: {
-        address: 'None',
-        extra_params: {
-        },
-        mcc: '5816',
-        merchant_id: '400000008',
-        name: '885.519.237',
-        phone_number: '3434343',
-        postal_code: 'None',
-        url: 'string'
-      },
-      psp_info: {
-        id: '0123',
-        name: 'mci',
-        sub_merchant: {
-          id: 'string',
-          name: 'string'
-        }
-
-      },
-      token_acquirer: @token_acquirer
-    }
   end
 end

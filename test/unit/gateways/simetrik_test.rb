@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'securerandom'
 
 class SimetrikTest < Test::Unit::TestCase
   def setup
@@ -7,9 +6,9 @@ class SimetrikTest < Test::Unit::TestCase
     @token_acquirer = 'ea890fd1-49f3-4a34-a150-192bf9a59205'
     @datetime = Time.new.strftime('%Y-%m-%dT%H:%M:%S.%L%:z')
     @gateway = SimetrikGateway.new(
-      client_id: 'wNhJBdrKDk3vTmkQMAWi5zWN7y21adO3',
-      client_secret: 'fq2riPpiDJaAwS4_UMAXZy1_nU1jNGz0F6gAFWOJFNmm_TfC8EFiHwMmGKAEDkwY',
-      audience: 'https://tenant-payments-dev.us.auth0.com/api/v2/'
+      client_id: 'client_id',
+      client_secret: 'client_secret_key',
+      audience: 'audience_url'
     )
     @credit_card = CreditCard.new(
       first_name: 'sergiod',
@@ -23,7 +22,84 @@ class SimetrikTest < Test::Unit::TestCase
     @trace_id = SecureRandom.uuid
     @order_id = SecureRandom.uuid[0..7]
 
-    setup_options()
+    @sub_merchant = {
+      address: 'string',
+      extra_params: {},
+      mcc: 'string',
+      merchant_id: 'string',
+      name: 'string',
+      phone_number: 'string',
+      postal_code: 'string',
+      url: 'string'
+    }
+
+    @authorize_capture_options = {
+      acquire_extra_options: {},
+      trace_id: @trace_id,
+      user: {
+        id: '123',
+        email: 's@example.com'
+      },
+      order: {
+        id: @order_id,
+        datetime_local_transaction: @datetime,
+        description: 'a popsicle',
+        installments: 1,
+        amount: {
+          currency: 'USD',
+          vat: 19
+        }
+      },
+      three_ds_fields: {
+        version: '2.1.0',
+        eci: '02',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
+        xid: '00000000000000000501',
+        enrolled: 'string',
+        cavv_algorithm: '1',
+        directory_response_status: 'Y',
+        authentication_response_status: 'Y',
+        three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
+      },
+      sub_merchant: @sub_merchant,
+      token_acquirer: @token_acquirer
+    }
+
+    @authorize_capture__fail_options = {
+      acquire_extra_options: {},
+      trace_id: @trace_id,
+      user: {
+        id: '123',
+        email: 's@example.com'
+      },
+      order: {
+        id: @order_id,
+        datetime_local_transaction: @datetime,
+        description: 'a popsicle',
+        installments: 1,
+        amount: {
+          currency: 'USD',
+          vat: 19
+        }
+      },
+      three_ds_fields: {
+        version: '2.1.0',
+        eci: '02',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
+        xid: '00000000000000000501',
+        enrolled: 'string',
+        cavv_algorithm: '1',
+        directory_response_status: 'Y',
+        authentication_response_status: 'Y',
+        three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
+      },
+      sub_merchant: @sub_merchant,
+      token_acquirer: @token_acquirer
+    }
 
     @authorize_capture_expected_body = {
       "forward_route": {
@@ -44,17 +120,6 @@ class SimetrikTest < Test::Unit::TestCase
             "total_amount": 10.0,
             "currency": 'USD',
             "vat": 19
-          },
-          "shipping_address": {
-            "name": 'string',
-            "company": 'string',
-            "address1": 'string',
-            "address2": 'string',
-            "city": 'string',
-            "state": 'string',
-            "country": 'string',
-            "zip": 'string',
-            "phone": 'string'
           }
         },
         "payment_method": {
@@ -65,18 +130,7 @@ class SimetrikTest < Test::Unit::TestCase
             "security_code": '111',
             "type": 'visa',
             "holder_first_name": 'sergiod',
-            "holder_last_name": 'lobob',
-            "billing_address": {
-              "name": 'string',
-              "company": 'string',
-              "address1": 'string',
-              "address2": 'string',
-              "city": 'string',
-              "state": 'string',
-              "country": 'string',
-              "zip": 'string',
-              "phone": 'string'
-            }
+            "holder_last_name": 'lobob'
           }
         },
         "authentication": {
@@ -117,10 +171,10 @@ class SimetrikTest < Test::Unit::TestCase
     assert_success response
     assert_instance_of Response, response
 
-    assert_equal response.params['message'], 'successful charge'
-    assert_equal response.params['code'][0], 'S', 'Should expected code like Sxxx'
-    assert_equal response.avs_result.to_hash['code'], 'G'
-    assert_equal response.cvv_result.to_hash['code'], 'P'
+    assert_equal response.message, 'successful charge'
+    assert_equal response.error_code, nil, 'Should expected error code equal to nil '
+    assert_equal response.avs_result['code'], 'G'
+    assert_equal response.cvv_result['code'], 'P'
     assert response.test?
   end
 
@@ -132,9 +186,9 @@ class SimetrikTest < Test::Unit::TestCase
     assert_failure response
     assert_instance_of Response, response
     assert response.test?
-    assert_equal response.avs_result.to_hash['code'], 'I'
-    assert_equal response.cvv_result.to_hash['code'], 'P'
-    assert_equal response.params['code'][0], 'R', 'Should expected code like Rxxx'
+    assert_equal response.avs_result['code'], 'I'
+    assert_equal response.cvv_result['code'], 'P'
+    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil '
     assert response.test?
   end
 
@@ -145,16 +199,15 @@ class SimetrikTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @authorize_capture_options)
     assert_success response
     assert_instance_of Response, response
-    assert_equal response.params['message'], 'successful authorize'
-    assert_equal response.params['code'][0], 'S', 'Should expected code like Sxxx'
-    assert_equal response.avs_result.to_hash['code'], 'G'
-    assert_equal response.cvv_result.to_hash['code'], 'P'
+    assert_equal response.message, 'successful authorize'
+    assert_equal response.error_code, nil, 'Should expected error code equal to nil '
+    assert_equal response.avs_result['code'], 'G'
+    assert_equal response.cvv_result['code'], 'P'
     assert response.test?
   end
 
   def test_failed_authorize
     @gateway.stubs(:timestamp_transaction).returns(@datetime)
-    # @gateway.expects(:ssl_post).with('https://payments.sta.simetrik.com/v1/abcdefg/authorization', @authorize_capture_expected_body, anything).returns(failed_authorize_response)
     @gateway.expects(:raw_ssl_request).with(:post, "https://payments.sta.simetrik.com/v1/#{@token_acquirer}/authorize", @authorize_capture_expected_body, anything).returns(FailedAuthorizeResponse.new())
 
     response = @gateway.authorize(@amount, @credit_card, @authorize_capture__fail_options)
@@ -162,9 +215,9 @@ class SimetrikTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert response.test?
 
-    assert_equal response.avs_result.to_hash['code'], 'I'
-    assert_equal response.cvv_result.to_hash['code'], 'P'
-    assert_equal response.params['code'][0], 'R', 'Should expected code like Rxxx'
+    assert_equal response.avs_result['code'], 'I'
+    assert_equal response.cvv_result['code'], 'P'
+    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil '
     assert response.test?
   end
 
@@ -200,7 +253,7 @@ class SimetrikTest < Test::Unit::TestCase
     assert_success response
     assert_instance_of Response, response
     assert response.test?
-    assert_equal 'successful capture', response.params['message']
+    assert_equal 'successful capture', response.message
     assert_equal response.message, 'successful capture'
   end
 
@@ -234,9 +287,9 @@ class SimetrikTest < Test::Unit::TestCase
 
     assert_failure response
     assert_instance_of Response, response
-    assert_equal response.avs_result.to_hash['code'], 'I'
-    assert_equal response.cvv_result.to_hash['code'], 'P'
-    assert_equal response.params['code'][0], 'R', 'Should expected code like Rxxx'
+    assert_equal response.avs_result['code'], 'I'
+    assert_equal response.cvv_result['code'], 'P'
+    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil '
     assert response.test?
   end
 
@@ -279,9 +332,9 @@ class SimetrikTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert response.test?
 
-    assert_equal 'successful refund', response.params['message']
+    assert_equal 'successful refund', response.message
     assert_equal response.message, 'successful refund'
-    assert_equal response.params['code'][0], 'S', 'Should expected code like Sxxx'
+    assert_equal response.error_code, nil, 'Should expected error code equal to nil'
   end
 
   def test_failed_refund
@@ -314,9 +367,9 @@ class SimetrikTest < Test::Unit::TestCase
     })
     assert_failure response
     assert_instance_of Response, response
-    assert_equal response.avs_result.to_hash['code'], 'I'
-    assert_equal response.cvv_result.to_hash['code'], 'P'
-    assert_equal response.params['code'][0], 'R', 'Should expected code like Rxxx'
+    assert_equal response.avs_result['code'], 'I'
+    assert_equal response.cvv_result['code'], 'P'
+    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil'
     assert response.test?
   end
 
@@ -344,7 +397,7 @@ class SimetrikTest < Test::Unit::TestCase
     assert_success response
     assert_instance_of Response, response
     assert response.test?
-    assert_equal 'successful void', response.params['message']
+    assert_equal 'successful void', response.message
     assert_equal response.message, 'successful void'
   end
 
@@ -369,9 +422,9 @@ class SimetrikTest < Test::Unit::TestCase
     })
     assert_failure response
     assert_instance_of Response, response
-    assert_equal response.avs_result.to_hash['code'], 'I'
-    assert_equal response.cvv_result.to_hash['code'], 'P'
-    assert_equal response.params['code'][0], 'R', 'Should expected code like Rxxx'
+    assert_equal response.avs_result['code'], 'I'
+    assert_equal response.cvv_result['code'], 'P'
+    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil '
     assert response.test?
   end
 
@@ -382,155 +435,6 @@ class SimetrikTest < Test::Unit::TestCase
   end
 
   private
-
-  def setup_options
-    @authorize_capture_options = {
-      acquire_extra_options: {},
-      trace_id: @trace_id,
-      user: {
-        id: '123',
-        email: 's@example.com'
-      },
-      order: {
-        id: @order_id,
-        datetime_local_transaction: @datetime,
-        description: 'a popsicle',
-        installments: 1,
-        amount: {
-          currency: 'USD',
-          vat: 19
-        },
-        shipping_address: {
-          name: 'string',
-          company: 'string',
-          address1: 'string',
-          address2: 'string',
-          city: 'string',
-          state: 'string',
-          country: 'string',
-          zip: 'string',
-          phone: 'string'
-        }
-      },
-      payment_method: {
-        card: {
-          billing_address: {
-            name: 'string',
-            company: 'string',
-            address1: 'string',
-            address2: 'string',
-            city: 'string',
-            state: 'string',
-            country: 'string',
-            zip: 'string',
-            phone: 'string'
-          }
-        }
-      },
-      three_ds_fields: {
-        version: '2.1.0',
-        eci: '02',
-        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
-        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
-        acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
-        xid: '00000000000000000501',
-        enrolled: 'string',
-        cavv_algorithm: '1',
-        directory_response_status: 'Y',
-        authentication_response_status: 'Y',
-        three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
-      },
-      sub_merchant: {
-        address: 'string',
-        extra_params: {
-        },
-        mcc: 'string',
-        merchant_id: 'string',
-        name: 'string',
-        phone_number: 'string',
-        postal_code: 'string',
-        url: 'string'
-      },
-      token_acquirer: @token_acquirer
-    }
-    @authorize_capture__fail_options = {
-      acquire_extra_options: {},
-      trace_id: @trace_id,
-      user: {
-        id: '123',
-        email: 's@example.com'
-      },
-      order: {
-        id: @order_id,
-        datetime_local_transaction: @datetime,
-        description: 'a popsicle',
-        installments: 1,
-        amount: {
-          currency: 'USD',
-          vat: 19
-        },
-        shipping_address: {
-          name: 'string',
-          company: 'string',
-          address1: 'string',
-          address2: 'string',
-          city: 'string',
-          state: 'string',
-          country: 'string',
-          zip: 'string',
-          phone: 'string'
-        }
-      },
-      payment_method: {
-        card: {
-          name: 'string',
-          company: 'string',
-          address1: 'string',
-          address2: 'string',
-          city: 'string',
-          state: 'string',
-          country: 'string',
-          zip: 'string',
-          phone: 'string',
-          billing_address: {
-            name: 'string',
-            company: 'string',
-            address1: 'string',
-            address2: 'string',
-            city: 'string',
-            state: 'string',
-            country: 'string',
-            zip: 'string',
-            phone: 'string'
-          }
-        }
-      },
-      three_ds_fields: {
-        version: '2.1.0',
-        eci: '02',
-        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
-        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
-        acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
-        xid: '00000000000000000501',
-        enrolled: 'string',
-        cavv_algorithm: '1',
-        directory_response_status: 'Y',
-        authentication_response_status: 'Y',
-        three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
-      },
-      sub_merchant: {
-        "merchant_id": 'string',
-        "extra_params": {},
-        "mcc": 'string',
-        "name": 'string',
-        "address": 'string',
-        "postal_code": 'string',
-        "url": 'string',
-        "phone_number": 'string'
-      },
-      token_acquirer: @token_acquirer
-    }
-  end
 
   def pre_scrubbed
     '{\"forward_route\":{\"trace_id\":\"eee174b7-c5aa-4b9a-b599-f2d8b2bdda94\",\"psp_extra_fields\":{}},\"forward_payload\":{\"user\":{\"id\":\"123\",\"email\":\"s@example.com\"},\"order\":{\"datetime_local_transaction\":\"2022-02-18T10:13:18.019-05:00\",\"id\":\"870559598225\",\"description\":\"apopsicle\",\"installments\":1,\"amount\":{\"total_amount\":1.0,\"currency\":\"USD\",\"vat\":19},\"shipping_address\":{\"name\":\"string\",\"company\":\"string\",\"address1\":\"string\",\"address2\":\"string\",\"city\":\"string\",\"state\":\"string\",\"country\":\"string\",\"zip\":\"string\",\"phone\":\"string\"}},\"payment_method\":{\"card\":{\"number\":\"4551478422045511\",\"exp_month\":12,\"exp_year\":2029,\"security_code\":\"111\",\"type\":\"001\",\"holder_first_name\":\"sergiod\",\"holder_last_name\":\"lobob\",\"billing_address\":{\"name\":\"string\",\"company\":\"string\",\"address1\":\"string\",\"address2\":\"string\",\"city\":\"string\",\"state\":\"string\",\"country\":\"string\",\"zip\":\"string\",\"phone\":\"string\"}}},\"authentication\":{\"three_ds_fields\":{\"version\":\"2.1.0\",\"eci\":\"05\",\"cavv\":\"jJ81HADVRtXfCBATEp01CJUAAAA\",\"ds_transaction_id\":\"97267598-FAE6-48F2-8083-C23433990FBC\",\"acs_transaction_id\":\"13c701a3-5a88-4c45-89e9-ef65e50a8bf9\",\"xid\":\"333333333\",\"enrolled\":\"test\",\"cavv_algorithm\":\"1\",\"directory_response_status\":\"Y\",\"authentication_response_status\":\"Y\",\"three_ds_server_trans_id\":\"24f701e3-9a85-4d45-89e9-af67e70d8fg8\"}},\"sub_merchant\":{\"merchant_id\":\"400000008\",\"extra_params\":{},\"mcc\":\"5816\",\"name\":\"885.519.237\",\"address\":\"None\",\"postal_code\":\"None\",\"url\":\"string\",\"phone_number\":\"3434343\"},\"acquire_extra_options\":{}}}'
@@ -1165,7 +1069,7 @@ class SimetrikTest < Test::Unit::TestCase
       <<-RESPONSE
         {
           "trace_id": 50300,
-          "code": "R302",
+          "code": "S001",
           "message": "successful void",
           "simetrik_authorization_id": "S-1205",
           "acquirer_body":  {}
