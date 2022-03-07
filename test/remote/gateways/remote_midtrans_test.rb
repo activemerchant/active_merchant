@@ -325,8 +325,8 @@ class RemoteMidtransTest < Test::Unit::TestCase
     va_numbers = response.params["va_numbers"]
     assert va_numbers.length() == 1
     assert va_numbers[0][:bank] == "mandiri"
-    assert va_numbers[0].key?(:bill_key)
-    assert va_numbers[0].key?(:bill_code)
+    assert va_numbers[0][:bill_key] == response.params["bill_key"]
+    assert va_numbers[0][:biller_code] == response.params["biller_code"]
   end
 
   def test_authorize_when_valid_card_then_success

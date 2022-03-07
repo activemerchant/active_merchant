@@ -12,9 +12,9 @@
 #
 
 adyen:
-  username: ''
-  password: ''
-  merchant_account: ''
+  username: 'ws_288081@Company.TestHarish'
+  password: 'D:IWmxHv~;9mDDuXh,Knz[I7a'
+  merchant_account: 'TestHarishECOM'
 
 allied_wallet:
   site_id: site_id

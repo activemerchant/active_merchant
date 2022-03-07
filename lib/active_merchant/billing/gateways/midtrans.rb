@@ -321,7 +321,7 @@ module ActiveMerchant #:nodoc:
           response[VA_NUMBERS] = [
             {
               "bill_key": response[:bill_key],
-              "bill_code": response[:bill_code],
+              "biller_code": response[:biller_code],
               "bank": MANDIRI
             }
           ]
