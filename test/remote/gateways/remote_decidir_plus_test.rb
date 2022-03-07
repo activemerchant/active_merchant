@@ -10,6 +10,7 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     @credit_card = credit_card('4484590159923090')
     @american_express = credit_card('376414000000009')
     @cabal = credit_card('5896570000000008')
+    @visa_debit = credit_card('4517721004856075')
     @declined_card = credit_card('4000300011112220')
     @options = {
       billing_address: address,
@@ -198,6 +199,49 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     response = @gateway_purchase.purchase(@amount, payment_reference, options)
     assert_success response
     assert_equal 63, response.params['payment_method_id']
+  end
+
+  def test_successful_purchase_with_payment_method_id
+    options = @options.merge(payment_method_id: '63')
+
+    assert response = @gateway_purchase.store(@cabal)
+    payment_reference = response.authorization
+
+    response = @gateway_purchase.purchase(@amount, payment_reference, options)
+    assert_success response
+    assert_equal 63, response.params['payment_method_id']
+  end
+
+  def test_failed_purchase_with_payment_method_id
+    options = @options.merge(payment_method_id: '1')
+
+    assert response = @gateway_purchase.store(@cabal)
+    payment_reference = response.authorization
+
+    response = @gateway_purchase.purchase(@amount, payment_reference, options)
+    assert_failure response
+  end
+
+  def test_successful_purchase_with_debit
+    options = @options.merge(debit: 'true', card_brand: 'visa')
+
+    assert response = @gateway_purchase.store(@visa_debit)
+    payment_reference = response.authorization
+
+    response = @gateway_purchase.purchase(@amount, payment_reference, options)
+    assert_success response
+    assert_equal 31, response.params['payment_method_id']
+  end
+
+  def test_failed_purchase_with_debit
+    options = @options.merge(debit: 'true', card_brand: 'visa')
+
+    assert response = @gateway_purchase.store(@credit_card)
+    payment_reference = response.authorization
+
+    response = @gateway_purchase.purchase(@amount, payment_reference, options)
+    assert_failure response
+    assert_equal 'invalid_param: bin', response.message
   end
 
   def test_invalid_login

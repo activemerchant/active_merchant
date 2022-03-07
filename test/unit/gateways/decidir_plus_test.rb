@@ -120,6 +120,8 @@ class DecidirPlusTest < Test::Unit::TestCase
     options = @options.merge(sub_payments: @sub_payments)
     options[:installments] = 4
     options[:payment_type] = 'distributed'
+    options[:debit] = 'true'
+    options[:card_brand] = 'visa_debit'
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @payment_reference, options)
@@ -127,6 +129,7 @@ class DecidirPlusTest < Test::Unit::TestCase
       assert_equal(@sub_payments, JSON.parse(data, symbolize_names: true)[:sub_payments])
       assert_match(/#{options[:installments]}/, data)
       assert_match(/#{options[:payment_type]}/, data)
+      assert_match(/\"payment_method_id\":31/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response

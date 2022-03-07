@@ -145,31 +145,38 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method_id(options)
-        return 1 unless options[:card_brand]
+        return options[:payment_method_id].to_i if options[:payment_method_id]
 
-        case options[:card_brand]
-        when 'visa'
-          1
-        when 'master'
-          104
-        when 'american_express'
-          65
-        when 'american_express_prisma'
-          111
-        when 'cabal'
-          63
-        when 'diners_club'
-          8
-        when 'visa_debit'
-          31
-        when 'master_debit'
-          105
-        when 'maestro_debit'
-          106
-        when 'cabal_debit'
-          108
+        if options[:debit]
+          case options[:card_brand]
+          when 'visa'
+            31
+          when 'master'
+            105
+          when 'maestro'
+            106
+          when 'cabal'
+            108
+          else
+            31
+          end
         else
-          1
+          case options[:card_brand]
+          when 'visa'
+            1
+          when 'master'
+            104
+          when 'american_express'
+            65
+          when 'american_express_prisma'
+            111
+          when 'cabal'
+            63
+          when 'diners_club'
+            8
+          else
+            1
+          end
         end
       end
 
