@@ -53,6 +53,7 @@ module ActiveMerchant #:nodoc:
         params['amount'] = localized_amount(amount.to_f, options[:currency])
         params['authOnly'] = false
 
+        add_replay_id(params, options)
         add_credit_card(params, credit_card, 'purchase', options)
         add_type_merchant_purchase(params, @options[:merchant_id], true, options)
         commit('purchase', params: params, jwt: options)
@@ -63,6 +64,7 @@ module ActiveMerchant #:nodoc:
         params['amount'] = localized_amount(amount.to_f, options[:currency])
         params['authOnly'] = true
 
+        add_replay_id(params, options)
         add_credit_card(params, credit_card, 'purchase', options)
         add_type_merchant_purchase(params, @options[:merchant_id], false, options)
         commit('purchase', params: params, jwt: options)
@@ -74,6 +76,7 @@ module ActiveMerchant #:nodoc:
         params['paymentToken'] = get_hash(authorization)['payment_token'] || options[:payment_token]
         # refund amounts must be negative
         params['amount'] = ('-' + localized_amount(amount.to_f, options[:currency])).to_f
+
         commit('refund', params: params, jwt: options)
       end
 
@@ -92,7 +95,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options = {})
-        commit('void', iid: get_hash(authorization)['id'], jwt: options)
+        params = {}
+
+        commit('void', params: params, iid: get_hash(authorization)['id'], jwt: options)
       end
 
       def verify(credit_card, options)
@@ -121,6 +126,10 @@ module ActiveMerchant #:nodoc:
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((number\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r((cvv\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
+      end
+
+      def add_replay_id(params, options)
+        params['replayId'] = options[:replay_id] if options[:replay_id]
       end
 
       def add_credit_card(params, credit_card, action, options)
@@ -200,6 +209,7 @@ module ActiveMerchant #:nodoc:
           rescue ResponseError => e
             parse(e.response.body)
           end
+
         success = success_from(response, action)
         response = { 'code' => '204' } if response == ''
         Response.new(
