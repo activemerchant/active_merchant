@@ -76,7 +76,10 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: )[^\\]*)i, '\1[FILTERED]').
           gsub(%r(("cardNumber\\+":\\+")\d+), '\1[FILTERED]').
-          gsub(%r(("cvv\\+":\\+")\d+), '\1[FILTERED]')
+          gsub(%r(("cvv\\+":\\+")\d+), '\1[FILTERED]').
+          gsub(%r(("dpan\\+":\\+")\d+), '\1[FILTERED]').
+          gsub(%r(("pan\\+":\\+")\d+), '\1[FILTERED]').
+          gsub(%r(("cryptogram\\+":\\+"|("cavv\\+" : \\+"))[^\\]*), '\1[FILTERED]')
       end
 
       private
@@ -89,7 +92,9 @@ module ActiveMerchant #:nodoc:
         'jcb' => '125',
         'diners_club' => '132',
         'cabal' => '135',
-        'naranja' => '136'
+        'naranja' => '136',
+        'apple_pay': '302',
+        'google_pay': '320'
       }
 
       def add_order(post, money, options, capture: false)
@@ -250,20 +255,49 @@ module ActiveMerchant #:nodoc:
         month = format(payment.month, :two_digits)
         expirydate = "#{month}#{year}"
         pre_authorization = options[:pre_authorization] ? 'PRE_AUTHORIZATION' : 'FINAL_AUTHORIZATION'
-        post['cardPaymentMethodSpecificInput'] = {
+        specifics_inputs = {
           'paymentProductId' => BRAND_MAP[payment.brand],
           'skipAuthentication' => 'true', # refers to 3DSecure
           'skipFraudService' => 'true',
           'authorizationMode' => pre_authorization
         }
-        post['cardPaymentMethodSpecificInput']['requiresApproval'] = options[:requires_approval] unless options[:requires_approval].nil?
+        specifics_inputs['requiresApproval'] = options[:requires_approval] unless options[:requires_approval].nil?
+        if payment.is_a?(NetworkTokenizationCreditCard) || (payment.is_a?(CreditCard) && options[:google_pay_pan_only])
+          specifics_inputs['paymentProductId'] = options[:google_pay_pan_only] ? BRAND_MAP[:google_pay] : BRAND_MAP[payment.source]
+          post['mobilePaymentMethodSpecificInput'] = specifics_inputs
+          add_decrypted_payment_data(post, payment, options, expirydate)
+        elsif payment.is_a?(CreditCard)
+          post['cardPaymentMethodSpecificInput'] = specifics_inputs.merge({
+            'card' => {
+              'cvv' => payment.verification_value,
+              'cardNumber' => payment.number,
+              'expiryDate' => expirydate,
+              'cardholderName' => payment.name
+            }
+          })
+        end
+      end
 
-        post['cardPaymentMethodSpecificInput']['card'] = {
-          'cvv' => payment.verification_value,
-          'cardNumber' => payment.number,
-          'expiryDate' => expirydate,
-          'cardholderName' => payment.name
-        }
+      def add_decrypted_payment_data(post, payment, options, expirydate)
+        if payment.is_a?(NetworkTokenizationCreditCard) && payment.payment_cryptogram
+          data = {
+            'cardholderName' => payment.name,
+            'cryptogram' => payment.payment_cryptogram,
+            'eci' => payment.eci,
+            'expiryDate' => expirydate,
+            'dpan' => payment.number
+          }
+          data['paymentMethod'] = 'TOKENIZED_CARD' if payment.source == :google_pay
+        # else case when google payment is an ONLY_PAN, doesn't have cryptogram or eci.
+        elsif options[:google_pay_pan_only]
+          data = {
+            'cardholderName' => payment.name,
+            'expiryDate' => expirydate,
+            'pan' => payment.number,
+            'paymentMethod' => 'CARD'
+          }
+        end
+        post['mobilePaymentMethodSpecificInput']['decryptedPaymentData'] = data if data
       end
 
       def add_customer_data(post, options, payment = nil)
@@ -432,7 +466,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def date
-        @date ||= Time.now.strftime('%a, %d %b %Y %H:%M:%S %Z') # Must be same in digest and HTTP header
+        @date ||= Time.now.gmtime.strftime('%a, %d %b %Y %H:%M:%S %Z') # Must be same in digest and HTTP header
       end
 
       def content_type

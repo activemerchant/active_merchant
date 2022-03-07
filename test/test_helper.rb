@@ -35,6 +35,8 @@ module ActiveMerchant
 
     def assert_field(field, value)
       clean_backtrace do
+        p field
+        p @helper
         assert_equal value, @helper.fields[field]
       end
     end
