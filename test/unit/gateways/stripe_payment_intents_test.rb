@@ -376,17 +376,13 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
       customer: @customer,
       shipping_address: {
         name: 'John Adam',
-        carrier: 'TEST',
-        phone: '+0018313818368',
-        tracking_number: 'TXNABC123',
-        address: {
-          city: 'San Diego',
-          country: 'USA',
-          line1: 'block C',
-          line2: 'street 48',
-          postal_code: '22400',
-          state: 'California'
-        }
+        phone_number: '+0018313818368',
+        city: 'San Diego',
+        country: 'USA',
+        address1: 'block C',
+        address2: 'street 48',
+        zip: '22400',
+        state: 'California'
       }
     }
     stub_comms(@gateway, :ssl_request) do
@@ -400,7 +396,26 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
       assert_match('shipping[address][state]=California', data)
       assert_match('shipping[name]=John+Adam', data)
       assert_match('shipping[phone]=%2B0018313818368', data)
-      assert_match('shipping[carrier]=TEST', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_purchase_with_shipping_carrier_and_tracking_number
+    options = {
+      currency: 'GBP',
+      customer: @customer,
+      shipping_address: {
+        name: 'John Adam',
+        address1: 'block C'
+      },
+      shipping_tracking_number: 'TXNABC123',
+      shipping_carrier: 'FEDEX'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('shipping[address][line1]=block+C', data)
+      assert_match('shipping[name]=John+Adam', data)
+      assert_match('shipping[carrier]=FEDEX', data)
       assert_match('shipping[tracking_number]=TXNABC123', data)
     end.respond_with(successful_create_intent_response)
   end

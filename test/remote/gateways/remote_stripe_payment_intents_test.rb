@@ -94,17 +94,13 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       customer: @customer,
       shipping_address: {
         name: 'John Adam',
-        carrier: 'TEST',
-        phone: '+0018313818368',
-        tracking_number: 'TXNABC123',
-        address: {
-          city: 'San Diego',
-          country: 'USA',
-          line1: 'block C',
-          line2: 'street 48',
-          postal_code: '22400',
-          state: 'California'
-        }
+        phone_number: '+0018313818368',
+        city: 'San Diego',
+        country: 'USA',
+        address1: 'block C',
+        address2: 'street 48',
+        zip: '22400',
+        state: 'California'
       }
     }
     assert response = @gateway.purchase(@amount, @visa_payment_method, options)
@@ -677,12 +673,9 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       currency: 'USD',
       customer: @customer,
       shipping_address: {
-        address: {
-          line1: '1 Test Ln',
-          city: 'Durham'
-        },
-        name: 'John Doe',
-        tracking_number: '123456789'
+        address1: '1 Test Ln',
+        city: 'Durham',
+        name: 'John Doe'
       }
     }
 

@@ -474,18 +474,21 @@ module ActiveMerchant #:nodoc:
         return unless shipping = options[:shipping_address]
 
         post[:shipping] = {}
-        post[:shipping][:address] = {}
-        post[:shipping][:address][:line1] = shipping[:address][:line1]
-        post[:shipping][:address][:city] = shipping[:address][:city] if shipping[:address][:city]
-        post[:shipping][:address][:country] = shipping[:address][:country] if shipping[:address][:country]
-        post[:shipping][:address][:line2] = shipping[:address][:line2] if shipping[:address][:line2]
-        post[:shipping][:address][:postal_code] = shipping[:address][:postal_code] if shipping[:address][:postal_code]
-        post[:shipping][:address][:state] = shipping[:address][:state] if shipping[:address][:state]
 
+        # fields required by Stripe PI
+        post[:shipping][:address] = {}
+        post[:shipping][:address][:line1] = shipping[:address1]
         post[:shipping][:name] = shipping[:name]
-        post[:shipping][:carrier] = shipping[:carrier] if shipping[:carrier]
-        post[:shipping][:phone] = shipping[:phone] if shipping[:phone]
-        post[:shipping][:tracking_number] = shipping[:tracking_number] if shipping[:tracking_number]
+
+        # fields considered optional by Stripe PI
+        post[:shipping][:address][:city] = shipping[:city] if shipping[:city]
+        post[:shipping][:address][:country] = shipping[:country] if shipping[:country]
+        post[:shipping][:address][:line2] = shipping[:address2] if shipping[:address2]
+        post[:shipping][:address][:postal_code] = shipping[:zip] if shipping[:zip]
+        post[:shipping][:address][:state] = shipping[:state] if shipping[:state]
+        post[:shipping][:phone] = shipping[:phone_number] if shipping[:phone_number]
+        post[:shipping][:carrier] = (shipping[:carrier] || options[:shipping_carrier]) if shipping[:carrier] || options[:shipping_carrier]
+        post[:shipping][:tracking_number] = (shipping[:tracking_number] || options[:shipping_tracking_number]) if shipping[:tracking_number] || options[:shipping_tracking_number]
       end
 
       def format_idempotency_key(options, suffix)
