@@ -1101,7 +1101,7 @@ class PayflowTest < Test::Unit::TestCase
       { name: 'ECI', expected: '02' },
       { name: 'CAVV', expected: 'jGvQIvG/5UhjAREALGYa6Vu/hto=' },
       { name: 'XID', expected: 'UXZEYlNBeFNpYVFzMjQxODk5RTA=' },
-      { name: 'THREEDSVERSON', expected: expected_version },
+      { name: 'THREEDSVERSION', expected: expected_version },
       { name: 'DSTRANSACTIONID', expected: expected_ds_transaction_id }
     ].each do |item|
       assert_equal item[:expected], REXML::XPath.first(xml_doc, threeds_xpath_for_extdata(item[:name], tx_type: tx_type))
