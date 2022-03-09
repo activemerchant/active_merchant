@@ -219,14 +219,14 @@ module ActiveMerchant #:nodoc:
         # 3DS2 only
         ds_transaction_id = three_d_secure_options[:ds_transaction_id] if version_2_or_newer?(three_d_secure_options)
 
-        xml.tag! 'ExtData', 'Name' => 'AUTHENTICATION_ID', 'Value' => authentication_id unless authentication_id.blank?
-        xml.tag! 'ExtData', 'Name' => 'AUTHENTICATION_STATUS', 'Value' => authentication_status unless authentication_status.blank?
+        xml.tag!('ExtData', 'Name' => 'AUTHENTICATION_ID', 'Value' => authentication_id) unless authentication_id.blank?
+        xml.tag!('ExtData', 'Name' => 'AUTHENTICATION_STATUS', 'Value' => authentication_status ) unless authentication_status.blank?
 
-        xml.tag! 'ExtData', 'Name' => 'CAVV', 'Value' => cavv unless cavv.blank?
-        xml.tag! 'ExtData', 'Name' => 'ECI', 'Value' => eci unless eci.blank?
-        xml.tag! 'ExtData', 'Name' => 'XID', 'Value' => xid unless xid.blank?
-        xml.tag! 'ExtData', 'Name' => 'THREEDSVERSON', 'Value' => version unless version.blank?
-        xml.tag! 'ExtData', 'Name' => 'DSTRANSACTIONID', 'Value' => ds_transaction_id unless ds_transaction_id.blank?
+        xml.tag!('ExtData', 'Name' => 'CAVV', 'Value' => cavv) unless cavv.blank?
+        xml.tag!('ExtData', 'Name' => 'ECI', 'Value' => eci) unless eci.blank?
+        xml.tag!('ExtData', 'Name' => 'XID', 'Value' => xid) unless xid.blank?
+        xml.tag!('ExtData', 'Name' => 'THREEDSVERSION', 'Value' => version) unless version.blank?
+        xml.tag!('ExtData', 'Name' => 'DSTRANSACTIONID', 'Value' => ds_transaction_id) unless ds_transaction_id.blank?
       end
 
       def add_level_two_three_fields(xml_string, options)
