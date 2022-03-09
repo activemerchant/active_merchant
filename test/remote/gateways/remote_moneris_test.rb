@@ -182,7 +182,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
   def test_failed_purchase_from_error
     assert response = @gateway.purchase(150, @credit_card, @options)
     assert_failure response
-    assert_equal 'Declined', response.message
+    assert_equal 'Card declined do not retry card declined do not retry', response.message
   end
 
   def test_successful_verify
