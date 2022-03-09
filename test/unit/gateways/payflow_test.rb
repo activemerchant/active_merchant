@@ -3,6 +3,7 @@ require 'test_helper'
 class PayflowTest < Test::Unit::TestCase
   include CommStub
 
+  # From `BuyerAuthStatusEnum` in https://www.paypalobjects.com/webstatic/en_US/developer/docs/pdf/pp_payflowpro_xmlpay_guide.pdf, page 109
   SUCCESSFUL_AUTHENTICATION_STATUS = 'Y'
   CHALLENGE_REQUIRED_AUTHENTICATION_STATUS = 'C'
 
@@ -155,6 +156,21 @@ class PayflowTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
+  def test_authorization_with_three_d_secure_option_with_version_2_x_via_mpi
+    expected_version = '2.2.0'
+    expected_authentication_status = SUCCESSFUL_AUTHENTICATION_STATUS
+    expected_ds_transaction_id = 'f38e6948-5388-41a6-bca4-b49723c19437'
+
+    three_d_secure_option = three_d_secure_option(options: { version: expected_version, ds_transaction_id: expected_ds_transaction_id })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
+    end.check_request do |_endpoint, data, _headers|
+      xml = REXML::Document.new(data)
+      assert_three_d_secure_via_mpi(xml, tx_type: 'Authorization', expected_version: expected_version, expected_ds_transaction_id: expected_ds_transaction_id)
+      assert_three_d_secure xml, authorize_buyer_auth_result_path, expected_version: expected_version, expected_authentication_status: expected_authentication_status, expected_ds_transaction_id: expected_ds_transaction_id
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_authorization_with_three_d_secure_option_with_version_2_x_and_authentication_response_status_include_authentication_status
     expected_version = '2.2.0'
     expected_authentication_status = SUCCESSFUL_AUTHENTICATION_STATUS
@@ -228,6 +244,27 @@ class PayflowTest < Test::Unit::TestCase
     assert_success response
     assert_equal '126', response.params['result']
     assert response.fraud_review?
+  end
+
+  def test_successful_purchase_with_three_d_secure_option_with_version_2_x_via_mpi
+    expected_version = '2.2.0'
+    expected_authentication_status = SUCCESSFUL_AUTHENTICATION_STATUS
+    expected_ds_transaction_id = 'f38e6948-5388-41a6-bca4-b49723c19437'
+
+    three_d_secure_option = three_d_secure_option(options: { version: expected_version, ds_transaction_id: expected_ds_transaction_id })
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure_option))
+    end.check_request do |_endpoint, data, _headers|
+      xml = REXML::Document.new(data)
+      assert_three_d_secure_via_mpi xml, tx_type: 'Sale', expected_version: expected_version, expected_ds_transaction_id: expected_ds_transaction_id
+
+      assert_three_d_secure xml, purchase_buyer_auth_result_path, expected_version: expected_version, expected_authentication_status: expected_authentication_status, expected_ds_transaction_id: expected_ds_transaction_id
+    end.respond_with(successful_purchase_with_3ds_mpi)
+    assert_success response
+
+    # see https://www.paypalobjects.com/webstatic/en_US/developer/docs/pdf/pp_payflowpro_xmlpay_guide.pdf, page 145, Table C.1
+    assert_equal '0', response.params['result']
+    refute response.fraud_review?
   end
 
   def test_successful_purchase_with_level_2_fields
@@ -812,6 +849,42 @@ class PayflowTest < Test::Unit::TestCase
     XML
   end
 
+  def successful_purchase_with_3ds_mpi
+    <<~XML
+      <XMLPayResponse xmlns="http://www.paypal.com/XMLPay">
+        <ResponseData>
+          <Vendor>spreedlyIntegrations</Vendor>
+          <Partner>paypal</Partner>
+          <TransactionResults>
+            <TransactionResult>
+              <Result>0</Result>
+              <ProcessorResult>
+                <AVSResult>Z</AVSResult>
+                <CVResult>M</CVResult>
+                <HostCode>A</HostCode>
+              </ProcessorResult>
+              <FraudPreprocessResult>
+                <Message>No Rules Triggered</Message>
+              </FraudPreprocessResult>
+              <FraudPostprocessResult>
+                <Message>No Rules Triggered</Message>
+              </FraudPostprocessResult>
+              <IAVSResult>N</IAVSResult>
+              <AVSResult>
+                <StreetMatch>No Match</StreetMatch>
+                <ZipMatch>Match</ZipMatch>
+              </AVSResult>
+              <CVResult>Match</CVResult>
+              <Message>Approved</Message>
+              <PNRef>A11AB1C8156A</PNRef>
+              <AuthCode>980PNI</AuthCode>
+            </TransactionResult>
+          </TransactionResults>
+        </ResponseData>
+      </XMLPayResponse>
+    XML
+  end
+
   def successful_l3_response
     <<~XML
       <ResponseData>
@@ -1021,6 +1094,20 @@ class PayflowTest < Test::Unit::TestCase
     }
   end
 
+  def assert_three_d_secure_via_mpi(xml_doc, tx_type: 'Authorization', expected_version: nil, expected_ds_transaction_id: nil)
+    [
+      { name: 'AUTHENTICATION_STATUS', expected: SUCCESSFUL_AUTHENTICATION_STATUS },
+      { name: 'AUTHENTICATION_ID', expected: 'QvDbSAxSiaQs241899E0' },
+      { name: 'ECI', expected: '02' },
+      { name: 'CAVV', expected: 'jGvQIvG/5UhjAREALGYa6Vu/hto=' },
+      { name: 'XID', expected: 'UXZEYlNBeFNpYVFzMjQxODk5RTA=' },
+      { name: 'THREEDSVERSON', expected: expected_version },
+      { name: 'DSTRANSACTIONID', expected: expected_ds_transaction_id }
+    ].each do |item|
+      assert_equal item[:expected], REXML::XPath.first(xml_doc, threeds_xpath_for_extdata(item[:name], tx_type: tx_type))
+    end
+  end
+
   def assert_three_d_secure(
     xml_doc,
     buyer_auth_result_path,
@@ -1049,11 +1136,24 @@ class PayflowTest < Test::Unit::TestCase
     end
   end
 
+  def xpath_prefix_for_transaction_type(tx_type)
+    return '/XMLPayRequest/RequestData/Transactions/Transaction/Authorization/' unless tx_type == 'Sale'
+
+    '/XMLPayRequest/RequestData/Transactions/Transaction/Sale/'
+  end
+
+  def threeds_xpath_for_extdata(attr_name, tx_type: 'Authorization')
+    xpath_prefix = xpath_prefix_for_transaction_type(tx_type)
+    %(string(#{xpath_prefix}/PayData/ExtData[@Name='#{attr_name}']/@Value)")
+  end
+
   def authorize_buyer_auth_result_path
-    '/XMLPayRequest/RequestData/Transactions/Transaction/Authorization/PayData/Tender/Card/BuyerAuthResult'
+    xpath_prefix = xpath_prefix_for_transaction_type('Authorization')
+    "#{xpath_prefix}/PayData/Tender/Card/BuyerAuthResult"
   end
 
   def purchase_buyer_auth_result_path
-    '/XMLPayRequest/RequestData/Transactions/Transaction/Sale/PayData/Tender/Card/BuyerAuthResult'
+    xpath_prefix = xpath_prefix_for_transaction_type('Sale')
+    "#{xpath_prefix}/PayData/Tender/Card/BuyerAuthResult"
   end
 end

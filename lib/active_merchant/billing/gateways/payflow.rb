@@ -192,6 +192,10 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end
 
+            if %i(authorization purchase).include? action
+              add_mpi_3ds(xml, options[:three_d_secure]) if options[:three_d_secure]
+            end
+
             xml.tag! 'Tender' do
               add_credit_card(xml, credit_card, options)
             end
@@ -200,6 +204,29 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'ExtData', 'Name' => 'BUTTONSOURCE', 'Value' => application_id unless application_id.blank?
         end
         add_level_two_three_fields(xml.target!, options)
+      end
+
+      def add_mpi_3ds(xml, three_d_secure_options)
+        # structure as per https://developer.paypal.com/api/nvp-soap/payflow/3d-secure-mpi/
+        authentication_id = three_d_secure_options[:authentication_id]
+        authentication_status = three_d_secure_options[:authentication_response_status]
+
+        eci = three_d_secure_options[:eci]
+        cavv = three_d_secure_options[:cavv]
+        xid = three_d_secure_options[:xid]
+        version = three_d_secure_options[:version]
+
+        # 3DS2 only
+        ds_transaction_id = three_d_secure_options[:ds_transaction_id] if version_2_or_newer?(three_d_secure_options)
+
+        xml.tag! 'ExtData', 'Name' => 'AUTHENTICATION_ID', 'Value' => authentication_id unless authentication_id.blank?
+        xml.tag! 'ExtData', 'Name' => 'AUTHENTICATION_STATUS', 'Value' => authentication_status unless authentication_status.blank?
+
+        xml.tag! 'ExtData', 'Name' => 'CAVV', 'Value' => cavv unless cavv.blank?
+        xml.tag! 'ExtData', 'Name' => 'ECI', 'Value' => eci unless eci.blank?
+        xml.tag! 'ExtData', 'Name' => 'XID', 'Value' => xid unless xid.blank?
+        xml.tag! 'ExtData', 'Name' => 'THREEDSVERSON', 'Value' => version unless version.blank?
+        xml.tag! 'ExtData', 'Name' => 'DSTRANSACTIONID', 'Value' => ds_transaction_id unless ds_transaction_id.blank?
       end
 
       def add_level_two_three_fields(xml_string, options)
