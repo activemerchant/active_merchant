@@ -296,22 +296,6 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     assert_equal 'VOID_REJECTED', void.message
   end
 
-  def test_successful_refund
-    option = {
-      token_acquirer: 'bd4c0f26-a357-4294-9b9e-a90e6c868c6e',
-      trace_id: '23138123-321213',
-      comment: 'Daniel Bernal',
-      currency: 'PEN',
-      acquire_extra_options: {
-        ruc: '20202380621'
-      }
-    }
-
-    assert refund = @gateway.refund(200, '936ca6a48a8b4cd3a3050bc637a5e2bc', option)
-    assert_success refund
-    assert_equal 'successful refund', refund.message
-  end
-
   def test_failed_refund
     response = @gateway.purchase(@amount, @credit_card, @authorize_capture_options_success)
     option = {
