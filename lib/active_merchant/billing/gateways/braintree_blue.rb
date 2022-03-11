@@ -298,7 +298,7 @@ module ActiveMerchant #:nodoc:
           end
 
           result = @braintree_gateway.credit_card.create(parameters)
-           ActiveMerchant::Billing::Response.new(
+          ActiveMerchant::Billing::Response.new(
             result.success?,
             message_from_result(result),
             {

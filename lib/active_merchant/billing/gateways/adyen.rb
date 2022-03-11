@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
         else
           MultiResponse.run do |r|
             r.process { authorize(money, payment, options) }
-            r.process(:ignore_result) { capture(money, r.authorization, capture_options(options)) }
+            r.process { capture(money, r.authorization, capture_options(options)) }
           end
         end
       end
