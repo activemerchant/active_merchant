@@ -15,9 +15,9 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     @credit_card_invalid = CreditCard.new(
       first_name: 'Joe',
       last_name: 'Doe',
-      number: '2440605262758053',
-      month: 7,
-      year: 2022,
+      number: '3551708161768059',
+      month: 3,
+      year: 2026,
       verification_value: '111'
     )
     @amount = 100
@@ -41,78 +41,8 @@ class RemoteSimetrikTest < Test::Unit::TestCase
       }
 
     }
-    @authorize_void_options_success = {
-      acquire_extra_options: {},
-      trace_id: SecureRandom.uuid,
-      user: {
-        id: '123',
-        email: 's@example.com'
-      },
-      order: {
-        id: rand(100000000000..999999999999).to_s,
-        description: 'apopsicle',
-        installments: 1,
-        datetime_local_transaction: Time.new.strftime('%Y-%m-%dT%H:%M:%S.%L%:z'),
-        amount: {
-          currency: 'USD',
-          vat: 19
-        }
-      },
-      authentication: {
-        three_ds_fields: {
-          version: '2.1.0',
-          eci: '05',
-          cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
-          ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
-          acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
-          cavv_algorithm: '1',
-          xid: '333333333',
-          directory_response_status: 'Y',
-          authentication_response_status: 'Y',
-          enrolled: 'test',
-          three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
-        }
-      },
-      sub_merchant: @sub_merchant,
-      psp_info: @psp_info,
-      token_acquirer: @token_acquirer
-    }
 
-    @authorize_capture_options_failed = {
-      acquire_extra_options: {},
-      trace_id: SecureRandom.uuid,
-      user: {},
-      order: {
-        id: rand(100000000000..999999999999).to_s,
-        description: 'apopsicle',
-        installments: 1,
-        datetime_local_transaction: Time.new.strftime('%Y-%m-%dT%H:%M:%S.%L%:z'),
-        amount: {
-          currency: 'USD',
-          vat: 19
-        }
-      },
-      authentication: {
-        three_ds_fields: {
-          version: '2.1.0',
-          eci: '05',
-          cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
-          ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
-          acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
-          cavv_algorithm: '1',
-          xid: '333333333',
-          directory_response_status: 'Y',
-          authentication_response_status: 'Y',
-          enrolled: 'test',
-          three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
-        }
-      },
-      sub_merchant: @sub_merchant,
-      psp_info: @psp_info,
-      token_acquirer: @token_acquirer
-    }
-
-    @authorize_capture_options_success = {
+    @authorize_options_success = {
       acquire_extra_options: {},
       trace_id: SecureRandom.uuid,
       user: {
@@ -151,7 +81,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
   end
 
   def test_success_authorize
-    response = @gateway.authorize(@amount, @credit_card, @authorize_capture_options_success)
+    response = @gateway.authorize(@amount, @credit_card, @authorize_options_success)
     assert_success response
     assert_instance_of Response, response
     assert_equal response.message, 'successful authorize'
@@ -162,27 +92,30 @@ class RemoteSimetrikTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(@amount, @credit_card, @authorize_capture_options_failed)
+    options = @authorize_options_success.clone()
+    options.delete(:user)
+
+    response = @gateway.authorize(@amount, @credit_card, options)
     assert_failure response
     assert_instance_of Response, response
-    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil'
+    assert_equal response.error_code, 'config_error'
     assert_equal response.avs_result['code'], 'I'
     assert_equal response.cvv_result['code'], 'P'
     assert response.test?
   end
 
   def test_failed_authorize_by_invalid_card
-    response = @gateway.authorize(@amount, @credit_card_invalid, @authorize_capture_options_success)
+    response = @gateway.authorize(@amount, @credit_card_invalid, @authorize_options_success)
     assert_failure response
     assert_instance_of Response, response
-    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil'
+    assert_equal response.error_code, 'invalid_number'
     assert_equal response.avs_result['code'], 'G'
     assert_equal response.cvv_result['code'], 'P'
     assert response.test?
   end
 
   def test_success_purchase
-    response = @gateway.purchase(@amount, @credit_card, @authorize_capture_options_success)
+    response = @gateway.purchase(@amount, @credit_card, @authorize_options_success)
     assert_success response
     assert_instance_of Response, response
     assert_equal response.message, 'successful charge'
@@ -193,35 +126,38 @@ class RemoteSimetrikTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@amount, @credit_card, @authorize_capture_options_failed)
+    options = @authorize_options_success.clone()
+    options.delete(:user)
+
+    response = @gateway.purchase(@amount, @credit_card, options)
     assert_failure response
     assert_instance_of Response, response
-    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil'
+    assert_equal response.error_code, 'config_error'
     assert_equal response.avs_result['code'], 'I'
     assert_equal response.cvv_result['code'], 'P'
     assert response.test?
   end
 
   def test_failed_purchase_by_invalid_card
-    response = @gateway.purchase(@amount, @credit_card_invalid, @authorize_capture_options_success)
+    response = @gateway.purchase(@amount, @credit_card_invalid, @authorize_options_success)
     assert_failure response
     assert_instance_of Response, response
-    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil'
+    assert_equal response.error_code, 'invalid_number'
     assert_equal response.avs_result['code'], 'G'
     assert_equal response.cvv_result['code'], 'P'
     assert response.test?
   end
 
   def test_successful_authorize_and_capture
-    auth = @gateway.authorize(@amount, @credit_card, @authorize_capture_options_success)
+    auth = @gateway.authorize(@amount, @credit_card, @authorize_options_success)
     assert_success auth
     sleep(3)
     option = {
-      vat: @authorize_capture_options_success[:order][:amount][:vat],
-      currency: @authorize_capture_options_success[:order][:amount][:currency],
+      vat: @authorize_options_success[:order][:amount][:vat],
+      currency: @authorize_options_success[:order][:amount][:currency],
       transaction_id: auth.authorization,
       token_acquirer: @token_acquirer,
-      trace_id: @authorize_capture_options_success[:trace_id]
+      trace_id: @authorize_options_success[:trace_id]
     }
 
     assert capture = @gateway.capture(@amount, auth.authorization, option)
@@ -230,15 +166,15 @@ class RemoteSimetrikTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    auth = @gateway.authorize(@amount, @credit_card, @authorize_capture_options_success)
+    auth = @gateway.authorize(@amount, @credit_card, @authorize_options_success)
     assert_success auth
 
     option = {
-      vat: @authorize_capture_options_success[:order][:amount][:vat],
-      currency: @authorize_capture_options_success[:order][:amount][:currency],
+      vat: @authorize_options_success[:order][:amount][:vat],
+      currency: @authorize_options_success[:order][:amount][:currency],
       transaction_id: auth.authorization,
       token_acquirer: @token_acquirer,
-      trace_id: @authorize_capture_options_success[:trace_id]
+      trace_id: @authorize_options_success[:trace_id]
     }
     sleep(3)
     capture = @gateway.capture(@amount, auth.authorization, option)
@@ -248,7 +184,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
       currency: 'USD',
       transaction_id: auth.authorization,
       token_acquirer: @token_acquirer,
-      trace_id: @authorize_capture_options_success[:trace_id]
+      trace_id: @authorize_options_success[:trace_id]
     }
 
     assert capture = @gateway.capture(@amount, auth.authorization, option)
@@ -257,12 +193,12 @@ class RemoteSimetrikTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    auth = @gateway.authorize(@amount, @credit_card, @authorize_void_options_success)
+    auth = @gateway.authorize(@amount, @credit_card, @authorize_options_success)
     assert_success auth
 
     option = {
       token_acquirer: @token_acquirer,
-      trace_id: @authorize_capture_options_success[:trace_id],
+      trace_id: @authorize_options_success[:trace_id],
       acquire_extra_options: {}
     }
     sleep(3)
@@ -273,12 +209,12 @@ class RemoteSimetrikTest < Test::Unit::TestCase
 
   def test_failed_void
     # First successful void
-    auth = @gateway.authorize(@amount, @credit_card, @authorize_void_options_success)
+    auth = @gateway.authorize(@amount, @credit_card, @authorize_options_success)
     assert_success auth
 
     option = {
       token_acquirer: @token_acquirer,
-      trace_id: @authorize_capture_options_success[:trace_id],
+      trace_id: @authorize_options_success[:trace_id],
       acquire_extra_options: {}
     }
     sleep(3)
@@ -297,7 +233,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.purchase(@amount, @credit_card, @authorize_capture_options_success)
+    response = @gateway.purchase(@amount, @credit_card, @authorize_options_success)
     option = {
       token_acquirer: @token_acquirer,
       trace_id: '2717a3e0-0db2-4971-b94f-686d3b72c44b',
@@ -315,7 +251,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @credit_card, @authorize_capture_options_success)
+      @gateway.purchase(@amount, @credit_card, @authorize_options_success)
     end
     transcript = @gateway.scrub(transcript)
     assert_scrubbed(@credit_card.number, transcript)

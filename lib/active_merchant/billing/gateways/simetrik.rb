@@ -62,7 +62,6 @@ module ActiveMerchant #:nodoc:
           forward_payload: {
             amount: {
               total_amount: amount(money).to_f,
-              vat: options[:vat],
               currency: (options[:currency] || currency(money))
             },
             transaction: {
@@ -71,6 +70,7 @@ module ActiveMerchant #:nodoc:
             acquire_extra_options: options[:acquire_extra_options] || {}
           }
         }
+        post[:forward_payload][:amount][:vat] = options[:vat] if options[:vat]
 
         add_forward_route(post, options)
         commit('capture', post, { token_acquirer: options[:token_acquirer] })
@@ -85,12 +85,12 @@ module ActiveMerchant #:nodoc:
               currency: (options[:currency] || currency(money))
             },
             transaction: {
-              id: authorization,
-              comment: options[:comment]
+              id: authorization
             },
             acquire_extra_options: options[:acquire_extra_options] || {}
           }
         }
+        post[:forward_payload][:transaction][:comment] = options[:comment] if options[:comment]
 
         add_forward_route(post, options)
         commit('refund', post, { token_acquirer: options[:token_acquirer] })
@@ -150,22 +150,27 @@ module ActiveMerchant #:nodoc:
         add_user(forward_payload, options[:user]) if options[:user]
         add_order(forward_payload, money, options[:order]) if options[:order] || money
         add_payment_method(forward_payload, payment, options[:payment_method]) if options[:payment_method] || payment
+
+        forward_payload[:payment_method] = {} unless forward_payload[:payment_method]
+        forward_payload[:payment_method][:card] = {} unless forward_payload[:payment_method][:card]
+        add_address('billing_address', forward_payload[:payment_method][:card], options[:billing_address]) if options[:billing_address]
+
         add_three_ds_fields(forward_payload[:authentication] = {}, options[:three_ds_fields]) if options[:three_ds_fields]
-        add_sub_merchant(forward_payload, options[:sub_merchant])
+        add_sub_merchant(forward_payload, options[:sub_merchant]) if options[:sub_merchant]
         forward_payload[:acquire_extra_options] = options[:acquire_extra_options] || {}
         post[:forward_payload] = forward_payload
       end
 
       def add_sub_merchant(post, sub_merchant_options)
         sub_merchant = {}
-        sub_merchant[:merchant_id] = sub_merchant_options[:merchant_id]
-        sub_merchant[:extra_params] = sub_merchant_options[:extra_params]
-        sub_merchant[:mcc] =  sub_merchant_options[:mcc]
-        sub_merchant[:name] = sub_merchant_options[:name]
-        sub_merchant[:address] = sub_merchant_options[:address]
-        sub_merchant[:postal_code] = sub_merchant_options[:postal_code]
-        sub_merchant[:url] = sub_merchant_options[:url]
-        sub_merchant[:phone_number] = sub_merchant_options[:phone_number]
+        sub_merchant[:merchant_id] = sub_merchant_options[:merchant_id] if sub_merchant_options[:merchant_id]
+        sub_merchant[:extra_params] = sub_merchant_options[:extra_params] if sub_merchant_options[:extra_params]
+        sub_merchant[:mcc] =  sub_merchant_options[:mcc] if sub_merchant_options[:mcc]
+        sub_merchant[:name] = sub_merchant_options[:name] if sub_merchant_options[:name]
+        sub_merchant[:address] = sub_merchant_options[:address] if sub_merchant_options[:address]
+        sub_merchant[:postal_code] = sub_merchant_options[:postal_code] if sub_merchant_options[:postal_code]
+        sub_merchant[:url] = sub_merchant_options[:url] if sub_merchant_options[:url]
+        sub_merchant[:phone_number] = sub_merchant_options[:phone_number] if sub_merchant_options[:phone_number]
 
         post[:sub_merchant] = sub_merchant
       end
@@ -174,7 +179,7 @@ module ActiveMerchant #:nodoc:
         payment_method = {}
         opts = nil
         opts = payment_method_options[:card] if payment_method_options
-        add_card(payment_method, payment, opts)
+        add_card(payment_method, payment, opts) if opts || payment
 
         post[:payment_method] = payment_method
       end
@@ -205,7 +210,6 @@ module ActiveMerchant #:nodoc:
         card_hash[:type] = card.brand
         card_hash[:holder_first_name] = card.first_name
         card_hash[:holder_last_name] = card.last_name
-        add_address('billing_address', card_hash, card_options[:billing_address]) if card_options
         post[:card] = card_hash
       end
 
@@ -233,7 +237,7 @@ module ActiveMerchant #:nodoc:
         order[:installments] = order_options[:installments] if order_options[:installments]
         order[:datetime_local_transaction] = order_options[:datetime_local_transaction] if order_options[:datetime_local_transaction]
 
-        add_amount(order, money, order_options[:amount])
+        add_amount(order, money, order_options[:amount]) if order_options[:amount]
         add_address('shipping_address', order, order_options[:shipping_address]) if order_options[:shipping_address]
 
         post[:order] = order
@@ -251,14 +255,15 @@ module ActiveMerchant #:nodoc:
       def add_address(tag, post, address_options)
         address = {}
         address[:name] = address_options[:name] if address_options[:name]
-        address[:company] = address_options[:company] if address_options[:company]
         address[:address1] = address_options[:address1] if address_options[:address1]
         address[:address2] = address_options[:address2] if address_options[:address2]
+        address[:company] = address_options[:company] if address_options[:company]
         address[:city] = address_options[:city] if address_options[:city]
         address[:state] = address_options[:state] if address_options[:state]
-        address[:country] = address_options[:country] if address_options[:country]
         address[:zip] = address_options[:zip] if address_options[:zip]
+        address[:country] = address_options[:country] if address_options[:country]
         address[:phone] = address_options[:phone] if address_options[:phone]
+        address[:fax] = address_options[:fax] if address_options[:fax]
 
         post[tag] = address
       end

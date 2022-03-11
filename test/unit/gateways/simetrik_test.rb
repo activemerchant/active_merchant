@@ -67,40 +67,6 @@ class SimetrikTest < Test::Unit::TestCase
       token_acquirer: @token_acquirer
     }
 
-    @authorize_capture__fail_options = {
-      acquire_extra_options: {},
-      trace_id: @trace_id,
-      user: {
-        id: '123',
-        email: 's@example.com'
-      },
-      order: {
-        id: @order_id,
-        datetime_local_transaction: @datetime,
-        description: 'a popsicle',
-        installments: 1,
-        amount: {
-          currency: 'USD',
-          vat: 19
-        }
-      },
-      three_ds_fields: {
-        version: '2.1.0',
-        eci: '02',
-        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
-        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
-        acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
-        xid: '00000000000000000501',
-        enrolled: 'string',
-        cavv_algorithm: '1',
-        directory_response_status: 'Y',
-        authentication_response_status: 'Y',
-        three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
-      },
-      sub_merchant: @sub_merchant,
-      token_acquirer: @token_acquirer
-    }
-
     @authorize_capture_expected_body = {
       "forward_route": {
         "trace_id": @trace_id,
@@ -164,7 +130,6 @@ class SimetrikTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.stubs(:timestamp_transaction).returns(@datetime)
     @gateway.expects(:raw_ssl_request).with(:post, "https://payments.sta.simetrik.com/v1/#{@token_acquirer}/charge", @authorize_capture_expected_body, anything).returns(SuccessfulPurchaseResponse.new())
 
     response = @gateway.purchase(@amount, @credit_card, @authorize_capture_options)
@@ -178,22 +143,41 @@ class SimetrikTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_success_purchase_with_billing_address
+    expected_body = JSON.parse(@authorize_capture_expected_body.dup)
+    expected_body['forward_payload']['payment_method']['card']['billing_address'] = address
+    expected_body = expected_body.to_json.to_s
+
+    @gateway.expects(:raw_ssl_request).with(:post, "https://payments.sta.simetrik.com/v1/#{@token_acquirer}/charge", expected_body, anything).returns(SuccessfulPurchaseResponse.new())
+
+    options = @authorize_capture_options.clone()
+    options[:billing_address] = address
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_instance_of Response, response
+
+    assert_equal response.message, 'successful charge'
+    assert_equal response.error_code, nil, 'Should expected error code equal to nil '
+    assert_equal response.avs_result['code'], 'G'
+    assert_equal response.cvv_result['code'], 'P'
+    assert response.test?
+  end
+
   def test_failed_purchase
-    @gateway.stubs(:timestamp_transaction).returns(@datetime)
     @gateway.expects(:raw_ssl_request).with(:post, "https://payments.sta.simetrik.com/v1/#{@token_acquirer}/charge", @authorize_capture_expected_body, anything).returns(FailedPurchaseResponse.new())
 
-    response = @gateway.purchase(@amount, @credit_card, @authorize_capture__fail_options)
+    response = @gateway.purchase(@amount, @credit_card, @authorize_capture_options)
     assert_failure response
     assert_instance_of Response, response
     assert response.test?
     assert_equal response.avs_result['code'], 'I'
     assert_equal response.cvv_result['code'], 'P'
-    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil '
+    assert_equal response.error_code, 'incorrect_number'
     assert response.test?
   end
 
   def test_successful_authorize
-    @gateway.stubs(:timestamp_transaction).returns(@datetime)
     @gateway.expects(:raw_ssl_request).with(:post, "https://payments.sta.simetrik.com/v1/#{@token_acquirer}/authorize", @authorize_capture_expected_body, anything).returns(SuccessfulAuthorizeResponse.new())
 
     response = @gateway.authorize(@amount, @credit_card, @authorize_capture_options)
@@ -207,17 +191,16 @@ class SimetrikTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    @gateway.stubs(:timestamp_transaction).returns(@datetime)
     @gateway.expects(:raw_ssl_request).with(:post, "https://payments.sta.simetrik.com/v1/#{@token_acquirer}/authorize", @authorize_capture_expected_body, anything).returns(FailedAuthorizeResponse.new())
 
-    response = @gateway.authorize(@amount, @credit_card, @authorize_capture__fail_options)
+    response = @gateway.authorize(@amount, @credit_card, @authorize_capture_options)
     assert_failure response
     assert_instance_of Response, response
     assert response.test?
 
     assert_equal response.avs_result['code'], 'I'
     assert_equal response.cvv_result['code'], 'P'
-    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil '
+    assert_equal response.error_code, 'incorrect_number'
     assert response.test?
   end
 
@@ -226,8 +209,8 @@ class SimetrikTest < Test::Unit::TestCase
       "forward_payload": {
         "amount": {
           "total_amount": 10.0,
-          "vat": 19,
-          "currency": 'USD'
+          "currency": 'USD',
+          "vat": 19
         },
         "transaction": {
           "id": 'fdb52e6a0e794b039de097e815a982fd'
@@ -262,8 +245,8 @@ class SimetrikTest < Test::Unit::TestCase
       "forward_payload": {
         "amount": {
           "total_amount": 10.0,
-          "vat": 19,
-          "currency": 'USD'
+          "currency": 'USD',
+          "vat": 19
         },
         "transaction": {
           "id": 'SI-226'
@@ -289,7 +272,7 @@ class SimetrikTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_equal response.avs_result['code'], 'I'
     assert_equal response.cvv_result['code'], 'P'
-    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil '
+    assert_equal response.error_code, 'processing_error'
     assert response.test?
   end
 
@@ -369,7 +352,7 @@ class SimetrikTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_equal response.avs_result['code'], 'I'
     assert_equal response.cvv_result['code'], 'P'
-    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil'
+    assert_equal response.error_code, 'processing_error'
     assert response.test?
   end
 
@@ -424,7 +407,7 @@ class SimetrikTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_equal response.avs_result['code'], 'I'
     assert_equal response.cvv_result['code'], 'P'
-    assert_not_equal response.error_code, nil, 'Should expected error code not equal to nil '
+    assert_equal response.error_code, 'processing_error'
     assert response.test?
   end
 
