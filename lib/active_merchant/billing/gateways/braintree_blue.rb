@@ -274,23 +274,31 @@ module ActiveMerchant #:nodoc:
 
       def add_credit_card_to_customer(credit_card, options)
         commit do
-          parameters = {
-            customer_id: options[:customer],
-            token: options[:credit_card_token],
-            cardholder_name: credit_card.name,
-            number: credit_card.number,
-            cvv: credit_card.verification_value,
-            expiration_month: credit_card.month.to_s.rjust(2, '0'),
-            expiration_year: credit_card.year.to_s,
-            device_data: options[:device_data]
-          }
+            if options[:payment_method_nonce]
+                parameters = {
+                    customer_id: options[:customer],
+                    payment_method_nonce: options[:payment_method_nonce]
+                }
+            else
+                parameters = {
+                    customer_id: options[:customer],
+                    token: options[:credit_card_token],
+                    cardholder_name: credit_card.name,
+                    number: credit_card.number,
+                    cvv: credit_card.verification_value,
+                    expiration_month: credit_card.month.to_s.rjust(2, '0'),
+                    expiration_year: credit_card.year.to_s,
+                    device_data: options[:device_data]
+                  }
+            end
+
           if options[:billing_address]
             address = map_address(options[:billing_address])
             parameters[:billing_address] = address unless address.all? { |_k, v| empty?(v) }
           end
 
           result = @braintree_gateway.credit_card.create(parameters)
-          ActiveMerchant::Billing::Response.new(
+           ActiveMerchant::Billing::Response.new(
             result.success?,
             message_from_result(result),
             {
