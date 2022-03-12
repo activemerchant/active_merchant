@@ -994,6 +994,19 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
   end
 
+  def test_successful_client_token_generation
+    response = @gateway.generate_client_token
+    assert_success response
+    assert_not_nil response.authorization
+  end
+
+  def test_failed_client_token_generation
+    gateway = BraintreeGateway.new({"merchant_id": "dummy", "public_key": "dummy-public-key", "private_key": "dummy-private-key"})
+    response = gateway.generate_client_token
+    assert_failure response
+    assert_equal 'Braintree::AuthenticationError', response.message
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)

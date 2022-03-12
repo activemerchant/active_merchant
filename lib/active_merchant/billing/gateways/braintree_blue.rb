@@ -224,6 +224,22 @@ module ActiveMerchant #:nodoc:
         true
       end
 
+      def generate_client_token
+        begin
+          client_token = @braintree_gateway.client_token.generate
+          ActiveMerchant::Billing::Response.new(
+            true,
+            "Token creation successful",
+            {
+              token: client_token
+            },
+            authorization: client_token
+          )
+        rescue Braintree::BraintreeError => ex
+          Response.new(false, ex.class.to_s)
+        end
+      end
+
       private
 
       def check_customer_exists(customer_vault_id)
