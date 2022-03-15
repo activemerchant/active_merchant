@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://test.ipg-online.com/ipgapi/services'
       self.live_url = 'https://www5.ipg-online.com'
 
-      self.supported_countries = %w(UY AR)
+      self.supported_countries = %w(AR)
       self.default_currency = 'ARS'
       self.supported_cardtypes = %i[visa master american_express discover]
 
@@ -12,7 +12,6 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'IPG'
 
       CURRENCY_CODES = {
-        'UYU' => '858',
         'ARS' => '032'
       }
 

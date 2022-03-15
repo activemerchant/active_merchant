@@ -262,7 +262,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   def test_failed_purchase_with_cabal_card
     response = @gateway.purchase(@amount, @invalid_cabal_card, @options)
     assert_failure response
-    assert_equal 'DECLINED', response.params['transactionResponse']['state']
+    assert_equal 'ERROR', response.params['code']
   end
 
   def test_failed_purchase_with_no_options
@@ -319,33 +319,35 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_equal 'Credenciales inválidas', response.message
   end
 
-  # As noted above, capture transactions are currently not supported, but in the hope
-  # they will one day be, here you go
+  def test_successful_capture
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert_match %r(^\d+\|(\w|-)+$), response.authorization
 
-  # def test_successful_capture
-  #   response = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success response
-  #   assert_equal 'APPROVED', response.message
-  #   assert_match %r(^\d+\|(\w|-)+$), response.authorization
+    capture = @gateway.capture(@amount, response.authorization, @options)
+    assert_success capture
+    assert_equal 'APPROVED', response.message
+    assert response.test?
+  end
 
-  #   capture = @gateway.capture(@amount, response.authorization, @options)
-  #   assert_success capture
-  #   assert_equal 'APPROVED', response.message
-  #   assert response.test?
-  # end
+  def test_successful_partial_capture
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert_match %r(^\d+\|(\w|-)+$), response.authorization
 
-  # def test_successful_partial_capture
-  #   response = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success response
-  #   assert_equal 'APPROVED', response.message
-  #   assert_match %r(^\d+\|(\w|-)+$), response.authorization
+    capture = @gateway.capture(@amount - 1, response.authorization, @options)
+    assert_success capture
+    assert_equal 'APPROVED', response.message
+    assert response.test?
+  end
 
-  #   capture = @gateway.capture(@amount - 1, response.authorization, @options)
-  #   assert_success capture
-  #   assert_equal 'APPROVED', response.message
-  #   assert_equal '39.99', response.params['TX_VALUE']['value']
-  #   assert response.test?
-  # end
+  def test_failed_capture
+    response = @gateway.capture(@amount, '')
+    assert_failure response
+    assert_match(/must not be null/, response.message)
+  end
 
   def test_successful_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
@@ -380,12 +382,6 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_match(/property: parentTransactionId, message: No puede ser vacio/, response.message)
   end
 
-  def test_failed_capture
-    response = @gateway.capture(@amount, '')
-    assert_failure response
-    assert_match(/must not be null/, response.message)
-  end
-
   def test_verify_credentials
     assert @gateway.verify_credentials
 
@@ -415,17 +411,17 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   end
 
   def test_failed_verify_with_specified_amount
-    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 499))
+    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 0))
 
     assert_failure verify
-    assert_equal 'INVALID_TRANSACTION | [The given payment value [4.99] is inferior than minimum configured value [5]]', verify.message
+    assert_equal 'The amount must be greater than zero', verify.message
   end
 
   def test_failed_verify_with_specified_language
-    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 499, language: 'es'))
+    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 0, language: 'es'))
 
     assert_failure verify
-    assert_equal 'INVALID_TRANSACTION | [El valor recibido [4,99] es inferior al valor mínimo configurado [5]]', verify.message
+    assert_equal 'El valor de la transacción debe ser mayor a cero', verify.message
   end
 
   def test_transcript_scrubbing

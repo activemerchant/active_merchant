@@ -13,6 +13,7 @@ class RemotePriorityTest < Test::Unit::TestCase
 
     # Run specific remote test
     # ruby -Itest test/remote/gateways/remote_priority_test.rb -n test_fail_refund_already_refunded_purchase_response
+
     @gateway = PriorityGateway.new(fixtures(:priority))
 
     # purchase params success
@@ -20,9 +21,56 @@ class RemotePriorityTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '999')
     @invalid_credit_card = credit_card('123456', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '999')
     @faulty_credit_card = credit_card('12345', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '999')
+    @replay_id = rand(100...1000)
 
     @option_spr = {
-      billing_address: address()
+      billing_address: address(),
+      invoice: '666',
+      card_present: 'false',
+      card_present_type: 'CardNotPresent',
+      is_auth: 'false',
+      payment_type: 'Sale',
+      bank_account: '',
+      should_vault_card: 'false',
+      tax_exempt: 'false',
+      tender_type: 'Card',
+      ship_amount: 0.01,
+      ship_to_country: 'USA',
+      ship_to_zip: '55667',
+      purchases: [
+        {
+          line_item_id: 79402,
+          name: 'Anita',
+          description: 'Dump',
+          quantity: 1,
+          unit_price: '1.23',
+          discount_amt: 0,
+          extended_amt: '1.23',
+          discount_rate: 0
+        },
+        {
+          line_item_id: 79403,
+          name: 'Old Peculier',
+          description: 'Beer',
+          quantity: 1,
+          unit_price: '2.34',
+          discount_amt: 0,
+          extended_amt: '2.34',
+          discount_rate: 0
+        }
+      ],
+      code: '101',
+      tax_rate: '05',
+      tax_amount: '0.50',
+      pos_data: {
+        cardholder_presence: 'Ecom',
+        device_attendance: 'HomePc',
+        device_input_capability: 'Unknown',
+        device_location: 'HomePc',
+        pan_capture_method: 'Manual',
+        partial_approval_support: 'NotSupported',
+        pin_capture_capability: 'Incapable'
+      }
     }
 
     # purchase params fail inavalid card number
@@ -250,5 +298,76 @@ class RemotePriorityTest < Test::Unit::TestCase
 
     payment_status = @gateway.get_payment_status(response.params['batchId'], @option_spr)
     assert payment_status.params['status'] == 'Pending'
+  end
+
+  def test_successful_purchase_with_duplicate_replay_id
+    response = @gateway.purchase(@amount_purchase, @credit_card, @option_spr.merge(replay_id: @replay_id))
+
+    assert_success response
+    assert_equal @replay_id, response.params['replayId']
+
+    duplicate_response = @gateway.purchase(@amount_purchase, @credit_card, @option_spr.merge(replay_id: response.params['replayId']))
+
+    assert_success duplicate_response
+    assert_equal response.params['id'], duplicate_response.params['id']
+  end
+
+  def test_failed_purchase_with_duplicate_replay_id
+    response = @gateway.purchase(@amount_purchase, @credit_card_purchase_fail_invalid_number, @option_spr.merge(replay_id: @replay_id))
+
+    assert_failure response
+
+    duplicate_response = @gateway.purchase(@amount_purchase, @credit_card_purchase_fail_invalid_number, @option_spr.merge(replay_id: response.params['replayId']))
+
+    assert_failure duplicate_response
+
+    assert_equal response.message, duplicate_response.message
+    assert_equal response.params['status'], duplicate_response.params['status']
+
+    assert_equal response.params['id'], duplicate_response.params['id']
+  end
+
+  def test_successful_purchase_with_unique_replay_id
+    first_purchase_response = @gateway.purchase(@amount_purchase, @credit_card, @option_spr.merge(replay_id: @replay_id))
+
+    assert_success first_purchase_response
+    assert_equal @replay_id, first_purchase_response.params['replayId']
+
+    second_purchase_response = @gateway.purchase(@amount_purchase + 1, @credit_card, @option_spr.merge(replay_id: @replay_id + 1))
+
+    assert_success second_purchase_response
+    assert_not_equal first_purchase_response.params['id'], second_purchase_response.params['id']
+  end
+
+  def test_failed_duplicate_refund
+    purchase_response = @gateway.purchase(@amount_purchase, @credit_card, @option_spr)
+    assert_success purchase_response
+
+    refund_params = @option_spr.merge(purchase_response.params).deep_transform_keys { |key| key.to_s.underscore }.transform_keys(&:to_sym)
+
+    refund_response = @gateway.refund(purchase_response.params['amount'].to_f * 100, purchase_response.authorization.to_s, refund_params)
+
+    assert_success refund_response
+    assert refund_response.params['status'] == 'Approved'
+    assert_equal 'Approved or completed successfully', refund_response.message
+
+    duplicate_refund_response = @gateway.refund(purchase_response.params['amount'].to_f * 100, purchase_response.authorization.to_s, refund_params)
+
+    assert_failure duplicate_refund_response
+    assert duplicate_refund_response.params['status'] == 'Declined'
+    assert_equal 'Payment already refunded', duplicate_refund_response.message
+  end
+
+  def test_failed_duplicate_void
+    response = @gateway.purchase(@amount_purchase, @credit_card, @option_spr)
+    assert_success response
+
+    void = @gateway.void({ 'id' => response.params['id'] }.to_s, @option_spr)
+    assert_success void
+
+    duplicate_void = @gateway.void({ 'id' => response.params['id'] }.to_s, @option_spr)
+
+    assert_failure duplicate_void
+    assert_equal 'Payment already voided.', duplicate_void.message
   end
 end

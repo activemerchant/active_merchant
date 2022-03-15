@@ -522,7 +522,9 @@ class RemotePayflowTest < Test::Unit::TestCase
         authentication_response_status: 'Y',
         eci: '02',
         cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA=',
+        version: '2.2.0',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
       }
     }
   end

@@ -16,6 +16,10 @@ adyen:
   password: ''
   merchant_account: ''
 
+airwallex:
+  client_id: SOMECREDENTIAL
+  client_api_key: ANOTHERCREDENTIAL
+
 allied_wallet:
   site_id: site_id
   merchant_id: merchant_id
@@ -103,6 +107,12 @@ bpoint:
   biller_code: ''
 
 braintree_blue:
+  merchant_id: X
+  public_key: Y
+  private_key: Z
+  merchant_account_id: A
+
+braintree_blue_with_ach_enabled:
   merchant_id: X
   public_key: Y
   private_key: Z
@@ -266,6 +276,10 @@ decidir_authorize:
   preauth_mode: true
 
 decidir_plus:
+  public_key: SOMECREDENTIAL
+  private_key: SOMECREDENTIAL
+
+decidir_plus_preauth:
   public_key: SOMECREDENTIAL
   private_key: SOMECREDENTIAL
 
@@ -641,6 +655,9 @@ nmi:
   login: demo
   password: password
 
+nmi_secure:
+  security_key: '6457Thfj624V5r7WUwc5v6a68Zsd6YEm'
+
 ogone:
   login: LOGIN
   user: USER
@@ -760,6 +777,10 @@ payment_express:
   password: PASSWORD
 
 paymentez:
+  application_code: APPCODE
+  app_key: APPKEY
+
+paymentez_ecuador:
   application_code: APPCODE
   app_key: APPKEY
 

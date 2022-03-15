@@ -104,6 +104,10 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     }
   end
 
+  def test_supports_network_tokenization
+    assert_true @gateway.supports_network_tokenization?
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -1501,11 +1505,11 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end
   end
 
-  def test_successful_verify_0_auth_defferent_cards
+  def test_successful_verify_zero_auth_different_cards
     @credit_card.brand = 'master'
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
-    end.respond_with(successful_purchase_response, successful_purchase_response)
+    end.respond_with(successful_purchase_response)
     assert_success response
     assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
     assert_equal 'Approved', response.message
@@ -1524,7 +1528,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     @credit_card.brand = 'discover'
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
-    end.respond_with(successful_purchase_response, successful_purchase_response)
+    end.respond_with(successful_purchase_response, successful_void_response)
     assert_success response
     assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
     assert_equal 'Approved', response.message

@@ -11,12 +11,57 @@ class PriorityTest < Test::Unit::TestCase
     # purchase params success
     @amount_purchase = 4
     @credit_card = credit_card('4111111111111111', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '123')
+    @replay_id = rand(100...1000)
 
     # Note the 'avsStreet' and 'avsZip' are the values obtained from credit card input on MX Merchant
     @option_spr = {
       billing_address: address(),
-      avs_street: '666',
-      avs_zip: '55044'
+      invoice: '666',
+      card_present: false,
+      card_present_type: 'CardNotPresent',
+      is_auth: false,
+      payment_type: 'Sale',
+      bank_account: '',
+      should_vault_card: false,
+      tax_exempt: false,
+      tender_type: 'Card',
+      ship_amount: 0.01,
+      ship_to_country: 'USA',
+      ship_to_zip: '55667',
+      purchases: [
+        {
+          line_item_id: 79402,
+          name: 'Anita',
+          description: 'Dump',
+          quantity: 1,
+          unit_price: '1.23',
+          discount_amount: 0,
+          extended_amount: '1.23',
+          discount_rate: 0
+        },
+        {
+          line_item_id: 79403,
+          name: 'Old Peculier',
+          description: 'Beer',
+          quantity: 1,
+          unit_price: '2.34',
+          discount_amount: 0,
+          extended_amount: '2.34',
+          discount_rate: 0
+        }
+      ],
+      code: '101',
+      tax_rate: '05',
+      tax_amount: '0.50',
+      pos_data: {
+        cardholder_presence: 'Ecom',
+        device_attendance: 'HomePc',
+        device_input_capability: 'Unknown',
+        device_location: 'HomePc',
+        pan_capture_method: 'Manual',
+        partial_approval_support: 'NotSupported',
+        pin_capture_capability: 'Incapable'
+      }
     }
 
     # purchase params fail
@@ -209,6 +254,38 @@ class PriorityTest < Test::Unit::TestCase
     batch_check = @gateway.get_payment_status(123456, @option_spr)
     assert_failure batch_check
     assert_equal 'Invalid JSON response', batch_check.params['message'][0..20]
+  end
+
+  def test_successful_purchase_with_duplicate_replay_id
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @option_spr.merge(replay_id: @replay_id))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal @replay_id, JSON.parse(data)['replayId']
+    end.respond_with(successful_purchase_response_with_replay_id)
+    assert_success response
+
+    duplicate_response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @option_spr.merge(replay_id: response.params['replayId']))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal response.params['replayId'], JSON.parse(data)['replayId']
+    end.respond_with(successful_purchase_response_with_replay_id)
+    assert_success duplicate_response
+
+    assert_equal response.params['id'], duplicate_response.params['id']
+  end
+
+  def test_failed_purchase_with_duplicate_replay_id
+    response = stub_comms do
+      @gateway.purchase(@amount_purchase, @invalid_credit_card, @option_spr.merge(replay_id: @replay_id))
+    end.respond_with(failed_purchase_response_with_replay_id)
+    assert_failure response
+
+    duplicate_response = stub_comms do
+      @gateway.purchase(@amount_purchase, @invalid_credit_card, @option_spr.merge(replay_id: response.params['replayId']))
+    end.respond_with(failed_purchase_response_with_replay_id)
+    assert_failure duplicate_response
+
+    assert_equal response.params['id'], duplicate_response.params['id']
   end
 
   def test_scrub
@@ -430,6 +507,102 @@ class PriorityTest < Test::Unit::TestCase
 )
   end
 
+  def successful_purchase_response_with_replay_id
+    %(
+      {
+        "created": "2022-03-07T16:04:45.103Z",
+        "paymentToken": "PuUfnYT8Tt8YlNmIce1wkQamcjmJymuB",
+        "id": 86560202,
+        "creatorName": "API Key",
+        "replayId": #{@replay_id},
+        "isDuplicate": false,
+        "shouldVaultCard": false,
+        "merchantId": 1000003310,
+        "batch": "0032",
+        "batchId": 10000000271187,
+        "tenderType": "Card",
+        "currency": "USD",
+        "amount": "0.02",
+        "cardAccount": {
+          "cardType": "Visa",
+          "entryMode": "Keyed",
+          "last4": "1111",
+          "cardId": "y15QvOteHZGBm7LH3GNIlTWbA1If",
+          "token": "PuUfnYT8Tt8YlNmIce1wkQamcjmJymuB",
+          "expiryMonth": "01",
+          "expiryYear": "29",
+          "hasContract": false,
+          "cardPresent": false,
+          "isDebit": false,
+          "isCorp": false
+        },
+        "posData": {
+          "panCaptureMethod": "Manual"
+        },
+        "authOnly": false,
+        "authCode": "PPS9f4",
+        "status": "Approved",
+        "risk": {
+          "cvvResponseCode": "N",
+          "cvvResponse": "No Match",
+          "cvvMatch": false,
+          "avsResponseCode": "D",
+          "avsAddressMatch": true,
+          "avsZipMatch": true
+        },
+        "requireSignature": false,
+        "settledAmount": "0",
+        "settledCurrency": "USD",
+        "cardPresent": false,
+        "authMessage": "Approved or completed successfully",
+        "availableAuthAmount": "0",
+        "reference": "206616004772",
+        "shipAmount": "0.01",
+        "shipToZip": "55667",
+        "shipToCountry": "USA",
+        "purchases": [
+          {
+            "dateCreated": "0001-01-01T00:00:00",
+            "iId": 0,
+            "transactionIId": 0,
+            "transactionId": "0",
+            "name": "Anita",
+            "description": "Dump",
+            "unitPrice": "0",
+            "quantity": 1,
+            "taxRate": "0",
+            "taxAmount": "0",
+            "discountRate": "0",
+            "discountAmount": "0",
+            "extendedAmount": "0",
+            "lineItemId": 0
+          },
+          {
+            "dateCreated": "0001-01-01T00:00:00",
+            "iId": 0,
+            "transactionIId": 0,
+            "transactionId": "0",
+            "name": "Old Peculier",
+            "description": "Beer",
+            "unitPrice": "0",
+            "quantity": 1,
+            "taxRate": "0",
+            "taxAmount": "0",
+            "discountRate": "0",
+            "discountAmount": "0",
+            "extendedAmount": "0",
+            "lineItemId": 0
+          }
+        ],
+        "type": "Sale",
+        "taxExempt": false,
+        "reviewIndicator": 1,
+        "source": "API",
+        "shouldGetCreditCardLevel": false
+      }
+    )
+  end
+
   def failed_purchase_response
     %(
     {
@@ -501,6 +674,93 @@ class PriorityTest < Test::Unit::TestCase
       "shouldGetCreditCardLevel": false
   }
 )
+  end
+
+  def failed_purchase_response_with_replay_id
+    %(
+      {
+        "created": "2022-03-07T17:41:29.1Z",
+        "paymentToken": "PKWMpiNtZ1mlUk4E4d95UWirHfQDNLwv",
+        "id": 86560811,
+        "creatorName": "API Key",
+        "replayId": #{@replay_id},
+        "isDuplicate": false,
+        "shouldVaultCard": false,
+        "merchantId": 1000003310,
+        "batch": "0050",
+        "batchId": 10000000271205,
+        "tenderType": "Card",
+        "currency": "USD",
+        "amount": "0.02",
+        "cardAccount": {
+          "entryMode": "Keyed",
+          "cardId": "B6R6ItScfvnUDwHWjP6ea1OUVX0f",
+          "token": "PKWMpiNtZ1mlUk4E4d95UWirHfQDNLwv",
+          "expiryMonth": "01",
+          "expiryYear": "29",
+          "hasContract": false,
+          "cardPresent": false
+        },
+        "posData": {
+          "panCaptureMethod": "Manual"
+        },
+        "authOnly": false,
+        "status": "Declined",
+        "risk": {
+          "avsResponse": "No Response from AVS",
+          "avsAddressMatch": false,
+          "avsZipMatch": false
+        },
+        "requireSignature": false,
+        "settledAmount": "0",
+        "settledCurrency": "USD",
+        "cardPresent": false,
+        "authMessage": "Invalid card number",
+        "availableAuthAmount": "0",
+        "reference": "206617005381",
+        "shipAmount": "0.01",
+        "shipToZip": "55667",
+        "shipToCountry": "USA",
+        "purchases": [
+          {
+            "dateCreated": "0001-01-01T00:00:00",
+            "iId": 0,
+            "transactionIId": 0,
+            "transactionId": "0",
+            "name": "Anita",
+            "description": "Dump",
+            "unitPrice": "0",
+            "quantity": 1,
+            "taxRate": "0",
+            "taxAmount": "0",
+            "discountRate": "0",
+            "discountAmount": "0",
+            "extendedAmount": "0",
+            "lineItemId": 0
+          },
+          {
+            "dateCreated": "0001-01-01T00:00:00",
+            "iId": 0,
+            "transactionIId": 0,
+            "transactionId": "0",
+            "name": "Old Peculier",
+            "description": "Beer",
+            "unitPrice": "0",
+            "quantity": 1,
+            "taxRate": "0",
+            "taxAmount": "0",
+            "discountRate": "0",
+            "discountAmount": "0",
+            "extendedAmount": "0",
+            "lineItemId": 0
+          }
+        ],
+        "type": "Sale",
+        "taxExempt": false,
+        "source": "API",
+        "shouldGetCreditCardLevel": false
+      }
+    )
   end
 
   def successful_authorize_response

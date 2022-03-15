@@ -52,9 +52,7 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
   def test_successful_regular_purchase_through_3ds_flow_with_invalid_pa_res
     response = @three_ds_gateway.purchase(@amount, @three_ds_invalid_pa_res_card, @three_ds_options)
     assert_success response
-    assert !response.params['acsurl'].blank?
-    assert !response.params['pareq'].blank?
-    assert !response.params['xid'].blank?
+    assert_equal 'Attempted But Card Not Enrolled', response.params['threedreason']
     assert response.params['threedflow'] = 1
     assert_equal 'Success', response.message
   end

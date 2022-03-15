@@ -64,6 +64,24 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_national_tax_indicator
+    national_tax_indicator = 1
+    stub_comms do
+      @gateway.purchase(100, @credit_card, @options.merge(national_tax_indicator: national_tax_indicator))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<otherTax>\s+<nationalTaxIndicator>#{national_tax_indicator}<\/nationalTaxIndicator>\s+<\/otherTax>/m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_authorize_with_national_tax_indicator
+    national_tax_indicator = 1
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(national_tax_indicator: national_tax_indicator))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<otherTax>\s+<nationalTaxIndicator>#{national_tax_indicator}<\/nationalTaxIndicator>\s+<\/otherTax>/m, data)
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_successful_credit_card_purchase_with_elo
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -717,6 +735,23 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorization_response)
     assert_success response
+  end
+
+  def test_successful_verify_zero_amount_request
+    @options[:zero_amount_auth] = true
+    stub_comms(@gateway, :ssl_post) do
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data|
+      assert_match %r(<grandTotalAmount>0.00<\/grandTotalAmount>), data
+    end
+  end
+
+  def test_successful_verify_request
+    stub_comms(@gateway, :ssl_post) do
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data|
+      assert_match %r(<grandTotalAmount>1.00<\/grandTotalAmount>), data
+    end
   end
 
   def test_successful_verify_with_elo
