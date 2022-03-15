@@ -220,7 +220,7 @@ module ActiveMerchant #:nodoc:
         ds_transaction_id = three_d_secure_options[:ds_transaction_id] if version_2_or_newer?(three_d_secure_options)
 
         xml.tag!('ExtData', 'Name' => 'AUTHENTICATION_ID', 'Value' => authentication_id) unless authentication_id.blank?
-        xml.tag!('ExtData', 'Name' => 'AUTHENTICATION_STATUS', 'Value' => authentication_status ) unless authentication_status.blank?
+        xml.tag!('ExtData', 'Name' => 'AUTHENTICATION_STATUS', 'Value' => authentication_status) unless authentication_status.blank?
 
         xml.tag!('ExtData', 'Name' => 'CAVV', 'Value' => cavv) unless cavv.blank?
         xml.tag!('ExtData', 'Name' => 'ECI', 'Value' => eci) unless eci.blank?
