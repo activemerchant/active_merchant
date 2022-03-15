@@ -42,7 +42,6 @@
 * Stripe PI: standardize `shipping_address` fields [dsmcclain] #4355
 * Airwallex: support gateway [therufs] #4342
 * Litle: Translate google_pay as android_pay [javierpedrozaing] #4331
-* Litle: Update schema version to 12.3 and test correction [jherreraa] #4340
 * Braintree: Add ACH support for store [cristian] #4285
 
 == Version 1.125.0 (January 20, 2022)

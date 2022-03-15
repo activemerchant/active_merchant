@@ -337,7 +337,7 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(failed_refund_response)
 
     assert_failure response
-    assert_equal 'No transaction found with specified transaction Id', response.message
+    assert_equal 'No transaction found with specified litleTxnId', response.message
     assert_equal '360', response.params['response']
   end
 
@@ -369,7 +369,7 @@ class LitleTest < Test::Unit::TestCase
     void = stub_comms do
       @gateway.void(response.authorization)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<authReversal.*<cnpTxnId>100000000000000001</m, data)
+      assert_match(/<authReversal.*<litleTxnId>100000000000000001</m, data)
     end.respond_with(successful_void_of_auth_response)
 
     assert_success void
@@ -385,7 +385,7 @@ class LitleTest < Test::Unit::TestCase
     void = stub_comms do
       @gateway.void(refund.authorization)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<void.*<cnpTxnId>100000000000000003</m, data)
+      assert_match(/<void.*<litleTxnId>100000000000000003</m, data)
     end.respond_with(successful_void_of_other_things_response)
 
     assert_success void
@@ -710,9 +710,9 @@ class LitleTest < Test::Unit::TestCase
 
   def successful_purchase_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <saleResponse id='1' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>100000000000000006</cnpTxnId>
+          <litleTxnId>100000000000000006</litleTxnId>
           <orderId>1</orderId>
           <response>000</response>
           <responseTime>2014-03-31T11:34:39</responseTime>
@@ -723,29 +723,29 @@ class LitleTest < Test::Unit::TestCase
             <cardValidationResult>M</cardValidationResult>
           </fraudResult>
         </saleResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def successful_purchase_with_echeck_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='9.12' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <echeckSalesResponse id='42' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>621100411297330000</cnpTxnId>
+          <litleTxnId>621100411297330000</litleTxnId>
           <orderId>42</orderId>
           <response>000</response>
           <responseTime>2018-01-09T14:02:20</responseTime>
           <message>Approved</message>
         </echeckSalesResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def successful_authorize_stored_credentials
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse xmlns="http://www.litle.com/schema" version="9.14" response="0" message="Valid Format">
         <authorizationResponse id="1" reportGroup="Default Report Group">
-          <cnpTxnId>991939023768015826</cnpTxnId>
+          <litleTxnId>991939023768015826</litleTxnId>
           <orderId>1</orderId>
           <response>000</response>
           <message>Approved</message>
@@ -753,15 +753,15 @@ class LitleTest < Test::Unit::TestCase
           <authCode>75045</authCode>
           <networkTransactionId>63225578415568556365452427825</networkTransactionId>
         </authorizationResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def failed_purchase_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <saleResponse id='6' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>600000000000000002</cnpTxnId>
+          <litleTxnId>600000000000000002</litleTxnId>
           <orderId>6</orderId>
           <response>110</response>
           <responseTime>2014-03-31T11:48:47</responseTime>
@@ -771,15 +771,15 @@ class LitleTest < Test::Unit::TestCase
             <cardValidationResult>P</cardValidationResult>
           </fraudResult>
         </saleResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def successful_authorize_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <authorizationResponse id='1' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>100000000000000001</cnpTxnId>
+          <litleTxnId>100000000000000001</litleTxnId>
           <orderId>1</orderId>
           <response>000</response>
           <responseTime>2014-03-31T12:21:56</responseTime>
@@ -790,15 +790,15 @@ class LitleTest < Test::Unit::TestCase
             <cardValidationResult>M</cardValidationResult>
           </fraudResult>
         </authorizationResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def failed_authorize_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <authorizationResponse id='6' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>600000000000000001</cnpTxnId>
+          <litleTxnId>600000000000000001</litleTxnId>
           <orderId>6</orderId>
           <response>110</response>
           <responseTime>2014-03-31T12:24:21</responseTime>
@@ -808,201 +808,201 @@ class LitleTest < Test::Unit::TestCase
             <cardValidationResult>P</cardValidationResult>
           </fraudResult>
         </authorizationResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def successful_capture_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <captureResponse id='' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>100000000000000002</cnpTxnId>
+          <litleTxnId>100000000000000002</litleTxnId>
           <response>000</response>
           <responseTime>2014-03-31T12:28:07</responseTime>
           <message>Approved</message>
         </captureResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def failed_capture_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <captureResponse id='' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>304546900824606360</cnpTxnId>
+          <litleTxnId>304546900824606360</litleTxnId>
           <response>360</response>
           <responseTime>2014-03-31T12:30:53</responseTime>
           <message>No transaction found with specified litleTxnId</message>
         </captureResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def successful_refund_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <creditResponse id='' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>100000000000000003</cnpTxnId>
+          <litleTxnId>100000000000000003</litleTxnId>
           <response>000</response>
           <responseTime>2014-03-31T12:36:50</responseTime>
           <message>Approved</message>
         </creditResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def failed_refund_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <creditResponse id='' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>996483567570258360</cnpTxnId>
+          <litleTxnId>996483567570258360</litleTxnId>
           <response>360</response>
           <responseTime>2014-03-31T12:42:41</responseTime>
-          <message>No transaction found with specified transaction Id</message>
+          <message>No transaction found with specified litleTxnId</message>
         </creditResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def successful_credit_response
     %(
       <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version="9.14" response="0" message="Valid Format">
         <creditResponse id="1" reportGroup="Default Report Group">
-          <cnpTxnId>908410935514139173</cnpTxnId>
+          <litleTxnId>908410935514139173</litleTxnId>
           <orderId>1</orderId>
           <response>000</response>
           <responseTime>2020-10-30T19:19:38.935</responseTime>
           <message>Approved</message>
         </creditResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def failed_credit_response
     %(
       <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-      <cnpOnlineResponse version="12.8" response="1" message="Error validating xml data against the schema: cvc-minLength-valid: Value '1234567890' with length = '10' is not facet-valid with respect to minLength '13' for type 'ccAccountNumberType'."/>
+      <litleOnlineResponse version="9.14" response="1" message="Error validating xml data against the schema: cvc-minLength-valid: Value '1234567890' with length = '10' is not facet-valid with respect to minLength '13' for type 'ccAccountNumberType'."/>
     )
   end
 
   def successful_void_of_auth_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <authReversalResponse id='' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>972619753208653000</cnpTxnId>
+          <litleTxnId>972619753208653000</litleTxnId>
           <orderId>123</orderId>
           <response>000</response>
           <responseTime>2014-03-31T12:45:44</responseTime>
           <message>Approved</message>
         </authReversalResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def successful_void_of_other_things_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <voidResponse id='' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>100000000000000004</cnpTxnId>
+          <litleTxnId>100000000000000004</litleTxnId>
           <response>000</response>
           <responseTime>2014-03-31T12:44:52</responseTime>
           <message>Approved</message>
         </voidResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def successful_void_of_echeck_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='9.12' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <echeckVoidResponse id='' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>986272331806746000</cnpTxnId>
+          <litleTxnId>986272331806746000</litleTxnId>
           <response>000</response>
           <responseTime>2018-01-09T14:20:00</responseTime>
           <message>Approved</message>
           <postDate>2018-01-09</postDate>
         </echeckVoidResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def failed_void_of_authorization_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <authReversalResponse id='' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>775712323632364360</cnpTxnId>
+          <litleTxnId>775712323632364360</litleTxnId>
           <orderId>123</orderId>
           <response>360</response>
           <responseTime>2014-03-31T13:03:17</responseTime>
           <message>No transaction found with specified litleTxnId</message>
         </authReversalResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def failed_void_of_other_things_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <voidResponse id='' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>486912375928374360</cnpTxnId>
+          <litleTxnId>486912375928374360</litleTxnId>
           <response>360</response>
           <responseTime>2014-03-31T12:55:46</responseTime>
           <message>No transaction found with specified litleTxnId</message>
         </voidResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def successful_store_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <registerTokenResponse id='50' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>501000000000000001</cnpTxnId>
+          <litleTxnId>501000000000000001</litleTxnId>
           <orderId>50</orderId>
-          <cnpToken>1111222233330123</cnpToken>
+          <litleToken>1111222233330123</litleToken>
           <response>801</response>
           <responseTime>2014-03-31T13:06:41</responseTime>
           <message>Account number was successfully registered</message>
           <bin>445711</bin>
           <type>VI</type>
         </registerTokenResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def successful_store_paypage_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.2' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <registerTokenResponse id='99999' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>222358384397377801</cnpTxnId>
+          <litleTxnId>222358384397377801</litleTxnId>
           <orderId>F12345</orderId>
-          <cnpToken>1111222233334444</cnpToken>
+          <litleToken>1111222233334444</litleToken>
           <response>801</response>
           <responseTime>2015-05-20T14:37:22</responseTime>
           <message>Account number was successfully registered</message>
         </registerTokenResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def failed_store_response
     %(
-      <cnpOnlineResponse xmlns="http://www.vantivcnp.com/schema" version="12.8" response="0" message="Valid Format">
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <registerTokenResponse id='51' reportGroup='Default Report Group' customerId=''>
-          <cnpTxnId>510000000000000001</cnpTxnId>
+          <litleTxnId>510000000000000001</litleTxnId>
           <orderId>51</orderId>
           <response>820</response>
           <responseTime>2014-03-31T13:10:51</responseTime>
           <message>Credit card number was invalid</message>
         </registerTokenResponse>
-      </cnpOnlineResponse>
+      </litleOnlineResponse>
     )
   end
 
   def unsuccessful_xml_schema_validation_response
     %(
-    <cnpOnlineResponse version='12.8' xmlns='http://www.vantivcnp.com/schema'
+    <litleOnlineResponse version='8.29' xmlns='http://www.litle.com/schema'
                      response='1'
                      message='Error validating xml data against the schema on line 8\nthe length of the value is 10, but the required minimum is 13.'/>
 
@@ -1016,7 +1016,7 @@ class LitleTest < Test::Unit::TestCase
       starting SSL for www.testlitle.com:443...
       SSL established
       <- "POST /sandbox/communicator/online HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.testlitle.com\r\nContent-Length: 406\r\n\r\n"
-      <- "<cnpOnlineRequest xmlns=\"http://www.vantivcnp.com/schema\" merchantId=\"101\" version=\"12.8\">\n  <authentication>\n    <user>ACTIVE</user>\n    <password>MERCHANT</password>\n  </authentication>\n  <registerTokenRequest reportGroup=\"Default Report Group\">\n    <orderId/>\n    <accountNumber>4242424242424242</accountNumber>\n    <cardValidationNum>111</cardValidationNum>\n  </registerTokenRequest>\n</cnpOnlineRequest>"
+      <- "<litleOnlineRequest xmlns=\"http://www.litle.com/schema\" merchantId=\"101\" version=\"9.4\">\n  <authentication>\n    <user>ACTIVE</user>\n    <password>MERCHANT</password>\n  </authentication>\n  <registerTokenRequest reportGroup=\"Default Report Group\">\n    <orderId/>\n    <accountNumber>4242424242424242</accountNumber>\n    <cardValidationNum>111</cardValidationNum>\n  </registerTokenRequest>\n</litleOnlineRequest>"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Mon, 16 May 2016 03:07:36 GMT\r\n"
       -> "Server: Apache-Coyote/1.1\r\n"
@@ -1027,7 +1027,7 @@ class LitleTest < Test::Unit::TestCase
       -> "1bf\r\n"
       reading 447 bytes...
       -> ""
-      -> "<cnpOnlineResponse version='12.8' response='0' message='Valid Format' xmlns='http://www.vantivcnp.com/schema'>\n  <registerTokenResponse id='' reportGroup='Default Report Group' customerId=''>\n    <cnpTxnId>185074924759529000</cnpTxnId>\n    <cnpToken>1111222233334444</cnpToken>\n    <response>000</response>\n    <responseTime>2016-05-15T23:07:36</responseTime>\n    <message>Approved</message>\n  </registerTokenResponse>\n</cnpOnlineResponse>"
+      -> "<litleOnlineResponse version='10.1' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>\n  <registerTokenResponse id='' reportGroup='Default Report Group' customerId=''>\n    <litleTxnId>185074924759529000</litleTxnId>\n    <litleToken>1111222233334444</litleToken>\n    <response>000</response>\n    <responseTime>2016-05-15T23:07:36</responseTime>\n    <message>Approved</message>\n  </registerTokenResponse>\n</litleOnlineResponse>"
       read 447 bytes
       reading 2 bytes...
       -> ""
@@ -1046,7 +1046,7 @@ class LitleTest < Test::Unit::TestCase
       starting SSL for www.testlitle.com:443...
       SSL established
       <- "POST /sandbox/communicator/online HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.testlitle.com\r\nContent-Length: 406\r\n\r\n"
-      <- "<cnpOnlineRequest xmlns=\"http://www.vantivcnp.com/schema\" merchantId=\"101\" version=\"12.8\">\n  <authentication>\n    <user>[FILTERED]</user>\n    <password>[FILTERED]</password>\n  </authentication>\n  <registerTokenRequest reportGroup=\"Default Report Group\">\n    <orderId/>\n    <accountNumber>[FILTERED]</accountNumber>\n    <cardValidationNum>[FILTERED]</cardValidationNum>\n  </registerTokenRequest>\n</cnpOnlineRequest>"
+      <- "<litleOnlineRequest xmlns=\"http://www.litle.com/schema\" merchantId=\"101\" version=\"9.4\">\n  <authentication>\n    <user>[FILTERED]</user>\n    <password>[FILTERED]</password>\n  </authentication>\n  <registerTokenRequest reportGroup=\"Default Report Group\">\n    <orderId/>\n    <accountNumber>[FILTERED]</accountNumber>\n    <cardValidationNum>[FILTERED]</cardValidationNum>\n  </registerTokenRequest>\n</litleOnlineRequest>"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Mon, 16 May 2016 03:07:36 GMT\r\n"
       -> "Server: Apache-Coyote/1.1\r\n"
@@ -1057,7 +1057,7 @@ class LitleTest < Test::Unit::TestCase
       -> "1bf\r\n"
       reading 447 bytes...
       -> ""
-      -> "<cnpOnlineResponse version='12.8' response='0' message='Valid Format' xmlns='http://www.vantivcnp.com/schema'>\n  <registerTokenResponse id='' reportGroup='Default Report Group' customerId=''>\n    <cnpTxnId>185074924759529000</cnpTxnId>\n    <cnpToken>1111222233334444</cnpToken>\n    <response>000</response>\n    <responseTime>2016-05-15T23:07:36</responseTime>\n    <message>Approved</message>\n  </registerTokenResponse>\n</cnpOnlineResponse>"
+      -> "<litleOnlineResponse version='10.1' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>\n  <registerTokenResponse id='' reportGroup='Default Report Group' customerId=''>\n    <litleTxnId>185074924759529000</litleTxnId>\n    <litleToken>1111222233334444</litleToken>\n    <response>000</response>\n    <responseTime>2016-05-15T23:07:36</responseTime>\n    <message>Approved</message>\n  </registerTokenResponse>\n</litleOnlineResponse>"
       read 447 bytes
       reading 2 bytes...
       -> ""
