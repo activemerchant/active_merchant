@@ -235,6 +235,108 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_level_two_data_visa
+    options = @options.merge(
+      level_2_data: {
+        sales_tax: 200
+      }
+    )
+    assert response = @gateway.purchase(10010, @credit_card1, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_two_data_master
+    credit_card = CreditCard.new(
+      first_name: 'John',
+      last_name: 'Smith',
+      month: '01',
+      year: '2024',
+      brand: 'master',
+      number: '5555555555554444',
+      verification_value: '349'
+    )
+
+    options = @options.merge(
+      level_2_data: {
+        total_tax_amount: 200,
+        customer_code: 'PO12345',
+        card_acceptor_tax_id: '011234567',
+        tax_included_in_total: 'true',
+        tax_amount: 50
+      }
+    )
+    assert response = @gateway.purchase(10010, credit_card, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_three_data_visa
+    options = @options.merge(
+      level_3_data: {
+        discount_amount: 50,
+        shipping_amount: 50,
+        duty_amount: 20,
+        tax_included_in_total: true,
+        tax_amount: 100,
+        tax_rate: 0.05,
+        tax_type_identifier: '01',
+        card_acceptor_tax_id: '361531321',
+        line_items: [{
+          item_sequence_number: 1,
+          item_commodity_code: 300,
+          item_description: 'ramdom-object',
+          product_code: 'TB123',
+          quantity: 2,
+          unit_of_measure: 'EACH',
+          unit_cost: 25,
+          discount_per_line_item: 5,
+          line_item_total: 300,
+          tax_included_in_total: true,
+          tax_amount: 100,
+          tax_rate: 0.05,
+          tax_type_identifier: '01',
+          card_acceptor_tax_id: '361531321'
+        }]
+      }
+    )
+    assert response = @gateway.purchase(10010, @credit_card1, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_three_data_master
+    credit_card = CreditCard.new(
+      first_name: 'John',
+      last_name: 'Smith',
+      month: '01',
+      year: '2024',
+      brand: 'master',
+      number: '5555555555554444',
+      verification_value: '349'
+    )
+
+    options = @options.merge(
+      level_3_data: {
+        total_tax_amount: 200,
+        customer_code: 'PO12345',
+        card_acceptor_tax_id: '011234567',
+        tax_amount: 50,
+        line_items: [{
+          item_description: 'ramdom-object',
+          product_code: 'TB123',
+          quantity: 2,
+          unit_of_measure: 'EACH',
+          line_item_total: 300
+        }]
+      }
+    )
+
+    assert response = @gateway.purchase(10010, credit_card, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_merchant_data
     options = @options.merge(
       affiliate: 'some-affiliate',
