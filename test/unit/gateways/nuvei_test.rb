@@ -7,13 +7,24 @@ class NuveiTest < Test::Unit::TestCase
     @gateway = NuveiGateway.new(
       merchantId: '12345',
       merchantSiteId: '67890',
-      secret: 'password'
+      secret: 'secretkey',
     )
 
+    @options = {
+      orderId: '1',
+      billingAddress: address,
+      description: 'Store Purchase'
+    }
+    @amount = 100
+    @credit_card = credit_card
   end
 
   def test_successful_authorize
-    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    expect_session
+    
+    @gateway.expects(:ssl_post)
+      .with("https://ppp-test.safecharge.com/ppp/api/v1/initPayment.do", anything, anything)
+      .returns(successful_initPayment_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
@@ -1040,7 +1051,13 @@ class NuveiTest < Test::Unit::TestCase
 
   private
 
-  def successful_authorize_response
+  def expect_session
+    @gateway.expects(:ssl_post)
+      .with("https://ppp-test.safecharge.com/ppp/api/v1/getSessionToken.do", anything, anything)
+      .returns(successful_session_create_response)
+  end
+  
+  def successful_session_create_response
     <<-RESPONSE
     {
       "sessionToken": "7c42f3a1-a399-4ba9-866e-0f04c651181b",
@@ -1051,6 +1068,130 @@ class NuveiTest < Test::Unit::TestCase
       "merchantId": "12345",
       "merchantSiteId": "67890",
       "version": "1.0"
+    }
+    RESPONSE
+  end
+
+  def successful_payment_request
+    <<-RESPONSE
+    {
+      "sessionToken": "0e762388-201b-4076-99a9-b2bda3007c0c",
+      "merchantId": "12345",
+      "merchantSiteId": "67890",
+      "clientRequestId": "",
+      "amount": "100",
+      "currency": "USD",
+      "userTokenId": "230811147",
+      "clientUniqueId": "1",
+      "paymentOption": {
+        "card": {
+          "cardNumber": "",
+          "cardHolderName": "John Smith",
+          "expirationMonth": "12",
+          "expirationYear": "2022",
+          "CVV": "217"
+        }
+      },
+      "deviceDetails": {
+        "ipAddress": "127.0.0.1"
+      },
+      "billingAddress": {
+        "email": "john.smith@email.com",
+        "country": "US"
+      },
+      "timeStamp": "20220311110525",
+      "checksum": "e297e3bd87c11984d2c569cb4bb7cedfcc3f8ca93aadeacb90abea267bd1f93f"
+    }
+    RESPONSE
+  end
+
+  def successful_initPayment_response
+    <<-RESPONSE
+    {
+      "orderId": "308576688",
+      "userTokenId": "230811147",
+      "transactionId": "711000000008956041",
+      "transactionType": "InitAuth3D",
+      "transactionStatus": "APPROVED",
+      "gwErrorCode": 0,
+      "gwExtendedErrorCode": 0,
+      "paymentOption": {
+                         "card": {
+                                   "ccCardNumber": "4****1111",
+                                  "bin": "411111",
+                                  "last4Digits": "1111",
+                                  "ccExpMonth": "12",
+                                  "ccExpYear": "50",
+                                  "acquirerId": "19",
+                                  "threeD": {
+                                              "methodUrl": "",
+                                             "version": "",
+                                             "v2supported": "false",
+                                             "methodPayload": "",
+                                             "serverTransId": ""
+                                            }
+                                 }
+                       },
+      "customData": "",
+      "sessionToken": "b85bc330-21bd-4569-8d76-e6cc08ef07e3",
+      "clientUniqueId": "12345",
+      "internalRequestId": 410795948,
+      "status": "SUCCESS",
+      "errCode": 0,
+      "reason": "",
+      "merchantId": "4318971784049510026",
+      "merchantSiteId": "231008",
+      "version": "1.0",
+      "clientRequestId": "17128"
+    }
+    RESPONSE
+  end
+  
+  def declined_payment_request
+    <<-RESPONSE
+    {
+      "orderId": "308575998",
+      "userTokenId": "230811147",
+      "paymentOption": {
+        "userPaymentOptionId": "74265028",
+        "card": {
+          "ccCardNumber": "4****4242",
+          "bin": "424242",
+          "last4Digits": "4242",
+          "ccExpMonth": "12",
+          "ccExpYear": "50",
+          "acquirerId": "19",
+          "cvv2Reply": "",
+          "avsCode": "",
+          "cardBrand": "VISA",
+          "issuerBankName": "",
+          "isPrepaid": "false",
+          "threeD": {}
+        }
+      },
+      "transactionStatus": "DECLINED",
+      "gwErrorCode": -1,
+      "gwErrorReason": "Decline",
+      "gwExtendedErrorCode": 0,
+      "transactionType": "Sale",
+      "transactionId": "711000000008955382",
+      "externalTransactionId": "",
+      "authCode": "",
+      "customData": "",
+      "fraudDetails": {
+        "finalDecision": "Accept"
+      },
+      "externalSchemeTransactionId": "",
+      "sessionToken": "4d98b92a-0687-44c5-a5f8-e9d76adf333b",
+      "clientUniqueId": "12345",
+      "internalRequestId": 410783398,
+      "status": "SUCCESS",
+      "errCode": 0,
+      "reason": "",
+      "merchantId": "4318971784049510026",
+      "merchantSiteId": "231008",
+      "version": "1.0",
+      "clientRequestId": "1"
     }
     RESPONSE
   end
