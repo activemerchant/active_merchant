@@ -104,6 +104,26 @@ class DecidirPlusTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_store_with_additional_data_validation
+    options = {
+      card_holder_identification_type: 'dni',
+      card_holder_identification_number: '44567890',
+      card_holder_door_number: '348',
+      card_holder_birthday: '01012017'
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal(options[:card_holder_identification_type], request['card_holder_identification']['type'])
+      assert_equal(options[:card_holder_identification_number], request['card_holder_identification']['number'])
+      assert_equal(options[:card_holder_door_number].to_i, request['card_holder_door_number'])
+      assert_equal(options[:card_holder_birthday], request['card_holder_birthday'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_unstore
     token_id = '3d5992f9-90f8-4ac4-94dd-6baa7306941f'
     response = stub_comms(@gateway, :ssl_request) do
@@ -142,6 +162,50 @@ class DecidirPlusTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @payment_reference, options)
     end.check_request do |_action, _endpoint, data, _headers|
       assert_equal(@fraud_detection, JSON.parse(data, symbolize_names: true)[:fraud_detection])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_establishment_name
+    establishment_name = 'Heavenly Buffaloes'
+    options = @options.merge(establishment_name: establishment_name)
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @payment_reference, options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      assert_equal(establishment_name, JSON.parse(data)['establishment_name'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_aggregate_data
+    aggregate_data = {
+      indicator: '1',
+      identification_number: '308103480',
+      bill_to_pay: 'test1',
+      bill_to_refund: 'test2',
+      merchant_name: 'Heavenly Buffaloes',
+      street: 'Sesame',
+      number: '123',
+      postal_code: '22001',
+      category: 'yum',
+      channel: '005',
+      geographic_code: 'C1234',
+      city: 'Ciudad de Buenos Aires',
+      merchant_id: 'dec_agg',
+      province: 'Buenos Aires',
+      country: 'Argentina',
+      merchant_email: 'merchant@mail.com',
+      merchant_phone: '2678433111'
+    }
+    options = @options.merge(aggregate_data: aggregate_data)
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @payment_reference, options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      assert_equal(aggregate_data, JSON.parse(data, symbolize_names: true)[:aggregate_data])
     end.respond_with(successful_purchase_response)
 
     assert_success response
