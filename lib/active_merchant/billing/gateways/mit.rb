@@ -23,9 +23,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options = {})
-        MultiResponse.run do |r|
-          r.process { authorize(money, payment, options) }
-          r.process { capture(money, r.authorization, options) }
+        if options[:execute_threed]
+          authorize(money, payment, options)
+        else
+          MultiResponse.run do |r|
+            r.process { authorize(money, payment, options) }
+            r.process { capture(money, r.authorization, options) }
+          end
         end
       end
 
@@ -93,8 +97,7 @@ module ActiveMerchant #:nodoc:
         post_to_json_encrypt = encrypt(post_to_json, @options[:key_session])
 
         final_post = '<authorization>' + post_to_json_encrypt + '</authorization><dataID>' + @options[:user] + '</dataID>'
-        json_post = {}
-        json_post[:payload] = final_post
+        json_post = final_post
         commit('sale', json_post)
       end
 
@@ -104,9 +107,9 @@ module ActiveMerchant #:nodoc:
           commerce_id: @options[:commerce_id],
           user: @options[:user],
           apikey: @options[:api_key],
-          testMode: (test? ? 'YES' : 'NO'),
-          transaction_id: authorization,
-          amount: amount(money)
+            testMode: (test? ? 'YES' : 'NO'),
+            transaction_id: authorization,
+            amount: amount(money)
         }
         post[:key_session] = @options[:key_session]
 
@@ -114,8 +117,7 @@ module ActiveMerchant #:nodoc:
         post_to_json_encrypt = encrypt(post_to_json, @options[:key_session])
 
         final_post = '<capture>' + post_to_json_encrypt + '</capture><dataID>' + @options[:user] + '</dataID>'
-        json_post = {}
-        json_post[:payload] = final_post
+        json_post = final_post
         commit('capture', json_post)
       end
 
@@ -136,9 +138,29 @@ module ActiveMerchant #:nodoc:
         post_to_json_encrypt = encrypt(post_to_json, @options[:key_session])
 
         final_post = '<refund>' + post_to_json_encrypt + '</refund><dataID>' + @options[:user] + '</dataID>'
-        json_post = {}
-        json_post[:payload] = final_post
+        json_post = final_post
         commit('refund', json_post)
+      end
+
+      def void(money, authorization, options = {})
+        post = {
+          operation: 'Refund',
+          commerce_id: @options[:commerce_id],
+          user: @options[:user],
+          apikey: @options[:api_key],
+          testMode: (test? ? 'YES' : 'NO'),
+          transaction_id: authorization,
+          auth: authorization,
+          amount: amount(money)
+        }
+        post[:key_session] = @options[:key_session]
+
+        post_to_json = post.to_json
+        post_to_json_encrypt = encrypt(post_to_json, @options[:key_session])
+
+        final_post = '<void>' + post_to_json_encrypt + '</void><dataID>' + @options[:user] + '</dataID>'
+        json_post = final_post
+        commit('void', json_post)
       end
 
       def supports_scrubbing?
@@ -180,6 +202,16 @@ module ActiveMerchant #:nodoc:
           ret_transcript = ret_transcript.gsub(/<refund>(.*?)<\/refund>/, ref_tagged)
         end
 
+        vid_origin = ret_transcript[/<void>(.*?)<\/void>/, 1]
+        unless vid_origin.nil?
+          vid_decrypted = decrypt(vid_origin, @options[:key_session])
+          vid_json = JSON.parse(vid_decrypted)
+          vid_json['apikey'] = '[FILTERED]'
+          vid_to_json = vid_json.to_json
+          vid_tagged = '<void>' + vid_to_json + '</void>'
+          ret_transcript = ret_transcript.gsub(/<void>(.*?)<\/void>/, vid_tagged)
+        end
+
         res_origin = ret_transcript[/#{Regexp.escape('reading ')}(.*?)#{Regexp.escape('read')}/m, 1]
         loop do
           break if res_origin.nil?
@@ -217,9 +249,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
+        url = live_url
         json_str = parameters.to_json
         cleaned_str = json_str.gsub('\n', '')
-        raw_response = ssl_post(live_url, cleaned_str, { 'Content-type' => 'application/json' })
+        raw_response = ssl_post(url, cleaned_str, { 'Content-type' => 'application/json' })
         response = JSON.parse(decrypt(raw_response, @options[:key_session]))
 
         Response.new(

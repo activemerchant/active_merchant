@@ -104,6 +104,32 @@ class RemoteMitTest < Test::Unit::TestCase
     assert_equal 'approved', refund.message
   end
 
+  def test_successful_void
+    # ###############################################################
+    # create unique id based on timestamp for testing purposes
+    # Each order / transaction passed to the gateway must be unique
+    time = Time.now.to_i.to_s
+    @options_success[:order_id] = 'TID|' + time
+    purchase = @gateway.purchase(@amount, @credit_card, @options_success)
+    assert_success purchase
+
+    # authorization is required
+    assert void = @gateway.void(@amount, purchase.authorization, @options_success)
+    assert_success void
+    assert_equal 'approved', void.message
+  end
+
+  def test_failed_void
+    # ###############################################################
+    # create unique id based on timestamp for testing purposes
+    # Each order / transaction passed to the gateway must be unique
+    time = Time.now.to_i.to_s
+    @options[:order_id] = 'TID|' + time
+    response = @gateway.void(@amount, 'invalidauth', @options)
+    assert_failure response
+    assert_not_equal 'approved', response.message
+  end
+
   def test_failed_refund
     # ###############################################################
     # create unique id based on timestamp for testing purposes
