@@ -150,5 +150,6 @@ class RemoteMitTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value, clean_transcript)
     assert_scrubbed(@gateway.options[:api_key], clean_transcript)
+    assert_scrubbed(@gateway.options[:key_session], clean_transcript)
   end
 end

@@ -8,12 +8,25 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'GBP'
       self.money_format = :cents
-      self.supported_countries = %w(HK GB AU AD AR BE BR CA CH CN CO CR CY CZ DE DK ES FI FR GI GR HU IE IN IT JP LI LU MC MT MY MX NL NO NZ PA PE PL PT SE SG SI SM TR UM VA)
+      self.supported_countries = %w(AD AE AG AI AL AM AO AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BM BN BO BR BS BT BW
+                                    BY BZ CA CC CF CH CK CL CM CN CO CR CV CX CY CZ DE DJ DK DO DZ EC EE EG EH ES ET FI FJ FK
+                                    FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GT GU GW GY HK HM HN HR HT HU ID IE IL
+                                    IM IN IO IS IT JE JM JO JP KE KG KH KI KM KN KR KW KY KZ LA LC LI LK LS LT LU LV MA MC MD
+                                    ME MG MH MK ML MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ
+                                    OM PA PE PF PH PK PL PN PR PT PW PY QA RE RO RS RU RW SA SB SC SE SG SI SK SL SM SN ST SV
+                                    SZ TC TD TF TG TH TJ TK TM TO TR TT TV TW TZ UA UG US UY UZ VA VC VE VI VN VU WF WS YE YT
+                                    ZA ZM)
       self.supported_cardtypes = %i[visa master american_express discover jcb maestro elo naranja cabal unionpay]
-      self.currencies_without_fractions = %w(HUF IDR ISK JPY KRW)
-      self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
+      self.currencies_without_fractions = %w(HUF IDR JPY KRW BEF XOF XAF XPF GRD GNF ITL LUF MGA MGF PYG PTE RWF ESP TRL VND KMF)
+      self.currencies_with_three_decimal_places = %w(BHD KWD OMR TND LYD JOD IQD)
       self.homepage_url = 'http://www.worldpay.com/'
       self.display_name = 'Worldpay Global'
+
+      NETWORK_TOKEN_TYPE = {
+        apple_pay: 'APPLEPAY',
+        google_pay: 'GOOGLEPAY',
+        network_token: 'NETWORKTOKEN'
+      }
 
       CARD_CODES = {
         'visa'             => 'VISA-SSL',
@@ -64,7 +77,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment_method, options = {})
         requires!(options, :order_id)
-        payment_details = payment_details_from(payment_method)
+        payment_details = payment_details(payment_method)
         authorize_request(money, payment_method, payment_details.merge(options))
       end
 
@@ -110,8 +123,12 @@ module ActiveMerchant #:nodoc:
       #   and other transactions should be performed on a normal eCom-flagged
       #   merchant ID.
       def credit(money, payment_method, options = {})
-        payment_details = payment_details_from(payment_method)
-        credit_request(money, payment_method, payment_details.merge(credit: true, **options))
+        payment_details = payment_details(payment_method)
+        if options[:fast_fund_credit]
+          fast_fund_credit_request(money, payment_method, payment_details.merge(credit: true, **options))
+        else
+          credit_request(money, payment_method, payment_details.merge(credit: true, **options))
+        end
       end
 
       def verify(payment_method, options = {})
@@ -139,7 +156,9 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((<cardNumber>)\d+(</cardNumber>)), '\1[FILTERED]\2').
-          gsub(%r((<cvc>)[^<]+(</cvc>)), '\1[FILTERED]\2')
+          gsub(%r((<cvc>)[^<]+(</cvc>)), '\1[FILTERED]\2').
+          gsub(%r((<tokenNumber>)\d+(</tokenNumber>)), '\1[FILTERED]\2').
+          gsub(%r((<cryptogram>)[^<]+(</cryptogram>)), '\1[FILTERED]\2')
       end
 
       private
@@ -166,6 +185,10 @@ module ActiveMerchant #:nodoc:
 
       def credit_request(money, payment_method, options)
         commit('credit', build_authorization_request(money, payment_method, options), :ok, 'SENT_FOR_REFUND', options)
+      end
+
+      def fast_fund_credit_request(money, payment_method, options)
+        commit('fast_credit', build_fast_fund_credit_request(money, payment_method, options), :ok, 'PUSH_APPROVED', options)
       end
 
       def store_request(credit_card, options)
@@ -206,15 +229,12 @@ module ActiveMerchant #:nodoc:
             xml.order order_tag_attributes(options) do
               xml.description(options[:description].blank? ? 'Purchase' : options[:description])
               add_amount(xml, money, options)
-              if options[:order_content]
-                xml.orderContent do
-                  xml.cdata! options[:order_content]
-                end
-              end
+              add_order_content(xml, options)
               add_payment_method(xml, money, payment_method, options)
               add_shopper(xml, options)
               add_statement_narrative(xml, options)
               add_risk_data(xml, options[:risk_data]) if options[:risk_data]
+              add_sub_merchant_data(xml, options[:sub_merchant_data]) if options[:sub_merchant_data]
               add_hcg_additional_data(xml, options) if options[:hcg_additional_data]
               add_instalments_data(xml, options) if options[:instalments]
               add_moto_flag(xml, options) if options.dig(:metadata, :manual_entry)
@@ -226,7 +246,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def order_tag_attributes(options)
-        { 'orderCode' => options[:order_id], 'installationId' => options[:inst_id] || @options[:inst_id] }.reject { |_, v| !v.present? }
+        { 'orderCode' => clean_order_id(options[:order_id]), 'installationId' => options[:inst_id] || @options[:inst_id] }.reject { |_, v| !v.present? }
+      end
+
+      def clean_order_id(order_id)
+        order_id.to_s.gsub(/(\s|\||<|>|'|")/, '')[0..64]
+      end
+
+      def add_order_content(xml, options)
+        return unless options[:order_content]
+
+        xml.orderContent do
+          xml.cdata! options[:order_content]
+        end
       end
 
       def build_capture_request(money, authorization, options)
@@ -271,8 +303,66 @@ module ActiveMerchant #:nodoc:
                   add_card(xml, credit_card, options)
                 end
               end
+              add_transaction_identifier(xml, options) if network_transaction_id(options)
             end
           end
+        end
+      end
+
+      def network_transaction_id(options)
+        options[:stored_credential_transaction_id] || options.dig(:stored_credential, :network_transaction_id)
+      end
+
+      def add_transaction_identifier(xml, options)
+        xml.storedCredentials 'usage' => 'FIRST' do
+          xml.schemeTransactionIdentifier network_transaction_id(options)
+        end
+      end
+
+      def build_fast_fund_credit_request(money, payment_method, options)
+        build_request do |xml|
+          xml.submit do
+            xml.order order_tag_attributes(options) do
+              xml.description(options[:description].blank? ? 'Fast Fund Credit' : options[:description])
+              add_amount(xml, money, options)
+              add_order_content(xml, options)
+              add_payment_details_for_ff_credit(xml, payment_method, options)
+              add_shopper_id(xml, options)
+            end
+          end
+        end
+      end
+
+      def add_payment_details_for_ff_credit(xml, payment_method, options)
+        xml.paymentDetails do
+          xml.tag! 'FF_DISBURSE-SSL' do
+            if payment_method.is_a?(CreditCard)
+              add_card_for_ff_credit(xml, payment_method, options)
+            else
+              add_token_for_ff_credit(xml, payment_method, options)
+            end
+          end
+        end
+      end
+
+      def add_card_for_ff_credit(xml, payment_method, options)
+        xml.recipient do
+          xml.paymentInstrument do
+            xml.cardDetails do
+              add_card(xml, payment_method, options)
+            end
+          end
+        end
+      end
+
+      def add_token_for_ff_credit(xml, payment_method, options)
+        return unless payment_method.is_a?(String)
+
+        token_details = token_details_from_authorization(payment_method)
+
+        xml.tag! 'recipient', 'tokenScope' => token_details[:token_scope] do
+          xml.paymentTokenID token_details[:token_id]
+          add_authenticated_shopper_id(xml, token_details)
         end
       end
 
@@ -311,6 +401,20 @@ module ActiveMerchant #:nodoc:
               'second' => timestamp[:second]
             )
           end
+        end
+      end
+
+      def add_sub_merchant_data(xml, options)
+        xml.subMerchantData do
+          xml.pfId options[:pf_id] if options[:pf_id]
+          xml.subName options[:sub_name] if options[:sub_name]
+          xml.subId options[:sub_id] if options[:sub_id]
+          xml.subStreet options[:sub_street] if options[:sub_street]
+          xml.subCity options[:sub_city] if options[:sub_city]
+          xml.subState options[:sub_state] if options[:sub_state]
+          xml.subCountryCode options[:sub_country_code] if options[:sub_country_code]
+          xml.subPostalCode options[:sub_postal_code] if options[:sub_postal_code]
+          xml.subTaxId options[:sub_tax_id] if options[:sub_tax_id]
         end
       end
 
@@ -388,46 +492,33 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(xml, amount, payment_method, options)
-        if options[:payment_type] == :pay_as_order
-          if options[:merchant_code]
-            xml.payAsOrder 'orderCode' => payment_method, 'merchantCode' => options[:merchant_code] do
-              add_amount(xml, amount, options)
-            end
-          else
-            xml.payAsOrder 'orderCode' => payment_method do
-              add_amount(xml, amount, options)
-            end
-          end
-        elsif options[:payment_type] == :network_token
+        case options[:payment_type]
+        when :pay_as_order
+          add_amount_for_pay_as_order(xml, amount, payment_method, options)
+        when :network_token
           add_network_tokenization_card(xml, payment_method)
         else
-          xml.paymentDetails credit_fund_transfer_attribute(options) do
-            if options[:payment_type] == :token
-              xml.tag! 'TOKEN-SSL', 'tokenScope' => options[:token_scope] do
-                xml.paymentTokenID options[:token_id]
-              end
-            else
-              xml.tag! card_code_for(payment_method) do
-                add_card(xml, payment_method, options)
-              end
-            end
-            add_stored_credential_options(xml, options)
-            if options[:ip] && options[:session_id]
-              xml.session 'shopperIPAddress' => options[:ip], 'id' => options[:session_id]
-            else
-              xml.session 'shopperIPAddress' => options[:ip] if options[:ip]
-              xml.session 'id' => options[:session_id] if options[:session_id]
-            end
-            if three_d_secure = options[:three_d_secure]
-              add_three_d_secure(three_d_secure, xml)
-            end
+          add_card_or_token(xml, payment_method, options)
+        end
+      end
+
+      def add_amount_for_pay_as_order(xml, amount, payment_method, options)
+        if options[:merchant_code]
+          xml.payAsOrder 'orderCode' => payment_method, 'merchantCode' => options[:merchant_code] do
+            add_amount(xml, amount, options)
+          end
+        else
+          xml.payAsOrder 'orderCode' => payment_method do
+            add_amount(xml, amount, options)
           end
         end
       end
 
       def add_network_tokenization_card(xml, payment_method)
+        token_type = NETWORK_TOKEN_TYPE.fetch(payment_method.source, 'NETWORKTOKEN')
+
         xml.paymentDetails do
-          xml.tag! 'EMVCO_TOKEN-SSL', 'type' => 'NETWORKTOKEN' do
+          xml.tag! 'EMVCO_TOKEN-SSL', 'type' => token_type do
             xml.tokenNumber payment_method.number
             xml.expiryDate do
               xml.date(
@@ -435,13 +526,52 @@ module ActiveMerchant #:nodoc:
                 'year' => format(payment_method.year, :four_digits_year)
               )
             end
+            name = card_holder_name(payment_method, options)
+            eci = format(payment_method.eci, :two_digits)
+            xml.cardHolderName name if name.present?
             xml.cryptogram payment_method.payment_cryptogram
-            xml.eciIndicator format(payment_method.eci, :two_digits)
+            xml.eciIndicator eci.empty? ? '07' : eci
           end
         end
       end
 
-      def add_three_d_secure(three_d_secure, xml)
+      def add_card_or_token(xml, payment_method, options)
+        xml.paymentDetails credit_fund_transfer_attribute(options) do
+          if options[:payment_type] == :token
+            add_token_details(xml, options)
+          else
+            add_card_details(xml, payment_method, options)
+          end
+          add_stored_credential_options(xml, options)
+          add_shopper_id(xml, options)
+          add_three_d_secure(xml, options)
+        end
+      end
+
+      def add_token_details(xml, options)
+        xml.tag! 'TOKEN-SSL', 'tokenScope' => options[:token_scope] do
+          xml.paymentTokenID options[:token_id]
+        end
+      end
+
+      def add_card_details(xml, payment_method, options)
+        xml.tag! card_code_for(payment_method) do
+          add_card(xml, payment_method, options)
+        end
+      end
+
+      def add_shopper_id(xml, options)
+        if options[:ip] && options[:session_id]
+          xml.session 'shopperIPAddress' => options[:ip], 'id' => options[:session_id]
+        else
+          xml.session 'shopperIPAddress' => options[:ip] if options[:ip]
+          xml.session 'id' => options[:session_id] if options[:session_id]
+        end
+      end
+
+      def add_three_d_secure(xml, options)
+        return unless three_d_secure = options[:three_d_secure]
+
         xml.info3DSecure do
           xml.threeDSVersion three_d_secure[:version]
           if three_d_secure[:version] && three_d_secure[:ds_transaction_id]
@@ -462,9 +592,7 @@ module ActiveMerchant #:nodoc:
             'year' => format(payment_method.year, :four_digits_year)
           )
         end
-
-        card_holder_name = test? && options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
-        xml.cardHolderName card_holder_name
+        xml.cardHolderName card_holder_name(payment_method, options)
         xml.cvc payment_method.verification_value
 
         add_address(xml, (options[:billing_address] || options[:address]), options)
@@ -626,6 +754,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, request, *success_criteria, options)
         xml = ssl_post(url, request, headers(options))
         raw = parse(action, xml)
+
         if options[:execute_threed]
           raw[:cookie] = @cookie if defined?(@cookie)
           raw[:session_id] = options[:session_id]
@@ -754,23 +883,22 @@ module ActiveMerchant #:nodoc:
         token_details
       end
 
-      def payment_details_from(payment_method)
-        payment_details = {}
-        if payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :network_token
-          payment_details[:payment_type] = :network_token
-        elsif payment_method.respond_to?(:number)
-          payment_details[:payment_type] = :credit
+      def payment_details(payment_method)
+        case payment_method
+        when String
+          token_type_and_details(payment_method)
+        when NetworkTokenizationCreditCard
+          { payment_type: :network_token }
         else
-          token_details = token_details_from_authorization(payment_method)
-          payment_details.merge!(token_details)
-          if token_details.has_key?(:token_id)
-            payment_details[:payment_type] = :token
-          else
-            payment_details[:payment_type] = :pay_as_order
-          end
+          { payment_type: :credit }
         end
+      end
 
-        payment_details
+      def token_type_and_details(token)
+        token_details = token_details_from_authorization(token)
+        token_details[:payment_type] = token_details.has_key?(:token_id) ? :token : :pay_as_order
+
+        token_details
       end
 
       def credit_fund_transfer_attribute(options)
@@ -797,6 +925,10 @@ module ActiveMerchant #:nodoc:
 
       def eligible_for_0_auth?(payment_method, options = {})
         payment_method.is_a?(CreditCard) && %w(visa master).include?(payment_method.brand) && options[:zero_dollar_auth]
+      end
+
+      def card_holder_name(payment_method, options)
+        test? && options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
       end
     end
   end

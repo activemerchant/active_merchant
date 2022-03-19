@@ -213,6 +213,15 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end
 
+  def test_transcript_scrubbing_echeck
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, clean_transcript)
+  end
+
   private
 
   def assert_bad_data_response(response)

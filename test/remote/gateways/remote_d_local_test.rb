@@ -72,12 +72,30 @@ class RemoteDLocalTest < Test::Unit::TestCase
     options = @options.merge(
       order_id: '1',
       ip: '127.0.0.1',
+      device_id: '123',
       email: 'joe@example.com',
       birth_date: '03-01-1970',
       document2: '87648987569',
       idempotency_key: generate_unique_id,
       user_reference: generate_unique_id
     )
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+  end
+
+  def test_successful_purchase_with_additional_data
+    options = @options.merge(
+      additional_data: { submerchant: { name: 'socks' } }
+    )
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+  end
+
+  def test_successful_purchase_with_force_type_debit
+    options = @options.merge(force_type: 'DEBIT')
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
@@ -214,13 +232,15 @@ class RemoteDLocalTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match %r{The payment was authorized}, response.message
+    assert_equal 0, response.params['amount']
+    assert_match %r{The payment was verified}, response.message
   end
 
   def test_successful_verify_with_cabal
     response = @gateway.verify(@cabal_credit_card, @options)
     assert_success response
-    assert_match %r{The payment was authorized}, response.message
+    assert_equal 0, response.params['amount']
+    assert_match %r{The payment was verified}, response.message
   end
 
   def test_failed_verify

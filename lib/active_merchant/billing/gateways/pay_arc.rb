@@ -286,16 +286,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        post['address_line1'] = options[:billing_address][:address1]
-        post['address_line2'] = options[:billing_address][:address2]
-        post['city'] = options[:billing_address][:city]
-        post['state'] = options[:billing_address][:state]
-        post['zip'] = options[:billing_address][:zip]
-        post['country'] = options[:billing_address][:country]
+        return unless billing_address = options[:billing_address]
+
+        post['address_line1'] = billing_address[:address1]
+        post['address_line2'] = billing_address[:address2]
+        post['city'] = billing_address[:city]
+        post['state'] = billing_address[:state]
+        post['zip'] = billing_address[:zip]
+        post['country'] = billing_address[:country]
       end
 
       def add_phone(post, options)
-        post['receipt_phone'] = options[:billing_address][:phone] if options[:billing_address][:phone]
+        post['phone_number'] = options[:billing_address][:phone] if options.dig(:billing_address, :phone)
       end
 
       def add_money(post, money, options)

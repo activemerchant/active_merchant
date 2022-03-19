@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
       self.require_verification_value = false
       self.require_name = false
 
-      attr_accessor :payment_cryptogram, :eci, :transaction_id
+      attr_accessor :payment_cryptogram, :eci, :transaction_id, :metadata
       attr_writer :source
 
       SOURCES = %i(apple_pay android_pay google_pay network_token)

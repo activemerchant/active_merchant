@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
         post[:PaymentDealerRequest] = {}
         add_payment_dealer_authentication(post)
         add_transaction_reference(post, authorization)
-        add_additional_transaction_data(post, options)
+        add_invoice(post, money, options)
 
         commit('capture', post)
       end
@@ -87,7 +87,6 @@ module ActiveMerchant #:nodoc:
         post[:PaymentDealerRequest] = {}
         add_payment_dealer_authentication(post)
         add_transaction_reference(post, authorization)
-        add_additional_transaction_data(post, options)
         add_void_refund_reason(post)
         add_amount(post, money)
 
@@ -99,7 +98,6 @@ module ActiveMerchant #:nodoc:
         post[:PaymentDealerRequest] = {}
         add_payment_dealer_authentication(post)
         add_transaction_reference(post, authorization)
-        add_additional_transaction_data(post, options)
         add_void_refund_reason(post)
 
         commit('void', post)
@@ -166,18 +164,19 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, card)
         post[:PaymentDealerRequest][:CardHolderFullName] = card.name
         post[:PaymentDealerRequest][:CardNumber] = card.number
-        post[:PaymentDealerRequest][:ExpMonth] = card.month
+        post[:PaymentDealerRequest][:ExpMonth] = card.month.to_s.rjust(2, '0')
         post[:PaymentDealerRequest][:ExpYear] = card.year
-        post[:PaymentDealerRequest][:CvcNumber] = card.verification_value
+        post[:PaymentDealerRequest][:CvcNumber] = card.verification_value || ''
       end
 
       def add_amount(post, money)
-        post[:PaymentDealerRequest][:Amount] = money || 0
+        post[:PaymentDealerRequest][:Amount] = amount(money) || 0
       end
 
       def add_additional_auth_purchase_data(post, options)
         post[:PaymentDealerRequest][:IsPreAuth] = options[:pre_auth]
-        post[:PaymentDealerRequest][:Description] = options[:order_id] if options[:order_id]
+        post[:PaymentDealerRequest][:Description] = options[:description] if options[:description]
+        post[:PaymentDealerRequest][:InstallmentNumber] = options[:installment_number].to_i if options[:installment_number]
         post[:SubMerchantName] = options[:sub_merchant_name] if options[:sub_merchant_name]
         post[:IsPoolPayment] = options[:is_pool_payment] || 0
       end

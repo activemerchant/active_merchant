@@ -237,7 +237,7 @@ class MitTest < Test::Unit::TestCase
     starting SSL for wpy.mitec.com.mx:443...
     SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384
     <- "POST /ModuloUtilWS/activeCDP.htm HTTP/1.1\r\nContent-Type: application/json\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: wpy.mitec.com.mx\r\nContent-Length: 359\r\n\r\n"
-    <- "{\"payload\":\"<capture>{"operation":"Capture","commerce_id":"147","user":"IVCA33721","apikey":"[FILTERED]","testMode":"YES","transaction_id":"721","amount":"11.15","key_session":"CB0DC4887DD1D5CEA205E66EE934E430"}</capture><dataID>IVCA33721</dataID>\"}"
+    <- "{\"payload\":\"<capture>{"operation":"Capture","commerce_id":"147","user":"IVCA33721","apikey":"[FILTERED]","testMode":"YES","transaction_id":"721","amount":"11.15","key_session":"[FILTERED]"}</capture><dataID>IVCA33721</dataID>\"}"
     -> "HTTP/1.1 200 \r\n"
     -> "Strict-Transport-Security: max-age=31536000;includeSubDomains\r\n"
     -> "X-Content-Type-Options: nosniff\r\n"

@@ -1,25 +1,18 @@
 require 'test_helper'
 
 class PaysafeTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = PaysafeGateway.new(username: 'username', password: 'password', account_id: 'account_id')
     @credit_card = credit_card
+    @mastercard = credit_card('5454545454545454', brand: 'master')
     @amount = 100
 
     @options = {
       billing_address: address,
       merchant_descriptor: {
         dynamic_descriptor: 'Store Purchase'
-      }
-    }
-
-    @more_options = {
-      phone: '111-222-3456',
-      email: 'profile@memail.com',
-      date_of_birth: {
-        month: 1,
-        year: 1979,
-        day: 1
       }
     }
   end
@@ -32,6 +25,94 @@ class PaysafeTest < Test::Unit::TestCase
 
     assert_equal 'cddbd29d-4983-4719-983a-c6a862895781', response.authorization
     assert response.test?
+  end
+
+  def test_successful_purchase_with_mastercard_3ds2
+    mc_three_d_secure_2_options = {
+      currency: 'EUR',
+      three_d_secure: {
+        eci: 0,
+        cavv: 'AAABBhkXYgAAAAACBxdiENhf7A+=',
+        version: '2.1.0',
+        ds_transaction_id: 'a3a721f3-b6fa-4cb5-84ea-c7b5c39890a2'
+      }
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @mastercard, mc_three_d_secure_2_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"threeDSecureVersion":"2.1.0"/, data)
+      assert_match(/"directoryServerTransactionId":"a3a721f3-b6fa-4cb5-84ea-c7b5c39890a2"/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_airline_details
+    airline_details = {
+      airline_travel_details: {
+        passenger_name: 'Joe Smith',
+        departure_date: '2021-11-30',
+        origin: 'SXF',
+        computerized_reservation_system: 'DATS',
+        ticket: {
+          ticket_number: 9876789,
+          is_restricted_ticket: false
+        },
+        customer_reference_number: 107854099,
+        travel_agency: {
+          name: 'Sally Travel',
+          code: 'AGENTS'
+        },
+        trip_legs: {
+          leg1: {
+            flight: {
+              carrier_code: 'LH',
+              flight_number: '344'
+            },
+            service_class: 'F',
+            is_stop_over_allowed: true,
+            departure_date: '2021-11-30'
+          },
+          leg2: {
+            flight: {
+              flight_number: '999'
+            },
+            destination: 'SOF',
+            fare_basis: 'VMAY'
+          }
+        }
+      }
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, airline_details)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"airlineTravelDetails"/, data)
+      assert_match(/"computerizedReservationSystem":"DATS"/, data)
+      assert_match(/"tripLegs":{"leg1":{"flight":{"carrierCode":"LH"/, data)
+      assert_match(/"leg2":{"flight":{"flightNumber":"999"/, data)
+      assert_match(/"departureDate":"2021-11-30"/, data)
+      assert_match(/"travelAgency":{"name":"Sally Travel","code":"AGENTS"}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials
+    stored_credential_options = {
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring',
+        initiator: 'merchant'
+      }
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential_options))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"type":"RECURRING"}, data)
+      assert_match(%r{"occurrence":"INITIAL"}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_failed_purchase
@@ -132,13 +213,23 @@ class PaysafeTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    @gateway.expects(:ssl_request).returns(successful_store_response)
+    profile_options = {
+      phone: '111-222-3456',
+      email: 'profile@memail.com',
+      date_of_birth: {
+        month: 1,
+        year: 1979,
+        day: 1
+      }
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, profile_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"holderName":"Longbob Longsen"/, data)
+      assert_match(/"dateOfBirth":{"year":1979,"month":1,"day":1}/, data)
+    end.respond_with(successful_store_response)
 
-    response = @gateway.store(@credit_card, @more_options)
     assert_success response
-
-    assert_equal '111-222-3456', response.params['phone']
-    assert_equal 'Longbob Longsen', response.params['cards'].first['holderName']
   end
 
   def test_scrub

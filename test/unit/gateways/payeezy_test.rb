@@ -279,8 +279,8 @@ class PayeezyGateway < Test::Unit::TestCase
     response = stub_comms do
       @gateway.credit(@amount, @credit_card, @options.merge(@options_mdd))
     end.check_request do |_endpoint, data, _headers|
-      json = '{"transaction_type":"refund","currency_code":"USD","amount":"100","method":"credit_card","credit_card":{"type":"Visa","cardholder_name":"Longbob Longsen","card_number":"4242424242424242","exp_date":"0922","cvv":"123"},"soft_descriptors":{"dba_name":"Caddyshack","street":"1234 Any Street","city":"Durham","region":"North Carolina","mid":"mid_1234","mcc":"mcc_5678","postal_code":"27701","country_code":"US","merchant_contact_info":"8885551212"},"merchant_ref":null}'
-      assert_match json, data
+      soft_descriptors_regex = %r("soft_descriptors":{"dba_name":"Caddyshack","street":"1234 Any Street","city":"Durham","region":"North Carolina","mid":"mid_1234","mcc":"mcc_5678","postal_code":"27701","country_code":"US","merchant_contact_info":"8885551212"})
+      assert_match soft_descriptors_regex, data
     end.respond_with(successful_refund_response)
 
     assert_success response
@@ -290,8 +290,7 @@ class PayeezyGateway < Test::Unit::TestCase
     response = stub_comms do
       @gateway.credit(@amount, @credit_card, @options.merge(order_id: 1234))
     end.check_request do |_endpoint, data, _headers|
-      json = '{"transaction_type":"refund","currency_code":"USD","amount":"100","method":"credit_card","credit_card":{"type":"Visa","cardholder_name":"Longbob Longsen","card_number":"4242424242424242","exp_date":"0922","cvv":"123"},"merchant_ref":1234}'
-      assert_match json, data
+      assert_match(/\"merchant_ref\":1234/, data)
     end.respond_with(successful_refund_response)
 
     assert_success response

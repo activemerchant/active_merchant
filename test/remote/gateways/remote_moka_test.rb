@@ -5,7 +5,7 @@ class RemoteMokaTest < Test::Unit::TestCase
     @gateway = MokaGateway.new(fixtures(:moka))
 
     @amount = 100
-    @credit_card = credit_card('5269111122223332', month: '10')
+    @credit_card = credit_card('5269111122223332')
     @declined_card = credit_card('4000300011112220')
     @options = {
       description: 'Store Purchase'
@@ -26,6 +26,13 @@ class RemoteMokaTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_single_digit_exp_month
+    @credit_card.month = 1
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -80,6 +87,22 @@ class RemoteMokaTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_nil_cvv
+    test_card = credit_card('5269111122223332')
+    test_card.verification_value = nil
+
+    response = @gateway.purchase(@amount, test_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_installments
+    options = @options.merge(installment_number: 12)
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -92,6 +115,16 @@ class RemoteMokaTest < Test::Unit::TestCase
     assert_success auth
 
     assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'Success', capture.message
+  end
+
+  def test_successful_authorize_and_capture_using_non_default_currency
+    options = @options.merge(currency: 'USD')
+    auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization, currency: 'USD')
     assert_success capture
     assert_equal 'Success', capture.message
   end

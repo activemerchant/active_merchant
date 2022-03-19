@@ -512,7 +512,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_stored_credential_recurring_cit_used
     @credit_card.verification_value = nil
-    options = stored_credential_options(:cardholder, :recurring, id: 'abc123')
+    options = stored_credential_options(:cardholder, :recurring, ntid: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -537,7 +537,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_stored_credential_recurring_mit_used
     @credit_card.verification_value = nil
-    options = stored_credential_options(:merchant, :recurring, id: 'abc123')
+    options = stored_credential_options(:merchant, :recurring, ntid: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -562,7 +562,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_stored_credential_unscheduled_cit_used
     @credit_card.verification_value = nil
-    options = stored_credential_options(:cardholder, :unscheduled, id: 'abc123')
+    options = stored_credential_options(:cardholder, :unscheduled, ntid: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -587,7 +587,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_stored_credential_unscheduled_mit_used
     @credit_card.verification_value = nil
-    options = stored_credential_options(:merchant, :unscheduled, id: 'abc123')
+    options = stored_credential_options(:merchant, :unscheduled, ntid: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -881,6 +881,46 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal @options[:shipping_address][:country], post[:deliveryAddress][:country]
   end
 
+  def test_successful_auth_phone
+    options = @options.merge(billing_address: { phone: 1234567890 })
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 1234567890, JSON.parse(data)['telephoneNumber']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_successful_auth_phone_number
+    options = @options.merge(billing_address: { phone_number: 987654321, phone: 1234567890 })
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 987654321, JSON.parse(data)['telephoneNumber']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_successful_auth_application_info
+    ActiveMerchant::Billing::AdyenGateway.application_id = { name: 'Acme', version: '1.0' }
+
+    options = @options.merge!(
+      merchantApplication: {
+        name: 'Acme Inc.',
+        version: '2'
+      }
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'Acme', JSON.parse(data)['applicationInfo']['externalPlatform']['name']
+      assert_equal '1.0', JSON.parse(data)['applicationInfo']['externalPlatform']['version']
+      assert_equal 'Acme Inc.', JSON.parse(data)['applicationInfo']['merchantApplication']['name']
+      assert_equal '2', JSON.parse(data)['applicationInfo']['merchantApplication']['version']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_purchase_with_long_order_id
     options = @options.merge({ order_id: @long_order_id })
     response = stub_comms do
@@ -939,6 +979,20 @@ class AdyenTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.capture(@amount, auth.authorization, @options.merge(network_transaction_id: auth.network_transaction_id))
+    end.check_request do |_, data, _|
+      assert_match(/"networkTxReference":"#{auth.network_transaction_id}"/, data)
+    end.respond_with(successful_capture_response)
+    assert_success response
+  end
+
+  def test_authorize_and_capture_with_network_transaction_id_from_stored_cred_hash
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response_with_network_tx_ref)
+    assert_equal auth.network_transaction_id, '858435661128555'
+
+    response = stub_comms do
+      @gateway.capture(@amount, auth.authorization, @options.merge(stored_credential: { network_transaction_id: auth.network_transaction_id }))
     end.check_request do |_, data, _|
       assert_match(/"networkTxReference":"#{auth.network_transaction_id}"/, data)
     end.respond_with(successful_capture_response)
@@ -1088,15 +1142,23 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_three_decimal_places_currency_handling
+    stub_comms do
+      @gateway.authorize(1000, @credit_card, @options.merge(currency: 'JOD'))
+    end.check_request(skip_response: true) do |_endpoint, data|
+      assert_match(/"amount\":{\"value\":\"1000\",\"currency\":\"JOD\"}/, data)
+    end
+  end
+
   private
 
-  def stored_credential_options(*args, id: nil)
+  def stored_credential_options(*args, ntid: nil)
     {
       order_id: '#1001',
       description: 'AM test',
       currency: 'GBP',
       customer: '123',
-      stored_credential: stored_credential(*args, id: id)
+      stored_credential: stored_credential(*args, ntid: ntid)
     }
   end
 

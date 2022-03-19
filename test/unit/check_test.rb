@@ -4,7 +4,7 @@ class CheckTest < Test::Unit::TestCase
   VALID_ABA     = '111000025'
   INVALID_ABA   = '999999999'
   MALFORMED_ABA = 'I like fish'
-  VALID_CBA = '00194611'
+  VALID_CBA = '000194611'
   INVALID_NINE_DIGIT_CBA = '012345678'
   INVALID_SEVEN_DIGIT_ROUTING_NUMBER = '0123456'
 
@@ -92,7 +92,7 @@ class CheckTest < Test::Unit::TestCase
     )
   end
 
-  def test_invalid_nine_digit_canada_routing_number
+  def test_invalid_canada_routing_number
     errors = assert_not_valid Check.new(
       name: 'Tim Horton',
       routing_number: INVALID_NINE_DIGIT_CBA,

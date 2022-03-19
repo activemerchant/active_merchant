@@ -62,6 +62,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_CCToken] = token
         post[:sg_ExpMonth] = exp_month
         post[:sg_ExpYear] = exp_year
+        post[:sg_Email] = options[:email]
 
         commit(post)
       end
@@ -106,10 +107,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        authorize(0, credit_card, options)
       end
 
       def supports_scrubbing?
@@ -126,9 +124,11 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_transaction_data(trans_type, post, money, options)
+        currency = options[:currency] || currency(money)
+
         post[:sg_TransType] = trans_type
-        post[:sg_Currency] = (options[:currency] || currency(money))
-        post[:sg_Amount] = amount(money)
+        post[:sg_Currency] = currency
+        post[:sg_Amount] = localized_amount(money, currency)
         post[:sg_ClientLoginID] = @options[:client_login_id]
         post[:sg_ClientPassword] = @options[:client_password]
         post[:sg_ResponseFormat] = '4'
@@ -144,6 +144,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_MerchantPhoneNumber] = options[:merchant_phone_number] if options[:merchant_phone_number]
         post[:sg_MerchantName] = options[:merchant_name] if options[:merchant_name]
         post[:sg_ProductID] = options[:product_id] if options[:product_id]
+        post[:sg_NotUseCVV] = options[:not_use_cvv].to_s == 'true' ? 1 : 0 unless options[:not_use_cvv].nil?
       end
 
       def add_payment(post, payment, options = {})

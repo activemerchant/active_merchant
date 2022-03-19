@@ -5,6 +5,7 @@ class NmiTest < Test::Unit::TestCase
 
   def setup
     @gateway = NmiGateway.new(fixtures(:nmi))
+    @gateway_secure = NmiGateway.new(fixtures(:nmi_secure))
 
     @amount = 100
     @credit_card = credit_card
@@ -16,6 +17,78 @@ class NmiTest < Test::Unit::TestCase
       recurring: true, order_id: '#1001', description: 'AM test', currency: 'GBP', dup_seconds: 15,
       customer: '123', tax: 5.25, shipping: 10.51, ponumber: 1002
     }
+    @descriptor_options = {
+      descriptor: 'test',
+      descriptor_phone: '123',
+      descriptor_address: 'address',
+      descriptor_city: 'city',
+      descriptor_state: 'state',
+      descriptor_postal: 'postal',
+      descriptor_country: 'country',
+      descriptor_mcc: 'mcc',
+      descriptor_merchant_id: '120',
+      descriptor_url: 'url'
+    }
+  end
+
+  def test_successful_authorize_and_capture_using_security_key
+    @credit_card.number = '4111111111111111'
+    response = stub_comms do
+      @gateway_secure.authorize(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/security_key=#{@gateway_secure.options[:security_key]}/, data)
+      assert_match(/type=auth/, data)
+      assert_match(/payment=creditcard/, data)
+      assert_match(/ccnumber=#{@credit_card.number}/, data)
+      assert_match(/cvv=#{@credit_card.verification_value}/, data)
+      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
+    end.respond_with(successful_authorization_response)
+    assert_success response
+    capture = stub_comms do
+      @gateway_secure.capture(@amount, response.authorization)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/security_key=#{@gateway_secure.options[:security_key]}/, data)
+      assert_match(/type=capture/, data)
+      assert_match(/amount=1.00/, data)
+      assert_match(/transactionid=2762787830/, data)
+    end.respond_with(successful_capture_response)
+    assert_success capture
+  end
+
+  def test_failed_authorize_using_security_key
+    response = stub_comms do
+      @gateway_secure.authorize(@amount, @credit_card)
+    end.respond_with(failed_authorization_response)
+
+    assert_failure response
+    assert_equal 'DECLINE', response.message
+    assert response.test?
+  end
+
+  def test_successful_purchase_using_security_key
+    @credit_card.number = '4111111111111111'
+    response = stub_comms do
+      @gateway_secure.purchase(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/security_key=#{@gateway_secure.options[:security_key]}/, data)
+      assert_match(/type=sale/, data)
+      assert_match(/amount=1.00/, data)
+      assert_match(/payment=creditcard/, data)
+      assert_match(/ccnumber=#{@credit_card.number}/, data)
+      assert_match(/cvv=#{@credit_card.verification_value}/, data)
+      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+    assert response.test?
+  end
+
+  def test_failed_purchase_using_security_key
+    response = stub_comms do
+      @gateway_secure.purchase(@amount, @credit_card)
+    end.respond_with(failed_purchase_response)
+    assert_failure response
+    assert response.test?
+    assert_equal 'DECLINE', response.message
   end
 
   def test_successful_purchase
@@ -156,6 +229,27 @@ class NmiTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
     assert_equal 'Succeeded', response.message
+  end
+
+  def test_purchase_with_descriptor_options
+    options = @transaction_options.merge({ descriptors: @descriptor_options })
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/descriptor=test/, data)
+      assert_match(/descriptor_phone=123/, data)
+      assert_match(/descriptor_address=address/, data)
+      assert_match(/descriptor_city=city/, data)
+      assert_match(/descriptor_state=state/, data)
+      assert_match(/descriptor_postal=postal/, data)
+      assert_match(/descriptor_country=country/, data)
+      assert_match(/descriptor_mcc=mcc/, data)
+      assert_match(/descriptor_merchant_id=120/, data)
+      assert_match(/descriptor_url=url/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_authorize_with_options
@@ -466,7 +560,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/initiated_by=customer/, data)
       assert_match(/stored_credential_indicator=used/, data)
       assert_match(/billing_method=recurring/, data)
-      assert_match(/initial_transaction_id=abc123/, data)
+      refute_match(/initial_transaction_id/, data)
     end.respond_with(successful_authorization_response)
 
     assert_success response
@@ -522,7 +616,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/initiated_by=customer/, data)
       assert_match(/stored_credential_indicator=used/, data)
       assert_match(/billing_method=installment/, data)
-      assert_match(/initial_transaction_id=abc123/, data)
+      refute_match(/initial_transaction_id/, data)
     end.respond_with(successful_authorization_response)
 
     assert_success response
@@ -578,7 +672,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/initiated_by=customer/, data)
       assert_match(/stored_credential_indicator=used/, data)
       refute_match(/billing_method/, data)
-      assert_match(/initial_transaction_id=abc123/, data)
+      refute_match(/initial_transaction_id/, data)
     end.respond_with(successful_authorization_response)
 
     assert_success response

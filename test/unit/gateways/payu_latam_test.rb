@@ -13,6 +13,8 @@ class PayuLatamTest < Test::Unit::TestCase
     @no_cvv_visa_card = credit_card('4097440000000004', verification_value: ' ')
     @no_cvv_amex_card = credit_card('4097440000000004', verification_value: ' ', brand: 'american_express')
     @cabal_credit_card = credit_card('5896570000000004', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'cabal')
+    @maestro_card = credit_card('6759000000000000005', verification_value: '123', first_name: 'APPROVED', brand: 'maestro')
+    @codensa_card = credit_card('5907120000000009', verification_value: '123', first_name: 'APPROVED', brand: 'maestro')
 
     @options = {
       dni_number: '5415668464654',
@@ -208,6 +210,22 @@ class PayuLatamTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       assert_equal 5555555555, JSON.parse(data)['transaction']['order']['buyer']['contactPhone']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_card_type_maestro_maps_to_mastercard
+    stub_comms do
+      @gateway.purchase(@amount, @maestro_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'MASTERCARD', JSON.parse(data)['transaction']['paymentMethod']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_card_type_codensa
+    stub_comms do
+      @gateway.purchase(@amount, @codensa_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'CODENSA', JSON.parse(data)['transaction']['paymentMethod']
     end.respond_with(successful_purchase_response)
   end
 

@@ -78,7 +78,7 @@ module ActiveMerchant
       def purchase(money, payment_method, options = {})
         payment_method_details = PaymentMethodDetails.new(payment_method)
 
-        commit(:purchase, :post, payment_method_details) do |doc|
+        commit(:purchase, options, :post, payment_method_details) do |doc|
           if payment_method_details.alt_transaction?
             add_alt_transaction_purchase(doc, money, payment_method_details, options)
           else
@@ -88,13 +88,13 @@ module ActiveMerchant
       end
 
       def authorize(money, payment_method, options = {})
-        commit(:authorize) do |doc|
+        commit(:authorize, options) do |doc|
           add_auth_purchase(doc, money, payment_method, options)
         end
       end
 
       def capture(money, authorization, options = {})
-        commit(:capture, :put) do |doc|
+        commit(:capture, options, :put) do |doc|
           add_authorization(doc, authorization)
           add_order(doc, options)
           add_amount(doc, money, options) if options[:include_capture_amount] == true
@@ -102,15 +102,16 @@ module ActiveMerchant
       end
 
       def refund(money, authorization, options = {})
-        commit(:refund, :put) do |doc|
-          add_authorization(doc, authorization)
-          add_amount(doc, money, options)
-          add_order(doc, options)
+        options[:endpoint] = options[:merchant_transaction_id] ? "/refund/merchant/#{options[:merchant_transaction_id]}" : "/refund/#{authorization}"
+        commit(:refund, options, :post) do |doc|
+          add_amount(doc, money, options) if money
+          %i[reason cancel_subscription tax_amount].each { |field| send_when_present(doc, field, options) }
+          add_metadata(doc, options)
         end
       end
 
       def void(authorization, options = {})
-        commit(:void, :put) do |doc|
+        commit(:void, options, :put) do |doc|
           add_authorization(doc, authorization)
           add_order(doc, options)
         end
@@ -123,7 +124,7 @@ module ActiveMerchant
       def store(payment_method, options = {})
         payment_method_details = PaymentMethodDetails.new(payment_method)
 
-        commit(:store, :post, payment_method_details) do |doc|
+        commit(:store, options, :post, payment_method_details) do |doc|
           add_personal_info(doc, payment_method, options)
           add_echeck_company(doc, payment_method) if payment_method_details.check?
           doc.send('payment-sources') do
@@ -149,7 +150,7 @@ module ActiveMerchant
 
       def verify_credentials
         begin
-          ssl_get(url.to_s, headers)
+          ssl_get(url.to_s, headers(options))
         rescue ResponseError => e
           return false if e.response.code.to_i == 401
         end
@@ -234,6 +235,7 @@ module ActiveMerchant
               doc.send('meta-key', truncate(entry[:meta_key], 40))
               doc.send('meta-value', truncate(entry[:meta_value], 500))
               doc.send('meta-description', truncate(entry[:meta_description], 40))
+              doc.send('is-visible', truncate(entry[:meta_is_visible], 5))
             end
           end
         end
@@ -386,13 +388,12 @@ module ActiveMerchant
 
       def parse(response)
         return bad_authentication_response if response.code.to_i == 401
-        return generic_error_response(response.body) if [403, 429].include?(response.code.to_i)
+        return generic_error_response(response.body) if [403, 405, 429].include?(response.code.to_i)
 
         parsed = {}
         doc = Nokogiri::XML(response.body)
         doc.root.xpath('*').each do |node|
           name = node.name.downcase
-
           if node.elements.empty?
             parsed[name] = node.text
           elsif name == 'transaction-meta-data'
@@ -433,15 +434,15 @@ module ActiveMerchant
         end
       end
 
-      def api_request(action, request, verb, payment_method_details)
-        ssl_request(verb, url(action, payment_method_details), request, headers)
+      def api_request(action, request, verb, payment_method_details, options)
+        ssl_request(verb, url(action, options, payment_method_details), request, headers(options))
       rescue ResponseError => e
         e.response
       end
 
-      def commit(action, verb = :post, payment_method_details = PaymentMethodDetails.new())
+      def commit(action, options, verb = :post, payment_method_details = PaymentMethodDetails.new())
         request = build_xml_request(action, payment_method_details) { |doc| yield(doc) }
-        response = api_request(action, request, verb, payment_method_details)
+        response = api_request(action, request, verb, payment_method_details, options)
         parsed = parse(response)
 
         succeeded = success_from(action, response)
@@ -457,9 +458,10 @@ module ActiveMerchant
         )
       end
 
-      def url(action = nil, payment_method_details = PaymentMethodDetails.new())
+      def url(action = nil, options = {}, payment_method_details = PaymentMethodDetails.new())
         base = test? ? test_url : live_url
         resource = action == :store ? 'vaulted-shoppers' : payment_method_details.resource_url
+        resource += options[:endpoint] if action == :refund
         "#{base}/#{resource}"
       end
 
@@ -532,20 +534,28 @@ module ActiveMerchant
       end
 
       def root_element(action, payment_method_details)
-        action == :store ? 'vaulted-shopper' : payment_method_details.root_element
+        return 'refund' if action == :refund
+        return 'vaulted-shopper' if action == :store
+
+        payment_method_details.root_element
       end
 
-      def headers
-        {
+      def headers(options)
+        idempotency_key = options[:idempotency_key] if options[:idempotency_key]
+
+        headers = {
           'Content-Type' => 'application/xml',
           'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:api_username]}:#{@options[:api_password]}").strip)
         }
+
+        headers['Idempotency-Key'] = idempotency_key if idempotency_key
+        headers
       end
 
       def build_xml_request(action, payment_method_details)
         builder = Nokogiri::XML::Builder.new
         builder.__send__(root_element(action, payment_method_details), root_attributes) do |doc|
-          doc.send('card-transaction-type', TRANSACTIONS[action]) if TRANSACTIONS[action] && !payment_method_details.alt_transaction?
+          doc.send('card-transaction-type', TRANSACTIONS[action]) if TRANSACTIONS[action] && !payment_method_details.alt_transaction? && action != :refund
           yield(doc)
         end
         builder.doc.root.to_xml

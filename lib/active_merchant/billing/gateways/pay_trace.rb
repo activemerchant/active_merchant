@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
         check_token_response(response, ENDPOINTS[:store], post, options)
       end
 
-      def redact(customer_id)
+      def unstore(customer_id)
         post = {}
         post[:customer_id] = customer_id
         response = commit(ENDPOINTS[:redact], post)

@@ -10,6 +10,11 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4111111111111111', verification_value: '987')
     @declined_card = credit_card('801111111111111')
+    @master_credit_card = credit_card('5555555555554444',
+      verification_value: '321',
+      month: '12',
+      year: (Time.now.year + 2).to_s,
+      brand: :master)
     @pinless_debit_card = credit_card('4002269999999999')
     @elo_credit_card = credit_card('5067310000000010',
       verification_value: '321',
@@ -47,19 +52,17 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
           quantity: 2,
           code: 'default',
           description: 'Giant Walrus',
-          sku: 'WA323232323232323'
-        },
-        {
-          declared_value: 100,
-          quantity: 2,
-          description: 'Marble Snowcone',
-          sku: 'FAKE1232132113123'
+          sku: 'WA323232323232323',
+          tax_amount: 10,
+          national_tax: 5
         }
       ],
       currency: 'USD',
       ignore_avs: 'true',
       ignore_cvv: 'true',
-      commerce_indicator: 'internet'
+      commerce_indicator: 'internet',
+      user_po: 'ABC123',
+      taxable: true
     }
 
     @subscription_options = {
@@ -249,7 +252,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(authorize)
     assert adjust = @gateway_latam.adjust(@amount * 2, authorize.authorization, @options)
     assert_success adjust
-    assert capture = @gateway_latam.capture(@amount, authorize.authorization, @options)
+    assert capture = @gateway_latam.capture(@amount, authorize.authorization, @options.merge({ national_tax_indicator: 1 }))
     assert_successful_response(capture)
   end
 
@@ -263,7 +266,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   def test_capture_and_void
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_successful_response(auth)
-    assert capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge({ national_tax_indicator: 1 }))
     assert_successful_response(capture)
     assert void = @gateway.void(capture.authorization, @options)
     assert_successful_response(void)
@@ -272,7 +275,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   def test_capture_and_void_with_elo
     assert auth = @gateway.authorize(@amount, @elo_credit_card, @options)
     assert_successful_response(auth)
-    assert capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge({ national_tax_indicator: 1 }))
     assert_successful_response(capture)
     assert void = @gateway.void(capture.authorization, @options)
     assert_successful_response(void)
@@ -318,6 +321,11 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_successful_response(response)
+  end
+
+  def test_successful_purchase_with_national_tax_indicator
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options.merge(national_tax_indicator: 1))
+    assert_successful_response(purchase)
   end
 
   def test_successful_purchase_with_issuer_additional_data
@@ -385,6 +393,11 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     options = @options.merge(customer_id: '7500BB199B4270EFE05348D0AFCAD')
     assert response = @gateway.authorize(@amount, @credit_card, options)
     assert_successful_response(response)
+  end
+
+  def test_authorize_with_national_tax_indicator
+    assert authorize = @gateway.authorize(@amount, @credit_card, @options.merge(national_tax_indicator: 1))
+    assert_successful_response(authorize)
   end
 
   def test_successful_purchase_with_customer_id
@@ -511,7 +524,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_successful_response(auth)
 
-    assert response = @gateway.capture(@amount, auth.authorization, @options)
+    assert response = @gateway.capture(@amount, auth.authorization, @options.merge({ national_tax_indicator: 1 }))
     assert_successful_response(response)
     assert !response.authorization.blank?
   ensure
@@ -522,14 +535,14 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_successful_response(auth)
 
-    assert capture = @gateway.capture(@amount + 10, auth.authorization, @options)
+    assert capture = @gateway.capture(@amount + 10, auth.authorization, @options.merge({ national_tax_indicator: 1 }))
     assert_failure capture
     assert_equal 'The requested amount exceeds the originally authorized amount', capture.message
   end
 
   def test_failed_capture_bad_auth_info
     assert @gateway.authorize(@amount, @credit_card, @options)
-    assert capture = @gateway.capture(@amount, 'a;b;c', @options)
+    assert capture = @gateway.capture(@amount, 'a;b;c', @options.merge({ national_tax_indicator: 1 }))
     assert_failure capture
   end
 
@@ -602,7 +615,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(auth)
 
     (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
-    assert capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge({ national_tax_indicator: 1 }))
     assert_successful_response(capture)
   end
 
@@ -625,7 +638,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_successful_response(auth)
 
-    capture_options = @options.merge(local_tax_amount: '0.17', national_tax_amount: '0.05')
+    capture_options = @options.merge(local_tax_amount: '0.17', national_tax_amount: '0.05', national_tax_indicator: 1)
     assert capture = @gateway.capture(@amount, auth.authorization, capture_options)
     assert_successful_response(capture)
   end
@@ -999,6 +1012,29 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     gateway = CyberSourceGateway.new(login: 'an_unknown_login', password: 'unknown_password')
     assert !gateway.verify_credentials
+  end
+
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match '1.00', response.params['amount']
+    assert_equal 'Successful transaction', response.message
+  end
+
+  def test_successful_verify_zero_amount_visa
+    @options[:zero_amount_auth] = true
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match '0.00', response.params['amount']
+    assert_equal 'Successful transaction', response.message
+  end
+
+  def test_successful_verify_zero_amount_master
+    @options[:zero_amount_auth] = true
+    response = @gateway.verify(@master_credit_card, @options)
+    assert_success response
+    assert_match '0.00', response.params['amount']
+    assert_equal 'Successful transaction', response.message
   end
 
   private
