@@ -297,7 +297,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        response.dig('error_type') unless success_from(response)
+        return if success_from(response)
+
+        error_code = nil
+        if error = response.dig('status_details', 'error')
+          error_code = error.dig('reason', 'id') || error['type']
+        elsif response['error_type']
+          error_code = response['error_type']
+        elsif response.dig('error', 'validation_errors')
+          error = response.dig('error')
+          validation_errors = error.dig('validation_errors', 0)
+          code = validation_errors['code'] if validation_errors && validation_errors['code']
+          param = validation_errors['param'] if validation_errors && validation_errors['param']
+          error_code = "#{error['error_type']} | #{code} | #{param}" if error['error_type']
+        elsif error = response.dig('error')
+          error_code = error.dig('reason', 'id')
+        end
+
+        error_code
       end
 
       def error_message(response)

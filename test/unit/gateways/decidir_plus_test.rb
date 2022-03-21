@@ -77,6 +77,15 @@ class DecidirPlusTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_failed_authorize
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(failed_authorize_response)
+
+    assert_failure response
+    assert_equal response.error_code, response.params['status_details']['error']['reason']['id']
+  end
+
   def test_successful_refund
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.refund(@amount, @payment_reference)
@@ -336,6 +345,12 @@ class DecidirPlusTest < Test::Unit::TestCase
   def failed_refund_response
     %{
       {\"error_type\":\"not_found_error\",\"entity_name\":\"\",\"id\":\"\"}
+    }
+  end
+
+  def failed_authorize_response
+    %{
+      {\"id\": 12516088,  \"site_transaction_id\": \"e77f40284fd5e0fba8e8ef7d1b784c5e\",  \"payment_method_id\": 1,  \"card_brand\": \"Visa\",  \"amount\": 100,  \"currency\": \"ars\",  \"status\": \"rejected\",  \"status_details\": {    \"ticket\": \"393\",    \"card_authorization_code\": \"\",    \"address_validation_code\": \"VTE0000\",    \"error\": {      \"type\": \"invalid_card\",      \"reason\": {        \"id\": 3,        \"description\": \"COMERCIO INVALIDO\",        \"additional_description\": \"\"      }    }  },  \"date\": \"2022-03-21T13:08Z\",  \"customer\": null,  \"bin\": \"400030\",  \"installments\": 1,  \"first_installment_expiration_date\": null,  \"payment_type\": \"single\",  \"sub_payments\": [],  \"site_id\": \"92002480\",  \"fraud_detection\": {    \"status\": null  },  \"aggregate_data\": null,  \"establishment_name\": null,  \"spv\": null,  \"confirmed\": null,  \"pan\": null,  \"customer_token\": null,  \"card_data\": \"/tokens/12516088\",  \"token\": \"058972ba-4235-4452-bfdf-fc9f61e2c0f9\"}
     }
   end
 
