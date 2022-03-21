@@ -1,3 +1,4 @@
+# coding: utf-8
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class NuveiGateway < Gateway
@@ -21,69 +22,50 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Nuvei'
 
       def initialize(options = {})
-        requires!(options, :merchantId, :merchantSiteId, :secret)
-        @merchant_id, @merchant_site_id, @secret = options.values_at(:merchantId, :merchantSiteId, :secret)
+        requires!(options, :merchant_id, :merchant_site_id, :secret)
+        @merchant_id, @merchant_site_id, @secret = options.values_at(:merchant_id, :merchant_site_id, :secret)
         super
       end
 
       def purchase(money, payment, options = {})
-        if options[:execute_threed] || options[:threed_dynamic]
-          authorize(money, payment, options)
-        else
-          MultiResponse.run do |r|
-            r.process { authorize(money, payment, options) }
-            r.process { capture(money, r.authorization, capture_options(options)) }
-          end
-        end
+        post = init_post
+        add_session(post)
+        add_payment(post, money, payment, options)
+        add_device_details(post, options)
+        add_billing_address(post, options)
+
+        commit('payment', post, options)
       end
 
       def authorize(money, payment, options = {})
-        session_tok = open_session()
-        post = init_post()
-        post[:session_tok] = session_tok
-        post[:merchantId] = @merchant_id
-        post[:merchantSiteId] = @merchant_site_id
-        post[:clientRequestId] = options[:orderId]
-        # TODO: Is this correct?
-        post[:amount] = money
-        # TODO: Is this correct?
-        post[:currency] = options[:currency] || self.default_currency
-        # TODO: What is this?
-        # post[:userTokenId] = options[:invoiceId]
-        #TODO: Is this correct?
-        post[:clientUniqueId] = options[:invoiceId]
+        post = init_post
+        add_session(post)
+        add_payment(post, money, payment, options)
+        add_device_details(post, options)
 
-        post[:paymentOption] = {
-          :card => {
-            :cardNumber => payment.number,
-            :cardHolderName => payment.name,
-            :expirationMonth => format(payment.month, :two_digits),
-            :expirationYear => format(payment.year, :four_digits_year),
-            :CVV => payment.verification_value
-          }
-        }
+        commit('initPayment', post, options)
+      end
 
-        # TODO: Finish filling in device details
+      def add_session(post)
+        session = open_session
+        post[:sessionToken] = session['sessionToken']
+      end
+
+      def add_device_details(post, options)
         post[:deviceDetails] = {
-          #TODO: This is wrong... Find right value for IP
-          :ipAddress => options[:IPAddr]
+          :ipAddress => options[:ip]
         }
+      end
 
-        # TODO: Finish filling in billing address
+      def add_billing_address(post, options)
         post[:billingAddress] = {
           :email => options[:email],
           # Country must be ISO 3166-1-alpha-2 code.
           # See: www.iso.org/iso/country_codes/iso_3166_code_lists/english_country_names_and_code_elements.htm
-          :country => options[:country]
+          :country => options.dig(:billing_address, :country)
         }
-
-        timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S")
-        post[:timestamp] = timestamp
-        post[:checksum] = get_payment_checksum(post[:clientRequestId], post[:amount], post[:currency], timestamp)
-        
-        commit('initPayment', post, options)
       end
-
+      
       def capture(money, authorization, options = {})
         post = init_post(options)
 
@@ -150,6 +132,48 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      # TODO: What is this for Nuvei?
+      AVS_MAPPING = {
+        '0'  => 'R',  # Unknown
+        '1'  => 'A',  # Address matches, postal code doesn't
+        '2'  => 'N',  # Neither postal code nor address match
+        '3'  => 'R',  # AVS unavailable
+        '4'  => 'E',  # AVS not supported for this card type
+        '5'  => 'U',  # No AVS data provided
+        '6'  => 'Z',  # Postal code matches, address doesn't match
+        '7'  => 'D',  # Both postal code and address match
+        '8'  => 'U',  # Address not checked, postal code unknown
+        '9'  => 'B',  # Address matches, postal code unknown
+        '10' => 'N',  # Address doesn't match, postal code unknown
+        '11' => 'U',  # Postal code not checked, address unknown
+        '12' => 'B',  # Address matches, postal code not checked
+        '13' => 'U',  # Address doesn't match, postal code not checked
+        '14' => 'P',  # Postal code matches, address unknown
+        '15' => 'P',  # Postal code matches, address not checked
+        '16' => 'N',  # Postal code doesn't match, address unknown
+        '17' => 'U',  # Postal code doesn't match, address not checked
+        '18' => 'I',  # Neither postal code nor address were checked
+        '19' => 'L',  # Name and postal code matches.
+        '20' => 'V',  # Name, address and postal code matches.
+        '21' => 'O',  # Name and address matches.
+        '22' => 'K',  # Name matches.
+        '23' => 'F',  # Postal code matches, name doesn't match.
+        '24' => 'H',  # Both postal code and address matches, name doesn't match.
+        '25' => 'T',  # Address matches, name doesn't match.
+        '26' => 'N'   # Neither postal code, address nor name matches.
+      }
+
+      # TODO: What is this for Nuvei?
+      CVC_MAPPING = {
+        '0' => 'P', # Unknown
+        '1' => 'M', # Matches
+        '2' => 'N', # Does not match
+        '3' => 'P', # Not checked
+        '4' => 'S', # No CVC/CVV provided, but was required
+        '5' => 'U', # Issuer not certifed by CVC/CVV
+        '6' => 'P'  # No CVC/CVV provided
+      }
+
       def open_session
         timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S")
         checksum = get_session_checksum(timestamp)
@@ -169,18 +193,21 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def failed_session_creation()
+        Response.new(
+          success,
+          message_from(success, response),
+          response,
+          authorization: authorization_from(success, action, response),
+          test: test?,
+          avs_result: AVSResult.new(code: avs_code_from(response)),
+          cvv_result: CVVResult.new(cvv_result_from(response))
+        )
+      end
+
       def get_payment_checksum (client_request_id, amount, currency, timestamp)
-        print @merchant_id + "\n"
-        print @merchant_site_id + "\n"
-        print client_request_id + "\n"
-        print amount.to_s + "\n"
-        print currency + "\n"
-        print timestamp + "\n"
-        print @secret
         base = @merchant_id + @merchant_site_id + client_request_id + amount.to_s + currency + timestamp + @secret
         checksum = Digest::SHA256.hexdigest base
-        print "Payment base: " + base + "\n"
-        print checksum
         checksum
       end
       
@@ -189,14 +216,34 @@ module ActiveMerchant #:nodoc:
         checksum = Digest::SHA256.hexdigest base
         checksum
       end
+
+      def add_payment (post, money, payment, options)
+        timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S")
+        post[:clientRequestId] = options[:order_id].to_s
+        post[:timeStamp] = timestamp
+        # TODO: Is this correct?
+        post[:amount] = money
+        # TODO: Is this correct?
+        post[:currency] = options[:currency] || self.default_currency
+        post[:paymentOption] = {
+          :card => {
+            :cardNumber => payment.number,
+            :cardHolderName => payment.name,
+            :expirationMonth => format(payment.month, :two_digits),
+            :expirationYear => format(payment.year, :four_digits_year),
+            :CVV => payment.verification_value,
+          }
+        }
+        post[:checksum] = get_payment_checksum(post[:clientRequestId], post[:amount], post[:currency], timestamp)
+      end
       
-      def add_merchant_options(post, options)
-        post[:merchantId] = options[:merchantId] || @merchant_id
+      def add_merchant_options(post)
+        post[:merchantId] = @merchant_id
+        post[:merchantSiteId] = @merchant_site_id
       end
 
       def parse(body)
         return {} if body.blank?
-        print body
         JSON.parse(body)
       end
 
@@ -212,15 +259,21 @@ module ActiveMerchant #:nodoc:
         success = success_from(action, response, options)
         Response.new(
           success,
-          message_from(action, response),
+          message_from(success, response),
           response,
-          authorization: authorization_from(action, parameters, response),
+          authorization: authorization_from(success, action, response),
           test: test?,
-          error_code: success ? nil : error_code_from(response),
-          network_transaction_id: network_transaction_id_from(response),
           avs_result: AVSResult.new(code: avs_code_from(response)),
           cvv_result: CVVResult.new(cvv_result_from(response))
         )
+      end
+      
+      def avs_code_from(response)
+        AVS_MAPPING[response['paymentOption']['card']['avsCode']] if response.dig('paymentOption', 'card', 'avsCode')
+      end
+
+      def cvv_result_from(response)
+        AVS_MAPPING[response['paymentOption']['card']['cvv2Reply']] if response.dig('paymentOption', 'card', 'cvv2Reply')
       end
 
       def url(action)
@@ -245,35 +298,31 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(action, response, options)
-        if %w[RedirectShopper ChallengeShopper].include?(response.dig('resultCode')) && !options[:execute_threed] && !options[:threed_dynamic]
-          response['refusalReason'] = 'Received unexpected 3DS authentication response. Use the execute_threed and/or threed_dynamic options to initiate a proper 3DS flow.'
-          return false
-        end
         case action.to_s
-        when 'authorise', 'authorise3d'
-          %w[Authorised Received RedirectShopper].include?(response['resultCode'])
-        when 'capture', 'refund', 'cancel', 'cancelOrRefund'
-          response['response'] == "[#{action}-received]"
-        when 'adjustAuthorisation'
-          response['response'] == 'Authorised' || response['response'] == '[adjustAuthorisation-received]'
-        when 'storeToken'
-          response['result'] == 'Success'
-        when 'disable'
-          response['response'] == '[detail-successfully-disabled]'
-        when 'refundWithData'
-          response['resultCode'] == 'Received'
+        when 'initPayment'
+          response['status'] == "SUCCESS" and response['transactionStatus'] == "APPROVED"
+        when 'payment'
+          response['status'] == "SUCCESS" and response['transactionStatus'] == "APPROVED"
         else
           false
         end
+        
       end
 
-      def message_from(action, response)
-        return authorize_message_from(response) if %w(authorise authorise3d authorise3ds2).include?(action.to_s)
-
-        response['response'] || response['message'] || response['result'] || response['resultCode']
+      def message_from(success, response)
+        if success
+          'Succeeded'
+        elsif !response['reason'].empty?
+          response['reason']
+        elsif !response['gwErrorReason'].empty?
+          response['gwErrorReason']
+        else
+          'Failed'
+        end
       end
 
       def authorize_message_from(response)
+        #TODO: update for nuvei
         if response['refusalReason'] && response['additionalData'] && response['additionalData']['refusalReasonRaw']
           "#{response['refusalReason']} | #{response['additionalData']['refusalReasonRaw']}"
         else
@@ -281,19 +330,22 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorization_from(action, parameters, response)
-        return nil if response['pspReference'].nil?
-
-        recurring = response['additionalData']['recurring.recurringDetailReference'] if response['additionalData']
-        recurring = response['recurringDetailReference'] if action == 'storeToken'
-
-        "#{parameters[:originalReference]}##{response['pspReference']}##{recurring}"
+      def authorization_from(success, action, response)
+        # Successful ayment requests give us an authCode back.
+        # For all other requests, we will just use the internalRequestId that Nuvei provides
+        
+        if !success
+          nil
+        elsif action == 'payment' and response['status'] == 'SUCCESS'
+          response['authCode'].to_s
+        else 
+          response["internalRequestId"].to_s
+        end
       end
 
       def init_post(options = {})
         post = {}
-        # add_merchant_options(post, options)
-        post[:reference] = options[:order_id][0..79] if options[:order_id]
+        add_merchant_options(post)
         post
       end
 
@@ -301,22 +353,6 @@ module ActiveMerchant #:nodoc:
         JSON.generate(parameters)
       end
 
-      def unsupported_failure_response(initial_response)
-        Response.new(
-          false,
-          'Recurring transactions are not supported for this card type.',
-          initial_response.params,
-          authorization: initial_response.authorization,
-          test: initial_response.test,
-          error_code: initial_response.error_code,
-          avs_result: initial_response.avs_result,
-          cvv_result: initial_response.cvv_result[:code]
-        )
-      end
-
-      def card_not_stored?(response)
-        response.authorization ? response.authorization.split('#')[2].nil? : true
-      end
     end
   end
 end
