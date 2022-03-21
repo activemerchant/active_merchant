@@ -40,6 +40,25 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
         }
       ]
     }
+    @aggregate_data = {
+      indicator: '1',
+      identification_number: '308103480',
+      bill_to_pay: 'test1',
+      bill_to_refund: 'test2',
+      merchant_name: 'Heavenly Buffaloes',
+      street: 'Sesame',
+      number: '123',
+      postal_code: '22001',
+      category: 'yum',
+      channel: '005',
+      geographic_code: 'C1234',
+      city: 'Ciudad de Buenos Aires',
+      merchant_id: 'dec_agg',
+      province: 'Buenos Aires',
+      country: 'Argentina',
+      merchant_email: 'merchant@mail.com',
+      merchant_phone: '2678433111'
+    }
   end
 
   def test_successful_purchase
@@ -210,6 +229,44 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     response = @gateway_purchase.purchase(@amount, payment_reference, options)
     assert_success response
     assert_equal 63, response.params['payment_method_id']
+  end
+
+  def test_successful_purchase_with_establishment_name
+    establishment_name = 'Heavenly Buffaloes'
+    options = @options.merge(establishment_name: establishment_name)
+
+    assert response = @gateway_purchase.store(@credit_card)
+    payment_reference = response.authorization
+
+    response = @gateway_purchase.purchase(@amount, payment_reference, options)
+    assert_success response
+    assert_equal 'approved', response.message
+  end
+
+  def test_successful_purchase_with_aggregate_data
+    options = @options.merge(aggregate_data: @aggregate_data)
+
+    assert response = @gateway_purchase.store(@credit_card)
+    payment_reference = response.authorization
+
+    response = @gateway_purchase.purchase(@amount, payment_reference, options)
+    assert_success response
+    assert_equal 'approved', response.message
+  end
+
+  def test_successful_purchase_with_additional_data_validation
+    store_options = {
+      card_holder_identification_type: 'dni',
+      card_holder_identification_number: '44567890',
+      card_holder_door_number: '348',
+      card_holder_birthday: '01012017'
+    }
+    assert response = @gateway_purchase.store(@credit_card, store_options)
+    payment_reference = response.authorization
+
+    response = @gateway_purchase.purchase(@amount, payment_reference, @options)
+    assert_success response
+    assert_equal 'approved', response.message
   end
 
   def test_failed_purchase_with_payment_method_id
