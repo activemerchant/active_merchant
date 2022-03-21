@@ -90,4 +90,46 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_equal 'Succeeded', refund.message
   end
 
+  def test_successful_credit
+    user_token_id = generate_unique_id
+    options = @options.dup
+    options[:order_id] = generate_unique_id
+    options[:user_token_id] = user_token_id
+    payment = @gateway.purchase(@amount, @credit_card, options)
+    assert_success payment
+    assert_equal 'Succeeded', payment.message
+
+    upo_id = payment.authorization.split('|')[1]
+    
+    credit_options = @options.dup
+    credit_options[:order_id] = generate_unique_id
+    credit_options[:user_token_id] = user_token_id
+    credit_options[:user_payment_option_id] = upo_id
+
+    credit = @gateway.credit(5, nil, credit_options)
+    assert_success credit
+    assert_equal 'Succeeded', credit.message
+  end
+
+  def test_failure_credit_limit_exceeded
+    user_token_id = generate_unique_id
+    options = @options.dup
+    options[:order_id] = generate_unique_id
+    options[:user_token_id] = user_token_id
+    payment = @gateway.purchase(@amount, @credit_card, options)
+    assert_success payment
+    assert_equal 'Succeeded', payment.message
+
+    upo_id = payment.authorization.split('|')[1]
+    
+    credit_options = @options.dup
+    credit_options[:order_id] = generate_unique_id
+    credit_options[:user_token_id] = user_token_id
+    credit_options[:user_payment_option_id] = upo_id
+
+    credit = @gateway.credit(99999999, nil, credit_options)
+    assert_failure credit
+    assert_equal 'Limit exceeding amount', credit.message
+  end
+
 end

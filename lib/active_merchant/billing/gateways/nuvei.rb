@@ -52,9 +52,10 @@ module ActiveMerchant #:nodoc:
 
       def credit(money, payment, options = {})
         post = init_post(options)
+        timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S")
         add_trans_details(post, money, options, timestamp)
         add_device_details(post, options)
-        add_payout_details(post, options)
+        add_payout_details(post, options, timestamp)
         commit('payout', post, options)
       end
 
@@ -135,6 +136,12 @@ module ActiveMerchant #:nodoc:
                amount.to_s + currency + timestamp + @secret
         Digest::SHA256.hexdigest base
       end
+
+      def get_payout_checksum (client_request_id, amount, currency, timestamp)
+        base = @merchant_id + @merchant_site_id + client_request_id +
+               amount.to_s + currency + timestamp + @secret
+        Digest::SHA256.hexdigest base
+      end
       
       def get_refund_checksum (client_request_id, amount, currency, transaction_id, timestamp)
         base = @merchant_id + @merchant_site_id + client_request_id +
@@ -198,11 +205,12 @@ module ActiveMerchant #:nodoc:
         post[:timeStamp] = timestamp
       end
 
-      def add_payout_details(post, options)
+      def add_payout_details(post, options, timestamp)
         post[:userTokenId] = options[:user_token_id]
         post[:userPaymentOption] = {
           :userPaymentOptionId => options[:user_payment_option_id]
         }
+        post[:checksum] = get_payout_checksum(post[:clientRequestId], post[:amount], post[:currency], timestamp)
       end
       
       def add_merchant_options(post)
