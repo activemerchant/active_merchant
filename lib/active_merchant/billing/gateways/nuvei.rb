@@ -282,9 +282,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(success, action, response)
-        # Successful ayment requests give us an authCode back.
-        # For all other requests, we will just use the internalRequestId that Nuvei provides
-
         if !success
           nil
         elsif action == "payment"

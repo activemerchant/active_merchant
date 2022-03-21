@@ -4,19 +4,8 @@ require 'securerandom'
 class RemoteNuveiTest < Test::Unit::TestCase
   def setup
     @gateway = NuveiGateway.new(fixtures(:nuvei))
-
-    @amount = 100
-
-    @bank_account = check(account_number: '123456789', routing_number: '121000358')
-
-    @declined_bank_account = check(account_number: '123456789', routing_number: '121000348')
-
-    @general_bank_account = check(name: 'A. Klaassen', account_number: '123456789', routing_number: 'NL13TEST0123456789')
-
-    @credit_card = credit_card('4111111111111111')
-
     @amount = 1
-    
+    @credit_card = credit_card('4111111111111111')
     @options = {
       order_id: 1,
       billing_address: address,
@@ -24,8 +13,6 @@ class RemoteNuveiTest < Test::Unit::TestCase
       ip: '127.0.0.1',
       email: 'test@test.com'
     }
-
-    @declined_card = credit_card('4008370896662369')
   end
 
   def test_successful_authorize
@@ -35,7 +22,7 @@ class RemoteNuveiTest < Test::Unit::TestCase
   end
 
   def test_authorize_fail_with_gwError_limit_exceeded
-    response = @gateway.authorize(999999999, @declined_card, @options)
+    response = @gateway.authorize(999999999, @credit_card, @options)
     assert_failure response
     assert_equal 'Limit exceeding amount', response.message
   end

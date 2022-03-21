@@ -111,7 +111,6 @@ class NuveiTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    # Payment authorization is "{transctionId}|{userPaymentOptionId}
     assert_equal response.authorization, "1110000000010304183"
     assert_equal 'Succeeded', response.message
 
