@@ -23,13 +23,13 @@ class NuveiTest < Test::Unit::TestCase
   end
 
   def test_successful_open_session
-    expect_session
+    expect_session successful_session_create_response
     response = @gateway.send(:open_session)
     assert response['sessionToken'] == "2da9b9cd-573e-4055-a209-3ac2b855f9af"
   end
 
   def test_successful_authorize
-    expect_session
+    expect_session successful_session_create_response
     
     @gateway.expects(:ssl_post)
       .with("https://ppp-test.safecharge.com/ppp/api/v1/initPayment.do", anything, anything)
@@ -38,13 +38,22 @@ class NuveiTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     
-    assert_equal '10036001', response.authorization
+    assert_equal '2110000000000587378', response.authorization
     assert_equal 'Succeeded', response.message
     assert response.test?
   end
 
+  def test_failed_authorize_cant_open_session
+    expect_session error_session_create_response
+    
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal response.message, "Failed to open session"
+    assert response.test?
+  end
+
   def test_failed_authorize_bad_card_number
-    expect_session
+    expect_session successful_session_create_response
     
     @gateway.expects(:ssl_post)
       .with("https://ppp-test.safecharge.com/ppp/api/v1/initPayment.do", anything, anything)
@@ -60,7 +69,7 @@ class NuveiTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize_gwError_limit_exceeded
-    expect_session
+    expect_session successful_session_create_response
     
     @gateway.expects(:ssl_post)
       .with("https://ppp-test.safecharge.com/ppp/api/v1/initPayment.do", anything, anything)
@@ -75,8 +84,8 @@ class NuveiTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_payment
-    expect_session
+  def test_successful_purchase
+    expect_session successful_session_create_response
     
     @gateway.expects(:ssl_post)
       .with("https://ppp-test.safecharge.com/ppp/api/v1/payment.do", anything, anything)
@@ -85,18 +94,56 @@ class NuveiTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal '111361', response.authorization
+    # Payment authorization is "{transctionId}|{userPaymentOptionId}
+    assert_equal response.authorization, "1110000000010304183|53959588"
     assert_equal 'Succeeded', response.message
 
-    # TODO: ASK NUVEI - These values are not included in the initPayment response...
-    # assert_equal 'R', response.avs_result['code']
-    # assert_equal 'M', response.cvv_result['code']
     assert response.test?
   end
 
-  #TODO: Flesh out error tests for payments
+  def test_successful_purchase_no_user_token_id
+    expect_session successful_session_create_response
+    
+    @gateway.expects(:ssl_post)
+      .with("https://ppp-test.safecharge.com/ppp/api/v1/payment.do", anything, anything)
+      .returns(successful_payment_response_no_user_token_id)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    # Payment authorization is "{transctionId}|{userPaymentOptionId}
+    assert_equal response.authorization, "1110000000010304183"
+    assert_equal 'Succeeded', response.message
+
+    assert response.test?
+  end
+
+  def test_failed_purchase_declined_card
+    expect_session successful_session_create_response
+    
+    @gateway.expects(:ssl_post)
+      .with("https://ppp-test.safecharge.com/ppp/api/v1/payment.do", anything, anything)
+      .returns(error_payment_response_declined_card)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal response.message, "Decline"
+
+    assert response.test?
+  end
+
+  def test_failed_purchase_cant_open_session
+    expect_session error_session_create_response
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal response.message, "Failed to open session"
+    assert response.test?
+  end
 
   def test_successful_refund
+    expect_session successful_session_create_response
+    
     @gateway.expects(:ssl_post)
       .with("https://ppp-test.safecharge.com/ppp/api/v1/payment.do", anything, anything)
       .returns(successful_payment_response)
@@ -106,18 +153,38 @@ class NuveiTest < Test::Unit::TestCase
 
     payment = @gateway.purchase(@amount, @credit_card, @options)
     assert_success payment
+    assert_equal payment.authorization, "1110000000010304183|53959588"
     
-    refund = @gateway.refund(@amount, payment.authorization)
+    refund = @gateway.refund(@amount, payment.authorization.split('|')[0])
+    assert_success refund
+  end
+  
+  def test_failure_refund_exceeds_total_charge
+    expect_session successful_session_create_response
+    
+    @gateway.expects(:ssl_post)
+      .with("https://ppp-test.safecharge.com/ppp/api/v1/payment.do", anything, anything)
+      .returns(successful_payment_response)
 
+    @gateway.expects(:ssl_post)
+      .with("https://ppp-test.safecharge.com/ppp/api/v1/refundTransaction.do", anything, anything)
+      .returns(error_refund_response_exceeded_total_charge)
+
+    payment = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success payment
+    assert_equal payment.authorization, "1110000000010304183|53959588"
+    
+    refund = @gateway.refund(@amount, payment.authorization.split('|')[0])
     assert_failure refund
+    assert_equal "Credit Amount Exceed Total Charges", refund.message
   end
   
   private
 
-  def expect_session
+  def expect_session(response)
     @gateway.expects(:ssl_post)
       .with("https://ppp-test.safecharge.com/ppp/api/v1/getSessionToken.do", anything, anything)
-      .returns(successful_session_create_response)
+      .returns(response)
   end
   
   def successful_session_create_response
@@ -132,6 +199,21 @@ class NuveiTest < Test::Unit::TestCase
         "merchantSiteId": "#{@merchant_site_id}",
         "version": "1.0",
         "clientRequestId": "1C6CT7V1L"
+    }
+    RESPONSE
+  end
+
+  def error_session_create_response
+    <<-RESPONSE
+    {
+      "sessionToken": "",
+      "internalRequestId": 412644488,
+      "status": "ERROR",
+      "errCode": 1001,
+      "reason": "Invalid checksum",
+      "merchantId": "#{@merchant_id}",
+      "merchantSiteId": "#{@merchant_site_id}",
+      "version": "1.0"
     }
     RESPONSE
   end
@@ -159,6 +241,52 @@ class NuveiTest < Test::Unit::TestCase
         "userTokenId": "230811147",
         "paymentOption": {
             "userPaymentOptionId": "53959588",
+            "card": {
+                "ccCardNumber": "4****2535",
+                "bin": "400002",
+                "last4Digits": "2535",
+                "ccExpMonth": "12",
+                "ccExpYear": "22",
+                "acquirerId": "19",
+                "cvv2Reply": "",
+                "avsCode": "",
+                "cardType": "Credit",
+                "cardBrand": "VISA",
+                "threeD": {}
+            }
+        },
+        "transactionStatus": "APPROVED",
+        "gwErrorCode": 0,
+        "gwExtendedErrorCode": 0,
+        "transactionType": "Sale",
+        "transactionId": "1110000000010304183",
+        "externalTransactionId": "",
+        "authCode": "111361",
+        "customData": "",
+        "fraudDetails": {
+            "finalDecision": "Accept"
+        },
+        "sessionToken": "cedbd6c0-52cf-4716-83b1-309e8e8dd2d3",
+        "clientUniqueId": "12345",
+        "internalRequestId": 222320318,
+        "status": "SUCCESS",
+        "errCode": 0,
+        "reason": "",
+        "merchantId": "#{@merchant_id}",
+        "merchantSiteId": "#{@merchant_site_id}",
+        "version": "1.0",
+        "clientRequestId": "1C6CT7V1L"
+    }
+    RESPONSE
+  end
+
+  def successful_payment_response_no_user_token_id
+    <<-RESPONSE
+    {
+        "orderId": "271308078",
+        "userTokenId": "",
+        "paymentOption": {
+            "userPaymentOptionId": "",
             "card": {
                 "ccCardNumber": "4****2535",
                 "bin": "400002",
@@ -299,7 +427,7 @@ class NuveiTest < Test::Unit::TestCase
     RESPONSE
   end
   
-  def declined_payment_request
+  def error_payment_response_declined_card
     <<-RESPONSE
     {
       "orderId": "308575998",
@@ -382,7 +510,7 @@ class NuveiTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def error_refund_exceeded_total_charge
+  def error_refund_response_exceeded_total_charge
     <<-RESPONSE
     {
       "transactionId": "711000000009008576",

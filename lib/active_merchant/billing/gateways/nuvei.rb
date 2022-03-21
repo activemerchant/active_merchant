@@ -4,20 +4,7 @@ module ActiveMerchant #:nodoc:
     class NuveiGateway < Gateway
       self.test_url = 'https://ppp-test.safecharge.com/ppp/api/v1/'
       self.live_url = 'https://secure.safecharge.com/ppp/api/v1/'
-
-      # TODO: Is there any limitation here with Nuvei?
-      self.supported_countries = %w(AT AU BE BG BR CH CY CZ DE DK EE ES FI FR GB GI GR HK HU IE IS IT LI LT LU LV MC MT MX NL NO PL PT RO SE SG SK SI US)
       self.default_currency = 'USD'
-      
-      # TODO: Is there any limitation here with Nuvei?
-      self.currencies_without_fractions = %w(CVE DJF GNF IDR JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
-
-      # TODO: What should this value be?
-      self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LYD OMR TND)
-
-      # TODO: Is there any limitation here with Nuvei?
-      self.supported_cardtypes = %i[visa master american_express diners_club jcb dankort maestro discover elo naranja cabal unionpay]
-
       self.homepage_url = 'https://www.nuvei.com/'
       self.display_name = 'Nuvei'
 
@@ -29,105 +16,46 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options = {})
         post = init_post
-        add_session(post)
-        add_payment(post, money, payment, options)
-        add_device_details(post, options)
-        add_billing_address(post, options)
-
-        commit('payment', post, options)
+        session = open_session
+        if session['sessionToken'].blank?
+          failed_session_creation(session)
+        else
+          add_session(post, session)
+          add_payment(post, money, payment, options)
+          add_device_details(post, options)
+          add_billing_address(post, options)
+          commit('payment', post, options)
+        end
       end
 
       def authorize(money, payment, options = {})
         post = init_post
-        add_session(post)
-        add_payment(post, money, payment, options)
-        add_device_details(post, options)
-
-        commit('initPayment', post, options)
-      end
-
-      def add_session(post)
         session = open_session
-        post[:sessionToken] = session['sessionToken']
-      end
+        if session['sessionToken'].blank?
+          failed_session_creation(session)
+        else
+          add_session(post, session)
+          add_payment(post, money, payment, options)
+          add_device_details(post, options)
 
-      def add_device_details(post, options)
-        post[:deviceDetails] = {
-          :ipAddress => options[:ip]
-        }
-      end
-
-      def add_billing_address(post, options)
-        post[:billingAddress] = {
-          :email => options[:email],
-          # Country must be ISO 3166-1-alpha-2 code.
-          # See: www.iso.org/iso/country_codes/iso_3166_code_lists/english_country_names_and_code_elements.htm
-          :country => options.dig(:billing_address, :country)
-        }
-      end
-      
-      def capture(money, authorization, options = {})
-        post = init_post(options)
-
-        # Example response:
-        # {
-        #   "sessionToken" => "",
-        #   "merchantId" => "${mId}",
-        #   "merchantSiteId" => "${mSiteId}",
-        #   "clientRequestId" => "${clientRequestId}",
-        #   "amount" => "${amount}",
-        #   "currency" => "${currency}",
-        #   "userTokenId" => "230811147",
-        #   "clientUniqueId" => "12345",
-        #   "paymentOption" => {
-	#     "card" => {
-	#       "cardNumber" => "4111111111111111",
-	#       "cardHolderName" => "John Smith",
-	#       "expirationMonth" => "12",
-	#       "expirationYear" => "2022",
-	#       "CVV" => "217"
-	#     }
-        #   },
-        #   "deviceDetails" => {
-	#     "ipAddress" => "127.0.0.1"
-        #   },
-        #   "billingAddress" => {
-	#     "email" => "john.smith@email.com",
-	#     "country" => "US"
-        #   },
-        #   "timeStamp" => "${timeStamp}",
-        #   "checksum" => "${hash}"
-        # }
-
-        commit('capture', post, options)
+          commit('initPayment', post, options)
+        end
       end
 
       def refund(money, authorization, options = {})
         post = init_post(options)
-        commit('refund', post, options)
+        timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S")
+        add_trans_details(post, money, options, timestamp)
+        add_refund_details(post, authorization, timestamp)
+        commit('refundTransaction', post, options)
       end
-      
+
       def credit(money, payment, options = {})
-        action = 'refundWithData'
         post = init_post(options)
-        commit(action, post, options)
-      end
-
-      def void(authorization, options = {})
-        post = init_post(options)
-        commit(endpoint, post, options)
-      end
-
-      def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(0, credit_card, options) }
-          options[:idempotency_key] = nil
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
-      end
-
-      def supports_scrubbing?
-        true
+        add_trans_details(post, money, options, timestamp)
+        add_device_details(post, options)
+        add_payout_details(post, options)
+        commit('payout', post, options)
       end
 
       private
@@ -188,43 +116,70 @@ module ActiveMerchant #:nodoc:
           raw_response = ssl_post(url('getSessionToken'), post_data(parameters), request_headers(options))
           response = parse(raw_response)
         rescue ResponseError => e
-          raw_response = e.response.body
+          e.response.body
           response = parse(raw_response)
         end
       end
 
-      def failed_session_creation()
+      def failed_session_creation(response)
         Response.new(
-          success,
-          message_from(success, response),
+          false,
+          "Failed to open session",
           response,
-          authorization: authorization_from(success, action, response),
-          test: test?,
-          avs_result: AVSResult.new(code: avs_code_from(response)),
-          cvv_result: CVVResult.new(cvv_result_from(response))
+          test: test?
         )
       end
 
       def get_payment_checksum (client_request_id, amount, currency, timestamp)
-        base = @merchant_id + @merchant_site_id + client_request_id + amount.to_s + currency + timestamp + @secret
-        checksum = Digest::SHA256.hexdigest base
-        checksum
+        base = @merchant_id + @merchant_site_id + client_request_id +
+               amount.to_s + currency + timestamp + @secret
+        Digest::SHA256.hexdigest base
+      end
+      
+      def get_refund_checksum (client_request_id, amount, currency, transaction_id, timestamp)
+        base = @merchant_id + @merchant_site_id + client_request_id +
+               amount.to_s + currency + transaction_id + timestamp + @secret
+        Digest::SHA256.hexdigest base
       end
       
       def get_session_checksum (timestamp)
         base = @merchant_id + @merchant_site_id + timestamp + @secret
-        checksum = Digest::SHA256.hexdigest base
-        checksum
+        Digest::SHA256.hexdigest base
       end
 
+      def add_session(post, session)
+        post[:sessionToken] = session['sessionToken']
+      end
+
+      def add_device_details(post, options)
+        post[:deviceDetails] = {
+          :ipAddress => options[:ip]
+        }
+      end
+
+      def add_billing_address(post, options)
+        post[:billingAddress] = {
+          :email => options[:email],
+          # Country must be ISO 3166-1-alpha-2 code.
+          # See: www.iso.org/iso/country_codes/iso_3166_code_lists/english_country_names_and_code_elements.htm
+          :country => options.dig(:billing_address, :country)
+        }
+      end
+      
+      def add_refund_details(post, authorization, timestamp)
+        post[:relatedTransactionId] = authorization
+        post[:checksum] = get_refund_checksum(post[:clientRequestId], post[:amount], post[:currency], post[:relatedTransactionId], timestamp)
+      end
+      
       def add_payment (post, money, payment, options)
         timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S")
-        post[:clientRequestId] = options[:order_id].to_s
-        post[:timeStamp] = timestamp
-        # TODO: Is this correct?
-        post[:amount] = money
-        # TODO: Is this correct?
-        post[:currency] = options[:currency] || self.default_currency
+        add_trans_details(post, money, options, timestamp)
+        add_payment_option(post, payment)
+        post[:checksum] = get_payment_checksum(post[:clientRequestId], post[:amount], post[:currency], timestamp)
+        post[:userTokenId] = options[:user_token_id]
+      end
+
+      def add_payment_option(post, payment)
         post[:paymentOption] = {
           :card => {
             :cardNumber => payment.number,
@@ -234,7 +189,20 @@ module ActiveMerchant #:nodoc:
             :CVV => payment.verification_value,
           }
         }
-        post[:checksum] = get_payment_checksum(post[:clientRequestId], post[:amount], post[:currency], timestamp)
+      end
+      
+      def add_trans_details(post, money, options, timestamp)
+        post[:amount] = amount(money)
+        post[:clientRequestId] = options[:order_id].to_s
+        post[:currency] = options[:currency] || currency(money)
+        post[:timeStamp] = timestamp
+      end
+
+      def add_payout_details(post, options)
+        post[:userTokenId] = options[:user_token_id]
+        post[:userPaymentOption] = {
+          :userPaymentOptionId => options[:user_payment_option_id]
+        }
       end
       
       def add_merchant_options(post)
@@ -284,24 +252,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def basic_auth
-        Base64.strict_encode64("#{@username}:#{@password}")
-      end
-
       def request_headers(options)
         headers = {
           'Content-Type' => 'application/json',
-          'Authorization' => "Basic #{basic_auth}"
         }
-        headers['Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
         headers
       end
 
       def success_from(action, response, options)
         case action.to_s
-        when 'initPayment'
-          response['status'] == "SUCCESS" and response['transactionStatus'] == "APPROVED"
-        when 'payment'
+        when 'initPayment', 'payment', 'refundTransaction', 'payout'
           response['status'] == "SUCCESS" and response['transactionStatus'] == "APPROVED"
         else
           false
@@ -312,35 +272,40 @@ module ActiveMerchant #:nodoc:
       def message_from(success, response)
         if success
           'Succeeded'
-        elsif !response['reason'].empty?
+        elsif !response['reason'].blank?
           response['reason']
-        elsif !response['gwErrorReason'].empty?
+        elsif !response['gwErrorReason'].blank?
           response['gwErrorReason']
         else
           'Failed'
         end
       end
 
-      def authorize_message_from(response)
-        #TODO: update for nuvei
-        if response['refusalReason'] && response['additionalData'] && response['additionalData']['refusalReasonRaw']
-          "#{response['refusalReason']} | #{response['additionalData']['refusalReasonRaw']}"
-        else
-          response['refusalReason'] || response['resultCode'] || response['message'] || response['result']
-        end
-      end
-
       def authorization_from(success, action, response)
         # Successful ayment requests give us an authCode back.
         # For all other requests, we will just use the internalRequestId that Nuvei provides
-        
+
         if !success
           nil
-        elsif action == 'payment' and response['status'] == 'SUCCESS'
-          response['authCode'].to_s
+        elsif action == "payment"
+          # If a userPaymentOptionId exists, then the payment authorizations
+          # will be in the format: {transactionId}|{userPaymentOptionId}
+          # The userPaymentOptionId is required for posting credit to this
+          # card in the future. This value is blank if userTokenId is blank when
+          # posting the payment.
+          authorization = response['transactionId'].to_s
+          upo_id = response.dig('paymentOption', 'userPaymentOptionId')
+          if !upo_id.blank?
+            authorization += "|" + upo_id
+          end
+
+        elsif !response['transactionId'].nil?
+          authorization = response['transactionId'].to_s
         else 
-          response["internalRequestId"].to_s
+          authorization = response["internalRequestId"].to_s
         end
+
+        authorization
       end
 
       def init_post(options = {})

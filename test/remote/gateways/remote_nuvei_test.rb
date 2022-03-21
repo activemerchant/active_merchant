@@ -43,10 +43,18 @@ class RemoteNuveiTest < Test::Unit::TestCase
   def test_successful_purchase
     options = @options.dup
     options[:order_id] = generate_unique_id
+    options[:external_user_id] = generate_unique_id
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
-    # assert_equal 'There is another transaction with this clientRequestId.', response.message
+  end
+
+  def test_successful_purchase_with_decimal_amount
+    options = @options.dup
+    options[:order_id] = generate_unique_id
+    response = @gateway.purchase(1.65, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failure_missing_card_number
@@ -78,6 +86,21 @@ class RemoteNuveiTest < Test::Unit::TestCase
     response2 = @gateway.purchase(@amount, @credit_card, options)
     assert_failure response2
     assert_equal 'There is another transaction with this clientRequestId.', response2.message
+  end
+
+  def test_successful_refund
+    options = @options.dup
+    options[:order_id] = generate_unique_id
+    payment = @gateway.purchase(@amount, @credit_card, options)
+    assert_success payment
+    assert_equal 'Succeeded', payment.message
+
+    refund_options = @options.dup
+    refund_options[:order_id] = generate_unique_id
+
+    refund = @gateway.refund(@amount, payment.authorization, refund_options)
+    assert_success refund
+    assert_equal 'Succeeded', refund.message
   end
 
 end
