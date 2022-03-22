@@ -1,0 +1,143 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.sandbox.braintreegateway.com/merchants/X/client_token
+    body:
+      encoding: UTF-8
+      string: |
+        <?xml version="1.0" encoding="UTF-8"?>
+        <client-token>
+          <version type="integer">2</version>
+        </client-token>
+    headers:
+      Accept-Encoding:
+      - gzip
+      Accept:
+      - application/xml
+      User-Agent:
+      - Braintree Ruby Gem 4.22.0 (ActiveMerchant 1.137.0)
+      X-Apiversion:
+      - '6'
+      Content-Type:
+      - application/xml
+      Authorization:
+      - Basic <AUTH_DATA>
+  response:
+    status:
+      code: 201
+      message: Created
+    headers:
+      Date:
+      - Wed, 19 Mar 2025 16:34:18 GMT
+      Content-Type:
+      - application/xml
+      Content-Length:
+      - '1533'
+      Connection:
+      - keep-alive
+      Braintree-Version:
+      - '2016-10-07'
+      Vary:
+      - Braintree-Version
+      - accept-encoding
+      Cache-Control:
+      - no-cache, no-store
+      Pragma:
+      - no-cache
+      Content-Encoding:
+      - gzip
+      Strict-Transport-Security:
+      - max-age=63072000; includeSubdomains; preload
+      X-Frame-Options:
+      - DENY
+      X-Content-Type-Options:
+      - nosniff
+      Paypal-Debug-Id:
+      - 288795aa62e34
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=kzaHQCH5yCfT1pJPLFwla8YW.ZwzMhRPNwmnII6wdqA-1742402058-1.0.1.1-3bbHJMTNVJYxcBp9wb8zxO1PQuLhwSd.PPPq1pbQEjwmJWMtJcvFUj6NSDrkVrC176nm01OVoTEQ2taX0Vmq1qoLCxnKmAJsmUjNhX07nnU;
+        path=/; expires=Wed, 19-Mar-25 17:04:18 GMT; domain=.sandbox.braintreegateway.com;
+        HttpOnly; Secure; SameSite=None
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 922e605d794d7bfa-MIA
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        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
+  recorded_at: Wed, 19 Mar 2025 16:34:18 GMT
+- request:
+    method: post
+    uri: https://payments.sandbox.braintree-api.com/graphql
+    body:
+      encoding: UTF-8
+      string: '{"clientSdkMetadata":{"platform":"web","source":"client","integration":"custom","sessionId":"16d2570a-4ec3-4450-a4e2-4773762da688","version":"3.83.0"},"query":"        mutation
+        TokenizeCreditCard($input: TokenizeCreditCardInput!) {\n          tokenizeCreditCard(input:
+        $input) {\n            paymentMethod {\n              id\n              details
+        {\n                ... on CreditCardDetails {\n                  last4\n                }\n              }\n            }\n          }\n        }\n","variables":{"input":{"creditCard":{"number":"4111111111111111","expirationYear":"2026","expirationMonth":"09","cvv":"123","cardholderName":"Longbob
+        Longsen","billingAddress":{"streetAddress":"96706 Onie Plains","extendedAddress":"01897
+        Alysa Lock","locality":"Miami","region":"FL","postalCode":"32191"}}}}}'
+    headers:
+      Content-Type:
+      - application/json
+      Accept:
+      - application/json
+      Authorization:
+      - Bearer <AUTH_DATA>
+      Braintree-Version:
+      - '2018-05-10'
+      Connection:
+      - close
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Wed, 19 Mar 2025 16:34:18 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - close
+      Braintree-Version:
+      - '2016-10-07'
+      Vary:
+      - Accept-Encoding
+      - Braintree-Version
+      Cache-Control:
+      - no-cache, no-store
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=63072000; includeSubdomains; preload
+      X-Frame-Options:
+      - DENY
+      X-Content-Type-Options:
+      - nosniff
+      Paypal-Debug-Id:
+      - f4d8dd42d6fe4
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=7oZSRej_ERbHKHsuec3xwLe5NLCDh7TIbfbsCjMMPu8-1742402058-1.0.1.1-OeKZCwuT38IB9cL7RKLoVWrMPKhysCrm6s3DLfRblZVgB154k7mRVZFzSA1kP_Kv6BubPmgc.cSDDongsLJzFF8Ok1BwT4AaPN9L0Wz7p2U;
+        path=/; expires=Wed, 19-Mar-25 17:04:18 GMT; domain=.sandbox.braintree-api.com;
+        HttpOnly; Secure; SameSite=None
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 922e6062fbd821c7-MIA
+    body:
+      encoding: ASCII-8BIT
+      string: '{"data":{"tokenizeCreditCard":{"paymentMethod":{"id":"tokencc_bc_4dgt3b_chrrb3_zwvhj3_y2qmtk_8n3","details":{"last4":"1111"}}}},"extensions":{"requestId":"1b681be7-389d-4d05-9854-230056d4fd16"}}'
+  recorded_at: Wed, 19 Mar 2025 16:34:18 GMT
+recorded_with: VCR 6.3.1

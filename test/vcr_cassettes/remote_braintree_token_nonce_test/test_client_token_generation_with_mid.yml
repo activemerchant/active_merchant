@@ -1,0 +1,74 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.sandbox.braintreegateway.com/merchants/X/client_token
+    body:
+      encoding: UTF-8
+      string: |
+        <?xml version="1.0" encoding="UTF-8"?>
+        <client-token>
+          <merchant-account-id>1234</merchant-account-id>
+          <version type="integer">2</version>
+        </client-token>
+    headers:
+      Accept-Encoding:
+      - gzip
+      Accept:
+      - application/xml
+      User-Agent:
+      - Braintree Ruby Gem 4.22.0 (ActiveMerchant 1.137.0)
+      X-Apiversion:
+      - '6'
+      Content-Type:
+      - application/xml
+      Authorization:
+      - Basic <AUTH_DATA>
+  response:
+    status:
+      code: 201
+      message: Created
+    headers:
+      Date:
+      - Wed, 19 Mar 2025 16:34:16 GMT
+      Content-Type:
+      - application/xml
+      Content-Length:
+      - '1589'
+      Connection:
+      - keep-alive
+      Braintree-Version:
+      - '2016-10-07'
+      Vary:
+      - Braintree-Version
+      - accept-encoding
+      Cache-Control:
+      - no-cache, no-store
+      Pragma:
+      - no-cache
+      Content-Encoding:
+      - gzip
+      Strict-Transport-Security:
+      - max-age=63072000; includeSubdomains; preload
+      X-Frame-Options:
+      - DENY
+      X-Content-Type-Options:
+      - nosniff
+      Paypal-Debug-Id:
+      - 4d7dd2322d2f4
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=skoQ6hY5L9wMxjuMOfNdp7kOZ05dnTAVnUreQgo3EtA-1742402056-1.0.1.1-Du5lXxqJ2yt1V__n3Z1Hb.v04.XDRy4NsB7VAklpNGfZCI6WXBu8Q0rUvzGqZY9dKjhyDDZUaXzm5zt3yELaF4i_k2xw2J3VzCUTsuSp1oE;
+        path=/; expires=Wed, 19-Mar-25 17:04:16 GMT; domain=.sandbox.braintreegateway.com;
+        HttpOnly; Secure; SameSite=None
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 922e60528be9cc76-TPA
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        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
+  recorded_at: Wed, 19 Mar 2025 16:34:16 GMT
+recorded_with: VCR 6.3.1

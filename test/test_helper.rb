@@ -9,6 +9,8 @@ require 'yaml'
 require 'json'
 require 'active_merchant'
 require 'comm_stub'
+require 'vcr'
+require 'support/vcr_module'
 
 require 'active_support/core_ext/integer/time'
 require 'active_support/core_ext/numeric/time'
@@ -358,3 +360,30 @@ class MockResponse
     @headers[header]
   end
 end
+
+# Given the state of remote tests, the VCR gem will initially be disabled and
+# will only be available in test classes that enable the VCRModule.
+# To do this, simply add VCRModule with the prepend keyword.
+VCR.configure do |config|
+  config.cassette_library_dir = 'test/vcr_cassettes'
+  config.allow_http_connections_when_no_cassette = true
+  config.hook_into :webmock
+  config.default_cassette_options = {
+    record: :once,
+    update_content_length_header: true, # Enables response body modification and prevent errors/bugs with some libraries
+    allow_unused_http_interactions: false # Behaves like a mock object
+  }
+
+  # filter out any Basic and Bearer headers on all requests
+  config.filter_sensitive_data('<AUTH_DATA>') do |interaction|
+    (interaction.request.headers['Authorization'] || ['']).first.split(' ').last
+  end
+
+  # extend the indentification of a unique request
+  config.default_cassette_options = {
+    match_requests_on: %i[method host path]
+  }
+end
+
+VCR.turn_off!
+WebMock.allow_net_connect!

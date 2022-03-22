@@ -25,6 +25,7 @@ module BraintreeCommon
       gsub(%r((<value>)[^<]{100,}(</value>)), '\1[FILTERED]\2').
       gsub(%r((<token>)[^<]+(</token>)), '\1[FILTERED]\2').
       gsub(%r((<cryptogram>)[^<]+(</cryptogram>)), '\1[FILTERED]\2').
-      gsub(%r((<number>)[^<]+(</number>)), '\1[FILTERED]\2')
+      gsub(%r((<number>)[^<]+(</number>)), '\1[FILTERED]\2').
+      gsub(%r((tokenusbankacct_bc)\w*), '\1[FILTERED]')
   end
 end

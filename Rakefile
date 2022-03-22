@@ -29,10 +29,18 @@ task test: 'test:units'
 
 RuboCop::RakeTask.new
 
+## Find all files under test/remote that include the VCRRemote module
+def find_vcr_files
+  Dir['test/remote/**/*_test.rb'].select do |file|
+    File.read(file).include?('VCRRemote')
+  end
+end
+
 namespace :test do
   Rake::TestTask.new(:units) do |t|
     ENV['RUNNING_UNIT_TESTS'] = 'true'
     t.pattern = 'test/unit/**/*_test.rb'
+    t.test_files = find_vcr_files
     t.libs << 'test'
     t.verbose = false
   end
