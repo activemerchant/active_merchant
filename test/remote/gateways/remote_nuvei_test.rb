@@ -18,10 +18,12 @@ class RemoteNuveiTest < Test::Unit::TestCase
   def test_successful_purchase
     options = @options.dup
     options[:order_id] = generate_unique_id
-    options[:external_user_id] = generate_unique_id
+    options[:user_token_id] = generate_unique_id
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
+    # Ensure that the authorization has a pipe to separate transactionId and user_payment_option_id
+    assert response.authorization.include? "|"
   end
 
   def test_failure_purchase_with_gwError_limit_exceeded
