@@ -28,62 +28,6 @@ class NuveiTest < Test::Unit::TestCase
     assert response['sessionToken'] == "2da9b9cd-573e-4055-a209-3ac2b855f9af"
   end
 
-  def test_successful_authorize
-    expect_session successful_session_create_response
-    
-    @gateway.expects(:ssl_post)
-      .with("https://ppp-test.safecharge.com/ppp/api/v1/initPayment.do", anything, anything)
-      .returns(successful_initPayment_response)
-
-    response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success response
-    
-    assert_equal '2110000000000587378', response.authorization
-    assert_equal 'Succeeded', response.message
-    assert response.test?
-  end
-
-  def test_failed_authorize_cant_open_session
-    expect_session error_session_create_response
-    
-    response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_failure response
-    assert_equal response.message, "Failed to open session"
-    assert response.test?
-  end
-
-  def test_failed_authorize_bad_card_number
-    expect_session successful_session_create_response
-    
-    @gateway.expects(:ssl_post)
-      .with("https://ppp-test.safecharge.com/ppp/api/v1/initPayment.do", anything, anything)
-      .returns(error_initPayment_bad_card_number_response)
-
-    response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_failure response
-    
-    assert_nil response.authorization
-    assert_equal 'Missing or invalid CardData data. Invalid credit card number 4211111111111111', response.message
-
-    assert response.test?
-  end
-
-  def test_failed_authorize_gwError_limit_exceeded
-    expect_session successful_session_create_response
-    
-    @gateway.expects(:ssl_post)
-      .with("https://ppp-test.safecharge.com/ppp/api/v1/initPayment.do", anything, anything)
-      .returns(error_initPayment_gwError_limit_exceeded)
-
-    response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_failure response
-    
-    assert_nil response.authorization
-    assert_equal 'Limit exceeding amount', response.message
-
-    assert response.test?
-  end
-
   def test_successful_purchase
     expect_session successful_session_create_response
     

@@ -15,18 +15,6 @@ class RemoteNuveiTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_authorize
-    response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success response
-    assert_equal 'Succeeded', response.message
-  end
-
-  def test_authorize_fail_with_gwError_limit_exceeded
-    response = @gateway.authorize(999999999, @credit_card, @options)
-    assert_failure response
-    assert_equal 'Limit exceeding amount', response.message
-  end
-
   def test_successful_purchase
     options = @options.dup
     options[:order_id] = generate_unique_id
@@ -34,6 +22,14 @@ class RemoteNuveiTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
+  end
+
+  def test_failure_purchase_with_gwError_limit_exceeded
+    options = @options.dup
+    options[:order_id] = generate_unique_id
+    response = @gateway.purchase(999999999, @credit_card, options)
+    assert_failure response
+    assert_equal 'Limit exceeding amount', response.message
   end
 
   def test_successful_purchase_with_decimal_amount

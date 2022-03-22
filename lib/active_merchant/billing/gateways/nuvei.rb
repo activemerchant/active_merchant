@@ -28,20 +28,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorize(money, payment, options = {})
-        post = init_post
-        session = open_session
-        if session['sessionToken'].blank?
-          failed_session_creation(session)
-        else
-          add_session(post, session)
-          add_payment(post, money, payment, options)
-          add_device_details(post, options)
-
-          commit('initPayment', post, options)
-        end
-      end
-
       def refund(money, authorization, options = {})
         post = init_post(options)
         timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S")
@@ -227,7 +213,7 @@ module ActiveMerchant #:nodoc:
 
       def success_from(action, response, options)
         case action.to_s
-        when 'initPayment', 'payment', 'refundTransaction', 'payout'
+        when 'payment', 'refundTransaction', 'payout'
           response['status'] == "SUCCESS" and response['transactionStatus'] == "APPROVED"
         else
           false
