@@ -91,6 +91,17 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     assert_success capture_response
   end
 
+  def test_failed_authorize
+    options = @options.merge(fraud_detection: @fraud_detection)
+
+    assert response = @gateway_auth.store(@declined_card, options)
+    payment_reference = response.authorization
+
+    response = @gateway_auth.authorize(@amount, payment_reference, options)
+    assert_failure response
+    assert_equal response.error_code, 3
+  end
+
   def test_successful_refund
     response = @gateway_purchase.store(@credit_card)
 
