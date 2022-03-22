@@ -61,48 +61,6 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      # TODO: What is this for Nuvei?
-      AVS_MAPPING = {
-        '0'  => 'R',  # Unknown
-        '1'  => 'A',  # Address matches, postal code doesn't
-        '2'  => 'N',  # Neither postal code nor address match
-        '3'  => 'R',  # AVS unavailable
-        '4'  => 'E',  # AVS not supported for this card type
-        '5'  => 'U',  # No AVS data provided
-        '6'  => 'Z',  # Postal code matches, address doesn't match
-        '7'  => 'D',  # Both postal code and address match
-        '8'  => 'U',  # Address not checked, postal code unknown
-        '9'  => 'B',  # Address matches, postal code unknown
-        '10' => 'N',  # Address doesn't match, postal code unknown
-        '11' => 'U',  # Postal code not checked, address unknown
-        '12' => 'B',  # Address matches, postal code not checked
-        '13' => 'U',  # Address doesn't match, postal code not checked
-        '14' => 'P',  # Postal code matches, address unknown
-        '15' => 'P',  # Postal code matches, address not checked
-        '16' => 'N',  # Postal code doesn't match, address unknown
-        '17' => 'U',  # Postal code doesn't match, address not checked
-        '18' => 'I',  # Neither postal code nor address were checked
-        '19' => 'L',  # Name and postal code matches.
-        '20' => 'V',  # Name, address and postal code matches.
-        '21' => 'O',  # Name and address matches.
-        '22' => 'K',  # Name matches.
-        '23' => 'F',  # Postal code matches, name doesn't match.
-        '24' => 'H',  # Both postal code and address matches, name doesn't match.
-        '25' => 'T',  # Address matches, name doesn't match.
-        '26' => 'N'   # Neither postal code, address nor name matches.
-      }
-
-      # TODO: What is this for Nuvei?
-      CVC_MAPPING = {
-        '0' => 'P', # Unknown
-        '1' => 'M', # Matches
-        '2' => 'N', # Does not match
-        '3' => 'P', # Not checked
-        '4' => 'S', # No CVC/CVV provided, but was required
-        '5' => 'U', # Issuer not certifed by CVC/CVV
-        '6' => 'P'  # No CVC/CVV provided
-      }
-
       def open_session
         timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S")
         checksum = get_session_checksum(timestamp)
@@ -245,11 +203,11 @@ module ActiveMerchant #:nodoc:
       end
       
       def avs_code_from(response)
-        AVS_MAPPING[response['paymentOption']['card']['avsCode']] if response.dig('paymentOption', 'card', 'avsCode')
+        response.dig('paymentOption', 'card', 'avsCode')
       end
 
       def cvv_result_from(response)
-        AVS_MAPPING[response['paymentOption']['card']['cvv2Reply']] if response.dig('paymentOption', 'card', 'cvv2Reply')
+        response.dig('paymentOption', 'card', 'cvv2Reply')
       end
 
       def url(action)

@@ -96,6 +96,13 @@ class NuveiTest < Test::Unit::TestCase
 
     # Payment authorization is "{transctionId}|{userPaymentOptionId}
     assert_equal response.authorization, "1110000000010304183|53959588"
+
+    assert_equal response.cvv_result['code'], "M"
+    assert_equal response.cvv_result['message'], "CVV matches"
+
+    assert_equal response.avs_result['code'], "Y"
+    assert_equal response.avs_result['message'], "Street address and 5-digit postal code match."
+
     assert_equal 'Succeeded', response.message
 
     assert response.test?
@@ -247,8 +254,8 @@ class NuveiTest < Test::Unit::TestCase
                 "ccExpMonth": "12",
                 "ccExpYear": "22",
                 "acquirerId": "19",
-                "cvv2Reply": "",
-                "avsCode": "",
+                "cvv2Reply": "M",
+                "avsCode": "Y",
                 "cardType": "Credit",
                 "cardBrand": "VISA",
                 "threeD": {}
