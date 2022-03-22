@@ -1,0 +1,127 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.sandbox.braintreegateway.com/merchants/sk2db46gz3spmcb2/client_token
+    body:
+      encoding: UTF-8
+      string: |
+        <?xml version="1.0" encoding="UTF-8"?>
+        <client-token>
+          <version type="integer">2</version>
+        </client-token>
+    headers:
+      Accept-Encoding:
+      - gzip
+      Accept:
+      - application/xml
+      User-Agent:
+      - Braintree Ruby Gem 3.0.1 (ActiveMerchant 1.125.0)
+      X-Apiversion:
+      - '6'
+      Content-Type:
+      - application/xml
+      Authorization:
+      - Basic <AUTH_DATA>
+  response:
+    status:
+      code: 201
+      message: Created
+    headers:
+      Server:
+      - nginx
+      Date:
+      - Tue, 15 Mar 2022 20:27:51 GMT
+      Content-Type:
+      - application/xml
+      Content-Length:
+      - '1592'
+      Braintree-Version:
+      - '2016-10-07'
+      Vary:
+      - Braintree-Version
+      Cache-Control:
+      - no-cache, no-store
+      Pragma:
+      - no-cache
+      Content-Encoding:
+      - gzip
+      Strict-Transport-Security:
+      - max-age=63072000; includeSubdomains; preload
+      X-Frame-Options:
+      - DENY
+      X-Content-Type-Options:
+      - nosniff
+      Paypal-Debug-Id:
+      - 2491d1b9394b4
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        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
+  recorded_at: Tue, 15 Mar 2022 20:27:50 GMT
+- request:
+    method: post
+    uri: https://payments.sandbox.braintree-api.com/graphql
+    body:
+      encoding: UTF-8
+      string: '{"clientSdkMetadata":{"platform":"web","source":"client","integration":"custom","sessionId":"7866f5a9-569d-4f96-8be7-20aeb6362518","version":"3.83.0"},"query":"        mutation
+        TokenizeUsBankAccount($input: TokenizeUsBankAccountInput!) {\n          tokenizeUsBankAccount(input:
+        $input) {\n            paymentMethod {\n              id\n              details
+        {\n                ... on UsBankAccountDetails {\n                  last4\n                }\n              }\n            }\n          }\n        }\n","variables":{"input":{"usBankAccount":{"achMandate":"By
+        clicking [\"Checkout\"], I authorize Braintree, a service of PayPal, on behalf
+        of My Company (i) to verify my bank account information using bank information
+        and consumer reports and (ii) to debit my bank account.","routingNumber":"011000015","accountNumber":"4012000033330125","accountType":"CHECKING","billingAddress":{"streetAddress":"96706
+        Onie Plains","extendedAddress":"01897 Alysa Lock","city":"Miami","state":"FL"},"individualOwner":{"firstName":"Jim","lastName":"Smith"}}}}}'
+    headers:
+      Content-Type:
+      - application/json
+      Accept:
+      - application/json
+      Authorization:
+      - Bearer <AUTH_DATA>
+      Braintree-Version:
+      - '2018-05-10'
+      Connection:
+      - close
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Server:
+      - nginx
+      Date:
+      - Tue, 15 Mar 2022 20:27:51 GMT
+      Content-Type:
+      - application/json
+      Content-Length:
+      - '218'
+      Braintree-Version:
+      - '2016-10-07'
+      Vary:
+      - Accept-Encoding
+      - Braintree-Version
+      Cache-Control:
+      - no-cache, no-store
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=63072000; includeSubdomains; preload
+      X-Frame-Options:
+      - DENY
+      X-Content-Type-Options:
+      - nosniff
+      Paypal-Debug-Id:
+      - 4d5bb55a3c104
+      Connection:
+      - close
+    body:
+      encoding: UTF-8
+      string: '{"errors":[{"message":"Field ''zipCode'' of variable ''input'' has
+        coerced Null value for NonNull type ''UsZipCode!''","locations":[{"line":1,"column":40}]}],"extensions":{"requestId":"2683618d-674c-4d6a-8699-8e2dd83af40e"}}'
+  recorded_at: Tue, 15 Mar 2022 20:27:51 GMT
+recorded_with: VCR 6.1.0

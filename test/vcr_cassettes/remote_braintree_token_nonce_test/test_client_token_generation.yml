@@ -1,0 +1,62 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.sandbox.braintreegateway.com/merchants/sk2db46gz3spmcb2/client_token
+    body:
+      encoding: UTF-8
+      string: |
+        <?xml version="1.0" encoding="UTF-8"?>
+        <client-token>
+          <version type="integer">2</version>
+        </client-token>
+    headers:
+      Accept-Encoding:
+      - gzip
+      Accept:
+      - application/xml
+      User-Agent:
+      - Braintree Ruby Gem 3.0.1 (ActiveMerchant 1.125.0)
+      X-Apiversion:
+      - '6'
+      Content-Type:
+      - application/xml
+      Authorization:
+      - Basic <AUTH_DATA>
+  response:
+    status:
+      code: 201
+      message: Created
+    headers:
+      Server:
+      - nginx
+      Date:
+      - Tue, 15 Mar 2022 20:27:48 GMT
+      Content-Type:
+      - application/xml
+      Content-Length:
+      - '1593'
+      Braintree-Version:
+      - '2016-10-07'
+      Vary:
+      - Braintree-Version
+      Cache-Control:
+      - no-cache, no-store
+      Pragma:
+      - no-cache
+      Content-Encoding:
+      - gzip
+      Strict-Transport-Security:
+      - max-age=63072000; includeSubdomains; preload
+      X-Frame-Options:
+      - DENY
+      X-Content-Type-Options:
+      - nosniff
+      Paypal-Debug-Id:
+      - eb9fb09b904c4
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        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
+  recorded_at: Tue, 15 Mar 2022 20:27:48 GMT
+recorded_with: VCR 6.1.0

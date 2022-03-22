@@ -1,8 +1,10 @@
 require 'test_helper'
 
 class RemoteBraintreeTokenNonceTest < Test::Unit::TestCase
+  prepend VCRRemote
+
   def setup
-    @gateway = BraintreeGateway.new(fixtures(:braintree_blue))
+    @gateway = BraintreeGateway.new(fixtures(:braintree_blue).merge({ merchant_id: 'sk2db46gz3spmcb2' }))
     @braintree_backend = @gateway.instance_eval { @braintree_gateway }
 
     ach_mandate = 'By clicking ["Checkout"], I authorize Braintree, a service of PayPal, ' \

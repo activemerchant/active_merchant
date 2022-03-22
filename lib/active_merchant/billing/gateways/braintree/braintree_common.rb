@@ -23,6 +23,7 @@ module BraintreeCommon
       gsub(%r((<payment-method-nonce>)[^<]+(</payment-method-nonce>)), '\1[FILTERED]\2').
       gsub(%r((<payment-method-token>)[^<]+(</payment-method-token>)), '\1[FILTERED]\2').
       gsub(%r((<value>)[^<]{100,}(</value>)), '\1[FILTERED]\2').
-      gsub(%r((<token>)[^<]+(</token>)), '\1[FILTERED]\2')
+      gsub(%r((<token>)[^<]+(</token>)), '\1[FILTERED]\2').
+      gsub(%r((tokenusbankacct_bc)\w*), '\1[FILTERED]')
   end
 end
