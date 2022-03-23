@@ -61,6 +61,13 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     )
 
     @destination_account = fixtures(:stripe_destination)[:stripe_user_id]
+
+    @options = {
+      currency: 'USD',
+      description: 'ActiveMerchant Test Purchase',
+      email: 'wow@example.com',
+      stripe_account: fixtures(:stripe_destination)[:stripe_user_id]
+    }
   end
 
   def test_authorization_and_void
@@ -160,6 +167,16 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_match('apple_pay', purchase.responses.first.params.dig('token', 'card', 'tokenization_method'))
     assert purchase.success?
     assert_match('apple_pay', purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['wallet']['type'])
+  end
+
+  def test_succesful_purchase_with_connect_for_apple_pay
+    assert response = @gateway.purchase(@amount, @apple_pay, @options)
+    assert_success response
+  end
+
+  def test_succesful_application_with_connect_for_google_pay
+    assert response = @gateway.purchase(@amount, @google_pay, @options)
+    assert_success response
   end
 
   def test_purchases_with_same_idempotency_key
