@@ -163,8 +163,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        return {} if body.blank?
-        JSON.parse(body)
+        body.blank? ? {} :  JSON.parse(body)
       end
 
       def commit(action, parameters, options)
