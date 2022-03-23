@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
           raw_response = ssl_post(url('getSessionToken'), post_data(parameters), request_headers(options))
           response = parse(raw_response)
         rescue ResponseError => e
-          e.response.body
+          raw_response = e.response.body
           response = parse(raw_response)
         end
       end
