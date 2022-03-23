@@ -204,10 +204,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def request_headers(options)
-        headers = {
+        {
           'Content-Type' => 'application/json',
         }
-        headers
       end
 
       def success_from(action, response, options)
