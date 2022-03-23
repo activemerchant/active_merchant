@@ -50,6 +50,7 @@
 * Dlocal: Add three_ds mpi support [cristian] #4345
 * Stripe PI: Add `request_three_d_secure` field for `create_setup_intent` [aenand] #4365
 * Adyen: Add `verify_amount` field for verify [ajawadmirza] #4369
+* Stripe PI: Pass options for tokenizing Apple/Google Pay [gasb150] #4368
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173

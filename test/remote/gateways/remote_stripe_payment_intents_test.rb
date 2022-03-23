@@ -162,6 +162,22 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_match('apple_pay', purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['wallet']['type'])
   end
 
+  def test_succesful_purchase_with_connect_for_apple_pay
+    options = {
+      stripe_account: @destination_account
+    }
+    assert response = @gateway.purchase(@amount, @apple_pay, options)
+    assert_success response
+  end
+
+  def test_succesful_application_with_connect_for_google_pay
+    options = {
+      stripe_account: @destination_account
+    }
+    assert response = @gateway.purchase(@amount, @google_pay, options)
+    assert_success response
+  end
+
   def test_purchases_with_same_idempotency_key
     options = {
       currency: 'GBP',
