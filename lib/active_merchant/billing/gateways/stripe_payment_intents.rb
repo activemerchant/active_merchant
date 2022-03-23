@@ -124,6 +124,7 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options)
         add_return_url(post, options)
         add_fulfillment_date(post, options)
+        request_three_d_secure(post, options)
         post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
         post[:usage] = options[:usage] if %w(on_session off_session).include?(options[:usage])
         post[:description] = options[:description] if options[:description]

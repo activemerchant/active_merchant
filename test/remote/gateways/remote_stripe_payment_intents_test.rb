@@ -500,6 +500,40 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     end
   end
 
+  def test_create_setup_intent_with_request_three_d_secure
+    [@three_ds_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+      assert authorize_response = @gateway.create_setup_intent(card_to_use, {
+        address: {
+          email: 'test@example.com',
+          name: 'John Doe',
+          line1: '1 Test Ln',
+          city: 'Durham',
+          tracking_number: '123456789'
+        },
+        currency: 'USD',
+        confirm: true,
+        execute_threed: true,
+        return_url: 'https://example.com',
+        request_three_d_secure: 'any'
+      })
+
+      assert_equal 'requires_action', authorize_response.params['status']
+      assert_match 'https://hooks.stripe.com', authorize_response.params.dig('next_action', 'redirect_to_url', 'url')
+
+      assert_equal 'any', authorize_response.params.dig('payment_method_options', 'card', 'request_three_d_secure')
+
+      # since we cannot "click" the stripe hooks URL to confirm the authorization
+      # we will at least confirm we can retrieve the created setup_intent and it contains the structure we expect
+      setup_intent_id = authorize_response.params['id']
+
+      assert si_reponse = @gateway.retrieve_setup_intent(setup_intent_id)
+      assert_equal 'requires_action', si_reponse.params['status']
+
+      assert_not_empty si_reponse.params.dig('latest_attempt', 'payment_method_details', 'card')
+      assert_nil si_reponse.params.dig('latest_attempt', 'payment_method_details', 'card', 'network_transaction_id')
+    end
+  end
+
   def test_retrieving_error_for_non_existant_setup_intent
     assert si_reponse = @gateway.retrieve_setup_intent('seti_does_not_exist')
     assert_nil si_reponse.params['status']
