@@ -658,6 +658,11 @@ nmi:
 nmi_secure:
   security_key: '6457Thfj624V5r7WUwc5v6a68Zsd6YEm'
 
+nuvei:
+  merchant_id: ''
+  merchant_site_id: ''
+  secret: ''
+
 ogone:
   login: LOGIN
   user: USER
