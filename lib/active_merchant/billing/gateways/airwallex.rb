@@ -26,15 +26,15 @@ module ActiveMerchant #:nodoc:
         @client_id = options[:client_id]
         @client_api_key = options[:client_api_key]
         super
-        setup_ids(options) unless options[:request_id] && options[:merchant_order_id]
         @access_token = setup_access_token
       end
 
       def purchase(money, card, options = {})
         requires!(options, :return_url)
-        payment_intent_id = create_payment_intent(money, @options)
+        setup_ids(options)
+        payment_intent_id = create_payment_intent(money, options)
         post = {
-          'request_id' => update_request_id(@options, 'purchase'),
+          'request_id' => update_request_id(options, 'purchase'),
           'return_url' => options[:return_url]
         }
         add_card(post, card, options)
@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment, options = {})
+        setup_ids(options)
         # authorize is just a purchase w/o an auto capture
         purchase(money, payment, options.merge({ auto_capture: false }))
       end
@@ -51,9 +52,10 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         raise ArgumentError, 'An authorization value must be provided.' if authorization.blank?
 
-        update_request_id(@options, 'capture')
+        setup_ids(options)
+        update_request_id(options, 'capture')
         post = {
-          'request_id' => @options[:request_id],
+          'request_id' => options[:request_id],
           'amount' => amount(money)
         }
         commit(:capture, post, authorization)
@@ -62,11 +64,12 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         raise ArgumentError, 'An authorization value must be provided.' if authorization.blank?
 
+        setup_ids(options)
         post = {}
         post[:amount] = amount(money)
         post[:payment_intent_id] = authorization
-        post[:request_id] = update_request_id(@options, 'refund')
-        post[:merchant_order_id] = @options[:merchant_order_id]
+        post[:request_id] = update_request_id(options, 'refund')
+        post[:merchant_order_id] = options[:merchant_order_id]
 
         commit(:refund, post)
       end
@@ -74,9 +77,10 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         raise ArgumentError, 'An authorization value must be provided.' if authorization.blank?
 
-        update_request_id(@options, 'void')
+        setup_ids(options)
+        update_request_id(options, 'void')
         post = {}
-        post[:request_id] = @options[:request_id]
+        post[:request_id] = options[:request_id]
         commit(:void, post, authorization)
       end
 
@@ -100,6 +104,8 @@ module ActiveMerchant #:nodoc:
       private
 
       def setup_ids(options)
+        return if options[:request_id] && options[:merchant_order_id]
+
         request_id, merchant_order_id = generate_ids
         options[:request_id] = options[:request_id] || request_id
         options[:merchant_order_id] = options[:merchant_order_id] || merchant_order_id
@@ -209,8 +215,8 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: authorization_from(response),
-          avs_result: AVSResult.new(code: response['some_avs_response_key']),
-          cvv_result: CVVResult.new(response['some_cvv_response_key']),
+          avs_result: AVSResult.new(code: response.dig('latest_payment_attempt', 'authentication_data', 'avs_result')),
+          cvv_result: CVVResult.new(response.dig('latest_payment_attempt', 'authentication_data', 'cvc_code')),
           test: test?,
           error_code: error_code_from(response)
         )
