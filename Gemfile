@@ -9,5 +9,4 @@ group :test, :remote_test do
   gem 'braintree', '>= 3.0.0', '<= 3.0.1'
   gem 'jwe'
   gem 'mechanize'
-  gem 'rexml'
 end
