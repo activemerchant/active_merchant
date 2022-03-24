@@ -15,9 +15,6 @@ module ActiveMerchant #:nodoc:
     #   CyberSource what kind of item you are selling.  It is used when
     #   calculating tax/VAT.
     # * All transactions use dollar values.
-    # * To process pinless debit cards through the pinless debit card
-    #   network, your Cybersource merchant account must accept pinless
-    #   debit card payments.
     # * The order of the XML elements does matter, make sure to follow the order in
     #   the documentation exactly.
     class CyberSourceGateway < Gateway
@@ -139,7 +136,6 @@ module ActiveMerchant #:nodoc:
         commit(build_capture_request(money, authorization, options), :capture, money, options)
       end
 
-      # options[:pinless_debit_card] => true # attempts to process as pinless debit card
       def purchase(money, payment_method_or_reference, options = {})
         setup_address_hash(options)
         commit(build_purchase_request(money, payment_method_or_reference, options), :purchase, money, options)
@@ -228,12 +224,6 @@ module ActiveMerchant #:nodoc:
         requires!(options, :line_items)
         setup_address_hash(options)
         commit(build_tax_calculation_request(creditcard, options), :calculate_tax, nil, options)
-      end
-
-      # Determines if a card can be used for Pinless Debit Card transactions
-      def validate_pinless_debit_card(creditcard, options = {})
-        requires!(options, :order_id)
-        commit(build_validate_pinless_debit_request(creditcard, options), :validate_pinless_debit_card, nil, options)
       end
 
       def supports_scrubbing?
@@ -365,7 +355,7 @@ module ActiveMerchant #:nodoc:
           add_purchase_service(xml, payment_method_or_reference, options)
           add_threeds_services(xml, options)
           add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
-          add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
+          add_business_rules_data(xml, payment_method_or_reference, options)
           add_stored_credential_subsequent_auth(xml, options)
           add_issuer_additional_data(xml, options)
           add_partner_solution_id(xml)
@@ -474,13 +464,6 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_subscription(xml, options, reference)
         add_subscription_retrieve_service(xml, options)
-        xml.target!
-      end
-
-      def build_validate_pinless_debit_request(creditcard, options)
-        xml = Builder::XmlMarkup.new indent: 2
-        add_creditcard(xml, creditcard)
-        add_validate_pinless_debit_service(xml)
         xml.target!
       end
 
@@ -797,15 +780,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_purchase_service(xml, payment_method, options)
-        if options[:pinless_debit_card]
-          xml.tag! 'pinlessDebitService', { 'run' => 'true' } do
-            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
-          end
-        else
-          add_auth_service(xml, payment_method, options)
-          xml.tag! 'ccCaptureService', { 'run' => 'true' } do
-            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
-          end
+        add_auth_service(xml, payment_method, options)
+        xml.tag! 'ccCaptureService', { 'run' => 'true' } do
+          xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
         end
       end
 
@@ -912,10 +889,6 @@ module ActiveMerchant #:nodoc:
           xml.tag!('planType', options[:installment_plan_type]) if options[:installment_plan_type]
           xml.tag!('firstInstallmentDate', options[:first_installment_date]) if options[:first_installment_date]
         end
-      end
-
-      def add_validate_pinless_debit_service(xml)
-        xml.tag! 'pinlessDebitValidateService', { 'run' => 'true' }
       end
 
       def add_threeds_services(xml, options)

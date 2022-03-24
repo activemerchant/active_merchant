@@ -450,11 +450,6 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
-  def test_successful_pinless_debit_card_purchase
-    assert response = @gateway.purchase(@amount, @pinless_debit_card, @options.merge(pinless_debit_card: true))
-    assert_successful_response(response)
-  end
-
   def test_successful_purchase_with_solution_id
     ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -575,13 +570,6 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(refund)
   ensure
     ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
-  end
-
-  def test_successful_validate_pinless_debit_card
-    assert response = @gateway.validate_pinless_debit_card(@pinless_debit_card, @options)
-    assert response.test?
-    assert_equal 'Y', response.params['status']
-    assert_equal true, response.success?
   end
 
   def test_network_tokenization_authorize_and_capture
