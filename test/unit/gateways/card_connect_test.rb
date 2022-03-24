@@ -20,6 +20,17 @@ class CardConnectTest < Test::Unit::TestCase
     assert CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'https://vendor.cardconnect.com/test')
   end
 
+  def test_add_address
+    result = {}
+
+    @gateway.send(:add_address, result, billing_address: { address1: '123 Test St.', address2: '5F', city: 'Testville', zip: '12345', state: 'AK' })
+    assert_equal '123 Test St.', result[:address]
+    assert_equal '5F', result[:address2]
+    assert_equal 'Testville', result[:city]
+    assert_equal 'AK', result[:region]
+    assert_equal '12345', result[:postal]
+  end
+
   def test_reject_domains_without_card_connect
     assert_raise(ArgumentError) {
       CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'https://www.google.com')

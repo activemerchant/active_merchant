@@ -386,7 +386,7 @@ module ActiveMerchant #:nodoc:
           doc.orderSource(order_source)
         elsif payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :apple_pay
           doc.orderSource('applepay')
-        elsif payment_method.is_a?(NetworkTokenizationCreditCard) && [:google_pay, :android_pay].include?(payment_method.source)
+        elsif payment_method.is_a?(NetworkTokenizationCreditCard) && %i[google_pay android_pay].include?(payment_method.source)
           doc.orderSource('androidpay')
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.orderSource('retail')
@@ -394,7 +394,6 @@ module ActiveMerchant #:nodoc:
           doc.orderSource('ecommerce')
         end
       end
-
 
       def order_source(options = {})
         return options[:order_source] unless options[:stored_credential]

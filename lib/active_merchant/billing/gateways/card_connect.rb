@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
           post[:address] = address[:address1] if address[:address1]
-          post[:address].concat(" #{address[:address2]}") if address[:address2]
+          post[:address2] = address[:address2] if address[:address2]
           post[:city] = address[:city] if address[:city]
           post[:region] = address[:state] if address[:state]
           post[:country] = address[:country] if address[:country]
