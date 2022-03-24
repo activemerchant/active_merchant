@@ -144,8 +144,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
+        amount = options[:verify_amount]&.to_i || 0
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(0, credit_card, options) }
+          r.process { authorize(amount, credit_card, options) }
           options[:idempotency_key] = nil
           r.process(:ignore_result) { void(r.authorization, options) }
         end

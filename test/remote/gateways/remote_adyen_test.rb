@@ -1038,6 +1038,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_match 'Authorised', response.message
   end
 
+  def test_successful_verify_with_custom_amount
+    response = @gateway.verify(@credit_card, @options.merge({ verify_amount: '500' }))
+    assert_success response
+    assert_match 'Authorised', response.message
+  end
+
   def test_successful_verify_with_bank_account
     response = @gateway.verify(@bank_account, @options)
     assert_success response
