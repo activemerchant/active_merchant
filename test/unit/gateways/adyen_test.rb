@@ -784,11 +784,22 @@ class AdyenTest < Test::Unit::TestCase
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      assert_equal '0', JSON.parse(data)['amount']['value'] if endpoint.include?('authorise')
     end.respond_with(successful_verify_response)
     assert_success response
     assert_equal '#7914776426645103#', response.authorization
     assert_equal 'Authorised', response.message
     assert response.test?
+  end
+
+  def test_successful_verify_with_custom_amount
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options.merge({ verify_amount: '500' }))
+    end.check_request do |endpoint, data, _headers|
+      assert_equal '500', JSON.parse(data)['amount']['value'] if endpoint.include?('authorise')
+    end.respond_with(successful_verify_response)
+    assert_success response
   end
 
   def test_successful_verify_with_bank_account

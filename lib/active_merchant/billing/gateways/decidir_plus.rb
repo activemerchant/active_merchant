@@ -105,8 +105,12 @@ module ActiveMerchant #:nodoc:
           post[:security_code] = payment.verification_value.to_s
           post[:card_holder_name] = payment.name.empty? ? options[:name_override] : payment.name
           post[:card_holder_identification] = {}
-          post[:card_holder_identification][:type] = options[:dni]
-          post[:card_holder_identification][:number] = options[:card_holder_identification_number]
+          post[:card_holder_identification][:type] = options[:card_holder_identification_type] if options[:card_holder_identification_type]
+          post[:card_holder_identification][:number] = options[:card_holder_identification_number] if options[:card_holder_identification_number]
+
+          # additional data used for Visa transactions
+          post[:card_holder_door_number] = options[:card_holder_door_number].to_i if options[:card_holder_door_number]
+          post[:card_holder_birthday] = options[:card_holder_birthday] if options[:card_holder_birthday]
         end
       end
 
@@ -125,7 +129,33 @@ module ActiveMerchant #:nodoc:
         post[:currency] = options[:currency] || self.default_currency
         post[:installments] = options[:installments] || 1
         post[:payment_type] = options[:payment_type] || 'single'
+        post[:establishment_name] = options[:establishment_name] if options[:establishment_name]
+
+        add_aggregate_data(post, options) if options[:aggregate_data]
         add_sub_payments(post, options)
+      end
+
+      def add_aggregate_data(post, options)
+        aggregate_data = {}
+        data = options[:aggregate_data]
+        aggregate_data[:indicator] = data[:indicator] if data[:indicator]
+        aggregate_data[:identification_number] = data[:identification_number] if data[:identification_number]
+        aggregate_data[:bill_to_pay] = data[:bill_to_pay] if data[:bill_to_pay]
+        aggregate_data[:bill_to_refund] = data[:bill_to_refund] if data[:bill_to_refund]
+        aggregate_data[:merchant_name] = data[:merchant_name] if data[:merchant_name]
+        aggregate_data[:street] = data[:street] if data[:street]
+        aggregate_data[:number] = data[:number] if data[:number]
+        aggregate_data[:postal_code] = data[:postal_code] if data[:postal_code]
+        aggregate_data[:category] = data[:category] if data[:category]
+        aggregate_data[:channel] = data[:channel] if data[:channel]
+        aggregate_data[:geographic_code] = data[:geographic_code] if data[:geographic_code]
+        aggregate_data[:city] = data[:city] if data[:city]
+        aggregate_data[:merchant_id] = data[:merchant_id] if data[:merchant_id]
+        aggregate_data[:province] = data[:province] if data[:province]
+        aggregate_data[:country] = data[:country] if data[:country]
+        aggregate_data[:merchant_email] = data[:merchant_email] if data[:merchant_email]
+        aggregate_data[:merchant_phone] = data[:merchant_phone] if data[:merchant_phone]
+        post[:aggregate_data] = aggregate_data
       end
 
       def add_sub_payments(post, options)
@@ -267,7 +297,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        response.dig('error_type') unless success_from(response)
+        return if success_from(response)
+
+        error_code = nil
+        if error = response.dig('status_details', 'error')
+          error_code = error.dig('reason', 'id') || error['type']
+        elsif response['error_type']
+          error_code = response['error_type']
+        elsif response.dig('error', 'validation_errors')
+          error = response.dig('error')
+          validation_errors = error.dig('validation_errors', 0)
+          code = validation_errors['code'] if validation_errors && validation_errors['code']
+          param = validation_errors['param'] if validation_errors && validation_errors['param']
+          error_code = "#{error['error_type']} | #{code} | #{param}" if error['error_type']
+        elsif error = response.dig('error')
+          error_code = error.dig('reason', 'id')
+        end
+
+        error_code
       end
 
       def error_message(response)

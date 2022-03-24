@@ -77,6 +77,15 @@ class DecidirPlusTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_failed_authorize
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(failed_authorize_response)
+
+    assert_failure response
+    assert_equal response.error_code, response.params['status_details']['error']['reason']['id']
+  end
+
   def test_successful_refund
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.refund(@amount, @payment_reference)
@@ -100,6 +109,26 @@ class DecidirPlusTest < Test::Unit::TestCase
       assert_match(/#{@credit_card.number}/, data)
       assert_match(/#{@credit_card.name}/, data)
     end.respond_with(successful_store_response)
+
+    assert_success response
+  end
+
+  def test_successful_store_with_additional_data_validation
+    options = {
+      card_holder_identification_type: 'dni',
+      card_holder_identification_number: '44567890',
+      card_holder_door_number: '348',
+      card_holder_birthday: '01012017'
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal(options[:card_holder_identification_type], request['card_holder_identification']['type'])
+      assert_equal(options[:card_holder_identification_number], request['card_holder_identification']['number'])
+      assert_equal(options[:card_holder_door_number].to_i, request['card_holder_door_number'])
+      assert_equal(options[:card_holder_birthday], request['card_holder_birthday'])
+    end.respond_with(successful_purchase_response)
 
     assert_success response
   end
@@ -142,6 +171,50 @@ class DecidirPlusTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @payment_reference, options)
     end.check_request do |_action, _endpoint, data, _headers|
       assert_equal(@fraud_detection, JSON.parse(data, symbolize_names: true)[:fraud_detection])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_establishment_name
+    establishment_name = 'Heavenly Buffaloes'
+    options = @options.merge(establishment_name: establishment_name)
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @payment_reference, options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      assert_equal(establishment_name, JSON.parse(data)['establishment_name'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_aggregate_data
+    aggregate_data = {
+      indicator: '1',
+      identification_number: '308103480',
+      bill_to_pay: 'test1',
+      bill_to_refund: 'test2',
+      merchant_name: 'Heavenly Buffaloes',
+      street: 'Sesame',
+      number: '123',
+      postal_code: '22001',
+      category: 'yum',
+      channel: '005',
+      geographic_code: 'C1234',
+      city: 'Ciudad de Buenos Aires',
+      merchant_id: 'dec_agg',
+      province: 'Buenos Aires',
+      country: 'Argentina',
+      merchant_email: 'merchant@mail.com',
+      merchant_phone: '2678433111'
+    }
+    options = @options.merge(aggregate_data: aggregate_data)
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @payment_reference, options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      assert_equal(aggregate_data, JSON.parse(data, symbolize_names: true)[:aggregate_data])
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -272,6 +345,12 @@ class DecidirPlusTest < Test::Unit::TestCase
   def failed_refund_response
     %{
       {\"error_type\":\"not_found_error\",\"entity_name\":\"\",\"id\":\"\"}
+    }
+  end
+
+  def failed_authorize_response
+    %{
+      {\"id\": 12516088,  \"site_transaction_id\": \"e77f40284fd5e0fba8e8ef7d1b784c5e\",  \"payment_method_id\": 1,  \"card_brand\": \"Visa\",  \"amount\": 100,  \"currency\": \"ars\",  \"status\": \"rejected\",  \"status_details\": {    \"ticket\": \"393\",    \"card_authorization_code\": \"\",    \"address_validation_code\": \"VTE0000\",    \"error\": {      \"type\": \"invalid_card\",      \"reason\": {        \"id\": 3,        \"description\": \"COMERCIO INVALIDO\",        \"additional_description\": \"\"      }    }  },  \"date\": \"2022-03-21T13:08Z\",  \"customer\": null,  \"bin\": \"400030\",  \"installments\": 1,  \"first_installment_expiration_date\": null,  \"payment_type\": \"single\",  \"sub_payments\": [],  \"site_id\": \"92002480\",  \"fraud_detection\": {    \"status\": null  },  \"aggregate_data\": null,  \"establishment_name\": null,  \"spv\": null,  \"confirmed\": null,  \"pan\": null,  \"customer_token\": null,  \"card_data\": \"/tokens/12516088\",  \"token\": \"058972ba-4235-4452-bfdf-fc9f61e2c0f9\"}
     }
   end
 

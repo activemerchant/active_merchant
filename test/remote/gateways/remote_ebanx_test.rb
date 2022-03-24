@@ -233,6 +233,26 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_match %r{Accepted}, response.message
   end
 
+  def test_successful_verify_for_mexico
+    options = @options.merge({
+      order_id: generate_unique_id,
+      ip: '127.0.0.1',
+      email: 'joao@example.com.mx',
+      birth_date: '10/11/1980',
+      billing_address: address({
+        address1: '1040 Rua E',
+        city: 'Toluca de Lerdo',
+        state: 'MX',
+        zip: '29269',
+        country: 'MX',
+        phone_number: '8522847035'
+      })
+    })
+    response = @gateway.verify(@credit_card, options)
+    assert_success response
+    assert_match %r{Accepted}, response.message
+  end
+
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
