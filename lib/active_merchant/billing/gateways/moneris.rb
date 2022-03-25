@@ -50,15 +50,16 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = options[:order_id]
         post[:address] = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        add_external_mpi_fields(post, options)
         add_stored_credential(post, options)
-        action = if post[:cavv]
+        action = if post[:cavv] || options[:three_d_secure]
                    'cavv_preauth'
                  elsif post[:data_key].blank?
                    'preauth'
                  else
                    'res_preauth_cc'
                  end
-        commit(action, post)
+        commit(action, post, options)
       end
 
       # This action verifies funding on a customer's card and readies them for
@@ -73,15 +74,16 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = options[:order_id]
         post[:address] = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        add_external_mpi_fields(post, options)
         add_stored_credential(post, options)
-        action = if post[:cavv]
+        action = if post[:cavv] || options[:three_d_secure]
                    'cavv_purchase'
                  elsif post[:data_key].blank?
                    'purchase'
                  else
                    'res_purchase_cc'
                  end
-        commit(action, post)
+        commit(action, post, options)
       end
 
       # This method retrieves locked funds from a customer's account (from a
@@ -203,6 +205,21 @@ module ActiveMerchant #:nodoc:
         sprintf('%.4i', creditcard.year)[-2..-1] + sprintf('%.2i', creditcard.month)
       end
 
+      def add_external_mpi_fields(post, options)
+        # See these pages:
+        # https://developer.moneris.com/livedemo/3ds2/cavv_purchase/tool/php
+        # https://developer.moneris.com/livedemo/3ds2/cavv_preauth/guide/php
+        return unless options[:three_d_secure]
+
+        three_d_secure_options = options[:three_d_secure]
+
+        post[:threeds_version] = three_d_secure_options[:version]
+        post[:crypt_type] = three_d_secure_options[:eci]
+        post[:cavv] = three_d_secure_options[:cavv]
+        post[:threeds_server_trans_id] = three_d_secure_options[:three_ds_server_trans_id]
+        post[:ds_trans_id] = three_d_secure_options[:ds_transaction_id]
+      end
+
       def add_payment_source(post, payment_method, options)
         if payment_method.is_a?(String)
           post[:data_key] = payment_method
@@ -291,14 +308,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(action, parameters = {})
+      def commit(action, parameters = {}, options = {})
+        threed_ds_transaction = options[:three_d_secure].present?
+
         data = post_data(action, parameters)
         url = test? ? self.test_url : self.live_url
         raw = ssl_post(url, data)
         response = parse(raw)
 
         Response.new(
-          successful?(response),
+          successful?(action, response, threed_ds_transaction),
           message_from(response[:message]),
           response,
           test: test?,
@@ -314,8 +333,16 @@ module ActiveMerchant #:nodoc:
       end
 
       # Tests for a successful response from Moneris' servers
-      def successful?(response)
-        response[:response_code] &&
+      def successful?(action, response, threed_ds_transaction = false)
+        # See 9.4 CAVV Result Codes in https://developer.moneris.com/livedemo/3ds2/reference/guide/php
+        cavv_accepted = if threed_ds_transaction
+                          response[:cavv_result_code] && response[:cavv_result_code] == '2'
+                        else
+                          true
+                        end
+
+        cavv_accepted &&
+          response[:response_code] &&
           response[:complete] &&
           (0..49).cover?(response[:response_code].to_i)
       end
