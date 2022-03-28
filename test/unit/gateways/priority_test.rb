@@ -3,194 +3,55 @@ class PriorityTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    # run command below to run tests in debug (byebug)
-    # byebug -Itest test/unit/gateways/priority_test.rb
-
     @gateway = PriorityGateway.new(key: 'sandbox_key', secret: 'secret', merchant_id: 'merchant_id')
-
-    # purchase params success
-    @amount_purchase = 4
-    @credit_card = credit_card('4111111111111111', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '123')
+    @amount = 4
+    @credit_card = credit_card
+    @invalid_credit_card = credit_card('4111')
     @replay_id = rand(100...1000)
-
-    # Note the 'avsStreet' and 'avsZip' are the values obtained from credit card input on MX Merchant
-    @option_spr = {
-      billing_address: address(),
-      invoice: '666',
-      card_present: false,
-      card_present_type: 'CardNotPresent',
-      is_auth: false,
-      payment_type: 'Sale',
-      bank_account: '',
-      should_vault_card: false,
-      tax_exempt: false,
-      tender_type: 'Card',
-      ship_amount: 0.01,
-      ship_to_country: 'USA',
-      ship_to_zip: '55667',
-      purchases: [
-        {
-          line_item_id: 79402,
-          name: 'Anita',
-          description: 'Dump',
-          quantity: 1,
-          unit_price: '1.23',
-          discount_amount: 0,
-          extended_amount: '1.23',
-          discount_rate: 0
-        },
-        {
-          line_item_id: 79403,
-          name: 'Old Peculier',
-          description: 'Beer',
-          quantity: 1,
-          unit_price: '2.34',
-          discount_amount: 0,
-          extended_amount: '2.34',
-          discount_rate: 0
-        }
-      ],
-      code: '101',
-      tax_rate: '05',
-      tax_amount: '0.50',
-      pos_data: {
-        cardholder_presence: 'Ecom',
-        device_attendance: 'HomePc',
-        device_input_capability: 'Unknown',
-        device_location: 'HomePc',
-        pan_capture_method: 'Manual',
-        partial_approval_support: 'NotSupported',
-        pin_capture_capability: 'Incapable'
-      }
-    }
-
-    # purchase params fail
-    @invalid_credit_card = credit_card('4111', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '123')
-    # purchase params fail end
-
-    # authorize params success
-    @amount_authorize = 799
-
-    setup_options_hashes
-  end
-
-  def setup_options_hashes
-    # Options  - A standard ActiveMerchant options hash:
-    @options = {
-      card_present: false,
-      client_ref: 'PTHER000IKZK',
-      created: '2021-07-01T19:01:57.69Z',
-      creator_name: 'Mike Saylor',
-      currency: 'USD',
-      customer_code: 'PTHER000IKZK',
-      invoice: 'R000IKZK',
-      is_duplicate: false,
-      merchant_id: @gateway.options[:merchant_id],
-      payment_token: 'P6NyKC5UfmZjgAlF3ZEd3YSaJG9qKT6E',
-      card_type: 'Visa',
-      entry_mode: 'Keyed',
-      last_4: '9898',
-      card_id: 'y15QvOteHZGBm7LH3GNIlTWbA1If',
-      token: 'P3hhDiddFRFTlsa8xmv7LHBGK9aI70UR',
-      has_contract: false,
-      is_debit: false,
-      is_corp: false,
-
-      pos_data: { pan_capture_method: 'Manual' },
-
-      risk: {
-        avs_address_match: false,
-        avs_response: 'No Response from AVS',
-        avs_zip_match: false,
-        cvv_match: true,
-        cvv_response: 'Match',
-        cvv_response_code: 'M'
-      },
-
-      purchases: [
-        {
-          code: 'MISC',
-          date_created: '0001-01-01T00:00:00',
-          description: 'Miscellaneous',
-          discount_amt: '0',
-          discount_rate: '0',
-          extended_amt: '9.51',
-          i_id: '11036546',
-          line_item_id: 0,
-          name: 'Miscellaneous',
-          quantity: '1',
-          tax_amount: '0.2',
-          tax_rate: '0.01',
-          transaction_i_id: 0,
-          transaction_id: '10000001610620',
-          unit_of_measure: 'EA',
-          unit_price: '1.51'
-        }
-      ],
-
-      reference: '118819000095',
-      replayId: nil,
-      require_signature: false,
-      review_indicator: nil,
-
-      settled_amt: '0',
-      settled_currency: 'USD',
-      settled_date: '2021-07-01T19:02:21.553',
-      ship_to_country: 'USA',
-      should_get_credit_card_level: true,
-      source: 'Tester1',
-      source_zip: '94102',
-      status: 'Settled',
-      tax: '0.12',
-      tax_exempt: false,
-      tender_type: 'Card',
-      type: 'Sale'
-    }
+    @approval_message = 'Approved or completed successfully. '
+    @options = { billing_address: address }
   end
 
   def test_successful_purchase
     response = stub_comms do
-      @gateway.purchase(@amount_purchase, @credit_card, @option_spr)
+      @gateway.purchase(@amount, @credit_card, @options)
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal 'Approved', response.params['status']
+    assert_equal @approval_message, response.message
     assert_equal 'Sale', response.params['type']
-
     assert response.test?
   end
 
-  def test_failed_purchase_invalid_creditcard
+  def test_failed_purchase_invalid_credit_card
     response = stub_comms do
-      @gateway.purchase(@amount_purchase, @invalid_credit_card, @option_spr)
+      @gateway.purchase(@amount, @invalid_credit_card, @options)
     end.respond_with(failed_purchase_response)
 
     assert_failure response
-    assert_equal 'Declined', response.params['status']
-
+    assert_equal 'Declined', response.error_code
     assert_equal 'Invalid card number', response.message
     assert response.test?
   end
 
   def test_successful_authorize
     response = stub_comms do
-      @gateway.authorize(333, @credit_card, @option_spr)
+      @gateway.authorize(333, @credit_card, @options)
     end.respond_with(successful_authorize_response)
+
     assert_success response
-    assert_equal 'Approved', response.params['status']
-    assert_equal 'Approved or completed successfully. ', response.message
+    assert_equal @approval_message, response.message
     assert_equal 'Authorization', response.params['type']
     assert response.test?
   end
 
-  def test_failed_authorize_invalid_creditcard
+  def test_failed_authorize_invalid_credit_card
     response = stub_comms do
-      @gateway.purchase(@amount_purchase, @invalid_credit_card, @option_spr)
+      @gateway.purchase(@amount, @invalid_credit_card, @options)
     end.respond_with(failed_authorize_response)
 
     assert_failure response
     assert_equal 'Declined', response.error_code
-
     assert_equal 'Invalid card number', response.message
     assert_equal 'Authorization', response.params['type']
     assert response.test?
@@ -198,74 +59,153 @@ class PriorityTest < Test::Unit::TestCase
 
   def test_successful_capture
     response = stub_comms do
-      @gateway.capture(@amount_authorize, { 'payment_token' => 'authobj' }.to_s, @option_spr)
+      @gateway.capture(@amount, '10000001625060|PaQLIYLRdWtcFKl5VaKTdUVxMutXJ5Ru', @options)
     end.respond_with(successful_capture_response)
+
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal 'PaQLIYLRdWtcFKl5VaKTdUVxMutXJ5Ru', response.authorization['payment_token']
+    assert_equal '10000001625061|PaQLIYLRdWtcFKl5VaKTdUVxMutXJ5Ru', response.authorization
   end
 
   def test_failed_capture
     response = stub_comms do
-      @gateway.capture(@amount_authorize, { 'payment_token' => 'bogus' }.to_s, jwt: {})
+      @gateway.capture(@amount, 'bogus_authorization', @options)
     end.respond_with(failed_capture_response)
+
     assert_failure response
-    assert_equal 'merchantId required', response.message
+    assert_equal 'Declined', response.error_code
+    assert_equal 'Original Transaction Not Found', response.message
     assert_equal nil, response.authorization
   end
 
   def test_failed_void
     @gateway.expects(:ssl_request).returns(failed_void_response)
 
-    response = @gateway.void({ 'id' => 123456 }.to_s)
+    response = @gateway.void('bogus authorization')
     assert_failure response
     assert_equal 'Unauthorized', response.error_code
     assert_equal 'Original Payment Not Found Or You Do Not Have Access.', response.message
   end
 
   def test_successful_refund
-    authorization = '{"payment_token"=>"PTp2WxLTXEP9Ml4DfDzTAbDWRaEFLKEM", "id"=>86044396}'
-
+    authorization = '86044396|PTp2WxLTXEP9Ml4DfDzTAbDWRaEFLKEM'
     response = stub_comms do
       @gateway.refund(544, authorization, @options)
     end.respond_with(successful_refund_response)
+
     assert_success response
-    assert_equal 'Approved', response.params['status']
-    assert_equal 'Approved or completed successfully. ', response.message
+    assert_equal @approval_message, response.message
     assert response.test?
   end
 
-  # Payment already refunded
-  def test_failed_refund_purchase_response
-    authorization = '{"payment_token"=>"PTp2WxLTXEP9Ml4DfDzTAbDWRaEFLKEM", "id"=>86044396}'
+  def test_failed_duplicate_refund
+    authorization = '86044396|PTp2WxLTXEP9Ml4DfDzTAbDWRaEFLKEM'
     response = stub_comms do
       @gateway.refund(544, authorization, @options)
-    end.respond_with(failed_refund_purchase_response)
+    end.respond_with(failed_duplicate_refund)
+
     assert_failure response
     assert_equal 'Declined', response.error_code
     assert_equal 'Payment already refunded', response.message
     assert response.test?
   end
 
-  def test_get_payment_status
-    # check is this transaction associated batch is "Closed".
-    @gateway.expects(:ssl_request).returns('')
+  def test_failed_get_payment_status
+    @gateway.expects(:ssl_get).returns('Not Found')
 
-    batch_check = @gateway.get_payment_status(123456, @option_spr)
+    batch_check = @gateway.get_payment_status(123456)
+
     assert_failure batch_check
-    assert_equal 'Invalid JSON response', batch_check.params['message'][0..20]
+    assert_includes batch_check.message, 'Invalid JSON response'
+    assert_includes batch_check.message, 'Not Found'
+  end
+
+  def test_purchase_passes_shipping_data
+    options_with_shipping = @options.merge({ ship_to_country: 'USA', ship_to_zip: 27703, ship_amount: 0.01 })
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_shipping)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/shipAmount\":0.01/, data)
+      assert_match(/shipToZip\":27703/, data)
+      assert_match(/shipToCountry\":\"USA/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_passes_purchases_data
+    purchases_data = {
+      purchases: [
+        {
+          line_item_id: 79402,
+          name: 'Book',
+          description: 'The Elements of Style',
+          quantity: 1,
+          unit_price: 1.23,
+          discount_amount: 0,
+          extended_amount: '1.23',
+          discount_rate: 0,
+          tax_amount: 1
+        }
+      ]
+    }
+    options_with_purchases = @options.merge(purchases_data)
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_purchases)
+    end.check_request do |_endpoint, data, _headers|
+      purchase_item = purchases_data[:purchases].first
+      purchase_object = JSON.parse(data)['purchases'].first
+
+      assert_equal(purchase_item[:name], purchase_object['name'])
+      assert_equal(purchase_item[:description], purchase_object['description'])
+      assert_equal(purchase_item[:unit_price], purchase_object['unitPrice'])
+      assert_equal(purchase_item[:quantity], purchase_object['quantity'])
+      assert_equal(purchase_item[:tax_amount], purchase_object['taxAmount'])
+      assert_equal(purchase_item[:discount_rate], purchase_object['discountRate'])
+      assert_equal(purchase_item[:discount_amount], purchase_object['discountAmount'])
+      assert_equal(purchase_item[:extended_amount], purchase_object['extendedAmount'])
+      assert_equal(purchase_item[:line_item_id], purchase_object['lineItemId'])
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_passes_pos_data
+    custom_pos_data = {
+      pos_data: {
+        cardholder_presence: 'NotPresent',
+        device_attendance: 'Unknown',
+        device_input_capability: 'KeyedOnly',
+        device_location: 'Unknown',
+        pan_capture_method: 'Manual',
+        partial_approval_support: 'Supported',
+        pin_capture_capability: 'Twelve'
+      }
+    }
+    options_with_custom_pos_data = @options.merge(custom_pos_data)
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_custom_pos_data)
+    end.check_request do |_endpoint, data, _headers|
+      pos_data_object = JSON.parse(data)['posData']
+      assert_equal(custom_pos_data[:pos_data][:cardholder_presence], pos_data_object['cardholderPresence'])
+      assert_equal(custom_pos_data[:pos_data][:device_attendance], pos_data_object['deviceAttendance'])
+      assert_equal(custom_pos_data[:pos_data][:device_input_capability], pos_data_object['deviceInputCapability'])
+      assert_equal(custom_pos_data[:pos_data][:device_location], pos_data_object['deviceLocation'])
+      assert_equal(custom_pos_data[:pos_data][:pan_capture_method], pos_data_object['panCaptureMethod'])
+      assert_equal(custom_pos_data[:pos_data][:partial_approval_support], pos_data_object['partialApprovalSupport'])
+      assert_equal(custom_pos_data[:pos_data][:pin_capture_capability], pos_data_object['pinCaptureCapability'])
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_purchase_with_duplicate_replay_id
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @option_spr.merge(replay_id: @replay_id))
+      @gateway.purchase(@amount, @credit_card, @options.merge(replay_id: @replay_id))
     end.check_request do |_endpoint, data, _headers|
       assert_equal @replay_id, JSON.parse(data)['replayId']
     end.respond_with(successful_purchase_response_with_replay_id)
     assert_success response
 
     duplicate_response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @option_spr.merge(replay_id: response.params['replayId']))
+      @gateway.purchase(@amount, @credit_card, @options.merge(replay_id: response.params['replayId']))
     end.check_request do |_endpoint, data, _headers|
       assert_equal response.params['replayId'], JSON.parse(data)['replayId']
     end.respond_with(successful_purchase_response_with_replay_id)
@@ -276,12 +216,12 @@ class PriorityTest < Test::Unit::TestCase
 
   def test_failed_purchase_with_duplicate_replay_id
     response = stub_comms do
-      @gateway.purchase(@amount_purchase, @invalid_credit_card, @option_spr.merge(replay_id: @replay_id))
+      @gateway.purchase(@amount, @invalid_credit_card, @options.merge(replay_id: @replay_id))
     end.respond_with(failed_purchase_response_with_replay_id)
     assert_failure response
 
     duplicate_response = stub_comms do
-      @gateway.purchase(@amount_purchase, @invalid_credit_card, @option_spr.merge(replay_id: response.params['replayId']))
+      @gateway.purchase(@amount, @invalid_credit_card, @options.merge(replay_id: response.params['replayId']))
     end.respond_with(failed_purchase_response_with_replay_id)
     assert_failure duplicate_response
 
@@ -989,14 +929,7 @@ class PriorityTest < Test::Unit::TestCase
 
   def failed_capture_response
     %(
-      {
-        "errorCode": "ValidationError",
-        "message": "Validation error happened",
-        "details": [
-            "merchantId required"
-        ],
-        "responseCode": "eENKmhrToV9UYxsXAh7iGAQ"
-    }
+      {"created":"2022-04-06T16:54:08.9Z","paymentToken":"PHubmbgcqEPVUI2HmOAr2sF7Vl33MnuJ","id":86777943,"creatorName":"API Key","isDuplicate":false,"merchantId":12345678,"batch":"0028","batchId":10000000272426,"tenderType":"Card","currency":"USD","amount":"0.02","cardAccount":{"token":"PHubmbgcqEPVUI2HmOAr2sF7Vl33MnuJ","hasContract":false,"cardPresent":false},"posData":{"panCaptureMethod":"Manual"},"authOnly":false,"status":"Declined","risk":{},"requireSignature":false,"settledAmount":"0","settledCurrency":"USD","cardPresent":false,"authMessage":"Original Transaction Not Found","availableAuthAmount":"0","reference":"209616004816","type":"Sale","source":"API","shouldGetCreditCardLevel":false}
     )
   end
 
@@ -1082,7 +1015,7 @@ class PriorityTest < Test::Unit::TestCase
     )
   end
 
-  def failed_refund_purchase_response
+  def failed_duplicate_refund
     %(
       {
         "created": "2021-07-27T04:35:58.397Z",
