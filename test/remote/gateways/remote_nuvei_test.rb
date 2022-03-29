@@ -9,6 +9,7 @@ class RemoteNuveiTest < Test::Unit::TestCase
     @options = {
       order_id: 1,
       billing_address: address,
+      description: 'Fake purchase',
       ip: '127.0.0.1',
       email: 'test@test.com'
     }
