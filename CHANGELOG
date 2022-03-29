@@ -58,6 +58,7 @@
 * CyberSource: Remove Pinless Debit Transaction Functionality [peteroas] #4370
 * Litle: Add support for Level 2 and 3 enhanced data [curiousepic] #4360
 * Rapyd: Add gateway support [meagabeth] #4372
+* CyberSource: Update and fix test coverage [peteroas] #4374
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
