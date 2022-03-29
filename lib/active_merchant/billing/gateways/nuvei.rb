@@ -29,10 +29,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
+        trans_id = get_trans_id(authorization)
         post = init_post(options)
         timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S")
         add_trans_details(post, money, options, timestamp)
-        add_refund_details(post, authorization, timestamp)
+        add_refund_details(post, trans_id, timestamp)
         commit('refundTransaction', post, options)
       end
 
@@ -47,6 +48,10 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def get_trans_id(authorization)
+        response = authorization.split('|').first()
+      end
+      
       def open_session
         timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S")
         checksum = get_session_checksum(timestamp)

@@ -28,6 +28,16 @@ class NuveiTest < Test::Unit::TestCase
     assert response['sessionToken'] == "2da9b9cd-573e-4055-a209-3ac2b855f9af"
   end
 
+  def test_successful_get_trans_id_with_upo_id
+    response = @gateway.send(:get_trans_id, "TransactionId|UserPaymentOptionId")
+    assert response == "TransactionId"
+  end
+
+  def test_successful_get_trans_id_without_upo_id
+    response = @gateway.send(:get_trans_id, "TransactionId")
+    assert response == "TransactionId"
+  end
+
   def test_successful_purchase
     expect_session successful_session_create_response
     
@@ -105,7 +115,7 @@ class NuveiTest < Test::Unit::TestCase
     assert_success payment
     assert_equal payment.authorization, "1110000000010304183|53959588"
     
-    refund = @gateway.refund(@amount, payment.authorization.split('|')[0])
+    refund = @gateway.refund(@amount, payment.authorization)
     assert_success refund
   end
   
