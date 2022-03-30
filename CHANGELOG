@@ -54,6 +54,7 @@
 * Stripe PI: Pass options for tokenizing Apple/Google Pay [gasb150] #4368
 * Dlocal: Format 3DS mpi enrollment data correctly [cristian] #4371
 * Airwallex: QA fixes for option handling [therufs] #4367
+* CardConnect: Fixed duplicate(concat) Address sent - card_connect is concat. address1 and 2 causing a AVS error [ahmirza] #4362
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
