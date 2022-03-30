@@ -333,7 +333,7 @@ module ActiveMerchant #:nodoc:
             cryptogram: payment.payment_cryptogram
           }
         }
-        token_response = api_request(:post, 'tokens', post, {})
+        token_response = api_request(:post, 'tokens', post, options)
         success = token_response['error'].nil?
         if success && token_response['id']
           Response.new(success, nil, token: token_response)

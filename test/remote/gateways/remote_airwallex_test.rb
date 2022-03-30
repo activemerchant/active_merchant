@@ -24,6 +24,15 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     assert_equal 'AUTHORIZED', response.message
   end
 
+  def test_successful_purchase_with_specified_ids
+    request_id = "request_#{(Time.now.to_f.round(2) * 100).to_i}"
+    merchant_order_id = "order_#{(Time.now.to_f.round(2) * 100).to_i}"
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(request_id: request_id, merchant_order_id: merchant_order_id))
+    assert_success response
+    assert_match(/request_/, response.params.dig('request_id'))
+    assert_match(/order_/, response.params.dig('merchant_order_id'))
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@declined_amount, @declined_card, @options)
     assert_failure response

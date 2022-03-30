@@ -2,6 +2,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Moneris: Add 3DS MPI field support [esmitperez] #4373
 * StripePI: Add ability to change payment_method_type to confirm_intent [aenand] #4300
 * GlobalCollect: Improve support for Naranja and Cabal card types [dsmcclain] #4286
 * Payflow: Add support for stored credentials [ajawadmirza] #4277
@@ -50,6 +51,9 @@
 * Dlocal: Add three_ds mpi support [cristian] #4345
 * Stripe PI: Add `request_three_d_secure` field for `create_setup_intent` [aenand] #4365
 * Adyen: Add `verify_amount` field for verify [ajawadmirza] #4369
+* Stripe PI: Pass options for tokenizing Apple/Google Pay [gasb150] #4368
+* Dlocal: Format 3DS mpi enrollment data correctly [cristian] #4371
+* Airwallex: QA fixes for option handling [therufs] #4367
 * CardConnect: Fixed duplicate(concat) Address sent - card_connect is concat. address1 and 2 causing a AVS error [ahmirza] #4362
 
 == Version 1.125.0 (January 20, 2022)

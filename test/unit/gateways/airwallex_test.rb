@@ -30,11 +30,6 @@ class AirwallexTest < Test::Unit::TestCase
     assert @gateway.instance_variable_defined?(:@access_token)
   end
 
-  def test_gateway_has_ids
-    assert @gateway.options[:request_id]
-    assert @gateway.options[:merchant_order_id]
-  end
-
   def test_successful_purchase
     @gateway.expects(:ssl_post).times(2).returns(successful_purchase_response)
 
@@ -165,6 +160,35 @@ class AirwallexTest < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
+  end
+
+  def test_refund_passes_both_ids
+    request_id = "request_#{(Time.now.to_f.round(2) * 100).to_i}"
+    merchant_order_id = "order_#{(Time.now.to_f.round(2) * 100).to_i}"
+    stub_comms do
+      # merchant_order_id is only passed directly on refunds
+      @gateway.refund(@amount, 'abc123', @options.merge(request_id: request_id, merchant_order_id: merchant_order_id))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/request_/, data)
+      assert_match(/order_/, data)
+    end.respond_with(successful_purchase_response, successful_refund_response)
+  end
+
+  def test_purchase_passes_request_id
+    request_id = "request_#{(Time.now.to_f.round(2) * 100).to_i}"
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(request_id: request_id))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/request_/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_passes_currency_code
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'USD'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/request_/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_invalid_login

@@ -17,7 +17,7 @@ class DLocalTest < Test::Unit::TestCase
       cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
       eci: '05',
       xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
-      enrolled: 'Y',
+      enrolled: 'true',
       authentication_response_status: 'Y'
     }
   end
@@ -249,7 +249,7 @@ class DLocalTest < Test::Unit::TestCase
     assert_equal ds_options[:eci], ds_data[:eci]
     assert_equal ds_options[:xid], ds_data[:xid]
     assert_equal nil, ds_data[:ds_transaction_id]
-    assert_equal ds_options[:enrolled], ds_data[:enrollment_response]
+    assert_equal 'Y', ds_data[:enrollment_response]
     assert_equal ds_options[:authentication_response_status], ds_data[:authentication_response]
   end
 
@@ -270,7 +270,7 @@ class DLocalTest < Test::Unit::TestCase
     assert_equal ds_options[:eci], ds_data[:eci]
     assert_equal nil, ds_data[:xid]
     assert_equal ds_options[:ds_transaction_id], ds_data[:ds_transaction_id]
-    assert_equal ds_options[:enrolled], ds_data[:enrollment_response]
+    assert_equal 'Y', ds_data[:enrollment_response]
     assert_equal ds_options[:authentication_response_status], ds_data[:authentication_response]
   end
 
@@ -332,6 +332,18 @@ class DLocalTest < Test::Unit::TestCase
 
     assert_equal 'ThreeDs data is invalid', resp.message
     assert_equal 'ThreeDs version not supported', resp.params['three_ds_version']
+  end
+
+  def test_formatted_enrollment
+    assert_equal 'Y', @gateway.send('formatted_enrollment', 'Y')
+    assert_equal 'Y', @gateway.send('formatted_enrollment', 'true')
+    assert_equal 'Y', @gateway.send('formatted_enrollment', true)
+
+    assert_equal 'N', @gateway.send('formatted_enrollment', 'N')
+    assert_equal 'N', @gateway.send('formatted_enrollment', 'false')
+    assert_equal 'N', @gateway.send('formatted_enrollment', false)
+
+    assert_equal 'U', @gateway.send('formatted_enrollment', 'U')
   end
 
   private
