@@ -463,7 +463,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(101, @declined_card, @options)
     assert_failure response
-    assert_equal 'Invalid CC Number', response.message
+    assert_includes ['Invalid CC Number', 'AUTH DECLINED                   12001', 'INVALID TERM ID                 41010'], response.message
   end
 
   def test_authorize_and_capture
@@ -801,14 +801,14 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal 'No reason to decline', response.message
+    assert_includes ['No reason to decline', 'Approved'], response.message
   end
 
   def test_successful_different_cards
     @credit_card.brand = 'master'
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal 'No reason to decline', response.message
+    assert_includes ['No reason to decline', 'Approved'], response.message
   end
 
   def test_successful_verify_with_discover_brand
@@ -822,13 +822,13 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @declined_card.brand = 'discover'
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'Invalid CC Number', response.message
+    assert_includes ['Invalid CC Number', 'INVALID TERM ID                 41010'], response.message
   end
 
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'Invalid CC Number', response.message
+    assert_includes ['Invalid CC Number', 'INVALID TERM ID                 41010'], response.message
   end
 
   def test_transcript_scrubbing
