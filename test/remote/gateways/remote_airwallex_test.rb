@@ -18,7 +18,13 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     assert_equal 'AUTHORIZED', response.message
   end
 
-  def test_successful_purchase_with_more_options
+  def test_successful_purchase_with_shipping_address
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(shipping_address: address))
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+  end
+
+  def test_successful_purchase_with_address
     response = @gateway.purchase(@amount, @credit_card, @options.merge(address))
     assert_success response
     assert_equal 'AUTHORIZED', response.message
@@ -38,6 +44,12 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'The card issuer declined this transaction. Please refer to the original response code.', response.message
     assert_equal '14', response.error_code
+  end
+
+  def test_purchase_with_reused_id_raises_error
+    assert_raise ArgumentError do
+      @gateway.purchase(@amount, @credit_card, @options.merge(request_id: '1234'))
+    end
   end
 
   def test_successful_authorize_and_capture

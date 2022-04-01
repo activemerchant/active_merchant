@@ -134,44 +134,52 @@ module ActiveMerchant #:nodoc:
       def create_payment_intent(money, options = {})
         post = {}
         add_invoice(post, money, options)
+        add_order(post, options)
         post[:request_id] = options[:request_id]
         post[:merchant_order_id] = options[:merchant_order_id]
 
         response = commit(:setup, post)
+        raise ArgumentError.new(response.message) unless response.success?
+
         response.params['id']
       end
 
       def add_billing(post, card, options = {})
-        return unless card_has_billing_info(card, options)
+        return unless has_name_info?(card)
 
         billing = post['payment_method']['card']['billing'] || {}
         billing['email'] = options[:email] if options[:email]
         billing['phone'] = options[:phone] if options[:phone]
         billing['first_name'] = card.first_name
         billing['last_name'] = card.last_name
-        billing['address'] = add_address(card, options) if card_has_address_info(card, options)
+        billing_address = options[:billing_address]
+        billing['address'] = build_address(billing_address) if has_required_address_info?(billing_address)
 
         post['payment_method']['card']['billing'] = billing
       end
 
-      def card_has_billing_info(card, options)
+      def has_name_info?(card)
         # These fields are required if billing data is sent.
         card.first_name && card.last_name
       end
 
-      def card_has_address_info(card, options)
+      def has_required_address_info?(address)
         # These fields are required if address data is sent.
-        options[:address1] && options[:country]
+        return unless address
+
+        address[:address1] && address[:country]
       end
 
-      def add_address(card, options = {})
-        address = {}
-        address[:country_code] = options[:country]
-        address[:street] = options[:address1]
-        address[:city] = options[:city] if options[:city] # required per doc, not in practice
-        address[:postcode] = options[:zip] if options[:zip]
-        address[:state] = options[:state] if options[:state]
-        address
+      def build_address(address)
+        return unless address
+
+        address_data = {} # names r hard
+        address_data[:country_code] = address[:country]
+        address_data[:street] = address[:address1]
+        address_data[:city] = address[:city] if address[:city] # required per doc, not in practice
+        address_data[:postcode] = address[:zip] if address[:zip]
+        address_data[:state] = address[:state] if address[:state]
+        address_data
       end
 
       def add_invoice(post, money, options)
@@ -191,6 +199,29 @@ module ActiveMerchant #:nodoc:
           }
         }
         add_billing(post, card, options)
+      end
+
+      def add_order(post, options)
+        return unless shipping_address = options[:shipping_address]
+
+        physical_address = build_shipping_address(shipping_address)
+        first_name, last_name = split_names(shipping_address[:name])
+        shipping = {}
+        shipping[:first_name] = first_name if first_name
+        shipping[:last_name] = last_name if last_name
+        shipping[:phone_number] = shipping_address[:phone_number] if shipping_address[:phone_number]
+        shipping[:address] = physical_address
+        post[:order] = { shipping: shipping }
+      end
+
+      def build_shipping_address(shipping_address)
+        address = {}
+        address[:city] = shipping_address[:city]
+        address[:country_code] = shipping_address[:country]
+        address[:postcode] = shipping_address[:zip]
+        address[:state] = shipping_address[:state]
+        address[:street] = shipping_address[:address1]
+        address
       end
 
       def authorization_only?(options = {})
