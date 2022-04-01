@@ -5,7 +5,7 @@ class RemoteVposTest < Test::Unit::TestCase
     @gateway = VposGateway.new(fixtures(:vpos))
 
     @amount = 100000
-    @credit_card = credit_card('5418630110000014', month: 8, year: 2021, verification_value: '258')
+    @credit_card = credit_card('5418630110000014', month: 8, year: 2026, verification_value: '277')
     @declined_card = credit_card('4000300011112220')
     @options = {
       billing_address: address,
