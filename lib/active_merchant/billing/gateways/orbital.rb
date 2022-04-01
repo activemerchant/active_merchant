@@ -211,7 +211,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
-        amount = allow_zero_auth?(credit_card) ? 0 : 100
+        amount = options[:verify_amount] ? options[:verify_amount].to_i : default_verify_amount(credit_card)
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(amount, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization) } unless amount == 0
@@ -263,6 +263,10 @@ module ActiveMerchant #:nodoc:
         order = build_void_request_xml(authorization, options)
 
         commit(order, :void, options[:retry_logic], options[:trace_number])
+      end
+
+      def default_verify_amount(credit_card)
+        allow_zero_auth?(credit_card) ? 0 : 100
       end
 
       def allow_zero_auth?(credit_card)
