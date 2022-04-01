@@ -1496,6 +1496,15 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_custom_amount_on_verify
+    response = stub_comms do
+      @gateway.verify(credit_card, @options.merge({ verify_amount: '101' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r{<Amount>101<\/Amount>}, data if data.include?('MessageType')
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_valid_amount_with_jcb_card
     @credit_card.brand = 'jcb'
     stub_comms do

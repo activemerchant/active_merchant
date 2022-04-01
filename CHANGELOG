@@ -62,7 +62,7 @@
 * Airwallex: QA fixes for address and create_setup_intent handling [therufs] #4377
 * Airwallex: add `descriptor` field and update logic for sending `request_id` and `merchant_order_id` [dsmcclain] #4379
 * Visanet Peru: use timestamp instead of random for purchaseNumber [therufs] #4093
-* Adyen: Fix `error_code_from` implementation [ajawadmirza] #4381
+* Orbital: add `verify_amount` field [ajawadmirza] #4376
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
