@@ -9,7 +9,7 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     @declined_amount = 8014
     @credit_card = credit_card('4111 1111 1111 1111')
     @declined_card = credit_card('2223 0000 1018 1375')
-    @options = { return_url: 'https://example.com' }
+    @options = { return_url: 'https://example.com', description: 'a test transaction' }
   end
 
   def test_successful_purchase
@@ -35,8 +35,8 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     merchant_order_id = "order_#{(Time.now.to_f.round(2) * 100).to_i}"
     response = @gateway.purchase(@amount, @credit_card, @options.merge(request_id: request_id, merchant_order_id: merchant_order_id))
     assert_success response
-    assert_match(/request_/, response.params.dig('request_id'))
-    assert_match(/order_/, response.params.dig('merchant_order_id'))
+    assert_match(request_id, response.params.dig('request_id'))
+    assert_match(merchant_order_id, response.params.dig('merchant_order_id'))
   end
 
   def test_failed_purchase

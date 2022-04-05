@@ -31,20 +31,21 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, card, options = {})
         requires!(options, :return_url)
-        setup_ids(options)
+
         payment_intent_id = create_payment_intent(money, options)
         post = {
-          'request_id' => update_request_id(options, 'purchase'),
+          'request_id' => request_id(options),
+          'merchant_order_id' => merchant_order_id(options),
           'return_url' => options[:return_url]
         }
         add_card(post, card, options)
+        add_descriptor(post, options)
         post['payment_method_options'] = { 'card' => { 'auto_capture' => false } } if authorization_only?(options)
 
         commit(:sale, post, payment_intent_id)
       end
 
       def authorize(money, payment, options = {})
-        setup_ids(options)
         # authorize is just a purchase w/o an auto capture
         purchase(money, payment, options.merge({ auto_capture: false }))
       end
@@ -52,24 +53,24 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         raise ArgumentError, 'An authorization value must be provided.' if authorization.blank?
 
-        setup_ids(options)
-        update_request_id(options, 'capture')
         post = {
-          'request_id' => options[:request_id],
+          'request_id' => request_id(options),
+          'merchant_order_id' => merchant_order_id(options),
           'amount' => amount(money)
         }
+        add_descriptor(post, options)
+
         commit(:capture, post, authorization)
       end
 
       def refund(money, authorization, options = {})
         raise ArgumentError, 'An authorization value must be provided.' if authorization.blank?
 
-        setup_ids(options)
         post = {}
         post[:amount] = amount(money)
         post[:payment_intent_id] = authorization
-        post[:request_id] = update_request_id(options, 'refund')
-        post[:merchant_order_id] = options[:merchant_order_id]
+        post[:request_id] = request_id(options)
+        post[:merchant_order_id] = merchant_order_id(options)
 
         commit(:refund, post)
       end
@@ -77,10 +78,11 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         raise ArgumentError, 'An authorization value must be provided.' if authorization.blank?
 
-        setup_ids(options)
-        update_request_id(options, 'void')
         post = {}
-        post[:request_id] = options[:request_id]
+        post[:request_id] = request_id(options)
+        post[:merchant_order_id] = merchant_order_id(options)
+        add_descriptor(post, options)
+
         commit(:void, post, authorization)
       end
 
@@ -103,17 +105,16 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def setup_ids(options)
-        return if options[:request_id] && options[:merchant_order_id]
-
-        request_id, merchant_order_id = generate_ids
-        options[:request_id] = options[:request_id] || request_id
-        options[:merchant_order_id] = options[:merchant_order_id] || merchant_order_id
+      def request_id(options)
+        options[:request_id] || generate_timestamp
       end
 
-      def generate_ids
-        timestamp = (Time.now.to_f.round(2) * 100).to_i.to_s
-        [timestamp.to_s, "mid_#{timestamp}"]
+      def merchant_order_id(options)
+        options[:merchant_order_id] || options[:order_id] || generate_timestamp
+      end
+
+      def generate_timestamp
+        (Time.now.to_f.round(2) * 100).to_i.to_s
       end
 
       def setup_access_token
@@ -135,8 +136,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, money, options)
         add_order(post, options)
-        post[:request_id] = options[:request_id]
-        post[:merchant_order_id] = options[:merchant_order_id]
+        post[:request_id] = "#{request_id(options)}_setup"
+        post[:merchant_order_id] = "#{merchant_order_id(options)}_setup"
+        add_descriptor(post, options)
 
         response = commit(:setup, post)
         raise ArgumentError.new(response.message) unless response.success?
@@ -228,8 +230,8 @@ module ActiveMerchant #:nodoc:
         options.include?(:auto_capture) && options[:auto_capture] == false
       end
 
-      def update_request_id(options, action)
-        options[:request_id] += "_#{action}"
+      def add_descriptor(post, options)
+        post[:descriptor] = options[:description] if options[:description]
       end
 
       def parse(body)

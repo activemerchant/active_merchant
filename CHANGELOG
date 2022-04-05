@@ -60,6 +60,7 @@
 * Rapyd: Add gateway support [meagabeth] #4372
 * CyberSource: Update and fix test coverage [peteroas] #4374
 * Airwallex: QA fixes for address and create_setup_intent handling [therufs] #4377
+* Airwallex: add `descriptor` field and update logic for sending `request_id` and `merchant_order_id` [dsmcclain] #4379
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173

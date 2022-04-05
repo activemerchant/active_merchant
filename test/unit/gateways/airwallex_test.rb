@@ -174,12 +174,33 @@ class AirwallexTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response, successful_refund_response)
   end
 
-  def test_purchase_passes_request_id
+  def test_purchase_passes_appropriate_request_id_per_call
     request_id = "request_#{(Time.now.to_f.round(2) * 100).to_i}"
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(request_id: request_id))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/request_/, data)
+      if data.include?('payment_method')
+        # check for this on the purchase call
+        assert_match(/\"request_id\":\"#{request_id}\"/, data)
+      else
+        # check for this on the create_payment_intent calls
+        assert_match(/\"request_id\":\"#{request_id}_setup\"/, data)
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_passes_appropriate_merchant_order_id_per_call
+    merchant_order_id = "order_#{(Time.now.to_f.round(2) * 100).to_i}"
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(merchant_order_id: merchant_order_id))
+    end.check_request do |_endpoint, data, _headers|
+      if data.include?('payment_method')
+        # check for this on the purchase call
+        assert_match(/\"merchant_order_id\":\"#{merchant_order_id}\"/, data)
+      else
+        # check for this on the create_payment_intent calls
+        assert_match(/\"merchant_order_id\":\"#{merchant_order_id}_setup\"/, data)
+      end
     end.respond_with(successful_purchase_response)
   end
 
@@ -187,7 +208,16 @@ class AirwallexTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'USD'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/request_/, data)
+      # only look for currency code on the create_payment_intent request
+      assert_match(/USD/, data) if data.include?('_setup')
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_passes_descriptor
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(description: 'a simple test'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/a simple test/, data)
     end.respond_with(successful_purchase_response)
   end
 
