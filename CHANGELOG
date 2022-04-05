@@ -69,6 +69,7 @@
 * Priority: Add additional fields to request and refactor gateway integration [dsmcclain] #4383
 * Rapyd: Update `type` option to `pm_type` [naashton] #4391
 * Conekta: Fix remote test [javierpedrozaing] #4386
+* NMI: Update post URL [jherreraa] #4380
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
