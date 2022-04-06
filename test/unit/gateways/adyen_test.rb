@@ -242,6 +242,22 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_standard_error_code_mapping
+    @gateway.expects(:ssl_post).returns(failed_billing_field_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'incorrect_address', response.error_code
+  end
+
+  def test_unknown_error_code_mapping
+    @gateway.expects(:ssl_post).returns(failed_invalid_delivery_field_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal '702', response.error_code
+  end
+
   def test_failed_authorise3d
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
@@ -1605,6 +1621,28 @@ class AdyenTest < Test::Unit::TestCase
       "resultCode":"Authorised",
       "authCode":"31265"
     }
+    RESPONSE
+  end
+
+  def failed_billing_field_response
+    <<~RESPONSE
+      {
+        "status": 422,
+        "errorCode": "132",
+        "message": "Required field 'billingAddress.street' is not provided.",
+        "errorType": "validation"
+      }
+    RESPONSE
+  end
+
+  def failed_invalid_delivery_field_response
+    <<~RESPONSE
+      {
+        "status": 500,
+        "errorCode": "702",
+        "message": "The 'deliveryDate' field is invalid. Invalid date (year)",
+        "errorType": "validation"
+      }
     RESPONSE
   end
 
