@@ -338,6 +338,22 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', refund.message
   end
 
+  def test_successful_refund_with_recipient_fields
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    refund_options = {
+      recipient_street_address: 'street',
+      recipient_city: 'chicago',
+      recipient_province_code: '312',
+      recipient_country_code: 'USA'
+    }
+
+    refund = @gateway.refund(@amount, response.authorization, refund_options)
+    assert_success refund
+    assert_equal 'Succeeded', refund.message
+  end
+
   def test_successful_refund_and_void
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
