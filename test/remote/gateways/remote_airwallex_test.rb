@@ -131,6 +131,54 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     assert_match %r{Invalid card number}, response.message
   end
 
+  def test_successful_cit_transaction_with_recurring_stored_credential
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'recurring',
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    }
+
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential: stored_credential_params))
+    assert_success auth
+  end
+
+  def test_successful_mit_transaction_with_recurring_stored_credential
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'merchant',
+      network_transaction_id: 'MCC123ABC0101'
+    }
+
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential: stored_credential_params))
+    assert_success auth
+  end
+
+  def test_successful_mit_transaction_with_unscheduled_stored_credential
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'unscheduled',
+      initiator: 'merchant',
+      network_transaction_id: 'MCC123ABC0101'
+    }
+
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential: stored_credential_params))
+    assert_success auth
+  end
+
+  def test_successful_mit_transaction_with_installment_stored_credential
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'installment',
+      initiator: 'cardholder',
+      network_transaction_id: 'MCC123ABC0101'
+    }
+
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential: stored_credential_params))
+    assert_success auth
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)

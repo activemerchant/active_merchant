@@ -40,6 +40,7 @@ module ActiveMerchant #:nodoc:
         }
         add_card(post, card, options)
         add_descriptor(post, options)
+        add_stored_credential(post, options)
         post['payment_method_options'] = { 'card' => { 'auto_capture' => false } } if authorization_only?(options)
 
         commit(:sale, post, payment_intent_id)
@@ -224,6 +225,22 @@ module ActiveMerchant #:nodoc:
         address[:state] = shipping_address[:state]
         address[:street] = shipping_address[:address1]
         address
+      end
+
+      def add_stored_credential(post, options)
+        return unless stored_credential = options[:stored_credential]
+
+        external_recurring_data = post[:external_recurring_data] = {}
+
+        case stored_credential.dig(:reason_type)
+        when 'recurring', 'installment'
+          external_recurring_data[:merchant_trigger_reason] = 'scheduled'
+        when 'unscheduled'
+          external_recurring_data[:merchant_trigger_reason] = 'unscheduled'
+        end
+
+        external_recurring_data[:original_transaction_id] = stored_credential.dig(:network_transaction_id)
+        external_recurring_data[:triggered_by] = stored_credential.dig(:initiator) == 'cardholder' ? 'customer' : 'merchant'
       end
 
       def authorization_only?(options = {})
