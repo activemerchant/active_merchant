@@ -63,6 +63,7 @@
 * Airwallex: add `descriptor` field and update logic for sending `request_id` and `merchant_order_id` [dsmcclain] #4379
 * Visanet Peru: use timestamp instead of random for purchaseNumber [therufs] #4093
 * Orbital: add `verify_amount` field [ajawadmirza] #4376
+* Credorax: add `recipient_street_address`, `recipient_city`, `recipient_province_code`, and `recipient_country_code` fields [ajawadmirza] #4384
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
