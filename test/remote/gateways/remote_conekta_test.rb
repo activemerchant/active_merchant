@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'date'
 
 class RemoteConektaTest < Test::Unit::TestCase
   def setup
@@ -9,8 +10,8 @@ class RemoteConektaTest < Test::Unit::TestCase
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
       number:             '4242424242424242',
       verification_value: '183',
-      month:              '01',
-      year:               '2019',
+      month:              '12',
+      year:                Date.today.year + 2,
       first_name:         'Mario F.',
       last_name:          'Moreno Reyes'
     )
@@ -59,6 +60,11 @@ class RemoteConektaTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount * 300, @credit_card, @options.merge({ monthly_installments: 3 }))
     assert_success response
     assert_equal nil, response.message
+  end
+
+  def test_unsuccessful_purchase_with_not_supported_currency
+    assert response = @gateway.purchase(8000, @credit_card, @options.merge({ currency: 'COP' }))
+    assert_equal 'At this time we process only Mexican pesos or U.S. dollars.', response.params['message']
   end
 
   def test_unsuccessful_purchase
@@ -170,12 +176,6 @@ class RemoteConektaTest < Test::Unit::TestCase
     assert_equal 'Wooden', response.params['details']['line_items'][-1]['description']
     assert_equal 'TheCustomerName', response.params['details']['name']
     assert_equal 'Guerrero', response.params['details']['billing_address']['city']
-  end
-
-  def test_failed_purchase_with_no_details
-    assert response = @gateway.purchase(@amount, @credit_card, {})
-    assert_failure response
-    assert_equal 'Falta el correo del comprador.', response.message
   end
 
   def test_invalid_key
