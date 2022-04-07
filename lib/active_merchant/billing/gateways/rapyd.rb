@@ -23,6 +23,8 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment, options)
         add_address(post, payment, options)
+        add_metadata(post, options)
+        add_ewallet(post, options)
         post[:capture] = true if payment_is_card?(options)
 
         if payment_is_ach?(options)
@@ -43,6 +45,8 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment, options)
         add_address(post, payment, options)
+        add_metadata(post, options)
+        add_ewallet(post, options)
         post[:capture] = false
         commit(:post, 'payments', post)
       end
@@ -56,6 +60,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:payment] = authorization
         add_invoice(post, money, options)
+        add_metadata(post, options)
         commit(:post, 'refunds', post)
       end
 
@@ -147,6 +152,14 @@ module ActiveMerchant #:nodoc:
         post[:payment_method][:fields][:routing_number] = payment.routing_number
         post[:payment_method][:fields][:account_number] = payment.account_number
         post[:payment_method][:fields][:payment_purpose] = options[:payment_purpose] if options[:payment_purpose]
+      end
+
+      def add_metadata(post, options)
+        post[:metadata] = options[:metadata] if options[:metadata]
+      end
+
+      def add_ewallet(post, options)
+        post[:ewallet_id] = options[:ewallet_id] if options[:ewallet_id]
       end
 
       def parse(body)

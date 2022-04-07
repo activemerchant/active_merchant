@@ -10,6 +10,25 @@ class RapydTest < Test::Unit::TestCase
       type: 'in_amex_card',
       currency: 'USD'
     }
+
+    @metadata = {
+      'array_of_objects': [
+        { 'name': 'John Doe' },
+        { 'type': 'customer' }
+      ],
+      'array_of_strings': %w[
+        color
+        size
+      ],
+      'number': 1234567890,
+      'object': {
+        'string': 'person'
+      },
+      'string': 'preferred',
+      'Boolean': true
+    }
+
+    @ewallet_id = 'ewallet_1a867a32b47158b30a8c17d42f12f3f1'
   end
 
   def test_successful_purchase
@@ -26,6 +45,14 @@ class RapydTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'ACT', response.params['data']['status']
+  end
+
+  def test_successful_purchase_with_options
+    @gateway.expects(:ssl_request).returns(successful_purchase_with_options_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(metadata: @metadata))
+    assert_success response
+    assert_equal @metadata, response.params['data']['metadata'].deep_transform_keys(&:to_sym)
   end
 
   def test_failed_purchase
@@ -187,6 +214,12 @@ class RapydTest < Test::Unit::TestCase
   def successful_purchase_response
     %(
       {"status":{"error_code":"","status":"SUCCESS","message":"","response_code":"","operation_id":"99571e34-f236-4f86-9040-5e0f256d6f64"},"data":{"id":"payment_716ce0efc63aa8d91579e873d29d9d5e","amount":1,"original_amount":1,"is_partial":false,"currency_code":"USD","country_code":"in","status":"CLO","description":"","merchant_reference_id":"","customer_token":"cus_f991c9a9f0cc7abdad64f9f7aea13f31","payment_method":"card_652d9fef3ec0089689fcaf0154340c64","payment_method_data":{"id":"card_652d9fef3ec0089689fcaf0154340c64","type":"in_amex_card","category":"card","metadata":null,"image":"","webhook_url":"","supporting_documentation":"","next_action":"not_applicable","name":"Ryan Reynolds","last4":"1111","acs_check":"unchecked","cvv_check":"unchecked","bin_details":{"type":null,"brand":null,"country":null,"bin_number":"411111"},"expiration_year":"35","expiration_month":"12","fingerprint_token":"ocfp_eb9edd24a3f3f59651aee0bd3d16201e"},"expiration":1648237659,"captured":true,"refunded":false,"refunded_amount":0,"receipt_email":"","redirect_url":"","complete_payment_url":"","error_payment_url":"","receipt_number":"","flow_type":"","address":null,"statement_descriptor":"N/A","transaction_id":"","created_at":1647632859,"metadata":{},"failure_code":"","failure_message":"","paid":true,"paid_at":1647632859,"dispute":null,"refunds":null,"order":null,"outcome":null,"visual_codes":{},"textual_codes":{},"instructions":{},"ewallet_id":"ewallet_1936682fdca7a188c49eb9f9817ade77","ewallets":[{"ewallet_id":"ewallet_1936682fdca7a188c49eb9f9817ade77","amount":1,"percent":100,"refunded_amount":0}],"payment_method_options":{},"payment_method_type":"in_amex_card","payment_method_type_category":"card","fx_rate":1,"merchant_requested_currency":null,"merchant_requested_amount":null,"fixed_side":"","payment_fees":null,"invoice":"","escrow":null,"group_payment":"","cancel_reason":null,"initiation_type":"customer_present","mid":"","next_action":"not_applicable","error_code":"","remitter_information":{}}}
+    )
+  end
+
+  def successful_purchase_with_options_response
+    %(
+      {"status":{"error_code":"", "status":"SUCCESS", "message":"", "response_code":"", "operation_id":"2852540b-ffa4-4547-9260-26f101f649ad"}, "data":{"id":"payment_6b00756cfefb0fdf6fb295fa507594d3", "amount":1000, "original_amount":1000, "is_partial":false, "currency_code":"USD", "country_code":"US", "status":"CLO", "description":"", "merchant_reference_id":"", "customer_token":"cus_9cb7908aec8a75a95846f1b3759ad1ef", "payment_method":"card_a838c23ef7be1ece86aa27a330167737", "payment_method_data":{"id":"card_a838c23ef7be1ece86aa27a330167737", "type":"us_visa_card", "category":"card", "metadata":null, "image":"", "webhook_url":"", "supporting_documentation":"", "next_action":"not_applicable", "name":"Ryan Reynolds", "last4":"1111", "acs_check":"unchecked", "cvv_check":"unchecked", "bin_details":{"type":null, "brand":null, "country":null, "bin_number":"411111"}, "expiration_year":"35", "expiration_month":"12", "fingerprint_token":"ocfp_eb9edd24a3f3f59651aee0bd3d16201e"}, "expiration":1649955834, "captured":true, "refunded":false, "refunded_amount":0, "receipt_email":"", "redirect_url":"", "complete_payment_url":"", "error_payment_url":"", "receipt_number":"", "flow_type":"", "address":null, "statement_descriptor":"N/A", "transaction_id":"", "created_at":1649351034, "metadata":{"number":1234567890, "object":{"string":"person"}, "string":"preferred", "Boolean":true, "array_of_objects":[{"name":"John Doe"}, {"type":"customer"}], "array_of_strings":["color", "size"]}, "failure_code":"", "failure_message":"", "paid":true, "paid_at":1649351034, "dispute":null, "refunds":null, "order":null, "outcome":null, "visual_codes":{}, "textual_codes":{}, "instructions":[], "ewallet_id":"ewallet_1936682fdca7a188c49eb9f9817ade77", "ewallets":[{"ewallet_id":"ewallet_1936682fdca7a188c49eb9f9817ade77", "amount":1000, "percent":100, "refunded_amount":0}], "payment_method_options":{}, "payment_method_type":"us_visa_card", "payment_method_type_category":"card", "fx_rate":1, "merchant_requested_currency":null, "merchant_requested_amount":null, "fixed_side":"", "payment_fees":null, "invoice":"", "escrow":null, "group_payment":"", "cancel_reason":null, "initiation_type":"customer_present", "mid":"", "next_action":"not_applicable", "error_code":"", "remitter_information":{}}}
     )
   end
 

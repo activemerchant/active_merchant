@@ -18,6 +18,22 @@ class RemoteRapydTest < Test::Unit::TestCase
       proof_of_authorization: false,
       payment_purpose: 'Testing Purpose'
     }
+    @metadata = {
+      'array_of_objects': [
+        { 'name': 'John Doe' },
+        { 'type': 'customer' }
+      ],
+      'array_of_strings': %w[
+        color
+        size
+      ],
+      'number': 1234567890,
+      'object': {
+        'string': 'person'
+      },
+      'string': 'preferred',
+      'Boolean': true
+    }
   end
 
   def test_successful_purchase
@@ -44,6 +60,13 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'SUCCESS', response.message
     assert_equal 'CLO', response.params['data']['status']
+  end
+
+  def test_successful_purchase_with_options
+    options = @options.merge(metadata: @metadata, ewallet_id: 'ewallet_1a867a32b47158b30a8c17d42f12f3f1')
+    response = @gateway.purchase(100000, @credit_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
   end
 
   def test_failed_purchase
@@ -86,6 +109,15 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal 'SUCCESS', refund.message
+  end
+
+  def test_successful_refund_with_options
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, @options.merge(metadata: @metadata))
     assert_success refund
     assert_equal 'SUCCESS', refund.message
   end
