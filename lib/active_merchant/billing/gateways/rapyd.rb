@@ -93,11 +93,15 @@ module ActiveMerchant #:nodoc:
       private
 
       def payment_is_ach?(options)
-        return true if options[:type].include?('_bank')
+        return unless options[:pm_type]
+
+        return true if options[:pm_type].include?('_bank')
       end
 
       def payment_is_card?(options)
-        return true if options[:type].include?('_card')
+        return unless options[:pm_type]
+
+        return true if options[:pm_type].include?('_card')
       end
 
       def add_address(post, creditcard, options)
@@ -133,7 +137,7 @@ module ActiveMerchant #:nodoc:
         post[:payment_method][:fields] = {}
         pm_fields = post[:payment_method][:fields]
 
-        post[:payment_method][:type] = options[:type]
+        post[:payment_method][:type] = options[:pm_type]
         pm_fields[:number] = payment.number
         pm_fields[:expiration_month] = payment.month.to_s
         pm_fields[:expiration_year] = payment.year.to_s
@@ -145,7 +149,7 @@ module ActiveMerchant #:nodoc:
         post[:payment_method] = {}
         post[:payment_method][:fields] = {}
 
-        post[:payment_method][:type] = options[:type]
+        post[:payment_method][:type] = options[:pm_type]
         post[:payment_method][:fields][:proof_of_authorization] = options[:proof_of_authorization]
         post[:payment_method][:fields][:first_name] = payment.first_name if payment.first_name
         post[:payment_method][:fields][:last_name] = payment.last_name if payment.last_name

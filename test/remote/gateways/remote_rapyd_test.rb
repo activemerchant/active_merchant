@@ -9,11 +9,11 @@ class RemoteRapydTest < Test::Unit::TestCase
     @declined_card = credit_card('4111111111111105')
     @check = check
     @options = {
-      type: 'us_visa_card',
+      pm_type: 'us_visa_card',
       currency: 'USD'
     }
     @ach_options = {
-      type: 'us_ach_bank',
+      pm_type: 'us_ach_bank',
       currency: 'USD',
       proof_of_authorization: false,
       payment_purpose: 'Testing Purpose'
@@ -162,7 +162,7 @@ class RemoteRapydTest < Test::Unit::TestCase
 
   def test_successful_verify_with_peso
     options = {
-      type: 'mx_visa_card',
+      pm_type: 'mx_visa_card',
       currency: 'MXN'
     }
     response = @gateway.verify(@credit_card, options)
@@ -172,7 +172,7 @@ class RemoteRapydTest < Test::Unit::TestCase
 
   def test_successful_verify_with_yen
     options = {
-      type: 'jp_visa_card',
+      pm_type: 'jp_visa_card',
       currency: 'JPY'
     }
     response = @gateway.verify(@credit_card, options)

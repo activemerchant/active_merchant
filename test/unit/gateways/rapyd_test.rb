@@ -7,7 +7,7 @@ class RapydTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      type: 'in_amex_card',
+      pm_type: 'in_amex_card',
       currency: 'USD'
     }
 
