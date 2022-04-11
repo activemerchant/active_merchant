@@ -409,7 +409,8 @@ class CheckoutV2Test < Test::Unit::TestCase
           version: '1.0.2',
           eci: '05',
           cryptogram: '1234',
-          xid: '1234'
+          xid: '1234',
+          status: 'Y'
         }
       }
       @gateway.authorize(@amount, @credit_card, options)
@@ -430,10 +431,11 @@ class CheckoutV2Test < Test::Unit::TestCase
       options = {
         execute_threed: true,
         three_d_secure: {
-          version: '2.0.0',
+          version: '2.1.0',
           eci: '05',
           cryptogram: '1234',
-          ds_transaction_id: '1234'
+          ds_transaction_id: '1234',
+          status: 'Y'
         }
       }
       @gateway.authorize(@amount, @credit_card, options)

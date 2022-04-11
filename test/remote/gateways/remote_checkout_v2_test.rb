@@ -78,17 +78,21 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
         version: '1.0.2',
         eci: '06',
         cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
-        xid: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY='
+        xid: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY=',
+        directory_response_status: 'Y',
+        authentication_response_status: 'Y'
       }
     )
     @additional_options_3ds2 = @options.merge(
       execute_threed: true,
       attempt_n3d: true,
       three_d_secure: {
-        version: '2.0.0',
+        version: '2.1.0',
         eci: '06',
         cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
-        ds_transaction_id: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY='
+        ds_transaction_id: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY=',
+        directory_response_status: 'Y',
+        authentication_response_status: 'Y'
       }
     )
   end
