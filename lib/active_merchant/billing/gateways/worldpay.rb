@@ -237,12 +237,98 @@ module ActiveMerchant #:nodoc:
               add_sub_merchant_data(xml, options[:sub_merchant_data]) if options[:sub_merchant_data]
               add_hcg_additional_data(xml, options) if options[:hcg_additional_data]
               add_instalments_data(xml, options) if options[:instalments]
+              add_additional_data(xml, money, options) if options[:level_2_data] || options[:level_3_data]
               add_moto_flag(xml, options) if options.dig(:metadata, :manual_entry)
               add_additional_3ds_data(xml, options) if options[:execute_threed] && options[:three_ds_version] && options[:three_ds_version] =~ /^2/
               add_3ds_exemption(xml, options) if options[:exemption_type]
             end
           end
         end
+      end
+
+      def add_additional_data(xml, amount, options)
+        level_two_data = options[:level_2_data] || {}
+        level_three_data = options[:level_3_data] || {}
+        level_two_and_three_data = level_two_data.merge(level_three_data).symbolize_keys
+
+        xml.branchSpecificExtension do
+          xml.purchase do
+            add_level_two_and_three_data(xml, amount, level_two_and_three_data)
+          end
+        end
+      end
+
+      def add_level_two_and_three_data(xml, amount, data)
+        xml.invoiceReferenceNumber data[:invoice_reference_number] if data.include?(:invoice_reference_number)
+        xml.customerReference data[:customer_reference] if data.include?(:customer_reference)
+        xml.cardAcceptorTaxId data[:card_acceptor_tax_id] if data.include?(:card_acceptor_tax_id)
+
+        {
+          sales_tax: 'salesTax',
+          discount_amount: 'discountAmount',
+          shipping_amount: 'shippingAmount',
+          duty_amount: 'dutyAmount'
+        }.each do |key, tag|
+          next unless data.include?(key)
+
+          xml.tag! tag do
+            data_amount = data[key].symbolize_keys
+            add_amount(xml, data_amount[:amount].to_i, data_amount)
+          end
+        end
+
+        xml.discountName data[:discount_name] if data.include?(:discount_name)
+        xml.discountCode data[:discount_code] if data.include?(:discount_code)
+
+        add_date_element(xml, 'shippingDate', data[:shipping_date]) if data.include?(:shipping_date)
+
+        if data.include?(:shipping_courier)
+          xml.shippingCourier(
+            data[:shipping_courier][:priority],
+            data[:shipping_courier][:tracking_number],
+            data[:shipping_courier][:name]
+          )
+        end
+
+        add_optional_data_level_two_and_three(xml, data)
+
+        if data.include?(:item) && data[:item].kind_of?(Array)
+          data[:item].each { |item| add_items_into_level_three_data(xml, item.symbolize_keys) }
+        elsif data.include?(:item)
+          add_items_into_level_three_data(xml, data[:item].symbolize_keys)
+        end
+      end
+
+      def add_items_into_level_three_data(xml, item)
+        xml.item do
+          xml.description item[:description] if item[:description]
+          xml.productCode item[:product_code] if item[:product_code]
+          xml.commodityCode item[:commodity_code] if item[:commodity_code]
+          xml.quantity item[:quantity] if item[:quantity]
+
+          {
+            unit_cost: 'unitCost',
+            item_total: 'itemTotal',
+            item_total_with_tax: 'itemTotalWithTax',
+            item_discount_amount: 'itemDiscountAmount',
+            tax_amount: 'taxAmount'
+          }.each do |key, tag|
+            next unless item.include?(key)
+
+            xml.tag! tag do
+              data_amount = item[key].symbolize_keys
+              add_amount(xml, data_amount[:amount].to_i, data_amount)
+            end
+          end
+        end
+      end
+
+      def add_optional_data_level_two_and_three(xml, data)
+        xml.shipFromPostalCode data[:ship_from_postal_code] if data.include?(:ship_from_postal_code)
+        xml.destinationPostalCode data[:destination_postal_code] if data.include?(:destination_postal_code)
+        xml.destinationCountryCode data[:destination_country_code] if data.include?(:destination_country_code)
+        add_date_element(xml, 'orderDate', data[:order_date].symbolize_keys) if data.include?(:order_date)
+        xml.taxExempt data[:tax_exempt] if data.include?(:tax_exempt)
       end
 
       def order_tag_attributes(options)

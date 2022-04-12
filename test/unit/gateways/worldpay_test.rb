@@ -62,6 +62,87 @@ class WorldpayTest < Test::Unit::TestCase
       source: :google_pay,
       transaction_id: '123456789',
       eci: '05')
+
+    @level_two_data = {
+      level_2_data: {
+        invoice_reference_number: 'INV12233565',
+        customer_reference: 'CUST00000101',
+        card_acceptor_tax_id: 'VAT1999292',
+        sales_tax: {
+          amount: '20',
+          exponent: '2',
+          currency: 'USD'
+        },
+        ship_from_postal_code:  '43245',
+        destination_postal_code: '54545',
+        destination_country_code: 'CO',
+        order_date: {
+          day_of_month: Date.today.day,
+          month: Date.today.month,
+          year: Date.today.year
+        },
+        tax_exempt: 'false'
+      }
+    }
+
+    @level_three_data = {
+      level_3_data: {
+        customer_reference: 'CUST00000102',
+        card_acceptor_tax_id: 'VAT1999285',
+        sales_tax: {
+          amount: '20',
+          exponent: '2',
+          currency: 'USD'
+        },
+        discount_amount: {
+          amount: '1',
+          exponent: '2',
+          currency: 'USD'
+        },
+        shipping_amount: {
+          amount: '50',
+          exponent: '2',
+          currency: 'USD'
+        },
+        duty_amount: {
+          amount: '20',
+          exponent: '2',
+          currency: 'USD'
+        },
+        item: {
+          description: 'Laptop 14',
+          product_code: 'LP00125',
+          commodity_code: 'COM00125',
+          quantity: '2',
+          unit_cost: {
+            amount: '1500',
+            exponent: '2',
+            currency: 'USD'
+          },
+          unit_of_measure: 'each',
+          item_total: {
+            amount: '3000',
+            exponent: '2',
+            currency: 'USD'
+          },
+          item_total_with_tax: {
+            amount: '3500',
+            exponent: '2',
+            currency: 'USD'
+          },
+          item_discount_amount: {
+            amount: '200',
+            exponent: '2',
+            currency: 'USD'
+          },
+          tax_amount: {
+            amount: '500',
+            exponent: '2',
+            currency: 'USD'
+          }
+        }
+      }
+    }
   end
 
   def test_successful_authorize
@@ -210,6 +291,41 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_transaction_with_level_two_data
+    options = @options.merge(@level_two_data)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<invoiceReferenceNumber>INV12233565</invoiceReferenceNumber>), data
+      assert_match %r(<customerReference>CUST00000101</customerReference>), data
+      assert_match %r(<cardAcceptorTaxId>VAT1999292</cardAcceptorTaxId>), data
+      assert_match %r(<salesTax><amountvalue="20"currencyCode="USD"exponent="2"/></salesTax>), data.gsub(/\s+/, '')
+      assert_match %r(<shipFromPostalCode>43245</shipFromPostalCode>), data
+      assert_match %r(<destinationPostalCode>54545</destinationPostalCode>), data
+      assert_match %r(<destinationCountryCode>CO</destinationCountryCode>), data
+      assert_match %r(<taxExempt>false</taxExempt>), data
+      assert_match %r(<salesTax><amountvalue="20"currencyCode="USD"exponent="2"/></salesTax>), data.gsub(/\s+/, '')
+      assert_match %r(<orderDate><datedayOfMonth="#{Date.today.day}"month="#{Date.today.month}"year="#{Date.today.year}"/></orderDate>), data.gsub(/\s+/, '')
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_transaction_with_level_three_data
+    options = @options.merge(@level_three_data)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<customerReference>CUST00000102</customerReference>), data
+      assert_match %r(<cardAcceptorTaxId>VAT1999285</cardAcceptorTaxId>), data
+      assert_match %r(<salesTax><amountvalue="20"currencyCode="USD"exponent="2"/></salesTax>), data.gsub(/\s+/, '')
+      assert_match %r(<discountAmount><amountvalue="1"currencyCode="USD"exponent="2"/></discountAmount>), data.gsub(/\s+/, '')
+      assert_match %r(<shippingAmount><amountvalue="50"currencyCode="USD"exponent="2"/></shippingAmount>), data.gsub(/\s+/, '')
+      assert_match %r(<dutyAmount><amountvalue="20"currencyCode="USD"exponent="2"/></dutyAmount>), data.gsub(/\s+/, '')
+      assert_match %r(<item><description>Laptop14</description><productCode>LP00125</productCode><commodityCode>COM00125</commodityCode><quantity>2</quantity><unitCost><amountvalue="1500"currencyCode="USD"exponent="2"/></unitCost><itemTotal><amountvalue="3000"currencyCode="USD"exponent="2"/></itemTotal><itemTotalWithTax><amountvalue="3500"currencyCode="USD"exponent="2"/></itemTotalWithTax><itemDiscountAmount><amountvalue="200"currencyCode="USD"exponent="2"/></itemDiscountAmount><taxAmount><amountvalue="500"currencyCode="USD"exponent="2"/></taxAmount></item>), data.gsub(/\s+/, '')
+    end.respond_with(successful_authorize_response)
     assert_success response
   end
 
