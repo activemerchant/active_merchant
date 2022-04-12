@@ -71,6 +71,7 @@
 * Conekta: Fix remote test [javierpedrozaing] #4386
 * NMI: Update post URL [jherreraa] #4380
 * Multiple Gateways: Resolve when/case bug [naashton] #4399
+* Airwallex: Add 3DS MPI support [drkjc] #4395
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173

@@ -80,6 +80,79 @@ class AirwallexTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_authorize_with_3ds_v1_options
+    @options[:three_d_secure] = {
+      version: '1',
+      cavv: 'VGhpcyBpcyBhIHRlc3QgYmFzZTY=',
+      eci: '02',
+      xid: 'b2h3aDZrd3BJWXVCWEFMbzJqSGQ='
+    }
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      unless endpoint == 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+        assert_match(/\"version\":\"1.0.0\"/, data)
+        assert_match(/\"cavv\":\"VGhpcyBpcyBhIHRlc3QgYmFzZTY=\"/, data)
+        assert_match(/\"eci\":\"02\"/, data)
+        assert_match(/\"xid\":\"b2h3aDZrd3BJWXVCWEFMbzJqSGQ=\"/, data)
+      end
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+  end
+
+  def test_successful_authorize_with_3ds_v2_options
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: 'MTIzNDU2Nzg5MDA5ODc2NTQzMjE=',
+      ds_transaction_id: 'f25084f0-5b16-4c0a-ae5d-b24808a95e4b',
+      eci: '02',
+      three_ds_server_trans_id: 'df8b9557-e41b-4e17-87e9-2328694a2ea0'
+    }
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      unless endpoint == 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+        assert_match(/\"version\":\"2.2.0\"/, data)
+        assert_match(/\"authentication_value\":\"MTIzNDU2Nzg5MDA5ODc2NTQzMjE=\"/, data)
+        assert_match(/\"ds_transaction_id\":\"f25084f0-5b16-4c0a-ae5d-b24808a95e4b\"/, data)
+        assert_match(/\"eci\":\"02\"/, data)
+        assert_match(/\"three_ds_server_transaction_id\":\"df8b9557-e41b-4e17-87e9-2328694a2ea0\"/, data)
+      end
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+  end
+
+  def test_successful_purchase_with_3ds_version_formatting
+    @options[:three_d_secure] = {
+      version: '2.0',
+      cavv: 'MTIzNDU2Nzg5MDA5ODc2NTQzMjE=',
+      ds_transaction_id: 'f25084f0-5b16-4c0a-ae5d-b24808a95e4b',
+      eci: '02',
+      three_ds_server_trans_id: 'df8b9557-e41b-4e17-87e9-2328694a2ea0'
+    }
+
+    formatted_version = format_three_ds_version(@options[:three_d_secure][:version])
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      data = JSON.parse(data)
+      assert_match(data['payment_method_options']['card']['external_three_ds']['version'], formatted_version) unless endpoint == 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+  end
+
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
@@ -295,6 +368,13 @@ class AirwallexTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def format_three_ds_version(version)
+    version = version.split('.')
+
+    version.push('0') until version.length == 3
+    version.join('.')
   end
 
   private

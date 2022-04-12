@@ -191,6 +191,47 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:client_api_key], transcript)
   end
 
+  def test_successful_authorize_with_3ds_v1_options
+    @options[:three_d_secure] = {
+      version: '1',
+      cavv: 'VGhpcyBpcyBhIHRlc3QgYmFzZTY=',
+      eci: '02',
+      xid: 'b2h3aDZrd3BJWXVCWEFMbzJqSGQ='
+    }
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_match 'AUTHORIZED', response.message
+  end
+
+  def test_successful_authorize_with_3ds_v2_options
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: 'MTIzNDU2Nzg5MDA5ODc2NTQzMjE=',
+      ds_transaction_id: 'f25084f0-5b16-4c0a-ae5d-b24808a95e4b',
+      eci: '02',
+      three_ds_server_trans_id: 'df8b9557-e41b-4e17-87e9-2328694a2ea0'
+    }
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_match 'AUTHORIZED', response.message
+  end
+
+  def test_successful_purchase_with_3ds_v2_options
+    @options[:three_d_secure] = {
+      version: '2.0',
+      cavv: 'MTIzNDU2Nzg5MDA5ODc2NTQzMjE=',
+      ds_transaction_id: 'f25084f0-5b16-4c0a-ae5d-b24808a95e4b',
+      eci: '02',
+      three_ds_server_trans_id: 'df8b9557-e41b-4e17-87e9-2328694a2ea0'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_match 'AUTHORIZED', response.message
+  end
+
   private
 
   def generated_ids
