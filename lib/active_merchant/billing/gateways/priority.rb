@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
         commit('void', params: params, iid: payment_id(authorization))
       end
 
-      def verify(credit_card)
+      def verify(credit_card, _options = {})
         jwt = create_jwt.params['jwtToken']
 
         commit('verify', card_number: credit_card.number, jwt: jwt)
