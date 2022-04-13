@@ -378,6 +378,13 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     end
   end
 
+  def test_should_detect_cartes_bancaires_cards
+    assert_equal 'cartes_bancaires', CreditCard.brand?('5855010000000000')
+    assert_equal 'cartes_bancaires', CreditCard.brand?('5075935000000000')
+    assert_equal 'cartes_bancaires', CreditCard.brand?('5075901100000000')
+    assert_equal 'cartes_bancaires', CreditCard.brand?('5075890130000000')
+  end
+
   def test_electron_cards
     # return the card number so assert failures are easy to isolate
     electron_test = Proc.new do |card_number|
