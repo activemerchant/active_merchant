@@ -344,7 +344,7 @@ module ActiveMerchant #:nodoc:
       def success_from(response, action)
         return !response['bank'].empty? if action == 'verify' && response['bank']
 
-        %w[Approved Open Success].include?(response['status'])
+        %w[Approved Open Success Settled Voided].include?(response['status'])
       end
 
       def message_from(response)
