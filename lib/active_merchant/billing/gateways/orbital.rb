@@ -637,7 +637,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_aav(xml, credit_card, three_d_secure)
-        return unless three_d_secure && credit_card.brand == 'master'
+        return unless three_d_secure && mastercard?(credit_card)
 
         xml.tag!(:AAV, three_d_secure[:cavv])
       end
@@ -661,7 +661,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def mastercard?(payment_source)
-        payment_source.is_a?(CreditCard) && payment_source.brand == 'master'
+        payment_source.is_a?(CreditCard) && ['master', 'maestro'].include?(payment_source.brand)
       end
 
       def add_mastercard_fields(xml, credit_card, parameters, three_d_secure)
