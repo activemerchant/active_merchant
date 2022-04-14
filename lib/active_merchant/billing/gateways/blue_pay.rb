@@ -483,7 +483,7 @@ module ActiveMerchant #:nodoc:
         return unless reason_type = options.dig(:stored_credential, :reason_type)
 
         case reason_type
-        when 'recurring' || 'installment'
+        when 'recurring', 'installment'
           'Y'
         when 'unscheduled'
           'N'

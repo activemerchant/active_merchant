@@ -70,6 +70,7 @@
 * Rapyd: Update `type` option to `pm_type` [naashton] #4391
 * Conekta: Fix remote test [javierpedrozaing] #4386
 * NMI: Update post URL [jherreraa] #4380
+* Multiple Gateways: Resolve when/case bug [naashton] #4399
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
