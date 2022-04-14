@@ -10,6 +10,8 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     @credit_card = credit_card('4111 1111 1111 1111')
     @declined_card = credit_card('2223 0000 1018 1375')
     @options = { return_url: 'https://example.com', description: 'a test transaction' }
+    @stored_credential_cit_options = { initial_transaction: true, initiator: 'cardholder', reason_type: 'recurring', network_transaction_id: nil }
+    @stored_credential_mit_options = { initial_transaction: false, initiator: 'merchant', reason_type: 'recurring', network_transaction_id: '123456789012345' }
   end
 
   def test_successful_purchase
@@ -131,52 +133,62 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     assert_match %r{Invalid card number}, response.message
   end
 
-  def test_successful_cit_transaction_with_recurring_stored_credential
-    stored_credential_params = {
-      initial_transaction: true,
-      reason_type: 'recurring',
-      initiator: 'cardholder',
-      network_transaction_id: nil
-    }
-
-    auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential: stored_credential_params))
+  def test_successful_cit_with_recurring_stored_credential
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential: @stored_credential_cit_options))
     assert_success auth
   end
 
-  def test_successful_mit_transaction_with_recurring_stored_credential
-    stored_credential_params = {
-      initial_transaction: false,
-      reason_type: 'recurring',
-      initiator: 'merchant',
-      network_transaction_id: 'MCC123ABC0101'
-    }
-
-    auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential: stored_credential_params))
+  def test_successful_mit_with_recurring_stored_credential
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential: @stored_credential_cit_options))
     assert_success auth
+
+    purchase = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: @stored_credential_mit_options))
+    assert_success purchase
   end
 
-  def test_successful_mit_transaction_with_unscheduled_stored_credential
-    stored_credential_params = {
-      initial_transaction: false,
-      reason_type: 'unscheduled',
-      initiator: 'merchant',
-      network_transaction_id: 'MCC123ABC0101'
-    }
+  def test_successful_mit_with_unscheduled_stored_credential
+    @stored_credential_cit_options[:reason_type] = 'unscheduled'
+    @stored_credential_mit_options[:reason_type] = 'unscheduled'
 
-    auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential: stored_credential_params))
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential: @stored_credential_cit_options))
     assert_success auth
+
+    purchase = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: @stored_credential_mit_options))
+    assert_success purchase
   end
 
-  def test_successful_mit_transaction_with_installment_stored_credential
-    stored_credential_params = {
-      initial_transaction: false,
-      reason_type: 'installment',
-      initiator: 'cardholder',
-      network_transaction_id: 'MCC123ABC0101'
-    }
+  def test_successful_mit_with_installment_stored_credential
+    @stored_credential_cit_options[:reason_type] = 'installment'
+    @stored_credential_mit_options[:reason_type] = 'installment'
 
-    auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential: stored_credential_params))
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential: @stored_credential_cit_options))
     assert_success auth
+
+    purchase = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: @stored_credential_mit_options))
+    assert_success purchase
+  end
+
+  def test_successful_mit_with_original_transaction_id
+    mastercard = credit_card('2223 0000 1018 1375', { brand: 'master' })
+
+    auth = @gateway.authorize(@amount, mastercard, @options.merge(stored_credential: @stored_credential_cit_options))
+    assert_success auth
+
+    @options[:original_transaction_id] = 'MCC123ABC0101'
+
+    purchase = @gateway.purchase(@amount, mastercard, @options.merge(stored_credential: @stored_credential_mit_options))
+    assert_success purchase
+  end
+
+  def test_failed_mit_with_unapproved_ntid
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential: @stored_credential_cit_options))
+    assert_success auth
+
+    @stored_credential_mit_options[:network_transaction_id] = 'abc123'
+
+    purchase = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: @stored_credential_mit_options))
+    assert_failure purchase
+    assert_equal 'external_recurring_data.original_transaction_id should be 13-15 characters long', purchase.message
   end
 
   def test_transcript_scrubbing

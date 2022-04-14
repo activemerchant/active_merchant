@@ -67,6 +67,7 @@
 * Airwallex: add support for stored credentials [drkjc] #4382
 * Rapyd: Add metadata and ewallet_id options [naashton] #4387
 * Priority: Add additional fields to request and refactor gateway integration [dsmcclain] #4383
+* Airwallex: Add support for `original_transaction_id` field [drkjc] #4401
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
