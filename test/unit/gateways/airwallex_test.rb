@@ -24,6 +24,9 @@ class AirwallexTest < Test::Unit::TestCase
       billing_address: address,
       return_url: 'https://example.com'
     }
+
+    @stored_credential_cit_options = { initial_transaction: true, initiator: 'cardholder', reason_type: 'recurring', network_transaction_id: nil }
+    @stored_credential_mit_options = { initial_transaction: false, initiator: 'merchant', reason_type: 'recurring', network_transaction_id: '123456789012345' }
   end
 
   def test_gateway_has_access_token
@@ -301,68 +304,138 @@ class AirwallexTest < Test::Unit::TestCase
   end
 
   def test_successful_cit_with_stored_credential
-    stored_credential_params = {
-      initial_transaction: true,
-      reason_type: 'recurring',
-      initiator: 'cardholder',
-      network_transaction_id: nil
-    }
-
     auth = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+      @gateway.authorize(@amount, @credit_card, @options.merge!({ stored_credential: @stored_credential_cit_options }))
     end.check_request do |endpoint, data, _headers|
-      # This conditional asserts after the initial setup call is made
-      assert_match(/"external_recurring_data\":{\"merchant_trigger_reason\":\"scheduled\",\"original_transaction_id\":null,\"triggered_by\":\"customer\"}/, data) if endpoint != 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+      # This conditional runs assertions after the initial setup call is made
+      unless endpoint == 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+        assert_match(/"external_recurring_data\"/, data)
+        assert_match(/"merchant_trigger_reason\":\"scheduled\"/, data)
+        assert_match(/"original_transaction_id\":null,/, data)
+        assert_match(/"triggered_by\":\"customer\"/, data)
+      end
     end.respond_with(successful_authorize_response)
     assert_success auth
   end
 
   def test_successful_mit_with_recurring_stored_credential
-    stored_credential_params = {
-      initial_transaction: false,
-      reason_type: 'recurring',
-      initiator: 'merchant',
-      network_transaction_id: 'MCC123ABC0101'
-    }
-
     auth = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+      @gateway.authorize(@amount, @credit_card, @options.merge!({ stored_credential: @stored_credential_cit_options }))
     end.check_request do |endpoint, data, _headers|
-      assert_match(/"external_recurring_data\":{\"merchant_trigger_reason\":\"scheduled\",\"original_transaction_id\":\"MCC123ABC0101\",\"triggered_by\":\"merchant\"}/, data) if endpoint != 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+      unless endpoint == 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+        assert_match(/"external_recurring_data\"/, data)
+        assert_match(/"merchant_trigger_reason\":\"scheduled\"/, data)
+        assert_match(/"original_transaction_id\":null,/, data)
+        assert_match(/"triggered_by\":\"customer\"/, data)
+      end
     end.respond_with(successful_authorize_response)
     assert_success auth
+
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge!({ stored_credential: @stored_credential_mit_options }))
+    end.check_request do |endpoint, data, _headers|
+      unless endpoint == 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+        assert_match(/"external_recurring_data\"/, data)
+        assert_match(/"merchant_trigger_reason\":\"scheduled\"/, data)
+        assert_match(/"original_transaction_id\":\"123456789012345\"/, data)
+        assert_match(/"triggered_by\":\"merchant\"/, data)
+      end
+    end.respond_with(successful_purchase_response)
+    assert_success purchase
   end
 
   def test_successful_mit_with_unscheduled_stored_credential
-    stored_credential_params = {
-      initial_transaction: false,
-      reason_type: 'unscheduled',
-      initiator: 'merchant',
-      network_transaction_id: 'MCC123ABC0101'
-    }
+    @stored_credential_cit_options[:reason_type] = 'unscheduled'
+    @stored_credential_mit_options[:reason_type] = 'unscheduled'
 
     auth = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+      @gateway.authorize(@amount, @credit_card, @options.merge!({ stored_credential: @stored_credential_cit_options }))
     end.check_request do |endpoint, data, _headers|
-      assert_match(/"external_recurring_data\":{\"merchant_trigger_reason\":\"unscheduled\",\"original_transaction_id\":\"MCC123ABC0101\",\"triggered_by\":\"merchant\"}/, data) if endpoint != 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+      unless endpoint == 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+        assert_match(/"external_recurring_data\"/, data)
+        assert_match(/"merchant_trigger_reason\":\"unscheduled\"/, data)
+        assert_match(/"original_transaction_id\":null,/, data)
+        assert_match(/"triggered_by\":\"customer\"/, data)
+      end
     end.respond_with(successful_authorize_response)
     assert_success auth
+
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge!({ stored_credential: @stored_credential_mit_options }))
+    end.check_request do |endpoint, data, _headers|
+      unless endpoint == 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+        assert_match(/"external_recurring_data\"/, data)
+        assert_match(/"merchant_trigger_reason\":\"unscheduled\"/, data)
+        assert_match(/"original_transaction_id\":\"123456789012345\"/, data)
+        assert_match(/"triggered_by\":\"merchant\"/, data)
+      end
+    end.respond_with(successful_purchase_response)
+    assert_success purchase
   end
 
   def test_successful_mit_with_installment_stored_credential
-    stored_credential_params = {
-      initial_transaction: false,
-      reason_type: 'installment',
-      initiator: 'merchant',
-      network_transaction_id: 'MCC123ABC0101'
-    }
+    @stored_credential_cit_options[:reason_type] = 'installment'
+    @stored_credential_mit_options[:reason_type] = 'installment'
 
     auth = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+      @gateway.authorize(@amount, @credit_card, @options.merge!({ stored_credential: @stored_credential_cit_options }))
     end.check_request do |endpoint, data, _headers|
-      assert_match(/"external_recurring_data\":{\"merchant_trigger_reason\":\"scheduled\",\"original_transaction_id\":\"MCC123ABC0101\",\"triggered_by\":\"merchant\"}/, data) if endpoint != 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+      unless endpoint == 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+        assert_match(/"external_recurring_data\"/, data)
+        assert_match(/"merchant_trigger_reason\":\"scheduled\"/, data)
+        assert_match(/"original_transaction_id\":null,/, data)
+        assert_match(/"triggered_by\":\"customer\"/, data)
+      end
     end.respond_with(successful_authorize_response)
     assert_success auth
+
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge!({ stored_credential: @stored_credential_mit_options }))
+    end.check_request do |endpoint, data, _headers|
+      unless endpoint == 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+        assert_match(/"external_recurring_data\"/, data)
+        assert_match(/"merchant_trigger_reason\":\"scheduled\"/, data)
+        assert_match(/"original_transaction_id\":\"123456789012345\"/, data)
+        assert_match(/"triggered_by\":\"merchant\"/, data)
+      end
+    end.respond_with(successful_purchase_response)
+    assert_success purchase
+  end
+
+  def test_successful_mit_with_original_transaction_id
+    mastercard = credit_card('2223 0000 1018 1375', { brand: 'master' })
+    @options[:original_transaction_id] = 'MCC123ABC0101'
+
+    auth = stub_comms do
+      @gateway.authorize(@amount, mastercard, @options.merge!({ stored_credential: @stored_credential_cit_options }))
+    end.check_request do |endpoint, data, _headers|
+      unless endpoint == 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+        assert_match(/"external_recurring_data\"/, data)
+        assert_match(/"merchant_trigger_reason\":\"scheduled\"/, data)
+        assert_match(/"original_transaction_id\":null,/, data)
+        assert_match(/"triggered_by\":\"customer\"/, data)
+      end
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+
+    purchase = stub_comms do
+      @gateway.purchase(@amount, mastercard, @options.merge!({ stored_credential: @stored_credential_mit_options }))
+    end.check_request do |endpoint, data, _headers|
+      unless endpoint == 'https://api-demo.airwallex.com/api/v1/pa/payment_intents/create'
+        assert_match(/"external_recurring_data\"/, data)
+        assert_match(/"merchant_trigger_reason\":\"scheduled\"/, data)
+        assert_match(/"original_transaction_id\":\"MCC123ABC0101\"/, data)
+        assert_match(/"triggered_by\":\"merchant\"/, data)
+      end
+    end.respond_with(successful_purchase_response)
+    assert_success purchase
+  end
+
+  def test_failed_mit_with_unapproved_ntid
+    @gateway.expects(:ssl_post).returns(failed_ntid_response)
+    assert_raise ArgumentError do
+      @gateway.authorize(@amount, @credit_card, @options.merge!({ stored_credential: @stored_credential_cit_options }))
+    end
   end
 
   def test_scrub
@@ -437,5 +510,9 @@ class AirwallexTest < Test::Unit::TestCase
 
   def failed_void_response
     %({"code":"not_found","message":"The requested endpoint does not exist [/api/v1/pa/payment_intents/12345/cancel]"})
+  end
+
+  def failed_ntid_response
+    %({"code":"validation_error","source":"external_recurring_data.original_transaction_id","message":"external_recurring_data.original_transaction_id should be 13-15 characters long"})
   end
 end

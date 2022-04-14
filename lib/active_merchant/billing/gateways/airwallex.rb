@@ -232,6 +232,7 @@ module ActiveMerchant #:nodoc:
         return unless stored_credential = options[:stored_credential]
 
         external_recurring_data = post[:external_recurring_data] = {}
+        original_transaction_id = add_original_transaction_id(options)
 
         case stored_credential.dig(:reason_type)
         when 'recurring', 'installment'
@@ -240,7 +241,7 @@ module ActiveMerchant #:nodoc:
           external_recurring_data[:merchant_trigger_reason] = 'unscheduled'
         end
 
-        external_recurring_data[:original_transaction_id] = stored_credential.dig(:network_transaction_id)
+        external_recurring_data[:original_transaction_id] = original_transaction_id || stored_credential.dig(:network_transaction_id)
         external_recurring_data[:triggered_by] = stored_credential.dig(:initiator) == 'cardholder' ? 'customer' : 'merchant'
       end
 
@@ -277,6 +278,12 @@ module ActiveMerchant #:nodoc:
             'xid': three_d_secure[:xid]
           }
         end
+      end
+
+      def add_original_transaction_id(options)
+        return unless options[:auto_capture] == false || original_transaction_id = options[:original_transaction_id]
+
+        original_transaction_id
       end
 
       def authorization_only?(options = {})

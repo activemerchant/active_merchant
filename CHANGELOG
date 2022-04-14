@@ -75,6 +75,7 @@
 * Multiple Gateways: Resolve when/case bug [naashton] #4399
 * Airwallex: Add 3DS MPI support [drkjc] #4395
 * Add Cartes Bancaires card bin ranges [leahriffell] #4398
+* Airwallex: Add support for `original_transaction_id` field [drkjc] #4401
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
