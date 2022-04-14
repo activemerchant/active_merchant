@@ -758,8 +758,10 @@ module ActiveMerchant #:nodoc:
           xml.tag!('payment') do
             add_credit_card(xml, payment_profile[:payment][:credit_card]) if payment_profile[:payment].has_key?(:credit_card)
             add_bank_account(xml, payment_profile[:payment][:bank_account]) if payment_profile[:payment].has_key?(:bank_account)
-            add_drivers_license(xml, payment_profile[:payment][:drivers_license]) if payment_profile[:payment].has_key?(:drivers_license)
             # This element is only required for Wells Fargo SecureSource eCheck.Net merchants
+            add_drivers_license(xml, payment_profile[:payment][:drivers_license]) if payment_profile[:payment].has_key?(:drivers_license)
+            add_accept_js(xml, payment_profile[:payment][:acceptjs]) if payment_profile[:payment].has_key?(:acceptjs)
+
             # The customer's Social Security Number or Tax ID
             xml.tag!('taxId', payment_profile[:payment]) if payment_profile[:payment].has_key?(:tax_id)
           end
@@ -847,6 +849,17 @@ module ActiveMerchant #:nodoc:
           # The date of birth listed on the customer's driver's license
           # YYYY-MM-DD
           xml.tag!('dateOfBirth', drivers_license[:date_of_birth])
+        end
+      end
+
+      def add_accept_js(xml, data_value)
+        return unless data_value
+        # The generic payment data type used to process tokenized payment information
+        xml.tag!('opaqueData') do
+          # Identifies the type or source of opaque payment data
+          xml.tag!('dataDescriptor', "COMMON.ACCEPT.INAPP.PAYMENT")
+          # The unmodified token that represents the payment data
+          xml.tag!('dataValue', data_value[:data_value])
         end
       end
 
