@@ -203,7 +203,6 @@ module ActiveMerchant #:nodoc:
         end
 
         succeeded = success_from(response)
-
         response(action, succeeded, response)
       end
 
@@ -270,7 +269,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response['response_summary'] == 'Approved' || response['approved'] == true || !response.key?('response_summary') && response.key?('action_id')
+        response["status"] == "Pending" || response['response_summary'] == 'Approved' || response['approved'] == true || !response.key?('response_summary') && response.key?('action_id')
       end
 
       def message_from(succeeded, response)
