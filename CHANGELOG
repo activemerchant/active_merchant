@@ -2,6 +2,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
 * StripePI: Add ability to change payment_method_type to confirm_intent [aenand] #4300
 * GlobalCollect: Improve support for Naranja and Cabal card types [dsmcclain] #4286
