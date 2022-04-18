@@ -1252,6 +1252,11 @@ securion_pay:
   secret_key: pr_test_qZN4VVIKCySfCeXCBoHO9DBe
 
 # Working credentials, no need to replace
+shift4:
+  client_guid: 
+  auth_token:
+
+# Working credentials, no need to replace
 simetrik:
   client_id: 'wNhJBdrKDk3vTmkQMAWi5zWN7y21adO3'
   client_secret: 'fq2riPpiDJaAwS4_UMAXZy1_nU1jNGz0F6gAFWOJFNmm_TfC8EFiHwMmGKAEDkwY' 
