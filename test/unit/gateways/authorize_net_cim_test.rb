@@ -1,6 +1,8 @@
 require 'test_helper'
+require 'support/authorize_helper'
 
 class AuthorizeNetCimTest < Test::Unit::TestCase
+  include AuthorizeHelper
   include CommStub
 
   def setup
@@ -10,6 +12,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     )
     @amount = 100
     @credit_card = credit_card
+    @accept_js_token = acceptjs_token
     @address = address
     @customer_profile_id = '3187'
     @customer_payment_profile_id = '7813'
@@ -61,6 +64,18 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal 'Successful.', response.message
   end
 
+  def test_should_create_customer_profile_request_with_acceptjs
+    @gateway.expects(:ssl_post).returns(successful_create_customer_profile_response)
+
+    @options[:profile][:payment_profiles][:payment] = acceptjs_token.payment_data
+
+    assert response = @gateway.create_customer_profile(@options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal @customer_profile_id, response.authorization
+    assert_equal 'Successful.', response.message
+  end
+
   def test_should_create_customer_payment_profile_request
     @gateway.expects(:ssl_post).returns(successful_create_customer_payment_profile_response)
 
@@ -70,6 +85,24 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
         :customer_type => 'individual',
         :bill_to => @address,
         :payment => @payment
+      },
+      :validation_mode => :test
+    )
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal @customer_payment_profile_id, response.params['customer_payment_profile_id']
+    assert_equal 'This output is only present if the ValidationMode input parameter is passed with a value of testMode or liveMode', response.params['validation_direct_response']
+  end
+
+  def test_should_create_customer_payment_profile_request_with_acceptjs
+    @gateway.expects(:ssl_post).returns(successful_create_customer_payment_profile_response)
+
+    assert response = @gateway.create_customer_payment_profile(
+      :customer_profile_id => @customer_profile_id,
+      :payment_profile => {
+        :customer_type => 'individual',
+        :bill_to => @address,
+        :payment => acceptjs_token.payment_data
       },
       :validation_mode => :test
     )
