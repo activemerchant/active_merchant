@@ -762,7 +762,7 @@ module ActiveMerchant #:nodoc:
             add_bank_account(xml, payment_profile[:payment][:bank_account]) if payment_profile[:payment].has_key?(:bank_account)
             # This element is only required for Wells Fargo SecureSource eCheck.Net merchants
             add_drivers_license(xml, payment_profile[:payment][:drivers_license]) if payment_profile[:payment].has_key?(:drivers_license)
-            add_accept_js(xml, payment_profile[:payment][:opaque_data]) if payment_profile[:payment].has_key?(:opaque_data)
+            add_opaque_data(xml, payment_profile[:payment][:opaque_data]) if payment_profile[:payment].has_key?(:opaque_data)
 
             # The customer's Social Security Number or Tax ID
             xml.tag!('taxId', payment_profile[:payment]) if payment_profile[:payment].has_key?(:tax_id)
@@ -853,7 +853,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_accept_js(xml, opaque_data)
+      def add_opaque_data(xml, opaque_data)
         return unless opaque_data
         # The generic payment data type used to process tokenized payment information
         xml.tag!('opaqueData') do
