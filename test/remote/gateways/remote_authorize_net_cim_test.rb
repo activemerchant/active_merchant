@@ -1,16 +1,21 @@
 require 'test_helper'
+require 'support/authorize_helper'
 require 'pp'
 
 class AuthorizeNetCimTest < Test::Unit::TestCase
+  include AuthorizeHelper
+
   def setup
     Base.mode = :test
 
     @gateway = AuthorizeNetCimGateway.new(fixtures(:authorize_net))
     @amount = 100
+    @customer_profile_id = nil
     @credit_card = credit_card('4242424242424242')
     @payment = {
       :credit_card => @credit_card
     }
+    @address = address
     @profile = {
       :merchant_customer_id => 'Up to 20 chars', # Optional
       :description => 'Up to 255 Characters', # Optional
@@ -74,8 +79,34 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_nil response.authorization
     assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
     assert_nil response.params['profile']['merchant_customer_id']
-    assert_nil response.params['profile']['description']
+    assert_equal 'Up to 255 Characters', response.params['profile']['description']
     assert_equal 'new email address', response.params['profile']['email']
+  end
+
+  def test_successful_profile_create_with_acceptjs
+    @options[:profile][:payment_profiles].delete(:payment)
+    token = get_sandbox_acceptjs_token_for_credit_card(credit_card)
+    @options[:profile][:payment_profiles][:payment] = token.payment_data
+
+    assert response = @gateway.create_customer_profile(@options)
+    @customer_profile_id = response.authorization
+
+    assert_success response
+    assert response.test?
+
+    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    assert response.test?
+    assert_success response
+    assert_equal @customer_profile_id, response.authorization
+    assert_equal 'Successful.', response.message
+    assert response.params['profile']['payment_profiles']['customer_payment_profile_id'] =~ /\d+/, 'The customer_payment_profile_id should be a number'
+    assert_equal "XXXX#{@credit_card.last_digits}", response.params['profile']['payment_profiles']['payment']['credit_card']['card_number'], "The card number should contain the last 4 digits of the card we passed in #{@credit_card.last_digits}"
+    assert_equal @profile[:merchant_customer_id], response.params['profile']['merchant_customer_id']
+    assert_equal @profile[:description], response.params['profile']['description']
+    assert_equal @profile[:email], response.params['profile']['email']
+    assert_equal @profile[:payment_profiles][:customer_type], response.params['profile']['payment_profiles']['customer_type']
+    assert_equal @profile[:ship_to_list][:phone_number], response.params['profile']['ship_to_list']['phone_number']
+    assert_equal @profile[:ship_to_list][:company], response.params['profile']['ship_to_list']['company']
   end
 
   # NOTE - prior_auth_capture should be used to complete an auth_only request
@@ -179,7 +210,36 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response.test?
     assert_success response
-    assert_nil response.authorization
+    assert customer_payment_profile_id = response.params['customer_payment_profile_id']
+    assert customer_payment_profile_id =~ /\d+/, "The customerPaymentProfileId should be numeric. It was #{customer_payment_profile_id}"
+  end
+
+  def test_get_token_for_credit_card
+    assert token = get_sandbox_acceptjs_token_for_credit_card(credit_card)
+    assert_not_nil token.opaque_data[:data_value]
+    assert token.opaque_data[:data_descriptor] == 'COMMON.ACCEPT.INAPP.PAYMENT'
+  end
+
+  def test_successful_create_customer_payment_profile_request_with_acceptjs
+    @options[:profile].delete(:payment_profiles)
+    assert response = @gateway.create_customer_profile(@options)
+    @customer_profile_id = response.authorization
+
+    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    assert_nil response.params['profile']['payment_profiles']
+
+    token = get_sandbox_acceptjs_token_for_credit_card(credit_card)
+
+    assert response = @gateway.create_customer_payment_profile(
+      :customer_profile_id => @customer_profile_id,
+      :payment_profile => {
+        :customer_type => 'individual',
+        :payment => token.payment_data
+      }
+    )
+
+    assert response.test?
+    assert_success response
     assert customer_payment_profile_id = response.params['customer_payment_profile_id']
     assert customer_payment_profile_id =~ /\d+/, "The customerPaymentProfileId should be numeric. It was #{customer_payment_profile_id}"
   end
@@ -218,7 +278,6 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response.test?
     assert_success response
-    assert_nil response.authorization
     assert customer_payment_profile_id = response.params['customer_payment_profile_id']
     assert customer_payment_profile_id =~ /\d+/, "The customerPaymentProfileId should be numeric. It was #{customer_payment_profile_id}"
   end
@@ -238,7 +297,6 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response.test?
     assert_success response
-    assert_nil response.authorization
     assert customer_address_id = response.params['customer_address_id']
     assert customer_address_id =~ /\d+/, "The customerAddressId should be numeric. It was #{customer_address_id}"
   end
@@ -263,14 +321,13 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response.test?
     assert_success response
-    assert_nil response.authorization
     assert customer_payment_profile_id = response.params['customer_payment_profile_id']
     assert customer_payment_profile_id =~ /\d+/, "The customerPaymentProfileId should be numeric. It was #{customer_payment_profile_id}"
 
     assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
     assert_equal 2, response.params['profile']['payment_profiles'].size
-    assert_equal 'XXXX4242', response.params['profile']['payment_profiles'][0]['payment']['credit_card']['card_number']
-    assert_equal 'XXXX1234', response.params['profile']['payment_profiles'][1]['payment']['credit_card']['card_number']
+    assert_equal 'XXXX1234', response.params['profile']['payment_profiles'][0]['payment']['credit_card']['card_number']
+    assert_equal 'XXXX4242', response.params['profile']['payment_profiles'][1]['payment']['credit_card']['card_number']
   end
 
   def test_successful_delete_customer_payment_profile_request
