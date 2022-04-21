@@ -8,6 +8,10 @@ module ActiveMerchant
       def opaque_data
         payment_data[:opaque_data]
       end
+
+      def display_number
+        @metadata[:card_number]
+      end
     end
   end
 end
