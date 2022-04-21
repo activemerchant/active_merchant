@@ -90,6 +90,7 @@ module ActiveMerchant
       }.freeze
 
       APPLE_PAY_DATA_DESCRIPTOR = 'COMMON.APPLE.INAPP.PAYMENT'
+      ACCEPT_JS_DATA_DESCRIPTOR = 'COMMON.ACCEPT.INAPP.PAYMENT'
 
       PAYMENT_METHOD_NOT_SUPPORTED_ERROR = '155'
       INELIGIBLE_FOR_ISSUING_CREDIT_ERROR = '54'
@@ -177,18 +178,18 @@ module ActiveMerchant
         end
       end
 
-      def verify(credit_card, options = {})
+      def verify(payment, options = {})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(100, payment, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
 
-      def store(credit_card, options = {})
+      def store(payment, options = {})
         if options[:customer_profile_id]
-          create_customer_payment_profile(credit_card, options)
+          create_customer_payment_profile(payment, options)
         else
-          create_customer_profile(credit_card, options)
+          create_customer_profile(payment, options)
         end
       end
 
@@ -397,6 +398,8 @@ module ActiveMerchant
           add_check(xml, source)
         elsif card_brand(source) == 'apple_pay'
           add_apple_pay_payment_token(xml, source)
+        elsif card_brand(source) == 'accept_js'
+          add_accept_js_token(xml, source)
         else
           add_credit_card(xml, source, action)
         end
@@ -520,8 +523,17 @@ module ActiveMerchant
         end
       end
 
+      def add_accept_js_token(xml, accept_js_token)
+        xml.payment do
+          xml.opaqueData do
+            xml.dataDescriptor(accept_js_token.opaque_data[:data_descriptor])
+            xml.dataValue(accept_js_token.opaque_data[:data_value])
+          end
+        end
+      end
+
       def add_market_type_device_type(xml, payment, options)
-        return if payment.is_a?(String) || card_brand(payment) == 'check' || card_brand(payment) == 'apple_pay'
+        return if payment.is_a?(String) || %w[check apple_pay accept_js].include?(card_brand(payment))
         if valid_track_data
           xml.retail do
             xml.marketType(options[:market_type] || MARKET_TYPE[:retail])
@@ -701,23 +713,17 @@ module ActiveMerchant
         xml.extraOptions("x_delim_char=#{options[:delimiter]}") if options[:delimiter]
       end
 
-      def create_customer_payment_profile(credit_card, options)
+      def create_customer_payment_profile(payment_source, options)
         commit(:cim_store_update, options) do |xml|
           xml.customerProfileId options[:customer_profile_id]
           xml.paymentProfile do
-            add_billing_address(xml, credit_card, options)
-            xml.payment do
-              xml.creditCard do
-                xml.cardNumber(truncate(credit_card.number, 16))
-                xml.expirationDate(format(credit_card.year, :four_digits) + '-' + format(credit_card.month, :two_digits))
-                xml.cardCode(credit_card.verification_value) if credit_card.verification_value
-              end
-            end
+            add_billing_address(xml, payment_source, options)
+            add_payment_source(xml, payment_source, options)
           end
         end
       end
 
-      def create_customer_profile(credit_card, options)
+      def create_customer_profile(payment_source, options)
         commit(:cim_store, options) do |xml|
           xml.profile do
             xml.merchantCustomerId(truncate(options[:merchant_customer_id], 20) || SecureRandom.hex(10))
@@ -726,15 +732,9 @@ module ActiveMerchant
 
             xml.paymentProfiles do
               xml.customerType('individual')
-              add_billing_address(xml, credit_card, options)
+              add_billing_address(xml, payment_source, options)
               add_shipping_address(xml, options, 'shipToList')
-              xml.payment do
-                xml.creditCard do
-                  xml.cardNumber(truncate(credit_card.number, 16))
-                  xml.expirationDate(format(credit_card.year, :four_digits) + '-' + format(credit_card.month, :two_digits))
-                  xml.cardCode(credit_card.verification_value) if credit_card.verification_value
-                end
-              end
+              add_payment_source(xml, payment_source, options)
             end
           end
         end

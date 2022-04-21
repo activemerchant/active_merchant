@@ -1,6 +1,8 @@
 require 'test_helper'
+require 'support/authorize_helper'
 
 class AuthorizeNetTest < Test::Unit::TestCase
+  include AuthorizeHelper
   include CommStub
 
   BAD_TRACK_DATA = '%B378282246310005LONGSONLONGBOB1705101130504392?'
@@ -22,6 +24,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       payment_network: 'Visa',
       transaction_identifier: 'transaction123'
     )
+    @acceptjs_token = acceptjs_token
 
     @options = {
       order_id: '1',
@@ -305,6 +308,22 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'Street address and 5-digit postal code match.', response.avs_result['message']
     assert_equal 'P', response.cvv_result['code']
     assert_equal 'CVV not processed', response.cvv_result['message']
+  end
+
+  def test_successful_acceptjs_purchase
+    response = stub_comms do
+      @gateway.purchase(@amount, @acceptjs_token)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal @gateway.class::ACCEPT_JS_DATA_DESCRIPTOR, doc.at_xpath('//opaqueData/dataDescriptor').content
+        assert_equal @acceptjs_token.opaque_data[:data_value], doc.at_xpath('//opaqueData/dataValue').content
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141795', response.authorization.split('#')[0]
   end
 
   def test_successful_purchase_with_utf_character
@@ -657,6 +676,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
     store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert_equal 'Successful', store.message
+    assert_equal '35959426', store.params['customer_profile_id']
+    assert_equal '32506918', store.params['customer_payment_profile_id']
+  end
+
+  def test_successful_acceptjs_store
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+
+    store = @gateway.store(@acceptjs_token, @options)
     assert_success store
     assert_equal 'Successful', store.message
     assert_equal '35959426', store.params['customer_profile_id']

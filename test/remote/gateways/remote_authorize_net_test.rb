@@ -1,6 +1,9 @@
 require 'test_helper'
+require 'support/authorize_helper'
 
 class RemoteAuthorizeNetTest < Test::Unit::TestCase
+  include AuthorizeHelper
+
   def setup
     @gateway = AuthorizeNetGateway.new(fixtures(:authorize_net))
 
@@ -150,6 +153,13 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved', response.message
   end
 
+  def test_successful_purchase_with_acceptjs_token
+    acceptjs_token = get_sandbox_acceptjs_token_for_credit_card(@credit_card)
+    response = @gateway.purchase(@amount, acceptjs_token, @options.merge(description: 'Accept.js Store Purchase'))
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -290,6 +300,16 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_authorization_and_void_acceptjs
+    acceptjs_token = get_sandbox_acceptjs_token_for_credit_card(@credit_card)
+    assert authorization = @gateway.authorize(@amount, acceptjs_token, @options)
+    assert_success authorization
+
+    assert void = @gateway.void(authorization.authorization)
+    assert_success void
+    assert_equal 'This transaction has been approved', void.message
+  end
+
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
@@ -312,6 +332,15 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal '1', response.params['message_code']
   end
 
+  def test_successful_store_acceptjs
+    acceptjs_token = get_sandbox_acceptjs_token_for_credit_card(@credit_card)
+    assert response = @gateway.store(acceptjs_token)
+    assert_success response
+    assert response.authorization
+    assert_equal 'Successful', response.message
+    assert_equal '1', response.params['message_code']
+  end
+
   def test_successful_store_new_payment_profile
     assert store = @gateway.store(@credit_card)
     assert_success store
@@ -321,6 +350,20 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     customer_profile_id, _, _ = store.authorization.split('#')
 
     assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id)
+    assert_success response
+    assert_equal 'Successful', response.message
+    assert_equal '1', response.params['message_code']
+  end
+
+  def test_successful_store_new_payment_profile_acceptjs
+    assert store = @gateway.store(@credit_card)
+    assert_success store
+    assert store.authorization
+
+    customer_profile_id, _, _ = store.authorization.split('#')
+    acceptjs_token = get_sandbox_acceptjs_token_for_credit_card(@credit_card)
+
+    assert response = @gateway.store(acceptjs_token, customer_profile_id: customer_profile_id)
     assert_success response
     assert_equal 'Successful', response.message
     assert_equal '1', response.params['message_code']
@@ -623,6 +666,14 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_credit
     response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_credit_acceptjs
+    acceptjs_token = get_sandbox_acceptjs_token_for_credit_card(@credit_card)
+    response = @gateway.credit(@amount, acceptjs_token, @options.merge(description: 'Accept.js Store Refund'))
     assert_success response
     assert_equal 'This transaction has been approved', response.message
     assert response.authorization
