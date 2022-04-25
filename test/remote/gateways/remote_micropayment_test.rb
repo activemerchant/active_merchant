@@ -89,7 +89,7 @@ class RemoteMicropaymentTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture_and_refund
-    response = @gateway.authorize(@amount, @credit_card,  @options.merge(recurring: false))
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(recurring: false))
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_match %r(^\w+\|.+$), response.authorization

@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://secure.inspiregateway.net/api/transact.php'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.homepage_url = 'http://www.inspiregateway.com'
       self.display_name = 'Inspire Commerce'
 
@@ -51,13 +51,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        post ={}
+        post = {}
         post[:transactionid] = authorization
         commit('capture', money, post)
       end
 
       def void(authorization, options = {})
-        post ={}
+        post = {}
         post[:transactionid] = authorization
         commit('void', nil, post)
       end
@@ -93,33 +93,29 @@ module ActiveMerchant #:nodoc:
       # store and unstore need to be defined
       def store(creditcard, options = {})
         billing_id = options.delete(:billing_id).to_s || true
-        authorize(100, creditcard, options.merge(:store => billing_id))
+        authorize(100, creditcard, options.merge(store: billing_id))
       end
 
-      alias_method :unstore, :delete
+      alias unstore delete
 
       private
 
       def add_customer_data(post, options)
-        if options.has_key? :email
-          post[:email] = options[:email]
-        end
+        post[:email] = options[:email] if options.has_key? :email
 
-        if options.has_key? :ip
-          post[:ipaddress] = options[:ip]
-        end
+        post[:ipaddress] = options[:ip] if options.has_key? :ip
       end
 
       def add_address(post, creditcard, options)
         if address = options[:billing_address] || options[:address]
           post[:address1]    = address[:address1].to_s
           post[:address2]    = address[:address2].to_s unless address[:address2].blank?
-          post[:company]    = address[:company].to_s
-          post[:phone]      = address[:phone].to_s
-          post[:zip]        = address[:zip].to_s
-          post[:city]       = address[:city].to_s
-          post[:country]    = address[:country].to_s
-          post[:state]      = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:company]     = address[:company].to_s
+          post[:phone]       = address[:phone].to_s
+          post[:zip]         = address[:zip].to_s
+          post[:city]        = address[:city].to_s
+          post[:country]     = address[:country].to_s
+          post[:state]       = address[:state].blank? ? 'n/a' : address[:state]
         end
       end
 
@@ -128,7 +124,7 @@ module ActiveMerchant #:nodoc:
         post[:orderdescription] = options[:description]
       end
 
-      def add_payment_source(params, source, options={})
+      def add_payment_source(params, source, options = {})
         case determine_funding_source(source)
         when :vault       then add_customer_vault_id(params, source)
         when :credit_card then add_creditcard(params, source, options)
@@ -145,9 +141,9 @@ module ActiveMerchant #:nodoc:
           post[:customer_vault] = 'add_customer'
           post[:customer_vault_id] = options[:store] unless options[:store] == true
         end
-        post[:ccnumber]  = creditcard.number
+        post[:ccnumber] = creditcard.number
         post[:cvv] = creditcard.verification_value if creditcard.verification_value?
-        post[:ccexp]  = expdate(creditcard)
+        post[:ccexp] = expdate(creditcard)
         post[:firstname] = creditcard.first_name
         post[:lastname]  = creditcard.last_name
       end
@@ -172,16 +168,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, money, parameters)
-        parameters[:amount]  = amount(money) if money
+        parameters[:amount] = amount(money) if money
 
         response = parse(ssl_post(self.live_url, post_data(action, parameters)))
 
         Response.new(response['response'] == '1', message_from(response), response,
-          :authorization => response['transactionid'],
-          :test => test?,
-          :cvv_result => response['cvvresponse'],
-          :avs_result => { :code => response['avsresponse'] }
-        )
+          authorization: response['transactionid'],
+          test: test?,
+          cvv_result: response['cvvresponse'],
+          avs_result: { code: response['avsresponse'] })
       end
 
       def message_from(response)
@@ -197,7 +192,7 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         post = {}
-        post[:username]      = @options[:login]
+        post[:username]   = @options[:login]
         post[:password]   = @options[:password]
         post[:type]       = action if action
 

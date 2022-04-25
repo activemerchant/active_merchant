@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
 
     def initialize(options = {})
       @name = options.delete(:name)
-      @codes = options.collect { |k, v| CountryCode.new(v) }
+      @codes = options.collect { |_k, v| CountryCode.new(v) }
     end
 
     def code(format)
@@ -330,6 +330,7 @@ module ActiveMerchant #:nodoc:
         country = COUNTRIES.detect { |c| c[:name].casecmp(name).zero? }
       end
       raise InvalidCountryCodeError, "No country could be found for the country #{name}" if country.nil?
+
       Country.new(country.dup)
     end
   end

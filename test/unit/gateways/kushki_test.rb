@@ -28,6 +28,19 @@ class KushkiTest < Test::Unit::TestCase
         subtotal_iva: '10',
         iva: '1.54',
         ice: '3.50'
+      },
+      contact_details: {
+        document_type: 'CC',
+        document_number: '123456',
+        email: 'who_dis@monkeys.tv',
+        first_name: 'Who',
+        last_name: 'Dis',
+        second_last_name: 'Buscemi',
+        phone_number: '+13125556789'
+      },
+      metadata: {
+        productos: 'bananas',
+        nombre_apellido: 'Kirk'
       }
     }
 
@@ -41,7 +54,12 @@ class KushkiTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_charge_response)
     @gateway.expects(:ssl_post).returns(successful_token_response)
 
-    response = @gateway.purchase(amount, @credit_card, options)
+    response = stub_comms do
+      @gateway.purchase(amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_includes data, 'metadata'
+    end.respond_with(successful_token_response, successful_charge_response)
+
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_match %r(^\d+$), response.authorization
@@ -68,10 +86,8 @@ class KushkiTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
-      if /charges/ =~ endpoint
-        assert_no_match %r{extraTaxes}, data
-      end
+    end.check_request do |endpoint, data, _headers|
+      assert_no_match %r{extraTaxes}, data if /charges/.match?(endpoint)
     end.respond_with(successful_charge_response, successful_token_response)
 
     assert_success response
@@ -101,8 +117,8 @@ class KushkiTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
-      if /charges/ =~ endpoint
+    end.check_request do |endpoint, data, _headers|
+      if /charges/.match?(endpoint)
         assert_match %r{extraTaxes}, data
         assert_no_match %r{propina}, data
         assert_match %r{iac}, data
@@ -138,8 +154,8 @@ class KushkiTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
-      if /charges/ =~ endpoint
+    end.check_request do |endpoint, data, _headers|
+      if /charges/.match?(endpoint)
         assert_match %r{extraTaxes}, data
         assert_match %r{propina}, data
       end
@@ -156,6 +172,33 @@ class KushkiTest < Test::Unit::TestCase
     }
 
     @gateway.expects(:ssl_post).returns(failed_charge_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_failure response
+    assert_equal 'Monto de la transacción es diferente al monto de la venta inicial', response.message
+    assert_equal '220', response.error_code
+  end
+
+  def test_successful_authorize
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+
+    response = @gateway.authorize(@amount, @credit_card)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+    assert response.test?
+  end
+
+  def test_failed_authorize
+    options = {
+      amount: {
+        subtotal_iva: '200'
+      }
+    }
+
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
     @gateway.expects(:ssl_post).returns(successful_token_response)
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -193,6 +236,35 @@ class KushkiTest < Test::Unit::TestCase
     assert_equal 'K010', refund.error_code
   end
 
+  def test_successful_capture
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+
+    auth = @gateway.authorize(@amount, @credit_card)
+    assert_success auth
+
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'Succeeded', capture.message
+  end
+
+  def test_failed_capture
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+
+    auth = @gateway.authorize(@amount, @credit_card)
+    assert_success auth
+
+    @gateway.expects(:ssl_post).returns(failed_capture_response)
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_failure capture
+    assert_equal 'Monto de captura inválido.', capture.message
+    assert_equal 'K012', capture.error_code
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_charge_response)
     @gateway.expects(:ssl_post).returns(successful_token_response)
@@ -214,6 +286,23 @@ class KushkiTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Tipo de moneda no válida', response.message
     assert_equal '205', response.error_code
+  end
+
+  def test_successful_purchase_with_full_response_flag
+    options = {
+      full_response: 'true'
+    }
+
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_includes data, 'fullResponse'
+    end.respond_with(successful_token_response, successful_charge_response)
+
+    assert_success response
   end
 
   def test_scrub
@@ -342,6 +431,39 @@ class KushkiTest < Test::Unit::TestCase
       {
         "code":"220",
         "message":"Monto de la transacción es diferente al monto de la venta inicial"
+      }
+    )
+  end
+
+  def successful_authorize_response
+    %(
+      {
+        "ticketNumber":"676185788080292214"
+      }
+    )
+  end
+
+  def failed_authorize_response
+    %(
+      {
+        "code":"220",
+        "message":"Monto de la transacción es diferente al monto de la venta inicial"
+      }
+    )
+  end
+
+  def successful_capture_response
+    %(
+      {
+        "ticketNumber":"911597984059374763"
+      }
+    )
+  end
+
+  def failed_capture_response
+    %(
+      {
+        "code":"K012","message":"Monto de captura inválido."
       }
     )
   end

@@ -8,36 +8,36 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(US CA)
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
 
       self.homepage_url = 'http://www.bluefincommerce.com/'
       self.display_name = 'PayConex'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :account_id, :api_accesskey)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         post = {}
         add_auth_purchase_params(post, money, payment_method, options)
         commit('SALE', post)
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         post = {}
         add_auth_purchase_params(post, money, payment_method, options)
         commit('AUTHORIZATION', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         add_reference_params(post, authorization, options)
         add_amount(post, money, options)
         commit('CAPTURE', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         add_reference_params(post, authorization, options)
         add_amount(post, money, options)
@@ -50,21 +50,19 @@ module ActiveMerchant #:nodoc:
         commit('REVERSAL', post)
       end
 
-      def credit(money, payment_method, options={})
-        if payment_method.is_a?(String)
-          raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.'
-        end
+      def credit(money, payment_method, options = {})
+        raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.' if payment_method.is_a?(String)
 
         post = {}
         add_auth_purchase_params(post, money, payment_method, options)
         commit('CREDIT', post)
       end
 
-      def verify(payment_method, options={})
+      def verify(payment_method, options = {})
         authorize(0, payment_method, options)
       end
 
-      def store(payment_method, options={})
+      def store(payment_method, options = {})
         post = {}
         add_credentials(post)
         add_payment_method(post, payment_method)
@@ -81,14 +79,17 @@ module ActiveMerchant #:nodoc:
         force_utf8(transcript).
           gsub(%r((api_accesskey=)\w+), '\1[FILTERED]').
           gsub(%r((card_number=)\w+), '\1[FILTERED]').
-          gsub(%r((card_verification=)\w+), '\1[FILTERED]')
+          gsub(%r((card_verification=)\w+), '\1[FILTERED]').
+          gsub(%r((bank_account_number=)\w+), '\1[FILTERED]').
+          gsub(%r((bank_routing_number=)\w+), '\1[FILTERED]')
       end
 
       private
 
       def force_utf8(string)
         return nil unless string
-        binary = string.encode('BINARY', invalid: :replace, undef: :replace, replace: '?')   # Needed for Ruby 2.0 since #encode is a no-op if the string is already UTF-8. It's not needed for Ruby 2.1 and up since it's not a no-op there.
+
+        binary = string.encode('BINARY', invalid: :replace, undef: :replace, replace: '?') # Needed for Ruby 2.0 since #encode is a no-op if the string is already UTF-8. It's not needed for Ruby 2.1 and up since it's not a no-op there.
         binary.encode('UTF-8', invalid: :replace, undef: :replace, replace: '?')
       end
 
@@ -209,8 +210,8 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: response['transaction_id'],
-          :avs_result => AVSResult.new(code: response['avs_response']),
-          :cvv_result => CVVResult.new(response['cvv2_response']),
+          avs_result: AVSResult.new(code: response['avs_response']),
+          cvv_result: CVVResult.new(response['cvv2_response']),
           test: test?
         )
       rescue JSON::ParserError
@@ -239,7 +240,6 @@ module ActiveMerchant #:nodoc:
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end
-
     end
   end
 end

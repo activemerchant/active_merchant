@@ -23,11 +23,11 @@ class OmiseTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal @gateway.supported_countries, %w( TH JP )
+    assert_equal @gateway.supported_countries, %w(TH JP)
   end
 
   def test_supported_cardtypes
-    assert_equal @gateway.supported_cardtypes, [:visa, :master, :jcb]
+    assert_equal @gateway.supported_cardtypes, %i[visa master jcb]
   end
 
   def test_supports_scrubbing
@@ -50,7 +50,7 @@ class OmiseTest < Test::Unit::TestCase
   end
 
   def test_post_data
-    post_data = @gateway.send(:post_data, { card: {number: '4242424242424242'} })
+    post_data = @gateway.send(:post_data, { card: { number: '4242424242424242' } })
     assert_equal '{"card":{"number":"4242424242424242"}}', post_data
   end
 
@@ -73,7 +73,7 @@ class OmiseTest < Test::Unit::TestCase
 
   def test_error_code_from
     response = @gateway.send(:parse, invalid_security_code_response)
-    error_code  = @gateway.send(:error_code_from, response)
+    error_code = @gateway.send(:error_code_from, response)
     assert_equal 'invalid_security_code', error_code
   end
 
@@ -90,7 +90,7 @@ class OmiseTest < Test::Unit::TestCase
   end
 
   def test_card_declined
-    card_declined =  @gateway.send(:parse, failed_capture_response)
+    card_declined = @gateway.send(:parse, failed_capture_response)
     card_declined_code = @gateway.send(:standard_error_code_mapping, card_declined)
     assert_equal 'card_declined', card_declined_code
   end
@@ -138,7 +138,7 @@ class OmiseTest < Test::Unit::TestCase
   def test_add_customer_without_card
     result = {}
     customer_id = 'cust_test_4zjzcgm8kpdt4xdhdw2'
-    @gateway.send(:add_customer, result, {customer_id: customer_id})
+    @gateway.send(:add_customer, result, { customer_id: customer_id })
     assert_equal 'cust_test_4zjzcgm8kpdt4xdhdw2', result[:customer]
   end
 
@@ -146,21 +146,21 @@ class OmiseTest < Test::Unit::TestCase
     result = {}
     customer_id   = 'cust_test_4zjzcgm8kpdt4xdhdw2'
     result[:card] = 'card_test_4zguktjcxanu3dw171a'
-    @gateway.send(:add_customer, result, {customer_id: customer_id})
+    @gateway.send(:add_customer, result, { customer_id: customer_id })
     assert_equal customer_id, result[:customer]
   end
 
   def test_add_amount
     result = {}
     desc = 'Charge for order 3947'
-    @gateway.send(:add_amount, result, @amount, {description: desc})
+    @gateway.send(:add_amount, result, @amount, { description: desc })
     assert_equal desc, result[:description]
   end
 
   def test_add_amount_with_correct_currency
     result = {}
     jpy_currency = 'JPY'
-    @gateway.send(:add_amount, result, @amount, {currency: jpy_currency})
+    @gateway.send(:add_amount, result, @amount, { currency: jpy_currency })
     assert_equal jpy_currency, result[:currency]
   end
 
@@ -812,5 +812,4 @@ class OmiseTest < Test::Unit::TestCase
     }
     RESPONSE
   end
-
 end

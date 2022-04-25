@@ -4,12 +4,12 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://api.securionpay.com/'
       self.live_url = 'https://api.securionpay.com/'
 
-      self.supported_countries = %w(AL AD AT BY BE BG HR CY CZ RE DK EE IS FI FR DE GI GR HU IS IE IT IL LV LI LT LU
-                                    MK MT MD MC NL NO PL PT RO RU MA RS SK SI ES SE CH UA GB KI CI ME)
+      self.supported_countries = %w(AD BE BG CH CY CZ DE DK EE ES FI FO FR GI GL GR GS GT HR HU IE IS IT LI LR LT
+                                    LU LV MC MT MU MV MW NL NO PL RO SE SI)
 
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
 
       self.homepage_url = 'https://securionpay.com/'
       self.display_name = 'SecurionPay'
@@ -31,17 +31,17 @@ module ActiveMerchant #:nodoc:
         'expired_token' => STANDARD_ERROR_CODE[:card_declined]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :secret_key)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = create_post_for_auth_or_purchase(money, payment, options)
         commit('charges', post, options)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = create_post_for_auth_or_purchase(money, payment, options)
         post[:captured] = 'false'
         commit('charges', post, options)
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         commit("charges/#{CGI.escape(authorization)}/refund", {}, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -166,6 +166,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         return unless post[:card]&.kind_of?(Hash)
+
         if address = options[:billing_address]
           post[:card][:addressLine1] = address[:address1] if address[:address1]
           post[:card][:addressLine2] = address[:address2] if address[:address2]
@@ -189,8 +190,7 @@ module ActiveMerchant #:nodoc:
           response,
           test: test?,
           authorization: (success ? response['id'] : response['error']['charge']),
-          error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['error']['code']])
-        )
+          error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['error']['code']]))
       end
 
       def headers(options = {})
@@ -214,6 +214,7 @@ module ActiveMerchant #:nodoc:
 
         params.map do |key, value|
           next if value.blank?
+
           if value.is_a?(Hash)
             h = {}
             value.each do |k, v|

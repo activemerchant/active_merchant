@@ -11,8 +11,8 @@ module ActiveMerchant #:nodoc:
       POST_LIVE_URL = 'https://api.merchantwarrior.com/post/'
 
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express,
-                                  :diners_club, :discover, :jcb]
+      self.supported_cardtypes = %i[visa master american_express
+                                    diners_club discover jcb]
       self.homepage_url = 'https://www.merchantwarrior.com/'
       self.display_name = 'Merchant Warrior'
 
@@ -30,6 +30,8 @@ module ActiveMerchant #:nodoc:
         add_order_id(post, options)
         add_address(post, options)
         add_payment_method(post, payment_method)
+        add_recurring_flag(post, options)
+        add_soft_descriptors(post, options)
         commit('processAuth', post)
       end
 
@@ -39,6 +41,8 @@ module ActiveMerchant #:nodoc:
         add_order_id(post, options)
         add_address(post, options)
         add_payment_method(post, payment_method)
+        add_recurring_flag(post, options)
+        add_soft_descriptors(post, options)
         commit('processCard', post)
       end
 
@@ -46,6 +50,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
+        add_soft_descriptors(post, options)
         post['captureAmount'] = amount(money)
         commit('processCapture', post)
       end
@@ -54,8 +59,19 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
+        add_soft_descriptors(post, options)
         post['refundAmount'] = amount(money)
         commit('refundCard', post)
+      end
+
+      def void(identification, options = {})
+        post = {}
+        # The amount parameter is required for void transactions
+        # on the Merchant Warrior gateway.
+        post['transactionAmount'] = options[:amount]
+        post['hash'] = void_verification_hash(identification)
+        add_transaction(post, identification)
+        commit('processVoid', post)
       end
 
       def store(creditcard, options = {})
@@ -87,7 +103,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        return unless(address = (options[:billing_address] || options[:address]))
+        return unless (address = (options[:billing_address] || options[:address]))
 
         post['customerName'] = scrub_name(address[:name])
         post['customerCountry'] = address[:country]
@@ -135,6 +151,18 @@ module ActiveMerchant #:nodoc:
         post['hash'] = verification_hash(amount(money), currency)
       end
 
+      def add_recurring_flag(post, options)
+        return if options[:recurring_flag].nil?
+
+        post['recurringFlag'] = options[:recurring_flag]
+      end
+
+      def add_soft_descriptors(post, options)
+        post['descriptorName'] = options[:descriptor_name] if options[:descriptor_name]
+        post['descriptorCity'] = options[:descriptor_city] if options[:descriptor_city]
+        post['descriptorState'] = options[:descriptor_state] if options[:descriptor_state]
+      end
+
       def verification_hash(money, currency)
         Digest::MD5.hexdigest(
           (
@@ -146,8 +174,20 @@ module ActiveMerchant #:nodoc:
         )
       end
 
+      def void_verification_hash(transaction_id)
+        Digest::MD5.hexdigest(
+          (
+            @options[:api_passphrase].to_s +
+            @options[:merchant_uuid].to_s +
+            transaction_id
+          ).downcase
+        )
+      end
+
       def parse(body)
         xml = REXML::Document.new(body)
+
+        return { response_message: 'Invalid gateway response' } unless xml.root.present?
 
         response = {}
         xml.root.elements.to_a.each do |node|
@@ -173,17 +213,15 @@ module ActiveMerchant #:nodoc:
           success?(response),
           response[:response_message],
           response,
-          :test => test?,
-          :authorization => (response[:card_id] || response[:transaction_id])
+          test: test?,
+          authorization: (response[:card_id] || response[:transaction_id])
         )
       end
 
       def add_auth(action, post)
         post['merchantUUID'] = @options[:merchant_uuid]
         post['apiKey'] = @options[:api_key]
-        unless token?(post)
-          post['method'] = action
-        end
+        post['method'] = action unless token?(post)
       end
 
       def url_for(action, post)

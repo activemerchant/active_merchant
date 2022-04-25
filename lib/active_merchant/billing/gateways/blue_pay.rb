@@ -10,15 +10,15 @@ module ActiveMerchant #:nodoc:
 
       self.ignore_http_status = true
 
-      CARD_CODE_ERRORS = %w( N S )
-      AVS_ERRORS = %w( A E N R W Z )
+      CARD_CODE_ERRORS = %w(N S)
+      AVS_ERRORS = %w(A E N R W Z)
       AVS_REASON_CODES = %w(27 45)
 
       FIELD_MAP = {
         'TRANS_ID' => :transaction_id,
         'STATUS' => :response_code,
         'AVS' => :avs_result_code,
-        'CVV2'=> :card_code,
+        'CVV2' => :card_code,
         'AUTH_CODE' => :authorization,
         'MESSAGE' => :message,
         'REBID' => :rebid,
@@ -29,7 +29,7 @@ module ActiveMerchant #:nodoc:
 
       REBILL_FIELD_MAP = {
         'REBILL_ID' => :rebill_id,
-        'ACCOUNT_ID'=> :account_id,
+        'ACCOUNT_ID' => :account_id,
         'USER_ID' => :user_id,
         'TEMPLATE_ID' => :template_id,
         'STATUS' => :status,
@@ -44,8 +44,8 @@ module ActiveMerchant #:nodoc:
         'CUST_TOKEN' => :cust_token
       }
 
-      self.supported_countries = ['US', 'CA']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_countries = %w[US CA]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
       self.homepage_url        = 'http://www.bluepay.com/'
       self.display_name        = 'BluePay'
       self.money_format        = :dollars
@@ -84,7 +84,8 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_rebill(post, options) if options[:rebill]
         add_duplicate_override(post, options)
-        post[:TRANS_TYPE]  = 'AUTH'
+        add_stored_credential(post, options)
+        post[:TRANS_TYPE] = 'AUTH'
         commit('AUTH_ONLY', money, post, options)
       end
 
@@ -107,7 +108,8 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_rebill(post, options) if options[:rebill]
         add_duplicate_override(post, options)
-        post[:TRANS_TYPE]  = 'SALE'
+        add_stored_credential(post, options)
+        post[:TRANS_TYPE] = 'SALE'
         commit('AUTH_CAPTURE', money, post, options)
       end
 
@@ -155,7 +157,7 @@ module ActiveMerchant #:nodoc:
       #   If the payment_object is either a CreditCard or Check object, then the transaction type will be an unmatched credit placing funds in the specified account. This is referred to a CREDIT transaction in BluePay.
       # * <tt>options</tt> -- A hash of parameters.
       def refund(money, identification, options = {})
-        if(identification && !identification.kind_of?(String))
+        if identification && !identification.kind_of?(String)
           ActiveMerchant.deprecated 'refund should only be used to refund a referenced transaction'
           return credit(money, identification, options)
         end
@@ -164,6 +166,7 @@ module ActiveMerchant #:nodoc:
         post[:PAYMENT_ACCOUNT] = ''
         post[:MASTER_ID]  = identification
         post[:TRANS_TYPE] = 'REFUND'
+        post[:DOC_TYPE] = options[:doc_type] if options[:doc_type]
         post[:NAME1] = options[:first_name] || ''
         post[:NAME2] = options[:last_name] if options[:last_name]
         post[:ZIP] = options[:zip] if options[:zip]
@@ -183,6 +186,7 @@ module ActiveMerchant #:nodoc:
         post[:PAYMENT_ACCOUNT] = ''
         add_payment_method(post, payment_object)
         post[:TRANS_TYPE] = 'CREDIT'
+        post[:DOC_TYPE] = options[:doc_type] if options[:doc_type]
 
         post[:NAME1] = options[:first_name] || ''
         post[:NAME2] = options[:last_name] if options[:last_name]
@@ -315,7 +319,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def commit(action, money, fields, options = {})
-        fields[:AMOUNT] = amount(money) unless(fields[:TRANS_TYPE] == 'VOID' || action == 'rebill')
+        fields[:AMOUNT] = amount(money) unless fields[:TRANS_TYPE] == 'VOID' || action == 'rebill'
         fields[:MODE] = (test? ? 'TEST' : 'LIVE')
         fields[:ACCOUNT_ID] = @options[:login]
         fields[:CUSTOMER_IP] = options[:ip] if options[:ip]
@@ -330,7 +334,7 @@ module ActiveMerchant #:nodoc:
         parse(ssl_post(url, post_data(action, fields)))
       end
 
-      def parse_recurring(response_fields, opts={}) # expected status?
+      def parse_recurring(response_fields, opts = {}) # expected status?
         parsed = {}
         response_fields.each do |k, v|
           mapped_key = REBILL_FIELD_MAP.include?(k) ? REBILL_FIELD_MAP[k] : k
@@ -341,17 +345,15 @@ module ActiveMerchant #:nodoc:
         message = parsed[:status]
 
         Response.new(success, message, parsed,
-          :test          => test?,
-          :authorization => parsed[:rebill_id])
+          test: test?,
+          authorization: parsed[:rebill_id])
       end
 
       def parse(body)
         # The bp20api has max one value per form field.
         response_fields = Hash[CGI::parse(body).map { |k, v| [k.upcase, v.first] }]
 
-        if response_fields.include? 'REBILL_ID'
-          return parse_recurring(response_fields)
-        end
+        return parse_recurring(response_fields) if response_fields.include? 'REBILL_ID'
 
         parsed = {}
         response_fields.each do |k, v|
@@ -363,16 +365,15 @@ module ActiveMerchant #:nodoc:
         message = message_from(parsed)
         success = parsed[:response_code] == '1'
         Response.new(success, message, parsed,
-          :test          => test?,
-          :authorization => (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
-          :avs_result    => { :code => parsed[:avs_result_code] },
-          :cvv_result    => parsed[:card_code]
-        )
+          test: test?,
+          authorization: (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
+          avs_result: { code: parsed[:avs_result_code] },
+          cvv_result: parsed[:card_code])
       end
 
       def message_from(parsed)
         message = parsed[:message]
-        if(parsed[:response_code].to_i == 2)
+        if parsed[:response_code].to_i == 2
           if CARD_CODE_ERRORS.include?(parsed[:card_code])
             message = CVVResult.messages[parsed[:card_code]]
           elsif AVS_ERRORS.include?(parsed[:avs_result_code])
@@ -382,10 +383,10 @@ module ActiveMerchant #:nodoc:
           end
         elsif message == 'Missing ACCOUNT_ID'
           message = 'The merchant login ID or password is invalid'
-        elsif message =~ /Approved/
+        elsif /Approved/.match?(message)
           message = 'This transaction has been approved'
-        elsif message =~  /Expired/
-          message =  'The credit card has expired'
+        elsif /Expired/.match?(message)
+          message = 'The credit card has expired'
         end
         message
       end
@@ -462,6 +463,33 @@ module ActiveMerchant #:nodoc:
         post[:REB_CYCLES]      = options[:rebill_cycles]
       end
 
+      def add_stored_credential(post, options)
+        post[:cof] = initiator(options)
+        post[:cofscheduled] = scheduled(options)
+      end
+
+      def initiator(options)
+        return unless initiator = options.dig(:stored_credential, :initiator)
+
+        case initiator
+        when 'merchant'
+          'M'
+        when 'cardholder'
+          'C'
+        end
+      end
+
+      def scheduled(options)
+        return unless reason_type = options.dig(:stored_credential, :reason_type)
+
+        case reason_type
+        when 'recurring' || 'installment'
+          'Y'
+        when 'unscheduled'
+          'N'
+        end
+      end
+
       def post_data(action, parameters = {})
         post = {}
         post[:version]        = '1'
@@ -512,9 +540,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def handle_response(response)
-        if ignore_http_status || (200...300).cover?(response.code.to_i)
-          return response.body
-        end
+        return response.body if ignore_http_status || (200...300).cover?(response.code.to_i)
+
         raise ResponseError.new(response)
       end
     end

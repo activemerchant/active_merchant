@@ -1,15 +1,14 @@
 require 'test_helper'
 
 class RemoteTnsTest < Test::Unit::TestCase
-
   def setup
     TnsGateway.ssl_strict = false # Sandbox has an improperly installed cert
     @gateway = TnsGateway.new(fixtures(:tns))
 
     @amount = 100
-    @credit_card = credit_card('5123456789012346')
-    @ap_credit_card = credit_card('5424180279791732', month: 05, year: 2017, verification_value: 222)
-    @declined_card = credit_card('4000300011112220')
+    @credit_card = credit_card('5123456789012346', month: 05, year: 2021)
+    @ap_credit_card = credit_card('5424180279791732', month: 05, year: 2021)
+    @declined_card = credit_card('5123456789012346', month: 01, year: 2028)
 
     @options = {
       order_id: generate_unique_id,
@@ -37,12 +36,24 @@ class RemoteTnsTest < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
     more_options = @options.merge({
       ip: '127.0.0.1',
-      email: 'joe@example.com',
+      email: 'joe@example.com'
     })
 
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(more_options))
     assert_success response
     assert_equal 'Succeeded', response.message
+  end
+
+  # This requires a test account flagged for pay/purchase mode.
+  # The primary test account (TESTSPREEDLY01) is not flagged for this mode.
+  # This was initially tested with a private account.
+  def test_successful_purchase_in_pay_mode
+    gateway = TnsGateway.new(fixtures(:tns_pay_mode).merge(region: 'europe'))
+
+    assert response = gateway.purchase(@amount, @credit_card, @options.merge(currency: 'GBP', pay_mode: true))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'CAPTURED', response.params['order']['status']
   end
 
   def test_successful_purchase_with_region
@@ -104,9 +115,9 @@ class RemoteTnsTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = TnsGateway.new(
-                :userid => 'nosuch',
-                :password => 'thing'
-              )
+      userid: 'nosuch',
+      password: 'thing'
+    )
     response = gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'ERROR - INVALID_REQUEST - Invalid credentials.', response.message

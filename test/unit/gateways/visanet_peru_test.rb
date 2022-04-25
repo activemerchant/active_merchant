@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class VisanetPeruTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = VisanetPeruGateway.new(fixtures(:visanet_peru))
 
@@ -37,6 +39,29 @@ class VisanetPeruTest < Test::Unit::TestCase
     assert_equal 'Operacion Denegada.', response.message
   end
 
+  def test_nonconsecutive_purchase_numbers
+    pn1, pn2 = nil
+
+    response1 = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      pn1 = JSON.parse(data)['purchaseNumber']
+    end.respond_with(successful_authorize_response)
+
+    # unit test is unrealistically speedy relative to real-world performance
+    sleep 0.1
+
+    response2 = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      pn2 = JSON.parse(data)['purchaseNumber']
+    end.respond_with(successful_authorize_response)
+
+    assert_success response1
+    assert_success response2
+    assert_not_equal(pn1, pn2)
+  end
+
   def test_successful_authorize
     @gateway.expects(:ssl_request).returns(successful_authorize_response)
     response = @gateway.authorize(@amount, @credit_card, @options)
@@ -67,7 +92,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).with(:post, any_parameters).returns(successful_authorize_response)
     @gateway.expects(:ssl_request).with(:put, any_parameters).returns(successful_capture_response)
     response = @gateway.authorize(@amount, @credit_card, @options)
-    capture = @gateway.capture(response.authorization, @options)
+    capture = @gateway.capture(@amount, response.authorization, @options)
     assert_success capture
     assert_equal 'OK', capture.message
     assert_match %r(^[0-9]{9}|$), capture.authorization
@@ -78,7 +103,7 @@ class VisanetPeruTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_request).returns(failed_capture_response)
     invalid_purchase_number = '900000044'
-    response = @gateway.capture(invalid_purchase_number)
+    response = @gateway.capture(@amount, invalid_purchase_number)
     assert_failure response
     assert_equal '[ "NUMORDEN 900000044 no se encuentra registrado", "No se realizo el deposito" ]', response.message
     assert_equal 400, response.error_code
@@ -518,5 +543,4 @@ class VisanetPeruTest < Test::Unit::TestCase
     }
     RESPONSE
   end
-
 end

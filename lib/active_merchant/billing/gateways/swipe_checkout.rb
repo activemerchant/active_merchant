@@ -11,9 +11,9 @@ module ActiveMerchant #:nodoc:
 
       TRANSACTION_API = '/createShopifyTransaction.php'
 
-      self.supported_countries = %w[ NZ CA ]
+      self.supported_countries = %w[NZ CA]
       self.default_currency = 'NZD'
-      self.supported_cardtypes = [:visa, :master]
+      self.supported_cardtypes = %i[visa master]
       self.homepage_url = 'https://www.swipehq.com/checkout'
       self.display_name = 'Swipe Checkout'
       self.money_format = :dollars
@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
         post[:address] = "#{address[:address1]}, #{address[:address2]}"
         post[:city] = address[:city]
         post[:country] = address[:country]
-        post[:mobile] = address[:phone]     # API only has a "mobile" field, no "phone"
+        post[:mobile] = address[:phone] # API only has a "mobile" field, no "phone"
       end
 
       def add_invoice(post, options)
@@ -109,8 +109,7 @@ module ActiveMerchant #:nodoc:
                 TRANSACTION_APPROVED_MSG :
                 TRANSACTION_DECLINED_MSG,
                 response,
-                :test => test?
-              )
+                test: test?)
             else
               build_error_response(message, response)
             end
@@ -125,7 +124,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def call_api(api, params=nil)
+      def call_api(api, params = nil)
         params ||= {}
         params[:merchant_id] = @options[:login]
         params[:api_key] = @options[:api_key]
@@ -139,12 +138,12 @@ module ActiveMerchant #:nodoc:
         (test? ? self.test_url : self.live_url) + api
       end
 
-      def build_error_response(message, params={})
+      def build_error_response(message, params = {})
         Response.new(
           false,
           message,
           params,
-          :test => test?
+          test: test?
         )
       end
     end

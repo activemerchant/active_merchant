@@ -1,25 +1,38 @@
 require 'test_helper'
 
 class RemoteWorldpayTest < Test::Unit::TestCase
-
   def setup
     @gateway = WorldpayGateway.new(fixtures(:world_pay_gateway))
     @cftgateway = WorldpayGateway.new(fixtures(:world_pay_gateway_cft))
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
+    @amex_card = credit_card('3714 496353 98431')
     @elo_credit_card = credit_card('4514 1600 0000 0008',
-      :month => 10,
-      :year => 2020,
-      :first_name => 'John',
-      :last_name => 'Smith',
-      :verification_value => '737',
-      :brand => 'elo'
-    )
+      month: 10,
+      year: 2020,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      brand: 'elo')
+    @credit_card_with_two_digits_year = credit_card('4111111111111111',
+      month: 10,
+      year: 22)
+    @cabal_card = credit_card('6035220000000006')
+    @naranja_card = credit_card('5895620000000002')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
-    @declined_card = credit_card('4111111111111111', :first_name => nil, :last_name => 'REFUSED')
-    @threeDS_card = credit_card('4111111111111111', :first_name => nil, :last_name => '3D')
-    @threeDS_card_external_MPI = credit_card('4444333322221111', :first_name => 'AA', :last_name => 'BD')
+    @declined_card = credit_card('4111111111111111', first_name: nil, last_name: 'REFUSED')
+    @threeDS_card = credit_card('4111111111111111', first_name: nil, last_name: 'doot')
+    @threeDS2_card = credit_card('4111111111111111', first_name: nil, last_name: '3DS_V2_FRICTIONLESS_IDENTIFIED')
+    @threeDS_card_external_MPI = credit_card('4444333322221111', first_name: 'AA', last_name: 'BD')
+    @nt_credit_card = network_tokenization_credit_card('4895370015293175',
+      brand: 'visa',
+      eci: '07',
+      source: :network_token,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+    @nt_credit_card_without_eci = network_tokenization_credit_card('4895370015293175',
+      source: :network_token,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
 
     @options = {
       order_id: generate_unique_id,
@@ -29,6 +42,38 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       customer: generate_unique_id,
       email: 'wow@example.com'
     }
+
+    @sub_merchant_options = {
+      sub_merchant_data: {
+        pf_id: '12345678901',
+        sub_name: 'Example Shop',
+        sub_id: '1234567',
+        sub_street: '123 Street',
+        sub_city: 'San Francisco',
+        sub_state: 'CA',
+        sub_country_code: '840',
+        sub_postal_code: '94101',
+        sub_tax_id: '987-65-4321'
+      }
+    }
+    @apple_pay_network_token = network_tokenization_credit_card('4895370015293175',
+      month: 10,
+      year: Time.new.year + 2,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      payment_cryptogram: 'abc1234567890',
+      eci: '07',
+      transaction_id: 'abc123',
+      source: :apple_pay)
+
+    @google_pay_network_token = network_tokenization_credit_card('4444333322221111',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      month: '01',
+      year: Time.new.year + 2,
+      source: :google_pay,
+      transaction_id: '123456789',
+      eci: '05')
   end
 
   def test_successful_purchase
@@ -37,19 +82,205 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_purchase_with_network_token
+    assert response = @gateway.purchase(@amount, @nt_credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_network_token_without_eci
+    assert response = @gateway.purchase(@amount, @nt_credit_card_without_eci, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_authorize_with_card_holder_name_apple_pay
+    response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+    assert_success response
+    assert_equal @amount, response.params['amount_value'].to_i
+    assert_equal 'GBP', response.params['amount_currency_code']
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_authorize_with_card_holder_name_google_pay
+    response = @gateway.authorize(@amount, @google_pay_network_token, @options)
+    assert_success response
+    assert_equal @amount, response.params['amount_value'].to_i
+    assert_equal 'GBP', response.params['amount_currency_code']
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_authorize_without_card_holder_name_apple_pay
+    @apple_pay_network_token.first_name = ''
+    @apple_pay_network_token.last_name = ''
+
+    response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+
+    assert_success response
+    assert_equal 'authorize', response.params['action']
+    assert_equal @amount, response.params['amount_value'].to_i
+    assert_equal 'GBP', response.params['amount_currency_code']
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_unsucessfull_authorize_without_token_number_apple_pay
+    @apple_pay_network_token.number = nil
+    response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+
+    assert_failure response
+    assert_equal response.error_code, '5'
+    assert_equal "Element 'tokenNumber' must have valid numeric content.", response.message
+  end
+
+  def test_unsucessfull_authorize_with_token_number_as_empty_string_apple_pay
+    @apple_pay_network_token.number = ''
+    response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+
+    assert_failure response
+    assert_equal response.error_code, '5'
+    assert_equal "Element 'tokenNumber' must have valid numeric content.", response.message
+  end
+
+  def test_unsucessfull_authorize_with_invalid_token_number_apple_pay
+    @apple_pay_network_token.first_name = 'REFUSED' # Magic value for testing purposes
+    @apple_pay_network_token.last_name = ''
+
+    response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+    assert_failure response
+    assert_equal 'REFUSED', response.message
+  end
+
+  def test_unsuccessful_authorize_with_overdue_expire_date_apple_pay
+    @apple_pay_network_token.month = 10
+    @apple_pay_network_token.year = 2019
+
+    response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+    assert_failure response
+    assert_equal 'Invalid payment details : Expiry date = 10/2019', response.message
+  end
+
+  def test_unsuccessful_authorize_without_expire_date_apple_pay
+    @apple_pay_network_token.month = nil
+    @apple_pay_network_token.year = nil
+
+    response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+    assert_failure response
+    assert_match(/of type NMTOKEN must be a name token/, response.message)
+  end
+
+  def test_purchase_with_apple_pay_card_apple_pay
+    assert auth = @gateway.purchase(@amount, @apple_pay_network_token, @options)
+    assert_success auth
+    assert_equal 'SUCCESS', auth.message
+    assert auth.authorization
+  end
+
+  def test_successful_authorize_with_void_apple_pay
+    assert auth = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+    assert_success auth
+    assert_equal 'authorize', auth.params['action']
+    assert_equal @amount, auth.params['amount_value'].to_i
+    assert_equal 'GBP', auth.params['amount_currency_code']
+    assert auth.authorization
+    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge(authorization_validated: true))
+    assert_success capture
+    assert void = @gateway.void(auth.authorization, @options.merge(authorization_validated: true))
+    assert_success void
+  end
+
+  def test_successful_purchase_with_refund_apple_pay
+    assert auth = @gateway.purchase(@amount, @apple_pay_network_token, @options)
+    assert_success auth
+    assert_equal 'capture', auth.params['action']
+    assert_equal @amount, auth.params['amount_value'].to_i
+    assert_equal 'GBP', auth.params['amount_currency_code']
+    assert auth.authorization
+    assert refund = @gateway.refund(@amount, auth.authorization, @options.merge(authorization_validated: true))
+    assert_success refund
+  end
+
+  def test_successful_store_apple_pay
+    assert response = @gateway.store(@apple_pay_network_token, @store_options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert_match response.params['payment_token_id'], response.authorization
+    assert_match 'shopper', response.authorization
+    assert_match @store_options[:customer], response.authorization
+  end
+
   def test_successful_purchase_with_elo
     assert response = @gateway.purchase(@amount, @elo_credit_card, @options.merge(currency: 'BRL'))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_purchase_with_two_digits_expiration_year
+    assert response = @gateway.purchase(@amount, @credit_card_with_two_digits_year, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_cabal
+    response = @gateway.purchase(@amount, @cabal_card, @options.merge(currency: 'ARS'))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_naranja
+    response = @gateway.purchase(@amount, @naranja_card, @options.merge(currency: 'ARS'))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_skipping_capture
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(skip_capture: true))
+    assert_success response
+    assert response.responses.length == 1
+    assert_equal 'SUCCESS', response.message
+  end
+
   def test_successful_authorize_avs_and_cvv
-    card = credit_card('4111111111111111', :verification_value => 555)
+    card = credit_card('4111111111111111', verification_value: 555)
     assert response = @gateway.authorize(@amount, card, @options.merge(billing_address: address.update(zip: 'CCCC')))
     assert_success response
     assert_equal 'SUCCESS', response.message
     assert_match %r{Street address does not match, but 5-digit postal code matches}, response.avs_result['message']
     assert_match %r{CVV matches}, response.cvv_result['message']
+  end
+
+  def test_successful_authorize_with_sub_merchant_data
+    options = @options.merge(@sub_merchant_options)
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_3ds2_authorize
+    options = @options.merge({ execute_threed: true, three_ds_version: '2.0' })
+    assert response = @gateway.authorize(@amount, @threeDS2_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_3ds2_authorize_with_browser_size
+    options = @options.merge({ execute_threed: true, three_ds_version: '2.0', browser_size: '390x400' })
+    assert response = @gateway.authorize(@amount, @threeDS2_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_authorize_with_risk_data
+    options = @options.merge({ execute_threed: true, three_ds_version: '2.0', risk_data: risk_data })
+    assert response = @gateway.authorize(@amount, @threeDS2_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_sub_merchant_data
+    options = @options.merge(@sub_merchant_options)
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
   end
 
   def test_successful_purchase_with_hcg_additional_data
@@ -126,22 +357,30 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   def test_successful_authorize_with_3ds
     session_id = generate_unique_id
     options = @options.merge(
-              {
-                execute_threed: true,
-                accept_header: 'text/html',
-                user_agent: 'Mozilla/5.0',
-                session_id: session_id,
-                ip: '127.0.0.1',
-                cookie: 'machine=32423423'
-              })
+      {
+        execute_threed: true,
+        accept_header: 'text/html',
+        user_agent: 'Mozilla/5.0',
+        session_id: session_id,
+        ip: '127.0.0.1',
+        cookie: 'machine=32423423'
+      }
+    )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
-    assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
+    assert_equal "A transaction status of 'AUTHORISED' or 'CAPTURED' is required.", first_message.message
     assert first_message.test?
     refute first_message.authorization.blank?
     refute first_message.params['issuer_url'].blank?
     refute first_message.params['pa_request'].blank?
     refute first_message.params['cookie'].blank?
     refute first_message.params['session_id'].blank?
+  end
+
+  # Ensure the account is configured to use this feature to proceed successfully
+  def test_marking_3ds_purchase_as_moto
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(metadata: { manual_entry: true }))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
   end
 
   def test_successful_auth_and_capture_with_normalized_stored_credential
@@ -152,7 +391,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       network_transaction_id: nil
     }
 
-    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({stored_credential: stored_credential_params}))
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
     assert_success auth
     assert auth.authorization
     assert auth.params['scheme_response']
@@ -212,17 +451,18 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       network_transaction_id: nil
     }
     options = @options.merge(
-              {
-                execute_threed: true,
-                accept_header: 'text/html',
-                user_agent: 'Mozilla/5.0',
-                session_id: session_id,
-                ip: '127.0.0.1',
-                cookie: 'machine=32423423',
-                stored_credential: stored_credential_params
-              })
+      {
+        execute_threed: true,
+        accept_header: 'text/html',
+        user_agent: 'Mozilla/5.0',
+        session_id: session_id,
+        ip: '127.0.0.1',
+        cookie: 'machine=32423423',
+        stored_credential: stored_credential_params
+      }
+    )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
-    assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
+    assert_equal "A transaction status of 'AUTHORISED' or 'CAPTURED' is required.", first_message.message
     assert first_message.test?
     refute first_message.authorization.blank?
     refute first_message.params['issuer_url'].blank?
@@ -234,17 +474,18 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   def test_successful_authorize_with_3ds_with_gateway_specific_stored_credentials
     session_id = generate_unique_id
     options = @options.merge(
-              {
-                execute_threed: true,
-                accept_header: 'text/html',
-                user_agent: 'Mozilla/5.0',
-                session_id: session_id,
-                ip: '127.0.0.1',
-                cookie: 'machine=32423423',
-                stored_credential_usage: 'FIRST'
-              })
+      {
+        execute_threed: true,
+        accept_header: 'text/html',
+        user_agent: 'Mozilla/5.0',
+        session_id: session_id,
+        ip: '127.0.0.1',
+        cookie: 'machine=32423423',
+        stored_credential_usage: 'FIRST'
+      }
+    )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
-    assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
+    assert_equal "A transaction status of 'AUTHORISED' or 'CAPTURED' is required.", first_message.message
     assert first_message.test?
     refute first_message.authorization.blank?
     refute first_message.params['issuer_url'].blank?
@@ -277,13 +518,14 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   def test_failed_authorize_with_3ds
     session_id = generate_unique_id
     options = @options.merge(
-              {
-                execute_threed: true,
-                accept_header: 'text/html',
-                session_id: session_id,
-                ip: '127.0.0.1',
-                cookie: 'machine=32423423'
-              })
+      {
+        execute_threed: true,
+        accept_header: 'text/html',
+        session_id: session_id,
+        ip: '127.0.0.1',
+        cookie: 'machine=32423423'
+      }
+    )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
     assert_match %r{missing info for 3D-secure transaction}i, first_message.message
     assert first_message.test?
@@ -296,7 +538,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       {
         three_d_secure: {
           version: '1.0.2',
-          xid: '',
+          xid: 'z9UKb06xLziZMOXBEmWSVA1kwG0=',
           cavv: 'MAAAAAAAAAAAAAAAAAAAAAAAAAA=',
           eci: '05'
         }
@@ -314,7 +556,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       {
         three_d_secure: {
           version: '2.1.0',
-          xid: 'A' * 40,
+          ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
           cavv: 'MAAAAAAAAAAAAAAAAAAAAAAAAAA=',
           eci: '05'
         }
@@ -334,7 +576,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_billing_address
-    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(:billing_address => address))
+    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address))
   end
 
   def test_partial_address
@@ -342,7 +584,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     billing_address.delete(:address1)
     billing_address.delete(:zip)
     billing_address.delete(:country)
-    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(:billing_address => billing_address))
+    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: billing_address))
+  end
+
+  def test_state_omitted
+    billing_address = address
+    billing_address.delete(:state)
+    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: billing_address))
   end
 
   def test_ip_address
@@ -369,21 +617,21 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_authorize_fractional_currency
-    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'USD')))
+    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(currency: 'USD')))
     assert_equal 'USD', result.params['amount_currency_code']
     assert_equal '1234', result.params['amount_value']
     assert_equal '2', result.params['amount_exponent']
   end
 
   def test_authorize_nonfractional_currency
-    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'IDR')))
+    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(currency: 'IDR')))
     assert_equal 'IDR', result.params['amount_currency_code']
     assert_equal '12', result.params['amount_value']
     assert_equal '0', result.params['amount_exponent']
   end
 
   def test_authorize_three_decimal_currency
-    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'OMR')))
+    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(currency: 'OMR')))
     assert_equal 'OMR', result.params['amount_currency_code']
     assert_equal '1234', result.params['amount_value']
     assert_equal '3', result.params['amount_exponent']
@@ -391,11 +639,11 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_reference_transaction
     assert_success(original = @gateway.authorize(100, @credit_card, @options))
-    assert_success(@gateway.authorize(200, original.authorization, :order_id => generate_unique_id))
+    assert_success(@gateway.authorize(200, original.authorization, order_id: generate_unique_id))
   end
 
   def test_invalid_login
-    gateway = WorldpayGateway.new(:login => '', :password => '')
+    gateway = WorldpayGateway.new(login: '', password: '')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid credentials', response.message
@@ -417,6 +665,20 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match %r{SUCCESS}, response.message
+  end
+
+  def test_successful_verify_with_0_auth
+    options = @options.merge(zero_dollar_auth: true)
+    response = @gateway.verify(@credit_card, options)
+    assert_success response
+    assert_match %r{SUCCESS}, response.message
+  end
+
+  def test_successful_verify_with_0_auth_and_ineligible_card
+    options = @options.merge(zero_dollar_auth: true)
+    response = @gateway.verify(@amex_card, options)
     assert_success response
     assert_match %r{SUCCESS}, response.message
   end
@@ -446,9 +708,36 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', credit.message
   end
 
+  def test_successful_fast_fund_credit_on_cft_gateway
+    options = @options.merge({ fast_fund_credit: true })
+
+    credit = @cftgateway.credit(@amount, @credit_card, options)
+    assert_success credit
+    assert_equal 'SUCCESS', credit.message
+  end
+
+  def test_successful_fast_fund_credit_with_token_on_cft_gateway
+    assert store = @gateway.store(@credit_card, @store_options)
+    assert_success store
+
+    options = @options.merge({ fast_fund_credit: true })
+    assert credit = @gateway.credit(@amount, store.authorization, options)
+    assert_success credit
+  end
+
+  def test_failed_fast_fund_credit_on_cft_gateway
+    options = @options.merge({ fast_fund_credit: true })
+    refused_card = credit_card('4917300800000000', name: 'REFUSED') # 'magic' value for testing failures, provided by Worldpay
+
+    credit = @cftgateway.credit(@amount, refused_card, options)
+    assert_failure credit
+    assert_equal '01', credit.params['action_code']
+    assert_equal "A transaction status of 'ok' or 'PUSH_APPROVED' is required.", credit.message
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @credit_card,  @options)
+      @gateway.purchase(@amount, @credit_card, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
 
@@ -486,12 +775,74 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   #   puts 'auth: ' + response.authorization
   # end
   #
-  # def test_refund
-  #   refund = @gateway.refund(@amount, '39270fd70be13aab55f84e28be45cad3')
-  #   assert_success refund
-  #   assert_equal 'SUCCESS', refund.message
-  # end
-  #
+  def test_refund
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert response.authorization
+
+    refund = @gateway.refund(@amount, response.authorization, authorization_validated: true)
+    assert_success refund
+    assert_equal 'SUCCESS', refund.message
+  end
+
+  def test_cancel_or_refund_non_captured_purchase
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(skip_capture: true))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert response.authorization
+
+    refund = @gateway.refund(@amount, response.authorization, authorization_validated: true, cancel_or_refund: true)
+    assert_success refund
+    assert_equal 'SUCCESS', refund.message
+  end
+
+  def test_cancel_or_refund_captured_purchase
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert response.authorization
+
+    refund = @gateway.refund(@amount, response.authorization, authorization_validated: true, cancel_or_refund: true)
+    assert_success refund
+    assert_equal 'SUCCESS', refund.message
+  end
+
+  def test_cancel_or_refund_non_captured_purchase_with_void
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(skip_capture: true))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert response.authorization
+
+    refund = @gateway.void(response.authorization, authorization_validated: true, cancel_or_refund: true)
+    assert_success refund
+    assert_equal 'SUCCESS', refund.message
+  end
+
+  def test_cancel_or_refund_captured_purchase_with_void
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert response.authorization
+
+    refund = @gateway.void(response.authorization, authorization_validated: true, cancel_or_refund: true)
+    assert_success refund
+    assert_equal 'SUCCESS', refund.message
+  end
+
+  def test_multiple_refunds
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert_equal 'SUCCESS', purchase.message
+
+    partial_amount = @amount - 1
+    assert_success refund1 = @gateway.refund(partial_amount, purchase.authorization, authorization_validated: true)
+    assert_equal 'SUCCESS', refund1.message
+
+    assert_success refund2 = @gateway.refund(@amount - partial_amount, purchase.authorization, authorization_validated: true)
+    assert_equal 'SUCCESS', refund2.message
+  end
+
   # def test_void_fails_unless_status_is_authorised
   #   response = @gateway.void('replace_with_authorization') # existing transaction in CAPTURED state
   #   assert_failure response
@@ -505,6 +856,32 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_match response.params['payment_token_id'], response.authorization
     assert_match 'shopper', response.authorization
     assert_match @store_options[:customer], response.authorization
+  end
+
+  def test_successful_store_with_transaction_identifier_using_gateway_specific_field
+    transaction_identifier = 'ABC123'
+    options_with_transaction_id = @store_options.merge(stored_credential_transaction_id: transaction_identifier)
+    assert response = @gateway.store(@credit_card, options_with_transaction_id)
+
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert_match transaction_identifier, response.params['transaction_identifier']
+  end
+
+  def test_successful_store_with_transaction_identifier_using_normalized_fields
+    transaction_identifier = 'CDE456'
+    options_with_transaction_id = @store_options.merge(stored_credential: { network_transaction_id: transaction_identifier })
+    assert response = @gateway.store(@credit_card, options_with_transaction_id)
+
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert_match transaction_identifier, response.params['transaction_identifier']
+  end
+
+  def test_successful_purchase_with_statement_narrative
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(statement_narrative: 'Merchant Statement Narrative'))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
   end
 
   def test_successful_authorize_using_token
@@ -584,5 +961,154 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal '5', response.error_code
     assert_match %r{REFUSED}, response.message
+  end
+
+  def test_authorize_and_capture_synchronous_response
+    card = credit_card('4111111111111111', verification_value: 555)
+    assert auth = @cftgateway.authorize(@amount, card, @options)
+    assert_success auth
+
+    assert capture = @cftgateway.capture(@amount, auth.authorization, @options.merge(authorization_validated: true))
+    assert_success capture
+
+    assert duplicate_capture = @cftgateway.capture(@amount, auth.authorization, @options.merge(authorization_validated: true))
+    assert_failure duplicate_capture
+  end
+
+  def test_capture_wrong_amount_synchronous_response
+    card = credit_card('4111111111111111', verification_value: 555)
+    assert auth = @cftgateway.authorize(@amount, card, @options)
+    assert_success auth
+
+    assert capture = @cftgateway.capture(@amount + 1, auth.authorization, @options.merge(authorization_validated: true))
+    assert_failure capture
+    assert_equal '5', capture.error_code
+    assert_equal 'Requested capture amount (GBP 1.01) exceeds the authorised balance for this payment (GBP 1.00)', capture.message
+  end
+
+  def test_successful_refund_synchronous_response
+    response = @cftgateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert response.authorization
+
+    assert @cftgateway.refund(@amount, response.authorization, authorization_validated: true)
+  end
+
+  def test_failed_refund_synchronous_response
+    auth = @cftgateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'SUCCESS', auth.message
+    assert auth.authorization
+
+    refund = @cftgateway.refund(@amount, auth.authorization, authorization_validated: true)
+    assert_failure refund
+    assert_equal 'This order is not refundable', refund.message
+
+    assert capture = @cftgateway.capture(@amount, auth.authorization, @options.merge(authorization_validated: true))
+    assert_success capture
+
+    refund = @cftgateway.refund(@amount * 2, auth.authorization, authorization_validated: true)
+    assert_failure refund
+    assert_equal 'Refund amount too high', refund.message
+  end
+
+  def test_successful_purchase_with_options_synchronous_response
+    options = @options
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'unscheduled',
+      initiator: 'merchant',
+      network_transaction_id: nil
+    }
+    options.merge(stored_credential: stored_credential_params)
+
+    assert purchase = @cftgateway.purchase(@amount, @credit_card, options.merge(instalments: 3, skip_capture: true, authorization_validated: true))
+    assert_success purchase
+  end
+
+  private
+
+  def risk_data
+    return @risk_data if @risk_data
+
+    authentication_time = Time.now
+    shopper_account_creation_date = Date.today
+    shopper_account_modification_date = Date.today - 1.day
+    shopper_account_password_change_date = Date.today - 2.days
+    shopper_account_shipping_address_first_use_date = Date.today - 3.day
+    shopper_account_payment_account_first_use_date = Date.today - 4.day
+    transaction_risk_data_pre_order_date = Date.today + 1.day
+
+    @risk_data = {
+      authentication_risk_data: {
+        authentication_method: 'localAccount',
+        authentication_date: {
+          day_of_month: authentication_time.strftime('%d'),
+          month: authentication_time.strftime('%m'),
+          year: authentication_time.strftime('%Y'),
+          hour: authentication_time.strftime('%H'),
+          minute: authentication_time.strftime('%M'),
+          second: authentication_time.strftime('%S')
+        }
+      },
+      shopper_account_risk_data: {
+        transactions_attempted_last_day: '1',
+        transactions_attempted_last_year: '2',
+        purchases_completed_last_six_months: '3',
+        add_card_attempts_last_day: '4',
+        previous_suspicious_activity: 'false', # Boolean (true or false)
+        shipping_name_matches_account_name: 'true', #	Boolean (true or false)
+        shopper_account_age_indicator: 'lessThanThirtyDays', # Possible Values: noAccount, createdDuringTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_change_indicator: 'thirtyToSixtyDays', # Possible values: changedDuringTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_password_change_indicator: 'noChange', # Possible Values: noChange, changedDuringTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_shipping_address_usage_indicator: 'moreThanSixtyDays', # Possible Values: thisTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_payment_account_indicator: 'thirtyToSixtyDays', # Possible Values: noAccount, duringTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_creation_date: {
+          day_of_month: shopper_account_creation_date.strftime('%d'),
+          month: shopper_account_creation_date.strftime('%m'),
+          year: shopper_account_creation_date.strftime('%Y')
+        },
+        shopper_account_modification_date: {
+          day_of_month: shopper_account_modification_date.strftime('%d'),
+          month: shopper_account_modification_date.strftime('%m'),
+          year: shopper_account_modification_date.strftime('%Y')
+        },
+        shopper_account_password_change_date: {
+          day_of_month: shopper_account_password_change_date.strftime('%d'),
+          month: shopper_account_password_change_date.strftime('%m'),
+          year: shopper_account_password_change_date.strftime('%Y')
+        },
+        shopper_account_shipping_address_first_use_date: {
+          day_of_month: shopper_account_shipping_address_first_use_date.strftime('%d'),
+          month: shopper_account_shipping_address_first_use_date.strftime('%m'),
+          year: shopper_account_shipping_address_first_use_date.strftime('%Y')
+        },
+        shopper_account_payment_account_first_use_date: {
+          day_of_month: shopper_account_payment_account_first_use_date.strftime('%d'),
+          month: shopper_account_payment_account_first_use_date.strftime('%m'),
+          year: shopper_account_payment_account_first_use_date.strftime('%Y')
+        }
+      },
+      transaction_risk_data: {
+        shipping_method: 'digital',
+        delivery_timeframe: 'electronicDelivery',
+        delivery_email_address: 'abe@lincoln.gov',
+        reordering_previous_purchases: 'false',
+        pre_order_purchase: 'false',
+        gift_card_count: '0',
+        transaction_risk_data_gift_card_amount: {
+          value: '123',
+          currency: 'EUR',
+          exponent: '2',
+          debit_credit_indicator: 'credit'
+        },
+        transaction_risk_data_pre_order_date: {
+          day_of_month: transaction_risk_data_pre_order_date.strftime('%d'),
+          month: transaction_risk_data_pre_order_date.strftime('%m'),
+          year: transaction_risk_data_pre_order_date.strftime('%Y')
+        }
+      }
+    }
   end
 end

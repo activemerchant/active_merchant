@@ -17,7 +17,12 @@ class RemoteEbanxTest < Test::Unit::TestCase
         phone_number: '8522847035'
       }),
       order_id: generate_unique_id,
-      document: '853.513.468-93'
+      document: '853.513.468-93',
+      device_id: '34c376b2767',
+      metadata: {
+        metadata_1: 'test',
+        metadata_2: 'test2'
+      }
     }
   end
 
@@ -37,6 +42,13 @@ class RemoteEbanxTest < Test::Unit::TestCase
     })
 
     response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_successful_purchase_passing_processing_type_in_header
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ processing_type: 'local' }))
+
     assert_success response
     assert_equal 'Accepted', response.message
   end
@@ -71,13 +83,13 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
     response = @gateway.purchase(500, @credit_card, options)
     assert_success response
-    assert_equal 'Sandbox - Test credit card, transaction captured', response.message
+    assert_equal 'Accepted', response.message
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Sandbox - Test credit card, transaction declined reason insufficientFunds', response.message
+    assert_equal 'Invalid card or card type', response.message
     assert_equal 'NOK', response.error_code
   end
 
@@ -86,7 +98,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'Accepted', auth.message
 
-    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
     assert_equal 'Accepted', capture.message
   end
@@ -94,16 +106,26 @@ class RemoteEbanxTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Sandbox - Test credit card, transaction declined reason insufficientFunds', response.message
+    assert_equal 'Invalid card or card type', response.message
     assert_equal 'NOK', response.error_code
   end
 
-  def test_partial_capture
+  def test_successful_partial_capture_when_include_capture_amount_is_not_passed
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
+  end
+
+  # Partial capture is only available in Brazil and the EBANX Integration Team must be contacted to enable
+  def test_failed_partial_capture_when_include_capture_amount_is_passed
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount - 1, auth.authorization, @options.merge(include_capture_amount: true))
+    assert_failure capture
+    assert_equal 'Partial capture not available', capture.message
   end
 
   def test_failed_capture
@@ -116,7 +138,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    refund_options = @options.merge({description: 'full refund'})
+    refund_options = @options.merge({ description: 'full refund' })
     assert refund = @gateway.refund(@amount, purchase.authorization, refund_options)
     assert_success refund
     assert_equal 'Accepted', refund.message
@@ -127,7 +149,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_success purchase
 
     refund_options = @options.merge(description: 'refund due to returned item')
-    assert refund = @gateway.refund(@amount-1, purchase.authorization, refund_options)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization, refund_options)
     assert_success refund
   end
 
@@ -149,7 +171,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_equal 'Parameter hash not informed', response.message
+    assert_equal 'Parameters hash or merchant_payment_code not informed', response.message
   end
 
   def test_successful_store_and_purchase
@@ -190,10 +212,51 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_match %r{Accepted}, response.message
   end
 
+  def test_successful_verify_for_chile
+    options = @options.merge({
+      order_id: generate_unique_id,
+      ip: '127.0.0.1',
+      email: 'jose@example.com.cl',
+      birth_date: '10/11/1980',
+      billing_address: address({
+        address1: '1040 Rua E',
+        city: 'Medellín',
+        state: 'AN',
+        zip: '29269',
+        country: 'CL',
+        phone_number: '8522847035'
+      })
+    })
+
+    response = @gateway.verify(@credit_card, options)
+    assert_success response
+    assert_match %r{Accepted}, response.message
+  end
+
+  def test_successful_verify_for_mexico
+    options = @options.merge({
+      order_id: generate_unique_id,
+      ip: '127.0.0.1',
+      email: 'joao@example.com.mx',
+      birth_date: '10/11/1980',
+      billing_address: address({
+        address1: '1040 Rua E',
+        city: 'Toluca de Lerdo',
+        state: 'MX',
+        zip: '29269',
+        country: 'MX',
+        phone_number: '8522847035'
+      })
+    })
+    response = @gateway.verify(@credit_card, options)
+    assert_success response
+    assert_match %r{Accepted}, response.message
+  end
+
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{Accepted}, response.message
+    assert_match %r{Invalid card or card type}, response.message
   end
 
   def test_invalid_login
@@ -215,4 +278,11 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:integration_key], transcript)
   end
 
+  def test_successful_purchase_with_long_order_id
+    options = @options.update(order_id: SecureRandom.hex(50))
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
 end

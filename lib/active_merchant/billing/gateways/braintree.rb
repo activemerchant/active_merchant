@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
 
       self.abstract_class = true
 
-      def self.new(options={})
+      def self.new(options = {})
         if options.has_key?(:login)
           BraintreeOrangeGateway.new(options)
         else

@@ -7,10 +7,10 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://gateway.l19tech.com/payments/'
       self.test_url = 'https://gateway-sb.l19tech.com/payments/'
 
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = %w[US CA]
       self.default_currency = 'USD'
-      self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.money_format = :dollars
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
       RESPONSE_CODE_MAPPING = {
         '100' => 'Approved',
@@ -51,12 +51,12 @@ module ActiveMerchant #:nodoc:
         'jcb' => 'JC'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :account_number, :configuration_id, :secret)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         if payment_method.is_a?(String)
           auth_or_sale('sale', payment_method, amount, nil, options)
         else
@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         if payment_method.is_a?(String)
           auth_or_sale('auth', payment_method, amount, nil, options)
         else
@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         post[:method] = 'deposit'
         add_request_id(post)
@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
         commit('v1/', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         method, pgwTID = split_authorization(authorization)
         case method
         when 'auth'
@@ -109,7 +109,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def credit(amount, payment_method, options={})
+      def credit(amount, payment_method, options = {})
         if payment_method.is_a?(String)
           refundWithCard(payment_method, amount, nil, options)
         else
@@ -121,7 +121,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def verify(payment_method, options={}, action=nil)
+      def verify(payment_method, options = {}, action = nil)
         if payment_method.is_a?(String)
           verifyOnly(action, payment_method, nil, options)
         else
@@ -133,7 +133,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def store(payment_method, options={})
+      def store(payment_method, options = {})
         verify(payment_method, options, 'store')
       end
 
@@ -201,7 +201,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def get_session(options={})
+      def get_session(options = {})
         post = {}
         post[:method] = 'getSession'
         add_request_id(post)
@@ -213,7 +213,7 @@ module ActiveMerchant #:nodoc:
         commit('session', post)
       end
 
-      def get_token(authorization, payment_method, options={})
+      def get_token(authorization, payment_method, options = {})
         post = {}
         post[:method] = 'tokenize'
         add_request_id(post)
@@ -226,7 +226,7 @@ module ActiveMerchant #:nodoc:
         commit('token', post)
       end
 
-      def auth_or_sale(method, authorization, amount, credit_card, options={})
+      def auth_or_sale(method, authorization, amount, credit_card, options = {})
         post = {}
         post[:method] = method
         add_request_id(post)
@@ -246,7 +246,7 @@ module ActiveMerchant #:nodoc:
         commit('v1/', post)
       end
 
-      def verifyOnly(action, authorization, credit_card, options={})
+      def verifyOnly(action, authorization, credit_card, options = {})
         post = {}
         post[:method] = 'verifyOnly'
         add_request_id(post)
@@ -267,7 +267,7 @@ module ActiveMerchant #:nodoc:
         commit('v1/', post)
       end
 
-      def refundWithCard(authorization, amount, credit_card, options={})
+      def refundWithCard(authorization, amount, credit_card, options = {})
         post = {}
         post[:method] = 'refundWithCard'
         add_request_id(post)
@@ -286,7 +286,7 @@ module ActiveMerchant #:nodoc:
         commit('v1/', post)
       end
 
-      def reverse_or_void(method, pgwTID, options={})
+      def reverse_or_void(method, pgwTID, options = {})
         post = {}
         post[:method] = method
         add_request_id(post)
@@ -324,7 +324,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Content-Type'  => 'application/json'
+          'Content-Type' => 'application/json'
         }
       end
 
@@ -364,6 +364,7 @@ module ActiveMerchant #:nodoc:
       def error_from(response)
         return response['error'] if response['error']
         return 'Failed' unless response.key?('result')
+
         return response['result']['pgwResponseCode'] || response['result']['processor']['responseCode'] || 'Failed'
       end
 
@@ -397,7 +398,7 @@ module ActiveMerchant #:nodoc:
           false,
           message_from(response),
           response,
-          :test => test?
+          test: test?
         )
       end
 

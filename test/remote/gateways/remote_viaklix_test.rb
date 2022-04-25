@@ -8,10 +8,10 @@ class RemoteViaklixTest < Test::Unit::TestCase
     @bad_credit_card = credit_card('invalid')
 
     @options = {
-      :order_id => '#1000.1',
-      :email => 'paul@domain.com',
-      :description => 'Test Transaction',
-      :billing_address => address
+      order_id: '#1000.1',
+      email: 'paul@domain.com',
+      description: 'Test Transaction',
+      billing_address: address
     }
     @amount = 100
   end

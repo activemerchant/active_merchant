@@ -3,19 +3,19 @@ module ActiveMerchant #:nodoc:
     class MercadoPagoGateway < Gateway
       self.live_url = self.test_url = 'https://api.mercadopago.com/v1'
 
-      self.supported_countries = ['AR', 'BR', 'CL', 'CO', 'MX', 'PE', 'UY']
-      self.supported_cardtypes = [:visa, :master, :american_express, :elo, :cabal, :naranja]
+      self.supported_countries = %w[AR BR CL CO MX PE UY]
+      self.supported_cardtypes = %i[visa master american_express elo cabal naranja creditel]
 
       self.homepage_url = 'https://www.mercadopago.com/'
       self.display_name = 'Mercado Pago'
       self.money_format = :dollars
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :access_token)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         MultiResponse.run do |r|
           r.process { commit('tokenize', 'card_tokens', card_token_request(money, payment, options)) }
           options[:card_token] = r.authorization.split('|').first
@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         MultiResponse.run do |r|
           r.process { commit('tokenize', 'card_tokens', card_token_request(money, payment, options)) }
           options[:card_token] = r.authorization.split('|').first
@@ -31,30 +31,32 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
-        authorization, _ = authorization.split('|')
+        authorization, = authorization.split('|')
         post[:capture] = true
         post[:transaction_amount] = amount(money).to_f
         commit('capture', "payments/#{authorization}", post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         authorization, original_amount = authorization.split('|')
         post[:amount] = amount(money).to_f if original_amount && original_amount.to_f > amount(money).to_f
         commit('refund', "payments/#{authorization}/refunds", post)
       end
 
-      def void(authorization, options={})
-        authorization, _ = authorization.split('|')
+      def void(authorization, options = {})
+        authorization, = authorization.split('|')
         post = { status: 'cancelled' }
         commit('void', "payments/#{authorization}", post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
+        verify_amount = 100
+        verify_amount = options[:amount].to_i if options[:amount]
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(verify_amount, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -96,25 +98,31 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, payment, options)
         add_address(post, options)
         add_processing_mode(post, options)
+        add_net_amount(post, options)
+        add_taxes(post, options)
+        add_notification_url(post, options)
         post[:binary_mode] = (options[:binary_mode].nil? ? true : options[:binary_mode])
         post
       end
 
       def authorize_request(money, payment, options = {})
         post = purchase_request(money, payment, options)
-        post[:capture] = false
+        post[:capture] = options[:capture] || false
         post
       end
 
       def add_processing_mode(post, options)
         return unless options[:processing_mode]
+
         post[:processing_mode] = options[:processing_mode]
         post[:merchant_account_id] = options[:merchant_account_id] if options[:merchant_account_id]
+        post[:payment_method_option_id] = options[:payment_method_option_id] if options[:payment_method_option_id]
         add_merchant_services(post, options)
       end
 
       def add_merchant_services(post, options)
         return unless options[:fraud_scoring] || options[:fraud_manual_review]
+
         merchant_services = {}
         merchant_services[:fraud_scoring] = options[:fraud_scoring] if options[:fraud_scoring]
         merchant_services[:fraud_manual_review] = options[:fraud_manual_review] if options[:fraud_manual_review]
@@ -123,6 +131,7 @@ module ActiveMerchant #:nodoc:
 
       def add_additional_data(post, options)
         post[:sponsor_id] = options[:sponsor_id]
+        post[:metadata] = options[:metadata] if options[:metadata]
         post[:device_id] = options[:device_id] if options[:device_id]
         post[:additional_info] = {
           ip_address: options[:ip_address]
@@ -137,7 +146,7 @@ module ActiveMerchant #:nodoc:
           email: options[:email],
           first_name: payment.first_name,
           last_name: payment.last_name
-        }
+        }.merge(options[:payer] || {})
       end
 
       def add_address(post, options)
@@ -185,13 +194,58 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         post[:installments] = options[:installments] ? options[:installments].to_i : 1
         post[:statement_descriptor] = options[:statement_descriptor] if options[:statement_descriptor]
-        post[:external_reference] = options[:order_id] || SecureRandom.hex(16)
+        post[:external_reference] = options[:order_id] || options[:external_reference] || SecureRandom.hex(16)
       end
 
       def add_payment(post, options)
         post[:token] = options[:card_token]
         post[:issuer_id] = options[:issuer_id] if options[:issuer_id]
         post[:payment_method_id] = options[:payment_method_id] if options[:payment_method_id]
+      end
+
+      def add_net_amount(post, options)
+        post[:net_amount] = Float(options[:net_amount]) if options[:net_amount]
+      end
+
+      def add_notification_url(post, options)
+        post[:notification_url] = options[:notification_url] if options[:notification_url]
+      end
+
+      def add_taxes(post, options)
+        return unless (tax_object = options[:taxes])
+
+        if tax_object.is_a?(Array)
+          post[:taxes] = process_taxes_array(tax_object)
+        elsif tax_object.is_a?(Hash)
+          post[:taxes] = process_taxes_hash(tax_object)
+        else
+          raise taxes_error
+        end
+      end
+
+      def process_taxes_hash(tax_object)
+        [sanitize_taxes_hash(tax_object)]
+      end
+
+      def process_taxes_array(taxes_array)
+        taxes_array.map do |tax_object|
+          raise taxes_error unless tax_object.is_a?(Hash)
+
+          sanitize_taxes_hash(tax_object)
+        end
+      end
+
+      def sanitize_taxes_hash(tax_object)
+        tax_value = tax_object['value'] || tax_object[:value]
+        tax_type = tax_object['type'] || tax_object[:type]
+
+        raise taxes_error if tax_value.nil? || tax_type.nil?
+
+        { value: Float(tax_value), type: tax_type }
+      end
+
+      def taxes_error
+        ArgumentError.new("Taxes should be a single object or array of objects with the shape: { value: 500, type: 'IVA' }")
       end
 
       def parse(body)
@@ -205,7 +259,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, path, parameters)
-        if ['capture', 'void'].include?(action)
+        if %w[capture void].include?(action)
           response = parse(ssl_request(:put, url(path), post_data(parameters), headers))
         else
           response = parse(ssl_post(url(path), post_data(parameters), headers(parameters)))
@@ -225,7 +279,7 @@ module ActiveMerchant #:nodoc:
         if action == 'refund'
           response['status'] != 404 && response['error'].nil?
         else
-          ['active', 'approved', 'authorized', 'cancelled', 'in_process'].include?(response['status'])
+          %w[active approved authorized cancelled in_process].include?(response['status'])
         end
       end
 
@@ -260,7 +314,7 @@ module ActiveMerchant #:nodoc:
         headers = {
           'Content-Type' => 'application/json'
         }
-        headers['X-Device-Session-ID'] = options[:device_id] if options[:device_id]
+        headers['X-meli-session-id'] = options[:device_id] if options[:device_id]
         headers
       end
 

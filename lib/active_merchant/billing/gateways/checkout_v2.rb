@@ -6,10 +6,12 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.checkout.com'
       self.test_url = 'https://api.sandbox.checkout.com'
 
-      self.supported_countries = ['AD', 'AE', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA']
+      self.supported_countries = %w[AD AE AR AT AU BE BG BH BR CH CL CN CO CY CZ DE DK EE EG ES FI FR GB GR HK HR HU IE IS IT JO JP KW LI LT LU LV MC MT MX MY NL NO NZ OM PE PL PT QA RO SA SE SG SI SK SM TR US]
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :maestro, :discover]
+      self.supported_cardtypes = %i[visa master american_express diners_club maestro discover jcb]
+      self.currencies_without_fractions = %w(BIF DJF GNF ISK KMF XAF CLF XPF JPY PYG RWF KRW VUV VND XOF)
+      self.currencies_with_three_decimal_places = %w(BHD LYD JOD KWD OMR TND)
 
       def initialize(options = {})
         requires!(options, :secret_key)
@@ -17,25 +19,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options = {})
-        multi = MultiResponse.run do |r|
-          r.process { authorize(amount, payment_method, options) }
-          r.process { capture(amount, r.authorization, options) }
-        end
+        post = {}
+        build_auth_or_purchase(post, amount, payment_method, options)
 
-        merged_params = multi.responses.map(&:params).reduce({}, :merge)
-        succeeded = success_from(merged_params)
-
-        response(:purchase, succeeded, merged_params)
+        commit(:purchase, post)
       end
 
       def authorize(amount, payment_method, options = {})
         post = {}
         post[:capture] = false
-        add_invoice(post, amount, options)
-        add_payment_method(post, payment_method, options)
-        add_customer_data(post, options)
-        add_transaction_data(post, options)
-        add_3ds(post, options)
+        build_auth_or_purchase(post, amount, payment_method, options)
 
         commit(:authorize, post)
       end
@@ -44,12 +37,15 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_customer_data(post, options)
+        add_metadata(post, options)
 
         commit(:capture, post, authorization)
       end
 
       def void(authorization, _options = {})
         post = {}
+        add_metadata(post, options)
+
         commit(:void, post, authorization)
       end
 
@@ -57,15 +53,17 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_customer_data(post, options)
+        add_metadata(post, options)
 
         commit(:refund, post, authorization)
       end
 
       def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        authorize(0, credit_card, options)
+      end
+
+      def verify_payment(authorization, option = {})
+        commit(:verify_payment, authorization)
       end
 
       def supports_scrubbing?
@@ -81,6 +79,18 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def build_auth_or_purchase(post, amount, payment_method, options)
+        add_invoice(post, amount, options)
+        add_payment_method(post, payment_method, options)
+        add_customer_data(post, options)
+        add_stored_credential_options(post, options)
+        add_transaction_data(post, options)
+        add_3ds(post, options)
+        add_metadata(post, options)
+        add_processing_channel(post, options)
+        add_marketplace_data(post, options)
+      end
+
       def add_invoice(post, money, options)
         post[:amount] = localized_amount(money, options[:currency])
         post[:reference] = options[:order_id]
@@ -94,15 +104,33 @@ module ActiveMerchant #:nodoc:
         post[:metadata][:udf5] = application_id || 'ActiveMerchant'
       end
 
+      def add_metadata(post, options)
+        post[:metadata] = {} unless post[:metadata]
+        post[:metadata].merge!(options[:metadata]) if options[:metadata]
+      end
+
       def add_payment_method(post, payment_method, options)
         post[:source] = {}
-        post[:source][:type] = 'card'
-        post[:source][:name] = payment_method.name
-        post[:source][:number] = payment_method.number
-        post[:source][:cvv] = payment_method.verification_value
+        if payment_method.is_a?(NetworkTokenizationCreditCard)
+          token_type = token_type_from(payment_method)
+          cryptogram = payment_method.payment_cryptogram
+          eci = payment_method.eci || options[:eci]
+          eci ||= '05' if token_type == 'vts'
+
+          post[:source][:type] = 'network_token'
+          post[:source][:token] = payment_method.number
+          post[:source][:token_type] = token_type
+          post[:source][:cryptogram] = cryptogram if cryptogram
+          post[:source][:eci] = eci if eci
+        else
+          post[:source][:type] = 'card'
+          post[:source][:name] = payment_method.name
+          post[:source][:number] = payment_method.number
+          post[:source][:cvv] = payment_method.verification_value
+          post[:source][:stored] = 'true' if options[:card_on_file] == true
+        end
         post[:source][:expiry_year] = format(payment_method.year, :four_digits)
         post[:source][:expiry_month] = format(payment_method.month, :two_digits)
-        post[:source][:stored] = 'true' if options[:card_on_file] == true
       end
 
       def add_customer_data(post, options)
@@ -124,13 +152,40 @@ module ActiveMerchant #:nodoc:
       def add_transaction_data(post, options = {})
         post[:payment_type] = 'Regular' if options[:transaction_indicator] == 1
         post[:payment_type] = 'Recurring' if options[:transaction_indicator] == 2
+        post[:payment_type] = 'MOTO' if options[:transaction_indicator] == 3 || options.dig(:metadata, :manual_entry)
         post[:previous_payment_id] = options[:previous_charge_id] if options[:previous_charge_id]
       end
 
+      def add_stored_credential_options(post, options = {})
+        return unless options[:stored_credential]
+
+        case options[:stored_credential][:initial_transaction]
+        when true
+          post[:merchant_initiated] = false
+        when false
+          post[:'source.stored'] = true
+          post[:previous_payment_id] = options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
+          post[:merchant_initiated] = true
+        end
+
+        case options[:stored_credential][:reason_type]
+        when 'recurring' || 'installment'
+          post[:payment_type] = 'Recurring'
+        when 'unscheduled'
+          return
+        end
+      end
+
       def add_3ds(post, options)
-        if options[:three_d_secure]
+        if options[:three_d_secure] || options[:execute_threed]
           post[:'3ds'] = {}
           post[:'3ds'][:enabled] = true
+          post[:success_url] = options[:callback_url] if options[:callback_url]
+          post[:failure_url] = options[:callback_url] if options[:callback_url]
+          post[:'3ds'][:attempt_n3d] = options[:attempt_n3d] if options[:attempt_n3d]
+        end
+
+        if options[:three_d_secure]
           post[:'3ds'][:eci] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
           post[:'3ds'][:cryptogram] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
           post[:'3ds'][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
@@ -138,16 +193,26 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_processing_channel(post, options)
+        post[:processing_channel_id] = options[:processing_channel_id] if options[:processing_channel_id]
+      end
+
+      def add_marketplace_data(post, options)
+        if options[:marketplace]
+          post[:marketplace] = {}
+          post[:marketplace][:sub_entity_id] = options[:marketplace][:sub_entity_id] if options[:marketplace][:sub_entity_id]
+        end
+      end
+
       def commit(action, post, authorization = nil)
         begin
-          raw_response = ssl_post(url(post, action, authorization), post.to_json, headers)
+          raw_response = (action == :verify_payment ? ssl_get("#{base_url}/payments/#{post}", headers) : ssl_post(url(post, action, authorization), post.to_json, headers))
           response = parse(raw_response)
-          if action == :capture && response.key?('_links')
-            response['id'] = response['_links']['payment']['href'].split('/')[-1]
-          end
+          response['id'] = response['_links']['payment']['href'].split('/')[-1] if action == :capture && response.key?('_links')
         rescue ResponseError => e
           raise unless e.response.code.to_s =~ /4\d\d/
-          response = parse(e.response.body)
+
+          response = parse(e.response.body, error: e.response)
         end
 
         succeeded = success_from(response)
@@ -175,12 +240,12 @@ module ActiveMerchant #:nodoc:
       def headers
         {
           'Authorization' => @options[:secret_key],
-          'Content-Type' => 'application/json;charset=UTF-8',
+          'Content-Type' => 'application/json;charset=UTF-8'
         }
       end
 
       def url(_post, action, authorization)
-        if action == :authorize
+        if %i[authorize purchase].include?(action)
           "#{base_url}/payments"
         elsif action == :capture
           "#{base_url}/payments/#{authorization}/captures"
@@ -205,17 +270,20 @@ module ActiveMerchant #:nodoc:
         response['source'] && response['source']['cvv_check'] ? CVVResult.new(response['source']['cvv_check']) : nil
       end
 
-      def parse(body)
+      def parse(body, error: nil)
         JSON.parse(body)
       rescue JSON::ParserError
-        {
+        response = {
+          'error_type' => error&.code,
           'message' => 'Invalid JSON response received from Checkout.com Unified Payments Gateway. Please contact Checkout.com if you continue to receive this message.',
           'raw_response' => scrub(body)
         }
+        response['error_codes'] = [error&.message] if error&.message
+        response
       end
 
       def success_from(response)
-        response['response_summary'] == 'Approved' || !response.key?('response_summary') && response.key?('action_id')
+        response['response_summary'] == 'Approved' || response['approved'] == true || !response.key?('response_summary') && response.key?('action_id')
       end
 
       def message_from(succeeded, response)
@@ -224,7 +292,7 @@ module ActiveMerchant #:nodoc:
         elsif response['error_type']
           response['error_type'] + ': ' + response['error_codes'].first
         else
-          response['response_summary'] || response['response_code'] || 'Unable to read error message'
+          response['response_summary'] || response['response_code'] || response['status'] || response['message'] || 'Unable to read error message'
         end
       end
 
@@ -247,12 +315,24 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(succeeded, response)
         return if succeeded
+
         if response['error_type'] && response['error_codes']
           "#{response['error_type']}: #{response['error_codes'].join(', ')}"
         elsif response['error_type']
           response['error_type']
         else
           STANDARD_ERROR_CODE_MAPPING[response['response_code']]
+        end
+      end
+
+      def token_type_from(payment_method)
+        case payment_method.source
+        when :network_token
+          payment_method.brand == 'visa' ? 'vts' : 'mdes'
+        when :google_pay, :android_pay
+          'googlepay'
+        when :apple_pay
+          'applepay'
         end
       end
     end

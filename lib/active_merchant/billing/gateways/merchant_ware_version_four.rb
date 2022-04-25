@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://ps1.merchantware.net/Merchantware/ws/RetailTransaction/v4/Credit.asmx'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://merchantwarehouse.com/merchantware'
       self.display_name = 'MerchantWARE'
 
@@ -16,12 +16,12 @@ module ActiveMerchant #:nodoc:
       TX_NAMESPACE = 'http://schemas.merchantwarehouse.com/merchantware/40/Credit/'
 
       ACTIONS = {
-        :purchase  => 'SaleKeyed',
-        :reference_purchase => 'RepeatSale',
-        :authorize => 'PreAuthorizationKeyed',
-        :capture   => 'PostAuthorization',
-        :void      => 'Void',
-        :refund    => 'Refund'
+        purchase: 'SaleKeyed',
+        reference_purchase: 'RepeatSale',
+        authorize: 'PreAuthorizationKeyed',
+        capture: 'PostAuthorization',
+        void: 'Void',
+        refund: 'Refund'
       }
 
       # Creates a new MerchantWareVersionFourGateway
@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
         commit(:refund, request)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -129,7 +129,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def soap_request(action)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'soap:Envelope', ENV_NAMESPACES do
           xml.tag! 'soap:Body' do
@@ -243,7 +243,7 @@ module ActiveMerchant #:nodoc:
           response[element.name] = element.text
         end
 
-        response[:message] = response['ErrorMessage'].to_s.gsub("\n", ' ')
+        response[:message] = response['ErrorMessage'].to_s.tr("\n", ' ')
         response
       rescue REXML::ParseException
         response[:http_body]        = http_response.body
@@ -263,19 +263,17 @@ module ActiveMerchant #:nodoc:
         begin
           data = ssl_post(url, request,
             'Content-Type' => 'text/xml; charset=utf-8',
-            'SOAPAction'   => soap_action(action)
-          )
+            'SOAPAction'   => soap_action(action))
           response = parse(action, data)
         rescue ActiveMerchant::ResponseError => e
           response = parse_error(e.response, action)
         end
 
         Response.new(response[:success], response[:message], response,
-          :test => test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => response['AvsResponse'] },
-          :cvv_result => response['CvResponse']
-        )
+          test: test?,
+          authorization: authorization_from(response),
+          avs_result: { code: response['AvsResponse'] },
+          cvv_result: response['CvResponse'])
       end
 
       def authorization_from(response)

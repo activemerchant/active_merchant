@@ -15,14 +15,14 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover jcb]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :acctid, :subid, :merchantpin)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment_method(post, payment_method)
@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
         commit('purchase', options, post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_credit_card(post, payment)
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         commit('authorize', options, post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', options, post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -58,14 +58,14 @@ module ActiveMerchant #:nodoc:
         commit('refund', options, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, authorization)
 
         commit('void', options, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:ci_companyname] = billing_address[:company]
           post[:ci_billaddr1]   = billing_address[:address1]
           post[:ci_billaddr2]   = billing_address[:address2]
@@ -105,13 +105,13 @@ module ActiveMerchant #:nodoc:
           post[:ci_ipaddress]   = billing_address[:ip]
         end
 
-        if(shipping_address = options[:shipping_address])
+        if (shipping_address = options[:shipping_address])
           post[:ci_shipaddr1] = shipping_address[:address1]
           post[:ci_shipaddr2] = shipping_address[:address2]
           post[:ci_shipcity] = shipping_address[:city]
           post[:ci_shipstate] = shipping_address[:state]
-          post[:ci_shipzip]    = shipping_address[:zip]
-          post[:ci_shipcountry]    = shipping_address[:country]
+          post[:ci_shipzip] = shipping_address[:zip]
+          post[:ci_shipcountry] = shipping_address[:country]
         end
       end
 
@@ -139,7 +139,7 @@ module ActiveMerchant #:nodoc:
 
       ACCOUNT_TYPES = {
         'checking' => '1',
-        'savings' => '2',
+        'savings' => '2'
       }
 
       def add_check(post, payment_method)
@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
         'refund' => 'ns_credit',
         'authorize' => 'ns_quicksale_cc',
         'capture' => 'ns_quicksale_cc',
-        'void' => 'ns_void',
+        'void' => 'ns_void'
       }
 
       def commit(action, options, post)
@@ -196,8 +196,8 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(raw),
-          :test => test?
+          authorization: authorization_from(raw),
+          test: test?
         )
       end
 

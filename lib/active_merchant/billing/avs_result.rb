@@ -39,10 +39,10 @@ module ActiveMerchant
 
       # Map vendor's AVS result code to a postal match code
       POSTAL_MATCH_CODE = {
-        'Y' => %w( D H F H J L M P Q V W X Y Z ),
-        'N' => %w( A C K N O ),
-        'X' => %w( G S ),
-        nil => %w( B E I R T U )
+        'Y' => %w(D H F H J L M P Q V W X Y Z),
+        'N' => %w(A C K N O),
+        'X' => %w(G S),
+        nil => %w(B E I R T U)
       }.inject({}) do |map, (type, codes)|
         codes.each { |code| map[code] = type }
         map
@@ -50,10 +50,10 @@ module ActiveMerchant
 
       # Map vendor's AVS result code to a street match code
       STREET_MATCH_CODE = {
-        'Y' => %w( A B D H J M O Q T V X Y ),
-        'N' => %w( C K L N W Z ),
-        'X' => %w( G S ),
-        nil => %w( E F I P R U )
+        'Y' => %w(A B D H J M O Q T V X Y),
+        'N' => %w(C K L N W Z),
+        'X' => %w(G S),
+        nil => %w(E F I P R U)
       }.inject({}) do |map, (type, codes)|
         codes.each { |code| map[code] = type }
         map
@@ -88,8 +88,7 @@ module ActiveMerchant
         { 'code' => code,
           'message' => message,
           'street_match' => street_match,
-          'postal_match' => postal_match
-        }
+          'postal_match' => postal_match }
       end
     end
   end

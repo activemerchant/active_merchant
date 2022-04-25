@@ -66,7 +66,7 @@ class SecurionPayTest < Test::Unit::TestCase
   def test_successful_purchase_with_token
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, 'tok_xxx')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/card=tok_xxx/, data)
       refute_match(/card\[number\]/, data)
     end.respond_with(successful_purchase_response)
@@ -88,7 +88,7 @@ class SecurionPayTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       updated_options = @options.merge({ description: 'test charge', ip: '127.127.127.127', user_agent: 'browser XXX', referrer: 'http://www.foobar.com', email: 'foo@bar.com' })
       @gateway.purchase(@amount, @credit_card, updated_options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/description=test\+charge/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
       assert_match(/user_agent=browser\+XXX/, data)
@@ -101,7 +101,7 @@ class SecurionPayTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       updated_options = @options.merge({ description: 'test charge', ip: '127.127.127.127', user_agent: 'browser XXX', referrer: 'http://www.foobar.com' })
       @gateway.purchase(@amount, @credit_card, updated_options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/description=test\+charge/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
       assert_match(/user_agent=browser\+XXX/, data)
@@ -122,7 +122,7 @@ class SecurionPayTest < Test::Unit::TestCase
   end
 
   def test_add_address
-    post = { card: { } }
+    post = { card: {} }
     @gateway.send(:add_address, post, @options)
     assert_equal @options[:billing_address][:zip], post[:card][:addressZip]
     assert_equal @options[:billing_address][:state], post[:card][:addressState]
@@ -139,7 +139,7 @@ class SecurionPayTest < Test::Unit::TestCase
   def test_address_is_included_with_card_data
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data =~ /card\[addressLine1\]/
     end.respond_with(successful_purchase_response)
   end

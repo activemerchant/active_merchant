@@ -5,17 +5,17 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = ModernPaymentsCimGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      login: 'login',
+      password: 'password'
+    )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -83,80 +83,80 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
   private
 
   def successful_create_customer_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <CreateCustomerResponse xmlns="http://secure.modpay.com:81/ws/">
-      <CreateCustomerResult>6677348</CreateCustomerResult>
-    </CreateCustomerResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <CreateCustomerResponse xmlns="http://secure.modpay.com:81/ws/">
+            <CreateCustomerResult>6677348</CreateCustomerResult>
+          </CreateCustomerResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def successful_modify_customer_credit_card_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <ModifyCustomerCreditCardResponse xmlns="http://secure.modpay.com:81/ws/">
-      <ModifyCustomerCreditCardResult>6677757</ModifyCustomerCreditCardResult>
-    </ModifyCustomerCreditCardResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <ModifyCustomerCreditCardResponse xmlns="http://secure.modpay.com:81/ws/">
+            <ModifyCustomerCreditCardResult>6677757</ModifyCustomerCreditCardResult>
+          </ModifyCustomerCreditCardResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def unsuccessful_credit_card_authorization_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-	<soap:Body>
-		<AuthorizeCreditCardPaymentResponse xmlns="https://secure.modpay.com/netservices/test/">
-			<AuthorizeCreditCardPaymentResult>
-				<transId>999</transId>
-				<authCode/>
-				<avsCode/>
-				<transCode/>
-				<authString>RESPONSECODE=D,AUTHCODE=,DECLINEREASON.1.TAG=,DECLINEREASON.1.ERRORCLASS=card declined,DECLINEREASON.1.PARAM1=05:DECLINE,DECLINEREASON.1.PARAM2=The authorization is declined,DECLINEREASON.1.MESSAGE=Card was declined: The authorization is declined,AVSDATA</authString>
-				<messageText>RESPONSECODE=D,AUTHCODE=,DECLINEREASON.1.TAG=,DECLINEREASON.1.ERRORCLASS=card declined,DECLINEREASON.1.PARAM1=05:DECLINE,DECLINEREASON.1.PARAM2=The authorization is declined,DECLINEREASON.1.MESSAGE=Card was declined: The authorization is declined,AVSDATA</messageText>
-				<approved>false</approved>
-			</AuthorizeCreditCardPaymentResult>
-		</AuthorizeCreditCardPaymentResponse>
-	</soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      	<soap:Body>
+      		<AuthorizeCreditCardPaymentResponse xmlns="https://secure.modpay.com/netservices/test/">
+      			<AuthorizeCreditCardPaymentResult>
+      				<transId>999</transId>
+      				<authCode/>
+      				<avsCode/>
+      				<transCode/>
+      				<authString>RESPONSECODE=D,AUTHCODE=,DECLINEREASON.1.TAG=,DECLINEREASON.1.ERRORCLASS=card declined,DECLINEREASON.1.PARAM1=05:DECLINE,DECLINEREASON.1.PARAM2=The authorization is declined,DECLINEREASON.1.MESSAGE=Card was declined: The authorization is declined,AVSDATA</authString>
+      				<messageText>RESPONSECODE=D,AUTHCODE=,DECLINEREASON.1.TAG=,DECLINEREASON.1.ERRORCLASS=card declined,DECLINEREASON.1.PARAM1=05:DECLINE,DECLINEREASON.1.PARAM2=The authorization is declined,DECLINEREASON.1.MESSAGE=Card was declined: The authorization is declined,AVSDATA</messageText>
+      				<approved>false</approved>
+      			</AuthorizeCreditCardPaymentResult>
+      		</AuthorizeCreditCardPaymentResponse>
+      	</soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def soap_fault_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <soap:Fault>
-      <faultcode>soap:Client</faultcode>
-      <faultstring>System.Web.Services.Protocols.SoapException: Server did not recognize the value of HTTP Header SOAPAction: h heheheh http://secure.modpay.com:81/ws/CreateCustomer.
-   at System.Web.Services.Protocols.Soap11ServerProtocolHelper.RouteRequest()
-   at System.Web.Services.Protocols.SoapServerProtocol.RouteRequest(SoapServerMessage message)
-   at System.Web.Services.Protocols.SoapServerProtocol.Initialize()
-   at System.Web.Services.Protocols.ServerProtocolFactory.Create(Type type, HttpContext context, HttpRequest request, HttpResponse response, Boolean&amp; abortProcessing)</faultstring>
-      <detail/>
-    </soap:Fault>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <soap:Fault>
+            <faultcode>soap:Client</faultcode>
+            <faultstring>System.Web.Services.Protocols.SoapException: Server did not recognize the value of HTTP Header SOAPAction: h heheheh http://secure.modpay.com:81/ws/CreateCustomer.
+         at System.Web.Services.Protocols.Soap11ServerProtocolHelper.RouteRequest()
+         at System.Web.Services.Protocols.SoapServerProtocol.RouteRequest(SoapServerMessage message)
+         at System.Web.Services.Protocols.SoapServerProtocol.Initialize()
+         at System.Web.Services.Protocols.ServerProtocolFactory.Create(Type type, HttpContext context, HttpRequest request, HttpResponse response, Boolean&amp; abortProcessing)</faultstring>
+            <detail/>
+          </soap:Fault>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def successful_authorization_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><AuthorizeCreditCardPaymentResponse xmlns="https://secure.modpay.com/ws/"><AuthorizeCreditCardPaymentResult><transId>18713505</transId><authCode>020411</authCode><avsCode>Z</avsCode><transCode>C00 17093294
-</transCode><authString>RESPONSECODE=A
-AUTHCODE=020411
-DECLINEREASON=
-AVSDATA=Z
-TRANSID=C00 17093294
-</authString><messageText>Approved</messageText><approved>true</approved></AuthorizeCreditCardPaymentResult></AuthorizeCreditCardPaymentResponse></soap:Body></soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><AuthorizeCreditCardPaymentResponse xmlns="https://secure.modpay.com/ws/"><AuthorizeCreditCardPaymentResult><transId>18713505</transId><authCode>020411</authCode><avsCode>Z</avsCode><transCode>C00 17093294
+      </transCode><authString>RESPONSECODE=A
+      AUTHCODE=020411
+      DECLINEREASON=
+      AVSDATA=Z
+      TRANSID=C00 17093294
+      </authString><messageText>Approved</messageText><approved>true</approved></AuthorizeCreditCardPaymentResult></AuthorizeCreditCardPaymentResponse></soap:Body></soap:Envelope>
     XML
   end
 end

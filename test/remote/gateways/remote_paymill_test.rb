@@ -7,7 +7,7 @@ class RemotePaymillTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('5500000000000004')
     @options = {
-        :email => 'Longbob.Longse@example.com'
+      email: 'Longbob.Longse@example.com'
     }
     @declined_card = credit_card('5105105105105100', month: 5, year: 2020)
 
@@ -171,5 +171,4 @@ class RemotePaymillTest < Test::Unit::TestCase
     gateway = PaymillGateway.new(public_key: 'unknown_key', private_key: 'unknown_key')
     assert !gateway.verify_credentials
   end
-
 end

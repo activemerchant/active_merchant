@@ -239,5 +239,4 @@ class RemoteCtPaymentCertificationTest < Test::Unit::TestCase
     puts "Test #{test_number} | transaction number: #{response.params['transactionNumber']}, invoice number #{response.params['invoiceNumber']}, timestamp: #{response.params['timeStamp']}, result: #{response.params['returnCode']}"
     puts response.inspect
   end
-
 end

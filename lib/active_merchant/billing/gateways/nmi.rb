@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://nmi.com/'
       self.display_name = 'NMI'
 
@@ -23,11 +23,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        if options.has_key?(:security_key)
+          requires!(options, :security_key)
+        else
+          requires!(options, :login, :password)
+        end
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
@@ -36,11 +40,12 @@ module ActiveMerchant #:nodoc:
         add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
         add_level3_fields(post, options)
+        add_three_d_secure(post, options)
 
         commit('sale', post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
@@ -49,11 +54,11 @@ module ActiveMerchant #:nodoc:
         add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
         add_level3_fields(post, options)
-
+        add_three_d_secure(post, options)
         commit('auth', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -62,7 +67,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, authorization)
         add_payment_type(post, authorization)
@@ -70,7 +75,7 @@ module ActiveMerchant #:nodoc:
         commit('void', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -79,7 +84,7 @@ module ActiveMerchant #:nodoc:
         commit('refund', post)
       end
 
-      def credit(amount, payment_method, options={})
+      def credit(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
@@ -90,7 +95,7 @@ module ActiveMerchant #:nodoc:
         commit('credit', post)
       end
 
-      def verify(payment_method, options={})
+      def verify(payment_method, options = {})
         post = {}
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
@@ -124,6 +129,7 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((password=)[^&\n]*), '\1[FILTERED]').
+          gsub(%r((security_key=)[^&\n]*), '\1[FILTERED]').
           gsub(%r((ccnumber=)\d+), '\1[FILTERED]').
           gsub(%r((cvv=)\d+), '\1[FILTERED]').
           gsub(%r((checkaba=)\d+), '\1[FILTERED]').
@@ -138,7 +144,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_level3_fields(post, options)
-        add_fields_to_post_if_present(post, options, [:tax, :shipping, :ponumber])
+        add_fields_to_post_if_present(post, options, %i[tax shipping ponumber])
       end
 
       def add_invoice(post, money, options)
@@ -153,14 +159,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(post, payment_method, options)
-        if(payment_method.is_a?(String))
-          customer_vault_id, _ = split_authorization(payment_method)
+        if payment_method.is_a?(String)
+          customer_vault_id, = split_authorization(payment_method)
           post[:customer_vault_id] = customer_vault_id
         elsif payment_method.is_a?(NetworkTokenizationCreditCard)
           post[:ccnumber] = payment_method.number
           post[:ccexp] = exp_date(payment_method)
           post[:token_cryptogram] = payment_method.payment_cryptogram
-        elsif(card_brand(payment_method) == 'check')
+        elsif card_brand(payment_method) == 'check'
           post[:payment] = 'check'
           post[:firstname] = payment_method.first_name
           post[:lastname] = payment_method.last_name
@@ -204,7 +210,8 @@ module ActiveMerchant #:nodoc:
           post[:stored_credential_indicator] = 'stored'
         else
           post[:stored_credential_indicator] = 'used'
-          post[:initial_transaction_id] = stored_credential[:network_transaction_id]
+          # should only send :initial_transaction_id if it is a MIT
+          post[:initial_transaction_id] = stored_credential[:network_transaction_id] if post[:initiated_by] == 'merchant'
         end
       end
 
@@ -213,26 +220,39 @@ module ActiveMerchant #:nodoc:
         post[:ipaddress] = options[:ip]
         post[:customer_id] = options[:customer_id] || options[:customer]
 
-        if(billing_address = options[:billing_address] || options[:address])
+        if (billing_address = options[:billing_address] || options[:address])
           post[:company] = billing_address[:company]
           post[:address1] = billing_address[:address1]
           post[:address2] = billing_address[:address2]
           post[:city] = billing_address[:city]
           post[:state] = billing_address[:state]
           post[:country] = billing_address[:country]
-          post[:zip]    = billing_address[:zip]
+          post[:zip] = billing_address[:zip]
           post[:phone] = billing_address[:phone]
         end
 
-        if(shipping_address = options[:shipping_address])
+        if (shipping_address = options[:shipping_address])
           post[:shipping_company] = shipping_address[:company]
           post[:shipping_address1] = shipping_address[:address1]
           post[:shipping_address2] = shipping_address[:address2]
           post[:shipping_city] = shipping_address[:city]
           post[:shipping_state] = shipping_address[:state]
           post[:shipping_country] = shipping_address[:country]
-          post[:shipping_zip]    = shipping_address[:zip]
+          post[:shipping_zip] = shipping_address[:zip]
           post[:shipping_phone] = shipping_address[:phone]
+        end
+
+        if (descriptor = options[:descriptors])
+          post[:descriptor] = descriptor[:descriptor]
+          post[:descriptor_phone] = descriptor[:descriptor_phone]
+          post[:descriptor_address] = descriptor[:descriptor_address]
+          post[:descriptor_city] = descriptor[:descriptor_city]
+          post[:descriptor_state] = descriptor[:descriptor_state]
+          post[:descriptor_postal] = descriptor[:descriptor_postal]
+          post[:descriptor_country] = descriptor[:descriptor_country]
+          post[:descriptor_mcc] = descriptor[:descriptor_mcc]
+          post[:descriptor_merchant_id] = descriptor[:descriptor_merchant_id]
+          post[:descriptor_url] = descriptor[:descriptor_url]
         end
       end
 
@@ -248,8 +268,25 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_three_d_secure(post, options)
+        three_d_secure = options[:three_d_secure]
+        return unless three_d_secure
+
+        post[:cardholder_auth] = cardholder_auth(three_d_secure[:authentication_response_status])
+        post[:cavv] = three_d_secure[:cavv]
+        post[:xid] = three_d_secure[:xid]
+        post[:three_ds_version] = three_d_secure[:version]
+        post[:directory_server_id] = three_d_secure[:ds_transaction_id]
+      end
+
+      def cardholder_auth(trans_status)
+        return nil if trans_status.nil?
+
+        trans_status == 'Y' ? 'verified' : 'attempted'
+      end
+
       def add_reference(post, authorization)
-        transaction_id, _ = split_authorization(authorization)
+        transaction_id, = split_authorization(authorization)
         post[:transactionid] = transaction_id
       end
 
@@ -264,9 +301,9 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, params)
         params[action == 'add_customer' ? :customer_vault : :type] = action
-        params[:username] = @options[:login]
-        params[:password] = @options[:password]
-
+        params[:username] = @options[:login] unless @options[:login].nil?
+        params[:password] = @options[:password] unless @options[:password].nil?
+        params[:security_key] = @options[:security_key] unless @options[:security_key].nil?
         raw_response = ssl_post(url, post_data(action, params), headers)
         response = parse(raw_response)
         succeeded = success_from(response)
@@ -284,7 +321,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, payment_type, action)
         authorization = (action == 'add_customer' ? response[:customer_vault_id] : response[:transactionid])
-        [ authorization, payment_type ].join('#')
+        [authorization, payment_type].join('#')
       end
 
       def split_authorization(authorization)
@@ -292,7 +329,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        { 'Content-Type'  => 'application/x-www-form-urlencoded;charset=UTF-8' }
+        headers = { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
+        headers
       end
 
       def post_data(action, params)
@@ -318,7 +356,6 @@ module ActiveMerchant #:nodoc:
           response[:responsetext]
         end
       end
-
     end
   end
 end

@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://cardconnect.com/'
       self.display_name = 'Card Connect'
@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
 
       def require_valid_domain!(options, param)
         if options[param]
-          raise ArgumentError.new('not a valid cardconnect domain') unless /\Dcardconnect.com:\d{1,}\D/ =~ options[param]
+          raise ArgumentError.new('not a valid cardconnect domain') unless /https:\/\/\D*cardconnect.com/ =~ options[param]
         end
       end
 
@@ -88,6 +88,7 @@ module ActiveMerchant #:nodoc:
           add_address(post, options)
           add_customer_data(post, options)
           add_3DS(post, options)
+          add_additional_data(post, options)
           post[:capture] = 'Y'
           commit('auth', post)
         end
@@ -102,6 +103,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_customer_data(post, options)
         add_3DS(post, options)
+        add_additional_data(post, options)
         commit('auth', post)
       end
 
@@ -167,7 +169,7 @@ module ActiveMerchant #:nodoc:
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
           post[:address] = address[:address1] if address[:address1]
-          post[:address].concat(" #{address[:address2]}") if address[:address2]
+          post[:address2] = address[:address2] if address[:address2]
           post[:city] = address[:city] if address[:city]
           post[:region] = address[:state] if address[:state]
           post[:country] = address[:country] if address[:country]
@@ -231,11 +233,12 @@ module ActiveMerchant #:nodoc:
           post[:items] = options[:items].map do |item|
             updated = {}
             item.each_pair do |k, v|
-              updated.merge!(k.to_s.gsub(/_/, '') => v)
+              updated.merge!(k.to_s.delete('_') => v)
             end
             updated
           end
         end
+        post[:userfields] = options[:user_fields] if options[:user_fields]
       end
 
       def add_3DS(post, options)
@@ -284,7 +287,8 @@ module ActiveMerchant #:nodoc:
           error_code: error_code_from(response)
         )
       rescue ResponseError => e
-        return Response.new(false, 'Unable to authenticate.  Please check your credentials.', {}, :test => test?) if e.response.code == '401'
+        return Response.new(false, 'Unable to authenticate.  Please check your credentials.', {}, test: test?) if e.response.code == '401'
+
         raise
       end
 

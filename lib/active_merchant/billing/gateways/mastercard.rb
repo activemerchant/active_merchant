@@ -1,19 +1,30 @@
 module ActiveMerchant
   module Billing
     module MastercardGateway
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :userid, :password)
         super
       end
 
-      def purchase(amount, payment_method, options={})
-        MultiResponse.run do |r|
-          r.process { authorize(amount, payment_method, options) }
-          r.process { capture(amount, r.authorization, options) }
+      def purchase(amount, payment_method, options = {})
+        if options[:pay_mode]
+          post = new_post
+          add_invoice(post, amount, options)
+          add_reference(post, *new_authorization)
+          add_payment_method(post, payment_method)
+          add_customer_data(post, payment_method, options)
+          add_3dsecure_id(post, options)
+
+          commit('pay', post)
+        else
+          MultiResponse.run do |r|
+            r.process { authorize(amount, payment_method, options) }
+            r.process { capture(amount, r.authorization, options) }
+          end
         end
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = new_post
         add_invoice(post, amount, options)
         add_reference(post, *new_authorization)
@@ -24,7 +35,7 @@ module ActiveMerchant
         commit('authorize', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = new_post
         add_invoice(post, amount, options, :transaction)
         add_reference(post, *next_authorization(authorization))
@@ -34,7 +45,7 @@ module ActiveMerchant
         commit('capture', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = new_post
         add_invoice(post, amount, options, :transaction)
         add_reference(post, *next_authorization(authorization))
@@ -43,14 +54,14 @@ module ActiveMerchant
         commit('refund', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = new_post
         add_reference(post, *next_authorization(authorization), :targetTransactionId)
 
         commit('void', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -94,16 +105,16 @@ module ActiveMerchant
           billing: {},
           device: {},
           shipping: {},
-          transaction: {},
+          transaction: {}
         }
       end
 
-      def add_invoice(post, amount, options, node=:order)
+      def add_invoice(post, amount, options, node = :order)
         post[node][:amount] = amount(amount)
         post[node][:currency] = (options[:currency] || currency(amount))
       end
 
-      def add_reference(post, orderid, transactionid, transaction_reference, reference_key=:reference)
+      def add_reference(post, orderid, transactionid, transaction_reference, reference_key = :reference)
         post[:orderid] = orderid
         post[:transactionid] = transactionid
         post[:transaction][reference_key] = transaction_reference if transaction_reference
@@ -164,7 +175,8 @@ module ActiveMerchant
 
       def add_3dsecure_id(post, options)
         return unless options[:threed_secure_id]
-        post.merge!({'3DSecureId' => options[:threed_secure_id]})
+
+        post.merge!({ '3DSecureId' => options[:threed_secure_id] })
       end
 
       def country_code(country)
@@ -178,7 +190,7 @@ module ActiveMerchant
       def headers
         {
           'Authorization' => 'Basic ' + Base64.encode64("merchant.#{@options[:userid]}:#{@options[:password]}").strip.delete("\r\n"),
-          'Content-Type' => 'application/json',
+          'Content-Type' => 'application/json'
         }
       end
 
@@ -195,8 +207,8 @@ module ActiveMerchant
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(post, raw),
-          :test => test?
+          authorization: authorization_from(post, raw),
+          test: test?
         )
       end
 
@@ -206,9 +218,23 @@ module ActiveMerchant
 
       def base_url
         if test?
-          @options[:region] == 'asia_pacific' ? test_ap_url : test_na_url
+          case @options[:region]
+          when 'asia_pacific'
+            test_ap_url
+          when 'europe'
+            test_eu_url
+          when 'north_america', nil
+            test_na_url
+          end
         else
-          @options[:region] == 'asia_pacific' ? live_ap_url : live_na_url
+          case @options[:region]
+          when 'asia_pacific'
+            live_ap_url
+          when 'europe'
+            live_eu_url
+          when 'north_america', nil
+            live_na_url
+          end
         end
       end
 

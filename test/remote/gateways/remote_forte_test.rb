@@ -10,13 +10,13 @@ class RemoteForteTest < Test::Unit::TestCase
 
     @check = check
     @bad_check = check({
-      :name => 'Jim Smith',
-      :bank_name => 'Bank of Elbonia',
-      :routing_number => '1234567890',
-      :account_number => '0987654321',
-      :account_holder_type => '',
-      :account_type => 'checking',
-      :number => '0'
+      name: 'Jim Smith',
+      bank_name: 'Bank of Elbonia',
+      routing_number: '1234567890',
+      account_number: '0987654321',
+      account_holder_type: '',
+      account_type: 'checking',
+      number: '0'
     })
 
     @options = {
@@ -43,6 +43,38 @@ class RemoteForteTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @check, @options)
     assert_success response
     assert_equal 'APPROVED', response.message
+    assert_equal 'PPD', response.params['echeck']['sec_code']
+  end
+
+  def test_successful_purchase_with_xdata
+    @options = @options.merge({
+      xdata: {
+        xdata_1: 'some customer metadata',
+        xdata_2: 'some customer metadata',
+        xdata_3: 'some customer metadata',
+        xdata_4: 'some customer metadata',
+        xdata_5: 'some customer metadata',
+        xdata_6: 'some customer metadata',
+        xdata_7: 'some customer metadata',
+        xdata_8: 'some customer metadata',
+        xdata_9: 'some customer metadata'
+      }
+    })
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    (1..9).each { |n| assert_equal 'some customer metadata', response.params['xdata']["xdata_#{n}"] }
+  end
+
+  def test_successful_purchase_with_echeck_with_more_options
+    options = {
+      sec_code: 'WEB'
+    }
+
+    response = @gateway.purchase(@amount, @check, options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert_equal 'WEB', response.params['echeck']['sec_code']
   end
 
   def test_failed_purchase_with_echeck
@@ -111,7 +143,7 @@ class RemoteForteTest < Test::Unit::TestCase
 
     wait_for_authorization_to_clear
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization, @options)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization, @options)
     assert_success capture
   end
 
@@ -134,7 +166,7 @@ class RemoteForteTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.credit(@amount-1, @credit_card, @options)
+    assert refund = @gateway.credit(@amount - 1, @credit_card, @options)
     assert_success refund
   end
 
@@ -202,10 +234,19 @@ class RemoteForteTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
   end
 
+  def test_account_number_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, clean_transcript)
+  end
+
   private
 
   def wait_for_authorization_to_clear
     sleep(10)
   end
-
 end
