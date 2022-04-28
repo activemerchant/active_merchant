@@ -77,6 +77,7 @@
 * Add Cartes Bancaires card bin ranges [leahriffell] #4398
 * Airwallex: Add support for `original_transaction_id` field [drkjc] #4401
 * Securion Pay: Pass external 3DS data [jherreraa] #4404
+* Airwallex: Update Stored Credentials testing, remove support for `original_transaction_id` field [drkjc] 4407
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173

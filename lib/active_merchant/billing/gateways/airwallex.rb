@@ -21,6 +21,12 @@ module ActiveMerchant #:nodoc:
         void: '/pa/payment_intents/%{id}/cancel'
       }
 
+      # Provided by Airwallex for testing purposes
+      TEST_NETWORK_TRANSACTION_IDS = {
+        visa: '123456789012345',
+        master: 'MCC123ABC0101'
+      }
+
       def initialize(options = {})
         requires!(options, :client_id, :client_api_key)
         @client_id = options[:client_id]
@@ -199,7 +205,8 @@ module ActiveMerchant #:nodoc:
             'expiry_year' => card.year.to_s,
             'number' => card.number.to_s,
             'name' => card.name,
-            'cvc' => card.verification_value
+            'cvc' => card.verification_value,
+            'brand' => card.brand
           }
         }
         add_billing(post, card, options)
@@ -232,7 +239,6 @@ module ActiveMerchant #:nodoc:
         return unless stored_credential = options[:stored_credential]
 
         external_recurring_data = post[:external_recurring_data] = {}
-        original_transaction_id = add_original_transaction_id(options)
 
         case stored_credential.dig(:reason_type)
         when 'recurring', 'installment'
@@ -241,8 +247,21 @@ module ActiveMerchant #:nodoc:
           external_recurring_data[:merchant_trigger_reason] = 'unscheduled'
         end
 
-        external_recurring_data[:original_transaction_id] = original_transaction_id || stored_credential.dig(:network_transaction_id)
+        external_recurring_data[:original_transaction_id] = test_mit?(options) ? test_network_transaction_id(post) : stored_credential.dig(:network_transaction_id)
         external_recurring_data[:triggered_by] = stored_credential.dig(:initiator) == 'cardholder' ? 'customer' : 'merchant'
+      end
+
+      def test_network_transaction_id(post)
+        case post['payment_method']['card']['brand']
+        when 'visa'
+          TEST_NETWORK_TRANSACTION_IDS[:visa]
+        when 'master'
+          TEST_NETWORK_TRANSACTION_IDS[:master]
+        end
+      end
+
+      def test_mit?(options)
+        test? && options.dig(:stored_credential, :initiator) == 'merchant'
       end
 
       def add_three_ds(post, options)
@@ -280,12 +299,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_original_transaction_id(options)
-        return unless options[:auto_capture] == false || original_transaction_id = options[:original_transaction_id]
-
-        original_transaction_id
-      end
-
       def authorization_only?(options = {})
         options.include?(:auto_capture) && options[:auto_capture] == false
       end
@@ -300,6 +313,11 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, id = nil)
         url = build_request_url(action, id)
+        # MIT txn w/ no NTID should fail and the gateway should say so
+        # Logic to prevent sending anything on test transactions
+        # if Airwallex changes the value it won't matter
+        # Passing nothing still doesn't test the happy path
+
         post_headers = { 'Authorization' => "Bearer #{@access_token}", 'Content-Type' => 'application/json' }
         response = parse(ssl_post(url, post_data(post), post_headers))
 
