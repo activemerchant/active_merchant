@@ -157,7 +157,7 @@ class CredoraxTest < Test::Unit::TestCase
       recipient_street_address: 'street',
       recipient_city: 'chicago',
       recipient_province_code: '312',
-      recipient_country_code: 'USA'
+      recipient_country_code: 'US'
     }
     refund = stub_comms do
       @gateway.refund(@amount, '123', refund_options)
