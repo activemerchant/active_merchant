@@ -39,3 +39,4 @@ Layout/IndentHash:
 Naming/PredicateName:
   Exclude:
     - "lib/active_merchant/billing/gateways/payeezy.rb"
+    - 'lib/active_merchant/billing/gateways/airwallex.rb'

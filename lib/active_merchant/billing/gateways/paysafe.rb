@@ -94,8 +94,8 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'profiles', post, options)
       end
 
-      def redact(pm_profile_id)
-        commit_for_redact(:delete, "profiles/#{pm_profile_id}", nil, nil)
+      def unstore(pm_profile_id)
+        commit(:delete, "profiles/#{get_id_from_store_auth(pm_profile_id)}", nil, nil)
       end
 
       def supports_scrubbing?
@@ -179,7 +179,7 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment)
         if payment.is_a?(String)
           post[:card] = {}
-          post[:card][:paymentToken] = payment
+          post[:card][:paymentToken] = get_pm_from_store_auth(payment)
         else
           post[:card] = { cardExpiry: {} }
           post[:card][:cardNum] = payment.number
@@ -299,7 +299,7 @@ module ActiveMerchant #:nodoc:
         end
 
         case options[:stored_credential][:reason_type]
-        when 'recurring' || 'installment'
+        when 'recurring', 'installment'
           post[:storedCredential][:type] = 'RECURRING'
         when 'unscheduled'
           if options[:stored_credential][:initiator] == 'merchant'
@@ -321,6 +321,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
+        return {} if body.empty?
+
         JSON.parse(body)
       end
 
@@ -339,17 +341,6 @@ module ActiveMerchant #:nodoc:
           cvv_result: CVVResult.new(response['cvvVerification']),
           test: test?,
           error_code: success ? nil : error_code_from(response)
-        )
-      end
-
-      def commit_for_redact(method, action, parameters, options)
-        url = url(action)
-        response = raw_ssl_request(method, url, post_data(parameters, options), headers)
-        success = true if response.code == '200'
-
-        Response.new(
-          success,
-          message: response.message
         )
       end
 
@@ -384,10 +375,19 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(action, response)
         if action == 'profiles'
-          response['cards'].first['paymentToken']
+          pm = response['cards'].first['paymentToken']
+          "#{pm}|#{response['id']}"
         else
           response['id']
         end
+      end
+
+      def get_pm_from_store_auth(authorization)
+        authorization.split('|')[0]
+      end
+
+      def get_id_from_store_auth(authorization)
+        authorization.split('|')[1]
       end
 
       def post_data(parameters = {}, options = {})

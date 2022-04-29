@@ -83,6 +83,7 @@ module ActiveMerchant #:nodoc:
         options[:name] = credit_card.name if options[:name].blank? && credit_card
         request = build_recurring_request(options[:profile_id] ? :modify : :add, money, options) do |xml|
           add_credit_card(xml, credit_card, options) if credit_card
+          add_stored_credential(xml, options[:stored_credential])
         end
         commit(request, options.merge(request_type: :recurring))
       end
@@ -158,6 +159,7 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'ExtData', 'Name' => 'ORIGID', 'Value' => reference
               end
             end
+            add_stored_credential(xml, options[:stored_credential])
           end
           xml.tag! 'ExtData', 'Name' => 'BUTTONSOURCE', 'Value' => application_id unless application_id.blank?
         end
@@ -190,13 +192,41 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end
 
+            if %i(authorization purchase).include? action
+              add_mpi_3ds(xml, options[:three_d_secure]) if options[:three_d_secure]
+            end
+
             xml.tag! 'Tender' do
               add_credit_card(xml, credit_card, options)
             end
+            add_stored_credential(xml, options[:stored_credential])
           end
           xml.tag! 'ExtData', 'Name' => 'BUTTONSOURCE', 'Value' => application_id unless application_id.blank?
         end
         add_level_two_three_fields(xml.target!, options)
+      end
+
+      def add_mpi_3ds(xml, three_d_secure_options)
+        # structure as per https://developer.paypal.com/api/nvp-soap/payflow/3d-secure-mpi/
+        authentication_id = three_d_secure_options[:authentication_id]
+        authentication_status = three_d_secure_options[:authentication_response_status]
+
+        eci = three_d_secure_options[:eci]
+        cavv = three_d_secure_options[:cavv]
+        xid = three_d_secure_options[:xid]
+        version = three_d_secure_options[:version]
+
+        # 3DS2 only
+        ds_transaction_id = three_d_secure_options[:ds_transaction_id] if version_2_or_newer?(three_d_secure_options)
+
+        xml.tag!('ExtData', 'Name' => 'AUTHENTICATION_ID', 'Value' => authentication_id) unless authentication_id.blank?
+        xml.tag!('ExtData', 'Name' => 'AUTHENTICATION_STATUS', 'Value' => authentication_status) unless authentication_status.blank?
+
+        xml.tag!('ExtData', 'Name' => 'CAVV', 'Value' => cavv) unless cavv.blank?
+        xml.tag!('ExtData', 'Name' => 'ECI', 'Value' => eci) unless eci.blank?
+        xml.tag!('ExtData', 'Name' => 'XID', 'Value' => xid) unless xid.blank?
+        xml.tag!('ExtData', 'Name' => 'THREEDSVERSION', 'Value' => version) unless version.blank?
+        xml.tag!('ExtData', 'Name' => 'DSTRANSACTIONID', 'Value' => ds_transaction_id) unless ds_transaction_id.blank?
       end
 
       def add_level_two_three_fields(xml_string, options)
@@ -258,6 +288,7 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'ABA', check.routing_number
               end
             end
+            add_stored_credential(xml, options[:stored_credential])
           end
           xml.tag! 'ExtData', 'Name' => 'BUTTONSOURCE', 'Value' => application_id unless application_id.blank?
         end
@@ -276,6 +307,37 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' => credit_card.last_name
         end
+      end
+
+      def add_stored_credential(xml, stored_credential)
+        return unless stored_credential
+
+        xml.tag! 'CardOnFile', add_card_on_file_type(stored_credential)
+        xml.tag! 'TxnId', stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
+      end
+
+      def card_on_file_initiator(initator)
+        case initator
+        when 'merchant'
+          'MIT'
+        when 'cardholder'
+          'CIT'
+        end
+      end
+
+      def card_on_file_reason(stored_credential)
+        return 'I' if stored_credential[:initial_transaction] && stored_credential[:reason_type] == 'unscheduled'
+
+        case stored_credential[:reason_type]
+        when 'recurring', 'installment'
+          'R'
+        when 'unscheduled'
+          'U'
+        end
+      end
+
+      def add_card_on_file_type(stored_credential)
+        card_on_file_initiator(stored_credential[:initiator]).to_s + card_on_file_reason(stored_credential).to_s
       end
 
       def add_three_d_secure(options, xml)

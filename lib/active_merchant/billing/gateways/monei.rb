@@ -201,6 +201,7 @@ module ActiveMerchant #:nodoc:
           request[:paymentMethod][:card][:expMonth] = format(payment_method.month, :two_digits)
           request[:paymentMethod][:card][:expYear] = format(payment_method.year, :two_digits)
           request[:paymentMethod][:card][:cvc] = payment_method.verification_value.to_s
+          request[:paymentMethod][:card][:cardholderName] = payment_method.name
         end
       end
 

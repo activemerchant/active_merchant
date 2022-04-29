@@ -261,10 +261,10 @@ class IpgTest < Test::Unit::TestCase
 
   def test_successful_verify_with_currency_code
     response = stub_comms do
-      @gateway.verify(@credit_card, { currency: 'UYU' })
+      @gateway.verify(@credit_card, { currency: 'ARS' })
     end.check_request do |_endpoint, data, _headers|
       doc = REXML::Document.new(data)
-      assert_match('858', REXML::XPath.first(doc, '//v1:Payment//v1:Currency').text) if REXML::XPath.first(doc, '//v1:CreditCardTxType//v1:Type')&.text == 'preAuth'
+      assert_match('032', REXML::XPath.first(doc, '//v1:Payment//v1:Currency').text) if REXML::XPath.first(doc, '//v1:CreditCardTxType//v1:Type')&.text == 'preAuth'
     end.respond_with(successful_authorize_response, successful_void_response)
     assert_success response
   end
@@ -287,6 +287,18 @@ class IpgTest < Test::Unit::TestCase
     payment_token = generate_unique_id
     response = stub_comms do
       @gateway.store(@credit_card, @options.merge!({ hosted_data_id: payment_token }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      assert_match(payment_token, REXML::XPath.first(doc, '//ns2:HostedDataID').text)
+    end.respond_with(successful_store_response)
+
+    assert_success response
+  end
+
+  def test_successful_unstore
+    payment_token = generate_unique_id
+    response = stub_comms do
+      @gateway.unstore(payment_token)
     end.check_request do |_endpoint, data, _headers|
       doc = REXML::Document.new(data)
       assert_match(payment_token, REXML::XPath.first(doc, '//ns2:HostedDataID').text)

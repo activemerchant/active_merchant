@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://test.ipg-online.com/ipgapi/services'
       self.live_url = 'https://www5.ipg-online.com'
 
-      self.supported_countries = %w(UY AR)
+      self.supported_countries = %w(AR)
       self.default_currency = 'ARS'
       self.supported_cardtypes = %i[visa master american_express discover]
 
@@ -12,9 +12,10 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'IPG'
 
       CURRENCY_CODES = {
-        'UYU' => '858',
         'ARS' => '032'
       }
+
+      ACTION_REQUEST_ITEMS = %w(vault unstore)
 
       def initialize(options = {})
         requires!(options, :store_id, :user_id, :password, :pem, :pem_password)
@@ -60,6 +61,13 @@ module ActiveMerchant #:nodoc:
         add_storage_item(xml, credit_card, options)
 
         commit('vault', xml)
+      end
+
+      def unstore(hosted_data_id)
+        xml = Builder::XmlMarkup.new(indent: 2)
+        add_unstore_item(xml, hosted_data_id)
+
+        commit('unstore', xml)
       end
 
       def verify(credit_card, options = {})
@@ -129,8 +137,8 @@ module ActiveMerchant #:nodoc:
         xml.tag!('soapenv:Envelope', envelope_namespaces) do
           xml.tag!('soapenv:Header')
           xml.tag!('soapenv:Body') do
-            build_order_request(xml, action, body) if action != 'vault'
-            build_action_request(xml, action, body) if action == 'vault'
+            build_order_request(xml, action, body) unless ACTION_REQUEST_ITEMS.include?(action)
+            build_action_request(xml, action, body) if ACTION_REQUEST_ITEMS.include?(action)
           end
         end
         xml.target!
@@ -149,6 +157,16 @@ module ActiveMerchant #:nodoc:
             add_credit_card(xml, credit_card, {}, 'ns2')
             add_three_d_secure(xml, options[:three_d_secure]) if options[:three_d_secure]
             xml.tag!('ns2:HostedDataID', @hosted_data_id) if @hosted_data_id
+          end
+        end
+      end
+
+      def add_unstore_item(xml, hosted_data_id)
+        requires!({}.merge!({ hosted_data_id: hosted_data_id }), :hosted_data_id)
+        xml.tag!('ns2:StoreHostedData') do
+          xml.tag!('ns2:DataStorageItem') do
+            xml.tag!('ns2:Function', 'delete')
+            xml.tag!('ns2:HostedDataID', hosted_data_id)
           end
         end
       end

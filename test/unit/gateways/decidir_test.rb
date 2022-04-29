@@ -14,6 +14,30 @@ class DecidirTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @fraud_detection = {
+      send_to_cs: false,
+      channel: 'Web',
+      dispatch_method: 'Store Pick Up',
+      csmdds: [
+        {
+          code: 17,
+          description: 'Campo MDD17'
+        }
+      ],
+      device_unique_id: '111'
+    }
+    @sub_payments = [
+      {
+        site_id: '04052018',
+        installments: 1,
+        amount: 1500
+      },
+      {
+        site_id: '04052018',
+        installments: 1,
+        amount: 1500
+      }
+    ]
   end
 
   def test_successful_purchase
@@ -36,19 +60,6 @@ class DecidirTest < Test::Unit::TestCase
       card_holder_identification_type: 'dni',
       card_holder_identification_number: '123456',
       establishment_name: 'Heavenly Buffaloes',
-      device_unique_identifier: '111',
-      fraud_detection: {
-        send_to_cs: false,
-        channel: 'Web',
-        dispatch_method: 'Store Pick Up',
-        csmdds: [
-          {
-            code: 17,
-            description: 'Campo MDD17'
-          }
-        ],
-        device_unique_id: '111'
-      },
       installments: 12,
       site_id: '99999999'
     }
@@ -62,8 +73,6 @@ class DecidirTest < Test::Unit::TestCase
       assert data =~ /"number":"123456"/
       assert data =~ /"establishment_name":"Heavenly Buffaloes"/
       assert data =~ /"site_id":"99999999"/
-      assert data =~ /"device_unique_identifier":"111"/
-      assert data =~ /"fraud_detection":{"send_to_cs":false,"channel":"Web","dispatch_method":"Store Pick Up","csmdds":\[{"code":17,"description":"Campo MDD17"}\],"device_unique_id":"111"}/
     end.respond_with(successful_purchase_response)
 
     assert_equal 7719132, response.authorization
@@ -119,6 +128,35 @@ class DecidirTest < Test::Unit::TestCase
     assert_equal 7719132, response.authorization
     assert_equal 'approved', response.message
     assert response.test?
+  end
+
+  def test_successful_purchase_with_fraud_detection
+    options = @options.merge(fraud_detection: @fraud_detection)
+
+    response = stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_equal(@fraud_detection, JSON.parse(data, symbolize_names: true)[:fraud_detection])
+      assert_match(/device_unique_identifier/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_sub_payments
+    options = @options.merge(sub_payments: @sub_payments)
+    options[:installments] = 4
+    options[:payment_type] = 'distributed'
+
+    response = stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_equal(@sub_payments, JSON.parse(data, symbolize_names: true)[:sub_payments])
+      assert_match(/#{options[:installments]}/, data)
+      assert_match(/#{options[:payment_type]}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_failed_purchase

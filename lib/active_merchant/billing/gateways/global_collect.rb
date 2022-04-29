@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
 
       self.test_url = 'https://eu.sandbox.api-ingenico.com'
       self.preproduction_url = 'https://world.preprod.api-ingenico.com'
-      self.live_url = 'https://api.globalcollect.com'
+      self.live_url = 'https://world.api-ingenico.com'
 
       self.supported_countries = %w[AD AE AG AI AL AM AO AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BW BY BZ CA CC CD CF CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HN HR HT HU ID IE IL IM IN IS IT JM JO JP KE KG KH KI KM KN KR KW KY KZ LA LB LC LI LK LR LS LT LU LV MA MC MD ME MF MG MH MK MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PL PN PS PT PW QA RE RO RS RU RW SA SB SC SE SG SH SI SJ SK SL SM SN SR ST SV SZ TC TD TG TH TJ TL TM TN TO TR TT TV TW TZ UA UG US UY UZ VC VE VG VI VN WF WS ZA ZM ZW]
       self.default_currency = 'USD'
@@ -87,7 +87,9 @@ module ActiveMerchant #:nodoc:
         'master' => '3',
         'discover' => '128',
         'jcb' => '125',
-        'diners_club' => '132'
+        'diners_club' => '132',
+        'cabal' => '135',
+        'naranja' => '136'
       }
 
       def add_order(post, money, options, capture: false)
@@ -248,7 +250,6 @@ module ActiveMerchant #:nodoc:
         month = format(payment.month, :two_digits)
         expirydate = "#{month}#{year}"
         pre_authorization = options[:pre_authorization] ? 'PRE_AUTHORIZATION' : 'FINAL_AUTHORIZATION'
-
         post['cardPaymentMethodSpecificInput'] = {
           'paymentProductId' => BRAND_MAP[payment.brand],
           'skipAuthentication' => 'true', # refers to 3DSecure
@@ -386,12 +387,12 @@ module ActiveMerchant #:nodoc:
           response = json_error(raw_response)
         end
 
-        succeeded = success_from(response)
+        succeeded = success_from(action, response)
         Response.new(
           succeeded,
           message_from(succeeded, response),
           response,
-          authorization: authorization_from(succeeded, response),
+          authorization: authorization_from(response),
           error_code: error_code_from(succeeded, response),
           test: test?
         )
@@ -400,8 +401,7 @@ module ActiveMerchant #:nodoc:
       def json_error(raw_response)
         {
           'error_message' => 'Invalid response received from the Ingenico ePayments (formerly GlobalCollect) API.  Please contact Ingenico ePayments if you continue to receive this message.' \
-            "  (The raw response returned by the API was #{raw_response.inspect})",
-          'status' => 'REJECTED'
+            "  (The raw response returned by the API was #{raw_response.inspect})"
         }
       end
 
@@ -438,8 +438,24 @@ module ActiveMerchant #:nodoc:
         'application/json'
       end
 
-      def success_from(response)
-        !response['errorId'] && response['status'] != 'REJECTED'
+      def success_from(action, response)
+        return false if response['errorId'] || response['error_message']
+
+        case action
+        when :authorize
+          response.dig('payment', 'statusOutput', 'isAuthorized')
+        when :capture
+          capture_status = response.dig('status') || response.dig('payment', 'status')
+          %w(CAPTURED CAPTURE_REQUESTED).include?(capture_status)
+        when :void
+          void_response_id = response.dig('cardPaymentMethodSpecificOutput', 'voidResponseId') || response.dig('mobilePaymentMethodSpecificOutput', 'voidResponseId')
+          %w(00 0 8 11).include?(void_response_id) || response.dig('payment', 'status') == 'CANCELLED'
+        when :refund
+          refund_status = response.dig('status') || response.dig('payment', 'status')
+          %w(REFUNDED REFUND_REQUESTED).include?(refund_status)
+        else
+          response['status'] != 'REJECTED'
+        end
       end
 
       def message_from(succeeded, response)
@@ -456,14 +472,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorization_from(succeeded, response)
-        if succeeded
-          response['id'] || response['payment']['id'] || response['paymentResult']['payment']['id']
-        elsif response['errorId']
-          response['errorId']
-        else
-          'GATEWAY ERROR'
-        end
+      def authorization_from(response)
+        response.dig('id') || response.dig('payment', 'id') || response.dig('paymentResult', 'payment', 'id')
       end
 
       def error_code_from(succeeded, response)

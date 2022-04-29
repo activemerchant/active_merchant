@@ -101,7 +101,7 @@ class PaysafeTest < Test::Unit::TestCase
     stored_credential_options = {
       stored_credential: {
         initial_transaction: true,
-        reason_type: 'recurring',
+        reason_type: 'installment',
         initiator: 'merchant'
       }
     }

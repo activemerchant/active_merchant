@@ -242,6 +242,22 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_standard_error_code_mapping
+    @gateway.expects(:ssl_post).returns(failed_billing_field_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'incorrect_address', response.error_code
+  end
+
+  def test_unknown_error_code_mapping
+    @gateway.expects(:ssl_post).returns(failed_invalid_delivery_field_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal '702', response.error_code
+  end
+
   def test_failed_authorise3d
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
@@ -784,11 +800,22 @@ class AdyenTest < Test::Unit::TestCase
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      assert_equal '0', JSON.parse(data)['amount']['value'] if endpoint.include?('authorise')
     end.respond_with(successful_verify_response)
     assert_success response
     assert_equal '#7914776426645103#', response.authorization
     assert_equal 'Authorised', response.message
     assert response.test?
+  end
+
+  def test_successful_verify_with_custom_amount
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options.merge({ verify_amount: '500' }))
+    end.check_request do |endpoint, data, _headers|
+      assert_equal '500', JSON.parse(data)['amount']['value'] if endpoint.include?('authorise')
+    end.respond_with(successful_verify_response)
+    assert_success response
   end
 
   def test_successful_verify_with_bank_account
@@ -902,12 +929,9 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_auth_application_info
+    ActiveMerchant::Billing::AdyenGateway.application_id = { name: 'Acme', version: '1.0' }
+
     options = @options.merge!(
-      externalPlatform: {
-        name: 'Acme',
-        version: '1',
-        integrator: 'abc'
-      },
       merchantApplication: {
         name: 'Acme Inc.',
         version: '2'
@@ -917,8 +941,7 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       assert_equal 'Acme', JSON.parse(data)['applicationInfo']['externalPlatform']['name']
-      assert_equal '1', JSON.parse(data)['applicationInfo']['externalPlatform']['version']
-      assert_equal 'abc', JSON.parse(data)['applicationInfo']['externalPlatform']['integrator']
+      assert_equal '1.0', JSON.parse(data)['applicationInfo']['externalPlatform']['version']
       assert_equal 'Acme Inc.', JSON.parse(data)['applicationInfo']['merchantApplication']['name']
       assert_equal '2', JSON.parse(data)['applicationInfo']['merchantApplication']['version']
     end.respond_with(successful_authorize_response)
@@ -1144,6 +1167,14 @@ class AdyenTest < Test::Unit::TestCase
       assert headers['Idempotency-Key']
     end.respond_with(successful_authorize_response)
     assert_success response
+  end
+
+  def test_three_decimal_places_currency_handling
+    stub_comms do
+      @gateway.authorize(1000, @credit_card, @options.merge(currency: 'JOD'))
+    end.check_request(skip_response: true) do |_endpoint, data|
+      assert_match(/"amount\":{\"value\":\"1000\",\"currency\":\"JOD\"}/, data)
+    end
   end
 
   private
@@ -1590,6 +1621,28 @@ class AdyenTest < Test::Unit::TestCase
       "resultCode":"Authorised",
       "authCode":"31265"
     }
+    RESPONSE
+  end
+
+  def failed_billing_field_response
+    <<~RESPONSE
+      {
+        "status": 422,
+        "errorCode": "132",
+        "message": "Required field 'billingAddress.street' is not provided.",
+        "errorType": "validation"
+      }
+    RESPONSE
+  end
+
+  def failed_invalid_delivery_field_response
+    <<~RESPONSE
+      {
+        "status": 500,
+        "errorCode": "702",
+        "message": "The 'deliveryDate' field is invalid. Invalid date (year)",
+        "errorType": "validation"
+      }
     RESPONSE
   end
 

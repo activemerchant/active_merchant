@@ -227,6 +227,27 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
+  def test_successful_purchase_with_sca_merchant_initiated_master_card
+    cc = credit_card('5555555555554444', first_name: 'Joe', last_name: 'Smith',
+                     month: '12', year: '2022', brand: 'master', verification_value: '999')
+    options_local = {
+      three_d_secure: {
+        eci: '7',
+        xid: 'TESTXID',
+        cavv: 'AAAEEEDDDSSSAAA2243234',
+        ds_transaction_id: '97267598FAE648F28083C23433990FBC',
+        version: '2.2.0'
+      },
+      sca_merchant_initiated: 'Y'
+    }
+
+    assert response = @three_ds_gateway.purchase(100, cc, @options.merge(options_local))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
   def test_successful_purchase_with_american_express_network_tokenization_credit_card
     network_card = network_tokenization_credit_card('4788250000028291',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
@@ -326,113 +347,6 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
-  end
-
-  [
-    {
-      card: {
-        number: '4112344112344113',
-        verification_value: '411',
-        brand: 'visa'
-      },
-      three_d_secure: {
-        eci: '5',
-        cavv: 'AAABAIcJIoQDIzAgVAkiAAAAAAA=',
-        xid: 'AAABAIcJIoQDIzAgVAkiAAAAAAA='
-      },
-      address: {
-        address1: '55 Forever Ave',
-        address2: '',
-        city: 'Concord',
-        state: 'NH',
-        zip: '03301',
-        country: 'US'
-      }
-    },
-    {
-      card: {
-        number: '5112345112345114',
-        verification_value: '823',
-        brand: 'master'
-      },
-      three_d_secure: {
-        eci: '5',
-        cavv: 'AAAEEEDDDSSSAAA2243234',
-        xid: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
-        version: '2.2.0',
-        ds_transaction_id: '8dh4htokdf84jrnxyemfiosheuyfjt82jiek'
-      },
-      address: {
-        address1: 'Byway Street',
-        address2: '',
-        city: 'Portsmouth',
-        state: 'MA',
-        zip: '67890',
-        country: 'US',
-        phone: '5555555555'
-      }
-    },
-    {
-      card: {
-        number: '371144371144376',
-        verification_value: '1234',
-        brand: 'american_express'
-      },
-      three_d_secure: {
-        eci: '5',
-        cavv: 'AAABBWcSNIdjeUZThmNHAAAAAAA=',
-        xid: 'AAABBWcSNIdjeUZThmNHAAAAAAA='
-      },
-      address: {
-        address1: '4 Northeastern Blvd',
-        address2: '',
-        city: 'Salem',
-        state: 'NH',
-        zip: '03105',
-        country: 'US'
-      }
-    }
-  ].each do |fixture|
-    define_method("test_successful_#{fixture[:card][:brand]}_authorization_with_3ds") do
-      cc = credit_card(fixture[:card][:number], {
-        verification_value: fixture[:card][:verification_value],
-        brand: fixture[:card][:brand]
-      })
-      options = @options.merge(
-        order_id: '2',
-        currency: 'USD',
-        three_d_secure: fixture[:three_d_secure],
-        address: fixture[:address],
-        soft_descriptors: {
-          merchant_name: 'Merch',
-          product_description: 'Description',
-          merchant_email: 'email@example'
-        }
-      )
-      assert response = @three_ds_gateway.authorize(100, cc, options)
-
-      assert_success response
-      assert_equal 'Approved', response.message
-      assert_false response.authorization.blank?
-    end
-
-    define_method("test_successful_#{fixture[:card][:brand]}_purchase_with_3ds") do
-      cc = credit_card(fixture[:card][:number], {
-        verification_value: fixture[:card][:verification_value],
-        brand: fixture[:card][:brand]
-      })
-      options = @options.merge(
-        order_id: '2',
-        currency: 'USD',
-        three_d_secure: fixture[:three_d_secure],
-        address: fixture[:address]
-      )
-      assert response = @three_ds_gateway.purchase(100, cc, options)
-
-      assert_success response
-      assert_equal 'Approved', response.message
-      assert_false response.authorization.blank?
-    end
   end
 
   def test_successful_purchase_with_mit_stored_credentials
@@ -887,7 +801,28 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
+    assert_equal 'No reason to decline', response.message
+  end
+
+  def test_successful_different_cards
+    @credit_card.brand = 'master'
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'No reason to decline', response.message
+  end
+
+  def test_successful_verify_with_discover_brand
+    @credit_card.brand = 'discover'
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
     assert_equal 'Approved', response.message
+  end
+
+  def test_unsuccessful_verify_with_invalid_discover_card
+    @declined_card.brand = 'discover'
+    response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_equal 'Invalid CC Number', response.message
   end
 
   def test_failed_verify
@@ -947,6 +882,618 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       @gateway.purchase(@amount, network_card, @options)
     end
     transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(network_card.payment_cryptogram, transcript)
+  end
+
+  private
+
+  def stored_credential_options(*args, id: nil)
+    @options.merge(order_id: generate_unique_id,
+                   stored_credential: stored_credential(*args, id: id))
+  end
+end
+
+class BrandSpecificOrbitalTests < RemoteOrbitalGatewayTest
+  # Additional class for a subset of tests that share setup logic.
+  # This will run automatically with the rest of the tests in this file,
+  # or you can specify individual tests by name as you usually would.
+  def setup
+    super
+
+    @brand_specific_fixtures = {
+      visa: {
+        card: {
+          number: '4112344112344113',
+          verification_value: '411',
+          brand: 'visa'
+        },
+        three_d_secure: {
+          eci: '5',
+          cavv: 'AAABAIcJIoQDIzAgVAkiAAAAAAA=',
+          xid: 'AAABAIcJIoQDIzAgVAkiAAAAAAA='
+        },
+        address: {
+          address1: '55 Forever Ave',
+          address2: '',
+          city: 'Concord',
+          state: 'NH',
+          zip: '03301',
+          country: 'US'
+        }
+      },
+      master: {
+        card: {
+          number: '5112345112345114',
+          verification_value: '823',
+          brand: 'master'
+        },
+        three_d_secure: {
+          eci: '5',
+          cavv: 'AAAEEEDDDSSSAAA2243234',
+          xid: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
+          version: '2.2.0',
+          ds_transaction_id: '8dh4htokdf84jrnxyemfiosheuyfjt82jiek'
+        },
+        address: {
+          address1: 'Byway Street',
+          address2: '',
+          city: 'Portsmouth',
+          state: 'MA',
+          zip: '67890',
+          country: 'US',
+          phone: '5555555555'
+        }
+      },
+      american_express: {
+        card: {
+          number: '371144371144376',
+          verification_value: '1234',
+          brand: 'american_express'
+        },
+        three_d_secure: {
+          eci: '5',
+          cavv: 'AAABBWcSNIdjeUZThmNHAAAAAAA=',
+          xid: 'AAABBWcSNIdjeUZThmNHAAAAAAA='
+        },
+        address: {
+          address1: '4 Northeastern Blvd',
+          address2: '',
+          city: 'Salem',
+          state: 'NH',
+          zip: '03105',
+          country: 'US'
+        }
+      }
+    }
+  end
+
+  def test_successful_3ds_authorization_with_visa
+    cc = brand_specific_card(@brand_specific_fixtures[:visa][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:visa])
+
+    assert response = @three_ds_gateway.authorize(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_successful_3ds_purchase_with_visa
+    cc = brand_specific_card(@brand_specific_fixtures[:visa][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:visa])
+
+    assert response = @three_ds_gateway.purchase(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_successful_3ds_authorization_with_mastercard
+    cc = brand_specific_card(@brand_specific_fixtures[:master][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:master])
+
+    assert response = @three_ds_gateway.authorize(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_succesful_3ds_purchase_with_mastercard
+    cc = brand_specific_card(@brand_specific_fixtures[:master][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:master])
+
+    assert response = @three_ds_gateway.purchase(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_successful_3ds_authorization_with_american_express
+    cc = brand_specific_card(@brand_specific_fixtures[:american_express][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:american_express])
+
+    assert response = @three_ds_gateway.authorize(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_successful_3ds_purchase_with_american_express
+    cc = brand_specific_card(@brand_specific_fixtures[:american_express][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:american_express])
+
+    assert response = @three_ds_gateway.purchase(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  private
+
+  def assert_success_with_authorization(response)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def brand_specific_3ds_options(data)
+    @options.merge(
+      order_id: '2',
+      currency: 'USD',
+      three_d_secure: data[:three_d_secure],
+      address: data[:address],
+      soft_descriptors: {
+        merchant_name: 'Merch',
+        product_description: 'Description',
+        merchant_email: 'email@example'
+      }
+    )
+  end
+
+  def brand_specific_card(card_data)
+    credit_card(
+      card_data[:number],
+      {
+        verification_value: card_data[:verification_value],
+        brand: card_data[:brand]
+      }
+    )
+  end
+end
+
+class TandemOrbitalTests < Test::Unit::TestCase
+  # Additional test cases to verify tandem integration
+  def setup
+    Base.mode = :test
+    @tandem_gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_tandem_gateway))
+
+    @amount = 100
+    @google_pay_amount = 10000
+    @credit_card = credit_card('4556761029983886')
+    @declined_card = credit_card('4011361100000012')
+    @google_pay_card = network_tokenization_credit_card(
+      '4777777777777778',
+      payment_cryptogram: 'BwAQCFVQdwEAABNZI1B3EGLyGC8=',
+      verification_value: '987',
+      source: :google_pay,
+      brand: 'visa',
+      eci: '5'
+    )
+
+    @options = {
+      order_id: generate_unique_id,
+      address: address,
+      merchant_id: 'merchant1234'
+    }
+
+    @level_2_options = {
+      tax_indicator: '1',
+      tax: '75',
+      purchase_order: '123abc',
+      zip: address[:zip]
+    }
+
+    @level_3_options = {
+      freight_amount: 1,
+      duty_amount: 1,
+      ship_from_zip: 27604,
+      dest_country: 'USA',
+      discount_amount: 1,
+      vat_tax: 1,
+      vat_rate: 25
+    }
+
+    @line_items = [
+      {
+        desc: 'another item',
+        prod_cd: generate_unique_id[0, 11],
+        qty: 1,
+        u_o_m: 'LBR',
+        tax_amt: 250,
+        tax_rate: 10000,
+        comm_cd: '00584',
+        unit_cost: 2500,
+        gross_net: 'Y',
+        tax_type: 'sale',
+        debit_ind: 'C'
+      },
+      {
+        desc: 'something else',
+        prod_cd: generate_unique_id[0, 11],
+        qty: 1,
+        u_o_m: 'LBR',
+        tax_amt: 125,
+        tax_rate: 5000,
+        comm_cd: '00584',
+        unit_cost: 1000,
+        gross_net: 'Y',
+        tax_type: 'sale',
+        debit_ind: 'C'
+      }
+    ]
+  end
+
+  def test_successful_purchase
+    assert response = @tandem_gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_soft_descriptor
+    options = @options.merge(
+      soft_descriptors: {
+        merchant_name: 'Merch',
+        product_description: 'Description',
+        merchant_email: 'email@example'
+      }
+    )
+    assert response = @tandem_gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_2_data
+    response = @tandem_gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: @level_2_options))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_3_data
+    response = @tandem_gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: @level_2_options, level_3_data: @level_3_options, line_items: @line_items))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_visa_network_tokenization_credit_card_with_eci
+    network_card = network_tokenization_credit_card(
+      '4788250000028291',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      verification_value: '111',
+      brand: 'visa',
+      eci: '5'
+    )
+
+    assert response = @tandem_gateway.purchase(3000, network_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_master_card_network_tokenization_credit_card
+    network_card = network_tokenization_credit_card('4788250000028291',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      verification_value: '111',
+      brand: 'master')
+    assert response = @tandem_gateway.purchase(3000, network_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_american_express_network_tokenization_credit_card
+    network_card = network_tokenization_credit_card('4788250000028291',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      verification_value: '111',
+      brand: 'american_express')
+    assert response = @tandem_gateway.purchase(3000, network_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_discover_network_tokenization_credit_card
+    network_card = network_tokenization_credit_card('4788250000028291',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      verification_value: '111',
+      brand: 'discover')
+    assert response = @tandem_gateway.purchase(3000, network_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  # verify stored credential flows in tandem support
+
+  def test_successful_purchase_with_mit_stored_credentials
+    mit_stored_credentials = {
+      mit_msg_type: 'MUSE',
+      mit_stored_credential_ind: 'Y',
+      mit_submitted_transaction_id: '111222333444555'
+    }
+
+    response = @tandem_gateway.purchase(@amount, @credit_card, @options.merge(mit_stored_credentials))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_cit_stored_credentials
+    cit_options = {
+      mit_msg_type: 'CUSE',
+      mit_stored_credential_ind: 'Y'
+    }
+
+    response = @tandem_gateway.purchase(@amount, @credit_card, @options.merge(cit_options))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_purchase_using_stored_credential_recurring_cit
+    initial_options = stored_credential_options(:cardholder, :recurring, :initial)
+    assert purchase = @tandem_gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+    assert network_transaction_id = purchase.params['mit_received_transaction_id']
+
+    used_options = stored_credential_options(:recurring, :cardholder, id: network_transaction_id)
+    assert purchase = @tandem_gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+  end
+
+  def test_purchase_using_stored_credential_recurring_mit
+    initial_options = stored_credential_options(:merchant, :recurring, :initial)
+    assert purchase = @tandem_gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+    assert network_transaction_id = purchase.params['mit_received_transaction_id']
+
+    used_options = stored_credential_options(:recurring, :merchant, id: network_transaction_id)
+    assert purchase = @tandem_gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+  end
+
+  def test_successful_purchase_with_overridden_normalized_stored_credentials
+    stored_credential = {
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'unscheduled',
+        network_transaction_id: '111222333444555'
+      },
+      mit_msg_type: 'MRSB'
+    }
+
+    response = @tandem_gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  # verify google pay transactions on tandem account
+
+  def test_successful_purchase_with_google_pay
+    response = @tandem_gateway.purchase(@google_pay_amount, @google_pay_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_unsuccessful_purchase
+    assert response = @tandem_gateway.purchase(101, @declined_card, @options)
+    assert_failure response
+    assert_match 'AUTH DECLINED', response.message
+  end
+
+  def test_authorize_and_capture
+    amount = @amount
+    assert auth = @tandem_gateway.authorize(amount, @credit_card, @options.merge(order_id: '2'))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert auth.authorization
+    assert capture = @tandem_gateway.capture(amount, auth.authorization, order_id: '2')
+    assert_success capture
+  end
+
+  def test_successful_authorize_and_capture_with_level_2_data
+    auth = @tandem_gateway.authorize(@amount, @credit_card, @options.merge(level_2_data: @level_2_options))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    capture = @tandem_gateway.capture(@amount, auth.authorization, @options.merge(level_2_data: @level_2_options))
+    assert_success capture
+  end
+
+  def test_successful_authorize_and_capture_with_line_items
+    auth = @tandem_gateway.authorize(@amount, @credit_card, @options.merge(level_2_data: @level_2_options, level_3_data: @level_3_options, line_items: @line_items))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    capture = @tandem_gateway.capture(@amount, auth.authorization, @options.merge(level_2_data: @level_2_options, level_3_data: @level_3_options, line_items: @line_items))
+    assert_success capture
+  end
+
+  def test_successful_authorize_and_capture_with_google_pay
+    auth = @tandem_gateway.authorize(@amount, @google_pay_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    capture = @tandem_gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+  end
+
+  def test_authorize_and_void
+    assert auth = @tandem_gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2'))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert auth.authorization
+    assert void = @tandem_gateway.void(auth.authorization, order_id: '2')
+    assert_success void
+  end
+
+  def test_authorize_and_void_using_google_pay
+    assert auth = @tandem_gateway.authorize(@amount, @google_pay_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    assert auth.authorization
+    assert void = @tandem_gateway.void(auth.authorization)
+    assert_success void
+  end
+
+  def test_successful_refund
+    amount = @amount
+    assert response = @tandem_gateway.purchase(amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
+    assert refund = @tandem_gateway.refund(amount, response.authorization, @options)
+    assert_success refund
+  end
+
+  def test_failed_refund
+    assert refund = @tandem_gateway.refund(@amount, '123;123', @options)
+    assert_failure refund
+    assert_equal '881', refund.params['proc_status']
+  end
+
+  def test_successful_refund_with_google_pay
+    auth = @tandem_gateway.authorize(@amount, @google_pay_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    capture = @tandem_gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+
+    assert capture.authorization
+    assert refund = @tandem_gateway.refund(@amount, capture.authorization, @options)
+    assert_success refund
+  end
+
+  def test_successful_refund_with_level_2_data
+    amount = @amount
+    assert response = @tandem_gateway.purchase(amount, @credit_card, @options.merge(level_2_data: @level_2_options))
+    assert_success response
+    assert response.authorization
+    assert refund = @tandem_gateway.refund(amount, response.authorization, @options.merge(level_2_data: @level_2_options))
+    assert_success refund
+  end
+
+  def test_successful_credit
+    payment_method = credit_card('5454545454545454')
+    assert response = @tandem_gateway.credit(@amount, payment_method, @options)
+    assert_success response
+  end
+
+  def test_failed_capture
+    assert response = @tandem_gateway.capture(@amount, '')
+    assert_failure response
+    assert_equal 'Bad data error', response.message
+  end
+
+  def test_credit_purchase_with_address_responds_with_name
+    transcript = capture_transcript(@tandem_gateway) do
+      @tandem_gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2'))
+    end
+
+    assert_match(/<AVSname>Longbob Longsen/, transcript)
+    assert_match(/<RespCode>00/, transcript)
+    assert_match(/<StatusMsg>Approved/, transcript)
+  end
+
+  def test_credit_purchase_with_no_address_responds_with_no_name
+    transcript = capture_transcript(@tandem_gateway) do
+      @tandem_gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2', address: nil, billing_address: nil))
+    end
+
+    assert_match(/<RespCode>00/, transcript)
+    assert_match(/<StatusMsg>Approved/, transcript)
+  end
+
+  def test_void_transactions
+    [3000, 105500, 2900].each do |amount|
+      assert auth_response = @tandem_gateway.authorize(amount, @credit_card, @options)
+      assert void_response = @tandem_gateway.void(auth_response.authorization, @options.merge(transaction_index: 1))
+      assert_kind_of Response, void_response
+    end
+  end
+
+  def test_successful_verify
+    response = @tandem_gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_different_cards
+    @credit_card.brand = 'master'
+    response = @tandem_gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_verify_with_discover_brand
+    @credit_card.brand = 'discover'
+    response = @tandem_gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_unsuccessful_verify_with_invalid_discover_card
+    @declined_card.brand = 'discover'
+    response = @tandem_gateway.verify(@declined_card, @options.merge({ verify_amount: '101' }))
+    assert_failure response
+    assert_match 'AUTH DECLINED', response.message
+  end
+
+  def test_failed_verify
+    response = @tandem_gateway.verify(@declined_card, @options.merge({ verify_amount: '101' }))
+    assert_failure response
+    assert_match 'AUTH DECLINED', response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@tandem_gateway) do
+      @tandem_gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @tandem_gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@tandem_gateway.options[:password], transcript)
+    assert_scrubbed(@tandem_gateway.options[:login], transcript)
+    assert_scrubbed(@tandem_gateway.options[:merchant_id], transcript)
+  end
+
+  def test_transcript_scrubbing_profile
+    transcript = capture_transcript(@tandem_gateway) do
+      @tandem_gateway.add_customer_profile(@credit_card, @options)
+    end
+    transcript = @tandem_gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@tandem_gateway.options[:password], transcript)
+    assert_scrubbed(@tandem_gateway.options[:login], transcript)
+    assert_scrubbed(@tandem_gateway.options[:merchant_id], transcript)
+  end
+
+  def test_transcript_scrubbing_network_card
+    network_card = network_tokenization_credit_card(
+      '4788250000028291',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      verification_value: '111',
+      brand: 'visa',
+      eci: '5'
+    )
+    transcript = capture_transcript(@tandem_gateway) do
+      @tandem_gateway.purchase(@tandem_gateway, network_card, @options)
+    end
+    transcript = @tandem_gateway.scrub(transcript)
 
     assert_scrubbed(network_card.payment_cryptogram, transcript)
   end

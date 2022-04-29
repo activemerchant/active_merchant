@@ -638,6 +638,24 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', capture.message
   end
 
+  def test_error_code_render_from_response
+    options = {
+      order_id: '123',
+      email: 'shopper@sky.uk',
+      billing_address: {
+        address2: 'address2',
+        zip: '31331',
+        city: 'Wanaque',
+        state: 'NJ',
+        country: 'IE'
+      },
+      delivery_date: 'invalid'
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_failure response
+    assert_equal '702', response.error_code
+  end
+
   def test_partial_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -1034,6 +1052,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match 'Authorised', response.message
+  end
+
+  def test_successful_verify_with_custom_amount
+    response = @gateway.verify(@credit_card, @options.merge({ verify_amount: '500' }))
     assert_success response
     assert_match 'Authorised', response.message
   end

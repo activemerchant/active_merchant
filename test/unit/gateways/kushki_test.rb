@@ -37,6 +37,10 @@ class KushkiTest < Test::Unit::TestCase
         last_name: 'Dis',
         second_last_name: 'Buscemi',
         phone_number: '+13125556789'
+      },
+      metadata: {
+        productos: 'bananas',
+        nombre_apellido: 'Kirk'
       }
     }
 
@@ -50,7 +54,12 @@ class KushkiTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_charge_response)
     @gateway.expects(:ssl_post).returns(successful_token_response)
 
-    response = @gateway.purchase(amount, @credit_card, options)
+    response = stub_comms do
+      @gateway.purchase(amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_includes data, 'metadata'
+    end.respond_with(successful_token_response, successful_charge_response)
+
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_match %r(^\d+$), response.authorization

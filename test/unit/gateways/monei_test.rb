@@ -149,6 +149,14 @@ class MoneiTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_sending_cardholder_name
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal @credit_card.name, JSON.parse(data)['paymentMethod']['card']['cardholderName']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_scrub
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end

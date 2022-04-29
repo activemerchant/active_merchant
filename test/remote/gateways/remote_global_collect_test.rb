@@ -3,31 +3,56 @@ require 'test_helper'
 class RemoteGlobalCollectTest < Test::Unit::TestCase
   def setup
     @gateway = GlobalCollectGateway.new(fixtures(:global_collect))
+    @gateway_preprod = GlobalCollectGateway.new(fixtures(:global_collect_preprod))
+    @gateway_preprod.options[:url_override] = 'preproduction'
 
     @amount = 100
     @credit_card = credit_card('4567350000427977')
+    @naranja_card = credit_card('5895620033330020', brand: 'naranja')
+    @cabal_card = credit_card('6271701225979642', brand: 'cabal')
     @declined_card = credit_card('5424180279791732')
+    @preprod_card = credit_card('4111111111111111')
     @accepted_amount = 4005
     @rejected_amount = 2997
     @options = {
       email: 'example@example.com',
       billing_address: address,
-      description: 'Store Purchase',
-      url_override: 'preproduction'
+      description: 'Store Purchase'
     }
     @long_address = {
       billing_address: {
         address1: '1234 Supercalifragilisticexpialidociousthiscantbemorethanfiftycharacters',
-        city: '‎Portland',
+        city: 'Portland',
         state: 'ME',
         zip: '09901',
         country: 'US'
       }
     }
+    @preprod_options = {
+      order_id: SecureRandom.hex(15),
+      email: 'email@example.com',
+      billing_address: address
+    }
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@accepted_amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
+  end
+
+  def test_successful_purchase_with_naranja
+    options = @preprod_options.merge(requires_approval: false, currency: 'ARS')
+    response = @gateway_preprod.purchase(1000, @naranja_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
+  end
+
+  def test_successful_purchase_with_cabal
+    options = @preprod_options.merge(requires_approval: false, currency: 'ARS')
+    response = @gateway_preprod.purchase(1000, @cabal_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
@@ -242,6 +267,12 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_pre_authorization_flag
+    response = @gateway.purchase(@accepted_amount, @credit_card, @options.merge(pre_authorization: true))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_truncated_address
     response = @gateway.purchase(@amount, @credit_card, @long_address)
     assert_success response
@@ -329,6 +360,18 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_match %r{UNKNOWN_PAYMENT_ID}, response.message
   end
 
+  def test_failed_repeat_void
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal 'Succeeded', void.message
+
+    assert repeat_void = @gateway.void(auth.authorization)
+    assert_failure repeat_void
+  end
+
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
@@ -356,5 +399,31 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@gateway.options[:secret_api_key], transcript)
+  end
+
+  def test_successful_preprod_auth_and_capture
+    options = @preprod_options.merge(requires_approval: true)
+    auth = @gateway_preprod.authorize(@accepted_amount, @preprod_card, options)
+    assert_success auth
+
+    assert capture = @gateway_preprod.capture(@amount, auth.authorization, options)
+    assert_success capture
+    assert_equal 'CAPTURE_REQUESTED', capture.params['payment']['status']
+  end
+
+  def test_successful_preprod_purchase
+    options = @preprod_options.merge(requires_approval: false)
+    assert purchase = @gateway_preprod.purchase(@accepted_amount, @preprod_card, options)
+    assert_success purchase
+  end
+
+  def test_successful_preprod_void
+    options = @preprod_options.merge(requires_approval: true)
+    auth = @gateway_preprod.authorize(@amount, @preprod_card, options)
+    assert_success auth
+
+    assert void = @gateway_preprod.void(auth.authorization)
+    assert_success void
+    assert_equal 'Succeeded', void.message
   end
 end

@@ -104,6 +104,10 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     }
   end
 
+  def test_supports_network_tokenization
+    assert_true @gateway.supports_network_tokenization?
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -308,6 +312,30 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
       assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
       assert_match %{<SCARecurringPayment>Y</SCARecurringPayment>}, data
+      assert_match %{<UCAFInd>4</UCAFInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_sca_merchant_initiated_master_card
+    options_local = {
+      three_d_secure: {
+        eci: '7',
+        xid: 'TESTXID',
+        cavv: 'AAAEEEDDDSSSAAA2243234',
+        ds_transaction_id: '97267598FAE648F28083C23433990FBC',
+        version: '2.2.0'
+      },
+      sca_merchant_initiated: 'Y'
+    }
+
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'master'), @options.merge(options_local))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<AuthenticationECIInd>7</AuthenticationECIInd>}, data
+      assert_match %{<AAV>AAAEEEDDDSSSAAA2243234</AAV>}, data
+      assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
+      assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
+      assert_match %{<SCAMerchantInitiatedTransaction>Y</SCAMerchantInitiatedTransaction>}, data
       assert_match %{<UCAFInd>4</UCAFInd>}, data
     end.respond_with(successful_purchase_response)
   end
@@ -1463,6 +1491,63 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.verify(credit_card, @options)
     end.respond_with(successful_purchase_response, successful_purchase_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal 'Approved', response.message
+  end
+
+  def test_custom_amount_on_verify
+    response = stub_comms do
+      @gateway.verify(credit_card, @options.merge({ verify_amount: '101' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r{<Amount>101<\/Amount>}, data if data.include?('MessageType')
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_valid_amount_with_jcb_card
+    @credit_card.brand = 'jcb'
+    stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r{<Amount>0<\/Amount>}, data
+    end
+  end
+
+  def test_successful_verify_zero_auth_different_cards
+    @credit_card.brand = 'master'
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal 'Approved', response.message
+  end
+
+  def test_valid_amount_with_discover_brand
+    @credit_card.brand = 'discover'
+    stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r{<Amount>100<\/Amount>}, data
+    end
+  end
+
+  def test_successful_verify_with_discover_brand
+    @credit_card.brand = 'discover'
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_purchase_response, successful_void_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_verify_and_failed_void_discover_brand
+    @credit_card.brand = 'discover'
+    response = stub_comms do
+      @gateway.verify(credit_card, @options)
+    end.respond_with(successful_purchase_response, failed_purchase_response)
     assert_success response
     assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
     assert_equal 'Approved', response.message

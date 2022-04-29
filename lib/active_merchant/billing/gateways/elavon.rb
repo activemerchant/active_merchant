@@ -298,7 +298,7 @@ module ActiveMerchant #:nodoc:
         xml.ssl_dynamic_dba                     options[:dba] if options.has_key?(:dba)
         xml.ssl_merchant_initiated_unscheduled  merchant_initiated_unscheduled(options) if merchant_initiated_unscheduled(options)
         xml.ssl_add_token                       options[:add_recurring_token] if options.has_key?(:add_recurring_token)
-        xml.ssl_token                           options[:ssl_token] if options.has_key?(:ssl_token)
+        xml.ssl_token                           options[:ssl_token] if options[:ssl_token]
         xml.ssl_customer_code                   options[:customer] if options.has_key?(:customer)
         xml.ssl_customer_number                 options[:customer_number] if options.has_key?(:customer_number)
         xml.ssl_entry_mode                      entry_mode(options) if entry_mode(options)
@@ -393,6 +393,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(request)
         request = "xmldata=#{request}".delete('&')
+        store_action = request.match?('CCGETTOKEN')
 
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request, headers))
         response = hash_html_decode(response)
@@ -402,7 +403,7 @@ module ActiveMerchant #:nodoc:
           response[:result_message] || response[:errorMessage],
           response,
           test: @options[:test] || test?,
-          authorization: authorization_from(response),
+          authorization: authorization_from(response, store_action),
           error_code: response[:errorCode],
           avs_result: { code: response[:avs_response] },
           cvv_result: response[:cvv2_response],
@@ -428,7 +429,9 @@ module ActiveMerchant #:nodoc:
         response.deep_transform_keys { |key| key.gsub('ssl_', '').to_sym }
       end
 
-      def authorization_from(response)
+      def authorization_from(response, store_action)
+        return response[:token] if store_action
+
         [response[:approval_code], response[:txn_id]].join(';')
       end
 

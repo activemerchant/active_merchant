@@ -34,6 +34,7 @@ module ActiveMerchant #:nodoc:
             CARNET_BINS.any? { |bin| num.slice(0, bin.size) == bin }
           )
         },
+        'cartes_bancaires' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), CARTES_BANCAIRES_RANGES) },
         'olimpica' => ->(num) { num =~ /^636853\d{10}$/ },
         'creditel' => ->(num) { num =~ /^601933\d{10}$/ },
         'confiable' => ->(num) { num =~ /^560718\d{10}$/ },
@@ -72,6 +73,17 @@ module ActiveMerchant #:nodoc:
           60462203 60462204 588772
         ]
       )
+
+      CARTES_BANCAIRES_RANGES = [
+        (507589..507590),
+        (507593..507595),
+        [507597],
+        [560408],
+        [581752],
+        (585402..585405),
+        (585501..585505),
+        (585577..585582)
+      ]
 
       # https://www.mastercard.us/content/dam/mccom/global/documents/mastercard-rules.pdf, page 73
       MASTERCARD_RANGES = [

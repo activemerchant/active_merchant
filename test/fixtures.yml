@@ -16,6 +16,10 @@ adyen:
   password: ''
   merchant_account: ''
 
+airwallex:
+  client_id: SOMECREDENTIAL
+  client_api_key: ANOTHERCREDENTIAL
+
 allied_wallet:
   site_id: site_id
   merchant_id: merchant_id
@@ -103,6 +107,12 @@ bpoint:
   biller_code: ''
 
 braintree_blue:
+  merchant_id: X
+  public_key: Y
+  private_key: Z
+  merchant_account_id: A
+
+braintree_blue_with_ach_enabled:
   merchant_id: X
   public_key: Y
   private_key: Z
@@ -264,6 +274,14 @@ data_cash:
 decidir_authorize:
   api_key: 5a15fbc227224edabdb6f2e8219e8b28
   preauth_mode: true
+
+decidir_plus:
+  public_key: SOMECREDENTIAL
+  private_key: SOMECREDENTIAL
+
+decidir_plus_preauth:
+  public_key: SOMECREDENTIAL
+  private_key: SOMECREDENTIAL
 
 decidir_purchase:
   api_key: 5df6b5764c3f4822aecdc82d56f26b9d
@@ -637,6 +655,9 @@ nmi:
   login: demo
   password: password
 
+nmi_secure:
+  security_key: '6457Thfj624V5r7WUwc5v6a68Zsd6YEm'
+
 ogone:
   login: LOGIN
   user: USER
@@ -664,6 +685,11 @@ optimal_payment:
   account_number: ACCOUNTNUMBER
 
 orbital_gateway:
+  login: LOGIN
+  password: PASSWORD
+  merchant_id: MERCHANTID
+
+orbital_tandem_gateway:
   login: LOGIN
   password: PASSWORD
   merchant_id: MERCHANTID
@@ -756,6 +782,10 @@ payment_express:
   password: PASSWORD
 
 paymentez:
+  application_code: APPCODE
+  app_key: APPKEY
+
+paymentez_ecuador:
   application_code: APPCODE
   app_key: APPKEY
 
@@ -1069,6 +1099,10 @@ qvalent:
     RFjxWKtn9pXbM1PLmUXCkKQnSJSeD1K0NjV+g8KFChTEgmhnLogyF/7YYw/amfc=
     -----END CERTIFICATE-----
 
+rapyd:
+  access_key: SOMECREDENTIAL
+  secret_key: ANOTHERCREDENTIAL
+
 raven_pac_net:
   user: ernest
   secret: "all good men die young"
@@ -1211,6 +1245,12 @@ secure_pay_tech:
 
 securion_pay:
   secret_key: pr_test_qZN4VVIKCySfCeXCBoHO9DBe
+
+# Working credentials, no need to replace
+simetrik:
+  client_id: 'wNhJBdrKDk3vTmkQMAWi5zWN7y21adO3'
+  client_secret: 'fq2riPpiDJaAwS4_UMAXZy1_nU1jNGz0F6gAFWOJFNmm_TfC8EFiHwMmGKAEDkwY' 
+  audience: 'https://tenant-payments-dev.us.auth0.com/api/v2/'
 
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:

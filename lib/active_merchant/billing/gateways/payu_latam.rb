@@ -392,26 +392,36 @@ module ActiveMerchant #:nodoc:
       def message_from(action, success, response)
         case action
         when 'store'
-          return response['code'] if success
-
-          error_description = response['creditCardToken']['errorDescription'] if response['creditCardToken']
-          response['error'] || error_description || 'FAILED'
+          message_from_store(success, response)
         when 'verify_credentials'
-          return 'VERIFIED' if success
-
-          'FAILED'
+          message_from_verify_credentials(success)
         else
-          if response['transactionResponse']
-            response_message = response['transactionResponse']['responseMessage']
-
-            response_code = response['transactionResponse']['responseCode'] || response['transactionResponse']['pendingReason']
-
-            response_message = response_code + ' | ' + response['transactionResponse']['paymentNetworkResponseErrorMessage'] unless response['transactionResponse']['paymentNetworkResponseErrorMessage'].nil?
-          end
-          return response_code if success
-
-          response_message || response['error'] || response_code || 'FAILED'
+          message_from_transaction_response(success, response)
         end
+      end
+
+      def message_from_store(success, response)
+        return response['code'] if success
+
+        error_description = response['creditCardToken']['errorDescription'] if response['creditCardToken']
+        response['error'] || error_description || 'FAILED'
+      end
+
+      def message_from_verify_credentials(success)
+        return 'VERIFIED' if success
+
+        'FAILED'
+      end
+
+      def message_from_transaction_response(success, response)
+        response_code = response.dig('transactionResponse', 'responseCode') || response.dig('transactionResponse', 'pendingReason')
+        return response_code if success
+        return response_code + ' | ' + response.dig('transactionResponse', 'paymentNetworkResponseErrorMessage') if response.dig('transactionResponse', 'paymentNetworkResponseErrorMessage')
+        return response.dig('transactionResponse', 'responseMessage') if response.dig('transactionResponse', 'responseMessage')
+        return response['error'] if response['error']
+        return response_code if response_code
+
+        'FAILED'
       end
 
       def authorization_from(action, response)

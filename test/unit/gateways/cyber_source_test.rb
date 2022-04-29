@@ -29,13 +29,9 @@ class CyberSourceTest < Test::Unit::TestCase
           quantity: 2,
           code: 'default',
           description: 'Giant Walrus',
-          sku: 'WA323232323232323'
-        },
-        {
-          declared_value: @amount,
-          quantity: 2,
-          description: 'Marble Snowcone',
-          sku: 'FAKE1232132113123'
+          sku: 'WA323232323232323',
+          tax_amount: '10',
+          national_tax: '5'
         }
       ],
       currency: 'USD'
@@ -66,6 +62,24 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_success response
     assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;", response.authorization
     assert response.test?
+  end
+
+  def test_successful_purchase_with_national_tax_indicator
+    national_tax_indicator = 1
+    stub_comms do
+      @gateway.purchase(100, @credit_card, @options.merge(national_tax_indicator: national_tax_indicator))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<otherTax>\s+<nationalTaxIndicator>#{national_tax_indicator}<\/nationalTaxIndicator>\s+<\/otherTax>/m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_authorize_with_national_tax_indicator
+    national_tax_indicator = 1
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(national_tax_indicator: national_tax_indicator))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<otherTax>\s+<nationalTaxIndicator>#{national_tax_indicator}<\/nationalTaxIndicator>\s+<\/otherTax>/m, data)
+    end.respond_with(successful_authorization_response)
   end
 
   def test_successful_credit_card_purchase_with_elo
@@ -401,6 +415,32 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_credit_card_tax_request_with_amounts
+    stub_comms do
+      @gateway.calculate_tax(@credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      REXML::XPath.each(doc, '//item') do |item|
+        request_item = @options[:line_items][item.attributes['id'].to_i]
+        assert_match(request_item[:tax_amount], item.get_elements('taxAmount')[0].text)
+        assert_match(request_item[:national_tax], item.get_elements('nationalTax')[0].text)
+      end
+    end.respond_with(successful_tax_response)
+  end
+
+  def test_successful_credit_card_authorize_request_with_line_items
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      REXML::XPath.each(doc, '//item') do |item|
+        request_item = @options[:line_items][item.attributes['id'].to_i]
+        assert_match(request_item[:tax_amount], item.get_elements('taxAmount')[0].text)
+        assert_match(request_item[:national_tax], item.get_elements('nationalTax')[0].text)
+      end
+    end.respond_with(successful_tax_response)
+  end
+
   def test_successful_credit_card_capture_request
     @gateway.stubs(:ssl_post).returns(successful_authorization_response, successful_capture_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)
@@ -427,6 +467,16 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
   end
 
+  def test_capture_with_additional_tax_fields
+    stub_comms do
+      @gateway.capture(100, '1842651133440156177166', user_po: 'ABC123', taxable: true, national_tax_indicator: 1)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<userPO>ABC123<\/userPO>/, data)
+      assert_match(/<taxable>true<\/taxable>/, data)
+      assert_match(/<nationalTaxIndicator>1<\/nationalTaxIndicator>/, data)
+    end.respond_with(successful_capture_response)
+  end
+
   def test_successful_credit_card_capture_with_elo_request
     @gateway.stubs(:ssl_post).returns(successful_authorization_response, successful_capture_response)
     assert response = @gateway.authorize(@amount, @elo_credit_card, @options)
@@ -450,6 +500,19 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert response.success?
     assert response.test?
+  end
+
+  def test_successful_credit_card_purchase_request_with_line_items
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      REXML::XPath.each(doc, '//item') do |item|
+        request_item = @options[:line_items][item.attributes['id'].to_i]
+        assert_match(request_item[:tax_amount], item.get_elements('taxAmount')[0].text)
+        assert_match(request_item[:national_tax], item.get_elements('nationalTax')[0].text)
+      end
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_credit_card_purchase_with_elo_request
@@ -652,13 +715,6 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response_void.success?
   end
 
-  def test_validate_pinless_debit_card_request
-    @gateway.stubs(:ssl_post).returns(successful_validate_pinless_debit_card)
-    assert response = @gateway.validate_pinless_debit_card(@credit_card, @options)
-    assert response.success?
-    assert_success(@gateway.void(response.authorization, @options))
-  end
-
   def test_validate_add_subscription_amount
     stub_comms do
       @gateway.store(@credit_card, @subscription_options)
@@ -672,6 +728,23 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorization_response)
     assert_success response
+  end
+
+  def test_successful_verify_zero_amount_request
+    @options[:zero_amount_auth] = true
+    stub_comms(@gateway, :ssl_post) do
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data|
+      assert_match %r(<grandTotalAmount>0.00<\/grandTotalAmount>), data
+    end
+  end
+
+  def test_successful_verify_request
+    stub_comms(@gateway, :ssl_post) do
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data|
+      assert_match %r(<grandTotalAmount>1.00<\/grandTotalAmount>), data
+    end
   end
 
   def test_successful_verify_with_elo
@@ -1522,14 +1595,6 @@ class CyberSourceTest < Test::Unit::TestCase
       <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
       <soap:Header>
       <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-21454119"><wsu:Created>2012-05-15T14:29:52.833Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.69"><c:merchantReferenceCode>0da9f4799515bfbfb85cbf6ab8839cde</c:merchantReferenceCode><c:requestID>3370921927710176056428</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>AhjzbwSRbXng4q9oFCjYIAKb7zXE/n0gAQsQyaSZV0ekrf+AaAAA+Q2H</c:requestToken><c:paySubscriptionRetrieveReply><c:reasonCode>100</c:reasonCode><c:approvalRequired>false</c:approvalRequired><c:automaticRenew>false</c:automaticRenew><c:cardAccountNumber>411111XXXXXX1111</c:cardAccountNumber><c:cardExpirationMonth>09</c:cardExpirationMonth><c:cardExpirationYear>2013</c:cardExpirationYear><c:cardType>001</c:cardType><c:city>Ottawa</c:city><c:companyName>Widgets Inc</c:companyName><c:country>CA</c:country><c:currency>USD</c:currency><c:email>someguy1232@fakeemail.net</c:email><c:endDate>99991231</c:endDate><c:firstName>JIM</c:firstName><c:frequency>on-demand</c:frequency><c:lastName>SMITH</c:lastName><c:paymentMethod>credit card</c:paymentMethod><c:paymentsRemaining>0</c:paymentsRemaining><c:postalCode>K1C2N6</c:postalCode><c:startDate>20120521</c:startDate><c:state>ON</c:state><c:status>CURRENT</c:status><c:street1>1234 My Street</c:street1><c:street2>Apt 1</c:street2><c:subscriptionID>3370921906250176056428</c:subscriptionID><c:totalPayments>0</c:totalPayments></c:paySubscriptionRetrieveReply></c:replyMessage></soap:Body></soap:Envelope>
-    XML
-  end
-
-  def successful_validate_pinless_debit_card
-    <<~XML
-      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-      <soap:Header>
-      <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-190204278"><wsu:Created>2013-05-13T13:52:57.159Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.69"><c:merchantReferenceCode>6427013</c:merchantReferenceCode><c:requestID>3684531771310176056442</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>AhijbwSRj3pM2QqPs2j0Ip+xoJXIsAMPYZNJMq6PSbs5ATAA6z42</c:requestToken><c:pinlessDebitValidateReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2013-05-13T13:52:57Z</c:requestDateTime><c:status>Y</c:status></c:pinlessDebitValidateReply></c:replyMessage></soap:Body></soap:Envelope>
     XML
   end
 

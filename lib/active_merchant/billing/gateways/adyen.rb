@@ -9,6 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(AT AU BE BG BR CH CY CZ DE DK EE ES FI FR GB GI GR HK HU IE IS IT LI LT LU LV MC MT MX NL NO PL PT RO SE SG SK SI US)
       self.default_currency = 'USD'
       self.currencies_without_fractions = %w(CVE DJF GNF IDR JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
+      self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LYD OMR TND)
       self.supported_cardtypes = %i[visa master american_express diners_club jcb dankort maestro discover elo naranja cabal unionpay]
 
       self.money_format = :cents
@@ -143,8 +144,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
+        amount = options[:verify_amount]&.to_i || 0
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(0, credit_card, options) }
+          r.process { authorize(amount, credit_card, options) }
           options[:idempotency_key] = nil
           r.process(:ignore_result) { void(r.authorization, options) }
         end
@@ -461,12 +463,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_external_platform(post, options)
+        options.update(externalPlatform: application_id) if application_id
+
         return unless options[:externalPlatform]
 
         post[:applicationInfo][:externalPlatform] = {
           name: options[:externalPlatform][:name],
-          version: options[:externalPlatform][:version],
-          integrator: options[:externalPlatform][:integrator]
+          version: options[:externalPlatform][:version]
         }
       end
 
@@ -669,7 +672,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        STANDARD_ERROR_CODE_MAPPING[response['errorCode']]
+        STANDARD_ERROR_CODE_MAPPING[response['errorCode']] || response['errorCode']
       end
 
       def network_transaction_id_from(response)

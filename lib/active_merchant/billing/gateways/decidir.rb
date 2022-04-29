@@ -117,11 +117,11 @@ module ActiveMerchant #:nodoc:
         post[:establishment_name] = options[:establishment_name] if options[:establishment_name]
         post[:fraud_detection] = add_fraud_detection(options[:fraud_detection]) if options[:fraud_detection].present?
         post[:site_id] = options[:site_id] if options[:site_id]
-        post[:sub_payments] = []
 
         add_invoice(post, money, options)
         add_payment(post, credit_card, options)
         add_aggregate_data(post, options) if options[:aggregate_data]
+        add_sub_payments(post, options)
       end
 
       def add_payment_method_id(credit_card, options)
@@ -208,6 +208,22 @@ module ActiveMerchant #:nodoc:
         aggregate_data[:merchant_email] = data[:merchant_email] if data[:merchant_email]
         aggregate_data[:merchant_phone] = data[:merchant_phone] if data[:merchant_phone]
         post[:aggregate_data] = aggregate_data
+      end
+
+      def add_sub_payments(post, options)
+        # sub_payments field is required for purchase transactions, even if empty
+        post[:sub_payments] = []
+
+        return unless sub_payments = options[:sub_payments]
+
+        sub_payments.each do |sub_payment|
+          sub_payment_hash = {
+            site_id: sub_payment[:site_id],
+            installments: sub_payment[:installments].to_i,
+            amount: sub_payment[:amount].to_i
+          }
+          post[:sub_payments] << sub_payment_hash
+        end
       end
 
       def add_fraud_detection(options = {})

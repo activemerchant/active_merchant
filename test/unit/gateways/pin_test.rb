@@ -132,6 +132,26 @@ class PinTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_unstore
+    token = 'cus_05p0n7UFPmcyCNjD8c6HdA'
+    @gateway.expects(:ssl_request).with(:delete, "https://test-api.pinpayments.com/1/customers/#{token}", instance_of(String), instance_of(Hash)).returns(nil)
+
+    assert response = @gateway.unstore(token)
+    assert_success response
+    assert_nil response.message
+    assert response.test?
+  end
+
+  def test_unsuccessful_unstore
+    token = 'cus_05p0n7UFPmcyCNjD8c6HdA'
+    @gateway.expects(:ssl_request).with(:delete, "https://test-api.pinpayments.com/1/customers/#{token}", instance_of(String), instance_of(Hash)).returns(failed_customer_unstore_response)
+
+    assert response = @gateway.unstore(token)
+    assert_failure response
+    assert_equal 'The requested resource could not be found.', response.message
+    assert response.test?
+  end
+
   def test_successful_update
     token = 'cus_05p0n7UFPmcyCNjD8c6HdA'
     @gateway.expects(:ssl_request).with(:put, "https://test-api.pinpayments.com/1/customers/#{token}", instance_of(String), instance_of(Hash)).returns(successful_customer_store_response)
@@ -495,6 +515,13 @@ class PinTest < Test::Unit::TestCase
           "message":"Card number [\"is not a valid credit card number\"]"
         }
       ]
+    }'
+  end
+
+  def failed_customer_unstore_response
+    '{
+      "error": "not_found",
+      "error_description": "The requested resource could not be found."
     }'
   end
 

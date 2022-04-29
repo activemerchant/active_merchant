@@ -32,6 +32,10 @@ class RemoteKushkiTest < Test::Unit::TestCase
         last_name: 'Dis',
         second_last_name: 'Buscemi',
         phone_number: '+13125556789'
+      },
+      metadata: {
+        productos: 'bananas',
+        nombre_apellido: 'Kirk'
       }
     }
 

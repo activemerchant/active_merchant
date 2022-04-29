@@ -34,6 +34,8 @@ module ActiveMerchant #:nodoc:
         28 => :card_declined
       }.freeze
 
+      SUCCESS_STATUS = ['success', 'pending', 1, 0]
+
       CARD_MAPPING = {
         'visa' => 'vi',
         'master' => 'mc',
@@ -67,6 +69,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment, options = {})
+        return purchase(money, payment, options) if options[:otp_flow]
+
         post = {}
 
         add_invoice(post, money, options)
@@ -77,13 +81,21 @@ module ActiveMerchant #:nodoc:
         commit_transaction('authorize', post)
       end
 
-      def capture(money, authorization, _options = {})
+      def capture(money, authorization, options = {})
         post = {
           transaction: { id: authorization }
         }
-        post[:order] = { amount: amount(money).to_f } if money
+        verify_flow = options[:type] && options[:value]
 
-        commit_transaction('capture', post)
+        if verify_flow
+          add_customer_data(post, options)
+          add_verify_value(post, options)
+        elsif money
+          post[:order] = { amount: amount(money).to_f }
+        end
+
+        action = verify_flow ? 'verify' : 'capture'
+        commit_transaction(action, post)
       end
 
       def refund(money, authorization, options = {})
@@ -139,10 +151,10 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_customer_data(post, options)
-        requires!(options, :user_id, :email)
+        requires!(options, :user_id)
         post[:user] ||= {}
         post[:user][:id] = options[:user_id]
-        post[:user][:email] = options[:email]
+        post[:user][:email] = options[:email] if options[:email]
         post[:user][:ip_address] = options[:ip] if options[:ip]
         post[:user][:fiscal_number] = options[:fiscal_number] if options[:fiscal_number]
         if phone = options[:phone] || options.dig(:billing_address, :phone)
@@ -177,6 +189,11 @@ module ActiveMerchant #:nodoc:
           post[:card][:cvc] = payment.verification_value
           post[:card][:type] = CARD_MAPPING[payment.brand]
         end
+      end
+
+      def add_verify_value(post, options)
+        post[:type] = options[:type] if options[:type]
+        post[:value] = options[:value] if options[:value]
       end
 
       def add_extra_params(post, options)
@@ -262,7 +279,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        !response.include?('error') && (response['status'] || response['transaction']['status']) == 'success'
+        return false if response.include?('error')
+
+        SUCCESS_STATUS.include?(response['status'] || response['transaction']['status'])
       end
 
       def card_success_from(response)
@@ -278,7 +297,7 @@ module ActiveMerchant #:nodoc:
         if !success_from(response) && response['error']
           response['error'] && response['error']['type']
         else
-          response['transaction'] && response['transaction']['message']
+          (response['transaction'] && response['transaction']['message']) || (response['message'])
         end
       end
 

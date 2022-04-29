@@ -152,6 +152,25 @@ class CredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', refund.message
   end
 
+  def test_successful_refund_with_recipient_fields
+    refund_options = {
+      recipient_street_address: 'street',
+      recipient_city: 'chicago',
+      recipient_province_code: '312',
+      recipient_country_code: 'USA'
+    }
+    refund = stub_comms do
+      @gateway.refund(@amount, '123', refund_options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/j6=street/, data)
+      assert_match(/j7=chicago/, data)
+      assert_match(/j8=312/, data)
+      assert_match(/j9=USA/, data)
+    end.respond_with(successful_refund_response)
+
+    assert_success refund
+  end
+
   def test_failed_refund
     response = stub_comms do
       @gateway.refund(nil, '')

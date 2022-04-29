@@ -2,6 +2,85 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Simetrik: Fix integer and float types, update scrub method [rachelkirk] #4405
+
+== Version 1.126.0 (April 15th, 2022)
+* Moneris: Add 3DS MPI field support [esmitperez] #4373
+* StripePI: Add ability to change payment_method_type to confirm_intent [aenand] #4300
+* GlobalCollect: Improve support for Naranja and Cabal card types [dsmcclain] #4286
+* Payflow: Add support for stored credentials [ajawadmirza] #4277
+* Orbital: Don't void $0 auths for Verify [javierpedrozaing] #2487
+* StripePI: Enable Apple Pay and Google Pay payment methods [gasb150] #4252
+* PaySafe: Update `unstore` method and authorization for redact [ajawadmirza] #4294
+* CyberSource: Add `national_tax_indicator` fields in authorize and purchase [ajawadmirza] #4299
+* NMI: Update gateway credentials to accept security_key [javierpedrozaing] #4302
+* PaySafe: Fix commit for `unstore` method [ajawadmirza] #4303
+* Ebanx: Add support for `order_number` field [ali-hassan] #4304
+* BlueSnap: Add support for  `idempotency_key` field [drkjc] #4305
+* Paymentez: Update `capture` method to verify by otp for pending transactions [ajawadmirza] #4267
+* BlueSnap: Update refund request and endpoint along with merchant transaction support [ajawadmirza] #4307
+* DecidirPlus: Added `authorize`, `capture`, `void`, and `verify` methods [ajawadmirza] #4284
+* Paymentez: Fix `authorize` to call `purchase` for otp flow [ajawadmirza] #4310
+* Orbital: Indicate support for network tokenization [dsmcclain] #4309
+* IPG: remove `uruguay` from supported countries [ajawadmirza] #4311
+* Decidir: Add sub_payments sub-fields to gateway [meagabeth] #4315
+* Priority: Add additional fields to purchase and capture requests [dsmcclain] #4301
+* DecidirPlus: Added `unstore` method [ajawadmirza] #4317
+* Decidir & Decidir Plus: Revise handling of `sub_payment` sub-fields [meagabeth] #4318
+* DecidirPlus: Update `unstore` implementation to get token from params [ajawadmirza] #4320
+* CyberSource: Add option for zero amount verify [gasb150] #4313
+* PayU Latam: Refactor `message_from` method, fix failing remote tests [rachelkirk] #4326
+* Adyen: Add currencies with three decimals places [gasb150] #4322
+* GlobalCollect: Stregthen success criteria for void action [peteroas] #4324
+* Priority Payment Systems - Clean up/refactor gateway file and tests [ali-hassan] #4327
+* SafeCharge: change `verify` to send 0 amount [dsmcclain] #4332
+* DLocal: add support for `force_type` field [dsmcclain] #4336
+* Barclaycard SmartPay: Support more nonstandard currencies [jherreraa] #4335
+* DecidirPlus: `name_override` option on `store` [naashton] #4338
+* Priority: Update `add_purchases_data` to return if `options[:purchases]` is empty [drkjc] #4349
+* Stripe PI: update `shipping` field to `shipping_address` [ajawadmirza] #4347
+* DecidirPlus: Handle `payment_method_id` by `card_brand` [naashton] #4350
+* DecidirPlus: `debit` and `payment_method_id` fields [naashton] #4351
+* Adyen: Include Application ID in adyen authorize and purchase transactions [peteroas] #4343
+* Priority: Add support for `replay_id` field [drkjc] #4352
+* Stripe PI: standardize `shipping_address` fields [dsmcclain] #4355
+* Airwallex: support gateway [therufs] #4342
+* Litle: Translate google_pay as android_pay [javierpedrozaing] #4331
+* Braintree: Add ACH support for store [cristian] #4285
+* Simetrik: Add support for Simetrik gateway [simetrik-frank] #4339
+* EBANX:  Change amount for Mexico and Chile [flaaviaa] #4337
+* DecidirPlus: Add `establishment_name`, `aggregate_data`, `sub_payments`, `card_holder_identification_type`, `card_holder_identification_number`, `card_door_number`, and `card_holder_birthday` fields [ajawadmirza] #4361
+* DecidirPlus: Update `error_code_from` to get error reason id [ajawadmirza] #4364
+* Dlocal: Add three_ds mpi support [cristian] #4345
+* Stripe PI: Add `request_three_d_secure` field for `create_setup_intent` [aenand] #4365
+* Adyen: Add `verify_amount` field for verify [ajawadmirza] #4369
+* Stripe PI: Pass options for tokenizing Apple/Google Pay [gasb150] #4368
+* Dlocal: Format 3DS mpi enrollment data correctly [cristian] #4371
+* Airwallex: QA fixes for option handling [therufs] #4367
+* CardConnect: Fixed duplicate(concat) Address sent - card_connect is concat. address1 and 2 causing a AVS error [ahmirza] #4362
+* CyberSource: Remove Pinless Debit Transaction Functionality [peteroas] #4370
+* Litle: Add support for Level 2 and 3 enhanced data [curiousepic] #4360
+* Rapyd: Add gateway support [meagabeth] #4372
+* CyberSource: Update and fix test coverage [peteroas] #4374
+* Airwallex: QA fixes for address and create_setup_intent handling [therufs] #4377
+* Airwallex: add `descriptor` field and update logic for sending `request_id` and `merchant_order_id` [dsmcclain] #4379
+* Visanet Peru: use timestamp instead of random for purchaseNumber [therufs] #4093
+* Orbital: add `verify_amount` field [ajawadmirza] #4376
+* Credorax: add `recipient_street_address`, `recipient_city`, `recipient_province_code`, and `recipient_country_code` fields [ajawadmirza] #4384
+* Airwallex: add support for stored credentials [drkjc] #4382
+* Rapyd: Add metadata and ewallet_id options [naashton] #4387
+* Priority: Add additional fields to request and refactor gateway integration [dsmcclain] #4383
+* Rapyd: Update `type` option to `pm_type` [naashton] #4391
+* Conekta: Fix remote test [javierpedrozaing] #4386
+* NMI: Update post URL [jherreraa] #4380
+* Multiple Gateways: Resolve when/case bug [naashton] #4399
+* Airwallex: Add 3DS MPI support [drkjc] #4395
+* Add Cartes Bancaires card bin ranges [leahriffell] #4398
+* Airwallex: Add support for `original_transaction_id` field [drkjc] #4401
+* Securion Pay: Pass external 3DS data [jherreraa] #4404
+* Airwallex: Update Stored Credentials testing, remove support for `original_transaction_id` field [drkjc] 4407
+
+== Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
 * Stripe Payment Intents: Add setup_purchase [aenand] #4178
 * Ipg: Add new gateway [ajawadmirza] #4171
@@ -62,6 +141,30 @@
 * StripePI: Set restriction for Apple/Google Pay [jherreraa] #4247
 * Cashnet: support multiple itemcodes and amounts [peteroas] #4243
 * IPG: Send default currency in `verify` and two digit `ExpMonth` [ajawadmirza] #4244
+* Stripe: Add remote tests set up to avoid exceed the max external accounts limit [jherreraa] #4239
+* Stripe: Add support for `radar_options: skip_rules` [dsmcclain] #4250
+* CyberSource: Add `user_po`, `taxable`, `national_tax_indicator`, `tax_amount`, and `national_tax` fields [ajawadmirza] #4251
+* Kushki: Add support for `metadata` [rachelkirk] #4253
+* IPG: Add `redact` operation [ajawadmirza] #4254
+* Wompi: Update sandbox and production endpoints [rachelkirk] #4255
+* Orbital: Add `sca_merchant_initiated` operation [ajawadmirza] #4256
+* Cashnet: convert amounts to integers for proper gateway handling [peteroas] #2207
+* PayTrace: Add `unstore` operation [ajawadmirza] #4262
+* Decidir Plus: Add gateway adapter [naashton] #4264
+* CheckoutV2: Add support for Apple Pay and Google Pay tokens [AMHOL] #4235
+* Decidir Plus: Update payment reference [naashton] #4271
+* Paysafe: Update redact method [meagabeth] #4269
+* CyberSource: Add `line_items` field in authorize method [ajawadmirza] #4268
+* CheckoutV2: Support processing channel and marketplace sub entity ID [AMHOL] #4236
+* Elavon: `third_party_token` bug fix [rachelkirk] #4273
+* Decidir Plus: Add `sub_payments` field [naashton] #4274
+* Pin Payments: Add `unstore` support [montdidier] #4276
+* Orbital: Add support for $0 verify [javierpedrozaing] #4275
+* Update inline documentation with all supported cardtypes [ali-hassan] #4283
+* PayWay: Update endpoints, response code [jessiagee] #4281
+* CyberSource: Add `line_items` for purchase [ajawadmirza] #4282
+* Payflow Pro: Add `stored_credential` fields [ajawadmirza] #4277
+* Decidir Plus: Add `fraud_detection` fields [naashton] #4289
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147

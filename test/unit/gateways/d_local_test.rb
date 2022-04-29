@@ -12,6 +12,14 @@ class DLocalTest < Test::Unit::TestCase
       order_id: '1',
       billing_address: address
     }
+    @three_ds_secure = {
+      version: '1.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
   end
 
   def test_successful_purchase
@@ -51,6 +59,14 @@ class DLocalTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(additional_data: additional_data))
     end.check_request do |_endpoint, data, _headers|
       assert_equal additional_data, JSON.parse(data)['additional_risk_data']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_force_type
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(force_type: 'debit'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'DEBIT', JSON.parse(data)['card']['force_type']
     end.respond_with(successful_purchase_response)
   end
 
@@ -216,6 +232,118 @@ class DLocalTest < Test::Unit::TestCase
     end.check_request do |_endpoint, _data, headers|
       assert_equal '2.1', headers['X-Version']
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_ds_v1_object_construction
+    post = {}
+    @options[:three_d_secure] = @three_ds_secure
+
+    @gateway.send(:add_three_ds, post, @options)
+
+    assert post[:three_dsecure]
+    ds_data = post[:three_dsecure]
+    ds_options = @options[:three_d_secure]
+
+    assert_equal ds_options[:version], ds_data[:three_dsecure_version]
+    assert_equal ds_options[:cavv], ds_data[:cavv]
+    assert_equal ds_options[:eci], ds_data[:eci]
+    assert_equal ds_options[:xid], ds_data[:xid]
+    assert_equal nil, ds_data[:ds_transaction_id]
+    assert_equal 'Y', ds_data[:enrollment_response]
+    assert_equal ds_options[:authentication_response_status], ds_data[:authentication_response]
+  end
+
+  def test_three_ds_v2_object_construction
+    post = {}
+    @three_ds_secure[:ds_transaction_id] = 'ODUzNTYzOTcwODU5NzY3Qw=='
+    @three_ds_secure[:version] = '2.2.0'
+    @options[:three_d_secure] = @three_ds_secure
+
+    @gateway.send(:add_three_ds, post, @options)
+
+    assert post[:three_dsecure]
+    ds_data = post[:three_dsecure]
+    ds_options = @options[:three_d_secure]
+
+    assert_equal ds_options[:version], ds_data[:three_dsecure_version]
+    assert_equal ds_options[:cavv], ds_data[:cavv]
+    assert_equal ds_options[:eci], ds_data[:eci]
+    assert_equal nil, ds_data[:xid]
+    assert_equal ds_options[:ds_transaction_id], ds_data[:ds_transaction_id]
+    assert_equal 'Y', ds_data[:enrollment_response]
+    assert_equal ds_options[:authentication_response_status], ds_data[:authentication_response]
+  end
+
+  def test_three_ds_version_validation
+    post = {}
+    @options[:three_d_secure] = @three_ds_secure
+    @gateway.send(:add_three_ds, post, @options)
+    resp = @gateway.send(:validate_three_ds_params, post[:three_dsecure])
+
+    assert_equal nil, resp
+    post[:three_dsecure][:three_dsecure_version] = '4.0'
+    resp = @gateway.send(:validate_three_ds_params, post[:three_dsecure])
+
+    assert_equal 'ThreeDs data is invalid', resp.message
+    assert_equal 'ThreeDs version not supported', resp.params['three_ds_version']
+  end
+
+  def test_three_ds_enrollment_validation
+    post = {}
+    @options[:three_d_secure] = @three_ds_secure
+    @gateway.send(:add_three_ds, post, @options)
+    post[:three_dsecure][:enrollment_response] = 'P'
+    resp = @gateway.send(:validate_three_ds_params, post[:three_dsecure])
+
+    assert_equal 'ThreeDs data is invalid', resp.message
+    assert_equal 'Enrollment value not supported', resp.params['enrollment']
+  end
+
+  def test_three_ds_auth_response_validation
+    post = {}
+    @options[:three_d_secure] = @three_ds_secure
+    @gateway.send(:add_three_ds, post, @options)
+    post[:three_dsecure][:authentication_response] = 'P'
+    resp = @gateway.send(:validate_three_ds_params, post[:three_dsecure])
+
+    assert_equal 'ThreeDs data is invalid', resp.message
+    assert_equal 'Authentication response value not supported', resp.params['auth_response']
+  end
+
+  def test_purchase_with_three_ds
+    @options[:three_d_secure] = @three_ds_secure
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      three_ds_params = JSON.parse(data)['three_dsecure']
+      assert_equal '1.0', three_ds_params['three_dsecure_version']
+      assert_equal '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=', three_ds_params['cavv']
+      assert_equal '05', three_ds_params['eci']
+      assert_equal 'ODUzNTYzOTcwODU5NzY3Qw==', three_ds_params['xid']
+      assert_equal 'Y', three_ds_params['enrollment_response']
+      assert_equal 'Y', three_ds_params['authentication_response']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_unsuccessfully_purchase_with_wrong_three_ds_data
+    @three_ds_secure.delete(:version)
+    @options[:three_d_secure] = @three_ds_secure
+    resp = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_equal 'ThreeDs data is invalid', resp.message
+    assert_equal 'ThreeDs version not supported', resp.params['three_ds_version']
+  end
+
+  def test_formatted_enrollment
+    assert_equal 'Y', @gateway.send('formatted_enrollment', 'Y')
+    assert_equal 'Y', @gateway.send('formatted_enrollment', 'true')
+    assert_equal 'Y', @gateway.send('formatted_enrollment', true)
+
+    assert_equal 'N', @gateway.send('formatted_enrollment', 'N')
+    assert_equal 'N', @gateway.send('formatted_enrollment', 'false')
+    assert_equal 'N', @gateway.send('formatted_enrollment', false)
+
+    assert_equal 'U', @gateway.send('formatted_enrollment', 'U')
   end
 
   private

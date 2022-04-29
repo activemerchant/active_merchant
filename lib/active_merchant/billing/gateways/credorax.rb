@@ -193,6 +193,7 @@ module ActiveMerchant #:nodoc:
         add_submerchant_id(post, options)
         add_processor(post, options)
         add_email(post, options)
+        add_recipient(post, options)
 
         if options[:referral_cft]
           add_customer_name(post, options)
@@ -318,6 +319,15 @@ module ActiveMerchant #:nodoc:
 
       def add_email(post, options)
         post[:c3] = options[:email] || 'unspecified@example.com'
+      end
+
+      def add_recipient(post, options)
+        return unless options[:recipient_street_address] || options[:recipient_city] || options[:recipient_province_code] || options[:recipient_country_code]
+
+        post[:j6] = options[:recipient_street_address] if options[:recipient_street_address]
+        post[:j7] = options[:recipient_city] if options[:recipient_city]
+        post[:j8] = options[:recipient_province_code] if options[:recipient_province_code]
+        post[:j9] = options[:recipient_country_code] if options[:recipient_country_code]
       end
 
       def add_customer_name(post, options)

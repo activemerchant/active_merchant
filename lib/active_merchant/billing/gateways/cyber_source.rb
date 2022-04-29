@@ -15,9 +15,6 @@ module ActiveMerchant #:nodoc:
     #   CyberSource what kind of item you are selling.  It is used when
     #   calculating tax/VAT.
     # * All transactions use dollar values.
-    # * To process pinless debit cards through the pinless debit card
-    #   network, your Cybersource merchant account must accept pinless
-    #   debit card payments.
     # * The order of the XML elements does matter, make sure to follow the order in
     #   the documentation exactly.
     class CyberSourceGateway < Gateway
@@ -139,7 +136,6 @@ module ActiveMerchant #:nodoc:
         commit(build_capture_request(money, authorization, options), :capture, money, options)
       end
 
-      # options[:pinless_debit_card] => true # attempts to process as pinless debit card
       def purchase(money, payment_method_or_reference, options = {})
         setup_address_hash(options)
         commit(build_purchase_request(money, payment_method_or_reference, options), :purchase, money, options)
@@ -158,9 +154,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(payment, options = {})
+        amount = eligible_for_zero_auth?(payment, options) ? 0 : 100
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, payment, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { authorize(amount, payment, options) }
+          r.process(:ignore_result) { void(r.authorization, options) } unless amount == 0
         end
       end
 
@@ -229,12 +226,6 @@ module ActiveMerchant #:nodoc:
         commit(build_tax_calculation_request(creditcard, options), :calculate_tax, nil, options)
       end
 
-      # Determines if a card can be used for Pinless Debit Card transactions
-      def validate_pinless_debit_card(creditcard, options = {})
-        requires!(options, :order_id)
-        commit(build_validate_pinless_debit_request(creditcard, options), :validate_pinless_debit_card, nil, options)
-      end
-
       def supports_scrubbing?
         true
       end
@@ -291,6 +282,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
+        add_other_tax(xml, options)
         add_threeds_2_ucaf_data(xml, creditcard_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
@@ -349,6 +341,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
+        add_other_tax(xml, options)
         add_threeds_2_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
@@ -362,7 +355,7 @@ module ActiveMerchant #:nodoc:
           add_purchase_service(xml, payment_method_or_reference, options)
           add_threeds_services(xml, options)
           add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
-          add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
+          add_business_rules_data(xml, payment_method_or_reference, options)
           add_stored_credential_subsequent_auth(xml, options)
           add_issuer_additional_data(xml, options)
           add_partner_solution_id(xml)
@@ -474,13 +467,6 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_validate_pinless_debit_request(creditcard, options)
-        xml = Builder::XmlMarkup.new indent: 2
-        add_creditcard(xml, creditcard)
-        add_validate_pinless_debit_service(xml)
-        xml.target!
-      end
-
       def add_business_rules_data(xml, payment_method, options)
         prioritized_options = [options, @options]
 
@@ -500,6 +486,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_line_item_data(xml, options)
+        return unless options[:line_items]
+
         options[:line_items].each_with_index do |value, index|
           xml.tag! 'item', { 'id' => index } do
             xml.tag! 'unitPrice', localized_amount(value[:declared_value].to_i, options[:currency] || default_currency)
@@ -507,6 +495,8 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'productCode', value[:code] || 'shipping_only'
             xml.tag! 'productName', value[:description]
             xml.tag! 'productSKU', value[:sku]
+            xml.tag! 'taxAmount', value[:tax_amount] if value[:tax_amount]
+            xml.tag! 'nationalTax', value[:national_tax] if value[:national_tax]
           end
         end
       end
@@ -522,10 +512,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_merchant_descriptor(xml, options)
-        return unless options[:merchant_descriptor]
+        return unless options[:merchant_descriptor] || options[:user_po] || options[:taxable]
 
         xml.tag! 'invoiceHeader' do
-          xml.tag! 'merchantDescriptor', options[:merchant_descriptor]
+          xml.tag! 'merchantDescriptor', options[:merchant_descriptor] if options[:merchant_descriptor]
+          xml.tag! 'userPO', options[:user_po] if options[:user_po]
+          xml.tag! 'taxable', options[:taxable] if options[:taxable]
         end
       end
 
@@ -628,11 +620,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_other_tax(xml, options)
-        return unless options[:local_tax_amount] || options[:national_tax_amount]
+        return unless options[:local_tax_amount] || options[:national_tax_amount] || options[:national_tax_indicator]
 
         xml.tag! 'otherTax' do
           xml.tag! 'localTaxAmount', options[:local_tax_amount] if options[:local_tax_amount]
           xml.tag! 'nationalTaxAmount', options[:national_tax_amount] if options[:national_tax_amount]
+          xml.tag! 'nationalTaxIndicator', options[:national_tax_indicator] if options[:national_tax_indicator]
         end
       end
 
@@ -787,15 +780,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_purchase_service(xml, payment_method, options)
-        if options[:pinless_debit_card]
-          xml.tag! 'pinlessDebitService', { 'run' => 'true' } do
-            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
-          end
-        else
-          add_auth_service(xml, payment_method, options)
-          xml.tag! 'ccCaptureService', { 'run' => 'true' } do
-            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
-          end
+        add_auth_service(xml, payment_method, options)
+        xml.tag! 'ccCaptureService', { 'run' => 'true' } do
+          xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
         end
       end
 
@@ -887,6 +874,7 @@ module ActiveMerchant #:nodoc:
         else
           add_address(xml, payment_method_or_reference, options[:billing_address], options)
           add_address(xml, payment_method_or_reference, options[:shipping_address], options, true)
+          add_line_item_data(xml, options)
           add_purchase_data(xml, money, true, options)
           add_installments(xml, options)
           add_creditcard(xml, payment_method_or_reference)
@@ -901,10 +889,6 @@ module ActiveMerchant #:nodoc:
           xml.tag!('planType', options[:installment_plan_type]) if options[:installment_plan_type]
           xml.tag!('firstInstallmentDate', options[:first_installment_date]) if options[:first_installment_date]
         end
-      end
-
-      def add_validate_pinless_debit_service(xml)
-        xml.tag! 'pinlessDebitValidateService', { 'run' => 'true' }
       end
 
       def add_threeds_services(xml, options)
@@ -1068,6 +1052,10 @@ module ActiveMerchant #:nodoc:
         else
           response[:message]
         end
+      end
+
+      def eligible_for_zero_auth?(payment_method, options = {})
+        payment_method.is_a?(CreditCard) && options[:zero_amount_auth]
       end
     end
   end

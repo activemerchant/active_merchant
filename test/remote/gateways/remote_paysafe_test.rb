@@ -364,16 +364,16 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert_match 'COMPLETED', purchase.message
   end
 
-  def test_successful_store_and_redact
+  def test_successful_store_and_unstore
     response = @gateway.store(credit_card('4111111111111111'), @profile_options)
     assert_success response
-    id = response.params['id']
-    redact = @gateway.redact(id)
-    assert_success redact
+    id = response.authorization
+    unstore = @gateway.unstore(id)
+    assert_success unstore
   end
 
   def test_invalid_login
-    gateway = PaysafeGateway.new(username: '', password: '', account_id: '')
+    gateway = PaysafeGateway.new(username: 'badbunny', password: 'carrotsrock', account_id: 'rejectstew')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
