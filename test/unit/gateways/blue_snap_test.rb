@@ -416,9 +416,9 @@ class BlueSnapTest < Test::Unit::TestCase
         assert_match item.elements['meta-description'].text, options[:transaction_meta_data][index][:meta_description]
         assert_match item.elements['is-visible'].text, options[:transaction_meta_data][index][:meta_is_visible]
       end
-    end.respond_with(successful_refund_response)
+    end.respond_with(successful_refund_without_merchant_transaction_id_response)
     assert_success response
-    assert_equal '1012082907', response.authorization
+    assert_equal '1061398943', response.authorization
   end
 
   def test_successful_refund_with_merchant_id
@@ -429,6 +429,7 @@ class BlueSnapTest < Test::Unit::TestCase
       assert_includes endpoint, "/refund/merchant/#{merchant_transaction_id}"
     end.respond_with(successful_refund_response)
     assert_success response
+    assert_equal '1012082907', response.authorization
   end
 
   def test_failed_refund
@@ -1091,6 +1092,32 @@ class BlueSnapTest < Test::Unit::TestCase
       </messages>
     XML
     MockResponse.failed(body, 400)
+  end
+
+  def successful_refund_without_merchant_transaction_id_response
+    MockResponse.succeeded <<-XML
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <refund xmlns="http://ws.plimus.com">
+        <refund-transaction-id>1061398943</refund-transaction-id>
+        <amount>1.00</amount>
+        <tax-amount>0.05</tax-amount>
+        <transaction-meta-data>
+          <meta-data>
+            <meta-key>refundedItems</meta-key>
+            <meta-value>1552,8832</meta-value>
+            <meta-description>Refunded Items</meta-description>
+            <is-visible>false</is-visible>
+          </meta-data>
+          <meta-data>
+            <meta-key>Number2</meta-key>
+            <meta-value>KTD</meta-value>
+            <meta-description>Metadata 2</meta-description>
+            <is-visible>true</is-visible>
+          </meta-data>
+        </transaction-meta-data>
+        <reason>Refund for order #1992</reason>
+      </refund>
+    XML
   end
 
   def successful_void_response

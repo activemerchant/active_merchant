@@ -449,6 +449,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, purchase.authorization, @refund_options)
     assert_success refund
     assert_equal 'Success', refund.message
+    assert_not_nil refund.authorization
   end
 
   def test_successful_refund_with_merchant_id

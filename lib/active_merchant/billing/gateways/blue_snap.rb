@@ -512,7 +512,9 @@ module ActiveMerchant
       end
 
       def authorization_from(action, parsed_response, payment_method_details)
-        action == :store ? vaulted_shopper_id(parsed_response, payment_method_details) : parsed_response['transaction-id']
+        return vaulted_shopper_id(parsed_response, payment_method_details) if action == :store
+
+        parsed_response['refund-transaction-id'] || parsed_response['transaction-id']
       end
 
       def vaulted_shopper_id(parsed_response, payment_method_details)
