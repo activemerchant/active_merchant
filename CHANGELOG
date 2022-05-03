@@ -7,6 +7,7 @@
 * BlueSnap: Correctly parse `refund-transaction-id` [dsmcclain] #4411
 * Worldpay: Add level II and level III data [javierpedrozaing] #4393
 * Worldpay: extract `issuer_response_code` and `issuer_response_description` from gateway response [dsmcclain] #4412
+* Vantiv: Support `duplicate` field read from saleResponse.duplicate attr [mashton] #4413
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

@@ -112,6 +112,22 @@ class LitleTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_sale_response_duplicate_attribute
+    dup_response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(duplicate_purchase_response)
+
+    assert_success dup_response
+    assert_true dup_response.params['duplicate']
+
+    non_dup_response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    assert_success non_dup_response
+    assert_false non_dup_response.params['duplicate']
+  end
+
   def test_failed_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
@@ -712,6 +728,25 @@ class LitleTest < Test::Unit::TestCase
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <saleResponse id='1' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>100000000000000006</litleTxnId>
+          <orderId>1</orderId>
+          <response>000</response>
+          <responseTime>2014-03-31T11:34:39</responseTime>
+          <message>Approved</message>
+          <authCode>11111 </authCode>
+          <fraudResult>
+            <avsResult>01</avsResult>
+            <cardValidationResult>M</cardValidationResult>
+          </fraudResult>
+        </saleResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def duplicate_purchase_response
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <saleResponse id='1' duplicate='true' reportGroup='Default Report Group' customerId=''>
           <litleTxnId>100000000000000006</litleTxnId>
           <orderId>1</orderId>
           <response>000</response>
