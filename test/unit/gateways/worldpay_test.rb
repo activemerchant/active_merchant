@@ -418,6 +418,16 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal(%w(authorize capture), response.responses.collect { |e| e.params['action'] })
   end
 
+  def test_failed_purchase_with_issuer_response_code
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(failed_purchase_response_with_issuer_response_code)
+
+    assert_failure response
+    assert_equal('51', response.params['issuer_response_code'])
+    assert_equal('Insufficient funds/over credit limit', response.params['issuer_response_description'])
+  end
+
   def test_successful_void
     response = stub_comms do
       @gateway.void(@options[:order_id], @options)
@@ -1543,6 +1553,37 @@ class WorldpayTest < Test::Unit::TestCase
       <paymentService version="1.4" merchantCode="SPREEDLY">
         <reply>
           <error code="5"><![CDATA[XML failed validation: Invalid payment details : Card number not recognised: 606070******4400]]></error>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def failed_purchase_response_with_issuer_response_code
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//Bibit//DTD Bibit PaymentService v1//EN"
+                                      "http://dtd.bibit.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="XXXXXXXXXXXXXXX">
+        <reply>
+          <orderStatus orderCode="R50704213207145707">
+            <payment>
+              <paymentMethod>VISA-SSL</paymentMethod>
+              <amount value="15000" currencyCode="USD" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>REFUSED</lastEvent>
+              <IssuerResponseCode code="51" description="Insufficient funds/over credit limit"/>
+              <CVCResultCode description="C"/>
+              <AVSResultCode description="H"/>
+              <AAVAddressResultCode description="B"/>
+              <AAVPostcodeResultCode description="B"/>
+              <AAVCardholderNameResultCode description="B"/>
+              <AAVTelephoneResultCode description="B"/>
+              <AAVEmailResultCode description="B"/>
+              <cardHolderName><![CDATA[Test McTest]]></cardHolderName>
+              <issuerCountryCode>US</issuerCountryCode>
+              <issuerName>TEST BANK</issuerName>
+              <riskScore value="0"/>
+            </payment>
+          </orderStatus>
         </reply>
       </paymentService>
     RESPONSE

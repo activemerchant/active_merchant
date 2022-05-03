@@ -804,7 +804,16 @@ module ActiveMerchant #:nodoc:
         resp_params = { action: action }
 
         parse_elements(doc.root, resp_params)
+        extract_issuer_response(doc.root, resp_params)
+
         resp_params
+      end
+
+      def extract_issuer_response(doc, response)
+        return unless issuer_response = doc.at_xpath('//paymentService//reply//orderStatus//payment//IssuerResponseCode')
+
+        response[:issuer_response_code] = issuer_response['code']
+        response[:issuer_response_description] = issuer_response['description']
       end
 
       def parse_elements(node, response)
