@@ -3,6 +3,8 @@
 
 == HEAD
 * Simetrik: Fix integer and float types, update scrub method [rachelkirk] #4405
+* Credorax: Convert country codes for  `recipient_country_code` field [ajawadmirza] #4408
+* BlueSnap: Correctly parse `refund-transaction-id` [dsmcclain] #4411
 * Worldpay: Add level II and level III data [javierpedrozaing] #4393
 
 == Version 1.126.0 (April 15th, 2022)
@@ -80,8 +82,6 @@
 * Airwallex: Add support for `original_transaction_id` field [drkjc] #4401
 * Securion Pay: Pass external 3DS data [jherreraa] #4404
 * Airwallex: Update Stored Credentials testing, remove support for `original_transaction_id` field [drkjc] 4407
-* Credorax: Convert country codes for  `recipient_country_code` field [ajawadmirza] #4408
-* BlueSnap: Correctly parse `refund-transaction-id` [dsmcclain] #4411
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
