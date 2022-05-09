@@ -277,6 +277,32 @@ class BlueSnapTest < Test::Unit::TestCase
     assert_equal '019082915501456', response.params['network-transaction-id']
   end
 
+  def test_successful_purchase_with_cit_stored_credential_fields
+    cit_stored_credentials = {
+      initiator: 'cardholder',
+      network_transaction_id: 'ABC123'
+    }
+    stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options_3ds2.merge({ stored_credential: cit_stored_credentials }))
+    end.check_request do |_method, _url, data|
+      assert_match '<transaction-initiator>SHOPPER</transaction-initiator>', data
+      assert_match '<original-network-transaction-id>ABC123</original-network-transaction-id>', data
+    end.respond_with(successful_purchase_with_3ds_auth_response)
+  end
+
+  def test_successful_purchase_with_mit_stored_credential_fields
+    cit_stored_credentials = {
+      initiator: 'merchant',
+      network_transaction_id: 'QER100'
+    }
+    stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options_3ds2.merge({ stored_credential: cit_stored_credentials }))
+    end.check_request do |_method, _url, data|
+      assert_match '<transaction-initiator>MERCHANT</transaction-initiator>', data
+      assert_match '<original-network-transaction-id>QER100</original-network-transaction-id>', data
+    end.respond_with(successful_purchase_with_3ds_auth_response)
+  end
+
   def test_does_not_send_3ds_auth_when_empty
     stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)

@@ -68,6 +68,8 @@ module ActiveMerchant
         'business_savings' => 'CORPORATE_SAVINGS'
       }
 
+      SHOPPER_INITIATOR = %w(CUSTOMER CARDHOLDER)
+
       STATE_CODE_COUNTRIES = %w(US CA)
 
       def initialize(options = {})
@@ -179,6 +181,7 @@ module ActiveMerchant
         doc.send('store-card', options[:store_card] || false)
         add_amount(doc, money, options)
         add_fraud_info(doc, payment_method, options)
+        add_stored_credentials(doc, options)
 
         if payment_method.is_a?(String)
           doc.send('vaulted-shopper-id', payment_method)
@@ -187,6 +190,19 @@ module ActiveMerchant
             add_personal_info(doc, payment_method, options)
           end
           add_credit_card(doc, payment_method)
+        end
+      end
+
+      def add_stored_credentials(doc, options)
+        return unless stored_credential = options[:stored_credential]
+
+        initiator = stored_credential[:initiator]&.upcase
+        initiator = 'SHOPPER' if SHOPPER_INITIATOR.include?(initiator)
+        doc.send('transaction-initiator', initiator) if stored_credential[:initiator]
+        if stored_credential[:network_transaction_id]
+          doc.send('network-transaction-info') do
+            doc.send('original-network-transaction-id', stored_credential[:network_transaction_id])
+          end
         end
       end
 
@@ -358,6 +374,7 @@ module ActiveMerchant
         add_echeck_transaction(doc, payment_method_details.payment_method, options, vaulted_shopper_id.present?) if payment_method_details.check?
 
         add_fraud_info(doc, payment_method_details.payment_method, options)
+        add_stored_credentials(doc, options)
         add_metadata(doc, options)
       end
 
