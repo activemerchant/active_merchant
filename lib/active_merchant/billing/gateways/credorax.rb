@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       class_attribute :test_url, :live_na_url, :live_eu_url
 
       self.display_name = 'Credorax Gateway'
-      self.homepage_url = 'https://www.credorax.com/'
+      self.homepage_url = 'https://www.finaro.com/'
 
       # NOTE: the IP address you run the remote tests from will need to be
       # whitelisted by Credorax; contact support@credorax.com as necessary to
@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
       self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LYD OMR TND)
 
       self.money_format = :cents
-      self.supported_cardtypes = %i[visa master maestro american_express]
+      self.supported_cardtypes = %i[visa master maestro american_express jcb discover diners_club]
 
       RESPONSE_MESSAGES = {
         '00' => 'Approved or completed successfully',
