@@ -294,6 +294,7 @@ module ActiveMerchant #:nodoc:
       def add_browser_info(request, options)
         request[:sessionDetails][:ip] = options[:ip] if options[:ip]
         request[:sessionDetails][:userAgent] = options[:user_agent] if options[:user_agent]
+        request[:sessionDetails][:lang] = options[:lang] if options[:lang]
       end
 
       # Private: Parse JSON response from Monei servers

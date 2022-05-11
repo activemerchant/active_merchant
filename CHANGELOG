@@ -10,6 +10,7 @@
 * Vantiv: Support `duplicate` field read from saleResponse.duplicate attr [mashton] #4413
 * Ogone: Add support for 3dsv2 [gasb150] #4410
 * BlueSnap: Add support for stored credentials [ajawadmirza] #4414
+* Monei: Add support for `lang` field [drkjc] #4421
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
