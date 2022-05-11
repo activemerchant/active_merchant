@@ -34,6 +34,12 @@ class RemoteRapydTest < Test::Unit::TestCase
       'string': 'preferred',
       'Boolean': true
     }
+    @three_d_secure = {
+      version: '2.1.0',
+      cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+      xid: '00000000000000000501',
+      eci: '02'
+    }
   end
 
   def test_successful_purchase
@@ -204,5 +210,28 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:secret_key], transcript)
     assert_scrubbed(@gateway.options[:access_key], transcript)
+  end
+
+  def test_successful_authorize_with_3ds_v1_options
+    options = @options.merge(three_d_secure: @three_d_secure)
+    options[:pm_type] = 'gb_visa_card'
+    options[:three_d_secure][:version] = '1.0.2'
+
+    response = @gateway.authorize(105000, @credit_card, options)
+    assert_success response
+    assert_equal 'ACT', response.params['data']['status']
+    assert_equal '3d_verification', response.params['data']['payment_method_data']['next_action']
+    assert response.params['data']['redirect_url']
+  end
+
+  def test_successful_authorize_with_3ds_v2_options
+    options = @options.merge(three_d_secure: @three_d_secure)
+    options[:pm_type] = 'gb_visa_card'
+
+    response = @gateway.authorize(105000, @credit_card, options)
+    assert_success response
+    assert_equal 'ACT', response.params['data']['status']
+    assert_equal '3d_verification', response.params['data']['payment_method_data']['next_action']
+    assert response.params['data']['redirect_url']
   end
 end

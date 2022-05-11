@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class RapydTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = RapydGateway.new(secret_key: 'secret_key', access_key: 'access_key')
     @credit_card = credit_card
@@ -152,6 +154,26 @@ class RapydTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
     assert_equal 'Do Not Honor', response.message
+  end
+
+  def test_three_d_secure
+    options = {
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '5',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      }
+    }
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"cavv":"EHuWW9PiBkWvqE5juRwDzAUFBAk="/, data)
+      assert_match(/"eci":"5"/, data)
+      assert_match(/"xid":"TTBCSkVTa1ZpbDI1bjRxbGk5ODE="/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
   end
 
   def test_scrub

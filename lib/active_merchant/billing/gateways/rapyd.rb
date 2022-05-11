@@ -22,6 +22,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment, options)
+        add_3ds(post, payment, options)
         add_address(post, payment, options)
         add_metadata(post, options)
         add_ewallet(post, options)
@@ -44,10 +45,12 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment, options)
+        add_3ds(post, payment, options)
         add_address(post, payment, options)
         add_metadata(post, options)
         add_ewallet(post, options)
         post[:capture] = false
+
         commit(:post, 'payments', post)
       end
 
@@ -156,6 +159,18 @@ module ActiveMerchant #:nodoc:
         post[:payment_method][:fields][:routing_number] = payment.routing_number
         post[:payment_method][:fields][:account_number] = payment.account_number
         post[:payment_method][:fields][:payment_purpose] = options[:payment_purpose] if options[:payment_purpose]
+      end
+
+      def add_3ds(post, payment, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post[:payment_method_options] = {}
+        post[:payment_method_options]['3d_required'] = three_d_secure[:required]
+        post[:payment_method_options]['3d_version'] = three_d_secure[:version]
+        post[:payment_method_options][:cavv] = three_d_secure[:cavv]
+        post[:payment_method_options][:eci] = three_d_secure[:eci]
+        post[:payment_method_options][:xid] = three_d_secure[:xid]
+        post[:payment_method_options][:ds_trans_id] = three_d_secure[:ds_transaction_id]
       end
 
       def add_metadata(post, options)
