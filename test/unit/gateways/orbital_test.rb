@@ -10,7 +10,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     @gateway = ActiveMerchant::Billing::OrbitalGateway.new(
       login: 'login',
       password: 'password',
-      merchant_id: 'merchant_id'
+      merchant_id: 'test12'
     )
     @customer_ref_num = 'ABC'
     @credit_card = credit_card('4556761029983886')
@@ -219,6 +219,22 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<PC3DtlGrossNet>#{@line_items[1][:gross_net]}</PC3DtlGrossNet>}, data
       assert_match %{<PC3DtlDiscInd>#{@line_items[1][:disc_ind]}</PC3DtlDiscInd>}, data
       assert_match %{<PC3DtlIndex>2</PC3DtlIndex>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_payment_action_ind_field
+    stub_comms do
+      @gateway.purchase(50, credit_card, @options.merge(payment_action_ind: 'P'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<PaymentActionInd>P</PaymentActionInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_secondary_url
+    stub_comms do
+      @gateway.purchase(50, credit_card, @options.merge(use_secondary_url: 'true'))
+    end.check_request do |endpoint, _data, _headers|
+      assert endpoint.include? 'orbitalvar2'
     end.respond_with(successful_purchase_response)
   end
 
@@ -1389,7 +1405,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.purchase(50, credit_card, order_id: 1, trace_number: 1)
     end.check_request do |_endpoint, _data, headers|
       assert_equal('1', headers['Trace-number'])
-      assert_equal('merchant_id', headers['Merchant-Id'])
+      assert_equal('test12', headers['Merchant-Id'])
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -1410,7 +1426,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.purchase(50, credit_card, order_id: 1, retry_logic: 'true', trace_number: 1)
     end.check_request do |_endpoint, _data, headers|
       assert_equal('1', headers['Trace-number'])
-      assert_equal('merchant_id', headers['Merchant-Id'])
+      assert_equal('test12', headers['Merchant-Id'])
     end.respond_with(successful_purchase_response)
     assert_success response
   end

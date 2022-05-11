@@ -235,11 +235,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         payment_method = options[:payment_method]
         order = build_new_order_xml(REFUND, money, payment_method, options.merge(authorization: authorization)) do |xml|
-          if payment_method.is_a?(Check)
-            add_echeck(xml, payment_method, options)
-          else
-            add_refund_payment_source(xml, options[:currency])
-          end
+          add_payment_source(xml, payment_method, options)
           xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
 
@@ -396,6 +392,12 @@ module ActiveMerchant #:nodoc:
 
         add_soft_descriptors_from_specialized_class(xml, descriptors) if descriptors.is_a?(OrbitalSoftDescriptors)
         add_soft_descriptors_from_hash(xml, descriptors) if descriptors.is_a?(Hash)
+      end
+
+      def add_payment_action_ind(xml, payment_action_ind)
+        return unless payment_action_ind
+
+        xml.tag! :PaymentActionInd, payment_action_ind
       end
 
       def add_soft_descriptors_from_specialized_class(xml, soft_desc)
@@ -577,12 +579,6 @@ module ActiveMerchant #:nodoc:
         add_verification_value(xml, credit_card) if credit_card
       end
 
-      def add_refund_payment_source(xml, currency = nil)
-        xml.tag! :AccountNum, nil
-
-        add_currency_fields(xml, currency)
-      end
-
       def add_verification_value(xml, credit_card)
         return unless credit_card&.verification_value?
 
@@ -595,7 +591,7 @@ module ActiveMerchant #:nodoc:
         #   Null-fill this attribute OR
         #   Do not submit the attribute at all.
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
-        xml.tag! :CardSecValInd, '1' if %w(visa master discover).include?(credit_card.brand)
+        xml.tag! :CardSecValInd, '1' if %w(visa master discover).include?(credit_card.brand) && bin == '000001'
         xml.tag! :CardSecVal, credit_card.verification_value
       end
 
@@ -862,6 +858,8 @@ module ActiveMerchant #:nodoc:
         # Failover URL will be attempted in the event of a connection error
         response =
           begin
+            raise ConnectionError.new 'Should use secondary url', 500 if @use_secondary_url
+
             request.call(remote_url)
           rescue ConnectionError
             request.call(remote_url(:secondary))
@@ -942,6 +940,7 @@ module ActiveMerchant #:nodoc:
 
       def build_new_order_xml(action, money, payment_source, parameters = {})
         requires!(parameters, :order_id)
+        @use_secondary_url = parameters[:use_secondary_url] if parameters[:use_secondary_url]
         xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :NewOrder do
@@ -969,6 +968,7 @@ module ActiveMerchant #:nodoc:
             # CustomerAni, AVSPhoneType and AVSDestPhoneType could be added here.
 
             add_soft_descriptors(xml, parameters[:soft_descriptors])
+            add_payment_action_ind(xml, parameters[:payment_action_ind])
             add_dpanind(xml, payment_source)
             add_aevv(xml, payment_source, three_d_secure)
             add_digital_token_cryptogram(xml, payment_source)
@@ -978,7 +978,7 @@ module ActiveMerchant #:nodoc:
             set_recurring_ind(xml, parameters)
 
             # Append Transaction Reference Number at the end for Refund transactions
-            add_tx_ref_num(xml, parameters[:authorization]) if action == REFUND
+            add_tx_ref_num(xml, parameters[:authorization]) if action == REFUND && payment_source.nil?
 
             add_level2_purchase(xml, parameters)
             add_level3_purchase(xml, parameters)
