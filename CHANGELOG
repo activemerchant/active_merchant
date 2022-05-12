@@ -2,6 +2,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Maestro: Adding missing BIN ranges [bradbroge] #4423
 * Simetrik: Fix integer and float types, update scrub method [rachelkirk] #4405
 * Credorax: Convert country codes for  `recipient_country_code` field [ajawadmirza] #4408
 * BlueSnap: Correctly parse `refund-transaction-id` [dsmcclain] #4411
