@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
             acquire_extra_options: options[:acquire_extra_options] || {}
           }
         }
-        post[:forward_payload][:amount][:vat] = options[:vat].to_f if options[:vat]
+        post[:forward_payload][:amount][:vat] = options[:vat].to_f / 100 if options[:vat]
 
         add_forward_route(post, options)
         commit('capture', post, { token_acquirer: options[:token_acquirer] })
@@ -250,7 +250,7 @@ module ActiveMerchant #:nodoc:
         amount_obj = {}
         amount_obj[:total_amount] = amount(money).to_f
         amount_obj[:currency] = (options[:currency] || currency(money))
-        amount_obj[:vat] = options[:vat].to_f if options[:vat]
+        amount_obj[:vat] = options[:vat].to_f / 100 if options[:vat]
 
         post[:amount] = amount_obj
       end

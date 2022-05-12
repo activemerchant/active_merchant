@@ -32,6 +32,7 @@
 * Orbital: Update API version to 9.0 [gasb150] #4440
 * Plexo:  Add `meta_data` fields and reorder amount object in response [ajawadmirza] #4441
 * Plexo:  Change field name from `meta_data` to `metadata` [ajawadmirza] #4443
+* Simetrik: Update `vat` to be in cents [simetrik-frank] #4425
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
