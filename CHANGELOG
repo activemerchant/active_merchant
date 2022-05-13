@@ -16,6 +16,7 @@
 * Adyen: Update API version [jherreraa] #4418
 * Ogone: Updated home gateway URL [gasb150] #4419
 * Credorax: Update url gateway and credit cards [javierpedrozaing] #4417
+* Kushki: Pass extra_taxes with USD [therufs] #4426
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

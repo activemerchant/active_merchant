@@ -52,6 +52,74 @@ class RemoteKushkiTest < Test::Unit::TestCase
     assert_match %r(^\d+$), response.authorization
   end
 
+  def test_successful_purchase_with_extra_taxes_cop
+    options = {
+      currency: 'COP',
+      amount: {
+        subtotal_iva_0: '4.95',
+        subtotal_iva: '10',
+        iva: '1.54',
+        ice: '3.50',
+        extra_taxes: {
+          propina: 0.1,
+          tasa_aeroportuaria: 0.2,
+          agencia_de_viaje: 0.3,
+          iac: 0.4
+        }
+      }
+    }
+
+    amount = 100 * (
+      options[:amount][:subtotal_iva_0].to_f +
+      options[:amount][:subtotal_iva].to_f +
+      options[:amount][:iva].to_f +
+      options[:amount][:ice].to_f +
+      options[:amount][:extra_taxes][:propina].to_f +
+      options[:amount][:extra_taxes][:tasa_aeroportuaria].to_f +
+      options[:amount][:extra_taxes][:agencia_de_viaje].to_f +
+      options[:amount][:extra_taxes][:iac].to_f
+    )
+
+    response = @gateway.purchase(amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_successful_purchase_with_extra_taxes_usd
+    options = {
+      currency: 'USD',
+      amount: {
+        subtotal_iva_0: '4.95',
+        subtotal_iva: '10',
+        iva: '1.54',
+        ice: '3.50',
+        extra_taxes: {
+          propina: 0.1,
+          tasa_aeroportuaria: 0.2,
+          agencia_de_viaje: 0.3,
+          iac: 0.4
+        }
+      }
+    }
+
+    amount = 100 * (
+      options[:amount][:subtotal_iva_0].to_f +
+      options[:amount][:subtotal_iva].to_f +
+      options[:amount][:iva].to_f +
+      options[:amount][:ice].to_f +
+      options[:amount][:extra_taxes][:propina].to_f +
+      options[:amount][:extra_taxes][:tasa_aeroportuaria].to_f +
+      options[:amount][:extra_taxes][:agencia_de_viaje].to_f +
+      options[:amount][:extra_taxes][:iac].to_f
+    )
+
+    response = @gateway.purchase(amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
   def test_failed_purchase
     options = {
       amount: {
