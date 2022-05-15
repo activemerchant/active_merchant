@@ -323,13 +323,17 @@ module ActiveMerchant #:nodoc:
           test: test?,
           avs_result: { code: response[:avs_result_code] },
           cvv_result: response[:cvd_result_code] && response[:cvd_result_code][-1, 1],
-          authorization: authorization_from(response)
+          authorization: authorization_from(action, response)
         )
       end
 
       # Generates a Moneris authorization string of the form 'trans_id;receipt_id'.
-      def authorization_from(response = {})
-        "#{response[:trans_id]};#{response[:receipt_id]}" if response[:trans_id] && response[:receipt_id]
+      def authorization_from(action, response = {})
+        if %w[res_temp_add res_add_cc].include?(action)
+          response[:data_key]
+        else
+          "#{response[:trans_id]};#{response[:receipt_id]}" if response[:trans_id] && response[:receipt_id]
+        end
       end
 
       # Tests for a successful response from Moneris' servers

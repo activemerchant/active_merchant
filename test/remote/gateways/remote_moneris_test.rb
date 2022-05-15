@@ -278,7 +278,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card)
     assert_success response
     assert_equal 'Successfully registered cc details', response.message
-    assert response.params['data_key'].present?
+    assert response.authorization.present?
+    assert_equal response.params['data_key'], response.authorization
     @data_key = response.params['data_key']
   end
 
@@ -286,7 +287,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card, duration: 600)
     assert_success response
     assert_equal 'Successfully registered cc details', response.message
-    assert response.params['data_key'].present?
+    assert response.authorization.present?
+    assert_equal response.params['data_key'], response.authorization
   end
 
   # AVS result fields are stored in the vault and returned as part of the

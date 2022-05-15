@@ -235,8 +235,9 @@ class MonerisTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card)
     assert_success response
     assert_equal 'Successfully registered cc details', response.message
-    assert response.params['data_key'].present?
-    @data_key = response.params['data_key']
+    assert response.authorization.present?
+    assert_equal response.params['data_key'], response.authorization
+    @data_key = response.authorization
   end
 
   def test_successful_store_with_duration
@@ -244,8 +245,9 @@ class MonerisTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card, duration: 600)
     assert_success response
     assert_equal 'Successfully registered cc details', response.message
-    assert response.params['data_key'].present?
-    @data_key = response.params['data_key']
+    assert response.authorization.present?
+    assert_equal response.params['data_key'], response.authorization
+    @data_key = response.authorization
   end
 
   def test_successful_unstore
