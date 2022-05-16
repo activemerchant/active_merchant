@@ -22,6 +22,10 @@ class DLocalTest < Test::Unit::TestCase
     }
   end
 
+  def test_supported_countries
+    assert_equal %w[AR BD BO BR CL CM CN CO CR DO EC EG GH GT IN ID JP KE MY MX MA NG PA PY PE PH SN SV TH TR TZ UG UY VN ZA], DLocalGateway.supported_countries
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
