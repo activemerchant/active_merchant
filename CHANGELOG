@@ -13,6 +13,7 @@
 * BlueSnap: Add support for stored credentials [ajawadmirza] #4414
 * Monei: Add support for `lang` field [drkjc] #4421
 * Wompi: Redirect `refund` to `void` [drkjc] #4424
+* Adyen: Update API version [jherreraa] #4418
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
