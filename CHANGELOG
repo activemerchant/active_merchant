@@ -24,6 +24,7 @@
 * Rapyd: Additional Fields [naashton] #4434
 * Braintree: Return generated client token [BritneyS] #4416
 * Simetrik: Update `audience` field [simetrik-frank] #4433
+* CyberSource: Add bank account payment method support [heavyblade] #4428
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

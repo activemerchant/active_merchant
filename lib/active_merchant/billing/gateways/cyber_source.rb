@@ -347,10 +347,11 @@ module ActiveMerchant #:nodoc:
         add_mdd_fields(xml, options)
         add_sales_slip_number(xml, options)
         add_airline_data(xml, options)
-        if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
+        if (!payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check') || reference_is_a_check?(payment_method_or_reference)
           add_check_service(xml)
           add_issuer_additional_data(xml, options)
           add_partner_solution_id(xml)
+          options[:payment_method] = :check
         else
           add_purchase_service(xml, payment_method_or_reference, options)
           add_threeds_services(xml, options)
@@ -360,11 +361,16 @@ module ActiveMerchant #:nodoc:
           add_issuer_additional_data(xml, options)
           add_partner_solution_id(xml)
           add_stored_credential_options(xml, options)
+          options[:payment_method] = :credit_card
         end
 
         add_merchant_description(xml, options)
 
         xml.target!
+      end
+
+      def reference_is_a_check?(payment_method_or_reference)
+        payment_method_or_reference.is_a?(String) && payment_method_or_reference.split(';')[7] == 'check'
       end
 
       def build_void_request(identification, options)
@@ -393,7 +399,9 @@ module ActiveMerchant #:nodoc:
 
         xml = Builder::XmlMarkup.new indent: 2
         add_purchase_data(xml, money, true, options)
-        add_credit_service(xml, request_id, request_token)
+        add_credit_service(xml, request_id: request_id,
+                                request_token: request_token,
+                                use_check_service: reference_is_a_check?(identification))
         add_partner_solution_id(xml)
 
         xml.target!
@@ -404,7 +412,7 @@ module ActiveMerchant #:nodoc:
 
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
         add_mdd_fields(xml, options)
-        add_credit_service(xml)
+        add_credit_service(xml, use_check_service: creditcard_or_reference.is_a?(Check))
         add_issuer_additional_data(xml, options)
         add_merchant_description(xml, options)
 
@@ -423,9 +431,11 @@ module ActiveMerchant #:nodoc:
         if card_brand(payment_method) == 'check'
           add_check(xml, payment_method)
           add_check_payment_method(xml)
+          options[:payment_method] = :check
         else
           add_creditcard(xml, payment_method)
           add_creditcard_payment_method(xml)
+          options[:payment_method] = :credit_card
         end
         add_subscription(xml, options)
         if options[:setup_fee]
@@ -800,10 +810,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_credit_service(xml, request_id = nil, request_token = nil)
-        xml.tag! 'ccCreditService', { 'run' => 'true' } do
-          xml.tag! 'captureRequestID', request_id if request_id
-          xml.tag! 'captureRequestToken', request_token if request_token
+      def add_credit_service(xml, options = {})
+        service = options[:use_check_service] ? 'ecCreditService' : 'ccCreditService'
+        request_tag = options[:use_check_service] ? 'debitRequestID' : 'captureRequestID'
+        options.delete :request_token if options[:use_check_service]
+
+        xml.tag! service, { 'run' => 'true' } do
+          xml.tag! request_tag, options[:request_id] if options[:request_id]
+          xml.tag! 'captureRequestToken', options[:request_token] if options[:request_token]
         end
       end
 
@@ -1033,7 +1047,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, action, amount, options)
         [options[:order_id], response[:requestID], response[:requestToken], action, amount,
-         options[:currency], response[:subscriptionID]].join(';')
+         options[:currency], response[:subscriptionID], options[:payment_method]].join(';')
       end
 
       def in_fraud_review?(response)
