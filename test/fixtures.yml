@@ -1268,6 +1268,10 @@ spreedly_core:
   gateway_token: "3gLeg4726V5P0HK7cq7QzHsL0a6"
 
 # Working credentials, no need to replace
+square:
+  access_token: EAAAEBfybUCoyfELbbSshWYKna9FYluyA56pcgXDNtSDULMWEah5Ci4S8XcPKBYz
+
+# Working credentials, no need to replace
 stripe:
   login: sk_test_3OD4TdKSIOhDOL2146JJcC79
 
