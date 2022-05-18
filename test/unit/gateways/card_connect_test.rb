@@ -14,6 +14,37 @@ class CardConnectTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @three_ds_secure = {
+      version: '2.0',
+      cavv: 'AJkBByEyYgAAAASwgmEodQAAAAA=',
+      eci: '05',
+      xid: '3875d372-d96d-412a-a806-5ac367d095b1'
+    }
+  end
+
+  def test_three_ds_2_object_construction
+    post = {}
+    @three_ds_secure[:ds_transaction_id] = '3875d372-d96d-412a-a806-5ac367d095b1'
+    @options[:three_d_secure] = @three_ds_secure
+
+    @gateway.send(:add_three_ds, post, @options)
+    three_ds_options = @options[:three_d_secure]
+    assert_equal three_ds_options[:cavv], post[:securevalue]
+    assert_equal three_ds_options[:eci], post[:secureflag]
+    assert_equal three_ds_options[:ds_transaction_id], post[:securedstid]
+  end
+
+  def test_purchase_with_three_ds
+    @options[:three_d_secure] = @three_ds_secure
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      three_ds_params = JSON.parse(data)['three_dsecure']
+      assert_equal 'AJkBByEyYgAAAASwgmEodQAAAAA=', three_ds_params['cavv']
+      assert_equal '05', three_ds_params['eci']
+      assert_equal '3875d372-d96d-412a-a806-5ac367d095b1', three_ds_params['xid']
+    end.respond_with(successful_purchase_response)
   end
 
   def test_allow_domains_without_ports
