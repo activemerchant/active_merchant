@@ -789,7 +789,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_verify
     response = stub_comms do
-      @gateway.verify(@credit_card)
+      @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, successful_void_response)
     assert_success response
   end
@@ -800,6 +800,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
     assert_match %r{This transaction has been approved}, response.message
+  end
+
+  def test_successful_verify_with_0_auth_card
+    options = {
+      verify_amount: 0,
+      billing_address: {
+        address1: '123 St',
+        zip: '88888'
+      }
+    }
+    response = stub_comms do
+      @gateway.verify(@credit_card, options)
+    end.respond_with(successful_authorize_response)
+    assert_success response
   end
 
   def test_unsuccessful_verify

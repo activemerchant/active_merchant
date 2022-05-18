@@ -387,7 +387,101 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
-    assert_success response.responses.last, 'The void should succeed'
+    assert_equal response.responses.count, 2
+  end
+
+  def test_successful_verify_with_no_address
+    @options[:billing_address] = nil
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+    assert_equal response.responses.count, 2
+  end
+
+  def test_0_amount_verify_with_no_zip
+    @options[:verify_amount] = 0
+    @options[:billing_address] = { zip: nil, address1: 'XYZ' }
+    response = @gateway.verify(@credit_card, @options)
+    assert_failure response
+    assert_equal 'Billing address including zip code is required for a 0 amount verify', response.message
+  end
+
+  def test_successful_verify_with_verify_amount_and_billing_address
+    @options[:verify_amount] = 1
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
+  def test_successful_verify_after_store_with_custom_verify_amount
+    @options[:verify_amount] = 1
+    assert store = @gateway.store(@credit_card, @options)
+    assert_success store
+    response = @gateway.verify(store.authorization, @options)
+    assert_success response
+  end
+
+  def test_failed_verify_after_store_with_custom_verify_amount_value_0_no_address
+    @options[:verify_amount] = 0
+    assert store = @gateway.store(@credit_card, @options)
+    assert_success store
+    @options[:billing_address] = nil
+    response = @gateway.verify(store.authorization, @options)
+    assert_failure response
+    assert_equal 'Billing address including zip code is required for a 0 amount verify', response.message
+  end
+
+  def test_successful_verify_after_store_without_custom_verify_amount
+    assert store = @gateway.store(@credit_card, @options)
+    assert_success store
+    response = @gateway.verify(store.authorization, @options)
+    assert_success response
+  end
+
+  def test_successful_verify_with_apple_pay
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: '111111111100cryptogram')
+    response = @gateway.verify(credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
+  def test_successful_verify_with_check
+    response = @gateway.verify(@check, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
+  def test_successful_verify_with_nil_custom_verify_amount
+    @options[:verify_amount] = nil
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
+  def test_verify_transcript_with_0_auth
+    transcript = capture_transcript(@gateway) do
+      @options[:verify_amount] = 0
+      @gateway.verify(@credit_card, @options)
+    end
+    assert_match %r{<amount>0.00</amount>}, transcript
+  end
+
+  def test_verify_transcript_with_1_dollar_auth
+    other_credit_card = credit_card('3088000000000017', brand: 'jcb')
+    transcript = capture_transcript(@gateway) do
+      @gateway.verify(other_credit_card, @options)
+    end
+    assert_match %r{<amount>1.00</amount>}, transcript
+  end
+
+  def test_verify_tpt_with_custom_verify_amount_and_no_address
+    @options[:verify_amount] = 100
+    assert store = @gateway.store(@credit_card, @options)
+    assert_success store
+    @options[:billing_address] = nil
+    response = @gateway.verify(store.authorization, @options)
+    assert_success response
   end
 
   def test_failed_verify

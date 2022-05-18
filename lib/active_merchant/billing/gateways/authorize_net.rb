@@ -176,11 +176,38 @@ module ActiveMerchant
         end
       end
 
-      def verify(credit_card, options = {})
+      def verify(payment_method, options = {})
+        amount = amount_for_verify(payment_method, options)
+        return amount if amount.is_a?(Response)
+
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { authorize(amount, payment_method, options) }
+          r.process(:ignore_result) { void(r.authorization, options) } unless amount == 0
         end
+      end
+
+      def amount_for_verify(payment_method, options)
+        if options[:verify_amount].present?
+          options[:verify_amount] = options[:verify_amount].to_i
+          if options[:verify_amount] < 0
+            response = Response.new(false, 'verify_amount value must be an integer')
+          elsif options[:verify_amount] > 0
+            response = options[:verify_amount]
+          elsif options[:verify_amount] == 0
+            response = 0
+            response = Response.new(false, 'Billing address including zip code is required for a 0 amount verify') unless validate_billing_address_values?(options)
+          else
+            response = options[:verify_amount]
+          end
+        else
+          response = 100
+        end
+
+        response
+      end
+
+      def validate_billing_address_values?(options)
+        options[:billing_address].present? && (options[:billing_address][:zip].present? && options[:billing_address][:address1].present?)
       end
 
       def store(credit_card, options = {})
