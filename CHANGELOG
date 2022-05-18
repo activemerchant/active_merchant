@@ -27,6 +27,7 @@
 * Rapyd: Zero Dollar Auth [naashton] #4435
 * Rapyd: Scrub ACH [naashton] #4436
 * VisaNet Peru: Update `purchase_number` [rachelkirk] #4437
+* CardConnect:  Add support for 3ds V2 [javierpedrozaing] #4429
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
