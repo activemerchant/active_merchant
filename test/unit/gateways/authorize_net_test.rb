@@ -790,6 +790,9 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal '1.00', doc.at_xpath('//transactionRequest/amount').content if doc.at_xpath('//transactionRequest/transactionType').content == 'authOnlyTransaction'
     end.respond_with(successful_authorize_response, successful_void_response)
     assert_success response
   end
@@ -1483,7 +1486,85 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert !@gateway.verify_credentials
   end
 
-  private
+  def test_0_amount_verify_with_no_zip
+    @options[:verify_amount] = 0
+    @options[:billing_address] = { zip: nil, address1: 'XYZ' }
+
+    response = @gateway.verify(@credit_card, @options)
+
+    assert_failure response
+    assert_equal 'Billing address including zip code is required for a 0 amount verify', response.message
+  end
+
+  def test_verify_transcript_with_0_auth
+    stub_comms do
+      @options[:verify_amount] = 0
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal '0.00', doc.at_xpath('//transactionRequest/amount').content if doc.at_xpath('//transactionRequest/transactionType').content == 'authOnlyTransaction'
+    end
+  end
+
+  def test_verify_amount_with_bad_string
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 'dog'
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_boolean
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: true
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_decimal
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 0.125
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_negative
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: -100
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_string_as_number
+    assert_equal 200, @gateway.send(:amount_for_verify, verify_amount: '200')
+  end
+
+  def test_verify_amount_with_zero_without_zip
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 0, billing_address: { address1: 'street' }
+    end
+
+    assert_equal 'Billing address including zip code is required for a 0 amount verify', error.message
+  end
+
+  def test_verify_amount_with_zero_without_address
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 0, billing_address: { zip: '051052' }
+    end
+
+    assert_equal 'Billing address including zip code is required for a 0 amount verify', error.message
+  end
+
+  def test_verify_amount_without_gsf
+    assert_equal 100, @gateway.send(:amount_for_verify, {})
+  end
+
+  def test_verify_amount_with_nil_value
+    assert_equal 100, @gateway.send(:amount_for_verify, { verify_amount: nil })
+  end
 
   def pre_scrubbed
     <<-PRE_SCRUBBED
