@@ -383,11 +383,18 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_zero_amount_verify
+    other_credit_card = credit_card('3088000000000017', brand: 'jcb')
+    response = @gateway.verify(other_credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+    assert_equal response.responses.count, 2
+  end
+
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
-    assert_success response.responses.last, 'The void should succeed'
   end
 
   def test_failed_verify

@@ -19,6 +19,7 @@
 * Kushki: Pass extra_taxes with USD [therufs] #4426
 * DLocal: fix bug with `X-Idempotency-Key` header [dsmcclain] #4431
 * DLocal: Mark support for additional countries [gasb150] #4427
+* Authorize.net: Enable zero auth for allowed cards [jherreraa] #4430
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

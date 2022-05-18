@@ -177,9 +177,10 @@ module ActiveMerchant
       end
 
       def verify(credit_card, options = {})
+        amount = credit_card.brand == 'jcb' ? 100 : 0
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { authorize(amount, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) } unless amount == 0
         end
       end
 
