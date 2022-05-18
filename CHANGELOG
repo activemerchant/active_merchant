@@ -44,6 +44,7 @@
 * Plexo: Update `ip`, `description`, and `email` fields request format and scrub method to not filter cardholder name and reference id [ajawadmirza] #4457
 * Plexo: Update `verify` implementation and add `verify_amount` field [ajawadmirza] #4462
 * Vanco: Update `purchase` to complete a purchase transaction with an existing session id [BritneyS] #4461
+* Authorize.net: Allow custom verify_amount and validate it [jherreraa] #4464
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

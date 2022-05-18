@@ -789,7 +789,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_verify
     response = stub_comms do
-      @gateway.verify(@credit_card)
+      @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, successful_void_response)
     assert_success response
   end
@@ -800,6 +800,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
     assert_match %r{This transaction has been approved}, response.message
+  end
+
+  def test_successful_verify_with_0_auth_card
+    options = {
+      verify_amount: 0,
+      billing_address: {
+        address1: '123 St',
+        zip: '88888'
+      }
+    }
+    response = stub_comms do
+      @gateway.verify(@credit_card, options)
+    end.respond_with(successful_authorize_response)
+    assert_success response
   end
 
   def test_unsuccessful_verify
@@ -2664,6 +2678,48 @@ class AuthorizeNetTest < Test::Unit::TestCase
           <transHashSha2/>
         </transactionResponse>
       </createTransactionResponse>
+    XML
+  end
+
+  def unsuccessful_authorize_response_for_jcb_card
+    <<-XML
+    <?xml version="1.0" encoding="utf-8"?>
+      <createTransactionResponse xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"AnetApi/xml/v1/schema/AnetApiSchema.xsd\">
+      <refId>1</refId>
+      <messages>
+        <resultCode>Error</resultCode>
+        <message>
+          <code>E00027</code>
+          <text>The transaction was unsuccessful.</text>
+        </message>
+      </messages>
+      <transactionResponse>
+        <responseCode>3</responseCode>
+        <authCode />
+        <avsResultCode>P</avsResultCode>
+        <cvvResultCode />
+        <cavvResultCode />
+        <transId>0</transId>
+        <refTransID />
+        <transHash />
+        <testRequest>0</testRequest>
+        <accountNumber>XXXX0017</accountNumber>
+        <accountType>JCB</accountType>
+        <errors>
+          <error>
+            <errorCode>289</errorCode>
+            <errorText>This processor does not accept zero dollar authorization for this card type.</errorText>
+          </error>
+        </errors>
+        <userFields>
+          <userField>
+            <name>x_currency_code</name>
+            <value>USD</value>
+          </userField>
+        </userFields>
+        <transHashSha2 />
+      </transactionResponse>
+    </createTransactionResponse>
     XML
   end
 end
