@@ -242,7 +242,7 @@ module ActiveMerchant #:nodoc:
           'X-Version' => '2.1',
           'Authorization' => signature(post, timestamp)
         }
-        headers.merge('X-Idempotency-Key' => options[:idempotency_key]) if options[:idempotency_key]
+        headers['X-Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
         headers
       end
 
