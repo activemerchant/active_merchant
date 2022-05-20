@@ -26,6 +26,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, payment, options)
         add_metadata(post, options)
         add_ewallet(post, options)
+        add_payment_fields(post, options)
         post[:capture] = true if payment_is_card?(options)
 
         if payment_is_ach?(options)
@@ -49,6 +50,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, payment, options)
         add_metadata(post, options)
         add_ewallet(post, options)
+        add_payment_fields(post, options)
         post[:capture] = false
 
         commit(:post, 'payments', post)
@@ -179,6 +181,15 @@ module ActiveMerchant #:nodoc:
 
       def add_ewallet(post, options)
         post[:ewallet_id] = options[:ewallet_id] if options[:ewallet_id]
+      end
+
+      def add_payment_fields(post, options)
+        post[:payment] = {}
+
+        post[:payment][:complete_payment_url] = options[:complete_payment_url] if options[:complete_payment_url]
+        post[:payment][:error_payment_url] = options[:error_payment_url] if options[:error_payment_url]
+        post[:payment][:description] = options[:description] if options[:description]
+        post[:payment][:statement_descriptor] = options[:statement_descriptor] if options[:statement_descriptor]
       end
 
       def parse(body)

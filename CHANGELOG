@@ -13,6 +13,7 @@
 * BlueSnap: Add support for stored credentials [ajawadmirza] #4414
 * Monei: Add support for `lang` field [drkjc] #4421
 * Wompi: Redirect `refund` to `void` [drkjc] #4424
+* Rapyd: 3DS Support [naashton] #4422
 * Adyen: Update API version [jherreraa] #4418
 * Ogone: Updated home gateway URL [gasb150] #4419
 * Credorax: Update url gateway and credit cards [javierpedrozaing] #4417
@@ -20,6 +21,7 @@
 * DLocal: fix bug with `X-Idempotency-Key` header [dsmcclain] #4431
 * DLocal: Mark support for additional countries [gasb150] #4427
 * Authorize.net: Enable zero auth for allowed cards [jherreraa] #4430
+* Rapyd: Additional Fields [naashton] #4434
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

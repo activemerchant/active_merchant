@@ -10,7 +10,11 @@ class RemoteRapydTest < Test::Unit::TestCase
     @check = check
     @options = {
       pm_type: 'us_visa_card',
-      currency: 'USD'
+      currency: 'USD',
+      complete_payment_url: 'www.google.com',
+      error_payment_url: 'www.google.com',
+      description: 'Describe this transaction',
+      statement_descriptor: 'Statement Descriptor'
     }
     @ach_options = {
       pm_type: 'us_ach_bank',
