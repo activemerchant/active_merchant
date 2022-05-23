@@ -216,6 +216,18 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:access_key], transcript)
   end
 
+  def test_transcript_scrubbing_with_ach
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @ach_options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@check.routing_number, transcript)
+    assert_scrubbed(@gateway.options[:secret_key], transcript)
+    assert_scrubbed(@gateway.options[:access_key], transcript)
+  end
+
   def test_successful_authorize_with_3ds_v1_options
     options = @options.merge(three_d_secure: @three_d_secure)
     options[:pm_type] = 'gb_visa_card'

@@ -86,6 +86,8 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Access_key: )\w+), '\1[FILTERED]').
           gsub(%r(("number\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r(("account_number\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r(("routing_number\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("cvv\\?":\\?")\d+), '\1[FILTERED]')
       end
 
