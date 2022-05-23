@@ -1250,7 +1250,6 @@ securion_pay:
 simetrik:
   client_id: 'wNhJBdrKDk3vTmkQMAWi5zWN7y21adO3'
   client_secret: 'fq2riPpiDJaAwS4_UMAXZy1_nU1jNGz0F6gAFWOJFNmm_TfC8EFiHwMmGKAEDkwY' 
-  audience: 'https://tenant-payments-dev.us.auth0.com/api/v2/'
 
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:
