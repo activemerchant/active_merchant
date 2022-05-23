@@ -875,6 +875,11 @@ payway_dot_com:
 pin:
   api_key: "I_mo9BUUUXIwXF-avcs3LA"
 
+plexo:
+  client_id: YOUR_CLIENT_ID
+  api_key: YOUR_API_KEY
+  merchant_id: YOUR_MERCHANT_ID
+
 plugnpay:
   login: LOGIN
   password: PASSWORD
