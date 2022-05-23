@@ -150,19 +150,11 @@ class RapydTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    @gateway.expects(:ssl_request).twice.returns(successful_authorize_response, successful_void_response)
+    @gateway.expects(:ssl_request).returns(successful_verify_response)
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message
-  end
-
-  def test_successful_verify_with_failed_void
-    @gateway.expects(:ssl_request).twice.returns(successful_authorize_response, failed_void_response)
-
-    response = @gateway.verify(@credit_card, @options)
-    assert_failure response
-    assert_equal 'UNAUTHORIZED_API_CALL', response.message
   end
 
   def test_failed_verify
@@ -319,6 +311,12 @@ class RapydTest < Test::Unit::TestCase
   def failed_void_response
     %(
       {"status":{"error_code":"UNAUTHORIZED_API_CALL","status":"ERROR","message":"","response_code":"UNAUTHORIZED_API_CALL","operation_id":"12e59804-b742-44eb-aa49-4b722629faa8"}}
+    )
+  end
+
+  def successful_verify_response
+    %(
+      {"status":{"error_code":"","status":"SUCCESS","message":"","response_code":"","operation_id":"27385814-fc69-46fc-bbcc-2a5e0aac442d"},"data":{"id":"payment_2736748fec92a96c7c1280f7e46e2876","amount":0,"original_amount":0,"is_partial":false,"currency_code":"USD","country_code":"US","status":"ACT","description":"","merchant_reference_id":"","customer_token":"cus_c99aab5dae41102b0bb4276ab32e7777","payment_method":"card_5a07af7ff5c038eef4802ffb200fffa6","payment_method_data":{"id":"card_5a07af7ff5c038eef4802ffb200fffa6","type":"us_visa_card","category":"card","metadata":null,"image":"","webhook_url":"","supporting_documentation":"","next_action":"3d_verification","name":"Ryan Reynolds","last4":"1111","acs_check":"unchecked","cvv_check":"unchecked","bin_details":{"type":null,"brand":null,"level":null,"country":null,"bin_number":"411111"},"expiration_year":"35","expiration_month":"12","fingerprint_token":"ocfp_eb9edd24a3f3f59651aee0bd3d16201e"},"expiration":1653942478,"captured":false,"refunded":false,"refunded_amount":0,"receipt_email":"","redirect_url":"https://sandboxcheckout.rapyd.net/3ds-payment?token=payment_2736748fec92a96c7c1280f7e46e2876","complete_payment_url":"","error_payment_url":"","receipt_number":"","flow_type":"","address":null,"statement_descriptor":"N/A","transaction_id":"","created_at":1653337678,"metadata":{},"failure_code":"","failure_message":"","paid":false,"paid_at":0,"dispute":null,"refunds":null,"order":null,"outcome":null,"visual_codes":{},"textual_codes":{},"instructions":[],"ewallet_id":null,"ewallets":[],"payment_method_options":{},"payment_method_type":"us_visa_card","payment_method_type_category":"card","fx_rate":1,"merchant_requested_currency":null,"merchant_requested_amount":null,"fixed_side":"","payment_fees":null,"invoice":"","escrow":null,"group_payment":"","cancel_reason":null,"initiation_type":"customer_present","mid":"","next_action":"3d_verification","error_code":"","remitter_information":{}}}
     )
   end
 end

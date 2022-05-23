@@ -74,14 +74,8 @@ module ActiveMerchant #:nodoc:
         commit(:delete, "payments/#{authorization}", post)
       end
 
-      # Gateway returns an error if trying to run a $0 auth as invalid payment amount
-      # Gateway does not support void on a card transaction and refunds can only be done on completed transactions
-      # (such as a purchase). Authorize transactions are considered 'active' and not 'complete' until they are captured.
       def verify(credit_card, options = {})
-        MultiResponse.run do |r|
-          r.process { purchase(100, credit_card, options) }
-          r.process { refund(100, r.authorization, options) }
-        end
+        authorize(0, credit_card, options)
       end
 
       def supports_scrubbing?
@@ -125,7 +119,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, money, options)
-        post[:amount] = amount(money).to_f.to_s
+        post[:amount] = money.zero? ? 0 : amount(money).to_f.to_s
         post[:currency] = (options[:currency] || currency(money))
       end
 
