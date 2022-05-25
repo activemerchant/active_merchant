@@ -42,7 +42,7 @@ class RapydTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'payment_716ce0efc63aa8d91579e873d29d9d5e', response.authorization
+    assert_equal 'payment_716ce0efc63aa8d91579e873d29d9d5e', response.authorization.split('|')[0]
   end
 
   def test_successful_purchase_with_ach
@@ -163,6 +163,19 @@ class RapydTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
     assert_equal 'Do Not Honor', response.message
+  end
+
+  def test_successful_store_and_unstore
+    @gateway.expects(:ssl_request).twice.returns(successful_store_response, successful_unstore_response)
+
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert customer_id = store.params.dig('data', 'id')
+
+    unstore = @gateway.unstore(store.authorization)
+    assert_success unstore
+    assert_equal true, unstore.params.dig('data', 'deleted')
+    assert_equal customer_id, unstore.params.dig('data', 'id')
   end
 
   def test_three_d_secure
@@ -317,6 +330,18 @@ class RapydTest < Test::Unit::TestCase
   def successful_verify_response
     %(
       {"status":{"error_code":"","status":"SUCCESS","message":"","response_code":"","operation_id":"27385814-fc69-46fc-bbcc-2a5e0aac442d"},"data":{"id":"payment_2736748fec92a96c7c1280f7e46e2876","amount":0,"original_amount":0,"is_partial":false,"currency_code":"USD","country_code":"US","status":"ACT","description":"","merchant_reference_id":"","customer_token":"cus_c99aab5dae41102b0bb4276ab32e7777","payment_method":"card_5a07af7ff5c038eef4802ffb200fffa6","payment_method_data":{"id":"card_5a07af7ff5c038eef4802ffb200fffa6","type":"us_visa_card","category":"card","metadata":null,"image":"","webhook_url":"","supporting_documentation":"","next_action":"3d_verification","name":"Ryan Reynolds","last4":"1111","acs_check":"unchecked","cvv_check":"unchecked","bin_details":{"type":null,"brand":null,"level":null,"country":null,"bin_number":"411111"},"expiration_year":"35","expiration_month":"12","fingerprint_token":"ocfp_eb9edd24a3f3f59651aee0bd3d16201e"},"expiration":1653942478,"captured":false,"refunded":false,"refunded_amount":0,"receipt_email":"","redirect_url":"https://sandboxcheckout.rapyd.net/3ds-payment?token=payment_2736748fec92a96c7c1280f7e46e2876","complete_payment_url":"","error_payment_url":"","receipt_number":"","flow_type":"","address":null,"statement_descriptor":"N/A","transaction_id":"","created_at":1653337678,"metadata":{},"failure_code":"","failure_message":"","paid":false,"paid_at":0,"dispute":null,"refunds":null,"order":null,"outcome":null,"visual_codes":{},"textual_codes":{},"instructions":[],"ewallet_id":null,"ewallets":[],"payment_method_options":{},"payment_method_type":"us_visa_card","payment_method_type_category":"card","fx_rate":1,"merchant_requested_currency":null,"merchant_requested_amount":null,"fixed_side":"","payment_fees":null,"invoice":"","escrow":null,"group_payment":"","cancel_reason":null,"initiation_type":"customer_present","mid":"","next_action":"3d_verification","error_code":"","remitter_information":{}}}
+    )
+  end
+
+  def successful_store_response
+    %(
+      {"status":{"error_code":"","status":"SUCCESS","message":"","response_code":"","operation_id":"47e8bbbc-baa5-43c6-9395-df8a01645e91"},"data":{"id":"cus_4d8509d0997c7ce8aa1f63c19c1b6870","delinquent":false,"discount":null,"name":"Ryan Reynolds","default_payment_method":"card_94a3a70510109163a4eb438f06d82f78","description":"","email":"","phone_number":"","invoice_prefix":"","addresses":[],"payment_methods":{"data":[{"id":"card_94a3a70510109163a4eb438f06d82f78","type":"us_visa_card","category":"card","metadata":null,"image":"https://iconslib.rapyd.net/checkout/us_visa_card.png","webhook_url":"","supporting_documentation":"","next_action":"3d_verification","name":"Ryan Reynolds","last4":"1111","acs_check":"unchecked","cvv_check":"unchecked","bin_details":{"type":null,"brand":null,"level":null,"country":null,"bin_number":"411111"},"expiration_year":"35","expiration_month":"12","fingerprint_token":"ocfp_eb9edd24a3f3f59651aee0bd3d16201e","redirect_url":"https://sandboxcheckout.rapyd.net/3ds-payment?token=payment_f4ab1b25a09cbd769df05b30a29f71a4"}],"has_more":false,"total_count":1,"url":"/v1/customers/cus_4d8509d0997c7ce8aa1f63c19c1b6870/payment_methods"},"subscriptions":null,"created_at":1653487824,"metadata":{},"business_vat_id":"","ewallet":""}}
+    )
+  end
+
+  def successful_unstore_response
+    %(
+      {"status":{"error_code":"","status":"SUCCESS","message":"","response_code":"","operation_id":"6f7857f4-e063-4edb-ab93-da60c8563c52"},"data":{"deleted":true,"id":"cus_4d8509d0997c7ce8aa1f63c19c1b6870"}}
     )
   end
 end

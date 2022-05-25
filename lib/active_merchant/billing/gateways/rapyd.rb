@@ -27,13 +27,13 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options)
         add_ewallet(post, options)
         add_payment_fields(post, options)
-        post[:capture] = true if payment_is_card?(options)
+        post[:capture] = true if payment.is_a?(CreditCard)
 
-        if payment_is_ach?(options)
+        if payment.is_a?(Check)
           MultiResponse.run do |r|
             r.process { commit(:post, 'payments', post) }
             post = {}
-            post[:token] = r.authorization
+            post[:token] = add_reference(r.authorization)
             post[:param2] = r.params.dig('data', 'original_amount').to_s
             r.process { commit(:post, 'payments/completePayment', post) }
           end
@@ -58,12 +58,12 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         post = {}
-        commit(:post, "payments/#{authorization}/capture", post)
+        commit(:post, "payments/#{add_reference(authorization)}/capture", post)
       end
 
       def refund(money, authorization, options = {})
         post = {}
-        post[:payment] = authorization
+        post[:payment] = add_reference(authorization)
         add_invoice(post, money, options)
         add_metadata(post, options)
         commit(:post, 'refunds', post)
@@ -71,11 +71,22 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         post = {}
-        commit(:delete, "payments/#{authorization}", post)
+        commit(:delete, "payments/#{add_reference(authorization)}", post)
       end
 
       def verify(credit_card, options = {})
         authorize(0, credit_card, options)
+      end
+
+      def store(payment, options = {})
+        post = {}
+        add_payment(post, payment, options)
+        add_customer_object(post, payment)
+        commit(:post, 'customers', post)
+      end
+
+      def unstore(customer)
+        commit(:delete, "customers/#{add_reference(customer)}", {})
       end
 
       def supports_scrubbing?
@@ -93,16 +104,10 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def payment_is_ach?(options)
-        return unless options[:pm_type]
+      def add_reference(authorization)
+        return unless authorization
 
-        return true if options[:pm_type].include?('_bank')
-      end
-
-      def payment_is_card?(options)
-        return unless options[:pm_type]
-
-        return true if options[:pm_type].include?('_card')
+        authorization.split('|')[0]
       end
 
       def add_address(post, creditcard, options)
@@ -126,10 +131,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment, options)
-        if payment_is_card?(options)
+        if payment.is_a?(CreditCard)
           add_creditcard(post, payment, options)
-        elsif payment_is_ach?(options)
+        elsif payment.is_a?(Check)
           add_ach(post, payment, options)
+        else
+          add_token(post, payment, options)
         end
       end
 
@@ -159,6 +166,10 @@ module ActiveMerchant #:nodoc:
         post[:payment_method][:fields][:payment_purpose] = options[:payment_purpose] if options[:payment_purpose]
       end
 
+      def add_token(post, payment, options)
+        post[:payment_method] = payment
+      end
+
       def add_3ds(post, payment, options)
         return unless three_d_secure = options[:three_d_secure]
 
@@ -186,6 +197,10 @@ module ActiveMerchant #:nodoc:
         post[:payment][:error_payment_url] = options[:error_payment_url] if options[:error_payment_url]
         post[:payment][:description] = options[:description] if options[:description]
         post[:payment][:statement_descriptor] = options[:statement_descriptor] if options[:statement_descriptor]
+      end
+
+      def add_customer_object(post, payment)
+        post[:name] = "#{payment.first_name} #{payment.last_name}"
       end
 
       def parse(body)
@@ -260,7 +275,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response.dig('data') ? response.dig('data', 'id') : response.dig('status', 'operation_id')
+        id = response.dig('data') ? response.dig('data', 'id') : response.dig('status', 'operation_id')
+
+        "#{id}|#{response.dig('data', 'default_payment_method')}"
       end
 
       def error_code_from(response)

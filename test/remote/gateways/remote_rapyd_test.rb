@@ -146,7 +146,7 @@ class RemoteRapydTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_equal 'The request tried to retrieve a payment, but the payment was not found. The request was rejected. Corrective action: Use a valid payment ID.', response.message
+    assert_equal 'The request attempted an operation that requires a payment ID, but the payment was not found. The request was rejected. Corrective action: Use the ID of a valid payment.', response.message
   end
 
   def test_failed_void_with_payment_method_error
@@ -194,6 +194,32 @@ class RemoteRapydTest < Test::Unit::TestCase
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_equal 'Do Not Honor', response.message
+  end
+
+  def test_successful_store_and_unstore
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert customer_id = store.params.dig('data', 'id')
+    assert store.params.dig('data', 'default_payment_method')
+
+    unstore = @gateway.unstore(store.authorization)
+    assert_success unstore
+    assert_equal true, unstore.params.dig('data', 'deleted')
+    assert_equal customer_id, unstore.params.dig('data', 'id')
+  end
+
+  def test_failed_store
+    store = @gateway.store(@declined_card, @options)
+    assert_failure store
+  end
+
+  def test_failed_unstore
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert store.params.dig('data', 'id')
+
+    unstore = @gateway.unstore('')
+    assert_failure unstore
   end
 
   def test_invalid_login
