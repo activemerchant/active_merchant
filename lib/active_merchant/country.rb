@@ -67,6 +67,7 @@ module ActiveMerchant #:nodoc:
     COUNTRIES = [
       { alpha2: 'AF', name: 'Afghanistan', alpha3: 'AFG', numeric: '004' },
       { alpha2: 'AL', name: 'Albania', alpha3: 'ALB', numeric: '008' },
+      { alpha2: 'AC', name: 'Ascension Island', alpha3: 'ASC' },
       { alpha2: 'DZ', name: 'Algeria', alpha3: 'DZA', numeric: '012' },
       { alpha2: 'AS', name: 'American Samoa', alpha3: 'ASM', numeric: '016' },
       { alpha2: 'AD', name: 'Andorra', alpha3: 'AND', numeric: '020' },
@@ -292,6 +293,7 @@ module ActiveMerchant #:nodoc:
       { alpha2: 'TK', name: 'Tokelau', alpha3: 'TKL', numeric: '772' },
       { alpha2: 'TO', name: 'Tonga', alpha3: 'TON', numeric: '776' },
       { alpha2: 'TT', name: 'Trinidad and Tobago', alpha3: 'TTO', numeric: '780' },
+      { alpha2: 'TA', name: 'Tristan da Cunha', alpha3: 'TAA' },
       { alpha2: 'TN', name: 'Tunisia', alpha3: 'TUN', numeric: '788' },
       { alpha2: 'TR', name: 'Turkey', alpha3: 'TUR', numeric: '792' },
       { alpha2: 'TM', name: 'Turkmenistan', alpha3: 'TKM', numeric: '795' },
