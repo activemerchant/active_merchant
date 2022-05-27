@@ -177,11 +177,22 @@ module ActiveMerchant
       end
 
       def verify(credit_card, options = {})
-        amount = credit_card.brand == 'jcb' ? 100 : 0
+        requires!(options, :billing_address) if options[:verify_amount].present?
+        requires!(options[:billing_address], :address1, :zip) if options[:verify_amount].present?
+
+        amount =  options[:verify_amount] || eligible_for_0_auth?(credit_card, options) ? 0 : 100
+
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(amount, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) } unless amount == 0
         end
+      end
+
+      def eligible_for_0_auth?(credit_card, options)
+        credit_card.is_a?(CreditCard) &&
+          credit_card.brand != 'jcb' &&
+          options.dig(:billing_address, :address1).present? &&
+          options.dig(:billing_address, :zip).present?
       end
 
       def store(credit_card, options = {})
@@ -816,6 +827,9 @@ module ActiveMerchant
 
       def commit(action, options = {}, &payload)
         raw_response = ssl_post(url, post_data(action, &payload), headers)
+
+        require 'pry'
+        binding.pry
         response = parse(action, raw_response, options)
 
         avs_result_code = response[:avs_result_code].upcase if response[:avs_result_code]
