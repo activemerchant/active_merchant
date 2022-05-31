@@ -29,6 +29,7 @@
 * VisaNet Peru: Update `purchase_number` [rachelkirk] #4437
 * CardConnect:  Add support for 3ds V2 [javierpedrozaing] #4429
 * Rapyd: Support `store` and `unstore` [naashton] #4439
+* Orbital: Update API version to 9.0 [gasb150] #4440
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
