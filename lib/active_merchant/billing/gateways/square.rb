@@ -99,6 +99,10 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'refunds', post, options)
       end
 
+      def show_payment(payment_id, options)
+        commit(:get, "payments/#{payment_id}", nil, options)
+      end
+
       def store(payment, options = {})
         requires!(options, :idempotency_key)
 
@@ -194,7 +198,7 @@ module ActiveMerchant #:nodoc:
         url = (test? ? test_url : live_url)
         raw_response = response = nil
         begin
-          raw_response = ssl_request(method, "#{url}/#{endpoint}", parameters.to_json, headers(options))
+          raw_response = ssl_request(method, "#{url}/#{endpoint}", parameters.presence&.to_json, headers(options))
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
