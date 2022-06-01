@@ -37,6 +37,7 @@ module ActiveMerchant #:nodoc:
 
         add_payment_method(post, payment, options)
         add_items(post, options[:items])
+        add_meta_data(post, options[:meta_data])
         add_amount(money, post, options[:amount_details])
         add_browser_details(post, options[:browser_details])
         add_capture_type(post, options)
@@ -131,6 +132,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_meta_data(post, meta_data)
+        return unless meta_data
+
+        meta_data.transform_keys! { |key| key.to_s.camelize.to_sym }
+        post[:Metadata] = meta_data
+      end
+
       def add_amount(money, post, amount_options)
         post[:Amount] = {}
 
@@ -208,10 +216,21 @@ module ActiveMerchant #:nodoc:
         url.split('/')[1]
       end
 
+      def reorder_amount_fields(response)
+        return response unless response['amount']
+
+        amount_obj = response['amount']
+        response['amount'] = amount_obj['total'].to_i if amount_obj['total']
+        response['currency'] = amount_obj['currency'] if amount_obj['currency']
+        response['amount_details'] = amount_obj['details'] if amount_obj['details']
+        response
+      end
+
       def commit(action, parameters)
         base_url = (test? ? test_url : live_url)
         url = build_url(action, base_url)
         response = parse(ssl_post(url, parameters.to_json, header(parameters)))
+        response = reorder_amount_fields(response) if action == 'authonly'
 
         Response.new(
           success_from(response),

@@ -49,6 +49,18 @@ class RemotePlexoTest < Test::Unit::TestCase
     assert_equal 'You have been mocked.', response.message
   end
 
+  def test_successful_authorize_with_meta_data
+    meta = {
+      custom_one: 'my field 1'
+    }
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge({ meta_data: meta }))
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'You have been mocked.', capture.message
+  end
+
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
