@@ -29,6 +29,7 @@
 * VisaNet Peru: Update `purchase_number` [rachelkirk] #4437
 * CardConnect:  Add support for 3ds V2 [javierpedrozaing] #4429
 * Rapyd: Support `store` and `unstore` [naashton] #4439
+* Plexo:  Add `meta_data` fields and reorder amount object in response [ajawadmirza] #4441
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

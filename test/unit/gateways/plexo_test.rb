@@ -28,6 +28,10 @@ class PlexoTest < Test::Unit::TestCase
       browser_details: {
         finger_print: '12345',
         ip: '127.0.0.1'
+      },
+      meta_data: {
+        custom_one: 'test1',
+        test_a: 'abc'
       }
     }
 
@@ -83,6 +87,31 @@ class PlexoTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
+  end
+
+  def test_successful_authorize_with_meta_fields
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      @options[:meta_data].keys.each do |meta_key|
+        camel_key = meta_key.to_s.camelize
+        assert_equal request['Metadata'][camel_key], @options[:meta_data][meta_key]
+      end
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_successful_reordering_of_amount_in_authorize
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    original_response = JSON.parse(successful_authorize_response)
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal response.params['amount'], original_response['amount']['total']
+    assert_equal response.params['currency'], original_response['amount']['currency']
+    assert_equal response.params['amount_details'], original_response['amount']['details']
   end
 
   def test_successful_authorize_with_extra_options
