@@ -280,16 +280,16 @@ module ActiveMerchant #:nodoc:
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
           if result.success?
             if options[:payment_method_nonce]
-              credit_card_token = result.customer.paypal_accounts[0].token
+              saved_token = result.customer.paypal_accounts[0].token
             else
-              credit_card_token = result.customer.credit_cards[0].token
+              saved_token = result.customer.credit_cards[0].token
             end
           end
           Response.new(result.success?, message_from_result(result),
             {
               braintree_customer: (customer_hash(result.customer, :include_credit_cards) if result.success?),
               customer_vault_id: (result.customer.id if result.success?),
-              credit_card_token: (credit_card_token if result.success?)
+              credit_card_token: (saved_token if result.success?)
             },
             authorization: (result.customer.id if result.success?),
             error_code: error_code_from_result(result))
