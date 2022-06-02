@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       TEST_XMLNS = 'https://secure.modpay.com/netservices/test/'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.modpay.com'
       self.display_name = 'Modern Payments'
 
@@ -17,8 +17,8 @@ module ActiveMerchant #:nodoc:
       ERROR_MESSAGE   = 'Transaction error'
 
       PAYMENT_METHOD = {
-        :check => 1,
-        :credit_card => 2
+        check: 1,
+        credit_card: 2
       }
 
       def initialize(options = {})
@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        post[:acctNum]   = options[:customer]
+        post[:acctNum] = options[:customer]
       end
 
       def add_address(post, options)
@@ -111,7 +111,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(action, params)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'env:Envelope',
           { 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
@@ -147,16 +147,14 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, params)
         data = ssl_post(url(action), build_request(action, params),
-          { 'Content-Type' =>'text/xml; charset=utf-8',
-            'SOAPAction' => "#{xmlns(action)}#{action}" }
-        )
+          { 'Content-Type' => 'text/xml; charset=utf-8',
+            'SOAPAction' => "#{xmlns(action)}#{action}" })
 
         response = parse(action, data)
         Response.new(successful?(action, response), message_from(action, response), response,
-          :test => test?,
-          :authorization => authorization_from(action, response),
-          :avs_result => { :code => response[:avs_code] }
-        )
+          test: test?,
+          authorization: authorization_from(action, response),
+          avs_result: { code: response[:avs_code] })
       end
 
       def authorization_from(action, response)

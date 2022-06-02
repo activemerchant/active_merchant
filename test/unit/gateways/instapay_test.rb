@@ -2,7 +2,7 @@ require 'test_helper'
 
 class InstapayTest < Test::Unit::TestCase
   def setup
-    @gateway = InstapayGateway.new(:login => 'TEST0')
+    @gateway = InstapayGateway.new(login: 'TEST0')
     @credit_card = credit_card
     @amount = 100
   end

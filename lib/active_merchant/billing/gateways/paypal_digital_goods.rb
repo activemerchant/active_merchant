@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
       def build_setup_request(action, money, options)
         requires!(options, :items)
         raise ArgumentError, 'Must include at least 1 Item' unless options[:items].length > 0
+
         options[:items].each do |item|
           requires!(item, :name, :number, :quantity, :amount, :description, :category)
           raise ArgumentError, "Each of the items must have the category 'Digital'" unless item[:category] == 'Digital'
@@ -38,7 +39,6 @@ module ActiveMerchant #:nodoc:
 
         super
       end
-
     end
   end
 end

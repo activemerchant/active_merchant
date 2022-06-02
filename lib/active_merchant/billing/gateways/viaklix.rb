@@ -8,13 +8,13 @@ module ActiveMerchant #:nodoc:
       self.delimiter = "\r\n"
 
       self.actions = {
-        :purchase => 'SALE',
-        :credit => 'CREDIT'
+        purchase: 'SALE',
+        credit: 'CREDIT'
       }
 
       APPROVED = '0'
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.supported_countries = ['US']
       self.display_name = 'ViaKLIX'
       self.homepage_url = 'http://viaklix.com'
@@ -49,9 +49,7 @@ module ActiveMerchant #:nodoc:
       # Make a credit to a card (Void can only be done from the virtual terminal)
       # Viaklix does not support credits by reference. You must pass in the credit card
       def credit(money, creditcard, options = {})
-        if creditcard.is_a?(String)
-          raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card'
-        end
+        raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card' if creditcard.is_a?(String)
 
         form = {}
         add_invoice(form, options)
@@ -109,9 +107,7 @@ module ActiveMerchant #:nodoc:
         form[:card_number] = creditcard.number
         form[:exp_date] = expdate(creditcard)
 
-        if creditcard.verification_value?
-          add_verification_value(form, creditcard)
-        end
+        add_verification_value(form, creditcard) if creditcard.verification_value?
 
         form[:first_name] = creditcard.first_name.to_s.slice(0, 20)
         form[:last_name] = creditcard.last_name.to_s.slice(0, 30)
@@ -141,11 +137,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(parameters)))
 
         Response.new(response['result'] == APPROVED, message_from(response), response,
-          :test => @options[:test] || test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => response['avs_response'] },
-          :cvv_result => response['cvv2_response']
-        )
+          test: @options[:test] || test?,
+          authorization: authorization_from(response),
+          avs_result: { code: response['avs_response'] },
+          cvv_result: response['cvv2_response'])
       end
 
       def authorization_from(response)

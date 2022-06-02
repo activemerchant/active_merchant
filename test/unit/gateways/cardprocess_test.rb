@@ -167,7 +167,7 @@ class CardprocessTest < Test::Unit::TestCase
       '800.800.202' => :invalid_zip
     }
     codes.each_pair do |code, key|
-      response = {'result' => {'code' => code}}
+      response = { 'result' => { 'code' => code } }
       assert_equal Gateway::STANDARD_ERROR_CODE[key], @gateway.send(:error_code_from, response), "expecting #{code} => #{key}"
     end
   end

@@ -43,7 +43,7 @@ class TelrTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/029894296182/, data)
     end.respond_with(successful_capture_response)
 
@@ -77,7 +77,7 @@ class TelrTest < Test::Unit::TestCase
 
     void = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/029894296182/, data)
     end.respond_with(successful_void_response)
 
@@ -87,7 +87,7 @@ class TelrTest < Test::Unit::TestCase
   def test_failed_void
     response = stub_comms do
       @gateway.void('5d53a33d960c46d00f5dc061947d998c')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/5d53a33d960c46d00f5dc061947d998c/, data)
     end.respond_with(failed_void_response)
 
@@ -104,7 +104,7 @@ class TelrTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/029724176180/, data)
     end.respond_with(successful_refund_response)
 
@@ -145,7 +145,7 @@ class TelrTest < Test::Unit::TestCase
 
     ref_purchase = stub_comms do
       @gateway.purchase(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/029724176180/, data)
     end.respond_with(successful_reference_purchase_response)
 

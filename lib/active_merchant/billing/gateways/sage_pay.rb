@@ -13,26 +13,26 @@ module ActiveMerchant #:nodoc:
       APPROVED = 'OK'
 
       TRANSACTIONS = {
-        :purchase => 'PAYMENT',
-        :credit => 'REFUND',
-        :authorization => 'DEFERRED',
-        :capture => 'RELEASE',
-        :void => 'VOID',
-        :abort => 'ABORT',
-        :store => 'TOKEN',
-        :unstore => 'REMOVETOKEN',
-        :repeat => 'REPEAT'
+        purchase: 'PAYMENT',
+        credit: 'REFUND',
+        authorization: 'DEFERRED',
+        capture: 'RELEASE',
+        void: 'VOID',
+        abort: 'ABORT',
+        store: 'TOKEN',
+        unstore: 'REMOVETOKEN',
+        repeat: 'REPEAT'
       }
 
       CREDIT_CARDS = {
-        :visa => 'VISA',
-        :master => 'MC',
-        :delta => 'DELTA',
-        :maestro => 'MAESTRO',
-        :american_express => 'AMEX',
-        :electron => 'UKE',
-        :diners_club => 'DC',
-        :jcb => 'JCB'
+        visa: 'VISA',
+        master: 'MC',
+        delta: 'DELTA',
+        maestro: 'MAESTRO',
+        american_express: 'AMEX',
+        electron: 'UKE',
+        diners_club: 'DC',
+        jcb: 'JCB'
       }
 
       AVS_CODE = {
@@ -69,8 +69,8 @@ module ActiveMerchant #:nodoc:
         recipient_dob: :FIRecipientDoB
       }
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :diners_club]
-      self.supported_countries = ['GB', 'IE']
+      self.supported_countries = %w[GB IE]
+      self.supported_cardtypes = %i[visa master american_express discover jcb maestro diners_club]
       self.default_currency = 'GBP'
 
       self.homepage_url = 'http://www.sagepay.com'
@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
         commit(:unstore, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -213,18 +213,18 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(post, money, options)
         currency = options[:currency] || currency(money)
-        add_pair(post, :Amount, localized_amount(money, currency), :required => true)
-        add_pair(post, :Currency, currency, :required => true)
+        add_pair(post, :Amount, localized_amount(money, currency), required: true)
+        add_pair(post, :Currency, currency, required: true)
       end
 
       def add_currency(post, money, options)
         currency = options[:currency] || currency(money)
-        add_pair(post, :Currency, currency, :required => true)
+        add_pair(post, :Currency, currency, required: true)
       end
 
       # doesn't actually use the currency -- dodgy!
       def add_release_amount(post, money, options)
-        add_pair(post, :ReleaseAmount, amount(money), :required => true)
+        add_pair(post, :ReleaseAmount, amount(money), required: true)
       end
 
       def add_customer_data(post, options)
@@ -248,7 +248,7 @@ module ActiveMerchant #:nodoc:
           add_pair(post, :BillingAddress1, truncate(billing_address[:address1], 100))
           add_pair(post, :BillingAddress2, truncate(billing_address[:address2], 100))
           add_pair(post, :BillingCity, truncate(billing_address[:city], 40))
-          add_pair(post, :BillingState, truncate(billing_address[:state], 2)) if is_usa(billing_address[:country])
+          add_pair(post, :BillingState, truncate(billing_address[:state], 2)) if usa?(billing_address[:country])
           add_pair(post, :BillingCountry, truncate(billing_address[:country], 2))
           add_pair(post, :BillingPhone, sanitize_phone(billing_address[:phone]))
           add_pair(post, :BillingPostCode, truncate(billing_address[:zip], 10))
@@ -261,7 +261,7 @@ module ActiveMerchant #:nodoc:
           add_pair(post, :DeliveryAddress1, truncate(shipping_address[:address1], 100))
           add_pair(post, :DeliveryAddress2, truncate(shipping_address[:address2], 100))
           add_pair(post, :DeliveryCity, truncate(shipping_address[:city], 40))
-          add_pair(post, :DeliveryState, truncate(shipping_address[:state], 2)) if is_usa(shipping_address[:country])
+          add_pair(post, :DeliveryState, truncate(shipping_address[:state], 2)) if usa?(shipping_address[:country])
           add_pair(post, :DeliveryCountry, truncate(shipping_address[:country], 2))
           add_pair(post, :DeliveryPhone, sanitize_phone(shipping_address[:phone]))
           add_pair(post, :DeliveryPostCode, truncate(shipping_address[:zip], 10))
@@ -269,7 +269,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        add_pair(post, :VendorTxCode, sanitize_order_id(options[:order_id]), :required => true)
+        add_pair(post, :VendorTxCode, sanitize_order_id(options[:order_id]), required: true)
         add_pair(post, :Description, truncate(options[:description] || options[:order_id], 100))
       end
 
@@ -286,10 +286,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(post, credit_card)
-        add_pair(post, :CardHolder, truncate(credit_card.name, 50), :required => true)
-        add_pair(post, :CardNumber, credit_card.number, :required => true)
+        add_pair(post, :CardHolder, truncate(credit_card.name, 50), required: true)
+        add_pair(post, :CardNumber, credit_card.number, required: true)
 
-        add_pair(post, :ExpiryDate, format_date(credit_card.month, credit_card.year), :required => true)
+        add_pair(post, :ExpiryDate, format_date(credit_card.month, credit_card.year), required: true)
         add_pair(post, :CardType, map_card_type(credit_card))
 
         add_pair(post, :CV2, credit_card.verification_value)
@@ -312,11 +312,12 @@ module ActiveMerchant #:nodoc:
 
       def sanitize_phone(phone)
         return nil unless phone
+
         cleansed = phone.to_s.gsub(/[^0-9+]/, '')
         truncate(cleansed, 20)
       end
 
-      def is_usa(country)
+      def usa?(country)
         truncate(country, 2) == 'US'
       end
 
@@ -346,14 +347,13 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url_for(action), post_data(action, parameters)))
 
         Response.new(response['Status'] == APPROVED, message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(response, parameters, action),
-          :avs_result => {
-            :street_match => AVS_CODE[response['AddressResult']],
-            :postal_match => AVS_CODE[response['PostCodeResult']],
+          test: test?,
+          authorization: authorization_from(response, parameters, action),
+          avs_result: {
+            street_match: AVS_CODE[response['AddressResult']],
+            postal_match: AVS_CODE[response['PostCodeResult']]
           },
-          :cvv_result => CVV_CODE[response['CV2Result']]
-        )
+          cvv_result: CVV_CODE[response['CV2Result']])
       end
 
       def authorization_from(response, params, action)
@@ -361,11 +361,11 @@ module ActiveMerchant #:nodoc:
         when :store
           response['Token']
         else
-          [ params[:VendorTxCode],
-            response['VPSTxId'] || params[:VPSTxId],
-            response['TxAuthNo'],
-            response['SecurityKey'] || params[:SecurityKey],
-            action ].join(';')
+          [params[:VendorTxCode],
+           response['VPSTxId'] || params[:VPSTxId],
+           response['TxAuthNo'],
+           response['SecurityKey'] || params[:SecurityKey],
+           action].join(';')
         end
       end
 
@@ -379,33 +379,32 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_url(action)
-        endpoint = case action
-        when :purchase, :authorization then 'vspdirect-register'
-        when :store then 'directtoken'
-        else TRANSACTIONS[action].downcase
-        end
+        endpoint =
+          case action
+          when :purchase, :authorization then 'vspdirect-register'
+          when :store then 'directtoken'
+          else TRANSACTIONS[action].downcase
+          end
         "#{test? ? self.test_url : self.live_url}/#{endpoint}.vsp"
       end
 
       def build_simulator_url(action)
-        endpoint = [ :purchase, :authorization ].include?(action) ? 'VSPDirectGateway.asp' : "VSPServerGateway.asp?Service=Vendor#{TRANSACTIONS[action].capitalize}Tx"
+        endpoint = %i[purchase authorization].include?(action) ? 'VSPDirectGateway.asp' : "VSPServerGateway.asp?Service=Vendor#{TRANSACTIONS[action].capitalize}Tx"
         "#{self.simulator_url}/#{endpoint}"
       end
 
       def message_from(response)
-        response['Status'] == APPROVED ? 'Success' : (response['StatusDetail'] || 'Unspecified error')    # simonr 20080207 can't actually get non-nil blanks, so this is shorter
+        response['Status'] == APPROVED ? 'Success' : (response['StatusDetail'] || 'Unspecified error') # simonr 20080207 can't actually get non-nil blanks, so this is shorter
       end
 
       def post_data(action, parameters = {})
         parameters.update(
-          :Vendor => @options[:login],
-          :TxType => TRANSACTIONS[action],
-          :VPSProtocol => @options.fetch(:protocol_version, '3.00')
+          Vendor: @options[:login],
+          TxType: TRANSACTIONS[action],
+          VPSProtocol: @options.fetch(:protocol_version, '3.00')
         )
 
-        if(application_id && (application_id != Gateway.application_id))
-          parameters.update(:ReferrerID => application_id)
-        end
+        parameters.update(ReferrerID: application_id) if application_id && (application_id != Gateway.application_id)
 
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
@@ -427,6 +426,7 @@ module ActiveMerchant #:nodoc:
 
       def past_purchase_reference?(payment_method)
         return false unless payment_method.is_a?(String)
+
         payment_method.split(';').last == 'purchase'
       end
     end

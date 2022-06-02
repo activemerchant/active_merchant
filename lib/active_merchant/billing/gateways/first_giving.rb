@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.firstgiving.com'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.firstgiving.com/'
       self.default_currency = 'USD'
       self.display_name = 'FirstGiving'
@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, identifier, options = {})
         get = {}
         get[:transactionId] = identifier
-        get[:tranType]     = 'REFUNDREQUEST'
+        get[:tranType] = 'REFUNDREQUEST'
         commit('/transaction/refundrequest?' + encode(get))
       end
 
@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:billToAddressLine1]  = billing_address[:address1]
           post[:billToCity]          = billing_address[:city]
           post[:billToState]         = billing_address[:state]
@@ -83,13 +83,14 @@ module ActiveMerchant #:nodoc:
         end
         element.children.each do |child|
           next if child.text?
+
           response[child.name] = child.text
         end
 
         response
       end
 
-      def commit(action, post=nil)
+      def commit(action, post = nil)
         url = (test? ? self.test_url : self.live_url) + action
 
         begin

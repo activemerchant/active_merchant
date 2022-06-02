@@ -3,8 +3,8 @@ module ActiveMerchant
     class PaywayGateway < Gateway
       self.live_url = self.test_url = 'https://ccapi.client.qvalent.com/payway/ccapi'
 
-      self.supported_countries = [ 'AU' ]
-      self.supported_cardtypes = [ :visa, :master, :diners_club, :american_express, :bankcard ]
+      self.supported_countries = ['AU']
+      self.supported_cardtypes = %i[visa master diners_club american_express bankcard]
       self.display_name        = 'Pay Way'
       self.homepage_url        = 'http://www.payway.com.au'
       self.default_currency    = 'AUD'
@@ -17,7 +17,7 @@ module ActiveMerchant
         '3' => 'Rejected'
       }
 
-      RESPONSE_CODES= {
+      RESPONSE_CODES = {
         '00' => 'Completed Successfully',
         '01' => 'Refer to card issuer',
         '03' => 'Invalid merchant',
@@ -74,16 +74,16 @@ module ActiveMerchant
         'QZ' => 'Zero value transaction'
       }
 
-      TRANSACTIONS  = {
-        :authorize  => 'preauth',
-        :purchase   => 'capture',
-        :capture    => 'captureWithoutAuth',
-        :status     => 'query',
-        :refund     => 'refund',
-        :store      => 'registerAccount'
+      TRANSACTIONS = {
+        authorize: 'preauth',
+        purchase: 'capture',
+        capture: 'captureWithoutAuth',
+        status: 'query',
+        refund: 'refund',
+        store: 'registerAccount'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         @options = options
 
         @options[:merchant] ||= 'TEST' if test?
@@ -92,7 +92,7 @@ module ActiveMerchant
         @options[:eci] ||= 'SSL'
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         requires!(options, :order_id)
 
         post = {}
@@ -101,7 +101,7 @@ module ActiveMerchant
         commit(:authorize, post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         requires!(options, :order_id)
 
         post = {}
@@ -110,7 +110,7 @@ module ActiveMerchant
         commit(:capture, post)
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         requires!(options, :order_id)
 
         post = {}
@@ -119,7 +119,7 @@ module ActiveMerchant
         commit(:purchase, post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         requires!(options, :order_id)
 
         post = {}
@@ -128,7 +128,7 @@ module ActiveMerchant
         commit(:refund, post)
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         requires!(options, :billing_id)
 
         post = {}
@@ -137,7 +137,7 @@ module ActiveMerchant
         commit(:store, post)
       end
 
-      def status(options={})
+      def status(options = {})
         requires!(options, :order_id)
 
         commit(:status, 'customer.orderNumber' => options[:order_id])
@@ -193,14 +193,14 @@ module ActiveMerchant
         success = (params[:summary_code] ? (params[:summary_code] == '0') : (params[:response_code] == '00'))
 
         Response.new(success, message, params,
-          :test => (@options[:merchant].to_s == 'TEST'),
-          :authorization => post[:order_number]
-        )
+          test: (@options[:merchant].to_s == 'TEST'),
+          authorization: post[:order_number])
       rescue ActiveMerchant::ResponseError => e
         raise unless e.response.code == '403'
-        return Response.new(false, 'Invalid credentials', {}, :test => test?)
+
+        return Response.new(false, 'Invalid credentials', {}, test: test?)
       rescue ActiveMerchant::ClientCertificateError
-        return Response.new(false, 'Invalid certificate', {}, :test => test?)
+        return Response.new(false, 'Invalid certificate', {}, test: test?)
       end
     end
   end

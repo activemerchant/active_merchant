@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
       self.live_periodic_url = 'https://transact.nab.com.au/xmlapi/periodic'
 
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       self.homepage_url = 'http://transact.nab.com.au'
       self.display_name = 'NAB Transact'
@@ -25,22 +25,22 @@ module ActiveMerchant #:nodoc:
 
       # Transactions currently accepted by NAB Transact XML API
       TRANSACTIONS = {
-        :purchase => 0,           # Standard Payment
-        :refund => 4,             # Refund
-        :void => 6,               # Client Reversal (Void)
-        :unmatched_refund => 666, # Unmatched Refund
-        :authorization => 10,     # Preauthorise
-        :capture => 11            # Preauthorise Complete (Advice)
+        purchase: 0,           # Standard Payment
+        refund: 4,             # Refund
+        void: 6,               # Client Reversal (Void)
+        unmatched_refund: 666, # Unmatched Refund
+        authorization: 10,     # Preauthorise
+        capture: 11            # Preauthorise Complete (Advice)
       }
 
       PERIODIC_TYPES = {
-        :addcrn    => 5,
-        :editcrn   => 5,
-        :deletecrn => 5,
-        :trigger   => 8
+        addcrn: 5,
+        editcrn: 5,
+        deletecrn: 5,
+        trigger: 8
       }
 
-      SUCCESS_CODES = [ '00', '08', '11', '16', '77' ]
+      SUCCESS_CODES = %w[00 08 11 16 77]
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -87,6 +87,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         return '' if transcript.blank?
+
         transcript.
           gsub(%r((<cardNumber>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<cvv>)[^<]+(<))i, '\1[FILTERED]\2').
@@ -98,8 +99,8 @@ module ActiveMerchant #:nodoc:
       def add_metadata(xml, options)
         if options[:merchant_name] || options[:merchant_location]
           xml.tag! 'metadata' do
-            xml.tag! 'meta', :name => 'ca_name', :value => options[:merchant_name] if options[:merchant_name]
-            xml.tag! 'meta', :name => 'ca_location', :value => options[:merchant_location] if options[:merchant_location]
+            xml.tag! 'meta', name: 'ca_name', value: options[:merchant_name] if options[:merchant_name]
+            xml.tag! 'meta', name: 'ca_location', value: options[:merchant_location] if options[:merchant_location]
           end
         end
       end
@@ -236,17 +237,15 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
 
         Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(action, response)
-        )
+          test: test?,
+          authorization: authorization_from(action, response))
       end
 
       def commit_periodic(action, request)
         response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, build_periodic_request(action, request)))
         Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(action, response)
-        )
+          test: test?,
+          authorization: authorization_from(action, response))
       end
 
       def success?(response)
@@ -298,7 +297,6 @@ module ActiveMerchant #:nodoc:
       def request_timeout
         @options[:request_timeout] || 60
       end
-
     end
   end
 end

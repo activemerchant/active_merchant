@@ -13,12 +13,12 @@ module ActiveMerchant #:nodoc:
       # VISA, Mastercard, Diners Club and Farmers cards are supported
       #
       # However, regular accounts with DPS only support VISA and Mastercard
-      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb ]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
-      self.supported_countries = %w[ AU FJ GB HK IE MY NZ PG SG US ]
+      self.supported_countries = %w[AU FJ GB HK IE MY NZ PG SG US]
 
-      self.homepage_url = 'http://www.paymentexpress.com/'
-      self.display_name = 'PaymentExpress'
+      self.homepage_url = 'https://www.windcave.com/'
+      self.display_name = 'Windcave (formerly PaymentExpress)'
 
       self.live_url = 'https://sec.paymentexpress.com/pxpost.aspx'
       self.test_url = 'https://uat.paymentexpress.com/pxpost.aspx'
@@ -26,11 +26,11 @@ module ActiveMerchant #:nodoc:
       APPROVED = '1'
 
       TRANSACTIONS = {
-        :purchase       => 'Purchase',
-        :credit         => 'Refund',
-        :authorization  => 'Auth',
-        :capture        => 'Complete',
-        :validate       => 'Validate'
+        purchase: 'Purchase',
+        credit: 'Refund',
+        authorization: 'Auth',
+        capture: 'Complete',
+        validate: 'Validate'
       }
 
       # We require the DPS gateway username and password when the object is created.
@@ -86,6 +86,11 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
+      def verify(payment_source, options = {})
+        request = build_purchase_or_authorization_request(100, payment_source, options)
+        commit(:validate, request)
+      end
+
       # Token Based Billing
       #
       # Instead of storing the credit card details locally, you can store them inside the
@@ -118,7 +123,7 @@ module ActiveMerchant #:nodoc:
       #
       # Note, once stored, PaymentExpress does not support unstoring a stored card.
       def store(credit_card, options = {})
-        request  = build_token_request(credit_card, options)
+        request = build_token_request(credit_card, options)
         commit(:validate, request)
       end
 
@@ -149,7 +154,7 @@ module ActiveMerchant #:nodoc:
           add_credit_card(result, payment_source)
         end
 
-        add_amount(result, money, options)
+        add_amount(result, money, options) if money
         add_invoice(result, options)
         add_address_verification_data(result, options)
         add_optional_elements(result, options)
@@ -229,8 +234,8 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address] || options[:address]
         return if address.nil?
 
-        xml.add_element('EnableAvsData').text = 1
-        xml.add_element('AvsAction').text = 1
+        xml.add_element('EnableAvsData').text = options[:enable_avs_data] || 1
+        xml.add_element('AvsAction').text = options[:avs_action] || 1
 
         xml.add_element('AvsStreetAddress').text = address[:address1]
         xml.add_element('AvsPostCode').text = address[:zip]
@@ -302,9 +307,8 @@ module ActiveMerchant #:nodoc:
 
         # Return a response
         PaymentExpressResponse.new(response[:success] == APPROVED, message_from(response), response,
-          :test => response[:test_mode] == '1',
-          :authorization => authorization_from(action, response)
-        )
+          test: response[:test_mode] == '1',
+          authorization: authorization_from(action, response))
       end
 
       # Response XML documentation: http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#XMLTxnOutput
@@ -335,7 +339,7 @@ module ActiveMerchant #:nodoc:
       def authorization_from(action, response)
         case action
         when :validate
-          (response[:billing_id] || response[:dps_billing_id])
+          (response[:billing_id] || response[:dps_billing_id] || response[:dps_txn_ref])
         else
           response[:dps_txn_ref]
         end
@@ -362,7 +366,7 @@ module ActiveMerchant #:nodoc:
       # add a method to response so we can easily get the token
       # for Validate transactions
       def token
-        @params['billing_id'] || @params['dps_billing_id']
+        @params['billing_id'] || @params['dps_billing_id'] || @params['dps_txn_ref']
       end
     end
   end

@@ -4,9 +4,9 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sandbox.ebanxpay.com/ws/'
       self.live_url = 'https://api.ebanxpay.com/ws/'
 
-      self.supported_countries = ['BR', 'MX', 'CO', 'CL', 'AR']
+      self.supported_countries = %w(BR MX CO CL AR PE)
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club]
 
       self.homepage_url = 'http://www.ebanx.com/'
       self.display_name = 'EBANX'
@@ -37,12 +37,21 @@ module ActiveMerchant #:nodoc:
         store: :post
       }
 
-      def initialize(options={})
+      VERIFY_AMOUNT_PER_COUNTRY = {
+        'br' => 100,
+        'ar' => 100,
+        'co' => 100,
+        'pe' => 300,
+        'mx' => 2000,
+        'cl' => 80000
+      }
+
+      def initialize(options = {})
         requires!(options, :integration_key)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = { payment: {} }
         add_integration_key(post)
         add_operation(post)
@@ -51,11 +60,12 @@ module ActiveMerchant #:nodoc:
         add_card_or_token(post, payment)
         add_address(post, options)
         add_customer_responsible_person(post, payment, options)
+        add_additional_data(post, options)
 
         commit(:purchase, post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = { payment: {} }
         add_integration_key(post)
         add_operation(post)
@@ -64,21 +74,22 @@ module ActiveMerchant #:nodoc:
         add_card_or_token(post, payment)
         add_address(post, options)
         add_customer_responsible_person(post, payment, options)
+        add_additional_data(post, options)
         post[:payment][:creditcard][:auto_capture] = false
 
         commit(:authorize, post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         add_integration_key(post)
         post[:hash] = authorization
-        post[:amount] = amount(money)
+        post[:amount] = amount(money) if options[:include_capture_amount].to_s == 'true'
 
         commit(:capture, post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         add_integration_key(post)
         add_operation(post)
@@ -89,7 +100,7 @@ module ActiveMerchant #:nodoc:
         commit(:refund, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_integration_key(post)
         add_authorization(post, authorization)
@@ -97,7 +108,7 @@ module ActiveMerchant #:nodoc:
         commit(:void, post)
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         post = {}
         add_integration_key(post)
         add_payment_details(post, credit_card)
@@ -106,9 +117,9 @@ module ActiveMerchant #:nodoc:
         commit(:store, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(VERIFY_AMOUNT_PER_COUNTRY[customer_country(options)], credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -119,7 +130,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(/(integration_key\\?":\\?")(\d*)/, '\1[FILTERED]').
+          gsub(/(integration_key\\?":\\?")(\w*)/, '\1[FILTERED]').
           gsub(/(card_number\\?":\\?")(\d*)/, '\1[FILTERED]').
           gsub(/(card_cvv\\?":\\?")(\d*)/, '\1[FILTERED]')
       end
@@ -170,14 +181,13 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post[:payment][:amount_total] = amount(money)
         post[:payment][:currency_code] = (options[:currency] || currency(money))
-        post[:payment][:merchant_payment_code] = options[:order_id]
+        post[:payment][:merchant_payment_code] = Digest::MD5.hexdigest(options[:order_id])
         post[:payment][:instalments] = options[:instalments] || 1
+        post[:payment][:order_number] = options[:order_id][0..39] if options[:order_id]
       end
 
       def add_card_or_token(post, payment)
-        if payment.is_a?(String)
-          payment, brand = payment.split('|')
-        end
+        payment, brand = payment.split('|') if payment.is_a?(String)
         post[:payment][:payment_type_code] = payment.is_a?(String) ? brand : CARD_BRAND[payment.brand.to_sym]
         post[:payment][:creditcard] = payment_details(payment)
       end
@@ -200,13 +210,22 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_additional_data(post, options)
+        post[:device_id] = options[:device_id] if options[:device_id]
+        post[:metadata] = options[:metadata] if options[:metadata]
+        post[:metadata] = {} if post[:metadata].nil?
+        post[:metadata][:merchant_payment_code] = options[:order_id] if options[:order_id]
+        post[:processing_type] = options[:processing_type] if options[:processing_type]
+      end
+
       def parse(body)
         JSON.parse(body)
       end
 
       def commit(action, parameters)
         url = url_for((test? ? test_url : live_url), action, parameters)
-        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), {}))
+
+        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), headers(parameters)))
 
         success = success_from(action, response)
 
@@ -220,8 +239,21 @@ module ActiveMerchant #:nodoc:
         )
       end
 
+      def headers(params)
+        processing_type = params[:processing_type]
+        commit_headers = { 'x-ebanx-client-user-agent': "ActiveMerchant/#{ActiveMerchant::VERSION}" }
+
+        add_processing_type_to_commit_headers(commit_headers, processing_type) if processing_type == 'local'
+
+        commit_headers
+      end
+
+      def add_processing_type_to_commit_headers(commit_headers, processing_type)
+        commit_headers['x-ebanx-api-processing-type'] = processing_type
+      end
+
       def success_from(action, response)
-        if [:purchase, :capture, :refund].include?(action)
+        if %i[purchase capture refund].include?(action)
           response.try(:[], 'payment').try(:[], 'status') == 'CO'
         elsif action == :authorize
           response.try(:[], 'payment').try(:[], 'status') == 'PE'
@@ -236,12 +268,13 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         return response['status_message'] if response['status'] == 'ERROR'
+
         response.try(:[], 'payment').try(:[], 'transaction_status').try(:[], 'description')
       end
 
       def authorization_from(action, parameters, response)
         if action == :store
-          "#{response.try(:[], "token")}|#{CARD_BRAND[parameters[:payment_type_code].to_sym]}"
+          "#{response.try(:[], 'token')}|#{CARD_BRAND[parameters[:payment_type_code].to_sym]}"
         else
           response.try(:[], 'payment').try(:[], 'hash')
         end
@@ -250,22 +283,26 @@ module ActiveMerchant #:nodoc:
       def post_data(action, parameters = {})
         return nil if requires_http_get(action)
         return convert_to_url_form_encoded(parameters) if action == :refund
+
         "request_body=#{parameters.to_json}"
       end
 
       def url_for(hostname, action, parameters)
         return "#{hostname}#{URL_MAP[action]}?#{convert_to_url_form_encoded(parameters)}" if requires_http_get(action)
+
         "#{hostname}#{URL_MAP[action]}"
       end
 
       def requires_http_get(action)
-        return true if [:capture, :void].include?(action)
+        return true if %i[capture void].include?(action)
+
         false
       end
 
       def convert_to_url_form_encoded(parameters)
         parameters.map do |key, value|
           next if value != false && value.blank?
+
           "#{key}=#{value}"
         end.compact.join('&')
       end
@@ -273,6 +310,7 @@ module ActiveMerchant #:nodoc:
       def error_code_from(response, success)
         unless success
           return response['status_code'] if response['status'] == 'ERROR'
+
           response.try(:[], 'payment').try(:[], 'transaction_status').try(:[], 'code')
         end
       end

@@ -4,12 +4,12 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://gateway.test.clearhaus.com'
       self.live_url = 'https://gateway.clearhaus.com'
 
-      self.supported_countries = ['DK', 'NO', 'SE', 'FI', 'DE', 'CH', 'NL', 'AD', 'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'FO', 'GL', 'EE', 'FR', 'GR',
-                                  'HU', 'IS', 'IE', 'IT', 'LV', 'LI', 'LT', 'LU', 'MT', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'GB']
+      self.supported_countries = %w[DK NO SE FI DE CH NL AD AT BE BG HR CY CZ FO GL EE FR GR
+                                    HU IS IE IT LV LI LT LU MT PL PT RO SK SI ES GB]
 
       self.default_currency    = 'EUR'
-      self.currencies_without_fractions = %w(BIF BYR DJF GNF JPY KMF KRW PYG RWF VND VUV XAF XOF XPF)
-      self.supported_cardtypes = [:visa, :master]
+      self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
+      self.supported_cardtypes = %i[visa master]
 
       self.homepage_url = 'https://www.clearhaus.com'
       self.display_name = 'Clearhaus'
@@ -36,31 +36,32 @@ module ActiveMerchant #:nodoc:
         50000 => 'Clearhaus error'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_key)
         options[:private_key] = options[:private_key].strip if options[:private_key]
         super
       end
 
-      def purchase(amount, payment, options={})
+      def purchase(amount, payment, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(amount, payment, options) }
           r.process { capture(amount, r.authorization, options) }
         end
       end
 
-      def authorize(amount, payment, options={})
+      def authorize(amount, payment, options = {})
         post = {}
         add_invoice(post, amount, options)
 
-        action = if payment.respond_to?(:number)
-                   add_payment(post, payment)
-                   '/authorizations'
-                 elsif payment.kind_of?(String)
-                   "/cards/#{payment}/authorizations"
-                 else
-                   raise ArgumentError.new("Unknown payment type #{payment.inspect}")
-        end
+        action =
+          if payment.respond_to?(:number)
+            add_payment(post, payment)
+            '/authorizations'
+          elsif payment.kind_of?(String)
+            "/cards/#{payment}/authorizations"
+          else
+            raise ArgumentError.new("Unknown payment type #{payment.inspect}")
+          end
 
         post[:recurring] = options[:recurring] if options[:recurring]
         post[:card][:pares] = options[:pares] if options[:pares]
@@ -68,14 +69,14 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
 
         commit("/authorizations/#{authorization}/captures", post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_amount(post, amount, options)
 
@@ -86,14 +87,14 @@ module ActiveMerchant #:nodoc:
         commit("/authorizations/#{authorization}/voids", options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(0, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         post = {}
         add_payment(post, credit_card)
 
@@ -127,12 +128,10 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment)
         card = {}
         card[:pan]          = payment.number
-        card[:expire_month] = '%02d'% payment.month
+        card[:expire_month] = '%02d' % payment.month
         card[:expire_year]  = payment.year
 
-        if payment.verification_value?
-          card[:csc] = payment.verification_value
-        end
+        card[:csc] = payment.verification_value if payment.verification_value?
 
         post[:card] = card if card.any?
       end
@@ -161,12 +160,14 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        response = begin
-          parse(ssl_post(url, body, headers))
-        rescue ResponseError => e
-          raise unless(e.response.code.to_s =~ /400/)
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_post(url, body, headers))
+          rescue ResponseError => e
+            raise unless e.response.code.to_s =~ /400/
+
+            parse(e.response.body)
+          end
 
         Response.new(
           success_from(response),
@@ -205,15 +206,13 @@ module ActiveMerchant #:nodoc:
 
       def generate_signature(body)
         key = OpenSSL::PKey::RSA.new(@options[:private_key])
-        hex = key.sign(OpenSSL::Digest.new('sha256'), body).unpack('H*').first
+        hex = key.sign(OpenSSL::Digest.new('sha256'), body).unpack1('H*')
 
         "#{@options[:signing_key]} RS256-hex #{hex}"
       end
 
       def error_code_from(response)
-        unless success_from(response)
-          response['status']['code']
-        end
+        response['status']['code'] unless success_from(response)
       end
     end
   end

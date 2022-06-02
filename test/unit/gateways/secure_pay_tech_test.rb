@@ -3,14 +3,14 @@ require 'test_helper'
 class SecurePayTechTest < Test::Unit::TestCase
   def setup
     @gateway = SecurePayTechGateway.new(
-                 :login => 'x',
-                 :password => 'y'
-               )
+      login: 'x',
+      password: 'y'
+    )
 
     @amount = 100
     @credit_card = credit_card('4987654321098769')
     @options = {
-      :billing_address => address
+      billing_address: address
     }
   end
 

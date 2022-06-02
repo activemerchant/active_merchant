@@ -8,8 +8,8 @@ module ActiveMerchant #:nodoc:
       include PaypalCommonAPI
       include PaypalRecurringApi
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
-      self.supported_countries = ['CA', 'NZ', 'GB', 'US']
+      self.supported_countries = %w[CA NZ GB US]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'https://www.paypal.com/us/webapps/mpp/paypal-payments-pro'
       self.display_name = 'PayPal Payments Pro (US)'
 
@@ -55,10 +55,10 @@ module ActiveMerchant #:nodoc:
         billing_address = options[:billing_address] || options[:address]
         currency_code = options[:currency] || currency(money)
 
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! transaction_type + 'Req', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! transaction_type + 'Request', 'xmlns:n2' => EBAY_NAMESPACE do
-            xml.tag! 'n2:Version', API_VERSION
+            xml.tag! 'n2:Version', api_version(options)
             xml.tag! 'n2:' + transaction_type + 'RequestDetails' do
               xml.tag! 'n2:ReferenceID', reference_id if transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:PaymentAction', action
@@ -71,6 +71,12 @@ module ActiveMerchant #:nodoc:
         end
 
         xml.target!
+      end
+
+      def api_version(options)
+        return API_VERSION_3DS2 if options.dig(:three_d_secure, :version) =~ /^2/
+
+        API_VERSION
       end
 
       def add_credit_card(xml, credit_card, address, options)
@@ -104,10 +110,12 @@ module ActiveMerchant #:nodoc:
         three_d_secure = options[:three_d_secure]
         xml.tag! 'ThreeDSecureRequest' do
           xml.tag! 'MpiVendor3ds', 'Y'
-          xml.tag! 'AuthStatus3ds', three_d_secure[:trans_status] unless three_d_secure[:trans_status].blank?
+          xml.tag! 'AuthStatus3ds', three_d_secure[:authentication_response_status] || three_d_secure[:trans_status] if three_d_secure[:authentication_response_status] || three_d_secure[:trans_status]
           xml.tag! 'Cavv', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
           xml.tag! 'Eci3ds', three_d_secure[:eci] unless three_d_secure[:eci].blank?
           xml.tag! 'Xid', three_d_secure[:xid] unless three_d_secure[:xid].blank?
+          xml.tag! 'ThreeDSVersion', three_d_secure[:version] unless three_d_secure[:version].blank?
+          xml.tag! 'DSTransactionId', three_d_secure[:ds_transaction_id] unless three_d_secure[:ds_transaction_id].blank?
         end
       end
 

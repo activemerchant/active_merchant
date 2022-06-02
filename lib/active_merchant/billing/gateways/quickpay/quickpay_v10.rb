@@ -24,11 +24,11 @@ module ActiveMerchant
           r.process {
             post = authorization_params(money, credit_card_or_reference, options)
             add_autocapture(post, false)
-            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/authorize"), post)
+            commit(synchronized_path("/payments/#{r.responses.last.params['id']}/authorize"), post)
           }
           r.process {
             post = capture_params(money, credit_card_or_reference, options)
-            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/capture"), post)
+            commit(synchronized_path("/payments/#{r.responses.last.params['id']}/capture"), post)
           }
         end
       end
@@ -42,7 +42,7 @@ module ActiveMerchant
           r.process { create_payment(money, options) }
           r.process {
             post = authorization_params(money, credit_card_or_reference, options)
-            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/authorize"), post)
+            commit(synchronized_path("/payments/#{r.responses.last.params['id']}/authorize"), post)
           }
         end
       end
@@ -68,7 +68,7 @@ module ActiveMerchant
         commit(synchronized_path("/payments/#{identification}/refund"), post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -154,9 +154,8 @@ module ActiveMerchant
         end
 
         Response.new(success, message_from(success, response), response,
-          :test => test?,
-          :authorization => authorization_from(response)
-        )
+          test: test?,
+          authorization: authorization_from(response))
       end
 
       def authorization_from(response)
@@ -187,15 +186,11 @@ module ActiveMerchant
       def add_invoice(post, options)
         add_order_id(post, options)
 
-        if options[:billing_address]
-          post[:invoice_address]  = map_address(options[:billing_address])
-        end
+        post[:invoice_address]  = map_address(options[:billing_address]) if options[:billing_address]
 
-        if options[:shipping_address]
-          post[:shipping_address] = map_address(options[:shipping_address])
-        end
+        post[:shipping_address] = map_address(options[:shipping_address]) if options[:shipping_address]
 
-        [:metadata, :branding_id, :variables].each do |field|
+        %i[metadata branding_id variables].each do |field|
           post[field] = options[field] if options[field]
         end
       end
@@ -208,7 +203,7 @@ module ActiveMerchant
       end
 
       def add_credit_card_or_reference(post, credit_card_or_reference, options = {})
-        post[:card]             ||= {}
+        post[:card] ||= {}
         if credit_card_or_reference.is_a?(String)
           post[:card][:token] = credit_card_or_reference
         else
@@ -219,7 +214,7 @@ module ActiveMerchant
         end
 
         if options[:three_d_secure]
-          post[:card][:cavv]= options.dig(:three_d_secure, :cavv)
+          post[:card][:cavv] = options.dig(:three_d_secure, :cavv)
           post[:card][:eci] = options.dig(:three_d_secure, :eci)
           post[:card][:xav] = options.dig(:three_d_secure, :xid)
         end
@@ -253,21 +248,22 @@ module ActiveMerchant
 
       def map_address(address)
         return {} if address.nil?
+
         requires!(address, :name, :address1, :city, :zip, :country)
         country = Country.find(address[:country])
         mapped = {
-          :name         => address[:name],
-          :street       => address[:address1],
-          :city         => address[:city],
-          :region       => address[:address2],
-          :zip_code     => address[:zip],
-          :country_code => country.code(:alpha3).value
+          name: address[:name],
+          street: address[:address1],
+          city: address[:city],
+          region: address[:address2],
+          zip_code: address[:zip],
+          country_code: country.code(:alpha3).value
         }
         mapped
       end
 
       def format_order_id(order_id)
-        truncate(order_id.to_s.gsub(/#/, ''), 20)
+        truncate(order_id.to_s.delete('#'), 20)
       end
 
       def headers

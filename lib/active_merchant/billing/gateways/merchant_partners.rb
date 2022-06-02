@@ -11,14 +11,14 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :account_id, :merchant_pin)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
         commit(payment_method.is_a?(String) ? :stored_purchase : :purchase, post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
         commit(:authorize, post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -45,14 +45,14 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, authorization)
 
         commit(:void, post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
         commit(:refund, post)
       end
 
-      def credit(amount, payment_method, options={})
+      def credit(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
         commit(payment_method.is_a?(String) ? :stored_credit : :credit, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -110,10 +110,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(post, payment_method)
-        if(payment_method.is_a?(String))
-          user_profile_id, last_4 = split_authorization(payment_method)
+        if payment_method.is_a?(String)
+          user_profile_id, last4 = split_authorization(payment_method)
           post[:userprofileid] = user_profile_id
-          post[:last4digits] = last_4
+          post[:last4digits] = last4
         else
           post[:ccname] = payment_method.name
           post[:ccnum] = payment_method.number
@@ -127,13 +127,13 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:email] = options[:email] if options[:email]
         post[:ipaddress] = options[:ip] if options[:ip]
-        if(billing_address = options[:billing_address])
+        if (billing_address = options[:billing_address])
           post[:billaddr1] = billing_address[:address1]
           post[:billaddr2] = billing_address[:address2]
           post[:billcity] = billing_address[:city]
           post[:billstate] = billing_address[:state]
           post[:billcountry] = billing_address[:country]
-          post[:bilzip]    = billing_address[:zip]
+          post[:bilzip] = billing_address[:zip]
           post[:phone] = billing_address[:phone]
         end
       end
@@ -172,20 +172,20 @@ module ActiveMerchant #:nodoc:
           message_from(succeeded, response_data),
           response_data,
           authorization: authorization_from(post, response_data),
-          :avs_result => AVSResult.new(code: response_data['avs_response']),
-          :cvv_result => CVVResult.new(response_data['cvv2_response']),
+          avs_result: AVSResult.new(code: response_data['avs_response']),
+          cvv_result: CVVResult.new(response_data['cvv2_response']),
           test: test?
         )
       end
 
       def headers
         {
-          'Content-Type'  => 'application/xml'
+          'Content-Type' => 'application/xml'
         }
       end
 
       def build_request(post)
-        Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |xml|
+        Nokogiri::XML::Builder.new(encoding: 'utf-8') do |xml|
           xml.interface_driver {
             xml.trans_catalog {
               xml.transaction(name: 'creditcard') {
@@ -235,7 +235,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_message_from(response)
-        if(response[:status] == 'Declined')
+        if response[:status] == 'Declined'
           match = response[:result].match(/DECLINED:\d{10}:(.+):/)
           match[1] if match
         end

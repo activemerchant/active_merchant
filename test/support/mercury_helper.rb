@@ -46,7 +46,7 @@ module MercuryHelper
 
   private
 
-  def close_batch(gateway=@gateway)
+  def close_batch(gateway = @gateway)
     gateway = ActiveMerchant::Billing::MercuryGateway.new(gateway.options)
     gateway.extend(BatchClosing)
     gateway.close_batch

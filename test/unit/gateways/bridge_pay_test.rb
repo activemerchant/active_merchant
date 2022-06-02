@@ -63,7 +63,7 @@ class BridgePayTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/OK2657/, data)
     end.respond_with(successful_capture_response)
 
@@ -80,7 +80,7 @@ class BridgePayTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/OK9757/, data)
     end.respond_with(successful_refund_response)
 
@@ -97,7 +97,7 @@ class BridgePayTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/OK9757/, data)
     end.respond_with(successful_refund_response)
 
@@ -123,15 +123,15 @@ class BridgePayTest < Test::Unit::TestCase
   def test_passing_cvv
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/#{@credit_card.verification_value}/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_passing_billing_address
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :billing_address => address)
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, billing_address: address)
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/Street=456\+My\+Street/, data)
       assert_match(/Zip=K1C2N6/, data)
     end.respond_with(successful_purchase_response)

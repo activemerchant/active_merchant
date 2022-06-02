@@ -43,7 +43,7 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
     assert_success authorize
 
     @gateway.expects(:ssl_request).returns(successful_capture_response)
-    assert capture = @gateway.capture(@amount-1, authorize.authorization)
+    assert capture = @gateway.capture(@amount - 1, authorize.authorization)
     assert_success capture
   end
 
@@ -71,7 +71,7 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
     assert_success authorize
 
     @gateway.expects(:ssl_request).returns(successful_capture_response)
-    assert capture = @gateway.capture(@amount-1, authorize.authorization)
+    assert capture = @gateway.capture(@amount - 1, authorize.authorization)
     assert_success capture
   end
 

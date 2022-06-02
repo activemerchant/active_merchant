@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteSageTest < Test::Unit::TestCase
-
   def setup
     @gateway = SageGateway.new(fixtures(:sage))
 
@@ -16,10 +15,10 @@ class RemoteSageTest < Test::Unit::TestCase
     @declined_card = credit_card('4000')
 
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :shipping_address => address,
-      :email => 'longbob@example.com'
+      order_id: generate_unique_id,
+      billing_address: address,
+      shipping_address: address,
+      email: 'longbob@example.com'
     }
   end
 
@@ -157,7 +156,7 @@ class RemoteSageTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @visa, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization, @options)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization, @options)
     assert_success refund
     assert_equal 'APPROVED', refund.message
   end
@@ -192,9 +191,9 @@ class RemoteSageTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = SageGateway.new(
-                :login => '',
-                :password => ''
-              )
+      login: '',
+      password: ''
+    )
     assert response = gateway.purchase(@amount, @visa, @options)
     assert_failure response
     assert_equal 'SECURITY VIOLATION', response.message
@@ -231,5 +230,4 @@ class RemoteSageTest < Test::Unit::TestCase
     assert_scrubbed(@check.routing_number, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
-
 end

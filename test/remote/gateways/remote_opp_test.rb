@@ -1,14 +1,13 @@
 require 'test_helper'
 
 class RemoteOppTest < Test::Unit::TestCase
-
   def setup
     @gateway = OppGateway.new(fixtures(:opp))
     @amount = 100
 
-    @valid_card = credit_card('4200000000000000', month: 05, year: 2018)
-    @invalid_card = credit_card('4444444444444444', month: 05, year: 2018)
-    @amex_card = credit_card('377777777777770 ', month: 05, year: 2018, brand: 'amex', verification_value: '1234')
+    @valid_card = credit_card('4200000000000000', month: 05, year: Date.today.year + 2)
+    @invalid_card = credit_card('4444444444444444', month: 05, year: Date.today.year + 2)
+    @amex_card = credit_card('377777777777770 ', month: 05, year: Date.today.year + 2, brand: 'amex', verification_value: '1234')
 
     request_type = 'complete' # 'minimal' || 'complete'
     time = Time.now.to_i
@@ -26,7 +25,7 @@ class RemoteOppTest < Test::Unit::TestCase
         city:     'Test',
         state:    'TE',
         zip:      'AB12CD',
-        country:  'GB',
+        country:  'GB'
       },
       shipping_address: {
         name:     'Muton DeMicelis',
@@ -34,7 +33,7 @@ class RemoteOppTest < Test::Unit::TestCase
         city:     'Munich',
         state:    'Bov',
         zip:      '81675',
-        country:  'DE',
+        country:  'DE'
       },
       customer: {
         merchant_customer_id:  'your merchant/customer id',
@@ -47,13 +46,13 @@ class RemoteOppTest < Test::Unit::TestCase
         company_name:  'JJ Ltd.',
         identification_doctype:  'PASSPORT',
         identification_docid:  'FakeID2342431234123',
-        ip:  ip,
-      },
+        ip:  ip
+      }
     }
 
     @minimal_request_options = {
       order_id: "Order #{time}",
-      description: 'Store Purchase - Books',
+      description: 'Store Purchase - Books'
     }
 
     @complete_request_options['customParameters[SHOPPER_test124TestName009]'] = 'customParameters_test'
@@ -140,7 +139,7 @@ class RemoteOppTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @valid_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
     assert_match %r{Request successfully processed}, capture.message
   end
@@ -150,7 +149,7 @@ class RemoteOppTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @valid_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
     assert_match %r{Request successfully processed}, refund.message
   end
@@ -211,6 +210,6 @@ class RemoteOppTest < Test::Unit::TestCase
 
     assert_scrubbed(@valid_card.number, transcript)
     assert_scrubbed(@valid_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed(@gateway.options[:access_token], transcript)
   end
 end

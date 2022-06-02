@@ -11,7 +11,7 @@ class RemoteCommercegateTest < Test::Unit::TestCase
     }
 
     @credit_card = credit_card(fixtures(:commercegate)[:card_number])
-    @expired_credit_card = credit_card(fixtures(:commercegate)[:card_number], year: Time.now.year-1)
+    @expired_credit_card = credit_card(fixtures(:commercegate)[:card_number], year: Time.now.year - 1)
   end
 
   def test_successful_authorize

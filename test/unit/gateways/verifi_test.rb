@@ -5,16 +5,16 @@ class VerifiTest < Test::Unit::TestCase
 
   def setup
     @gateway = VerifiGateway.new(
-      :login => 'l',
-      :password => 'p'
+      login: 'l',
+      password: 'p'
     )
 
     @credit_card = credit_card('4111111111111111')
 
     @options = {
-      :order_id => '37',
-      :email => 'paul@example.com',
-      :billing_address => address
+      order_id: '37',
+      email: 'paul@example.com',
+      billing_address: address
     }
 
     @amount = 100
@@ -67,7 +67,7 @@ class VerifiTest < Test::Unit::TestCase
 
   def test_add_description
     result = {}
-    @gateway.send(:add_invoice_data, result, :description => 'My Purchase is great')
+    @gateway.send(:add_invoice_data, result, description: 'My Purchase is great')
     assert_equal 'My Purchase is great', result[:orderdescription]
   end
 

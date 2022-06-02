@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(AU AE BD BN EG HK ID JO KW LB LK MU MV MY NZ OM PH QA SA SG TT VN)
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       self.money_format = :cents
       self.currencies_without_fractions = %w(IDR)
@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
 
       # MiGS works by merchants being either purchase only or authorize/capture
       # So authorize is the same as purchase when in authorize mode
-      alias_method :authorize, :purchase
+      alias authorize purchase
 
       # ==== Options
       #
@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         requires!(@options, :advanced_login, :advanced_password)
 
-        post = options.merge(:TransNo => authorization)
+        post = options.merge(TransNo: authorization)
 
         add_amount(post, money, options)
         add_advanced_user(post)
@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         requires!(@options, :advanced_login, :advanced_password)
 
-        post = options.merge(:TransNo => authorization)
+        post = options.merge(TransNo: authorization)
 
         add_amount(post, money, options)
         add_advanced_user(post)
@@ -109,7 +109,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         requires!(@options, :advanced_login, :advanced_password)
 
-        post = options.merge(:TransNo => authorization)
+        post = options.merge(TransNo: authorization)
 
         add_advanced_user(post)
         add_standard_parameters('voidAuthorisation', post, options[:unique_id])
@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -195,9 +195,7 @@ module ActiveMerchant #:nodoc:
         response_hash = parse(data)
 
         expected_secure_hash = calculate_secure_hash(response_hash, @options[:secure_hash])
-        unless response_hash[:SecureHash] == expected_secure_hash
-          raise SecurityError, 'Secure Hash mismatch, response may be tampered with'
-        end
+        raise SecurityError, 'Secure Hash mismatch, response may be tampered with' unless response_hash[:SecureHash] == expected_secure_hash
 
         response_object(response_hash)
       end
@@ -256,7 +254,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard_type(post, card_type)
-        post[:Gateway]  = 'ssl'
+        post[:Gateway] = 'ssl'
         post[:card] = CARD_TYPES.detect { |ct| ct.am_code == card_type }.migs_long_code
       end
 
@@ -284,12 +282,11 @@ module ActiveMerchant #:nodoc:
         cvv_result_code = 'P' if cvv_result_code == 'Unsupported'
 
         Response.new(success?(response), response[:Message], response,
-          :test => test?,
-          :authorization => response[:TransactionNo],
-          :fraud_review => fraud_review?(response),
-          :avs_result => { :code => avs_response_code },
-          :cvv_result => cvv_result_code
-        )
+          test: test?,
+          authorization: response[:TransactionNo],
+          fraud_review: fraud_review?(response),
+          avs_result: { code: avs_response_code },
+          cvv_result: cvv_result_code)
       end
 
       def success?(response)
@@ -302,11 +299,11 @@ module ActiveMerchant #:nodoc:
 
       def add_standard_parameters(action, post, unique_id = nil)
         post.merge!(
-          :Version     => API_VERSION,
-          :Merchant    => @options[:login],
-          :AccessCode  => @options[:password],
-          :Command     => action,
-          :MerchTxnRef => unique_id || generate_unique_id.slice(0, 40)
+          Version: API_VERSION,
+          Merchant: @options[:login],
+          AccessCode: @options[:password],
+          Command: action,
+          MerchTxnRef: unique_id || generate_unique_id.slice(0, 40)
         )
       end
 
