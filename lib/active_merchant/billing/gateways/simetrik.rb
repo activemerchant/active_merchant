@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       class_attribute :test_auth_url, :live_auth_url
       self.test_auth_url = 'https://tenant-payments-dev.us.auth0.com/oauth/token'
       self.live_auth_url = 'https://tenant-payments-prod.us.auth0.com/oauth/token'
-
+      
       self.supported_countries = %w(PE AR)
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover]
@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
             acquire_extra_options: options[:acquire_extra_options] || {}
           }
         }
-        post[:forward_payload][:amount][:vat] = amount(options[:vat]).to_f if options[:vat]
+        post[:forward_payload][:amount][:vat] = options[:vat].to_f / 100 if options[:vat]
 
         add_forward_route(post, options)
         commit('capture', post, { token_acquirer: options[:token_acquirer] })
@@ -247,7 +247,7 @@ module ActiveMerchant #:nodoc:
         amount_obj = {}
         amount_obj[:total_amount] = amount(money).to_f
         amount_obj[:currency] = (options[:currency] || currency(money))
-        amount_obj[:vat] = amount(options[:vat]).to_f if options[:vat]
+        amount_obj[:vat] = options[:vat].to_f / 100 if options[:vat]
 
         post[:amount] = amount_obj
       end
