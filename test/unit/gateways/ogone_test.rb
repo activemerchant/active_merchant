@@ -41,6 +41,10 @@ class OgoneTest < Test::Unit::TestCase
     Base.mode = :test
   end
 
+  def test_should_have_homepage_url
+    assert_equal 'https://www.ingenico.com/login/ogone/', OgoneGateway.homepage_url
+  end
+
   def test_successful_purchase
     @gateway.expects(:add_pair).at_least(1)
     @gateway.expects(:add_pair).with(anything, 'ECI', '7')

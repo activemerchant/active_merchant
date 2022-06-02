@@ -22,16 +22,18 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment, options)
+        add_3ds(post, payment, options)
         add_address(post, payment, options)
         add_metadata(post, options)
         add_ewallet(post, options)
-        post[:capture] = true if payment_is_card?(options)
+        add_payment_fields(post, options)
+        post[:capture] = true if payment.is_a?(CreditCard)
 
-        if payment_is_ach?(options)
+        if payment.is_a?(Check)
           MultiResponse.run do |r|
             r.process { commit(:post, 'payments', post) }
             post = {}
-            post[:token] = r.authorization
+            post[:token] = add_reference(r.authorization)
             post[:param2] = r.params.dig('data', 'original_amount').to_s
             r.process { commit(:post, 'payments/completePayment', post) }
           end
@@ -44,21 +46,24 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment, options)
+        add_3ds(post, payment, options)
         add_address(post, payment, options)
         add_metadata(post, options)
         add_ewallet(post, options)
+        add_payment_fields(post, options)
         post[:capture] = false
+
         commit(:post, 'payments', post)
       end
 
       def capture(money, authorization, options = {})
         post = {}
-        commit(:post, "payments/#{authorization}/capture", post)
+        commit(:post, "payments/#{add_reference(authorization)}/capture", post)
       end
 
       def refund(money, authorization, options = {})
         post = {}
-        post[:payment] = authorization
+        post[:payment] = add_reference(authorization)
         add_invoice(post, money, options)
         add_metadata(post, options)
         commit(:post, 'refunds', post)
@@ -66,17 +71,22 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         post = {}
-        commit(:delete, "payments/#{authorization}", post)
+        commit(:delete, "payments/#{add_reference(authorization)}", post)
       end
 
-      # Gateway returns an error if trying to run a $0 auth as invalid payment amount
-      # Gateway does not support void on a card transaction and refunds can only be done on completed transactions
-      # (such as a purchase). Authorize transactions are considered 'active' and not 'complete' until they are captured.
       def verify(credit_card, options = {})
-        MultiResponse.run do |r|
-          r.process { purchase(100, credit_card, options) }
-          r.process { refund(100, r.authorization, options) }
-        end
+        authorize(0, credit_card, options)
+      end
+
+      def store(payment, options = {})
+        post = {}
+        add_payment(post, payment, options)
+        add_customer_object(post, payment)
+        commit(:post, 'customers', post)
+      end
+
+      def unstore(customer)
+        commit(:delete, "customers/#{add_reference(customer)}", {})
       end
 
       def supports_scrubbing?
@@ -87,21 +97,17 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Access_key: )\w+), '\1[FILTERED]').
           gsub(%r(("number\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r(("account_number\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r(("routing_number\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("cvv\\?":\\?")\d+), '\1[FILTERED]')
       end
 
       private
 
-      def payment_is_ach?(options)
-        return unless options[:pm_type]
+      def add_reference(authorization)
+        return unless authorization
 
-        return true if options[:pm_type].include?('_bank')
-      end
-
-      def payment_is_card?(options)
-        return unless options[:pm_type]
-
-        return true if options[:pm_type].include?('_card')
+        authorization.split('|')[0]
       end
 
       def add_address(post, creditcard, options)
@@ -120,15 +126,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, money, options)
-        post[:amount] = amount(money).to_f.to_s
+        post[:amount] = money.zero? ? 0 : amount(money).to_f.to_s
         post[:currency] = (options[:currency] || currency(money))
       end
 
       def add_payment(post, payment, options)
-        if payment_is_card?(options)
+        if payment.is_a?(CreditCard)
           add_creditcard(post, payment, options)
-        elsif payment_is_ach?(options)
+        elsif payment.is_a?(Check)
           add_ach(post, payment, options)
+        else
+          add_token(post, payment, options)
         end
       end
 
@@ -158,12 +166,41 @@ module ActiveMerchant #:nodoc:
         post[:payment_method][:fields][:payment_purpose] = options[:payment_purpose] if options[:payment_purpose]
       end
 
+      def add_token(post, payment, options)
+        post[:payment_method] = payment
+      end
+
+      def add_3ds(post, payment, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post[:payment_method_options] = {}
+        post[:payment_method_options]['3d_required'] = three_d_secure[:required]
+        post[:payment_method_options]['3d_version'] = three_d_secure[:version]
+        post[:payment_method_options][:cavv] = three_d_secure[:cavv]
+        post[:payment_method_options][:eci] = three_d_secure[:eci]
+        post[:payment_method_options][:xid] = three_d_secure[:xid]
+        post[:payment_method_options][:ds_trans_id] = three_d_secure[:ds_transaction_id]
+      end
+
       def add_metadata(post, options)
         post[:metadata] = options[:metadata] if options[:metadata]
       end
 
       def add_ewallet(post, options)
         post[:ewallet_id] = options[:ewallet_id] if options[:ewallet_id]
+      end
+
+      def add_payment_fields(post, options)
+        post[:payment] = {}
+
+        post[:payment][:complete_payment_url] = options[:complete_payment_url] if options[:complete_payment_url]
+        post[:payment][:error_payment_url] = options[:error_payment_url] if options[:error_payment_url]
+        post[:payment][:description] = options[:description] if options[:description]
+        post[:payment][:statement_descriptor] = options[:statement_descriptor] if options[:statement_descriptor]
+      end
+
+      def add_customer_object(post, payment)
+        post[:name] = "#{payment.first_name} #{payment.last_name}"
       end
 
       def parse(body)
@@ -238,7 +275,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response.dig('data') ? response.dig('data', 'id') : response.dig('status', 'operation_id')
+        id = response.dig('data') ? response.dig('data', 'id') : response.dig('status', 'operation_id')
+
+        "#{id}|#{response.dig('data', 'default_payment_method')}"
       end
 
       def error_code_from(response)
