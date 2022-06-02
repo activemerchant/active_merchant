@@ -35,8 +35,7 @@ module ActiveMerchant #:nodoc:
            'state'      => @params['state'],
            'country'    => @params['country'],
            'zip'        => @params['zip'],
-           'phone'      => phone,
-        }
+           'phone'      => phone }
       end
     end
   end

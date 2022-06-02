@@ -14,6 +14,30 @@ class DecidirTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @fraud_detection = {
+      send_to_cs: false,
+      channel: 'Web',
+      dispatch_method: 'Store Pick Up',
+      csmdds: [
+        {
+          code: 17,
+          description: 'Campo MDD17'
+        }
+      ],
+      device_unique_id: '111'
+    }
+    @sub_payments = [
+      {
+        site_id: '04052018',
+        installments: 1,
+        amount: 1500
+      },
+      {
+        site_id: '04052018',
+        installments: 1,
+        amount: 1500
+      }
+    ]
   end
 
   def test_successful_purchase
@@ -35,16 +59,20 @@ class DecidirTest < Test::Unit::TestCase
       card_holder_birthday: '01011980',
       card_holder_identification_type: 'dni',
       card_holder_identification_number: '123456',
-      installments: 12
+      establishment_name: 'Heavenly Buffaloes',
+      installments: 12,
+      site_id: '99999999'
     }
 
     response = stub_comms(@gateway_for_purchase, :ssl_request) do
       @gateway_for_purchase.purchase(@amount, @credit_card, @options.merge(options))
-    end.check_request do |method, endpoint, data, headers|
-      assert data =~ /card_holder_door_number/, '1234'
-      assert data =~ /card_holder_birthday/, '01011980'
-      assert data =~ /type/, 'dni'
-      assert data =~ /number/, '123456'
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert data =~ /"card_holder_door_number":1234/
+      assert data =~ /"card_holder_birthday":"01011980"/
+      assert data =~ /"type":"dni"/
+      assert data =~ /"number":"123456"/
+      assert data =~ /"establishment_name":"Heavenly Buffaloes"/
+      assert data =~ /"site_id":"99999999"/
     end.respond_with(successful_purchase_response)
 
     assert_equal 7719132, response.authorization
@@ -52,12 +80,91 @@ class DecidirTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_aggregate_data
+    options = {
+      aggregate_data: {
+        indicator: 1,
+        identification_number: '308103480',
+        bill_to_pay: 'test1',
+        bill_to_refund: 'test2',
+        merchant_name: 'Heavenly Buffaloes',
+        street: 'Sesame',
+        number: '123',
+        postal_code: '22001',
+        category: 'yum',
+        channel: '005',
+        geographic_code: 'C1234',
+        city: 'Ciudad de Buenos Aires',
+        merchant_id: 'dec_agg',
+        province: 'Buenos Aires',
+        country: 'Argentina',
+        merchant_email: 'merchant@mail.com',
+        merchant_phone: '2678433111'
+      }
+    }
+
+    response = stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, @credit_card, @options.merge(options))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert data =~ /"aggregate_data":{"indicator":1/
+      assert data =~ /"identification_number":"308103480"/
+      assert data =~ /"bill_to_pay":"test1"/
+      assert data =~ /"bill_to_refund":"test2"/
+      assert data =~ /"merchant_name":"Heavenly Buffaloes"/
+      assert data =~ /"street":"Sesame"/
+      assert data =~ /"number":"123"/
+      assert data =~ /"postal_code":"22001"/
+      assert data =~ /"category":"yum"/
+      assert data =~ /"channel":"005"/
+      assert data =~ /"geographic_code":"C1234"/
+      assert data =~ /"city":"Ciudad de Buenos Aires"/
+      assert data =~ /"merchant_id":"dec_agg"/
+      assert data =~ /"province":"Buenos Aires"/
+      assert data =~ /"country":"Argentina"/
+      assert data =~ /"merchant_email":"merchant@mail.com"/
+      assert data =~ /"merchant_phone":"2678433111"/
+    end.respond_with(successful_purchase_response)
+
+    assert_equal 7719132, response.authorization
+    assert_equal 'approved', response.message
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_fraud_detection
+    options = @options.merge(fraud_detection: @fraud_detection)
+
+    response = stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_equal(@fraud_detection, JSON.parse(data, symbolize_names: true)[:fraud_detection])
+      assert_match(/device_unique_identifier/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_sub_payments
+    options = @options.merge(sub_payments: @sub_payments)
+    options[:installments] = 4
+    options[:payment_type] = 'distributed'
+
+    response = stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_equal(@sub_payments, JSON.parse(data, symbolize_names: true)[:sub_payments])
+      assert_match(/#{options[:installments]}/, data)
+      assert_match(/#{options[:payment_type]}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_failed_purchase
     @gateway_for_purchase.expects(:ssl_request).returns(failed_purchase_response)
 
     response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'TARJETA INVALIDA', response.message
+    assert_equal 'TARJETA INVALIDA | invalid_number', response.message
     assert_match Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
   end
 
@@ -74,6 +181,22 @@ class DecidirTest < Test::Unit::TestCase
     assert_raise(ArgumentError) do
       @gateway_for_auth.purchase(@amount, @credit_card, @options)
     end
+  end
+
+  def test_failed_purchase_error_response
+    @gateway_for_purchase.expects(:ssl_request).returns(unique_purchase_error_response)
+
+    response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match 'invalid_request_error | invalid_param | payment_type', response.error_code
+  end
+
+  def test_failed_purchase_error_response_with_error_code
+    @gateway_for_purchase.expects(:ssl_request).returns(error_response_with_error_code)
+
+    response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match '14, invalid_number', response.error_code
   end
 
   def test_successful_authorize
@@ -94,7 +217,7 @@ class DecidirTest < Test::Unit::TestCase
     assert_failure response
 
     assert_equal 7719358, response.authorization
-    assert_equal 'TARJETA INVALIDA', response.message
+    assert_equal 'TARJETA INVALIDA | invalid_number', response.message
     assert response.test?
   end
 
@@ -158,7 +281,7 @@ class DecidirTest < Test::Unit::TestCase
   def test_partial_refund
     @gateway_for_purchase.expects(:ssl_request).returns(partial_refund_response)
 
-    response = @gateway_for_purchase.refund(@amount-1, 81932, @options)
+    response = @gateway_for_purchase.refund(@amount - 1, 81932, @options)
     assert_success response
 
     assert_equal 81932, response.authorization
@@ -219,13 +342,23 @@ class DecidirTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_verify_with_failed_void_unique_error_message
+    @gateway_for_auth.expects(:ssl_request).at_most(3).returns(unique_void_error_response)
+
+    response = @gateway_for_auth.verify(@credit_card, @options)
+    assert_failure response
+
+    assert_equal 'invalid_status_error - status: refunded', response.message
+    assert response.test?
+  end
+
   def test_failed_verify
     @gateway_for_auth.expects(:ssl_request).at_most(2).returns(failed_authorize_response)
 
     response = @gateway_for_auth.verify(@credit_card, @options)
     assert_failure response
 
-    assert_equal 'TARJETA INVALIDA', response.message
+    assert_equal 'TARJETA INVALIDA | invalid_number', response.message
     assert response.test?
   end
 
@@ -238,6 +371,91 @@ class DecidirTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway_for_purchase.supports_scrubbing?
     assert_equal @gateway_for_purchase.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_payment_method_id_with_visa
+    post = {}
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, @credit_card, @options)
+    assert_equal 1, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_mastercard
+    post = {}
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card('5299910010000015'), @options)
+    assert_equal 104, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_amex
+    post = {}
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card('373953192351004'), @options)
+    assert_equal 65, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_diners
+    post = {}
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card('36463664750005'), @options)
+    assert_equal 8, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_cabal
+    post = {}
+    credit_card = credit_card('5896570000000008')
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card, @options)
+    assert_equal 63, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_naranja
+    post = {}
+    credit_card = credit_card('5895627823453005')
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card, @options)
+    assert_equal 24, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_visa_debit
+    visa_debit_card = credit_card('4517721004856075')
+    debit_options = @options.merge(debit: true)
+
+    stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, visa_debit_card, debit_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"payment_method_id":31/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_payment_method_id_with_mastercard_debit
+    # currently lacking a valid MasterCard debit card number, so using the MasterCard credit card number
+    mastercard = credit_card('5299910010000015')
+    debit_options = @options.merge(debit: true)
+
+    stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, mastercard, debit_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"payment_method_id":105/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_payment_method_id_with_maestro_debit
+    # currently lacking a valid Maestro debit card number, so using a generated test card number
+    maestro_card = credit_card('6759649826438453')
+    debit_options = @options.merge(debit: true)
+
+    stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, maestro_card, debit_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"payment_method_id":106/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_payment_method_id_with_cabal_debit
+    # currently lacking a valid Cabal debit card number, so using the Cabal credit card number
+    cabal_card = credit_card('5896570000000008')
+    debit_options = @options.merge(debit: true)
+
+    stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, cabal_card, debit_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"payment_method_id":108/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   private
@@ -261,7 +479,7 @@ class DecidirTest < Test::Unit::TestCase
       -> "Via: kong/0.8.3\r\n"
       -> "\r\n"
       reading 659 bytes...
-      -> "{\"id\":7721017,\"site_transaction_id\":\"d5972b68-87d5-46fd-8d3d-b2512902b9af\",\"payment_method_id\":1,\"card_brand\":\"Visa\",\"amount\":100,\"currency\":\"ars\",\"status\":\"approved\",\"status_details\":{\"ticket\":\"7297\",\"card_authorization_code\":\"153842\",\"address_validation_code\":\"VTE0011\",\"error\":null},\"date\":\"2019-06-24T15:38Z\",\"customer\":null,\"bin\":\"450799\",\"installments\":1,\"first_installment_expiration_date\":null,\"payment_type\":\"single\",\"sub_payments\":[],\"site_id\":\"99999999\",\"fraud_detection\":null,\"aggregate_data\":null,\"establishment_name\":null,\"spv\":null,\"confirmed\":null,\"pan\":\"345425f15b2c7c4584e0044357b6394d7e\",\"customer_token\":null,\"card_data\":\"/tokens/7721017\"}"
+      -> "{\"id\":7721017,\"site_transaction_id\":\"d5972b68-87d5-46fd-8d3d-b2512902b9af\",\"payment_method_id\":1,\"card_brand\":\"Visa\",\"amount\":100,\"currency\":\"ars\",\"status\":\"approved\",\"status_details\":{\"ticket\":\"7297\",\"card_authorization_code\":\"153842\",\"address_validation_code\":\"VTE0011\",\"error\":null},\"date\":\"2019-06-24T15:38Z\",\"customer\":null,\"bin\":\"450799\",\"installments\":1,\"first_installment_expiration_date\":null,\"payment_type\":\"single\",\"sub_payments\":[],\"site_id\":\"99999999\",\"fraud_detection\":{\"status\":null},\"aggregate_data\":null,\"establishment_name\":\"Heavenly Buffaloes\",\"spv\":null,\"confirmed\":null,\"pan\":\"345425f15b2c7c4584e0044357b6394d7e\",\"customer_token\":null,\"card_data\":\"/tokens/7721017\"}"
       read 659 bytes
       Conn close
     )
@@ -286,7 +504,7 @@ class DecidirTest < Test::Unit::TestCase
       -> "Via: kong/0.8.3\r\n"
       -> "\r\n"
       reading 659 bytes...
-      -> "{\"id\":7721017,\"site_transaction_id\":\"d5972b68-87d5-46fd-8d3d-b2512902b9af\",\"payment_method_id\":1,\"card_brand\":\"Visa\",\"amount\":100,\"currency\":\"ars\",\"status\":\"approved\",\"status_details\":{\"ticket\":\"7297\",\"card_authorization_code\":\"153842\",\"address_validation_code\":\"VTE0011\",\"error\":null},\"date\":\"2019-06-24T15:38Z\",\"customer\":null,\"bin\":\"450799\",\"installments\":1,\"first_installment_expiration_date\":null,\"payment_type\":\"single\",\"sub_payments\":[],\"site_id\":\"99999999\",\"fraud_detection\":null,\"aggregate_data\":null,\"establishment_name\":null,\"spv\":null,\"confirmed\":null,\"pan\":\"345425f15b2c7c4584e0044357b6394d7e\",\"customer_token\":null,\"card_data\":\"/tokens/7721017\"}"
+      -> "{\"id\":7721017,\"site_transaction_id\":\"d5972b68-87d5-46fd-8d3d-b2512902b9af\",\"payment_method_id\":1,\"card_brand\":\"Visa\",\"amount\":100,\"currency\":\"ars\",\"status\":\"approved\",\"status_details\":{\"ticket\":\"7297\",\"card_authorization_code\":\"153842\",\"address_validation_code\":\"VTE0011\",\"error\":null},\"date\":\"2019-06-24T15:38Z\",\"customer\":null,\"bin\":\"450799\",\"installments\":1,\"first_installment_expiration_date\":null,\"payment_type\":\"single\",\"sub_payments\":[],\"site_id\":\"99999999\",\"fraud_detection\":{\"status\":null},\"aggregate_data\":null,\"establishment_name\":\"Heavenly Buffaloes\",\"spv\":null,\"confirmed\":null,\"pan\":\"345425f15b2c7c4584e0044357b6394d7e\",\"customer_token\":null,\"card_data\":\"/tokens/7721017\"}"
       read 659 bytes
       Conn close
     )
@@ -294,7 +512,7 @@ class DecidirTest < Test::Unit::TestCase
 
   def successful_purchase_response
     %(
-      {"id":7719132,"site_transaction_id":"ebcb2db7-7aab-4f33-a7d1-6617a5749fce","payment_method_id":1,"card_brand":"Visa","amount":100,"currency":"ars","status":"approved","status_details":{"ticket":"7156","card_authorization_code":"174838","address_validation_code":"VTE0011","error":null},"date":"2019-06-21T17:48Z","customer":null,"bin":"450799","installments":1,"first_installment_expiration_date":null,"payment_type":"single","sub_payments":[],"site_id":"99999999","fraud_detection":null,"aggregate_data":null,"establishment_name":null,"spv":null,"confirmed":null,"pan":"345425f15b2c7c4584e0044357b6394d7e","customer_token":null,"card_data":"/tokens/7719132"}
+      {"id":7719132,"site_transaction_id":"ebcb2db7-7aab-4f33-a7d1-6617a5749fce","payment_method_id":1,"card_brand":"Visa","amount":100,"currency":"ars","status":"approved","status_details":{"ticket":"7156","card_authorization_code":"174838","address_validation_code":"VTE0011","error":null},"date":"2019-06-21T17:48Z","customer":null,"bin":"450799","installments":1,"establishment_name":"Heavenly Buffaloes","first_installment_expiration_date":null,"payment_type":"single","sub_payments":[],"site_id":"99999999","fraud_detection":{"status":null},"aggregate_data":null,"establishment_name":null,"spv":null,"confirmed":null,"pan":"345425f15b2c7c4584e0044357b6394d7e","customer_token":null,"card_data":"/tokens/7719132"}
     )
   end
 
@@ -367,5 +585,23 @@ class DecidirTest < Test::Unit::TestCase
     %(
       {"error_type":"not_found_error","entity_name":"","id":""}
     )
+  end
+
+  def unique_purchase_error_response
+    %{
+      {\"error\":{\"error_type\":\"invalid_request_error\",\"validation_errors\":[{\"code\":\"invalid_param\",\"param\":\"payment_type\"}]}}
+    }
+  end
+
+  def unique_void_error_response
+    %{
+      {\"error_type\":\"invalid_status_error\",\"validation_errors\":{\"status\":\"refunded\"}}
+    }
+  end
+
+  def error_response_with_error_code
+    %{
+      {\"error\":{\"type\":\"invalid_number\",\"reason\":{\"id\":14,\"description\":\"TARJETA INVALIDA\",\"additional_description\":\"\"}}}
+    }
   end
 end

@@ -1,9 +1,8 @@
 require 'test_helper'
 
 class RemoteRealexTest < Test::Unit::TestCase
-
   def setup
-    @gateway = RealexGateway.new(fixtures(:realex_with_account))
+    @gateway = RealexGateway.new(fixtures(:realex))
 
     # Replace the card numbers with the test account numbers from Realex
     @visa              = card_fixtures(:realex_visa)
@@ -23,32 +22,29 @@ class RemoteRealexTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
 
     @declined_apple_pay = network_tokenization_credit_card('4000120000001154',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     @amount = 10000
   end
 
   def card_fixtures(name)
-    credit_card(nil, fixtures(name))
+    credit_card(nil, fixtures(name).merge({ month: 1, year: Time.now.year + 1 }))
   end
 
   def test_realex_purchase
-    [ @visa, @mastercard ].each do |card|
+    [@visa, @mastercard].each do |card|
       response = @gateway.purchase(@amount, card,
-        :order_id => generate_unique_id,
-        :description => 'Test Realex Purchase',
-        :billing_address => {
-          :zip => '90210',
-          :country => 'US'
-        }
-      )
+        order_id: generate_unique_id,
+        description: 'Test Realex Purchase',
+        billing_address: {
+          zip: '90210',
+          country: 'US'
+        })
       assert_not_nil response
       assert_success response
       assert response.test?
@@ -59,13 +55,12 @@ class RemoteRealexTest < Test::Unit::TestCase
 
   def test_realex_purchase_with_invalid_login
     gateway = RealexGateway.new(
-      :login => 'invalid',
-      :password => 'invalid'
+      login: 'invalid',
+      password: 'invalid'
     )
     response = gateway.purchase(@amount, @visa,
-      :order_id => generate_unique_id,
-      :description => 'Invalid login test'
-    )
+      order_id: generate_unique_id,
+      description: 'Invalid login test')
 
     assert_not_nil response
     assert_failure response
@@ -76,9 +71,8 @@ class RemoteRealexTest < Test::Unit::TestCase
 
   def test_realex_purchase_with_invalid_account
     response = RealexGateway.new(fixtures(:realex_with_account).merge(account: 'invalid')).purchase(@amount, @visa,
-      :order_id => generate_unique_id,
-      :description => 'Test Realex purchase with invalid account'
-    )
+      order_id: generate_unique_id,
+      description: 'Test Realex purchase with invalid account')
 
     assert_not_nil response
     assert_failure response
@@ -88,18 +82,17 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_realex_purchase_with_apple_pay
-    response = @gateway.purchase(1000, @apple_pay, :order_id => generate_unique_id, :description => 'Test Realex with ApplePay')
+    response = @gateway.purchase(1000, @apple_pay, order_id: generate_unique_id, description: 'Test Realex with ApplePay')
     assert_success response
     assert response.test?
     assert_equal 'Successful', response.message
   end
 
   def test_realex_purchase_declined
-    [ @visa_declined, @mastercard_declined ].each do |card|
+    [@visa_declined, @mastercard_declined].each do |card|
       response = @gateway.purchase(@amount, card,
-        :order_id => generate_unique_id,
-        :description => 'Test Realex purchase declined'
-      )
+        order_id: generate_unique_id,
+        description: 'Test Realex purchase declined')
       assert_not_nil response
       assert_failure response
 
@@ -109,7 +102,7 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_realex_purchase_with_apple_pay_declined
-    response = @gateway.purchase(1101, @declined_apple_pay, :order_id => generate_unique_id, :description => 'Test Realex with ApplePay')
+    response = @gateway.purchase(1101, @declined_apple_pay, order_id: generate_unique_id, description: 'Test Realex with ApplePay')
     assert_failure response
     assert response.test?
     assert_equal '101', response.params['result']
@@ -124,10 +117,10 @@ class RemoteRealexTest < Test::Unit::TestCase
         eci: '05',
         cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
         xid: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY=',
-        version: '1.0.2',
+        version: '1.0.2'
       },
-      :order_id => generate_unique_id,
-      :description => 'Test Realex with 3DS'
+      order_id: generate_unique_id,
+      description: 'Test Realex with 3DS'
     )
     assert_success response
     assert response.test?
@@ -142,22 +135,52 @@ class RemoteRealexTest < Test::Unit::TestCase
         eci: '05',
         cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
         ds_transaction_id: 'bDE9Aa1A-C5Ac-AD3a-4bBC-aC918ab1de3E',
-        version: '2.1.0',
+        version: '2.1.0'
       },
-      :order_id => generate_unique_id,
-      :description => 'Test Realex with 3DS'
+      order_id: generate_unique_id,
+      description: 'Test Realex with 3DS'
     )
     assert_success response
     assert response.test?
     assert_equal 'Successful', response.message
   end
 
+  def test_initial_purchase_with_stored_credential
+    options = {
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'unscheduled',
+        initiator: 'cardholder',
+        network_transaction_id: nil
+      }
+    }
+    response = @gateway.purchase(@amount, @visa, options.merge(order_id: generate_unique_id))
+    assert_success response
+  end
+
+  def test_subsequent_purchase_with_stored_credential
+    initial_response = @gateway.purchase(@amount, @visa, order_id: generate_unique_id)
+    assert_success initial_response
+    network_id = initial_response.params['srd']
+
+    options = {
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'recurring',
+        initiator: 'merchant',
+        network_transaction_id: network_id
+      }
+    }
+
+    subsequent_response = @gateway.purchase(@amount, @visa, options.merge(order_id: generate_unique_id))
+    assert_success subsequent_response
+  end
+
   def test_realex_purchase_referral_b
-    [ @visa_referral_b, @mastercard_referral_b ].each do |card|
+    [@visa_referral_b, @mastercard_referral_b].each do |card|
       response = @gateway.purchase(@amount, card,
-        :order_id => generate_unique_id,
-        :description => 'Test Realex Referral B'
-      )
+        order_id: generate_unique_id,
+        description: 'Test Realex Referral B')
       assert_not_nil response
       assert_failure response
       assert response.test?
@@ -167,11 +190,10 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_realex_purchase_referral_a
-    [ @visa_referral_a, @mastercard_referral_a ].each do |card|
+    [@visa_referral_a, @mastercard_referral_a].each do |card|
       response = @gateway.purchase(@amount, card,
-        :order_id => generate_unique_id,
-        :description => 'Test Realex Rqeferral A'
-      )
+        order_id: generate_unique_id,
+        description: 'Test Realex Rqeferral A')
       assert_not_nil response
       assert_failure response
       assert_equal '103', response.params['result']
@@ -180,11 +202,10 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_realex_purchase_coms_error
-    [ @visa_coms_error, @mastercard_coms_error ].each do |card|
+    [@visa_coms_error, @mastercard_coms_error].each do |card|
       response = @gateway.purchase(@amount, card,
-        :order_id => generate_unique_id,
-        :description => 'Test Realex coms error'
-      )
+        order_id: generate_unique_id,
+        description: 'Test Realex coms error')
       assert_not_nil response
       assert_failure response
 
@@ -197,9 +218,8 @@ class RemoteRealexTest < Test::Unit::TestCase
     @visa.month = 13
 
     response = @gateway.purchase(@amount, @visa,
-      :order_id => generate_unique_id,
-      :description => 'Test Realex expiry month error'
-    )
+      order_id: generate_unique_id,
+      description: 'Test Realex expiry month error')
     assert_not_nil response
     assert_failure response
 
@@ -211,9 +231,8 @@ class RemoteRealexTest < Test::Unit::TestCase
     @visa.year = 2005
 
     response = @gateway.purchase(@amount, @visa,
-      :order_id => generate_unique_id,
-      :description => 'Test Realex expiry year error'
-    )
+      order_id: generate_unique_id,
+      description: 'Test Realex expiry year error')
     assert_not_nil response
     assert_failure response
 
@@ -226,9 +245,8 @@ class RemoteRealexTest < Test::Unit::TestCase
     @visa.last_name = ''
 
     response = @gateway.purchase(@amount, @visa,
-      :order_id => generate_unique_id,
-      :description => 'test_chname_error'
-    )
+      order_id: generate_unique_id,
+      description: 'test_chname_error')
     assert_not_nil response
     assert_failure response
 
@@ -240,9 +258,8 @@ class RemoteRealexTest < Test::Unit::TestCase
     @visa_cvn = @visa.clone
     @visa_cvn.verification_value = '111'
     response = @gateway.purchase(@amount, @visa_cvn,
-      :order_id => generate_unique_id,
-      :description => 'test_cvn'
-    )
+      order_id: generate_unique_id,
+      description: 'test_cvn')
     assert_not_nil response
     assert_success response
     assert response.authorization.length > 0
@@ -250,10 +267,9 @@ class RemoteRealexTest < Test::Unit::TestCase
 
   def test_customer_number
     response = @gateway.purchase(@amount, @visa,
-      :order_id => generate_unique_id,
-      :description => 'test_cust_num',
-      :customer => 'my customer id'
-    )
+      order_id: generate_unique_id,
+      description: 'test_cust_num',
+      customer: 'my customer id')
     assert_not_nil response
     assert_success response
     assert response.authorization.length > 0
@@ -261,13 +277,12 @@ class RemoteRealexTest < Test::Unit::TestCase
 
   def test_realex_authorize
     response = @gateway.authorize(@amount, @visa,
-      :order_id => generate_unique_id,
-      :description => 'Test Realex Purchase',
-      :billing_address => {
-        :zip => '90210',
-        :country => 'US'
-      }
-    )
+      order_id: generate_unique_id,
+      description: 'Test Realex Purchase',
+      billing_address: {
+        zip: '90210',
+        country: 'US'
+      })
 
     assert_not_nil response
     assert_success response
@@ -280,13 +295,12 @@ class RemoteRealexTest < Test::Unit::TestCase
     order_id = generate_unique_id
 
     auth_response = @gateway.authorize(@amount, @visa,
-      :order_id => order_id,
-      :description => 'Test Realex Purchase',
-      :billing_address => {
-        :zip => '90210',
-        :country => 'US'
-      }
-    )
+      order_id: order_id,
+      description: 'Test Realex Purchase',
+      billing_address: {
+        zip: '90210',
+        country: 'US'
+      })
     assert auth_response.test?
 
     capture_response = @gateway.capture(nil, auth_response.authorization)
@@ -301,14 +315,13 @@ class RemoteRealexTest < Test::Unit::TestCase
   def test_realex_authorize_then_capture_with_extra_amount
     order_id = generate_unique_id
 
-    auth_response = @gateway.authorize(@amount*115, @visa,
-      :order_id => order_id,
-      :description => 'Test Realex Purchase',
-      :billing_address => {
-        :zip => '90210',
-        :country => 'US'
-      }
-    )
+    auth_response = @gateway.authorize(@amount * 115, @visa,
+      order_id: order_id,
+      description: 'Test Realex Purchase',
+      billing_address: {
+        zip: '90210',
+        country: 'US'
+      })
     assert auth_response.test?
 
     capture_response = @gateway.capture(@amount, auth_response.authorization)
@@ -324,13 +337,12 @@ class RemoteRealexTest < Test::Unit::TestCase
     order_id = generate_unique_id
 
     purchase_response = @gateway.purchase(@amount, @visa,
-      :order_id => order_id,
-      :description => 'Test Realex Purchase',
-      :billing_address => {
-        :zip => '90210',
-        :country => 'US'
-      }
-    )
+      order_id: order_id,
+      description: 'Test Realex Purchase',
+      billing_address: {
+        zip: '90210',
+        country: 'US'
+      })
     assert purchase_response.test?
 
     void_response = @gateway.void(purchase_response.authorization)
@@ -344,16 +356,15 @@ class RemoteRealexTest < Test::Unit::TestCase
   def test_realex_purchase_then_refund
     order_id = generate_unique_id
 
-    gateway_with_refund_password = RealexGateway.new(fixtures(:realex).merge(:rebate_secret => 'rebate'))
+    gateway_with_refund_password = RealexGateway.new(fixtures(:realex).merge(rebate_secret: 'rebate'))
 
     purchase_response = gateway_with_refund_password.purchase(@amount, @visa,
-      :order_id => order_id,
-      :description => 'Test Realex Purchase',
-      :billing_address => {
-        :zip => '90210',
-        :country => 'US'
-      }
-    )
+      order_id: order_id,
+      description: 'Test Realex Purchase',
+      billing_address: {
+        zip: '90210',
+        country: 'US'
+      })
     assert purchase_response.test?
 
     rebate_response = gateway_with_refund_password.refund(@amount, purchase_response.authorization)
@@ -366,9 +377,8 @@ class RemoteRealexTest < Test::Unit::TestCase
 
   def test_realex_verify
     response = @gateway.verify(@visa,
-      :order_id => generate_unique_id,
-      :description => 'Test Realex verify'
-    )
+      order_id: generate_unique_id,
+      description: 'Test Realex verify')
 
     assert_not_nil response
     assert_success response
@@ -379,9 +389,8 @@ class RemoteRealexTest < Test::Unit::TestCase
 
   def test_realex_verify_declined
     response = @gateway.verify(@visa_declined,
-      :order_id => generate_unique_id,
-      :description => 'Test Realex verify declined'
-    )
+      order_id: generate_unique_id,
+      description: 'Test Realex verify declined')
 
     assert_not_nil response
     assert_failure response
@@ -391,16 +400,15 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_successful_credit
-    gateway_with_refund_password = RealexGateway.new(fixtures(:realex).merge(:refund_secret => 'refund'))
+    gateway_with_refund_password = RealexGateway.new(fixtures(:realex).merge(refund_secret: 'refund'))
 
     credit_response = gateway_with_refund_password.credit(@amount, @visa,
-      :order_id => generate_unique_id,
-      :description => 'Test Realex Credit',
-      :billing_address => {
-        :zip => '90210',
-        :country => 'US'
-      }
-    )
+      order_id: generate_unique_id,
+      description: 'Test Realex Credit',
+      billing_address: {
+        zip: '90210',
+        country: 'US'
+      })
 
     assert_not_nil credit_response
     assert_success credit_response
@@ -410,13 +418,12 @@ class RemoteRealexTest < Test::Unit::TestCase
 
   def test_failed_credit
     credit_response = @gateway.credit(@amount, @visa,
-      :order_id => generate_unique_id,
-      :description => 'Test Realex Credit',
-      :billing_address => {
-        :zip => '90210',
-        :country => 'US'
-      }
-    )
+      order_id: generate_unique_id,
+      description: 'Test Realex Credit',
+      billing_address: {
+        zip: '90210',
+        country: 'US'
+      })
 
     assert_not_nil credit_response
     assert_failure credit_response
@@ -425,15 +432,14 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_maps_avs_and_cvv_response_codes
-    [ @visa, @mastercard ].each do |card|
+    [@visa, @mastercard].each do |card|
       response = @gateway.purchase(@amount, card,
-        :order_id => generate_unique_id,
-        :description => 'Test Realex Purchase',
-        :billing_address => {
-          :zip => '90210',
-          :country => 'US'
-        }
-      )
+        order_id: generate_unique_id,
+        description: 'Test Realex Purchase',
+        billing_address: {
+          zip: '90210',
+          country: 'US'
+        })
       assert_not_nil response
       assert_success response
       assert_equal 'M', response.avs_result['code']
@@ -444,13 +450,12 @@ class RemoteRealexTest < Test::Unit::TestCase
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @visa_declined,
-        :order_id => generate_unique_id,
-        :description => 'Test Realex Purchase',
-        :billing_address => {
-          :zip => '90210',
-          :country => 'US'
-        }
-      )
+        order_id: generate_unique_id,
+        description: 'Test Realex Purchase',
+        billing_address: {
+          zip: '90210',
+          country: 'US'
+        })
     end
     clean_transcript = @gateway.scrub(transcript)
 

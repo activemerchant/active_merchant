@@ -128,7 +128,7 @@ class RemoteWepayTest < Test::Unit::TestCase
   # end
 
   def test_successful_store_with_defaulted_email
-    response = @gateway.store(@credit_card, {billing_address: address})
+    response = @gateway.store(@credit_card, { billing_address: address })
     assert_success response
   end
 
@@ -169,7 +169,7 @@ class RemoteWepayTest < Test::Unit::TestCase
     authorize = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorize
 
-    sleep 30  # Wait for authorization to clear. Doesn't always work.
+    sleep 30 # Wait for authorization to clear. Doesn't always work.
     assert capture = @gateway.capture(nil, authorize.authorization)
     assert_success capture
   end

@@ -5,7 +5,7 @@ class RemoteCtPaymentTest < Test::Unit::TestCase
     @gateway = CtPaymentGateway.new(fixtures(:ct_payment))
 
     @amount = 100
-    @credit_card = credit_card('4501161107217214', month: '07', year: 2020)
+    @credit_card = credit_card('4501161107217214')
     @declined_card = credit_card('4502244713161718')
     @options = {
       billing_address: address,
@@ -47,7 +47,7 @@ class RemoteCtPaymentTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization, @options.merge(order_id: generate_unique_id[0, 11]))
+    assert capture = @gateway.capture(@amount - 1, auth.authorization, @options.merge(order_id: generate_unique_id[0, 11]))
     assert_success capture
   end
 
@@ -70,7 +70,7 @@ class RemoteCtPaymentTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization, @options.merge(order_id: generate_unique_id[0, 11]))
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization, @options.merge(order_id: generate_unique_id[0, 11]))
     assert_success refund
   end
 
@@ -169,5 +169,4 @@ class RemoteCtPaymentTest < Test::Unit::TestCase
     assert_scrubbed(Base64.strict_encode64(@credit_card.number), transcript)
     assert_scrubbed(@gateway.options[:api_key], transcript)
   end
-
 end

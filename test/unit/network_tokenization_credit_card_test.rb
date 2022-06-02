@@ -1,25 +1,28 @@
 require 'test_helper'
 
 class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
-
   def setup
-    @tokenized_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
-      number: '4242424242424242', :brand => 'visa',
+    @tokenized_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      number: '4242424242424242', brand: 'visa',
       month: default_expiration_date.month, year: default_expiration_date.year,
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', eci: '05'
-    })
-    @tokenized_apple_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', eci: '05',
+      metadata: { device_manufacturer_id: '1324' }
+    )
+    @tokenized_apple_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       source: :apple_pay
-    })
-    @tokenized_android_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+    )
+    @tokenized_android_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       source: :android_pay
-    })
-    @tokenized_google_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+    )
+    @tokenized_google_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       source: :google_pay
-    })
-    @tokenized_bogus_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+    )
+    @existing_network_token = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      source: :network_token
+    )
+    @tokenized_bogus_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       source: :bogus_pay
-    })
+    )
   end
 
   def test_type
@@ -44,5 +47,6 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
     assert_equal @tokenized_android_pay_card.source, :android_pay
     assert_equal @tokenized_google_pay_card.source, :google_pay
     assert_equal @tokenized_bogus_pay_card.source, :apple_pay
+    assert_equal @existing_network_token.source, :network_token
   end
 end

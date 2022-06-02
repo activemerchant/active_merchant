@@ -7,15 +7,14 @@ class RemoteSkipJackTest < Test::Unit::TestCase
     @gateway = SkipJackGateway.new(fixtures(:skip_jack))
 
     @credit_card = credit_card('4445999922225',
-      :verification_value => '999'
-    )
+      verification_value: '999')
 
     @amount = 100
 
     @options = {
-      :order_id => generate_unique_id,
-      :email => 'email@foo.com',
-      :billing_address => address
+      order_id: generate_unique_id,
+      email: 'email@foo.com',
+      billing_address: address
     }
   end
 
@@ -75,7 +74,7 @@ class RemoteSkipJackTest < Test::Unit::TestCase
     authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
 
-    capture = @gateway.capture(@amount, authorization.authorization, :force_settlement => true)
+    capture = @gateway.capture(@amount, authorization.authorization, force_settlement: true)
     assert_success capture
 
     # developer login won't change transaction immediately to settled, so status will have to mismatch
@@ -107,9 +106,9 @@ class RemoteSkipJackTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = SkipJackGateway.new(
-                :login => '555555555555',
-                :password => '999999999999'
-              )
+      login: '555555555555',
+      password: '999999999999'
+    )
 
     response = gateway.authorize(@amount, @credit_card, @options)
     assert_failure response

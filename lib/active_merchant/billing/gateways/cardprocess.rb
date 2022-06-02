@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
                                      MT HU NL AT PL PT RO SI SK FI SE GB IS LI NO
                                      CH ME MK AL RS TR BA ]
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       self.homepage_url = 'https://vr-pay-ecommerce.docs.oppwa.com/'
       self.display_name = 'CardProcess VR-Pay'
@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:user_id</tt> -- The CardProcess user ID
       # * <tt>:password</tt> -- The CardProcess password
       # * <tt>:entity_id</tt> -- The CardProcess channel or entity ID for any transactions
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :user_id, :password, :entity_id)
         super
         # This variable exists purely to allow remote tests to force error codes;
@@ -123,6 +123,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, money, options)
         return if money.nil?
+
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money))
         post[:merchantInvoiceId] = options[:merchant_invoice_id] if options[:merchant_invoice_id]
@@ -132,6 +133,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment)
         return if payment.is_a?(String)
+
         post[:paymentBrand] = payment.brand.upcase if payment.brand
         post[:card] ||= {}
         post[:card][:number] = payment.number

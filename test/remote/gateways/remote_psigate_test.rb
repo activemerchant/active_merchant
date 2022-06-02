@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class PsigateRemoteTest < Test::Unit::TestCase
-
   def setup
     Base.mode = :test
     @gateway = PsigateGateway.new(fixtures(:psigate))
@@ -10,9 +9,9 @@ class PsigateRemoteTest < Test::Unit::TestCase
     @amount = 2400
     @creditcard = credit_card('4111111111111111')
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :email => 'jack@example.com'
+      order_id: generate_unique_id,
+      billing_address: address,
+      email: 'jack@example.com'
     }
   end
 
@@ -45,7 +44,7 @@ class PsigateRemoteTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    assert response = @gateway.purchase(@amount, @creditcard, @options.update(:test_result => 'D'))
+    assert response = @gateway.purchase(@amount, @creditcard, @options.update(test_result: 'D'))
     assert_failure response
   end
 

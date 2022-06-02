@@ -31,7 +31,7 @@ module ActiveMerchant
 
       self.money_format = :cents
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club ]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
       self.supported_countries = %w(IE GB FR BE NL LU IT US CA ES)
       self.homepage_url = 'http://www.realexpayments.com/'
       self.display_name = 'Realex'
@@ -107,8 +107,8 @@ module ActiveMerchant
           (response[:result] == '00'),
           message_from(response),
           response,
-          :test => (response[:message] =~ %r{\[ test system \]}),
-          :authorization => authorization_from(response),
+          test: (response[:message] =~ %r{\[ test system \]}),
+          authorization: authorization_from(response),
           avs_result: AVSResult.new(code: response[:avspostcoderesponse]),
           cvv_result: CVVResult.new(response[:cvnresult])
         )
@@ -138,7 +138,7 @@ module ActiveMerchant
 
       def build_purchase_or_authorization_request(action, money, credit_card, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'auth' do
           add_merchant_details(xml, options)
           xml.tag! 'orderid', sanitize_order_id(options[:order_id])
@@ -151,6 +151,7 @@ module ActiveMerchant
           else
             add_three_d_secure(xml, options)
           end
+          add_stored_credential(xml, options)
           add_comments(xml, options)
           add_address_and_customer_info(xml, options)
         end
@@ -159,7 +160,7 @@ module ActiveMerchant
 
       def build_capture_request(money, authorization, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'settle' do
           add_merchant_details(xml, options)
           add_amount(xml, money, options)
@@ -172,7 +173,7 @@ module ActiveMerchant
 
       def build_refund_request(money, authorization, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'rebate' do
           add_merchant_details(xml, options)
           add_transaction_identifiers(xml, authorization, options)
@@ -187,7 +188,7 @@ module ActiveMerchant
 
       def build_credit_request(money, credit_card, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'credit' do
           add_merchant_details(xml, options)
           xml.tag! 'orderid', sanitize_order_id(options[:order_id])
@@ -203,7 +204,7 @@ module ActiveMerchant
 
       def build_void_request(authorization, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'void' do
           add_merchant_details(xml, options)
           add_transaction_identifiers(xml, authorization, options)
@@ -216,7 +217,7 @@ module ActiveMerchant
       # Verify initiates an OTB (Open To Buy) request
       def build_verify_request(credit_card, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'otb' do
           add_merchant_details(xml, options)
           xml.tag! 'orderid', sanitize_order_id(options[:order_id])
@@ -230,13 +231,14 @@ module ActiveMerchant
       def add_address_and_customer_info(xml, options)
         billing_address = options[:billing_address] || options[:address]
         shipping_address = options[:shipping_address]
+        ipv4_address = ipv4?(options[:ip]) ? options[:ip] : nil
 
-        return unless billing_address || shipping_address || options[:customer] || options[:invoice] || options[:ip]
+        return unless billing_address || shipping_address || options[:customer] || options[:invoice] || ipv4_address
 
         xml.tag! 'tssinfo' do
           xml.tag! 'custnum', options[:customer] if options[:customer]
           xml.tag! 'prodid', options[:invoice] if options[:invoice]
-          xml.tag! 'custipaddress', options[:ip] if options[:ip]
+          xml.tag! 'custipaddress', options[:ip] if ipv4_address
 
           if billing_address
             xml.tag! 'address', 'type' => 'billing' do
@@ -256,9 +258,7 @@ module ActiveMerchant
 
       def add_merchant_details(xml, options)
         xml.tag! 'merchantid', @options[:login]
-        if options[:account] || @options[:account]
-          xml.tag! 'account', (options[:account] || @options[:account])
-        end
+        xml.tag! 'account', (options[:account] || @options[:account]) if options[:account] || @options[:account]
       end
 
       def add_transaction_identifiers(xml, authorization, options)
@@ -270,6 +270,7 @@ module ActiveMerchant
 
       def add_comments(xml, options)
         return unless options[:description]
+
         xml.tag! 'comments' do
           xml.tag! 'comment', options[:description], 'id' => 1
         end
@@ -300,25 +301,44 @@ module ActiveMerchant
         end
         xml.tag! 'supplementarydata' do
           xml.tag! 'item', 'type' => 'mobile' do
-            xml.tag! 'field01', payment.source.to_s.gsub('_', '-')
+            xml.tag! 'field01', payment.source.to_s.tr('_', '-')
           end
         end
       end
 
       def add_three_d_secure(xml, options)
         return unless three_d_secure = options[:three_d_secure]
+
         version = three_d_secure.fetch(:version, '')
         xml.tag! 'mpi' do
-          if version =~ /^2/
+          if /^2/.match?(version)
             xml.tag! 'authentication_value', three_d_secure[:cavv]
             xml.tag! 'ds_trans_id', three_d_secure[:ds_transaction_id]
           else
             xml.tag! 'cavv', three_d_secure[:cavv]
             xml.tag! 'xid', three_d_secure[:xid]
+            version = '1'
           end
           xml.tag! 'eci', three_d_secure[:eci]
           xml.tag! 'message_version', version
         end
+      end
+
+      def add_stored_credential(xml, options)
+        return unless stored_credential = options[:stored_credential]
+
+        xml.tag! 'storedcredential' do
+          xml.tag! 'type', stored_credential_type(stored_credential[:reason_type])
+          xml.tag! 'initiator', stored_credential[:initiator]
+          xml.tag! 'sequence', stored_credential[:initial_transaction] ? 'first' : 'subsequent'
+          xml.tag! 'srd', stored_credential[:network_transaction_id]
+        end
+      end
+
+      def stored_credential_type(reason)
+        return 'oneoff' if reason == 'unscheduled'
+
+        reason
       end
 
       def format_address_code(address)
@@ -368,6 +388,12 @@ module ActiveMerchant
 
       def sanitize_order_id(order_id)
         order_id.to_s.gsub(/[^a-zA-Z0-9\-_]/, '')
+      end
+
+      def ipv4?(ip_address)
+        return false if ip_address.nil?
+
+        !ip_address.match(/\A\d+\.\d+\.\d+\.\d+\z/).nil?
       end
     end
   end

@@ -3,20 +3,37 @@
 require 'test_helper'
 
 class RemoteOgoneTest < Test::Unit::TestCase
-
   def setup
     @gateway = OgoneGateway.new(fixtures(:ogone))
     @amount = 100
     @credit_card     = credit_card('4000100011112224')
-    @mastercard      = credit_card('5399999999999999', :brand => 'mastercard')
+    @mastercard      = credit_card('5399999999999999', brand: 'mastercard')
     @declined_card   = credit_card('1111111111111111')
-    @credit_card_d3d = credit_card('4000000000000002', :verification_value => '111')
+    @credit_card_d3d = credit_card('4000000000000002', verification_value: '111')
+    @credit_card_d3d_2_challenge = credit_card('4874970686672022', verification_value: '123')
+    @credit_card_d3d_2_frictionless = credit_card('4186455175836497', verification_value: '123')
     @options = {
-      :order_id => generate_unique_id[0...30],
-      :billing_address => address,
-      :description => 'Store Purchase',
-      :currency => fixtures(:ogone)[:currency] || 'EUR',
-      :origin => 'STORE'
+      order_id: generate_unique_id[0...30],
+      billing_address: address,
+      description: 'Store Purchase',
+      currency: fixtures(:ogone)[:currency] || 'EUR',
+      origin: 'STORE'
+    }
+    @options_browser_info = {
+      three_ds_2: {
+        browser_info:  {
+          "width": 390,
+          "height": 400,
+          "depth": 24,
+          "timezone": 300,
+          "user_agent": 'Spreedly Agent',
+          "java": false,
+          "javascript": true,
+          "language": 'en-US',
+          "browser_size": '05',
+          "accept_header": 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+        }
+      }
     }
   end
 
@@ -28,13 +45,13 @@ class RemoteOgoneTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_utf8_encoding_1
-    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => 'Rémy', :last_name => 'Fröåïør'), @options)
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', first_name: 'Rémy', last_name: 'Fröåïør'), @options)
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
 
   def test_successful_purchase_with_utf8_encoding_2
-    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => 'ワタシ', :last_name => 'ёжзийклмнопрсуфхцч'), @options)
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', first_name: 'ワタシ', last_name: 'ёжзийклмнопрсуфхцч'), @options)
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
@@ -62,19 +79,68 @@ class RemoteOgoneTest < Test::Unit::TestCase
   # NOTE: You have to set the "Hash algorithm" to "SHA-512" in the "Technical information"->"Global security parameters"
   #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
   def test_successful_purchase_with_signature_encryptor_to_sha512
-    gateway = OgoneGateway.new(fixtures(:ogone).merge(:signature_encryptor => 'sha512'))
+    gateway = OgoneGateway.new(fixtures(:ogone).merge(signature_encryptor: 'sha512'))
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
 
   # NOTE: You have to contact Ogone to make sure your test account allow 3D Secure transactions before running this test
-  def test_successful_purchase_with_3d_secure
-    assert response = @gateway.purchase(@amount, @credit_card_d3d, @options.merge(:d3d => true))
+  def test_successful_purchase_with_3d_secure_v1
+    assert response = @gateway.purchase(@amount, @credit_card_d3d, @options.merge(d3d: true))
     assert_success response
     assert_equal '46', response.params['STATUS']
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
     assert response.params['HTML_ANSWER']
+    assert_match 'mpi-v1', Base64.decode64(response.params['HTML_ANSWER'])
+  end
+
+  def test_successful_purchase_with_3d_secure_v2
+    assert response = @gateway.purchase(@amount, @credit_card_d3d_2_challenge, @options_browser_info.merge(d3d: true))
+    assert_success response
+    assert_equal '46', response.params['STATUS']
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+    assert response.params['HTML_ANSWER']
+    assert_match 'mpi-v2', Base64.decode64(response.params['HTML_ANSWER'])
+  end
+
+  def test_successful_purchase_with_3d_secure_v2_frictionless
+    assert response = @gateway.purchase(@amount, @credit_card_d3d_2_frictionless, @options_browser_info.merge(d3d: true))
+    assert_success response
+    assert_includes response.params, 'PAYID'
+    assert_equal '0', response.params['NCERROR']
+    assert_equal '9', response.params['STATUS']
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  end
+
+  def test_successful_purchase_with_3d_secure_v2_recomended_parameters
+    options = @options.merge(@options_browser_info)
+    assert response = @gateway.authorize(@amount, @credit_card_d3d_2_challenge, options.merge(d3d: true))
+    assert_success response
+    assert_equal '46', response.params['STATUS']
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+    assert response.params['HTML_ANSWER']
+    assert_match 'mpi-v2', Base64.decode64(response.params['HTML_ANSWER'])
+  end
+
+  def test_successful_purchase_with_3d_secure_v2_optional_parameters
+    options = @options.merge(@options_browser_info).merge(mpi: { threeDSRequestorChallengeIndicator: '04' })
+    assert response = @gateway.authorize(@amount, @credit_card_d3d_2_challenge, options.merge(d3d: true))
+    assert_success response
+    assert_equal '46', response.params['STATUS']
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+    assert response.params['HTML_ANSWER']
+    assert_match 'mpi-v2', Base64.decode64(response.params['HTML_ANSWER'])
+  end
+
+  def test_unsuccessful_purchase_with_3d_secure_v2
+    @credit_card_d3d_2_challenge.number = '4419177274955460'
+    assert response = @gateway.purchase(@amount, @credit_card_d3d_2_challenge, @options_browser_info.merge(d3d: true))
+    assert_failure response
+    assert_includes response.params, 'PAYID'
+    assert_equal response.params['NCERROR'], '40001134'
+    assert_equal response.params['STATUS'], '2'
+    assert_equal response.params['NCERRORPLUS'], 'Authentication failed. Please retry or cancel.'
   end
 
   def test_successful_with_non_numeric_order_id
@@ -92,7 +158,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_custom_eci
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:eci => 4))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(eci: 4))
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
@@ -100,7 +166,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   # NOTE: You have to allow USD as a supported currency in the "Account"->"Currencies"
   #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
   def test_successful_purchase_with_custom_currency_at_the_gateway_level
-    gateway = OgoneGateway.new(fixtures(:ogone).merge(:currency => 'USD'))
+    gateway = OgoneGateway.new(fixtures(:ogone).merge(currency: 'USD'))
     assert response = gateway.purchase(@amount, @credit_card)
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
@@ -109,8 +175,8 @@ class RemoteOgoneTest < Test::Unit::TestCase
   # NOTE: You have to allow USD as a supported currency in the "Account"->"Currencies"
   #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
   def test_successful_purchase_with_custom_currency
-    gateway = OgoneGateway.new(fixtures(:ogone).merge(:currency => 'EUR'))
-    assert response = gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'USD'))
+    gateway = OgoneGateway.new(fixtures(:ogone).merge(currency: 'EUR'))
+    assert response = gateway.purchase(@amount, @credit_card, @options.merge(currency: 'USD'))
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
@@ -118,7 +184,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'No brand', response.message
+    assert_equal 'No brand or invalid card number', response.message
   end
 
   def test_successful_authorize_with_mastercard
@@ -137,7 +203,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture_with_custom_eci
-    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(:eci => 4))
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(eci: 4))
     assert_success auth
     assert_equal OgoneGateway::SUCCESS_MESSAGE, auth.message
     assert auth.authorization
@@ -148,7 +214,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_unsuccessful_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'No card no, no exp date, no brand', response.message
+    assert_equal 'No card no, no exp date, no brand or invalid card number', response.message
   end
 
   def test_successful_void
@@ -161,15 +227,15 @@ class RemoteOgoneTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    assert response = @gateway.store(@credit_card, :billing_id => 'test_alias')
+    assert response = @gateway.store(@credit_card, billing_id: 'test_alias')
     assert_success response
     assert purchase = @gateway.purchase(@amount, 'test_alias')
     assert_success purchase
   end
 
   def test_successful_store_with_store_amount_at_the_gateway_level
-    gateway = OgoneGateway.new(fixtures(:ogone).merge(:store_amount => 100))
-    assert response = gateway.store(@credit_card, :billing_id => 'test_alias')
+    gateway = OgoneGateway.new(fixtures(:ogone).merge(store_amount: 100))
+    assert response = gateway.store(@credit_card, billing_id: 'test_alias')
     assert_success response
     assert purchase = gateway.purchase(@amount, 'test_alias')
     assert_success purchase
@@ -194,7 +260,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
-    assert refund = @gateway.refund(@amount+1, purchase.authorization, @options) # too much refund requested
+    assert refund = @gateway.refund(@amount + 1, purchase.authorization, @options) # too much refund requested
     assert_failure refund
     assert refund.authorization
     assert_equal 'Overflow in refunds requests', refund.message
@@ -216,28 +282,28 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'No brand', response.message
+    assert_equal 'No brand or invalid card number', response.message
   end
 
   def test_reference_transactions
     # Setting an alias
-    assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(:billing_id => 'awesomeman', :order_id=>Time.now.to_i.to_s+'1'))
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(billing_id: 'awesomeman', order_id: Time.now.to_i.to_s + '1'))
     assert_success response
     # Updating an alias
-    assert response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(:billing_id => 'awesomeman', :order_id=>Time.now.to_i.to_s+'2'))
+    assert response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(billing_id: 'awesomeman', order_id: Time.now.to_i.to_s + '2'))
     assert_success response
     # Using an alias (i.e. don't provide the credit card)
-    assert response = @gateway.purchase(@amount, 'awesomeman', @options.merge(:order_id => Time.now.to_i.to_s + '3'))
+    assert response = @gateway.purchase(@amount, 'awesomeman', @options.merge(order_id: Time.now.to_i.to_s + '3'))
     assert_success response
   end
 
   def test_invalid_login
     gateway = OgoneGateway.new(
-                login: 'login',
-                user: 'user',
-                password: 'password',
-                signature: 'signature'
-              )
+      login: 'login',
+      user: 'user',
+      password: 'password',
+      signature: 'signature'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end

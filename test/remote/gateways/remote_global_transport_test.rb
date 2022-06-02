@@ -9,7 +9,7 @@ class RemoteGlobalTransportTest < Test::Unit::TestCase
     @options = {
       email: 'john@example.com',
       order_id: '1',
-      billing_address: address,
+      billing_address: address
     }
   end
 
@@ -137,5 +137,4 @@ class RemoteGlobalTransportTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:global_password], transcript)
   end
-
 end

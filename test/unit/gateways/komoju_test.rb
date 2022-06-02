@@ -2,19 +2,19 @@ require 'test_helper'
 
 class KomojuTest < Test::Unit::TestCase
   def setup
-    @gateway = KomojuGateway.new(:login => 'login')
+    @gateway = KomojuGateway.new(login: 'login')
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :description => 'Store Purchase',
-      :tax => '10',
-      :ip => '192.168.0.1',
-      :email => 'valid@email.com',
-      :browser_language => 'en',
-      :browser_user_agent => 'user_agent'
+      order_id: '1',
+      description: 'Store Purchase',
+      tax: '10',
+      ip: '192.168.0.1',
+      email: 'valid@email.com',
+      browser_language: 'en',
+      browser_user_agent: 'user_agent'
     }
   end
 
@@ -59,7 +59,7 @@ class KomojuTest < Test::Unit::TestCase
     successful_response = successful_credit_card_refund_response
     @gateway.expects(:ssl_post).returns(JSON.generate(successful_response))
 
-    response = @gateway.refund(@amount,  '7e8c55a54256ce23e387f2838c', @options)
+    response = @gateway.refund(@amount, '7e8c55a54256ce23e387f2838c', @options)
     assert_success response
 
     assert_equal successful_response['id'], response.authorization

@@ -7,29 +7,27 @@ module ActiveMerchant #:nodoc:
       self.v4_live_url = 'https://ps1.merchantware.net/Merchantware/ws/RetailTransaction/v4/Credit.asmx'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://merchantwarehouse.com/merchantware'
       self.display_name = 'MerchantWARE'
 
       ENV_NAMESPACES = { 'xmlns:xsi'  => 'http://www.w3.org/2001/XMLSchema-instance',
                          'xmlns:xsd'  => 'http://www.w3.org/2001/XMLSchema',
-                         'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/'
-                       }
+                         'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/' }
       ENV_NAMESPACES_V4 = { 'xmlns:xsi'  => 'http://www.w3.org/2001/XMLSchema-instance',
                             'xmlns:xsd'  => 'http://www.w3.org/2001/XMLSchema',
-                            'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'
-                          }
+                            'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' }
 
       TX_NAMESPACE = 'http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail'
       TX_NAMESPACE_V4 = 'http://schemas.merchantwarehouse.com/merchantware/40/Credit/'
 
       ACTIONS = {
-        :purchase  => 'IssueKeyedSale',
-        :authorize => 'IssueKeyedPreAuth',
-        :capture   => 'IssuePostAuth',
-        :void      => 'VoidPreAuthorization',
-        :credit    => 'IssueKeyedRefund',
-        :reference_credit => 'IssueRefundByReference'
+        purchase: 'IssueKeyedSale',
+        authorize: 'IssueKeyedPreAuth',
+        capture: 'IssuePostAuth',
+        void: 'VoidPreAuthorization',
+        credit: 'IssueKeyedRefund',
+        reference_credit: 'IssueRefundByReference'
       }
 
       # Creates a new MerchantWareGateway
@@ -119,7 +117,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def soap_request(action)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'env:Envelope', ENV_NAMESPACES do
           xml.tag! 'env:Body' do
@@ -133,7 +131,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def v4_soap_request(action)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'soap:Envelope', ENV_NAMESPACES_V4 do
           xml.tag! 'soap:Body' do
@@ -274,7 +272,7 @@ module ActiveMerchant #:nodoc:
           response[element.name] = element.text
         end
 
-        response[:message] = response['faultstring'].to_s.gsub("\n", ' ')
+        response[:message] = response['faultstring'].to_s.tr("\n", ' ')
         response
       rescue REXML::ParseException
         response[:http_body]        = http_response.body
@@ -294,25 +292,21 @@ module ActiveMerchant #:nodoc:
         begin
           data = ssl_post(url(v4), request,
             'Content-Type' => 'text/xml; charset=utf-8',
-            'SOAPAction'   => soap_action(action, v4)
-          )
+            'SOAPAction'   => soap_action(action, v4))
           response = parse(action, data)
         rescue ActiveMerchant::ResponseError => e
           response = parse_error(e.response)
         end
 
         Response.new(response[:success], response[:message], response,
-          :test => test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => response['AVSResponse'] },
-          :cvv_result => response['CVResponse']
-        )
+          test: test?,
+          authorization: authorization_from(response),
+          avs_result: { code: response['AVSResponse'] },
+          cvv_result: response['CVResponse'])
       end
 
       def authorization_from(response)
-        if response[:success]
-          [ response['ReferenceID'], response['OrderNumber'] ].join(';')
-        end
+        [response['ReferenceID'], response['OrderNumber']].join(';') if response[:success]
       end
     end
   end

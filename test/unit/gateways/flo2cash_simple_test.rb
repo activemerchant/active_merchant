@@ -7,9 +7,9 @@ class Flo2cashSimpleTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = Flo2cashSimpleGateway.new(
-      :username => 'username',
-      :password => 'password',
-      :account_id => 'account_id'
+      username: 'username',
+      password: 'password',
+      account_id: 'account_id'
     )
 
     @credit_card = credit_card
@@ -19,7 +19,7 @@ class Flo2cashSimpleTest < Test::Unit::TestCase
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, order_id: 'boom')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{<Reference>boom</Reference>}, data)
     end.respond_with(successful_purchase_response)
 
@@ -50,7 +50,7 @@ class Flo2cashSimpleTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/P150200005007600/, data)
     end.respond_with(successful_refund_response)
 
@@ -67,7 +67,7 @@ class Flo2cashSimpleTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
-    transcript =  @gateway.scrub(successful_purchase_response)
+    transcript = @gateway.scrub(successful_purchase_response)
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)

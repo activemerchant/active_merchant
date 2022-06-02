@@ -7,21 +7,21 @@ class RemoteIridiumTest < Test::Unit::TestCase
     @gateway = IridiumGateway.new(fixtures(:iridium))
 
     @amount = 100
-    @avs_card = credit_card('4921810000005462', {:verification_value => '441'})
-    @cv2_card = credit_card('4976000000003436', {:verification_value => '777'})
-    @avs_cv2_card = credit_card('4921810000005462', {:verification_value => '777'})
-    @credit_card = credit_card('4976000000003436', {:verification_value => '452'})
+    @avs_card = credit_card('4921810000005462', { verification_value: '441' })
+    @cv2_card = credit_card('4976000000003436', { verification_value: '777' })
+    @avs_cv2_card = credit_card('4921810000005462', { verification_value: '777' })
+    @credit_card = credit_card('4976000000003436', { verification_value: '452' })
     @declined_card = credit_card('4221690000004963')
 
-    our_address = address(:address1 => '32 Edward Street',
-                          :address2 => 'Camborne',
-                          :state => 'Cornwall',
-                          :zip => 'TR14 8PA',
-                          :country => '826')
+    our_address = address(address1: '32 Edward Street',
+                          address2: 'Camborne',
+                          state: 'Cornwall',
+                          zip: 'TR14 8PA',
+                          country: '826')
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => our_address,
-      :description => 'Store Purchase'
+      order_id: generate_unique_id,
+      billing_address: our_address,
+      description: 'Store Purchase'
     }
   end
 
@@ -111,7 +111,7 @@ class RemoteIridiumTest < Test::Unit::TestCase
     assert_success response
     assert(reference = response.authorization)
 
-    assert response = @gateway.purchase(@amount, reference, {:order_id => generate_unique_id})
+    assert response = @gateway.purchase(@amount, reference, { order_id: generate_unique_id })
     assert_success response
   end
 
@@ -120,7 +120,7 @@ class RemoteIridiumTest < Test::Unit::TestCase
     assert_success response
     assert response.authorization
 
-    assert response = @gateway.purchase(@amount, 'bogusref', {:order_id => generate_unique_id})
+    assert response = @gateway.purchase(@amount, 'bogusref', { order_id: generate_unique_id })
     assert_failure response
   end
 
@@ -129,7 +129,7 @@ class RemoteIridiumTest < Test::Unit::TestCase
     assert_success response
     assert(reference = response.authorization)
 
-    assert response = @gateway.authorize(@amount, reference, {:order_id => generate_unique_id})
+    assert response = @gateway.authorize(@amount, reference, { order_id: generate_unique_id })
     assert_success response
   end
 
@@ -145,7 +145,7 @@ class RemoteIridiumTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert response = @gateway.credit(@amount*2, response.authorization)
+    assert response = @gateway.credit(@amount * 2, response.authorization)
     assert_failure response
   end
 
@@ -164,9 +164,9 @@ class RemoteIridiumTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = IridiumGateway.new(
-                :login => '',
-                :password => ''
-              )
+      login: '',
+      password: ''
+    )
 
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

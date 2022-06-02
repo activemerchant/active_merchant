@@ -8,9 +8,8 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111')
     @check = check()
     @declined_amount = rand(99)
-    @options = {  :order_id => generate_unique_id,
-                  :billing_address => address
-               }
+    @options = {  order_id: generate_unique_id,
+                  billing_address: address }
   end
 
   def test_successful_purchase
@@ -21,12 +20,12 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_echeck
     check = ActiveMerchant::Billing::Check.new(
-              :name => 'Fredd Bloggs',
-              :routing_number => '111000025', # Valid ABA # - Bank of America, TX
-              :account_number => '999999999999',
-              :account_holder_type => 'personal',
-              :account_type => 'checking'
-            )
+      name: 'Fredd Bloggs',
+      routing_number: '111000025', # Valid ABA # - Bank of America, TX
+      account_number: '999999999999',
+      account_holder_type: 'personal',
+      account_type: 'checking'
+    )
     assert response = @gateway.purchase(@amount, check, @options)
     assert_equal 'This transaction has been approved', response.message
     assert_success response
@@ -61,7 +60,7 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
     assert_success response
     assert_not_nil customer_id = response.params['customer_vault_id']
 
-    assert second_response = @gateway.purchase(@amount*2, customer_id, @options)
+    assert second_response = @gateway.purchase(@amount * 2, customer_id, @options)
     assert_equal 'This transaction has been approved', second_response.message
     assert second_response.success?
   end
@@ -90,7 +89,7 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
 
   def test_update_vault
     test_add_to_vault_with_custom_vault_id
-    @credit_card = credit_card('4111111111111111', :month => 10)
+    @credit_card = credit_card('4111111111111111', month: 10)
     assert response = @gateway.update(@options[:store], @credit_card)
     assert_success response
     assert_equal 'Customer Update Successful', response.message
@@ -163,9 +162,9 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = BraintreeOrangeGateway.new(
-                :login => '',
-                :password => ''
-              )
+      login: '',
+      password: ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Invalid Username', response.message
     assert_failure response

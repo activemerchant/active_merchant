@@ -8,13 +8,13 @@ class BogusTest < Test::Unit::TestCase
 
   def setup
     @gateway = BogusGateway.new(
-      :login => 'bogus',
-      :password => 'bogus'
+      login: 'bogus',
+      password: 'bogus'
     )
 
     @creditcard = credit_card(CC_SUCCESS_PLACEHOLDER)
 
-    @response = ActiveMerchant::Billing::Response.new(true, 'Transaction successful', :transid => BogusGateway::AUTHORIZATION)
+    @response = ActiveMerchant::Billing::Response.new(true, 'Transaction successful', transid: BogusGateway::AUTHORIZATION)
   end
 
   def test_authorize
@@ -47,7 +47,7 @@ class BogusTest < Test::Unit::TestCase
   def test_capture
     assert  @gateway.capture(1000, '1337').success?
     assert  @gateway.capture(1000, @response.params['transid']).success?
-    response =  @gateway.capture(1000, CC_FAILURE_PLACEHOLDER)
+    response = @gateway.capture(1000, CC_FAILURE_PLACEHOLDER)
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     assert_raises(ActiveMerchant::Billing::Error) do
@@ -57,7 +57,7 @@ class BogusTest < Test::Unit::TestCase
 
   def test_credit
     assert @gateway.credit(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
-    response =  @gateway.credit(1000, credit_card(CC_FAILURE_PLACEHOLDER))
+    response = @gateway.credit(1000, credit_card(CC_FAILURE_PLACEHOLDER))
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     e = assert_raises(ActiveMerchant::Billing::Error) do
@@ -78,7 +78,7 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_credit_uses_refund
-    options = {:foo => :bar}
+    options = { foo: :bar }
     @gateway.expects(:refund).with(1000, '1337', options)
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
       @gateway.credit(1000, '1337', options)
@@ -125,71 +125,71 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_authorize_with_check
-    assert  @gateway.authorize(1000, check(:account_number => CHECK_SUCCESS_PLACEHOLDER, :number => nil)).success?
-    assert !@gateway.authorize(1000, check(:account_number => CHECK_FAILURE_PLACEHOLDER, :number => nil)).success?
+    assert  @gateway.authorize(1000, check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: nil)).success?
+    assert !@gateway.authorize(1000, check(account_number: CHECK_FAILURE_PLACEHOLDER, number: nil)).success?
     e = assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.authorize(1000, check(:account_number => '123', :number => nil))
+      @gateway.authorize(1000, check(account_number: '123', number: nil))
     end
     assert_equal('Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error', e.message)
   end
 
   def test_purchase_with_check
     # use account number if number isn't given
-    assert  @gateway.purchase(1000, check(:account_number => CHECK_SUCCESS_PLACEHOLDER, :number => nil)).success?
-    assert !@gateway.purchase(1000, check(:account_number => CHECK_FAILURE_PLACEHOLDER, :number => nil)).success?
+    assert  @gateway.purchase(1000, check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: nil)).success?
+    assert !@gateway.purchase(1000, check(account_number: CHECK_FAILURE_PLACEHOLDER, number: nil)).success?
     # give priority to number over account_number if given
-    assert !@gateway.purchase(1000, check(:account_number => CHECK_SUCCESS_PLACEHOLDER, :number => CHECK_FAILURE_PLACEHOLDER)).success?
-    assert  @gateway.purchase(1000, check(:account_number => CHECK_FAILURE_PLACEHOLDER, :number => CHECK_SUCCESS_PLACEHOLDER)).success?
+    assert !@gateway.purchase(1000, check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: CHECK_FAILURE_PLACEHOLDER)).success?
+    assert  @gateway.purchase(1000, check(account_number: CHECK_FAILURE_PLACEHOLDER, number: CHECK_SUCCESS_PLACEHOLDER)).success?
     e = assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.purchase(1000, check(:account_number => '123', :number => nil))
+      @gateway.purchase(1000, check(account_number: '123', number: nil))
     end
     assert_equal('Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error', e.message)
   end
 
   def test_store_with_check
-    assert  @gateway.store(check(:account_number => CHECK_SUCCESS_PLACEHOLDER, :number => nil)).success?
-    assert !@gateway.store(check(:account_number => CHECK_FAILURE_PLACEHOLDER, :number => nil)).success?
+    assert  @gateway.store(check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: nil)).success?
+    assert !@gateway.store(check(account_number: CHECK_FAILURE_PLACEHOLDER, number: nil)).success?
     e = assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.store(check(:account_number => '123', :number => nil))
+      @gateway.store(check(account_number: '123', number: nil))
     end
     assert_equal('Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error', e.message)
   end
 
   def test_credit_with_check
-    assert  @gateway.credit(1000, check(:account_number => CHECK_SUCCESS_PLACEHOLDER, :number => nil)).success?
-    assert !@gateway.credit(1000, check(:account_number => CHECK_FAILURE_PLACEHOLDER, :number => nil)).success?
+    assert  @gateway.credit(1000, check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: nil)).success?
+    assert !@gateway.credit(1000, check(account_number: CHECK_FAILURE_PLACEHOLDER, number: nil)).success?
     e = assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.credit(1000, check(:account_number => '123', :number => nil))
+      @gateway.credit(1000, check(account_number: '123', number: nil))
     end
     assert_equal('Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error', e.message)
   end
 
   def test_store_then_purchase_with_check
-    reference = @gateway.store(check(:account_number => CHECK_SUCCESS_PLACEHOLDER, :number => nil))
+    reference = @gateway.store(check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: nil))
     assert @gateway.purchase(1000, reference.authorization).success?
   end
 
   def test_authorize_emv
-    approve_response = @gateway.authorize(1000, credit_card('123', {icc_data: 'DEADBEEF'}))
+    approve_response = @gateway.authorize(1000, credit_card('123', { icc_data: 'DEADBEEF' }))
     assert approve_response.success?
     assert_equal '8A023030', approve_response.emv_authorization
-    decline_response = @gateway.authorize(1005, credit_card('123', {icc_data: 'DEADBEEF'}))
+    decline_response = @gateway.authorize(1005, credit_card('123', { icc_data: 'DEADBEEF' }))
     refute decline_response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], decline_response.error_code
     assert_equal '8A023035', decline_response.emv_authorization
     e = assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.authorize(1001, credit_card('123', {icc_data: 'DEADBEEF'}))
+      @gateway.authorize(1001, credit_card('123', { icc_data: 'DEADBEEF' }))
     end
     assert_equal('Bogus Gateway: Use amount ending in 00 for success, 05 for failure and anything else for exception', e.message)
   end
 
   def test_purchase_emv
-    assert @gateway.purchase(1000, credit_card('123', {icc_data: 'DEADBEEF'})).success?
-    response = @gateway.purchase(1005, credit_card('123', {icc_data: 'DEADBEEF'}))
+    assert @gateway.purchase(1000, credit_card('123', { icc_data: 'DEADBEEF' })).success?
+    response = @gateway.purchase(1005, credit_card('123', { icc_data: 'DEADBEEF' }))
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     e = assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.purchase(1001, credit_card('123', {icc_data: 'DEADBEEF'}))
+      @gateway.purchase(1001, credit_card('123', { icc_data: 'DEADBEEF' }))
     end
     assert_equal('Bogus Gateway: Use amount ending in 00 for success, 05 for failure and anything else for exception', e.message)
   end

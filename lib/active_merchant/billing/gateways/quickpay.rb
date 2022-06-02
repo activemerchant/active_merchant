@@ -19,7 +19,6 @@ module ActiveMerchant #:nodoc:
           QuickpayV10Gateway.new(options)
         end
       end
-
     end
   end
 end

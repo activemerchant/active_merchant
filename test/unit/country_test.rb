@@ -2,7 +2,7 @@ require 'test_helper'
 
 class CountryTest < Test::Unit::TestCase
   def test_country_from_hash
-    country = ActiveMerchant::Country.new(:name => 'Canada', :alpha2 => 'CA', :alpha3 => 'CAN', :numeric => '124')
+    country = ActiveMerchant::Country.new(name: 'Canada', alpha2: 'CA', alpha3: 'CAN', numeric: '124')
     assert_equal 'CA', country.code(:alpha2).value
     assert_equal 'CAN', country.code(:alpha3).value
     assert_equal '124', country.code(:numeric).value

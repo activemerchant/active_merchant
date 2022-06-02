@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://secure.quantumgateway.com/cgi/xml_requester.php'
 
       # visa, master, american_express, discover
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :dollars
@@ -95,14 +95,14 @@ module ActiveMerchant #:nodoc:
       def build_capture_request(money, authorization, options)
         xml = Builder::XmlMarkup.new
         add_common_credit_card_info(xml, 'PREVIOUS_SALE')
-        transaction_id, _ = authorization_parts_from(authorization)
+        transaction_id, = authorization_parts_from(authorization)
         add_transaction_id(xml, transaction_id)
         xml.target!
       end
 
       def build_purchase_request(money, creditcard, options)
         xml = Builder::XmlMarkup.new
-        add_common_credit_card_info(xml, @options[:ignore_avs] ||  @options[:ignore_cvv] ? 'SALES' : 'AUTH_CAPTURE')
+        add_common_credit_card_info(xml, @options[:ignore_avs] || @options[:ignore_cvv] ? 'SALES' : 'AUTH_CAPTURE')
         add_address(xml, creditcard, options[:billing_address], options)
         add_purchase_data(xml, money)
         add_creditcard(xml, creditcard)
@@ -116,7 +116,7 @@ module ActiveMerchant #:nodoc:
       def build_void_request(authorization, options)
         xml = Builder::XmlMarkup.new
         add_common_credit_card_info(xml, 'VOID')
-        transaction_id, _ = authorization_parts_from(authorization)
+        transaction_id, = authorization_parts_from(authorization)
         add_transaction_id(xml, transaction_id)
         xml.target!
       end
@@ -216,11 +216,10 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(success, message, response,
-          :test => test?,
-          :authorization => authorization,
-          :avs_result => { :code => response[:AVSResponseCode] },
-          :cvv_result => response[:CVV2ResponseCode]
-        )
+          test: test?,
+          authorization: authorization,
+          avs_result: { code: response[:AVSResponseCode] },
+          cvv_result: response[:CVV2ResponseCode])
       end
 
       # Parse the SOAP response
@@ -253,7 +252,7 @@ module ActiveMerchant #:nodoc:
         if node.has_elements?
           node.elements.each { |e| parse_element(reply, e) }
         else
-          if node.parent.name =~ /item/
+          if /item/.match?(node.parent.name)
             parent = node.parent.name + (node.parent.attributes['id'] ? '_' + node.parent.attributes['id'] : '')
             reply[(parent + '_' + node.name).to_sym] = node.text
           else
@@ -270,7 +269,6 @@ module ActiveMerchant #:nodoc:
       def authorization_parts_from(authorization)
         authorization.split(/;/)
       end
-
     end
   end
 end

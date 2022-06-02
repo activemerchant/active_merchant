@@ -9,15 +9,15 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover,
-                                  :diners_club, :jcb, :maestro]
+      self.supported_cardtypes = %i[visa master american_express discover
+                                    diners_club jcb maestro]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :site_id, :merchant_id, :token)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
         commit(:purchase, post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
         commit(:authorize, post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization, :capture)
@@ -44,14 +44,14 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, authorization, :void)
 
         commit(:void, post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization, :refund)
@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
         commit(:refund, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
           post[:city] = billing_address[:city]
           post[:state] = billing_address[:state]
           post[:countryId] = billing_address[:country]
-          post[:postalCode]    = billing_address[:zip]
+          post[:postalCode] = billing_address[:zip]
           post[:phone] = billing_address[:phone]
         end
       end
@@ -141,7 +141,8 @@ module ActiveMerchant #:nodoc:
           raw_response = ssl_post(url(action), post.to_json, headers)
           response = parse(raw_response)
         rescue ResponseError => e
-          raise unless(e.response.code.to_s =~ /4\d\d/)
+          raise unless e.response.code.to_s =~ /4\d\d/
+
           response = parse(e.response.body)
         end
 
@@ -151,8 +152,8 @@ module ActiveMerchant #:nodoc:
           message_from(succeeded, response),
           response,
           authorization: response['id'],
-          :avs_result => AVSResult.new(code: response['avs_response']),
-          :cvv_result => CVVResult.new(response['cvv2_response']),
+          avs_result: AVSResult.new(code: response['avs_response']),
+          cvv_result: CVVResult.new(response['cvv2_response']),
           test: test?
         )
       rescue JSON::ParserError
@@ -199,7 +200,6 @@ module ActiveMerchant #:nodoc:
           response['message'] || 'Unable to read error message'
         end
       end
-
     end
   end
 end

@@ -6,9 +6,9 @@ class RemoteExactTest < Test::Unit::TestCase
     @credit_card = credit_card
     @amount = 100
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -49,8 +49,8 @@ class RemoteExactTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = ExactGateway.new(:login    => 'NotARealUser',
-                               :password => 'NotARealPassword')
+    gateway = ExactGateway.new(login: 'NotARealUser',
+                               password: 'NotARealPassword')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_match %r{^Invalid Login}, response.message
     assert_failure response

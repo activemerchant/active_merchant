@@ -15,19 +15,18 @@ class PayflowExpressTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = PayflowExpressGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD'
+      login: 'LOGIN',
+      password: 'PASSWORD'
     )
 
-    @address = { :address1 => '1234 My Street',
-                 :address2 => 'Apt 1',
-                 :company => 'Widgets Inc',
-                 :city => 'Ottawa',
-                 :state => 'ON',
-                 :zip => 'K1C2N6',
-                 :country => 'Canada',
-                 :phone => '(555)555-5555'
-               }
+    @address = { address1: '1234 My Street',
+                 address2: 'Apt 1',
+                 company: 'Widgets Inc',
+                 city: 'Ottawa',
+                 state: 'ON',
+                 zip: 'K1C2N6',
+                 country: 'Canada',
+                 phone: '(555)555-5555' }
   end
 
   def teardown
@@ -42,9 +41,9 @@ class PayflowExpressTest < Test::Unit::TestCase
     Base.mode = :production
 
     gateway = PayflowExpressGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD',
-      :test => true
+      login: 'LOGIN',
+      password: 'PASSWORD',
+      test: true
     )
 
     assert gateway.test?
@@ -54,8 +53,8 @@ class PayflowExpressTest < Test::Unit::TestCase
     Base.mode = :production
 
     gateway = PayflowExpressGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD'
+      login: 'LOGIN',
+      password: 'PASSWORD'
     )
 
     assert !gateway.test?
@@ -64,24 +63,24 @@ class PayflowExpressTest < Test::Unit::TestCase
   def test_live_redirect_url
     Base.mode = :production
     assert_equal LIVE_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
-    assert_equal LIVE_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', :mobile => true)
+    assert_equal LIVE_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', mobile: true)
   end
 
   def test_test_redirect_url
     assert_equal TEST_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
-    assert_equal TEST_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', :mobile => true)
+    assert_equal TEST_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', mobile: true)
   end
 
   def test_live_redirect_url_without_review
     Base.mode = :production
-    assert_equal LIVE_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false)
-    assert_equal LIVE_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false, :mobile => true)
+    assert_equal LIVE_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', review: false)
+    assert_equal LIVE_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', review: false, mobile: true)
   end
 
   def test_test_redirect_url_without_review
     assert_equal :test, Base.mode
-    assert_equal TEST_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false)
-    assert_equal TEST_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false, :mobile => true)
+    assert_equal TEST_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', review: false)
+    assert_equal TEST_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', review: false, mobile: true)
   end
 
   def test_invalid_get_express_details_request
@@ -143,7 +142,7 @@ class PayflowExpressTest < Test::Unit::TestCase
   end
 
   def test_get_express_details_with_invalid_xml
-    @gateway.expects(:ssl_post).returns(successful_get_express_details_response(:street => 'Main & Magic'))
+    @gateway.expects(:ssl_post).returns(successful_get_express_details_response(street: 'Main & Magic'))
     response = @gateway.details_for('EC-2OPN7UJGFWK9OYFV')
     assert_instance_of PayflowExpressResponse, response
     assert_success response
@@ -162,95 +161,95 @@ class PayflowExpressTest < Test::Unit::TestCase
 
   private
 
-  def successful_get_express_details_response(options={:street => '111 Main St.'})
-    <<-RESPONSE
-<XMLPayResponse xmlns='http://www.verisign.com/XMLPay'>
-  <ResponseData>
-    <Vendor>TEST</Vendor>
-    <Partner>verisign</Partner>
-    <TransactionResults>
-      <TransactionResult>
-        <Result>0</Result>
-        <Message>Approved</Message>
-        <PayPalResult>
-          <EMail>Buyer1@paypal.com</EMail>
-          <PayerID>12345678901234567</PayerID>
-          <Token>EC-2OPN7UJGFWK9OYFV</Token>
-          <FeeAmount>0</FeeAmount>
-          <PayerStatus>verified</PayerStatus>
-          <Name>Joe</Name>
-          <Phone>555-555-5555</Phone>
-          <ShipTo>
-            <Address>
-              <Street>#{options[:street]}</Street>
-              <City>San Jose</City>
-              <State>CA</State>
-              <Zip>95100</Zip>
-              <Country>US</Country>
-            </Address>
-          </ShipTo>
-          <CorrelationID>9c3706997455e</CorrelationID>
-        </PayPalResult>
-        <ExtData Name='LASTNAME' Value='Smith'/>
-      </TransactionResult>
-    </TransactionResults>
-  </ResponseData>
-  </XMLPayResponse>
+  def successful_get_express_details_response(options = { street: '111 Main St.' })
+    <<~RESPONSE
+      <XMLPayResponse xmlns='http://www.verisign.com/XMLPay'>
+        <ResponseData>
+          <Vendor>TEST</Vendor>
+          <Partner>verisign</Partner>
+          <TransactionResults>
+            <TransactionResult>
+              <Result>0</Result>
+              <Message>Approved</Message>
+              <PayPalResult>
+                <EMail>Buyer1@paypal.com</EMail>
+                <PayerID>12345678901234567</PayerID>
+                <Token>EC-2OPN7UJGFWK9OYFV</Token>
+                <FeeAmount>0</FeeAmount>
+                <PayerStatus>verified</PayerStatus>
+                <Name>Joe</Name>
+                <Phone>555-555-5555</Phone>
+                <ShipTo>
+                  <Address>
+                    <Street>#{options[:street]}</Street>
+                    <City>San Jose</City>
+                    <State>CA</State>
+                    <Zip>95100</Zip>
+                    <Country>US</Country>
+                  </Address>
+                </ShipTo>
+                <CorrelationID>9c3706997455e</CorrelationID>
+              </PayPalResult>
+              <ExtData Name='LASTNAME' Value='Smith'/>
+            </TransactionResult>
+          </TransactionResults>
+        </ResponseData>
+        </XMLPayResponse>
     RESPONSE
   end
 
   def successful_get_express_details_response_with_ship_to_name
-    <<-RESPONSE
-<XMLPayResponse xmlns='http://www.verisign.com/XMLPay'>
-  <ResponseData>
-    <Vendor>TEST</Vendor>
-    <Partner>verisign</Partner>
-    <TransactionResults>
-      <TransactionResult>
-        <Result>0</Result>
-        <Message>Approved</Message>
-        <PayPalResult>
-          <EMail>Buyer1@paypal.com</EMail>
-          <PayerID>12345678901234567</PayerID>
-          <Token>EC-2OPN7UJGFWK9OYFV</Token>
-          <FeeAmount>0</FeeAmount>
-          <PayerStatus>verified</PayerStatus>
-          <Name>Joe</Name>
-          <Phone>555-555-5555</Phone>
-          <ShipTo>
-            <Address>
-              <Street>111 Main St.</Street>
-              <City>San Jose</City>
-              <State>CA</State>
-              <Zip>95100</Zip>
-              <Country>US</Country>
-            </Address>
-          </ShipTo>
-          <CorrelationID>9c3706997455e</CorrelationID>
-        </PayPalResult>
-        <ExtData Name='LASTNAME' Value='Smith'/>
-        <ExtData Name='SHIPTONAME' Value='John Joseph'/>
-      </TransactionResult>
-    </TransactionResults>
-  </ResponseData>
-  </XMLPayResponse>
+    <<~RESPONSE
+      <XMLPayResponse xmlns='http://www.verisign.com/XMLPay'>
+        <ResponseData>
+          <Vendor>TEST</Vendor>
+          <Partner>verisign</Partner>
+          <TransactionResults>
+            <TransactionResult>
+              <Result>0</Result>
+              <Message>Approved</Message>
+              <PayPalResult>
+                <EMail>Buyer1@paypal.com</EMail>
+                <PayerID>12345678901234567</PayerID>
+                <Token>EC-2OPN7UJGFWK9OYFV</Token>
+                <FeeAmount>0</FeeAmount>
+                <PayerStatus>verified</PayerStatus>
+                <Name>Joe</Name>
+                <Phone>555-555-5555</Phone>
+                <ShipTo>
+                  <Address>
+                    <Street>111 Main St.</Street>
+                    <City>San Jose</City>
+                    <State>CA</State>
+                    <Zip>95100</Zip>
+                    <Country>US</Country>
+                  </Address>
+                </ShipTo>
+                <CorrelationID>9c3706997455e</CorrelationID>
+              </PayPalResult>
+              <ExtData Name='LASTNAME' Value='Smith'/>
+              <ExtData Name='SHIPTONAME' Value='John Joseph'/>
+            </TransactionResult>
+          </TransactionResults>
+        </ResponseData>
+        </XMLPayResponse>
     RESPONSE
   end
 
   def invalid_get_express_details_response
-    <<-RESPONSE
-<XMLPayResponse xmlns='http://www.verisign.com/XMLPay'>
-  <ResponseData>
-    <Vendor>TEST</Vendor>
-    <Partner>verisign</Partner>
-    <TransactionResults>
-      <TransactionResult>
-        <Result>7</Result>
-        <Message>Field format error: Invalid Token</Message>
-      </TransactionResult>
-    </TransactionResults>
-  </ResponseData>
-</XMLPayResponse>
+    <<~RESPONSE
+      <XMLPayResponse xmlns='http://www.verisign.com/XMLPay'>
+        <ResponseData>
+          <Vendor>TEST</Vendor>
+          <Partner>verisign</Partner>
+          <TransactionResults>
+            <TransactionResult>
+              <Result>7</Result>
+              <Message>Field format error: Invalid Token</Message>
+            </TransactionResult>
+          </TransactionResults>
+        </ResponseData>
+      </XMLPayResponse>
     RESPONSE
   end
 end
