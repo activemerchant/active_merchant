@@ -3,18 +3,21 @@ require 'test_helper'
 class MigsTest < Test::Unit::TestCase
   def setup
     @gateway = MigsGateway.new(
-                 :login => 'login',
-                 :password => 'password',
-                 :secure_hash => '76AF3392002D202A60D0AB5F9D81653C'
+                 login: 'login',
+                 password: 'password',
+                 secure_hash: '76AF3392002D202A60D0AB5F9D81653C',
+                 advanced_login: 'advlogin',
+                 advanced_password: 'advpass'
                )
-
     @credit_card = credit_card
     @amount = 100
+    @authorization = '2070000742'
+    @tx_source = 'MOTO'
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -41,9 +44,9 @@ class MigsTest < Test::Unit::TestCase
 
   def test_secure_hash
     params = {
-      :MerchantId => 'MER123',
-      :OrderInfo  => 'A48cvE28',
-      :Amount     => 2995
+      MerchantId:  'MER123',
+      OrderInfo:   'A48cvE28',
+      Amount:      2995
     }
     ordered_values = 'vpc_Amount=2995&vpc_MerchantId=MER123&vpc_OrderInfo=A48cvE28'
     @gateway.send(:add_secure_hash, params)
@@ -74,26 +77,50 @@ class MigsTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_purchase_passes_tx_source
+    expect_commit_with_tx_source
+    @gateway.purchase(@amount, @credit_card, @options.merge(tx_source: @tx_source))
+  end
+
+  def test_capture_passes_tx_source
+    expect_commit_with_tx_source
+    @gateway.capture(@amount, @authorization, @options.merge(tx_source: @tx_source))
+  end
+
+  def test_refund_passes_tx_source
+    expect_commit_with_tx_source
+    @gateway.refund(@amount, @authorization, @options.merge(tx_source: @tx_source))
+  end
+
+  def test_void_passes_tx_source
+    expect_commit_with_tx_source
+    @gateway.void(@authorization, @options.merge(tx_source: @tx_source))
+  end
+
   private
 
   # Place raw successful response from gateway here
   def successful_purchase_response
     build_response(
-      :TxnResponseCode => '0',
-      :TransactionNo   => '123456'
+      TxnResponseCode:  '0',
+      TransactionNo:    '123456'
     )
   end
 
   # Place raw failed response from gateway here
   def failed_purchase_response
     build_response(
-      :TxnResponseCode => '3',
-      :TransactionNo   => '654321'
+      TxnResponseCode:  '3',
+      TransactionNo:    '654321'
     )
   end
 
   def build_response(options)
     options.collect { |key, value| "vpc_#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+  end
+
+  def expect_commit_with_tx_source
+    @gateway.expects(:commit).with(has_entries(TxSource: @tx_source))
   end
 
   def pre_scrubbed

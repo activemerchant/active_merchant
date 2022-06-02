@@ -104,6 +104,16 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal '000000142800000000920000100001', response.authorization
   end
 
+  def test_handles_blank_names
+    credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil})
+
+    response = stub_comms do
+      @gateway.authorize(@accepted_amount, credit_card, @options)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
   def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@rejected_amount, @declined_card, @options)

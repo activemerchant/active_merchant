@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class HpsTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = HpsGateway.new({:secret_api_key => '12'})
 
@@ -195,6 +197,249 @@ class HpsTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrub), post_scrub
   end
 
+  def test_successful_purchase_with_apple_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :apple_pay
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_purchase_with_apple_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(failed_charge_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :apple_pay
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_purchase_with_apple_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :apple_pay
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_purchase_with_apple_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(failed_charge_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :apple_pay
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_auth_with_apple_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :apple_pay
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_auth_with_apple_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(failed_authorize_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :apple_pay
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_auth_with_apple_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :apple_pay
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_auth_with_apple_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(failed_authorize_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :apple_pay
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_three_d_secure_visa
+    @credit_card.number = '4012002000060016'
+    @credit_card.brand = 'visa'
+
+    options = {
+      :three_d_secure => {
+        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        :eci => '05',
+        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      }
+    }
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
+      assert_match(/<hps:PaymentDataSource>Visa 3DSecure<\/hps:PaymentDataSource>/, data)
+      assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
+      assert_match(/<hps:PaymentData>#{options[:three_d_secure][:cavv]}<\/hps:PaymentData>/, data)
+      assert_match(/<hps:ECommerceIndicator>5<\/hps:ECommerceIndicator>/, data)
+      assert_match(/<hps:XID>#{options[:three_d_secure][:xid]}<\/hps:XID>/, data)
+    end.respond_with(successful_charge_response)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_three_d_secure_mastercard
+    @credit_card.number = '5473500000000014'
+    @credit_card.brand = 'master'
+
+    options = {
+      :three_d_secure => {
+        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        :eci => '05',
+        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      }
+    }
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
+      assert_match(/<hps:PaymentDataSource>MasterCard 3DSecure<\/hps:PaymentDataSource>/, data)
+      assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
+      assert_match(/<hps:PaymentData>#{options[:three_d_secure][:cavv]}<\/hps:PaymentData>/, data)
+      assert_match(/<hps:ECommerceIndicator>5<\/hps:ECommerceIndicator>/, data)
+      assert_match(/<hps:XID>#{options[:three_d_secure][:xid]}<\/hps:XID>/, data)
+    end.respond_with(successful_charge_response)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_three_d_secure_discover
+    @credit_card.number = '6011000990156527'
+    @credit_card.brand = 'discover'
+
+    options = {
+      :three_d_secure => {
+        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        :eci => '5',
+        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      }
+    }
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
+      assert_match(/<hps:PaymentDataSource>Discover 3DSecure<\/hps:PaymentDataSource>/, data)
+      assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
+      assert_match(/<hps:PaymentData>#{options[:three_d_secure][:cavv]}<\/hps:PaymentData>/, data)
+      assert_match(/<hps:ECommerceIndicator>5<\/hps:ECommerceIndicator>/, data)
+      assert_match(/<hps:XID>#{options[:three_d_secure][:xid]}<\/hps:XID>/, data)
+    end.respond_with(successful_charge_response)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_three_d_secure_amex
+    @credit_card.number = '372700699251018'
+    @credit_card.brand = 'american_express'
+
+    options = {
+      :three_d_secure => {
+        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        :eci => '05',
+        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      }
+    }
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
+      assert_match(/<hps:PaymentDataSource>AMEX 3DSecure<\/hps:PaymentDataSource>/, data)
+      assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
+      assert_match(/<hps:PaymentData>#{options[:three_d_secure][:cavv]}<\/hps:PaymentData>/, data)
+      assert_match(/<hps:ECommerceIndicator>5<\/hps:ECommerceIndicator>/, data)
+      assert_match(/<hps:XID>#{options[:three_d_secure][:xid]}<\/hps:XID>/, data)
+    end.respond_with(successful_charge_response)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_three_d_secure_jcb
+    @credit_card.number = '372700699251018'
+    @credit_card.brand = 'jcb'
+
+    options = {
+      :three_d_secure => {
+        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        :eci => '5',
+        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      }
+    }
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |method, endpoint, data, headers|
+      refute_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
+      refute_match(/<hps:PaymentDataSource>(.*)<\/hps:PaymentDataSource>/, data)
+      refute_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
+      refute_match(/<hps:PaymentData>#{options[:three_d_secure][:cavv]}<\/hps:PaymentData>/, data)
+      refute_match(/<hps:ECommerceIndicator>5<\/hps:ECommerceIndicator>/, data)
+      refute_match(/<hps:XID>#{options[:three_d_secure][:xid]}<\/hps:XID>/, data)
+    end.respond_with(successful_charge_response)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   private
 
   def successful_charge_response
@@ -269,6 +514,40 @@ class HpsTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def failed_charge_response_decline
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap:Body>
+     <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+        <Ver1.0>
+           <Header>
+              <LicenseId>21229</LicenseId>
+              <SiteId>21232</SiteId>
+              <DeviceId>1525997</DeviceId>
+              <GatewayTxnId>16099851</GatewayTxnId>
+              <GatewayRspCode>0</GatewayRspCode>
+              <GatewayRspMsg>Success</GatewayRspMsg>
+              <RspDT>2014-03-17T13:01:55.851307</RspDT>
+           </Header>
+           <Transaction>
+              <CreditSale>
+                 <RspCode>05</RspCode>
+                 <RspText>DECLINE</RspText>
+                 <AuthCode />
+                 <AVSRsltCode>0</AVSRsltCode>
+                 <RefNbr>407613674802</RefNbr>
+                 <CardType>Visa</CardType>
+                 <AVSRsltText>AVS Not Requested.</AVSRsltText>
+              </CreditSale>
+           </Transaction>
+        </Ver1.0>
+     </PosResponse>
+  </soap:Body>
+</soap:Envelope>
+    RESPONSE
+  end
+
   def successful_authorize_response
     <<-RESPONSE
 <?xml version="1.0" encoding="UTF-8"?>
@@ -327,6 +606,40 @@ class HpsTest < Test::Unit::TestCase
              <CreditAuth>
                 <RspCode>54</RspCode>
                 <RspText>EXPIRED CARD</RspText>
+                <AuthCode />
+                <AVSRsltCode>0</AVSRsltCode>
+                <RefNbr>407613674811</RefNbr>
+                <CardType>Visa</CardType>
+                <AVSRsltText>AVS Not Requested.</AVSRsltText>
+             </CreditAuth>
+          </Transaction>
+       </Ver1.0>
+    </PosResponse>
+  </soap:Body>
+</soap:Envelope>
+    RESPONSE
+  end
+
+  def failed_authorize_response_decline
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap:Body>
+    <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+       <Ver1.0>
+          <Header>
+             <LicenseId>21229</LicenseId>
+             <SiteId>21232</SiteId>
+             <DeviceId>1525997</DeviceId>
+             <GatewayTxnId>16088893</GatewayTxnId>
+             <GatewayRspCode>0</GatewayRspCode>
+             <GatewayRspMsg>Success</GatewayRspMsg>
+             <RspDT>2014-03-17T13:06:45.449707</RspDT>
+          </Header>
+          <Transaction>
+             <CreditAuth>
+                <RspCode>05</RspCode>
+                <RspText>DECLINE</RspText>
                 <AuthCode />
                 <AVSRsltCode>0</AVSRsltCode>
                 <RefNbr>407613674811</RefNbr>
@@ -616,7 +929,7 @@ opened
 starting SSL for posgateway.cert.secureexchange.net:443...
 SSL established
 <- "POST /Hps.Exchange.PosGateway/PosGatewayService.asmx?wsdl HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: posgateway.cert.secureexchange.net\r\nContent-Length: 1295\r\n\r\n"
-<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP:Envelope xmlns:SOAP=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hps=\"http://Hps.Exchange.PosGateway\"><SOAP:Body><hps:PosRequest><hps:Ver1.0><hps:Header><hps:SecretAPIKey>skapi_cert_MYl2AQAowiQAbLp5JesGKh7QFkcizOP2jcX9BrEMqQ</hps:SecretAPIKey></hps:Header><hps:Transaction><hps:CreditSale><hps:Block1><hps:Amt>1.00</hps:Amt><hps:AllowDup>Y</hps:AllowDup><hps:CardHolderData><hps:CardHolderFirstName>Longbob</hps:CardHolderFirstName><hps:CardHolderLastName>Longsen</hps:CardHolderLastName><hps:CardHolderAddr>456 My Street</hps:CardHolderAddr><hps:CardHolderCity>Ottawa</hps:CardHolderCity><hps:CardHolderState>ON</hps:CardHolderState><hps:CardHolderZip>K1C2N6</hps:CardHolderZip></hps:CardHolderData><hps:AdditionalTxnFields><hps:Description>Store Purchase</hps:Description><hps:InvoiceNbr>1</hps:InvoiceNbr></hps:AdditionalTxnFields><hps:CardData><hps:ManualEntry><hps:CardNbr>4000100011112224</hps:CardNbr><hps:ExpMonth>9</hps:ExpMonth><hps:ExpYear>2019</hps:ExpYear><hps:CVV2>123</hps:CVV2><hps:CardPresent>N</hps:CardPresent><hps:ReaderPresent>N</hps:ReaderPresent></hps:ManualEntry><hps:TokenRequest>N</hps:TokenRequest></hps:CardData></hps:Block1></hps:CreditSale></hps:Transaction></hps:Ver1.0></hps:PosRequest></SOAP:Body></SOAP:Envelope>"
+<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP:Envelope xmlns:SOAP=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hps=\"http://Hps.Exchange.PosGateway\"><SOAP:Body><hps:PosRequest><hps:Ver1.0><hps:Header><hps:SecretAPIKey>skapi_cert_MYl2AQAowiQAbLp5JesGKh7QFkcizOP2jcX9BrEMqQ</hps:SecretAPIKey></hps:Header><hps:Transaction><hps:CreditSale><hps:Block1><hps:Amt>1.00</hps:Amt><hps:AllowDup>Y</hps:AllowDup><hps:CardHolderData><hps:CardHolderFirstName>Longbob</hps:CardHolderFirstName><hps:CardHolderLastName>Longsen</hps:CardHolderLastName><hps:CardHolderAddr>456 My Street</hps:CardHolderAddr><hps:CardHolderCity>Ottawa</hps:CardHolderCity><hps:CardHolderState>ON</hps:CardHolderState><hps:CardHolderZip>K1C2N6</hps:CardHolderZip></hps:CardHolderData><hps:AdditionalTxnFields><hps:Description>Store Purchase</hps:Description><hps:InvoiceNbr>1</hps:InvoiceNbr></hps:AdditionalTxnFields><hps:CardData><hps:ManualEntry><hps:CardNbr>4000100011112224</hps:CardNbr><hps:ExpMonth>9</hps:ExpMonth><hps:ExpYear>2019</hps:ExpYear><hps:CVV2>123</hps:CVV2><hps:CardPresent>N</hps:CardPresent><hps:ReaderPresent>N</hps:ReaderPresent></hps:ManualEntry><hps:TokenRequest>N</hps:TokenRequest></hps:CardData><hps:SecureECommerce><hps:PaymentDataSource>ApplePay</hps:PaymentDataSource><hps:TypeOfPaymentData>3DSecure</hps:TypeOfPaymentData><hps:PaymentData>EHuWW9PiBkWvqE5juRwDzAUFBAk</hps:PaymentData><hps:ECommerceIndicator>5</hps:ECommerceIndicator><hps:XID>abc123</hps:XID</hps:SecureECommerce></hps:Block1></hps:CreditSale></hps:Transaction></hps:Ver1.0></hps:PosRequest></SOAP:Body></SOAP:Envelope>"
 -> "HTTP/1.1 200 OK\r\n"
 -> "Cache-Control: private, max-age=0\r\n"
 -> "Content-Type: text/xml; charset=utf-8\r\n"
@@ -646,7 +959,7 @@ opened
 starting SSL for posgateway.cert.secureexchange.net:443...
 SSL established
 <- "POST /Hps.Exchange.PosGateway/PosGatewayService.asmx?wsdl HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: posgateway.cert.secureexchange.net\r\nContent-Length: 1295\r\n\r\n"
-<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP:Envelope xmlns:SOAP=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hps=\"http://Hps.Exchange.PosGateway\"><SOAP:Body><hps:PosRequest><hps:Ver1.0><hps:Header><hps:SecretAPIKey>[FILTERED]</hps:SecretAPIKey></hps:Header><hps:Transaction><hps:CreditSale><hps:Block1><hps:Amt>1.00</hps:Amt><hps:AllowDup>Y</hps:AllowDup><hps:CardHolderData><hps:CardHolderFirstName>Longbob</hps:CardHolderFirstName><hps:CardHolderLastName>Longsen</hps:CardHolderLastName><hps:CardHolderAddr>456 My Street</hps:CardHolderAddr><hps:CardHolderCity>Ottawa</hps:CardHolderCity><hps:CardHolderState>ON</hps:CardHolderState><hps:CardHolderZip>K1C2N6</hps:CardHolderZip></hps:CardHolderData><hps:AdditionalTxnFields><hps:Description>Store Purchase</hps:Description><hps:InvoiceNbr>1</hps:InvoiceNbr></hps:AdditionalTxnFields><hps:CardData><hps:ManualEntry><hps:CardNbr>[FILTERED]</hps:CardNbr><hps:ExpMonth>9</hps:ExpMonth><hps:ExpYear>2019</hps:ExpYear><hps:CVV2>[FILTERED]</hps:CVV2><hps:CardPresent>N</hps:CardPresent><hps:ReaderPresent>N</hps:ReaderPresent></hps:ManualEntry><hps:TokenRequest>N</hps:TokenRequest></hps:CardData></hps:Block1></hps:CreditSale></hps:Transaction></hps:Ver1.0></hps:PosRequest></SOAP:Body></SOAP:Envelope>"
+<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP:Envelope xmlns:SOAP=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hps=\"http://Hps.Exchange.PosGateway\"><SOAP:Body><hps:PosRequest><hps:Ver1.0><hps:Header><hps:SecretAPIKey>[FILTERED]</hps:SecretAPIKey></hps:Header><hps:Transaction><hps:CreditSale><hps:Block1><hps:Amt>1.00</hps:Amt><hps:AllowDup>Y</hps:AllowDup><hps:CardHolderData><hps:CardHolderFirstName>Longbob</hps:CardHolderFirstName><hps:CardHolderLastName>Longsen</hps:CardHolderLastName><hps:CardHolderAddr>456 My Street</hps:CardHolderAddr><hps:CardHolderCity>Ottawa</hps:CardHolderCity><hps:CardHolderState>ON</hps:CardHolderState><hps:CardHolderZip>K1C2N6</hps:CardHolderZip></hps:CardHolderData><hps:AdditionalTxnFields><hps:Description>Store Purchase</hps:Description><hps:InvoiceNbr>1</hps:InvoiceNbr></hps:AdditionalTxnFields><hps:CardData><hps:ManualEntry><hps:CardNbr>[FILTERED]</hps:CardNbr><hps:ExpMonth>9</hps:ExpMonth><hps:ExpYear>2019</hps:ExpYear><hps:CVV2>[FILTERED]</hps:CVV2><hps:CardPresent>N</hps:CardPresent><hps:ReaderPresent>N</hps:ReaderPresent></hps:ManualEntry><hps:TokenRequest>N</hps:TokenRequest></hps:CardData><hps:SecureECommerce><hps:PaymentDataSource>ApplePay</hps:PaymentDataSource><hps:TypeOfPaymentData>3DSecure</hps:TypeOfPaymentData><hps:PaymentData>[FILTERED]</hps:PaymentData><hps:ECommerceIndicator>5</hps:ECommerceIndicator><hps:XID>abc123</hps:XID</hps:SecureECommerce></hps:Block1></hps:CreditSale></hps:Transaction></hps:Ver1.0></hps:PosRequest></SOAP:Body></SOAP:Envelope>"
 -> "HTTP/1.1 200 OK\r\n"
 -> "Cache-Control: private, max-age=0\r\n"
 -> "Content-Type: text/xml; charset=utf-8\r\n"

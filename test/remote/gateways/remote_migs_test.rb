@@ -16,6 +16,9 @@ class RemoteMigsTest < Test::Unit::TestCase
     @diners = credit_card('30123456789019',   :month => 5, :year => 2021, :brand => 'diners_club')
     @credit_card = @visa
 
+    @valid_tx_source = 'MOTO'
+    @invalid_tx_source = 'penguin'
+
     @options = {
       :order_id => '1',
       :currency => 'SAR'
@@ -102,6 +105,48 @@ class RemoteMigsTest < Test::Unit::TestCase
     # assert response = @gateway.refund(@amount, payment_response.authorization, @options)
     # refute_success response
     # assert_equal 'Approved', response.message
+  end
+
+  def test_purchase_passes_tx_source
+    # returns a successful response when a valid tx_source parameter is sent
+    assert good_response = @gateway.purchase(@amount, @credit_card, @options.merge(tx_source: @valid_tx_source))
+    assert_success good_response
+    assert_equal 'Approved', good_response.message
+
+    # returns a failed response when an invalid tx_source parameter is sent
+    assert bad_response = @gateway.purchase(@amount, @credit_card, @options.merge(tx_source: @invalid_tx_source))
+    assert_failure bad_response
+  end
+
+  def test_capture_passes_tx_source
+    # authorize the credit card in order to then run capture
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    # returns a successful response when a valid tx_source paramater is sent
+    assert good_response = @gateway.capture(@amount, auth.authorization, @options.merge(tx_source: @valid_tx_source))
+    assert_success good_response
+
+    # returns a failed response when an invalid tx_source parameter is sent
+    assert bad_response = @gateway.capture(@amount, auth.authorization, @options.merge(tx_source: @invalid_tx_source))
+    assert_failure bad_response
+  end
+
+  def test_void_passes_tx_source
+    # authorize the credit card in order to then run capture
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    # returns a successful response when a valid tx_source paramater is sent
+    assert good_response = @gateway.void(auth.authorization, @options.merge(tx_source: @valid_tx_source))
+    assert_success good_response
+    assert_equal 'Approved', good_response.message
+
+    # returns a failed response when an invalid tx_source parameter is sent
+    assert bad_response = @gateway.void(auth.authorization, @options.merge(tx_source: @invalid_tx_source))
+    assert_failure bad_response
   end
 
   def test_status

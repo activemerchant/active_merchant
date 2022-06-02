@@ -29,6 +29,27 @@ class RemotePayflowTest < Test::Unit::TestCase
       :routing_number => '111111118',
       :account_number => '1111111111'
     )
+
+    @l2_json = '{
+        "Tender": {
+          "ACH": {
+            "AcctType": "C",
+            "AcctNum": "6355059797",
+            "ABA": "021000021"
+          }
+        }
+      }'
+
+    @l3_json = '{
+        "Invoice": {
+          "Date": "20190104",
+          "Level3Invoice": {
+            "CountyTax": {"Amount": "3.23"}
+          },
+          "Items":
+            "<Item Number=\"1\"><SKU>1111</SKU><UPC>9999</UPC><Description>Widget</Description><Quantity>2</Quantity><UnitOfMeasurement>INQ</UnitOfMeasurement><UnitPrice>49.99</UnitPrice><DiscountAmt>9.98</DiscountAmt><FreightAmt>3.00</FreightAmt><HandlingAmt>8.00</HandlingAmt><TotalAmt>101.00</TotalAmt><PickUp>  <Address>  <Street>500 Main St.</Street><City>Anytown</City><State>NY</State><Zip>67890</Zip><Country>US</Country></Address><Time>15:30</Time><Date>20030630</Date><RecordNumber>24680</RecordNumber></PickUp><TrackingNumber>ABC0123</TrackingNumber><Delivery><Date>20030714</Date><Time>12:00</Time></Delivery><UNSPSCCode>54.10.15.05</UNSPSCCode></Item><Item Number=\"2\"><SKU>2222</SKU><UPC>8888</UPC><Description>Gizmo</Description><Quantity>5</Quantity><UnitOfMeasurement>INQ</UnitOfMeasurement><UnitPrice>9.99</UnitPrice><DiscountAmt>2.50</DiscountAmt><FreightAmt>3.00</FreightAmt><HandlingAmt>2.50</HandlingAmt><TotalAmt>52.95</TotalAmt><PickUp>  <Address>    <Street>500 Main St.</Street><City>Anytown</City><State>NY</State><Zip>67890</Zip><Country>US</Country></Address><Time>09:00</Time><Date>20030628</Date><RecordNumber>13579</RecordNumber></PickUp><TrackingNumber>XYZ7890</TrackingNumber><Delivery><Date>20030711</Date><Time>09:00</Time></Delivery><UNSPSCCode>54.10.16.05</UNSPSCCode></Item>"
+        }
+      }'
   end
 
   def test_successful_purchase
@@ -66,6 +87,36 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_success response, 'This is probably failing due to your Payflow test account not being set up for fraud filters.'
     assert_equal '126', response.params['result']
     assert response.fraud_review?
+  end
+
+  def test_successful_purchase_with_l2_fields
+    options = @options.merge(level_two_fields: @l2_json)
+
+    assert response = @gateway.purchase(100000, @credit_card, options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+  end
+
+  def test_successful_purchase_with_l3_fields
+    options = @options.merge(level_three_fields: @l3_json)
+
+    assert response = @gateway.purchase(100000, @credit_card, options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+  end
+
+  def test_successful_purchase_with_l2_l3_fields
+    options = @options.merge(level_two_fields: @l2_json).merge(level_three_fields: @l3_json)
+
+    assert response = @gateway.purchase(100000, @credit_card, options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
   end
 
   def test_declined_purchase

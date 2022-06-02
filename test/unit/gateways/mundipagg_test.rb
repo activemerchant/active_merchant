@@ -3,11 +3,37 @@ require 'test_helper'
 class MundipaggTest < Test::Unit::TestCase
   include CommStub
   def setup
-    @gateway = MundipaggGateway.new(api_key: 'my_api_key')
     @credit_card = credit_card
+
+    @alelo_card = credit_card(
+      '5067700000000028',
+      {
+        month: 10,
+        year: 2032,
+        first_name: 'John',
+        last_name: 'Smith',
+        verification_value: '737',
+        brand: 'alelo'
+      }
+    )
+
+    @alelo_visa_card = credit_card(
+      '4025880000000010',
+      {
+        month: 10,
+        year: 2032,
+        first_name: 'John',
+        last_name: 'Smith',
+        verification_value: '737',
+        brand: 'alelo'
+      }
+    )
+
+    @gateway = MundipaggGateway.new(api_key: 'my_api_key')
     @amount = 100
 
     @options = {
+      gateway_affiliation_id: 'abc123',
       order_id: '1',
       billing_address: address,
       description: 'Store Purchase'
@@ -15,13 +41,15 @@ class MundipaggTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    test_successful_purchase_with(@credit_card)
+  end
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
+  def test_successful_purchase_with_alelo_card
+    test_successful_purchase_with(@alelo_card)
+  end
 
-    assert_equal 'ch_90Vjq8TrwfP74XJO', response.authorization
-    assert response.test?
+  def test_successful_purchase_with_alelo_number_beginning_with_4
+    test_successful_purchase_with(@alelo_visa_card)
   end
 
   def test_successful_purchase_with_holder_document
@@ -168,12 +196,36 @@ class MundipaggTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_gateway_id_fallback
+    gateway = MundipaggGateway.new(api_key: 'my_api_key', gateway_id: 'abc123')
+    options = {
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
+    }
+    stub_comms do
+      gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"gateway_affiliation_id":"abc123"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
   private
+
+  def test_successful_purchase_with(card)
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, card, @options)
+    assert_success response
+
+    assert_equal 'ch_90Vjq8TrwfP74XJO', response.authorization
+    assert response.test?
+  end
 
   def pre_scrubbed
     %q(

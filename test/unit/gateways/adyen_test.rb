@@ -61,6 +61,29 @@ class AdyenTest < Test::Unit::TestCase
         reason_type: 'recurring'
       }
     }
+
+    @normalized_3ds_2_options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: address(),
+      order_id: '123',
+      stored_credential: {reason_type: 'unscheduled'},
+      three_ds_2: {
+        channel: 'browser',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 100,
+          java: false,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown'
+        }
+      }
+    }
   end
 
   # Subdomains are only valid for production gateways, so the test_url check must be manually bypassed for this test to pass.
@@ -163,6 +186,23 @@ class AdyenTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_3ds_2_fields_sent
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options)
+    end.check_request do |endpoint, data, headers|
+      data = JSON.parse(data)
+      assert_equal 'browser', data['threeDS2RequestData']['deviceChannel']
+      assert_equal 'unknown', data['browserInfo']['acceptHeader']
+      assert_equal 100, data['browserInfo']['colorDepth']
+      assert_equal false, data['browserInfo']['javaEnabled']
+      assert_equal 'US', data['browserInfo']['language']
+      assert_equal 1000, data['browserInfo']['screenHeight']
+      assert_equal 500, data['browserInfo']['screenWidth']
+      assert_equal '-120', data['browserInfo']['timeZoneOffset']
+      assert_equal 'unknown', data['browserInfo']['userAgent']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_installments_sent
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -177,6 +217,15 @@ class AdyenTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_equal 'abcdefg', JSON.parse(data)['additionalData']['customRoutingFlag']
     end.respond_with(successful_authorize_response)
+  end
+
+  def test_update_shopper_statement_and_industry_usage_sent
+    stub_comms do
+      @gateway.adjust(@amount, '123', @options.merge({update_shopper_statement: 'statement note', industry_usage: 'DelayedCharge'}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'statement note', JSON.parse(data)['additionalData']['updateShopperStatement']
+      assert_equal 'DelayedCharge', JSON.parse(data)['additionalData']['industryUsage']
+    end.respond_with(successful_adjust_response)
   end
 
   def test_risk_data_sent
@@ -219,6 +268,20 @@ class AdyenTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/"shopperInteraction":"Ecommerce"/, data)
       assert_match(/"recurringProcessingModel":"CardOnFile"/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_nonfractional_currency_handling
+    stub_comms do
+      @gateway.authorize(200, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"amount\":{\"value\":\"2\",\"currency\":\"JPY\"}/, data)
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(200, @credit_card, @options.merge(currency: 'CLP'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"amount\":{\"value\":\"200\",\"currency\":\"CLP\"}/, data)
     end.respond_with(successful_authorize_response)
   end
 
@@ -275,13 +338,26 @@ class AdyenTest < Test::Unit::TestCase
     response = @gateway.adjust(200, '8835544088660594')
     assert_equal '8835544088660594#8835544088660594#', response.authorization
     assert_equal '[adjustAuthorisation-received]', response.message
-    assert response.test?
   end
 
   def test_failed_adjust
     @gateway.expects(:ssl_post).returns(failed_adjust_response)
     response = @gateway.adjust(200, '')
     assert_equal 'Original pspReference required for this operation', response.message
+    assert_failure response
+  end
+
+  def test_successful_synchronous_adjust
+    @gateway.expects(:ssl_post).returns(successful_synchronous_adjust_response)
+    response = @gateway.adjust(200, '8835544088660594')
+    assert_equal '8835544088660594#8835574118820108#', response.authorization
+    assert_equal 'Authorised', response.message
+  end
+
+  def test_failed_synchronous_adjust
+    @gateway.expects(:ssl_post).returns(failed_synchronous_adjust_response)
+    response = @gateway.adjust(200, '8835544088660594')
+    assert_equal 'Refused', response.message
     assert_failure response
   end
 
@@ -346,12 +422,12 @@ class AdyenTest < Test::Unit::TestCase
     @options[:billing_address].delete(:address2)
     @options[:billing_address].delete(:state)
     @gateway.send(:add_address, post, @options)
-    assert_equal 'N/A', post[:card][:billingAddress][:street]
-    assert_equal 'N/A', post[:card][:billingAddress][:houseNumberOrName]
-    assert_equal 'N/A', post[:card][:billingAddress][:stateOrProvince]
-    assert_equal @options[:billing_address][:zip], post[:card][:billingAddress][:postalCode]
-    assert_equal @options[:billing_address][:city], post[:card][:billingAddress][:city]
-    assert_equal @options[:billing_address][:country], post[:card][:billingAddress][:country]
+    assert_equal 'N/A', post[:billingAddress][:street]
+    assert_equal 'N/A', post[:billingAddress][:houseNumberOrName]
+    assert_equal 'N/A', post[:billingAddress][:stateOrProvince]
+    assert_equal @options[:billing_address][:zip], post[:billingAddress][:postalCode]
+    assert_equal @options[:billing_address][:city], post[:billingAddress][:city]
+    assert_equal @options[:billing_address][:country], post[:billingAddress][:country]
   end
 
   def test_authorize_with_network_tokenization_credit_card_no_name
@@ -665,6 +741,18 @@ class AdyenTest < Test::Unit::TestCase
       "message":"Original pspReference required for this operation",
       "errorType":"validation"
     }
+    RESPONSE
+  end
+
+  def successful_synchronous_adjust_response
+    <<-RESPONSE
+    {\"additionalData\":{\"authCode\":\"70125\",\"adjustAuthorisationData\":\"BQABAQA9NtGnJAkLXKqW1C+VUeCNMzDf4WwzLFBiuQ8iaA2Yvflz41t0cYxtA7XVzG2pzlJPMnkSK75k3eByNS0\\/m0\\/N2+NnnKv\\/9rYPn8Pjq1jc7CapczdqZNl8P9FwqtIa4Kdeq7ZBNeGalx9oH4reutlFggzWCr+4eYXMRqMgQNI2Bu5XvwkqBbXwbDL05CuNPjjEwO64YrCpVBLrxk4vlW4fvCLFR0u8O68C+Y4swmsPDvGUxWpRgwNVqXsTmvt9z8hlej21BErL8fPEy+fJP4Zab8oyfcLrv9FJkHZq03cyzJpOzqX458Ctn9sIwBawXzNEFN5bCt6eT1rgp0yuHeMGEGwrjNl8rijez7Rd\\/vy1WUYAAMfmZFuJMQ73l1+Hkr0VlHv6crlyP\\/FVTY\\/XIUiGMqa1yM08Zu\\/Gur5N7lU8qnMi2WO9QPyHmmdlfo7+AGsrKrzV4wY\\/wISg0pcv8PypBWVq\\/hYoCqlHsGUuIiyGLIW7A8LtG6\\/JqAA9t\\/0EdnQVz0k06IEEYnBzkQoY8Qv3cVszgPQukGstBraB47gQdVDp9vmuQjMstt8Te56SDRxtfcu0z4nQIURVSkJJNj8RYfwXH9OUbz3Vd2vwoR3lCJFTCKIeW8sidNVB3xAZnddBVQ3P\\/QxPnrrRdCcnoWSGoEOBBIxgF00XwNxJ4P7Xj1bB7oq3M7k99dgPnSdZIjyvG6BWKnCQcGyVRB0yOaYBaOCmN66EgWfXoJR5BA4Jo6gnWnESWV62iUC8OCzmis1VagfaBn0A9vWNcqKFkUr\\/68s3w8ixLJFy+WdpAS\\/flzC3bJbvy9YR9nESKAP40XiNGz9iBROCfPI2bSOvdFf831RdTxWaE+ewAC3w9GsgEKAXxzWsVeSODWRZQA0TEVOfX8SaNVa5w3EXLDsRVnmKgUH8yQnEJQBGhDJXg1sEbowE07CzzdAY5Mc=\",\"refusalReasonRaw\":\"AUTHORISED\"},\"pspReference\":\"8835574118820108\",\"response\":\"Authorised\"}
+    RESPONSE
+  end
+
+  def failed_synchronous_adjust_response
+    <<-RESPONSE
+    {\"additionalData\":{\"authCode\":\"90745\",\"refusalReasonRaw\":\"2\"},\"pspReference\":\"8835574120337117\",\"response\":\"Refused\"}
     RESPONSE
   end
 

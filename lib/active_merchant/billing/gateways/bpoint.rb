@@ -163,10 +163,10 @@ module ActiveMerchant #:nodoc:
         xml.send('PaymentType', payment_type)
         xml.send('TxnType', 'WEB_SHOP')
         xml.send('BillerCode', options.fetch(:biller_code, ''))
-        xml.send('MerchantReference', '')
-        xml.send('CRN1', '')
-        xml.send('CRN2', '')
-        xml.send('CRN3', '')
+        xml.send('MerchantReference', options[:order_id]) if options[:order_id]
+        xml.send('CRN1', options[:crn1]) if options[:crn1]
+        xml.send('CRN2', options[:crn2]) if options[:crn2]
+        xml.send('CRN3', options[:crn3]) if options[:crn3]
         xml.send('Amount', amount)
       end
 

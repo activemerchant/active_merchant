@@ -204,6 +204,50 @@ class CredoraxTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_adds_3ds2_fields_via_normalized_hash
+    version = '2.0'
+    eci = '05'
+    cavv = '637574652070757070792026206b697474656e73'
+    ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    options_with_normalized_3ds = @options.merge(
+      three_d_secure: {
+        version: version,
+        eci: eci,
+        cavv: cavv,
+        ds_transaction_id: ds_transaction_id
+      }
+    )
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/i8=#{eci}%3A#{cavv}%3Anone/, data)
+      assert_match(/3ds_version=#{version}/, data)
+      assert_match(/3ds_dstrxid=#{ds_transaction_id}/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_adds_default_cavv_when_omitted_from_normalized_hash
+    version = '2.0'
+    eci = '05'
+    ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    options_with_normalized_3ds = @options.merge(
+      three_d_secure: {
+        version: version,
+        eci: eci,
+        ds_transaction_id: ds_transaction_id
+      }
+    )
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/i8=#{eci}%3Anone%3Anone/, data)
+      assert_match(/3ds_version=#{version}/, data)
+      assert_match(/3ds_dstrxid=#{ds_transaction_id}/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_adds_a9_field
     options_with_3ds = @options.merge({transaction_type: '8'})
 

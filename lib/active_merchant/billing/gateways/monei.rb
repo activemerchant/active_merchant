@@ -133,6 +133,7 @@ module ActiveMerchant #:nodoc:
           add_payment(xml, action, money, options)
           add_account(xml, credit_card)
           add_customer(xml, credit_card, options)
+          add_three_d_secure(xml, options)
         end
 
         commit(request)
@@ -221,6 +222,36 @@ module ActiveMerchant #:nodoc:
           xml.Contact do
             xml.Email options[:email] || 'noemail@monei.net'
             xml.Ip options[:ip] || '0.0.0.0'
+          end
+        end
+      end
+
+      # Private : Convert ECI to ResultIndicator
+      # Possible ECI values:
+      # 02 or 05 - Fully Authenticated Transaction
+      # 00 or 07 - Non 3D Secure Transaction
+      # Possible ResultIndicator values:
+      # 01 = MASTER_3D_ATTEMPT
+      # 02 = MASTER_3D_SUCCESS
+      # 05 = VISA_3D_SUCCESS
+      # 06 = VISA_3D_ATTEMPT
+      # 07 = DEFAULT_E_COMMERCE
+      def eci_to_result_indicator(eci)
+        case eci
+        when '02', '05'
+          return eci
+        else
+          return '07'
+        end
+      end
+
+      # Private : Add the 3DSecure infos to XML
+      def add_three_d_secure(xml, options)
+        if options[:three_d_secure]
+          xml.Authentication(:type => '3DSecure') do
+            xml.ResultIndicator eci_to_result_indicator options[:three_d_secure][:eci]
+            xml.Parameter(:name => 'VERIFICATION_ID') { xml.text options[:three_d_secure][:cavv] }
+            xml.Parameter(:name => 'XID') { xml.text options[:three_d_secure][:xid] }
           end
         end
       end

@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://api-uat.kushkipagos.com/v1/'
       self.live_url = 'https://api.kushkipagos.com/v1/'
 
-      self.supported_countries = ['CO', 'EC']
+      self.supported_countries = ['CL', 'CO', 'EC', 'MX', 'PE']
       self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]

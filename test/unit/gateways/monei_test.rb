@@ -5,10 +5,7 @@ class MoneiTest < Test::Unit::TestCase
 
   def setup
     @gateway = MoneiGateway.new(
-      :sender_id => 'mother',
-      :channel_id => 'there is no other',
-      :login => 'like mother',
-      :pwd => 'so treat Her right'
+      fixtures(:monei)
     )
 
     @credit_card = credit_card
@@ -128,6 +125,26 @@ class MoneiTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
+  end
+
+  def test_3ds_request
+    three_d_secure_options = {
+      eci: '05',
+      cavv: 'AAACAgSRBklmQCFgMpEGAAAAAAA=',
+      xid: 'CAACCVVUlwCXUyhQNlSXAAAAAAA='
+    }
+    options = @options.merge!({
+      three_d_secure: three_d_secure_options
+    })
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      body = CGI.unescape data
+      assert_match %r{<Authentication type="3DSecure">}, body
+      assert_match %r{<ResultIndicator>05</ResultIndicator>}, body
+      assert_match %r{<Parameter name="VERIFICATION_ID">#{three_d_secure_options[:cavv]}</Parameter>}, body
+      assert_match %r{<Parameter name="XID">#{three_d_secure_options[:xid]}</Parameter>}, body
+    end.respond_with(successful_purchase_response)
   end
 
   private

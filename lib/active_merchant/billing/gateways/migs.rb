@@ -63,6 +63,7 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard)
         add_standard_parameters('pay', post, options[:unique_id])
         add_3ds(post, options)
+        add_tx_source(post, options)
 
         commit(post)
       end
@@ -83,6 +84,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_advanced_user(post)
         add_standard_parameters('capture', post, options[:unique_id])
+        add_tx_source(post, options)
 
         commit(post)
       end
@@ -99,6 +101,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_advanced_user(post)
         add_standard_parameters('refund', post, options[:unique_id])
+        add_tx_source(post, options)
 
         commit(post)
       end
@@ -110,6 +113,7 @@ module ActiveMerchant #:nodoc:
 
         add_advanced_user(post)
         add_standard_parameters('voidAuthorisation', post, options[:unique_id])
+        add_tx_source(post, options)
 
         commit(post)
       end
@@ -239,6 +243,10 @@ module ActiveMerchant #:nodoc:
         post['3DSECI'] = options[:three_ds_eci] if options[:three_ds_eci]
         post['3DSenrolled'] = options[:three_ds_enrolled] if options[:three_ds_enrolled]
         post['3DSstatus'] = options[:three_ds_status] if options[:three_ds_status]
+      end
+
+      def add_tx_source(post, options)
+        post[:TxSource] = options[:tx_source] if options[:tx_source]
       end
 
       def add_creditcard(post, creditcard)

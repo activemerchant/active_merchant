@@ -261,4 +261,152 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:secret_api_key], transcript)
   end
+
+  def test_transcript_scrubbing_with_cryptogram
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :apple_pay
+    )
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(credit_card.number, transcript)
+    assert_scrubbed(@gateway.options[:secret_api_key], transcript)
+    assert_scrubbed(credit_card.payment_cryptogram, transcript)
+  end
+
+  def test_successful_purchase_with_apple_pay_raw_cryptogram_with_eci
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :apple_pay
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_apple_pay_raw_cryptogram_without_eci
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :apple_pay
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_auth_with_apple_pay_raw_cryptogram_with_eci
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :apple_pay
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_auth_with_apple_pay_raw_cryptogram_without_eci
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :apple_pay
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_three_d_secure_visa
+    @credit_card.number = '4012002000060016'
+    @credit_card.brand = 'visa'
+
+    options = {
+      :three_d_secure => {
+        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        :eci => '05',
+        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_three_d_secure_mastercard
+    @credit_card.number = '5473500000000014'
+    @credit_card.brand = 'master'
+
+    options = {
+      :three_d_secure => {
+        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        :eci => '05',
+        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_three_d_secure_discover
+    @credit_card.number = '6011000990156527'
+    @credit_card.brand = 'discover'
+
+    options = {
+      :three_d_secure => {
+        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        :eci => '05',
+        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_three_d_secure_amex
+    @credit_card.number = '372700699251018'
+    @credit_card.brand = 'american_express'
+
+    options = {
+      :three_d_secure => {
+        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        :eci => '05',
+        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_three_d_secure_jcb
+    @credit_card.number = '372700699251018'
+    @credit_card.brand = 'jcb'
+
+    options = {
+      :three_d_secure => {
+        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        :eci => '05',
+        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
 end

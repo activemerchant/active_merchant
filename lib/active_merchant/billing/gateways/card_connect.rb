@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def require_valid_domain!(options, param)
-        if options.key?(param)
+        if options[param]
           raise ArgumentError.new('not a valid cardconnect domain') unless /\Dcardconnect.com:\d{1,}\D/ =~ options[param]
         end
       end
@@ -233,6 +233,7 @@ module ActiveMerchant #:nodoc:
             item.each_pair do |k, v|
               updated.merge!(k.to_s.gsub(/_/, '') => v)
             end
+            updated
           end
         end
       end
@@ -267,6 +268,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters, verb: :put, path: '')
+        parameters[:frontendid] = application_id
         parameters[:merchid] = @options[:merchant_id]
         url = url(action, path)
         response = parse(ssl_request(verb, url, post_data(parameters), headers))

@@ -142,12 +142,8 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options, payment = nil)
         if payment
-          post['order']['customer']['personalInformation'] = {
-            'name' => {
-              'firstName' => payment.first_name[0..14],
-              'surname' => payment.last_name[0..69]
-            }
-          }
+          post['order']['customer']['personalInformation']['name']['firstName'] = payment.first_name[0..14] if payment.first_name
+          post['order']['customer']['personalInformation']['name']['surname'] = payment.last_name[0..69] if payment.last_name
         end
         post['order']['customer']['merchantCustomerId'] = options[:customer] if options[:customer]
         post['order']['customer']['companyInformation']['name'] = options[:company] if options[:company]

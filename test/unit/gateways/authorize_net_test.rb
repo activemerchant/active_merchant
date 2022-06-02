@@ -990,7 +990,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(no_match_avs_response)
-    assert_equal 'Street address matches, but 5-digit and 9-digit postal code do not match.', response.message
+    assert_equal 'Street address matches, but postal code does not match.', response.message
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)

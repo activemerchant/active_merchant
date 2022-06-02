@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.barclaycardsmartpay.com/'
       self.display_name = 'Barclaycard Smartpay'
 
-      API_VERSION = 'v30'
+      API_VERSION = 'v40'
 
       def initialize(options = {})
         requires!(options, :company, :merchant, :password)
@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         post[:card] = credit_card_hash(creditcard)
         post[:billingAddress] = billing_address_hash(options) if options[:billing_address]
         post[:deliveryAddress] = shipping_address_hash(options) if options[:shipping_address]
-        add_3ds(post, options) if options[:execute_threed]
+        add_3ds(post, options)
         commit('authorise', post)
       end
 
@@ -186,7 +186,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse_avs_code(response)
-        AVS_MAPPING[response['avsResult'][0..1].strip] if response['avsResult']
+        AVS_MAPPING[response['additionalData']['avsResult'][0..1].strip] if response.dig('additionalData', 'avsResult')
       end
 
       def flatten_hash(hash, prefix = nil)
@@ -210,12 +210,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(response)
-        Hash[
-          response.split('&').map do |x|
-            key, val = x.split('=', 2)
-            [key.split('.').last, CGI.unescape(val)]
+        parsed_response = {}
+        params = CGI.parse(response)
+        params.each do |key, value|
+          parsed_key = key.split('.', 2)
+          if parsed_key.size > 1
+            parsed_response[parsed_key[0]] ||= {}
+            parsed_response[parsed_key[0]][parsed_key[1]] = value[0]
+          else
+            parsed_response[parsed_key[0]] = value[0]
           end
-        ]
+        end
+        parsed_response
       end
 
       def post_data(data)
@@ -343,8 +349,31 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_3ds(post, options)
-        post[:additionalData] = { executeThreeD: 'true' }
-        post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
+        if three_ds_2_options = options[:three_ds_2]
+          if browser_info = three_ds_2_options[:browser_info]
+            post[:browserInfo] = {
+              acceptHeader: browser_info[:accept_header],
+              colorDepth: browser_info[:depth],
+              javaEnabled: browser_info[:java],
+              language: browser_info[:language],
+              screenHeight: browser_info[:height],
+              screenWidth: browser_info[:width],
+              timeZoneOffset: browser_info[:timezone],
+              userAgent: browser_info[:user_agent]
+            }
+
+            if device_channel = three_ds_2_options[:channel]
+              post[:threeDS2RequestData] = {
+                deviceChannel: device_channel,
+                notificationURL: three_ds_2_options[:notification_url]
+              }
+            end
+          end
+        else
+          return unless options[:execute_threed] || options[:threed_dynamic]
+          post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
+          post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
+        end
       end
     end
   end

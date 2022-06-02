@@ -200,6 +200,16 @@ module ActiveMerchant #:nodoc:
         false
       end
 
+      def add_fields_to_post_if_present(post, options, fields)
+        fields.each do |field|
+          add_field_to_post_if_present(post, options, field)
+        end
+      end
+
+      def add_field_to_post_if_present(post, options, field)
+        post[field] = options[field] if options[field]
+      end
+
       protected # :nodoc: all
 
       def normalize(field)

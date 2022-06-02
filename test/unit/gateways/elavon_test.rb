@@ -10,6 +10,13 @@ class ElavonTest < Test::Unit::TestCase
                  :password => 'password'
                )
 
+    @multi_currency_gateway = ElavonGateway.new(
+                                :login => 'login',
+                                :user => 'user',
+                                :password => 'password',
+                                :multi_currency => true
+                              )
+
     @credit_card = credit_card
     @amount = 100
 
@@ -111,6 +118,26 @@ class ElavonTest < Test::Unit::TestCase
       parsed = CGI.parse(data)
       assert_equal ['203.0.113.0'], parsed['ssl_cardholder_ip']
     end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_multi_currency
+    response = stub_comms(@multi_currency_gateway) do
+      @multi_currency_gateway.purchase(@amount, @credit_card, @options.merge(currency: 'EUR'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/ssl_transaction_currency=EUR/, data)
+    end.respond_with(successful_purchase_with_multi_currency_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_without_multi_currency
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'EUR', multi_currency: false))
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(/ssl_transaction_currency=EUR/, data)
+    end.respond_with(successful_purchase_response)
 
     assert_success response
   end
@@ -295,6 +322,23 @@ class ElavonTest < Test::Unit::TestCase
     ssl_cvv2_response=P
     ssl_avs_response=X
     ssl_account_balance=0.00
+    ssl_txn_time=08/07/2009 09:54:18 PM"
+  end
+
+  def successful_purchase_with_multi_currency_response
+    "ssl_card_number=42********4242
+    ssl_exp_date=0910
+    ssl_amount=1.00
+    ssl_invoice_number=
+    ssl_description=Test Transaction
+    ssl_result=0
+    ssl_result_message=APPROVED
+    ssl_txn_id=00000000-0000-0000-0000-00000000000
+    ssl_approval_code=123456
+    ssl_cvv2_response=P
+    ssl_avs_response=X
+    ssl_account_balance=0.00
+    ssl_transaction_currency=EUR
     ssl_txn_time=08/07/2009 09:54:18 PM"
   end
 

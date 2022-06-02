@@ -15,6 +15,24 @@ class PayflowTest < Test::Unit::TestCase
     @credit_card = credit_card('4242424242424242')
     @options = { :billing_address => address.merge(:first_name => 'Longbob', :last_name => 'Longsen') }
     @check = check(:name => 'Jim Smith')
+    @l2_json = '{
+      "Tender": {
+        "ACH": {
+          "AcctType": "C",
+          "AcctNum": "6355059797",
+          "ABA": "021000021"
+        }
+      }
+    }'
+
+    @l3_json = '{
+      "Invoice": {
+        "Date": "20190104",
+        "Level3Invoice": {
+          "CountyTax": {"Amount": "3.23"}
+        }
+      }
+    }'
   end
 
   def test_successful_authorization
@@ -95,6 +113,55 @@ class PayflowTest < Test::Unit::TestCase
     assert_success response
     assert_equal '126', response.params['result']
     assert response.fraud_review?
+  end
+
+  def test_successful_purchase_with_level_2_fields
+    options = @options.merge(level_two_fields: @l2_json)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<AcctNum>6355059797</AcctNum>), data
+      assert_match %r(<ACH><AcctType>), data.tr("\n ", '')
+    end.respond_with(successful_l2_response)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert_equal 'A1ADADCE9B12', response.authorization
+    refute response.fraud_review?
+  end
+
+  def test_successful_purchase_with_level_3_fields
+    options = @options.merge(level_three_fields: @l3_json)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<Date>20190104</Date>), data
+      assert_match %r(<Amount>3.23</Amount>), data
+      assert_match %r(<Level3Invoice><CountyTax><Amount>), data.tr("\n ", '')
+    end.respond_with(successful_l3_response)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert_equal 'A71AAC3B60A1', response.authorization
+    refute response.fraud_review?
+  end
+
+  def test_successful_purchase_with_level_2_3_fields
+    options = @options.merge(level_two_fields: @l2_json).merge(level_three_fields: @l3_json)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<Date>20190104</Date>), data
+      assert_match %r(<Amount>3.23</Amount>), data
+      assert_match %r(<AcctNum>6355059797</AcctNum>), data
+      assert_match %r(<ACH><AcctType>), data.tr("\n ", '')
+      assert_match %r(<Level3Invoice><CountyTax><Amount>), data.tr("\n ", '')
+    end.respond_with(successful_l2_response)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert_equal 'A1ADADCE9B12', response.authorization
+    refute response.fraud_review?
   end
 
   def test_credit
@@ -602,6 +669,59 @@ Conn close
     <AvsResult>Y</AvsResult>
     <StreetMatch>Match</StreetMatch>
     <CvResult>Match</CvResult>
+</ResponseData>
+    XML
+  end
+
+  def successful_l3_response
+    <<-XML
+<ResponseData>
+  <Vendor>spreedlyIntegrations</Vendor>
+  <Partner>paypal</Partner>
+  <TransactionResults>
+    <TransactionResult>
+      <Result>0</Result>
+      <ProcessorResult>
+        <AVSResult>Z</AVSResult>
+        <CVResult>M</CVResult>
+        <HostCode>A</HostCode>
+      </ProcessorResult>
+      <FraudPreprocessResult>
+        <Message>No Rules Triggered</Message>
+      </FraudPreprocessResult>
+      <FraudPostprocessResult>
+        <Message>No Rules Triggered</Message>
+      </FraudPostprocessResult>
+      <IAVSResult>N</IAVSResult>
+      <AVSResult>
+        <StreetMatch>No Match</StreetMatch>
+        <ZipMatch>Match</ZipMatch>
+      </AVSResult>
+      <CVResult>Match</CVResult>
+      <Message>Approved</Message>
+      <PNRef>A71AAC3B60A1</PNRef>
+      <AuthCode>240PNI</AuthCode>
+    </TransactionResult>
+  </TransactionResults>
+</ResponseData>
+    XML
+  end
+
+  def successful_l2_response
+    <<-XML
+<ResponseData>
+  <Vendor>spreedlyIntegrations</Vendor>
+  <Partner>paypal</Partner>
+  <TransactionResults>
+    <TransactionResult>
+      <Result>0</Result>
+      <ProcessorResult>
+        <HostCode>A</HostCode>
+      </ProcessorResult>
+      <Message>Approved</Message>
+      <PNRef>A1ADADCE9B12</PNRef>
+    </TransactionResult>
+  </TransactionResults>
 </ResponseData>
     XML
   end

@@ -125,17 +125,40 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_should_detect_sodexo_card
-    assert_equal 'sodexo', CreditCard.brand?('60606944957644')
+    assert_equal 'sodexo', CreditCard.brand?('6060694495764400')
   end
 
   def test_should_detect_vr_card
-    assert_equal 'vr', CreditCard.brand?('63703644957644')
+    assert_equal 'vr', CreditCard.brand?('6370364495764400')
   end
 
   def test_should_detect_elo_card
     assert_equal 'elo', CreditCard.brand?('5090510000000000')
     assert_equal 'elo', CreditCard.brand?('5067530000000000')
     assert_equal 'elo', CreditCard.brand?('6509550000000000')
+  end
+
+  def test_should_detect_alelo_card
+    assert_equal 'alelo', CreditCard.brand?('5067490000000010')
+    assert_equal 'alelo', CreditCard.brand?('5067700000000028')
+    assert_equal 'alelo', CreditCard.brand?('5067600000000036')
+    assert_equal 'alelo', CreditCard.brand?('5067600000000044')
+  end
+
+  # Alelo BINs beginning with the digit 4 overlap with Visa's range of valid card numbers.
+  # We intentionally misidentify these cards as Visa, which works because transactions with
+  # such cards will run on Visa rails.
+  def test_should_detect_alelo_number_beginning_with_4_as_visa
+    assert_equal 'visa', CreditCard.brand?('4025880000000010')
+    assert_equal 'visa', CreditCard.brand?('4025880000000028')
+    assert_equal 'visa', CreditCard.brand?('4025880000000036')
+    assert_equal 'visa', CreditCard.brand?('4025880000000044')
+  end
+
+  def test_should_detect_cabal_card
+    assert_equal 'cabal', CreditCard.brand?('6044009000000000')
+    assert_equal 'cabal', CreditCard.brand?('5896575500000000')
+    assert_equal 'cabal', CreditCard.brand?('6035224400000000')
   end
 
   def test_should_detect_when_an_argument_brand_does_not_match_calculated_brand

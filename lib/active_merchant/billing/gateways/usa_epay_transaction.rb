@@ -33,9 +33,9 @@ module ActiveMerchant #:nodoc:
         '10110' => STANDARD_ERROR_CODE[:incorrect_address],
         '10111' => STANDARD_ERROR_CODE[:incorrect_address],
         '10127' => STANDARD_ERROR_CODE[:card_declined],
-        '10128' => STANDARD_ERROR_CODE[:processing_error],
-        '10132' => STANDARD_ERROR_CODE[:processing_error],
-        '00043' => STANDARD_ERROR_CODE[:call_issuer]
+        '00043' => STANDARD_ERROR_CODE[:call_issuer],
+        '10205' => STANDARD_ERROR_CODE[:card_declined],
+        '10204' => STANDARD_ERROR_CODE[:pickup_card]
       }
 
       def initialize(options = {})
@@ -318,12 +318,15 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters)
         url = (test? ? self.test_url : self.live_url)
         response = parse(ssl_post(url, post_data(action, parameters)))
-        Response.new(response[:status] == 'Approved', message_from(response), response,
+        approved = response[:status] == 'Approved'
+        error_code = nil
+        error_code = (STANDARD_ERROR_CODE_MAPPING[response[:error_code]] || STANDARD_ERROR_CODE[:processing_error]) unless approved
+        Response.new(approved, message_from(response), response,
           :test           => test?,
           :authorization  => response[:ref_num],
           :cvv_result     => response[:cvv2_result_code],
           :avs_result     => { :code => response[:avs_result_code] },
-          :error_code     => STANDARD_ERROR_CODE_MAPPING[response[:error_code]]
+          :error_code     => error_code
         )
       end
 

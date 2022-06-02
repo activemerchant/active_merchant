@@ -132,6 +132,103 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
+  [
+    {
+      card: {
+        number: '4112344112344113',
+        verification_value: '411',
+        brand: 'visa',
+      },
+      three_d_secure: {
+        eci: '5',
+        cavv: 'AAABAIcJIoQDIzAgVAkiAAAAAAA=',
+        xid: 'AAABAIcJIoQDIzAgVAkiAAAAAAA=',
+      },
+      address: {
+        address1: '55 Forever Ave',
+        address2: '',
+        city: 'Concord',
+        state: 'NH',
+        zip: '03301',
+        country: 'US',
+      },
+    },
+    {
+      card: {
+        number: '5112345112345114',
+        verification_value: '823',
+        brand: 'master',
+      },
+      three_d_secure: {
+        eci: '6',
+        cavv: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
+        xid: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
+      },
+      address: {
+        address1: 'Byway Street',
+        address2: '',
+        city: 'Portsmouth',
+        state: 'MA',
+        zip: '',
+        country: 'US',
+      },
+    },
+    {
+      card: {
+        number: '371144371144376',
+        verification_value: '1234',
+        brand: 'american_express',
+      },
+      three_d_secure: {
+        eci: '5',
+        cavv: 'AAABBWcSNIdjeUZThmNHAAAAAAA=',
+        xid: 'AAABBWcSNIdjeUZThmNHAAAAAAA=',
+      },
+      address: {
+        address1: '4 Northeastern Blvd',
+        address2: '',
+        city: 'Salem',
+        state: 'NH',
+        zip: '03105',
+        country: 'US',
+      },
+    }
+  ].each do |fixture|
+    define_method("test_successful_#{fixture[:card][:brand]}_authorization_with_3ds") do
+      cc = credit_card(fixture[:card][:number], {
+        verification_value: fixture[:card][:verification_value],
+        brand: fixture[:card][:brand]
+      })
+      assert response = @gateway.authorize(100, cc, @options.merge(
+        order_id: '2',
+        currency: 'USD',
+        three_d_secure: fixture[:three_d_secure],
+        address: fixture[:address]
+      ))
+
+      assert_success response
+      assert_equal 'Approved', response.message
+      assert_false response.authorization.blank?
+    end
+
+    define_method("test_successful_#{fixture[:card][:brand]}_purchase_with_3ds") do
+      cc = credit_card(fixture[:card][:number], {
+        verification_value: fixture[:card][:verification_value],
+        brand: fixture[:card][:brand]
+      })
+      assert response = @gateway.purchase(100, cc, @options.merge(
+        order_id: '2',
+        currency: 'USD',
+        three_d_secure: fixture[:three_d_secure],
+        address: fixture[:address]
+      ))
+
+      assert_success response
+      assert_equal 'Approved', response.message
+      assert_false response.authorization.blank?
+    end
+  end
+
   def test_successful_purchase_with_mit_stored_credentials
     mit_stored_credentials = {
       mit_msg_type: 'MUSE',

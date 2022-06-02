@@ -199,6 +199,17 @@ class CardConnectTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_frontendid_is_added_to_post_data_parameters
+    @gateway.class.application_id = 'my_app'
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_, _, body|
+      assert_equal 'my_app', JSON.parse(body)['frontendid']
+    end.respond_with(successful_purchase_response)
+  ensure
+    @gateway.class.application_id = nil
+  end
+
   private
 
   def pre_scrubbed

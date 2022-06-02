@@ -15,6 +15,14 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :dollars
 
+      PAYMENT_DATA_SOURCE_MAPPING = {
+        apple_pay:        'ApplePay',
+        master:           'MasterCard 3DSecure',
+        visa:             'Visa 3DSecure',
+        american_express: 'AMEX 3DSecure',
+        discover:         'Discover 3DSecure',
+      }
+
       def initialize(options={})
         requires!(options, :secret_api_key)
         super
@@ -28,6 +36,7 @@ module ActiveMerchant #:nodoc:
           add_details(xml, options)
           add_descriptor_name(xml, options)
           add_payment(xml, card_or_token, options)
+          add_three_d_secure(xml, card_or_token, options)
         end
       end
 
@@ -46,6 +55,7 @@ module ActiveMerchant #:nodoc:
           add_details(xml, options)
           add_descriptor_name(xml, options)
           add_payment(xml, card_or_token, options)
+          add_three_d_secure(xml, card_or_token, options)
         end
       end
 
@@ -81,7 +91,8 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((<hps:CardNbr>)[^<]*(<\/hps:CardNbr>))i, '\1[FILTERED]\2').
           gsub(%r((<hps:CVV2>)[^<]*(<\/hps:CVV2>))i, '\1[FILTERED]\2').
-          gsub(%r((<hps:SecretAPIKey>)[^<]*(<\/hps:SecretAPIKey>))i, '\1[FILTERED]\2')
+          gsub(%r((<hps:SecretAPIKey>)[^<]*(<\/hps:SecretAPIKey>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:PaymentData>)[^<]*(<\/hps:PaymentData>))i, '\1[FILTERED]\2')
       end
 
       private
@@ -162,6 +173,40 @@ module ActiveMerchant #:nodoc:
 
       def add_descriptor_name(xml, options)
         xml.hps :TxnDescriptor, options[:descriptor_name] if options[:descriptor_name]
+      end
+
+      def add_three_d_secure(xml, card_or_token, options)
+        if card_or_token.is_a?(NetworkTokenizationCreditCard)
+          build_three_d_secure(xml, {
+            source: card_or_token.source,
+            cavv: card_or_token.payment_cryptogram,
+            eci: card_or_token.eci,
+            xid: card_or_token.transaction_id,
+          })
+        elsif options[:three_d_secure]
+          options[:three_d_secure][:source] ||= card_brand(card_or_token)
+          build_three_d_secure(xml, options[:three_d_secure])
+        end
+      end
+
+      def build_three_d_secure(xml, three_d_secure)
+        # PaymentDataSource is required when supplying the SecureECommerce data group,
+        # and the gateway currently only allows the values within the mapping
+        return unless PAYMENT_DATA_SOURCE_MAPPING[three_d_secure[:source].to_sym]
+
+        xml.hps :SecureECommerce do
+          xml.hps :PaymentDataSource, PAYMENT_DATA_SOURCE_MAPPING[three_d_secure[:source].to_sym]
+          xml.hps :TypeOfPaymentData, '3DSecure' # Only type currently supported
+          xml.hps :PaymentData, three_d_secure[:cavv] if three_d_secure[:cavv]
+          # the gateway only allows a single character for the ECI
+          xml.hps :ECommerceIndicator, strip_leading_zero(three_d_secure[:eci]) if three_d_secure[:eci]
+          xml.hps :XID, three_d_secure[:xid] if three_d_secure[:xid]
+        end
+      end
+
+      def strip_leading_zero(value)
+        return value unless value[0] == '0'
+        value[1, 1]
       end
 
       def build_request(action)

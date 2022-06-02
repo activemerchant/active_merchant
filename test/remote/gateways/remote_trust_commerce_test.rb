@@ -84,6 +84,18 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert_success response
   end
 
+  # Requires enabling the setting: 'Allow voids to process or settle on processing node' in the Trust Commerce vault UI
+  def test_purchase_and_void
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    void = @gateway.void(purchase.authorization)
+    assert_success void
+    assert_equal 'The transaction was successful', void.message
+    assert_equal 'accepted', void.params['status']
+    assert void.params['transid']
+  end
+
   def test_successful_authorize_with_avs
     assert response = @gateway.authorize(@amount, @credit_card, :billing_address => @valid_address)
 

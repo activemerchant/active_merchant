@@ -685,8 +685,7 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
   end
 
-  # What is the significance of this??? it's to test that the first response is used as primary. so identical to above with an extra assertion
-  def test_refund_with_fee_response_gives_a_charge_authorization
+  def test_refund_with_fee_response_responds_with_the_refund_authorization
     s = sequence('request')
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
     @gateway.expects(:ssl_request).returns(successful_fetch_application_fee_response).in_sequence(s)
@@ -697,20 +696,27 @@ class StripeTest < Test::Unit::TestCase
     assert_equal 're_test_refund', response.authorization
   end
 
-  def test_unsuccessful_refund_with_refund_fee_amount_when_application_fee_id_not_found
+  def test_successful_refund_with_failed_fee_refund_fetch
     s = sequence('request')
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
     @gateway.expects(:ssl_request).returns(unsuccessful_fetch_application_fee_response).in_sequence(s)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
-    assert_failure response
-    assert_match(/^Application fee id could not be retrieved/, response.message)
+    assert_success response
   end
 
-  def test_unsuccessful_refund_with_refund_fee_amount_when_refunding_application_fee
+  def test_successful_refund_with_failed_fee_refund
     s = sequence('request')
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
     @gateway.expects(:ssl_request).returns(successful_fetch_application_fee_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(generic_error_response).in_sequence(s)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
+    assert_success response
+  end
+
+  def test_unsuccessful_refund_does_not_refund_fee
+    s = sequence('request')
     @gateway.expects(:ssl_request).returns(generic_error_response).in_sequence(s)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)

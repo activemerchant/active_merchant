@@ -130,6 +130,15 @@ class BpointTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_passing_reference_and_crn
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ crn1: 'ref' }))
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<MerchantReference>1</MerchantReference>)m, data)
+      assert_match(%r(<CRN1>ref</CRN1>)m, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   private
 
   def pre_scrubbed

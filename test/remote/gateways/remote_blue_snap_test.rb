@@ -111,6 +111,21 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal '9', response.params['line-item-total']
   end
 
+  def test_successful_purchase_with_unused_state_code
+    unrecognized_state_code_options = {
+      billing_address: {
+        city: 'Dresden',
+        state: 'Sachsen',
+        country: 'DE',
+        zip: '01069'
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, unrecognized_state_code_options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_echeck_purchase
     response = @gateway.purchase(@amount, @check, @options.merge(@valid_check_options))
     assert_success response
@@ -157,6 +172,15 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_success auth
 
     assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'Success', capture.message
+  end
+
+  def test_successful_authorize_and_partial_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
     assert_equal 'Success', capture.message
   end

@@ -315,6 +315,9 @@ module ActiveMerchant #:nodoc:
         post[:operationType] = options[:operationType] || options[:operation] || secure_profile_action(:new)
         post[:customerCode] = options[:billing_id] || options[:vault_id] || false
         post[:status] = options[:status]
+
+        billing_address = options[:billing_address] || options[:address]
+        post[:trnCardOwner] = billing_address[:name]
       end
 
       def add_recurring_amount(post, money)

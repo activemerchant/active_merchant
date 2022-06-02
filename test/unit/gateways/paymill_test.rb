@@ -181,6 +181,20 @@ class PaymillTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_store_includes_currency_and_amount
+    expected_currency = 'USD'
+    expected_amount = 100
+
+    @gateway.expects(:raw_ssl_request).with(
+      :get,
+      store_endpoint_url(@credit_card, expected_currency, expected_amount),
+      nil,
+      {}
+    ).returns(successful_store_response, successful_purchase_response)
+
+    @gateway.store(@credit_card)
+  end
+
   def test_failed_store_with_invalid_credit_card
     @gateway.expects(:raw_ssl_request).returns(failed_store_response)
     response = @gateway.store(@credit_card)
@@ -224,6 +238,10 @@ class PaymillTest < Test::Unit::TestCase
   end
 
   private
+
+  def store_endpoint_url(credit_card, currency, amount)
+    "https://test-token.paymill.com?account.holder=#{credit_card.first_name}+#{credit_card.last_name}&account.number=#{credit_card.number}&account.expiry.month=#{'%02d' % credit_card.month}&account.expiry.year=#{credit_card.year}&account.verification=#{credit_card.verification_value}&presentation.amount3D=#{amount}&presentation.currency3D=#{currency}&channel.id=PUBLIC&jsonPFunction=jsonPFunction&transaction.mode=CONNECTOR_TEST"
+  end
 
   def successful_store_response
     MockResponse.new 200, %[jsonPFunction({"transaction":{"mode":"CONNECTOR_TEST","channel":"57313835619696ac361dc591bc973626","response":"SYNC","payment":{"code":"CC.DB"},"processing":{"code":"CC.DB.90.00","reason":{"code":"00","message":"Successful Processing"},"result":"ACK","return":{"code":"000.100.112","message":"Request successfully processed in 'Merchant in Connector Test Mode'"},"timestamp":"2013-02-12 21:33:43"},"identification":{"shortId":"1998.1832.1612","uniqueId":"tok_4f9a571b39bd8d0b4db5"}}})]

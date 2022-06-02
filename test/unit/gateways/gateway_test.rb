@@ -143,4 +143,30 @@ EOF
       REXML::Document.new(xml)
     end
   end
+
+  def test_add_field_to_post_if_present
+    order_id = 'abc123'
+
+    post = { }
+    options = { order_id: order_id, do_not_add: 24 }
+
+    @gateway.add_field_to_post_if_present(post, options, :order_id)
+
+    assert_equal post[:order_id], order_id
+    assert_false post.key?(:do_not_add)
+  end
+
+  def test_add_fields_to_post_if_present
+    order_id = 'abc123'
+    transaction_number = 500
+
+    post = { }
+    options = { order_id: order_id, transaction_number: transaction_number, do_not_add: 24 }
+
+    @gateway.add_fields_to_post_if_present(post, options, [:order_id, :transaction_number])
+
+    assert_equal post[:order_id], order_id
+    assert_equal post[:transaction_number], transaction_number
+    assert_false post.key?(:do_not_add)
+  end
 end

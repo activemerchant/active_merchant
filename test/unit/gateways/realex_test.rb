@@ -4,7 +4,7 @@ class RealexTest < Test::Unit::TestCase
   class ActiveMerchant::Billing::RealexGateway
     # For the purposes of testing, lets redefine some protected methods as public.
     public :build_purchase_or_authorization_request, :build_refund_request, :build_void_request,
-      :build_capture_request, :build_verify_request
+      :build_capture_request, :build_verify_request, :build_credit_request
   end
 
   def setup
@@ -12,6 +12,7 @@ class RealexTest < Test::Unit::TestCase
     @password = 'your_secret'
     @account = 'your_account'
     @rebate_secret = 'your_rebate_secret'
+    @refund_secret = 'your_refund_secret'
 
     @gateway = RealexGateway.new(
       :login => @login,
@@ -48,6 +49,43 @@ class RealexTest < Test::Unit::TestCase
     }
 
     @amount = 100
+  end
+
+  def test_initialize_sets_refund_and_credit_hashes
+    refund_secret = 'refund'
+    rebate_secret = 'rebate'
+
+    gateway = RealexGateway.new(
+      login: @login,
+      password: @password,
+      rebate_secret: rebate_secret,
+      refund_secret: refund_secret
+    )
+
+    assert gateway.options[:refund_hash] == Digest::SHA1.hexdigest(rebate_secret)
+    assert gateway.options[:credit_hash] == Digest::SHA1.hexdigest(refund_secret)
+  end
+
+  def test_initialize_with_nil_refund_and_rebate_secrets
+    gateway = RealexGateway.new(
+      login: @login,
+      password: @password,
+      rebate_secret: nil,
+      refund_secret: nil
+    )
+
+    assert_false gateway.options.key?(:refund_hash)
+    assert_false gateway.options.key?(:credit_hash)
+  end
+
+  def test_initialize_without_refund_and_rebate_secrets
+    gateway = RealexGateway.new(
+      login: @login,
+      password: @password
+    )
+
+    assert_false gateway.options.key?(:refund_hash)
+    assert_false gateway.options.key?(:credit_hash)
   end
 
   def test_hash
@@ -88,11 +126,14 @@ class RealexTest < Test::Unit::TestCase
     assert_failure @gateway.refund(@amount, '1234;1234;1234')
   end
 
-  def test_deprecated_credit
-    @gateway.expects(:ssl_post).returns(successful_refund_response)
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      assert_success @gateway.credit(@amount, '1234;1234;1234')
-    end
+  def test_successful_credit
+    @gateway.expects(:ssl_post).returns(successful_credit_response)
+    assert_success @gateway.credit(@amount, @credit_card, @options)
+  end
+
+  def test_unsuccessful_credit
+    @gateway.expects(:ssl_post).returns(unsuccessful_credit_response)
+    assert_failure @gateway.credit(@amount, @credit_card, @options)
   end
 
   def test_supported_countries
@@ -296,6 +337,69 @@ SRC
     assert_xml_equal valid_refund_request_xml, gateway.build_refund_request(@amount, '1;4321;1234', {})
   end
 
+  def test_credit_xml
+    options = {
+      :order_id => '1'
+    }
+
+    @gateway.expects(:new_timestamp).returns('20190717161006')
+
+    valid_credit_request_xml = <<-SRC
+  <request timestamp="20190717161006" type="credit">
+  <merchantid>your_merchant_id</merchantid>
+  <account>your_account</account>
+  <orderid>1</orderid>
+  <amount currency="EUR">100</amount>
+  <card>
+    <number>4263971921001307</number>
+    <expdate>0808</expdate>
+    <chname>Longbob Longsen</chname>
+    <type>VISA</type>
+    <issueno></issueno>
+    <cvn>
+      <number></number>
+      <presind></presind>
+    </cvn>
+  </card>
+  <autosettle flag="1"/>
+  <sha1hash>73ff566dcfc3a73bebf1a2d387316162111f030e</sha1hash>
+</request>
+SRC
+
+    assert_xml_equal valid_credit_request_xml, @gateway.build_credit_request(@amount, @credit_card, options)
+  end
+
+  def test_credit_with_refund_secret_xml
+    gateway = RealexGateway.new(:login => @login, :password => @password, :account => @account, :refund_secret => @refund_secret)
+
+    gateway.expects(:new_timestamp).returns('20190717161006')
+
+    valid_credit_request_xml = <<-SRC
+<request timestamp="20190717161006" type="credit">
+  <merchantid>your_merchant_id</merchantid>
+  <account>your_account</account>
+  <orderid>1</orderid>
+  <amount currency="EUR">100</amount>
+  <card>
+    <number>4263971921001307</number>
+    <expdate>0808</expdate>
+    <chname>Longbob Longsen</chname>
+    <type>VISA</type>
+    <issueno></issueno>
+    <cvn>
+      <number></number>
+      <presind></presind>
+    </cvn>
+  </card>
+  <refundhash>bbc192c6eac0132a039c23eae8550a22907c6796</refundhash>
+  <autosettle flag="1"/>
+  <sha1hash>73ff566dcfc3a73bebf1a2d387316162111f030e</sha1hash>
+</request>
+SRC
+
+    assert_xml_equal valid_credit_request_xml, gateway.build_credit_request(@amount, @credit_card, @options)
+  end
+
   def test_auth_with_address
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -339,15 +443,16 @@ SRC
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
-  def test_three_d_secure
+  def test_three_d_secure_1
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     options = {
-      :order_id => '1',
-      :three_d_secure => {
-        :cavv => '1234',
-        :eci => '1234',
-        :xid => '1234'
+      order_id: '1',
+      three_d_secure: {
+        cavv: '1234',
+        eci: '1234',
+        xid: '1234',
+        version: '1.0.2',
       }
     }
 
@@ -355,13 +460,14 @@ SRC
     assert_equal 'M', response.cvv_result['code']
   end
 
-  def test_auth_xml_with_three_d_secure
+  def test_auth_xml_with_three_d_secure_1
     options = {
-      :order_id => '1',
-      :three_d_secure => {
-        :cavv => '1234',
-        :eci => '1234',
-        :xid => '1234'
+      order_id: '1',
+      three_d_secure: {
+        cavv: '1234',
+        eci: '1234',
+        xid: '1234',
+        version: '1.0.2',
       }
     }
 
@@ -388,8 +494,53 @@ SRC
   <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
   <mpi>
     <cavv>1234</cavv>
-    <eci>1234</eci>
     <xid>1234</xid>
+    <eci>1234</eci>
+    <message_version>1.0.2</message_version>
+  </mpi>
+</request>
+SRC
+
+    assert_xml_equal valid_auth_request_xml, @gateway.build_purchase_or_authorization_request(:authorization, @amount, @credit_card, options)
+  end
+
+  def test_auth_xml_with_three_d_secure_2
+    options = {
+      order_id: '1',
+      three_d_secure: {
+        cavv: '1234',
+        eci: '1234',
+        ds_transaction_id: '1234',
+        version: '2.1.0',
+      }
+    }
+
+    @gateway.expects(:new_timestamp).returns('20090824160201')
+
+    valid_auth_request_xml = <<-SRC
+<request timestamp="20090824160201" type="auth">
+  <merchantid>your_merchant_id</merchantid>
+  <account>your_account</account>
+  <orderid>1</orderid>
+  <amount currency=\"EUR\">100</amount>
+  <card>
+    <number>4263971921001307</number>
+    <expdate>0808</expdate>
+    <chname>Longbob Longsen</chname>
+    <type>VISA</type>
+    <issueno></issueno>
+    <cvn>
+      <number></number>
+      <presind></presind>
+    </cvn>
+  </card>
+  <autosettle flag="0"/>
+  <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
+  <mpi>
+    <authentication_value>1234</authentication_value>
+    <ds_trans_id>1234</ds_trans_id>
+    <eci>1234</eci>
+    <message_version>2.1.0</message_version>
   </mpi>
 </request>
 SRC
@@ -519,6 +670,43 @@ SRC
   <sha1hash>7384ae67....ac7d7d</sha1hash>
   <md5hash>34e7....a77d</md5hash>
 </response>"
+    RESPONSE
+  end
+
+  def successful_credit_response
+    <<-RESPONSE
+    <response timestamp="20190717205030">
+    <merchantid>spreedly</merchantid>
+    <account>internet</account>
+    <orderid>57a861e97273371e6f1b1737a9bc5710</orderid>
+    <authcode>005030</authcode>
+    <result>00</result>
+    <cvnresult>U</cvnresult>
+    <avspostcoderesponse>U</avspostcoderesponse>
+    <avsaddressresponse>U</avsaddressresponse>
+    <batchid>674655</batchid>
+    <message>AUTH CODE: 005030</message>
+    <pasref>15633930303644971</pasref>
+    <timetaken>0</timetaken>
+    <authtimetaken>0</authtimetaken>
+    <cardissuer>
+      <bank>AIB BANK</bank>
+      <country>IRELAND</country>
+      <countrycode>IE</countrycode>
+      <region>EUR</region>
+    </cardissuer>
+    <sha1hash>6d2fc...67814</sha1hash>
+  </response>"
+    RESPONSE
+  end
+
+  def unsuccessful_credit_response
+    <<-RESPONSE
+    <response timestamp="20190717210119">
+    <result>502</result>
+    <message>Refund Hash not present.</message>
+    <orderid>_refund_fd4ea2d10b339011bdba89f580c5b207</orderid>
+  </response>"
     RESPONSE
   end
 
