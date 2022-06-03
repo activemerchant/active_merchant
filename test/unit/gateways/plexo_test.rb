@@ -29,7 +29,7 @@ class PlexoTest < Test::Unit::TestCase
         finger_print: '12345',
         ip: '127.0.0.1'
       },
-      meta_data: {
+      metadata: {
         custom_one: 'test1',
         test_a: 'abc'
       }
@@ -94,9 +94,9 @@ class PlexoTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
-      @options[:meta_data].keys.each do |meta_key|
+      @options[:metadata].keys.each do |meta_key|
         camel_key = meta_key.to_s.camelize
-        assert_equal request['Metadata'][camel_key], @options[:meta_data][meta_key]
+        assert_equal request['Metadata'][camel_key], @options[:metadata][meta_key]
       end
     end.respond_with(successful_authorize_response)
 

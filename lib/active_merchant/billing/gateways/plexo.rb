@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
 
         add_payment_method(post, payment, options)
         add_items(post, options[:items])
-        add_meta_data(post, options[:meta_data])
+        add_metadata(post, options[:metadata])
         add_amount(money, post, options[:amount_details])
         add_browser_details(post, options[:browser_details])
         add_capture_type(post, options)
@@ -132,11 +132,11 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_meta_data(post, meta_data)
-        return unless meta_data
+      def add_metadata(post, metadata)
+        return unless metadata
 
-        meta_data.transform_keys! { |key| key.to_s.camelize.to_sym }
-        post[:Metadata] = meta_data
+        metadata.transform_keys! { |key| key.to_s.camelize.to_sym }
+        post[:Metadata] = metadata
       end
 
       def add_amount(money, post, amount_options)
