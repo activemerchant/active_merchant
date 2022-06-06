@@ -622,6 +622,45 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(capture)
   end
 
+  def test_network_tokenization_with_amex_cc_and_basic_cryptogram
+    credit_card = network_tokenization_credit_card('378282246310005',
+      brand: 'american_express',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+
+    assert auth = @gateway.authorize(@amount, credit_card, @options)
+    assert_successful_response(auth)
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_successful_response(capture)
+  end
+
+  def test_network_tokenization_with_amex_cc_longer_cryptogram
+    # Generate a random 40 bytes binary amex cryptogram => Base64.encode64(Random.bytes(40))
+    long_cryptogram = "NZwc40C4eTDWHVDXPekFaKkNYGk26w+GYDZmU50cATbjqOpNxR/eYA==\n"
+
+    credit_card = network_tokenization_credit_card('378282246310005',
+      brand: 'american_express',
+      eci: '05',
+      payment_cryptogram: long_cryptogram)
+
+    assert auth = @gateway.authorize(@amount, credit_card, @options)
+    assert_successful_response(auth)
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_successful_response(capture)
+  end
+
+  def test_purchase_with_network_tokenization_with_amex_cc
+    credit_card = network_tokenization_credit_card('378282246310005',
+      brand: 'american_express',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+
+    assert auth = @gateway.purchase(@amount, credit_card, @options)
+    assert_successful_response(auth)
+  end
+
   def test_successful_authorize_with_mdd_fields
     (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
 
