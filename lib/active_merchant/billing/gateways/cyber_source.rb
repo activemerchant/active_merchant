@@ -769,7 +769,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
             xml.tag!('cavv', Base64.encode64(cryptogram[0...20]))
             xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
-            xml.tag!('xid', Base64.encode64(cryptogram[20...40]))
+            xml.tag!('xid', Base64.encode64(cryptogram[20...40])) if cryptogram.bytes.count > 20
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         end
