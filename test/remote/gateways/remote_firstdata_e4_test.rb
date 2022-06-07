@@ -8,14 +8,14 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     @credit_card_with_track_data = credit_card_with_track_data('4003000123456781')
     @amount = 100
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
     @options_with_authentication_data = @options.merge({
-      eci: "5",
-      cavv: "TESTCAVV",
-      xid: "TESTXID"
+      eci: '5',
+      cavv: 'TESTCAVV',
+      xid: 'TESTXID'
     })
   end
 
@@ -25,8 +25,18 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_network_tokenization
+    @credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      verification_value: nil)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction Normal - Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
   def test_successful_purchase_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     assert response = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
     assert_match(/Transaction Normal/, response.message)
     assert_success response
@@ -51,34 +61,34 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
 
     response = @gateway.purchase(500, @credit_card, @options.merge(level_3: level_3_xml))
     assert_success response
-    assert_equal "Transaction Normal - Approved", response.message
+    assert_equal 'Transaction Normal - Approved', response.message
   end
 
   def test_successful_purchase_with_tax_fields
-    response = @gateway.purchase(500, @credit_card, @options.merge(tax1_amount: 50, tax1_number: "A458"))
+    response = @gateway.purchase(500, @credit_card, @options.merge(tax1_amount: 50, tax1_number: 'A458'))
     assert_success response
-    assert_equal "50.0", response.params["tax1_amount"]
-    assert_equal "", response.params["tax1_number"], "E4 blanks this out in the response"
+    assert_equal '50.0', response.params['tax1_amount']
+    assert_equal '', response.params['tax1_number'], 'E4 blanks this out in the response'
   end
 
   def test_successful_purchase_with_customer_ref
-    response = @gateway.purchase(500, @credit_card, @options.merge(customer: "267"))
+    response = @gateway.purchase(500, @credit_card, @options.merge(customer: '267'))
     assert_success response
-    assert_equal "267", response.params["customer_ref"]
+    assert_equal '267', response.params['customer_ref']
   end
 
   def test_successful_purchase_with_card_authentication
     assert response = @gateway.purchase(@amount, @credit_card, @options_with_authentication_data)
-    assert_equal response.params["cavv"], @options_with_authentication_data[:cavv]
-    assert_equal response.params["ecommerce_flag"], @options_with_authentication_data[:eci]
-    assert_equal response.params["xid"], @options_with_authentication_data[:xid]
+    assert_equal response.params['cavv'], @options_with_authentication_data[:cavv]
+    assert_equal response.params['ecommerce_flag'], @options_with_authentication_data[:eci]
+    assert_equal response.params['xid'], @options_with_authentication_data[:xid]
     assert_success response
   end
 
   def test_unsuccessful_purchase
     # ask for error 13 response (Amount Error) via dollar amount 5,000 + error
     @amount = 501300
-    assert response = @gateway.purchase(@amount, @credit_card, @options )
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_match(/Transaction Normal/, response.message)
     assert_failure response
   end
@@ -87,16 +97,16 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @bad_credit_card, @options)
     assert_match(/Invalid Credit Card/, response.message)
     assert_failure response
-    assert_equal response.error_code, "invalid_number"
+    assert_equal response.error_code, 'invalid_number'
   end
 
   def test_trans_error
     # ask for error 42 (unable to send trans) as the cents bit...
     @amount = 500042
-    assert response = @gateway.purchase(@amount, @credit_card, @options )
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_match(/Unable to Send Transaction/, response.message) # 42 is 'unable to send trans'
     assert_failure response
-    assert_equal response.error_code, "processing_error"
+    assert_equal response.error_code, 'processing_error'
   end
 
   def test_purchase_and_credit
@@ -108,7 +118,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_purchase_and_credit_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     assert purchase = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
     assert_success purchase
     assert purchase.authorization
@@ -154,21 +164,21 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
 
-    assert_equal "Transaction Normal - Approved", response.message
-    assert_equal "0.0", response.params["dollar_amount"]
-    assert_equal "05", response.params["transaction_type"]
+    assert_equal 'Transaction Normal - Approved', response.message
+    assert_equal '0.0', response.params['dollar_amount']
+    assert_equal '05', response.params['transaction_type']
   end
 
   def test_failed_verify
     assert response = @gateway.verify(@bad_credit_card, @options)
     assert_failure response
     assert_match %r{Invalid Credit Card Number}, response.message
-    assert_equal response.error_code, "invalid_number"
+    assert_equal response.error_code, 'invalid_number'
   end
 
   def test_invalid_login
-    gateway = FirstdataE4Gateway.new(:login    => "NotARealUser",
-                                     :password => "NotARealPassword" )
+    gateway = FirstdataE4Gateway.new(login: 'NotARealUser',
+                                     password: 'NotARealPassword')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_match %r{Unauthorized Request}, response.message
     assert_failure response
@@ -177,8 +187,8 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   def test_response_contains_cvv_and_avs_results
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'M', response.cvv_result["code"]
-    assert_equal '4', response.avs_result["code"]
+    assert_equal 'M', response.cvv_result['code']
+    assert_equal '4', response.avs_result['code']
   end
 
   def test_refund
@@ -193,7 +203,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_refund_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     assert purchase = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
     assert_match(/Transaction Normal/, purchase.message)
     assert_success purchase
@@ -226,7 +236,15 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert !gateway.verify_credentials
   end
 
-  def test_dump_transcript
-    # See firstdata_e4_test.rb for an example of a scrubbed transcript
+  def test_transcript_scrubbing
+    cc_with_different_cvc = credit_card(verification_value: '999')
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, cc_with_different_cvc, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(cc_with_different_cvc.number, transcript)
+    assert_scrubbed(cc_with_different_cvc.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 end

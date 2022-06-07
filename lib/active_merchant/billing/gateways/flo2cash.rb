@@ -10,52 +10,52 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['NZ']
       self.default_currency = 'NZD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
 
       BRAND_MAP = {
-        "visa" => "VISA",
-        "master" => "MC",
-        "american_express" => "AMEX",
-        "diners_club" => "DINERS"
+        'visa' => 'VISA',
+        'master' => 'MC',
+        'american_express' => 'AMEX',
+        'diners_club' => 'DINERS'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :username, :password, :account_id)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         MultiResponse.run do |r|
           r.process { authorize(amount, payment_method, options) }
           r.process { capture(amount, r.authorization, options) }
         end
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
-        commit("ProcessAuthorise", post)
+        commit('ProcessAuthorise', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
         add_customer_data(post, options)
 
-        commit("ProcessCapture", post)
+        commit('ProcessCapture', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
         add_customer_data(post, options)
 
-        commit("ProcessRefund", post)
+        commit('ProcessRefund', post)
       end
 
       def supports_scrubbing?
@@ -71,8 +71,8 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
-      CURRENCY_CODES["NZD"] = "554"
+      CURRENCY_CODES = Hash.new { |_h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
+      CURRENCY_CODES['NZD'] = '554'
 
       def add_invoice(post, money, options)
         post[:Amount] = amount(money)
@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:Email] = billing_address[:email]
         end
       end
@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         begin
           raw = parse(ssl_post(url, data, headers(action)), action)
         rescue ActiveMerchant::ResponseError => e
-          if(e.response.code == "500" && e.response.body.start_with?("<?xml"))
+          if e.response.code == '500' && e.response.body.start_with?('<?xml')
             raw = parse(e.response.body, action)
           else
             raise
@@ -119,9 +119,9 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(action, raw[:transaction_id], post[:OriginalTransactionId]),
-          :error_code => error_code_from(succeeded, raw),
-          :test => test?
+          authorization: authorization_from(action, raw[:transaction_id], post[:OriginalTransactionId]),
+          error_code: error_code_from(succeeded, raw),
+          test: test?
         )
       end
 
@@ -133,7 +133,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(action, post)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         post.each do |field, value|
           xml.tag!(field, value)
         end
@@ -142,16 +142,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def envelope_wrap(action, body)
-        <<-EOS
-<?xml version="1.0" encoding="utf-8"?>
-<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
-  <soap12:Body>
-    <#{action} xmlns="http://www.flo2cash.co.nz/webservices/paymentwebservice">
-      #{body}
-    </#{action}>
-  </soap12:Body>
-</soap12:Envelope>
-        EOS
+        <<~XML
+          <?xml version="1.0" encoding="utf-8"?>
+          <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+            <soap12:Body>
+              <#{action} xmlns="http://www.flo2cash.co.nz/webservices/paymentwebservice">
+                #{body}
+              </#{action}>
+            </soap12:Body>
+          </soap12:Envelope>
+        XML
       end
 
       def url
@@ -161,7 +161,7 @@ module ActiveMerchant #:nodoc:
       def parse(body, action)
         response = {}
         xml = REXML::Document.new(body)
-        root = (REXML::XPath.first(xml, "//#{action}Response") || REXML::XPath.first(xml, "//detail"))
+        root = (REXML::XPath.first(xml, "//#{action}Response") || REXML::XPath.first(xml, '//detail'))
 
         root.elements.to_a.each do |node|
           parse_element(response, node)
@@ -172,7 +172,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|element| parse_element(response, element) }
+          node.elements.each { |element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
@@ -184,9 +184,9 @@ module ActiveMerchant #:nodoc:
 
       def message_from(succeeded, response)
         if succeeded
-          "Succeeded"
+          'Succeeded'
         else
-          response[:message] || response[:errormessage] || "Unable to read error message"
+          response[:message] || response[:errormessage] || 'Unable to read error message'
         end
       end
 
@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
         'Bank Declined Transaction' => STANDARD_ERROR_CODE[:card_declined],
         'Insufficient Funds' => STANDARD_ERROR_CODE[:card_declined],
         'Transaction Declined - Bank Error' => STANDARD_ERROR_CODE[:processing_error],
-        'No Reply from Bank' => STANDARD_ERROR_CODE[:processing_error],
+        'No Reply from Bank' => STANDARD_ERROR_CODE[:processing_error]
       }
 
       def error_code_from(succeeded, response)

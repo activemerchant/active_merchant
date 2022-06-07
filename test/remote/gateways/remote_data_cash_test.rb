@@ -1,65 +1,62 @@
 require 'test_helper'
 
 class RemoteDataCashTest < Test::Unit::TestCase
-
   def setup
     # gateway to connect to Datacash
     @gateway = DataCashGateway.new(fixtures(:data_cash))
 
     @mastercard = CreditCard.new(
-      :number => '5120790000000034',
-      :month => 3,
-      :year => Date.today.year + 2,
-      :first_name => 'Mark',
-      :last_name => 'McBride',
-      :brand => :master
+      number: '5120790000000034',
+      month: 3,
+      year: Date.today.year + 2,
+      first_name: 'Mark',
+      last_name: 'McBride',
+      brand: :master
     )
 
     @mastercard_declined = CreditCard.new(
-      :number => '5473000000000106',
-      :month => 3,
-      :year => Date.today.year + 2,
-      :first_name => 'Mark',
-      :last_name => 'McBride',
-      :brand => :master,
-      :verification_value => '547'
+      number: '5473000000000106',
+      month: 3,
+      year: Date.today.year + 2,
+      first_name: 'Mark',
+      last_name: 'McBride',
+      brand: :master,
+      verification_value: '547'
     )
 
     @visa_delta = CreditCard.new(
-      :number => '4539792100000003',
-      :month => 3,
-      :year => Date.today.year + 2,
-      :first_name => 'Mark',
-      :last_name => 'McBride',
-      :brand => :visa,
-      :verification_value => '444'
+      number: '4539792100000003',
+      month: 3,
+      year: Date.today.year + 2,
+      first_name: 'Mark',
+      last_name: 'McBride',
+      brand: :visa,
+      verification_value: '444'
     )
 
     @solo = CreditCard.new(
-      :first_name => 'Cody',
-      :last_name => 'Fauser',
-      :number => '633499100000000004',
-      :month => 3,
-      :year => Date.today.year + 2,
-      :brand => :solo,
-      :issue_number => 5,
-      :start_month => 12,
-      :start_year => 2006,
-      :verification_value => 444
+      first_name: 'Cody',
+      last_name: 'Fauser',
+      number: '633499100000000004',
+      month: 3,
+      year: Date.today.year + 2,
+      brand: :solo,
+      start_month: 12,
+      start_year: 2006
     )
 
     @address = {
-      :name     => 'Mark McBride',
-      :address1 => 'Flat 12/3',
-      :address2 => '45 Main Road',
-      :city     => 'Sometown',
-      :state    => 'Somecounty',
-      :zip      => 'A987AA',
-      :phone    => '(555)555-5555'
+      name: 'Mark McBride',
+      address1: 'Flat 12/3',
+      address2: '45 Main Road',
+      city: 'Sometown',
+      state: 'Somecounty',
+      zip: 'A987AA',
+      phone: '(555)555-5555'
     }
 
     @params = {
-      :order_id => generate_unique_id
+      order_id: generate_unique_id
     }
 
     @amount = 198
@@ -73,8 +70,8 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  #the amount is changed to £1.99 - the DC test server won't check the
-  #address details - this is more a check on the passed ExtendedPolicy
+  # the amount is changed to £1.99 - the DC test server won't check the
+  # address details - this is more a check on the passed ExtendedPolicy
   def test_successful_purchase_without_address_check
     response = @gateway.purchase(199, @mastercard, @params)
     assert_success response
@@ -110,8 +107,8 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert !response.authorization.to_s.split(';')[2].blank?
     assert response.test?
 
-    #Make second payment on the continuous authorization that was set up in the first purchase
-    second_order_params = { :order_id => generate_unique_id }
+    # Make second payment on the continuous authorization that was set up in the first purchase
+    second_order_params = { order_id: generate_unique_id }
     purchase = @gateway.purchase(201, response.authorization, second_order_params)
     assert_success purchase
   end
@@ -122,8 +119,8 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert_success response
     assert !response.authorization.to_s.split(';')[2].blank?
 
-    #Make second payment on the continuous authorization that was set up in the first purchase
-    second_order_params = { :order_id => generate_unique_id }
+    # Make second payment on the continuous authorization that was set up in the first purchase
+    second_order_params = { order_id: generate_unique_id }
     purchase = @gateway.purchase(201, response.authorization, second_order_params)
     assert_success purchase
   end
@@ -136,20 +133,20 @@ class RemoteDataCashTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization_and_capture_with_account_set_up_and_second_purchase
-    #Authorize first payment
+    # Authorize first payment
     @params[:set_up_continuous_authority] = true
     first_authorization = @gateway.authorize(@amount, @mastercard, @params)
     assert_success first_authorization
     assert !first_authorization.authorization.to_s.split(';')[2].blank?
     assert first_authorization.test?
 
-    #Capture first payment
+    # Capture first payment
     capture = @gateway.capture(@amount, first_authorization.authorization, @params)
     assert_success capture
     assert capture.test?
 
-    #Collect second purchase
-    second_order_params = { :order_id => generate_unique_id }
+    # Collect second purchase
+    second_order_params = { order_id: generate_unique_id }
     purchase = @gateway.purchase(201, first_authorization.authorization, second_order_params)
     assert_success purchase
     assert purchase.test?
@@ -166,6 +163,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
   end
 
   def test_invalid_verification_number
+    @mastercard.number = 1000350000000007
     @mastercard.verification_value = 123
     response = @gateway.purchase(@amount, @mastercard, @params)
     assert_failure response
@@ -303,6 +301,23 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert_equal '1.98 > remaining funds 0.00', second_refund.message
   end
 
+  def test_successful_refund_of_a_repeat_payment
+    @params[:set_up_continuous_authority] = true
+    response = @gateway.purchase(@amount, @mastercard, @params)
+    assert_success response
+    assert !response.authorization.to_s.split(';')[2].blank?
+    assert response.test?
+
+    # Make second payment on the continuous authorization that was set up in the first purchase
+    second_order_params = { order_id: generate_unique_id }
+    purchase = @gateway.purchase(201, response.authorization, second_order_params)
+    assert_success purchase
+
+    # Refund payment that was made via the continuous authorization payment above
+    refund = @gateway.refund(201, purchase.authorization)
+    assert_success refund
+  end
+
   def test_order_id_that_is_too_short
     @params[:order_id] = @params[:order_id].first(5)
     response = @gateway.purchase(@amount, @mastercard, @params)
@@ -310,10 +325,20 @@ class RemoteDataCashTest < Test::Unit::TestCase
   end
 
   def test_order_id_that_is_too_long
-    @params[:order_id] =  "#{@params[:order_id]}1234356"
+    @params[:order_id] = "#{@params[:order_id]}1234356"
     response = @gateway.purchase(@amount, @mastercard, @params)
     assert_success response
     assert response.test?
   end
 
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @visa_delta, @params)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@visa_delta.number, transcript)
+    assert_scrubbed(@visa_delta.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
 end

@@ -1,11 +1,11 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CamsGateway < Gateway
-      self.live_url = "https://secure.centralams.com/gw/api/transact.php"
+      self.live_url = 'https://secure.centralams.com/gw/api/transact.php'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://www.centralams.com/'
       self.display_name = 'CAMS: Central Account Management System'
@@ -67,12 +67,12 @@ module ActiveMerchant #:nodoc:
         '894' => STANDARD_ERROR_CODE[:processing_error]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :username, :password)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
 
@@ -83,10 +83,10 @@ module ActiveMerchant #:nodoc:
           post[:transactionid] = split_authorization(payment)[0]
         end
 
-        commit("sale", post)
+        commit('sale', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
         commit('auth', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         add_reference(post, authorization)
         add_invoice(post, money, options)
@@ -103,20 +103,20 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         add_reference(post, authorization)
         add_invoice(post, money, options)
         commit('refund', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, authorization)
         commit('void', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         post = {}
         add_invoice(post, 0, options)
         add_payment(post, credit_card)
@@ -138,26 +138,26 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_address(post, creditcard, options={})
+      def add_address(post, creditcard, options = {})
         post[:firstname] = creditcard.first_name
-        post[:lastname ] = creditcard.last_name
+        post[:lastname]  = creditcard.last_name
 
         return unless options[:billing_address]
 
         address = options[:billing_address]
-        post[:address1 ] = address[:address1]
-        post[:address2 ] = address[:address2]
-        post[:city     ] = address[:city]
-        post[:state    ] = address[:state]
-        post[:zip      ] = address[:zip]
-        post[:country  ] = address[:country]
-        post[:phone    ] = address[:phone]
+        post[:address1] = address[:address1]
+        post[:address2] = address[:address2]
+        post[:city]     = address[:city]
+        post[:state]    = address[:state]
+        post[:zip]      = address[:zip]
+        post[:country]  = address[:country]
+        post[:phone]    = address[:phone]
       end
 
       def add_reference(post, authorization)
         transaction_id, authcode = split_authorization(authorization)
-        post["transactionid"] = transaction_id
-        post["authcode"]      = authcode
+        post['transactionid'] = transaction_id
+        post['authcode']      = authcode
       end
 
       def add_invoice(post, money, options)
@@ -167,15 +167,15 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment)
         post[:ccnumber] = payment.number
-        post[:ccexp   ] = "#{payment.month.to_s.rjust(2,"0")}#{payment.year.to_s[-2..-1]}"
-        post[:cvv     ] = payment.verification_value
+        post[:ccexp] = "#{payment.month.to_s.rjust(2, '0')}#{payment.year.to_s[-2..-1]}"
+        post[:cvv] = payment.verification_value
       end
 
       def parse(body)
-        kvs = body.split("&")
+        kvs = body.split('&')
 
         kvs.inject({}) { |h, kv|
-          k,v = kv.split("=")
+          k, v = kv.split('=')
           h[k] = v
           h
         }
@@ -199,19 +199,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response["response_code"] == "100"
+        response['response_code'] == '100'
       end
 
       def message_from(response)
-        response["responsetext"]
+        response['responsetext']
       end
 
       def authorization_from(response)
-        [response["transactionid"], response["authcode"]].join("#")
+        [response['transactionid'], response['authcode']].join('#')
       end
 
       def split_authorization(authorization)
-        transaction_id, authcode = authorization.split("#")
+        transaction_id, authcode = authorization.split('#')
         [transaction_id, authcode]
       end
 
@@ -219,11 +219,11 @@ module ActiveMerchant #:nodoc:
         parameters[:password] = @options[:password]
         parameters[:username] = @options[:username]
 
-        parameters.collect{|k,v| "#{k}=#{v}" }.join("&")
+        parameters.collect { |k, v| "#{k}=#{v}" }.join('&')
       end
 
       def error_code_from(response)
-        STANDARD_ERROR_CODE_MAPPING[response["response_code"]]
+        STANDARD_ERROR_CODE_MAPPING[response['response_code']]
       end
     end
   end

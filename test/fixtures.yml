@@ -11,6 +11,15 @@
 # Paste any required PEM certificates after the pem key.
 #
 
+adyen:
+  username: ''
+  password: ''
+  merchant_account: ''
+
+airwallex:
+  client_id: SOMECREDENTIAL
+  client_api_key: ANOTHERCREDENTIAL
+
 allied_wallet:
   site_id: site_id
   merchant_id: merchant_id
@@ -31,6 +40,10 @@ axcessms:
 balanced:
   login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
 
+bambora_apac:
+  username: nmi.api
+  password: qwerty123
+
 # Bank Frick doesn't provide public testing data
 bank_frick:
   sender: sender-uuid
@@ -47,11 +60,6 @@ barclaycard_smartpay:
   merchant: merchant
   password: password
 
-barclays_epdq:
-  login: test
-  password: test
-  client_id: 1234
-
 barclays_epdq_extra_plus:
   login: merchant number
   user: username
@@ -67,6 +75,7 @@ beanstream:
   password: password
   secure_profile_api_key: API Access Passcode
   recurring_api_key: API Access Passcode
+  api_key: API KEY
 
 beanstream_interac:
   login: merchant id
@@ -103,6 +112,12 @@ braintree_blue:
   private_key: Z
   merchant_account_id: A
 
+braintree_blue_with_ach_enabled:
+  merchant_id: X
+  public_key: Y
+  private_key: Z
+  merchant_account_id: A
+
 braintree_blue_with_processing_rules:
   merchant_id: X
   public_key: Y
@@ -122,6 +137,12 @@ cams:
   username: testintegrationc
   password: password9
 
+# Working credentials, no need to replace
+card_connect:
+  merchant_id: "496160873888"
+  username: testing
+  password: testing123
+
 #Username/Password given in sign up email. Not MMS credentials
 card_save:
   login: merchant_id
@@ -134,6 +155,12 @@ card_stream:
 # Working credentials, no need to replace
 cardknox:
   api_key: ActiveMerchant_Test
+
+# Working credentials, no need to replace
+cardprocess:
+  user_id: 8a8294174e735d0c014e78beb6c5154f
+  password: cTZjAm9c87
+  entity_id: 8a8294174e735d0c014e78beb6b9154b
 
 # Cashnet doesn't provide public testing data
 cashnet:
@@ -196,16 +223,24 @@ commercegate:
   card_number: "XXXXXXXXXXXXXXXX"
 
 conekta:
-  key: key_eYvWV7gSDkNYXsmr
+  key: key_6FTbuwqhYs6zvyyeL3PySg
 
 # Working credentials, no need to replace
 creditcall:
   terminal_id: '99961426'
   transaction_key: '9drdRU9wJ65SNRw3'
 
+# NOTE: the IP address you run the remote tests from will need to be
+# whitelisted by Credorax; contact support@credorax.com as necessary to request
+# your IP address be added to the whitelist for your test account.
 credorax:
   merchant_id: 'merchant_id'
   cipher_key: 'cipher_key'
+
+ct_payment:
+  api_key: SOMECREDENTIAL
+  company_number: '12345'
+  merchant_number: '12345678'
 
 # Culqi does not provide public testing data
 culqi:
@@ -221,26 +256,69 @@ cyber_source:
   login: X
   password: Y
 
+cyber_source_latam_pe:
+  login: merchant_id
+  password: soap_key
+
+# Working credentials, no need to replace
+d_local:
+  login: aeaf9bbfa1
+  trans_key: 9de3769b7e
+  secret_key: ae132899f56162a669b38dab5927862f3
+
 data_cash:
   login: X
   password: Y
+
+# Working credentials, no need to replace
+decidir_authorize:
+  api_key: 5a15fbc227224edabdb6f2e8219e8b28
+  preauth_mode: true
+
+decidir_plus:
+  public_key: SOMECREDENTIAL
+  private_key: SOMECREDENTIAL
+
+decidir_plus_preauth:
+  public_key: SOMECREDENTIAL
+  private_key: SOMECREDENTIAL
+
+decidir_purchase:
+  api_key: 5df6b5764c3f4822aecdc82d56f26b9d
 
 # No working test credentials
 dibs:
   merchant_id: SOMECREDENTIAL
   secret_key: NOPUBLICCREDENTIAL
 
+# Working credentials, no need to replace
+digitzs:
+  app_key: tcwtTux8SPZYO44Gf0UHZH74Z1HSutqCxmIV2PFj2jRc9Poroh3Z3R1BBQNRQ98Q
+  api_key: 0HhRdOU2AsWVEu3gRIKi2UpMMmj8Fj48qggBYTo4
+
 direc_pay:
   login: 200904281000001
+
+# Working credentials, no need to replace
+ebanx:
+  integration_key: 1231000
 
 efsnet:
   login: X
   password: Y
 
+# Provided for url update test
+
 elavon:
-  login: LOGIN
-  password: PASSWORD
-  user: USER (often the same as LOGIN)
+  login: "009005"
+  user: "devportal"
+  password: "BDDZY5KOUDCNPV4L3821K7PETO4Z7TPYOJB06TYBI1CW771IDHXBVBP51HZ6ZANJ"
+
+elavon_multi_currency:
+  login: "009006"
+  user: "devportal"
+  password: "XWJS3QTFCH40HW0QGHJKXAYADCTDH0TXXAKXAEZCGCCJ29CFNPCZT4KA9D5KQMDA"
+  multi_currency: true
 
 element:
   account_id: "1013963"
@@ -309,6 +387,12 @@ firstdata_e4:
   login: SD8821-67
   password: T6bxSywbcccbJ19eDXNIGaCDOBg1W7T8
 
+firstdata_e4_v27:
+  login: ALOGIN
+  password: APASSWORD
+  key_id: ANINTEGER
+  hmac_key: AMAGICALKEY
+
 flo2cash:
   username: SOMECREDENTIAL
   password: ANOTHERCREDENTIAL
@@ -332,9 +416,9 @@ garanti:
   password: "123qweASD"
 
 global_collect:
-  merchant_id: 1428
-  api_key_id: 96f16a41890565d0
-  secret_api_key: g/VQ432G02bFpwg/6EY7uiPRSZxKMbQ87Kal716XORA=
+  merchant_id: 2196
+  api_key_id: c91d6752cbbf9cf1
+  secret_api_key: xHjQr5gL9Wcihkqoj4w/UQugdSCNXM2oUQHG5C82jy4=
 
 global_transport:
   global_user_name: "USERNAME"
@@ -349,19 +433,13 @@ hdfc:
 hps:
   secret_api_key: "skapi_cert_MYl2AQAowiQAbLp5JesGKh7QFkcizOP2jcX9BrEMqQ"
 
+hps_echeck:
+  secret_api_key:
+
 iats_payments:
   agent_code: TEST88
   password: TEST88
   region: na
-
-# login: merchant number
-# password: password for the PEM secret key
-# pem: public certificate and PEM secret key
-ideal_rabobank:
-  login: LOGIN
-  password: PASSWORD
-  pem: |
-    PASTE YOUR PEM FILE HERE
 
 inspire:
   login: demo
@@ -370,6 +448,14 @@ inspire:
 instapay:
   login: TEST0
   password:
+
+# Working credentials, no need to replace
+ipg:
+  store_id: "YOUR STORE ID"
+  user_id: "YOUR USER ID"
+  password: "YOUR PASSWORD"
+  pem_password: "CERTIFICATE PASSWORD"
+  pem: "YOUR CERTIFICATE WITH PRIVATE KEY"
 
 # Working credentials, no need to replace
 ipp:
@@ -385,8 +471,22 @@ itransact:
   password: API_ACCESS_KEY
   gateway_id: GATEWAY_ID
 
+# Working credentials, no need to replace
+iveri:
+  cert_id: CB69E68D-C7E7-46B9-9B7A-025DCABAD6EF
+  app_id: d10a603d-4ade-405b-93f1-826dfc0181e8
+
+ixopay:
+  username: USERNAME
+  api_key: API_KEY
+  password: PASSWORD
+  secret: SHARED_SECRET
+
 jetpay:
   login: TESTTERMINAL
+
+jetpay_v2:
+  login: TESTMCC3136X
 
 komoju:
   login: sk_f1dd75ce3d5cad477eac0c827c1cac8eaa51ede3
@@ -414,6 +514,10 @@ litle:
 maxipago:
   login: "100"
   password: "21g8u6gh6szw1gywfs165vui"
+
+# Working credentials, no need to replace
+mercado_pago:
+  access_token: "TEST-8527269031909288-071213-0fc96cb7cd3633189bfbe29f63722700__LB_LA__-263489584"
 
 # Working test credentials, no need to replace
 merchant_esolutions:
@@ -470,32 +574,41 @@ migs:
   advanced_login: activemerchant
   advanced_password: test12345
 
+# Working credentials, no need to replace
+mit:
+  commerce_id: '147'
+  user: IVCA33721
+  api_key: IGECPJ0QOJJCEHUI
+  key_session: CB0DC4887DD1D5CEA205E66EE934E430
+  test: true
+
 modern_payments:
   login: login
   password: password
 
-mollie_ideal:
-  api_key: 'test_8isBjQoJXJoiXRSzjhwKPO1Bo9AkVA'
+moka:
+  dealer_code: DEALER_CODE
+  username: USERNAME
+  password: PASSWORD
 
 # Working credentials, no need to replace
 monei:
-  sender_id: 8a829417488d34c401489a5cd1350977
-  channel_id: 8a829417488d34c401489a5de5dd097b
-  login: 8a829417488d34c401489a5cd1360979
-  pwd: GyNSEAp2
+  api_key: pk_test_3cb2d54b7ee145fa92d683c01816ad15
 
 # Working credentials, no need to replace
 moneris:
-  login: store1
+  login: store3
   password: yesguy
-
-moneris_us:
-  login: monusqa002
-  password: qatoken
 
 money_movers:
   login: demo
   password: password
+
+mundipagg:
+  api_key: api_key
+  gateway_affiliation_id: gateway_affiliation_id
+  # left for backward-compatibility
+  gateway_id: gateway_id
 
 # Working credentials, no need to replace
 nab_transact:
@@ -542,6 +655,9 @@ nmi:
   login: demo
   password: password
 
+nmi_secure:
+  security_key: '6457Thfj624V5r7WUwc5v6a68Zsd6YEm'
+
 ogone:
   login: LOGIN
   user: USER
@@ -560,8 +676,7 @@ openpay:
   merchant_id: 'mzdtln0bmtms6o3kck8f'
 
 opp:
-  user_id: '8a8294174b7ecb28014b9699220015cc'
-  password: 'sy6KJsT8'
+  access_token: 'OGE4Mjk0MTc0YjdlY2IyODAxNGI5Njk5MjIwMDE1Y2N8c3k2S0pzVDg='
   entity_id: '8a8294174d0a8edd014d242337942575'
 
 optimal_payment:
@@ -570,6 +685,11 @@ optimal_payment:
   account_number: ACCOUNTNUMBER
 
 orbital_gateway:
+  login: LOGIN
+  password: PASSWORD
+  merchant_id: MERCHANTID
+
+orbital_tandem_gateway:
   login: LOGIN
   password: PASSWORD
   merchant_id: MERCHANTID
@@ -583,6 +703,10 @@ pago_facil:
   branch_id: 60f961360ca187d533d5adba7d969d6334771370
   merchant_id: 62ad6f592ecf2faa87ef2437ed85a4d175e73c58
   service_id: 3
+
+# Working credentials, no need to replace
+pay_arc:
+  api_key: APIKEY
 
 # Working credentials, no need to replace
 pay_conex:
@@ -616,15 +740,25 @@ pay_secure:
   login: LOGIN
   password: PASSWORD
 
+pay_trace:
+  username: USERNAME
+  password: PASSWORD
+  integrator_id: INTEGRATOR_ID
+
 paybox_direct:
-  login: 199988863
+  login: 1999888
   password: 1999888I
-  rang: 85
+  rang: 222
+  credit_card_ok_3ds: 4012001037141112
+  credit_card_nok_3ds: 4012001037141113
+  credit_card_ok_3ds_not_enrolled: 4012001038443335
+  credit_card_ok: 1111222233334444
+  credit_card_nok: 1111222233334445
 
 # Working credentials, no need to replace
 payeezy:
-  apikey: oKB61AAxbN3xwC6gVAH3dp58FmioHSAT
-  apisecret: 36ef1fc3b908b7a79ad2c29de931d2ccff26fcec35602c709a9e34318e936683
+  apikey: UyDMTXx6TD9WErF6ynw7xeEfCAn8fcGs
+  apisecret: 2a4974e242c91cab7f38910938f2a5db79e89756b084bbf7cab7849b50a9930f
   token: fdoa-a480ce8951daa73262734cf102641994c1e55e7cdf4c02b6
 
 payex:
@@ -634,9 +768,9 @@ payex:
 
 # Working credentials, no need to replace
 payflow:
-  login: spreedly
-  password: 'ibB4Z8=d;G'
-  partner: PayPal
+  login: 'spreedlyIntegrations'
+  password: 'L9DjqEKjXCkU'
+  partner: 'PayPal'
 
 payflow_uk:
   login: LOGIN
@@ -646,6 +780,14 @@ payflow_uk:
 payment_express:
   login: LOGIN
   password: PASSWORD
+
+paymentez:
+  application_code: APPCODE
+  app_key: APPKEY
+
+paymentez_ecuador:
+  application_code: APPCODE
+  app_key: APPKEY
 
 paymill:
   private_key: a9580be4a7b9d0151a3da88c6c935ce0
@@ -694,6 +836,11 @@ paypal_signature:
   password: HBC6A84QLRWC923A
   signature: AFcWxV21C7fd0v3bYYYRCpSSRl31AC-11AKBL8FFO9tjImL311y8a0hx
 
+paysafe:
+  login: SOMECREDENTIAL
+  secret_key: ANOTHERCREDENTIAL
+  account_id: CREDENTIAL
+
 payscout:
   username: demo
   password: password
@@ -718,12 +865,33 @@ payway:
   password:
   pem:
 
+# Working credentials, no need to replace
+payway_dot_com:
+  login:      "sprerestwsdev"
+  password:   "sprerestwsdev1!"
+  company_id: "3"
+  source_id: "67"
+
 pin:
   api_key: "I_mo9BUUUXIwXF-avcs3LA"
+
+plexo:
+  client_id: YOUR_CLIENT_ID
+  api_key: YOUR_API_KEY
+  merchant_id: YOUR_MERCHANT_ID
 
 plugnpay:
   login: LOGIN
   password: PASSWORD
+
+priority:
+  key: SANDBOX_KEY
+  secret: SECRET
+  merchant_id: MERCHANT_ID
+
+# Working credentials, no need to replace
+pro_pay:
+  cert_str: "5ab9cddef2e4911b77e0c4ffb70f03"
 
 # Working credentials, no need to replace
 psigate:
@@ -799,8 +967,17 @@ quantum:
   password: Y
 
 # You will need to create a developer sandbox at https://developer.intuit.com/ and
-# successfully generate an OAuth 1.0a access token and token secret.
+# successfully generate an OAuth 2.0 access token and refresh_token. Access token
+# expires every 60 minutes
 quickbooks:
+  client_id:
+  client_secret:
+  refresh_token:
+  access_token:
+
+# You will need to create a developer sandbox at https://developer.intuit.com/ and
+# successfully generate an OAuth 1.0a access token and token secret.
+quickbooks_oauth_1:
   consumer_key:
   consumer_secret:
   access_token:
@@ -824,10 +1001,112 @@ quickpay_with_api_key:
   apikey: "fB46983ZwR5dzy46A3r6ngDx7P37N5YTu1F4S9W2JKCs9v4t5L9m2Q8Mlbjpa2I1"
   version: 7
 
+# To get this credential, log into: https://quickstream.support.qvalent.com/->click Administration->Facility Settings->
+# Authentication and Credentials->update "Technology" to SOAP and save->create cert and download .pfx file->
+# use the following command to get the Bag Attributes:
+# $ openssl pkcs12 -in filename.pfx -out cert.pem -nodes
+# open cert.pem file in a text editor (e.g. TextEdit) and you'll see the Bag Attributes to add below under "pem:" field
 qvalent:
-  username: TEST
-  password: TEST
-  merchant: TEST
+  username: "QRSL"
+  password: "QRSLTEST"
+  merchant: 24436057
+  pem_password: "Ceic4s4ig"
+  pem: |
+    Bag Attributes
+        localKeyID: 01 00 00 00
+        friendlyName: CCAPI Client Certificate
+    Key Attributes
+        X509v3 Key Usage: 10
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIEpAIBAAKCAQEAtgPNEzLEFAm2CXCiaJeEFQxzkxXHn+Lyf65FjTDIOMknXnmw
+    gtoPTrFHtDVLJqWHaccLg9/lMKHivW1iGPTeZj4Uke07EcmIaDQD3Gq33gukDbgx
+    d5QDN+mEPRs0TF6FHlKKELKGIZdw4BlM+Jg7hebwZnBC/g9cetmB3ny99g0e5ANk
+    pPESguo+HTFk5vwHkLjMtDB+0zM5y6AyU6z+PaCDr3Q7+vcR50kQLNxpSWH1Il1g
+    BewIHAroN4lJjPvKLnDWvK5SsxW9XB14gLAyQg6qCHDYOdTsdiG6BFG1eijT+3W7
+    iXm8uTDiXSj+PiADEeKvnbEsWqXu+DvUsR/m8wIDAQABAoIBADtC/ZBUpRbJGqX0
+    MEzRmEWqKi8nljlukPoVabvQuEAU7maKRHg2O2mpuujnuTI6Dt7X2d30FhFBhCuc
+    46WwhIDRkaz5ipP+BBW5adBoRrlbHO0CnciLPokD1PR4WQzMcZcv1JgfKCDjx/KP
+    CkqedjLgwED6KDXEFp5BF1GzV742dfux0Bgq+5kzLp0uAe0+ADxGll1Fx1wWbP/e
+    4XSTWz4P1q3fmGAJB7fgXcfdp+Yri1x0RNDjBUa6YsR5fFVZBXcFEmPcRGbcsO3J
+    ApJTrskt4H0rQafcx/LmUj3pBVsl/tcyMBHHGHUb0N5pKypf2X+79IYhV+b9K9Ll
+    5EHVV+ECgYEA8TTci5PsysRvzN5HIgpfsd3ZK/JrTkJ2z3Xx2HFL9XU8EAx9gO5h
+    Qa7CnJY+myoes+x90I7uKqfJdB1JDq2Bek6Jfj8stVd/YTtrOMt7WhHc6OW2S+qY
+    TpvtdeoVcJ2rKGFyo5/mj0aO+Hg1i6wxsIhDPKvSEqSqUrbjmLi5AfkCgYEAwS2V
+    IVzmMZIaRg0FxRccWl/XgpK9JNVjNr4PRiSkjsbFktVNLkbBcFOvrbmPPkBuHW8t
+    XDK6goRcNraxkkzB81mx0glW/zHfEQS4GWuQQEqIWwBfC9QEvC+AlGLaNhQYMleC
+    omLzTDTkBPtQSc72H0ov8TpowgeyM1+U2uozq0sCgYEAm+Szag64KzEcpQdAaDLW
+    OIoO04WBbvor+dfb8C0Bj+ouYJ0B/HOVLjN6GmRMoFJvt4/wnPvT2IPLAx3uWusu
+    1NKvsIW6KpYbgMc7fGCfH86NvYTB9nzv5VaH+f7JzphIx/d7dV9iT1WmD9b5nIU1
+    NEhNVIgkZOJCJuWHYex5vlkCgYAF4uqxapBFIGuWiN0NJWgixNrfSrNixPHSADac
+    747oHtx0XfWNHHDWiGZJB+d6gSIZ2YJrVcxjH79jl2uPxrD+RlRpzwkMm6ttbFRj
+    yehKXTsMctVymdJPHa9wVhbKIRCfsBT198fsIYx1LmdC6ICNcYhGdH4us2dVs2ro
+    xMwwQwKBgQDgNA9bGhiajsOI//M9ndH8KZCGdOoYM+6JBurHKX2fF8INRX+sxWix
+    DbUr9rQXkDrX1CY5RNs9kZpNxLJpOSHOpYlIytnGghYTrU1nzXoKLVopkO9Oz1A6
+    WzrOd297XdEoyEbAeCgcLr2WtjMiFHonesjeWIgbqXSKZ+W1oek0vQ==
+    -----END RSA PRIVATE KEY-----
+    Bag Attributes
+        localKeyID: 01 00 00 00
+        friendlyName: CCAPI Client Certificate
+    subject=/CN=Returned &#38; Services League of Australia (Queensland Branch) - Support/OU=IT/O=Returned &#38; Services League of Australia (Queensland Branch)/ST=NSW/C=AU/EMAILADDRESS=pp_support@qvalent.com
+    issuer=/CN=eQvalent/OU=Operations/O=QValent Pty Ltd/L=Wallsend/ST=NSW/C=AU
+    -----BEGIN CERTIFICATE-----
+    MIIE0DCCA7igAwIBAgIEWLX2pzANBgkqhkiG9w0BAQUFADBwMQswCQYDVQQGEwJB
+    VTEMMAoGA1UECBMDTlNXMREwDwYDVQQHEwhXYWxsc2VuZDEYMBYGA1UEChMPUVZh
+    bGVudCBQdHkgTHRkMRMwEQYDVQQLEwpPcGVyYXRpb25zMREwDwYDVQQDEwhlUXZh
+    bGVudDAeFw0xNzAyMjgyMjE2MDdaFw0xOTAyMjgyMjE2MDdaMIHtMSUwIwYJKoZI
+    hvcNAQkBFhZwcF9zdXBwb3J0QHF2YWxlbnQuY29tMQswCQYDVQQGEwJBVTEMMAoG
+    A1UECAwDTlNXMUgwRgYDVQQKDD9SZXR1cm5lZCAmIzM4OyBTZXJ2aWNlcyBMZWFn
+    dWUgb2YgQXVzdHJhbGlhIChRdWVlbnNsYW5kIEJyYW5jaCkxCzAJBgNVBAsMAklU
+    MVIwUAYDVQQDDElSZXR1cm5lZCAmIzM4OyBTZXJ2aWNlcyBMZWFndWUgb2YgQXVz
+    dHJhbGlhIChRdWVlbnNsYW5kIEJyYW5jaCkgLSBTdXBwb3J0MIIBIjANBgkqhkiG
+    9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtgPNEzLEFAm2CXCiaJeEFQxzkxXHn+Lyf65F
+    jTDIOMknXnmwgtoPTrFHtDVLJqWHaccLg9/lMKHivW1iGPTeZj4Uke07EcmIaDQD
+    3Gq33gukDbgxd5QDN+mEPRs0TF6FHlKKELKGIZdw4BlM+Jg7hebwZnBC/g9cetmB
+    3ny99g0e5ANkpPESguo+HTFk5vwHkLjMtDB+0zM5y6AyU6z+PaCDr3Q7+vcR50kQ
+    LNxpSWH1Il1gBewIHAroN4lJjPvKLnDWvK5SsxW9XB14gLAyQg6qCHDYOdTsdiG6
+    BFG1eijT+3W7iXm8uTDiXSj+PiADEeKvnbEsWqXu+DvUsR/m8wIDAQABo4HzMIHw
+    MBMGA1UdJQQMMAoGCCsGAQUFBwMCMB0GA1UdDgQWBBTujPN/magozRJ8XJxAVYPw
+    v5/HsDCBqQYDVR0jBIGhMIGegBQ2QKUf9O24xKZrWTyUqRmZeq04IqF0pHIwcDEL
+    MAkGA1UEBhMCQVUxDDAKBgNVBAgTA05TVzERMA8GA1UEBxMIV2FsbHNlbmQxGDAW
+    BgNVBAoTD1FWYWxlbnQgUHR5IEx0ZDETMBEGA1UECxMKT3BlcmF0aW9uczERMA8G
+    A1UEAxMIZVF2YWxlbnSCEG49SZXSVViNQE7XcOvVjwYwDgYDVR0PAQH/BAQDAgTw
+    MA0GCSqGSIb3DQEBBQUAA4IBAQCQwdv8D4B5sRnA9/ppDfwlix6omzh/SdA3SI4m
+    BNcImoqzBEq1OokdWKDkRQXlP6822aJn8fzDMV1/YsmomC4fT0wdag0DvBEvRlhy
+    roQRFjQai6CKRUgoH/p0q4EwxKLOa/H0kix+cn6Nszl07wu6YtHzvISXf4MC72au
+    /xTf/qwXI1uXnQghb4sFM9/ubYlsNEFiNHt7CHBK7ivhFGcT7eI9rmSOTMKsZfmV
+    pALJ58Ynz08xLYRMq54FxzwhN3CZ7AWRA+9JpzJacJ6lzHX9Y4FAjzRzoqn5h/IN
+    dgMIW+HoTgCe4+M1aDx2A0SKJCSK9tYZCYSsPMi9JXdLDU+k
+    -----END CERTIFICATE-----
+    Bag Attributes
+        localKeyID: 02 00 00 00
+    subject=/CN=eQvalent/OU=Operations/O=QValent Pty Ltd/L=Wallsend/ST=NSW/C=AU
+    issuer=/CN=eQvalent/OU=Operations/O=QValent Pty Ltd/L=Wallsend/ST=NSW/C=AU
+    -----BEGIN CERTIFICATE-----
+    MIIDuzCCAqOgAwIBAgIQbj1JldJVWI1ATtdw69WPBjANBgkqhkiG9w0BAQUFADBw
+    MQswCQYDVQQGEwJBVTEMMAoGA1UECBMDTlNXMREwDwYDVQQHEwhXYWxsc2VuZDEY
+    MBYGA1UEChMPUVZhbGVudCBQdHkgTHRkMRMwEQYDVQQLEwpPcGVyYXRpb25zMREw
+    DwYDVQQDEwhlUXZhbGVudDAeFw0xMDA0MDcwNTUyMThaFw0zMDA0MDcwNjAyMTda
+    MHAxCzAJBgNVBAYTAkFVMQwwCgYDVQQIEwNOU1cxETAPBgNVBAcTCFdhbGxzZW5k
+    MRgwFgYDVQQKEw9RVmFsZW50IFB0eSBMdGQxEzARBgNVBAsTCk9wZXJhdGlvbnMx
+    ETAPBgNVBAMTCGVRdmFsZW50MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKC
+    AQEAxKuwonFlg53dyb0zFyS0JPUbxKmHwBDZcTT78eV4hs9TveOR34yT9xv+y7R1
+    GbUdtXxidGaXW6lfkWvVnS1mkDbj84OY2FzRTHeKuNmkcPddQDUgE+gaOGV6GKW7
+    v/s5jMt6pz075teLKvNO2Gs2alpPl4NYU5zJfa+AGFzqE1z7Zxbl9N/Sc6Y8ZbWI
+    IGWKJFeaTic8tE05hIGuWw1KfxbhH0QMKnTSzW5fJi4Pce3iIftkCTjIXdTg+El8
+    9b+Jn5VMk+bQZQiusPbPbHZTvAADX/WCUuzAlFqyyNtutJmUlD/TiEB12YYp9R6U
+    1MGRvC9+c+sz2bBccW3c+Zm7cQIDAQABo1EwTzALBgNVHQ8EBAMCAYYwDwYDVR0T
+    AQH/BAUwAwEB/zAdBgNVHQ4EFgQUNkClH/TtuMSma1k8lKkZmXqtOCIwEAYJKwYB
+    BAGCNxUBBAMCAQAwDQYJKoZIhvcNAQEFBQADggEBAAJRMGZzxO3lcTXoFdmOpo8P
+    Ptf/agwrlGT8krwKcZt42YZ98VoIaCTI83kkACYlTlkTTNkDdHtAwF7ROteZmbfQ
+    5ky0nqZTpdQ2IPfGXpxcMIrGqrSJ6GbLTxrm0kXDH6TgYeY1dVTHtJD9wEgWwdI9
+    coRkKQVjK/QucPuVX0uoRppCz0rCiJfCQf2825BrcbaY4HyDHvNxRXKV9ECuYwrk
+    HYDy3bnYWVB2ekk8xOEiocjQI3T//V36ZfiGubKlUZ4xsSed410hkLtB6ttCyZB1
+    RFjxWKtn9pXbM1PLmUXCkKQnSJSeD1K0NjV+g8KFChTEgmhnLogyF/7YYw/amfc=
+    -----END CERTIFICATE-----
+
+rapyd:
+  access_key: SOMECREDENTIAL
+  secret_key: ANOTHERCREDENTIAL
 
 raven_pac_net:
   user: ernest
@@ -839,64 +1118,75 @@ realex:
   password: Y
 
 realex_mastercard:
-  number:
+  number: '5425230000004415'
   month: '6'
   year: '2020'
   verification_value: '123'
+  brand: 'master'
 
 realex_mastercard_coms_error:
-  number:
+  number: '5135020000005871'
   month: '6'
   year: '2020'
   verification_value: '123'
+  brand: 'master'
 
 realex_mastercard_declined:
-  number:
+  number: '5114610000004778'
   month: '6'
   year: '2020'
   verification_value: '123'
+  brand: 'master'
 
 realex_mastercard_referral_a:
-  number:
+  number: '5121220000006921'
   month: '6'
   year: '2020'
   verification_value: '123'
+  brand: 'master'
 
 realex_mastercard_referral_b:
-  number:
+  number: '5114630000009791'
   month: '6'
   year: '2020'
   verification_value: '123'
+  brand: 'master'
 
 # Realex doesn't provide public testing data
 # Fill in the card numbers with the Realex test
 # data.
 realex_visa:
-  number:
+  number: '4263970000005262'
   month: '6'
   year: '2020'
   verification_value: '123'
 
+realex_visa_3ds_enrolled:
+  number: '4012001037141112'
+  month: '9'
+  year: '2021'
+  verification_value: '123'
+
 realex_visa_coms_error:
-  number:
+  number: '4009830000001985'
   month: '6'
   year: '2020'
   verification_value: '123'
 
 realex_visa_declined:
-  number:
+  number: '4000120000001154'
   month: '6'
   year: '2020'
   verification_value: '123'
 
 realex_visa_referral_a:
-  number:
+  number: '4000160000004147'
   month: '6'
   year: '2020'
   verification_value: '123'
 
 realex_visa_referral_b:
-  number:
+  number: '4000130000001724'
   month: '6'
   year: '2020'
   verification_value: '123'
@@ -923,12 +1213,21 @@ s5:
   login: 8a82941847c4d0780147cea1d1730dcc
   password: n3yNMBGK
 
+# Working credentials, no need to replace
+safe_charge:
+  client_login_id: 'SpreedlyTestTRX'
+  client_password: '5Jp5xKmgqY'
+
+safe_charge_three_ds:
+  client_login_id: 'SpreedlyManTestTRX'
+  client_password: 'iGx9DQQHQG'
+
 sage:
   login: 214282982451
   password: 'Z5W2S8J7X8T5'
 
 sage_pay:
-  login: LOGIN
+  login: spreedly
 
 sallie_mae:
   login: TEST0
@@ -952,6 +1251,11 @@ secure_pay_tech:
 securion_pay:
   secret_key: pr_test_qZN4VVIKCySfCeXCBoHO9DBe
 
+# Working credentials, no need to replace
+simetrik:
+  client_id: 'wNhJBdrKDk3vTmkQMAWi5zWN7y21adO3'
+  client_secret: 'fq2riPpiDJaAwS4_UMAXZy1_nU1jNGz0F6gAFWOJFNmm_TfC8EFiHwMmGKAEDkwY' 
+
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:
   login: X
@@ -973,17 +1277,7 @@ stripe:
 
 # Working credentials, no need to replace
 stripe_destination:
-  stripe_user_id: "acct_17FRNfIPBJTitsen"
-
-# Used only for remote tests that use EMV credit card mocks
-stripe_emv_uk:
-  login:
-  fee_refund_login:
-
-# Used only for remote tests that use EMV credit card mocks
-stripe_emv_us:
-  login:
-  fee_refund_login:
+  stripe_user_id: "acct_1K5HlrPT5iqVqrJn"
 
 # Externally verified bank account for testing
 stripe_verified_bank_account:
@@ -1005,9 +1299,14 @@ tns:
   userid: TESTSPREEDLY01
   password: 3f34fe50334fbe6cbe04c283411a5860
 
+# This account seem to have expired
 tns_ap:
   userid: TESTUNISOLMAA01
   password: b7f8119fda3bd27c17656badb52c95bb
+
+tns_pay_mode:
+  userid: USERID
+  password: password
 
 trans_first:
   login: 45567
@@ -1033,9 +1332,14 @@ transax:
   password: nelix123
 
 # Working credentials, no need to replace
+trexle:
+  api_key: "J5RGMpDlFlTfv9mEFvNWYoqHufyukPP4"
+
+# Working credentials, no need to replace
 trust_commerce:
   login: 'TestMerchant'
   password: 'password'
+  aggregator_id: 'abc123'
 
 # Working credentials, no need to replace
 usa_epay:
@@ -1069,9 +1373,16 @@ viaklix:
 
 # test credentails
 visanet_peru:
-  access_key_id: "AKIAJPOQZ7BAXJZ5K35A"
-  secret_access_key: "Ur+U0pn1bkjRhPGz+G+OLNjqIi7OBlwkZ2eTHySG"
-  merchant_id: "101266802"
+  access_key_id: "AKIAJLJTVQYHO4P76YYA"
+  secret_access_key: "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"
+  merchant_id: "543025501"
+  ruc: '20341198217'
+
+vpos:
+  public_key: SOMECREDENTIAL
+  private_key: ANOTHERCREDENTIAL
+  commerce: 123
+  commerce_branch: 45
 
 webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
@@ -1094,14 +1405,22 @@ wirecard_checkout_page:
   shop_id: ''
   paymenttype: IDL
 
+wompi:
+  test_public_key: SOMECREDENTIAL
+  test_private_key: ANOTHERCREDENTIAL
+
 # Working credentials, no need to replace
 world_net:
   terminal_id: '6001'
   secret: 'sandboxEUR'
 
 world_pay_gateway:
-  login: LOGIN
-  password: PASSWORD
+  login: 'SPREEDLY'
+  password: 'KZ#P2aR+'
+
+world_pay_gateway_cft:
+  login: 'SPREEDLYCFT'
+  password: 'Xbf+6#pD'
 
 worldpay_online_payments:
   client_key: "T_C_b9f629e7-cea7-4edb-8206-24bbe351d699"

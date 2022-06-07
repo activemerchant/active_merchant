@@ -1,13 +1,13 @@
-require "test_helper"
+require 'test_helper'
 
 class CenposTest < Test::Unit::TestCase
   include CommStub
 
   def setup
     @gateway = CenposGateway.new(
-      :merchant_id => "merchant_id",
-      :password => "password",
-      :user_id => "user_id"
+      merchant_id: 'merchant_id',
+      password: 'password',
+      user_id: 'user_id'
     )
 
     @credit_card = credit_card
@@ -21,7 +21,7 @@ class CenposTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "1609995363|4242|1.00", response.authorization
+    assert_equal '1609995363|4242|1.00', response.authorization
     assert response.test?
   end
 
@@ -31,7 +31,7 @@ class CenposTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     cvv_result = response.cvv_result
-    assert_equal "M", cvv_result["code"]
+    assert_equal 'M', cvv_result['code']
   end
 
   def test_successful_purchase_avs_result
@@ -40,7 +40,7 @@ class CenposTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     avs_result = response.avs_result
-    assert_equal "D", avs_result["code"]
+    assert_equal 'D', avs_result['code']
   end
 
   def test_failed_purchase
@@ -49,7 +49,7 @@ class CenposTest < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
 
     assert_failure response
-    assert_equal "Decline transaction", response.message
+    assert_equal 'Decline transaction', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
     assert response.test?
   end
@@ -60,7 +60,7 @@ class CenposTest < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
 
     cvv_result = response.cvv_result
-    assert_equal nil, cvv_result["code"]
+    assert_equal nil, cvv_result['code']
   end
 
   def test_failed_purchase_avs_result
@@ -69,7 +69,7 @@ class CenposTest < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
 
     avs_result = response.avs_result
-    assert_equal nil, avs_result["code"]
+    assert_equal nil, avs_result['code']
   end
 
   def test_unmatched_cvv_result
@@ -78,7 +78,7 @@ class CenposTest < Test::Unit::TestCase
     end.respond_with(cvv_no_match_response)
 
     cvv_result = response.cvv_result
-    assert_equal "N", cvv_result["code"]
+    assert_equal 'N', cvv_result['code']
   end
 
   def test_avs_result_unmatched_zip
@@ -86,7 +86,7 @@ class CenposTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(avs_zip_no_match_response)
 
-    assert_equal "B", response.avs_result["code"]
+    assert_equal 'B', response.avs_result['code']
   end
 
   def test_avs_result_unmatched_address
@@ -94,7 +94,7 @@ class CenposTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(avs_billing_no_match_response)
 
-    assert_equal "P", response.avs_result["code"]
+    assert_equal 'P', response.avs_result['code']
   end
 
   def test_avs_result_unmatched_address_and_zip
@@ -102,7 +102,7 @@ class CenposTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(avs_billing_and_zip_no_match_response)
 
-    assert_equal "C", response.avs_result["code"]
+    assert_equal 'C', response.avs_result['code']
   end
 
   def test_successful_authorize_and_capture
@@ -111,11 +111,11 @@ class CenposTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "1760035844|4242|1.00", response.authorization
+    assert_equal '1760035844|4242|1.00', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1760035844/, data)
     end.respond_with(successful_capture_response)
 
@@ -128,14 +128,14 @@ class CenposTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal "Decline transaction", response.message
+    assert_equal 'Decline transaction', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
     assert response.test?
   end
 
   def test_failed_capture
     response = stub_comms do
-      @gateway.capture(100, "")
+      @gateway.capture(100, '')
     end.respond_with(failed_capture_response)
 
     assert_failure response
@@ -147,11 +147,11 @@ class CenposTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "1760035844|4242|1.00", response.authorization
+    assert_equal '1760035844|4242|1.00', response.authorization
 
     void = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1760035844/, data)
     end.respond_with(successful_void_response)
 
@@ -160,8 +160,8 @@ class CenposTest < Test::Unit::TestCase
 
   def test_failed_void
     response = stub_comms do
-      @gateway.void("1758584451|4242|1.00")
-    end.check_request do |endpoint, data, headers|
+      @gateway.void('1758584451|4242|1.00')
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1758584451/, data)
     end.respond_with(failed_void_response)
 
@@ -174,11 +174,11 @@ class CenposTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "1609995363|4242|1.00", response.authorization
+    assert_equal '1609995363|4242|1.00', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1609995363/, data)
     end.respond_with(successful_refund_response)
 
@@ -187,7 +187,7 @@ class CenposTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(nil, "")
+      @gateway.refund(nil, '')
     end.respond_with(failed_refund_response)
 
     assert_failure response
@@ -200,7 +200,7 @@ class CenposTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "1609996211|4242|1.00", response.authorization
+    assert_equal '1609996211|4242|1.00', response.authorization
     assert response.test?
   end
 
@@ -210,7 +210,7 @@ class CenposTest < Test::Unit::TestCase
     end.respond_with(failed_credit_response)
 
     assert_failure response
-    assert_equal "Invalid card number", response.message
+    assert_equal 'Invalid card number', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
     assert response.test?
   end
@@ -220,7 +220,7 @@ class CenposTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_verify
@@ -228,7 +228,7 @@ class CenposTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
-    assert_equal "Decline transaction", response.message
+    assert_equal 'Decline transaction', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
@@ -238,7 +238,7 @@ class CenposTest < Test::Unit::TestCase
     end.respond_with(empty_purchase_response)
 
     assert_failure response
-    assert_equal "Unable to read error message", response.message
+    assert_equal 'Unable to read error message', response.message
   end
 
   def test_transcript_scrubbing
@@ -306,7 +306,6 @@ class CenposTest < Test::Unit::TestCase
       <s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"><s:Body><s:Fault><faultcode xmlns:a=\"http://schemas.microsoft.com/net/2005/12/windowscommunicationfoundation/dispatcher\">a:DeserializationFailed</faultcode><faultstring xml:lang=\"en-US\">The formatter threw an exception while trying to deserialize the message: There was an error while trying to deserialize parameter http://tempuri.org/:request. The InnerException message was 'There was an error deserializing the object of type Acriter.ABI.CenPOS.Client.VirtualTerminal.v6.Common.Requests.ProcessCardRequest. The value '' cannot be parsed as the type 'decimal'.'.  Please see InnerException for more details.</faultstring><detail><ExceptionDetail xmlns=\"http://schemas.datacontract.org/2004/07/System.ServiceModel\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\"><HelpLink i:nil=\"true\"/><InnerException><HelpLink i:nil=\"true\"/><InnerException><HelpLink i:nil=\"true\"/><InnerException><HelpLink i:nil=\"true\"/><InnerException i:nil=\"true\"/><Message>Input string was not in a correct format.</Message><StackTrace>   at System.Number.StringToNumber(String str, NumberStyles options, NumberBuffer&amp; number, NumberFormatInfo info, Boolean parseDecimal)&#xD;\n   at System.Number.ParseDecimal(String value, NumberStyles options, NumberFormatInfo numfmt)&#xD;\n   at System.Xml.XmlConvert.ToDecimal(String s)&#xD;\n   at System.Xml.XmlConverter.ToDecimal(String value)</StackTrace><Type>System.FormatException</Type></InnerException><Message>The value '' cannot be parsed as the type 'decimal'.</Message><StackTrace>   at System.Xml.XmlConverter.ToDecimal(String value)&#xD;\n   at System.Xml.XmlDictionaryReader.ReadElementContentAsDecimal()&#xD;\n   at System.Runtime.Serialization.XmlReaderDelegator.ReadElementContentAsDecimal()&#xD;\n   at ReadProcessCardRequestFromXml(XmlReaderDelegator , XmlObjectSerializerReadContext , XmlDictionaryString[] , XmlDictionaryString[] )&#xD;\n   at System.Runtime.Serialization.ClassDataContract.ReadXmlValue(XmlReaderDelegator xmlReader, XmlObjectSerializerReadContext context)&#xD;
     )
   end
-
 
   def successful_credit_response
     %(

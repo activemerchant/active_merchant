@@ -9,27 +9,27 @@ module ActiveMerchant #:nodoc:
     # largely depends on the transaction acquiring bank. Be sure to understand how
     # your account was configured prior to using this gateway.
     class CulqiGateway < Gateway
-      self.display_name = "Culqi"
-      self.homepage_url = "https://www.culqi.com"
+      self.display_name = 'Culqi'
+      self.homepage_url = 'https://www.culqi.com'
 
-      self.test_url = "https://staging.paymentz.com/transaction/"
-      self.live_url = "https://secure.culqi.com/transaction/"
+      self.test_url = 'https://staging.paymentz.com/transaction/'
+      self.live_url = 'https://secure.culqi.com/transaction/'
 
-      self.supported_countries = ["PE"]
-      self.default_currency = "PEN"
+      self.supported_countries = ['PE']
+      self.default_currency = 'PEN'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :diners_club, :american_express]
+      self.supported_cardtypes = %i[visa master diners_club american_express]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :merchant_id, :terminal_id, :secret_key)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         authorize(amount, payment_method, options)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         if payment_method.is_a?(String)
           action = :tokenpay
         else
@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         action = :capture
         post = {}
         add_credentials(post)
@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         action = :void
         post = {}
         add_credentials(post)
@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         action = :refund
         post = {}
         add_credentials(post)
@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(1000, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -86,11 +86,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify_credentials
-        response = void("0", order_id: "0")
-        response.message.include? "Transaction not found"
+        response = void('0', order_id: '0')
+        response.message.include? 'Transaction not found'
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         action = :tokenize
         post = {}
         post[:partnerid] = options[:partner_id] if options[:partner_id]
@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def invalidate(authorization, options={})
+      def invalidate(authorization, options = {})
         action = :invalidate
         post = {}
         post[:partnerid] = options[:partner_id] if options[:partner_id]
@@ -173,22 +173,23 @@ module ActiveMerchant #:nodoc:
           post[:city] = billing_address[:city]
           post[:state] = billing_address[:state]
           post[:countrycode] = billing_address[:country]
-          post[:zip]    = billing_address[:zip]
+          post[:zip] = billing_address[:zip]
           post[:telno] = billing_address[:phone]
           post[:telnocc] = options[:telephone_country_code] || '051'
         end
       end
 
       def add_checksum(action, post)
-        checksum_elements = case action
-        when :capture;  [post[:toid], post[:trackingid], post[:captureamount], @options[:secret_key]]
-        when :void;     [post[:toid], post[:description], post[:trackingid], @options[:secret_key]]
-        when :refund;   [post[:toid], post[:trackingid], post[:refundamount], @options[:secret_key]]
-        when :tokenize; [post[:partnerid], post[:cardnumber], post[:cvv], @options[:secret_key]]
-        when :invalidate; [post[:partnerid], post[:token], @options[:secret_key]]
-        else [post[:toid], post[:totype], post[:amount], post[:description], post[:redirecturl],
-              post[:cardnumber] || post[:token], @options[:secret_key]]
-        end
+        checksum_elements =
+          case action
+          when :capture    then  [post[:toid], post[:trackingid], post[:captureamount], @options[:secret_key]]
+          when :void       then  [post[:toid], post[:description], post[:trackingid], @options[:secret_key]]
+          when :refund     then  [post[:toid], post[:trackingid], post[:refundamount], @options[:secret_key]]
+          when :tokenize   then [post[:partnerid], post[:cardnumber], post[:cvv], @options[:secret_key]]
+          when :invalidate then [post[:partnerid], post[:token], @options[:secret_key]]
+          else [post[:toid], post[:totype], post[:amount], post[:description], post[:redirecturl],
+                post[:cardnumber] || post[:token], @options[:secret_key]]
+          end
 
         post[:checksum] = Digest::MD5.hexdigest(checksum_elements.compact.join('|'))
       end
@@ -198,21 +199,22 @@ module ActiveMerchant #:nodoc:
       end
 
       ACTIONS = {
-        authorize: "SingleCallGenericServlet",
-        capture: "SingleCallGenericCaptureServlet",
-        void: "SingleCallGenericVoid",
-        refund: "SingleCallGenericReverse",
-        tokenize: "SingleCallTokenServlet",
-        invalidate: "SingleCallInvalidateToken",
-        tokenpay: "SingleCallTokenTransaction",
+        authorize: 'SingleCallGenericServlet',
+        capture: 'SingleCallGenericCaptureServlet',
+        void: 'SingleCallGenericVoid',
+        refund: 'SingleCallGenericReverse',
+        tokenize: 'SingleCallTokenServlet',
+        invalidate: 'SingleCallInvalidateToken',
+        tokenpay: 'SingleCallTokenTransaction'
       }
 
       def commit(action, params)
-        response = begin
-          parse(ssl_post(url + ACTIONS[action], post_data(action, params), headers))
-        rescue ResponseError => e
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_post(url + ACTIONS[action], post_data(action, params), headers))
+          rescue ResponseError => e
+            parse(e.response.body)
+          end
 
         success = success_from(response)
 
@@ -229,13 +231,13 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          "Accept"  => "application/json",
-          "Content-Type"  => "application/x-www-form-urlencoded;charset=UTF-8"
+          'Accept' => 'application/json',
+          'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8'
         }
       end
 
       def post_data(action, params)
-        params.map {|k, v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
+        params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def url
@@ -243,16 +245,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        begin
-          JSON.parse(body)
-        rescue JSON::ParserError
-          message = "Invalid JSON response received from CulqiGateway. Please contact CulqiGateway if you continue to receive this message."
-          message += "(The raw response returned by the API was #{body.inspect})"
-          {
-            "status" => "N",
-            "statusdescription" => message
-          }
-        end
+        JSON.parse(body)
+      rescue JSON::ParserError
+        message = 'Invalid JSON response received from CulqiGateway. Please contact CulqiGateway if you continue to receive this message.'
+        message += "(The raw response returned by the API was #{body.inspect})"
+        {
+          'status' => 'N',
+          'statusdescription' => message
+        }
       end
 
       def success_from(response)

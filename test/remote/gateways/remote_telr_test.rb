@@ -1,45 +1,45 @@
-require "test_helper"
+require 'test_helper'
 
 class RemoteTelrTest < Test::Unit::TestCase
   def setup
     @gateway = TelrGateway.new(fixtures(:telr))
 
     @amount = 100
-    @credit_card = credit_card("5105105105105100")
-    @declined_card = credit_card("5105105105105100", verification_value: "031")
+    @credit_card = credit_card('5105105105105100')
+    @declined_card = credit_card('5105105105105100', verification_value: '031')
 
     @options = {
       order_id: generate_unique_id,
       billing_address: address,
-      description: "Test transaction",
-      email: "email@address.com"
+      description: 'Test transaction',
+      email: 'email@address.com'
     }
   end
 
   def test_invalid_login
-    gateway = TelrGateway.new(merchant_id: "", api_key: "")
+    gateway = TelrGateway.new(merchant_id: '', api_key: '')
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Invalid request", response.message
+    assert_equal 'Invalid request', response.message
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_successful_purchase_sans_options
     response = @gateway.purchase(@amount, @credit_card)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "Not authorised", response.message
-    assert_equal "31", response.error_code
+    assert_equal 'Not authorised', response.message
+    assert_equal '31', response.error_code
   end
 
   def test_successful_reference_purchase
@@ -62,14 +62,14 @@ class RemoteTelrTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "Not authorised", response.message
+    assert_equal 'Not authorised', response.message
   end
 
   def test_failed_capture
-    response = @gateway.capture(@amount, "")
+    response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal "Invalid transaction reference", response.message
-    assert_equal "22", response.error_code
+    assert_equal 'Invalid transaction reference', response.message
+    assert_equal '22', response.error_code
   end
 
   def test_successful_void
@@ -77,14 +77,14 @@ class RemoteTelrTest < Test::Unit::TestCase
     assert_success response
     void = @gateway.void(response.authorization)
     assert_success void
-    assert_equal "Succeeded", void.message
+    assert_equal 'Succeeded', void.message
   end
 
   def test_failed_void
-    response = @gateway.void("")
+    response = @gateway.void('')
     assert_failure response
-    assert_equal "Transaction cost or currency not valid", response.message
-    assert_equal "05", response.error_code
+    assert_equal 'Transaction cost or currency not valid', response.message
+    assert_equal '05', response.error_code
   end
 
   def test_successful_refund
@@ -104,10 +104,10 @@ class RemoteTelrTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.refund(@amount, "0")
+    response = @gateway.refund(@amount, '0')
     assert_failure response
-    assert_equal "Invalid transaction reference", response.message
-    assert_equal "22", response.error_code
+    assert_equal 'Invalid transaction reference', response.message
+    assert_equal '22', response.error_code
   end
 
   def test_excess_refund
@@ -116,8 +116,8 @@ class RemoteTelrTest < Test::Unit::TestCase
 
     refund = @gateway.refund(200, response.authorization)
     assert_failure refund
-    assert_equal "Amount greater than available balance", refund.message
-    assert_equal "29", refund.error_code
+    assert_equal 'Amount greater than available balance', refund.message
+    assert_equal '29', refund.error_code
   end
 
   def test_successful_verify
@@ -129,8 +129,8 @@ class RemoteTelrTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal "Not authorised", response.message
-    assert_equal "31", response.error_code
+    assert_equal 'Not authorised', response.message
+    assert_equal '31', response.error_code
   end
 
   def test_verify_credentials
@@ -145,13 +145,13 @@ class RemoteTelrTest < Test::Unit::TestCase
   def test_cvv_result
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "M", response.cvv_result["code"]
+    assert_equal 'M', response.cvv_result['code']
   end
 
   def test_avs_result
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "I", response.avs_result["code"]
+    assert_equal 'I', response.avs_result['code']
   end
 
   def test_transcript_scrubbing

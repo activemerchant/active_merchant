@@ -35,10 +35,10 @@ module ActiveMerchant #:nodoc:
     #   :email => 'jack@yahoo.com'
     # )
     class PsigateGateway < Gateway
-      self.test_url  = 'https://dev.psigate.com:7989/Messenger/XMLMessenger'
-      self.live_url  = 'https://secure.psigate.com:17934/Messenger/XMLMessenger'
+      self.test_url  = 'https://realtimestaging.psigate.com/xml'
+      self.live_url  = 'https://realtime.psigate.com/xml'
 
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.supported_countries = ['CA']
       self.homepage_url = 'http://www.psigate.com/'
       self.display_name = 'Psigate'
@@ -53,18 +53,18 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options = {})
         requires!(options, :order_id)
-        options[:CardAction] = "1"
+        options[:CardAction] = '1'
         commit(money, creditcard, options)
       end
 
       def purchase(money, creditcard, options = {})
         requires!(options, :order_id)
-        options[:CardAction] = "0"
+        options[:CardAction] = '0'
         commit(money, creditcard, options)
       end
 
       def capture(money, authorization, options = {})
-        options[:CardAction] = "2"
+        options[:CardAction] = '2'
         options[:order_id], options[:trans_ref_number] = split_authorization(authorization)
         commit(money, nil, options)
       end
@@ -75,15 +75,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        options[:CardAction] = "3"
+        options[:CardAction] = '3'
         options[:order_id], options[:trans_ref_number] = split_authorization(authorization)
         commit(money, nil, options)
       end
 
       def void(authorization, options = {})
-        options[:CardAction] = "9"
+        options[:CardAction] = '9'
         options[:order_id], options[:trans_ref_number] = split_authorization(authorization)
         commit(nil, nil, options)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<Passphrase>)[^<]*(</Passphrase>))i, '\1[FILTERED]\2').
+          gsub(%r((<CardNumber>)[^<]*(</CardNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<CardIDNumber>)[^<]*(</CardIDNumber>))i, '\1[FILTERED]\2')
       end
 
       private
@@ -92,11 +103,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, post_data(money, creditcard, options)))
 
         Response.new(successful?(response), message_from(response), response,
-          :test => test?,
-          :authorization => build_authorization(response) ,
-          :avs_result => { :code => response[:avsresult] },
-          :cvv_result => response[:cardidresult]
-        )
+          test: test?,
+          authorization: build_authorization(response),
+          avs_result: { code: response[:avsresult] },
+          cvv_result: response[:cardidresult])
       end
 
       def url
@@ -104,11 +114,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def successful?(response)
-        response[:approved] == "APPROVED"
+        response[:approved] == 'APPROVED'
       end
 
       def parse(xml)
-        response = {:message => "Global Error Receipt", :complete => false}
+        response = { message: 'Global Error Receipt', complete: false }
 
         xml = REXML::Document.new(xml)
         xml.elements.each('//Result/*') do |node|
@@ -121,7 +131,7 @@ module ActiveMerchant #:nodoc:
       def post_data(money, creditcard, options)
         xml = REXML::Document.new
         xml << REXML::XMLDecl.new
-        root = xml.add_element("Order")
+        root = xml.add_element('Order')
 
         parameters(money, creditcard, options).each do |key, value|
           root.add_element(key.to_s).text = value if value
@@ -133,43 +143,43 @@ module ActiveMerchant #:nodoc:
       def parameters(money, creditcard, options = {})
         params = {
           # General order parameters
-          :StoreID => @options[:login],
-          :Passphrase => @options[:password],
-          :TestResult => options[:test_result],
-          :OrderID => options[:order_id],
-          :UserID => options[:user_id],
-          :Phone => options[:phone],
-          :Fax => options[:fax],
-          :Email => options[:email],
-          :TransRefNumber => options[:trans_ref_number],
+          StoreID: @options[:login],
+          Passphrase: @options[:password],
+          TestResult: options[:test_result],
+          OrderID: options[:order_id],
+          UserID: options[:user_id],
+          Phone: options[:phone],
+          Fax: options[:fax],
+          Email: options[:email],
+          TransRefNumber: options[:trans_ref_number],
 
           # Credit Card parameters
-          :PaymentType => "CC",
-          :CardAction => options[:CardAction],
+          PaymentType: 'CC',
+          CardAction: options[:CardAction],
 
           # Financial parameters
-          :CustomerIP => options[:ip],
-          :SubTotal => amount(money),
-          :Tax1 => options[:tax1],
-          :Tax2 => options[:tax2],
-          :ShippingTotal => options[:shipping_total],
+          CustomerIP: options[:ip],
+          SubTotal: amount(money),
+          Tax1: options[:tax1],
+          Tax2: options[:tax2],
+          ShippingTotal: options[:shipping_total]
         }
 
         if creditcard
-          exp_month = sprintf("%.2i", creditcard.month) unless creditcard.month.blank?
-          exp_year = creditcard.year.to_s[2,2] unless creditcard.year.blank?
-          card_id_code = (creditcard.verification_value.blank? ? nil : "1")
+          exp_month = sprintf('%.2i', creditcard.month) unless creditcard.month.blank?
+          exp_year = creditcard.year.to_s[2, 2] unless creditcard.year.blank?
+          card_id_code = (creditcard.verification_value.blank? ? nil : '1')
 
           params.update(
-            :CardNumber => creditcard.number,
-            :CardExpMonth => exp_month,
-            :CardExpYear => exp_year,
-            :CardIDCode => card_id_code,
-            :CardIDNumber => creditcard.verification_value
+            CardNumber: creditcard.number,
+            CardExpMonth: exp_month,
+            CardExpYear: exp_year,
+            CardIDCode: card_id_code,
+            CardIDNumber: creditcard.verification_value
           )
         end
 
-        if(address = (options[:billing_address] || options[:address]))
+        if (address = (options[:billing_address] || options[:address]))
           params[:Bname] = address[:name] || creditcard.name
           params[:Baddress1]    = address[:address1] unless address[:address1].blank?
           params[:Baddress2]    = address[:address2] unless address[:address2].blank?
@@ -195,11 +205,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if response[:approved] == "APPROVED"
+        if response[:approved] == 'APPROVED'
           return SUCCESS_MESSAGE
         else
           return FAILURE_MESSAGE if response[:errmsg].blank?
-          return response[:errmsg].gsub(/[^\w]/, ' ').split.join(" ").capitalize
+
+          return response[:errmsg].gsub(/[^\w]/, ' ').split.join(' ').capitalize
         end
       end
 
@@ -209,7 +220,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_authorization(response)
-        [response[:orderid], response[:transrefnumber]].join(";")
+        [response[:orderid], response[:transrefnumber]].join(';')
       end
     end
   end

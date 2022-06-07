@@ -1,24 +1,26 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SageGateway < Gateway
+      include Empty
+
       self.display_name = 'http://www.sagepayments.com'
       self.homepage_url = 'Sage Payment Solutions'
       self.live_url = 'https://www.sagepayments.net/cgi-bin'
 
-      self.supported_countries =  ['US', 'CA']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_countries = %w[US CA]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
 
       TRANSACTIONS = {
-        :purchase           => '01',
-        :authorization      => '02',
-        :capture            => '11',
-        :void               => '04',
-        :credit             => '06',
-        :refund             => '10'
+        purchase:       '01',
+        authorization:  '02',
+        capture:        '11',
+        void:           '04',
+        credit:         '06',
+        refund:         '10'
       }
 
-      SOURCE_CARD   = "bankcard"
-      SOURCE_ECHECK =  "virtual_check"
+      SOURCE_CARD   = 'bankcard'
+      SOURCE_ECHECK = 'virtual_check'
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -34,7 +36,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment_method, options = {})
         post = {}
-        if card_brand(payment_method) == "check"
+        if card_brand(payment_method) == 'check'
           source = SOURCE_ECHECK
           add_check(post, payment_method)
           add_check_customer_data(post, options)
@@ -57,13 +59,13 @@ module ActiveMerchant #:nodoc:
       def void(reference, options = {})
         post = {}
         add_reference(post, reference)
-        source = reference.split(";").last
+        source = reference.split(';').last
         commit(:void, post, source)
       end
 
       def credit(money, payment_method, options = {})
         post = {}
-        if card_brand(payment_method) == "check"
+        if card_brand(payment_method) == 'check'
           source = SOURCE_ECHECK
           add_check(post, payment_method)
           add_check_customer_data(post, options)
@@ -75,7 +77,7 @@ module ActiveMerchant #:nodoc:
         commit(:credit, post, source)
       end
 
-      def refund(money, reference, options={})
+      def refund(money, reference, options = {})
         post = {}
         add_reference(post, reference)
         add_transaction_data(post, money, options)
@@ -95,11 +97,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-         force_utf8(transcript).
+        force_utf8(transcript).
           gsub(%r((M_id=)[^&]*), '\1[FILTERED]').
           gsub(%r((M_key=)[^&]*), '\1[FILTERED]').
           gsub(%r((C_cardnumber=)[^&]*), '\1[FILTERED]').
           gsub(%r((C_cvv=)[^&]*), '\1[FILTERED]').
+          gsub(%r((C_rte=)[^&]*), '\1[FILTERED]').
+          gsub(%r((C_acct=)[^&]*), '\1[FILTERED]').
+          gsub(%r((C_ssn=)[^&]*), '\1[FILTERED]').
           gsub(%r((<ns1:CARDNUMBER>).+(</ns1:CARDNUMBER>)), '\1[FILTERED]\2').
           gsub(%r((<ns1:M_ID>).+(</ns1:M_ID>)), '\1[FILTERED]\2').
           gsub(%r((<ns1:M_KEY>).+(</ns1:M_KEY>)), '\1[FILTERED]\2')
@@ -110,8 +115,9 @@ module ActiveMerchant #:nodoc:
       # use the same method as in pay_conex
       def force_utf8(string)
         return nil unless string
-        binary = string.encode("BINARY", invalid: :replace, undef: :replace, replace: "?")   # Needed for Ruby 2.0 since #encode is a no-op if the string is already UTF-8. It's not needed for Ruby 2.1 and up since it's not a no-op there.
-        binary.encode("UTF-8", invalid: :replace, undef: :replace, replace: "?")
+
+        binary = string.encode('BINARY', invalid: :replace, undef: :replace, replace: '?') # Needed for Ruby 2.0 since #encode is a no-op if the string is already UTF-8. It's not needed for Ruby 2.1 and up since it's not a no-op there.
+        binary.encode('UTF-8', invalid: :replace, undef: :replace, replace: '?')
       end
 
       def add_credit_card(post, credit_card)
@@ -131,22 +137,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_check_customer_data(post, options)
-        # Required  Customer Type – (NACHA Transaction Class)
-        # CCD for Commercial, Merchant Initiated
-        # PPD for Personal, Merchant Initiated
-        # WEB for Internet, Consumer Initiated
-        # RCK for Returned Checks
-        # ARC for Account Receivable Entry
-        # TEL for TelephoneInitiated
-        post[:C_customer_type] = "WEB"
+        # Required  Customer Type – (NACHA Transaction Class)
+        # CCD for Commercial, Merchant Initiated
+        # PPD for Personal, Merchant Initiated
+        # WEB for Internet, Consumer Initiated
+        # RCK for Returned Checks
+        # ARC for Account Receivable Entry
+        # TEL for TelephoneInitiated
+        post[:C_customer_type] = 'WEB'
 
-        # Optional  10  Digit Originator  ID – Assigned  By for  each transaction  class  or  business  purpose. If  not provided, the default Originator ID for the specific  Customer Type will be applied.
+        # Optional  10  Digit Originator  ID – Assigned  By for  each transaction  class  or  business  purpose. If  not provided, the default Originator ID for the specific  Customer Type will be applied. 
         post[:C_originator_id] = options[:originator_id]
 
-        # Optional  Transaction Addenda
+        # Optional  Transaction Addenda
         post[:T_addenda] = options[:addenda]
 
-        # Required  Check  Writer  Social  Security  Number  (  Numbers Only, No Dashes )
+        # Required  Check  Writer  Social  Security  Number  (  Numbers Only, No Dashes ) 
         post[:C_ssn] = options[:ssn].to_s.gsub(/[^\d]/, '')
 
         post[:C_dl_state_code] = options[:drivers_license_state]
@@ -155,11 +161,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def format_birth_date(date)
-        date.respond_to?(:strftime) ? date.strftime("%m/%d/%Y") : date
+        date.respond_to?(:strftime) ? date.strftime('%m/%d/%Y') : date
       end
 
-      # DDA for Checking
-      # SAV for Savings
+      # DDA for Checking
+      # SAV for Savings 
       def account_type(check)
         case check.account_type
         when 'checking' then 'DDA'
@@ -174,9 +180,9 @@ module ActiveMerchant #:nodoc:
 
       def parse_check(data)
         response = {}
-        response[:success]          = data[1,1]
-        response[:code]             = data[2,6].strip
-        response[:message]          = data[8,32].strip
+        response[:success]          = data[1, 1]
+        response[:code]             = data[2, 6].strip
+        response[:message]          = data[8, 32].strip
         response[:risk]             = data[40, 2]
         response[:reference]        = data[42, 10]
 
@@ -189,9 +195,9 @@ module ActiveMerchant #:nodoc:
 
       def parse_credit_card(data)
         response = {}
-        response[:success]          = data[1,1]
-        response[:code]             = data[2,6]
-        response[:message]          = data[8,32].strip
+        response[:success]          = data[1, 1]
+        response[:code]             = data[2, 6]
+        response[:message]          = data[8, 32].strip
         response[:front_end]        = data[40, 2]
         response[:cvv_result]       = data[42, 1]
         response[:avs_result]       = data[43, 1].strip
@@ -204,12 +210,12 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:T_ordernum] = (options[:order_id] || generate_unique_id).slice(0, 20)
-        post[:T_tax] = amount(options[:tax]) unless options[:tax].blank?
-        post[:T_shipping] = amount(options[:shipping]) unless options[:shipping].blank?
+        post[:T_tax] = amount(options[:tax]) unless empty?(options[:tax])
+        post[:T_shipping] = amount(options[:shipping]) unless empty?(options[:shipping])
       end
 
       def add_reference(post, reference)
-        ref, _ = reference.to_s.split(";")
+        ref, = reference.to_s.split(';')
         post[:T_reference] = ref
       end
 
@@ -222,11 +228,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_addresses(post, options)
-        billing_address   = options[:billing_address] || options[:address] || {}
+        billing_address = options[:billing_address] || options[:address] || {}
 
         post[:C_address]    = billing_address[:address1]
         post[:C_city]       = billing_address[:city]
-        post[:C_state]      = billing_address[:state]
+        post[:C_state]      = empty?(billing_address[:state]) ? 'Outside of US' : billing_address[:state]
         post[:C_zip]        = billing_address[:zip]
         post[:C_country]    = billing_address[:country]
         post[:C_telephone]  = billing_address[:phone]
@@ -255,11 +261,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, post_data(action, params)), source)
 
         Response.new(success?(response), response[:message], response,
-          :test => test?,
-          :authorization => authorization_from(response, source),
-          :avs_result => { :code => response[:avs_result] },
-          :cvv_result => response[:cvv_result]
-        )
+          test: test?,
+          authorization: authorization_from(response, source),
+          avs_result: { code: response[:avs_result] },
+          cvv_result: response[:cvv_result])
       end
 
       def url(params, source)
@@ -283,7 +288,7 @@ module ActiveMerchant #:nodoc:
         params[:M_key] = @options[:password]
         params[:T_code] = TRANSACTIONS[action]
 
-        params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def vault
@@ -291,7 +296,6 @@ module ActiveMerchant #:nodoc:
       end
 
       class SageVault
-
         def initialize(options, gateway)
           @live_url = 'https://www.sagepayments.net/web_services/wsVault/wsVault.asmx'
           @options = options
@@ -352,16 +356,19 @@ module ActiveMerchant #:nodoc:
         end
 
         def exp_date(credit_card)
-          year  = sprintf("%.4i", credit_card.year)
-          month = sprintf("%.2i", credit_card.month)
+          year  = sprintf('%.4i', credit_card.year)
+          month = sprintf('%.2i', credit_card.month)
 
           "#{month}#{year[-2..-1]}"
         end
 
         def commit(action, request)
-          response = parse(@gateway.ssl_post(@live_url,
-            build_soap_request(action, request),
-            build_headers(action))
+          response = parse(
+            @gateway.ssl_post(
+              @live_url,
+              build_soap_request(action, request),
+              build_headers(action)
+            )
           )
 
           case action
@@ -374,13 +381,12 @@ module ActiveMerchant #:nodoc:
           end
 
           Response.new(success, message, response,
-            authorization: response[:guid]
-          )
+            authorization: response[:guid])
         end
 
         ENVELOPE_NAMESPACES = {
-          'xmlns:SOAP-ENV' => "http://schemas.xmlsoap.org/soap/envelope/",
-          'xmlns:ns1' => "https://www.sagepayments.net/web_services/wsVault/wsVault"
+          'xmlns:SOAP-ENV' => 'http://schemas.xmlsoap.org/soap/envelope/',
+          'xmlns:ns1' => 'https://www.sagepayments.net/web_services/wsVault/wsVault'
         }
 
         ACTION_ELEMENTS = {
@@ -410,8 +416,8 @@ module ActiveMerchant #:nodoc:
 
         def build_headers(action)
           {
-            "SOAPAction" => SOAP_ACTIONS[action],
-            "Content-Type" => "text/xml; charset=utf-8"
+            'SOAPAction' => SOAP_ACTIONS[action],
+            'Content-Type' => 'text/xml; charset=utf-8'
           }
         end
 
@@ -425,12 +431,12 @@ module ActiveMerchant #:nodoc:
           xml = REXML::Document.new(xml)
 
           # Store
-          xml.elements.each("//Table1/*") do |node|
+          xml.elements.each('//Table1/*') do |node|
             response[node.name.underscore.to_sym] = node.text
           end
 
           # Unstore
-          xml.elements.each("//DELETE_DATAResponse/*") do |node|
+          xml.elements.each('//DELETE_DATAResponse/*') do |node|
             response[node.name.underscore.to_sym] = node.text
           end
         end

@@ -7,15 +7,15 @@ module ActiveMerchant #:nodoc:
       AUTHORIZATION_EMV_SUCCESS = '8A023030'
       AUTHORIZATION_EMV_DECLINE = '8A023035'
 
-      SUCCESS_MESSAGE = "Bogus Gateway: Forced success"
-      FAILURE_MESSAGE = "Bogus Gateway: Forced failure"
-      NUMBER_ERROR_MESSAGE = "Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error"
-      AMOUNT_ERROR_MESSAGE = "Bogus Gateway: Use amount ending in 00 for success, 05 for failure and anything else for exception"
-      UNSTORE_ERROR_MESSAGE = "Bogus Gateway: Use trans_id ending in 1 for success, 2 for exception and anything else for error"
-      CAPTURE_ERROR_MESSAGE = "Bogus Gateway: Use authorization number ending in 1 for exception, 2 for error and anything else for success"
-      VOID_ERROR_MESSAGE = "Bogus Gateway: Use authorization number ending in 1 for exception, 2 for error and anything else for success"
-      REFUND_ERROR_MESSAGE = "Bogus Gateway: Use trans_id number ending in 1 for exception, 2 for error and anything else for success"
-      CHECK_ERROR_MESSAGE = "Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error"
+      SUCCESS_MESSAGE = 'Bogus Gateway: Forced success'
+      FAILURE_MESSAGE = 'Bogus Gateway: Forced failure'
+      NUMBER_ERROR_MESSAGE = 'Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error'
+      AMOUNT_ERROR_MESSAGE = 'Bogus Gateway: Use amount ending in 00 for success, 05 for failure and anything else for exception'
+      UNSTORE_ERROR_MESSAGE = 'Bogus Gateway: Use trans_id ending in 1 for success, 2 for exception and anything else for error'
+      CAPTURE_ERROR_MESSAGE = 'Bogus Gateway: Use authorization number ending in 1 for exception, 2 for error and anything else for success'
+      VOID_ERROR_MESSAGE = 'Bogus Gateway: Use authorization number ending in 1 for exception, 2 for error and anything else for success'
+      REFUND_ERROR_MESSAGE = 'Bogus Gateway: Use trans_id number ending in 1 for exception, 2 for error and anything else for success'
+      CHECK_ERROR_MESSAGE = 'Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error'
 
       self.supported_countries = []
       self.supported_cardtypes = [:bogus]
@@ -47,9 +47,9 @@ module ActiveMerchant #:nodoc:
         money = amount(money)
         case normalize(paysource)
         when /1$/
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true )
+          Response.new(true, SUCCESS_MESSAGE, { paid_amount: money }, test: true)
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
+          Response.new(false, FAILURE_MESSAGE, { paid_amount: money, error: FAILURE_MESSAGE }, test: true, error_code: STANDARD_ERROR_CODE[:processing_error])
         else
           raise Error, error_message(paysource)
         end
@@ -61,9 +61,9 @@ module ActiveMerchant #:nodoc:
         when /1$/
           raise Error, REFUND_ERROR_MESSAGE
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
+          Response.new(false, FAILURE_MESSAGE, { paid_amount: money, error: FAILURE_MESSAGE }, test: true, error_code: STANDARD_ERROR_CODE[:processing_error])
         else
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
+          Response.new(true, SUCCESS_MESSAGE, { paid_amount: money }, test: true)
         end
       end
 
@@ -73,9 +73,9 @@ module ActiveMerchant #:nodoc:
         when /1$/
           raise Error, CAPTURE_ERROR_MESSAGE
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
+          Response.new(false, FAILURE_MESSAGE, { paid_amount: money, error: FAILURE_MESSAGE }, test: true, error_code: STANDARD_ERROR_CODE[:processing_error])
         else
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
+          Response.new(true, SUCCESS_MESSAGE, { paid_amount: money }, test: true)
         end
       end
 
@@ -84,18 +84,18 @@ module ActiveMerchant #:nodoc:
         when /1$/
           raise Error, VOID_ERROR_MESSAGE
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:authorization => reference, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
+          Response.new(false, FAILURE_MESSAGE, { authorization: reference, error: FAILURE_MESSAGE }, test: true, error_code: STANDARD_ERROR_CODE[:processing_error])
         else
-          Response.new(true, SUCCESS_MESSAGE, {:authorization => reference}, :test => true)
+          Response.new(true, SUCCESS_MESSAGE, { authorization: reference }, test: true)
         end
       end
 
       def store(paysource, options = {})
         case normalize(paysource)
         when /1$/
-          Response.new(true, SUCCESS_MESSAGE, {:billingid => '1'}, :test => true, :authorization => AUTHORIZATION)
+          Response.new(true, SUCCESS_MESSAGE, { billingid: '1' }, test: true, authorization: AUTHORIZATION)
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:billingid => nil, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
+          Response.new(false, FAILURE_MESSAGE, { billingid: nil, error: FAILURE_MESSAGE }, test: true, error_code: STANDARD_ERROR_CODE[:processing_error])
         else
           raise Error, error_message(paysource)
         end
@@ -104,9 +104,9 @@ module ActiveMerchant #:nodoc:
       def unstore(reference, options = {})
         case reference
         when /1$/
-          Response.new(true, SUCCESS_MESSAGE, {}, :test => true)
+          Response.new(true, SUCCESS_MESSAGE, {}, test: true)
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:error => FAILURE_MESSAGE },:test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
+          Response.new(false, FAILURE_MESSAGE, { error: FAILURE_MESSAGE }, test: true, error_code: STANDARD_ERROR_CODE[:processing_error])
         else
           raise Error, UNSTORE_ERROR_MESSAGE
         end
@@ -118,9 +118,9 @@ module ActiveMerchant #:nodoc:
         money = amount(money)
         case money
         when /00$/
-          Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION, :emv_authorization => AUTHORIZATION_EMV_SUCCESS)
+          Response.new(true, SUCCESS_MESSAGE, { authorized_amount: money }, test: true, authorization: AUTHORIZATION, emv_authorization: AUTHORIZATION_EMV_SUCCESS)
         when /05$/
-          Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error], :emv_authorization => AUTHORIZATION_EMV_DECLINE)
+          Response.new(false, FAILURE_MESSAGE, { authorized_amount: money, error: FAILURE_MESSAGE }, test: true, error_code: STANDARD_ERROR_CODE[:processing_error], emv_authorization: AUTHORIZATION_EMV_DECLINE)
         else
           raise Error, error_message(paysource)
         end
@@ -129,10 +129,10 @@ module ActiveMerchant #:nodoc:
       def authorize_swipe(money, paysource, options = {})
         money = amount(money)
         case normalize(paysource)
-        when /1$/
-          Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
+        when /1$/, AUTHORIZATION
+          Response.new(true, SUCCESS_MESSAGE, { authorized_amount: money }, test: true, authorization: AUTHORIZATION)
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
+          Response.new(false, FAILURE_MESSAGE, { authorized_amount: money, error: FAILURE_MESSAGE }, test: true, error_code: STANDARD_ERROR_CODE[:processing_error])
         else
           raise Error, error_message(paysource)
         end
@@ -142,9 +142,9 @@ module ActiveMerchant #:nodoc:
         money = amount(money)
         case money
         when /00$/
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true, :authorization => AUTHORIZATION, :emv_authorization => AUTHORIZATION_EMV_SUCCESS)
+          Response.new(true, SUCCESS_MESSAGE, { paid_amount: money }, test: true, authorization: AUTHORIZATION, emv_authorization: AUTHORIZATION_EMV_SUCCESS)
         when /05$/
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error], :emv_authorization => AUTHORIZATION_EMV_DECLINE)
+          Response.new(false, FAILURE_MESSAGE, { paid_amount: money, error: FAILURE_MESSAGE }, test: true, error_code: STANDARD_ERROR_CODE[:processing_error], emv_authorization: AUTHORIZATION_EMV_DECLINE)
         else
           raise Error, error_message(paysource)
         end
@@ -154,9 +154,9 @@ module ActiveMerchant #:nodoc:
         money = amount(money)
         case normalize(paysource)
         when /1$/, AUTHORIZATION
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true, :authorization => AUTHORIZATION)
+          Response.new(true, SUCCESS_MESSAGE, { paid_amount: money }, test: true, authorization: AUTHORIZATION)
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
+          Response.new(false, FAILURE_MESSAGE, { paid_amount: money, error: FAILURE_MESSAGE }, test: true, error_code: STANDARD_ERROR_CODE[:processing_error])
         else
           raise Error, error_message(paysource)
         end

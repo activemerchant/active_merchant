@@ -24,7 +24,7 @@ class RemoteBankFrickTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_minimal_options
-    assert response = @gateway.purchase(@amount, @credit_card, {address: address})
+    assert response = @gateway.purchase(@amount, @credit_card, { address: address })
     assert_success response
     assert response.test?
     assert_match %r{Transaction succeeded}, response.message
@@ -63,7 +63,7 @@ class RemoteBankFrickTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -84,7 +84,7 @@ class RemoteBankFrickTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -123,7 +123,7 @@ class RemoteBankFrickTest < Test::Unit::TestCase
       sender: '',
       channel: '',
       userid: '',
-      userpwd: '',
+      userpwd: ''
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

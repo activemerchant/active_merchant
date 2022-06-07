@@ -5,12 +5,12 @@ class InspireTest < Test::Unit::TestCase
 
   def setup
     @gateway = InspireGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD'
+      login: 'LOGIN',
+      password: 'PASSWORD'
     )
     @credit_card = credit_card('4242424242424242')
     @amount = 100
-    @options = { :billing_address => address }
+    @options = { billing_address: address }
   end
 
   def test_successful_purchase
@@ -32,7 +32,7 @@ class InspireTest < Test::Unit::TestCase
 
   def test_successful_refund
     response = stub_comms do
-      @gateway.refund(nil, "identifier")
+      @gateway.refund(nil, 'identifier')
     end.check_request do |_, data, _|
       assert_match %r{identifier}, data
       assert_no_match %r{amount}, data
@@ -42,7 +42,7 @@ class InspireTest < Test::Unit::TestCase
 
   def test_partial_refund
     response = stub_comms do
-      @gateway.refund(100, "identifier")
+      @gateway.refund(100, 'identifier')
     end.check_request do |_, data, _|
       assert_match %r{identifier}, data
       assert_match %r{amount}, data
@@ -52,7 +52,7 @@ class InspireTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(nil, "identifier")
+      @gateway.refund(nil, 'identifier')
     end.respond_with(failed_refund_response)
     assert_failure response
   end
@@ -60,8 +60,8 @@ class InspireTest < Test::Unit::TestCase
   def test_add_address
     result = {}
 
-    @gateway.send(:add_address, result, nil, :billing_address => {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'} )
-    assert_equal ["address1", "city", "company", "country", "phone", "state", "zip"], result.stringify_keys.keys.sort
+    @gateway.send(:add_address, result, nil, billing_address: { address1: '164 Waverley Street', country: 'US', state: 'CO' })
+    assert_equal %w[address1 city company country phone state zip], result.stringify_keys.keys.sort
     assert_equal 'CO', result[:state]
     assert_equal '164 Waverley Street', result[:address1]
     assert_equal 'US', result[:country]
@@ -72,32 +72,32 @@ class InspireTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express], InspireGateway.supported_cardtypes
+    assert_equal %i[visa master american_express], InspireGateway.supported_cardtypes
   end
 
   def test_adding_store_adds_vault_id_flag
     result = {}
 
-    @gateway.send(:add_creditcard, result, @credit_card, :store => true)
-    assert_equal ["ccexp", "ccnumber", "customer_vault", "cvv", "firstname", "lastname"], result.stringify_keys.keys.sort
+    @gateway.send(:add_creditcard, result, @credit_card, store: true)
+    assert_equal %w[ccexp ccnumber customer_vault cvv firstname lastname], result.stringify_keys.keys.sort
     assert_equal 'add_customer', result[:customer_vault]
   end
 
   def test_blank_store_doesnt_add_vault_flag
     result = {}
 
-    @gateway.send(:add_creditcard, result, @credit_card, {} )
-    assert_equal ["ccexp", "ccnumber", "cvv", "firstname", "lastname"], result.stringify_keys.keys.sort
+    @gateway.send(:add_creditcard, result, @credit_card, {})
+    assert_equal %w[ccexp ccnumber cvv firstname lastname], result.stringify_keys.keys.sort
     assert_nil result[:customer_vault]
   end
 
   def test_accept_check
     post = {}
-    check = Check.new(:name => 'Fred Bloggs',
-                      :routing_number => '111000025',
-                      :account_number => '123456789012',
-                      :account_holder_type => 'personal',
-                      :account_type => 'checking')
+    check = Check.new(name: 'Fred Bloggs',
+                      routing_number: '111000025',
+                      account_number: '123456789012',
+                      account_holder_type: 'personal',
+                      account_type: 'checking')
     @gateway.send(:add_check, post, check)
     assert_equal %w[account_holder_type account_type checkaba checkaccount checkname payment], post.stringify_keys.keys.sort
   end
@@ -133,11 +133,10 @@ class InspireTest < Test::Unit::TestCase
   end
 
   def successful_refund_response
-    "response=1&responsetext=SUCCESS&authcode=&transactionid=2594884528&avsresponse=&cvvresponse=&orderid=&type=refund&response_code=100"
+    'response=1&responsetext=SUCCESS&authcode=&transactionid=2594884528&avsresponse=&cvvresponse=&orderid=&type=refund&response_code=100'
   end
 
   def failed_refund_response
-    "response=3&responsetext=Invalid Transaction ID specified REFID:3150951931&authcode=&transactionid=&avsresponse=&cvvresponse=&orderid=&type=refund&response_code=300"
+    'response=3&responsetext=Invalid Transaction ID specified REFID:3150951931&authcode=&transactionid=&avsresponse=&cvvresponse=&orderid=&type=refund&response_code=300'
   end
 end
-

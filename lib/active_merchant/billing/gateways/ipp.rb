@@ -1,4 +1,4 @@
-require "nokogiri"
+require 'nokogiri'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://demo.ippayments.com.au/interface/api/dts.asmx'
 
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       self.homepage_url = 'http://www.ippayments.com.au/'
       self.display_name = 'IPP'
@@ -15,23 +15,24 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
 
       STANDARD_ERROR_CODE_MAPPING = {
-        "05" => STANDARD_ERROR_CODE[:card_declined],
-        "06" => STANDARD_ERROR_CODE[:processing_error],
-        "14" => STANDARD_ERROR_CODE[:invalid_number],
-        "54" => STANDARD_ERROR_CODE[:expired_card],
+        '05' => STANDARD_ERROR_CODE[:card_declined],
+        '06' => STANDARD_ERROR_CODE[:processing_error],
+        '14' => STANDARD_ERROR_CODE[:invalid_number],
+        '54' => STANDARD_ERROR_CODE[:expired_card]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
+        ActiveMerchant.deprecated('IPP gateway is now named Bambora Asia-Pacific')
         requires!(options, :username, :password)
         super
       end
 
-      def purchase(money, payment, options={})
-        commit("SubmitSinglePayment") do |xml|
+      def purchase(money, payment, options = {})
+        commit('SubmitSinglePayment') do |xml|
           xml.Transaction do
             xml.CustRef options[:order_id]
             add_amount(xml, money)
-            xml.TrnType "1"
+            xml.TrnType '1'
             add_credit_card(xml, payment)
             add_credentials(xml)
             xml.TrnSource options[:ip]
@@ -39,12 +40,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorize(money, payment, options={})
-        commit("SubmitSinglePayment") do |xml|
+      def authorize(money, payment, options = {})
+        commit('SubmitSinglePayment') do |xml|
           xml.Transaction do
             xml.CustRef options[:order_id]
             add_amount(xml, money)
-            xml.TrnType "2"
+            xml.TrnType '2'
             add_credit_card(xml, payment)
             add_credentials(xml)
             xml.TrnSource options[:ip]
@@ -52,8 +53,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(money, authorization, options={})
-        commit("SubmitSingleCapture") do |xml|
+      def capture(money, authorization, options = {})
+        commit('SubmitSingleCapture') do |xml|
           xml.Capture do
             xml.Receipt authorization
             add_amount(xml, money)
@@ -62,8 +63,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund(money, authorization, options={})
-        commit("SubmitSingleRefund") do |xml|
+      def refund(money, authorization, options = {})
+        commit('SubmitSingleRefund') do |xml|
           xml.Refund do
             xml.Receipt authorization
             add_amount(xml, money)
@@ -97,7 +98,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(xml, payment)
-        xml.CreditCard :Registered => "False" do
+        xml.CreditCard Registered: 'False' do
           xml.CardNumber payment.number
           xml.ExpM format(payment.month, :two_digits)
           xml.ExpY format(payment.year, :four_digits)
@@ -119,8 +120,8 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, &block)
         headers = {
-          "Content-Type" => "text/xml; charset=utf-8",
-          "SOAPAction" => "http://www.ippayments.com.au/interface/api/dts/#{action}",
+          'Content-Type' => 'text/xml; charset=utf-8',
+          'SOAPAction' => "http://www.ippayments.com.au/interface/api/dts/#{action}"
         }
         response = parse(ssl_post(commit_url, new_submit_xml(action, &block), headers))
 
@@ -130,16 +131,16 @@ module ActiveMerchant #:nodoc:
           response,
           authorization: authorization_from(response),
           error_code: error_code_from(response),
-          test: test?,
+          test: test?
         )
       end
 
       def new_submit_xml(action)
         xml = Builder::XmlMarkup.new(indent: 2)
         xml.instruct!
-        xml.soap :Envelope, "xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance", "xmlns:xsd" => "http://www.w3.org/2001/XMLSchema", "xmlns:soap" => "http://schemas.xmlsoap.org/soap/envelope/" do
+        xml.soap :Envelope, 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema', 'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' do
           xml.soap :Body do
-            xml.__send__(action, "xmlns" => "http://www.ippayments.com.au/interface/api/dts") do
+            xml.__send__(action, 'xmlns' => 'http://www.ippayments.com.au/interface/api/dts') do
               xml.trnXML do
                 inner_xml = Builder::XmlMarkup.new(indent: 2)
                 yield(inner_xml)
@@ -156,7 +157,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        (response[:response_code] == "0")
+        (response[:response_code] == '0')
       end
 
       def error_code_from(response)

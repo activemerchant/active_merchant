@@ -6,18 +6,18 @@ class JetpayTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
 
-    @gateway = JetpayGateway.new(:login => 'login')
+    @gateway = JetpayGateway.new(login: 'login')
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :billing_address => address(:country => 'US'),
-      :shipping_address => address(:country => 'US'),
-      :email => 'test@test.com',
-      :ip => '127.0.0.1',
-      :order_id => '12345',
-      :tax => 7
+      billing_address: address(country: 'US'),
+      shipping_address: address(country: 'US'),
+      email: 'test@test.com',
+      ip: '127.0.0.1',
+      order_id: '12345',
+      tax: 7
     }
   end
 
@@ -28,7 +28,7 @@ class JetpayTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '8afa688fd002821362;TEST97;100;KKLIHOJKKNKKHJKONJHOLHOL', response.authorization
-    assert_equal('TEST97', response.params["approval"])
+    assert_equal('TEST97', response.params['approval'])
     assert response.test?
   end
 
@@ -48,18 +48,18 @@ class JetpayTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal('cbf902091334a0b1aa;TEST01;100;KKLIHOJKKNKKHJKONOHCLOIO', response.authorization)
-    assert_equal('TEST01', response.params["approval"])
+    assert_equal('TEST01', response.params['approval'])
     assert response.test?
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(1111, "010327153017T10018;502F7B;1111")
+    assert response = @gateway.capture(1111, '010327153017T10018;502F7B;1111')
     assert_success response
 
     assert_equal('010327153017T10018;502F6B;1111;', response.authorization)
-    assert_equal('502F6B', response.params["approval"])
+    assert_equal('502F6B', response.params['approval'])
     assert response.test?
   end
 
@@ -70,13 +70,13 @@ class JetpayTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal('010327153x17T10418;502F7B;500;', response.authorization)
-    assert_equal('502F7B', response.params["approval"])
+    assert_equal('502F7B', response.params['approval'])
     assert response.test?
   end
 
   def test_successful_credit
     # no need for csv
-    card = credit_card('4242424242424242', :verification_value => nil)
+    card = credit_card('4242424242424242', verification_value: nil)
 
     @gateway.expects(:ssl_post).returns(successful_credit_response)
 
@@ -137,12 +137,13 @@ class JetpayTest < Test::Unit::TestCase
   def test_purchase_sends_order_origin
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<Origin>RECURRING<\/Origin>/)).returns(successful_purchase_response)
 
-    @gateway.purchase(@amount, @credit_card, {:origin => 'RECURRING'})
+    @gateway.purchase(@amount, @credit_card, { origin: 'RECURRING' })
   end
 
   private
+
   def successful_purchase_response
-    <<-EOF
+    <<-XML
     <JetPayResponse>
       <TransactionID>8afa688fd002821362</TransactionID>
       <ActionCode>000</ActionCode>
@@ -154,21 +155,21 @@ class JetpayTest < Test::Unit::TestCase
       <ZipMatch>Y</ZipMatch>
       <AVS>Y</AVS>
     </JetPayResponse>
-    EOF
+    XML
   end
 
   def failed_purchase_response
-    <<-EOF
+    <<-XML
       <JetPayResponse>
         <TransactionID>7605f7c5d6e8f74deb</TransactionID>
         <ActionCode>005</ActionCode>
         <ResponseText>DECLINED</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def successful_authorize_response
-    <<-EOF
+    <<-XML
       <JetPayResponse>
         <TransactionID>cbf902091334a0b1aa</TransactionID>
         <ActionCode>000</ActionCode>
@@ -180,44 +181,44 @@ class JetpayTest < Test::Unit::TestCase
         <ZipMatch>Y</ZipMatch>
         <AVS>Y</AVS>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def successful_capture_response
-    <<-EOF
+    <<-XML
       <JetPayResponse>
         <TransactionID>010327153017T10018</TransactionID>
         <ActionCode>000</ActionCode>
         <Approval>502F6B</Approval>
         <ResponseText>APPROVED</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def successful_void_response
-    <<-EOF
+    <<-XML
       <JetPayResponse>
         <TransactionID>010327153x17T10418</TransactionID>
         <ActionCode>000</ActionCode>
         <Approval>502F7B</Approval>
         <ResponseText>VOID PROCESSED</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def successful_credit_response
-    <<-EOF
+    <<-XML
       <JetPayResponse>
         <TransactionID>010327153017T10017</TransactionID>
         <ActionCode>000</ActionCode>
         <Approval>002F6B</Approval>
         <ResponseText>APPROVED</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def transcript
-    <<-EOF
+    <<-XML
     <TerminalID>TESTTERMINAL</TerminalID>
     <TransactionType>SALE</TransactionType>
     <TransactionID>e23c963a1247fd7aad</TransactionID>
@@ -226,11 +227,11 @@ class JetpayTest < Test::Unit::TestCase
     <CardExpYear>16</CardExpYear>
     <CardName>Longbob Longsen</CardName>
     <CVV2>123</CVV2>
-    EOF
+    XML
   end
 
   def scrubbed_transcript
-    <<-EOF
+    <<-XML
     <TerminalID>TESTTERMINAL</TerminalID>
     <TransactionType>SALE</TransactionType>
     <TransactionID>e23c963a1247fd7aad</TransactionID>
@@ -239,6 +240,6 @@ class JetpayTest < Test::Unit::TestCase
     <CardExpYear>16</CardExpYear>
     <CardName>Longbob Longsen</CardName>
     <CVV2>[FILTERED]</CVV2>
-    EOF
+    XML
   end
 end

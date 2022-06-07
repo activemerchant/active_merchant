@@ -1,4 +1,5 @@
 # coding: utf-8
+
 require 'rexml/document'
 
 module ActiveMerchant #:nodoc:
@@ -119,29 +120,26 @@ module ActiveMerchant #:nodoc:
                       'KO' => 'N',
                       'NO' => 'R' }
 
-      SUCCESS_MESSAGE = "The transaction was successful"
+      SUCCESS_MESSAGE = 'The transaction was successful'
 
-      THREE_D_SECURE_DISPLAY_WAYS = { :main_window => 'MAINW',  # display the identification page in the main window
-                                                                # (default value).
-                                      :pop_up      => 'POPUP',  # display the identification page in a pop-up window
-                                                                # and return to the main window at the end.
-                                      :pop_ix      => 'POPIX' } # display the identification page in a pop-up window
-                                                                # and remain in the pop-up window.
+      THREE_D_SECURE_DISPLAY_WAYS = { main_window: 'MAINW', # display the identification page in the main window (default value).
 
-      OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE   = "Signature usage will be the default for a future release of ActiveMerchant. You should either begin using it, or update your configuration to explicitly disable it (signature_encryptor: none)"
+                                      pop_up: 'POPUP',  # display the identification page in a pop-up window and return to the main window at the end.
+                                      pop_ix: 'POPIX' } # display the identification page in a pop-up window and remain in the pop-up window.
+
+      OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE   = 'Signature usage will be the default for a future release of ActiveMerchant. You should either begin using it, or update your configuration to explicitly disable it (signature_encryptor: none)'
       OGONE_STORE_OPTION_DEPRECATION_MESSAGE   = "The 'store' option has been renamed to 'billing_id', and its usage is deprecated."
 
-      self.test_url = "https://secure.ogone.com/ncol/test/"
-      self.live_url = "https://secure.ogone.com/ncol/prod/"
+      self.test_url = 'https://secure.ogone.com/ncol/test/'
+      self.live_url = 'https://secure.ogone.com/ncol/prod/'
 
-      self.supported_countries = ['BE', 'DE', 'FR', 'NL', 'AT', 'CH']
+      self.supported_countries = %w[BE DE FR NL AT CH]
       # also supports Airplus and UATP
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro]
-      self.homepage_url = 'http://www.ogone.com/'
+      self.supported_cardtypes = %i[visa master american_express diners_club discover jcb maestro]
+      self.homepage_url = 'https://www.ingenico.com/login/ogone/'
       self.display_name = 'Ogone'
       self.default_currency = 'EUR'
       self.money_format = :cents
-      self.ssl_version = :TLSv1
 
       def initialize(options = {})
         requires!(options, :login, :user, :password)
@@ -151,7 +149,7 @@ module ActiveMerchant #:nodoc:
       # Verify and reserve the specified amount on the account, without actually doing the transaction.
       def authorize(money, payment_source, options = {})
         post = {}
-        action = (payment_source.brand == "mastercard") ? "PAU" : "RES"
+        action = payment_source.brand == 'mastercard' ? 'PAU' : 'RES'
         add_invoice(post, options)
         add_payment_source(post, payment_source, options)
         add_address(post, payment_source, options)
@@ -206,7 +204,7 @@ module ActiveMerchant #:nodoc:
         perform_reference_credit(money, reference, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -215,7 +213,7 @@ module ActiveMerchant #:nodoc:
 
       # Store a credit card by creating an Ogone Alias
       def store(payment_source, options = {})
-        options.merge!(:alias_operation => 'BYPSP') unless(options.has_key?(:billing_id) || options.has_key?(:store))
+        options[:alias_operation] = 'BYPSP' unless options.has_key?(:billing_id) || options.has_key?(:store)
         response = authorize(@options[:store_amount] || 1, payment_source, options)
         void(response.authorization) if response.success?
         response
@@ -227,21 +225,22 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-        gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-        gsub(%r((&?cardno=)[^&]*)i, '\1[FILTERED]').
-        gsub(%r((&?cvc=)[^&]*)i, '\1[FILTERED]').
-        gsub(%r((&?pswd=)[^&]*)i, '\1[FILTERED]')
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?cardno=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?cvc=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?pswd=)[^&]*)i, '\1[FILTERED]')
       end
 
       private
 
       def reference_from(authorization)
-        authorization.split(";").first
+        authorization.split(';').first
       end
 
       def reference_transaction?(identifier)
         return false unless identifier.is_a?(String)
-        _, action = identifier.split(";")
+
+        _, action = identifier.split(';')
         !action.nil?
       end
 
@@ -265,7 +264,6 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_source(post, payment_source, options)
         add_d3d(post, options) if options[:d3d]
-
         if payment_source.is_a?(String)
           add_alias(post, payment_source, options[:alias_operation])
           add_eci(post, options[:eci] || '9')
@@ -286,25 +284,54 @@ module ActiveMerchant #:nodoc:
           THREE_D_SECURE_DISPLAY_WAYS[options[:win_3ds]] :
           THREE_D_SECURE_DISPLAY_WAYS[:main_window]
         add_pair post, 'WIN3DS', win_3ds
-
-        add_pair post, 'HTTP_ACCEPT',     options[:http_accept] || "*/*"
         add_pair post, 'HTTP_USER_AGENT', options[:http_user_agent] if options[:http_user_agent]
         add_pair post, 'ACCEPTURL',       options[:accept_url]      if options[:accept_url]
         add_pair post, 'DECLINEURL',      options[:decline_url]     if options[:decline_url]
         add_pair post, 'EXCEPTIONURL',    options[:exception_url]   if options[:exception_url]
         add_pair post, 'CANCELURL',       options[:cancel_url]      if options[:cancel_url]
-        add_pair post, 'PARAMVAR',        options[:paramvar]       if options[:paramvar]
+        add_pair post, 'PARAMVAR',        options[:paramvar]        if options[:paramvar]
         add_pair post, 'PARAMPLUS',       options[:paramplus]       if options[:paramplus]
         add_pair post, 'COMPLUS',         options[:complus]         if options[:complus]
         add_pair post, 'LANGUAGE',        options[:language]        if options[:language]
+        if  options[:three_ds_2]
+          browser_info = options[:three_ds_2][:browser_info]
+          ecom_postal = options[:billing_address]
+          if browser_info
+            add_pair post, 'BROWSERACCEPTHEADER', browser_info[:accept_header]
+            add_pair post, 'BROWSERCOLORDEPTH', browser_info[:depth]
+
+            # for 3ds v2.1 to v2.2 add BROWSERJAVASCRIPTENABLED: This boolean indicates whether your customers have enabled JavaScript in their browsers when making a purchase.
+            # the following BROWSER<tag> parameters will remain mandatory unless browser_info[:javascript] = false
+            # her documentation https://epayments-support.ingenico.com/en/integration-solutions/integrations/directlink#directlink_integration_guides_secure_payment_with_3_d_secure
+            add_pair post, 'BROWSERJAVASCRIPTENABLED', browser_info[:javascript]
+            add_pair post, 'BROWSERJAVAENABLED', browser_info[:java]
+            add_pair post, 'BROWSERLANGUAGE', browser_info[:language]
+            add_pair post, 'BROWSERSCREENHEIGHT', browser_info[:height]
+            add_pair post, 'BROWSERSCREENWIDTH', browser_info[:width]
+            add_pair post, 'BROWSERTIMEZONE', browser_info[:timezone]
+            add_pair post, 'BROWSERUSERAGENT', browser_info[:user_agent]
+          end
+          # recommended
+          if ecom_postal
+            add_pair post, 'ECOM_BILLTO_POSTAL_CITY', ecom_postal[:city]
+            add_pair post, 'ECOM_BILLTO_POSTAL_COUNTRYCODE', ecom_postal[:country]
+            add_pair post, 'ECOM_BILLTO_POSTAL_STREET_LINE1', ecom_postal[:address1]
+            add_pair post, 'ECOM_BILLTO_POSTAL_STREET_LINE2', ecom_postal[:address2]
+            add_pair post, 'ECOM_BILLTO_POSTAL_POSTALCODE', ecom_postal[:zip]
+          end
+          # optional
+          add_pair post, 'Mpi.threeDSRequestorChallengeIndicator', options[:three_ds_reqchallengeind]
+        else
+          add_pair post, 'HTTP_ACCEPT', options[:http_accept] || '*/*'
+        end
       end
 
       def add_eci(post, eci)
         add_pair post, 'ECI', eci.to_s
       end
 
-      def add_alias(post, _alias, alias_operation = nil)
-        add_pair post, 'ALIAS', _alias
+      def add_alias(post, alias_name, alias_operation = nil)
+        add_pair post, 'ALIAS', alias_name
         add_pair post, 'ALIASOPERATION', alias_operation unless alias_operation.nil?
       end
 
@@ -324,6 +351,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, creditcard, options)
         return unless options[:billing_address]
+
         add_pair post, 'Owneraddress', options[:billing_address][:address1]
         add_pair post, 'OwnerZip',     options[:billing_address][:zip]
         add_pair post, 'ownertown',    options[:billing_address][:city]
@@ -334,12 +362,13 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, options)
         add_pair post, 'orderID', options[:order_id] || generate_unique_id[0...30]
         add_pair post, 'COM',     options[:description]
+        add_pair post, 'ORIG',    options[:origin] if options[:origin]
       end
 
       def add_creditcard(post, creditcard)
         add_pair post, 'CN',     creditcard.name
         add_pair post, 'CARDNO', creditcard.number
-        add_pair post, 'ED',     "%02d%02s" % [creditcard.month, creditcard.year.to_s[-2..-1]]
+        add_pair post, 'ED',     '%02d%02s' % [creditcard.month, creditcard.year.to_s[-2..-1]]
         add_pair post, 'CVC',    creditcard.verification_value
       end
 
@@ -349,8 +378,8 @@ module ActiveMerchant #:nodoc:
 
         # Add HTML_ANSWER element (3-D Secure specific to the response's params)
         # Note: HTML_ANSWER is not an attribute so we add it "by hand" to the response
-        if html_answer = REXML::XPath.first(xml_root, "//HTML_ANSWER")
-          response["HTML_ANSWER"] = html_answer.text
+        if html_answer = REXML::XPath.first(xml_root, '//HTML_ANSWER')
+          response['HTML_ANSWER'] = html_answer.text
         end
 
         response
@@ -365,27 +394,27 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url(parameters['PAYID']), post_data(action, parameters)))
 
         options = {
-          :authorization => [response["PAYID"], action].join(";"),
-          :test          => test?,
-          :avs_result    => { :code => AVS_MAPPING[response["AAVCheck"]] },
-          :cvv_result    => CVV_MAPPING[response["CVCCheck"]]
+          authorization: [response['PAYID'], action].join(';'),
+          test: test?,
+          avs_result: { code: AVS_MAPPING[response['AAVCheck']] },
+          cvv_result: CVV_MAPPING[response['CVCCheck']]
         }
         OgoneResponse.new(successful?(response), message_from(response), response, options)
       end
 
       def url(payid)
-        (test? ? test_url : live_url) + (payid ? "maintenancedirect.asp" : "orderdirect.asp")
+        (test? ? test_url : live_url) + (payid ? 'maintenancedirect.asp' : 'orderdirect.asp')
       end
 
       def successful?(response)
-        response["NCERROR"] == "0"
+        response['NCERROR'] == '0'
       end
 
       def message_from(response)
         if successful?(response)
           SUCCESS_MESSAGE
         else
-          format_error_message(response["NCERRORPLUS"])
+          format_error_message(response['NCERRORPLUS'])
         end
       end
 
@@ -393,9 +422,9 @@ module ActiveMerchant #:nodoc:
         raw_message = message.to_s.strip
         case raw_message
         when /\|/
-          raw_message.split("|").join(", ").capitalize
+          raw_message.split('|').join(', ').capitalize
         when /\//
-          raw_message.split("/").first.to_s.capitalize
+          raw_message.split('/').first.to_s.capitalize
         else
           raw_message.to_s.capitalize
         end
@@ -409,30 +438,31 @@ module ActiveMerchant #:nodoc:
 
       def add_signature(parameters)
         if @options[:signature].blank?
-           ActiveMerchant.deprecated(OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE) unless(@options[:signature_encryptor] == "none")
-           return
+          ActiveMerchant.deprecated(OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE) unless @options[:signature_encryptor] == 'none'
+          return
         end
 
-        add_pair parameters, 'SHASign', calculate_signature(parameters, @options[:signature_encryptor], @options[:signature])
+        add_pair parameters, 'SHASIGN', calculate_signature(parameters, @options[:signature_encryptor], @options[:signature])
       end
 
       def calculate_signature(signed_parameters, algorithm, secret)
         return legacy_calculate_signature(signed_parameters, secret) unless algorithm
 
-        sha_encryptor = case algorithm
-        when 'sha256'
-          Digest::SHA256
-        when 'sha512'
-          Digest::SHA512
-        when 'sha1'
-          Digest::SHA1
-        else
-          raise "Unknown signature algorithm #{algorithm}"
-        end
+        sha_encryptor =
+          case algorithm
+          when 'sha256'
+            Digest::SHA256
+          when 'sha512'
+            Digest::SHA512
+          when 'sha1'
+            Digest::SHA1
+          else
+            raise "Unknown signature algorithm #{algorithm}"
+          end
 
-        filtered_params = signed_parameters.select{|k,v| !v.blank?}
+        filtered_params = signed_parameters.compact
         sha_encryptor.hexdigest(
-          filtered_params.sort_by{|k,v| k.upcase}.map{|k, v| "#{k.upcase}=#{v}#{secret}"}.join("")
+          filtered_params.sort_by { |k, _v| k.upcase }.map { |k, v| "#{k.upcase}=#{v}#{secret}" }.join('')
         ).upcase
       end
 
@@ -447,14 +477,14 @@ module ActiveMerchant #:nodoc:
               PSPID
               Operation
               ALIAS
-            ).map{|key| parameters[key]} +
+            ).map { |key| parameters[key] } +
             [secret]
-          ).join("")
+          ).join('')
         ).upcase
       end
 
       def add_pair(post, key, value)
-        post[key] = value if !value.blank?
+        post[key] = value unless value.nil?
       end
 
       def convert_attributes_to_hash(rexml_attributes)

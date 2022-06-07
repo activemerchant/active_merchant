@@ -97,23 +97,23 @@ module ActiveMerchant #:nodoc:
     # See example use above for address AVS fields
     # See #recurring for periodic transaction fields
     class PayJunctionGateway < Gateway
-      API_VERSION   = '1.2'
+      API_VERSION = '1.2'
 
       class_attribute :test_url, :live_url
 
-      self.test_url = "https://www.payjunctionlabs.com/quick_link"
-      self.live_url = "https://payjunction.com/quick_link"
+      self.test_url = 'https://www.payjunctionlabs.com/quick_link'
+      self.live_url = 'https://payjunction.com/quick_link'
 
       TEST_LOGIN = 'pj-ql-01'
       TEST_PASSWORD = 'pj-ql-01p'
 
-      SUCCESS_CODES = ["00", "85"]
+      SUCCESS_CODES = %w[00 85]
       SUCCESS_MESSAGE = 'The transaction was approved.'
 
       FAILURE_MESSAGE = 'The transaction was declined.'
 
       DECLINE_CODES = {
-        "AE"  => 'Address verification failed because address did not match.',
+        'AE'  => 'Address verification failed because address did not match.',
         'ZE'  => 'Address verification failed because zip did not match.',
         'XE'  => 'Address verification failed because zip and address did not match.',
         'YE'  => 'Address verification failed because zip and address did not match.',
@@ -144,13 +144,13 @@ module ActiveMerchant #:nodoc:
         '96'  => 'Declined because of a system error.',
         'N7'  => 'Declined because of a CVV2/CVC2 mismatch.',
         'M4'  => 'Declined.',
-        "FE"  => "There was a format error with your Trinity Gateway Service (API) request.",
-        "LE"  => "Could not log you in (problem with dc_logon and/or dc_password).",
+        'FE'  => 'There was a format error with your Trinity Gateway Service (API) request.',
+        'LE'  => 'Could not log you in (problem with dc_logon and/or dc_password).',
         'NL'  => 'Aborted because of a system error, please try again later. ',
         'AB'  => 'Aborted because of an upstream system error, please try again later.'
       }
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.supported_countries = ['US']
       self.homepage_url = 'http://www.payjunction.com/'
       self.display_name = 'PayJunction'
@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
       # transaction_id that can be used later to postauthorize (capture) the funds.
       def authorize(money, payment_source, options = {})
         parameters = {
-          :transaction_amount => amount(money),
+          transaction_amount: amount(money)
         }
 
         add_payment_source(parameters, payment_source)
@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
       # Execute authorization and capture in a single step.
       def purchase(money, payment_source, options = {})
         parameters = {
-          :transaction_amount => amount(money),
+          transaction_amount: amount(money)
         }
 
         add_payment_source(parameters, payment_source)
@@ -191,8 +191,8 @@ module ActiveMerchant #:nodoc:
       # Retrieve funds that have been previously authorized with _authorization_
       def capture(money, authorization, options = {})
         parameters = {
-          :transaction_id => authorization,
-          :posture => 'capture'
+          transaction_id: authorization,
+          posture: 'capture'
         }
 
         add_optional_fields(parameters, options)
@@ -203,8 +203,8 @@ module ActiveMerchant #:nodoc:
       # _authorization_ should be the transaction id of the transaction we are returning.
       def refund(money, authorization, options = {})
         parameters = {
-          :transaction_amount => amount(money),
-          :transaction_id => authorization
+          transaction_amount: amount(money),
+          transaction_id: authorization
         }
 
         commit('CREDIT', parameters)
@@ -219,8 +219,8 @@ module ActiveMerchant #:nodoc:
       # through the batch process.
       def void(authorization, options = {})
         parameters = {
-          :transaction_id => authorization,
-          :posture => 'void'
+          transaction_id: authorization,
+          posture: 'void'
         }
 
         add_optional_fields(parameters, options)
@@ -241,16 +241,17 @@ module ActiveMerchant #:nodoc:
       def recurring(money, payment_source, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        requires!(options, [:periodicity, :monthly, :weekly, :daily], :payments)
+        requires!(options, %i[periodicity monthly weekly daily], :payments)
 
-        periodic_type = case options[:periodicity]
-        when :monthly
-          'month'
-        when :weekly
-          'week'
-        when :daily
-          'day'
-        end
+        periodic_type =
+          case options[:periodicity]
+          when :monthly
+            'month'
+          when :weekly
+            'week'
+          when :daily
+            'day'
+          end
 
         if options[:starting_at].nil?
           start_date = Time.now.strftime('%Y-%m-%d')
@@ -262,12 +263,12 @@ module ActiveMerchant #:nodoc:
         end
 
         parameters = {
-          :transaction_amount => amount(money),
-          :schedule_periodic_type => periodic_type,
-          :schedule_create => 'true',
-          :schedule_limit => options[:payments].to_i > 1 ? options[:payments] : 1,
-          :schedule_periodic_number => 1,
-          :schedule_start => start_date
+          transaction_amount: amount(money),
+          schedule_periodic_type: periodic_type,
+          schedule_create: 'true',
+          schedule_limit: options[:payments].to_i > 1 ? options[:payments] : 1,
+          schedule_periodic_number: 1,
+          schedule_start: start_date
         }
 
         add_payment_source(parameters, payment_source)
@@ -318,7 +319,7 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address] || options[:address]
 
         if address
-          params[:address]  = address[:address1] unless address[:address1].blank?
+          params[:address]   = address[:address1] unless address[:address1].blank?
           params[:city]      = address[:city]     unless address[:city].blank?
           params[:state]     = address[:state]    unless address[:state].blank?
           params[:zipcode]   = address[:zip]      unless address[:zip].blank?
@@ -334,12 +335,11 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters)
         url = test? ? self.test_url : self.live_url
 
-        response = parse( ssl_post(url, post_data(action, parameters)) )
+        response = parse(ssl_post(url, post_data(action, parameters)))
 
         Response.new(successful?(response), message_from(response), response,
-          :test => test?,
-          :authorization => response[:transaction_id] || parameters[:transaction_id]
-        )
+          test: test?,
+          authorization: response[:transaction_id] || parameters[:transaction_id])
       end
 
       def successful?(response)
@@ -366,7 +366,7 @@ module ActiveMerchant #:nodoc:
         params[:version] = API_VERSION
         params[:transaction_type] = action
 
-        params.reject{|k,v| v.blank?}.collect{ |k, v| "dc_#{k.to_s}=#{CGI.escape(v.to_s)}" }.join("&")
+        params.reject { |_k, v| v.blank? }.collect { |k, v| "dc_#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def parse(body)

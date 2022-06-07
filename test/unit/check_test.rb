@@ -4,6 +4,9 @@ class CheckTest < Test::Unit::TestCase
   VALID_ABA     = '111000025'
   INVALID_ABA   = '999999999'
   MALFORMED_ABA = 'I like fish'
+  VALID_CBA = '000194611'
+  INVALID_NINE_DIGIT_CBA = '012345678'
+  INVALID_SEVEN_DIGIT_ROUTING_NUMBER = '0123456'
 
   ACCOUNT_NUMBER = '123456789012'
 
@@ -12,26 +15,26 @@ class CheckTest < Test::Unit::TestCase
   end
 
   def test_first_name_last_name
-    check = Check.new(:name => 'Fred Bloggs')
+    check = Check.new(name: 'Fred Bloggs')
     assert_equal 'Fred', check.first_name
     assert_equal 'Bloggs', check.last_name
     assert_equal 'Fred Bloggs', check.name
   end
 
   def test_nil_name
-    check = Check.new(:name => nil)
+    check = Check.new(name: nil)
     assert_nil check.first_name
     assert_nil check.last_name
-    assert_equal "", check.name
+    assert_equal '', check.name
   end
 
   def test_valid
     assert_valid Check.new(
-      :name => 'Fred Bloggs',
-      :routing_number => VALID_ABA,
-      :account_number => ACCOUNT_NUMBER,
-      :account_holder_type => 'personal',
-      :account_type => 'checking'
+      name: 'Fred Bloggs',
+      routing_number: VALID_ABA,
+      account_number: ACCOUNT_NUMBER,
+      account_holder_type: 'personal',
+      account_type: 'checking'
     )
   end
 
@@ -40,13 +43,13 @@ class CheckTest < Test::Unit::TestCase
   end
 
   def test_invalid_routing_number
-    errors = assert_not_valid Check.new(:routing_number => INVALID_ABA)
-    assert_equal ["is invalid"], errors[:routing_number]
+    errors = assert_not_valid Check.new(routing_number: INVALID_ABA)
+    assert_equal ['is invalid'], errors[:routing_number]
   end
 
   def test_malformed_routing_number
-    errors = assert_not_valid Check.new(:routing_number => MALFORMED_ABA)
-    assert_equal ["is invalid"], errors[:routing_number]
+    errors = assert_not_valid Check.new(routing_number: MALFORMED_ABA)
+    assert_equal ['is invalid'], errors[:routing_number]
   end
 
   def test_account_holder_type
@@ -73,9 +76,43 @@ class CheckTest < Test::Unit::TestCase
     assert !c.validate[:account_type]
 
     c.account_type = 'moo'
-    assert_equal ["must be checking or savings"], c.validate[:account_type]
+    assert_equal ['must be checking or savings'], c.validate[:account_type]
 
     c.account_type = nil
     assert !c.validate[:account_type]
+  end
+
+  def test_valid_canada_routing_number
+    assert_valid Check.new(
+      name: 'Tim Horton',
+      routing_number: VALID_CBA,
+      account_number: ACCOUNT_NUMBER,
+      account_holder_type: 'personal',
+      account_type: 'checking'
+    )
+  end
+
+  def test_invalid_canada_routing_number
+    errors = assert_not_valid Check.new(
+      name: 'Tim Horton',
+      routing_number: INVALID_NINE_DIGIT_CBA,
+      account_number: ACCOUNT_NUMBER,
+      account_holder_type: 'personal',
+      account_type: 'checking'
+    )
+
+    assert_equal ['is invalid'], errors[:routing_number]
+  end
+
+  def test_invalid_routing_number_length
+    errors = assert_not_valid Check.new(
+      name: 'Routing Shortlength',
+      routing_number: INVALID_SEVEN_DIGIT_ROUTING_NUMBER,
+      account_number: ACCOUNT_NUMBER,
+      account_holder_type: 'personal',
+      account_type: 'checking'
+    )
+
+    assert_equal ['is invalid'], errors[:routing_number]
   end
 end

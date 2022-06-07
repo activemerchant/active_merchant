@@ -3,40 +3,35 @@ module ActiveMerchant #:nodoc:
     class ExactGateway < Gateway
       self.live_url = self.test_url = 'https://secure2.e-xact.com/vplug-in/transaction/rpc-enc/service.asmx'
 
-      API_VERSION = "8.5"
+      API_VERSION = '8.5'
 
-      TEST_LOGINS = [ {:login => "A00049-01", :password => "test1"},
-                      {:login => "A00427-01", :password => "testus"} ]
+      TEST_LOGINS = [{ login: 'A00049-01', password: 'test1' },
+                     { login: 'A00427-01', password: 'testus' }]
 
-      TRANSACTIONS = { :sale          => "00",
-                       :authorization => "01",
-                       :capture       => "32",
-                       :credit        => "34" }
-
+      TRANSACTIONS = { sale: '00',
+                       authorization: '01',
+                       capture: '32',
+                       credit: '34' }
 
       ENVELOPE_NAMESPACES = { 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
                               'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/',
-                              'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance'
-                            }
+                              'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance' }
 
-      SEND_AND_COMMIT_ATTRIBUTES = { 'xmlns:n1' => "http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/Request",
-                                     'env:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/'
-                                   }
+      SEND_AND_COMMIT_ATTRIBUTES = { 'xmlns:n1' => 'http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/Request',
+                                     'env:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/' }
 
       SEND_AND_COMMIT_SOURCE_ATTRIBUTES = { 'xmlns:n2' => 'http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/encodedTypes',
-                                            'xsi:type' => 'n2:Transaction'
-                                          }
+                                            'xsi:type' => 'n2:Transaction' }
 
-      POST_HEADERS = { 'soapAction' => "http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/SendAndCommit",
-                       'Content-Type' => 'text/xml'
-                     }
+      POST_HEADERS = { 'soapAction' => 'http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/SendAndCommit',
+                       'Content-Type' => 'text/xml' }
 
-      SUCCESS = "true"
+      SUCCESS = 'true'
 
-      SENSITIVE_FIELDS = [ :verification_str2, :expiry_date, :card_number ]
+      SENSITIVE_FIELDS = %i[verification_str2 expiry_date card_number]
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover]
-      self.supported_countries = ['CA', 'US']
+      self.supported_countries = %w[CA US]
+      self.supported_cardtypes = %i[visa master american_express jcb discover]
       self.homepage_url = 'http://www.e-xact.com'
       self.display_name = 'E-xact'
 
@@ -161,19 +156,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, request)
-         response = parse(ssl_post(self.live_url, build_request(action, request), POST_HEADERS))
+        response = parse(ssl_post(self.live_url, build_request(action, request), POST_HEADERS))
 
-         Response.new(successful?(response), message_from(response), response,
-           :test => test?,
-           :authorization => authorization_from(response),
-           :avs_result => { :code => response[:avs] },
-           :cvv_result => response[:cvv2]
-         )
-
+        Response.new(successful?(response), message_from(response), response,
+          test: test?,
+          authorization: authorization_from(response),
+          avs_result: { code: response[:avs] },
+          cvv_result: response[:cvv2])
       rescue ResponseError => e
         case e.response.code
         when '401'
-          return Response.new(false, "Invalid Login: #{e.response.body}", {}, :test => test?)
+          return Response.new(false, "Invalid Login: #{e.response.body}", {}, test: test?)
         else
           raise
         end
@@ -185,9 +178,9 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         if response[:authorization_num] && response[:transaction_tag]
-           "#{response[:authorization_num]};#{response[:transaction_tag]}"
+          "#{response[:authorization_num]};#{response[:transaction_tag]}"
         else
-           ''
+          ''
         end
       end
 
@@ -207,13 +200,13 @@ module ActiveMerchant #:nodoc:
         response = {}
         xml = REXML::Document.new(xml)
 
-        if root = REXML::XPath.first(xml, "//types:TransactionResult")
+        if root = REXML::XPath.first(xml, '//types:TransactionResult')
           parse_elements(response, root)
-        elsif root = REXML::XPath.first(xml, "//soap:Fault")
+        elsif root = REXML::XPath.first(xml, '//soap:Fault')
           parse_elements(response, root)
         end
 
-        response.delete_if{ |k,v| SENSITIVE_FIELDS.include?(k) }
+        response.delete_if { |k, _v| SENSITIVE_FIELDS.include?(k) }
       end
 
       def parse_elements(response, root)
@@ -224,4 +217,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

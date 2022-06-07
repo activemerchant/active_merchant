@@ -1,5 +1,5 @@
-require "active_merchant/billing/compatibility"
-require "active_merchant/empty"
+require 'active_merchant/billing/compatibility'
+require 'active_merchant/empty'
 
 module ActiveMerchant
   module Billing

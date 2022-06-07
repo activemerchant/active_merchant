@@ -9,17 +9,41 @@ class CreditCardMethodsTest < Test::Unit::TestCase
 
   def maestro_card_numbers
     %w[
-      5000000000000000 5099999999999999 5600000000000000
-      5899999999999999 6000000000000000 6999999999999999
-      6761999999999999 6763000000000000 5038999999999999
+      5612590000000000 5817500000000000 5818000000000000
+      6390000000000000 6390700000000000 6390990000000000
+      6761999999999999 6763000000000000 6799999999999999
+      5000330000000000 5811499999999999 5010410000000000
+      5010630000000000 5892440000000000
     ]
   end
 
   def non_maestro_card_numbers
     %w[
       4999999999999999 5100000000000000 5599999999999999
-      5900000000000000 5999999999999999 7000000000000000
+      5612709999999999 5817520000000000 5818019999999999
+      5912600000000000 6000009999999999 7000000000000000
     ]
+  end
+
+  def maestro_bins
+    %w[500032 500057 501015 501016 501018 501020 501021 501023 501024 501025 501026 501027 501028 501029
+       501038 501039 501040 501041 501043 501045 501047 501049 501051 501053 501054 501055 501056 501057
+       501058 501060 501061 501062 501063 501066 501067 501072 501075 501083 501087
+       501800 501089 501091 501092 501095 501104 501105 501107 501108 501500 501879
+       502000 502113 502301 503175 503645 503800
+       503670 504310 504338 504363 504533 504587 504620 504639 504656 504738 504781 504910
+       507001 507002 507004 507082 507090 560014 560565 561033 572402 572610 572626 576904 578614
+       585274 585697 586509 588729 588792 589244 589300 589407 589471 589605 589633 589647 589671
+       590043 590206 590263 590265
+       590278 590361 590362 590379 590393 590590 591235 591420 591481 591620 591770 591948 591994 592024
+       592161 592184 592186 592201 592384 592393 592528 592566 592704 592735 592879 592884 593074 593264
+       593272 593355 593496 593556 593589 593666 593709 593825 593963 593994 594184 594409 594468 594475
+       594581 594665 594691 594710 594874 594968 595355 595364 595532 595547 595561 595568 595743 595929
+       596245 596289 596399 596405 596590 596608 596645 596646 596791 596808 596815 596846 597077 597094
+       597143 597370 597410 597765 597855 597862 598053 598054 598395 598585 598793 598794 598815 598835
+       598838 598880 598889 599000 599069 599089 599148 599191 599310 599741 599742 599867
+       601070 604983 601638 606126
+       630400 636380 636422 636502 636639 637046 637756 639130 639229 690032]
   end
 
   def test_should_be_able_to_identify_valid_expiry_months
@@ -47,11 +71,11 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_valid_start_year_can_handle_strings
-    assert valid_start_year?("2009")
+    assert valid_start_year?('2009')
   end
 
   def test_valid_month_can_handle_strings
-    assert valid_month?("1")
+    assert valid_month?('1')
   end
 
   def test_valid_expiry_year_can_handle_strings
@@ -99,10 +123,26 @@ class CreditCardMethodsTest < Test::Unit::TestCase
 
   def test_should_detect_diners_club
     assert_equal 'diners_club', CreditCard.brand?('36148010000000')
+    assert_equal 'diners_club', CreditCard.brand?('3000000000000004')
   end
 
   def test_should_detect_diners_club_dk
     assert_equal 'diners_club', CreditCard.brand?('30401000000000')
+  end
+
+  def test_should_detect_jcb_cards
+    assert_equal 'jcb', CreditCard.brand?('3528000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3580000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3088000000000017')
+    assert_equal 'jcb', CreditCard.brand?('3094000000000017')
+    assert_equal 'jcb', CreditCard.brand?('3096000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3102000000000017')
+    assert_equal 'jcb', CreditCard.brand?('3112000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3120000000000017')
+    assert_equal 'jcb', CreditCard.brand?('3158000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3159000000000017')
+    assert_equal 'jcb', CreditCard.brand?('3337000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3349000000000017')
   end
 
   def test_should_detect_maestro_dk_as_maestro
@@ -110,48 +150,151 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_should_detect_maestro_cards
-    assert_equal 'maestro', CreditCard.brand?('5020100000000000')
+    assert_equal 'maestro', CreditCard.brand?('675675000000000')
 
     maestro_card_numbers.each { |number| assert_equal 'maestro', CreditCard.brand?(number) }
+    maestro_bins.each { |bin| assert_equal 'maestro', CreditCard.brand?("#{bin}0000000000") }
     non_maestro_card_numbers.each { |number| assert_not_equal 'maestro', CreditCard.brand?(number) }
   end
 
   def test_should_detect_mastercard
-    assert_equal 'master', CreditCard.brand?('6771890000000000')
+    assert_equal 'master', CreditCard.brand?('2720890000000000')
     assert_equal 'master', CreditCard.brand?('5413031000000000')
+    assert_equal 'master', CreditCard.brand?('6052721000000000')
+    assert_equal 'master', CreditCard.brand?('6062821000000000')
+    assert_equal 'master', CreditCard.brand?('6370951000000000')
+    assert_equal 'master', CreditCard.brand?('6375681000000000')
+    assert_equal 'master', CreditCard.brand?('6375991000000000')
+    assert_equal 'master', CreditCard.brand?('6376091000000000')
   end
 
   def test_should_detect_forbrugsforeningen
     assert_equal 'forbrugsforeningen', CreditCard.brand?('6007221000000000')
   end
 
-  def test_should_detect_laser_card
-    # 16 digits
-    assert_equal 'laser', CreditCard.brand?('6304985028090561')
+  def test_should_detect_sodexo_card
+    assert_equal 'sodexo', CreditCard.brand?('6060694495764400')
+  end
 
-    # 18 digits
-    assert_equal 'laser', CreditCard.brand?('630498502809056151')
+  def test_should_detect_alia_card
+    assert_equal 'alia', CreditCard.brand?('5049970000000000')
+    assert_equal 'alia', CreditCard.brand?('5058780000000000')
+    assert_equal 'alia', CreditCard.brand?('6010300000000000')
+    assert_equal 'alia', CreditCard.brand?('6010730000000000')
+    assert_equal 'alia', CreditCard.brand?('5058740000000000')
+  end
 
-    # 19 digits
-    assert_equal 'laser', CreditCard.brand?('6304985028090561515')
+  def test_alia_number_not_validated
+    10.times do
+      number = rand(5058740000000001..5058749999999999).to_s
+      assert_equal 'alia', CreditCard.brand?(number)
+      assert CreditCard.valid_number?(number)
+    end
+  end
 
-    # 17 digits
-    assert_not_equal 'laser', CreditCard.brand?('63049850280905615')
+  def test_should_detect_confiable_card
+    assert_equal 'confiable', CreditCard.brand?('5607180000000000')
+  end
 
-    # 15 digits
-    assert_not_equal 'laser', CreditCard.brand?('630498502809056')
+  def test_confiable_number_not_validated
+    10.times do
+      number = rand(5607180000000001..5607189999999999).to_s
+      assert_equal 'confiable', CreditCard.brand?(number)
+      assert CreditCard.valid_number?(number)
+    end
+  end
 
-    # Alternate format
-    assert_equal 'laser', CreditCard.brand?('6706950000000000000')
+  def test_should_detect_maestro_no_luhn_card
+    assert_equal 'maestro_no_luhn', CreditCard.brand?('5010800000000000')
+    assert_equal 'maestro_no_luhn', CreditCard.brand?('5010810000000000')
+    assert_equal 'maestro_no_luhn', CreditCard.brand?('5010820000000000')
+    assert_equal 'maestro_no_luhn', CreditCard.brand?('501082000000')
+    assert_equal 'maestro_no_luhn', CreditCard.brand?('5010820000000000000')
+  end
 
-    # Alternate format (16 digits)
-    assert_equal 'laser', CreditCard.brand?('6706123456789012')
+  def test_maestro_no_luhn_number_not_validated
+    10.times do
+      number = rand(5010800000000001..5010829999999999).to_s
+      assert_equal 'maestro_no_luhn', CreditCard.brand?(number)
+      assert CreditCard.valid_number?(number)
+    end
+  end
 
-    # New format (16 digits)
-    assert_equal 'laser', CreditCard.brand?('6709123456789012')
+  def test_should_detect_olimpica_card
+    assert_equal 'olimpica', CreditCard.brand?('6368530000000000')
+  end
 
-    # Ulster bank (Ireland) with 12 digits
-    assert_equal 'laser', CreditCard.brand?('677117111234')
+  def test_should_detect_creditel_card
+    assert_equal 'creditel', CreditCard.brand?('6019330047539016')
+  end
+
+  def test_should_detect_vr_card
+    assert_equal 'vr', CreditCard.brand?('6370364495764400')
+    assert_equal 'vr', CreditCard.brand?('6274160000000001')
+  end
+
+  def test_should_detect_elo_card
+    assert_equal 'elo', CreditCard.brand?('5090510000000000')
+    assert_equal 'elo', CreditCard.brand?('5067530000000000')
+    assert_equal 'elo', CreditCard.brand?('6277800000000000')
+    assert_equal 'elo', CreditCard.brand?('6509550000000000')
+    assert_equal 'elo', CreditCard.brand?('5090890000000000')
+    assert_equal 'elo', CreditCard.brand?('5092570000000000')
+    assert_equal 'elo', CreditCard.brand?('5094100000000000')
+  end
+
+  def test_should_detect_alelo_card
+    assert_equal 'alelo', CreditCard.brand?('5067490000000010')
+    assert_equal 'alelo', CreditCard.brand?('5067700000000028')
+    assert_equal 'alelo', CreditCard.brand?('5067600000000036')
+    assert_equal 'alelo', CreditCard.brand?('5067600000000044')
+    assert_equal 'alelo', CreditCard.brand?('5099920000000000')
+    assert_equal 'alelo', CreditCard.brand?('5067630000000000')
+    assert_equal 'alelo', CreditCard.brand?('5098870000000000')
+  end
+
+  def test_should_detect_naranja_card
+    assert_equal 'naranja', CreditCard.brand?('5895627823453005')
+    assert_equal 'naranja', CreditCard.brand?('5895620000000002')
+    assert_equal 'naranja', CreditCard.brand?('5895626746595650')
+  end
+
+  # Alelo BINs beginning with the digit 4 overlap with Visa's range of valid card numbers.
+  # We intentionally misidentify these cards as Visa, which works because transactions with
+  # such cards will run on Visa rails.
+  def test_should_detect_alelo_number_beginning_with_4_as_visa
+    assert_equal 'visa', CreditCard.brand?('4025880000000010')
+    assert_equal 'visa', CreditCard.brand?('4025880000000028')
+    assert_equal 'visa', CreditCard.brand?('4025880000000036')
+    assert_equal 'visa', CreditCard.brand?('4025880000000044')
+  end
+
+  def test_should_detect_cabal_card
+    assert_equal 'cabal', CreditCard.brand?('6044009000000000')
+    assert_equal 'cabal', CreditCard.brand?('5896575500000000')
+    assert_equal 'cabal', CreditCard.brand?('6035224400000000')
+  end
+
+  def test_should_detect_unionpay_card
+    assert_equal 'unionpay', CreditCard.brand?('6221260000000000')
+    assert_equal 'unionpay', CreditCard.brand?('6250941006528599')
+    assert_equal 'unionpay', CreditCard.brand?('6282000000000000')
+    assert_equal 'unionpay', CreditCard.brand?('8100000000000000')
+    assert_equal 'unionpay', CreditCard.brand?('814400000000000000')
+    assert_equal 'unionpay', CreditCard.brand?('8171999927660000')
+    assert_equal 'unionpay', CreditCard.brand?('8171999900000000021')
+    assert_equal 'unionpay', CreditCard.brand?('6200000000000005')
+  end
+
+  def test_should_detect_synchrony_card
+    assert_equal 'synchrony', CreditCard.brand?('7006000000000000')
+  end
+
+  def test_should_detect_routex_card
+    number = '7006760000000000000'
+    assert_equal 'routex', CreditCard.brand?(number)
+    assert CreditCard.valid_number?(number)
+    assert_equal 'routex', CreditCard.brand?('7006789224703725591')
   end
 
   def test_should_detect_when_an_argument_brand_does_not_match_calculated_brand
@@ -160,14 +303,14 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_detecting_full_range_of_maestro_card_numbers
-    maestro = '50000000000'
+    maestro = '63900000000'
 
     assert_equal 11, maestro.length
     assert_not_equal 'maestro', CreditCard.brand?(maestro)
 
     while maestro.length < 19
       maestro << '0'
-      assert_equal 'maestro', CreditCard.brand?(maestro)
+      assert_equal 'maestro', CreditCard.brand?(maestro), "Failed for bin #{maestro}"
     end
 
     assert_equal 19, maestro.length
@@ -179,7 +322,6 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   def test_matching_discover_card
     assert_equal 'discover', CreditCard.brand?('6011000000000000')
     assert_equal 'discover', CreditCard.brand?('6500000000000000')
-    assert_equal 'discover', CreditCard.brand?('6221260000000000')
     assert_equal 'discover', CreditCard.brand?('6450000000000000')
 
     assert_not_equal 'discover', CreditCard.brand?('6010000000000000')
@@ -187,26 +329,60 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_matching_invalid_card
-    assert_nil CreditCard.brand?("XXXXXXXXXXXX0000")
-    assert_false CreditCard.valid_number?("XXXXXXXXXXXX0000")
+    assert_nil CreditCard.brand?('XXXXXXXXXXXX0000')
+    assert_false CreditCard.valid_number?('XXXXXXXXXXXX0000')
+    assert_false CreditCard.valid_number?(nil)
+  end
+
+  def test_matching_valid_naranja
+    number = '5895627823453005'
+    assert_equal 'naranja', CreditCard.brand?(number)
+    assert CreditCard.valid_number?(number)
+  end
+
+  def test_matching_valid_creditel
+    number = '6019330047539016'
+    assert_equal 'creditel', CreditCard.brand?(number)
+    assert CreditCard.valid_number?(number)
   end
 
   def test_16_digit_maestro_uk
     number = '6759000000000000'
     assert_equal 16, number.length
-    assert_equal 'switch', CreditCard.brand?(number)
+    assert_equal 'maestro', CreditCard.brand?(number)
   end
 
   def test_18_digit_maestro_uk
     number = '675900000000000000'
     assert_equal 18, number.length
-    assert_equal 'switch', CreditCard.brand?(number)
+    assert_equal 'maestro', CreditCard.brand?(number)
   end
 
   def test_19_digit_maestro_uk
     number = '6759000000000000000'
     assert_equal 19, number.length
-    assert_equal 'switch', CreditCard.brand?(number)
+    assert_equal 'maestro', CreditCard.brand?(number)
+  end
+
+  def test_carnet_cards
+    numbers = %w[
+      5062280000000000
+      6046220312312312
+      6393889871239871
+      5022751231231231
+      6275350000000001
+    ]
+    numbers.each do |num|
+      assert_equal 16, num.length
+      assert_equal 'carnet', CreditCard.brand?(num)
+    end
+  end
+
+  def test_should_detect_cartes_bancaires_cards
+    assert_equal 'cartes_bancaires', CreditCard.brand?('5855010000000000')
+    assert_equal 'cartes_bancaires', CreditCard.brand?('5075935000000000')
+    assert_equal 'cartes_bancaires', CreditCard.brand?('5075901100000000')
+    assert_equal 'cartes_bancaires', CreditCard.brand?('5075890130000000')
   end
 
   def test_electron_cards
@@ -221,6 +397,9 @@ class CreditCardMethodsTest < Test::Unit::TestCase
         assert_equal card_number, electron_test.call(card_number)
       end
     end
+
+    # nil check
+    assert_false electron_test.call(nil)
 
     # Visa range
     assert_false electron_test.call('4245180000000000')

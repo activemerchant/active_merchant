@@ -9,7 +9,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
   def setup
     @logger = stubs(:logger)
     @requester = stubs(:requester)
-    @ok = stub(:code => 200, :message => 'OK', :body => 'success')
+    @ok = stub(code: 200, message: 'OK', body: 'success')
   end
 
   def test_eoferror_raises_correctly
@@ -19,7 +19,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
       end
     end
 
-    assert_equal "The remote server dropped the connection", raised.message
+    assert_equal 'The remote server dropped the connection', raised.message
   end
 
   def test_econnreset_raises_correctly
@@ -28,14 +28,11 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
         raise Errno::ECONNRESET
       end
     end
-    assert_equal "The remote server reset the connection", raised.message
+    assert_equal 'The remote server reset the connection', raised.message
   end
 
   def test_timeout_errors_raise_correctly
-    exceptions = [Timeout::Error, Errno::ETIMEDOUT]
-    if RUBY_VERSION >= '2.0.0'
-      exceptions += [Net::ReadTimeout, Net::OpenTimeout]
-    end
+    exceptions = [Timeout::Error, Errno::ETIMEDOUT, Net::ReadTimeout, Net::OpenTimeout]
 
     exceptions.each do |exception|
       raised = assert_raises(ActiveMerchant::ConnectionError) do
@@ -43,7 +40,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
           raise exception
         end
       end
-      assert_equal "The connection to the remote server timed out", raised.message
+      assert_equal 'The connection to the remote server timed out', raised.message
     end
   end
 
@@ -53,14 +50,12 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
         raise SocketError
       end
     end
-    assert_equal "The connection to the remote server could not be established", raised.message
+    assert_equal 'The connection to the remote server could not be established', raised.message
   end
 
   def test_ssl_errors_raise_correctly
-    exceptions = [OpenSSL::SSL::SSLError]
-    if RUBY_VERSION >= '2.1.0'
-      exceptions += [OpenSSL::SSL::SSLErrorWaitWritable, OpenSSL::SSL::SSLErrorWaitReadable]
-    end
+    exceptions = [OpenSSL::SSL::SSLError, OpenSSL::SSL::SSLErrorWaitWritable,
+                  OpenSSL::SSL::SSLErrorWaitReadable]
 
     exceptions.each do |exception|
       raised = assert_raises(ActiveMerchant::ConnectionError) do
@@ -68,10 +63,9 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
           raise exception
         end
       end
-      assert_equal "The SSL connection to the remote server could not be established", raised.message
+      assert_equal 'The SSL connection to the remote server could not be established', raised.message
     end
   end
-
 
   def test_invalid_response_error
     assert_raises(ActiveMerchant::InvalidResponseError) do
@@ -84,7 +78,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
   def test_unrecoverable_exception_logged_if_logger_provided
     @logger.expects(:info).once
     assert_raises(ActiveMerchant::ConnectionError) do
-      retry_exceptions :logger => @logger do
+      retry_exceptions logger: @logger do
         raise EOFError
       end
     end
@@ -113,7 +107,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
     @requester.expects(:post).times(ActiveMerchant::NetworkConnectionRetries::DEFAULT_RETRIES).raises(Errno::ECONNREFUSED)
 
     assert_raises(ActiveMerchant::ConnectionError) do
-      retry_exceptions(:logger => @logger) do
+      retry_exceptions(logger: @logger) do
         @requester.post
       end
     end
@@ -122,7 +116,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
   def test_failure_then_success_with_retry_safe_enabled
     @requester.expects(:post).times(2).raises(EOFError).then.returns(@ok)
 
-    retry_exceptions :retry_safe => true do
+    retry_exceptions retry_safe: true do
       @requester.post
     end
   end
@@ -132,18 +126,21 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
     @logger.expects(:info).with(regexp_matches(/success/))
     @requester.expects(:post).times(2).raises(EOFError).then.returns(@ok)
 
-    retry_exceptions(:logger => @logger, :retry_safe => true) do
+    retry_exceptions(logger: @logger, retry_safe: true) do
       @requester.post
     end
   end
 
   def test_mixture_of_failures_with_retry_safe_enabled
-    @requester.expects(:post).times(3).raises(Errno::ECONNRESET).
-                                       raises(Errno::ECONNREFUSED).
-                                       raises(EOFError)
+    @requester.
+      expects(:post).
+      times(3).
+      raises(Errno::ECONNRESET).
+      raises(Errno::ECONNREFUSED).
+      raises(EOFError)
 
     assert_raises(ActiveMerchant::ConnectionError) do
-      retry_exceptions :retry_safe => true do
+      retry_exceptions retry_safe: true do
         @requester.post
       end
     end
@@ -164,7 +161,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
     @requester.expects(:post).raises(OpenSSL::X509::CertificateError)
 
     assert_raises(ActiveMerchant::ClientCertificateError) do
-      retry_exceptions :logger => @logger do
+      retry_exceptions logger: @logger do
         @requester.post
       end
     end
@@ -174,7 +171,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
     @requester.expects(:post).raises(MyNewError)
 
     assert_raises(ActiveMerchant::ConnectionError) do
-      retry_exceptions :connection_exceptions => {MyNewError => "my message"} do
+      retry_exceptions connection_exceptions: { MyNewError => 'my message' } do
         @requester.post
       end
     end

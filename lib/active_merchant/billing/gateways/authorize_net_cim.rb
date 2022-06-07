@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # ==== Customer Information Manager (CIM)
@@ -33,55 +34,55 @@ module ActiveMerchant #:nodoc:
       AUTHORIZE_NET_CIM_NAMESPACE = 'AnetApi/xml/v1/schema/AnetApiSchema.xsd'
 
       CIM_ACTIONS = {
-        :create_customer_profile => 'createCustomerProfile',
-        :create_customer_payment_profile => 'createCustomerPaymentProfile',
-        :create_customer_shipping_address => 'createCustomerShippingAddress',
-        :get_customer_profile => 'getCustomerProfile',
-        :get_customer_profile_ids => 'getCustomerProfileIds',
-        :get_customer_payment_profile => 'getCustomerPaymentProfile',
-        :get_customer_shipping_address => 'getCustomerShippingAddress',
-        :delete_customer_profile => 'deleteCustomerProfile',
-        :delete_customer_payment_profile => 'deleteCustomerPaymentProfile',
-        :delete_customer_shipping_address => 'deleteCustomerShippingAddress',
-        :update_customer_profile => 'updateCustomerProfile',
-        :update_customer_payment_profile => 'updateCustomerPaymentProfile',
-        :update_customer_shipping_address => 'updateCustomerShippingAddress',
-        :create_customer_profile_transaction => 'createCustomerProfileTransaction',
-        :validate_customer_payment_profile => 'validateCustomerPaymentProfile'
+        create_customer_profile: 'createCustomerProfile',
+        create_customer_payment_profile: 'createCustomerPaymentProfile',
+        create_customer_shipping_address: 'createCustomerShippingAddress',
+        get_customer_profile: 'getCustomerProfile',
+        get_customer_profile_ids: 'getCustomerProfileIds',
+        get_customer_payment_profile: 'getCustomerPaymentProfile',
+        get_customer_shipping_address: 'getCustomerShippingAddress',
+        delete_customer_profile: 'deleteCustomerProfile',
+        delete_customer_payment_profile: 'deleteCustomerPaymentProfile',
+        delete_customer_shipping_address: 'deleteCustomerShippingAddress',
+        update_customer_profile: 'updateCustomerProfile',
+        update_customer_payment_profile: 'updateCustomerPaymentProfile',
+        update_customer_shipping_address: 'updateCustomerShippingAddress',
+        create_customer_profile_transaction: 'createCustomerProfileTransaction',
+        validate_customer_payment_profile: 'validateCustomerPaymentProfile'
       }
 
       CIM_TRANSACTION_TYPES = {
-        :auth_capture => 'profileTransAuthCapture',
-        :auth_only => 'profileTransAuthOnly',
-        :capture_only => 'profileTransCaptureOnly',
-        :prior_auth_capture => 'profileTransPriorAuthCapture',
-        :refund => 'profileTransRefund',
-        :void => 'profileTransVoid'
+        auth_capture: 'profileTransAuthCapture',
+        auth_only: 'profileTransAuthOnly',
+        capture_only: 'profileTransCaptureOnly',
+        prior_auth_capture: 'profileTransPriorAuthCapture',
+        refund: 'profileTransRefund',
+        void: 'profileTransVoid'
       }
 
       CIM_VALIDATION_MODES = {
-        :none => 'none',
-        :test => 'testMode',
-        :live => 'liveMode',
-        :old => 'oldLiveMode'
+        none: 'none',
+        test: 'testMode',
+        live: 'liveMode',
+        old: 'oldLiveMode'
       }
 
       BANK_ACCOUNT_TYPES = {
-        :checking => 'checking',
-        :savings => 'savings',
-        :business_checking => 'businessChecking'
+        checking: 'checking',
+        savings: 'savings',
+        business_checking: 'businessChecking'
       }
 
       ECHECK_TYPES = {
-        :ccd => 'CCD',
-        :ppd => 'PPD',
-        :web => 'WEB'
+        ccd: 'CCD',
+        ppd: 'PPD',
+        web: 'WEB'
       }
 
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net CIM'
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       # Creates a new AuthorizeNetCimGateway
       #
@@ -379,19 +380,19 @@ module ActiveMerchant #:nodoc:
         requires!(options, :transaction)
         requires!(options[:transaction], :type)
         case options[:transaction][:type]
-          when :void
-            requires!(options[:transaction], :trans_id)
-          when :refund
-            requires!(options[:transaction], :trans_id) &&
-              (
-                (options[:transaction][:customer_profile_id] && options[:transaction][:customer_payment_profile_id]) ||
-                options[:transaction][:credit_card_number_masked] ||
-                (options[:transaction][:bank_routing_number_masked] && options[:transaction][:bank_account_number_masked])
-              )
-          when :prior_auth_capture
-            requires!(options[:transaction], :amount, :trans_id)
-          else
-            requires!(options[:transaction], :amount, :customer_profile_id, :customer_payment_profile_id)
+        when :void
+          requires!(options[:transaction], :trans_id)
+        when :refund
+          requires!(options[:transaction], :trans_id) &&
+            (
+              (options[:transaction][:customer_profile_id] && options[:transaction][:customer_payment_profile_id]) ||
+              options[:transaction][:credit_card_number_masked] ||
+              (options[:transaction][:bank_routing_number_masked] && options[:transaction][:bank_account_number_masked])
+            )
+        when :prior_auth_capture
+          requires!(options[:transaction], :amount, :trans_id)
+        else
+          requires!(options[:transaction], :amount, :customer_profile_id, :customer_payment_profile_id)
         end
         request = build_request(:create_customer_profile_transaction, options)
         commit(:create_customer_profile_transaction, request)
@@ -485,13 +486,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(action, options = {})
-        unless CIM_ACTIONS.include?(action)
-          raise StandardError, "Invalid Customer Information Manager Action: #{action}"
-        end
+        raise StandardError, "Invalid Customer Information Manager Action: #{action}" unless CIM_ACTIONS.include?(action)
 
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
-        xml.tag!("#{CIM_ACTIONS[action]}Request", :xmlns => AUTHORIZE_NET_CIM_NAMESPACE) do
+        xml = Builder::XmlMarkup.new(indent: 2)
+        xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
+        xml.tag!("#{CIM_ACTIONS[action]}Request", xmlns: AUTHORIZE_NET_CIM_NAMESPACE) do
           add_merchant_authentication(xml)
           # Merchant-assigned reference ID for the request
           xml.tag!('refId', options[:ref_id]) if options[:ref_id]
@@ -564,6 +563,8 @@ module ActiveMerchant #:nodoc:
 
       def build_get_customer_profile_request(xml, options)
         xml.tag!('customerProfileId', options[:customer_profile_id])
+        xml.tag!('unmaskExpirationDate', options[:unmask_expiration_date]) if options[:unmask_expiration_date]
+        xml.tag!('includeIssuerInfo', options[:include_issuer_info]) if options[:include_issuer_info]
         xml.target!
       end
 
@@ -575,6 +576,7 @@ module ActiveMerchant #:nodoc:
         xml.tag!('customerProfileId', options[:customer_profile_id])
         xml.tag!('customerPaymentProfileId', options[:customer_payment_profile_id])
         xml.tag!('unmaskExpirationDate', options[:unmask_expiration_date]) if options[:unmask_expiration_date]
+        xml.tag!('includeIssuerInfo', options[:include_issuer_info]) if options[:include_issuer_info]
         xml.target!
       end
 
@@ -614,7 +616,7 @@ module ActiveMerchant #:nodoc:
 
       def build_create_customer_profile_transaction_request(xml, options)
         options[:extra_options] ||= {}
-        options[:extra_options].merge!('x_delim_char' => @options[:delimiter]) if @options[:delimiter]
+        options[:extra_options]['x_delim_char'] = @options[:delimiter] if @options[:delimiter]
 
         add_transaction(xml, options[:transaction])
         xml.tag!('extraOptions') do
@@ -657,51 +659,46 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_transaction(xml, transaction)
-        unless CIM_TRANSACTION_TYPES.include?(transaction[:type])
-          raise StandardError, "Invalid Customer Information Manager Transaction Type: #{transaction[:type]}"
-        end
+        raise StandardError, "Invalid Customer Information Manager Transaction Type: #{transaction[:type]}" unless CIM_TRANSACTION_TYPES.include?(transaction[:type])
 
         xml.tag!('transaction') do
           xml.tag!(CIM_TRANSACTION_TYPES[transaction[:type]]) do
             # The amount to be billed to the customer
             case transaction[:type]
-              when :void
-                tag_unless_blank(xml,'customerProfileId', transaction[:customer_profile_id])
-                tag_unless_blank(xml,'customerPaymentProfileId', transaction[:customer_payment_profile_id])
-                tag_unless_blank(xml,'customerShippingAddressId', transaction[:customer_shipping_address_id])
-                xml.tag!('transId', transaction[:trans_id])
-              when :refund
-                #TODO - add lineItems field
-                xml.tag!('amount', transaction[:amount])
-                tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
-                tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
-                tag_unless_blank(xml, 'customerShippingAddressId', transaction[:customer_shipping_address_id])
-                tag_unless_blank(xml, 'creditCardNumberMasked', transaction[:credit_card_number_masked])
-                tag_unless_blank(xml, 'bankRoutingNumberMasked', transaction[:bank_routing_number_masked])
-                tag_unless_blank(xml, 'bankAccountNumberMasked', transaction[:bank_account_number_masked])
-                add_order(xml, transaction[:order]) if transaction[:order].present?
-                xml.tag!('transId', transaction[:trans_id])
-                add_tax(xml, transaction[:tax]) if transaction[:tax]
-                add_duty(xml, transaction[:duty]) if transaction[:duty]
-                add_shipping(xml, transaction[:shipping]) if transaction[:shipping]
-              when :prior_auth_capture
-                xml.tag!('amount', transaction[:amount])
-                add_order(xml, transaction[:order]) if transaction[:order].present?
-                xml.tag!('transId', transaction[:trans_id])
-              else
-                xml.tag!('amount', transaction[:amount])
-                xml.tag!('customerProfileId', transaction[:customer_profile_id])
-                xml.tag!('customerPaymentProfileId', transaction[:customer_payment_profile_id])
-                xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
-                add_order(xml, transaction[:order]) if transaction[:order].present?
+            when :void
+              tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
+              tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
+              tag_unless_blank(xml, 'customerShippingAddressId', transaction[:customer_shipping_address_id])
+              xml.tag!('transId', transaction[:trans_id])
+            when :refund
+              xml.tag!('amount', transaction[:amount])
+              tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
+              tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
+              tag_unless_blank(xml, 'customerShippingAddressId', transaction[:customer_shipping_address_id])
+              tag_unless_blank(xml, 'creditCardNumberMasked', transaction[:credit_card_number_masked])
+              tag_unless_blank(xml, 'bankRoutingNumberMasked', transaction[:bank_routing_number_masked])
+              tag_unless_blank(xml, 'bankAccountNumberMasked', transaction[:bank_account_number_masked])
+              add_order(xml, transaction[:order]) if transaction[:order].present?
+              xml.tag!('transId', transaction[:trans_id])
+              add_tax(xml, transaction[:tax]) if transaction[:tax]
+              add_duty(xml, transaction[:duty]) if transaction[:duty]
+              add_shipping(xml, transaction[:shipping]) if transaction[:shipping]
+            when :prior_auth_capture
+              xml.tag!('amount', transaction[:amount])
+              add_order(xml, transaction[:order]) if transaction[:order].present?
+              xml.tag!('transId', transaction[:trans_id])
+            else
+              xml.tag!('amount', transaction[:amount])
+              xml.tag!('customerProfileId', transaction[:customer_profile_id])
+              xml.tag!('customerPaymentProfileId', transaction[:customer_payment_profile_id])
+              xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
+              add_order(xml, transaction[:order]) if transaction[:order].present?
 
             end
-            if [:auth_capture, :auth_only, :capture_only].include?(transaction[:type])
+            if %i[auth_capture auth_only capture_only].include?(transaction[:type])
               xml.tag!('recurringBilling', transaction[:recurring_billing]) if transaction.has_key?(:recurring_billing)
             end
-            unless [:void,:refund,:prior_auth_capture].include?(transaction[:type])
-              tag_unless_blank(xml, 'cardCode', transaction[:card_code])
-            end
+            tag_unless_blank(xml, 'cardCode', transaction[:card_code]) unless %i[void refund prior_auth_capture].include?(transaction[:type])
           end
         end
       end
@@ -798,6 +795,7 @@ module ActiveMerchant #:nodoc:
       # when the payment method is credit card.
       def add_credit_card(xml, credit_card)
         return unless credit_card
+
         xml.tag!('creditCard') do
           # The credit card number used for payment of the subscription
           xml.tag!('cardNumber', full_or_masked_card_number(credit_card.number))
@@ -854,11 +852,13 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, request)
         url = test? ? test_url : live_url
-        xml = ssl_post(url, request, "Content-Type" => "text/xml")
+        xml = ssl_post(url, request, 'Content-Type' => 'text/xml')
 
         response_params = parse(action, xml)
 
-        message = response_params['messages']['message']['text']
+        message_element = response_params['messages']['message']
+        first_error = message_element.is_a?(Array) ? message_element.first : message_element
+        message = first_error['text']
         test_mode = @options[:test_requests] || message =~ /Test Mode/
         success = response_params['messages']['result_code'] == 'Ok'
         response_params['direct_response'] = parse_direct_response(response_params['direct_response']) if response_params['direct_response']
@@ -867,7 +867,7 @@ module ActiveMerchant #:nodoc:
         response_options = {}
         response_options[:test] = test_mode
         response_options[:authorization] = transaction_id || response_params['customer_profile_id'] || (response_params['profile'] ? response_params['profile']['customer_profile_id'] : nil)
-        response_options[:error_code] = response_params['messages']['message']['code'] unless success
+        response_options[:error_code] = first_error['code'] unless success
 
         Response.new(success, message, response_params, response_options)
       end
@@ -877,12 +877,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def format_extra_options(options)
-        options.map{ |k, v| "#{k}=#{v}" }.join('&') unless options.nil?
+        options&.map { |k, v| "#{k}=#{v}" }&.join('&')
       end
 
       def parse_direct_response(params)
         delimiter = @options[:delimiter] || ','
-        direct_response = {'raw' => params}
+        direct_response = { 'raw' => params }
         direct_response_fields = params.split(delimiter)
         direct_response.merge(
           {
@@ -932,7 +932,7 @@ module ActiveMerchant #:nodoc:
             'card_type' => direct_response_fields[51] || '',
             'split_tender_id' => direct_response_fields[52] || '',
             'requested_amount' => direct_response_fields[53] || '',
-            'balance_on_card' => direct_response_fields[54] || '',
+            'balance_on_card' => direct_response_fields[54] || ''
           }
         )
       end
@@ -940,10 +940,8 @@ module ActiveMerchant #:nodoc:
       def parse(action, xml)
         xml = REXML::Document.new(xml)
         root = REXML::XPath.first(xml, "//#{CIM_ACTIONS[action]}Response") ||
-               REXML::XPath.first(xml, "//ErrorResponse")
-        if root
-          response = parse_element(root)
-        end
+               REXML::XPath.first(xml, '//ErrorResponse')
+        response = parse_element(root) if root
 
         response
       end
@@ -951,7 +949,7 @@ module ActiveMerchant #:nodoc:
       def parse_element(node)
         if node.has_elements?
           response = {}
-          node.elements.each{ |e|
+          node.elements.each { |e|
             key = e.name.underscore
             value = parse_element(e)
             if response.has_key?(key)

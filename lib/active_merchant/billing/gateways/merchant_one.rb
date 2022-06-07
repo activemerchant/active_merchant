@@ -1,9 +1,8 @@
-require "cgi"
+require 'cgi'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MerchantOneGateway < Gateway
-
       class MerchantOneSslConnection < ActiveMerchant::Connection
         def configure_ssl(http)
           super(http)
@@ -14,7 +13,7 @@ module ActiveMerchant #:nodoc:
       BASE_URL = 'https://secure.merchantonegateway.com/api/transact.php'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://merchantone.com/'
       self.display_name = 'Merchant One Gateway'
       self.money_format = :dollars
@@ -46,7 +45,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         post = {}
-        post.merge!(:transactionid => authorization)
+        post[:transactionid] = authorization
         add_amount(post, money, options)
         commit('capture', money, post)
       end
@@ -75,40 +74,37 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(post, creditcard)
-       post['cvv'] = creditcard.verification_value
-       post['ccnumber'] = creditcard.number
-       post['ccexp'] =  "#{sprintf("%02d", creditcard.month)}#{"#{creditcard.year}"[-2, 2]}"
+        post['cvv'] = creditcard.verification_value
+        post['ccnumber'] = creditcard.number
+        post['ccexp'] = "#{sprintf('%02d', creditcard.month)}#{creditcard.year.to_s[-2, 2]}"
       end
 
-      def commit(action, money, parameters={})
+      def commit(action, money, parameters = {})
         parameters['username'] = @options[:username]
         parameters['password'] = @options[:password]
-        parse(ssl_post(BASE_URL,post_data(action, parameters)))
+        parse(ssl_post(BASE_URL, post_data(action, parameters)))
       end
 
       def post_data(action, parameters = {})
-        parameters.merge!({:type => action})
-        ret = ""
+        parameters[:type] = action
+        ret = ''
         for key in parameters.keys
           ret += "#{key}=#{CGI.escape(parameters[key].to_s)}"
-          if key != parameters.keys.last
-            ret += "&"
-          end
+          ret += '&' if key != parameters.keys.last
         end
         ret.to_s
       end
 
       def parse(data)
-        responses =  CGI.parse(data).inject({}){|h,(k, v)| h[k] = v.first; h}
+        responses = CGI.parse(data).inject({}) { |h, (k, v)| h[k] = v.first; h }
         Response.new(
-          (responses["response"].to_i == 1),
-          responses["responsetext"],
+          (responses['response'].to_i == 1),
+          responses['responsetext'],
           responses,
-          :test => test?,
-          :authorization => responses["transactionid"]
+          test: test?,
+          authorization: responses['transactionid']
         )
       end
     end
   end
 end
-

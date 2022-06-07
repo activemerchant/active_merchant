@@ -1,11 +1,11 @@
 require 'test_helper'
 
 RSP = {
-  :approved_auth => "AUTH_CODE=XCADZ&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=AUTH&REBID=&STATUS=1&AVS=_&TRANS_ID=100134203758&CVV2=_&MESSAGE=Approved%20Auth",
-  :approved_capture => "AUTH_CODE=CHTHX&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=CAPTURE&REBID=&STATUS=1&AVS=_&TRANS_ID=100134203760&CVV2=_&MESSAGE=Approved%20Capture",
-  :approved_void => "AUTH_CODE=KTMHB&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=VOID&REBID=&STATUS=1&AVS=_&TRANS_ID=100134203763&CVV2=_&MESSAGE=Approved%20Void",
-  :declined => "TRANS_ID=100000000150&STATUS=0&AVS=0&CVV2=7&MESSAGE=Declined&REBID=",
-  :approved_purchase => "AUTH_CODE=GYRUY&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=SALE&REBID=&STATUS=1&AVS=_&TRANS_ID=100134203767&CVV2=_&MESSAGE=Approved%20Sale"
+  approved_auth: 'AUTH_CODE=XCADZ&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=AUTH&REBID=&STATUS=1&AVS=_&TRANS_ID=100134203758&CVV2=_&MESSAGE=Approved%20Auth',
+  approved_capture: 'AUTH_CODE=CHTHX&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=CAPTURE&REBID=&STATUS=1&AVS=_&TRANS_ID=100134203760&CVV2=_&MESSAGE=Approved%20Capture',
+  approved_void: 'AUTH_CODE=KTMHB&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=VOID&REBID=&STATUS=1&AVS=_&TRANS_ID=100134203763&CVV2=_&MESSAGE=Approved%20Void',
+  declined: 'TRANS_ID=100000000150&STATUS=0&AVS=0&CVV2=7&MESSAGE=Declined&REBID=',
+  approved_purchase: 'AUTH_CODE=GYRUY&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=SALE&REBID=&STATUS=1&AVS=_&TRANS_ID=100134203767&CVV2=_&MESSAGE=Approved%20Sale'
 }
 
 class BluePayTest < Test::Unit::TestCase
@@ -13,37 +13,51 @@ class BluePayTest < Test::Unit::TestCase
 
   def setup
     @gateway = BluePayGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
     @amount = 100
     @credit_card = credit_card
+    @check = check
     @rebill_id = '100096219669'
     @rebill_status = 'active'
+    @options = { ip: '192.168.0.1' }
   end
 
   def test_successful_authorization
-    #@gateway.expects(:ssl_post).returns(successful_authorization_response)
-    @gateway.expects(:ssl_post).returns(RSP[:approved_auth])
-    assert response = @gateway.authorize(@amount, @credit_card)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/CUSTOMER_IP=192.168.0.1/, data)
+    end.respond_with(RSP[:approved_auth])
+
+    assert response
     assert_instance_of Response, response
     assert_success response
     assert_equal '100134203758', response.authorization
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(RSP[:approved_purchase])
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/CUSTOMER_IP=192.168.0.1/, data)
+    end.respond_with(RSP[:approved_purchase])
 
-    assert response = @gateway.purchase(@amount, @credit_card)
+    assert response
     assert_instance_of Response, response
     assert_success response
     assert_equal '100134203767', response.authorization
   end
 
   def test_failed_authorization
-    @gateway.expects(:ssl_post).returns(RSP[:declined])
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/CUSTOMER_IP=192.168.0.1/, data)
+    end.respond_with(RSP[:declined])
 
-    assert response = @gateway.authorize(@amount, @credit_card)
+    assert response
     assert_instance_of Response, response
     assert_failure response
     assert_equal '100000000150', response.authorization
@@ -52,8 +66,8 @@ class BluePayTest < Test::Unit::TestCase
   def test_add_address_outsite_north_america
     result = {}
 
-    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Test St.', :address2 => '5F', :city => 'Testville', :company => 'Test Company', :country => 'DE', :state => ''} )
-    assert_equal ["ADDR1", "ADDR2", "CITY", "COMPANY_NAME", "COUNTRY", "PHONE", "STATE", "ZIP"], result.stringify_keys.keys.sort
+    @gateway.send(:add_address, result, billing_address: { address1: '123 Test St.', address2: '5F', city: 'Testville', company: 'Test Company', country: 'DE', state: '' })
+    assert_equal %w[ADDR1 ADDR2 CITY COMPANY_NAME COUNTRY PHONE STATE ZIP], result.stringify_keys.keys.sort
     assert_equal 'n/a', result[:STATE]
     assert_equal '123 Test St.', result[:ADDR1]
     assert_equal 'DE', result[:COUNTRY]
@@ -62,20 +76,19 @@ class BluePayTest < Test::Unit::TestCase
   def test_add_address
     result = {}
 
-    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Test St.', :address2 => '5F', :city => 'Testville', :company => 'Test Company', :country => 'US', :state => 'AK'} )
+    @gateway.send(:add_address, result, billing_address: { address1: '123 Test St.', address2: '5F', city: 'Testville', company: 'Test Company', country: 'US', state: 'AK' })
 
-    assert_equal ["ADDR1", "ADDR2", "CITY", "COMPANY_NAME", "COUNTRY", "PHONE", "STATE", "ZIP"], result.stringify_keys.keys.sort
+    assert_equal %w[ADDR1 ADDR2 CITY COMPANY_NAME COUNTRY PHONE STATE ZIP], result.stringify_keys.keys.sort
     assert_equal 'AK', result[:STATE]
     assert_equal '123 Test St.', result[:ADDR1]
     assert_equal 'US', result[:COUNTRY]
-
   end
 
   def test_name_comes_from_payment_method
     result = {}
 
     @gateway.send(:add_creditcard, result, @credit_card)
-    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Test St.', :address2 => '5F', :city => 'Testville', :company => 'Test Company', :country => 'US', :state => 'AK'} )
+    @gateway.send(:add_address, result, billing_address: { address1: '123 Test St.', address2: '5F', city: 'Testville', company: 'Test Company', country: 'US', state: 'AK' })
 
     assert_equal @credit_card.first_name, result[:NAME1]
     assert_equal @credit_card.last_name, result[:NAME2]
@@ -83,19 +96,19 @@ class BluePayTest < Test::Unit::TestCase
 
   def test_add_invoice
     result = {}
-    @gateway.send(:add_invoice, result, :order_id => '#1001')
+    @gateway.send(:add_invoice, result, order_id: '#1001')
     assert_equal '#1001', result[:invoice_num]
   end
 
   def test_add_description
     result = {}
-    @gateway.send(:add_invoice, result, :description => 'My Purchase is great')
+    @gateway.send(:add_invoice, result, description: 'My Purchase is great')
     assert_equal 'My Purchase is great', result[:description]
   end
 
   def test_purchase_meets_minimum_requirements
     params = {
-      :amount => "1.01",
+      amount: '1.01'
     }
 
     @gateway.send(:add_creditcard, params, @credit_card)
@@ -107,58 +120,87 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    @gateway.expects(:ssl_post).returns(successful_refund_response)
-    assert response = @gateway.refund(@amount, '100134230412', :card_number => @credit_card.number)
+    response = stub_comms do
+      @gateway.refund(@amount, '100134230412', @options.merge({ card_number: @credit_card.number }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/CUSTOMER_IP=192\.168\.0\.1/, data)
+    end.respond_with(successful_refund_response)
+
+    assert response
     assert_success response
     assert_equal 'This transaction has been approved', response.message
   end
 
   def test_refund_passing_extra_info
     response = stub_comms do
-      @gateway.refund(50, '123456789', :card_number => @credit_card.number, :first_name => "Bob", :last_name => "Smith", :zip => "12345")
-    end.check_request do |endpoint, data, headers|
+      @gateway.refund(50, '123456789', @options.merge({ card_number: @credit_card.number, first_name: 'Bob', last_name: 'Smith', zip: '12345', doc_type: 'WEB' }))
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/NAME1=Bob/, data)
       assert_match(/NAME2=Smith/, data)
       assert_match(/ZIP=12345/, data)
+      assert_match(/CUSTOMER_IP=192\.168\.0\.1/, data)
+      assert_match(/DOC_TYPE=WEB/, data)
     end.respond_with(successful_purchase_response)
+
     assert_success response
   end
 
   def test_failed_refund
-    @gateway.expects(:ssl_post).returns(failed_refund_response)
-    assert response = @gateway.refund(@amount, '123456789', :card_number => @credit_card.number)
+    response = stub_comms do
+      @gateway.refund(@amount, '123456789', @options.merge({ card_number: @credit_card.number }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/CUSTOMER_IP=192\.168\.0\.1/, data)
+    end.respond_with(failed_refund_response)
+
+    assert response
     assert_failure response
     assert_equal 'The referenced transaction does not meet the criteria for issuing a credit', response.message
   end
 
   def test_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert_deprecation_warning("credit should only be used to credit a payment method") do
-      assert response = @gateway.credit(@amount, '123456789', :card_number => @credit_card.number)
+    assert_deprecation_warning('credit should only be used to credit a payment method') do
+      response = stub_comms do
+        @gateway.credit(@amount, '123456789', @options.merge({ card_number: @credit_card.number }))
+      end.check_request do |_endpoint, data, _headers|
+        assert_match(/CUSTOMER_IP=192\.168\.0\.1/, data)
+      end.respond_with(failed_refund_response)
+
+      assert response
       assert_success response
       assert_equal 'This transaction has been approved', response.message
     end
   end
 
+  def test_successful_credit_with_check
+    response = stub_comms do
+      @gateway.credit(50, @check, @options.merge({ doc_type: 'PPD' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/DOC_TYPE=PPD/, data)
+    end.respond_with(successful_credit_response)
+
+    assert_success response
+  end
+
   def test_supported_countries
-    assert_equal ['US', 'CA'], BluePayGateway.supported_countries
+    assert_equal %w[US CA], BluePayGateway.supported_countries
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb],  BluePayGateway.supported_cardtypes
+    assert_equal %i[visa master american_express discover diners_club jcb], BluePayGateway.supported_cardtypes
   end
 
   def test_parser_extracts_exactly_the_keys_in_gateway_response
     assert_nothing_raised do
-      response = @gateway.send(:parse, "NEW_IMPORTANT_FIELD=value_on_fire")
+      response = @gateway.send(:parse, 'NEW_IMPORTANT_FIELD=value_on_fire')
       assert_equal response.params.keys, ['NEW_IMPORTANT_FIELD']
-      assert_equal response.params['NEW_IMPORTANT_FIELD'], "value_on_fire"
+      assert_equal response.params['NEW_IMPORTANT_FIELD'], 'value_on_fire'
     end
   end
 
   def test_failure_without_response_reason_text
     assert_nothing_raised do
-      assert_equal '', @gateway.send(:parse, "MESSAGE=").message
+      assert_equal '', @gateway.send(:parse, 'MESSAGE=').message
     end
   end
 
@@ -177,13 +219,39 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def test_message_from
+    assert_equal 'CVV does not match', @gateway.send(:parse, 'STATUS=2&CVV2=N&AVS=A&MESSAGE=FAILURE').message
+    assert_equal 'Street address matches, but postal code does not match.',
+      @gateway.send(:parse, 'STATUS=2&CVV2=M&AVS=A&MESSAGE=FAILURE').message
+  end
 
-    def get_msg(query)
-      @gateway.send(:parse, query).message
-    end
-    assert_equal "CVV does not match", get_msg('STATUS=2&CVV2=N&AVS=A&MESSAGE=FAILURE')
-    assert_equal "Street address matches, but 5-digit and 9-digit postal code do not match.",
-                   get_msg('STATUS=2&CVV2=M&AVS=A&MESSAGE=FAILURE')
+  def test_passing_stored_credentials_data_for_mit_transaction
+    options = @options.merge({ stored_credential: { initiator: 'merchant', reason_type: 'installment' } })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/cof=M/, data)
+      assert_match(/cofscheduled=Y/, data)
+    end.respond_with(RSP[:approved_auth])
+  end
+
+  def test_passing_stored_credentials_for_cit_transaction
+    options = @options.merge({ stored_credential: { initiator: 'cardholder', reason_type: 'unscheduled' } })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/cof=C/, data)
+      assert_match(/cofscheduled=N/, data)
+    end.respond_with(RSP[:approved_auth])
+  end
+
+  def test_passes_nothing_for_unrecognized_stored_credentials_values
+    options = @options.merge({ stored_credential: { initiator: 'unknown', reason_type: 'something weird' } })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/cof=&/, data)
+      assert_match(/cofscheduled=&/, data)
+    end.respond_with(RSP[:approved_auth])
   end
 
   # Recurring Billing Unit Tests
@@ -192,12 +260,11 @@ class BluePayTest < Test::Unit::TestCase
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
       @gateway.recurring(@amount, @credit_card,
-        :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
-        :rebill_start_date => '1 MONTH',
-        :rebill_expression => '14 DAYS',
-        :rebill_cycles     => '24',
-        :rebill_amount     => @amount * 4
-     )
+        billing_address: address.merge(first_name: 'Jim', last_name: 'Smith'),
+        rebill_start_date: '1 MONTH',
+        rebill_expression: '14 DAYS',
+        rebill_cycles: '24',
+        rebill_amount: @amount * 4)
     end
 
     assert_instance_of Response, response
@@ -210,7 +277,7 @@ class BluePayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_update_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.update_recurring(:rebill_id => @rebill_id, :rebill_amount => @amount * 2)
+      @gateway.update_recurring(rebill_id: @rebill_id, rebill_amount: @amount * 2)
     end
 
     assert_instance_of Response, response
@@ -245,9 +312,9 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def test_solution_id_is_added_to_post_data_parameters
-    assert !@gateway.send(:post_data, 'AUTH_ONLY').include?("solution_ID=A1000000")
+    assert !@gateway.send(:post_data, 'AUTH_ONLY').include?('solution_ID=A1000000')
     ActiveMerchant::Billing::BluePayGateway.application_id = 'A1000000'
-    assert @gateway.send(:post_data, 'AUTH_ONLY').include?("solution_ID=A1000000")
+    assert @gateway.send(:post_data, 'AUTH_ONLY').include?('solution_ID=A1000000')
   ensure
     ActiveMerchant::Billing::BluePayGateway.application_id = nil
   end
@@ -263,7 +330,7 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def successful_refund_response
-    "AUTH_CODE=GFOCD&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=CREDIT&REBID=&STATUS=1&AVS=_&TRANS_ID=100134230412&CVV2=_&MESSAGE=Approved%20Credit"
+    'AUTH_CODE=GFOCD&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=CREDIT&REBID=&STATUS=1&AVS=_&TRANS_ID=100134230412&CVV2=_&MESSAGE=Approved%20Credit'
   end
 
   def failed_refund_response
@@ -271,15 +338,15 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def successful_authorization_response
-    "AUTH_CODE=RSWUC&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=AUTH&REBID=&STATUS=1&AVS=_&TRANS_ID=100134229528&CVV2=_&MESSAGE=Approved%20Auth"
+    'AUTH_CODE=RSWUC&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=AUTH&REBID=&STATUS=1&AVS=_&TRANS_ID=100134229528&CVV2=_&MESSAGE=Approved%20Auth'
   end
 
   def successful_purchase_response
-    "AUTH_CODE=KHJMY&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=SALE&REBID=&STATUS=1&AVS=_&TRANS_ID=100134229668&CVV2=_&MESSAGE=Approved%20Sale"
+    'AUTH_CODE=KHJMY&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=SALE&REBID=&STATUS=1&AVS=_&TRANS_ID=100134229668&CVV2=_&MESSAGE=Approved%20Sale'
   end
 
   def failed_authorization_response
-    "AUTH_CODE=&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=AUTH&REBID=&STATUS=0&AVS=_&TRANS_ID=100134229728&CVV2=_&MESSAGE=Declined%20Auth"
+    'AUTH_CODE=&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=AUTH&REBID=&STATUS=0&AVS=_&TRANS_ID=100134229728&CVV2=_&MESSAGE=Declined%20Auth'
   end
 
   def successful_recurring_response
@@ -298,11 +365,15 @@ class BluePayTest < Test::Unit::TestCase
     'last_date=2012-04-13%2009%3A49%3A27&usual_date=2012-04-13%2000%3A00%3A00&template_id=100096219668&status=active&account_id=100096218902&rebill_id=100096219669&reb_amount=2.00&creation_date=2012-04-13%2009%3A49%3A19&sched_expr=1%20DAY&next_date=2012-04-13%2000%3A00%3A00&next_amount=&user_id=100096218903&cycles_remain=4'
   end
 
+  def successful_credit_response
+    'REBID=&AVS=_&TRANS_TYPE=CREDIT&STATUS=1&PAYMENT_ACCOUNT_MASK=C%3A244183602%3Axxxx8535&AUTH_CODE=&CARD_TYPE=ACH&MESSAGE=App%20ACH%20Credit&CVV2=_&TRANS_ID=100786598799'
+  end
+
   def transcript
-    "card_num=4111111111111111&exp_date=1212&MASTER_ID=&PAYMENT_TYPE=CREDIT&PAYMENT_ACCOUNT=4242424242424242&CARD_CVV2=123&CARD_EXPIRE=0916&NAME1=Longbob&NAME2=Longsen&ORDER_ID=78c40687dd55dbdc140df777b0e8ece3&INVOICE_ID=&invoice_num=78c40687dd55dbdc140df777b0e8ece3&EMAIL=&CUSTOM_ID=&DUPLICATE_OVERRIDE=&TRANS_TYPE=SALE&AMOUNT=1.00&MODE=TEST&ACCOUNT_ID=100096218902&TAMPER_PROOF_SEAL=55624458ce3e15fa8e33e6f2d784bbcb"
+    'card_num=4111111111111111&exp_date=1212&MASTER_ID=&PAYMENT_TYPE=CREDIT&PAYMENT_ACCOUNT=4242424242424242&CARD_CVV2=123&CARD_EXPIRE=0916&NAME1=Longbob&NAME2=Longsen&ORDER_ID=78c40687dd55dbdc140df777b0e8ece3&INVOICE_ID=&invoice_num=78c40687dd55dbdc140df777b0e8ece3&EMAIL=&CUSTOM_ID=&DUPLICATE_OVERRIDE=&TRANS_TYPE=SALE&AMOUNT=1.00&MODE=TEST&ACCOUNT_ID=100096218902&TAMPER_PROOF_SEAL=55624458ce3e15fa8e33e6f2d784bbcb'
   end
 
   def scrubbed_transcript
-    "card_num=[FILTERED]&exp_date=1212&MASTER_ID=&PAYMENT_TYPE=CREDIT&PAYMENT_ACCOUNT=[FILTERED]&CARD_CVV2=[FILTERED]&CARD_EXPIRE=0916&NAME1=Longbob&NAME2=Longsen&ORDER_ID=78c40687dd55dbdc140df777b0e8ece3&INVOICE_ID=&invoice_num=78c40687dd55dbdc140df777b0e8ece3&EMAIL=&CUSTOM_ID=&DUPLICATE_OVERRIDE=&TRANS_TYPE=SALE&AMOUNT=1.00&MODE=TEST&ACCOUNT_ID=100096218902&TAMPER_PROOF_SEAL=[FILTERED]"
+    'card_num=[FILTERED]&exp_date=1212&MASTER_ID=&PAYMENT_TYPE=CREDIT&PAYMENT_ACCOUNT=[FILTERED]&CARD_CVV2=[FILTERED]&CARD_EXPIRE=0916&NAME1=Longbob&NAME2=Longsen&ORDER_ID=78c40687dd55dbdc140df777b0e8ece3&INVOICE_ID=&invoice_num=78c40687dd55dbdc140df777b0e8ece3&EMAIL=&CUSTOM_ID=&DUPLICATE_OVERRIDE=&TRANS_TYPE=SALE&AMOUNT=1.00&MODE=TEST&ACCOUNT_ID=100096218902&TAMPER_PROOF_SEAL=[FILTERED]'
   end
 end

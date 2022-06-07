@@ -1,13 +1,12 @@
 require 'test_helper'
 
 class RemoteQuickPayV10Test < Test::Unit::TestCase
-
   def setup
     @gateway = QuickpayV10Gateway.new(fixtures(:quickpay_v10_api_key))
     @amount = 100
     @options = {
-      :order_id => generate_unique_id[0...10],
-      :billing_address => address(country: 'DNK')
+      order_id: generate_unique_id[0...10],
+      billing_address: address(country: 'DNK')
     }
 
     @valid_card    = credit_card('1000000000000008')
@@ -16,8 +15,8 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     @capture_rejected_card = credit_card('1000000000000032')
     @refund_rejected_card = credit_card('1000000000000040')
 
-    @valid_address   = address(:phone => '4500000001')
-    @invalid_address = address(:phone => '4500000002')
+    @valid_address   = address(phone: '4500000001')
+    @invalid_address = address(phone: '4500000002')
   end
 
   def card_brand(response)
@@ -25,7 +24,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_short_country
-    options = @options.merge({billing_address: address(country: 'DK')})
+    options = @options.merge({ billing_address: address(country: 'DK') })
     assert response = @gateway.purchase(@amount, @valid_card, options)
 
     assert_equal 'OK', response.message
@@ -35,7 +34,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_order_id_format
-    options = @options.merge({order_id: "##{Time.new.to_f}"})
+    options = @options.merge({ order_id: "##{Time.new.to_f}" })
     assert response = @gateway.purchase(@amount, @valid_card, options)
 
     assert_equal 'OK', response.message
@@ -60,7 +59,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   end
 
   def test_successful_usd_purchase
-    assert response = @gateway.purchase(@amount, @valid_card, @options.update(:currency => 'USD'))
+    assert response = @gateway.purchase(@amount, @valid_card, @options.update(currency: 'USD'))
     assert_equal 'OK',  response.message
     assert_equal 'USD', response.params['currency']
     assert_success response
@@ -68,13 +67,13 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_acquirers
-    assert response = @gateway.purchase(@amount, @valid_card, @options.update(:acquirer => "nets"))
+    assert response = @gateway.purchase(@amount, @valid_card, @options.update(acquirer: 'nets'))
     assert_equal 'OK', response.message
     assert_success response
   end
 
   def test_unsuccessful_purchase_with_invalid_acquirers
-    assert response = @gateway.purchase(@amount, @valid_card, @options.update(:acquirer => "invalid"))
+    assert response = @gateway.purchase(@amount, @valid_card, @options.update(acquirer: 'invalid'))
     assert_failure response
     assert_equal 'Validation error', response.message
   end
@@ -82,11 +81,28 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   def test_unsuccessful_authorize_with_invalid_card
     assert response = @gateway.authorize(@amount, @invalid_card, @options)
     assert_failure response
-    assert_match /Rejected test operation/, response.message
+    assert_match(/Rejected test operation/, response.message)
   end
 
   def test_successful_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @valid_card, @options)
+    assert_success auth
+    assert_equal 'OK', auth.message
+    assert auth.authorization
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'OK', capture.message
+  end
+
+  def test_successful_authorize_and_capture_with_3ds
+    options = @options.merge(
+      three_d_secure: {
+        cavv: '1234',
+        eci: '1234',
+        xid: '1234'
+      }
+    )
+    assert auth = @gateway.authorize(@amount, @valid_card, options)
     assert_success auth
     assert_equal 'OK', auth.message
     assert auth.authorization
@@ -108,7 +124,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '1111')
     assert_failure response
-    assert_equal 'Unknown error - please contact QuickPay', response.message
+    assert_equal 'Not found: No Payment with id 1111', response.message
   end
 
   def test_successful_purchase_and_void
@@ -119,6 +135,12 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert void = @gateway.void(auth.authorization)
     assert_success void
     assert_equal 'OK', void.message
+  end
+
+  def test_unsuccessful_void
+    assert void = @gateway.void('123')
+    assert_failure void
+    assert_equal 'Not found: No Payment with id 123', void.message
   end
 
   def test_successful_authorization_capture_and_credit
@@ -159,7 +181,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@invalid_card, @options)
     assert_failure response
-    assert_equal "Rejected test operation", response.message
+    assert_equal 'Rejected test operation', response.message
   end
 
   def test_successful_store
@@ -172,6 +194,52 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_success store
     assert purchase = @gateway.purchase(@amount, store.authorization, @options)
     assert_success purchase
+  end
+
+  def test_successful_store_and_reference_recurring_purchase
+    assert store = @gateway.store(@valid_card, @options)
+    assert_success store
+    assert signup = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success signup
+    @options[:order_id] = generate_unique_id[0...10]
+    assert renewal = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success renewal
+  end
+
+  def test_successful_store_and_reference_authorize
+    assert store = @gateway.store(@valid_card, @options)
+    assert_success store
+    assert authorization = @gateway.authorize(@amount, store.authorization, @options)
+    assert_success authorization
+  end
+
+  def test_successful_store_and_credit
+    assert store = @gateway.store(@valid_card, @options)
+    assert_success store
+    assert purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+    assert credit = @gateway.refund(@amount, purchase.authorization)
+    assert_success credit
+  end
+
+  def test_unsuccessful_store_and_credit
+    assert store = @gateway.store(@refund_rejected_card, @options)
+    assert_success store
+    assert purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+    assert credit = @gateway.refund(@amount, purchase.authorization)
+    assert_failure credit
+    assert_match(/Rejected test operation/, credit.message)
+  end
+
+  def test_successful_store_and_void_authorize
+    assert store = @gateway.store(@valid_card, @options)
+    assert_success store
+    assert authorize = @gateway.authorize(@amount, store.authorization, @options)
+    assert_success authorize
+    assert void = @gateway.void(authorize.authorization)
+    assert_success void
+    assert_equal 'OK', void.message
   end
 
   def test_successful_unstore
@@ -199,5 +267,4 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_scrubbed(@valid_card.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:api_key], clean_transcript)
   end
-
 end
