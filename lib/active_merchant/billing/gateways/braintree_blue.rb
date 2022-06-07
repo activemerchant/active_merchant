@@ -616,9 +616,7 @@ module ActiveMerchant #:nodoc:
           }
         }
 
-        if options[:billing_address] && options[:billing_address][:name]
-          parameters[:customer][:first_name], parameters[:customer][:last_name] = split_names(options[:billing_address][:name])
-        end
+        parameters[:customer][:first_name], parameters[:customer][:last_name] = split_names(options[:billing_address][:name]) if options[:billing_address] && options[:billing_address][:name]
 
         parameters[:custom_fields] = options[:custom_fields]
         parameters[:device_data] = options[:device_data] if options[:device_data]
