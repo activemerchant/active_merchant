@@ -282,18 +282,22 @@ module ActiveMerchant #:nodoc:
             if options[:payment_method_nonce]
               if not result.customer.paypal_accounts.empty?
                 saved_token = result.customer.paypal_accounts[0].token
+                email = result.customer.paypal_accounts[0].email
               else
                 saved_token = result.customer.credit_cards[0].token
+                email = result.customer.credit_cards[0].email
               end
             else
               saved_token = result.customer.credit_cards[0].token
+              email = result.customer.credit_cards[0].email
             end
           end
           Response.new(result.success?, message_from_result(result),
             {
               braintree_customer: (customer_hash(result.customer, :include_credit_cards) if result.success?),
               customer_vault_id: (result.customer.id if result.success?),
-              credit_card_token: (saved_token if result.success?)
+              credit_card_token: (saved_token if result.success?),
+              email: (email if result.success?),
             },
             authorization: (result.customer.id if result.success?),
             error_code: error_code_from_result(result))
@@ -325,15 +329,16 @@ module ActiveMerchant #:nodoc:
             parameters[:billing_address] = address unless address.all? { |_k, v| empty?(v) }
           end
 
-          result = @braintree_gateway.credit_card.create(parameters)
+          result = @braintree_gateway.payment_method.create(parameters)
           ActiveMerchant::Billing::Response.new(
             result.success?,
             message_from_result(result),
             {
-              customer_vault_id: (result.credit_card.customer_id if result.success?),
-              credit_card_token: (result.credit_card.token if result.success?)
+              customer_vault_id: (result.payment_method.customer_id if result.success?),
+              credit_card_token: (result.payment_method.token if result.success?),
+              email: (result.payment_method.email if result.success?)
             },
-            authorization: (result.credit_card.customer_id if result.success?),
+            authorization: (result.payment_method.customer_id if result.success?),
             error_code: error_code_from_result(result)
           )
         end
