@@ -399,8 +399,6 @@ module ActiveMerchant
           add_check(xml, source)
         elsif card_brand(source) == 'apple_pay'
           add_apple_pay_payment_token(xml, source)
-        elsif card_brand(source) == 'tokenized'
-          add_tokenized_credit_card(xml, source)
         else
           add_credit_card(xml, source, action)
         end
@@ -485,19 +483,6 @@ module ActiveMerchant
               xml.expirationDate(format(credit_card.month, :two_digits) + '/' + format(credit_card.year, :four_digits))
               xml.cardCode(credit_card.verification_value) if credit_card.valid_card_verification_value?(credit_card.verification_value, credit_card.brand)
               xml.cryptogram(credit_card.payment_cryptogram) if credit_card.is_a?(NetworkTokenizationCreditCard) && action != :credit
-            end
-          end
-        end
-      end
-
-      def add_tokenized_credit_card(xml, credit_card)
-        if credit_card.track_data
-          add_swipe_data(xml, credit_card)
-        else
-          xml.payment do
-            xml.opaqueData do
-              xml.dataDescriptor(credit_card.nonce_desc)
-              xml.dataValue(credit_card.nonce)
             end
           end
         end
