@@ -71,6 +71,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     response = @gateway.authorize(100, credit_card('41111111111111111111'))
 
     assert_equal 'transaction_id', response.authorization
+    assert_equal 'transaction_id', response.params['transaction_id']
     assert_equal true, response.test
   end
 
@@ -81,6 +82,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     response = @gateway.purchase(100, credit_card('41111111111111111111'))
 
     assert_equal 'transaction_id', response.authorization
+    assert_equal 'transaction_id', response.params['transaction_id']
     assert_equal true, response.test
   end
 
@@ -957,6 +959,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization
+    assert_equal 'transaction_id', response.params['transaction_id']
   end
 
   def test_android_pay_card
@@ -990,6 +993,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization
+    assert_equal 'transaction_id', response.params['transaction_id']
   end
 
   def test_google_pay_card
@@ -1023,6 +1027,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization
+    assert_equal 'transaction_id', response.params['transaction_id']
   end
 
   def test_supports_network_tokenization

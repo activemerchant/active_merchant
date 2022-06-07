@@ -393,6 +393,7 @@ module ActiveMerchant #:nodoc:
       def response_params(result)
         params = {}
         params[:customer_vault_id] = result.transaction.customer_details.id if result.success?
+        params[:transaction_id] = result.transaction.id if result.success?
         params[:braintree_transaction] = transaction_hash(result)
         params
       end
