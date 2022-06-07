@@ -285,11 +285,11 @@ module ActiveMerchant #:nodoc:
                 email = result.customer.paypal_accounts[0].email
               else
                 saved_token = result.customer.credit_cards[0].token
-                email = result.customer.credit_cards[0].email
+                email = nil
               end
             else
               saved_token = result.customer.credit_cards[0].token
-              email = result.customer.credit_cards[0].email
+              email = nil
             end
           end
           Response.new(result.success?, message_from_result(result),
@@ -330,13 +330,21 @@ module ActiveMerchant #:nodoc:
           end
 
           result = @braintree_gateway.payment_method.create(parameters)
+          if result.success?
+            if result.payment_method.instance_variable_defined?(:@email)
+              email = result.payment_method.email
+            else
+              email = nil
+            end
+          end
+
           ActiveMerchant::Billing::Response.new(
             result.success?,
             message_from_result(result),
             {
               customer_vault_id: (result.payment_method.customer_id if result.success?),
               credit_card_token: (result.payment_method.token if result.success?),
-              email: (result.payment_method.email if result.success?)
+              email: (email if result.success?)
             },
             authorization: (result.payment_method.customer_id if result.success?),
             error_code: error_code_from_result(result)
