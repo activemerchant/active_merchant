@@ -140,6 +140,5 @@ class RemoteTnsTest < Test::Unit::TestCase
 
     gateway = TnsGateway.new(userid: 'unknown', password: 'unknown')
     assert !gateway.verify_credentials
->>>>>>> upstream/master
   end
 end
