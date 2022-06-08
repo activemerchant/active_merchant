@@ -279,17 +279,16 @@ module ActiveMerchant #:nodoc:
           }.merge credit_card_params
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
           if result.success?
+            email = nil
             if options[:payment_method_nonce]
               if not result.customer.paypal_accounts.empty?
                 saved_token = result.customer.paypal_accounts[0].token
                 email = result.customer.paypal_accounts[0].email
               else
                 saved_token = result.customer.credit_cards[0].token
-                email = nil
               end
             else
               saved_token = result.customer.credit_cards[0].token
-              email = nil
             end
           end
           Response.new(result.success?, message_from_result(result),
