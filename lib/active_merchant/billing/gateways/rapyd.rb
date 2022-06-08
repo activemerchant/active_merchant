@@ -66,6 +66,8 @@ module ActiveMerchant #:nodoc:
         post[:payment] = add_reference(authorization)
         add_invoice(post, money, options)
         add_metadata(post, options)
+        add_ewallet(post, options)
+
         commit(:post, 'refunds', post)
       end
 
@@ -82,6 +84,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_payment(post, payment, options)
         add_customer_object(post, payment)
+        add_metadata(post, options)
+        add_ewallet(post, options)
+        add_payment_fields(post, options)
         commit(:post, 'customers', post)
       end
 

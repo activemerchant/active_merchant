@@ -34,6 +34,7 @@
 * Plexo:  Change field name from `meta_data` to `metadata` [ajawadmirza] #4443
 * Simetrik: Update `vat` to be in cents [simetrik-frank] #4425
 * Cybersource: Handle Amex cryptograms [heavyblade] #4445
+* Rapyd: Pass fields to `refund` and `store` [naashton] #4449
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
