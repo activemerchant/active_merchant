@@ -27,6 +27,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :private_key, :public_key)
         @private_key = options[:private_key]
         @public_key = options[:public_key]
+        @encryption_key = OpenSSL::PKey::RSA.new(options[:encryption_key]) if options[:encryption_key]
         @shop_process_id = options[:shop_process_id] || SecureRandom.random_number(10**15)
         super
       end
@@ -114,14 +115,14 @@ module ActiveMerchant #:nodoc:
         transcript.encode('UTF-8', 'binary', undef: :replace, replace: '')
       end
 
-      private
-
       # Required to encrypt PAN data.
       def one_time_public_key
         token = generate_token('get_encription_public_key', @public_key)
         response = commit(:pci_encryption_key, token: token)
-        OpenSSL::PKey::RSA.new(response.params['encryption_key'])
+        response.params['encryption_key']
       end
+
+      private
 
       def generate_token(*elements)
         Digest::MD5.hexdigest(@private_key + elements.join)
@@ -138,7 +139,9 @@ module ActiveMerchant #:nodoc:
 
         payload = { card_number: card_number, 'cvv': cvv }.to_json
 
-        post[:card_encrypted_data] = JWE.encrypt(payload, one_time_public_key)
+        encryption_key = @encryption_key || OpenSSL::PKey::RSA.new(one_time_public_key)
+
+        post[:card_encrypted_data] = JWE.encrypt(payload, encryption_key)
         post[:card_month_expiration] = format(payment.month, :two_digits)
         post[:card_year_expiration] = format(payment.year, :two_digits)
       end

@@ -1381,6 +1381,7 @@ visanet_peru:
 vpos:
   public_key: SOMECREDENTIAL
   private_key: ANOTHERCREDENTIAL
+  encryption_key: "-----BEGIN PUBLIC KEY-----\n ..."
   commerce: 123
   commerce_branch: 45
 
