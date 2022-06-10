@@ -289,6 +289,15 @@ class AirwallexTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_purchase_passes_referrer_data
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      # only look for referrer data on the create_payment_intent request
+      assert_match(/\"referrer_type\":\"spreedly\"/, data) if data.include?('_setup')
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_purchase_passes_descriptor
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(description: 'a simple test'))

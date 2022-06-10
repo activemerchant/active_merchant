@@ -146,6 +146,7 @@ module ActiveMerchant #:nodoc:
         add_order(post, options)
         post[:request_id] = "#{request_id(options)}_setup"
         post[:merchant_order_id] = "#{merchant_order_id(options)}_setup"
+        post[:referrer_type] = 'spreedly'
         add_descriptor(post, options)
 
         response = commit(:setup, post)

@@ -37,7 +37,7 @@
 * Rapyd: Pass fields to `refund` and `store` [naashton] #4449
 * VPOS: Allow reuse of encryption key [therufs] #4450
 * Orbital: Add `payment_action_ind` field and refund through credit card to support tandem implementation [ajawadmirza] #4420
-* Airwallex: Remove confusing comments [drkjc] #4452
+* Airwallex: Send `referrer_data` on setup transactions [drkjc] #4453
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
