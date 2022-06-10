@@ -75,6 +75,12 @@ module ActiveMerchant #:nodoc:
         @braintree_gateway = Braintree::Gateway.new(@configuration)
       end
 
+      def setup_purchase
+        commit do
+          Response.new(true, 'Client token created', { client_token: @braintree_gateway.client_token.generate })
+        end
+      end
+
       def authorize(money, credit_card_or_vault_id, options = {})
         return Response.new(false, DIRECT_BANK_ERROR) if credit_card_or_vault_id.is_a? Check
 

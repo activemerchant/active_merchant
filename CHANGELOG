@@ -2,6 +2,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Maestro: Adding missing BIN ranges [bradbroge] #4423
 * Simetrik: Fix integer and float types, update scrub method [rachelkirk] #4405
 * Credorax: Convert country codes for  `recipient_country_code` field [ajawadmirza] #4408
 * BlueSnap: Correctly parse `refund-transaction-id` [dsmcclain] #4411
@@ -11,6 +12,29 @@
 * Ogone: Add support for 3dsv2 [gasb150] #4410
 * BlueSnap: Add support for stored credentials [ajawadmirza] #4414
 * Monei: Add support for `lang` field [drkjc] #4421
+* Wompi: Redirect `refund` to `void` [drkjc] #4424
+* Rapyd: 3DS Support [naashton] #4422
+* Adyen: Update API version [jherreraa] #4418
+* Ogone: Updated home gateway URL [gasb150] #4419
+* Credorax: Update url gateway and credit cards [javierpedrozaing] #4417
+* Kushki: Pass extra_taxes with USD [therufs] #4426
+* DLocal: fix bug with `X-Idempotency-Key` header [dsmcclain] #4431
+* DLocal: Mark support for additional countries [gasb150] #4427
+* Rapyd: Additional Fields [naashton] #4434
+* Braintree: Return generated client token [BritneyS] #4416
+* Simetrik: Update `audience` field [simetrik-frank] #4433
+* CyberSource: Add bank account payment method support [heavyblade] #4428
+* Rapyd: Zero Dollar Auth [naashton] #4435
+* Rapyd: Scrub ACH [naashton] #4436
+* VisaNet Peru: Update `purchase_number` [rachelkirk] #4437
+* CardConnect:  Add support for 3ds V2 [javierpedrozaing] #4429
+* Rapyd: Support `store` and `unstore` [naashton] #4439
+* Orbital: Update API version to 9.0 [gasb150] #4440
+* Plexo:  Add `meta_data` fields and reorder amount object in response [ajawadmirza] #4441
+* Plexo:  Change field name from `meta_data` to `metadata` [ajawadmirza] #4443
+* Simetrik: Update `vat` to be in cents [simetrik-frank] #4425
+* Cybersource: Handle Amex cryptograms [heavyblade] #4445
+* Rapyd: Pass fields to `refund` and `store` [naashton] #4449
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

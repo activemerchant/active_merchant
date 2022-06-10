@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
     class OrbitalGateway < Gateway
       include Empty
 
-      API_VERSION = '8.1'
+      API_VERSION = '9.0'
 
       POST_HEADERS = {
         'MIME-Version' => '1.1',
