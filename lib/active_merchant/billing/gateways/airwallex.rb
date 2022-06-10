@@ -313,10 +313,6 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, id = nil)
         url = build_request_url(action, id)
-        # MIT txn w/ no NTID should fail and the gateway should say so
-        # Logic to prevent sending anything on test transactions
-        # if Airwallex changes the value it won't matter
-        # Passing nothing still doesn't test the happy path
 
         post_headers = { 'Authorization' => "Bearer #{@access_token}", 'Content-Type' => 'application/json' }
         response = parse(ssl_post(url, post_data(post), post_headers))
