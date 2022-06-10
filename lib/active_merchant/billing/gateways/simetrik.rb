@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       class_attribute :test_auth_url, :live_auth_url
       self.test_auth_url = 'https://tenant-payments-dev.us.auth0.com/oauth/token'
       self.live_auth_url = 'https://tenant-payments-prod.us.auth0.com/oauth/token'
-
+      
       self.supported_countries = %w(PE AR)
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover]
@@ -232,8 +232,8 @@ module ActiveMerchant #:nodoc:
 
         order = {}
         order_options = options[:order] || {}
-        order[:id] = order_options[:id] if order_options[:id]
-        order[:description] = order_options[:description] if order_options[:description]
+        order[:id] = options[:order_id] if options[:order_id]
+        order[:description] = options[:description] if options[:description]
         order[:installments] = order_options[:installments].to_i if order_options[:installments]
         order[:datetime_local_transaction] = order_options[:datetime_local_transaction] if order_options[:datetime_local_transaction]
 
