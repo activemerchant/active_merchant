@@ -235,8 +235,8 @@ module ActiveMerchant #:nodoc:
 
         order = {}
         order_options = options[:order] || {}
-        order[:id] = order_options[:id] if order_options[:id]
-        order[:description] = order_options[:description] if order_options[:description]
+        order[:id] = options[:order_id] if options[:order_id]
+        order[:description] = options[:description] if options[:description]
         order[:installments] = order_options[:installments].to_i if order_options[:installments]
         order[:datetime_local_transaction] = order_options[:datetime_local_transaction] if order_options[:datetime_local_transaction]
 
