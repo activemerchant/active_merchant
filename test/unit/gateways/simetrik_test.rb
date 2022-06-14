@@ -12,6 +12,7 @@ end
 
 class SimetrikTest < Test::Unit::TestCase
   def setup
+    puts address
     @token_acquirer = 'ea890fd1-49f3-4a34-a150-192bf9a59205'
     @datetime = Time.new.strftime('%Y-%m-%dT%H:%M:%S.%L%:z')
     @gateway = SimetrikGateway.new(
@@ -158,6 +159,26 @@ class SimetrikTest < Test::Unit::TestCase
 
     options = @authorize_capture_options.clone()
     options[:billing_address] = address
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_instance_of Response, response
+
+    assert_equal response.message, 'successful charge'
+    assert_equal response.error_code, nil, 'Should expected error code equal to nil '
+    assert_equal response.avs_result['code'], 'G'
+    assert_equal response.cvv_result['code'], 'P'
+    assert response.test?
+  end
+
+  def test_success_purchase_with_shipping_address
+    expected_body = JSON.parse(@authorize_capture_expected_body.dup)
+    expected_body['forward_payload']['order']['shipping_address'] = address
+
+    @gateway.expects(:ssl_request).returns(successful_purchase_response_body)
+
+    options = @authorize_capture_options.clone()
+    options[:shipping_address] = address
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
