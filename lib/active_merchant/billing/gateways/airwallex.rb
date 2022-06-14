@@ -140,13 +140,17 @@ module ActiveMerchant #:nodoc:
         base_url + ENDPOINTS[action].to_s % { id: id }
       end
 
+      def add_referrer_data(post)
+        post[:referrer_data] = { type: 'spreedly' }
+      end
+
       def create_payment_intent(money, options = {})
         post = {}
         add_invoice(post, money, options)
         add_order(post, options)
         post[:request_id] = "#{request_id(options)}_setup"
         post[:merchant_order_id] = "#{merchant_order_id(options)}_setup"
-        post[:referrer_type] = 'spreedly'
+        add_referrer_data(post)
         add_descriptor(post, options)
 
         response = commit(:setup, post)

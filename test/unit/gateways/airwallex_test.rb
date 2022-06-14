@@ -294,7 +294,7 @@ class AirwallexTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       # only look for referrer data on the create_payment_intent request
-      assert_match(/\"referrer_type\":\"spreedly\"/, data) if data.include?('_setup')
+      assert_match(/\"referrer_data\":{\"type\":\"spreedly\"}/, data) if data.include?('_setup')
     end.respond_with(successful_purchase_response)
   end
 
