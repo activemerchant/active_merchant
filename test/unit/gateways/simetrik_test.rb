@@ -57,7 +57,7 @@ class SimetrikTest < Test::Unit::TestCase
         installments: 1
       },
       currency: 'USD',
-      vat: 19,
+      vat: 190,
       three_ds_fields: {
         version: '2.1.0',
         eci: '02',
@@ -93,7 +93,7 @@ class SimetrikTest < Test::Unit::TestCase
           "amount": {
             "total_amount": 10.0,
             "currency": 'USD',
-            "vat": 19
+            "vat": 1.9
           }
         },
         "payment_method": {
@@ -253,7 +253,7 @@ class SimetrikTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).returns(failed_capture_response_body)
 
     response = @gateway.capture(@amount, 'SI-226', {
-      vat: 19,
+      vat: 190,
       currency: 'USD',
       token_acquirer: @token_acquirer,
       trace_id: @trace_id

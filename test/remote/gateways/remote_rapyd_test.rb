@@ -10,7 +10,11 @@ class RemoteRapydTest < Test::Unit::TestCase
     @check = check
     @options = {
       pm_type: 'us_visa_card',
-      currency: 'USD'
+      currency: 'USD',
+      complete_payment_url: 'www.google.com',
+      error_payment_url: 'www.google.com',
+      description: 'Describe this transaction',
+      statement_descriptor: 'Statement Descriptor'
     }
     @ach_options = {
       pm_type: 'us_ach_bank',
@@ -33,6 +37,12 @@ class RemoteRapydTest < Test::Unit::TestCase
       },
       'string': 'preferred',
       'Boolean': true
+    }
+    @three_d_secure = {
+      version: '2.1.0',
+      cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+      xid: '00000000000000000501',
+      eci: '02'
     }
   end
 
@@ -136,7 +146,7 @@ class RemoteRapydTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_equal 'The request tried to retrieve a payment, but the payment was not found. The request was rejected. Corrective action: Use a valid payment ID.', response.message
+    assert_equal 'The request attempted an operation that requires a payment ID, but the payment was not found. The request was rejected. Corrective action: Use the ID of a valid payment.', response.message
   end
 
   def test_failed_void_with_payment_method_error
@@ -186,6 +196,32 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_equal 'Do Not Honor', response.message
   end
 
+  def test_successful_store_and_unstore
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert customer_id = store.params.dig('data', 'id')
+    assert store.params.dig('data', 'default_payment_method')
+
+    unstore = @gateway.unstore(store.authorization)
+    assert_success unstore
+    assert_equal true, unstore.params.dig('data', 'deleted')
+    assert_equal customer_id, unstore.params.dig('data', 'id')
+  end
+
+  def test_failed_store
+    store = @gateway.store(@declined_card, @options)
+    assert_failure store
+  end
+
+  def test_failed_unstore
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert store.params.dig('data', 'id')
+
+    unstore = @gateway.unstore('')
+    assert_failure unstore
+  end
+
   def test_invalid_login
     gateway = RapydGateway.new(secret_key: '', access_key: '')
 
@@ -204,5 +240,40 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:secret_key], transcript)
     assert_scrubbed(@gateway.options[:access_key], transcript)
+  end
+
+  def test_transcript_scrubbing_with_ach
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @ach_options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@check.routing_number, transcript)
+    assert_scrubbed(@gateway.options[:secret_key], transcript)
+    assert_scrubbed(@gateway.options[:access_key], transcript)
+  end
+
+  def test_successful_authorize_with_3ds_v1_options
+    options = @options.merge(three_d_secure: @three_d_secure)
+    options[:pm_type] = 'gb_visa_card'
+    options[:three_d_secure][:version] = '1.0.2'
+
+    response = @gateway.authorize(105000, @credit_card, options)
+    assert_success response
+    assert_equal 'ACT', response.params['data']['status']
+    assert_equal '3d_verification', response.params['data']['payment_method_data']['next_action']
+    assert response.params['data']['redirect_url']
+  end
+
+  def test_successful_authorize_with_3ds_v2_options
+    options = @options.merge(three_d_secure: @three_d_secure)
+    options[:pm_type] = 'gb_visa_card'
+
+    response = @gateway.authorize(105000, @credit_card, options)
+    assert_success response
+    assert_equal 'ACT', response.params['data']['status']
+    assert_equal '3d_verification', response.params['data']['payment_method_data']['next_action']
+    assert response.params['data']['redirect_url']
   end
 end

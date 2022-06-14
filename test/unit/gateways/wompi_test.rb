@@ -82,23 +82,36 @@ class WompiTest < Test::Unit::TestCase
     assert_equal 'La transacción fue rechazada (Sandbox)', response.message
   end
 
-  def test_successful_refund
-    @gateway.expects(:ssl_post).returns(successful_refund_response)
+  # def test_successful_refund
+  #   @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    response = @gateway.refund(@amount, @credit_card, @options)
+  #   response = @gateway.refund(@amount, @credit_card, @options)
+  #   assert_success response
+
+  #   assert_equal '113879-1635301011-28454', response.authorization
+  #   assert response.test?
+  # end
+
+  # def test_failed_refund
+  #   @gateway.expects(:ssl_post).returns(failed_refund_response)
+
+  #   response = @gateway.refund(@amount, @credit_card, @options)
+  #   assert_failure response
+  #   message = JSON.parse(response.message)
+  #   assert_equal 'transaction_id Debe ser completado', message['transaction_id'].first
+  # end
+
+  def test_successful_refund_to_void
+    response = stub_comms(@gateway) do
+      @gateway.refund(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      assert_match 'void_sync', endpoint
+      assert_match '{}', data
+    end.respond_with(successful_void_response)
     assert_success response
 
-    assert_equal '113879-1635301011-28454', response.authorization
+    assert_equal '113879-1635301067-17128', response.authorization
     assert response.test?
-  end
-
-  def test_failed_refund
-    @gateway.expects(:ssl_post).returns(failed_refund_response)
-
-    response = @gateway.refund(@amount, @credit_card, @options)
-    assert_failure response
-    message = JSON.parse(response.message)
-    assert_equal 'transaction_id Debe ser completado', message['transaction_id'].first
   end
 
   def test_successful_void

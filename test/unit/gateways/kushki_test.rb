@@ -128,9 +128,45 @@ class KushkiTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_taxes_are_included_when_provided
+  def test_cop_taxes_are_included_when_provided
     options = {
       currency: 'COP',
+      amount: {
+        subtotal_iva_0: '4.95',
+        subtotal_iva: '10',
+        iva: '1.54',
+        ice: '3.50',
+        extra_taxes: {
+          propina: 0.1,
+          tasa_aeroportuaria: 0.2,
+          agencia_de_viaje: 0.3,
+          iac: 0.4
+        }
+      }
+    }
+
+    amount = 100 * (
+      options[:amount][:subtotal_iva_0].to_f +
+      options[:amount][:subtotal_iva].to_f +
+      options[:amount][:iva].to_f +
+      options[:amount][:ice].to_f
+    )
+
+    response = stub_comms do
+      @gateway.purchase(amount, @credit_card, options)
+    end.check_request do |endpoint, data, _headers|
+      if /charges/.match?(endpoint)
+        assert_match %r{extraTaxes}, data
+        assert_match %r{propina}, data
+      end
+    end.respond_with(successful_charge_response, successful_token_response)
+
+    assert_success response
+  end
+
+  def test_usd_taxes_are_included_when_provided
+    options = {
+      currency: 'USD',
       amount: {
         subtotal_iva_0: '4.95',
         subtotal_iva: '10',

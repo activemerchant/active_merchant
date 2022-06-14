@@ -325,6 +325,32 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
+  def test_successful_purchase_with_bank_account
+    bank_account = check({ account_number: '4100', routing_number: '011000015' })
+    assert response = @gateway.purchase(10000, bank_account, @options)
+    assert_successful_response(response)
+  end
+
+  def test_successful_purchase_with_bank_account_savings_account
+    bank_account = check({ account_number: '4100', routing_number: '011000015', account_type: 'savings' })
+    assert response = @gateway.purchase(10000, bank_account, @options)
+    assert_successful_response(response)
+  end
+
+  def test_unsuccessful_purchase_with_bank_account_card_declined
+    bank_account = check({ account_number: '4201', routing_number: '011000015' })
+    assert response = @gateway.purchase(10000, bank_account, @options)
+    assert_failure response
+    assert_equal 'General decline by the processor', response.message
+  end
+
+  def test_unsuccessful_purchase_with_bank_account_merchant_configuration
+    bank_account = check({ account_number: '4241', routing_number: '011000015' })
+    assert response = @gateway.purchase(10000, bank_account, @options)
+    assert_failure response
+    assert_equal 'A problem exists with your CyberSource merchant configuration', response.message
+  end
+
   def test_successful_purchase_with_national_tax_indicator
     assert purchase = @gateway.purchase(@amount, @credit_card, @options.merge(national_tax_indicator: 1))
     assert_successful_response(purchase)
@@ -574,6 +600,15 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
   end
 
+  def test_successful_refund_with_bank_account_follow_on
+    bank_account = check({ account_number: '4100', routing_number: '011000015' })
+    assert response = @gateway.purchase(10000, bank_account, @options)
+    assert_successful_response(response)
+
+    assert response = @gateway.refund(10000, response.authorization, @options)
+    assert_successful_response(response)
+  end
+
   def test_network_tokenization_authorize_and_capture
     credit_card = network_tokenization_credit_card('4111111111111111',
       brand: 'visa',
@@ -585,6 +620,45 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_successful_response(capture)
+  end
+
+  def test_network_tokenization_with_amex_cc_and_basic_cryptogram
+    credit_card = network_tokenization_credit_card('378282246310005',
+      brand: 'american_express',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+
+    assert auth = @gateway.authorize(@amount, credit_card, @options)
+    assert_successful_response(auth)
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_successful_response(capture)
+  end
+
+  def test_network_tokenization_with_amex_cc_longer_cryptogram
+    # Generate a random 40 bytes binary amex cryptogram => Base64.encode64(Random.bytes(40))
+    long_cryptogram = "NZwc40C4eTDWHVDXPekFaKkNYGk26w+GYDZmU50cATbjqOpNxR/eYA==\n"
+
+    credit_card = network_tokenization_credit_card('378282246310005',
+      brand: 'american_express',
+      eci: '05',
+      payment_cryptogram: long_cryptogram)
+
+    assert auth = @gateway.authorize(@amount, credit_card, @options)
+    assert_successful_response(auth)
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_successful_response(capture)
+  end
+
+  def test_purchase_with_network_tokenization_with_amex_cc
+    credit_card = network_tokenization_credit_card('378282246310005',
+      brand: 'american_express',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+
+    assert auth = @gateway.purchase(@amount, credit_card, @options)
+    assert_successful_response(auth)
   end
 
   def test_successful_authorize_with_mdd_fields
@@ -644,6 +718,16 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
 
     assert response = @gateway.authorize(@amount, response.authorization, order_id: generate_unique_id)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_subscription_authorization_with_bank_account
+    bank_account = check({ account_number: '4100', routing_number: '011000015' })
+    assert response = @gateway.store(bank_account, order_id: generate_unique_id)
+    assert_successful_response(response)
+
+    assert response = @gateway.purchase(@amount, response.authorization, order_id: generate_unique_id)
     assert_successful_response(response)
     assert !response.authorization.blank?
   end
@@ -712,9 +796,24 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
+  def test_successful_credit_with_bank_account
+    bank_account = check({ account_number: '4100', routing_number: '011000015' })
+    assert response = @gateway.credit(10000, bank_account, order_id: generate_unique_id)
+
+    assert_successful_response(response)
+  end
+
   def test_successful_create_subscription
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert_successful_response(response)
+    assert_equal 'credit_card', response.authorization.split(';')[7]
+  end
+
+  def test_successful_create_subscription_with_bank_account
+    bank_account = check({ account_number: '4100', routing_number: '011000015' })
+    assert response = @gateway.store(bank_account, @subscription_options)
+    assert_successful_response(response)
+    assert_equal 'check', response.authorization.split(';')[7]
   end
 
   def test_successful_create_subscription_with_elo

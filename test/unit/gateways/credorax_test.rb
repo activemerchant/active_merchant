@@ -44,6 +44,11 @@ class CredoraxTest < Test::Unit::TestCase
     }
   end
 
+  def test_supported_card_types
+    klass = @gateway.class
+    assert_equal %i[visa master maestro american_express jcb discover diners_club], klass.supported_cardtypes
+  end
+
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
