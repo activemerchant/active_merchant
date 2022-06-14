@@ -16,6 +16,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card
     @check = check
+    @tokenized_credit_card = tokenized_credit_card
     @apple_pay_payment_token = ActiveMerchant::Billing::ApplePayPaymentToken.new(
       { data: 'encoded_payment_data' },
       payment_instrument_name: 'SomeBank Visa',
@@ -152,8 +153,8 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end
   end
 
-  def test_market_type_not_included_for_apple_pay_or_echeck
-    [@check, @apple_pay_payment_token].each do |payment|
+  def test_market_type_not_included_for_apple_pay_or_echeck_or_tokenized
+    [@check, @apple_pay_payment_token, @tokenized_credit_card].each do |payment|
       stub_comms do
         @gateway.purchase(@amount, payment)
       end.check_request do |_endpoint, data, _headers|
@@ -286,6 +287,38 @@ class AuthorizeNetTest < Test::Unit::TestCase
       parse(data) do |doc|
         assert_equal @gateway.class::APPLE_PAY_DATA_DESCRIPTOR, doc.at_xpath('//opaqueData/dataDescriptor').content
         assert_equal Base64.strict_encode64(@apple_pay_payment_token.payment_data.to_json), doc.at_xpath('//opaqueData/dataValue').content
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141795', response.authorization.split('#')[0]
+  end
+
+  def test_successful_tokenized_credit_card_authorization
+    response = stub_comms do
+      @gateway.authorize(@amount, @tokenized_credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert_equal @gateway.class::PAYMENT_NONCE_DATA_DESCRIPTOR, doc.at_xpath('//opaqueData/dataDescriptor').content
+        assert_equal @tokenized_credit_card.nonce, doc.at_xpath('//opaqueData/dataValue').content
+      end
+    end.respond_with(successful_authorize_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141794', response.authorization.split('#')[0]
+  end
+
+  def test_successful_tokenized_credit_card_purchase
+    response = stub_comms do
+      @gateway.purchase(@amount, @tokenized_credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert_equal @gateway.class::PAYMENT_NONCE_DATA_DESCRIPTOR, doc.at_xpath('//opaqueData/dataDescriptor').content
+        assert_equal @tokenized_credit_card.nonce, doc.at_xpath('//opaqueData/dataValue').content
       end
     end.respond_with(successful_purchase_response)
 

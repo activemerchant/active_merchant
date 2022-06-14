@@ -202,6 +202,15 @@ module ActiveMerchant
       Billing::Check.new(defaults)
     end
 
+    def tokenized_credit_card(options ={})
+      defaults = {
+        name: 'Jim Smith',
+        nonce: '9471056021205027705001'
+      }.update(options)
+
+      Billing::AuthorizeNetPaymentNonce.new(defaults)
+    end
+
     def apple_pay_payment_token(options = {})
       # apple_pay_json_raw should contain the JSON serialization of the object described here
       # https://developer.apple.com/library/IOs//documentation/PassKit/Reference/PaymentTokenJSON/PaymentTokenJSON.htm

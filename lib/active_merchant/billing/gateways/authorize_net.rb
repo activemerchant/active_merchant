@@ -90,6 +90,7 @@ module ActiveMerchant
       }.freeze
 
       APPLE_PAY_DATA_DESCRIPTOR = 'COMMON.APPLE.INAPP.PAYMENT'
+      PAYMENT_NONCE_DATA_DESCRIPTOR = 'COMMON.ACCEPT.INAPP.PAYMENT'
 
       PAYMENT_METHOD_NOT_SUPPORTED_ERROR = '155'
       INELIGIBLE_FOR_ISSUING_CREDIT_ERROR = '54'
@@ -399,6 +400,8 @@ module ActiveMerchant
           add_check(xml, source)
         elsif card_brand(source) == 'apple_pay'
           add_apple_pay_payment_token(xml, source)
+        elsif card_brand(source) == 'tokenized'
+          add_tokenized_credit_card(xml, source)
         else
           add_credit_card(xml, source, action)
         end
@@ -488,6 +491,15 @@ module ActiveMerchant
         end
       end
 
+      def add_tokenized_credit_card(xml, credit_card)
+        xml.payment do
+          xml.opaqueData do
+            xml.dataDescriptor(PAYMENT_NONCE_DATA_DESCRIPTOR)
+            xml.dataValue(credit_card.nonce)
+          end
+        end
+      end
+
       def add_swipe_data(xml, credit_card)
         TRACKS.each do |key, regex|
           if regex.match?(credit_card.track_data)
@@ -519,7 +531,7 @@ module ActiveMerchant
       end
 
       def add_market_type_device_type(xml, payment, options)
-        return if payment.is_a?(String) || card_brand(payment) == 'check' || card_brand(payment) == 'apple_pay'
+        return if payment.is_a?(String) || card_brand(payment) == 'check' || card_brand(payment) == 'apple_pay' || card_brand(payment) == 'tokenized'
 
         if valid_track_data
           xml.retail do
