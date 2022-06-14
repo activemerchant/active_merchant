@@ -71,6 +71,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     response = @gateway.authorize(100, credit_card('41111111111111111111'))
 
     assert_equal 'transaction_id', response.authorization
+    assert_equal 'transaction_id', response.params['transaction_id']
     assert_equal true, response.test
   end
 
@@ -81,6 +82,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     response = @gateway.purchase(100, credit_card('41111111111111111111'))
 
     assert_equal 'transaction_id', response.authorization
+    assert_equal 'transaction_id', response.params['transaction_id']
     assert_equal true, response.test
   end
 
@@ -668,6 +670,13 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.purchase(100, credit_card('41111111111111111111'), billing_address: { country_code_numeric: 840 })
   end
 
+  def test_address_name_handling
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      params[:customer][:first_name] == 'John' && params[:customer][:last_name] == 'Smith'
+    end.returns(braintree_result)
+    @gateway.purchase(100, 'present', billing_address: { country: 'US', name: 'John Smith' })
+  end
+
   def test_address_zip_handling
     Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
       (params[:billing][:postal_code] == '12345')
@@ -957,6 +966,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization
+    assert_equal 'transaction_id', response.params['transaction_id']
   end
 
   def test_android_pay_card
@@ -990,6 +1000,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization
+    assert_equal 'transaction_id', response.params['transaction_id']
   end
 
   def test_google_pay_card
@@ -1023,6 +1034,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization
+    assert_equal 'transaction_id', response.params['transaction_id']
   end
 
   def test_supports_network_tokenization

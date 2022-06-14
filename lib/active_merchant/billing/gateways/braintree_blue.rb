@@ -393,6 +393,7 @@ module ActiveMerchant #:nodoc:
       def response_params(result)
         params = {}
         params[:customer_vault_id] = result.transaction.customer_details.id if result.success?
+        params[:transaction_id] = result.transaction.id if result.success?
         params[:braintree_transaction] = transaction_hash(result)
         params
       end
@@ -614,6 +615,8 @@ module ActiveMerchant #:nodoc:
             hold_in_escrow: options[:hold_in_escrow]
           }
         }
+
+        parameters[:customer][:first_name], parameters[:customer][:last_name] = split_names(options[:billing_address][:name]) if options[:billing_address] && options[:billing_address][:name]
 
         parameters[:custom_fields] = options[:custom_fields]
         parameters[:device_data] = options[:device_data] if options[:device_data]
