@@ -10,9 +10,8 @@ class PlexoTest < Test::Unit::TestCase
     @credit_card = credit_card('5555555555554444', month: '12', year: '2024', verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
     @declined_card = credit_card('5555555555554445')
     @options = {
-      cardholder: {
-        email: 'snavatta@plexo.com.uy'
-      },
+      email: 'snavatta@plexo.com.uy',
+      ip: '127.0.0.1',
       items: [
         {
           name: 'prueba',
@@ -24,10 +23,6 @@ class PlexoTest < Test::Unit::TestCase
       ],
       amount_details: {
         tip_amount: '5'
-      },
-      browser_details: {
-        finger_print: '12345',
-        ip: '127.0.0.1'
       },
       metadata: {
         custom_one: 'test1',
@@ -66,6 +61,7 @@ class PlexoTest < Test::Unit::TestCase
       assert_equal @credit_card.number, request['paymentMethod']['Card']['Number']
       assert_equal @credit_card.verification_value, request['paymentMethod']['Card']['Cvc']
       assert_equal @credit_card.first_name, request['paymentMethod']['Card']['Cardholder']['FirstName']
+      assert_equal @options[:email], request['paymentMethod']['Card']['Cardholder']['Email']
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -313,7 +309,7 @@ class PlexoTest < Test::Unit::TestCase
       starting SSL for api.testing.plexo.com.uy:443...
       SSL established, protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384
       <- "POST /v1/payments/628b723aa450dab85ba2fa03/captures HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]=\r\nX-Mock-Tokenization: true\r\nX-Mock-Switcher: true\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: api.testing.plexo.com.uy\r\nContent-Length: 66\r\n\r\n"
-      <- "{\"ReferenceId\":\"[FILTERED]",\"Amount\":\"1.00\"}"
+      <- "{\"ReferenceId\":\"e6742109bb60458b1c5a7c69ffcc3f54",\"Amount\":\"1.00\"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Mon, 23 May 2022 11:38:35 GMT\r\n"
       -> "Content-Type: application/json; charset=utf-8\r\n"
@@ -325,7 +321,7 @@ class PlexoTest < Test::Unit::TestCase
       -> "\r\n"
       -> "192\r\n"
       reading 402 bytes...
-      -> "{\"id\":\"628b723ba450dab85ba2fa0a\",\"uniqueId\":\"978260656060936192\",\"parentId\":\"cf8ecc4a-b0ed-4a40-945e-0eaff39e66f9\",\"referenceId\":\"[FILTERED]",\"type\":\"capture\",\"status\":\"approved\",\"createdAt\":\"2022-05-23T11:38:35.6091676Z\",\"processedAt\":\"2022-05-23T11:38:35.6091521Z\",\"resultCode\":\"0\",\"resultMessage\":\"You have been mocked.\",\"authorization\":\"12133\",\"ticket\":\"111111\",\"amount\":1.00}"
+      -> "{\"id\":\"628b723ba450dab85ba2fa0a\",\"uniqueId\":\"978260656060936192\",\"parentId\":\"cf8ecc4a-b0ed-4a40-945e-0eaff39e66f9\",\"referenceId\":\"e6742109bb60458b1c5a7c69ffcc3f54",\"type\":\"capture\",\"status\":\"approved\",\"createdAt\":\"2022-05-23T11:38:35.6091676Z\",\"processedAt\":\"2022-05-23T11:38:35.6091521Z\",\"resultCode\":\"0\",\"resultMessage\":\"You have been mocked.\",\"authorization\":\"12133\",\"ticket\":\"111111\",\"amount\":1.00}"
       read 402 bytes
       reading 2 bytes...
       -> "\r\n"
