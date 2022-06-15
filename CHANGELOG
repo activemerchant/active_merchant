@@ -40,7 +40,6 @@
 * Airwallex: Send `referrer_data` on setup transactions [drkjc] #4453
 * Adyen and StripPI: Updated error messaging [mbreenlyles] #4454
 * Airwallex: Update `referrer_data` field [drkjc] #4455
->>>>>>> 6e160329 (Revert "Authorize.net: Custom verify amount for $0 auth")
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
