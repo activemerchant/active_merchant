@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
         add_items(post, options[:items])
         add_metadata(post, options[:metadata])
         add_amount(money, post, options[:amount_details])
-        add_browser_details(post, options[:browser_details])
+        add_browser_details(post, options)
         add_capture_type(post, options)
 
         commit('authonly', post)
@@ -89,10 +89,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r(("Number\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("Cvc\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("FirstName\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("LastName\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("InvoiceNumber\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("ReferenceId\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("MerchantId\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
       end
 
@@ -117,6 +114,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_items(post, items)
+        return unless items&.kind_of?(Array)
+
         post[:Items] = []
 
         items.each do |option_item|
@@ -133,7 +132,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_metadata(post, metadata)
-        return unless metadata
+        return unless metadata&.kind_of?(Hash)
 
         metadata.transform_keys! { |key| key.to_s.camelize.to_sym }
         post[:Metadata] = metadata
@@ -186,7 +185,7 @@ module ActiveMerchant #:nodoc:
           post[:paymentMethod][:Card][:ExpYear] = format(payment.year, :two_digits) if payment.year
           post[:paymentMethod][:Card][:Cvc] = payment.verification_value if payment.verification_value
 
-          add_card_holder(post[:paymentMethod][:Card], payment, options[:cardholder])
+          add_card_holder(post[:paymentMethod][:Card], payment, options)
         end
       end
 

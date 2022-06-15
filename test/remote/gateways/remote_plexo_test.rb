@@ -8,9 +8,8 @@ class RemotePlexoTest < Test::Unit::TestCase
     @credit_card = credit_card('5555555555554444', month: '12', year: '2024', verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
     @declined_card = credit_card('5555555555554445')
     @options = {
-      cardholder: {
-        email: 'snavatta@plexo.com.uy'
-      },
+      email: 'snavatta@plexo.com.uy',
+      ip: '127.0.0.1',
       items: [
         {
           name: 'prueba',
@@ -22,10 +21,6 @@ class RemotePlexoTest < Test::Unit::TestCase
       ],
       amount_details: {
         tip_amount: '5'
-      },
-      browser_details: {
-        finger_print: '12345',
-        ip: '127.0.0.1'
       }
     }
 
