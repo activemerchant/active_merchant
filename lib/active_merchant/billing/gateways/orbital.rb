@@ -196,6 +196,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login, :password) unless options[:ip_authentication]
         super
         @options[:merchant_id] = @options[:merchant_id].to_s
+        @use_secondary_url = false
       end
 
       # A – Authorization request
