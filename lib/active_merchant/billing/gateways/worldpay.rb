@@ -45,6 +45,7 @@ module ActiveMerchant #:nodoc:
 
       AVS_CODE_MAP = {
         'A' => 'M', # Match
+        'APPROVED' => 'M', # Match
         'B' => 'P', # Postcode matches, address not verified
         'C' => 'Z', # Postcode matches, address does not match
         'D' => 'B', # Address matched; postcode not checked
@@ -71,7 +72,13 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options = {})
         MultiResponse.run do |r|
           r.process { authorize(money, payment_method, options) }
-          r.process { capture(money, r.authorization, options.merge(authorization_validated: true)) } unless options[:skip_capture]
+          unless options[:skip_capture]
+            r.process do
+              response = capture(money, r.authorization, options.merge(authorization_validated: true))
+              response.params['avs_result'] = r.avs_result
+              response
+            end
+          end
         end
       end
 
