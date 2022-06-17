@@ -126,7 +126,13 @@ class RemotePlexoTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = @gateway.verify(@credit_card, @options.merge(@cancel_options))
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'You have been mocked.', response.message
+  end
+
+  def test_successful_verify_with_custom_amount
+    response = @gateway.verify(@credit_card, @options.merge({ verify_amount: '400' }))
     assert_success response
     assert_equal 'You have been mocked.', response.message
   end
@@ -134,9 +140,8 @@ class RemotePlexoTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'You have been mocked.', response.message
-    assert_equal '96', response.error_code
-    assert_equal 'denied', response.params['status']
+    assert_equal 'The selected payment state is not valid.', response.message
+    assert_equal 400, response.error_code
   end
 
   def test_invalid_login

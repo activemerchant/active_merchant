@@ -130,7 +130,6 @@ class PlexoTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_amount_fields
     amount_fields = {
-      currency: 'USD',
       taxed_amount: '100',
       tip_amount: '32',
       discount_amount: '10',
@@ -142,10 +141,10 @@ class PlexoTest < Test::Unit::TestCase
       }
     }
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge({ amount_details: amount_fields }))
+      @gateway.authorize(@amount, @credit_card, @options.merge({ amount_details: amount_fields, currency: 'USD' }))
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
-      assert_equal request['Amount']['Currency'], amount_fields[:currency]
+      assert_equal request['Amount']['Currency'], 'USD'
       assert_equal request['Amount']['Details']['TaxedAmount'], amount_fields[:taxed_amount]
       assert_equal request['Amount']['Details']['TipAmount'], amount_fields[:tip_amount]
       assert_equal request['Amount']['Details']['DiscountAmount'], amount_fields[:discount_amount]
@@ -243,22 +242,24 @@ class PlexoTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, successful_capture_response)
+    @gateway.expects(:ssl_post).returns(successful_verify_response)
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal 'You have been mocked.', response.message
   end
 
-  def test_successful_verify_with_failed_void
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, failed_void_response)
-
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
+  def test_successful_verify_with_custom_amount
+    stub_comms do
+      @gateway.verify(@credit_card, @options.merge({ verify_amount: '900' }))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['Amount']['Total'], '9.00'
+    end.respond_with(successful_verify_response)
   end
 
   def test_failed_verify
-    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+    @gateway.expects(:ssl_post).returns(failed_verify_response)
 
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
@@ -605,6 +606,161 @@ class PlexoTest < Test::Unit::TestCase
       {
         "code": "internal-error",
         "message": "An internal error occurred. Contact support.",
+        "type": "api-error",
+        "status": 400
+      }
+    RESPONSE
+  end
+
+  def successful_verify_response
+    <<~RESPONSE
+      {
+        "id": "62ac2c5eaf353be57867f977",
+        "token": "7220c5cc-4b57-43e6-ae91-3fd3f3e8d49f",
+        "referenceId": "e7dbc06224f646ad8e63ec1c6e670a39",
+        "status": "approved",
+        "processingMethod": "api",
+        "browserDetails": {
+          "DeviceFingerprint": "12345",
+          "IpAddress": "127.0.0.1"
+        },
+        "createdAt": "2022-06-17T07:25:18.1421498Z",
+        "merchant": {
+          "id": 3243,
+          "name": "spreedly",
+          "settings": {
+            "id": 41363,
+            "issuerId": 4,
+            "issuer": {
+              "id": 4,
+              "code": "mastercard",
+              "name": "MASTERCARD",
+              "type": "online"
+            },
+            "metadata": {
+              "ProviderCommerceNumber": "153289",
+              "TerminalNumber": "1K153289",
+              "SoftDescriptor": "VTEX-Testing",
+              "PaymentProcessorId": "oca"
+            },
+            "paymentProcessor": {
+              "acquirer": "oca",
+              "settings": {
+                "commerce": {
+                  "fields": [
+                    {
+                      "name": "ProviderCommerceNumber",
+                      "type": 2049
+                    },
+                    {
+                      "name": "TerminalNumber",
+                      "type": 2051
+                    }
+                  ]
+                },
+                "fingerprint": {
+                  "name": "cybersource-oca"
+                },
+                "fields": [
+                  {
+                    "name": "Email",
+                    "type": 261
+                  },
+                  {
+                    "name": "FirstName",
+                    "type": 271
+                  },
+                  {
+                    "name": "LastName",
+                    "type": 272
+                  },
+                  {
+                    "name": "CVC",
+                    "type": 33154
+                  }
+                ]
+              }
+            }
+          },
+          "clientId": 221
+        },
+        "client": {
+          "id": 221,
+          "name": "Spreedly",
+          "tier": 2,
+          "sessionTimeInSeconds": 36000
+        },
+        "paymentMethod": {
+          "type": "card",
+          "card": {
+            "name": "555555XXXXXX4444",
+            "bin": "555555",
+            "last4": "4444",
+            "expMonth": 12,
+            "expYear": 24,
+            "cardholder": {
+              "firstName": "Santiago",
+              "lastName": "Navatta",
+              "email": "snavatta@plexo.com.uy"
+            },
+            "fingerprint": "36e2219cc4734a61af258905c1c59ba4"
+          },
+          "issuer": {
+            "id": "mastercard",
+            "name": "MasterCard",
+            "pictureUrl": "https://static.plexo.com.uy/issuers/4.svg",
+            "type": "online"
+          },
+          "processor": {
+            "acquirer": "oca"
+          }
+        },
+        "installments": 1,
+        "amount": {
+          "currency": "UYU",
+          "total": 20
+        },
+        "items": [
+          {
+            "referenceId": "997d4aafe29b4421ac52a3ddf5b28dfd",
+            "name": "card-verification",
+            "quantity": 1,
+            "price": 20
+          }
+        ],
+        "capture": {
+          "method": "manual",
+          "delay": 0
+        },
+        "metadata": {
+          "One": "abc"
+        },
+        "transactions": [
+          {
+            "id": "62ac2c5eaf353be57867f97b",
+            "uniqueId": "987256610059481088",
+            "parentId": "7220c5cc-4b57-43e6-ae91-3fd3f3e8d49f",
+            "referenceId": "e7dbc06224f646ad8e63ec1c6e670a39",
+            "type": "authorization",
+            "status": "approved",
+            "createdAt": "2022-06-17T07:25:18.1796516Z",
+            "processedAt": "2022-06-17T07:25:18.1796366Z",
+            "resultCode": "0",
+            "resultMessage": "You have been mocked.",
+            "authorization": "12133",
+            "ticket": "111111",
+            "amount": 20
+          }
+        ]
+      }
+    RESPONSE
+  end
+
+  def failed_verify_response
+    <<~RESPONSE
+      {
+        "code": "invalid-transaction-state",
+        "message": "The selected payment state is not valid.",
         "type": "api-error",
         "status": 400
       }

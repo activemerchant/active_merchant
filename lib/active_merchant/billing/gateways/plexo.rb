@@ -11,7 +11,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.plexo.com.uy'
       self.display_name = 'Plexo'
 
-      APPENDED_URLS = %w(captures refunds cancellations)
+      APPENDED_URLS = %w(captures refunds cancellations verify)
+      AMOUNT_IN_RESPONSE = %w(authonly /verify)
 
       def initialize(options = {})
         requires!(options, :client_id, :api_key)
@@ -38,7 +39,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment, options)
         add_items(post, options[:items])
         add_metadata(post, options[:metadata])
-        add_amount(money, post, options[:amount_details])
+        add_amount(money, post, options)
         add_browser_details(post, options)
         add_capture_type(post, options)
 
@@ -74,10 +75,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        post = {}
+        post[:ReferenceId] = options[:reference_id] || generate_unique_id
+        post[:MerchantId] = options[:merchant_id] || @credentials[:merchant_id]
+        post[:StatementDescriptor] = options[:statement_descriptor] if options[:statement_descriptor]
+        post[:CustomerId] = options[:customer_id] if options[:customer_id]
+        money = options[:verify_amount].to_i || 100
+
+        add_payment_method(post, credit_card, options)
+        add_metadata(post, options[:metadata])
+        add_amount(money, post, options)
+        add_browser_details(post, options)
+
+        commit('/verify', post)
       end
 
       def supports_scrubbing?
@@ -144,7 +154,7 @@ module ActiveMerchant #:nodoc:
         post[:Amount][:Currency] = amount_options[:currency] || self.default_currency
         post[:Amount][:Total] = amount(money)
         post[:Amount][:Details] = {}
-        add_amount_details(post[:Amount][:Details], amount_options)
+        add_amount_details(post[:Amount][:Details], amount_options[:amount_details]) if amount_options[:amount_details]
       end
 
       def add_amount_details(amount_details, options)
@@ -229,7 +239,7 @@ module ActiveMerchant #:nodoc:
         base_url = (test? ? test_url : live_url)
         url = build_url(action, base_url)
         response = parse(ssl_post(url, parameters.to_json, header(parameters)))
-        response = reorder_amount_fields(response) if action == 'authonly'
+        response = reorder_amount_fields(response) if AMOUNT_IN_RESPONSE.include?(action)
 
         Response.new(
           success_from(response),
