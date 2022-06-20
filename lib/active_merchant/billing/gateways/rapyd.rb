@@ -149,6 +149,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_stored_credential(post, options)
+        return unless stored_credential = options[:stored_credential]
+
+        post[:payment_method][:fields][:network_reference_id] = stored_credential[:original_network_transaction_id] if stored_credential[:original_network_transaction_id]
+        post[:initiation_type] = stored_credential[:reason_type] if stored_credential[:reason_type]
+      end
+
       def add_creditcard(post, payment, options)
         post[:payment_method] = {}
         post[:payment_method][:fields] = {}
@@ -158,8 +165,10 @@ module ActiveMerchant #:nodoc:
         pm_fields[:number] = payment.number
         pm_fields[:expiration_month] = payment.month.to_s
         pm_fields[:expiration_year] = payment.year.to_s
-        pm_fields[:cvv] = payment.verification_value.to_s
         pm_fields[:name] = "#{payment.first_name} #{payment.last_name}"
+        pm_fields[:cvv] = payment.verification_value.to_s
+
+        add_stored_credential(post, options)
       end
 
       def add_ach(post, payment, options)
