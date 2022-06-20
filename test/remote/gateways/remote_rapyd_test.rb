@@ -54,6 +54,17 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_subsequent_purchase_with_stored_credential
+    @options[:currency] = 'EUR'
+    @options[:pm_type] = 'gi_visa_card'
+    @options[:complete_payment_url] = 'https://www.rapyd.net/platform/collect/online/'
+    @options[:error_payment_url] = 'https://www.rapyd.net/platform/collect/online/'
+
+    response = @gateway.purchase(15000, @credit_card, @options.merge({ stored_credential: { original_network_transaction_id: '123456', reason_type: 'recurring' } }))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
   def test_successful_purchase_with_address
     billing_address = address(name: 'Henry Winkler', address1: '123 Happy Days Lane')
 

@@ -79,6 +79,20 @@ class RapydTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_stored_credential
+    @options[:stored_credential] = {
+      reason_type: 'recurring',
+      original_network_transaction_id: '12345'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['payment_method']['fields']['network_reference_id'], @options[:stored_credential][:original_network_transaction_id]
+      assert_equal request['initiation_type'], @options[:stored_credential][:reason_type]
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
 
