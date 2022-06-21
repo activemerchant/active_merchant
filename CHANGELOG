@@ -47,6 +47,7 @@
 * Authorize.net: Allow custom verify_amount and validate it [jherreraa] #4464
 * Shift4: Add gateway adapter [ali-hassan] #4415
 * Rapyd: Correctly add `billing_address` [naashton] #4465
+* Credorax: Update processor response messages [jcreiff] #4466
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
