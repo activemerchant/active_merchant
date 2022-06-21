@@ -93,6 +93,48 @@ class MundipaggTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_authorization_secret_key
+    options = {
+      gateway_affiliation_id: 'abc123',
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase',
+      authorization_secret_key: 'secret_token'
+    }
+    basic_token = Base64.strict_encode64("#{options[:authorization_secret_key]}:")
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, _data, headers|
+      assert_match(basic_token, headers['Authorization'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert response.test?
+  end
+
+  def test_api_key_in_headers
+    basic_token = Base64.strict_encode64("#{@gateway.options[:api_key]}:")
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, _data, headers|
+      assert_match(basic_token, headers['Authorization'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert response.test?
+  end
+
+  def test_failed_with_voucher
+    @gateway.expects(:ssl_post).returns(failed_voucher_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'General Failure', response.message
+    assert_equal '500', response.params['last_transaction']['gateway_response']['code']
+  end
+
   def test_successful_purchase_with_submerchant
     options = @options.update(@submerchant_options)
     response = stub_comms do
@@ -329,16 +371,16 @@ class MundipaggTest < Test::Unit::TestCase
   end
 
   def test_gateway_id_fallback
-    gateway = MundipaggGateway.new(api_key: 'my_api_key', gateway_id: 'abc123')
+    @gateway = MundipaggGateway.new(api_key: 'my_api_key', gateway_id: 'abcd123')
     options = {
       order_id: '1',
       billing_address: address,
       description: 'Store Purchase'
     }
     stub_comms do
-      gateway.purchase(@amount, @credit_card, options)
+      @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/"gateway_affiliation_id":"abc123"/, data)
+      assert_match(/"gateway_affiliation_id":"abcd123"/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -494,6 +536,82 @@ class MundipaggTest < Test::Unit::TestCase
           "gateway_response": {
             "code": "201"
           }
+        }
+      }
+    )
+  end
+
+  def failed_voucher_response
+    %(
+      {
+        "id": "FILTERED",
+        "code": "FILTERED",
+        "amount": 300,
+        "status": "processing",
+        "currency": "BRL",
+        "payment_method": "voucher",
+        "created_at": "2021-09-20T13:40:04Z",
+        "updated_at": "2021-09-20T13:40:04Z",
+        "customer": {
+          "id": "FILTERED",
+          "name": "FILTERED",
+          "email": "FILTERED",
+          "delinquent": false,
+          "created_at": "2021-09-20T13:40:04Z",
+          "updated_at": "2021-09-20T13:40:04Z",
+          "phones": {}
+        },
+        "last_transaction": {
+          "id": "FILTERED",
+          "transaction_type": "voucher",
+          "amount": 300,
+          "status": "with_error",
+          "success": false,
+          "operation_type": "auth_and_capture",
+          "card": {
+            "id": "FILTERED",
+            "first_six_digits": "FILTERED",
+            "last_four_digits": "FILTERED",
+            "brand": "Sodexo",
+            "holder_name": "FILTERED",
+            "holder_document": "FILTERED",
+            "exp_month": 5,
+            "exp_year": 2030,
+            "status": "active",
+            "type": "voucher",
+            "created_at": "2021-09-20T13:40:04Z",
+            "updated_at": "2021-09-20T13:40:04Z",
+            "billing_address": {
+              "street": "FILTERED",
+              "number": "00",
+              "zip_code": "FILTERED",
+              "neighborhood": "FILTERED",
+              "city": "FILTERED",
+              "state": "FILTERED",
+              "country": "FILTERED",
+              "line_1": "FILTERED"
+            },
+            "customer": {
+              "id": "FILTERED",
+              "name": "FILTERED",
+              "email": "FILTERED",
+              "delinquent": false,
+              "created_at": "2021-09-20T13:40:04Z",
+              "updated_at": "2021-09-20T13:40:04Z",
+              "phones": {}
+            }
+          },
+          "created_at": "2021-09-20T13:40:04Z",
+          "updated_at": "2021-09-20T13:40:04Z",
+          "gateway_response": {
+            "code": "500",
+            "errors": [
+              {
+                "message": "General Failure"
+              }
+            ]
+          },
+          "antifraud_response": {}
         }
       }
     )

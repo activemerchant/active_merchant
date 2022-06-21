@@ -16,6 +16,12 @@ class QvalentTest < Test::Unit::TestCase
     @amount = 100
   end
 
+  def test_successful_gateway_creation_without_pem_password
+    gateway = QvalentGateway.new(username: 'username', password: 'password', merchant: 'merchant', pem: 'pem')
+
+    assert_instance_of QvalentGateway, gateway
+  end
+
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)

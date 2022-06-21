@@ -39,6 +39,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment_method, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         @options[:ssl_vendor_id] || options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:purchase]
           xml.ssl_amount            amount(money)
 
@@ -63,6 +64,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         @options[:ssl_vendor_id] || options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:authorize]
           xml.ssl_amount            amount(money)
 
@@ -82,6 +84,8 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         @options[:ssl_vendor_id] || options[:ssl_vendor_id]
+
           if options[:credit_card]
             xml.ssl_transaction_type self.actions[:capture]
             xml.ssl_amount amount(money)
@@ -107,6 +111,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, identification, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         @options[:ssl_vendor_id] || options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:refund]
           xml.ssl_amount            amount(money)
           add_txn_id(xml, identification)
@@ -117,6 +122,7 @@ module ActiveMerchant #:nodoc:
 
       def void(identification, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         @options[:ssl_vendor_id] || options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:void]
 
           add_txn_id(xml, identification)
@@ -129,6 +135,7 @@ module ActiveMerchant #:nodoc:
         raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.' if creditcard.is_a?(String)
 
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         @options[:ssl_vendor_id] || options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:credit]
           xml.ssl_amount            amount(money)
           add_invoice(xml, options)
@@ -143,6 +150,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(credit_card, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         @options[:ssl_vendor_id] || options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:verify]
           add_creditcard(xml, credit_card)
           add_address(xml, options)
@@ -154,6 +162,7 @@ module ActiveMerchant #:nodoc:
 
       def store(creditcard, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         @options[:ssl_vendor_id] || options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:store]
           xml.ssl_add_token 'Y'
           add_creditcard(xml, creditcard)
@@ -167,6 +176,7 @@ module ActiveMerchant #:nodoc:
 
       def update(token, creditcard, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         @options[:ssl_vendor_id] || options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:update]
           add_token(xml, token)
           add_creditcard(xml, creditcard)
@@ -191,8 +201,8 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_invoice(xml, options)
-        xml.ssl_invoice_number    truncate((options[:order_id] || options[:invoice]), 25)
-        xml.ssl_description       truncate(options[:description], 255)
+        xml.ssl_invoice_number    url_encode_truncate((options[:order_id] || options[:invoice]), 25)
+        xml.ssl_description       url_encode_truncate(options[:description], 255)
       end
 
       def add_approval_code(xml, authorization)
@@ -209,8 +219,8 @@ module ActiveMerchant #:nodoc:
 
         add_verification_value(xml, creditcard) if creditcard.verification_value?
 
-        xml.ssl_first_name    truncate(creditcard.first_name, 20)
-        xml.ssl_last_name     truncate(creditcard.last_name, 30)
+        xml.ssl_first_name    url_encode_truncate(creditcard.first_name, 20)
+        xml.ssl_last_name     url_encode_truncate(creditcard.last_name, 30)
       end
 
       def add_currency(xml, money, options)
@@ -230,7 +240,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_email(xml, options)
-        xml.ssl_email truncate(options[:email], 100) unless empty?(options[:email])
+        xml.ssl_email url_encode_truncate(options[:email], 100) unless empty?(options[:email])
       end
 
       def add_salestax(xml, options)
@@ -243,27 +253,27 @@ module ActiveMerchant #:nodoc:
         billing_address = options[:billing_address] || options[:address]
 
         if billing_address
-          xml.ssl_avs_address     truncate(billing_address[:address1], 30)
-          xml.ssl_address2        truncate(billing_address[:address2], 30)
-          xml.ssl_avs_zip         truncate(billing_address[:zip].to_s.gsub(/[^a-zA-Z0-9]/, ''), 9)
-          xml.ssl_city            truncate(billing_address[:city], 30)
-          xml.ssl_state           truncate(billing_address[:state], 10)
-          xml.ssl_company         truncate(billing_address[:company], 50)
-          xml.ssl_phone           truncate(billing_address[:phone], 20)
-          xml.ssl_country         truncate(billing_address[:country], 50)
+          xml.ssl_avs_address     url_encode_truncate(billing_address[:address1], 30)
+          xml.ssl_address2        url_encode_truncate(billing_address[:address2], 30)
+          xml.ssl_avs_zip         url_encode_truncate(billing_address[:zip].to_s.gsub(/[^a-zA-Z0-9]/, ''), 9)
+          xml.ssl_city            url_encode_truncate(billing_address[:city], 30)
+          xml.ssl_state           url_encode_truncate(billing_address[:state], 10)
+          xml.ssl_company         url_encode_truncate(billing_address[:company], 50)
+          xml.ssl_phone           url_encode_truncate(billing_address[:phone], 20)
+          xml.ssl_country         url_encode_truncate(billing_address[:country], 50)
         end
 
         if shipping_address = options[:shipping_address]
-          xml.ssl_ship_to_address1    truncate(shipping_address[:address1], 30)
-          xml.ssl_ship_to_address2    truncate(shipping_address[:address2], 30)
-          xml.ssl_ship_to_city        truncate(shipping_address[:city], 30)
-          xml.ssl_ship_to_company     truncate(shipping_address[:company], 50)
-          xml.ssl_ship_to_country     truncate(shipping_address[:country], 50)
-          xml.ssl_ship_to_first_name  truncate(shipping_address[:first_name], 20)
-          xml.ssl_ship_to_last_name   truncate(shipping_address[:last_name], 30)
-          xml.ssl_ship_to_phone       truncate(shipping_address[:phone], 10)
-          xml.ssl_ship_to_state       truncate(shipping_address[:state], 2)
-          xml.ssl_ship_to_zip         truncate(shipping_address[:zip], 10)
+          xml.ssl_ship_to_address1    url_encode_truncate(shipping_address[:address1], 30)
+          xml.ssl_ship_to_address2    url_encode_truncate(shipping_address[:address2], 30)
+          xml.ssl_ship_to_city        url_encode_truncate(shipping_address[:city], 30)
+          xml.ssl_ship_to_company     url_encode_truncate(shipping_address[:company], 50)
+          xml.ssl_ship_to_country     url_encode_truncate(shipping_address[:country], 50)
+          xml.ssl_ship_to_first_name  url_encode_truncate(shipping_address[:first_name], 20)
+          xml.ssl_ship_to_last_name   url_encode_truncate(shipping_address[:last_name], 30)
+          xml.ssl_ship_to_phone       url_encode_truncate(shipping_address[:phone], 10)
+          xml.ssl_ship_to_state       url_encode_truncate(shipping_address[:state], 2)
+          xml.ssl_ship_to_zip         url_encode_truncate(shipping_address[:zip], 10)
         end
       end
 
@@ -283,9 +293,12 @@ module ActiveMerchant #:nodoc:
         xml.ssl_cardholder_ip options[:ip] if options.has_key?(:ip)
       end
 
+      # add_recurring_token is a field that can be sent in to obtain a token from Elavon for use with their tokenization program
       def add_auth_purchase_params(xml, options)
         xml.ssl_dynamic_dba                     options[:dba] if options.has_key?(:dba)
         xml.ssl_merchant_initiated_unscheduled  merchant_initiated_unscheduled(options) if merchant_initiated_unscheduled(options)
+        xml.ssl_add_token                       options[:add_recurring_token] if options.has_key?(:add_recurring_token)
+        xml.ssl_token                           options[:ssl_token] if options[:ssl_token]
         xml.ssl_customer_code                   options[:customer] if options.has_key?(:customer)
         xml.ssl_customer_number                 options[:customer_number] if options.has_key?(:customer_number)
         xml.ssl_entry_mode                      entry_mode(options) if entry_mode(options)
@@ -357,7 +370,7 @@ module ActiveMerchant #:nodoc:
 
       def merchant_initiated_unscheduled(options)
         return options[:merchant_initiated_unscheduled] if options[:merchant_initiated_unscheduled]
-        return 'Y' if options.dig(:stored_credential, :initiator) == 'merchant' && options.dig(:stored_credential, :reason_type) == 'unscheduled'
+        return 'Y' if options.dig(:stored_credential, :initiator) == 'merchant' && options.dig(:stored_credential, :reason_type) == 'unscheduled' || options.dig(:stored_credential, :reason_type) == 'recurring'
       end
 
       def entry_mode(options)
@@ -380,15 +393,17 @@ module ActiveMerchant #:nodoc:
 
       def commit(request)
         request = "xmldata=#{request}".delete('&')
+        store_action = request.match?('CCGETTOKEN')
 
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request, headers))
+        response = hash_html_decode(response)
 
         Response.new(
           response[:result] == '0',
           response[:result_message] || response[:errorMessage],
           response,
           test: @options[:test] || test?,
-          authorization: authorization_from(response),
+          authorization: authorization_from(response, store_action),
           error_code: response[:errorCode],
           avs_result: { code: response[:avs_response] },
           cvv_result: response[:cvv2_response],
@@ -403,7 +418,7 @@ module ActiveMerchant #:nodoc:
       def headers
         {
           'Accept' => 'application/xml',
-          'Content-type' => 'application/x-www-form-urlencoded'
+          'Content-type' => 'application/x-www-form-urlencoded;charset=utf8'
         }
       end
 
@@ -414,16 +429,46 @@ module ActiveMerchant #:nodoc:
         response.deep_transform_keys { |key| key.gsub('ssl_', '').to_sym }
       end
 
-      def authorization_from(response)
+      def authorization_from(response, store_action)
+        return response[:token] if store_action
+
         [response[:approval_code], response[:txn_id]].join(';')
       end
 
-      def truncate(value, size)
+      def url_encode_truncate(value, size)
         return nil unless value
 
-        difference = value.force_encoding('iso-8859-1').length - value.length
+        encoded = url_encode(value)
 
-        return value.delete('&"<>').to_s[0, (size - difference)]
+        while encoded.length > size
+          value.chop!
+          encoded = url_encode(value)
+        end
+        encoded
+      end
+
+      def url_encode(value)
+        if value.is_a?(String)
+          encoded = CGI.escape(value)
+          encoded = encoded.tr('+', ' ') # don't encode spaces
+          encoded = encoded.gsub('%26', '%26amp;') # account for Elavon's weird '&' handling
+          encoded
+        else
+          value.to_s
+        end
+      end
+
+      def hash_html_decode(hash)
+        hash.each do |k, v|
+          if v.is_a?(String)
+            # decode all string params
+            v = v.gsub('&amp;amp;', '&amp;') # account for Elavon's weird '&' handling
+            hash[k] = CGI.unescape_html(v)
+          elsif v.is_a?(Hash)
+            hash_html_decode(v)
+          end
+        end
+        hash
       end
     end
   end

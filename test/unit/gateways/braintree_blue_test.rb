@@ -127,6 +127,39 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert !@gateway.verify_credentials
   end
 
+  def test_zero_dollar_verification_transaction
+    Braintree::CreditCardVerificationGateway.any_instance.expects(:create).
+      returns(braintree_result(cvv_response_code: 'M', avs_error_response_code: 'P'))
+
+    card = credit_card('4111111111111111')
+    options = {
+      allow_card_verification: true,
+      billing_address: {
+        zip: '10000'
+      }
+    }
+    response = @gateway.verify(card, options)
+    assert_success response
+    assert_equal 'transaction_id', response.params['authorization']
+    assert_equal 'M', response.cvv_result['code']
+    assert_equal 'P', response.avs_result['code']
+  end
+
+  def test_failed_verification_transaction
+    Braintree::CreditCardVerificationGateway.any_instance.expects(:create).
+      returns(braintree_error_result(message: 'CVV must be 4 digits for American Express and 3 digits for other card types. (81707)'))
+
+    card = credit_card('4111111111111111')
+    options = {
+      allow_card_verification: true,
+      billing_address: {
+        zip: '10000'
+      }
+    }
+    response = @gateway.verify(card, options)
+    assert_failure response
+  end
+
   def test_user_agent_includes_activemerchant_version
     assert @internal_gateway.config.user_agent.include?("(ActiveMerchant #{ActiveMerchant::VERSION})")
   end
@@ -175,6 +208,17 @@ class BraintreeBlueTest < Test::Unit::TestCase
       returns(braintree_result)
 
     @gateway.authorize(100, credit_card('41111111111111111111'), service_fee_amount: '2.31')
+  end
+
+  def test_risk_data_can_be_specified
+    risk_data = {
+      customer_browser: 'User-Agent Header',
+      customer_ip: '127.0.0.1'
+    }
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      with(has_entries(risk_data: risk_data)).returns(braintree_result)
+
+    @gateway.authorize(100, credit_card('4111111111111111'), risk_data: risk_data)
   end
 
   def test_hold_in_escrow_can_be_specified
@@ -924,7 +968,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
                    first_name: 'Longbob', last_name: 'Longsen' },
         options: { store_in_vault: false, submit_for_settlement: nil, hold_in_escrow: nil },
         custom_fields: nil,
-        android_pay_card: {
+        google_pay_card: {
           number: '4111111111111111',
           expiration_month: '09',
           expiration_year: (Time.now.year + 1).to_s,
@@ -957,7 +1001,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
                    first_name: 'Longbob', last_name: 'Longsen' },
         options: { store_in_vault: false, submit_for_settlement: nil, hold_in_escrow: nil },
         custom_fields: nil,
-        android_pay_card: {
+        google_pay_card: {
           number: '4111111111111111',
           expiration_month: '09',
           expiration_year: (Time.now.year + 1).to_s,
@@ -1226,6 +1270,72 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.purchase(100, credit_card('41111111111111111111'), { test: true, order_id: '1', stored_credential: stored_credential(:merchant, :unscheduled, id: '123ABC') })
   end
 
+  def test_stored_credential_recurring_first_cit_initial
+    Braintree::TransactionGateway.any_instance.expects(:sale).with(
+      standard_purchase_params.merge(
+        {
+          external_vault: {
+            status: 'will_vault'
+          },
+          transaction_source: 'recurring_first'
+        }
+      )
+    ).returns(braintree_result)
+
+    @gateway.purchase(100, credit_card('41111111111111111111'), { test: true, order_id: '1', stored_credential: { initiator: 'merchant', reason_type: 'recurring_first', initial_transaction: true } })
+  end
+
+  def test_stored_credential_moto_cit_initial
+    Braintree::TransactionGateway.any_instance.expects(:sale).with(
+      standard_purchase_params.merge(
+        {
+          external_vault: {
+            status: 'will_vault'
+          },
+          transaction_source: 'moto'
+        }
+      )
+    ).returns(braintree_result)
+
+    @gateway.purchase(100, credit_card('41111111111111111111'), { test: true, order_id: '1', stored_credential: { initiator: 'merchant', reason_type: 'moto', initial_transaction: true } })
+  end
+
+  def test_raises_exeption_when_adding_bank_account_to_customer_without_billing_address
+    bank_account = check({ account_number: '1000000002', routing_number: '011000015' })
+
+    err = @gateway.store(bank_account, { customer: 'abc123' })
+    assert_equal 'billing_address is required parameter to store and verify Bank accounts.', err.message
+  end
+
+  def test_returns_error_on_authorize_when_passing_a_bank_account
+    bank_account = check({ account_number: '1000000002', routing_number: '011000015' })
+    response = @gateway.authorize(100, bank_account, {})
+
+    assert_failure response
+    assert_equal 'Direct bank account transactions are not supported. Bank accounts must be successfully stored before use.', response.message
+  end
+
+  def test_error_on_store_bank_account_without_a_mandate
+    options = {
+      billing_address: {
+        address1: '1670',
+        address2: '1670 NW 82ND AVE',
+        city: 'Miami',
+        state: 'FL',
+        zip: '32191'
+      }
+    }
+    bank_account = check({ account_number: '1000000002', routing_number: '011000015' })
+    response = @gateway.store(bank_account, options)
+
+    assert_failure response
+    assert_match(/ach_mandate is a required parameter to process/, response.message)
+  end
+
+  def test_scrub_sensitive_data
+    assert_equal filtered_success_token_nonce, @gateway.scrub(success_create_token_nonce)
+  end
+
   private
 
   def braintree_result(options = {})
@@ -1265,5 +1375,139 @@ class BraintreeBlueTest < Test::Unit::TestCase
         cardholder_name: 'Longbob Longsen'
       }
     }
+  end
+
+  def success_create_token_nonce
+    <<-RESPONSE
+      [Braintree] <payment-method>
+      [Braintree]   <customer-id>673970040</customer-id>
+      [Braintree]   <payment-method-nonce>tokenusbankacct_bc_tbf5zn_6xtcs8_wmknct_y3yfy5_sg6</payment-method-nonce>
+      [Braintree]   <options>
+      [Braintree]     <us-bank-account-verification-method>network_check</us-bank-account-verification-method>
+      [Braintree]   </options>
+      [Braintree] </payment-method>
+      [Braintree] <client-token>
+      [Braintree]   <value>eyJ2ZXJzaW9uIjoyLCJhdXRob3JpemF0aW9uRmluZ2VycHJpbnQiOiJleUowZVhBaU9pSktWMVFpTENKaGJHY2lPaUpGVXpJMU5pSXNJbXRwWkNJNklqSXdNVGd3TkRJMk1UWXRjMkZ1WkdKdmVDSXNJbWx6Y3lJNkltaDBkSEJ6T2k4dllYQnBMbk5oYm1SaWIzZ3VZbkpoYVc1MGNtVmxaMkYwWlhkaGVTNWpiMjBpZlEuZXlKbGVIQWlPakUyTkRNeE5EazFNVEFzSW1wMGFTSTZJbVJpTkRJME1XRmpMVGMwTkdVdE5EWmpOQzFoTjJWakxUbGlNakpoWm1KaFl6QmxZU0lzSW5OMVlpSTZJbXRrTm5SaVkydGpaR1JtTm5sMlpHY2lMQ0pwYzNNaU9pSm9kSFJ3Y3pvdkwyRndhUzV6WVc1a1ltOTRMbUp5WVdsdWRISmxaV2RoZEdWM1lYa3VZMjl0SWl3aWJXVnlZMmhoYm5RaU9uc2ljSFZpYkdsalgybGtJam9pYTJRMmRHSmphMk5rWkdZMmVYWmtaeUlzSW5abGNtbG1lVjlqWVhKa1gySjVYMlJsWm1GMWJIUWlPblJ5ZFdWOUxDSnlhV2RvZEhNaU9sc2liV0Z1WVdkbFgzWmhkV3gwSWwwc0luTmpiM0JsSWpwYklrSnlZV2x1ZEhKbFpUcFdZWFZzZENKZExDSnZjSFJwYjI1eklqcDdmWDAuYnpKRUFZWWxSenhmOUJfNGJvN1JrUlZaMERtR1pEVFRieDVQWWxXdFNCSjhnc19pT3RTQ0MtWHRYcEM3NE5pV1A5a0g0MG9neWVKVzZaNkpTbnNOTGciLCJjb25maWdVcmwiOiJodHRwczovL2FwaS5zYW5kYm94LmJyYWludHJlZWdhdGV3YXkuY29tOjQ0My9tZXJjaGFudHMva2Q2dGJja2NkZGY2eXZkZy9jbGllbnRfYXBpL3YxL2NvbmZpZ3VyYXRpb24iLCJncmFwaFFMIjp7InVybCI6Imh0dHBzOi8vcGF5bWVudHMuc2FuZGJveC5icmFpbnRyZWUtYXBpLmNvbS9ncmFwaHFsIiwiZGF0ZSI6IjIwMTgtMDUtMDgiLCJmZWF0dXJlcyI6WyJ0b2tlbml6ZV9jcmVkaXRfY2FyZHMiXX0sImNsaWVudEFwaVVybCI6Imh0dHBzOi8vYXBpLnNhbmRib3guYnJhaW50cmVlZ2F0ZXdheS5jb206NDQzL21lcmNoYW50cy9rZDZ0YmNrY2RkZjZ5dmRnL2NsaWVudF9hcGkiLCJlbnZpcm9ubWVudCI6InNhbmRib3giLCJtZXJjaGFudElkIjoia2Q2dGJja2NkZGY2eXZkZyIsImFzc2V0c1VybCI6Imh0dHBzOi8vYXNzZXRzLmJyYWludHJlZWdhdGV3YXkuY29tIiwiYXV0aFVybCI6Imh0dHBzOi8vYXV0aC52ZW5tby5zYW5kYm94LmJyYWludHJlZWdhdGV3YXkuY29tIiwidmVubW8iOiJvZmYiLCJjaGFsbGVuZ2VzIjpbXSwidGhyZWVEU2VjdXJlRW5hYmxlZCI6dHJ1ZSwiYW5hbHl0aWNzIjp7InVybCI6Imh0dHBzOi8vb3JpZ2luLWFuYWx5dGljcy1zYW5kLnNhbmRib3guYnJhaW50cmVlLWFwaS5jb20va2Q2dGJja2NkZGY2eXZkZyJ9LCJwYXlwYWxFbmFibGVkIjp0cnVlLCJicmFpbnRyZWVfYXBpIjp7InVybCI6Imh0dHBzOi8vcGF5bWVudHMuc2FuZGJveC5icmFpbnRyZWUtYXBpLmNvbSIsImFjY2Vzc190b2tlbiI6ImV5SjBlWEFpT2lKS1YxUWlMQ0poYkdjaU9pSkZVekkxTmlJc0ltdHBaQ0k2SWpJd01UZ3dOREkyTVRZdGMyRnVaR0p2ZUNJc0ltbHpjeUk2SW1oMGRIQnpPaTh2WVhCcExuTmhibVJpYjNndVluSmhhVzUwY21WbFoyRjBaWGRoZVM1amIyMGlmUS5leUpsZUhBaU9qRTJORE14TkRrMU1UQXNJbXAwYVNJNklqRmhNMkpqTm1OaExUY3hNalV0TkdKaU5TMWlOMk5tTFdReU5HUTNNMlEyWWpJd01TSXNJbk4xWWlJNkltdGtOblJpWTJ0alpHUm1ObmwyWkdjaUxDSnBjM01pT2lKb2RIUndjem92TDJGd2FTNXpZVzVrWW05NExtSnlZV2x1ZEhKbFpXZGhkR1YzWVhrdVkyOXRJaXdpYldWeVkyaGhiblFpT25zaWNIVmliR2xqWDJsa0lqb2lhMlEyZEdKamEyTmtaR1kyZVhaa1p5SXNJblpsY21sbWVWOWpZWEprWDJKNVgyUmxabUYxYkhRaU9uUnlkV1Y5TENKeWFXZG9kSE1pT2xzaWRHOXJaVzVwZW1VaUxDSnRZVzVoWjJWZmRtRjFiSFFpWFN3aWMyTnZjR1VpT2xzaVFuSmhhVzUwY21WbE9sWmhkV3gwSWwwc0ltOXdkR2x2Ym5NaU9udDlmUS52ZGtCVFVpOGtPdm1lSUVvdjRYMFBtVmpuLVFER2JNSWhyQ3JmVkpRcUIxVG5GSVYySkx3U2RxYlFXXzN6R2RIcUl6WkVzVEtQdXNxRF9nWUhwR2xjdyJ9LCJwYXlwYWwiOnsiYmlsbGluZ0FncmVlbWVudHNFbmFibGVkIjp0cnVlLCJlbnZpcm9ubWVudE5vTmV0d29yayI6dHJ1ZSwidW52ZXR0ZWRNZXJjaGFudCI6ZmFsc2UsImFsbG93SHR0cCI6dHJ1ZSwiZGlzcGxheU5hbWUiOiJlbmRhdmEiLCJjbGllbnRJZCI6bnVsbCwicHJpdmFjeVVybCI6Imh0dHA6Ly9leGFtcGxlLmNvbS9wcCIsInVzZXJBZ3JlZW1lbnRVcmwiOiJodHRwOi8vZXhhbXBsZS5jb20vdG9zIiwiYmFzZVVybCI6Imh0dHBzOi8vYXNzZXRzLmJyYWludHJlZWdhdGV3YXkuY29tIiwiYXNzZXRzVXJsIjoiaHR0cHM6Ly9jaGVja291dC5wYXlwYWwuY29tIiwiZGlyZWN0QmFzZVVybCI6bnVsbCwiZW52aXJvbm1lbnQiOiJvZmZsaW5lIiwiYnJhaW50cmVlQ2xpZW50SWQiOiJtYXN0ZXJjbGllbnQzIiwibWVyY2hhbnRBY2NvdW50SWQiOiJlbmRhdmEiLCJjdXJyZW5jeUlzb0NvZGUiOiJVU0QifX0=</value>
+      [Braintree] </client-token>
+      [Braintree] <us-bank-account>
+      [Braintree]   <routing-number>011000015</routing-number>
+      [Braintree]   <last-4>0000</last-4>
+      [Braintree]   <account-type>checking</account-type>
+      [Braintree]   <account-holder-name>Jon Doe</account-holder-name>
+      [Braintree]   <bank-name>FEDERAL RESERVE BANK</bank-name>
+      [Braintree]   <ach-mandate>
+      [Braintree]     <accepted-at type="datetime">2022-01-24T22:25:11Z</accepted-at>
+      [Braintree]     <text>By clicking ["Checkout"], I authorize Braintree, a service of PayPal, on behalf of [your business name here] (i) to verify my bank account information using bank information and consumer reports and (ii) to debit my bank account.</text>
+      [Braintree]   </ach-mandate>
+      [Braintree]   <ownership-type>personal</ownership-type>
+      [Braintree]   <verified type="boolean">true</verified>
+      [Braintree]   <account-number>1000000000</account-number>
+      [Braintree]   <verified-by nil="true"/>
+      [Braintree]   <vaulted-in-blue type="boolean">true</vaulted-in-blue>
+      [Braintree]   <business-name nil="true"/>
+      [Braintree]   <first-name>Jon</first-name>
+      [Braintree]   <last-name>Doe</last-name>
+      [Braintree]   <default type="boolean">true</default>
+      [Braintree]   <token>9dkrvzg</token>
+      [Braintree]   <customer-id>673970040</customer-id>
+      [Braintree]   <customer-global-id>Y3VzdG9tZXJfNjczOTcwMDQw</customer-global-id>
+      [Braintree]   <image-url>https://assets.braintreegateway.com/payment_method_logo/us_bank_account.png?environment=sandbox</image-url>
+      [Braintree]   <verifications type="array">
+      [Braintree]     <us-bank-account-verification>
+      [Braintree]       <status>verified</status>
+      [Braintree]       <gateway-rejection-reason nil="true"/>
+      [Braintree]       <merchant-account-id>endava</merchant-account-id>
+      [Braintree]       <processor-response-code>1000</processor-response-code>
+      [Braintree]       <processor-response-text>Approved</processor-response-text>
+      [Braintree]       <id>d4gaqtek</id>
+      [Braintree]       <verification-method>network_check</verification-method>
+      [Braintree]       <verification-determined-at type="datetime">2022-01-24T22:25:12Z</verification-determined-at>
+      [Braintree]       <us-bank-account>
+      [Braintree]         <token>9dkrvzg</token>
+      [Braintree]         <last-4>0000</last-4>
+      [Braintree]         <account-type>checking</account-type>
+      [Braintree]         <account-holder-name>Jon Doe</account-holder-name>
+      [Braintree]         <bank-name>FEDERAL RESERVE BANK</bank-name>
+      [Braintree]         <routing-number>011000015</routing-number>
+      [Braintree]         <verified type="boolean">true</verified>
+      [Braintree]         <ownership-type>personal</ownership-type>
+      [Braintree]       </us-bank-account>
+      [Braintree]       <created-at type="datetime">2022-01-24T22:25:12Z</created-at>
+      [Braintree]       <updated-at type="datetime">2022-01-24T22:25:12Z</updated-at>
+      [Braintree]       <global-id>dXNiYW5rYWNjb3VudHZlcmlmaWNhdGlvbl9kNGdhcXRlaw</global-id>
+      [Braintree]     </us-bank-account-verification>
+      [Braintree]   </verifications>
+      [Braintree]   <global-id>cGF5bWVudG1ldGhvZF91c2JfOWRrcnZ6Zw</global-id>
+      [Braintree]   <created-at type="datetime">2022-01-24T22:25:12Z</created-at>
+      [Braintree]   <updated-at type="datetime">2022-01-24T22:25:12Z</updated-at>
+      [Braintree] </us-bank-account>
+    RESPONSE
+  end
+
+  def filtered_success_token_nonce
+    <<-RESPONSE
+      [Braintree] <payment-method>
+      [Braintree]   <customer-id>673970040</customer-id>
+      [Braintree]   <payment-method-nonce>[FILTERED]</payment-method-nonce>
+      [Braintree]   <options>
+      [Braintree]     <us-bank-account-verification-method>network_check</us-bank-account-verification-method>
+      [Braintree]   </options>
+      [Braintree] </payment-method>
+      [Braintree] <client-token>
+      [Braintree]   <value>[FILTERED]</value>
+      [Braintree] </client-token>
+      [Braintree] <us-bank-account>
+      [Braintree]   <routing-number>011000015</routing-number>
+      [Braintree]   <last-4>0000</last-4>
+      [Braintree]   <account-type>checking</account-type>
+      [Braintree]   <account-holder-name>Jon Doe</account-holder-name>
+      [Braintree]   <bank-name>FEDERAL RESERVE BANK</bank-name>
+      [Braintree]   <ach-mandate>
+      [Braintree]     <accepted-at type="datetime">2022-01-24T22:25:11Z</accepted-at>
+      [Braintree]     <text>By clicking ["Checkout"], I authorize Braintree, a service of PayPal, on behalf of [your business name here] (i) to verify my bank account information using bank information and consumer reports and (ii) to debit my bank account.</text>
+      [Braintree]   </ach-mandate>
+      [Braintree]   <ownership-type>personal</ownership-type>
+      [Braintree]   <verified type="boolean">true</verified>
+      [Braintree]   <account-number>[FILTERED]</account-number>
+      [Braintree]   <verified-by nil="true"/>
+      [Braintree]   <vaulted-in-blue type="boolean">true</vaulted-in-blue>
+      [Braintree]   <business-name nil="true"/>
+      [Braintree]   <first-name>Jon</first-name>
+      [Braintree]   <last-name>Doe</last-name>
+      [Braintree]   <default type="boolean">true</default>
+      [Braintree]   <token>[FILTERED]</token>
+      [Braintree]   <customer-id>673970040</customer-id>
+      [Braintree]   <customer-global-id>Y3VzdG9tZXJfNjczOTcwMDQw</customer-global-id>
+      [Braintree]   <image-url>https://assets.braintreegateway.com/payment_method_logo/us_bank_account.png?environment=sandbox</image-url>
+      [Braintree]   <verifications type="array">
+      [Braintree]     <us-bank-account-verification>
+      [Braintree]       <status>verified</status>
+      [Braintree]       <gateway-rejection-reason nil="true"/>
+      [Braintree]       <merchant-account-id>endava</merchant-account-id>
+      [Braintree]       <processor-response-code>1000</processor-response-code>
+      [Braintree]       <processor-response-text>Approved</processor-response-text>
+      [Braintree]       <id>d4gaqtek</id>
+      [Braintree]       <verification-method>network_check</verification-method>
+      [Braintree]       <verification-determined-at type="datetime">2022-01-24T22:25:12Z</verification-determined-at>
+      [Braintree]       <us-bank-account>
+      [Braintree]         <token>[FILTERED]</token>
+      [Braintree]         <last-4>0000</last-4>
+      [Braintree]         <account-type>checking</account-type>
+      [Braintree]         <account-holder-name>Jon Doe</account-holder-name>
+      [Braintree]         <bank-name>FEDERAL RESERVE BANK</bank-name>
+      [Braintree]         <routing-number>011000015</routing-number>
+      [Braintree]         <verified type="boolean">true</verified>
+      [Braintree]         <ownership-type>personal</ownership-type>
+      [Braintree]       </us-bank-account>
+      [Braintree]       <created-at type="datetime">2022-01-24T22:25:12Z</created-at>
+      [Braintree]       <updated-at type="datetime">2022-01-24T22:25:12Z</updated-at>
+      [Braintree]       <global-id>dXNiYW5rYWNjb3VudHZlcmlmaWNhdGlvbl9kNGdhcXRlaw</global-id>
+      [Braintree]     </us-bank-account-verification>
+      [Braintree]   </verifications>
+      [Braintree]   <global-id>cGF5bWVudG1ldGhvZF91c2JfOWRrcnZ6Zw</global-id>
+      [Braintree]   <created-at type="datetime">2022-01-24T22:25:12Z</created-at>
+      [Braintree]   <updated-at type="datetime">2022-01-24T22:25:12Z</updated-at>
+      [Braintree] </us-bank-account>
+    RESPONSE
   end
 end

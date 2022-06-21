@@ -4,9 +4,9 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sandbox.dlocal.com'
       self.live_url = 'https://api.dlocal.com'
 
-      self.supported_countries = %w[AR BR CL CO MX PE UY TR]
+      self.supported_countries = %w[AR BD BO BR CL CM CN CO CR DO EC EG GH GT IN ID JP KE MY MX MA NG PA PY PE PH SN SV TH TR TZ UG UY VN ZA]
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro naranja cabal]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro naranja cabal elo alia carnet]
 
       self.homepage_url = 'https://dlocal.com/'
       self.display_name = 'dLocal'
@@ -19,6 +19,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options = {})
         post = {}
         add_auth_purchase_params(post, money, payment, 'purchase', options)
+        add_three_ds(post, options)
 
         commit('purchase', post, options)
       end
@@ -26,6 +27,8 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options = {})
         post = {}
         add_auth_purchase_params(post, money, payment, 'authorize', options)
+        add_three_ds(post, options)
+        post[:card][:verify] = true if options[:verify].to_s == 'true'
 
         commit('authorize', post, options)
       end
@@ -52,10 +55,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        authorize(0, credit_card, options.merge(verify: 'true'))
       end
 
       def supports_scrubbing?
@@ -78,6 +78,7 @@ module ActiveMerchant #:nodoc:
         add_country(post, card, options)
         add_payer(post, card, options)
         add_card(post, card, action, options)
+        add_additional_data(post, options)
         post[:order_id] = options[:order_id] || generate_unique_id
         post[:description] = options[:description] if options[:description]
       end
@@ -85,6 +86,10 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money))
+      end
+
+      def add_additional_data(post, options)
+        post[:additional_risk_data] = options[:additional_data]
       end
 
       def add_country(post, card, options)
@@ -109,6 +114,8 @@ module ActiveMerchant #:nodoc:
         post[:payer][:document] = options[:document] if options[:document]
         post[:payer][:document2] = options[:document2] if options[:document2]
         post[:payer][:user_reference] = options[:user_reference] if options[:user_reference]
+        post[:payer][:event_uuid] = options[:device_id] if options[:device_id]
+        post[:payer][:onboarding_ip_address] = options[:ip] if options[:ip]
         post[:payer][:address] = add_address(post, card, options)
       end
 
@@ -149,6 +156,7 @@ module ActiveMerchant #:nodoc:
         post[:card][:capture] = (action == 'purchase')
         post[:card][:installments] = options[:installments] if options[:installments]
         post[:card][:installments_id] = options[:installments_id] if options[:installments_id]
+        post[:card][:force_type] = options[:force_type].to_s.upcase if options[:force_type]
       end
 
       def parse(body)
@@ -156,6 +164,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters, options = {})
+        three_ds_errors = validate_three_ds_params(parameters[:three_dsecure]) if parameters[:three_dsecure].present?
+        return three_ds_errors if three_ds_errors
+
         url = url(action, parameters, options)
         post = post_data(action, parameters)
         begin
@@ -184,7 +195,7 @@ module ActiveMerchant #:nodoc:
       def success_from(action, response)
         return false unless response['status_code']
 
-        %w[100 200 400 600].include? response['status_code'].to_s
+        %w[100 200 400 600 700].include? response['status_code'].to_s
       end
 
       def message_from(action, response)
@@ -228,9 +239,10 @@ module ActiveMerchant #:nodoc:
           'X-Date' => timestamp,
           'X-Login' => @options[:login],
           'X-Trans-Key' => @options[:trans_key],
+          'X-Version' => '2.1',
           'Authorization' => signature(post, timestamp)
         }
-        headers.merge('X-Idempotency-Key' => options[:idempotency_key]) if options[:idempotency_key]
+        headers['X-Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
         headers
       end
 
@@ -242,6 +254,49 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         parameters.to_json
+      end
+
+      def xid_or_ds_trans_id(three_d_secure)
+        if three_d_secure[:version].to_f >= 2
+          { ds_transaction_id: three_d_secure[:ds_transaction_id] }
+        else
+          { xid: three_d_secure[:xid] }
+        end
+      end
+
+      def add_three_ds(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post[:three_dsecure] = {
+          mpi: true,
+          three_dsecure_version: three_d_secure[:version],
+          cavv: three_d_secure[:cavv],
+          eci: three_d_secure[:eci],
+          enrollment_response: formatted_enrollment(three_d_secure[:enrolled]),
+          authentication_response: three_d_secure[:authentication_response_status]
+        }.merge(xid_or_ds_trans_id(three_d_secure))
+      end
+
+      def validate_three_ds_params(three_ds)
+        errors = {}
+        supported_version = %w{1.0 2.0 2.1.0 2.2.0}.include?(three_ds[:three_dsecure_version])
+        supported_enrollment = ['Y', 'N', 'U', nil].include?(three_ds[:enrollment_response])
+        supported_auth_response = ['Y', 'N', 'U', nil].include?(three_ds[:authentication_response])
+
+        errors[:three_ds_version] = 'ThreeDs version not supported' unless supported_version
+        errors[:enrollment] = 'Enrollment value not supported' unless supported_enrollment
+        errors[:auth_response] = 'Authentication response value not supported' unless supported_auth_response
+        errors.compact!
+
+        errors.present? ? Response.new(false, 'ThreeDs data is invalid', errors) : nil
+      end
+
+      def formatted_enrollment(val)
+        case val
+        when 'Y', 'N', 'U' then val
+        when true, 'true' then 'Y'
+        when false, 'false' then 'N'
+        end
       end
     end
   end

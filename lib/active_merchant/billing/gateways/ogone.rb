@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w[BE DE FR NL AT CH]
       # also supports Airplus and UATP
       self.supported_cardtypes = %i[visa master american_express diners_club discover jcb maestro]
-      self.homepage_url = 'http://www.ogone.com/'
+      self.homepage_url = 'https://www.ingenico.com/login/ogone/'
       self.display_name = 'Ogone'
       self.default_currency = 'EUR'
       self.money_format = :cents
@@ -264,7 +264,6 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_source(post, payment_source, options)
         add_d3d(post, options) if options[:d3d]
-
         if payment_source.is_a?(String)
           add_alias(post, payment_source, options[:alias_operation])
           add_eci(post, options[:eci] || '9')
@@ -285,8 +284,6 @@ module ActiveMerchant #:nodoc:
           THREE_D_SECURE_DISPLAY_WAYS[options[:win_3ds]] :
           THREE_D_SECURE_DISPLAY_WAYS[:main_window]
         add_pair post, 'WIN3DS', win_3ds
-
-        add_pair post, 'HTTP_ACCEPT',     options[:http_accept] || '*/*'
         add_pair post, 'HTTP_USER_AGENT', options[:http_user_agent] if options[:http_user_agent]
         add_pair post, 'ACCEPTURL',       options[:accept_url]      if options[:accept_url]
         add_pair post, 'DECLINEURL',      options[:decline_url]     if options[:decline_url]
@@ -296,6 +293,37 @@ module ActiveMerchant #:nodoc:
         add_pair post, 'PARAMPLUS',       options[:paramplus]       if options[:paramplus]
         add_pair post, 'COMPLUS',         options[:complus]         if options[:complus]
         add_pair post, 'LANGUAGE',        options[:language]        if options[:language]
+        if  options[:three_ds_2]
+          browser_info = options[:three_ds_2][:browser_info]
+          ecom_postal = options[:billing_address]
+          if browser_info
+            add_pair post, 'BROWSERACCEPTHEADER', browser_info[:accept_header]
+            add_pair post, 'BROWSERCOLORDEPTH', browser_info[:depth]
+
+            # for 3ds v2.1 to v2.2 add BROWSERJAVASCRIPTENABLED: This boolean indicates whether your customers have enabled JavaScript in their browsers when making a purchase.
+            # the following BROWSER<tag> parameters will remain mandatory unless browser_info[:javascript] = false
+            # her documentation https://epayments-support.ingenico.com/en/integration-solutions/integrations/directlink#directlink_integration_guides_secure_payment_with_3_d_secure
+            add_pair post, 'BROWSERJAVASCRIPTENABLED', browser_info[:javascript]
+            add_pair post, 'BROWSERJAVAENABLED', browser_info[:java]
+            add_pair post, 'BROWSERLANGUAGE', browser_info[:language]
+            add_pair post, 'BROWSERSCREENHEIGHT', browser_info[:height]
+            add_pair post, 'BROWSERSCREENWIDTH', browser_info[:width]
+            add_pair post, 'BROWSERTIMEZONE', browser_info[:timezone]
+            add_pair post, 'BROWSERUSERAGENT', browser_info[:user_agent]
+          end
+          # recommended
+          if ecom_postal
+            add_pair post, 'ECOM_BILLTO_POSTAL_CITY', ecom_postal[:city]
+            add_pair post, 'ECOM_BILLTO_POSTAL_COUNTRYCODE', ecom_postal[:country]
+            add_pair post, 'ECOM_BILLTO_POSTAL_STREET_LINE1', ecom_postal[:address1]
+            add_pair post, 'ECOM_BILLTO_POSTAL_STREET_LINE2', ecom_postal[:address2]
+            add_pair post, 'ECOM_BILLTO_POSTAL_POSTALCODE', ecom_postal[:zip]
+          end
+          # optional
+          add_pair post, 'Mpi.threeDSRequestorChallengeIndicator', options[:three_ds_reqchallengeind]
+        else
+          add_pair post, 'HTTP_ACCEPT', options[:http_accept] || '*/*'
+        end
       end
 
       def add_eci(post, eci)
@@ -414,7 +442,7 @@ module ActiveMerchant #:nodoc:
           return
         end
 
-        add_pair parameters, 'SHASign', calculate_signature(parameters, @options[:signature_encryptor], @options[:signature])
+        add_pair parameters, 'SHASIGN', calculate_signature(parameters, @options[:signature_encryptor], @options[:signature])
       end
 
       def calculate_signature(signed_parameters, algorithm, secret)
@@ -432,7 +460,7 @@ module ActiveMerchant #:nodoc:
             raise "Unknown signature algorithm #{algorithm}"
           end
 
-        filtered_params = signed_parameters.select { |_k, v| !v.blank? }
+        filtered_params = signed_parameters.compact
         sha_encryptor.hexdigest(
           filtered_params.sort_by { |k, _v| k.upcase }.map { |k, v| "#{k.upcase}=#{v}#{secret}" }.join('')
         ).upcase
@@ -456,7 +484,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_pair(post, key, value)
-        post[key] = value if !value.blank?
+        post[key] = value unless value.nil?
       end
 
       def convert_attributes_to_hash(rexml_attributes)

@@ -567,14 +567,16 @@ module ActiveMerchant
 
         xml.customerIP(options[:ip]) unless empty?(options[:ip])
 
-        xml.cardholderAuthentication do
-          three_d_secure = options.fetch(:three_d_secure, {})
-          xml.authenticationIndicator(
-            options[:authentication_indicator] || three_d_secure[:eci]
-          )
-          xml.cardholderAuthenticationValue(
-            options[:cardholder_authentication_value] || three_d_secure[:cavv]
-          )
+        if !empty?(options.fetch(:three_d_secure, {})) || options[:authentication_indicator] || options[:cardholder_authentication_value]
+          xml.cardholderAuthentication do
+            three_d_secure = options.fetch(:three_d_secure, {})
+            xml.authenticationIndicator(
+              options[:authentication_indicator] || three_d_secure[:eci]
+            )
+            xml.cardholderAuthenticationValue(
+              options[:cardholder_authentication_value] || three_d_secure[:cavv]
+            )
+          end
         end
       end
 
@@ -708,9 +710,10 @@ module ActiveMerchant
         return unless options[:stored_credential]
 
         xml.processingOptions do
-          if options[:stored_credential][:initial_transaction]
+          if options[:stored_credential][:initial_transaction] && options[:stored_credential][:reason_type] == 'recurring'
+            xml.isFirstRecurringPayment 'true'
+          elsif options[:stored_credential][:initial_transaction]
             xml.isFirstSubsequentAuth 'true'
-            # xml.isFirstRecurringPayment 'true' if options[:stored_credential][:reason_type] == 'recurring'
           elsif options[:stored_credential][:initiator] == 'cardholder'
             xml.isStoredCredentials 'true'
           else
@@ -720,7 +723,7 @@ module ActiveMerchant
       end
 
       def add_subsequent_auth_information(xml, options)
-        return unless options.dig(:stored_credential, :reason_type) == 'unscheduled'
+        return unless options.dig(:stored_credential, :initiator) == 'merchant'
 
         xml.subsequentAuthInformation do
           xml.reason options[:stored_credential_reason_type_override] if options[:stored_credential_reason_type_override]
@@ -931,6 +934,11 @@ module ActiveMerchant
 
         response[:full_response_code] =
           if element = doc.at_xpath('//messages/message/code')
+            empty?(element.content) ? nil : element.content
+          end
+
+        response[:network_trans_id] =
+          if element = doc.at_xpath('//networkTransId')
             empty?(element.content) ? nil : element.content
           end
 

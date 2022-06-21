@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       class_attribute :test_url, :live_na_url, :live_eu_url
 
       self.display_name = 'Credorax Gateway'
-      self.homepage_url = 'https://www.credorax.com/'
+      self.homepage_url = 'https://www.finaro.com/'
 
       # NOTE: the IP address you run the remote tests from will need to be
       # whitelisted by Credorax; contact support@credorax.com as necessary to
@@ -20,12 +20,13 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://assigned-subdomain.credorax.net/crax_gate/service/gateway'
 
       self.supported_countries = %w(AD AT BE BG HR CY CZ DK EE FR DE GI GR GG HU IS IE IM IT JE LV LI LT LU MT MC NO PL PT RO SM SK ES SE CH GB)
+
       self.default_currency = 'EUR'
-      self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW PYG RWF VND VUV XAF XOF XPF)
+      self.currencies_without_fractions = %w(BIF CLP DJF GNF ISK JPY KMF KRW PYG RWF VND VUV XAF XOF XPF)
       self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LYD OMR TND)
 
       self.money_format = :cents
-      self.supported_cardtypes = %i[visa master maestro american_express]
+      self.supported_cardtypes = %i[visa master maestro american_express jcb discover diners_club]
 
       RESPONSE_MESSAGES = {
         '00' => 'Approved or completed successfully',
@@ -192,6 +193,7 @@ module ActiveMerchant #:nodoc:
         add_submerchant_id(post, options)
         add_processor(post, options)
         add_email(post, options)
+        add_recipient(post, options)
 
         if options[:referral_cft]
           add_customer_name(post, options)
@@ -211,6 +213,7 @@ module ActiveMerchant #:nodoc:
         add_submerchant_id(post, options)
         add_transaction_type(post, options)
         add_processor(post, options)
+        add_customer_name(post, options)
 
         commit(:credit, post)
       end
@@ -319,6 +322,16 @@ module ActiveMerchant #:nodoc:
         post[:c3] = options[:email] || 'unspecified@example.com'
       end
 
+      def add_recipient(post, options)
+        return unless options[:recipient_street_address] || options[:recipient_city] || options[:recipient_province_code] || options[:recipient_country_code]
+
+        recipient_country_code = options[:recipient_country_code]&.length == 3 ? options[:recipient_country_code] : Country.find(options[:recipient_country_code]).code(:alpha3).value if options[:recipient_country_code]
+        post[:j6] = options[:recipient_street_address] if options[:recipient_street_address]
+        post[:j7] = options[:recipient_city] if options[:recipient_city]
+        post[:j8] = options[:recipient_province_code] if options[:recipient_province_code]
+        post[:j9] = recipient_country_code
+      end
+
       def add_customer_name(post, options)
         post[:j5] = options[:first_name] if options[:first_name]
         post[:j13] = options[:last_name] if options[:last_name]
@@ -346,14 +359,7 @@ module ActiveMerchant #:nodoc:
           post[:d6] = browser_info[:language]
           post[:'3ds_browserjavaenabled'] = browser_info[:java]
           post[:'3ds_browseracceptheader'] = browser_info[:accept_header]
-          if (shipping_address = options[:shipping_address])
-            post[:'3ds_shipaddrstate'] = shipping_address[:state]
-            post[:'3ds_shipaddrpostcode'] = shipping_address[:zip]
-            post[:'3ds_shipaddrline2'] = shipping_address[:address2]
-            post[:'3ds_shipaddrline1'] = shipping_address[:address1]
-            post[:'3ds_shipaddrcountry'] = shipping_address[:country]
-            post[:'3ds_shipaddrcity'] = shipping_address[:city]
-          end
+          add_complete_shipping_address(post, options[:shipping_address]) if options[:shipping_address]
         elsif options[:three_d_secure]
           add_normalized_3d_secure_2_data(post, options)
         end
@@ -371,6 +377,17 @@ module ActiveMerchant #:nodoc:
           post[:i8] = build_i8(options[:eci], options[:cavv], options[:xid])
           post[:'3ds_version'] = options[:three_ds_version].nil? || options[:three_ds_version]&.start_with?('1') ? '1.0' : options[:three_ds_version]
         end
+      end
+
+      def add_complete_shipping_address(post, shipping_address)
+        return if shipping_address.values.any?(&:blank?)
+
+        post[:'3ds_shipaddrstate'] = shipping_address[:state]
+        post[:'3ds_shipaddrpostcode'] = shipping_address[:zip]
+        post[:'3ds_shipaddrline2'] = shipping_address[:address2]
+        post[:'3ds_shipaddrline1'] = shipping_address[:address1]
+        post[:'3ds_shipaddrcountry'] = shipping_address[:country]
+        post[:'3ds_shipaddrcity'] = shipping_address[:city]
       end
 
       def add_normalized_3d_secure_2_data(post, options)

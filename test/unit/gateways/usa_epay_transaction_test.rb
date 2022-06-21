@@ -280,6 +280,15 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_store_request
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    expected_auth = response.params['card_ref']
+    assert_equal expected_auth, response.authorization
+  end
+
   def test_successful_capture_passing_extra_info
     response = stub_comms do
       @gateway.capture(@amount, '65074409', @options)
@@ -604,6 +613,10 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def successful_void_response_echeck
     'UMversion=2.9&UMstatus=Approved&UMauthCode=TM80A5&UMrefNum=133134971&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled'
+  end
+
+  def successful_store_response
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=&UMrefNum=&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMcardRef=whx6-fvz2-24l1-39a8&UMcardType=Visa&UMmaskedCardNum=XXXXXXXXXXXX2224&UMfiller=filled'
   end
 
   def pre_scrubbed

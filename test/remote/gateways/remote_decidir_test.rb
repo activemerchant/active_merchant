@@ -18,6 +18,18 @@ class RemoteDecidirTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @sub_payments = [
+      {
+        site_id: '04052018',
+        installments: '1',
+        amount: '1500'
+      },
+      {
+        site_id: '04052018',
+        installments: 1,
+        amount: 1500
+      }
+    ]
   end
 
   def test_successful_purchase
@@ -125,6 +137,14 @@ class RemoteDecidirTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_sub_payments
+    options = @options.merge(sub_payments: @sub_payments)
+
+    assert response = @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'approved', response.message
+  end
+
   def test_failed_purchase_with_bad_csmdds
     options = {
       fraud_detection: {
@@ -177,7 +197,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
     response = @gateway_for_auth.authorize(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'PEDIR AUTORIZACION | request_authorization_card', response.message
-    assert_match 'call_issuer', response.error_code
+    assert_match '1, call_issuer', response.error_code
   end
 
   def test_failed_partial_capture

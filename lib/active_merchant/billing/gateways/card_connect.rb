@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
           add_currency(post, money, options)
           add_address(post, options)
           add_customer_data(post, options)
-          add_3DS(post, options)
+          add_three_ds_mpi_data(post, options)
           add_additional_data(post, options)
           post[:capture] = 'Y'
           commit('auth', post)
@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
         add_payment(post, payment)
         add_address(post, options)
         add_customer_data(post, options)
-        add_3DS(post, options)
+        add_three_ds_mpi_data(post, options)
         add_additional_data(post, options)
         commit('auth', post)
       end
@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
           post[:address] = address[:address1] if address[:address1]
-          post[:address].concat(" #{address[:address2]}") if address[:address2]
+          post[:address2] = address[:address2] if address[:address2]
           post[:city] = address[:city] if address[:city]
           post[:region] = address[:state] if address[:state]
           post[:country] = address[:country] if address[:country]
@@ -241,10 +241,12 @@ module ActiveMerchant #:nodoc:
         post[:userfields] = options[:user_fields] if options[:user_fields]
       end
 
-      def add_3DS(post, options)
-        post[:secureflag] = options[:secure_flag] if options[:secure_flag]
-        post[:securevalue] = options[:secure_value] if options[:secure_value]
-        post[:securexid] = options[:secure_xid] if options[:secure_xid]
+      def add_three_ds_mpi_data(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post[:secureflag]  = three_d_secure[:eci]
+        post[:securevalue] = three_d_secure[:cavv]
+        post[:securedstid] = three_d_secure[:ds_transaction_id]
       end
 
       def headers

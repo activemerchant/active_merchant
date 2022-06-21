@@ -44,6 +44,13 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
       fraud_manual_review: true,
       payment_method_option_id: '123abc'
     }
+    @payer = {
+      entity_type: 'individual',
+      type: 'customer',
+      identification: {},
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    }
   end
 
   def test_successful_purchase
@@ -111,6 +118,21 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options.merge(notification_url: 'https://www.spreedly.com/'))
     assert_success response
     assert_equal 'https://www.spreedly.com/', response.params['notification_url']
+  end
+
+  def test_successful_purchase_with_payer
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ payer: @payer }))
+    assert_success response
+    assert_equal 'accredited', response.message
+  end
+
+  def test_successful_purchase_with_metadata_passthrough
+    metadata = { 'key_1' => 'value_1',
+      'key_2' => 'value_2',
+      'key_3' => { 'nested_key_1' => 'value_3' } }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ metadata: metadata }))
+    assert_success response
+    assert_equal metadata, response.params['metadata']
   end
 
   def test_failed_purchase
@@ -280,6 +302,13 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match %r{pending_capture}, response.message
+  end
+
+  def test_successful_verify_with_amount
+    @options[:amount] = 200
     response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_match %r{pending_capture}, response.message

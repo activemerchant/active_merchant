@@ -86,8 +86,32 @@ class RemoteElementTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_duplicate_override_flag
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: true))
+    assert_success response
+    assert_equal 'Approved', response.message
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: false))
+    assert_success response
+    assert_equal 'Approved', response.message
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_overrride_flag: 'true'))
+    assert_success response
+    assert_equal 'Approved', response.message
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'xxx'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_terminal_id
     response = @gateway.purchase(@amount, @credit_card, @options.merge(terminal_id: '02'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_merchant_descriptor
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(merchant_descriptor: 'Flowerpot Florists'))
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -143,6 +167,20 @@ class RemoteElementTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, '')
     assert_failure response
     assert_equal 'TransactionID required', response.message
+  end
+
+  def test_successful_credit
+    credit_options = @options.merge({ ticket_number: '1', market_code: 'FoodRestaurant', merchant_supplied_transaction_id: '123' })
+    credit = @gateway.credit(@amount, @credit_card, credit_options)
+
+    assert_success credit
+  end
+
+  def test_failed_credit
+    credit = @gateway.credit(nil, @credit_card, @options)
+
+    assert_failure credit
+    assert_equal 'TransactionAmount required', credit.message
   end
 
   def test_successful_void

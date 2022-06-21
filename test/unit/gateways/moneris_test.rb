@@ -13,6 +13,11 @@ class MonerisTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
+
+    # https://developer.moneris.com/livedemo/3ds2/reference/guide/php
+    @fully_authenticated_eci = 5
+    @no_liability_shift_eci = 7
+
     @options = { order_id: '1', customer: '1', billing_address: address }
   end
 
@@ -28,6 +33,40 @@ class MonerisTest < Test::Unit::TestCase
     assert response = @gateway.purchase(100, @credit_card, @options)
     assert_success response
     assert_equal '58-0_3;1026.1', response.authorization
+  end
+
+  def test_successful_mpi_cavv_purchase
+    @gateway.expects(:ssl_post).returns(successful_cavv_purchase_response)
+
+    assert response = @gateway.purchase(100, @credit_card,
+      @options.merge(
+        three_d_secure: {
+          version: '2',
+          cavv: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+          eci: @fully_authenticated_eci,
+          three_ds_server_trans_id: 'd0f461f8-960f-40c9-a323-4e43a4e16aaa',
+          ds_transaction_id: '12345'
+        }
+      ))
+    assert_success response
+    assert_equal '69785-0_98;a131684dbecc1d89d9927c539ed3791b', response.authorization
+  end
+
+  def test_failed_mpi_cavv_purchase
+    @gateway.expects(:ssl_post).returns(failed_cavv_purchase_response)
+
+    assert response = @gateway.purchase(100, @credit_card,
+      @options.merge(
+        three_d_secure: {
+          version: '2',
+          cavv: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+          eci: @fully_authenticated_eci,
+          three_ds_server_trans_id: 'd0f461f8-960f-40c9-a323-4e43a4e16aaa',
+          ds_transaction_id: '12345'
+        }
+      ))
+    assert_failure response
+    assert_equal '69785-0_98;a131684dbecc1d89d9927c539ed3791b', response.authorization
   end
 
   def test_successful_first_purchase_with_credential_on_file
@@ -610,6 +649,66 @@ class MonerisTest < Test::Unit::TestCase
           <CardType>V</CardType>
           <TransID>58-0_3</TransID>
           <TimedOut>false</TimedOut>
+        </receipt>
+      </response>
+
+    RESPONSE
+  end
+
+  def successful_cavv_purchase_response
+    <<~RESPONSE
+      <?xml version="1.0" standalone="yes"?>
+      <response>
+        <receipt>
+          <ReceiptId>a131684dbecc1d89d9927c539ed3791b</ReceiptId>
+          <ReferenceNum>660148420010137130</ReferenceNum>
+          <ResponseCode>027</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>655371</AuthCode>
+          <TransTime>18:26:32</TransTime>
+          <TransDate>2022-03-25</TransDate>
+          <TransType>00</TransType>
+          <Complete>true</Complete>
+          <Message>APPROVED * =</Message>
+          <TransAmount>1.00</TransAmount>
+          <CardType>V</CardType>
+          <TransID>69785-0_98</TransID>
+          <TimedOut>false</TimedOut>
+          <BankTotals>null</BankTotals>
+          <Ticket>null</Ticket>
+          <CorporateCard>false</CorporateCard>
+          <CavvResultCode>2</CavvResultCode>
+          <IsVisaDebit>false</IsVisaDebit>
+        </receipt>
+      </response>
+
+    RESPONSE
+  end
+
+  def failed_cavv_purchase_response
+    # this response is exactly the same as successful_cavv_purchase_response MINUS the CavvResultCode
+    <<~RESPONSE
+      <?xml version="1.0" standalone="yes"?>
+      <response>
+        <receipt>
+          <ReceiptId>a131684dbecc1d89d9927c539ed3791b</ReceiptId>
+          <ReferenceNum>660148420010137130</ReferenceNum>
+          <ResponseCode>027</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>655371</AuthCode>
+          <TransTime>18:26:32</TransTime>
+          <TransDate>2022-03-25</TransDate>
+          <TransType>00</TransType>
+          <Complete>true</Complete>
+          <Message>APPROVED * =</Message>
+          <TransAmount>1.00</TransAmount>
+          <CardType>V</CardType>
+          <TransID>69785-0_98</TransID>
+          <TimedOut>false</TimedOut>
+          <BankTotals>null</BankTotals>
+          <Ticket>null</Ticket>
+          <CorporateCard>false</CorporateCard>
+          <IsVisaDebit>false</IsVisaDebit>
         </receipt>
       </response>
 

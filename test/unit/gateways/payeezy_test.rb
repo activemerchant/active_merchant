@@ -32,6 +32,20 @@ class PayeezyGateway < Test::Unit::TestCase
     }
     @authorization = 'ET1700|106625152|credit_card|4738'
     @reversal_id = SecureRandom.random_number(1000000).to_s
+
+    @options_mdd = {
+      soft_descriptors: {
+        dba_name: 'Caddyshack',
+        street: '1234 Any Street',
+        city: 'Durham',
+        region: 'North Carolina',
+        mid: 'mid_1234',
+        mcc: 'mcc_5678',
+        postal_code: '27701',
+        country_code: 'US',
+        merchant_contact_info: '8885551212'
+      }
+    }
   end
 
   def test_invalid_credentials
@@ -131,6 +145,17 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal 'Transaction Normal - Approved', response.message
   end
 
+  def test_successful_purchase_with_customer_ref
+    options = @options.merge(level2: { customer_ref: 'An important customer' })
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"level2":{"customer_ref":"An important customer"}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_stored_credentials
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(@options_stored_credentials))
@@ -216,10 +241,59 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_refund_with_soft_descriptors
+    response = stub_comms do
+      @gateway.refund(@amount, @authorization, @options.merge(@options_mdd))
+    end.check_request do |_endpoint, data, _headers|
+      json = '{"transaction_type":"refund","method":"credit_card","transaction_tag":"106625152","currency_code":"USD","amount":"100","soft_descriptors":{"dba_name":"Caddyshack","street":"1234 Any Street","city":"Durham","region":"North Carolina","mid":"mid_1234","mcc":"mcc_5678","postal_code":"27701","country_code":"US","merchant_contact_info":"8885551212"},"merchant_ref":null}'
+      assert_match json, data
+    end.respond_with(successful_refund_response)
+
+    assert_success response
+  end
+
+  def test_successful_refund_with_order_id
+    response = stub_comms do
+      @gateway.refund(@amount, @authorization, @options.merge(order_id: 1234))
+    end.check_request do |_endpoint, data, _headers|
+      json = '{"transaction_type":"refund","method":"credit_card","transaction_tag":"106625152","currency_code":"USD","amount":"100","merchant_ref":1234}'
+      assert_match json, data
+    end.respond_with(successful_refund_response)
+
+    assert_success response
+  end
+
   def test_failed_refund
     @gateway.expects(:ssl_post).raises(failed_refund_response)
     assert response = @gateway.refund(@amount, @authorization)
     assert_failure response
+  end
+
+  def test_successful_general_credit
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    assert response = @gateway.credit(@amount, @credit_card)
+    assert_success response
+  end
+
+  def test_successful_general_credit_with_soft_descriptors
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card, @options.merge(@options_mdd))
+    end.check_request do |_endpoint, data, _headers|
+      soft_descriptors_regex = %r("soft_descriptors":{"dba_name":"Caddyshack","street":"1234 Any Street","city":"Durham","region":"North Carolina","mid":"mid_1234","mcc":"mcc_5678","postal_code":"27701","country_code":"US","merchant_contact_info":"8885551212"})
+      assert_match soft_descriptors_regex, data
+    end.respond_with(successful_refund_response)
+
+    assert_success response
+  end
+
+  def test_successful_general_credit_with_order_id
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card, @options.merge(order_id: 1234))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/\"merchant_ref\":1234/, data)
+    end.respond_with(successful_refund_response)
+
+    assert_success response
   end
 
   def test_successful_void

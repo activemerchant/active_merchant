@@ -85,6 +85,12 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_customer_ref
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(level2: { customer_ref: 'An important customer' }))
+    assert_match(/Transaction Normal/, response.message)
+    assert_success response
+  end
+
   def test_successful_purchase_with_stored_credentials
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@options_stored_credentials))
     assert_match(/Transaction Normal/, response.message)
@@ -162,6 +168,28 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_refund_with_soft_descriptors
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, purchase.message)
+    assert_success purchase
+
+    assert response = @gateway.refund(50, purchase.authorization, @options.merge(@options_mdd))
+    assert_success response
+    assert_match(/Transaction Normal/, response.message)
+    assert response.authorization
+  end
+
+  def test_successful_refund_with_order_id
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, purchase.message)
+    assert_success purchase
+
+    assert response = @gateway.refund(50, purchase.authorization, @options.merge(order_id: '1234'))
+    assert_success response
+    assert_match(/Transaction Normal/, response.message)
+    assert response.authorization
+  end
+
   def test_successful_refund_with_echeck
     assert purchase = @gateway.purchase(@amount, @check, @options)
     assert_match(/Transaction Normal/, purchase.message)
@@ -204,6 +232,22 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_failure response
     assert_match(/The transaction tag is not provided/, response.message)
     assert response.authorization
+  end
+
+  def test_successful_general_credit
+    assert response = @gateway.credit(@amount, @credit_card, @options.merge(@options_mdd))
+    assert_match(/Transaction Normal/, response.message)
+    assert_equal '100', response.params['bank_resp_code']
+    assert_equal nil, response.error_code
+    assert_success response
+  end
+
+  def test_successful_general_credit_with_order_id
+    assert response = @gateway.credit(@amount, @credit_card, @options.merge(order_id: '1234'))
+    assert_match(/Transaction Normal/, response.message)
+    assert_equal '100', response.params['bank_resp_code']
+    assert_equal nil, response.error_code
+    assert_success response
   end
 
   def test_successful_void

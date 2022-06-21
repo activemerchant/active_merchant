@@ -66,6 +66,13 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_and_amount_for_isk
+    response = @gateway.purchase(14200, @credit_card, @options.merge(currency: 'ISK'))
+    assert_success response
+    assert_equal '142', response.params['A4']
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_extra_options
     response = @gateway.purchase(@amount, @credit_card, @options.merge(transaction_type: '10'))
     assert_success response
@@ -331,6 +338,22 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', refund.message
   end
 
+  def test_successful_refund_with_recipient_fields
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    refund_options = {
+      recipient_street_address: 'street',
+      recipient_city: 'chicago',
+      recipient_province_code: '312',
+      recipient_country_code: 'USA'
+    }
+
+    refund = @gateway.refund(@amount, response.authorization, refund_options)
+    assert_success refund
+    assert_equal 'Succeeded', refund.message
+  end
+
   def test_successful_refund_and_void
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -521,6 +544,13 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     # returns a failed response when an invalid processor parameter is sent
     assert bad_response = @gateway.purchase(@amount, @credit_card, @options.merge(processor: 'invalid'))
     assert_failure bad_response
+  end
+
+  def test_purchase_passes_d2_field
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(echo: 'Echo Parameter'))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'Echo Parameter', response.params['D2']
   end
 
   # #########################################################################

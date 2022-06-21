@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class RemoteVancoTest < Test::Unit::TestCase
+  SECONDS_PER_DAY = 3600 * 24
+
   def setup
     @gateway = VancoGateway.new(fixtures(:vanco))
 
@@ -30,6 +32,42 @@ class RemoteVancoTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_ip_address
     response = @gateway.purchase(@amount, @credit_card, @options.merge(ip: '192.168.19.123'))
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_existing_session_id
+    previous_login_response = @gateway.send(:login)
+
+    response = @gateway.purchase(
+      @amount,
+      @credit_card,
+      @options.merge(
+        session_id:
+          {
+            id: previous_login_response.params['response_sessionid'],
+            created_at: Time.parse(previous_login_response.params['auth_requesttime'])
+          }
+      )
+    )
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_expired_session_id
+    two_days_from_now = Time.now - (2 * SECONDS_PER_DAY)
+    previous_login_response = @gateway.send(:login)
+
+    response = @gateway.purchase(
+      @amount,
+      @credit_card,
+      @options.merge(
+        session_id: {
+          id: previous_login_response.params['response_sessionid'],
+          created_at: two_days_from_now
+        }
+      )
+    )
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -95,6 +133,15 @@ class RemoteVancoTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_account_number_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, clean_transcript)
   end
 
   def test_invalid_login

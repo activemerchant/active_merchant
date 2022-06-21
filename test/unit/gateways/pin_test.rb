@@ -52,11 +52,11 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['AU'], PinGateway.supported_countries
+    assert_equal %w(AU NZ), PinGateway.supported_countries
   end
 
   def test_supported_cardtypes
-    assert_equal %i[visa master american_express], PinGateway.supported_cardtypes
+    assert_equal %i[visa master american_express diners_club discover jcb], PinGateway.supported_cardtypes
   end
 
   def test_display_name
@@ -129,6 +129,26 @@ class PinTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card, @options)
     assert_failure response
     assert_equal 'The current resource was deemed invalid.', response.message
+    assert response.test?
+  end
+
+  def test_successful_unstore
+    token = 'cus_05p0n7UFPmcyCNjD8c6HdA'
+    @gateway.expects(:ssl_request).with(:delete, "https://test-api.pinpayments.com/1/customers/#{token}", instance_of(String), instance_of(Hash)).returns(nil)
+
+    assert response = @gateway.unstore(token)
+    assert_success response
+    assert_nil response.message
+    assert response.test?
+  end
+
+  def test_unsuccessful_unstore
+    token = 'cus_05p0n7UFPmcyCNjD8c6HdA'
+    @gateway.expects(:ssl_request).with(:delete, "https://test-api.pinpayments.com/1/customers/#{token}", instance_of(String), instance_of(Hash)).returns(failed_customer_unstore_response)
+
+    assert response = @gateway.unstore(token)
+    assert_failure response
+    assert_equal 'The requested resource could not be found.', response.message
     assert response.test?
   end
 
@@ -495,6 +515,13 @@ class PinTest < Test::Unit::TestCase
           "message":"Card number [\"is not a valid credit card number\"]"
         }
       ]
+    }'
+  end
+
+  def failed_customer_unstore_response
+    '{
+      "error": "not_found",
+      "error_description": "The requested resource could not be found."
     }'
   end
 

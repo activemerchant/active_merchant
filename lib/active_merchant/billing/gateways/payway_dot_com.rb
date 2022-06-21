@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaywayDotComGateway < Gateway
-      self.test_url = 'https://devedgilpayway.net/PaywayWS/Payment/CreditCard'
-      self.live_url = 'https://edgilpayway.com/PaywayWS/Payment/CreditCard'
+      self.test_url = 'https://paywaywsdev.com/PaywayWS/Payment/CreditCard'
+      self.live_url = 'https://paywayws.com/PaywayWS/Payment/CreditCard'
 
       self.supported_countries = %w[US CA]
       self.default_currency = 'USD'
@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
       SCRUB_REPLACEMENT = '\1[FILTERED]'
 
       def initialize(options = {})
-        requires!(options, :login, :password, :company_id)
+        requires!(options, :login, :password, :company_id, :source_id)
         super
       end
 
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_common(post, options)
         add_card_payment(post, payment, options)
-        add_card_transaction(post, money, options)
+        add_card_transaction_details(post, money, options)
         add_address(post, payment, options)
 
         commit('sale', post)
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_common(post, options)
         add_card_payment(post, payment, options)
-        add_card_transaction(post, money, options)
+        add_card_transaction_details(post, money, options)
         add_address(post, payment, options)
 
         commit('authorize', post)
@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {}
         add_common(post, options)
-        add_card_transaction_name_and_source(post, authorization, options)
+        add_card_transaction_name(post, authorization, options)
 
         commit('capture', post)
       end
@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_common(post, options)
         add_card_payment(post, payment, options)
-        add_card_transaction(post, money, options)
+        add_card_transaction_details(post, money, options)
         add_address(post, payment, options)
 
         commit('credit', post)
@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         post = {}
         add_common(post, options)
-        add_card_transaction_name_and_source(post, authorization, options)
+        add_card_transaction_name(post, authorization, options)
 
         commit('void', post)
       end
@@ -131,12 +131,8 @@ module ActiveMerchant #:nodoc:
         post[:userName] = @options[:login]
         post[:password] = @options[:password]
         post[:companyId] = @options[:company_id]
-      end
-
-      def add_card_transaction_name_and_source(post, identifier, options)
-        post[:cardTransaction] ||= {}
-        post[:cardTransaction][:name] = identifier
-        post[:cardTransaction][:sourceId] = options[:source_id] if options[:source_id]
+        post[:cardTransaction] = {}
+        post[:cardTransaction][:sourceId] = @options[:source_id]
       end
 
       def add_address(post, payment, options)
@@ -155,14 +151,16 @@ module ActiveMerchant #:nodoc:
         post[:cardAccount][:phone]     = phone           if phone
       end
 
-      def add_card_transaction(post, money, options)
-        post[:cardTransaction] ||= {}
+      def add_card_transaction_details(post, money, options)
         post[:cardTransaction][:amount] = amount(money)
         eci_type = options[:eci_type].nil? ? '1' : options[:eci_type]
         post[:cardTransaction][:eciType] = eci_type
-        post[:cardTransaction][:sourceId] = options[:source_id] if options[:source_id]
         post[:cardTransaction][:processorSoftDescriptor] = options[:processor_soft_descriptor] if options[:processor_soft_descriptor]
         post[:cardTransaction][:tax] = options[:tax] if options[:tax]
+      end
+
+      def add_card_transaction_name(post, identifier, options)
+        post[:cardTransaction][:name] = identifier
       end
 
       def add_card_payment(post, payment, options)
@@ -235,7 +233,7 @@ module ActiveMerchant #:nodoc:
 
         return response['paywayCode'] + '-' + 'success' if success
 
-        response['paywayCode'] + '-' + response['paywayMessage']
+        response['paywayCode']
       end
 
       def authorization_from(response)
