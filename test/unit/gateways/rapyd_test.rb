@@ -38,9 +38,12 @@ class RapydTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: address(name: 'Joe John-ston')))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_equal JSON.parse(data)['address']['name'], 'Joe John-ston'
+    end.respond_with(successful_purchase_response)
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'payment_716ce0efc63aa8d91579e873d29d9d5e', response.authorization.split('|')[0]
   end

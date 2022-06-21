@@ -116,7 +116,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, creditcard, options)
-        return unless address = options[:address]
+        return unless address = options[:billing_address]
 
         post[:address] = {}
         # name and line_1 are required at the gateway
@@ -127,7 +127,7 @@ module ActiveMerchant #:nodoc:
         post[:address][:state] = address[:state] if address[:state]
         post[:address][:country] = address[:country] if address[:country]
         post[:address][:zip] = address[:zip] if address[:zip]
-        post[:address][:phone_number] = address[:phone] if address[:phone]
+        post[:address][:phone_number] = address[:phone].gsub(/\D/, '') if address[:phone]
       end
 
       def add_invoice(post, money, options)

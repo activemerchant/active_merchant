@@ -53,14 +53,9 @@ class RemoteRapydTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_address
-    options = {
-      address: {
-        name: 'Henry Winkler',
-        address1: '123 Happy Days Lane'
-      }
-    }
+    billing_address = address(name: 'Henry Winkler', address1: '123 Happy Days Lane')
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: billing_address))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
@@ -165,7 +160,7 @@ class RemoteRapydTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = @gateway.verify(@credit_card, @options)
+    response = @gateway.verify(@credit_card, @options.except(:billing_address))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
