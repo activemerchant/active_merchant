@@ -42,10 +42,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def update(customer_attributes, bank_account, options)
+      def update(customer_id, customer_attributes, bank_account, options = {})
         res = nil
         MultiResponse.run do |r|
-          r.process { res = commit(:put, "/customers/#{customer_attributes['vault_token']}", customer_params(customer_attributes, options)) }
+          r.process { res = commit(:put, "/customers/#{customer_id}", customer_params(customer_attributes, options)) }
           if res.success?
             r.process { res = create_bank_account(res.params['customers']['id'], bank_account, options) }
           end

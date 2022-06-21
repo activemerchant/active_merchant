@@ -33,6 +33,16 @@ class GoCardlessTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_update
+    bank_account = mock_bank_account_with_iban
+    stub_update_requests_to_be_successful
+
+    customer_id = JSON.parse(successful_create_customer_response)["customers"]["id"]
+
+    update_response = @gateway.update(customer_id, @customer_attributes, bank_account)
+    assert_success update_response
+  end
+
   def test_successful_purchase_with_token
     @gateway.expects(:ssl_request).returns(successful_purchase_response)
 
@@ -121,6 +131,20 @@ class GoCardlessTest < Test::Unit::TestCase
   def stub_requests_to_be_successful
     @gateway.expects(:ssl_request)
       .with(:post, 'https://api-sandbox.gocardless.com/customers', anything, anything)
+      .returns(successful_create_customer_response)
+
+    @gateway.expects(:ssl_request)
+      .with(:post, 'https://api-sandbox.gocardless.com/customer_bank_accounts', anything, anything)
+      .returns(successful_create_bank_account_response)
+
+    @gateway.expects(:ssl_request)
+      .with(:post, 'https://api-sandbox.gocardless.com/mandates', anything, anything)
+      .returns(successful_create_mandate_response)
+  end
+
+  def stub_update_requests_to_be_successful
+    @gateway.expects(:ssl_request)
+      .with(:put, 'https://api-sandbox.gocardless.com/customers/CU0004CKN9T1HZ', anything, anything)
       .returns(successful_create_customer_response)
 
     @gateway.expects(:ssl_request)
