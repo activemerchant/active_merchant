@@ -13,6 +13,10 @@ module ActiveMerchant #:nodoc:
         (@params['PaymentDetails']||{})
       end
 
+      def payment_status
+        (@params['CheckoutStatus']||{})
+      end
+
       def name
         payer = (info['PayerName']||{})
         [payer['FirstName'], payer['MiddleName'], payer['LastName']].compact.join(' ')
