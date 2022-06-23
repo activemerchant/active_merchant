@@ -13,6 +13,7 @@ module ActiveMerchant #:nodoc:
 
       APPENDED_URLS = %w(captures refunds cancellations verify)
       AMOUNT_IN_RESPONSE = %w(authonly /verify)
+      APPROVED_STATUS = %w(approved authorized)
 
       def initialize(options = {})
         requires!(options, :client_id, :api_key)
@@ -261,7 +262,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response['status'] == 'approved'
+        APPROVED_STATUS.include?(response['status'])
       end
 
       def message_from(response)
