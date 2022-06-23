@@ -1251,10 +1251,9 @@ secure_pay_tech:
 securion_pay:
   secret_key: pr_test_qZN4VVIKCySfCeXCBoHO9DBe
 
-# Working credentials, no need to replace
 shift4:
-  client_guid: 
-  auth_token:
+  client_guid: YOUR_CLIENT_ID
+  auth_token: YOUR_AUTH_TOKEN
 
 # Working credentials, no need to replace
 simetrik:
