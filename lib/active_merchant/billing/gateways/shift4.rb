@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://utgapi.shift4test.com/api/rest/v1/'
       self.live_url = 'https://utg.shift4api.net/api/rest/v1/'
 
-      self.supported_countries = ['US']
+      self.supported_countries = %w(US CA CU HT DO PR JM TT GP MQ BS BB LC CW AW VC VI GD AG DM KY KN SX TC MF VG BQ AI BL MS)
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover]
 
@@ -109,7 +109,6 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_credentials(post, options)
-        post[:dateTime] = current_date_time
         post[:credential] = {}
         post[:credential][:clientGuid] = @client_guid
         post[:credential][:authToken] = @auth_token
@@ -118,9 +117,10 @@ module ActiveMerchant #:nodoc:
       def setup_access_token
         post = {}
         add_credentials(post, options)
+        add_datetime(post, options)
 
         response = commit('accesstoken', post, request_headers(options))
-        response.params['result'][0]['credential']['accessToken']
+        response.params['result'].first['credential']['accessToken']
       end
 
       def add_clerk(post, options)
@@ -139,11 +139,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_transaction(post, options)
-        add_purchase_card(post, options)
-        add_override_bus_date(post, options)
-        add_amex(post, options)
-        add_auto(post, options)
-        add_card_on_file(post, options)
+        post[:transaction] = {}
+        post[:transaction][:invoice] = options[:invoice]
+        post[:transaction][:notes] = options[:notes] if options[:notes].present?
+
+        add_purchase_card(post[:transaction], options)
+        add_card_on_file(post[:transaction], options)
       end
 
       def add_card(post, credit_card, options)
@@ -175,27 +176,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_purchase_card(post, options)
-        post[:transaction] = {}
-        post[:transaction][:invoice] = options[:invoice]
-        post[:transaction][:notes] = options[:notes] if options[:notes].present?
-      end
-
-      def add_override_bus_date(post, options)
-        post[:overrideBusDate] = options[:override_bus_date] if options[:override_bus_date].present?
-      end
-
-      def add_amex(post, options)
-        if options[:amex].present?
-          post[:amex] = {}
-          post[:amex][:propertyCode] = options[:property_code]
-        end
-      end
-
-      def add_auto(post, options)
-        if options[:auto].present?
-          post[:auto] = {}
-          post[:auto][:estimatedDays] = options[:estimated_days]
-        end
+        post[:purchaseCard] = {}
+        post[:purchaseCard][:customerReference] = options[:customer_reference]
+        post[:purchaseCard][:destinationPostalCode] = options[:destination_postal_code]
+        post[:purchaseCard][:productDescriptors] = options[:product_descriptors]
       end
 
       def add_card_on_file(post, options)
@@ -285,11 +269,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error(response)
-        response_result(response)['error']
-      end
-
-      def response_result(response)
-        response['result'][0]
+        response['result'].first['error']
       end
 
       def current_date_time

@@ -15,54 +15,26 @@ class Shift4Test < Test::Unit::TestCase
   def setup
     @gateway = Shift4Gateway.new(client_guid: '123456', auth_token: 'abcder123')
     @credit_card = credit_card
-    @amount = 100
-
-    @options = {
-      order_id: '1',
-      company_name: 'Spreedly',
-      billing_address: address,
-      description: 'Store Purchase',
-      tax: 0,
-      total: 5,
-      clerk_id: 24,
-      invoice: '3333333309',
-      purchase_card: {
-        customer_reference: '457',
-        destination_postal_code: '89123',
-        product_descriptors: %w[
-          Potential
-          Wrong
-        ]
-      },
-      present: 'N'
+    @amount = 5
+    @options = {}
+    @extra_options = {
+      clerk_id: '1576',
+      notes: 'test notes',
+      tax: '2',
+      customer_reference: 'D019D09309F2',
+      destination_postal_code: '94719',
+      product_descriptors: %w(Hamburger Fries Soda Cookie)
     }
-    @refund_options = {
-      date_time: '2022-05-02T09:18:26.000-07:00',
-      billing_address: address,
-      total: 5,
-      clerk_id: 24,
-      invoice: rand(4),
-      purchase_card: {
-        customer_reference: '457',
-        destination_postal_code: '89123',
-        product_descriptors: 'Test'
-      },
-      notes: 'Transaction notes are added here',
-      present: 'N'
-    }
-    @invalid_auth_token = '1111g66gw3ryke00'
-    @invoid_options = { company_name: 'Spreedly', invoice: '111' }
   end
 
   def test_successful_capture
-    auth_token = '1111g66gw3ryke06'
     response = stub_comms do
-      @gateway.capture(@amount, auth_token, @options)
+      @gateway.capture(@amount, '1111g66gw3ryke06', @options)
     end.respond_with(successful_capture_response)
 
     assert response.success?
     assert_equal response.message, 'Transaction successful'
-    assert_equal @options[:total], response_result(response)['amount']['total']
+    assert_equal @amount, response_result(response)['amount']['total']
     assert_equal response_result(response)['card']['token']['value'].present?, true
   end
 
@@ -73,26 +45,41 @@ class Shift4Test < Test::Unit::TestCase
 
     assert response.success?
     assert_equal response.message, 'Transaction successful'
-    assert_equal @options[:total], response_result(response)['amount']['total']
+    assert_equal @amount, response_result(response)['amount']['total']
     assert_equal response_result(response)['card']['token']['value'].present?, true
   end
 
   def test_successful_purchase
-    auth_token = '1111g66gw3ryke06'
     response = stub_comms do
-      @gateway.purchase(@amount, auth_token, @options)
+      @gateway.purchase(@amount, '1111g66gw3ryke06', @options)
     end.respond_with(successful_purchase_response)
 
     assert response.success?
     assert_equal response.message, 'Transaction successful'
-    assert_equal @options[:total], response_result(response)['amount']['total']
+    assert_equal @amount, response_result(response)['amount']['total']
     assert_equal response_result(response)['card']['token']['value'].present?, true
   end
 
-  def test_successful_refund
-    auth_token = '1111g66gw3ryke06'
+  def test_successful_purchase_with_extra_fields
     response = stub_comms do
-      @gateway.refund(@amount, auth_token, @refund_options.merge!(invoice: '4666309473'))
+      @gateway.purchase(@amount, @credit_card, @options.merge(@extra_options))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['clerk']['numericId'], @extra_options[:clerk_id]
+      assert_equal request['transaction']['notes'], @extra_options[:notes]
+      assert_equal request['amount']['tax'], @extra_options[:tax].to_f
+      assert_equal request['transaction']['purchaseCard']['customerReference'], @extra_options[:customer_reference]
+      assert_equal request['transaction']['purchaseCard']['destinationPostalCode'], @extra_options[:destination_postal_code]
+      assert_equal request['transaction']['purchaseCard']['productDescriptors'], @extra_options[:product_descriptors]
+    end.respond_with(successful_purchase_response)
+
+    assert response.success?
+    assert_equal response.message, 'Transaction successful'
+  end
+
+  def test_successful_refund
+    response = stub_comms do
+      @gateway.refund(@amount, '1111g66gw3ryke06', @options.merge!(invoice: '4666309473'))
     end.respond_with(successful_refund_response)
 
     assert response.success?
@@ -108,10 +95,9 @@ class Shift4Test < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    @invalid_auth_token = '1111g66gw3ryke00'
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
 
-    response = @gateway.purchase(@amount, @invalid_auth_token, @options)
+    response = @gateway.purchase(@amount, 'abc', @options)
     assert_failure response
     assert_nil response.authorization
   end
@@ -126,20 +112,18 @@ class Shift4Test < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    @invalid_auth_token = '1111g66gw3ryke00'
     @gateway.expects(:ssl_request).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, @invalid_auth_token, @options)
+    response = @gateway.capture(@amount, 'abc', @options)
     assert_failure response
     assert_nil response.authorization
     assert response.test?
   end
 
   def test_failed_refund
-    @invalid_auth_token = '1111g66gw3ryke00'
     @gateway.expects(:ssl_request).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, @invalid_auth_token, @options)
+    response = @gateway.refund(@amount, 'abc', @options)
     assert_failure response
     assert_nil response.authorization
     assert response.test?
@@ -148,7 +132,7 @@ class Shift4Test < Test::Unit::TestCase
   def test_failed_void
     @gateway.expects(:ssl_request).returns(failed_void_response)
 
-    response = @gateway.void('', @invoid_options)
+    response = @gateway.void('', @options)
     assert_failure response
     assert_nil response.authorization
     assert response.test?
@@ -166,7 +150,7 @@ class Shift4Test < Test::Unit::TestCase
   private
 
   def response_result(response)
-    response.params['result'][0]
+    response.params['result'].first
   end
 
   def pre_scrubbed
