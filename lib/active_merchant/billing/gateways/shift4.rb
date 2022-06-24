@@ -11,6 +11,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://shift4.com'
       self.display_name = 'Shift4'
 
+      RECURRING_TYPE_TRANSACTIONS = %w(recurring installment)
       STANDARD_ERROR_CODE_MAPPING = {
         'incorrect_number' => STANDARD_ERROR_CODE[:incorrect_number],
         'invalid_number' => STANDARD_ERROR_CODE[:invalid_number],
@@ -184,17 +185,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_card_on_file(post, options)
-        if options[:stored_credential].present?
-          post[:cardOnFile] = {}
-          post[:cardOnFile][:indicator] = options[:stored_credential][:indicator] if options[:stored_credential][:indicator]
-          if usage_indicator = options[:stored_credential][:usage_indicator] == 'initial' ? '01' : '02'
-            post[:cardOnFile][:usageIndicator] = usage_indicator
-          end
-          if scheduled_indicator = options[:stored_credential][:scheduled_indicator] == 'scheduled' ? '' : '02'
-            post[:cardOnFile][:scheduledIndicator] = scheduled_indicator
-          end
-          post[:cardOnFile][:transactionId] = options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
-        end
+        return unless stored_credential = options[:stored_credential]
+
+        post[:cardOnFile] = {}
+        post[:cardOnFile][:usageIndicator] = stored_credential[:inital_transaction] ? '01' : '02'
+        post[:cardOnFile][:indicator] = options[:card_on_file_indicator] || '01'
+        post[:cardOnFile][:scheduledIndicator] = RECURRING_TYPE_TRANSACTIONS.include?(stored_credential[:reason_type]) ? '01' : '02' if stored_credential[:reason_type]
+        post[:cardOnFile][:transactionId] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
       end
 
       def commit(action, parameters, option)

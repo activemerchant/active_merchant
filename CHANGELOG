@@ -51,6 +51,7 @@
 * Shift4: add `customer_reference`, `destination_postal_code`, `product_descriptors` fields and core refactoring [ajawadmirza] #4469
 * Paypal Express: Add checkout status to response object [mbreenlyles] #4467
 * Shift4: Scrub security code [naashton] #4470
+* Shift4: Update `cardOnFile` transaction requests [ajawadmirza] #4471
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
