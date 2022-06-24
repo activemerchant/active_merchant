@@ -88,7 +88,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'FWRVKNRRZ3WUC', response.payer_id
     assert_equal 'buyer@jadedpallet.com', response.email
     assert_equal 'This is a test note', response.note
-    assert_equal 'PaymentActionNotInitiated', response.payment_status
+    assert_equal 'PaymentActionNotInitiated', response.checkout_status
 
     assert address = response.address
     assert_equal 'Fred Brooks', address['name']

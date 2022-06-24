@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
         (@params['PaymentDetails']||{})
       end
 
-      def payment_status
+      def checkout_status
         (@params['CheckoutStatus']||{})
       end
 

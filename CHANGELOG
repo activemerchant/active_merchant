@@ -54,6 +54,7 @@
 * Shift4: Update `cardOnFile` transaction requests [ajawadmirza] #4471
 * Plexo: Update `success_from` definition [ajawadmirza] #4468
 * Rapyd: Un-nest the payment urls [naashton] #4472
+* Paypal Express: Correct naming mistake for accessor [mbreenlyles] #4473
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
