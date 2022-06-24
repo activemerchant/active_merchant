@@ -104,7 +104,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r(("Number\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("expirationDate\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("FirstName\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("LastName\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
+          gsub(%r(("LastName\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("securityCode":{"[\w]+":"[\w]+","value":")[\d]*)i, '\1[FILTERED]')
       end
 
       private
