@@ -27,6 +27,7 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options)
         add_ewallet(post, options)
         add_payment_fields(post, options)
+        add_payment_urls(post, options)
         post[:capture] = true if payment.is_a?(CreditCard)
 
         if payment.is_a?(Check)
@@ -51,6 +52,7 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options)
         add_ewallet(post, options)
         add_payment_fields(post, options)
+        add_payment_urls(post, options)
         post[:capture] = false
 
         commit(:post, 'payments', post)
@@ -87,6 +89,7 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options)
         add_ewallet(post, options)
         add_payment_fields(post, options)
+        add_payment_urls(post, options)
         commit(:post, 'customers', post)
       end
 
@@ -198,10 +201,13 @@ module ActiveMerchant #:nodoc:
       def add_payment_fields(post, options)
         post[:payment] = {}
 
-        post[:payment][:complete_payment_url] = options[:complete_payment_url] if options[:complete_payment_url]
-        post[:payment][:error_payment_url] = options[:error_payment_url] if options[:error_payment_url]
         post[:payment][:description] = options[:description] if options[:description]
         post[:payment][:statement_descriptor] = options[:statement_descriptor] if options[:statement_descriptor]
+      end
+
+      def add_payment_urls(post, options)
+        post[:complete_payment_url] = options[:complete_payment_url] if options[:complete_payment_url]
+        post[:error_payment_url] = options[:error_payment_url] if options[:error_payment_url]
       end
 
       def add_customer_object(post, payment)
