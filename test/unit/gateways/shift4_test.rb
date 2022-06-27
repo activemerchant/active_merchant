@@ -34,7 +34,6 @@ class Shift4Test < Test::Unit::TestCase
 
     assert response.success?
     assert_equal response.message, 'Transaction successful'
-    assert_equal @amount, response_result(response)['amount']['total']
     assert_equal response_result(response)['card']['token']['value'].present?, true
   end
 
@@ -45,7 +44,6 @@ class Shift4Test < Test::Unit::TestCase
 
     assert response.success?
     assert_equal response.message, 'Transaction successful'
-    assert_equal @amount, response_result(response)['amount']['total']
     assert_equal response_result(response)['card']['token']['value'].present?, true
   end
 
@@ -56,7 +54,6 @@ class Shift4Test < Test::Unit::TestCase
 
     assert response.success?
     assert_equal response.message, 'Transaction successful'
-    assert_equal @amount, response_result(response)['amount']['total']
     assert_equal response_result(response)['card']['token']['value'].present?, true
   end
 
@@ -68,6 +65,7 @@ class Shift4Test < Test::Unit::TestCase
       assert_equal request['clerk']['numericId'], @extra_options[:clerk_id]
       assert_equal request['transaction']['notes'], @extra_options[:notes]
       assert_equal request['amount']['tax'], @extra_options[:tax].to_f
+      assert_equal request['amount']['total'], (@amount / 100.0).to_s
       assert_equal request['transaction']['purchaseCard']['customerReference'], @extra_options[:customer_reference]
       assert_equal request['transaction']['purchaseCard']['destinationPostalCode'], @extra_options[:destination_postal_code]
       assert_equal request['transaction']['purchaseCard']['productDescriptors'], @extra_options[:product_descriptors]
@@ -92,6 +90,22 @@ class Shift4Test < Test::Unit::TestCase
       assert_equal request['cardOnFile']['scheduledIndicator'], '01'
       assert_equal request['cardOnFile']['transactionId'], stored_credential_options[:network_transaction_id]
     end.respond_with(successful_purchase_response)
+
+    assert response.success?
+    assert_equal response.message, 'Transaction successful'
+  end
+
+  def test_successful_store
+    response = stub_comms do
+      @gateway.store(@credit_card, @options.merge(@extra_options.except(:tax)))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['clerk']['numericId'], @extra_options[:clerk_id]
+      assert_equal request['transaction']['notes'], @extra_options[:notes]
+      assert_equal request['transaction']['purchaseCard']['customerReference'], @extra_options[:customer_reference]
+      assert_equal request['transaction']['purchaseCard']['destinationPostalCode'], @extra_options[:destination_postal_code]
+      assert_equal request['transaction']['purchaseCard']['productDescriptors'], @extra_options[:product_descriptors]
+    end.respond_with(successful_store_response)
 
     assert response.success?
     assert_equal response.message, 'Transaction successful'
@@ -156,6 +170,22 @@ class Shift4Test < Test::Unit::TestCase
     assert_failure response
     assert_nil response.authorization
     assert response.test?
+  end
+
+  def test_card_present_field
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['card']['present'], 'N'
+    end.respond_with(successful_purchase_response)
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ card_present: 'Y' }))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['card']['present'], 'Y'
+    end.respond_with(successful_purchase_response)
   end
 
   def test_support_scrub
@@ -313,6 +343,36 @@ class Shift4Test < Test::Unit::TestCase
                   }
               }
           ]
+      }
+    RESPONSE
+  end
+
+  def successful_store_response
+    <<-RESPONSE
+      {
+        "result": [
+          {
+            "dateTime": "2022-06-27T13:06:07.000-07:00",
+            "receiptColumns": 30,
+            "card": {
+              "type": "VS",
+              "number": "XXXXXXXXXXXX2224",
+              "securityCode": {},
+              "token": {
+                "value": "22243v5f0vkezpej"
+              }
+            },
+            "merchant": {
+              "mid": 8628968
+            },
+            "server": {
+              "name": "UTGAPI11CE"
+            },
+            "universalToken": {
+              "value": "400010-2F1AA405-001AA4-000026B7-1766C44E9E8"
+            }
+          }
+        ]
       }
     RESPONSE
   end

@@ -57,6 +57,7 @@
 * Paypal Express: Correct naming mistake for accessor [mbreenlyles] #4473
 * GlobalCollect: Enable Google Pay and Apple Pay [gasb150] #4388
 * Shift4: $0 auth [naashton] #4474
+* Shift4: add `store` method, `present` field in card, and to pass amount in cents [ajawadmirza] #4475
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
