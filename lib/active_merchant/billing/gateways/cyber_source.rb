@@ -22,8 +22,8 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor'
 
       # Schema files can be found here: https://ics2ws.ic3.com/commerce/1.x/transactionProcessor/
-      TEST_XSD_VERSION = '1.181'
-      PRODUCTION_XSD_VERSION = '1.181'
+      TEST_XSD_VERSION = '1.198'
+      PRODUCTION_XSD_VERSION = '1.198'
       ECI_BRAND_MAPPING = {
         visa: 'vbv',
         master: 'spa',
@@ -65,6 +65,7 @@ module ActiveMerchant #:nodoc:
         r100: 'Successful transaction',
         r101: 'Request is missing one or more required fields',
         r102: 'One or more fields contains invalid data',
+        r104: 'The merchantReferenceCode sent with this authorization request matches the merchantReferenceCode of another authorization request that you sent in the last 15 minutes.', r110: 'Partial amount was approved',
         r150: 'General failure',
         r151: 'The request was received but a server time-out occurred',
         r152: 'The request was received, but a service timed out',
@@ -79,7 +80,9 @@ module ActiveMerchant #:nodoc:
         r209: 'American Express Card Identifiction Digits (CID) did not match',
         r210: 'The card has reached the credit limit',
         r211: 'Invalid card verification number',
+        r220: 'Generic Decline.',
         r221: "The customer matched an entry on the processor's negative file",
+        r222: 'customer\'s account is frozen',
         r230: 'The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the card verification check',
         r231: 'Invalid account number',
         r232: 'The card type is not accepted by the payment processor',
@@ -97,9 +100,36 @@ module ActiveMerchant #:nodoc:
         r244: 'The bank account number failed the validation check',
         r246: 'The capture or credit is not voidable because the capture or credit information has already been submitted to your processor',
         r247: 'You requested a credit for a capture that was previously voided',
+        r248: 'The boleto request was declined by your processor.',
         r250: 'The request was received, but a time-out occurred with the payment processor',
+        r251: 'The Pinless Debit card\'s use frequency or maximum amount per use has been exceeded.',
         r254: 'Your CyberSource account is prohibited from processing stand-alone refunds',
-        r255: 'Your CyberSource account is not configured to process the service in the country you specified'
+        r255: 'Your CyberSource account is not configured to process the service in the country you specified',
+        r400: 'Soft Decline - Fraud score exceeds threshold.',
+        r450: 'Apartment number missing or not found.',
+        r451: 'Insufficient address information.',
+        r452: 'House/Box number not found on street.',
+        r453: 'Multiple address matches were found.',
+        r454: 'P.O. Box identifier not found or out of range.',
+        r455: 'Route service identifier not found or out of range.',
+        r456: 'Street name not found in Postal code.',
+        r457: 'Postal code not found in database.',
+        r458: 'Unable to verify or correct address.',
+        r459: 'Multiple addres matches were found (international)',
+        r460: 'Address match not found (no reason given)',
+        r461: 'Unsupported character set',
+        r475: 'The cardholder is enrolled in Payer Authentication. Please authenticate the cardholder before continuing with the transaction.',
+        r476: 'Encountered a Payer Authentication problem. Payer could not be authenticated.',
+        r478: 'Strong customer authentication (SCA) is required for this transaction.',
+        r480: 'The order is marked for review by Decision Manager',
+        r481: 'The order has been rejected by Decision Manager',
+        r490: 'Your aggregator or acquirer is not accepting transactions from you at this time.',
+        r491: 'Your aggregator or acquirer is not accepting this transaction.',
+        r520: 'Soft Decline - The authorization request was approved by the issuing bank but declined by CyberSource based on your Smart Authorization settings.',
+        r700: 'The customer matched the Denied Parties List',
+        r701: 'Export bill_country/ship_country match',
+        r702: 'Export email_country match',
+        r703: 'Export hostname_country/ip_country match'
       }
 
       # These are the options that can be used when creating a new CyberSource
