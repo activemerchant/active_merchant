@@ -4,7 +4,7 @@ class RemoteShift4Test < Test::Unit::TestCase
   def setup
     @gateway = Shift4Gateway.new(fixtures(:shift4))
 
-    @amount = 5
+    @amount = 500
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('400030001111220')
     @options = {}
@@ -23,7 +23,6 @@ class RemoteShift4Test < Test::Unit::TestCase
 
     assert_success response
     assert_equal response.message, 'Transaction successful'
-    assert_equal @amount, response_result(response)['amount']['total']
   end
 
   def test_successful_authorize_with_extra_options
@@ -39,14 +38,13 @@ class RemoteShift4Test < Test::Unit::TestCase
 
     assert_success response
     assert_equal response.message, 'Transaction successful'
-    assert_equal @amount, response_result(response)['amount']['total']
     assert response_result(response)['transaction']['invoice'].present?
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal @amount, response_result(response)['amount']['total']
+    assert_include 'Transaction successful', response.message
   end
 
   def test_successful_purchase_with_extra_options
@@ -70,6 +68,16 @@ class RemoteShift4Test < Test::Unit::TestCase
     }
     response = @gateway.purchase(@amount, @credit_card, @options.merge(@extra_options.merge({ stored_credential: stored_credential_options })))
     assert_success response
+  end
+
+  def test_successful_purchase_with_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_not_empty response.authorization
+
+    response = @gateway.purchase(@amount, response.authorization, @options)
+    assert_success response
+    assert_include 'Transaction successful', response.message
   end
 
   def test_successful_verify
@@ -114,9 +122,7 @@ class RemoteShift4Test < Test::Unit::TestCase
     res = @gateway.purchase(@amount, @credit_card, @options)
     assert_success res
     response = @gateway.refund(@amount, res.authorization, @options)
-
     assert_success response
-    assert_equal @amount, response_result(response)['amount']['total']
   end
 
   def test_successful_void
@@ -124,7 +130,6 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert response = @gateway.void(authorize_res.authorization, @options)
 
     assert_success response
-    assert_equal @amount, response_result(response)['amount']['total']
     assert_equal @options[:invoice], response_result(response)['transaction']['invoice']
   end
 

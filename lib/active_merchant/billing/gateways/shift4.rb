@@ -12,6 +12,10 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Shift4'
 
       RECURRING_TYPE_TRANSACTIONS = %w(recurring installment)
+      URL_POSTFIX_MAPPING = {
+        'accesstoken' => 'credentials',
+        'add' => 'tokens'
+      }
       STANDARD_ERROR_CODE_MAPPING = {
         'incorrect_number' => STANDARD_ERROR_CODE[:incorrect_number],
         'invalid_number' => STANDARD_ERROR_CODE[:invalid_number],
@@ -37,13 +41,16 @@ module ActiveMerchant #:nodoc:
         @access_token = setup_access_token
       end
 
-      def purchase(money, authorization, options = {})
+      def purchase(money, payment, options = {})
         post = {}
+
+        payment = get_card_token(payment) if payment.is_a?(String)
         add_datetime(post, options)
         add_invoice(post, money, options)
         add_clerk(post, options)
         add_transaction(post, options)
-        add_card(post, authorization, options)
+        add_card(post, payment, options)
+        add_card_present(post, options)
 
         commit('sale', post, options)
       end
@@ -55,6 +62,7 @@ module ActiveMerchant #:nodoc:
         add_clerk(post, options)
         add_transaction(post, options)
         add_card(post, card, options)
+        add_card_present(post, options)
         add_customer(post, options)
 
         commit('authorization', post, options)
@@ -95,6 +103,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def store(credit_card, options = {})
+        post = {}
+        add_datetime(post, options)
+        add_clerk(post, options)
+        add_transaction(post, options)
+        add_card(post, credit_card, options)
+
+        commit('add', post, options)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -132,7 +150,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, money, options)
         post[:amount] = {}
-        post[:amount][:total] = money.to_f
+        post[:amount][:total] = amount(money.to_f)
         post[:amount][:tax] = options[:tax].to_f || 0.0
       end
 
@@ -149,21 +167,26 @@ module ActiveMerchant #:nodoc:
         add_card_on_file(post[:transaction], options)
       end
 
-      def add_card(post, credit_card, options)
+      def add_card(post, payment_method, options)
         post[:card] = {}
-        if credit_card.is_a?(CreditCard)
-          post[:card][:expirationDate] = "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
-          post[:card][:number] = credit_card.number
+        if payment_method.is_a?(CreditCard)
+          post[:card][:expirationDate] = "#{format(payment_method.month, :two_digits)}#{format(payment_method.year, :two_digits)}"
+          post[:card][:number] = payment_method.number
           post[:card][:entryMode] = options[:entry_mode]
-          post[:card][:present] = options[:present]
           post[:card][:securityCode] = {}
           post[:card][:securityCode][:indicator] = 1
-          post[:card][:securityCode][:value] = credit_card.verification_value
+          post[:card][:securityCode][:value] = payment_method.verification_value
         else
           post[:card] = {} if post[:card].nil?
           post[:card][:token] = {}
-          post[:card][:token][:value] = credit_card
+          post[:card][:token][:value] = payment_method
         end
+      end
+
+      def add_card_present(post, options)
+        post[:card] = {} unless post[:card].present?
+
+        post[:card][:present] = options[:card_present] || 'N'
       end
 
       def add_customer(post, options)
@@ -195,7 +218,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters, option)
-        url_postfix = action == 'accesstoken' ? 'credentials' : 'transactions'
+        url_postfix = URL_POSTFIX_MAPPING[action] || 'transactions'
         url = (test? ? "#{test_url}#{url_postfix}/#{action}" : "#{live_url}#{url_postfix}/#{action}")
         if action == 'invoice'
           response = parse(ssl_request(:delete, url, parameters.to_json, request_headers(option)))
