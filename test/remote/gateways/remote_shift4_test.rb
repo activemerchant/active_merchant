@@ -5,7 +5,7 @@ class RemoteShift4Test < Test::Unit::TestCase
     @gateway = Shift4Gateway.new(fixtures(:shift4))
 
     @amount = 500
-    @credit_card = credit_card('4000100011112224')
+    @credit_card = credit_card('4000100011112224', verification_value: '333')
     @declined_card = credit_card('400030001111220')
     @options = {}
     @extra_options = {

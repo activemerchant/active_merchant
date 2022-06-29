@@ -335,7 +335,7 @@ class Shift4Test < Test::Unit::TestCase
                               "Test"
                           ]
                       },
-                      "responseCode": "D",
+                      "responseCode": "A",
                       "saleFlag": "S"
                   },
                   "universalToken": {
@@ -586,7 +586,7 @@ class Shift4Test < Test::Unit::TestCase
                   "Test"
                 ]
               },
-              "responseCode": "D",
+              "responseCode": "A",
               "saleFlag": "S"
             },
             "universalToken": {
@@ -651,7 +651,7 @@ class Shift4Test < Test::Unit::TestCase
             "transaction": {
               "authSource": "E",
               "invoice": "0000000001",
-              "responseCode": "D",
+              "responseCode": "A",
               "saleFlag": "S"
             }
           }

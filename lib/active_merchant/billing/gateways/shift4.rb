@@ -12,6 +12,8 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Shift4'
 
       RECURRING_TYPE_TRANSACTIONS = %w(recurring installment)
+      TRANSACTIONS_WITHOUT_RESPONSE_CODE = %w(accesstoken add)
+      SUCCESS_TRANSACTION_STATUS = %w(A R)
       URL_POSTFIX_MAPPING = {
         'accesstoken' => 'credentials',
         'add' => 'tokens'
@@ -179,7 +181,7 @@ module ActiveMerchant #:nodoc:
 
       def add_transaction(post, options)
         post[:transaction] = {}
-        post[:transaction][:invoice] = options[:invoice]
+        post[:transaction][:invoice] = options[:invoice] || rand.to_s[2..11]
         post[:transaction][:notes] = options[:notes] if options[:notes].present?
 
         add_purchase_card(post[:transaction], options)
@@ -188,6 +190,7 @@ module ActiveMerchant #:nodoc:
 
       def add_card(post, payment_method, options)
         post[:card] = {}
+        post[:card][:entryMode] = options[:entry_mode] || 'M'
         if payment_method.is_a?(CreditCard)
           post[:card][:expirationDate] = "#{format(payment_method.month, :two_digits)}#{format(payment_method.year, :two_digits)}"
           post[:card][:number] = payment_method.number
@@ -212,10 +215,12 @@ module ActiveMerchant #:nodoc:
         if address = options[:billing_address]
           post[:customer] = {}
           post[:customer][:addressLine1] = address[:address1] if address[:address1]
-          name = address[:name].split(' ')
-          post[:customer][:firstName] = name[0]
-          post[:customer][:lastName] = name[1]
-          post[:customer][:postalCode] = address[:postal_code]
+          post[:customer][:postalCode] = address[:zip]
+          name = address[:name].split(' ') if address[:name]
+          if name&.is_a?(Array)
+            post[:customer][:firstName] = name[0]
+            post[:customer][:lastName] = name[1]
+          end
         end
       end
 
@@ -246,12 +251,12 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(
-          success_from(response),
-          message_from(response),
+          success_from(action, response),
+          message_from(action, response),
           response,
-          authorization: authorization_from(response, action),
+          authorization: authorization_from(action, response),
           test: test?,
-          error_code: error_code_from(response)
+          error_code: error_code_from(action, response)
         )
       end
 
@@ -270,18 +275,18 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def message_from(response)
-        success_from(response) ? 'Transaction successful' : error(response)['longText']
+      def message_from(action, response)
+        success_from(action, response) ? 'Transaction successful' : (error(response)&.dig('longText') || 'Transaction declined')
       end
 
-      def error_code_from(response)
-        return unless success_from(response)
+      def error_code_from(action, response)
+        return unless success_from(action, response)
 
         STANDARD_ERROR_CODE_MAPPING[response['primaryCode']]
       end
 
-      def authorization_from(response, action)
-        return unless success_from(response)
+      def authorization_from(action, response)
+        return unless success_from(action, response)
 
         "#{response.dig('result', 0, 'card', 'token', 'value')}|#{response.dig('result', 0, 'transaction', 'invoice')}"
       end
@@ -304,8 +309,10 @@ module ActiveMerchant #:nodoc:
         headers
       end
 
-      def success_from(response)
-        error(response).nil?
+      def success_from(action, response)
+        success = error(response).nil?
+        success &&= SUCCESS_TRANSACTION_STATUS.include?(response['result'].first['transaction']['responseCode']) unless TRANSACTIONS_WITHOUT_RESPONSE_CODE.include?(action)
+        success
       end
 
       def error(response)
