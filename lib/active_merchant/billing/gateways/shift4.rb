@@ -16,7 +16,8 @@ module ActiveMerchant #:nodoc:
       SUCCESS_TRANSACTION_STATUS = %w(A R)
       URL_POSTFIX_MAPPING = {
         'accesstoken' => 'credentials',
-        'add' => 'tokens'
+        'add' => 'tokens',
+        'verify' => 'cards'
       }
       STANDARD_ERROR_CODE_MAPPING = {
         'incorrect_number' => STANDARD_ERROR_CODE[:incorrect_number],
@@ -101,10 +102,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(0, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        post = {}
+        add_card(post, credit_card, options)
+
+        commit('verify', post, options)
       end
 
       def store(credit_card, options = {})
