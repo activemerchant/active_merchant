@@ -85,11 +85,12 @@ module ActiveMerchant #:nodoc:
       def store(payment, options = {})
         post = {}
         add_payment(post, payment, options)
-        add_customer_object(post, payment)
+        add_customer_object(post, payment, options)
         add_metadata(post, options)
         add_ewallet(post, options)
         add_payment_fields(post, options)
         add_payment_urls(post, options)
+        add_address(post, payment, options)
         commit(:post, 'customers', post)
       end
 
@@ -210,8 +211,10 @@ module ActiveMerchant #:nodoc:
         post[:error_payment_url] = options[:error_payment_url] if options[:error_payment_url]
       end
 
-      def add_customer_object(post, payment)
+      def add_customer_object(post, payment, options)
         post[:name] = "#{payment.first_name} #{payment.last_name}"
+        post[:phone_number] = options[:billing_address][:phone].gsub(/\D/, '') if options[:billing_address]
+        post[:email] = options[:email] if options[:email]
       end
 
       def parse(body)

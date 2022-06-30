@@ -14,7 +14,9 @@ class RemoteRapydTest < Test::Unit::TestCase
       complete_payment_url: 'www.google.com',
       error_payment_url: 'www.google.com',
       description: 'Describe this transaction',
-      statement_descriptor: 'Statement Descriptor'
+      statement_descriptor: 'Statement Descriptor',
+      email: 'test@example.com',
+      billing_address: address(name: 'Jim Reynolds')
     }
     @ach_options = {
       pm_type: 'us_ach_bank',

@@ -14,7 +14,9 @@ class RapydTest < Test::Unit::TestCase
       complete_payment_url: 'www.google.com',
       error_payment_url: 'www.google.com',
       description: 'Describe this transaction',
-      statement_descriptor: 'Statement Descriptor'
+      statement_descriptor: 'Statement Descriptor',
+      email: 'test@example.com',
+      billing_address: address(name: 'Jim Reynolds')
     }
 
     @metadata = {
@@ -179,6 +181,18 @@ class RapydTest < Test::Unit::TestCase
     assert_success unstore
     assert_equal true, unstore.params.dig('data', 'deleted')
     assert_equal customer_id, unstore.params.dig('data', 'id')
+  end
+
+  def test_successful_store_with_customer_object
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"name":"Jim Reynolds"/, data)
+      assert_match(/"email":"test@example.com"/, data)
+      assert_match(/"phone_number":"5555555555"/, data)
+    end.respond_with(successful_store_response)
+
+    assert_success response
   end
 
   def test_three_d_secure
