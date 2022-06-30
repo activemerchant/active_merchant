@@ -114,15 +114,15 @@ module ActiveMerchant #:nodoc:
       private
 
       def request_id(options)
-        options[:request_id] || generate_timestamp
+        options[:request_id] || generate_uuid
       end
 
       def merchant_order_id(options)
-        options[:merchant_order_id] || options[:order_id] || generate_timestamp
+        options[:merchant_order_id] || options[:order_id] || generate_uuid
       end
 
-      def generate_timestamp
-        (Time.now.to_f.round(2) * 100).to_i.to_s
+      def generate_uuid
+        SecureRandom.uuid
       end
 
       def setup_access_token
@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_order(post, options)
         post[:request_id] = "#{request_id(options)}_setup"
-        post[:merchant_order_id] = "#{merchant_order_id(options)}_setup"
+        post[:merchant_order_id] = merchant_order_id(options)
         add_referrer_data(post)
         add_descriptor(post, options)
 

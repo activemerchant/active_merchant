@@ -251,7 +251,7 @@ class AirwallexTest < Test::Unit::TestCase
   end
 
   def test_purchase_passes_appropriate_request_id_per_call
-    request_id = "request_#{(Time.now.to_f.round(2) * 100).to_i}"
+    request_id = SecureRandom.uuid
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(request_id: request_id))
     end.check_request do |_endpoint, data, _headers|
@@ -265,18 +265,12 @@ class AirwallexTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_purchase_passes_appropriate_merchant_order_id_per_call
-    merchant_order_id = "order_#{(Time.now.to_f.round(2) * 100).to_i}"
+  def test_purchase_passes_appropriate_merchant_order_id
+    merchant_order_id = SecureRandom.uuid
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(merchant_order_id: merchant_order_id))
     end.check_request do |_endpoint, data, _headers|
-      if data.include?('payment_method')
-        # check for this on the purchase call
-        assert_match(/\"merchant_order_id\":\"#{merchant_order_id}\"/, data)
-      else
-        # check for this on the create_payment_intent calls
-        assert_match(/\"merchant_order_id\":\"#{merchant_order_id}_setup\"/, data)
-      end
+      assert_match(/\"merchant_order_id\":\"#{merchant_order_id}\"/, data)
     end.respond_with(successful_purchase_response)
   end
 
