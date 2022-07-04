@@ -68,6 +68,7 @@
 * CheckoutV2: Add `challenge_indicator`, `exemption`, `authorization_type`, `processing_channel_id`, and `capture_type` fields [ajawadmirza] #4482
 * Add `mada` card type and associated BINs; add support for `mada` in CheckoutV2 gateway [dsmcclain] #4486
 * Authorize.net: Refactor custom verify amount handling [jherreraa] #4485
+* EBANX:  Change amount for Colombia [flaaviaa] #4481
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

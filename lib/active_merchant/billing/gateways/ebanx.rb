@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
       VERIFY_AMOUNT_PER_COUNTRY = {
         'br' => 100,
         'ar' => 100,
-        'co' => 100,
+        'co' => 50000,
         'pe' => 300,
         'mx' => 2000,
         'cl' => 80000
