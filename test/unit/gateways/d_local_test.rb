@@ -22,6 +22,10 @@ class DLocalTest < Test::Unit::TestCase
     }
   end
 
+  def test_supported_countries
+    assert_equal %w[AR BD BO BR CL CM CN CO CR DO EC EG GH GT IN ID JP KE MY MX MA NG PA PY PE PH SN SV TH TR TZ UG UY VN ZA], DLocalGateway.supported_countries
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -231,6 +235,15 @@ class DLocalTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, _data, headers|
       assert_equal '2.1', headers['X-Version']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_idempotency_header
+    options = @options.merge(idempotency_key: '12345')
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, _data, headers|
+      assert_equal '12345', headers['X-Idempotency-Key']
     end.respond_with(successful_purchase_response)
   end
 

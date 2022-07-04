@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       class_attribute :test_url, :live_na_url, :live_eu_url
 
       self.display_name = 'Credorax Gateway'
-      self.homepage_url = 'https://www.credorax.com/'
+      self.homepage_url = 'https://www.finaro.com/'
 
       # NOTE: the IP address you run the remote tests from will need to be
       # whitelisted by Credorax; contact support@credorax.com as necessary to
@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
       self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LYD OMR TND)
 
       self.money_format = :cents
-      self.supported_cardtypes = %i[visa master maestro american_express]
+      self.supported_cardtypes = %i[visa master maestro american_express jcb discover diners_club]
 
       RESPONSE_MESSAGES = {
         '00' => 'Approved or completed successfully',
@@ -63,26 +63,27 @@ module ActiveMerchant #:nodoc:
         '31' => 'Issuer signed-off',
         '32' => 'Completed partially',
         '33' => 'Pick-up, expired card',
-        '34' => 'Suspect Fraud',
+        '34' => 'Implausible card data',
         '35' => 'Pick-up, card acceptor contact acquirer',
         '36' => 'Pick up, card restricted',
         '37' => 'Pick up, call acquirer security',
         '38' => 'Pick up, Allowable PIN tries exceeded',
-        '39' => 'Transaction Not Allowed',
+        '39' => 'No credit account',
         '40' => 'Requested function not supported',
         '41' => 'Lost Card, Pickup',
         '42' => 'No universal account',
         '43' => 'Pick up, stolen card',
         '44' => 'No investment account',
+        '46' => 'Closed account',
         '50' => 'Do not renew',
-        '51' => 'Not sufficient funds',
+        '51' => 'Insufficient funds',
         '52' => 'No checking Account',
         '53' => 'No savings account',
         '54' => 'Expired card',
-        '55' => 'Pin incorrect',
+        '55' => 'Incorrect PIN',
         '56' => 'No card record',
         '57' => 'Transaction not allowed for cardholder',
-        '58' => 'Transaction not allowed for merchant',
+        '58' => 'Transaction not permitted to terminal',
         '59' => 'Suspected Fraud',
         '60' => 'Card acceptor contact acquirer',
         '61' => 'Exceeds withdrawal amount limit',
@@ -93,22 +94,22 @@ module ActiveMerchant #:nodoc:
         '66' => 'Call acquirers security department',
         '67' => 'Card to be picked up at ATM',
         '68' => 'Response received too late.',
-        '70' => 'Invalid transaction; contact card issuer',
+        '70' => 'PIN data required',
         '71' => 'Decline PIN not changed',
         '75' => 'Pin tries exceeded',
         '76' => 'Wrong PIN, number of PIN tries exceeded',
         '77' => 'Wrong Reference No.',
-        '78' => 'Record Not Found',
-        '79' => 'Already reversed',
+        '78' => 'Blocked, first used/ Record not found',
+        '79' => 'Declined due to lifecycle event',
         '80' => 'Network error',
-        '81' => 'Foreign network error / PIN cryptographic error',
-        '82' => 'Time out at issuer system',
+        '81' => 'PIN cryptographic error',
+        '82' => 'Bad CVV/ Declined due to policy event',
         '83' => 'Transaction failed',
         '84' => 'Pre-authorization timed out',
         '85' => 'No reason to decline',
         '86' => 'Cannot verify pin',
         '87' => 'Purchase amount only, no cashback allowed',
-        '88' => 'MAC sync Error',
+        '88' => 'Cryptographic failure',
         '89' => 'Authentication failure',
         '91' => 'Issuer not available',
         '92' => 'Unable to route at acquirer Module',
@@ -116,9 +117,13 @@ module ActiveMerchant #:nodoc:
         '94' => 'Duplicate Transmission',
         '95' => 'Reconcile error / Auth Not found',
         '96' => 'System malfunction',
+        '97' => 'Transaction has been declined by the processor',
+        'N3' => 'Cash service not available',
+        'N4' => 'Cash request exceeds issuer or approved limit',
+        'N7' => 'CVV2 failure',
         'R0' => 'Stop Payment Order',
         'R1' => 'Revocation of Authorisation Order',
-        'R3' => 'Revocation of all Authorisations Order',
+        'R3' => 'Revocation of all Authorisation Orders',
         '1A' => 'Strong Customer Authentication required'
       }
 
@@ -213,6 +218,7 @@ module ActiveMerchant #:nodoc:
         add_submerchant_id(post, options)
         add_transaction_type(post, options)
         add_processor(post, options)
+        add_customer_name(post, options)
 
         commit(:credit, post)
       end
@@ -324,10 +330,11 @@ module ActiveMerchant #:nodoc:
       def add_recipient(post, options)
         return unless options[:recipient_street_address] || options[:recipient_city] || options[:recipient_province_code] || options[:recipient_country_code]
 
+        recipient_country_code = options[:recipient_country_code]&.length == 3 ? options[:recipient_country_code] : Country.find(options[:recipient_country_code]).code(:alpha3).value if options[:recipient_country_code]
         post[:j6] = options[:recipient_street_address] if options[:recipient_street_address]
         post[:j7] = options[:recipient_city] if options[:recipient_city]
         post[:j8] = options[:recipient_province_code] if options[:recipient_province_code]
-        post[:j9] = options[:recipient_country_code] if options[:recipient_country_code]
+        post[:j9] = recipient_country_code
       end
 
       def add_customer_name(post, options)

@@ -61,8 +61,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        post = { amount_in_cents: amount(money).to_i, transaction_id: authorization.to_s }
-        commit('refund', post, '/refunds_sync')
+        # post = { amount_in_cents: amount(money).to_i, transaction_id: authorization.to_s }
+        # commit('refund', post, '/refunds_sync')
+
+        # All refunds will instead be voided. This is temporary.
+        void(authorization)
       end
 
       def void(authorization, options = {})

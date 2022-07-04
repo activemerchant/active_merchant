@@ -134,11 +134,13 @@ class RemoteCardConnectTest < Test::Unit::TestCase
     assert_equal 'Approval Queued for Capture', response.message
   end
 
-  def test_successful_purchase_3DS
+  def test_successful_purchase_three_ds
     three_ds_options = @options.merge(
-      secure_flag: 'se3453',
-      secure_value: '233frdf',
-      secure_xid: '334ef34'
+      three_d_secure: {
+        eci: 'se3453',
+        cavv: 'AJkBByEyYgAAAASwgmEodQAAAAA=',
+        ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw=='
+      }
     )
     response = @gateway.purchase(@amount, @credit_card, three_ds_options)
     assert_success response

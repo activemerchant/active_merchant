@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
           sum[:iva] = amount[:iva].to_f if amount[:iva]
           sum[:subtotalIva0] = amount[:subtotal_iva_0].to_f if amount[:subtotal_iva_0]
           sum[:ice] = amount[:ice].to_f if amount[:ice]
-          if (extra_taxes = amount[:extra_taxes]) && sum[:currency] == 'COP'
+          if (extra_taxes = amount[:extra_taxes])
             sum[:extraTaxes] ||= Hash.new
             sum[:extraTaxes][:propina] = extra_taxes[:propina].to_f if extra_taxes[:propina]
             sum[:extraTaxes][:tasaAeroportuaria] = extra_taxes[:tasa_aeroportuaria].to_f if extra_taxes[:tasa_aeroportuaria]

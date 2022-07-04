@@ -875,6 +875,11 @@ payway_dot_com:
 pin:
   api_key: "I_mo9BUUUXIwXF-avcs3LA"
 
+plexo:
+  client_id: YOUR_CLIENT_ID
+  api_key: YOUR_API_KEY
+  merchant_id: YOUR_MERCHANT_ID
+
 plugnpay:
   login: LOGIN
   password: PASSWORD
@@ -1246,11 +1251,14 @@ secure_pay_tech:
 securion_pay:
   secret_key: pr_test_qZN4VVIKCySfCeXCBoHO9DBe
 
+shift4:
+  client_guid: YOUR_CLIENT_ID
+  auth_token: YOUR_AUTH_TOKEN
+
 # Working credentials, no need to replace
 simetrik:
   client_id: 'wNhJBdrKDk3vTmkQMAWi5zWN7y21adO3'
   client_secret: 'fq2riPpiDJaAwS4_UMAXZy1_nU1jNGz0F6gAFWOJFNmm_TfC8EFiHwMmGKAEDkwY' 
-  audience: 'https://tenant-payments-dev.us.auth0.com/api/v2/'
 
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:
@@ -1377,6 +1385,7 @@ visanet_peru:
 vpos:
   public_key: SOMECREDENTIAL
   private_key: ANOTHERCREDENTIAL
+  encryption_key: "-----BEGIN PUBLIC KEY-----\n ..."
   commerce: 123
   commerce_branch: 45
 

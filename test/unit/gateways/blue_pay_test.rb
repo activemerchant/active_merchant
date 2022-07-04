@@ -225,7 +225,7 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def test_passing_stored_credentials_data_for_mit_transaction
-    options = @options.merge({ stored_credential: { initiator: 'merchant', reason_type: 'recurring' } })
+    options = @options.merge({ stored_credential: { initiator: 'merchant', reason_type: 'installment' } })
     stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|

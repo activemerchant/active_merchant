@@ -565,6 +565,16 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_successful_refund_with_payment_source
+    amount = @amount
+    assert response = @gateway.purchase(amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
+
+    assert refund = @gateway.refund(amount, '', @options.merge({ payment_method: @credit_card }))
+    assert_success refund
+  end
+
   def test_failed_refund
     assert refund = @gateway.refund(@amount, '123;123', @options)
     assert_failure refund

@@ -228,6 +228,20 @@ class PriorityTest < Test::Unit::TestCase
     assert_equal response.params['id'], duplicate_response.params['id']
   end
 
+  def test_successful_settled_purchase_recalled_with_replay_id
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(replay_id: '10101010101010101'))
+    end.respond_with(successful_purchase_response_with_settled_transaction)
+    assert_success response
+  end
+
+  def test_successful_voided_purchase_recalled_with_replay_id
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(replay_id: '333333'))
+    end.respond_with(successful_response_with_voided_transaction)
+    assert_success response
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -541,6 +555,145 @@ class PriorityTest < Test::Unit::TestCase
         "shouldGetCreditCardLevel": false
       }
     )
+  end
+
+  def successful_purchase_response_with_settled_transaction
+    %(
+    {
+      "created": "2022-04-12T17:25:16.48Z",
+      "paymentToken": "P9NTT6JORP0kQsEW1mQOpQG2sWUwrZJq",
+      "id": 86816543,
+      "creatorName": "API Key",
+      "replayId": 10101010101010101,
+      "isDuplicate": false,
+      "shouldVaultCard": false,
+      "merchantId": 1000003310,
+      "batch": "0022",
+      "batchId": 10000000272639,
+      "tenderType": "Card",
+      "currency": "USD",
+      "amount": "0.02",
+      "cardAccount": {
+        "cardType": "MasterCard",
+        "entryMode": "Keyed",
+        "last4": "0008",
+        "cardId": "59n0xFxuRB77138B0zc3wZwljA8f",
+        "token": "P9NTT6JORP0kQsEW1mQOpQG2sWUwrZJq",
+        "expiryMonth": "12",
+        "expiryYear": "22",
+        "hasContract": false,
+        "cardPresent": false,
+        "isDebit": false,
+        "isCorp": false
+      },
+      "posData": {
+        "panCaptureMethod": "Manual"
+      },
+      "authOnly": false,
+      "authCode": "PPS4a2",
+      "status": "Settled",
+      "risk": {
+        "cvvResponseCode": "M",
+        "cvvResponse": "Match",
+        "cvvMatch": false,
+        "avsResponseCode": "X",
+        "avsAddressMatch": true,
+        "avsZipMatch": true
+      },
+      "requireSignature": false,
+      "settledAmount": "0",
+      "settledCurrency": "USD",
+      "settledDate": "2022-04-12T17:38:26.283",
+      "cardPresent": false,
+      "authMessage": "Approved or completed successfully",
+      "availableAuthAmount": "0",
+      "reference": "210217004823",
+      "shipAmount": "0.01",
+      "shipToZip": "27705",
+      "shipToCountry": "USA",
+      "purchases": [
+        {
+          "dateCreated": "0001-01-01T00:00:00",
+          "iId": 0,
+          "transactionIId": 0,
+          "transactionId": "0",
+          "name": "Cat Poster",
+          "description": "A sleeping cat",
+          "unitPrice": "0",
+          "quantity": 1,
+          "taxRate": "0",
+          "taxAmount": "0",
+          "discountRate": "0",
+          "discountAmount": "0",
+          "extendedAmount": "0",
+          "lineItemId": 0
+        }
+      ],
+      "type": "Sale",
+      "taxExempt": false,
+      "reviewIndicator": 0,
+      "source": "API",
+      "shouldGetCreditCardLevel": false
+  }
+)
+  end
+
+  def successful_response_with_voided_transaction
+    %(
+    {
+      "created": "2022-04-13T20:18:58.357Z",
+      "paymentToken": "PWagbvmFarc7V3vhN5llPE1pA11phsqB",
+      "id": 86823831,
+      "creatorName": "API Key",
+      "replayId": 333333,
+      "isDuplicate": false,
+      "merchantId": 1000003310,
+      "batch": "0029",
+      "batchId": 10000000272684,
+      "tenderType": "Card",
+      "currency": "USD",
+      "amount": "0.02",
+      "cardAccount":
+        {
+          "cardType": "Visa",
+          "entryMode": "Keyed",
+          "last4": "4242",
+          "cardId": "ESkW1RwQPcSW12HOH4wdBllGQMsf",
+          "token": "PWagbvmFarc7V3vhN5llPE1pA11phsqB",
+          "expiryMonth": "09",
+          "expiryYear": "23",
+          "hasContract": false,
+          "cardPresent": false
+        },
+      "authOnly": false,
+      "authCode": "PPS42e",
+      "status": "Voided",
+      "risk":
+        {
+          "cvvResponseCode": "N",
+          "cvvResponse": "No Match",
+          "cvvMatch": false,
+          "avsResponseCode": "D",
+          "avsAddressMatch": true,
+          "avsZipMatch": true
+        },
+      "requireSignature": false,
+      "settledAmount": "0",
+      "settledCurrency": "USD",
+      "cardPresent": false,
+      "authMessage": "Approved or completed successfully",
+      "originalAmount": "0.02",
+      "availableAuthAmount": "0",
+      "reference": "210320005533",
+      "shipToZip": "K1C2N6",
+      "shipToCountry": "CA",
+      "type": "Sale",
+      "taxExempt": false,
+      "reviewIndicator": 1,
+      "source": "API",
+      "shouldGetCreditCardLevel": false
+  }
+)
   end
 
   def failed_purchase_response

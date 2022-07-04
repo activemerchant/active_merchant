@@ -532,8 +532,10 @@ module ActiveMerchant #:nodoc:
 
       def parse(kind, xml)
         parsed = {}
-
         doc = Nokogiri::XML(xml).remove_namespaces!
+
+        parsed['duplicate'] = doc.at_xpath('//saleResponse').try(:[], 'duplicate') == 'true' if kind == :sale
+
         doc.xpath("//litleOnlineResponse/#{kind}Response/*").each do |node|
           if node.elements.empty?
             parsed[node.name.to_sym] = node.text

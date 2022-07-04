@@ -373,7 +373,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = PaysafeGateway.new(username: '', password: '', account_id: '')
+    gateway = PaysafeGateway.new(username: 'badbunny', password: 'carrotsrock', account_id: 'rejectstew')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

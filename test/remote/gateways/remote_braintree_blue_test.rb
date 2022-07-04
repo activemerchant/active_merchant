@@ -83,6 +83,13 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal('510510', response.params['braintree_transaction']['credit_card_details']['bin'])
   end
 
+  def test_successful_setup_purchase
+    assert response = @gateway.setup_purchase
+    assert_success response
+    assert_equal 'Client token created', response.message
+    assert_not_nil response.params['client_token']
+  end
+
   def test_successful_authorize_with_order_id
     assert response = @gateway.authorize(@amount, @credit_card, order_id: '123')
     assert_success response

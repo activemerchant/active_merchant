@@ -44,6 +44,11 @@ class CredoraxTest < Test::Unit::TestCase
     }
   end
 
+  def test_supported_card_types
+    klass = @gateway.class
+    assert_equal %i[visa master maestro american_express jcb discover diners_club], klass.supported_cardtypes
+  end
+
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
@@ -157,7 +162,7 @@ class CredoraxTest < Test::Unit::TestCase
       recipient_street_address: 'street',
       recipient_city: 'chicago',
       recipient_province_code: '312',
-      recipient_country_code: 'USA'
+      recipient_country_code: 'US'
     }
     refund = stub_comms do
       @gateway.refund(@amount, '123', refund_options)

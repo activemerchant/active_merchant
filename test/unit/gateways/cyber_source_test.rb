@@ -60,7 +60,7 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response
-    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;", response.authorization
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;;credit_card", response.authorization
     assert response.test?
   end
 
@@ -88,7 +88,7 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @elo_credit_card, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response
-    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;", response.authorization
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;;credit_card", response.authorization
     assert response.test?
   end
 
@@ -276,7 +276,7 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @check, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response
-    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;", response.authorization
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;;check", response.authorization
     assert response.test?
   end
 
@@ -286,7 +286,7 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(pinless_debit_card: true))
     assert_equal 'Successful transaction', response.message
     assert_success response
-    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;", response.authorization
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;;credit_card", response.authorization
     assert response.test?
   end
 
@@ -620,7 +620,7 @@ class CyberSourceTest < Test::Unit::TestCase
 
     assert_failure(response = @gateway.authorize(@amount, @credit_card, @options))
     assert response.fraud_review?
-    assert_equal(response.authorization, "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};authorize;100;USD;")
+    assert_equal(response.authorization, "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};authorize;100;USD;;")
   end
 
   def test_successful_credit_to_subscription_request
@@ -1355,6 +1355,37 @@ class CyberSourceTest < Test::Unit::TestCase
 
     assert_failure response
     assert_equal 'c:billTo/c:postalCode', response.params['invalidField']
+  end
+
+  def test_able_to_properly_handle_40bytes_cryptogram
+    long_cryptogram = "NZwc40C4eTDWHVDXPekFaKkNYGk26w+GYDZmU50cATbjqOpNxR/eYA==\n"
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      brand: 'american_express',
+      payment_cryptogram: long_cryptogram)
+
+    stub_comms do
+      @gateway.authorize(@amount, credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, body, _headers|
+      assert_xml_valid_to_xsd(body)
+      first_half = Base64.encode64(Base64.decode64(long_cryptogram)[0...20])
+      second_half = Base64.encode64(Base64.decode64(long_cryptogram)[20...40])
+      assert_match %r{<cavv>#{first_half}</cavv>}, body
+      assert_match %r{<xid>#{second_half}</xid>}, body
+    end
+  end
+
+  def test_able_to_properly_handle_20bytes_cryptogram
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      brand: 'american_express',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+
+    stub_comms do
+      @gateway.authorize(@amount, credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, body, _headers|
+      assert_xml_valid_to_xsd(body)
+      assert_match %r{<cavv>#{credit_card.payment_cryptogram}\n</cavv>}, body
+      assert_not_match %r{<xid>}, body
+    end
   end
 
   private
