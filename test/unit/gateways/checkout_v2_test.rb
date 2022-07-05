@@ -63,6 +63,54 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_passing_processing_channel_id
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { processing_channel_id: '123456abcde' })
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+      assert_equal(request_data['processing_channel_id'], '123456abcde')
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_incremental_authorization
+    id = 'abcd123'
+    response = stub_comms do
+      @gateway.authorize(@amount, id, { incremental_authorization: 'true' })
+    end.check_request do |endpoint, _data, _headers|
+      assert_equal endpoint, "https://api.sandbox.checkout.com/payments/#{id}/authorizations"
+    end.respond_with(successful_incremental_authorize_response)
+
+    assert_success response
+  end
+
+  def test_successful_passing_authorization_type
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { authorization_type: 'Estimated' })
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+      assert_equal(request_data['authorization_type'], 'Estimated')
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_passing_exemption_and_challenge_indicator
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { execute_threed: true, exemption: 'no_preference', challenge_indicator: 'trusted_listing' })
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+      assert_equal(request_data['3ds']['exemption'], 'no_preference')
+      assert_equal(request_data['3ds']['challenge_indicator'], 'trusted_listing')
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_passing_capture_type
+    stub_comms do
+      @gateway.capture(@amount, 'abc', { capture_type: 'NonFinal' })
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+      assert_equal(request_data['capture_type'], 'NonFinal')
+    end.respond_with(successful_capture_response)
+  end
+
   def test_successful_purchase_using_vts_network_token_with_eci
     network_token = network_tokenization_credit_card(
       '4242424242424242',
@@ -769,6 +817,56 @@ class CheckoutV2Test < Test::Unit::TestCase
        },
        "response_summary": "Invalid Card Number",
        "response_code":"20014"
+      }
+    )
+  end
+
+  def successful_incremental_authorize_response
+    %(
+      {
+        "action_id": "act_q4dbxom5jbgudnjzjpz7j2z6uq",
+        "amount": 50,
+        "currency": "USD",
+        "approved": true,
+        "status": "Authorized",
+        "auth_code": "503198",
+        "expires_on": "2020-04-20T10:11:12Z",
+        "eci": "05",
+        "scheme_id": "511129554406717",
+        "response_code": "10000",
+        "response_summary": "Approved",
+        "balances": {
+          "total_authorized": 150,
+          "total_voided": 0,
+          "available_to_void": 150,
+          "total_captured": 0,
+          "available_to_capture": 150,
+          "total_refunded": 0,
+          "available_to_refund": 0
+        },
+        "processed_on": "2020-03-16T22:11:24Z",
+        "reference": "ORD-752-814",
+        "processing": {
+          "acquirer_transaction_id": "8367314942",
+          "retrieval_reference_number": "162588399162"
+        },
+        "_links": {
+          "self": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tqgk5c6k2nnexagtcuom5ktlua"
+          },
+          "actions": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tqgk5c6k2nnexagtcuom5ktlua/actions"
+          },
+          "authorize": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tqgk5c6k2nnexagtcuom5ktlua/authorizations"
+          },
+          "capture": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tqgk5c6k2nnexagtcuom5ktlua/captures"
+          },
+          "void": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tqgk5c6k2nnexagtcuom5ktlua/voids"
+          }
+        }
       }
     )
   end
