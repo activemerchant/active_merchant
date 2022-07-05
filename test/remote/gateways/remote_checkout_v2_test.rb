@@ -84,6 +84,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @additional_options_3ds2 = @options.merge(
       execute_threed: true,
       attempt_n3d: true,
+      challenge_indicator: 'no_preference',
+      exemption: 'trusted_listing',
       three_d_secure: {
         version: '2.0.0',
         eci: '06',
@@ -233,6 +235,18 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Y', response.cvv_result['code']
   end
 
+  def test_successful_authorize_with_estimated_type
+    response = @gateway.authorize(@amount, @credit_card, @options.merge({ authorization_type: 'Estimated' }))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_authorize_with_processing_channel_id
+    response = @gateway.authorize(@amount, @credit_card, @options.merge({ processing_channel_id: 'pc_ovo75iz4hdyudnx6tu74mum3fq' }))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_descriptors
     options = @options.merge(descriptor_name: 'shop', descriptor_city: 'london')
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -293,6 +307,14 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_success auth
 
     assert capture = @gateway.capture(nil, auth.authorization)
+    assert_success capture
+  end
+
+  def test_successful_authorize_and_partial_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture((@amount / 2).to_i, auth.authorization, { capture_type: 'NonFinal' })
     assert_success capture
   end
 

@@ -30,11 +30,12 @@ module ActiveMerchant #:nodoc:
         post[:capture] = false
         build_auth_or_purchase(post, amount, payment_method, options)
 
-        commit(:authorize, post)
+        options[:incremental_authorization].to_s.casecmp('true').zero? ? commit(:incremental_authorize, post, payment_method) : commit(:authorize, post)
       end
 
       def capture(amount, authorization, options = {})
         post = {}
+        post[:capture_type] = options[:capture_type] || 'Final'
         add_invoice(post, amount, options)
         add_customer_data(post, options)
         add_metadata(post, options)
@@ -83,6 +84,7 @@ module ActiveMerchant #:nodoc:
 
       def build_auth_or_purchase(post, amount, payment_method, options)
         add_invoice(post, amount, options)
+        add_authorization_type(post, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_stored_credential_options(post, options)
@@ -106,6 +108,10 @@ module ActiveMerchant #:nodoc:
         post[:metadata][:udf5] = application_id || 'ActiveMerchant'
       end
 
+      def add_authorization_type(post, options)
+        post[:authorization_type] = options[:authorization_type] if options[:authorization_type]
+      end
+
       def add_metadata(post, options)
         post[:metadata] = {} unless post[:metadata]
         post[:metadata].merge!(options[:metadata]) if options[:metadata]
@@ -124,15 +130,17 @@ module ActiveMerchant #:nodoc:
           post[:source][:token_type] = token_type
           post[:source][:cryptogram] = cryptogram if cryptogram
           post[:source][:eci] = eci if eci
-        else
+        elsif payment_method.is_a?(CreditCard)
           post[:source][:type] = 'card'
           post[:source][:name] = payment_method.name
           post[:source][:number] = payment_method.number
           post[:source][:cvv] = payment_method.verification_value
           post[:source][:stored] = 'true' if options[:card_on_file] == true
         end
-        post[:source][:expiry_year] = format(payment_method.year, :four_digits)
-        post[:source][:expiry_month] = format(payment_method.month, :two_digits)
+        unless payment_method.is_a?(String)
+          post[:source][:expiry_year] = format(payment_method.year, :four_digits)
+          post[:source][:expiry_month] = format(payment_method.month, :two_digits)
+        end
       end
 
       def add_customer_data(post, options)
@@ -185,6 +193,8 @@ module ActiveMerchant #:nodoc:
           post[:success_url] = options[:callback_url] if options[:callback_url]
           post[:failure_url] = options[:callback_url] if options[:callback_url]
           post[:'3ds'][:attempt_n3d] = options[:attempt_n3d] if options[:attempt_n3d]
+          post[:'3ds'][:challenge_indicator] = options[:challenge_indicator] if options[:challenge_indicator]
+          post[:'3ds'][:exemption] = options[:exemption] if options[:exemption]
         end
 
         if options[:three_d_secure]
@@ -255,6 +265,8 @@ module ActiveMerchant #:nodoc:
           "#{base_url}/payments/#{authorization}/refunds"
         elsif action == :void
           "#{base_url}/payments/#{authorization}/voids"
+        elsif action == :incremental_authorize
+          "#{base_url}/payments/#{authorization}/authorizations"
         else
           "#{base_url}/payments/#{authorization}/#{action}"
         end
