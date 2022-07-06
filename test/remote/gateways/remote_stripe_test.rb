@@ -131,6 +131,33 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 'wow@example.com', response.params['metadata']['email']
   end
 
+  def test_successful_purchase_with_shipping_address
+    @options[:shipping_address] = {}
+    @options[:shipping_address][:name] = 'Jim Doe'
+    @options[:shipping_address][:phone_number] = '9194041014'
+    @options[:shipping_address][:address1] = '100 W Main St'
+    @options[:shipping_address][:address2] = 'Apt 2'
+    @options[:shipping_address][:city] = 'Baltimore'
+    @options[:shipping_address][:state] = 'MD'
+    @options[:shipping_address][:zip] = '21201'
+    @options[:shipping_address][:country] = 'US'
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'charge', response.params['object']
+    assert_equal response.authorization, response.params['id']
+    assert response.params['paid']
+    assert_equal 'ActiveMerchant Test Purchase', response.params['description']
+    assert_equal 'Jim Doe', response.params['shipping']['name']
+    assert_equal '9194041014', response.params['shipping']['phone']
+    assert_equal '100 W Main St', response.params['shipping']['address']['line1']
+    assert_equal 'Apt 2', response.params['shipping']['address']['line2']
+    assert_equal 'Baltimore', response.params['shipping']['address']['city']
+    assert_equal 'MD', response.params['shipping']['address']['state']
+    assert_equal '21201', response.params['shipping']['address']['postal_code']
+    assert_equal 'US', response.params['shipping']['address']['country']
+  end
+
   def test_purchase_with_connected_account
     destination = fixtures(:stripe_destination)[:stripe_user_id]
     transfer_group = 'XFERGROUP'
@@ -622,7 +649,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   # These "track data present" tests fail with invalid expiration dates. The
   # test track data probably needs to be updated.
   def test_card_present_purchase
-    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^2205101130504392?'
+    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^2705101130504392?'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -630,7 +657,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_card_present_authorize_and_capture
-    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^2205101130504392?'
+    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^2705101130504392?'
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
     refute authorization.params['captured']
