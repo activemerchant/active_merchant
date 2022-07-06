@@ -1,5 +1,15 @@
 require 'test_helper'
 
+module ActiveMerchant #:nodoc:
+  module Billing #:nodoc:
+    class CheckoutV2Gateway
+      def setup_access_token
+        '12345678'
+      end
+    end
+  end
+end
+
 class CheckoutV2Test < Test::Unit::TestCase
   include CommStub
 
@@ -7,6 +17,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     @gateway = CheckoutV2Gateway.new(
       secret_key: '1111111111111'
     )
+    @gateway_oauth = CheckoutV2Gateway.new({ client_id: 'abcd', client_secret: '1234' })
 
     @credit_card = credit_card
     @amount = 100
@@ -241,6 +252,18 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal '2FCFE326D92D4C27EDD699560F484', response.params['source']['payment_account_reference']
     assert response.test?
+  end
+
+  def test_successful_render_for_oauth
+    processing_channel_id = 'abcd123'
+    response = stub_comms(@gateway_oauth, :ssl_request) do
+      @gateway_oauth.purchase(@amount, @credit_card, { processing_channel_id: processing_channel_id })
+    end.check_request do |_method, _endpoint, data, headers|
+      request = JSON.parse(data)
+      assert_equal headers['Authorization'], 'Bearer 12345678'
+      assert_equal request['processing_channel_id'], processing_channel_id
+    end.respond_with(successful_purchase_response)
+    assert_success response
   end
 
   def test_successful_authorize_includes_avs_result

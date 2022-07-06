@@ -13,8 +13,18 @@ module ActiveMerchant #:nodoc:
       self.currencies_without_fractions = %w(BIF DJF GNF ISK KMF XAF CLF XPF JPY PYG RWF KRW VUV VND XOF)
       self.currencies_with_three_decimal_places = %w(BHD LYD JOD KWD OMR TND)
 
+      LIVE_ACCESS_TOKEN_URL = 'https://access.checkout.com/connect/token'
+      TEST_ACCESS_TOKEN_URL = 'https://access.sandbox.checkout.com/connect/token'
+
       def initialize(options = {})
-        requires!(options, :secret_key)
+        @options = options
+        @access_token = nil
+        begin
+          requires!(options, :secret_key)
+        rescue ArgumentError
+          requires!(options, :client_id, :client_secret)
+          @access_token = setup_access_token
+        end
         super
       end
 
@@ -218,6 +228,23 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def access_token_header
+        {
+          'Authorization' => "Basic #{Base64.encode64("#{@options[:client_id]}:#{@options[:client_secret]}").delete("\n")}",
+          'Content-Type' => 'application/x-www-form-urlencoded'
+        }
+      end
+
+      def access_token_url
+        test? ? TEST_ACCESS_TOKEN_URL : LIVE_ACCESS_TOKEN_URL
+      end
+
+      def setup_access_token
+        request = 'grant_type=client_credentials'
+        response = parse(ssl_post(access_token_url, request, access_token_header))
+        response['access_token']
+      end
+
       def commit(action, post, authorization = nil)
         begin
           raw_response = (action == :verify_payment ? ssl_get("#{base_url}/payments/#{post}", headers) : ssl_post(url(post, action, authorization), post.to_json, headers))
@@ -252,8 +279,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
+        auth_token = @access_token ? "Bearer #{@access_token}" : @options[:secret_key]
         {
-          'Authorization' => @options[:secret_key],
+          'Authorization' => auth_token,
           'Content-Type' => 'application/json;charset=UTF-8'
         }
       end
