@@ -189,7 +189,9 @@ checkout:
   password: Password1!
 
 checkout_v2:
-  secret_key: secret_key
+  secret_key: SECRET_KEY_FOR_BASIC_TRANSACTIONS
+  client_id: CLIENT_ID_FOR_OAUTH_TRANSACTIONS
+  client_secret: CLIENT_SECRET_FOR_OAUTH_TRANSACTIONS
 
 citrus_pay:
   userid: CPF00001
