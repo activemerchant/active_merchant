@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w[AD AE AR AT AU BE BG BH BR CH CL CN CO CY CZ DE DK EE EG ES FI FR GB GR HK HR HU IE IS IT JO JP KW LI LT LU LV MC MT MX MY NL NO NZ OM PE PL PT QA RO SA SE SG SI SK SM TR US]
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = %i[visa master american_express diners_club maestro discover jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club maestro discover jcb mada]
       self.currencies_without_fractions = %w(BIF DJF GNF ISK KMF XAF CLF XPF JPY PYG RWF KRW VUV VND XOF)
       self.currencies_with_three_decimal_places = %w(BHD LYD JOD KWD OMR TND)
 
@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
         add_stored_credential_options(post, options)
         add_transaction_data(post, options)
         add_3ds(post, options)
-        add_metadata(post, options)
+        add_metadata(post, options, payment_method)
         add_processing_channel(post, options)
         add_marketplace_data(post, options)
       end
@@ -112,9 +112,10 @@ module ActiveMerchant #:nodoc:
         post[:authorization_type] = options[:authorization_type] if options[:authorization_type]
       end
 
-      def add_metadata(post, options)
+      def add_metadata(post, options, payment_method = nil)
         post[:metadata] = {} unless post[:metadata]
         post[:metadata].merge!(options[:metadata]) if options[:metadata]
+        post[:metadata][:udf1] = 'mada' if payment_method.try(:brand) == 'mada'
       end
 
       def add_payment_method(post, payment_method, options)

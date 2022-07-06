@@ -39,7 +39,8 @@ module ActiveMerchant #:nodoc:
         'creditel' => ->(num) { num =~ /^601933\d{10}$/ },
         'confiable' => ->(num) { num =~ /^560718\d{10}$/ },
         'synchrony' => ->(num) { num =~ /^700600\d{10}$/ },
-        'routex' => ->(num) { num =~ /^(700676|700678)\d{13}$/ }
+        'routex' => ->(num) { num =~ /^(700676|700678)\d{13}$/ },
+        'mada' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MADA_RANGES) }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
@@ -209,6 +210,12 @@ module ActiveMerchant #:nodoc:
         60420100..60440099,
         58965700..58965799,
         60352200..60352299
+      ]
+
+      MADA_RANGES = [
+        504300..504300, 506968..506968, 508160..508160, 585265..585265, 588848..588848,
+        588850..588850, 588982..588983, 589005..589005, 589206..589206, 604906..604906,
+        605141..605141, 636120..636120, 968201..968209, 968211..968211
       ]
 
       NARANJA_RANGES = [

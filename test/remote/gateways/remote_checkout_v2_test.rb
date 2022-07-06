@@ -9,6 +9,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @expired_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2010')
     @declined_card = credit_card('42424242424242424', verification_value: '234', month: '6', year: '2025')
     @threeds_card = credit_card('4485040371536584', verification_value: '100', month: '12', year: '2020')
+    @mada_card = credit_card('5043000000000000', brand: 'mada')
 
     @vts_network_token = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
@@ -161,6 +162,13 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded', response.message
   end
+
+  # # currently, checkout does not provide any valid test card numbers for testing mada cards
+  # def test_successful_purchase_with_mada_card
+  #   response = @gateway.purchase(@amount, @mada_card, @options)
+  #   assert_success response
+  #   assert_equal 'Succeeded', response.message
+  # end
 
   def test_successful_purchase_with_additional_options
     response = @gateway.purchase(@amount, @credit_card, @additional_options)

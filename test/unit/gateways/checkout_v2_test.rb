@@ -272,6 +272,17 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_passing_metadata_with_mada_card_type
+    @credit_card.brand = 'mada'
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+      assert_equal(request_data['metadata']['udf1'], 'mada')
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
