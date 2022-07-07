@@ -1257,8 +1257,8 @@ shift4:
 
 # Working credentials, no need to replace
 simetrik:
-  client_id: 'wNhJBdrKDk3vTmkQMAWi5zWN7y21adO3'
-  client_secret: 'fq2riPpiDJaAwS4_UMAXZy1_nU1jNGz0F6gAFWOJFNmm_TfC8EFiHwMmGKAEDkwY' 
+  client_id: 'xQi5wLbgCSGMKlxDL2AiOoeAfd9IQtfO'
+  client_secret: 'qZH8UdZlpb5BrHw4F1lb6-1k6ya9BzindP81XasiBDi-tylUKo6jCAGoKe2oMNzO' 
 
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:
