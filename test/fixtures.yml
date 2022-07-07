@@ -1164,7 +1164,7 @@ stripe:
 
 # Working credentials, no need to replace
 stripe_destination:
-  stripe_user_id: "acct_17FRNfIPBJTitsen"
+  stripe_user_id: "acct_1K5HlrPT5iqVqrJn"
 
 # Externally verified bank account for testing
 stripe_verified_bank_account:

@@ -269,6 +269,29 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 2, customer_response.params["sources"]["total_count"]
   end
 
+  def test_successful_store_with_existing_customer_and_set_default
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+
+    assert response = @gateway.store(@new_credit_card, customer: response.params["id"], email: "email@example.com", description: "TheDesc", set_default: true)
+    assert_success response
+    assert_equal 2, response.responses.size
+
+    card_response = response.responses[0]
+    assert_equal "card", card_response.params["object"]
+    assert_equal @new_credit_card.last_digits, card_response.params["last4"]
+
+    customer_response = response.responses[1]
+    assert_equal "customer", customer_response.params["object"]
+    assert_equal "TheDesc", customer_response.params["description"]
+    assert_equal "email@example.com", customer_response.params["email"]
+    assert_equal 2, customer_response.params["sources"]["total_count"]
+
+    new_card_id = card_response.params["id"]
+    assert_equal new_card_id, customer_response.params["default_source"]
+    assert_equal new_card_id, customer_response.params["invoice_settings"]["default_payment_method"]
+  end
+
   def test_successful_store_with_existing_account
     account = fixtures(:stripe_destination)[:stripe_user_id]
 
@@ -453,7 +476,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_card_present_purchase
-    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^3005101130504392?'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal "charge", response.params["object"]
@@ -461,7 +484,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_card_present_authorize_and_capture
-    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^3005101130504392?'
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
     refute authorization.params["captured"]

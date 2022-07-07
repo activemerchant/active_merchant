@@ -238,6 +238,8 @@ module ActiveMerchant #:nodoc:
 
               if options[:set_default] and r.success? and r.params['id'].present?
                 post[:default_card] = r.params['id']
+                post[:invoice_settings] = {}
+                post[:invoice_settings][:default_payment_method] = r.params['id']
               end
             end
 
