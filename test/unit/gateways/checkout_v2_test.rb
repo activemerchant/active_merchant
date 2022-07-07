@@ -581,6 +581,10 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal post_scrubbed, @gateway.scrub(pre_scrubbed)
   end
 
+  def test_network_transaction_scrubbing
+    assert_equal network_transaction_post_scrubbed, @gateway.scrub(network_transaction_pre_scrubbed)
+  end
+
   def test_invalid_json
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
@@ -618,6 +622,20 @@ class CheckoutV2Test < Test::Unit::TestCase
     %q(
       <- "POST /payments HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: sk_test_ab12301d-e432-4ea7-97d1-569809518aaf\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.checkout.com\r\nContent-Length: 346\r\n\r\n"
       <- "{\"capture\":false,\"amount\":\"200\",\"reference\":\"1\",\"currency\":\"USD\",\"source\":{\"type\":\"card\",\"name\":\"Longbob Longsen\",\"number\":\"4242424242424242\",\"cvv\":\"100\",\"expiry_year\":\"2025\"
+    )
+  end
+
+  def network_transaction_pre_scrubbed
+    %q(
+      <- "POST /payments HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: sk_test_ab12301d-e432-4ea7-97d1-569809518aaf\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.checkout.com\r\nContent-Length: 346\r\n\r\n"
+      <- "{\"amount\":\"100\",\"reference\":\"1\",\"currency\":\"USD\",\"metadata\":{\"udf5\":\"ActiveMerchant\"},\"source\":{\"type\":\"network_token\",\"token\":\"4242424242424242\",\"token_type\":\"applepay\",\"cryptogram\":\"AgAAAAAAAIR8CQrXcIhbQAAAAAA\",\"eci\":\"05\",\"expiry_year\":\"2025\",\"expiry_month\":\"10\",\"billing_address\":{\"address_line1\":\"456 My Street\",\"address_line2\":\"Apt 1\",\"city\":\"Ottawa\",\"state\":\"ON\",\"country\":\"CA\",\"zip\":\"K1C2N6\"}},\"customer\":{\"email\":\"longbob.longsen@example.com\"}}"
+    )
+  end
+
+  def network_transaction_post_scrubbed
+    %q(
+      <- "POST /payments HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: [FILTERED]\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.checkout.com\r\nContent-Length: 346\r\n\r\n"
+      <- "{\"amount\":\"100\",\"reference\":\"1\",\"currency\":\"USD\",\"metadata\":{\"udf5\":\"ActiveMerchant\"},\"source\":{\"type\":\"network_token\",\"token\":\"[FILTERED]\",\"token_type\":\"applepay\",\"cryptogram\":\"[FILTERED]\",\"eci\":\"05\",\"expiry_year\":\"2025\",\"expiry_month\":\"10\",\"billing_address\":{\"address_line1\":\"456 My Street\",\"address_line2\":\"Apt 1\",\"city\":\"Ottawa\",\"state\":\"ON\",\"country\":\"CA\",\"zip\":\"K1C2N6\"}},\"customer\":{\"email\":\"longbob.longsen@example.com\"}}"
     )
   end
 
