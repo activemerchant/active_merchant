@@ -104,6 +104,16 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:secret_key], transcript)
   end
 
+  def test_network_transaction_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(100, @apple_pay_network_token, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@apple_pay_network_token.payment_cryptogram, transcript)
+    assert_scrubbed(@apple_pay_network_token.number, transcript)
+    assert_scrubbed(@gateway.options[:secret_key], transcript)
+  end
+
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response

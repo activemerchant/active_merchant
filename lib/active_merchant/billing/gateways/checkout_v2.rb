@@ -74,7 +74,9 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(/(Authorization: )[^\\]*/i, '\1[FILTERED]').
           gsub(/("number\\":\\")\d+/, '\1[FILTERED]').
-          gsub(/("cvv\\":\\")\d+/, '\1[FILTERED]')
+          gsub(/("cvv\\":\\")\d+/, '\1[FILTERED]').
+          gsub(/("cryptogram\\":\\")\w+/, '\1[FILTERED]').
+          gsub(/(source\\":\{.*\\"token\\":\\")\d+/, '\1[FILTERED]')
       end
 
       private

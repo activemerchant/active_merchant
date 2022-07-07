@@ -63,6 +63,7 @@
 * Shift4: update `success_from` definition to consider response code [ajawadmirza] #4477
 * Rapyd: Customer Object [naashton] #4478
 * Shift4: Verify Endopint Fix [naashton] #4479
+* CheckoutV2: Scrub cryptogram and credit card number [ajawadmirza] #4488
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
