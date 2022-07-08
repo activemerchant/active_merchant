@@ -85,6 +85,7 @@
 * Worldpay: Add machine cookie to subsequent calls during 3DS challenge [mbreenlyles] #4513*
 * Shift4: Scrub `securityCode` fix [naashton] #4524
 * Credorax: Update `OpCode` for credit transactions [dsmcclain] #4279
+* CheckoutV2: Add `credit` method [ajawadmirza] #4490
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
