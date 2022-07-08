@@ -553,6 +553,14 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_credit
+    @credit_card.first_name = 'John'
+    @credit_card.last_name = 'Doe'
+    response = @gateway_oauth.credit(@amount, @credit_card, @options.merge({ source_type: 'currency_account', source_id: 'ca_spwmped4qmqenai7hcghquqle4', account_holder_type: 'individual' }))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase

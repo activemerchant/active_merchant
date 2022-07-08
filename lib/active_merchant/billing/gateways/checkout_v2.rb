@@ -53,6 +53,18 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post, authorization)
       end
 
+      def credit(amount, payment, options = {})
+        post = {}
+        post[:instruction] = {}
+        post[:instruction][:funds_transfer_type] = options[:funds_transfer_type] || 'FD'
+        add_processing_channel(post, options)
+        add_invoice(post, amount, options)
+        add_payment_method(post, payment, options, :destination)
+        add_source(post, options)
+
+        commit(:credit, post)
+      end
+
       def void(authorization, _options = {})
         post = {}
         add_metadata(post, options)
@@ -128,30 +140,45 @@ module ActiveMerchant #:nodoc:
         post[:metadata][:udf1] = 'mada' if payment_method.try(:brand) == 'mada'
       end
 
-      def add_payment_method(post, payment_method, options)
-        post[:source] = {}
+      def add_payment_method(post, payment_method, options, key = :source)
+        post[key] = {}
         if payment_method.is_a?(NetworkTokenizationCreditCard)
           token_type = token_type_from(payment_method)
           cryptogram = payment_method.payment_cryptogram
           eci = payment_method.eci || options[:eci]
           eci ||= '05' if token_type == 'vts'
 
-          post[:source][:type] = 'network_token'
-          post[:source][:token] = payment_method.number
-          post[:source][:token_type] = token_type
-          post[:source][:cryptogram] = cryptogram if cryptogram
-          post[:source][:eci] = eci if eci
+          post[key][:type] = 'network_token'
+          post[key][:token] = payment_method.number
+          post[key][:token_type] = token_type
+          post[key][:cryptogram] = cryptogram if cryptogram
+          post[key][:eci] = eci if eci
         elsif payment_method.is_a?(CreditCard)
-          post[:source][:type] = 'card'
-          post[:source][:name] = payment_method.name
-          post[:source][:number] = payment_method.number
-          post[:source][:cvv] = payment_method.verification_value
-          post[:source][:stored] = 'true' if options[:card_on_file] == true
+          post[key][:type] = 'card'
+          post[key][:name] = payment_method.name
+          post[key][:number] = payment_method.number
+          post[key][:cvv] = payment_method.verification_value
+          post[key][:stored] = 'true' if options[:card_on_file] == true
+          if options[:account_holder_type]
+            post[key][:account_holder] = {}
+            post[key][:account_holder][:type] = options[:account_holder_type]
+            post[key][:account_holder][:first_name] = payment_method.first_name if payment_method.first_name
+            post[key][:account_holder][:last_name] = payment_method.last_name if payment_method.last_name
+          else
+            post[key][:first_name] = payment_method.first_name if payment_method.first_name
+            post[key][:last_name] = payment_method.last_name if payment_method.last_name
+          end
         end
         unless payment_method.is_a?(String)
-          post[:source][:expiry_year] = format(payment_method.year, :four_digits)
-          post[:source][:expiry_month] = format(payment_method.month, :two_digits)
+          post[key][:expiry_year] = format(payment_method.year, :four_digits)
+          post[key][:expiry_month] = format(payment_method.month, :two_digits)
         end
+      end
+
+      def add_source(post, options)
+        post[:source] = {}
+        post[:source][:type] = options[:source_type] if options[:source_type]
+        post[:source][:id] = options[:source_id] if options[:source_id]
       end
 
       def add_customer_data(post, options)
@@ -256,7 +283,7 @@ module ActiveMerchant #:nodoc:
           response = parse(e.response.body, error: e.response)
         end
 
-        succeeded = success_from(response)
+        succeeded = success_from(action, response)
 
         response(action, succeeded, response)
       end
@@ -287,7 +314,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(_post, action, authorization)
-        if %i[authorize purchase].include?(action)
+        if %i[authorize purchase credit].include?(action)
           "#{base_url}/payments"
         elsif action == :capture
           "#{base_url}/payments/#{authorization}/captures"
@@ -326,7 +353,9 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def success_from(response)
+      def success_from(action, response)
+        return response['status'] == 'Pending' if action == :credit
+
         response['response_summary'] == 'Approved' || response['approved'] == true || !response.key?('response_summary') && response.key?('action_id')
       end
 
