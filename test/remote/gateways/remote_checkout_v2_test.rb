@@ -78,7 +78,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
         version: '1.0.2',
         eci: '06',
         cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
-        xid: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY='
+        xid: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY=',
+        authentication_response_status: 'Y'
       }
     )
     @additional_options_3ds2 = @options.merge(
@@ -88,7 +89,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
         version: '2.0.0',
         eci: '06',
         cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
-        ds_transaction_id: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY='
+        ds_transaction_id: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY=',
+        authentication_response_status: 'Y'
       }
     )
   end

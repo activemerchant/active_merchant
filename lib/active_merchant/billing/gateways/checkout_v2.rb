@@ -192,6 +192,7 @@ module ActiveMerchant #:nodoc:
           post[:'3ds'][:cryptogram] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
           post[:'3ds'][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
           post[:'3ds'][:xid] = options[:three_d_secure][:ds_transaction_id] || options[:three_d_secure][:xid]
+          post[:'3ds'][:status] = options[:three_d_secure][:authentication_response_status]
         end
       end
 

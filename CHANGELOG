@@ -64,6 +64,7 @@
 * Rapyd: Customer Object [naashton] #4478
 * Shift4: Verify Endopint Fix [naashton] #4479
 * CheckoutV2: Scrub cryptogram and credit card number [ajawadmirza] #4488
+* CheckoutV2: Add `3ds.status` field to send status of 3DS flow of all 3DS transactions [BritneyS] #4492
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
