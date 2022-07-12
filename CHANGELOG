@@ -69,6 +69,7 @@
 * Add `mada` card type and associated BINs; add support for `mada` in CheckoutV2 gateway [dsmcclain] #4486
 * Authorize.net: Refactor custom verify amount handling [jherreraa] #4485
 * EBANX:  Change amount for Colombia [flaaviaa] #4481
+* Worldpay: Update `required_status_message` and `message_from` methods for response. [rachelkirk] #4493
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
