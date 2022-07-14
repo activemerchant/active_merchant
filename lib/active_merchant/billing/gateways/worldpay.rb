@@ -856,7 +856,7 @@ module ActiveMerchant #:nodoc:
           raw[:is3DSOrder] = true
         end
         success = success_from(action, raw, success_criteria)
-        message = message_from(success, raw, success_criteria, action)
+        message = message_from(success, raw, success_criteria)
 
         Response.new(
           success,
@@ -904,10 +904,10 @@ module ActiveMerchant #:nodoc:
         success_criteria_success?(raw, success_criteria) || action_success?(action, raw)
       end
 
-      def message_from(success, raw, success_criteria, action)
+      def message_from(success, raw, success_criteria)
         return 'SUCCESS' if success
 
-        raw[:iso8583_return_code_description] || raw[:error] || required_status_message(raw, success_criteria, action) || raw[:issuer_response_description]
+        raw[:iso8583_return_code_description] || raw[:error] || required_status_message(raw, success_criteria)
       end
 
       # success_criteria can be:
@@ -933,11 +933,8 @@ module ActiveMerchant #:nodoc:
         raw[:iso8583_return_code_code] || raw[:error_code] || nil unless success == 'SUCCESS'
       end
 
-      def required_status_message(raw, success_criteria, action)
-        return if success_criteria.include?(raw[:last_event])
-        return unless %w[cancel refund inquiry credit fast_credit].include?(action)
-
-        "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(' or ')} is required."
+      def required_status_message(raw, success_criteria)
+        "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(' or ')} is required." if !success_criteria.include?(raw[:last_event])
       end
 
       def authorization_from(action, raw, options)
