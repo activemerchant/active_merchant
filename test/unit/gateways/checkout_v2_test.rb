@@ -272,15 +272,35 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_purchase_passing_metadata_with_mada_card_type
-    @credit_card.brand = 'mada'
+  def test_mada_brand_specified_on_mada_bins
+    # 446404 is a Visa BIN 'co-branded' with mada
+    # 605141 is a mada-only BIN
+    # let's test both :)
+    numbers = %w(6051410000000000 4464040000000000)
+
+    numbers.each do |number|
+      @credit_card.number = number
+
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card)
+      end.check_request do |_endpoint, data, _headers|
+        request_data = JSON.parse(data)
+
+        assert_equal(request_data['metadata']['udf1'], 'mada')
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
+  def test_customer_can_specify_mada_brand_by_passing_metadata_udf1
+    options = { 'metadata': { 'udf1': 'mada' } }
 
     stub_comms do
-      @gateway.purchase(@amount, @credit_card)
+      @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       request_data = JSON.parse(data)
+
       assert_equal(request_data['metadata']['udf1'], 'mada')
-    end.respond_with(successful_purchase_response)
+    end.respond_with(successful_purchase_with_network_token_response)
   end
 
   def test_failed_purchase
