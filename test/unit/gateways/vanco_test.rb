@@ -50,9 +50,8 @@ class VancoTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_existing_session_id
-    previous_login_response = @gateway.send(:login)
-
     response = stub_comms do
+      previous_login_response = @gateway.send(:login)
       @gateway.purchase(
         @amount,
         @credit_card,
@@ -66,7 +65,7 @@ class VancoTest < Test::Unit::TestCase
       )
     end.check_request do |_endpoint, data, _headers|
       assert_match(%r(<SessionID>5d4177ec3c356ec5f7abe0e17e814250<\/SessionID>), data) if data =~ /<RequestType>EFTAddCompleteTransaction/
-    end.respond_with(successful_purchase_with_existing_session_id_response)
+    end.respond_with(login_request_response, successful_purchase_with_existing_session_id_response)
 
     assert_success response
     assert_equal '14949117|15756594|16136938', response.authorization
@@ -236,5 +235,11 @@ class VancoTest < Test::Unit::TestCase
     %(
       <?xml version="1.0" encoding="UTF-8"  ?><VancoWS><Auth><RequestID>dc9a5e2b620eee5d248e1b33cc1f33</RequestID><RequestTime>2015-05-01 16:19:33 -0400</RequestTime><RequestType>EFTAddCredit</RequestType><Signature></Signature><SessionID>67a731057f821413155033bc23551aef3ba0b204</SessionID><Version>2</Version></Auth><Response><Errors><Error><ErrorCode>575</ErrorCode><ErrorDescription>Amount Cannot Be Greater Than $100.05</ErrorDescription></Error></Errors></Response></VancoWS>
      )
+  end
+
+  def login_request_response
+    %(
+      <?xml version=\"1.0\" encoding=\"UTF-8\"  ?> <VancoWS> <Auth> <RequestID>38de95050240d49f8897578825c717</RequestID> <RequestTime>#{Time.now}</RequestTime> <RequestType>Login</RequestType> <Version>2</Version> </Auth> <Response> <SessionID>9edc7951048106b821f5e304e9ccdcc0700f533a</SessionID> </Response> </VancoWS>
+    )
   end
 end
