@@ -844,4 +844,40 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:login], transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
+
+  def test_successful_authorize_with_3ds_v1_options
+    @options[:three_d_secure] = {
+      version: '1.0',
+      cavv: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+      eci: '05',
+      xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
+    @options[:order_id] = '3DS1'
+    @credit_card = credit_card('4100200300000004')
+
+    response = @gateway.authorize(100, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_authorize_with_3ds_v2_options
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
+    @options[:order_id] = '3DS1'
+    @credit_card = credit_card('4100200300000004')
+
+    response = @gateway.authorize(100, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
 end

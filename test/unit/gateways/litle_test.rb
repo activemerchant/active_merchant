@@ -65,6 +65,15 @@ class LitleTest < Test::Unit::TestCase
       zip: '09901',
       country: 'US'
     }
+
+    @options_3ds = {
+      version: '1.0',
+      cavv: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+      eci: '05',
+      xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
   end
 
   def test_successful_purchase
@@ -716,6 +725,70 @@ class LitleTest < Test::Unit::TestCase
 
   def test_supports_scrubbing?
     assert @gateway.supports_scrubbing?
+  end
+
+  def test_ordersource_on_3ds_successful_authentication
+    @options[:three_d_secure] = @options_3ds
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<orderSource>3dsAuthenticated</orderSource>), data)
+    end.respond_with(successful_authorize_stored_credentials)
+  end
+
+  def test_ordersource_on_3ds_user_not_enrolled
+    @options[:three_d_secure] = @options_3ds
+    @options[:three_d_secure][:enrolled] = 'N'
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<orderSource>3dsAttempted</orderSource>), data)
+    end.respond_with(successful_authorize_stored_credentials)
+  end
+
+  def test_ordersource_on_3ds_when_auth_response_failed
+    @options[:three_d_secure] = @options_3ds
+    @options[:three_d_secure][:enrolled] = 'Y'
+    @options[:three_d_secure][:authentication_response_status] = 'N'
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<orderSource>3dsAttempted</orderSource>), data)
+    end.respond_with(successful_authorize_stored_credentials)
+  end
+
+  def test_detect_xid_on_3ds_v1
+    @options[:three_d_secure] = @options_3ds
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<authenticationTransactionId>#{@options[:three_d_secure][:xid]}</authenticationTransactionId>), data)
+    end.respond_with(successful_authorize_stored_credentials)
+  end
+
+  def test_detect_transaction_id_on_3ds_v2
+    @options[:three_d_secure] = @options_3ds
+    @options[:three_d_secure][:ds_transaction_id] = 'ODUzNTYzOTcwODU5NzY3Qw=='
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<authenticationTransactionId>#{@options[:three_d_secure][:ds_transaction_id]}</authenticationTransactionId>), data)
+    end.respond_with(successful_authorize_stored_credentials)
+  end
+
+  def test_3ds_ip_inclusion
+    @options[:three_d_secure] = @options_3ds
+    @options[:ip] = '127.0.0.1'
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<customerIpAddress>#{@options[:ip]}</customerIpAddress>), data)
+    end.respond_with(successful_authorize_stored_credentials)
   end
 
   private

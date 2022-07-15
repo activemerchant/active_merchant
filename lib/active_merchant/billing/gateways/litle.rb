@@ -389,9 +389,17 @@ module ActiveMerchant #:nodoc:
             doc.expDate(exp_date(payment_method))
             doc.cardValidationNum(payment_method.verification_value)
           end
+
           if payment_method.is_a?(NetworkTokenizationCreditCard)
             doc.cardholderAuthentication do
               doc.authenticationValue(payment_method.payment_cryptogram)
+            end
+          elsif options[:three_d_secure].present?
+            three_d = options[:three_d_secure]
+            doc.cardholderAuthentication do
+              doc.authenticationValue(three_d[:cavv])
+              doc.authenticationTransactionId(three_d[:ds_transaction_id] || three_d[:xid])
+              doc.customerIpAddress(options[:ip]) if options[:ip]
             end
           elsif options[:order_source]&.start_with?('3ds')
             doc.cardholderAuthentication do
@@ -480,10 +488,23 @@ module ActiveMerchant #:nodoc:
           doc.orderSource('applepay')
         elsif payment_method.is_a?(NetworkTokenizationCreditCard) && %i[google_pay android_pay].include?(payment_method.source)
           doc.orderSource('androidpay')
+        elsif options[:three_d_secure].present?
+          enrolled = formatted_status(options[:three_d_secure][:enrolled])
+          response_status = formatted_status(options[:three_d_secure][:authentication_response_status])
+          source = enrolled == 'Y' && response_status == 'Y' ? '3dsAuthenticated' : '3dsAttempted'
+          doc.orderSource(source)
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.orderSource('retail')
         else
           doc.orderSource('ecommerce')
+        end
+      end
+
+      def formatted_status(val)
+        case val
+        when 'Y', 'N', 'U' then val
+        when true, 'true' then 'Y'
+        when false, 'false' then 'N'
         end
       end
 
