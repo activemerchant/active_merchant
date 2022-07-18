@@ -1388,6 +1388,29 @@ class CyberSourceTest < Test::Unit::TestCase
     end
   end
 
+  def test_raises_error_on_network_token_with_an_underlying_discover_card
+    error = assert_raises ArgumentError do
+      credit_card = network_tokenization_credit_card('4111111111111111',
+        brand: 'discover',
+        payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+
+      @gateway.authorize(100, credit_card, @options)
+    end
+    assert_equal 'Payment method discover is not supported, check https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/CreatingOnlineAuth/CreatingAuthReqPNT.html', error.message
+  end
+
+  def test_raises_error_on_network_token_with_an_underlying_apms
+    error = assert_raises ArgumentError do
+      credit_card = network_tokenization_credit_card('4111111111111111',
+        brand: 'sodexo',
+        payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+
+      @gateway.authorize(100, credit_card, @options)
+    end
+
+    assert_equal 'Payment method sodexo is not supported, check https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/CreatingOnlineAuth/CreatingAuthReqPNT.html', error.message
+  end
+
   private
 
   def options_with_normalized_3ds(

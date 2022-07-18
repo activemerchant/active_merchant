@@ -79,6 +79,7 @@
 * Shift4: Add default `numericId`, add `InterfaceVersion`, `InterfaceName`, and `CompanyName` header fields, change date time format and allow merchant time zone [ajawadmirza] #4509
 * BraintreeBlue: Add support for partial capture [aenand] #4515
 * Rapyd: Change key name to `network_transaction_id` [ajawadmirza] #4514
+* CyberSource: Handle unsupported Network Token brands [heavyblade] #4500
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
