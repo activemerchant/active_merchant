@@ -802,6 +802,8 @@ module ActiveMerchant #:nodoc:
             xml.tag!('xid', Base64.encode64(cryptogram[20...40])) if cryptogram.bytes.count > 20
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
+        else
+          raise ArgumentError.new("Payment method #{brand} is not supported, check https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/CreatingOnlineAuth/CreatingAuthReqPNT.html")
         end
       end
 
