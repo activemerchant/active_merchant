@@ -84,7 +84,7 @@ end
 ## Contributing
 
 For more in-depth documentation and tutorials, see [GettingStarted.md](GettingStarted.md) and the
-[API documentation](http://www.rubydoc.info/github/activemerchant/active_merchant/).
+[API documentation](https://www.rubydoc.info/github/Shopify/active_merchant).
 
 Emerging ActiveMerchant 3DS conventions are documented in the [Contributing](https://github.com/activemerchant/active_merchant/wiki/Contributing#3ds-options)
 guide and [Standardized 3DS Fields](https://github.com/activemerchant/active_merchant/wiki/Standardized-3DS-Fields) guide of the wiki.
