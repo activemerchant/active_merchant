@@ -102,6 +102,15 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         ds_transaction_id: '97267598FAE648F28083C23433990FBC'
       }
     }
+
+    @google_pay_card = network_tokenization_credit_card(
+      '4777777777777778',
+      payment_cryptogram: 'BwAQCFVQdwEAABNZI1B3EGLyGC8=',
+      verification_value: '987',
+      source: :google_pay,
+      brand: 'visa',
+      eci: '5'
+    )
   end
 
   def test_supports_network_tokenization
@@ -854,6 +863,20 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<MITMsgType>#{@options_stored_credentials[:mit_msg_type]}</MITMsgType>}, data
       assert_match %{<MITStoredCredentialInd>#{@options_stored_credentials[:mit_stored_credential_ind]}</MITStoredCredentialInd>}, data
       assert_match %{<MITSubmittedTransactionID>#{@options_stored_credentials[:mit_submitted_transaction_id]}</MITSubmittedTransactionID>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_dpanind_for_rc_and_ec_transactions
+    stub_comms do
+      @gateway.purchase(50, @google_pay_card, @options.merge(industry_type: 'RC'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_false data.include?('DPANInd')
+    end.respond_with(successful_purchase_response)
+
+    stub_comms do
+      @gateway.purchase(50, @google_pay_card, @options.merge(industry_type: 'EC'))
+    end.check_request do |_endpoint, data, _headers|
+      assert data.include?('DPANInd')
     end.respond_with(successful_purchase_response)
   end
 
