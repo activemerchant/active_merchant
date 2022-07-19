@@ -117,6 +117,7 @@ braintree_blue_with_ach_enabled:
   public_key: Y
   private_key: Z
   merchant_account_id: A
+  venmo_profile_id: B
 
 braintree_blue_with_processing_rules:
   merchant_id: X

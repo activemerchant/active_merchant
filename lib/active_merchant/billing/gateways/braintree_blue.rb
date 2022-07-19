@@ -622,6 +622,7 @@ module ActiveMerchant #:nodoc:
         add_account_type(parameters, options) if options[:account_type]
         add_skip_options(parameters, options)
         add_merchant_account_id(parameters, options)
+        add_profile_id(parameters, options)
 
         add_payment_method(parameters, credit_card_or_vault_id, options)
         add_stored_credential_data(parameters, credit_card_or_vault_id, options)
@@ -662,6 +663,13 @@ module ActiveMerchant #:nodoc:
         return unless merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
 
         parameters[:merchant_account_id] = merchant_account_id
+      end
+
+      def add_profile_id(parameters, options)
+        return unless profile_id = options[:venmo_profile_id]
+
+        parameters[:options][:venmo] = {}
+        parameters[:options][:venmo][:profile_id] = profile_id
       end
 
       def add_transaction_source(parameters, options)

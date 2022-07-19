@@ -210,6 +210,14 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.authorize(100, credit_card('41111111111111111111'), service_fee_amount: '2.31')
   end
 
+  def test_venmo_profile_id_can_be_specified
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:options][:venmo][:profile_id] == 'profile_id')
+    end.returns(braintree_result)
+
+    @gateway.authorize(100, credit_card('41111111111111111111'), venmo_profile_id: 'profile_id')
+  end
+
   def test_risk_data_can_be_specified
     risk_data = {
       customer_browser: 'User-Agent Header',
