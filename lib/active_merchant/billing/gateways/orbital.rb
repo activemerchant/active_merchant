@@ -749,10 +749,10 @@ module ActiveMerchant #:nodoc:
         xml.tag!(:AuthenticationECIInd, eci) if eci
       end
 
-      def add_dpanind(xml, credit_card)
+      def add_dpanind(xml, credit_card, industry_type = nil)
         return unless credit_card.is_a?(NetworkTokenizationCreditCard)
 
-        xml.tag! :DPANInd, 'Y'
+        xml.tag! :DPANInd, 'Y' unless industry_type == 'RC'
       end
 
       def add_digital_token_cryptogram(xml, credit_card)
@@ -970,7 +970,7 @@ module ActiveMerchant #:nodoc:
 
             add_soft_descriptors(xml, parameters[:soft_descriptors])
             add_payment_action_ind(xml, parameters[:payment_action_ind])
-            add_dpanind(xml, payment_source)
+            add_dpanind(xml, payment_source, parameters[:industry_type])
             add_aevv(xml, payment_source, three_d_secure)
             add_digital_token_cryptogram(xml, payment_source)
 
