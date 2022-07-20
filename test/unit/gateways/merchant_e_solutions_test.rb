@@ -84,20 +84,25 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_store
-    @gateway.expects(:ssl_post).returns(successful_store_response)
-    assert response = @gateway.store(@credit_card)
-    assert response.success?
-    assert_equal 'ae641b57b19b3bb89faab44191479872', response.authorization
-    assert response.test?
-  end
-
   def test_unstore
     @gateway.expects(:ssl_post).returns(successful_unstore_response)
     assert response = @gateway.unstore('ae641b57b19b3bb89faab44191479872')
     assert response.success?
     assert_equal 'd79410c91b4b31ba99f5a90558565df9', response.authorization
     assert response.test?
+  end
+
+  def test_successful_verify
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, { verify_amount: '200', store_card: 'y' })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/transaction_type=A/, data)
+      assert_match(/transaction_amount=2.00/, data)
+      assert_match(/store_card=y/, data)
+      assert_match(/card_number=#{@credit_card.number}/, data)
+    end.respond_with(successful_verify_response)
+    assert_success response
+    assert_equal 'Card Ok', response.message
   end
 
   def test_successful_avs_check
@@ -200,6 +205,10 @@ class MerchantESolutionsTest < Test::Unit::TestCase
 
   def successful_unstore_response
     'transaction_id=d79410c91b4b31ba99f5a90558565df9&error_code=000&auth_response_text=Stored Card Data Deleted'
+  end
+
+  def successful_verify_response
+    'transaction_id=a5ef059bff7a3f75ac2398eea4cc73cd&error_code=085&auth_response_text=Card Ok&avs_result=0&cvv2_result=M&auth_code=T1933H'
   end
 
   def failed_purchase_response

@@ -71,7 +71,8 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
   def test_store_purchase_unstore
     assert store = @gateway.store(@credit_card)
     assert_success store
-    assert_equal 'This transaction has been approved', store.message
+    assert_equal 'Card Ok', store.message
+    assert_equal store.authorization, store.params['card_id']
     assert purchase = @gateway.purchase(@amount, store.authorization, @options)
     assert_success purchase
     assert_equal 'This transaction has been approved', purchase.message
@@ -183,11 +184,11 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_connection_failure_404_notfound_with_purchase
+  def test_connection_failure_with_purchase
     @gateway.test_url = 'https://cert.merchante-solutions.com/mes-api/tridentApiasdasd'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'Failed with 404 Not Found', response.message
+    assert_equal 'Failed with 401 Unauthorized', response.message
   end
 
   def test_successful_purchase_with_3dsecure_params
@@ -198,6 +199,12 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
+  end
+
+  def test_successful_verify
+    assert response = @gateway.verify(@credit_card, @options.merge({ verify_amount: 0 }))
+    assert_success response
+    assert_equal 'Card Ok', response.message
   end
 
   def test_transcript_scrubbing
