@@ -75,6 +75,7 @@
 * Vanco: Update unit test to remove remote call to gateway [ajawadmirza] #4497
 * Shift4: remove support for 3ds2 [ajawadmirza] #4503
 * Rapyd: Add support for stored credential [ajawadmirza] #4487
+* MerchantE: Update `store` and add `verify` method [ajawadmirza] #4507
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

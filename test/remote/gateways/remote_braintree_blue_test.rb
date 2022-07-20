@@ -205,7 +205,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   # for sandbox control panel https://sandbox.braintreegateway.com/login to create a venmo profile.
   # Insert your Profile Id into fixtures.
   def test_successful_purchase_with_venmo_profile_id
-    options = @options.merge(venmo_profile_id: fixtures(:braintree_blue)[:venmo_profile_id], payment_method_nonce: 'fake-venmo-account-nonce' )
+    options = @options.merge(venmo_profile_id: fixtures(:braintree_blue)[:venmo_profile_id], payment_method_nonce: 'fake-venmo-account-nonce')
     assert response = @gateway.purchase(@amount, 'fake-venmo-account-nonce', options)
     assert_success response
   end

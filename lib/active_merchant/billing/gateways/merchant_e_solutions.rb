@@ -18,6 +18,8 @@ module ActiveMerchant #:nodoc:
       # The name of the gateway
       self.display_name = 'Merchant e-Solutions'
 
+      SUCCESS_RESPONSE_CODES = %w(000 085)
+
       def initialize(options = {})
         requires!(options, :login, :password)
         super
@@ -55,10 +57,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(creditcard, options = {})
-        post = {}
-        post[:client_reference_number] = options[:customer] if options.has_key?(:customer)
-        add_creditcard(post, creditcard, options)
-        commit('T', nil, post)
+        MultiResponse.run do |r|
+          r.process { temporary_store(creditcard, options) }
+          r.process { verify(r.authorization, { store_card: 'y' }) }
+        end
       end
 
       def unstore(card_id, options = {})
@@ -94,6 +96,13 @@ module ActiveMerchant #:nodoc:
         commit('V', nil, options.merge(post))
       end
 
+      def verify(credit_card, options = {})
+        post = {}
+        post[:store_card] = options[:store_card] if options[:store_card]
+        add_payment_source(post, credit_card, options)
+        commit('A', 0, post)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -106,6 +115,13 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def temporary_store(creditcard, options = {})
+        post = {}
+        post[:client_reference_number] = options[:customer] if options.has_key?(:customer)
+        add_creditcard(post, creditcard, options)
+        commit('T', nil, post)
+      end
 
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
@@ -165,11 +181,21 @@ module ActiveMerchant #:nodoc:
             { 'error_code' => '404', 'auth_response_text' => e.to_s }
           end
 
-        Response.new(response['error_code'] == '000', message_from(response), response,
-          authorization: response['transaction_id'],
+        Response.new(success_from(response), message_from(response), response,
+          authorization: authorization_from(response),
           test: test?,
           cvv_result: response['cvv2_result'],
           avs_result: { code: response['avs_result'] })
+      end
+
+      def authorization_from(response)
+        return response['card_id'] if response['card_id']
+
+        response['transaction_id']
+      end
+
+      def success_from(response)
+        SUCCESS_RESPONSE_CODES.include?(response['error_code'])
       end
 
       def message_from(response)
