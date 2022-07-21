@@ -54,7 +54,6 @@ module ActiveMerchant #:nodoc:
         add_transaction(post, options)
         add_card(post, payment_method, options)
         add_card_present(post, options)
-        add_three_d_secure(post, payment_method, options)
 
         commit('sale', post, options)
       end
@@ -67,7 +66,6 @@ module ActiveMerchant #:nodoc:
         add_transaction(post, options)
         add_card(post, payment_method, options)
         add_card_present(post, options)
-        add_three_d_secure(post, payment_method, options)
         add_customer(post, options)
 
         commit('authorization', post, options)
@@ -146,23 +144,6 @@ module ActiveMerchant #:nodoc:
 
         response = commit('accesstoken', post, request_headers(options))
         response.params['result'].first['credential']['accessToken']
-      end
-
-      def add_three_d_secure(post, payment_method, options)
-        return unless three_d_secure = options[:three_d_secure]
-
-        post[:threeDSecure] = {}
-        post[:threeDSecure][:cryptogram] = payment_method.payment_cryptogram if payment_method.is_a?(NetworkTokenizationCreditCard)
-        post[:threeDSecure][:ecommIndicator] = three_d_secure[:eci] || payment_method.eci if three_d_secure[:eci] || (payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.eci)
-        post[:threeDSecure][:securityLevelIndicator] = options[:security_level_indicator] || '241'
-        post[:threeDSecure][:xid] = three_d_secure[:xid] if three_d_secure[:xid]
-        post[:threeDSecure][:programProtocol] = three_d_secure[:version][0, 1] if three_d_secure[:version]
-        post[:threeDSecure][:authenticationSource] = options[:authentication_source] if options[:authentication_source]
-        post[:threeDSecure][:cavvResult] = options[:cavv_result] if options[:cavv_result]
-        post[:threeDSecure][:authenticationValue] = three_d_secure[:cavv] if three_d_secure[:cavv]
-        post[:threeDSecure][:tavvResult] = options[:tavv_result] if options[:tavv_result]
-        post[:threeDSecure][:directoryServerTranId] = three_d_secure[:ds_transaction_id] if three_d_secure[:ds_transaction_id]
-        post[:threeDSecure][:walletID] = options[:wallet_id] if options[:wallet_id]
       end
 
       def add_clerk(post, options)
