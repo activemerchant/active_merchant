@@ -304,9 +304,11 @@ module ActiveMerchant #:nodoc:
         headers = {
           'Content-Type' => 'application/x-www-form-urlencoded'
         }
-        headers['CompanyName'] = options[:company_name]
         headers['AccessToken'] = @access_token
         headers['Invoice'] = options[:invoice] if options[:invoice].present?
+        headers['InterfaceVersion'] = options[:interface_version] if options[:interface_version]
+        headers['InterfaceName'] = options[:interface_name] if options[:interface_name]
+        headers['CompanyName'] = options[:company_name] if options[:company_name]
         headers
       end
 

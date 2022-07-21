@@ -25,6 +25,11 @@ class Shift4Test < Test::Unit::TestCase
       destination_postal_code: '94719',
       product_descriptors: %w(Hamburger Fries Soda Cookie)
     }
+    @extra_headers = {
+      company_name: 'Spreedly',
+      interface_name: 'ForwardPOS',
+      interface_version: '2.1'
+    }
   end
 
   def test_successful_capture
@@ -185,6 +190,16 @@ class Shift4Test < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['card']['present'], 'Y'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_header_fields
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @extra_headers)
+    end.check_request do |_endpoint, _data, headers|
+      assert_equal headers['CompanyName'], @extra_headers[:company_name]
+      assert_equal headers['InterfaceVersion'], @extra_headers[:interface_version]
+      assert_equal headers['InterfaceName'], @extra_headers[:interface_name]
     end.respond_with(successful_purchase_response)
   end
 
