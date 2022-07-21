@@ -14,7 +14,10 @@ class RemoteShift4Test < Test::Unit::TestCase
       tax: '2',
       customer_reference: 'D019D09309F2',
       destination_postal_code: '94719',
-      product_descriptors: %w(Hamburger Fries Soda Cookie)
+      product_descriptors: %w(Hamburger Fries Soda Cookie),
+      company_name: 'Spreedly',
+      interface_name: 'ForwardPOS',
+      interface_version: '2.1'
     }
   end
 
