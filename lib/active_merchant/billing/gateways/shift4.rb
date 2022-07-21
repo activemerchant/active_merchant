@@ -148,7 +148,7 @@ module ActiveMerchant #:nodoc:
 
       def add_clerk(post, options)
         post[:clerk] = {}
-        post[:clerk][:numericId] = options[:clerk_id]
+        post[:clerk][:numericId] = options[:clerk_id] || '1'
       end
 
       def add_invoice(post, money, options)
@@ -158,7 +158,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_datetime(post, options)
-        post[:dateTime] = options[:date_time] || current_date_time
+        post[:dateTime] = options[:date_time] || current_date_time(options)
       end
 
       def add_transaction(post, options)
@@ -176,7 +176,6 @@ module ActiveMerchant #:nodoc:
         if payment_method.is_a?(CreditCard)
           post[:card][:expirationDate] = "#{format(payment_method.month, :two_digits)}#{format(payment_method.year, :two_digits)}"
           post[:card][:number] = payment_method.number
-          post[:card][:entryMode] = options[:entry_mode]
           post[:card][:securityCode] = {}
           post[:card][:securityCode][:indicator] = 1
           post[:card][:securityCode][:value] = payment_method.verification_value
@@ -285,9 +284,11 @@ module ActiveMerchant #:nodoc:
         headers = {
           'Content-Type' => 'application/x-www-form-urlencoded'
         }
-        headers['CompanyName'] = options[:company_name]
         headers['AccessToken'] = @access_token
         headers['Invoice'] = options[:invoice] if options[:invoice].present?
+        headers['InterfaceVersion'] = options[:interface_version] if options[:interface_version]
+        headers['InterfaceName'] = options[:interface_name] if options[:interface_name]
+        headers['CompanyName'] = options[:company_name] if options[:company_name]
         headers
       end
 
@@ -301,8 +302,9 @@ module ActiveMerchant #:nodoc:
         response['result'].first['error']
       end
 
-      def current_date_time
-        DateTime.now.strftime('%Y-%m-%dT%H:%M:%S.%N+%H:%M')
+      def current_date_time(options = {})
+        time_zone = options[:merchant_time_zone] || 'Pacific Time (US & Canada)'
+        Time.now.in_time_zone(time_zone).strftime('%Y-%m-%dT%H:%M:%S.%3N+%H:%M')
       end
     end
   end
