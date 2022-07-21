@@ -52,18 +52,6 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_purchase_with_3ds2
-    three_d_fields = {
-      version: '2.1.0',
-      cavv: '7451894935398554493186199357',
-      xid: '7170741190961626698806524700',
-      ds_transaction_id: '720428161140523826506349191480340441',
-      eci: '5'
-    }
-    response = @gateway.purchase(@amount, @credit_card, @options.merge({ three_d_secure: three_d_fields }))
-    assert_success response
-  end
-
   def test_successful_purchase_with_stored_credential
     stored_credential_options = {
       inital_transaction: true,
