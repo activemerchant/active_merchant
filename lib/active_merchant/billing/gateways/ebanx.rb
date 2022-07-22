@@ -11,6 +11,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.ebanx.com/'
       self.display_name = 'EBANX'
 
+      TAGS = ['Spreedly']
+
       CARD_BRAND = {
         visa: 'visa',
         master: 'master_card',
@@ -216,6 +218,7 @@ module ActiveMerchant #:nodoc:
         post[:metadata] = {} if post[:metadata].nil?
         post[:metadata][:merchant_payment_code] = options[:order_id] if options[:order_id]
         post[:processing_type] = options[:processing_type] if options[:processing_type]
+        post[:payment][:tags] = TAGS
       end
 
       def parse(body)

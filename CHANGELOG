@@ -68,6 +68,7 @@
 * Rapyd: Add metadata and ewallet_id options [naashton] #4387
 * Priority: Add additional fields to request and refactor gateway integration [dsmcclain] #4383
 * Rapyd: Update `type` option to `pm_type` [naashton] #4391
+* EBANX:  Add Spreedly tag to payment body [flaaviaa] #4511
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
