@@ -22,7 +22,8 @@ class RemoteEbanxTest < Test::Unit::TestCase
       metadata: {
         metadata_1: 'test',
         metadata_2: 'test2'
-      }
+      },
+      tags: EbanxGateway::TAGS
     }
   end
 
