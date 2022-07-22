@@ -90,6 +90,7 @@
 * CheckoutV2: Send payment id via `incremental_authorization` field [ajawadmirza] #4518
 * Shift4: Add card `present` field, use previous transaction authorization for capture, and hardcode header values [ajawadmirza] #4528
 * Orbital: Remove `DPANInd` field for RC transactions [ajawadmirza] #4502
+* EBANX: Add Spreedly tag to payment body [flaaviaa] #4527
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
