@@ -172,4 +172,94 @@ class MultiResponseTest < Test::Unit::TestCase
 
     assert m.success?
   end
+
+  def test_handles_responses_with_only_one_with_avs_and_cvv_result
+    r1 = Response.new(true, '1', {}, { avs_result: AVSResult.new(code: 'Y'), cvv_result: 'M' })
+    r2 = Response.new(true, '2', {})
+    m = MultiResponse.run do |r|
+      r.process { r1 }
+      r.process { r2 }
+    end
+    assert_equal [r1, r2], m.responses
+    assert_equal m.avs_result, { 'code' => 'Y', 'message' => 'Street address and 5-digit postal code match.', 'street_match' => 'Y', 'postal_match' => 'Y' }
+    assert_equal m.cvv_result, { 'code' => 'M', 'message' => 'CVV matches' }
+  end
+
+  def test_handles_responses_using_last_response_cvv_and_avs_result
+    r1 = Response.new(true, '1', {}, { avs_result: AVSResult.new(code: 'Y'), cvv_result: 'M' })
+    r2 = Response.new(true, '1', {}, { avs_result: AVSResult.new(code: 'B'), cvv_result: 'N' })
+    m = MultiResponse.run do |r|
+      r.process { r1 }
+      r.process { r2 }
+    end
+    assert_equal [r1, r2], m.responses
+    assert_equal m.avs_result, { 'code' => 'B', 'message' => 'Street address matches, but postal code not verified.', 'street_match' => 'Y', 'postal_match' => nil }
+    assert_equal m.cvv_result, { 'code' => 'N', 'message' => 'CVV does not match' }
+  end
+
+  def test_handles_responses_using_first_response_cvv_and_avs_result
+    r1 = Response.new(true, '1', {}, { avs_result: AVSResult.new(code: 'Y'), cvv_result: 'M' })
+    r2 = Response.new(true, '1', {}, { avs_result: AVSResult.new(code: 'B'), cvv_result: 'N' })
+    m = MultiResponse.run(:use_first_response) do |r|
+      r.process { r1 }
+      r.process { r2 }
+    end
+    assert_equal [r1, r2], m.responses
+    assert_equal m.avs_result, { 'code' => 'Y', 'message' => 'Street address and 5-digit postal code match.', 'street_match' => 'Y', 'postal_match' => 'Y' }
+    assert_equal m.cvv_result, { 'code' => 'M', 'message' => 'CVV matches' }
+  end
+
+  def test_handles_responses_using_first_response_cvv_that_no_has_cvv_and_avs_result
+    r1 = Response.new(true, '1', {})
+    r2 = Response.new(true, '1', {}, { avs_result: AVSResult.new(code: 'B'), cvv_result: 'N' })
+    m = MultiResponse.run(:use_first_response) do |r|
+      r.process { r1 }
+      r.process { r2 }
+    end
+    assert_equal [r1, r2], m.responses
+    assert_equal m.avs_result, { 'code' => nil, 'message' => nil, 'street_match' => nil, 'postal_match' => nil }
+    assert_equal m.cvv_result, { 'code' => nil, 'message' => nil }
+  end
+
+  def test_handles_response_with_avs_and_without_cvv_result
+    r1 = Response.new(true, '1', {}, { avs_result: AVSResult.new(code: 'X'), cvv_result: CVVResult.new(nil) })
+    r2 = Response.new(true, '2', {})
+    m = MultiResponse.run do |r|
+      r.process { r1 }
+      r.process { r2 }
+    end
+    assert_equal [r1, r2], m.responses
+    assert_equal m.avs_result, { 'code' => 'X', 'message' => 'Street address and 9-digit postal code match.', 'street_match' => 'Y', 'postal_match' => 'Y' }
+    assert_equal m.cvv_result, { 'code' => nil, 'message' => nil }
+  end
+
+  def test_handles_response_avs_and_cvv_result_with_wrong_values_avs_and_cvv_code
+    r1 = Response.new(true, '1', {}, { avs_result: AVSResult.new(code: '1234567'), cvv_result: CVVResult.new('987654') })
+    r2 = Response.new(true, '2', {})
+    m = MultiResponse.run do |r|
+      r.process { r1 }
+      r.process { r2 }
+    end
+    assert_equal [r1, r2], m.responses
+    assert_equal m.avs_result, { 'code' => '1234567', 'message' => nil, 'street_match' => nil, 'postal_match' => nil }
+    assert_equal m.cvv_result, { 'code' => '987654', 'message' => nil }
+  end
+
+  def test_handles_response_without_avs_and_cvv_result
+    r1 = Response.new(true, '1', {})
+    r2 = Response.new(true, '2', {})
+    m = MultiResponse.run do |r|
+      r.process { r1 }
+      r.process { r2 }
+    end
+    assert_equal [r1, r2], m.responses
+    assert_equal m.avs_result, { 'code' => nil, 'message' => nil, 'street_match' => nil, 'postal_match' => nil }
+    assert_equal m.cvv_result, { 'code' => nil, 'message' => nil }
+  end
+
+  def test_handles_responses_avs_and_cvv_result_with_no_responses_provideds
+    m = MultiResponse.new
+    assert_equal m.avs_result, nil
+    assert_equal m.cvv_result, nil
+  end
 end
