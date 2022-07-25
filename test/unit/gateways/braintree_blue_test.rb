@@ -94,6 +94,16 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal true, response.test
   end
 
+  def test_partial_capture_transaction
+    Braintree::TransactionGateway.any_instance.expects(:submit_for_partial_settlement).
+      returns(braintree_result(id: 'capture_transaction_id'))
+
+    response = @gateway.capture(100, 'transaction_id', { partial_capture: true })
+
+    assert_equal 'capture_transaction_id', response.authorization
+    assert_equal true, response.test
+  end
+
   def test_refund_transaction
     Braintree::TransactionGateway.any_instance.expects(:refund).
       returns(braintree_result(id: 'refund_transaction_id'))

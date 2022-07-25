@@ -210,6 +210,18 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_partial_capture
+    options = @options.merge(venmo_profile_id: fixtures(:braintree_blue)[:venmo_profile_id], payment_method_nonce: 'fake-venmo-account-nonce')
+    assert auth = @gateway.authorize(@amount, 'fake-venmo-account-nonce', options)
+    assert_success auth
+    assert_equal '1000 Approved', auth.message
+    assert auth.authorization
+    assert capture_one = @gateway.capture(50, auth.authorization, { partial_capture: true })
+    assert_success capture_one
+    assert capture_two = @gateway.capture(50, auth.authorization, { partial_capture: true })
+    assert_success capture_two
+  end
+
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
