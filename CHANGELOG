@@ -77,6 +77,7 @@
 * Rapyd: Add support for stored credential [ajawadmirza] #4487
 * MerchantE: Update `store` and add `verify` method [ajawadmirza] #4507
 * Shift4: Add default `numericId`, add `InterfaceVersion`, `InterfaceName`, and `CompanyName` header fields, change date time format and allow merchant time zone [ajawadmirza] #4509
+* BraintreeBlue: Add support for partial capture [aenand] #4515
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

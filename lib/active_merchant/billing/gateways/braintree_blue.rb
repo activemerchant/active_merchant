@@ -88,9 +88,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        commit do
-          result = @braintree_gateway.transaction.submit_for_settlement(authorization, localized_amount(money, options[:currency] || default_currency).to_s)
-          response_from_result(result)
+        if options[:partial_capture] == true
+          commit do
+            result = @braintree_gateway.transaction.submit_for_partial_settlement(authorization, localized_amount(money, options[:currency] || default_currency).to_s)
+            response_from_result(result)
+          end
+        else
+          commit do
+            result = @braintree_gateway.transaction.submit_for_settlement(authorization, localized_amount(money, options[:currency] || default_currency).to_s)
+            response_from_result(result)
+          end
         end
       end
 
