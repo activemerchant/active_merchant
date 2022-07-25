@@ -1,8 +1,10 @@
 require 'test_helper'
 
-class RemoteVposTest < Test::Unit::TestCase
+class RemoteVposWithoutKeyTest < Test::Unit::TestCase
   def setup
-    @gateway = VposGateway.new(fixtures(:vpos))
+    vpos_fixtures = fixtures(:vpos)
+    vpos_fixtures.delete(:encryption_key)
+    @gateway = VposGateway.new(vpos_fixtures)
 
     @amount = 100000
     @credit_card = credit_card('5418630110000014', month: 8, year: 2026, verification_value: '277')
@@ -111,5 +113,13 @@ class RemoteVposTest < Test::Unit::TestCase
     # does not contain anything other than '[FILTERED]'
     assert_no_match(/token\\":\\"[^\[FILTERED\]]/, transcript)
     assert_no_match(/card_encrypted_data\\":\\"[^\[FILTERED\]]/, transcript)
+  end
+
+  def test_regenerate_encryption_key
+    puts 'Regenerating encryption key.'
+    puts 'Before running the standard vpos remote test suite, run this test individually:'
+    puts '$ ruby -Ilib:test test/remote/gateways/remote_vpos_without_key_test.rb -n test_regenerate_encryption_key'
+    puts 'Then copy this key into your fixtures file.'
+    p @gateway.one_time_public_key
   end
 end

@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
 
       DUP_WINDOW_DEPRECATION_MESSAGE = 'The class-level duplicate_window variable is deprecated. Please use the :dup_seconds transaction option instead.'
 
-      self.test_url = self.live_url = 'https://secure.nmi.com/api/transact.php'
+      self.test_url = self.live_url = 'https://secure.networkmerchants.com/api/transact.php'
       self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_countries = ['US']

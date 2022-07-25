@@ -1,5 +1,15 @@
 require 'test_helper'
 
+module ActiveMerchant #:nodoc:
+  module Billing #:nodoc:
+    class CheckoutV2Gateway
+      def setup_access_token
+        '12345678'
+      end
+    end
+  end
+end
+
 class CheckoutV2Test < Test::Unit::TestCase
   include CommStub
 
@@ -7,6 +17,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     @gateway = CheckoutV2Gateway.new(
       secret_key: '1111111111111'
     )
+    @gateway_oauth = CheckoutV2Gateway.new({ client_id: 'abcd', client_secret: '1234' })
 
     @credit_card = credit_card
     @amount = 100
@@ -61,6 +72,54 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal '2FCFE326D92D4C27EDD699560F484', response.params['source']['payment_account_reference']
     assert response.test?
+  end
+
+  def test_successful_passing_processing_channel_id
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { processing_channel_id: '123456abcde' })
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+      assert_equal(request_data['processing_channel_id'], '123456abcde')
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_incremental_authorization
+    id = 'abcd123'
+    response = stub_comms do
+      @gateway.authorize(@amount, id, { incremental_authorization: 'true' })
+    end.check_request do |endpoint, _data, _headers|
+      assert_equal endpoint, "https://api.sandbox.checkout.com/payments/#{id}/authorizations"
+    end.respond_with(successful_incremental_authorize_response)
+
+    assert_success response
+  end
+
+  def test_successful_passing_authorization_type
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { authorization_type: 'Estimated' })
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+      assert_equal(request_data['authorization_type'], 'Estimated')
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_passing_exemption_and_challenge_indicator
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { execute_threed: true, exemption: 'no_preference', challenge_indicator: 'trusted_listing' })
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+      assert_equal(request_data['3ds']['exemption'], 'no_preference')
+      assert_equal(request_data['3ds']['challenge_indicator'], 'trusted_listing')
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_passing_capture_type
+    stub_comms do
+      @gateway.capture(@amount, 'abc', { capture_type: 'NonFinal' })
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+      assert_equal(request_data['capture_type'], 'NonFinal')
+    end.respond_with(successful_capture_response)
   end
 
   def test_successful_purchase_using_vts_network_token_with_eci
@@ -195,6 +254,18 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_render_for_oauth
+    processing_channel_id = 'abcd123'
+    response = stub_comms(@gateway_oauth, :ssl_request) do
+      @gateway_oauth.purchase(@amount, @credit_card, { processing_channel_id: processing_channel_id })
+    end.check_request do |_method, _endpoint, data, headers|
+      request = JSON.parse(data)
+      assert_equal headers['Authorization'], 'Bearer 12345678'
+      assert_equal request['processing_channel_id'], processing_channel_id
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_successful_authorize_includes_avs_result
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
@@ -222,6 +293,17 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
+  end
+
+  def test_successful_purchase_passing_metadata_with_mada_card_type
+    @credit_card.brand = 'mada'
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+      assert_equal(request_data['metadata']['udf1'], 'mada')
+    end.respond_with(successful_purchase_response)
   end
 
   def test_failed_purchase
@@ -282,7 +364,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       initial_options = {
         stored_credential: {
           initial_transaction: true,
-          reason_type: 'recurring'
+          reason_type: 'installment'
         }
       }
       @gateway.purchase(@amount, @credit_card, initial_options)
@@ -409,7 +491,8 @@ class CheckoutV2Test < Test::Unit::TestCase
           version: '1.0.2',
           eci: '05',
           cryptogram: '1234',
-          xid: '1234'
+          xid: '1234',
+          authentication_response_status: 'Y'
         }
       }
       @gateway.authorize(@amount, @credit_card, options)
@@ -433,7 +516,8 @@ class CheckoutV2Test < Test::Unit::TestCase
           version: '2.0.0',
           eci: '05',
           cryptogram: '1234',
-          ds_transaction_id: '1234'
+          ds_transaction_id: '1234',
+          authentication_response_status: 'Y'
         }
       }
       @gateway.authorize(@amount, @credit_card, options)
@@ -581,6 +665,10 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal post_scrubbed, @gateway.scrub(pre_scrubbed)
   end
 
+  def test_network_transaction_scrubbing
+    assert_equal network_transaction_post_scrubbed, @gateway.scrub(network_transaction_pre_scrubbed)
+  end
+
   def test_invalid_json
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
@@ -618,6 +706,20 @@ class CheckoutV2Test < Test::Unit::TestCase
     %q(
       <- "POST /payments HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: sk_test_ab12301d-e432-4ea7-97d1-569809518aaf\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.checkout.com\r\nContent-Length: 346\r\n\r\n"
       <- "{\"capture\":false,\"amount\":\"200\",\"reference\":\"1\",\"currency\":\"USD\",\"source\":{\"type\":\"card\",\"name\":\"Longbob Longsen\",\"number\":\"4242424242424242\",\"cvv\":\"100\",\"expiry_year\":\"2025\"
+    )
+  end
+
+  def network_transaction_pre_scrubbed
+    %q(
+      <- "POST /payments HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: sk_test_ab12301d-e432-4ea7-97d1-569809518aaf\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.checkout.com\r\nContent-Length: 346\r\n\r\n"
+      <- "{\"amount\":\"100\",\"reference\":\"1\",\"currency\":\"USD\",\"metadata\":{\"udf5\":\"ActiveMerchant\"},\"source\":{\"type\":\"network_token\",\"token\":\"4242424242424242\",\"token_type\":\"applepay\",\"cryptogram\":\"AgAAAAAAAIR8CQrXcIhbQAAAAAA\",\"eci\":\"05\",\"expiry_year\":\"2025\",\"expiry_month\":\"10\",\"billing_address\":{\"address_line1\":\"456 My Street\",\"address_line2\":\"Apt 1\",\"city\":\"Ottawa\",\"state\":\"ON\",\"country\":\"CA\",\"zip\":\"K1C2N6\"}},\"customer\":{\"email\":\"longbob.longsen@example.com\"}}"
+    )
+  end
+
+  def network_transaction_post_scrubbed
+    %q(
+      <- "POST /payments HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: [FILTERED]\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.checkout.com\r\nContent-Length: 346\r\n\r\n"
+      <- "{\"amount\":\"100\",\"reference\":\"1\",\"currency\":\"USD\",\"metadata\":{\"udf5\":\"ActiveMerchant\"},\"source\":{\"type\":\"network_token\",\"token\":\"[FILTERED]\",\"token_type\":\"applepay\",\"cryptogram\":\"[FILTERED]\",\"eci\":\"05\",\"expiry_year\":\"2025\",\"expiry_month\":\"10\",\"billing_address\":{\"address_line1\":\"456 My Street\",\"address_line2\":\"Apt 1\",\"city\":\"Ottawa\",\"state\":\"ON\",\"country\":\"CA\",\"zip\":\"K1C2N6\"}},\"customer\":{\"email\":\"longbob.longsen@example.com\"}}"
     )
   end
 
@@ -749,6 +851,56 @@ class CheckoutV2Test < Test::Unit::TestCase
        },
        "response_summary": "Invalid Card Number",
        "response_code":"20014"
+      }
+    )
+  end
+
+  def successful_incremental_authorize_response
+    %(
+      {
+        "action_id": "act_q4dbxom5jbgudnjzjpz7j2z6uq",
+        "amount": 50,
+        "currency": "USD",
+        "approved": true,
+        "status": "Authorized",
+        "auth_code": "503198",
+        "expires_on": "2020-04-20T10:11:12Z",
+        "eci": "05",
+        "scheme_id": "511129554406717",
+        "response_code": "10000",
+        "response_summary": "Approved",
+        "balances": {
+          "total_authorized": 150,
+          "total_voided": 0,
+          "available_to_void": 150,
+          "total_captured": 0,
+          "available_to_capture": 150,
+          "total_refunded": 0,
+          "available_to_refund": 0
+        },
+        "processed_on": "2020-03-16T22:11:24Z",
+        "reference": "ORD-752-814",
+        "processing": {
+          "acquirer_transaction_id": "8367314942",
+          "retrieval_reference_number": "162588399162"
+        },
+        "_links": {
+          "self": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tqgk5c6k2nnexagtcuom5ktlua"
+          },
+          "actions": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tqgk5c6k2nnexagtcuom5ktlua/actions"
+          },
+          "authorize": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tqgk5c6k2nnexagtcuom5ktlua/authorizations"
+          },
+          "capture": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tqgk5c6k2nnexagtcuom5ktlua/captures"
+          },
+          "void": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tqgk5c6k2nnexagtcuom5ktlua/voids"
+          }
+        }
       }
     )
   end

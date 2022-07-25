@@ -49,16 +49,14 @@ class RemoteSimetrikTest < Test::Unit::TestCase
         id: '123',
         email: 's@example.com'
       },
+      order_id: rand(100000000000..999999999999).to_s,
+      description: 'apopsicle',
       order: {
-        id: rand(100000000000..999999999999).to_s,
         datetime_local_transaction: Time.new.strftime('%Y-%m-%dT%H:%M:%S.%L%:z'),
-        description: 'apopsicle',
-        installments: 1,
-        amount: {
-          currency: 'USD',
-          vat: 19
-        }
+        installments: 1
       },
+      vat: 19,
+      currency: 'USD',
       authentication: {
         three_ds_fields: {
           version: '2.1.0',
@@ -153,13 +151,13 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     assert_success auth
     sleep(3)
     option = {
-      vat: @authorize_options_success[:order][:amount][:vat],
-      currency: @authorize_options_success[:order][:amount][:currency],
+      vat: @authorize_options_success[:vat],
+      currency: @authorize_options_success[:currency],
+
       transaction_id: auth.authorization,
       token_acquirer: @token_acquirer,
       trace_id: @authorize_options_success[:trace_id]
     }
-
     assert capture = @gateway.capture(@amount, auth.authorization, option)
     assert_success capture
     assert_equal 'successful capture', capture.message
@@ -170,8 +168,8 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     assert_success auth
 
     option = {
-      vat: @authorize_options_success[:order][:amount][:vat],
-      currency: @authorize_options_success[:order][:amount][:currency],
+      vat: @authorize_options_success[:vat],
+      currency: @authorize_options_success[:currency],
       transaction_id: auth.authorization,
       token_acquirer: @token_acquirer,
       trace_id: @authorize_options_success[:trace_id]
@@ -201,7 +199,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
       trace_id: @authorize_options_success[:trace_id],
       acquire_extra_options: {}
     }
-    sleep(3)
+    sleep(6)
     assert void = @gateway.void(auth.authorization, option)
     assert_success void
     assert_equal 'successful void', void.message
@@ -243,6 +241,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
         ruc: '13431131234'
       }
     }
+    assert_success response
     sleep(3)
     refund = @gateway.refund(@amount, response.authorization, option)
     assert_failure refund
@@ -255,6 +254,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     end
     transcript = @gateway.scrub(transcript)
     assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value.to_s, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:client_secret], transcript)
   end
 end

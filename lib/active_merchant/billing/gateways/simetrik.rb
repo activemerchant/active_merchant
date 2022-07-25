@@ -4,9 +4,12 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://payments.sta.simetrik.com/v1'
       self.live_url = 'https://payments.simetrik.com/v1'
 
-      class_attribute :test_auth_url, :live_auth_url
+      class_attribute :test_auth_url, :live_auth_url, :test_audience, :live_audience
       self.test_auth_url = 'https://tenant-payments-dev.us.auth0.com/oauth/token'
       self.live_auth_url = 'https://tenant-payments-prod.us.auth0.com/oauth/token'
+
+      self.test_audience = 'https://tenant-payments-dev.us.auth0.com/api/v2/'
+      self.live_audience = 'https://tenant-payments-prod.us.auth0.com/api/v2/'
 
       self.supported_countries = %w(PE AR)
       self.default_currency = 'USD'
@@ -39,7 +42,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        requires!(options, :client_id, :client_secret, :audience)
+        requires!(options, :client_id, :client_secret)
         super
         @access_token = {}
         sign_access_token()
@@ -52,7 +55,6 @@ module ActiveMerchant #:nodoc:
         add_forward_route(post, options)
         add_forward_payload(post, money, payment, options)
         add_stored_credential(post, options)
-
         commit('authorize', post, { token_acquirer: options[:token_acquirer] })
       end
 
@@ -70,7 +72,7 @@ module ActiveMerchant #:nodoc:
             acquire_extra_options: options[:acquire_extra_options] || {}
           }
         }
-        post[:forward_payload][:amount][:vat] = options[:vat] if options[:vat]
+        post[:forward_payload][:amount][:vat] = options[:vat].to_f / 100 if options[:vat]
 
         add_forward_route(post, options)
         commit('capture', post, { token_acquirer: options[:token_acquirer] })
@@ -127,12 +129,10 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((\"number\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"security_code\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"exp_month\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"exp_year\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"holder_first_name\\\":\\\")"\w+"), '\1[FILTERED]').
-          gsub(%r((\"holder_last_name\\\":\\\")"\w+"), '\1[FILTERED]')
+          gsub(%r((Authorization: Bearer ).+), '\1[FILTERED]').
+          gsub(%r(("client_secret\\?":\\?")\w+), '\1[FILTERED]').
+          gsub(%r(("number\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r(("security_code\\?":\\?")\d+), '\1[FILTERED]')
       end
 
       private
@@ -148,7 +148,7 @@ module ActiveMerchant #:nodoc:
       def add_forward_payload(post, money, payment, options)
         forward_payload = {}
         add_user(forward_payload, options[:user]) if options[:user]
-        add_order(forward_payload, money, options[:order]) if options[:order] || money
+        add_order(forward_payload, money, options)
         add_payment_method(forward_payload, payment, options[:payment_method]) if options[:payment_method] || payment
 
         forward_payload[:payment_method] = {} unless forward_payload[:payment_method]
@@ -230,29 +230,34 @@ module ActiveMerchant #:nodoc:
         post[:forward_payload][:authentication][:stored_credential] = options[:stored_credential] if check_initiator && check_reason_type
       end
 
-      def add_order(post, money, order_options)
+      def add_order(post, money, options)
+        return unless options[:order] || money
+
         order = {}
-        order[:id] = order_options[:id] if order_options[:id]
-        order[:description] = order_options[:description] if order_options[:description]
-        order[:installments] = order_options[:installments] if order_options[:installments]
+        order_options = options[:order] || {}
+        order[:id] = options[:order_id] if options[:order_id]
+        order[:description] = options[:description] if options[:description]
+        order[:installments] = order_options[:installments].to_i if order_options[:installments]
         order[:datetime_local_transaction] = order_options[:datetime_local_transaction] if order_options[:datetime_local_transaction]
 
-        add_amount(order, money, order_options[:amount]) if order_options[:amount]
-        add_address('shipping_address', order, order_options[:shipping_address]) if order_options[:shipping_address]
+        add_amount(order, money, options)
+        add_address('shipping_address', order, options)
 
         post[:order] = order
       end
 
-      def add_amount(post, money, amount_options)
+      def add_amount(post, money, options)
         amount_obj = {}
         amount_obj[:total_amount] = amount(money).to_f
-        amount_obj[:currency] = (amount_options[:currency] || currency(money))
-        amount_obj[:vat] = amount_options[:vat] if amount_options[:vat]
+        amount_obj[:currency] = (options[:currency] || currency(money))
+        amount_obj[:vat] = options[:vat].to_f / 100 if options[:vat]
 
         post[:amount] = amount_obj
       end
 
-      def add_address(tag, post, address_options)
+      def add_address(tag, post, options)
+        return unless address_options = options[:shipping_address]
+
         address = {}
         address[:name] = address_options[:name] if address_options[:name]
         address[:address1] = address_options[:address1] if address_options[:address1]
@@ -335,6 +340,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
+      # if this method is refactored, ensure that the client_secret is properly scrubbed
       def sign_access_token
         fetch_access_token() if Time.new.to_i > (@access_token[:expires_at] || 0) + 10
         @access_token[:access_token]
@@ -348,7 +354,7 @@ module ActiveMerchant #:nodoc:
         login_info = {}
         login_info[:client_id] = @options[:client_id]
         login_info[:client_secret] = @options[:client_secret]
-        login_info[:audience] = @options[:audience]
+        login_info[:audience] = test? ? test_audience : live_audience
         login_info[:grant_type] = 'client_credentials'
         response = parse(ssl_post(auth_url(), login_info.to_json, {
           'content-Type' => 'application/json'

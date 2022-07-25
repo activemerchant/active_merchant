@@ -249,6 +249,40 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_for_stored_credentials_with_cit
+    cit_stored_credentials = {
+      initiator: 'cardholder'
+    }
+    response = @gateway.purchase(@amount, @three_ds_visa_card, @options_3ds2.merge({ stored_credential: cit_stored_credentials }))
+    assert_success response
+    assert_equal 'Success', response.message
+
+    cit_stored_credentials = {
+      initiator: 'cardholder',
+      network_transaction_id: response.params['original-network-transaction-id']
+    }
+    response = @gateway.purchase(@amount, @three_ds_visa_card, @options_3ds2.merge({ stored_credential: cit_stored_credentials }))
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_for_stored_credentials_with_mit
+    mit_stored_credentials = {
+      initiator: 'merchant'
+    }
+    response = @gateway.purchase(@amount, @three_ds_visa_card, @options_3ds2.merge({ stored_credential: mit_stored_credentials }))
+    assert_success response
+    assert_equal 'Success', response.message
+
+    mit_stored_credentials = {
+      initiator: 'merchant',
+      network_transaction_id: response.params['original-network-transaction-id']
+    }
+    response = @gateway.purchase(@amount, @three_ds_visa_card, @options_3ds2.merge({ stored_credential: mit_stored_credentials }))
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_purchase_with_currency
     response = @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'CAD'))
     assert_success response
@@ -449,6 +483,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, purchase.authorization, @refund_options)
     assert_success refund
     assert_equal 'Success', refund.message
+    assert_not_nil refund.authorization
   end
 
   def test_successful_refund_with_merchant_id

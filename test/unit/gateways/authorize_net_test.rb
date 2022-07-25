@@ -789,7 +789,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_verify
     response = stub_comms do
-      @gateway.verify(@credit_card)
+      @gateway.verify(@credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal '1.00', doc.at_xpath('//transactionRequest/amount').content if doc.at_xpath('//transactionRequest/transactionType').content == 'authOnlyTransaction'
     end.respond_with(successful_authorize_response, successful_void_response)
     assert_success response
   end
@@ -800,6 +803,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
     assert_match %r{This transaction has been approved}, response.message
+  end
+
+  def test_successful_verify_with_0_auth_card
+    options = {
+      verify_amount: 0,
+      billing_address: {
+        address1: '123 St',
+        zip: '88888'
+      }
+    }
+    response = stub_comms do
+      @gateway.verify(@credit_card, options)
+    end.respond_with(successful_authorize_response)
+    assert_success response
   end
 
   def test_unsuccessful_verify
@@ -1469,7 +1486,85 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert !@gateway.verify_credentials
   end
 
-  private
+  def test_0_amount_verify_with_no_zip
+    @options[:verify_amount] = 0
+    @options[:billing_address] = { zip: nil, address1: 'XYZ' }
+
+    response = @gateway.verify(@credit_card, @options)
+
+    assert_failure response
+    assert_equal 'Billing address including zip code is required for a 0 amount verify', response.message
+  end
+
+  def test_verify_transcript_with_0_auth
+    stub_comms do
+      @options[:verify_amount] = 0
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal '0.00', doc.at_xpath('//transactionRequest/amount').content if doc.at_xpath('//transactionRequest/transactionType').content == 'authOnlyTransaction'
+    end
+  end
+
+  def test_verify_amount_with_bad_string
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 'dog'
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_boolean
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: true
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_decimal
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 0.125
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_negative
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: -100
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_string_as_number
+    assert_equal 200, @gateway.send(:amount_for_verify, verify_amount: '200')
+  end
+
+  def test_verify_amount_with_zero_without_zip
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 0, billing_address: { address1: 'street' }
+    end
+
+    assert_equal 'Billing address including zip code is required for a 0 amount verify', error.message
+  end
+
+  def test_verify_amount_with_zero_without_address
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 0, billing_address: { zip: '051052' }
+    end
+
+    assert_equal 'Billing address including zip code is required for a 0 amount verify', error.message
+  end
+
+  def test_verify_amount_without_gsf
+    assert_equal 100, @gateway.send(:amount_for_verify, {})
+  end
+
+  def test_verify_amount_with_nil_value
+    assert_equal 100, @gateway.send(:amount_for_verify, { verify_amount: nil })
+  end
 
   def pre_scrubbed
     <<-PRE_SCRUBBED
@@ -2664,6 +2759,48 @@ class AuthorizeNetTest < Test::Unit::TestCase
           <transHashSha2/>
         </transactionResponse>
       </createTransactionResponse>
+    XML
+  end
+
+  def unsuccessful_authorize_response_for_jcb_card
+    <<-XML
+    <?xml version="1.0" encoding="utf-8"?>
+      <createTransactionResponse xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"AnetApi/xml/v1/schema/AnetApiSchema.xsd\">
+      <refId>1</refId>
+      <messages>
+        <resultCode>Error</resultCode>
+        <message>
+          <code>E00027</code>
+          <text>The transaction was unsuccessful.</text>
+        </message>
+      </messages>
+      <transactionResponse>
+        <responseCode>3</responseCode>
+        <authCode />
+        <avsResultCode>P</avsResultCode>
+        <cvvResultCode />
+        <cavvResultCode />
+        <transId>0</transId>
+        <refTransID />
+        <transHash />
+        <testRequest>0</testRequest>
+        <accountNumber>XXXX0017</accountNumber>
+        <accountType>JCB</accountType>
+        <errors>
+          <error>
+            <errorCode>289</errorCode>
+            <errorText>This processor does not accept zero dollar authorization for this card type.</errorText>
+          </error>
+        </errors>
+        <userFields>
+          <userField>
+            <name>x_currency_code</name>
+            <value>USD</value>
+          </userField>
+        </userFields>
+        <transHashSha2 />
+      </transactionResponse>
+    </createTransactionResponse>
     XML
   end
 end

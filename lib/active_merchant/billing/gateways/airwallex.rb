@@ -21,6 +21,12 @@ module ActiveMerchant #:nodoc:
         void: '/pa/payment_intents/%{id}/cancel'
       }
 
+      # Provided by Airwallex for testing purposes
+      TEST_NETWORK_TRANSACTION_IDS = {
+        visa: '123456789012345',
+        master: 'MCC123ABC0101'
+      }
+
       def initialize(options = {})
         requires!(options, :client_id, :client_api_key)
         @client_id = options[:client_id]
@@ -43,6 +49,7 @@ module ActiveMerchant #:nodoc:
         add_stored_credential(post, options)
         post['payment_method_options'] = { 'card' => { 'auto_capture' => false } } if authorization_only?(options)
 
+        add_three_ds(post, options)
         commit(:sale, post, payment_intent_id)
       end
 
@@ -107,15 +114,15 @@ module ActiveMerchant #:nodoc:
       private
 
       def request_id(options)
-        options[:request_id] || generate_timestamp
+        options[:request_id] || generate_uuid
       end
 
       def merchant_order_id(options)
-        options[:merchant_order_id] || options[:order_id] || generate_timestamp
+        options[:merchant_order_id] || options[:order_id] || generate_uuid
       end
 
-      def generate_timestamp
-        (Time.now.to_f.round(2) * 100).to_i.to_s
+      def generate_uuid
+        SecureRandom.uuid
       end
 
       def setup_access_token
@@ -133,12 +140,17 @@ module ActiveMerchant #:nodoc:
         base_url + ENDPOINTS[action].to_s % { id: id }
       end
 
+      def add_referrer_data(post)
+        post[:referrer_data] = { type: 'spreedly' }
+      end
+
       def create_payment_intent(money, options = {})
         post = {}
         add_invoice(post, money, options)
         add_order(post, options)
         post[:request_id] = "#{request_id(options)}_setup"
-        post[:merchant_order_id] = "#{merchant_order_id(options)}_setup"
+        post[:merchant_order_id] = merchant_order_id(options)
+        add_referrer_data(post)
         add_descriptor(post, options)
 
         response = commit(:setup, post)
@@ -198,7 +210,8 @@ module ActiveMerchant #:nodoc:
             'expiry_year' => card.year.to_s,
             'number' => card.number.to_s,
             'name' => card.name,
-            'cvc' => card.verification_value
+            'cvc' => card.verification_value,
+            'brand' => card.brand
           }
         }
         add_billing(post, card, options)
@@ -239,8 +252,56 @@ module ActiveMerchant #:nodoc:
           external_recurring_data[:merchant_trigger_reason] = 'unscheduled'
         end
 
-        external_recurring_data[:original_transaction_id] = stored_credential.dig(:network_transaction_id)
+        external_recurring_data[:original_transaction_id] = test_mit?(options) ? test_network_transaction_id(post) : stored_credential.dig(:network_transaction_id)
         external_recurring_data[:triggered_by] = stored_credential.dig(:initiator) == 'cardholder' ? 'customer' : 'merchant'
+      end
+
+      def test_network_transaction_id(post)
+        case post['payment_method']['card']['brand']
+        when 'visa'
+          TEST_NETWORK_TRANSACTION_IDS[:visa]
+        when 'master'
+          TEST_NETWORK_TRANSACTION_IDS[:master]
+        end
+      end
+
+      def test_mit?(options)
+        test? && options.dig(:stored_credential, :initiator) == 'merchant'
+      end
+
+      def add_three_ds(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        pm_options = post.dig('payment_method_options', 'card')
+
+        external_three_ds = {
+          'version': format_three_ds_version(three_d_secure),
+          'eci': three_d_secure[:eci]
+        }.merge(three_ds_version_specific_fields(three_d_secure))
+
+        pm_options ? pm_options.merge!('external_three_ds': external_three_ds) : post['payment_method_options'] = { 'card': { 'external_three_ds': external_three_ds } }
+      end
+
+      def format_three_ds_version(three_d_secure)
+        version = three_d_secure[:version].split('.')
+
+        version.push('0') until version.length == 3
+        version.join('.')
+      end
+
+      def three_ds_version_specific_fields(three_d_secure)
+        if three_d_secure[:version].to_f >= 2
+          {
+            'authentication_value': three_d_secure[:cavv],
+            'ds_transaction_id': three_d_secure[:ds_transaction_id],
+            'three_ds_server_transaction_id': three_d_secure[:three_ds_server_trans_id]
+          }
+        else
+          {
+            'cavv': three_d_secure[:cavv],
+            'xid': three_d_secure[:xid]
+          }
+        end
       end
 
       def authorization_only?(options = {})
@@ -257,6 +318,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, id = nil)
         url = build_request_url(action, id)
+
         post_headers = { 'Authorization' => "Bearer #{@access_token}", 'Content-Type' => 'application/json' }
         response = parse(ssl_post(url, post_data(post), post_headers))
 

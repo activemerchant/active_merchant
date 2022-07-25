@@ -9,12 +9,22 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w[AD AE AR AT AU BE BG BH BR CH CL CN CO CY CZ DE DK EE EG ES FI FR GB GR HK HR HU IE IS IT JO JP KW LI LT LU LV MC MT MX MY NL NO NZ OM PE PL PT QA RO SA SE SG SI SK SM TR US]
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = %i[visa master american_express diners_club maestro discover jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club maestro discover jcb mada]
       self.currencies_without_fractions = %w(BIF DJF GNF ISK KMF XAF CLF XPF JPY PYG RWF KRW VUV VND XOF)
       self.currencies_with_three_decimal_places = %w(BHD LYD JOD KWD OMR TND)
 
+      LIVE_ACCESS_TOKEN_URL = 'https://access.checkout.com/connect/token'
+      TEST_ACCESS_TOKEN_URL = 'https://access.sandbox.checkout.com/connect/token'
+
       def initialize(options = {})
-        requires!(options, :secret_key)
+        @options = options
+        @access_token = nil
+        begin
+          requires!(options, :secret_key)
+        rescue ArgumentError
+          requires!(options, :client_id, :client_secret)
+          @access_token = setup_access_token
+        end
         super
       end
 
@@ -30,11 +40,12 @@ module ActiveMerchant #:nodoc:
         post[:capture] = false
         build_auth_or_purchase(post, amount, payment_method, options)
 
-        commit(:authorize, post)
+        options[:incremental_authorization].to_s.casecmp('true').zero? ? commit(:incremental_authorize, post, payment_method) : commit(:authorize, post)
       end
 
       def capture(amount, authorization, options = {})
         post = {}
+        post[:capture_type] = options[:capture_type] || 'Final'
         add_invoice(post, amount, options)
         add_customer_data(post, options)
         add_metadata(post, options)
@@ -74,19 +85,22 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(/(Authorization: )[^\\]*/i, '\1[FILTERED]').
           gsub(/("number\\":\\")\d+/, '\1[FILTERED]').
-          gsub(/("cvv\\":\\")\d+/, '\1[FILTERED]')
+          gsub(/("cvv\\":\\")\d+/, '\1[FILTERED]').
+          gsub(/("cryptogram\\":\\")\w+/, '\1[FILTERED]').
+          gsub(/(source\\":\{.*\\"token\\":\\")\d+/, '\1[FILTERED]')
       end
 
       private
 
       def build_auth_or_purchase(post, amount, payment_method, options)
         add_invoice(post, amount, options)
+        add_authorization_type(post, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_stored_credential_options(post, options)
         add_transaction_data(post, options)
         add_3ds(post, options)
-        add_metadata(post, options)
+        add_metadata(post, options, payment_method)
         add_processing_channel(post, options)
         add_marketplace_data(post, options)
       end
@@ -104,9 +118,14 @@ module ActiveMerchant #:nodoc:
         post[:metadata][:udf5] = application_id || 'ActiveMerchant'
       end
 
-      def add_metadata(post, options)
+      def add_authorization_type(post, options)
+        post[:authorization_type] = options[:authorization_type] if options[:authorization_type]
+      end
+
+      def add_metadata(post, options, payment_method = nil)
         post[:metadata] = {} unless post[:metadata]
         post[:metadata].merge!(options[:metadata]) if options[:metadata]
+        post[:metadata][:udf1] = 'mada' if payment_method.try(:brand) == 'mada'
       end
 
       def add_payment_method(post, payment_method, options)
@@ -122,15 +141,17 @@ module ActiveMerchant #:nodoc:
           post[:source][:token_type] = token_type
           post[:source][:cryptogram] = cryptogram if cryptogram
           post[:source][:eci] = eci if eci
-        else
+        elsif payment_method.is_a?(CreditCard)
           post[:source][:type] = 'card'
           post[:source][:name] = payment_method.name
           post[:source][:number] = payment_method.number
           post[:source][:cvv] = payment_method.verification_value
           post[:source][:stored] = 'true' if options[:card_on_file] == true
         end
-        post[:source][:expiry_year] = format(payment_method.year, :four_digits)
-        post[:source][:expiry_month] = format(payment_method.month, :two_digits)
+        unless payment_method.is_a?(String)
+          post[:source][:expiry_year] = format(payment_method.year, :four_digits)
+          post[:source][:expiry_month] = format(payment_method.month, :two_digits)
+        end
       end
 
       def add_customer_data(post, options)
@@ -169,7 +190,7 @@ module ActiveMerchant #:nodoc:
         end
 
         case options[:stored_credential][:reason_type]
-        when 'recurring' || 'installment'
+        when 'recurring', 'installment'
           post[:payment_type] = 'Recurring'
         when 'unscheduled'
           return
@@ -183,6 +204,8 @@ module ActiveMerchant #:nodoc:
           post[:success_url] = options[:callback_url] if options[:callback_url]
           post[:failure_url] = options[:callback_url] if options[:callback_url]
           post[:'3ds'][:attempt_n3d] = options[:attempt_n3d] if options[:attempt_n3d]
+          post[:'3ds'][:challenge_indicator] = options[:challenge_indicator] if options[:challenge_indicator]
+          post[:'3ds'][:exemption] = options[:exemption] if options[:exemption]
         end
 
         if options[:three_d_secure]
@@ -190,6 +213,7 @@ module ActiveMerchant #:nodoc:
           post[:'3ds'][:cryptogram] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
           post[:'3ds'][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
           post[:'3ds'][:xid] = options[:three_d_secure][:ds_transaction_id] || options[:three_d_secure][:xid]
+          post[:'3ds'][:status] = options[:three_d_secure][:authentication_response_status]
         end
       end
 
@@ -202,6 +226,23 @@ module ActiveMerchant #:nodoc:
           post[:marketplace] = {}
           post[:marketplace][:sub_entity_id] = options[:marketplace][:sub_entity_id] if options[:marketplace][:sub_entity_id]
         end
+      end
+
+      def access_token_header
+        {
+          'Authorization' => "Basic #{Base64.encode64("#{@options[:client_id]}:#{@options[:client_secret]}").delete("\n")}",
+          'Content-Type' => 'application/x-www-form-urlencoded'
+        }
+      end
+
+      def access_token_url
+        test? ? TEST_ACCESS_TOKEN_URL : LIVE_ACCESS_TOKEN_URL
+      end
+
+      def setup_access_token
+        request = 'grant_type=client_credentials'
+        response = parse(ssl_post(access_token_url, request, access_token_header))
+        response['access_token']
       end
 
       def commit(action, post, authorization = nil)
@@ -238,8 +279,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
+        auth_token = @access_token ? "Bearer #{@access_token}" : @options[:secret_key]
         {
-          'Authorization' => @options[:secret_key],
+          'Authorization' => auth_token,
           'Content-Type' => 'application/json;charset=UTF-8'
         }
       end
@@ -253,6 +295,8 @@ module ActiveMerchant #:nodoc:
           "#{base_url}/payments/#{authorization}/refunds"
         elsif action == :void
           "#{base_url}/payments/#{authorization}/voids"
+        elsif action == :incremental_authorize
+          "#{base_url}/payments/#{authorization}/authorizations"
         else
           "#{base_url}/payments/#{authorization}/#{action}"
         end

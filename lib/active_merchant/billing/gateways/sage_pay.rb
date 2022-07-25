@@ -427,7 +427,7 @@ module ActiveMerchant #:nodoc:
       def past_purchase_reference?(payment_method)
         return false unless payment_method.is_a?(String)
 
-        payment_method.split(';').last == 'purchase'
+        %w(purchase repeat).include?(payment_method.split(';').last)
       end
     end
   end

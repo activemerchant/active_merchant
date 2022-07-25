@@ -37,7 +37,7 @@ class BluePayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, check, @options.merge(email: 'foo@example.com'))
     assert_success response
     assert response.test?
-    assert_equal 'App ACH Sale', response.message
+    assert_equal 'ACH Accepted', response.message
     assert response.authorization
   end
 
@@ -184,18 +184,18 @@ class BluePayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, check, @options.merge(email: 'foo@example.com'))
     assert_success response
     assert response.test?
-    assert_equal 'App ACH Sale', response.message
+    assert_equal 'ACH Accepted', response.message
     assert response.authorization
 
     assert refund = @gateway.refund(@amount, response.authorization, @options.merge(doc_type: 'PPD'))
     assert_success refund
-    assert_equal 'App ACH Void', refund.message
+    assert_equal 'ACH VOIDED', refund.message
   end
 
   def test_successful_credit_with_check
     assert credit = @gateway.credit(@amount, check, @options.merge(doc_type: 'PPD'))
     assert_success credit
-    assert_equal 'App ACH Credit', credit.message
+    assert_equal 'ACH Accepted', credit.message
   end
 
   def test_transcript_scrubbing

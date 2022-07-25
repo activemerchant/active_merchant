@@ -715,7 +715,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(100, @three_ds_credit_card, options)
     assert_failure response
-    assert_match 'Received unexpected 3DS authentication response', response.message
+    assert_match 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.', response.message
   end
 
   def test_create_payment_intent_with_shipping_address

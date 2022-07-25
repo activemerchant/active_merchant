@@ -299,7 +299,7 @@ module ActiveMerchant #:nodoc:
         end
 
         case options[:stored_credential][:reason_type]
-        when 'recurring' || 'installment'
+        when 'recurring', 'installment'
           post[:storedCredential][:type] = 'RECURRING'
         when 'unscheduled'
           if options[:stored_credential][:initiator] == 'merchant'

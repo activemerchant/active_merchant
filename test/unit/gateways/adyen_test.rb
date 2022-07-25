@@ -165,7 +165,7 @@ class AdyenTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_authorize_with_3ds_response)
     response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options)
     assert_failure response
-    assert_match 'Received unexpected 3DS authentication response', response.message
+    assert_match 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.', response.message
   end
 
   def test_successful_authorize_with_recurring_contract_type

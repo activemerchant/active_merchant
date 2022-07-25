@@ -17,8 +17,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.adyen.com/'
       self.display_name = 'Adyen'
 
-      PAYMENT_API_VERSION = 'v64'
-      RECURRING_API_VERSION = 'v49'
+      PAYMENT_API_VERSION = 'v68'
+      RECURRING_API_VERSION = 'v68'
 
       STANDARD_ERROR_CODE_MAPPING = {
         '101' => STANDARD_ERROR_CODE[:incorrect_number],
@@ -616,7 +616,7 @@ module ActiveMerchant #:nodoc:
 
       def success_from(action, response, options)
         if %w[RedirectShopper ChallengeShopper].include?(response.dig('resultCode')) && !options[:execute_threed] && !options[:threed_dynamic]
-          response['refusalReason'] = 'Received unexpected 3DS authentication response. Use the execute_threed and/or threed_dynamic options to initiate a proper 3DS flow.'
+          response['refusalReason'] = 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.'
           return false
         end
         case action.to_s

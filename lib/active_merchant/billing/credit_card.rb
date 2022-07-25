@@ -32,6 +32,7 @@ module ActiveMerchant #:nodoc:
     # * Olimpica
     # * Creditel
     # * Confiable
+    # * Mada
     #
     # For testing purposes, use the 'bogus' credit card brand. This skips the vast majority of
     # validations, allowing you to focus on your core concerns until you're ready to be more concerned
@@ -116,6 +117,7 @@ module ActiveMerchant #:nodoc:
       # * +'olimpica'+
       # * +'creditel'+
       # * +'confiable'+
+      # * +'mada'+
       #
       # Or, if you wish to test your implementation, +'bogus'+.
       #

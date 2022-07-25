@@ -22,8 +22,8 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor'
 
       # Schema files can be found here: https://ics2ws.ic3.com/commerce/1.x/transactionProcessor/
-      TEST_XSD_VERSION = '1.181'
-      PRODUCTION_XSD_VERSION = '1.181'
+      TEST_XSD_VERSION = '1.198'
+      PRODUCTION_XSD_VERSION = '1.198'
       ECI_BRAND_MAPPING = {
         visa: 'vbv',
         master: 'spa',
@@ -65,6 +65,7 @@ module ActiveMerchant #:nodoc:
         r100: 'Successful transaction',
         r101: 'Request is missing one or more required fields',
         r102: 'One or more fields contains invalid data',
+        r104: 'The merchantReferenceCode sent with this authorization request matches the merchantReferenceCode of another authorization request that you sent in the last 15 minutes.', r110: 'Partial amount was approved',
         r150: 'General failure',
         r151: 'The request was received but a server time-out occurred',
         r152: 'The request was received, but a service timed out',
@@ -79,7 +80,9 @@ module ActiveMerchant #:nodoc:
         r209: 'American Express Card Identifiction Digits (CID) did not match',
         r210: 'The card has reached the credit limit',
         r211: 'Invalid card verification number',
+        r220: 'Generic Decline.',
         r221: "The customer matched an entry on the processor's negative file",
+        r222: 'customer\'s account is frozen',
         r230: 'The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the card verification check',
         r231: 'Invalid account number',
         r232: 'The card type is not accepted by the payment processor',
@@ -97,9 +100,36 @@ module ActiveMerchant #:nodoc:
         r244: 'The bank account number failed the validation check',
         r246: 'The capture or credit is not voidable because the capture or credit information has already been submitted to your processor',
         r247: 'You requested a credit for a capture that was previously voided',
+        r248: 'The boleto request was declined by your processor.',
         r250: 'The request was received, but a time-out occurred with the payment processor',
+        r251: 'The Pinless Debit card\'s use frequency or maximum amount per use has been exceeded.',
         r254: 'Your CyberSource account is prohibited from processing stand-alone refunds',
-        r255: 'Your CyberSource account is not configured to process the service in the country you specified'
+        r255: 'Your CyberSource account is not configured to process the service in the country you specified',
+        r400: 'Soft Decline - Fraud score exceeds threshold.',
+        r450: 'Apartment number missing or not found.',
+        r451: 'Insufficient address information.',
+        r452: 'House/Box number not found on street.',
+        r453: 'Multiple address matches were found.',
+        r454: 'P.O. Box identifier not found or out of range.',
+        r455: 'Route service identifier not found or out of range.',
+        r456: 'Street name not found in Postal code.',
+        r457: 'Postal code not found in database.',
+        r458: 'Unable to verify or correct address.',
+        r459: 'Multiple addres matches were found (international)',
+        r460: 'Address match not found (no reason given)',
+        r461: 'Unsupported character set',
+        r475: 'The cardholder is enrolled in Payer Authentication. Please authenticate the cardholder before continuing with the transaction.',
+        r476: 'Encountered a Payer Authentication problem. Payer could not be authenticated.',
+        r478: 'Strong customer authentication (SCA) is required for this transaction.',
+        r480: 'The order is marked for review by Decision Manager',
+        r481: 'The order has been rejected by Decision Manager',
+        r490: 'Your aggregator or acquirer is not accepting transactions from you at this time.',
+        r491: 'Your aggregator or acquirer is not accepting this transaction.',
+        r520: 'Soft Decline - The authorization request was approved by the issuing bank but declined by CyberSource based on your Smart Authorization settings.',
+        r700: 'The customer matched the Denied Parties List',
+        r701: 'Export bill_country/ship_country match',
+        r702: 'Export email_country match',
+        r703: 'Export hostname_country/ip_country match'
       }
 
       # These are the options that can be used when creating a new CyberSource
@@ -347,10 +377,11 @@ module ActiveMerchant #:nodoc:
         add_mdd_fields(xml, options)
         add_sales_slip_number(xml, options)
         add_airline_data(xml, options)
-        if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
+        if (!payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check') || reference_is_a_check?(payment_method_or_reference)
           add_check_service(xml)
           add_issuer_additional_data(xml, options)
           add_partner_solution_id(xml)
+          options[:payment_method] = :check
         else
           add_purchase_service(xml, payment_method_or_reference, options)
           add_threeds_services(xml, options)
@@ -360,11 +391,16 @@ module ActiveMerchant #:nodoc:
           add_issuer_additional_data(xml, options)
           add_partner_solution_id(xml)
           add_stored_credential_options(xml, options)
+          options[:payment_method] = :credit_card
         end
 
         add_merchant_description(xml, options)
 
         xml.target!
+      end
+
+      def reference_is_a_check?(payment_method_or_reference)
+        payment_method_or_reference.is_a?(String) && payment_method_or_reference.split(';')[7] == 'check'
       end
 
       def build_void_request(identification, options)
@@ -393,7 +429,9 @@ module ActiveMerchant #:nodoc:
 
         xml = Builder::XmlMarkup.new indent: 2
         add_purchase_data(xml, money, true, options)
-        add_credit_service(xml, request_id, request_token)
+        add_credit_service(xml, request_id: request_id,
+                                request_token: request_token,
+                                use_check_service: reference_is_a_check?(identification))
         add_partner_solution_id(xml)
 
         xml.target!
@@ -404,7 +442,7 @@ module ActiveMerchant #:nodoc:
 
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
         add_mdd_fields(xml, options)
-        add_credit_service(xml)
+        add_credit_service(xml, use_check_service: creditcard_or_reference.is_a?(Check))
         add_issuer_additional_data(xml, options)
         add_merchant_description(xml, options)
 
@@ -423,9 +461,11 @@ module ActiveMerchant #:nodoc:
         if card_brand(payment_method) == 'check'
           add_check(xml, payment_method)
           add_check_payment_method(xml)
+          options[:payment_method] = :check
         else
           add_creditcard(xml, payment_method)
           add_creditcard_payment_method(xml)
+          options[:payment_method] = :credit_card
         end
         add_subscription(xml, options)
         if options[:setup_fee]
@@ -759,7 +799,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
             xml.tag!('cavv', Base64.encode64(cryptogram[0...20]))
             xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
-            xml.tag!('xid', Base64.encode64(cryptogram[20...40]))
+            xml.tag!('xid', Base64.encode64(cryptogram[20...40])) if cryptogram.bytes.count > 20
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         end
@@ -800,10 +840,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_credit_service(xml, request_id = nil, request_token = nil)
-        xml.tag! 'ccCreditService', { 'run' => 'true' } do
-          xml.tag! 'captureRequestID', request_id if request_id
-          xml.tag! 'captureRequestToken', request_token if request_token
+      def add_credit_service(xml, options = {})
+        service = options[:use_check_service] ? 'ecCreditService' : 'ccCreditService'
+        request_tag = options[:use_check_service] ? 'debitRequestID' : 'captureRequestID'
+        options.delete :request_token if options[:use_check_service]
+
+        xml.tag! service, { 'run' => 'true' } do
+          xml.tag! request_tag, options[:request_id] if options[:request_id]
+          xml.tag! 'captureRequestToken', options[:request_token] if options[:request_token]
         end
       end
 
@@ -1033,7 +1077,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, action, amount, options)
         [options[:order_id], response[:requestID], response[:requestToken], action, amount,
-         options[:currency], response[:subscriptionID]].join(';')
+         options[:currency], response[:subscriptionID], options[:payment_method]].join(';')
       end
 
       def in_fraud_review?(response)

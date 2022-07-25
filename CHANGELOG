@@ -2,6 +2,79 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Maestro: Adding missing BIN ranges [bradbroge] #4423
+* Simetrik: Fix integer and float types, update scrub method [rachelkirk] #4405
+* Credorax: Convert country codes for  `recipient_country_code` field [ajawadmirza] #4408
+* BlueSnap: Correctly parse `refund-transaction-id` [dsmcclain] #4411
+* Worldpay: Add level II and level III data [javierpedrozaing] #4393
+* Worldpay: extract `issuer_response_code` and `issuer_response_description` from gateway response [dsmcclain] #4412
+* Vantiv: Support `duplicate` field read from saleResponse.duplicate attr [mashton] #4413
+* Ogone: Add support for 3dsv2 [gasb150] #4410
+* BlueSnap: Add support for stored credentials [ajawadmirza] #4414
+* Monei: Add support for `lang` field [drkjc] #4421
+* Wompi: Redirect `refund` to `void` [drkjc] #4424
+* Rapyd: 3DS Support [naashton] #4422
+* Adyen: Update API version [jherreraa] #4418
+* Ogone: Updated home gateway URL [gasb150] #4419
+* Credorax: Update url gateway and credit cards [javierpedrozaing] #4417
+* Kushki: Pass extra_taxes with USD [therufs] #4426
+* DLocal: fix bug with `X-Idempotency-Key` header [dsmcclain] #4431
+* DLocal: Mark support for additional countries [gasb150] #4427
+* Rapyd: Additional Fields [naashton] #4434
+* Braintree: Return generated client token [BritneyS] #4416
+* Simetrik: Update `audience` field [simetrik-frank] #4433
+* CyberSource: Add bank account payment method support [heavyblade] #4428
+* Rapyd: Zero Dollar Auth [naashton] #4435
+* Rapyd: Scrub ACH [naashton] #4436
+* VisaNet Peru: Update `purchase_number` [rachelkirk] #4437
+* CardConnect:  Add support for 3ds V2 [javierpedrozaing] #4429
+* Rapyd: Support `store` and `unstore` [naashton] #4439
+* Orbital: Update API version to 9.0 [gasb150] #4440
+* Plexo:  Add `meta_data` fields and reorder amount object in response [ajawadmirza] #4441
+* Plexo:  Change field name from `meta_data` to `metadata` [ajawadmirza] #4443
+* Simetrik: Update `vat` to be in cents [simetrik-frank] #4425
+* Cybersource: Handle Amex cryptograms [heavyblade] #4445
+* Rapyd: Pass fields to `refund` and `store` [naashton] #4449
+* VPOS: Allow reuse of encryption key [therufs] #4450
+* Orbital: Add `payment_action_ind` field and refund through credit card to support tandem implementation [ajawadmirza] #4420
+* Airwallex: Send `referrer_data` on setup transactions [drkjc] #4453
+* Adyen and StripPI: Updated error messaging [mbreenlyles] #4454
+* Airwallex: Update `referrer_data` field [drkjc] #4455
+* Simetrik: Update `order_id` and `description` to be top level fields [simetrik-frank] #4451
+* Plexo: Update `ip`, `description`, and `email` fields request format and scrub method to not filter cardholder name and reference id [ajawadmirza] #4457
+* Plexo: Update `verify` implementation and add `verify_amount` field [ajawadmirza] #4462
+* Vanco: Update `purchase` to complete a purchase transaction with an existing session id [BritneyS] #4461
+* Authorize.net: Allow custom verify_amount and validate it [jherreraa] #4464
+* Shift4: Add gateway adapter [ali-hassan] #4415
+* Rapyd: Correctly add `billing_address` [naashton] #4465
+* Credorax: Update processor response messages [jcreiff] #4466
+* Shift4: add `customer_reference`, `destination_postal_code`, `product_descriptors` fields and core refactoring [ajawadmirza] #4469
+* Paypal Express: Add checkout status to response object [mbreenlyles] #4467
+* Shift4: Scrub security code [naashton] #4470
+* Shift4: Update `cardOnFile` transaction requests [ajawadmirza] #4471
+* Plexo: Update `success_from` definition [ajawadmirza] #4468
+* Rapyd: Un-nest the payment urls [naashton] #4472
+* Paypal Express: Correct naming mistake for accessor [mbreenlyles] #4473
+* GlobalCollect: Enable Google Pay and Apple Pay [gasb150] #4388
+* Shift4: $0 auth [naashton] #4474
+* CyberSource: Updatie API version to 1.198 and fix 3DS test [cristian] #4456
+* Shift4: add `store` method, `present` field in card, and to pass amount in cents [ajawadmirza] #4475
+* Shift4: add `3ds2` implementation [ajawadmirza] #4476
+* Shift4: update `success_from` definition to consider response code [ajawadmirza] #4477
+* Rapyd: Customer Object [naashton] #4478
+* Shift4: Verify Endopint Fix [naashton] #4479
+* CheckoutV2: Scrub cryptogram and credit card number [ajawadmirza] #4488
+* CheckoutV2: Add `3ds.status` field to send status of 3DS flow of all 3DS transactions [BritneyS] #4492
+* CheckoutV2: Add `challenge_indicator`, `exemption`, `authorization_type`, `processing_channel_id`, and `capture_type` fields [ajawadmirza] #4482
+* Add `mada` card type and associated BINs; add support for `mada` in CheckoutV2 gateway [dsmcclain] #4486
+* Authorize.net: Refactor custom verify amount handling [jherreraa] #4485
+* EBANX:  Change amount for Colombia [flaaviaa] #4481
+* Worldpay: Update `required_status_message` and `message_from` methods for response. [rachelkirk] #4493
+* CheckoutV2: Add support for transactions through OAuth [ajawadmirza] #4483
+* Vanco: Update unit test to remove remote call to gateway [ajawadmirza] #4497
+* Shift4: remove support for 3ds2 [ajawadmirza] #4503
+
+== Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
 * StripePI: Add ability to change payment_method_type to confirm_intent [aenand] #4300
 * GlobalCollect: Improve support for Naranja and Cabal card types [dsmcclain] #4286
@@ -68,6 +141,14 @@
 * Rapyd: Add metadata and ewallet_id options [naashton] #4387
 * Priority: Add additional fields to request and refactor gateway integration [dsmcclain] #4383
 * Rapyd: Update `type` option to `pm_type` [naashton] #4391
+* Conekta: Fix remote test [javierpedrozaing] #4386
+* NMI: Update post URL [jherreraa] #4380
+* Multiple Gateways: Resolve when/case bug [naashton] #4399
+* Airwallex: Add 3DS MPI support [drkjc] #4395
+* Add Cartes Bancaires card bin ranges [leahriffell] #4398
+* Airwallex: Add support for `original_transaction_id` field [drkjc] #4401
+* Securion Pay: Pass external 3DS data [jherreraa] #4404
+* Airwallex: Update Stored Credentials testing, remove support for `original_transaction_id` field [drkjc] 4407
 * EBANX:  Add Spreedly tag to payment body [flaaviaa] #4511
 
 == Version 1.125.0 (January 20, 2022)

@@ -143,7 +143,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def generate_purchase_number_stamp
-        (Time.now.to_f.round(2) * 100).to_i.to_s
+        Time.now.to_f.to_s.delete('.')[1..10] + rand(99).to_s
       end
 
       def commit(action, params, options = {})

@@ -184,6 +184,14 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'alia', CreditCard.brand?('5058740000000000')
   end
 
+  def test_should_detect_mada_card
+    assert_equal 'mada', CreditCard.brand?('5043000000000000')
+    assert_equal 'mada', CreditCard.brand?('5852650000000000')
+    assert_equal 'mada', CreditCard.brand?('5888500000000000')
+    assert_equal 'mada', CreditCard.brand?('6361200000000000')
+    assert_equal 'mada', CreditCard.brand?('9682040000000000')
+  end
+
   def test_alia_number_not_validated
     10.times do
       number = rand(5058740000000001..5058749999999999).to_s
@@ -376,6 +384,13 @@ class CreditCardMethodsTest < Test::Unit::TestCase
       assert_equal 16, num.length
       assert_equal 'carnet', CreditCard.brand?(num)
     end
+  end
+
+  def test_should_detect_cartes_bancaires_cards
+    assert_equal 'cartes_bancaires', CreditCard.brand?('5855010000000000')
+    assert_equal 'cartes_bancaires', CreditCard.brand?('5075935000000000')
+    assert_equal 'cartes_bancaires', CreditCard.brand?('5075901100000000')
+    assert_equal 'cartes_bancaires', CreditCard.brand?('5075890130000000')
   end
 
   def test_electron_cards
