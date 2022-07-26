@@ -24,6 +24,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @declined_card = credit_card('4111111111111111', first_name: nil, last_name: 'REFUSED')
     @threeDS_card = credit_card('4111111111111111', first_name: nil, last_name: 'doot')
     @threeDS2_card = credit_card('4111111111111111', first_name: nil, last_name: '3DS_V2_FRICTIONLESS_IDENTIFIED')
+    @threeDS2_challenge_card = credit_card('4000000000001091', first_name: nil, last_name: 'challenge-me-plz')
     @threeDS_card_external_MPI = credit_card('4444333322221111', first_name: 'AA', last_name: 'BD')
     @nt_credit_card = network_tokenization_credit_card('4895370015293175',
       brand: 'visa',
@@ -456,6 +457,27 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_authorize_with_3ds2_challenge
+    session_id = generate_unique_id
+    options = @options.merge(
+      {
+        execute_threed: true,
+        accept_header: 'text/html',
+        user_agent: 'Mozilla/5.0',
+        session_id: session_id,
+        ip: '127.0.0.1'
+      }
+    )
+    assert response = @gateway.authorize(@amount, @threeDS2_challenge_card, options)
+    assert_equal "A transaction status of 'AUTHORISED' or 'CAPTURED' is required.", response.message
+    assert response.test?
+    refute response.authorization.blank?
+    refute response.params['issuer_url'].blank?
+    refute response.params['pa_request'].blank?
+    refute response.params['cookie'].blank?
+    refute response.params['session_id'].blank?
+  end
+
   def test_successful_auth_and_capture_with_normalized_stored_credential
     stored_credential_params = {
       initial_transaction: true,
@@ -832,7 +854,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success store
 
     options = @options.merge({ fast_fund_credit: true })
-    assert credit = @gateway.credit(@amount, store.authorization, options)
+    assert credit = @cftgateway.credit(@amount, store.authorization, options)
     assert_success credit
   end
 

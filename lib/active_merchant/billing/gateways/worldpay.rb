@@ -838,9 +838,11 @@ module ActiveMerchant #:nodoc:
           'Content-Type' => 'text/xml',
           'Authorization' => encoded_credentials
         }
-        if options[:cookie]
-          headers['Cookie'] = options[:cookie] if options[:cookie]
-        end
+
+        # ensure cookie included on follow-up '3ds' and 'capture_request' calls, using the cookie saved from the preceding response
+        # cookie should be present in options on the 3ds and capture calls, but also still saved in the instance var in case
+        cookie = options[:cookie] || @cookie || nil
+        headers['Cookie'] = cookie if cookie
 
         headers['Idempotency-Key'] = idempotency_key if idempotency_key
         headers
@@ -893,7 +895,8 @@ module ActiveMerchant #:nodoc:
       def handle_response(response)
         case response.code.to_i
         when 200...300
-          @cookie = response['Set-Cookie']
+          cookie = response.header['Set-Cookie']&.match('^[^;]*')
+          @cookie = cookie[0] if cookie
           response.body
         else
           raise ResponseError.new(response)
