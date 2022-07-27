@@ -60,7 +60,7 @@ class RemoteRapydTest < Test::Unit::TestCase
     @options[:complete_payment_url] = 'https://www.rapyd.net/platform/collect/online/'
     @options[:error_payment_url] = 'https://www.rapyd.net/platform/collect/online/'
 
-    response = @gateway.purchase(15000, @credit_card, @options.merge({ stored_credential: { original_network_transaction_id: '123456', reason_type: 'recurring' } }))
+    response = @gateway.purchase(15000, @credit_card, @options.merge({ stored_credential: { network_transaction_id: '123456', reason_type: 'recurring' } }))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end

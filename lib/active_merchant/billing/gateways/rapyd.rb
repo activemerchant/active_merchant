@@ -152,7 +152,7 @@ module ActiveMerchant #:nodoc:
       def add_stored_credential(post, options)
         return unless stored_credential = options[:stored_credential]
 
-        post[:payment_method][:fields][:network_reference_id] = stored_credential[:original_network_transaction_id] if stored_credential[:original_network_transaction_id]
+        post[:payment_method][:fields][:network_reference_id] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
         post[:initiation_type] = stored_credential[:reason_type] if stored_credential[:reason_type]
       end
 
