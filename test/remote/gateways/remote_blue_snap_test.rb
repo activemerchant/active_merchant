@@ -4,7 +4,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   def setup
     @gateway = BlueSnapGateway.new(fixtures(:blue_snap))
 
-    @amount = 100
+    @amount = 1000
     @credit_card = credit_card('4263982640269299')
     @cabal_card = credit_card('6271701225979642', month: 3, year: 2024)
     @naranja_card = credit_card('5895626746595650', month: 11, year: 2024)

@@ -246,6 +246,15 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_partial_refund
+    assert response = @gateway.purchase(1000, @credit_card, @options)
+    assert_success response
+
+    assert response = @gateway.refund(500, response.authorization)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_refund
     assert response = @gateway.refund(@amount, 'badauth')
     assert_failure response

@@ -1,0 +1,37 @@
+{
+  "payment": {
+    "id": "000000219600000066510000100001",
+    "paymentOutput": {
+      "amountOfMoney": {
+        "amount": 4005,
+        "currencyCode": "USD"
+      },
+      "references": {
+        "paymentReference": "0"
+      },
+      "paymentMethod": "card",
+      "cardPaymentMethodSpecificOutput": {
+        "paymentProductId": 1,
+        "authorisationCode": "OK3037",
+        "fraudResults": {
+          "fraudServiceResult": "no-advice",
+          "avsResult": "X",
+          "cvvResult": "0"
+        },
+        "card": {
+          "cardNumber": "************7977",
+          "expiryDate": "0923"
+        }
+      }
+    },
+    "status": "CAPTURE_REQUESTED",
+    "statusOutput": {
+      "isCancellable": true,
+      "statusCategory": "PENDING_CONNECT_OR_3RD_PARTY",
+      "statusCode": 800,
+      "statusCodeChangeDateTime": "20220808215234",
+      "isAuthorized": true,
+      "isRefundable": false
+    }
+  }
+}

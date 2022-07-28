@@ -588,6 +588,14 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
+  def test_successful_partial_refund
+    assert response = @gateway.purchase(1000, @credit_card, @options)
+    assert_successful_response(response)
+
+    assert response = @gateway.refund(500, response.authorization)
+    assert_successful_response(response)
+  end
+
   def test_successful_refund_with_solution_id
     ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
 

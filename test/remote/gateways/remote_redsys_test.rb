@@ -121,6 +121,13 @@ class RemoteRedsysTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_purchase_and_partial_refund
+    purchase = @gateway.purchase(1000, @credit_card, @options)
+    assert_success purchase
+    refund = @gateway.refund(500, purchase.authorization)
+    assert_success refund
+  end
+
   # Multiple currencies are not supported in test, but should at least fail.
   def test_purchase_and_refund_with_currency
     response = @gateway.purchase(600, @credit_card, @options.merge(currency: 'PEN'))

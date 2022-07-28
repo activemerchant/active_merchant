@@ -265,6 +265,22 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_success void
   end
 
+  def test_successful_refund
+    assert purchase = @gateway.purchase(@amount, @visa, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+  end
+
+  def test_successful_partial_refund
+    assert purchase = @gateway.purchase(1000, @visa, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(500, purchase.authorization)
+    assert_success refund
+  end
+
   def test_successful_check_purchase
     assert response = @gateway.purchase(@amount, @check, @options)
     assert_success response
