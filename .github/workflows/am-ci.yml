@@ -1,0 +1,65 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+    types: [opened, synchronize, reopened]
+name: Main Workflow
+jobs:
+  Build_and_test:
+    name: active_merchant tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby: [2.5.7, 2.6.9, 2.7.5]
+        gateways: ['stripe','stripe_payment_intents']
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+    - name: Set up active_merchant
+      run: |
+          gem install bundler -v '2.2.21'
+          bundle install
+    - name: Static code analyze
+      if: always()
+      run: |
+        rubocop --format progress --format json --out rubocop.json
+    - name: Unit test
+      if: always()
+      run: |
+        bundle exec rake test:units
+    - name: Upload reports
+      if: success()
+      uses: actions/upload-artifact@v2
+      with:
+        name: reports
+        path: |
+          coverage/coverage.json
+          rubocop.json
+    - name: Remote test
+      if: always()
+      run: |
+        bundle exec rake test:remote TEST=test/remote/gateways/remote_${{ matrix.gateways }}_test.rb
+  sonarcloud:
+    needs: Build_and_test
+    runs-on: ubuntu-latest
+    steps:  
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/download-artifact@v2
+      with:
+          name: reports
+    - name: Passing reports to sonar cloud
+      run: |
+          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' coverage/coverage.json
+          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' rubocop.json
+    - name: SonarCloud Scan
+      uses: sonarsource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
