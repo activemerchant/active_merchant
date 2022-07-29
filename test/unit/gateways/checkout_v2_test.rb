@@ -83,12 +83,11 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_successful_incremental_authorization
-    id = 'abcd123'
+  def test_successful_passing_incremental_authorization
     response = stub_comms do
-      @gateway.authorize(@amount, id, { incremental_authorization: 'true' })
+      @gateway.authorize(@amount, @credit_card, { incremental_authorization: 'abcd1234' })
     end.check_request do |endpoint, _data, _headers|
-      assert_equal endpoint, "https://api.sandbox.checkout.com/payments/#{id}/authorizations"
+      assert_include endpoint, 'abcd1234'
     end.respond_with(successful_incremental_authorize_response)
 
     assert_success response
