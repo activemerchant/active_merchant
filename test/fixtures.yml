@@ -757,6 +757,9 @@ paybox_direct:
   credit_card_ok_3ds_not_enrolled: 4012001038443335
   credit_card_ok: 1111222233334444
   credit_card_nok: 1111222233334445
+  credit_card_ok_3dsv2: 4000000000001091
+  credit_card_nok_3dsv2: 4000000000001125
+  credit_card_ok_3dsv2_not_enrolled: 4000000000000051
 
 # Working credentials, no need to replace
 payeezy:

@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
       def add_3dsecure(post, options)
         # ECI=02 => MasterCard success
         # ECI=05 => Visa, Amex or JCB success
-        if options[:eci] == '02' || options[:eci] == '05'
+        if options[:three_d_secure][:eci] == '02' || options[:three_d_secure][:eci] == '05'
           post[:"3DSTATUS"] = 'Y'
           post[:"3DENROLLED"] = 'Y'
           post[:"3DSIGNVAL"] = 'Y'
@@ -78,18 +78,69 @@ module ActiveMerchant #:nodoc:
           post[:"3DSIGNVAL"] = 'N'
           post[:"3DERROR"] = '10000'
         end
-        post[:"3DECI"] = options[:eci]
-        post[:"3DXID"] = options[:xid]
-        post[:"3DCAVV"] = options[:cavv]
-        post[:"3DCAVVALGO"] = options[:cavv_algorithm]
+        post[:"3DECI"] = options[:three_d_secure][:eci]
+        post[:"3DXID"] = options[:three_d_secure][:xid]
+        post[:"3DCAVV"] = options[:three_d_secure][:cavv]
+        post[:"3DCAVVALGO"] = options[:three_d_secure][:cavv_algorithm]
+
+        # 3DSV2 specific fields
+        if options[:three_d_secure][:version]&.start_with?('2')
+          billing_address = options[:billing_address] || options[:address]
+          shipping_address = options[:shipping_address] || options[:address]
+
+          post[:"3DSTATUS"] = options[:three_d_secure][:authentication_response_status]
+          post[:"3DENROLLED"] = 'Y'
+
+          post[:"VERSION3DS"] = options[:three_d_secure][:version]
+          post[:"ADRESSEPORTEUR"] = billing_address[:address1] || 'NA'
+          post[:"CODEPOSTALPORTEUR"] = billing_address[:zip] if billing_address[:zip]
+          post[:"ADRESSELIVRAISON"] = shipping_address[:address1] || 'NA'
+          post[:"CODEPOSTALLIVRAISON"] = shipping_address[:zip] if shipping_address[:zip]
+          post[:"PAYSLIVRAISON"] = shipping_address[:country] if shipping_address[:country]
+          # Browser-based payment = 01
+          post[:"TYPOLOGIETRANS3DS"] = '01'
+          post[:"DSTRANSID"] = options[:three_d_secure][:ds_transaction_id]
+          post[:"ACSTRANSID"] = options[:three_d_secure][:acs_transaction_id]
+          post[:"NOMMARCHANDAUTHENT"] = options[:merchant_name] if options[:merchant_name]
+          post[:"ADRESSEIPAUTHENT"] = options[:ip] if options[:ip]
+          # Frictionless delegated
+          post[:"TYPEAUTH3DS"] = 'FD'
+          # No preference regarding auth requirement
+          post[:"SOUHAITAUTH3DS"] = '01'
+          # VADS 3DS proof = 01
+          post[:"TYPEPREUVE3DS"] = '01'
+
+          if (options[:"SHOPPINGCART"])
+            post[:"SHOPPINGCART"] = options[:"SHOPPINGCART"]
+          else
+            if (options[:line_items])
+                xml = Builder::XmlMarkup.new indent: 0
+                xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
+                totalQuantity = 0
+                options[:line_items].each do |value|
+                totalQuantity += value[:quantity]
+                end
+                totalQuantity = [[1, totalQuantity].max, 99].min
+                xml.tag! 'shoppingcart' do
+                    xml.tag! 'total' do
+                        xml.tag! 'totalQuantity', totalQuantity
+                    end
+                end
+                xml = xml.target!
+                post[:"SHOPPINGCART"] = xml
+                post[:"NBARTICLES"] = totalQuantity
+            end
+          end
+        end
       end
 
       def authorize(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)
-        add_3dsecure(post, options[:three_d_secure]) if options[:three_d_secure]
+        add_3dsecure(post, options) if options[:three_d_secure]
         add_amount(post, money, options)
+        post[:ERRORCODETEST] = options[:ERRORCODETEST] if options[:ERRORCODETEST]
 
         commit('authorization', money, post)
       end
@@ -98,8 +149,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)
-        add_3dsecure(post, options[:three_d_secure]) if options[:three_d_secure]
+        add_3dsecure(post, options) if options[:three_d_secure]
         add_amount(post, money, options)
+        post[:ERRORCODETEST] = options[:ERRORCODETEST] if options[:ERRORCODETEST]
 
         commit('purchase', money, post)
       end
