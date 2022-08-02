@@ -160,10 +160,14 @@ module ActiveMerchant #:nodoc:
         card_details['expiryDate'] = exp_date(credit_card)
         card_details['cardType'] = credit_card.brand
         card_details['last4'] = credit_card.last_digits
-        card_details['cvv'] = credit_card.verification_value
+        if credit_card.verification_value != nil
+          card_details['cvv'] = credit_card.verification_value
+        end
         card_details['number'] = credit_card.number
         card_details['avsStreet'] = options[:billing_address][:address1] if options[:billing_address]
-        card_details['avsZip'] =  options[:billing_address][:zip] if options[:billing_address]
+        if options[:billing_address] != nil && options[:billing_address][:zip] != nil
+          card_details['avsZip'] =  options[:billing_address][:zip]
+        end
 
         params['cardAccount'] = card_details
       end
