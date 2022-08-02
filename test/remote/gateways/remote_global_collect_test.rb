@@ -327,6 +327,14 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_payment_product_id
+    options = @preprod_options.merge(requires_approval: false, currency: 'ARS')
+    response = @gateway_preprod.purchase(1000, @cabal_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 135, response.params['payment']['paymentOutput']['cardPaymentMethodSpecificOutput']['paymentProductId']
+  end
+
   def test_successful_purchase_with_truncated_address
     response = @gateway.purchase(@amount, @credit_card, @long_address)
     assert_success response

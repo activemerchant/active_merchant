@@ -255,8 +255,9 @@ module ActiveMerchant #:nodoc:
         month = format(payment.month, :two_digits)
         expirydate = "#{month}#{year}"
         pre_authorization = options[:pre_authorization] ? 'PRE_AUTHORIZATION' : 'FINAL_AUTHORIZATION'
+        product_id = options[:payment_product_id] || BRAND_MAP[payment.brand]
         specifics_inputs = {
-          'paymentProductId' => BRAND_MAP[payment.brand],
+          'paymentProductId' => product_id,
           'skipAuthentication' => 'true', # refers to 3DSecure
           'skipFraudService' => 'true',
           'authorizationMode' => pre_authorization
