@@ -5,6 +5,7 @@ class RemotePriorityTest < Test::Unit::TestCase
     @gateway = PriorityGateway.new(fixtures(:priority))
 
     @amount = 2
+    @credit_amount = 2000
     @credit_card = credit_card
     @invalid_credit_card = credit_card('123456')
     @replay_id = rand(100...99999999)
@@ -16,6 +17,20 @@ class RemotePriorityTest < Test::Unit::TestCase
       should_vault_card: false,
       invoice: '123',
       tax_exempt: true
+    }
+
+    @additional_creditoptions = {
+      is_auth: true,
+      should_get_credit_card_level: false,
+      should_vault_card: false,
+      invoice: '123',
+      tax_exempt: true,
+      is_ticket: false,
+      source_zip: '30022',
+      auth_code: '',
+      ach_indicator: '',
+      bank_account: '',
+      meta: 'Harry Maguire is the best defender in premier league'
     }
 
     @custom_pos_data = {
@@ -145,6 +160,29 @@ class RemotePriorityTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'Approved or completed successfully', response.message
+  end
+
+  def test_successful_credit
+    options = @options.merge(@additional_creditoptions)
+    response = @gateway.credit(@credit_amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Approved or completed successfully', response.message
+  end
+
+  def test_failed_credit
+    options = @options.merge(@additional_creditoptions)
+    response = @gateway.credit(@credit_amount, @invalid_credit_card, options)
+    assert_failure response
+    assert_equal 'Invalid card number', response.message
+  end
+
+  def test_failed_credit_missing_card_month
+    card_without_month = credit_card('4242424242424242', month: '')
+    options = @options.merge(@additional_creditoptions)
+    response = @gateway.credit(@credit_amount, card_without_month, options)
+    assert_failure response
+    assert_equal 'ValidationError', response.error_code
+    assert_equal 'Missing expiration month and / or year', response.message
   end
 
   def test_successful_void_with_batch_open
