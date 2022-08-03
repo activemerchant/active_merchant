@@ -993,6 +993,14 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_tokenize_only_store_with_ntid
+    assert response = @gateway.store(@credit_card, @options.merge({ tokenize_only: true, network_transaction_id: '858435661128555' }))
+
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_store_with_elo_card
     assert response = @gateway.store(@elo_credit_card, @options)
 

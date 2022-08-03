@@ -737,6 +737,14 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal '#8835205392522157#', response.authorization
   end
 
+  def test_successful_tokenize_only_store_with_ntid
+    stub_comms do
+      @gateway.store(@credit_card, @options.merge({ tokenize_only: true, network_transaction_id: '858435661128555' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal '858435661128555', JSON.parse(data)['additionalData']['networkTxReference']
+    end.respond_with(successful_store_response)
+  end
+
   def test_successful_store
     response = stub_comms do
       @gateway.store(@credit_card, @options)

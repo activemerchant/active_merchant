@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
         add_extra_data(post, credit_card, options)
         add_stored_credentials(post, credit_card, options)
         add_address(post, options)
-
+        add_network_transaction_reference(post, options)
         options[:recurring_contract_type] ||= 'RECURRING'
         add_recurring_contract(post, options)
 
