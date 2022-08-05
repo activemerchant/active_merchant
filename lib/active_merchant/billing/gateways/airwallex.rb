@@ -36,17 +36,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, card, options = {})
-        requires!(options, :return_url)
-
         payment_intent_id = create_payment_intent(money, options)
         post = {
           'request_id' => request_id(options),
-          'merchant_order_id' => merchant_order_id(options),
-          'return_url' => options[:return_url]
+          'merchant_order_id' => merchant_order_id(options)
         }
         add_card(post, card, options)
         add_descriptor(post, options)
         add_stored_credential(post, options)
+        add_return_url(post, options)
         post['payment_method_options'] = { 'card' => { 'auto_capture' => false } } if authorization_only?(options)
 
         add_three_ds(post, options)
@@ -119,6 +117,10 @@ module ActiveMerchant #:nodoc:
 
       def merchant_order_id(options)
         options[:merchant_order_id] || options[:order_id] || generate_uuid
+      end
+
+      def add_return_url(post, options)
+        post[:return_url] = options[:return_url] if options[:return_url]
       end
 
       def generate_uuid

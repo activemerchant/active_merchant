@@ -21,8 +21,7 @@ class AirwallexTest < Test::Unit::TestCase
     @declined_amount = 8014
 
     @options = {
-      billing_address: address,
-      return_url: 'https://example.com'
+      billing_address: address
     }
 
     @stored_credential_cit_options = { initial_transaction: true, initiator: 'cardholder', reason_type: 'recurring', network_transaction_id: nil }
@@ -52,12 +51,6 @@ class AirwallexTest < Test::Unit::TestCase
     assert_equal 'The card issuer declined this transaction. Please refer to the original response code.', response.message
   end
 
-  def test_purchase_without_return_url_raises_error
-    assert_raise ArgumentError do
-      @gateway.purchase(@amount, @credit_card, {})
-    end
-  end
-
   def test_successful_authorize
     @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response)
 
@@ -77,10 +70,18 @@ class AirwallexTest < Test::Unit::TestCase
     assert_equal 'The card issuer declined this transaction. Please refer to the original response code.', response.message
   end
 
-  def test_authorize_without_return_url_raises_error
-    assert_raise ArgumentError do
-      @gateway.authorize(@amount, @credit_card, { auto_capture: false })
-    end
+  def test_successful_authorize_with_return_url
+    return_url = 'https://example.com'
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(return_url: return_url))
+    end.check_request do |endpoint, data, _headers|
+      assert_match(/\"return_url\":\"https:\/\/example.com\"/, data) unless endpoint == setup_endpoint
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
   end
 
   def test_successful_authorize_with_3ds_v1_options
