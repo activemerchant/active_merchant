@@ -95,6 +95,7 @@ class RemoteShift4Test < Test::Unit::TestCase
     transcript = @gateway.scrub(transcript)
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed("0#{@credit_card.month}#{@credit_card.year.to_s[2..4]}", transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
   end
 
   def test_failed_purchase

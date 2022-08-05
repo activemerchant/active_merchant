@@ -82,7 +82,8 @@
 * CyberSource: Handle unsupported Network Token brands [heavyblade] #4500
 * Ingenico(Global Collect): Add support for `payment_product_id` [rachelkirk] #4521
 * Adyen: Add network transaction id to store call [jcreiff] #4522
-* Worldpay: Add machine cookie to subsequent calls during 3DS challenge [mbreenlyles] #4513
+* Worldpay: Add machine cookie to subsequent calls during 3DS challenge [mbreenlyles] #4513*
+* Shift4: Scrub `securityCode` fix [naashton] #4524
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
