@@ -7,19 +7,6 @@ module ActiveMerchant #:nodoc:
 
       attr_accessor :first_name, :last_name, :nonce
 
-      def name
-        @name ||= "#{first_name} #{last_name}".strip
-      end
-
-      def name=(value)
-        return if empty?(value)
-
-        @name = value
-        segments = value.split(' ')
-        @last_name = segments.pop
-        @first_name = segments.join(' ')
-      end
-
       def type
         'tokenized'
       end

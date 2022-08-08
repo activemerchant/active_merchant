@@ -202,9 +202,10 @@ module ActiveMerchant
       Billing::Check.new(defaults)
     end
 
-    def tokenized_credit_card(options ={})
+    def tokenized_credit_card(options = {})
       defaults = {
-        name: 'Jim Smith',
+        first_name: 'Jim',
+        last_name: 'Smith',
         nonce: '9471056021205027705001'
       }.update(options)
 
