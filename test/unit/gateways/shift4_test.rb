@@ -25,11 +25,6 @@ class Shift4Test < Test::Unit::TestCase
       destination_postal_code: '94719',
       product_descriptors: %w(Hamburger Fries Soda Cookie)
     }
-    @extra_headers = {
-      company_name: 'Spreedly',
-      interface_name: 'ForwardPOS',
-      interface_version: '2.1'
-    }
   end
 
   def test_successful_capture
@@ -119,6 +114,9 @@ class Shift4Test < Test::Unit::TestCase
   def test_successful_refund
     response = stub_comms do
       @gateway.refund(@amount, '1111g66gw3ryke06', @options.merge!(invoice: '4666309473'))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['card']['present'], 'N'
     end.respond_with(successful_refund_response)
 
     assert response.success?
@@ -195,11 +193,11 @@ class Shift4Test < Test::Unit::TestCase
 
   def test_successful_header_fields
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @extra_headers)
+      @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, _data, headers|
-      assert_equal headers['CompanyName'], @extra_headers[:company_name]
-      assert_equal headers['InterfaceVersion'], @extra_headers[:interface_version]
-      assert_equal headers['InterfaceName'], @extra_headers[:interface_name]
+      assert_equal headers['CompanyName'], 'Spreedly'
+      assert_equal headers['InterfaceVersion'], '1'
+      assert_equal headers['InterfaceName'], 'Spreedly'
     end.respond_with(successful_purchase_response)
   end
 

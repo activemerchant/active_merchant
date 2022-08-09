@@ -14,10 +14,7 @@ class RemoteShift4Test < Test::Unit::TestCase
       tax: '2',
       customer_reference: 'D019D09309F2',
       destination_postal_code: '94719',
-      product_descriptors: %w(Hamburger Fries Soda Cookie),
-      company_name: 'Spreedly',
-      interface_name: 'ForwardPOS',
-      interface_version: '2.1'
+      product_descriptors: %w(Hamburger Fries Soda Cookie)
     }
   end
 
@@ -42,6 +39,7 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert_success response
     assert_equal response.message, 'Transaction successful'
     assert response_result(response)['transaction']['invoice'].present?
+    assert_equal response_result(response)['transaction']['invoice'], response_result(authorize_res)['transaction']['invoice']
   end
 
   def test_successful_purchase
@@ -111,7 +109,7 @@ class RemoteShift4Test < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture(@amount, @declined_card, @options)
+    response = @gateway.capture(@amount, '', @options)
     assert_failure response
     assert_include response.message, 'Card  for Merchant Id 0008628968 not found'
   end
