@@ -516,6 +516,41 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     end
   end
 
+  def test_create_setup_intent_with_connected_account
+    [@three_ds_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+      assert authorize_response = @gateway.create_setup_intent(card_to_use, {
+        address: {
+          email: 'test@example.com',
+          name: 'John Doe',
+          line1: '1 Test Ln',
+          city: 'Durham',
+          tracking_number: '123456789'
+        },
+        currency: 'USD',
+        confirm: true,
+        execute_threed: true,
+        return_url: 'https://example.com',
+        stripe_account: @destination_account
+      })
+
+      assert_equal 'requires_action', authorize_response.params['status']
+      assert_match 'https://hooks.stripe.com', authorize_response.params.dig('next_action', 'redirect_to_url', 'url')
+
+      # since we cannot "click" the stripe hooks URL to confirm the authorization
+      # we will at least confirm we can retrieve the created setup_intent and it contains the structure we expect
+      setup_intent_id = authorize_response.params['id']
+
+      # If we did not pass the stripe_account header it would return an error
+      assert si_response = @gateway.retrieve_setup_intent(setup_intent_id, {
+        stripe_account: @destination_account
+      })
+      assert_equal 'requires_action', si_response.params['status']
+
+      assert_not_empty si_response.params.dig('latest_attempt', 'payment_method_details', 'card')
+      assert_nil si_response.params.dig('latest_attempt', 'payment_method_details', 'card', 'network_transaction_id')
+    end
+  end
+
   def test_create_setup_intent_with_request_three_d_secure
     [@three_ds_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
       assert authorize_response = @gateway.create_setup_intent(card_to_use, {
@@ -531,6 +566,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
         execute_threed: true,
         return_url: 'https://example.com',
         request_three_d_secure: 'any'
+
       })
 
       assert_equal 'requires_action', authorize_response.params['status']
