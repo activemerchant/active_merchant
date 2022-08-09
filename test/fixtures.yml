@@ -20,6 +20,10 @@ airwallex:
   client_id: SOMECREDENTIAL
   client_api_key: ANOTHERCREDENTIAL
 
+# Working credentials, no need to replace
+alelo:
+  access_token: xxxxxxx
+
 allied_wallet:
   site_id: site_id
   merchant_id: merchant_id
