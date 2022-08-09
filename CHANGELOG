@@ -98,6 +98,7 @@
 * Rapyd: Pass Customer ID and fix `add_token` method [naashton] #4538
 * Shift4: If no timezone is sent on transactions, the code uses the hours and minutes as a timezone offset [ali-hassan] #4536
 * Priority: Add support for general credit and updating cvv and zip [priorityspreedly] #4517
+* Worldpay: Update actions for generated message in `required_status_message` method [rachelkirk] #4530
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

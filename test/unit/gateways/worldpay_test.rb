@@ -428,6 +428,16 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal('Insufficient funds/over credit limit', response.params['issuer_response_description'])
   end
 
+  def test_failed_purchase_without_active_merchant_generated_response_message
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(failed_purchase_response_without_useful_error_from_gateway)
+
+    assert_failure response
+    assert_equal('61', response.params['issuer_response_code'])
+    assert_equal('Exceeds withdrawal amount limit', response.message)
+  end
+
   def test_successful_void
     response = stub_comms do
       @gateway.void(@options[:order_id], @options)
@@ -1817,6 +1827,35 @@ class WorldpayTest < Test::Unit::TestCase
               <riskScore value="1"/>
             </payment>
             <date dayOfMonth="05" month="03" year="2013" hour="23" minute="6" second="0"/>
+          </orderStatus>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def failed_purchase_response_without_useful_error_from_gateway
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <paymentService version="1.4" merchantCode="ACMECORP">
+        <reply>
+          <orderStatus orderCode="2119303">
+            <payment>
+              <paymentMethod>ECMC_DEBIT-SSL</paymentMethod>
+              <amount value="2000" currencyCode="USD" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>REFUSED</lastEvent>
+              <IssuerResponseCode code="61" description="Exceeds withdrawal amount limit"/>
+              <CVCResultCode description="A"/>
+              <AVSResultCode description="H"/>
+              <AAVAddressResultCode description="B"/>
+              <AAVPostcodeResultCode description="B"/>
+              <AAVCardholderNameResultCode description="B"/>
+              <AAVTelephoneResultCode description="B"/>
+              <AAVEmailResultCode description="B"/>
+              <cardHolderName>Snuffy Smith</cardHolderName>
+              <issuerCountryCode>US</issuerCountryCode>
+              <issuerName>PRETEND BANK</issuerName>
+              <riskScore value="95"/>
+            </payment>
           </orderStatus>
         </reply>
       </paymentService>

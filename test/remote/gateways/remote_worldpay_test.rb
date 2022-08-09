@@ -441,7 +441,6 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       }
     )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
-    assert_equal "A transaction status of 'AUTHORISED' or 'CAPTURED' is required.", first_message.message
     assert first_message.test?
     refute first_message.authorization.blank?
     refute first_message.params['issuer_url'].blank?
@@ -469,7 +468,6 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       }
     )
     assert response = @gateway.authorize(@amount, @threeDS2_challenge_card, options)
-    assert_equal "A transaction status of 'AUTHORISED' or 'CAPTURED' is required.", response.message
     assert response.test?
     refute response.authorization.blank?
     refute response.params['issuer_url'].blank?
@@ -557,7 +555,6 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       }
     )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
-    assert_equal "A transaction status of 'AUTHORISED' or 'CAPTURED' is required.", first_message.message
     assert first_message.test?
     refute first_message.authorization.blank?
     refute first_message.params['issuer_url'].blank?
@@ -580,7 +577,6 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       }
     )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
-    assert_equal "A transaction status of 'AUTHORISED' or 'CAPTURED' is required.", first_message.message
     assert first_message.test?
     refute first_message.authorization.blank?
     refute first_message.params['issuer_url'].blank?
