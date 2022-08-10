@@ -336,6 +336,16 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_authorize_with_incremental_authoriation
+    response = @gateway_oauth.authorize(@amount, @credit_card, @options.merge({ authorization_type: 'Estimated' }))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+
+    response = @gateway_oauth.authorize(@amount, @credit_card, @options.merge({ incremental_authorization: response.authorization }))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_authorize_with_estimated_type_via_oauth
     response = @gateway_oauth.authorize(@amount, @credit_card, @options.merge({ authorization_type: 'Estimated' }))
     assert_success response
