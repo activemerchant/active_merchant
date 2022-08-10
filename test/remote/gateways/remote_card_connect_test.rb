@@ -201,6 +201,19 @@ class RemoteCardConnectTest < Test::Unit::TestCase
     assert_equal 'Invalid card', response.message
   end
 
+=begin 
+  A transaction cannot be refunded before settlement so these tests will fail with the following response
+    {
+     "respproc"=>"PPS",
+     "amount"=>"0.00",
+     "resptext"=>"Txn not settled", 
+     "currency"=>"USD",
+     "retref"=>"222509002106",
+     "respstat"=>"C",
+     "respcode"=>"28",
+     "merchid"=>"496160873888"
+    }
+
   def test_successful_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -208,7 +221,8 @@ class RemoteCardConnectTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
     assert_equal 'Approval', refund.message
-  end
+  end 
+
 
   def test_partial_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
@@ -217,6 +231,7 @@ class RemoteCardConnectTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
+=end
 
   def test_failed_refund
     response = @gateway.refund(@amount, @invalid_txn)
