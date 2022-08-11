@@ -187,6 +187,7 @@ module ActiveMerchant #:nodoc:
           post[:card] = {} if post[:card].nil?
           post[:card][:token] = {}
           post[:card][:token][:value] = payment_method
+          post[:card][:expirationDate] = options[:expiration_date] if options[:expiration_date]
         end
       end
 

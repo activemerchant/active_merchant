@@ -127,6 +127,13 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_refund_with_expiration_date
+    res = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success res
+    response = @gateway.refund(@amount, res.authorization, @options.merge({ expiration_date: '1235' }))
+    assert_success response
+  end
+
   def test_successful_void
     authorize_res = @gateway.authorize(@amount, @credit_card, @options)
     assert response = @gateway.void(authorize_res.authorization, @options)

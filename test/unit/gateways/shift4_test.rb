@@ -113,10 +113,11 @@ class Shift4Test < Test::Unit::TestCase
 
   def test_successful_refund
     response = stub_comms do
-      @gateway.refund(@amount, '1111g66gw3ryke06', @options.merge!(invoice: '4666309473'))
+      @gateway.refund(@amount, '1111g66gw3ryke06', @options.merge!(invoice: '4666309473', expiration_date: '1235'))
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['card']['present'], 'N'
+      assert_equal request['card']['expirationDate'], '1235'
     end.respond_with(successful_refund_response)
 
     assert response.success?
