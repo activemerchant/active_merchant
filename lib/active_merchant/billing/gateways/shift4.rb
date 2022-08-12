@@ -73,11 +73,14 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         post = {}
+        options[:invoice] = get_invoice(authorization)
+
         add_datetime(post, options)
         add_invoice(post, money, options)
         add_clerk(post, options)
         add_transaction(post, options)
         add_card(post, get_card_token(authorization), options)
+        add_card_present(post, options)
 
         commit('capture', post, options)
       end
@@ -90,6 +93,7 @@ module ActiveMerchant #:nodoc:
         add_transaction(post, options)
         add_customer(post, options)
         add_card(post, get_card_token(authorization), options)
+        add_card_present(post, options)
 
         commit('refund', post, options)
       end
@@ -183,6 +187,7 @@ module ActiveMerchant #:nodoc:
           post[:card] = {} if post[:card].nil?
           post[:card][:token] = {}
           post[:card][:token][:value] = payment_method
+          post[:card][:expirationDate] = options[:expiration_date] if options[:expiration_date]
         end
       end
 
@@ -206,10 +211,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_purchase_card(post, options)
+        return unless options[:customer_reference] || options[:destination_postal_code] || options[:product_descriptors]
+
         post[:purchaseCard] = {}
-        post[:purchaseCard][:customerReference] = options[:customer_reference]
-        post[:purchaseCard][:destinationPostalCode] = options[:destination_postal_code]
-        post[:purchaseCard][:productDescriptors] = options[:product_descriptors]
+        post[:purchaseCard][:customerReference] = options[:customer_reference] if options[:customer_reference]
+        post[:purchaseCard][:destinationPostalCode] = options[:destination_postal_code] if options[:destination_postal_code]
+        post[:purchaseCard][:productDescriptors] = options[:product_descriptors] if options[:product_descriptors]
       end
 
       def add_card_on_file(post, options)
@@ -286,9 +293,9 @@ module ActiveMerchant #:nodoc:
         }
         headers['AccessToken'] = @access_token
         headers['Invoice'] = options[:invoice] if options[:invoice].present?
-        headers['InterfaceVersion'] = options[:interface_version] if options[:interface_version]
-        headers['InterfaceName'] = options[:interface_name] if options[:interface_name]
-        headers['CompanyName'] = options[:company_name] if options[:company_name]
+        headers['InterfaceVersion'] = '1'
+        headers['InterfaceName'] = 'Spreedly'
+        headers['CompanyName'] = 'Spreedly'
         headers
       end
 

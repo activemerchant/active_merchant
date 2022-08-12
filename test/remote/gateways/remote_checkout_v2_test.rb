@@ -336,6 +336,16 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_authorize_with_incremental_authoriation
+    response = @gateway_oauth.authorize(@amount, @credit_card, @options.merge({ authorization_type: 'Estimated' }))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+
+    response = @gateway_oauth.authorize(@amount, @credit_card, @options.merge({ incremental_authorization: response.authorization }))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_authorize_with_estimated_type_via_oauth
     response = @gateway_oauth.authorize(@amount, @credit_card, @options.merge({ authorization_type: 'Estimated' }))
     assert_success response
@@ -551,6 +561,14 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_failed_capture_via_oauth
     response = @gateway_oauth.capture(nil, '')
     assert_failure response
+  end
+
+  def test_successful_credit
+    @credit_card.first_name = 'John'
+    @credit_card.last_name = 'Doe'
+    response = @gateway_oauth.credit(@amount, @credit_card, @options.merge({ source_type: 'currency_account', source_id: 'ca_spwmped4qmqenai7hcghquqle4', account_holder_type: 'individual' }))
+    assert_success response
+    assert_equal 'Succeeded', response.message
   end
 
   def test_successful_refund

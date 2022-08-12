@@ -132,7 +132,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'setup_intents', post, options)
       end
 
-      def retrieve_setup_intent(setup_intent_id)
+      def retrieve_setup_intent(setup_intent_id, options = {})
         # Retrieving a setup_intent passing 'expand[]=latest_attempt' allows the caller to
         # check for a network_transaction_id and ds_transaction_id
         # eg (latest_attempt -> payment_method_details -> card -> network_transaction_id)
@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
         # Being able to retrieve these fields enables payment flows that rely on MIT exemptions, e.g: off_session
         commit(:post, "setup_intents/#{setup_intent_id}", {
           'expand[]': 'latest_attempt'
-        }, {})
+        }, options)
       end
 
       def authorize(money, payment_method, options = {})

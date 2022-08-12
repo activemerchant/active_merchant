@@ -83,12 +83,11 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_successful_incremental_authorization
-    id = 'abcd123'
+  def test_successful_passing_incremental_authorization
     response = stub_comms do
-      @gateway.authorize(@amount, id, { incremental_authorization: 'true' })
+      @gateway.authorize(@amount, @credit_card, { incremental_authorization: 'abcd1234' })
     end.check_request do |endpoint, _data, _headers|
-      assert_equal endpoint, "https://api.sandbox.checkout.com/payments/#{id}/authorizations"
+      assert_include endpoint, 'abcd1234'
     end.respond_with(successful_incremental_authorize_response)
 
     assert_success response
@@ -594,8 +593,28 @@ class CheckoutV2Test < Test::Unit::TestCase
     response = stub_comms do
       @gateway.void('5d53a33d960c46d00f5dc061947d998c')
     end.respond_with(failed_void_response)
-
     assert_failure response
+  end
+
+  def test_successfully_passes_fund_type_and_fields
+    options = {
+      funds_transfer_type: 'FD',
+      source_type: 'currency_account',
+      source_id: 'ca_spwmped4qmqenai7hcghquqle4',
+      account_holder_type: 'individual'
+    }
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['instruction']['funds_transfer_type'], options[:funds_transfer_type]
+      assert_equal request['source']['type'], options[:source_type]
+      assert_equal request['source']['id'], options[:source_id]
+      assert_equal request['destination']['account_holder']['type'], options[:account_holder_type]
+      assert_equal request['destination']['account_holder']['first_name'], @credit_card.first_name
+      assert_equal request['destination']['account_holder']['last_name'], @credit_card.last_name
+    end.respond_with(successful_credit_response)
+    assert_success response
   end
 
   def test_successful_refund
@@ -938,6 +957,27 @@ class CheckoutV2Test < Test::Unit::TestCase
     {
      "action_id": "act_2f56bhkau5dubequbv5aa6w4qi",
      "reference": "1"
+    }
+    )
+  end
+
+  def successful_credit_response
+    %(
+    {
+      "id": "pay_jhzh3u7vxcgezlcek7ymzyy6be",
+      "status": "Pending",
+      "reference": "ORD-5023-4E89",
+      "instruction": {
+          "value_date": "2022-08-09T06:11:37.2306547+00:00"
+      },
+      "_links": {
+          "self": {
+              "href": "https://api.sandbox.checkout.com/payments/pay_jhzh3u7vxcgezlcek7ymzyy6be"
+          },
+          "actions": {
+              "href": "https://api.sandbox.checkout.com/payments/pay_jhzh3u7vxcgezlcek7ymzyy6be/actions"
+          }
+      }
     }
     )
   end
