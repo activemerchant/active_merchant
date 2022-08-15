@@ -154,6 +154,7 @@ module ActiveMerchant #:nodoc:
         post[:merchant_order_id] = merchant_order_id(options)
         add_referrer_data(post)
         add_descriptor(post, options)
+        post['payment_method_options'] = { 'card' => { 'risk_control' => { 'three_ds_action' => 'SKIP_3DS' } } } if options[:skip_3ds]
 
         response = commit(:setup, post)
         raise ArgumentError.new(response.message) unless response.success?

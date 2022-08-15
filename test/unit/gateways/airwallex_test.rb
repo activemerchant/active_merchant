@@ -157,6 +157,22 @@ class AirwallexTest < Test::Unit::TestCase
     assert_equal 'AUTHORIZED', response.message
   end
 
+  def test_successful_skip_3ds_in_payment_intent
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ skip_3ds: true }))
+    end.check_request do |endpoint, data, _headers|
+      data = JSON.parse(data)
+      assert_match(data['payment_method_options']['card']['risk_control']['three_ds_action'], 'SKIP_3DS') if endpoint == setup_endpoint
+    end.respond_with(successful_purchase_response)
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ skip_3ds: 'true' }))
+    end.check_request do |endpoint, data, _headers|
+      data = JSON.parse(data)
+      assert_match(data['payment_method_options']['card']['risk_control']['three_ds_action'], 'SKIP_3DS') if endpoint == setup_endpoint
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
