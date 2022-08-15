@@ -116,6 +116,7 @@
 * Rapyd: No force capture for ACH [naashton] #4562
 * Shift4: Applied checks on Shift4 Time/Timezone offset [ali-hassan] #45611
 * Alelo: Add gateway [heavyblade] #4555
+* Wompi: Allow partial refund amount on void_sync [jcreiff] #4535
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
