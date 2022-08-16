@@ -93,6 +93,7 @@
 * EBANX: Add Spreedly tag to payment body [flaaviaa] #4527
 * Shift4: Add `expiration_date` field for refund transactions [ajawadmirza] #4532
 * Improve handling of AVS and CVV Results in Multiresponses [gasb150] #4516
+* Airwallex: Add `skip_3ds` field for create payment transactions [ajawadmirza] #4534
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
