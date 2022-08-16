@@ -168,6 +168,7 @@ module ActiveMerchant #:nodoc:
         transcript
           .gsub(/(Authorization: Basic )\w+/, '\1[FILTERED]')
           .gsub(/(account_number)\W+\d+/, '\1[FILTERED]')
+          .gsub(/(routing_number)\W+\d+/, '\1[FILTERED]')
           .gsub(/(card_verification_value)\W+\d+/, '\1[FILTERED]')
       end
 

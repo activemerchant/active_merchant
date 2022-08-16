@@ -34,14 +34,36 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
-    transcript = capture_transcript(@gateway) do
+    credit_card_transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
     end
-    transcript = @gateway.scrub(transcript)
+    credit_card_transcript = @gateway.scrub(credit_card_transcript)
+    assert_scrubbed(@credit_card.number, credit_card_transcript)
+    assert_scrubbed(@credit_card.verification_value, credit_card_transcript)
+    assert_scrubbed(@gateway.options[:login], credit_card_transcript)
 
-    assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:login], transcript)
+    check_transcript = capture_transcript(@gateway) do
+      @gateway.store(@check, @options)
+    end
+    check_transcript = @gateway.scrub(check_transcript)
+    assert_scrubbed(@check.routing_number, check_transcript)
+    assert_scrubbed(@check.account_number, check_transcript)
+    assert_scrubbed(@gateway.options[:login], check_transcript)
+
+    sepa_direct_debit_transcript = capture_transcript(@gateway) do
+      @gateway.store(@sepa_direct_debit, email: 'sepa@example.com', device_data: { ip: '127.0.0.1', user_agent: 'Firefox' }, currency: 'EUR')
+    end
+    sepa_direct_debit_transcript = @gateway.scrub(sepa_direct_debit_transcript)
+    assert_scrubbed(@sepa_direct_debit.iban, sepa_direct_debit_transcript)
+    assert_scrubbed(@gateway.options[:login], sepa_direct_debit_transcript)
+
+    becs_direct_debit_transcript = capture_transcript(@gateway) do
+      @gateway.store(@becs_direct_debit, email: 'becs@example.com', device_data: { ip: '127.0.0.1', user_agent: 'Firefox' }, currency: 'AUD')
+    end
+    becs_direct_debit_transcript = @gateway.scrub(becs_direct_debit_transcript)
+    assert_scrubbed(@becs_direct_debit.branch_code, becs_direct_debit_transcript)
+    assert_scrubbed(@becs_direct_debit.account_number, becs_direct_debit_transcript)
+    assert_scrubbed(@gateway.options[:login], becs_direct_debit_transcript)
   end
 
   def test_successful_purchase

@@ -443,14 +443,19 @@ class RemoteForteTest < Test::Unit::TestCase
 
   def test_transcript_scrubbing
     @credit_card.verification_value = 789
-    transcript = capture_transcript(@gateway) do
+    credit_card_transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
     end
+    credit_card_transcript = @gateway.scrub(credit_card_transcript)
+    assert_scrubbed(@credit_card.number, credit_card_transcript)
+    assert_scrubbed(@credit_card.verification_value, credit_card_transcript)
 
-    transcript = @gateway.scrub(transcript)
-
-    assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
+    check_transcript = capture_transcript(@gateway) do
+      @gateway.store(@check)
+    end
+    check_transcript = @gateway.scrub(check_transcript)
+    assert_scrubbed(@check.account_number, check_transcript)
+    assert_scrubbed(@check.routing_number, check_transcript)
   end
 
   private
