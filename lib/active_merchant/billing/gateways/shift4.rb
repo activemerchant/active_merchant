@@ -223,7 +223,7 @@ module ActiveMerchant #:nodoc:
         return unless stored_credential = options[:stored_credential]
 
         post[:cardOnFile] = {}
-        post[:cardOnFile][:usageIndicator] = stored_credential[:inital_transaction] ? '01' : '02'
+        post[:cardOnFile][:usageIndicator] = stored_credential[:initial_transaction] ? '01' : '02'
         post[:cardOnFile][:indicator] = options[:card_on_file_indicator] || '01'
         post[:cardOnFile][:scheduledIndicator] = RECURRING_TYPE_TRANSACTIONS.include?(stored_credential[:reason_type]) ? '01' : '02' if stored_credential[:reason_type]
         post[:cardOnFile][:transactionId] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
