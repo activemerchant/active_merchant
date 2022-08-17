@@ -9,7 +9,7 @@ class RemoteRapydTest < Test::Unit::TestCase
     @declined_card = credit_card('4111111111111105')
     @check = check
     @options = {
-      pm_type: 'us_visa_card',
+      pm_type: 'us_debit_visa_card',
       currency: 'USD',
       complete_payment_url: 'www.google.com',
       error_payment_url: 'www.google.com',
@@ -202,6 +202,17 @@ class RemoteRapydTest < Test::Unit::TestCase
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_equal 'Do Not Honor', response.message
+  end
+
+  def test_successful_store_and_purchase
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert store.params.dig('data', 'id')
+    assert store.params.dig('data', 'default_payment_method')
+
+    # 3DS authorization is required on storing a payment method for future transactions
+    # purchase = @gateway.purchase(100, store.authorization, @options.merge(customer_id: customer_id))
+    # assert_sucess purchase
   end
 
   def test_successful_store_and_unstore
