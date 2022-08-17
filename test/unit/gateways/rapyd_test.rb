@@ -7,6 +7,7 @@ class RapydTest < Test::Unit::TestCase
     @gateway = RapydGateway.new(secret_key: 'secret_key', access_key: 'access_key')
     @credit_card = credit_card
     @amount = 100
+    @authorization = 'cus_9e1b5a357b2b7f25f8dd98827fbc4f22|card_cf105df9e77462deb34ffef33c3e3d05'
 
     @options = {
       pm_type: 'in_amex_card',
@@ -58,10 +59,16 @@ class RapydTest < Test::Unit::TestCase
     assert_equal 'ACT', response.params['data']['status']
   end
 
-  def test_successful_purchase_with_options
-    @gateway.expects(:ssl_request).returns(successful_purchase_with_options_response)
+  def test_successful_purchase_with_token
+    @options.merge(customer_id: 'cus_9e1b5a357b2b7f25f8dd98827fbc4f22')
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @authorization, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['payment_method'], @authorization.split('|')[1]
+      assert_equal request['customer'], @options[:customer_id]
+    end.respond_with(successful_purchase_with_options_response)
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(metadata: @metadata))
     assert_success response
     assert_equal @metadata, response.params['data']['metadata'].deep_transform_keys(&:to_sym)
   end
