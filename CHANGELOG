@@ -102,6 +102,7 @@
 * Adyen: Modify handling of countryCode for ACH [jcreiff] #4543
 * CardConnect: update api end-point urls [heavyblade] #4541
 * Vantiv(Litle): Add support for `fraudFilterOverride` field [rachelkirk] #4544
+* Stripe: Add shipping address [jcreiff] #4539
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

@@ -234,6 +234,19 @@ module ActiveMerchant
       }.update(options)
     end
 
+    def shipping_address(options = {})
+      {
+        name:     'Jon Smith',
+        address1: '123 Your Street',
+        address2: 'Apt 2',
+        city:     'Toronto',
+        state:    'ON',
+        zip:      'K2C3N7',
+        country:  'CA',
+        phone_number: '(123)456-7890'
+      }.update(options)
+    end
+
     def statement_address(options = {})
       {
         address1: '456 My Street',

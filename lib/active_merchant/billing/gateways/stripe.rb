@@ -389,6 +389,7 @@ module ActiveMerchant #:nodoc:
         end
 
         add_metadata(post, options)
+        add_shipping_address(post, payment, options)
         add_application_fee(post, options)
         add_exchange_rate(post, options)
         add_destination(post, options)
@@ -553,6 +554,23 @@ module ActiveMerchant #:nodoc:
       def add_emv_metadata(post, creditcard)
         post[:metadata] ||= {}
         post[:metadata][:card_read_method] = creditcard.read_method if creditcard.respond_to?(:read_method)
+      end
+
+      def add_shipping_address(post, payment, options = {})
+        return unless shipping = options[:shipping_address]
+        return unless shipping_name = shipping[:name]
+
+        post[:shipping] = {}
+
+        post[:shipping][:name] = shipping_name
+        post[:shipping][:address] = {}
+        post[:shipping][:address][:line1] = shipping[:address1]
+        post[:shipping][:address][:line2] = shipping[:address2] if shipping[:address2]
+        post[:shipping][:address][:city] = shipping[:city] if shipping[:city]
+        post[:shipping][:address][:country] = shipping[:country] if shipping[:country]
+        post[:shipping][:address][:state] = shipping[:state] if shipping[:state]
+        post[:shipping][:address][:postal_code] = shipping[:zip] if shipping[:zip]
+        post[:shipping][:phone] = shipping[:phone_number] if shipping[:phone_number]
       end
 
       def add_source_owner(post, creditcard, options)
