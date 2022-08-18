@@ -311,7 +311,7 @@ module ActiveMerchant #:nodoc:
 
       def current_date_time(options = {})
         time_zone = options[:merchant_time_zone] || 'Pacific Time (US & Canada)'
-        Time.now.in_time_zone(time_zone).strftime('%Y-%m-%dT%H:%M:%S.%3N+%H:%M')
+        Time.now.in_time_zone(time_zone).strftime('%H:%M')
       end
     end
   end

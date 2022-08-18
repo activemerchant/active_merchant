@@ -96,6 +96,7 @@
 * Airwallex: Add `skip_3ds` field for create payment transactions [ajawadmirza] #4534
 * Shift4: Typo correction for `initial_transaction` [ajawadmirza] #4537
 * Rapyd: Pass Customer ID and fix `add_token` method [naashton] #4538
+* Shift4: If no timezone is sent on transactions, the code uses the hours and minutes as a timezone offset [ali-hassan] #4536
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
