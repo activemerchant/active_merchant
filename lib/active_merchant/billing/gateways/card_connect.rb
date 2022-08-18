@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CardConnectGateway < Gateway
-      self.test_url = 'https://fts.cardconnect.com:6443/cardconnect/rest/'
-      self.live_url = 'https://fts.cardconnect.com:8443/cardconnect/rest/'
+      self.test_url = 'https://fts-uat.cardconnect.com/cardconnect/rest/'
+      self.live_url = 'https://fts.cardconnect.com/cardconnect/rest/'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'

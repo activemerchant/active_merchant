@@ -201,22 +201,27 @@ class RemoteCardConnectTest < Test::Unit::TestCase
     assert_equal 'Invalid card', response.message
   end
 
-  def test_successful_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-
-    assert refund = @gateway.refund(@amount, purchase.authorization)
-    assert_success refund
-    assert_equal 'Approval', refund.message
-  end
-
-  def test_partial_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-
-    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
-    assert_success refund
-  end
+  #   A transaction cannot be refunded before settlement so these tests will
+  #   fail with the following response, to properly test refunds create a purchase
+  #   save the reference and test the next day, check:
+  #   https://cardconnect.com/launchpointe/running-a-business/payment-processing-101#how_long_it_takes
+  #
+  #   def test_successful_refund
+  #     purchase = @gateway.purchase(@amount, @credit_card, @options)
+  #     assert_success purchase
+  #
+  #     assert refund = @gateway.refund(@amount, purchase.authorization)
+  #     assert_success refund
+  #     assert_equal 'Approval', refund.message
+  #   end
+  #
+  #   def test_partial_refund
+  #     purchase = @gateway.purchase(@amount, @credit_card, @options)
+  #     assert_success purchase
+  #
+  #     assert refund = @gateway.refund(@amount - 1, purchase.authorization)
+  #     assert_success refund
+  #   end
 
   def test_failed_refund
     response = @gateway.refund(@amount, @invalid_txn)
