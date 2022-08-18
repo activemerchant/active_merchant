@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Plexo'
 
       APPENDED_URLS = %w(captures refunds cancellations verify)
-      AMOUNT_IN_RESPONSE = %w(authonly /verify)
+      AMOUNT_IN_RESPONSE = %w(authonly purchase /verify)
       APPROVED_STATUS = %w(approved authorized)
 
       def initialize(options = {})
@@ -22,29 +22,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options = {})
-        response = MultiResponse.run do |r|
-          r.process { authorize(money, payment, options) }
-          r.process { capture(money, r.authorization, options) }
-        end
-        response.responses.last
+        post = {}
+        build_auth_purchase_request(money, post, payment, options)
+
+        commit('purchase', post, options)
       end
 
       def authorize(money, payment, options = {})
         post = {}
-        post[:ReferenceId] = options[:reference_id] || generate_unique_id
-        post[:MerchantId] = options[:merchant_id] || @credentials[:merchant_id]
-        post[:Installments] = options[:installments] if options[:installments]
-        post[:StatementDescriptor] = options[:statement_descriptor] if options[:statement_descriptor]
-        post[:CustomerId] = options[:customer_id] if options[:customer_id]
-
-        add_payment_method(post, payment, options)
-        add_items(post, options[:items])
-        add_metadata(post, options[:metadata])
-        add_amount(money, post, options)
-        add_browser_details(post, options)
+        build_auth_purchase_request(money, post, payment, options)
         add_capture_type(post, options)
 
-        commit('authonly', post)
+        commit('authonly', post, options)
       end
 
       def capture(money, authorization, options = {})
@@ -52,7 +41,7 @@ module ActiveMerchant #:nodoc:
         post[:ReferenceId] = options[:reference_id] || generate_unique_id
         post[:Amount] = amount(money)
 
-        commit("/#{authorization}/captures", post)
+        commit("/#{authorization}/captures", post, options)
       end
 
       def refund(money, authorization, options = {})
@@ -63,7 +52,7 @@ module ActiveMerchant #:nodoc:
         post[:Reason] = options[:reason]
         post[:Amount] = amount(money)
 
-        commit("/#{authorization}/refunds", post)
+        commit("/#{authorization}/refunds", post, options)
       end
 
       def void(authorization, options = {})
@@ -72,7 +61,7 @@ module ActiveMerchant #:nodoc:
         post[:Description] = options[:description]
         post[:Reason] = options[:reason]
 
-        commit("/#{authorization}/cancellations", post)
+        commit("/#{authorization}/cancellations", post, options)
       end
 
       def verify(credit_card, options = {})
@@ -88,7 +77,7 @@ module ActiveMerchant #:nodoc:
         add_amount(money, post, options)
         add_browser_details(post, options)
 
-        commit('/verify', post)
+        commit('/verify', post, options)
       end
 
       def supports_scrubbing?
@@ -110,12 +99,24 @@ module ActiveMerchant #:nodoc:
         Base64.encode64("#{@credentials[:client_id]}:#{@credentials[:api_key]}").delete("\n")
       end
 
+      def build_auth_purchase_request(money, post, payment, options)
+        post[:ReferenceId] = options[:reference_id] || generate_unique_id
+        post[:MerchantId] = options[:merchant_id] || @credentials[:merchant_id]
+        post[:Installments] = options[:installments] if options[:installments]
+        post[:StatementDescriptor] = options[:statement_descriptor] if options[:statement_descriptor]
+        post[:CustomerId] = options[:customer_id] if options[:customer_id]
+
+        add_payment_method(post, payment, options)
+        add_items(post, options[:items])
+        add_metadata(post, options[:metadata])
+        add_amount(money, post, options)
+        add_browser_details(post, options)
+      end
+
       def header(parameters = {})
         {
           'Content-Type' => 'application/json',
-          'Authorization' => "Basic #{encoded_credentials}",
-          'x-mock-tokenization' => parameters.dig(:header, :mock_tokenization) || 'true',
-          'x-mock-switcher' => parameters.dig(:header, :mock_switcher) || 'true'
+          'Authorization' => "Basic #{encoded_credentials}"
         }
       end
 
@@ -211,7 +212,21 @@ module ActiveMerchant #:nodoc:
         cardholder[:Identification] = {}
         cardholder[:Identification][:Type] = options[:identification_type] if options[:identification_type]
         cardholder[:Identification][:Value] = options[:identification_value] if options[:identification_value]
+        add_billing_address(cardholder, options)
+
         card[:Cardholder] = cardholder
+      end
+
+      def add_billing_address(cardholder, options)
+        return unless address = options[:billing_address]
+
+        cardholder[:BillingAddress] = {}
+        cardholder[:BillingAddress][:City] = address[:city]
+        cardholder[:BillingAddress][:Country] = address[:country]
+        cardholder[:BillingAddress][:Line1] = address[:address1]
+        cardholder[:BillingAddress][:Line2] = address[:address2]
+        cardholder[:BillingAddress][:PostalCode] = address[:zip]
+        cardholder[:BillingAddress][:State] = address[:state]
       end
 
       def parse(body)
@@ -240,10 +255,10 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def commit(action, parameters)
+      def commit(action, parameters, options = {})
         base_url = (test? ? test_url : live_url)
         url = build_url(action, base_url)
-        response = parse(ssl_post(url, parameters.to_json, header(parameters)))
+        response = parse(ssl_post(url, parameters.to_json, header(options)))
         response = reorder_amount_fields(response) if AMOUNT_IN_RESPONSE.include?(action)
 
         Response.new(
