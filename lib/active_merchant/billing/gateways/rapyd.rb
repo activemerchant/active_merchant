@@ -29,6 +29,7 @@ module ActiveMerchant #:nodoc:
         add_payment_fields(post, options)
         add_payment_urls(post, options)
         add_customer_id(post, options)
+        add_customer_object(post, payment, options)
         post[:capture] = true if payment.is_a?(CreditCard)
 
         if payment.is_a?(Check)
@@ -55,6 +56,7 @@ module ActiveMerchant #:nodoc:
         add_payment_fields(post, options)
         add_payment_urls(post, options)
         add_customer_id(post, options)
+        add_customer_object(post, payment, options)
         post[:capture] = false
 
         commit(:post, 'payments', post)
@@ -225,6 +227,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_object(post, payment, options)
+        return unless payment.instance_of?(CreditCard)
+
         post[:name] = "#{payment.first_name} #{payment.last_name}"
         post[:phone_number] = options[:billing_address][:phone].gsub(/\D/, '') if options[:billing_address]
         post[:email] = options[:email] if options[:email]
