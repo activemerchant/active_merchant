@@ -396,7 +396,7 @@ module ActiveMerchant #:nodoc:
         bank = {
           bankAccountNumber: bank_account.account_number,
           ownerName: bank_account.name,
-          countryCode: options[:billing_address][:country]
+          countryCode: options[:billing_address].try(:[], :country)
         }
 
         action == 'refundWithData' ? bank[:iban] = bank_account.routing_number : bank[:bankLocationId] = bank_account.routing_number

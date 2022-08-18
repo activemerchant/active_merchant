@@ -464,6 +464,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Bank Account or Bank Location Id not valid or missing', response.message
   end
 
+  def test_failed_authorize_with_bank_account_missing_country_code
+    response = @gateway.authorize(@amount, @bank_account, @options.except(:billing_address))
+    assert_failure response
+    assert_equal 'BankDetails missing', response.message
+  end
+
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
