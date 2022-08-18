@@ -77,11 +77,27 @@ class Shift4Test < Test::Unit::TestCase
 
   def test_successful_purchase_with_stored_credential
     stored_credential_options = {
-      inital_transaction: false,
+      initial_transaction: true,
+      reason_type: 'recurring'
+    }
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_options }))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)['transaction']
+      assert_equal request['cardOnFile']['usageIndicator'], '01'
+      assert_equal request['cardOnFile']['indicator'], '01'
+      assert_equal request['cardOnFile']['scheduledIndicator'], '01'
+      assert_nil request['cardOnFile']['transactionId']
+    end.respond_with(successful_purchase_response)
+
+    assert response.success?
+    assert_equal response.message, 'Transaction successful'
+
+    stored_credential_options = {
       reason_type: 'recurring',
       network_transaction_id: '123abcdefg'
     }
-    response = stub_comms do
+    stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_options }))
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)['transaction']
@@ -90,9 +106,6 @@ class Shift4Test < Test::Unit::TestCase
       assert_equal request['cardOnFile']['scheduledIndicator'], '01'
       assert_equal request['cardOnFile']['transactionId'], stored_credential_options[:network_transaction_id]
     end.respond_with(successful_purchase_response)
-
-    assert response.success?
-    assert_equal response.message, 'Transaction successful'
   end
 
   def test_successful_store

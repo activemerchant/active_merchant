@@ -41,6 +41,12 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     assert_match(merchant_order_id, response.params.dig('merchant_order_id'))
   end
 
+  def test_successful_purchase_with_skip_3ds
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ skip_3ds: 'true' }))
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@declined_amount, @declined_card, @options)
     assert_failure response

@@ -28,6 +28,7 @@ module ActiveMerchant #:nodoc:
         add_ewallet(post, options)
         add_payment_fields(post, options)
         add_payment_urls(post, options)
+        add_customer_id(post, options)
         post[:capture] = true if payment.is_a?(CreditCard)
 
         if payment.is_a?(Check)
@@ -53,6 +54,7 @@ module ActiveMerchant #:nodoc:
         add_ewallet(post, options)
         add_payment_fields(post, options)
         add_payment_urls(post, options)
+        add_customer_id(post, options)
         post[:capture] = false
 
         commit(:post, 'payments', post)
@@ -185,7 +187,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_token(post, payment, options)
-        post[:payment_method] = payment
+        return unless token = payment.split('|')[1]
+
+        post[:payment_method] = token
       end
 
       def add_3ds(post, payment, options)
@@ -224,6 +228,10 @@ module ActiveMerchant #:nodoc:
         post[:name] = "#{payment.first_name} #{payment.last_name}"
         post[:phone_number] = options[:billing_address][:phone].gsub(/\D/, '') if options[:billing_address]
         post[:email] = options[:email] if options[:email]
+      end
+
+      def add_customer_id(post, options)
+        post[:customer] = options[:customer_id] if options[:customer_id]
       end
 
       def parse(body)
