@@ -2,7 +2,7 @@ require 'test_helper'
 
 class AleloTest < Test::Unit::TestCase
   def setup
-    @gateway = AleloGateway.new(some_credential: 'login', another_credential: 'password')
+    @gateway = AleloGateway.new(client_id: 'xxxx', client_secret: 'xxxx')
     @credit_card = credit_card
     @amount = 100
 
@@ -13,23 +13,9 @@ class AleloTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+  def test_successful_purchase; end
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-
-    assert_equal 'REPLACE', response.authorization
-    assert response.test?
-  end
-
-  def test_failed_purchase
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
-
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
-  end
+  def test_failed_purchase; end
 
   def test_successful_authorize; end
 
@@ -58,22 +44,36 @@ class AleloTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_access_token_from_options
+    options = { access_token: 'abc123' }
+
+    assert_equal options[:access_token], @gateway.send(:access_token, options)
+  end
+
+  def test_encryption_key_from_options
+    options = { encryption_key: 'abc123' }
+
+    assert_equal options[:encryption_key], @gateway.send(:remote_encryption_key, options)
+  end
+
+  def test_success_payload_encryption
+    jwe = @gateway.send(:encrypt_payload, { hello: 'world' }, test_key)
+
+    refute_nil jwe
+  end
+
   private
 
   def pre_scrubbed
-    '
-      Run the remote tests for this gateway, and then put the contents of transcript.log here.
-    '
+    %(same text)
   end
 
   def post_scrubbed
-    '
-      Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
-      Things to scrub:
-        - Credit card number
-        - CVV
-        - Sensitive authentication details
-    '
+    %(same text)
+  end
+
+  def test_key
+    'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlqfFfUoVCZnSM66vq0UimOZzsd6k5nuHOMr5s/pGw45n24Qs2cdJlgtX34N7W7vftuxYBAMhD4FucFZ0b12HO3iqGheqcgPolYTAlM/XFkzEohSI3B5Xhj1m6PTJZfmwFWaGHWapy0oAHJQvc4gnjn5UjytN1UGCKNStiN255XhpdsDJBwY4zPz55doZGywKscpN4QuPGJQK/XocbWApYIh0+Yj9PxSgFoEWH1KIxDVg+voOruVrOJwPNaNITBX3O0U6G9xT4av+4hcomGNhrFZDuhlvbUqBllw0VUp+87bzDJVImnz97WvZLRnOMgrPfwTz5z467/yqbmaevCI+VwIDAQAB'
   end
 
   def successful_purchase_response

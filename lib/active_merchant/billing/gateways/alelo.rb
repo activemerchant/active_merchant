@@ -1,7 +1,9 @@
+require 'jose'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class AleloGateway < Gateway
-      self.test_url = 'https://sandbox-desenvolvedor.alelo.com.br'
+      self.test_url = 'https://sandbox-api.alelo.com.br/alelo/sandbox/'
       self.live_url = 'https://desenvolvedor.alelo.com.br'
 
       self.supported_countries = ['BR']
@@ -14,7 +16,7 @@ module ActiveMerchant #:nodoc:
       STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options = {})
-        requires!(options, :access_token)
+        requires!(options, :client_id, :client_secret)
         super
       end
 
@@ -67,8 +69,49 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment); end
 
+      def access_token(options = {})
+        return options[:access_token] if options[:access_token].present?
+
+        params = {
+          grant_type: 'client_credentials',
+          client_id: @options[:client_id],
+          client_secret: @options[:client_secret],
+          scope: '/capture'
+        }
+
+        headers = {
+          'Accept' => 'application/json',
+          'Content-Type' => 'application/x-www-form-urlencoded'
+        }
+
+        raw_response = ssl_post(url('captura-oauth-provider/oauth/token'), post_data(params), headers)
+        options[:access_token] = parse(raw_response)[:access_token]
+      end
+
+      def remote_encryption_key(options = {}, try_again = true)
+        return options[:encryption_key] if options[:encryption_key].present?
+
+        raw_response = ssl_get(url('capture/key?format=json'), request_headers(options))
+        options[:encryption_key] = parse(raw_response)[:publicKey]
+      rescue ResponseError => error
+        if error.response.code == '401'
+          options.delete(:access_token)
+          remote_encryption_key(options, false) if try_again
+        end
+      end
+
+      def encrypt_payload(body, encryption_key)
+        key = OpenSSL::PKey::RSA.new(Base64.decode64(encryption_key))
+        jwk = JOSE::JWK.from_key(key)
+        JOSE::JWE.block_encrypt(jwk, body.to_json, { 'alg' => 'RSA-OAEP-256', 'enc' => 'A128CBC-HS256' }).compact
+      end
+
       def parse(body)
-        {}
+        JSON.parse(body, symbolize_names: true)
+      end
+
+      def post_data(params)
+        params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def commit(action, parameters)
@@ -93,12 +136,23 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response); end
 
-      def post_data(action, parameters = {}); end
-
       def error_code_from(response)
         unless success_from(response)
           # TODO: lookup error code for this response
         end
+      end
+
+      def url(action)
+        "#{test? ? test_url : live_url}#{action}"
+      end
+
+      def request_headers(options)
+        {
+          'Accept' => 'application/json',
+          'X-IBM-Client-Id' => @options[:client_id],
+          'X-IBM-Client-Secret' => @options[:client_secret],
+          'Authorization' => "Bearer #{options[:access_token] || access_token}"
+        }
       end
     end
   end
