@@ -13,6 +13,48 @@ class RemoteAleloTest < Test::Unit::TestCase
     }
   end
 
+  def test_access_token_success
+    options = {}
+    @gateway.send(:access_token, options)
+
+    refute_nil options[:access_token]
+  end
+
+  def test_failure_access_token_with_invalid_keys
+    gateway = AleloGateway.new({ client_id: 'abc123', client_secret: 'abc456' })
+
+    options = {}
+    gateway.send(:access_token, options)
+  end
+
+  def test_successful_remote_encryption_key_with_provided_access_token
+    options = {}
+    access_token = @gateway.send(:access_token, options)
+
+    options = { access_token: access_token }
+    resp = @gateway.send(:remote_encryption_key, options)
+
+    assert_equal options[:access_token], access_token
+    assert resp.is_a? String
+  end
+
+  def test_success_remote_encryption_key_without_access_token
+    options = {}
+    resp = @gateway.send(:remote_encryption_key, options)
+
+    refute_nil resp
+    assert_equal resp, @gateway.send(:remote_encryption_key, options)
+  end
+
+  def test_succesfull_failure_recovery_with_expired_access_token_on_encryption_key_generation
+    options = { access_token: 'abc123' }
+
+    resp = @gateway.send(:remote_encryption_key, options)
+
+    refute_equal options[:access_token], 'abc123'
+    refute_nil resp
+  end
+
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
