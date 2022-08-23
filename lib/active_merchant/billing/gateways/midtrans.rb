@@ -249,7 +249,7 @@ module ActiveMerchant #:nodoc:
           card_exp_year: card.year,
           client_key: @midtrans_gateway.config.client_key
         }
-        @uri = URI.parse("#{url()}/token?#{URI.encode_www_form(query_params)}")
+        @uri = URI.parse("#{url()}/v2/token?#{URI.encode_www_form(query_params)}")
         begin
           response = Net::HTTP.get_response(@uri)
           JSON.parse(response.body)
