@@ -237,6 +237,14 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_fraud_filter_override
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, { fraud_filter_override: true })
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<fraudFilterOverride>true</fraudFilterOverride>), data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_passing_payment_cryptogram
     stub_comms do
       @gateway.purchase(@amount, @decrypted_apple_pay)

@@ -320,6 +320,7 @@ module ActiveMerchant #:nodoc:
         add_merchant_data(doc, options)
         add_debt_repayment(doc, options)
         add_stored_credential_params(doc, options)
+        add_fraud_filter_override(doc, options)
       end
 
       def add_credit_params(doc, money, payment_method, options)
@@ -363,6 +364,10 @@ module ActiveMerchant #:nodoc:
 
       def add_debt_repayment(doc, options)
         doc.debtRepayment(true) if options[:debt_repayment] == true
+      end
+
+      def add_fraud_filter_override(doc, options)
+        doc.fraudFilterOverride(options[:fraud_filter_override]) if options[:fraud_filter_override]
       end
 
       def add_payment_method(doc, payment_method, options)

@@ -206,6 +206,17 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_fraud_filter_override_flag
+    assert response = @gateway.purchase(10010, @credit_card1, @options.merge(fraud_filter_override: true))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_failed_purchase_when_fraud_filter_override_flag_not_sent_as_boolean
+    assert response = @gateway.purchase(10010, @credit_card1, @options.merge(fraud_filter_override: 'hey'))
+    assert_failure response
+  end
+
   def test_successful_purchase_with_3ds_fields
     options = @options.merge({
       order_source: '3dsAuthenticated',
