@@ -7,8 +7,8 @@ end
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MidtransGateway < Gateway
-      self.test_url = 'https://api.sandbox.midtrans.com/v2'
-      self.live_url = 'https://api.midtrans.com/v2'
+      self.test_url = 'https://api.sandbox.midtrans.com'
+      self.live_url = 'https://api.midtrans.com'
       self.supported_countries = ['ID']
       self.default_currency = 'IDR'
 
@@ -109,6 +109,9 @@ module ActiveMerchant #:nodoc:
         @midtrans_gateway.config.client_key = options[:client_key]
         @midtrans_gateway.config.server_key = options[:server_key]
         @midtrans_gateway.logger = options[:logger]
+        if !options[:test]
+          @midtrans_gateway.config.api_host = live_url
+        end
       end
 
       def purchase(money, payment, options={})
@@ -246,7 +249,7 @@ module ActiveMerchant #:nodoc:
           card_exp_year: card.year,
           client_key: @midtrans_gateway.config.client_key
         }
-        @uri = URI.parse("#{url()}/token?#{URI.encode_www_form(query_params)}")
+        @uri = URI.parse("#{url()}/v2/token?#{URI.encode_www_form(query_params)}")
         begin
           response = Net::HTTP.get_response(@uri)
           JSON.parse(response.body)
