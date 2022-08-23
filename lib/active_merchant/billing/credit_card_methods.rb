@@ -40,7 +40,8 @@ module ActiveMerchant #:nodoc:
         'confiable' => ->(num) { num =~ /^560718\d{10}$/ },
         'synchrony' => ->(num) { num =~ /^700600\d{10}$/ },
         'routex' => ->(num) { num =~ /^(700676|700678)\d{13}$/ },
-        'mada' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MADA_RANGES) }
+        'mada' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MADA_RANGES) },
+        'bp_plus' => ->(num) { num =~ /^(70505|705\d)\s\d{9}\s\d{3}$/ }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf

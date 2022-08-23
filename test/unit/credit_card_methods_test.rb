@@ -192,6 +192,14 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'mada', CreditCard.brand?('9682040000000000')
   end
 
+  def test_should_detect_bp_plus_card
+    assert_equal 'bp_plus', CreditCard.brand?('7051 211111111 111')
+    assert_equal 'bp_plus', CreditCard.brand?('7050 111111111 111')
+    assert_equal 'bp_plus', CreditCard.brand?('70505 911111111 111')
+    assert_equal 'bp_plus', CreditCard.brand?('70505 511181111 111')
+    assert_equal 'bp_plus', CreditCard.brand?('70505 561187111 111')
+  end
+
   def test_alia_number_not_validated
     10.times do
       number = rand(5058740000000001..5058749999999999).to_s
