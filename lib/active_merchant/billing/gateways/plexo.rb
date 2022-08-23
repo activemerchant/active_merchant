@@ -207,6 +207,10 @@ module ActiveMerchant #:nodoc:
         cardholder[:FirstName] = payment.first_name if payment.first_name
         cardholder[:LastName] = payment.last_name if payment.last_name
         cardholder[:Email] = options[:email]
+        cardholder[:Birthdate] = options[:cardholder_birthdate] if options[:cardholder_birthdate]
+        cardholder[:Identification] = {}
+        cardholder[:Identification][:Type] = options[:identification_type] if options[:identification_type]
+        cardholder[:Identification][:Value] = options[:identification_value] if options[:identification_value]
         card[:Cardholder] = cardholder
       end
 
