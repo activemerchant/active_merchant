@@ -108,10 +108,10 @@ module ActiveMerchant #:nodoc:
         @midtrans_gateway = Midtrans
         @midtrans_gateway.config.client_key = options[:client_key]
         @midtrans_gateway.config.server_key = options[:server_key]
+        @midtrans_gateway.logger = options[:logger]
         if !options[:test]
           @midtrans_gateway.config.api_host = live_url
         end
-          @midtrans_gateway.logger = options[:logger]
       end
 
       def purchase(money, payment, options={})
