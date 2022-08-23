@@ -27,7 +27,9 @@ class PlexoTest < Test::Unit::TestCase
       metadata: {
         custom_one: 'test1',
         test_a: 'abc'
-      }
+      },
+      identification_type: '1',
+      identification_value: '123456'
     }
 
     @cancel_options = {
@@ -62,6 +64,8 @@ class PlexoTest < Test::Unit::TestCase
       assert_equal @credit_card.verification_value, request['paymentMethod']['Card']['Cvc']
       assert_equal @credit_card.first_name, request['paymentMethod']['Card']['Cardholder']['FirstName']
       assert_equal @options[:email], request['paymentMethod']['Card']['Cardholder']['Email']
+      assert_equal @options[:identification_type], request['paymentMethod']['Card']['Cardholder']['Identification']['Type']
+      assert_equal @options[:identification_value], request['paymentMethod']['Card']['Cardholder']['Identification']['Value']
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -114,7 +118,8 @@ class PlexoTest < Test::Unit::TestCase
     other_fields = {
       installments: '1',
       statement_descriptor: 'Plexo * Test',
-      customer_id: 'customer1'
+      customer_id: 'customer1',
+      cardholder_birthdate: '1999-08-18T19:49:37.023Z'
     }
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(other_fields))
@@ -123,6 +128,7 @@ class PlexoTest < Test::Unit::TestCase
       assert_equal request['Installments'], other_fields[:installments]
       assert_equal request['CustomerId'], other_fields[:customer_id]
       assert_equal request['StatementDescriptor'], other_fields[:statement_descriptor]
+      assert_equal request['paymentMethod']['Card']['Cardholder']['Birthdate'], other_fields[:cardholder_birthdate]
     end.respond_with(successful_authorize_response)
 
     assert_success response

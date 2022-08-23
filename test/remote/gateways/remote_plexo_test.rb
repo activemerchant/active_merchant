@@ -21,7 +21,9 @@ class RemotePlexoTest < Test::Unit::TestCase
       ],
       amount_details: {
         tip_amount: '5'
-      }
+      },
+      identification_type: '1',
+      identification_value: '123456'
     }
 
     @cancel_options = {
