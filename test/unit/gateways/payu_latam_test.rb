@@ -469,6 +469,16 @@ class PayuLatamTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_extra_parameters_fields
+    stub_comms(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ extra_1: '123456', extra_2: 'abcdef', extra_3: 'testing' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/\"EXTRA1\":\"123456\"/, data)
+      assert_match(/\"EXTRA2\":\"abcdef\"/, data)
+      assert_match(/\"EXTRA3\":\"testing\"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed

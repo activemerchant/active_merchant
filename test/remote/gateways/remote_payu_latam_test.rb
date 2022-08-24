@@ -346,7 +346,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_match(/must not be null/, response.message)
+    assert_match(/may not be null/, response.message)
   end
 
   def test_successful_refund
@@ -414,14 +414,14 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 0))
 
     assert_failure verify
-    assert_equal 'The amount must be greater than zero', verify.message
+    assert_equal 'INVALID_TRANSACTION | [The given payment value [0] is inferior than minimum configured value [0.01]]', verify.message
   end
 
   def test_failed_verify_with_specified_language
     verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 0, language: 'es'))
 
     assert_failure verify
-    assert_equal 'El valor de la transacción debe ser mayor a cero', verify.message
+    assert_equal 'INVALID_TRANSACTION | [El valor recibido [0] es inferior al valor mínimo configurado [0,01]]', verify.message
   end
 
   def test_transcript_scrubbing
@@ -439,5 +439,11 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     store = @gateway.store(@credit_card, @options)
     assert_success store
     assert_equal 'SUCCESS', store.message
+  end
+
+  def test_successful_purchase_with_extra_fields
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ extra_1: '123456', extra_2: 'abcdef', extra_3: 'testing' }))
+    assert_success response
+    assert_equal 'APPROVED', response.message
   end
 end
