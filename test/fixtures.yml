@@ -712,6 +712,10 @@ pay_arc:
   api_key: APIKEY
 
 # Working credentials, no need to replace
+pay_com:
+  api_key: 'API_KEY'
+
+# Working credentials, no need to replace
 pay_conex:
   account_id: '220614968961'
   api_accesskey: '69e9c4dd6b8ab9ab47da4e288df78315'
@@ -1261,7 +1265,7 @@ shift4:
 # Working credentials, no need to replace
 simetrik:
   client_id: 'wNhJBdrKDk3vTmkQMAWi5zWN7y21adO3'
-  client_secret: 'fq2riPpiDJaAwS4_UMAXZy1_nU1jNGz0F6gAFWOJFNmm_TfC8EFiHwMmGKAEDkwY' 
+  client_secret: 'fq2riPpiDJaAwS4_UMAXZy1_nU1jNGz0F6gAFWOJFNmm_TfC8EFiHwMmGKAEDkwY'
 
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:
