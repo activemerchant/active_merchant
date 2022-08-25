@@ -111,6 +111,8 @@ module ActiveMerchant #:nodoc:
         @midtrans_gateway.logger = options[:logger]
         if !options[:test]
           @midtrans_gateway.config.api_host = live_url
+        else
+          @midtrans_gateway.config.api_host = test_url
         end
       end
 
