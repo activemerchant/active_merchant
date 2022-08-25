@@ -17,14 +17,8 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options = {})
         post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_billing_address(post, options)
-        add_merchant_details(post, options)
+        add_auth_purchase_params(post, money, payment, options)
         add_airline_travel_details(post, options)
-        add_customer_data(post, payment, options) unless payment.is_a?(String)
-        add_three_d_secure(post, payment, options) if options[:three_d_secure]
-        add_stored_credential(post, options) if options[:stored_credential]
         add_split_pay_details(post, options)
         post[:settleWithAuth] = true
 
@@ -33,13 +27,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment, options = {})
         post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_billing_address(post, options)
-        add_merchant_details(post, options)
-        add_customer_data(post, payment, options) unless payment.is_a?(String)
-        add_three_d_secure(post, payment, options) if options[:three_d_secure]
-        add_stored_credential(post, options) if options[:stored_credential]
+        add_auth_purchase_params(post, money, payment, options)
 
         commit(:post, 'auths', post, options)
       end
@@ -110,6 +98,17 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_auth_purchase_params(post, money, payment, options)
+        add_invoice(post, money, options)
+        add_payment(post, payment)
+        add_billing_address(post, options)
+        add_merchant_details(post, options)
+        add_customer_data(post, payment, options) unless payment.is_a?(String)
+        add_three_d_secure(post, payment, options) if options[:three_d_secure]
+        add_stored_credential(post, options) if options[:stored_credential]
+        add_funding_transaction(post, options)
+      end
 
       # Customer data can be included in transactions where the payment method is a credit card
       # but should not be sent when the payment method is a token
@@ -284,6 +283,15 @@ module ActiveMerchant #:nodoc:
           split_pay << split
         end
         post[:splitpay] = split_pay
+      end
+
+      def add_funding_transaction(post, options)
+        return unless options[:funding_transaction]
+
+        post[:fundingTransaction] = {}
+        post[:fundingTransaction][:type] = options[:funding_transaction]
+        post[:profile] ||= {}
+        post[:profile][:merchantCustomerId] = options[:customer_id] || SecureRandom.hex(12)
       end
 
       def add_stored_credential(post, options)

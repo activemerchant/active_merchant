@@ -216,6 +216,22 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert_equal 'COMPLETED', response.message
   end
 
+  # Merchant account must be setup to support funding transaction, and funding transaction type must be correct for the MCC
+  def test_successful_purchase_with_correct_funding_transaction_type
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ funding_transaction: 'SDW_WALLET_TRANSFER' }))
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+    assert_equal 0, response.params['availableToSettle']
+    assert_not_nil response.params['authCode']
+    assert_match 'SDW_WALLET_TRANSFER', response.params['fundingTransaction']['type']
+  end
+
+  def test_failed_purchase_with_incorrect_funding_transaction_type
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ funding_transaction: 'SVDW_FUNDS_TRANSFER' }))
+    assert_failure response
+    assert_equal 'Error(s)- code:3068, message:You submitted a funding transaction that is not correct for the merchant account.', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(11, @credit_card, @options)
     assert_failure response

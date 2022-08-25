@@ -104,6 +104,7 @@
 * Vantiv(Litle): Add support for `fraudFilterOverride` field [rachelkirk] #4544
 * Stripe: Add shipping address [jcreiff] #4539
 * PayuLatam: Add extra1, extra2, extra3 fields [jcreiff] #4550
+* Paysafe: Add fundingTransaction object [jcreiff] #4552
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
