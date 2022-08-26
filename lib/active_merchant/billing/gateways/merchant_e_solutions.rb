@@ -27,8 +27,10 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard_or_card_id, options = {})
         post = {}
-        post[:client_reference_number] = options[:customer] if options.has_key?(:customer)
-        post[:moto_ecommerce_ind] = options[:moto_ecommerce_ind] if options.has_key?(:moto_ecommerce_ind)
+        post[:client_reference_number] = options[:customer] if options[:customer]
+        post[:moto_ecommerce_ind] = options[:moto_ecommerce_ind] if options[:moto_ecommerce_ind]
+        post[:recurring_pmt_num] = options[:recurring_pmt_num] if options[:recurring_pmt_num]
+        post[:recurring_pmt_count] = options[:recurring_pmt_count] if options[:recurring_pmt_count]
         add_invoice(post, options)
         add_payment_source(post, creditcard_or_card_id, options)
         add_address(post, options)
@@ -38,8 +40,10 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, creditcard_or_card_id, options = {})
         post = {}
-        post[:client_reference_number] = options[:customer] if options.has_key?(:customer)
-        post[:moto_ecommerce_ind] = options[:moto_ecommerce_ind] if options.has_key?(:moto_ecommerce_ind)
+        post[:client_reference_number] = options[:customer] if options[:customer]
+        post[:moto_ecommerce_ind] = options[:moto_ecommerce_ind] if options[:moto_ecommerce_ind]
+        post[:recurring_pmt_num] = options[:recurring_pmt_num] if options[:recurring_pmt_num]
+        post[:recurring_pmt_count] = options[:recurring_pmt_count] if options[:recurring_pmt_count]
         add_invoice(post, options)
         add_payment_source(post, creditcard_or_card_id, options)
         add_address(post, options)

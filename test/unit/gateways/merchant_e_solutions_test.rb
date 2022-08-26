@@ -16,6 +16,8 @@ class MerchantESolutionsTest < Test::Unit::TestCase
 
     @options = {
       order_id: '1',
+      recurring_pmt_num: 11,
+      recurring_pmt_count: 10,
       billing_address: address,
       description: 'Store Purchase'
     }
