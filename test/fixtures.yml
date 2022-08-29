@@ -22,7 +22,8 @@ airwallex:
 
 # Working credentials, no need to replace
 alelo:
-  access_token: xxxxxxx
+  client_id: xxxxxxx
+  client_secret: xxxxxxx
 
 allied_wallet:
   site_id: site_id

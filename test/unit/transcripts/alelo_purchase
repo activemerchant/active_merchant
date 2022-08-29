@@ -1,0 +1,169 @@
+opening connection to sandbox-api.alelo.com.br:443...
+opened
+starting SSL for sandbox-api.alelo.com.br:443...
+SSL established, protocol: TLSv1.2, cipher: DHE-RSA-AES256-GCM-SHA384
+<- "POST /alelo/sandbox/captura-oauth-provider/oauth/token HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept: application/json\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nHost: sandbox-api.alelo.com.br\r\nContent-Length: 158\r\n\r\n"
+<- "grant_type=client_credentials&client_id=ed702c5c-117c-4bc6-989a-055ede547b6d&client_secret=uI3cG0nO5cI0lQ4mY2aF1eN4kV0jA4vC1bJ1rJ0gV2pW7aU4uC&scope=%2Fcapture"
+-> "HTTP/1.1 200 OK\r\n"
+-> "X-Backside-Transport: FAIL FAIL\r\n"
+-> "Connection: close\r\n"
+-> "Transfer-Encoding: chunked\r\n"
+-> "Content-Type: application/json\r\n"
+-> "Cache-Control: private, no-store, no-cache, must-revalidate\r\n"
+-> "Pragma: no-cache\r\n"
+-> "Content-Security-Policy: default-src 'self'; style-src 'unsafe-inline'\r\n"
+-> "Access-Control-Expose-Headers: APIm-Debug-Trans-Id, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-Global-Transaction-ID\r\n"
+-> "Access-Control-Allow-Origin: *\r\n"
+-> "Access-Control-Allow-Methods: POST\r\n"
+-> "Content-Encoding: gzip\r\n"
+-> "\r\n"
+-> "9e\r\n"
+reading 158 bytes...
+-> "\x1F\x8B\b\x00\x00\x00\x00\x00\x00\x03\x1C\x90\xC1r\x820\x14\x00\x7F\xC5\xE1\xDC\x99\x06\x81PzC\x81\x11JB\xB1(\x85\v#\xF8,\x1A\r\x18b\x01;\xFD\xF7R\xAF\xBB\xA7\xDD\x9F\x99\"\e\x06\xBC\x90c\v\xCA\xAB\xB2\x80\x9D\x00\xA1<\xCD\x94]UA\xD7\x15\x0F;\t\xDB\xF6Y\x9E\xC6\x1Aq\x82\x13M\x89$\x89\xABe#B\xD9\x85\xCC\xC3\x84\xE9Q\xEAJ\xE2l\xD4<]\x9Fi\x12k\xD9)g\x891\xCE\x91}\x0E\xAEK2\x94\xEF\xE8\x82\xC1\xA4<\\~\xD5\xAB\xDEt\rD;a7m\xD9\x87\xA5\xCC\xCD{\xE9\xC0\xC7"
+-> "6:l\xF7"
+read 158 bytes
+reading 2 bytes...
+-> ""
+-> "\r\n"
+read 2 bytes
+-> "70\r\n"
+reading 112 bytes...
+-> "\x03\xF3I\x99\xE0O\x1E\x8B\xC8\xA6\xD8\xB8yA\x91\xAF,/\xAC\xF5\xBD\xBF\xD9Zo\xD1=\x18\x17\x19?\xE8\x19utK\xE3v\xB2\xF2\xEA\xB8\x85\x96~7\xBAz\xBD\x99bd\xA7\x05s\xFB\xFF\f\x18\xDA\xA3\x80\xAE8N\x11/XGhbU\xC3;\xE0\x12\xF6E3Q\x15cU3-\xAC\xE2IuU\xF3\xF8\xF0\\\xEDZy\x13\xA0\xCC~\xFF\x06\x00\xEC\x99\xD5\x18#\x01\x00\x00"
+read 112 bytes
+reading 2 bytes...
+-> ""
+-> "\r\n"
+read 2 bytes
+-> "0\r\n"
+-> "\r\n"
+Conn close
+opening connection to sandbox-api.alelo.com.br:443...
+opened
+starting SSL for sandbox-api.alelo.com.br:443...
+SSL established, protocol: TLSv1.2, cipher: DHE-RSA-AES256-GCM-SHA384
+<- "GET /alelo/sandbox/capture/key?format=json HTTP/1.1\r\nAccept: application/json\r\nX-Ibm-Client-Id: ed702c5c-117c-4bc6-989a-055ede547b6d\r\nX-Ibm-Client-Secret: uI3cG0nO5cI0lQ4mY2aF1eN4kV0jA4vC1bJ1rJ0gV2pW7aU4uC\r\nAuthorization: Bearer AAIkZWQ3MDJjNWMtMTE3Yy00YmM2LTk4OWEtMDU1ZWRlNTQ3YjZkT5y20AlJqCMxbP0m6e7NnLCghHw7E50NsrAopbwLbtZ7zbDeSVOfVdxkIMbT6XnQrOAN65uFJ_ZH9FLh4dIUV9KOzJyBYnf4YND493nATHFhQpepNvo41qu7rykjBkEw\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nHost: sandbox-api.alelo.com.br\r\n\r\n"
+-> "HTTP/1.1 200 OK\r\n"
+-> "X-Backside-Transport: OK OK\r\n"
+-> "Connection: close\r\n"
+-> "Transfer-Encoding: chunked\r\n"
+-> "Content-Type: application/json\r\n"
+-> "Date: Wed, 24 Aug 2022 22:20:34 GMT\r\n"
+-> "X-Global-Transaction-ID: 379298106306a42155f1a5f2\r\n"
+-> "x-content-type-options: nosniff\r\n"
+-> "x-xss-protection: 1; mode=block\r\n"
+-> "cache-control: no-cache, no-store, max-age=0, must-revalidate\r\n"
+-> "pragma: no-cache\r\n"
+-> "expires: 0\r\n"
+-> "x-frame-options: DENY\r\n"
+-> "Access-Control-Expose-Headers: APIm-Debug-Trans-Id, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-Global-Transaction-ID\r\n"
+-> "Access-Control-Allow-Origin: *\r\n"
+-> "Access-Control-Allow-Methods: GET\r\n"
+-> "Set-Cookie: 20af66d9029740e40c713b05f443f86d=2bdc6d7099faf31789e088a0d77ea5cc; path=/; HttpOnly; Secure; SameSite=None\r\n"
+-> "X-RateLimit-Limit: name=rate-limit,400;\r\n"
+-> "X-RateLimit-Remaining: name=rate-limit,399;\r\n"
+-> "Content-Encoding: gzip\r\n"
+-> "\r\n"
+-> "193\r\n"
+reading 403 bytes...
+-> "\x1F\x8B\b\x00\x00\x00\x00\x00\x00\x03\x14\x8B\xC7\x16\x9A@\x00E\xFF\x85\xAD\xF1H\x99A\xCDn\xE8%\xB4H\xDF\xC1 M\xBA\x02BN\xFE=dw\xCF}\xF7\xFD!\xE6\xB9\xCA\x88\x9F\x04d(@A\x9A:'9\xBE\x9DAB\xDE\x0E\"\xF19'\x99\e\x9D<s\xC0`\x8A\xF8A\xE4\xFD\xD4&\x9F\xA3\xE7\xD0Cd\xC1a\x869m*\xAC?\xB7C\x1A\xAA\xCA\xA952\xB9\xE25\x96\xAFJ\xBE\xAF$\x87\x1CQB\xC8\xE2\x91sC\xFFw\xBE\xD0\x0F\x16Q3\xE6R\xEE\xF5>\x1Fw\x0F\x83e\x97\x91\xF4\xAA\xD6\x8A\xF7w\xC6\xBE`7+\x961\xC1\xF7e\x90W\x00;\x1A8o\x1AgZS|B\x06\x98\xD7\xE0\xBA\xE4\x9F\xF9\eq\xC8(\x05 \xCDX\x8A\xC9\x94\xA2\x15\x8B\xA9F\xB9|\x8E\xB8\xB0\xFB&rQc\\B\xE9\xB5\x8B}\xF9P\x19\x0E\x86eM\xB5\xAC\xEDjq\xDE\xAER\x90\xC8J\x90\f\e\xD9#Es\x16\f\x8A\xAE\xEE\xA0Wo\x1F\x93\xF2d^7\x1F\x9F\xCA\xA4\xE1\xF1\x1A\xB2\xB7\xA0qk\x04v{\x870\xEBcy[\xF57\x1EL\xE0\xCC\xB6\xAC9\xFA%\xECq\x1A\xA0!RK\xF2\x14\xD5w\xFB\xFB(\xA4^\f\x14JW\xBF\x82_\x9C\x96\xDE\x9Af\x7F\xB2\xB4\xD56\x13Su\xB9\x90\xB1H\x8F\x95\xEF_\x17$\xCB\t\x94\xB8oe\xB3\x9C\xA4X\x98\xCBfI\xBD\x91k\x9A\x95\xF4\xBD\xE1t\xBB\xA6\xBB\xA0\xF9j\xDB\xED\xF7k\xB0\xC4\xBF~w\x96QLv\xBE\xBA;\xDC\x01{\xBDlc\xDA&\xCF\x85WO\xFE\xAA\n\xC8A\x1C\xF1\xF7\x1F\x00\x00\x00\xFF\xFF"
+read 403 bytes
+reading 2 bytes...
+-> ""
+-> "\r\n"
+read 2 bytes
+-> "a\r\n"
+reading 10 bytes...
+-> "\x03\x00\xF6\xF3f\xA1\xD8\x01\x00\x00"
+read 10 bytes
+reading 2 bytes...
+-> ""
+-> "\r\n"
+read 2 bytes
+-> "0\r\n"
+-> "\r\n"
+Conn close
+opening connection to sandbox-api.alelo.com.br:443...
+opened
+starting SSL for sandbox-api.alelo.com.br:443...
+SSL established, protocol: TLSv1.2, cipher: DHE-RSA-AES256-GCM-SHA384
+<- "POST /alelo/sandbox/captura-oauth-provider/oauth/token HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept: application/json\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nHost: sandbox-api.alelo.com.br\r\nContent-Length: 158\r\n\r\n"
+<- "grant_type=client_credentials&client_id=ed702c5c-117c-4bc6-989a-055ede547b6d&client_secret=uI3cG0nO5cI0lQ4mY2aF1eN4kV0jA4vC1bJ1rJ0gV2pW7aU4uC&scope=%2Fcapture"
+-> "HTTP/1.1 200 OK\r\n"
+-> "X-Backside-Transport: FAIL FAIL\r\n"
+-> "Connection: close\r\n"
+-> "Transfer-Encoding: chunked\r\n"
+-> "Content-Type: application/json\r\n"
+-> "Cache-Control: private, no-store, no-cache, must-revalidate\r\n"
+-> "Pragma: no-cache\r\n"
+-> "Content-Security-Policy: default-src 'self'; style-src 'unsafe-inline'\r\n"
+-> "Access-Control-Expose-Headers: APIm-Debug-Trans-Id, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-Global-Transaction-ID\r\n"
+-> "Access-Control-Allow-Origin: *\r\n"
+-> "Access-Control-Allow-Methods: POST\r\n"
+-> "Content-Encoding: gzip\r\n"
+-> "\r\n"
+-> "9e\r\n"
+reading 158 bytes...
+-> "\x1F\x8B\b\x00\x00\x00\x00\x00\x00\x03\x1C\x90Mo\x820\x00@\xFF\x8A\xE9y\xCB\x8A\x18\xC0\xDD\x10\x9D\x8E\xD9\x12L\x19\xC2\xA5\xC1R\x04\xCB\x97\xB4\xA6\xE2\xB2\xFF>\xE6\xF5\xBD\xD3{?3\xA0:\xC1[\xAA\xC6\x9E\x83w\xB0\xE2\xD9\xC0\a\xF02\x03\x19c\\J\xFA\xB4\x93p\xDDO\x91\xC6\xA1\x89\xD6\xFE\x05\xC7H!\xB21\x93\x11\xC2\xA4A\xF3=\x11\x8B \xDE(\xB4\x8E\x8C4>\xD4\x98\x84frI\x85\x18\x1Fc\x81\x83/\xA7h,#A\x14\x9F\xB7\x84\xF4py\xCB\x89(;\xEE\xE5\x97\x9Dk\xB7\xA88j\xEFD\xB2*2W"
+-> "\xBE\x855\x16"
+read 158 bytes
+reading 2 bytes...
+-> ""
+-> "\r\n"
+read 2 bytes
+-> "6f\r\n"
+reading 111 bytes...
+-> "\xFB\xABow\xE7b\xBD\x9D\xB3\xA0\xD4m\xF9\x1D4\xB9\x17.\xB4\xDE\x1F\xB4WF\xA9O\xE9a\xF7\xB8\x9F\xD4+\xAAK\x15\x9E\xB6\xD7H|\xC0\xCAHu\x8D\xA3!\xB07\xB5w\x94c\f\xFF3\xF8\xBD\xAF\x06.i5E8\xD6\x02\xC2\x89\xB1\xAE\x95\xBCU<\xA7\xDDD\r\xCB2L{i\x19\xCE\xA4$\xEB\x9E\x1F\xDEX\xD6\xAB\xDB\xC0\xC1\xEC\xF7o\x00\xCA.\xDC\xA3#\x01\x00\x00"
+read 111 bytes
+reading 2 bytes...
+-> ""
+-> "\r\n"
+read 2 bytes
+-> "0\r\n"
+-> "\r\n"
+Conn close
+opening connection to sandbox-api.alelo.com.br:443...
+opened
+starting SSL for sandbox-api.alelo.com.br:443...
+SSL established, protocol: TLSv1.2, cipher: DHE-RSA-AES256-GCM-SHA384
+<- "POST /alelo/sandbox/capture/transaction HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept: application/json\r\nX-Ibm-Client-Id: ed702c5c-117c-4bc6-989a-055ede547b6d\r\nX-Ibm-Client-Secret: uI3cG0nO5cI0lQ4mY2aF1eN4kV0jA4vC1bJ1rJ0gV2pW7aU4uC\r\nAuthorization: Bearer AAIkZWQ3MDJjNWMtMTE3Yy00YmM2LTk4OWEtMDU1ZWRlNTQ3YjZkkyzyfNOK8fm61YM_NgGTTp09udTkhoeCdjHA7nMfXwCbTaiU3BJ6NwNkLqJ7ogfDG2cOhwnhVOmdCQ4wwLRwChUZJ__RHzxbt-MlhtQbGqUkF0i1ZwlNUrO7ElCXsyW0\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nHost: sandbox-api.alelo.com.br\r\nContent-Length: 913\r\n\r\n"
+<- "{\"token\":\"eyJhbGciOiJSU0EtT0FFUC0yNTYiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0.Sy8e0y387LVWcv0P7nwKtu7DHKWww4fCnCx68OnjhmM9sbhmZ9FTQwznGfnSljWFYxXmQPy2PnvtsdvMsEPp5jUANMKTpp4aAGfS_1x31UBuMeRQT5NMlFG8lhCwbPmNtrEOyB2fZUQBsmePpTtdzzAn1tj_hY7XC2bqGkPJ2zS6K2jXqdtkGWeLSMjEDRdyjDuQ_ybFx6uHfYcN_ioXcetUU_MJ1Ai3snfBU-150fCKTmY0SJ09tWMLCyYmvL416L_ha2UmY3tZm1zvpkyRQ612t88ZCEeUK-ZXBYp7FJT-KAAogG49G-Nadj3PSe8jQdxoIZTP46knT3vYp6OmxQ._5Y3c8IjGVJEpkvk4rXwNA.H7LHUpASrZB7zf4Wj5og2l7OBIvgLb2zEdpEC2NVcQPW612oS5jMnUucd58NGDoNoQssxfpjJXse5K-2V7KYEkRlYoVN39gqrIYNesnqPqTmU2VvpQsarjPVO62DgOes3R-qAKkytR3uB3VqNdYmgzdhWf-5tKc8XwLRa41kIsWo6cL7KvKzNUNS_a083X5IUje7Gh4yuH21RzAYVH3diuWDX9QcrdFMZ0BQxE1SpddG8QBcyGgQGvMsfju3Q2kEDrXuJZUSURRiOHdGOpHcYaTjHiGv-Q-NNVNtlwcMhGguMW93_YG8m5gI8VyW8Nq_2epq9YqZwK2YC7XO9CAMxQCaak1ol3ZqR5eo_RO6_ZIUe5NY6NjSWCLqijrAnARbpBUnaXY8CJN4_xRpg3zgqg.gFksDAHH--hQMyWZtXyOfQ\",\"uuid\":\"53141521-afc8-4a08-af0c-f0382aef43c1\"}"
+-> "HTTP/1.1 200 OK\r\n"
+-> "X-Backside-Transport: OK OK\r\n"
+-> "Connection: close\r\n"
+-> "Transfer-Encoding: chunked\r\n"
+-> "Content-Type: application/json\r\n"
+-> "Date: Wed, 24 Aug 2022 22:20:37 GMT\r\n"
+-> "X-Global-Transaction-ID: 379298106306a42455f1a6b2\r\n"
+-> "x-content-type-options: nosniff\r\n"
+-> "x-xss-protection: 1; mode=block\r\n"
+-> "cache-control: no-cache, no-store, max-age=0, must-revalidate\r\n"
+-> "pragma: no-cache\r\n"
+-> "expires: 0\r\n"
+-> "x-frame-options: DENY\r\n"
+-> "Access-Control-Expose-Headers: APIm-Debug-Trans-Id, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-Global-Transaction-ID\r\n"
+-> "Access-Control-Allow-Origin: *\r\n"
+-> "Access-Control-Allow-Methods: POST\r\n"
+-> "Set-Cookie: 20af66d9029740e40c713b05f443f86d=2bdc6d7099faf31789e088a0d77ea5cc; path=/; HttpOnly; Secure; SameSite=None\r\n"
+-> "X-RateLimit-Limit: name=rate-limit,400;\r\n"
+-> "X-RateLimit-Remaining: name=rate-limit,399;\r\n"
+-> "Content-Encoding: gzip\r\n"
+-> "\r\n"
+-> "fa\r\n"
+reading 250 bytes...
+-> "\x1F\x8B\b\x00\x00\x00\x00\x00\x00\x034\x8F\xCDN\x840\x14\x85\xDF\xA5K#\x13\n\x94\x82\xBB\t\x93IX\xA8\x89\xE1\x05.\xEDel\x94\x16\xFB\xB3\x18\x8D\xEFB\xE2\xC2\xF7`^\xCC\x96\xC4\xBB\xEA=\xDF9\xF7\xA4_\xC4\xE2G@\xE7{I\x1E\b\x93\x02\v\xD1\xD6\x19k\xA6:\xAB(\xC5l\x14\rf\x15\x1FY\x81b\x04\xA8\x90\xDC\x13\t\x1E\a5cL\x14\x94\xD2\x9C\xD1\x86\xB6\xAC\x89\xC4\xA2\x0FVwF&\x96\xE7Q\xD1.\xECOZ\x94q\x83\xD9\x04\xED\x93p\xA0\x89\xCE\xE0\xDEPv`\xF7\xF6\xBC\xE6\xAC\xB9\xDB\x87\xE7t\xF7\a\xFFj\xAC\xFA\x04\xAF\xCC\xFFY^\xB2\x96\xF3\x14F\xE7\xE0\x82.j\x83\x05\xED\xE0\xF6{\xFB1\xDB\xDA\x19=);\x83\x84m\x15f\xDEV\x17D\xB4\x9AC\xCC8\x0F>\xA4D\xF7\xFCt\xEE_\x1E\x8F\xA7cT\x97w\xB8\xA2\xED%j\xAF&%\xF6\xB6\xE8\xA9\"\x12\xB0\xC4/\xE1p]RwI\xBE\xFF\x00\x00\x00\xFF\xFF"
+read 250 bytes
+reading 2 bytes...
+-> ""
+-> "\r\n"
+read 2 bytes
+-> "a\r\n"
+reading 10 bytes...
+-> "\x03\x00\xBB\x9B_\xC02\x01\x00\x00"
+read 10 bytes
+reading 2 bytes...
+-> ""
+-> "\r\n"
+read 2 bytes
+-> "0\r\n"
+-> "\r\n"
+Conn close

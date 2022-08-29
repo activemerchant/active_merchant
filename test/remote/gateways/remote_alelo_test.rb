@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'singleton'
 
 class RemoteAleloTest < Test::Unit::TestCase
   def setup
@@ -8,181 +9,184 @@ class RemoteAleloTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
     @options = {
-      billing_address: address,
-      description: 'Store Purchase'
+      order_id: '1',
+      establishment_code: '000002007690360',
+      sub_merchant_mcc: '5499',
+      player_identification: '1',
+      description: 'Store Purchase',
+      external_trace_number: '123456'
     }
   end
 
   def test_access_token_success
-    options = {}
-    @gateway.send(:access_token, options)
+    resp = @gateway.send :fetch_access_token
 
-    refute_nil options[:access_token]
+    assert_kind_of Response, resp
+    refute_nil resp.message
   end
 
   def test_failure_access_token_with_invalid_keys
-    gateway = AleloGateway.new({ client_id: 'abc123', client_secret: 'abc456' })
+    error = assert_raises(ActiveMerchant::ResponseError) do
+      gateway = AleloGateway.new({ client_id: 'abc123', client_secret: 'abc456' })
+      gateway.send :fetch_access_token
+    end
 
-    options = {}
-    gateway.send(:access_token, options)
+    assert_match(/401/, error.message)
   end
 
   def test_successful_remote_encryption_key_with_provided_access_token
-    options = {}
-    access_token = @gateway.send(:access_token, options)
+    access_token = @gateway.send :fetch_access_token
+    resp = @gateway.send(:remote_encryption_key, access_token.message)
 
-    options = { access_token: access_token }
-    resp = @gateway.send(:remote_encryption_key, options)
-
-    assert_equal options[:access_token], access_token
-    assert resp.is_a? String
+    assert_kind_of Response, resp
+    refute_nil resp.message
   end
 
-  def test_success_remote_encryption_key_without_access_token
-    options = {}
-    resp = @gateway.send(:remote_encryption_key, options)
+  def test_ensure_credentials_with_no_provided_access_token_key_are_generated
+    credentials = @gateway.send :ensure_credentials, {}
 
-    refute_nil resp
-    assert_equal resp, @gateway.send(:remote_encryption_key, options)
+    refute_nil credentials[:key]
+    refute_nil credentials[:access_token]
+    assert_kind_of Response, credentials[:multiresp]
+    assert_equal 2, credentials[:multiresp].responses.size
   end
 
-  def test_succesfull_failure_recovery_with_expired_access_token_on_encryption_key_generation
-    options = { access_token: 'abc123' }
+  def test_sucessful_encryption_key_requested_when_access_token_provided
+    access_token = @gateway.send :fetch_access_token
+    credentials = @gateway.send :ensure_credentials, { access_token: access_token.message }
 
-    resp = @gateway.send(:remote_encryption_key, options)
+    refute_nil credentials[:key]
+    refute_nil credentials[:access_token]
+    assert_equal access_token.message, credentials[:access_token]
+    assert_kind_of Response, credentials[:multiresp]
+    assert_equal 1, credentials[:multiresp].responses.size
+  end
 
-    refute_equal options[:access_token], 'abc123'
-    refute_nil resp
+  def test_successful_fallback_with_expired_access_token
+    credentials = @gateway.send :ensure_credentials, { access_token: 'abc123' }
+
+    refute_nil credentials[:key]
+    refute_nil credentials[:access_token]
+    refute_equal 'abc123', credentials[:access_token]
+    assert_kind_of Response, credentials[:multiresp]
+    assert_equal 2, credentials[:multiresp].responses.size
   end
 
   def test_successful_purchase
+    set_credentials!
+    @options[:uuid] = '53141521-afc8-4a08-af0c-f0382aef43c1'
     response = @gateway.purchase(@amount, @credit_card, @options)
+
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_match %r(Confirmada), response.message
   end
 
-  def test_successful_purchase_with_more_options
+  def test_successful_purchase_with_no_predefined_credentials
+    @options[:uuid] = '53141521-afc8-4a08-af0c-f0382aef43c1'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_match %r(Confirmada), response.message
+  end
+
+  def test_unsuccessful_purchase_with_merchant_discredited
+    set_credentials!
+    @options[:uuid] = '7c82f46e-64f7-4745-9c60-335a689b8e90'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert_match %r(contato), response.message
+  end
+
+  def test_unsuccessful_purchase_with_insuffieicent_funds
+    set_credentials!
+    @options[:uuid] = 'a36aa740-d505-4d47-8aa6-6c31c7526a68'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert_match %r(insuficiente), response.message
+  end
+
+  def test_unsuccessful_purchase_with_invalid_fields
+    set_credentials!
+    @options[:uuid] = 'd7aff4a6-1ea1-4e74-b81a-934589385958'
+    response = @gateway.purchase(@amount, @declined_card, @options)
+
+    assert_failure response
+    assert_match %r{Erro}, response.message
+  end
+
+  def test_unsuccessful_purchase_with_blocked_card
+    set_credentials!
+    @options[:uuid] = 'd2a0350d-e872-47bf-a543-2d36c2ad693e'
+    response = @gateway.purchase(@amount, @declined_card, @options)
+
+    assert_failure response
+    assert_match %r(Bloqueado), response.message
+  end
+
+  def test_successful_without_uuid_purchase
+    set_credentials!
+    SecureRandom.expects(:uuid).returns('53141521-afc8-4a08-af0c-f0382aef43c1')
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_match %r(Confirmada), response.message
+  end
+
+  def test_successful_purchase_with_geolocalitation
+    set_credentials!
     options = {
-      order_id: '1',
-      ip: '127.0.0.1',
-      email: 'joe@example.com'
+      geolocation: {
+        longitude: '10.451526',
+        latitude: '51.165691'
+      },
+      uuid: '53141521-afc8-4a08-af0c-f0382aef43c1'
     }
 
-    response = @gateway.purchase(@amount, @credit_card, options)
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
-  end
-
-  def test_failed_purchase
-    response = @gateway.purchase(@amount, @declined_card, @options)
-    assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
-  end
-
-  def test_successful_authorize_and_capture
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-
-    assert capture = @gateway.capture(@amount, auth.authorization)
-    assert_success capture
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', capture.message
-  end
-
-  def test_failed_authorize
-    response = @gateway.authorize(@amount, @declined_card, @options)
-    assert_failure response
-    assert_equal 'REPLACE WITH FAILED AUTHORIZE MESSAGE', response.message
-  end
-
-  def test_partial_capture
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-
-    assert capture = @gateway.capture(@amount - 1, auth.authorization)
-    assert_success capture
-  end
-
-  def test_failed_capture
-    response = @gateway.capture(@amount, '')
-    assert_failure response
-    assert_equal 'REPLACE WITH FAILED CAPTURE MESSAGE', response.message
-  end
-
-  def test_successful_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-
-    assert refund = @gateway.refund(@amount, purchase.authorization)
-    assert_success refund
-    assert_equal 'REPLACE WITH SUCCESSFUL REFUND MESSAGE', refund.message
-  end
-
-  def test_partial_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-
-    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
-    assert_success refund
-  end
-
-  def test_failed_refund
-    response = @gateway.refund(@amount, '')
-    assert_failure response
-    assert_equal 'REPLACE WITH FAILED REFUND MESSAGE', response.message
-  end
-
-  def test_successful_void
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-
-    assert void = @gateway.void(auth.authorization)
-    assert_success void
-    assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', void.message
-  end
-
-  def test_failed_void
-    response = @gateway.void('')
-    assert_failure response
-    assert_equal 'REPLACE WITH FAILED VOID MESSAGE', response.message
-  end
-
-  def test_successful_verify
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
-    assert_match %r{REPLACE WITH SUCCESS MESSAGE}, response.message
-  end
-
-  def test_failed_verify
-    response = @gateway.verify(@declined_card, @options)
-    assert_failure response
-    assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
+    assert_match %r(Confirmada), response.message
   end
 
   def test_invalid_login
-    gateway = AleloGateway.new(login: '', password: '')
+    gateway = AleloGateway.new(client_id: 'asdfghj', client_secret: '1234rtytre')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match %r{REPLACE WITH FAILED LOGIN MESSAGE}, response.message
-  end
-
-  def test_dump_transcript
-    # This test will run a purchase transaction on your gateway
-    # and dump a transcript of the HTTP conversation so that
-    # you can use that transcript as a reference while
-    # implementing your scrubbing logic.  You can delete
-    # this helper after completing your scrub implementation.
-    dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
+    assert_match %r{invalid_client}, response.message
   end
 
   def test_transcript_scrubbing
+    set_credentials!
     transcript = capture_transcript(@gateway) do
+      @options[:uuid] = '53141521-afc8-4a08-af0c-f0382aef43c1'
       @gateway.purchase(@amount, @credit_card, @options)
     end
     transcript = @gateway.scrub(transcript)
 
-    assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed(@gateway.options[:client_id], transcript)
+    assert_scrubbed(@gateway.options[:client_secret], transcript)
   end
+
+  private
+
+  def set_credentials!
+    if AleloCredentials.instance.access_token.nil?
+      credentials = @gateway.send :ensure_credentials, {}
+      AleloCredentials.instance.access_token = credentials[:access_token]
+      AleloCredentials.instance.key = credentials[:key]
+    end
+
+    @options[:access_token] = AleloCredentials.instance.access_token
+    @options[:encryption_key] = AleloCredentials.instance.key
+  end
+end
+
+# A simple singleton so an access token and key can
+# be shared among several tests
+class AleloCredentials
+  include Singleton
+
+  attr_accessor :access_token, :key
 end

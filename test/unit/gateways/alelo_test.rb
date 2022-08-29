@@ -1,107 +1,290 @@
 require 'test_helper'
 
 class AleloTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
-    @gateway = AleloGateway.new(client_id: 'xxxx', client_secret: 'xxxx')
+    @gateway = AleloGateway.new(fixtures(:alelo))
+    @gateway_no_valid = AleloGateway.new(client_id: 'client_id', client_secret: 'client_secret')
     @credit_card = credit_card
     @amount = 100
 
     @options = {
       order_id: '1',
-      billing_address: address,
-      description: 'Store Purchase'
+      establishment_code: '000002007690360',
+      sub_merchant_mcc: '5499',
+      player_identification: '1',
+      description: 'Store Purchase',
+      external_trace_number: '123456'
     }
   end
 
-  def test_successful_purchase; end
+  def test_required_client_id_and_client_secret
+    error = assert_raises ArgumentError do
+      AleloGateway.new
+    end
 
-  def test_failed_purchase; end
+    assert_equal 'Missing required parameter: client_id', error.message
+  end
 
-  def test_successful_authorize; end
+  def test_supported_card_types
+    assert_equal AleloGateway.supported_cardtypes, %i[visa master american_express discover]
+  end
 
-  def test_failed_authorize; end
+  def test_supported_countries
+    assert_equal AleloGateway.supported_countries, ['BR']
+  end
 
-  def test_successful_capture; end
+  def test_support_scrubbing_flag_enabled
+    assert @gateway.supports_scrubbing?
+  end
 
-  def test_failed_capture; end
+  def test_extra_data_present; end
 
-  def test_successful_refund; end
+  def test_sucessful_fetch_access_token_with_proper_client_id_client_secret
+    @gateway = AleloGateway.new(client_id: 'abc123', client_secret: 'def456')
+    access_token_expectation! @gateway
 
-  def test_failed_refund; end
+    resp = @gateway.send(:fetch_access_token)
+    assert_kind_of Response, resp
+    assert_equal 'abc123', resp.message
+  end
 
-  def test_successful_void; end
+  def test_successful_remote_encryption_key
+    @gateway = AleloGateway.new(client_id: 'abc123', client_secret: 'def456')
+    encryption_key_expectation! @gateway
 
-  def test_failed_void; end
+    resp = @gateway.send(:remote_encryption_key, 'abc123')
 
-  def test_successful_verify; end
+    assert_kind_of Response, resp
+    assert_equal 'def456', resp.message
+  end
 
-  def test_successful_verify_with_failed_void; end
+  def test_success_purchase_with_provided_credentials
+    key, secret_key = test_key true
 
-  def test_failed_verify; end
+    @options[:encryption_key] = key
+    @options[:access_token] = 'abc123'
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      decrypted = JOSE::JWE.block_decrypt(secret_key, JSON.parse(data)['token']).first
+      request = JSON.parse(decrypted, symbolize_names: true)
+
+      assert_equal @options[:order_id], request[:request_id]
+      assert_equal '1.00', request[:amount]
+      assert_equal @credit_card.number, request[:cardNumber]
+      assert_equal @credit_card.name, request[:cardholderName]
+      assert_equal @credit_card.month, request[:expirationMonth]
+      assert_equal '23', request[:expirationYear]
+      assert_equal '3', request[:captureType]
+      assert_equal @credit_card.verification_value, request[:securityCode]
+      assert_equal @options[:establishment_code], request[:establishmentCode]
+      assert_equal @options[:player_identification], request[:playerIdentification]
+      assert_equal @options[:sub_merchant_mcc], request[:subMerchantCode]
+      assert_equal @options[:external_trace_number], request[:externalTraceNumber]
+    end.respond_with(successful_capture_response)
+
+    assert_success response
+  end
+
+  def test_success_purchase_with_no_provided_credentials
+    key = test_key
+    @gateway.expects(:ssl_post).times(2).returns({ access_token: 'abc123' }.to_json).returns(successful_capture_response)
+    @gateway.expects(:ssl_get).returns({ publicKey: key }.to_json)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_kind_of MultiResponse, response
+    assert_equal 3, response.responses.size
+    assert_equal 'abc123', response.responses.first.message
+    assert_equal key, response.responses[1].message
+  end
+
+  def test_sucessful_retry_with_expired_credentials
+    key = test_key
+    @options[:encryption_key] = key
+    @options[:access_token] = 'abc123'
+
+    # Expectations
+    # ssl_post => raises a 401
+    # ssl_post => access_token
+    # ssl_get => key
+    # ssl_post => Final purchase success
+    @gateway.expects(:ssl_post).
+      times(3).
+      raises(ActiveMerchant::ResponseError.new(stub('401 Response', code: '401'))).
+      then.returns({ access_token: 'abc123' }.to_json, successful_capture_response)
+    @gateway.expects(:ssl_get).returns({ publicKey: key }.to_json)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_kind_of MultiResponse, response
+    assert_equal 3, response.responses.size
+    assert_equal 'abc123', response.responses.first.message
+    assert_equal key, response.responses[1].message
+  end
+
+  def test_detecting_successfull_response_from_body
+    assert @gateway.send :success_from, { status: 'CONFIRMADA' }
+  end
+
+  def test_get_response_message_from_messages_key
+    message = @gateway.send :message_from, { messages: 'hello', messageUser: 'world' }
+    assert_equal 'hello', message
+  end
+
+  def test_get_response_message_from_message_user
+    message = @gateway.send :message_from, { messages: nil, messageUser: 'world' }
+    assert_equal 'world', message
+  end
+
+  def test_url_generation_from_action
+    action = 'test'
+    assert_equal @gateway.test_url + action, @gateway.send(:url, action)
+  end
+
+  def test_request_headers_building
+    gateway = AleloGateway.new(client_id: 'abc123', client_secret: 'def456')
+    headers = gateway.send :request_headers, 'access_123'
+
+    assert_equal 'application/json', headers['Accept']
+    assert_equal 'abc123', headers['X-IBM-Client-Id']
+    assert_equal 'def456', headers['X-IBM-Client-Secret']
+    assert_equal 'Bearer access_123', headers['Authorization']
+  end
 
   def test_scrub
     assert @gateway.supports_scrubbing?
+
+    pre_scrubbed = File.read('test/unit/transcripts/alelo_purchase')
+    post_scrubbed = File.read('test/unit/transcripts/alelo_purchase_scrubbed')
+
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
-  def test_access_token_from_options
+  def test_success_payload_encryption
+    options = {
+      access_token: 'abc123',
+      encryption_key: test_key
+    }
+
+    jwe, _credentials = @gateway.send(:encrypt_payload, { hello: 'world' }, options)
+
+    refute_nil JSON.parse(jwe)['token']
+    refute_nil JSON.parse(jwe)['uuid']
+  end
+
+  def test_ensure_encryption_format
+    key, secret_key = test_key true
+    body = { hello: 'world' }
+    options = { access_token: 'abc123', encryption_key: key }
+
+    jwe, _cred = @gateway.send(:encrypt_payload, body, options)
+    parsed_jwe = JSON.parse(jwe, symbolize_names: true)
+    refute_nil parsed_jwe[:token]
+
+    decrypted = JOSE::JWE.block_decrypt(secret_key, parsed_jwe[:token]).first
+    assert_equal body.to_json, decrypted
+  end
+
+  def test_ensure_credentials_use_provided_access_token_and_key
+    options = { access_token: 'abc123', encryption_key: 'def456' }
+
+    credentials = @gateway.send :ensure_credentials, options
+
+    assert_equal options[:access_token], credentials[:access_token]
+    assert_equal options[:encryption_key], credentials[:key]
+    assert_nil options[:multiresp]
+  end
+
+  def test_ensure_credentials_with_access_token_and_not_key
+    encryption_key_expectation! @gateway
     options = { access_token: 'abc123' }
 
-    assert_equal options[:access_token], @gateway.send(:access_token, options)
+    credentials = @gateway.send :ensure_credentials, options
+
+    assert_equal options[:access_token], credentials[:access_token]
+    assert_equal 'def456', credentials[:key]
+    refute_nil credentials[:multiresp]
+    assert_equal 1, credentials[:multiresp].responses.size
   end
 
-  def test_encryption_key_from_options
-    options = { encryption_key: 'abc123' }
+  def test_ensure_credentials_with_key_but_not_access_token
+    @gateway = AleloGateway.new(client_id: 'abc123', client_secret: 'def456')
+    access_token_expectation! @gateway
+    encryption_key_expectation! @gateway
 
-    assert_equal options[:encryption_key], @gateway.send(:remote_encryption_key, options)
-  end
+    options = { encryption_key: 'xx_no_key_xx' }
 
-  def test_success_payload_encryption
-    jwe = @gateway.send(:encrypt_payload, { hello: 'world' }, test_key)
+    credentials = @gateway.send :ensure_credentials, options
 
-    refute_nil jwe
+    assert_equal 'abc123', credentials[:access_token]
+    assert_equal 'def456', credentials[:key]
+    refute_nil credentials[:multiresp]
+    assert_equal 2, credentials[:multiresp].responses.size
   end
 
   private
 
-  def pre_scrubbed
-    %(same text)
+  def test_key(with_sk = false)
+    jwk_rsa_sk = JOSE::JWK.generate_key([:rsa, 4096])
+    jwk_rsa_pk = JOSE::JWK.to_public(jwk_rsa_sk)
+
+    pem = jwk_rsa_pk.to_pem.split("\n")
+    pem.pop
+    pem.shift
+
+    return pem.join unless with_sk
+
+    return pem.join, jwk_rsa_sk
   end
 
-  def post_scrubbed
-    %(same text)
+  def access_token_expectation!(gateway, access_token = 'abc123')
+    url = 'https://sandbox-api.alelo.com.br/alelo/sandbox/captura-oauth-provider/oauth/token'
+    params = [
+      'grant_type=client_credentials',
+      'client_id=abc123',
+      'client_secret=def456',
+      'scope=%2Fcapture'
+    ].join('&')
+
+    headers = {
+      'Accept' => 'application/json',
+      'Content-Type' => 'application/x-www-form-urlencoded'
+    }
+
+    gateway.expects(:ssl_post).with(url, params, headers).returns({ access_token: access_token }.to_json)
   end
 
-  def test_key
-    'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlqfFfUoVCZnSM66vq0UimOZzsd6k5nuHOMr5s/pGw45n24Qs2cdJlgtX34N7W7vftuxYBAMhD4FucFZ0b12HO3iqGheqcgPolYTAlM/XFkzEohSI3B5Xhj1m6PTJZfmwFWaGHWapy0oAHJQvc4gnjn5UjytN1UGCKNStiN255XhpdsDJBwY4zPz55doZGywKscpN4QuPGJQK/XocbWApYIh0+Yj9PxSgFoEWH1KIxDVg+voOruVrOJwPNaNITBX3O0U6G9xT4av+4hcomGNhrFZDuhlvbUqBllw0VUp+87bzDJVImnz97WvZLRnOMgrPfwTz5z467/yqbmaevCI+VwIDAQAB'
-  end
+  def encryption_key_expectation!(gateway, public_key = 'def456')
+    url = 'https://sandbox-api.alelo.com.br/alelo/sandbox/capture/key?format=json'
+    headers = {
+      'Accept' => 'application/json',
+      'X-IBM-Client-Id' => gateway.options[:client_id],
+      'X-IBM-Client-Secret' => gateway.options[:client_secret],
+      'Authorization' => 'Bearer abc123'
+    }
 
-  def successful_purchase_response
-    %(
-      Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-      to "true" when running remote tests:
-
-      $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-        test/remote/gateways/remote_alelo_test.rb \
-        -n test_successful_purchase
-    )
+    @gateway.expects(:ssl_get).with(url, headers).returns({ publicKey: public_key }.to_json)
   end
 
   def failed_purchase_response; end
 
-  def successful_authorize_response; end
-
-  def failed_authorize_response; end
-
-  def successful_capture_response; end
-
-  def failed_capture_response; end
-
-  def successful_refund_response; end
-
-  def failed_refund_response; end
-
-  def successful_void_response; end
-
-  def failed_void_response; end
+  def successful_capture_response
+    {
+      requestId: '5dce2c96-58f6-411e-bc8e-47b52ecbaa4e',
+      dateTime: '211105181958',
+      returnCode: '00',
+      nsu: '00123',
+      amount: '0.10',
+      maskedCard: '506758******7013',
+      authorizationCode: '735977',
+      messages: 'Transação Confirmada com sucesso.',
+      status: 'CONFIRMADA',
+      playerIdentification: '4',
+      captureType: '3'
+    }.to_json
+  end
 end
