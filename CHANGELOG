@@ -108,6 +108,7 @@
 * MerchantE: Add tests for `moto_ecommerce_ind` field [ajawadmirza] #4554
 * Plexo: Update `purchase` method, add flags for header fields, add new fields `billing_address`, `identification_type`, `identification_value`, and `cardholder_birthdate` [ajawadmirza] #4540
 * Rapyd: Remove `BR`, `MX`, and `US` from supported countries [ajawadmirza] #4558
+* Stripe Payment Intents: fix bug with billing address email [jcreiff] #4556
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
