@@ -97,6 +97,10 @@ class SquareTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_scrub
+    assert_equal @gateway.send(:scrub, pre_scrubbed), post_scrubbed
+  end
+
   private
 
   def successful_purchase_response
@@ -231,5 +235,67 @@ class SquareTest < Test::Unit::TestCase
                  { "id" => "22A4SJQS0QDCV.REACHABLE", "name" => "Reachable" }],
     "creation_source" => "THIRD_PARTY",
     "segment_ids" => ["22A4SJQS0QDCV.CARDS_ON_FILE", "22A4SJQS0QDCV.REACHABLE"] } }
+  end
+
+  def pre_scrubbed
+    <<-PRE_SCRUBBED
+      "--- !ruby/object:Square::ApiResponse\n" +
+      "status_code: 400\n" +
+      "reason_phrase: Bad Request\n" +
+      "headers: !ruby/hash-with-ivars:Faraday::Utils::Headers\n" +
+      "raw_body: '{\"errors\":[{\"category\":\"INVALID_REQUEST_ERROR\",\"code\":\"EXPECTED_STRING\",\"detail\":\"Expected\n" +
+      "  a string value.\",\"field\":\"card_nonce\"}]}'\n" +
+      "request: !ruby/object:Square::HttpRequest\n" +
+      "  http_method: POST\n" +
+      "  query_url: https://connect.squareupsandbox.com/v2/customers/B57MH6YFT32YH7AEP1ZB2E4KWM/cards\n" +
+      "  headers:\n" +
+      "    accept: application/json\n" +
+      "    content-type: application/json; charset=utf-8\n" +
+      "    Authorization: Bearer EAAAEAynpbJlUt5RS2QdUCPNOvQRYs_l8_cH5eqi8JwoZjhrI79JyW8RGbyVpMu4\n" +
+      "    user-agent: Square-Ruby-SDK/6.3.0.20200826\n" +
+      "    Square-Version: '2020-08-26'\n" +
+      "  parameters: '{\"card_nonce\":{\"first_name\":\"Joe\",\"last_name\":\"Smith\",\"number\":\"4111111111111111\",\"month\":1,\"year\":2025,\"brand\":\"visa\",\"verification_value\":\"000\"},\"billing_address\":{\"first_name\":\"Joe\",\"last_name\":\"Smith\",\"address_line_1\":\"123\n" +
+      "    Mass Ave.\",\"locality\":\"Boston\",\"administrative_district_level_1\":\"MA\",\"postal_code\":\"02120\",\"country\":\"US\"},\"cardholder_name\":\"Joe\n" +
+      "    Smith\"}'\n" +
+      "errors: &1\n" +
+      "- :category: INVALID_REQUEST_ERROR\n" +
+      "  :code: EXPECTED_STRING\n" +
+      "  :detail: Expected a string value.\n" +
+      "  :field: card_nonce\n" +
+      "body: !ruby/struct\n" +
+      "  errors: *1\n" +
+      "cursor:\n"
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed
+    <<-POST_SCRUBBED
+      "--- !ruby/object:Square::ApiResponse\n" +
+      "status_code: 400\n" +
+      "reason_phrase: Bad Request\n" +
+      "headers: !ruby/hash-with-ivars:Faraday::Utils::Headers\n" +
+      "raw_body: '{\"errors\":[{\"category\":\"INVALID_REQUEST_ERROR\",\"code\":\"EXPECTED_STRING\",\"detail\":\"Expected\n" +
+      "  a string value.\",\"field\":\"card_nonce\"}]}'\n" +
+      "request: !ruby/object:Square::HttpRequest\n" +
+      "  http_method: POST\n" +
+      "  query_url: https://connect.squareupsandbox.com/v2/customers/B57MH6YFT32YH7AEP1ZB2E4KWM/cards\n" +
+      "  headers:\n" +
+      "    accept: application/json\n" +
+      "    content-type: application/json; charset=utf-8\n" +
+      "    Authorization: Bearer [FILTERED]\n" +
+      "    user-agent: Square-Ruby-SDK/6.3.0.20200826\n" +
+      "    Square-Version: '2020-08-26'\n" +
+      "  parameters: '{\"card_nonce\":{\"first_name\":\"Joe\",\"last_name\":\"Smith\",\"number\":\"[FILTERED]\",\"month\":1,\"year\":2025,\"brand\":\"visa\",\"verification_value\":\"[FILTERED]\"},\"billing_address\":{\"first_name\":\"Joe\",\"last_name\":\"Smith\",\"address_line_1\":\"123\n" +
+      "    Mass Ave.\",\"locality\":\"Boston\",\"administrative_district_level_1\":\"MA\",\"postal_code\":\"02120\",\"country\":\"US\"},\"cardholder_name\":\"Joe\n" +
+      "    Smith\"}'\n" +
+      "errors: &1\n" +
+      "- :category: INVALID_REQUEST_ERROR\n" +
+      "  :code: EXPECTED_STRING\n" +
+      "  :detail: Expected a string value.\n" +
+      "  :field: card_nonce\n" +
+      "body: !ruby/struct\n" +
+      "  errors: *1\n" +
+      "cursor:\n"
+    POST_SCRUBBED
   end
 end
