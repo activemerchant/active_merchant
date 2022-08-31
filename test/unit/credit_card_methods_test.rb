@@ -204,6 +204,31 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'confiable', CreditCard.brand?('5607180000000000')
   end
 
+  def test_should_detect_bp_plus_card
+    assert_equal 'bp_plus', CreditCard.brand?('70501 501021600 378')
+    assert_equal 'bp_plus', CreditCard.brand?('70502 111111111 111')
+    assert_equal 'bp_plus', CreditCard.brand?('7050 15605297 00114')
+    assert_equal 'bp_plus', CreditCard.brand?('7050 15546992 00062')
+  end
+
+  def test_should_validate_bp_plus_card
+    assert_true CreditCard.valid_number?('70501 501021600 378')
+    assert_true CreditCard.valid_number?('7050 15605297 00114')
+    assert_true CreditCard.valid_number?('7050 15546992 00062')
+    assert_true CreditCard.valid_number?('7050 16150146 00110')
+    assert_true CreditCard.valid_number?('7050 16364764 00070')
+
+    # numbers with invalid formats
+    assert_false CreditCard.valid_number?('7050_15546992_00062')
+    assert_false CreditCard.valid_number?('70501 55469920 0062')
+    assert_false CreditCard.valid_number?('70 501554699 200062')
+
+    # numbers that are luhn-invalid
+    assert_false CreditCard.valid_number?('70502 111111111 111')
+    assert_false CreditCard.valid_number?('7050 16364764 00071')
+    assert_false CreditCard.valid_number?('7050 16364764 00072')
+  end
+
   def test_confiable_number_not_validated
     10.times do
       number = rand(5607180000000001..5607189999999999).to_s

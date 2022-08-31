@@ -40,7 +40,8 @@ module ActiveMerchant #:nodoc:
         'confiable' => ->(num) { num =~ /^560718\d{10}$/ },
         'synchrony' => ->(num) { num =~ /^700600\d{10}$/ },
         'routex' => ->(num) { num =~ /^(700676|700678)\d{13}$/ },
-        'mada' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MADA_RANGES) }
+        'mada' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MADA_RANGES) },
+        'bp_plus' => ->(num) { num =~ /^(7050\d\s\d{9}\s\d{3}$|705\d\s\d{8}\s\d{5}$)/ }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
@@ -306,7 +307,7 @@ module ActiveMerchant #:nodoc:
         def valid_number?(number)
           valid_test_mode_card_number?(number) ||
             valid_card_number_length?(number) &&
-              valid_card_number_characters?(number) &&
+              valid_card_number_characters?(brand?(number), number) &&
               valid_by_algorithm?(brand?(number), number)
         end
 
@@ -373,8 +374,9 @@ module ActiveMerchant #:nodoc:
           number.length >= 12
         end
 
-        def valid_card_number_characters?(number) #:nodoc:
+        def valid_card_number_characters?(brand, number) #:nodoc:
           return false if number.nil?
+          return number =~ /\A[0-9 ]+\Z/ if brand == 'bp_plus'
 
           !number.match(/\D/)
         end
@@ -392,12 +394,14 @@ module ActiveMerchant #:nodoc:
             valid_creditel_algo?(numbers)
           when 'alia', 'confiable', 'maestro_no_luhn'
             true
+          when 'bp_plus'
+            valid_bp_plus_algo?(numbers)
           else
             valid_luhn?(numbers)
           end
         end
 
-        ODD_LUHN_VALUE = {
+        BYTES_TO_DIGITS = {
           48 => 0,
           49 => 1,
           50 => 2,
@@ -411,7 +415,7 @@ module ActiveMerchant #:nodoc:
           nil => 0
         }.freeze
 
-        EVEN_LUHN_VALUE = {
+        BYTES_TO_DIGITS_DOUBLED = {
           48 => 0, # 0 * 2
           49 => 2, # 1 * 2
           50 => 4, # 2 * 2
@@ -431,17 +435,38 @@ module ActiveMerchant #:nodoc:
           sum = 0
 
           odd = true
-          numbers.reverse.bytes.each do |number|
+          numbers.reverse.bytes.each do |bytes|
             if odd
               odd = false
-              sum += ODD_LUHN_VALUE[number]
+              sum += BYTES_TO_DIGITS[bytes]
             else
               odd = true
-              sum += EVEN_LUHN_VALUE[number]
+              sum += BYTES_TO_DIGITS_DOUBLED[bytes]
             end
           end
 
           sum % 10 == 0
+        end
+
+        def valid_luhn_with_check_digit?(numbers, check_digit)
+          sum = 0
+
+          doubler = true
+
+          numbers.reverse.bytes.each do |bytes|
+            doubler ? sum += BYTES_TO_DIGITS_DOUBLED[bytes] : sum += BYTES_TO_DIGITS[bytes]
+            doubler = !doubler
+          end
+
+          (10 - (sum % 10)) % 10 == check_digit.to_i
+        end
+
+        def valid_bp_plus_algo?(numbers)
+          return valid_luhn?(numbers.delete(' ')) if numbers[5] == ' '
+
+          check_digit = numbers[-1]
+          luhn_payload = numbers.delete(' ').chop
+          valid_luhn_with_check_digit?(luhn_payload, check_digit)
         end
 
         # Checks the validity of a card number by use of specific algorithms
