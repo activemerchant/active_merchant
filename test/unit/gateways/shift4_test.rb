@@ -14,7 +14,7 @@ class Shift4Test < Test::Unit::TestCase
   include CommStub
   def setup
     @gateway = Shift4Gateway.new(client_guid: '123456', auth_token: 'abcder123')
-    @credit_card = credit_card
+    @credit_card = credit_card('4000100011112224', verification_value: '333', first_name: 'John', last_name: 'Doe')
     @amount = 5
     @options = {}
     @extra_options = {
@@ -24,6 +24,10 @@ class Shift4Test < Test::Unit::TestCase
       customer_reference: 'D019D09309F2',
       destination_postal_code: '94719',
       product_descriptors: %w(Hamburger Fries Soda Cookie)
+    }
+    @customer_address = {
+      address1: '123 Street',
+      zip: '94901'
     }
   end
 
@@ -75,6 +79,21 @@ class Shift4Test < Test::Unit::TestCase
     assert_equal response.message, 'Transaction successful'
   end
 
+  def test_successful_purchase_with_customer_details
+    customer = { billing_address: @customer_address, ip: '127.0.0.1', email: 'test@test.com' }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(customer))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['customer']['addressLine1'], @customer_address[:address1]
+      assert_equal request['customer']['postalCode'], @customer_address[:zip]
+      assert_equal request['customer']['emailAddress'], customer[:email]
+      assert_equal request['customer']['ipAddress'], customer[:ip]
+      assert_equal request['customer']['firstName'], @credit_card.first_name
+      assert_equal request['customer']['lastName'], @credit_card.last_name
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_purchase_with_stored_credential
     stored_credential_options = {
       initial_transaction: true,
@@ -114,10 +133,6 @@ class Shift4Test < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['clerk']['numericId'], @extra_options[:clerk_id]
-      assert_equal request['transaction']['notes'], @extra_options[:notes]
-      assert_equal request['transaction']['purchaseCard']['customerReference'], @extra_options[:customer_reference]
-      assert_equal request['transaction']['purchaseCard']['destinationPostalCode'], @extra_options[:destination_postal_code]
-      assert_equal request['transaction']['purchaseCard']['productDescriptors'], @extra_options[:product_descriptors]
     end.respond_with(successful_store_response)
 
     assert response.success?
