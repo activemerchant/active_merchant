@@ -110,6 +110,7 @@
 * Rapyd: Remove `BR`, `MX`, and `US` from supported countries [ajawadmirza] #4558
 * Stripe Payment Intents: fix bug with billing address email [jcreiff] #4556
 * Shift4: Add customer to `purchase` & `store` and remove transaction from `store` [ajawadmirza] #4557
+* MerchantE: only add `moto_commerce_ind` to request if it is present [ajawadmirza] #4560
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
