@@ -6,6 +6,7 @@ class RapydTest < Test::Unit::TestCase
   def setup
     @gateway = RapydGateway.new(secret_key: 'secret_key', access_key: 'access_key')
     @credit_card = credit_card
+    @check = check
     @amount = 100
     @authorization = 'cus_9e1b5a357b2b7f25f8dd98827fbc4f22|card_cf105df9e77462deb34ffef33c3e3d05'
 
@@ -52,9 +53,12 @@ class RapydTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_ach
-    @gateway.expects(:ssl_request).returns(successful_ach_purchase_response)
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @check, @options.merge(billing_address: address(name: 'Joe John-ston')))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_nil JSON.parse(data)['capture']
+    end.respond_with(successful_ach_purchase_response)
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'ACT', response.params['data']['status']
   end

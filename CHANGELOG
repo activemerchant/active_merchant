@@ -113,6 +113,7 @@
 * MerchantE: only add `moto_commerce_ind` to request if it is present [ajawadmirza] #4560
 * Add BpPlus card type along with custom validation logic [dsmcclain] #4559
 * PayTrace: Support ACH implementation for new endpoints and request body [ajawadmirza] #4545
+* Rapyd: No force capture for ACH [naashton] #4562
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
