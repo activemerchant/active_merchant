@@ -594,7 +594,7 @@ module ActiveMerchant #:nodoc:
         #   Null-fill this attribute OR
         #   Do not submit the attribute at all.
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
-        xml.tag! :CardSecValInd, '1' if %w(visa master discover).include?(credit_card.brand) && bin == '000001'
+        xml.tag! :CardSecValInd, '1' if %w(visa discover diners_club).include?(credit_card.brand) && bin == '000001'
         xml.tag! :CardSecVal, credit_card.verification_value
       end
 
