@@ -60,20 +60,52 @@ module ActiveMerchant #:nodoc:
         false
       end
 
+      def valid_routing_number?
+        digits = routing_number.to_s.split('').map(&:to_i).select { |d| (0..9).cover?(d) }
+        case digits.size
+        when 9
+          return checksum(digits) == 0 || CAN_INSTITUTION_NUMBERS.include?(routing_number[1..3])
+        when 8
+          return CAN_INSTITUTION_NUMBERS.include?(routing_number[5..7])
+        end
+
+        false
+      end
+
       # Routing numbers may be validated by calculating a checksum and dividing it by 10. The
       # formula is:
       #   (3(d1 + d4 + d7) + 7(d2 + d5 + d8) + 1(d3 + d6 + d9))mod 10 = 0
       # See http://en.wikipedia.org/wiki/Routing_transit_number#Internal_checksums
-      def valid_routing_number?
-        digits = routing_number.to_s.split('').map(&:to_i).select { |d| (0..9).cover?(d) }
-        if digits.size == 9
-          checksum = ((3 * (digits[0] + digits[3] + digits[6])) +
-            (7 * (digits[1] + digits[4] + digits[7])) +
-            (digits[2] + digits[5] + digits[8])) % 10
+      def checksum(digits)
+        ((3 * (digits[0] + digits[3] + digits[6])) +
+        (7 * (digits[1] + digits[4] + digits[7])) +
+        (digits[2] + digits[5] + digits[8])) % 10
+      end
 
-          return checksum == 0 || CAN_INSTITUTION_NUMBERS.include?(routing_number[1..3])
+      # Always return MICR-formatted routing number for Canadian routing numbers, US routing numbers unchanged
+      def micr_format_routing_number
+        digits = routing_number.to_s.split('').map(&:to_i).select { |d| (0..9).cover?(d) }
+        case digits.size
+        when 9
+          if checksum(digits) == 0
+            return routing_number
+          else
+            return routing_number[4..8] + routing_number[1..3]
+          end
+        when 8
+          return routing_number
         end
-        false
+      end
+
+      # Always return electronic-formatted routing number for Canadian routing numbers, US routing numbers unchanged
+      def electronic_format_routing_number
+        digits = routing_number.to_s.split('').map(&:to_i).select { |d| (0..9).cover?(d) }
+        case digits.size
+        when 9
+          return routing_number
+        when 8
+          return '0' + routing_number[5..7] + routing_number[0..4]
+        end
       end
     end
   end

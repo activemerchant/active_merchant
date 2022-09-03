@@ -16,6 +16,7 @@
 * iVeri: Remove schema validation on Live requests [curiousepic] #4606
 * Beanstream: Adding Third Party 3DS fields [heavyblade] #4602
 * Borgun: Add support for 3DS preauth [ajawadmirza] #4603
+* Accept both formats of Canadian routing numbers [molbrown] #4568
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512
