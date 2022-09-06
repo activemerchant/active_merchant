@@ -20,6 +20,10 @@ airwallex:
   client_id: SOMECREDENTIAL
   client_api_key: ANOTHERCREDENTIAL
 
+alelo:
+  client_id: xxxxxxx
+  client_secret: xxxxxxx
+
 allied_wallet:
   site_id: site_id
   merchant_id: merchant_id
