@@ -222,6 +222,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_remote_address(post, options)
         add_country_code(post, options)
+        add_threeds_fields(post, options)
       end
 
       def add_amount(post, money, options)
@@ -281,6 +282,20 @@ module ActiveMerchant #:nodoc:
 
       def add_threeds_required(post, options)
         add_pair(post, :threeDSRequired, options[:threeds_required] || @threeds_required ? 'Y' : 'N')
+      end
+
+      def add_threeds_fields(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        add_pair(post, :threeDSEnrolled, formatted_enrollment(three_d_secure[:enrolled]))
+        if three_d_secure[:enrolled] == 'true'
+          add_pair(post, :threeDSAuthenticated, three_d_secure[:authentication_response_status])
+          if three_d_secure[:authentication_response_status] == 'Y'
+            post[:threeDSECI]  = three_d_secure[:eci]
+            post[:threeDSCAVV] = three_d_secure[:cavv]
+            post[:threeDSXID] = three_d_secure[:xid] || three_d_secure[:ds_transaction_id]
+          end
+        end
       end
 
       def add_remote_address(post, options = {})
@@ -365,6 +380,14 @@ module ActiveMerchant #:nodoc:
 
       def add_pair(post, key, value, options = {})
         post[key] = value if !value.blank? || options[:required]
+      end
+
+      def formatted_enrollment(val)
+        case val
+        when 'Y', 'N', 'U' then val
+        when true, 'true' then 'Y'
+        when false, 'false' then 'N'
+        end
       end
     end
   end
