@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sandboxapi.rapyd.net/v1/'
       self.live_url = 'https://api.rapyd.net/v1/'
 
-      self.supported_countries = %w(US BR CA CL CO DO SV MX PE PT VI AU HK IN ID JP MY NZ PH SG KR TW TH VN AD AT BE BA BG HR CY CZ DK EE FI FR GE DE GI GR GL HU IS IE IL IT LV LI LT LU MK MT MD MC ME NL GB NO PL RO RU SM SK SI ZA ES SE CH TR VA)
+      self.supported_countries = %w(CA CL CO DO SV PE PT VI AU HK IN ID JP MY NZ PH SG KR TW TH VN AD AT BE BA BG HR CY CZ DK EE FI FR GE DE GI GR GL HU IS IE IL IT LV LI LT LU MK MT MD MC ME NL GB NO PL RO RU SM SK SI ZA ES SE CH TR VA)
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover]
 
@@ -20,42 +20,16 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options = {})
         post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment, options)
-        add_3ds(post, payment, options)
-        add_address(post, payment, options)
-        add_metadata(post, options)
-        add_ewallet(post, options)
-        add_payment_fields(post, options)
-        add_payment_urls(post, options)
-        add_customer_id(post, options)
-        post[:capture] = true if payment.is_a?(CreditCard)
+        add_auth_purchase(post, money, payment, options)
+        post[:capture] = true unless payment.is_a?(Check)
 
-        if payment.is_a?(Check)
-          MultiResponse.run do |r|
-            r.process { commit(:post, 'payments', post) }
-            post = {}
-            post[:token] = add_reference(r.authorization)
-            post[:param2] = r.params.dig('data', 'original_amount').to_s
-            r.process { commit(:post, 'payments/completePayment', post) }
-          end
-        else
-          commit(:post, 'payments', post)
-        end
+        commit(:post, 'payments', post)
       end
 
       def authorize(money, payment, options = {})
         post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment, options)
-        add_3ds(post, payment, options)
-        add_address(post, payment, options)
-        add_metadata(post, options)
-        add_ewallet(post, options)
-        add_payment_fields(post, options)
-        add_payment_urls(post, options)
-        add_customer_id(post, options)
-        post[:capture] = false
+        add_auth_purchase(post, money, payment, options)
+        post[:capture] = false unless payment.is_a?(Check)
 
         commit(:post, 'payments', post)
       end
@@ -119,6 +93,18 @@ module ActiveMerchant #:nodoc:
         return unless authorization
 
         authorization.split('|')[0]
+      end
+
+      def add_auth_purchase(post, money, payment, options)
+        add_invoice(post, money, options)
+        add_payment(post, payment, options)
+        add_3ds(post, payment, options)
+        add_address(post, payment, options)
+        add_metadata(post, options)
+        add_ewallet(post, options)
+        add_payment_fields(post, options)
+        add_payment_urls(post, options)
+        add_customer_id(post, options)
       end
 
       def add_address(post, creditcard, options)
