@@ -123,6 +123,7 @@
 * Orbital: Fix CardSecValInd [molbrown] #4563
 * Shift4: Add `usage_indicator`, `indicator`, `scheduled_indicator`, and `transaction_id` fields [ajawadmirza] #4564
 * Shift4: Retrieve `access_token` once [naashton] #4572
+* Redsys: Update Base64 encryption handling for secret key [jcreiff] #4565
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

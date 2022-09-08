@@ -250,6 +250,17 @@ class RemoteRedsysTest < Test::Unit::TestCase
     assert_equal clean_transcript.include?('[BLANK]'), true
   end
 
+  def test_encrypt_handles_url_safe_character_in_secret_key_without_error
+    gateway = RedsysGateway.new({
+      login: '091952713',
+      secret_key: 'yG78qf-PkHyRzRiZGSTCJdO2TvjWgFa8',
+      terminal: '1',
+      signature_algorithm: 'sha256'
+    })
+    response = gateway.purchase(@amount, @credit_card, @options)
+    assert response
+  end
+
   private
 
   def generate_order_id

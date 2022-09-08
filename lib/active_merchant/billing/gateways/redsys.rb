@@ -685,7 +685,7 @@ module ActiveMerchant #:nodoc:
         cipher = OpenSSL::Cipher.new('DES3')
         cipher.encrypt
 
-        cipher.key = Base64.strict_decode64(key)
+        cipher.key = Base64.urlsafe_decode64(key)
         # The OpenSSL default of an all-zeroes ("\\0") IV is used.
         cipher.padding = 0
 
