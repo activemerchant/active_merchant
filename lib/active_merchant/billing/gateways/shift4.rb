@@ -313,12 +313,10 @@ module ActiveMerchant #:nodoc:
 
       def current_date_time(options = {})
         time_zone = options[:merchant_time_zone] || 'Pacific Time (US & Canada)'
-        time_zone_diff = Time.now.in_time_zone(time_zone)
-        if options[:merchant_time_zone].present?
-          time_zone_diff.strftime('%Y-%m-%dT%H:%M:%S.%3N+%H:%M')
-        else
-          time_zone_diff.strftime('%Y-%m-%dT%H:%M:%S.%3N+00:00')
-        end
+        time = Time.now.in_time_zone(time_zone)
+        offset = Time.now.in_time_zone(time_zone).formatted_offset
+
+        time.strftime('%Y-%m-%dT%H:%M:%S.%3N') + offset
       end
     end
   end

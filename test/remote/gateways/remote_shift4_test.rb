@@ -78,6 +78,7 @@ class RemoteShift4Test < Test::Unit::TestCase
       initial_transaction: true,
       reason_type: 'recurring'
     }
+    @options[:merchant_time_zone] = 'EST'
     first_response = @gateway.purchase(@amount, @credit_card, @options.merge(@extra_options.merge({ stored_credential: stored_credential_options })))
     assert_success first_response
 

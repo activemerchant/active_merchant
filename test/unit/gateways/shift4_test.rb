@@ -230,6 +230,14 @@ class Shift4Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_time_zone_offset
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge!(merchant_time_zone: 'EST'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal DateTime.parse(JSON.parse(data)['dateTime']).formatted_offset, Time.now.in_time_zone(@options[:merchant_time_zone]).formatted_offset
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_support_scrub
     assert @gateway.supports_scrubbing?
   end
