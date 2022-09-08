@@ -73,7 +73,7 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_purchase_with_stored_credential
+  def test_successful_purchase_with_stored_credential_framework
     stored_credential_options = {
       initial_transaction: true,
       reason_type: 'recurring'
@@ -89,6 +89,26 @@ class RemoteShift4Test < Test::Unit::TestCase
       network_transaction_id: ntxid
     }
     response = @gateway.purchase(@amount, @credit_card, @options.merge(@extra_options.merge({ stored_credential: stored_credential_options })))
+    assert_success response
+  end
+
+  def test_successful_purchase_with_card_on_file_fields
+    card_on_file_fields = {
+      usage_indicator: '01',
+      indicator: '01',
+      scheduled_indicator: '01'
+    }
+    first_response = @gateway.purchase(@amount, @credit_card, @options.merge(card_on_file_fields))
+    assert_success first_response
+
+    ntxid = first_response.params['result'].first['transaction']['cardOnFile']['transactionId']
+    card_on_file_fields = {
+      usage_indicator: '02',
+      indicator: '01',
+      scheduled_indicator: '02',
+      transaction_id: ntxid
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(@extra_options.merge(card_on_file_fields)))
     assert_success response
   end
 
