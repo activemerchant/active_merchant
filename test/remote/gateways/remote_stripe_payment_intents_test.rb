@@ -776,13 +776,14 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       currency: 'USD',
       customer: @customer,
       billing_address: address,
+      email: 'jim@widgets.inc',
       confirm: true
     }
-
     assert response = @gateway.create_intent(@amount, @visa_card, options)
     assert_success response
-    assert billing = response.params.dig('charges', 'data')[0].dig('billing_details', 'address')
-    assert_equal 'Ottawa', billing['city']
+    assert billing_details = response.params.dig('charges', 'data')[0].dig('billing_details')
+    assert_equal 'Ottawa', billing_details['address']['city']
+    assert_equal 'jim@widgets.inc', billing_details['email']
   end
 
   def test_create_payment_intent_with_name_if_billing_address_absent

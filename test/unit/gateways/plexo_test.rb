@@ -27,7 +27,10 @@ class PlexoTest < Test::Unit::TestCase
       metadata: {
         custom_one: 'test1',
         test_a: 'abc'
-      }
+      },
+      identification_type: '1',
+      identification_value: '123456',
+      billing_address: address
     }
 
     @cancel_options = {
@@ -37,11 +40,11 @@ class PlexoTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, successful_capture_response)
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'You have been mocked.', response.message
+    assert_equal 'You have been mocked', response.message
   end
 
   def test_failed_purchase
@@ -62,6 +65,14 @@ class PlexoTest < Test::Unit::TestCase
       assert_equal @credit_card.verification_value, request['paymentMethod']['Card']['Cvc']
       assert_equal @credit_card.first_name, request['paymentMethod']['Card']['Cardholder']['FirstName']
       assert_equal @options[:email], request['paymentMethod']['Card']['Cardholder']['Email']
+      assert_equal @options[:identification_type], request['paymentMethod']['Card']['Cardholder']['Identification']['Type']
+      assert_equal @options[:identification_value], request['paymentMethod']['Card']['Cardholder']['Identification']['Value']
+      assert_equal @options[:billing_address][:city], request['paymentMethod']['Card']['Cardholder']['BillingAddress']['City']
+      assert_equal @options[:billing_address][:country], request['paymentMethod']['Card']['Cardholder']['BillingAddress']['Country']
+      assert_equal @options[:billing_address][:address1], request['paymentMethod']['Card']['Cardholder']['BillingAddress']['Line1']
+      assert_equal @options[:billing_address][:address2], request['paymentMethod']['Card']['Cardholder']['BillingAddress']['Line2']
+      assert_equal @options[:billing_address][:zip], request['paymentMethod']['Card']['Cardholder']['BillingAddress']['PostalCode']
+      assert_equal @options[:billing_address][:state], request['paymentMethod']['Card']['Cardholder']['BillingAddress']['State']
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -114,7 +125,8 @@ class PlexoTest < Test::Unit::TestCase
     other_fields = {
       installments: '1',
       statement_descriptor: 'Plexo * Test',
-      customer_id: 'customer1'
+      customer_id: 'customer1',
+      cardholder_birthdate: '1999-08-18T19:49:37.023Z'
     }
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(other_fields))
@@ -123,6 +135,7 @@ class PlexoTest < Test::Unit::TestCase
       assert_equal request['Installments'], other_fields[:installments]
       assert_equal request['CustomerId'], other_fields[:customer_id]
       assert_equal request['StatementDescriptor'], other_fields[:statement_descriptor]
+      assert_equal request['paymentMethod']['Card']['Cardholder']['Birthdate'], other_fields[:cardholder_birthdate]
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -333,26 +346,6 @@ class PlexoTest < Test::Unit::TestCase
     POST_SCRUBBED
   end
 
-  def successful_purchase_response
-    <<~RESPONSE
-      {
-        "id": "62878b1fa450dab85ba2f987",
-        "uniqueId": "977187868889886720",
-        "parentId": "7c23b951-599f-462e-8a47-6bbbb4dc5ad0",
-        "referenceId": "e7dbc06224f646ad8e63ec1c6e670a39",
-        "type": "capture",
-        "status": "approved",
-        "createdAt": "2022-05-20T12:35:43.216Z",
-        "processedAt": "2022-05-20T12:35:43.216Z",
-        "resultCode": "0",
-        "resultMessage": "You have been mocked.",
-        "authorization": "12133",
-        "ticket": "111111",
-        "amount": 147
-      }
-    RESPONSE
-  end
-
   def failed_purchase_response
     <<~RESPONSE
       {
@@ -503,6 +496,119 @@ class PlexoTest < Test::Unit::TestCase
                 "authorization": "12133",
                 "ticket": "111111",
                 "amount": 147
+            }
+        ]
+      }
+    RESPONSE
+  end
+
+  def successful_purchase_response
+    <<~RESPONSE
+      {
+        "id": "6305dd2d000d6ed5d1ecf79b",
+        "token": "82ae122c-d235-43bc-a454-fba16b2ae3a4",
+        "referenceId": "e7dbc06224f646ad8e63ec1c6e670a39",
+        "status": "approved",
+        "processingMethod": "api",
+        "createdAt": "2022-08-24T08:11:25.677Z",
+        "updatedAt": "2022-08-24T08:11:26.2893146Z",
+        "processedAt": "2022-08-24T08:11:26.2893146Z",
+        "merchant": {
+            "id": 3243,
+            "name": "spreedly",
+            "settings": {
+                "merchantIdentificationNumber": "98001456",
+                "paymentProcessor": {
+                    "acquirer": "fiserv"
+                }
+            },
+            "clientId": 221
+        },
+        "client": {
+            "id": 221,
+            "name": "Spreedly",
+            "tier": 2,
+            "sessionTimeInSeconds": 36000
+        },
+        "paymentMethod": {
+            "id": "mastercard",
+            "name": "MASTERCARD",
+            "type": "card",
+            "card": {
+                "name": "555555XXXXXX4444",
+                "bin": "555555",
+                "last4": "4444",
+                "expMonth": 12,
+                "expYear": 24,
+                "cardholder": {
+                    "firstName": "Santiago",
+                    "lastName": "Navatta",
+                    "email": "snavatta@plexo.com.uy",
+                    "identification": {
+                        "type": 1,
+                        "value": "123456"
+                    },
+                    "billingAddress": {
+                        "city": "Karachi",
+                        "country": "Pakistan",
+                        "line1": "street 4"
+                    }
+                },
+                "type": "credit",
+                "origin": "international",
+                "token": "03d43b25971546e0ab27e8b4698c9b7d"
+            },
+            "issuer": {
+                "id": "mastercard",
+                "name": "MasterCard",
+                "pictureUrl": "https://static.plexo.com.uy/issuers/4.svg",
+                "type": "online"
+            },
+            "processor": {
+                "id": 4,
+                "acquirer": "fiserv"
+            }
+        },
+        "installments": 1,
+        "amount": {
+            "currency": "UYU",
+            "total": 147.0,
+            "details": {
+                "tax": {
+                    "type": "17934",
+                    "amount": 22.0
+                },
+                "taxedAmount": 100.0,
+                "tipAmount": 25.0,
+                "discountAmount": 0.0
+            }
+        },
+        "items": [
+            {
+                "referenceId": "7c34953392e84949ab511667db0ebef2",
+                "name": "prueba",
+                "description": "prueba desc",
+                "quantity": 1,
+                "price": 100.0,
+                "discount": 0.0
+            }
+        ],
+        "transactions": [
+            {
+                "id": "6305dd2e000d6ed5d1ecf79f",
+                "uniqueId": "1011910592648278016",
+                "parentId": "82ae122c-d235-43bc-a454-fba16b2ae3a4",
+                "traceId": "cbf814cd-8b28-4145-ac0b-7381980015e8",
+                "referenceId": "e7dbc06224f646ad8e63ec1c6e670a39",
+                "type": "purchase",
+                "status": "approved",
+                "createdAt": "2022-08-24T08:11:26.2893133Z",
+                "processedAt": "2022-08-24T08:11:26.2893129Z",
+                "resultCode": "0",
+                "resultMessage": "You have been mocked",
+                "authorization": "1234567890",
+                "ticket": "1234567890",
+                "amount": 147.0
             }
         ]
       }

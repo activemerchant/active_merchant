@@ -451,6 +451,8 @@ module ActiveMerchant #:nodoc:
       def add_billing_address(post, options = {})
         return unless billing = options[:billing_address] || options[:address]
 
+        email = billing[:email] || options[:email]
+
         post[:billing_details] = {}
         post[:billing_details][:address] = {}
         post[:billing_details][:address][:city] = billing[:city] if billing[:city]
@@ -459,7 +461,7 @@ module ActiveMerchant #:nodoc:
         post[:billing_details][:address][:line2] = billing[:address2] if billing[:address2]
         post[:billing_details][:address][:postal_code] = billing[:zip] if billing[:zip]
         post[:billing_details][:address][:state] = billing[:state] if billing[:state]
-        post[:billing_details][:email] = billing[:email] if billing[:email]
+        post[:billing_details][:email] = email if email
         post[:billing_details][:name] = billing[:name] if billing[:name]
         post[:billing_details][:phone] = billing[:phone] if billing[:phone]
       end

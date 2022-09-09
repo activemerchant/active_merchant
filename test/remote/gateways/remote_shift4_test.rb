@@ -5,8 +5,8 @@ class RemoteShift4Test < Test::Unit::TestCase
     @gateway = Shift4Gateway.new(fixtures(:shift4))
 
     @amount = 500
-    @credit_card = credit_card('4000100011112224', verification_value: '333')
-    @declined_card = credit_card('400030001111220')
+    @credit_card = credit_card('4000100011112224', verification_value: '333', first_name: 'John', last_name: 'Smith')
+    @declined_card = credit_card('400030001111220', first_name: 'John', last_name: 'Doe')
     @options = {}
     @extra_options = {
       clerk_id: '1576',
@@ -15,6 +15,10 @@ class RemoteShift4Test < Test::Unit::TestCase
       customer_reference: 'D019D09309F2',
       destination_postal_code: '94719',
       product_descriptors: %w(Hamburger Fries Soda Cookie)
+    }
+    @customer_address = {
+      address1: '65 Easy St',
+      zip: '65144'
     }
   end
 
@@ -31,6 +35,16 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert_equal response.message, 'Transaction successful'
   end
 
+  def test_successful_authorize_with_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_not_empty response.authorization
+
+    response = @gateway.authorize(@amount, response.authorization, @options)
+    assert_success response
+    assert_include 'Transaction successful', response.message
+  end
+
   def test_successful_capture
     authorize_res = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorize_res
@@ -44,6 +58,12 @@ class RemoteShift4Test < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_include 'Transaction successful', response.message
+  end
+
+  def test_successful_purchase_with_customer_details
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ billing_address: @customer_address }))
     assert_success response
     assert_include 'Transaction successful', response.message
   end
@@ -73,6 +93,16 @@ class RemoteShift4Test < Test::Unit::TestCase
 
   def test_successful_purchase_with_store
     response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_not_empty response.authorization
+
+    response = @gateway.purchase(@amount, response.authorization, @options)
+    assert_success response
+    assert_include 'Transaction successful', response.message
+  end
+
+  def test_successful_purchase_with_store_having_customer_details
+    response = @gateway.store(@credit_card, @options.merge({ billing_address: @customer_address }))
     assert_success response
     assert_not_empty response.authorization
 

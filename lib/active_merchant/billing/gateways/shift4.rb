@@ -54,19 +54,22 @@ module ActiveMerchant #:nodoc:
         add_transaction(post, options)
         add_card(post, payment_method, options)
         add_card_present(post, options)
+        add_customer(post, payment_method, options)
 
         commit('sale', post, options)
       end
 
       def authorize(money, payment_method, options = {})
         post = {}
+
+        payment_method = get_card_token(payment_method) if payment_method.is_a?(String)
         add_datetime(post, options)
         add_invoice(post, money, options)
         add_clerk(post, options)
         add_transaction(post, options)
         add_card(post, payment_method, options)
         add_card_present(post, options)
-        add_customer(post, options)
+        add_customer(post, payment_method, options)
 
         commit('authorization', post, options)
       end
@@ -91,7 +94,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_clerk(post, options)
         add_transaction(post, options)
-        add_customer(post, options)
+        add_customer(post, authorization, options)
         add_card(post, get_card_token(authorization), options)
         add_card_present(post, options)
 
@@ -114,8 +117,8 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_datetime(post, options)
         add_clerk(post, options)
-        add_transaction(post, options)
         add_card(post, credit_card, options)
+        add_customer(post, credit_card, options)
 
         commit('add', post, options)
       end
@@ -197,17 +200,16 @@ module ActiveMerchant #:nodoc:
         post[:card][:present] = options[:card_present] || 'N'
       end
 
-      def add_customer(post, options)
-        if address = options[:billing_address]
-          post[:customer] = {}
-          post[:customer][:addressLine1] = address[:address1] if address[:address1]
-          post[:customer][:postalCode] = address[:zip]
-          name = address[:name].split(' ') if address[:name]
-          if name&.is_a?(Array)
-            post[:customer][:firstName] = name[0]
-            post[:customer][:lastName] = name[1]
-          end
-        end
+      def add_customer(post, card, options)
+        address = options[:billing_address] || {}
+
+        post[:customer] = {}
+        post[:customer][:addressLine1] = address[:address1] if address[:address1]
+        post[:customer][:postalCode] = address[:zip]
+        post[:customer][:firstName] = card.first_name if card.is_a?(CreditCard) && card.first_name
+        post[:customer][:lastName] = card.last_name if card.is_a?(CreditCard) && card.last_name
+        post[:customer][:emailAddress] = options[:email] if options[:email]
+        post[:customer][:ipAddress] = options[:ip] if options[:ip]
       end
 
       def add_purchase_card(post, options)
@@ -311,7 +313,12 @@ module ActiveMerchant #:nodoc:
 
       def current_date_time(options = {})
         time_zone = options[:merchant_time_zone] || 'Pacific Time (US & Canada)'
-        Time.now.in_time_zone(time_zone).strftime('%H:%M')
+        time_zone_diff = Time.now.in_time_zone(time_zone)
+        if options[:merchant_time_zone].present?
+          time_zone_diff.strftime('%Y-%m-%dT%H:%M:%S.%3N+%H:%M')
+        else
+          time_zone_diff.strftime('%Y-%m-%dT%H:%M:%S.%3N+00:00')
+        end
       end
     end
   end

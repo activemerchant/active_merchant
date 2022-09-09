@@ -32,6 +32,14 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_moto_ecommerce_ind
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, { moto_ecommerce_ind: '7' })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/moto_ecommerce_ind=7/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_unsuccessful_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)

@@ -21,7 +21,10 @@ class RemotePlexoTest < Test::Unit::TestCase
       ],
       amount_details: {
         tip_amount: '5'
-      }
+      },
+      identification_type: '1',
+      identification_value: '123456',
+      billing_address: address
     }
 
     @cancel_options = {
@@ -33,15 +36,13 @@ class RemotePlexoTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'You have been mocked.', response.message
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'denied', response.params['status']
-    assert_equal '96', response.error_code
-    assert_equal 'You have been mocked.', response.message
+    assert_equal '10', response.error_code
   end
 
   def test_successful_authorize_with_metadata
@@ -53,7 +54,6 @@ class RemotePlexoTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'You have been mocked.', capture.message
   end
 
   def test_successful_authorize_and_capture
@@ -62,15 +62,13 @@ class RemotePlexoTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'You have been mocked.', capture.message
   end
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal '96', response.error_code
+    assert_equal '10', response.error_code
     assert_equal 'denied', response.params['status']
-    assert_equal 'You have been mocked.', response.message
   end
 
   def test_partial_capture
@@ -93,7 +91,6 @@ class RemotePlexoTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, purchase.authorization, @cancel_options)
     assert_success refund
-    assert_equal 'You have been mocked.', refund.message
   end
 
   def test_partial_refund
@@ -116,7 +113,6 @@ class RemotePlexoTest < Test::Unit::TestCase
 
     assert void = @gateway.void(auth.authorization, @cancel_options)
     assert_success void
-    assert_equal 'You have been mocked.', void.message
   end
 
   def test_failed_void
@@ -128,19 +124,16 @@ class RemotePlexoTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal 'You have been mocked.', response.message
   end
 
   def test_successful_verify_with_custom_amount
     response = @gateway.verify(@credit_card, @options.merge({ verify_amount: '400' }))
     assert_success response
-    assert_equal 'You have been mocked.', response.message
   end
 
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'The selected payment state is not valid.', response.message
     assert_equal 400, response.error_code
   end
 

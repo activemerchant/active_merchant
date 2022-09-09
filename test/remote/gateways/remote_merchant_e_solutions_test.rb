@@ -39,6 +39,12 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved', response.message
   end
 
+  def test_successful_purchase_with_moto_ecommerce_ind
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge({ moto_ecommerce_ind: '7' }))
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response

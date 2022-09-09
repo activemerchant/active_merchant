@@ -77,7 +77,7 @@ class RemoteRapydTest < Test::Unit::TestCase
     response = @gateway.purchase(100000, @check, @ach_options)
     assert_success response
     assert_equal 'SUCCESS', response.message
-    assert_equal 'CLO', response.params['data']['status']
+    assert_equal 'ACT', response.params['data']['status']
   end
 
   def test_successful_purchase_with_options
