@@ -20,7 +20,9 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
         state: 'MT',
         country: 'US',
         zip: '55555',
-        phone: '555-555-5555'
+        phone: '555-555-5555',
+        recurring_pmt_num: 11,
+        recurring_pmt_count: 10
       }
     }
   end

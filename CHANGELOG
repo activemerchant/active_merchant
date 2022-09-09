@@ -118,6 +118,7 @@
 * Alelo: Add gateway [heavyblade] #4555
 * Wompi: Allow partial refund amount on void_sync [jcreiff] #4535
 * Shift4: Timezone Offset [naashton] #4566
+* MerchantE: `recurring_pmt_num` and `recurring_pmt_count` fields [ali-hassan] #4553
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
