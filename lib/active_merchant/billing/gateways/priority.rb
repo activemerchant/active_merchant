@@ -27,12 +27,12 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Priority'
 
       def initialize(options = {})
-        requires!(options, :merchant_id, :key, :secret)
+        requires!(options, :merchant_id, :api_key, :secret)
         super
       end
 
       def basic_auth
-        Base64.strict_encode64("#{@options[:key]}:#{@options[:secret]}")
+        Base64.strict_encode64("#{@options[:api_key]}:#{@options[:secret]}")
       end
 
       def request_headers

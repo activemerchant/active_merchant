@@ -3,7 +3,7 @@ class PriorityTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = PriorityGateway.new(key: 'sandbox_key', secret: 'secret', merchant_id: 'merchant_id')
+    @gateway = PriorityGateway.new(api_key: 'sandbox_key', secret: 'secret', merchant_id: 'merchant_id')
     @amount = 4
     @credit_card = credit_card
     @invalid_credit_card = credit_card('4111')
