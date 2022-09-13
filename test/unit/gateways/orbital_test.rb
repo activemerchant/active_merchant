@@ -1609,11 +1609,39 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'AUTH DECLINED                   12001', response.message
   end
 
-  def test_cvv_indicator_present_for_visas_with_cvvs
+  def test_cvv_indicator_present_for_visa_and_discovers_with_cvvs
+    discover = credit_card('4556761029983886', brand: 'discover')
+    diners_club = credit_card('4556761029983886', brand: 'diners_club')
+
     stub_comms do
       @gateway.purchase(50, credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match %r{<CardSecValInd>1<\/CardSecValInd>}, data
+      assert_match %r{<CardSecVal>123<\/CardSecVal>}, data
+    end.respond_with(successful_purchase_response)
+
+    stub_comms do
+      @gateway.purchase(50, discover, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r{<CardSecValInd>1<\/CardSecValInd>}, data
+      assert_match %r{<CardSecVal>123<\/CardSecVal>}, data
+    end.respond_with(successful_purchase_response)
+
+    stub_comms do
+      @gateway.purchase(50, diners_club, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r{<CardSecValInd>1<\/CardSecValInd>}, data
+      assert_match %r{<CardSecVal>123<\/CardSecVal>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_cvv_indicator_absent_for_mastercard
+    mastercard = credit_card('4556761029983886', brand: 'master')
+
+    stub_comms do
+      @gateway.purchase(50, mastercard, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_no_match %r{<CardSecValInd>}, data
       assert_match %r{<CardSecVal>123<\/CardSecVal>}, data
     end.respond_with(successful_purchase_response)
   end

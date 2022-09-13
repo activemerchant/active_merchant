@@ -98,6 +98,7 @@ module ActiveMerchant #:nodoc:
         'NZD' => '554',
         'NOK' => '578',
         'SGD' => '702',
+        'ZAR' => '710',
         'SEK' => '752',
         'CHF' => '756',
         'GBP' => '826',
@@ -119,6 +120,7 @@ module ActiveMerchant #:nodoc:
         'NZD' => '2',
         'NOK' => '2',
         'SGD' => '2',
+        'ZAR' => '2',
         'SEK' => '2',
         'CHF' => '2',
         'GBP' => '2',
@@ -592,7 +594,7 @@ module ActiveMerchant #:nodoc:
         #   Null-fill this attribute OR
         #   Do not submit the attribute at all.
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
-        xml.tag! :CardSecValInd, '1' if %w(visa master discover).include?(credit_card.brand) && bin == '000001'
+        xml.tag! :CardSecValInd, '1' if %w(visa discover diners_club).include?(credit_card.brand) && bin == '000001'
         xml.tag! :CardSecVal, credit_card.verification_value
       end
 
