@@ -119,7 +119,6 @@
 * Wompi: Allow partial refund amount on void_sync [jcreiff] #4535
 * Shift4: Timezone Offset [naashton] #4566
 * MerchantE: `recurring_pmt_num` and `recurring_pmt_count` fields [ali-hassan] #4553
-* Shift4: Add `usage_indicator`, `indicator`, `scheduled_indicator`, and `transaction_id` fields [ajawadmirza] #4564
 * Orbital: Add South African Rand to supported currencies [molbrown] #4569
 * Orbital: Fix CardSecValInd [molbrown] #4563
 * Shift4: Add `usage_indicator`, `indicator`, `scheduled_indicator`, and `transaction_id` fields [ajawadmirza] #4564
