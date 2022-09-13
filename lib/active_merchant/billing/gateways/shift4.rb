@@ -40,8 +40,8 @@ module ActiveMerchant #:nodoc:
         requires!(options, :client_guid, :auth_token)
         @client_guid = options[:client_guid]
         @auth_token = options[:auth_token]
+        @access_token = options[:access_token]
         super
-        @access_token = setup_access_token
       end
 
       def purchase(money, payment_method, options = {})
@@ -136,14 +136,6 @@ module ActiveMerchant #:nodoc:
           gsub(%r(("securityCode\\?":{\\?"[\w]+\\?":[\d]+,\\?"value\\?":\\?")[\d]*)i, '\1[FILTERED]')
       end
 
-      private
-
-      def add_credentials(post, options)
-        post[:credential] = {}
-        post[:credential][:clientGuid] = @client_guid
-        post[:credential][:authToken] = @auth_token
-      end
-
       def setup_access_token
         post = {}
         add_credentials(post, options)
@@ -151,6 +143,14 @@ module ActiveMerchant #:nodoc:
 
         response = commit('accesstoken', post, request_headers(options))
         response.params['result'].first['credential']['accessToken']
+      end
+
+      private
+
+      def add_credentials(post, options)
+        post[:credential] = {}
+        post[:credential][:clientGuid] = @client_guid
+        post[:credential][:authToken] = @auth_token
       end
 
       def add_clerk(post, options)
