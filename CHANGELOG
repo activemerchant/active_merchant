@@ -114,13 +114,14 @@
 * Add BpPlus card type along with custom validation logic [dsmcclain] #4559
 * PayTrace: Support ACH implementation for new endpoints and request body [ajawadmirza] #4545
 * Rapyd: No force capture for ACH [naashton] #4562
-* Shift4: Applied checks on Shift4 Time/Timezone offset [ali-hassan] #45611
+* Shift4: Applied checks on Shift4 Time/Timezone offset [ali-hassan] #4561
 * Alelo: Add gateway [heavyblade] #4555
 * Wompi: Allow partial refund amount on void_sync [jcreiff] #4535
 * Shift4: Timezone Offset [naashton] #4566
 * MerchantE: `recurring_pmt_num` and `recurring_pmt_count` fields [ali-hassan] #4553
 * Orbital: Add South African Rand to supported currencies [molbrown] #4569
 * Orbital: Fix CardSecValInd [molbrown] #4563
+* Shift4: Add `usage_indicator`, `indicator`, `scheduled_indicator`, and `transaction_id` fields [ajawadmirza] #4564
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

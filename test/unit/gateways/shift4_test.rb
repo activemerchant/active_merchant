@@ -94,7 +94,7 @@ class Shift4Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_successful_purchase_with_stored_credential
+  def test_successful_purchase_with_stored_credential_framework
     stored_credential_options = {
       initial_transaction: true,
       reason_type: 'recurring'
@@ -124,6 +124,61 @@ class Shift4Test < Test::Unit::TestCase
       assert_equal request['cardOnFile']['indicator'], '01'
       assert_equal request['cardOnFile']['scheduledIndicator'], '01'
       assert_equal request['cardOnFile']['transactionId'], stored_credential_options[:network_transaction_id]
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_card_on_file_fields
+    card_on_file_fields = {
+      usage_indicator: '01',
+      indicator: '02',
+      scheduled_indicator: '01'
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(card_on_file_fields))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)['transaction']
+      assert_equal request['cardOnFile']['usageIndicator'], card_on_file_fields[:usage_indicator]
+      assert_equal request['cardOnFile']['indicator'], card_on_file_fields[:indicator]
+      assert_equal request['cardOnFile']['scheduledIndicator'], card_on_file_fields[:scheduled_indicator]
+      assert_nil request['cardOnFile']['transactionId']
+    end.respond_with(successful_purchase_response)
+
+    card_on_file_fields = {
+      usage_indicator: '02',
+      indicator: '01',
+      scheduled_indicator: '02',
+      transaction_id: 'TXID00001293'
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(card_on_file_fields))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)['transaction']
+      assert_equal request['cardOnFile']['usageIndicator'], card_on_file_fields[:usage_indicator]
+      assert_equal request['cardOnFile']['indicator'], card_on_file_fields[:indicator]
+      assert_equal request['cardOnFile']['scheduledIndicator'], card_on_file_fields[:scheduled_indicator]
+      assert_equal request['cardOnFile']['transactionId'], card_on_file_fields[:transaction_id]
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_card_on_file_fields_and_stored_credential_framework_combined
+    card_on_file_fields = {
+      usage_indicator: '02',
+      indicator: '02',
+      scheduled_indicator: '02'
+    }
+    stored_credential_options = {
+      initial_transaction: true,
+      reason_type: 'recurring'
+    }
+    @options[:stored_credential] = stored_credential_options
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(card_on_file_fields))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)['transaction']
+      assert_equal request['cardOnFile']['usageIndicator'], card_on_file_fields[:usage_indicator]
+      assert_equal request['cardOnFile']['indicator'], card_on_file_fields[:indicator]
+      assert_equal request['cardOnFile']['scheduledIndicator'], card_on_file_fields[:scheduled_indicator]
+      assert_nil request['cardOnFile']['transactionId']
     end.respond_with(successful_purchase_response)
   end
 
