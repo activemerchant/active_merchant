@@ -3,7 +3,7 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class LitleGateway < Gateway
-      SCHEMA_VERSION = '9.14'
+      SCHEMA_VERSION = '12.8'
 
       class_attribute :postlive_url
 
@@ -152,7 +152,7 @@ module ActiveMerchant #:nodoc:
           add_authentication(doc)
           add_descriptor(doc, options)
           doc.capture_(transaction_attributes(options)) do
-            doc.litleTxnId(transaction_id)
+            doc.cnpTxnId(transaction_id)
             doc.amount(money) if money
           end
         end
@@ -172,7 +172,7 @@ module ActiveMerchant #:nodoc:
           doc.send(refund_type(payment), transaction_attributes(options)) do
             if payment.is_a?(String)
               transaction_id, = split_authorization(payment)
-              doc.litleTxnId(transaction_id)
+              doc.cnpTxnId(transaction_id)
               doc.amount(money) if money
             elsif check?(payment)
               add_echeck_purchase_params(doc, money, payment, options)
@@ -194,11 +194,10 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         transaction_id, kind, money = split_authorization(authorization)
-
         request = build_xml_request do |doc|
           add_authentication(doc)
           doc.send(void_type(kind), transaction_attributes(options)) do
-            doc.litleTxnId(transaction_id)
+            doc.cnpTxnId(transaction_id)
             doc.amount(money) if void_type(kind) == :authReversal
           end
         end
@@ -373,7 +372,7 @@ module ActiveMerchant #:nodoc:
       def add_payment_method(doc, payment_method, options)
         if payment_method.is_a?(String)
           doc.token do
-            doc.litleToken(payment_method)
+            doc.cnpToken(payment_method)
             doc.expDate(format_exp_date(options[:basis_expiration_month], options[:basis_expiration_year])) if options[:basis_expiration_month] && options[:basis_expiration_year]
           end
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
@@ -541,7 +540,7 @@ module ActiveMerchant #:nodoc:
 
         parsed['duplicate'] = doc.at_xpath('//saleResponse').try(:[], 'duplicate') == 'true' if kind == :sale
 
-        doc.xpath("//litleOnlineResponse/#{kind}Response/*").each do |node|
+        doc.xpath("//cnpOnlineResponse/#{kind}Response/*").each do |node|
           if node.elements.empty?
             parsed[node.name.to_sym] = node.text
           else
@@ -554,7 +553,7 @@ module ActiveMerchant #:nodoc:
 
         if parsed.empty?
           %w(response message).each do |attribute|
-            parsed[attribute.to_sym] = doc.xpath('//litleOnlineResponse').attribute(attribute).value
+            parsed[attribute.to_sym] = doc.xpath('//cnpOnlineResponse').attribute(attribute).value
           end
         end
 
@@ -563,7 +562,6 @@ module ActiveMerchant #:nodoc:
 
       def commit(kind, request, money = nil)
         parsed = parse(kind, ssl_post(url, request, headers))
-
         options = {
           authorization: authorization_from(kind, parsed, money),
           test: test?,
@@ -581,7 +579,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(kind, parsed, money)
-        kind == :registerToken ? parsed[:litleToken] : "#{parsed[:litleTxnId]};#{kind};#{money}"
+        kind == :registerToken ? parsed[:cnpToken] : "#{parsed[:cnpTxnId]};#{kind};#{money}"
       end
 
       def split_authorization(authorization)
@@ -602,13 +600,13 @@ module ActiveMerchant #:nodoc:
         {
           merchantId: @options[:merchant_id],
           version: SCHEMA_VERSION,
-          xmlns: 'http://www.litle.com/schema'
+          xmlns: 'http://www.vantivcnp.com/schema'
         }
       end
 
       def build_xml_request
         builder = Nokogiri::XML::Builder.new
-        builder.__send__('litleOnlineRequest', root_attributes) do |doc|
+        builder.__send__('cnpOnlineRequest', root_attributes) do |doc|
           yield(doc)
         end
         builder.doc.root.to_xml

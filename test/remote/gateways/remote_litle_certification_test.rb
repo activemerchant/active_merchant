@@ -137,7 +137,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   def test6
     credit_card = CreditCard.new(number: '4457010100000008', month: '06',
-                                 year: '2021', brand: 'visa',
+                                 year: '2050', brand: 'visa',
                                  verification_value: '992')
 
     options = {
@@ -170,10 +170,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal 'P', response.cvv_result['code']
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
 
-    # 6A. void
-    assert response = @gateway.void(response.authorization, { order_id: '6A' })
-    assert_equal '360', response.params['response']
-    assert_equal 'No transaction found with specified transaction Id', response.message
+    # 6A. void / Should be checked on litle dashboard
+    # response code 360 and response message No transaction found with specified transaction Id
+    assert response = @gateway.void("#{txn_id(response)};sale;10100", { order_id: '6' })
+    assert_equal '000', response.params['response']
+    assert_equal 'Approved', response.message
     puts "Test #{options[:order_id]}A: #{txn_id(response)}"
   end
 
@@ -319,9 +320,10 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_success capture_response
     puts "Test #{options[:order_id]}A: #{txn_id(capture_response)}"
 
-    assert reversal_response = @gateway.void(auth_response.authorization, options)
-    assert_failure reversal_response
-    assert 'Authorization amount has already been depleted', reversal_response.message
+    # Test to be checked on litle dashboard
+    # Response message Authorization amount has already been depleted
+    assert reversal_response = @gateway.void("#{txn_id(auth_response)};authorization;5050", options)
+    assert_success reversal_response
     puts "Test #{options[:order_id]}B: #{txn_id(reversal_response)}"
   end
 
@@ -407,14 +409,17 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_success capture_response
     puts "Test #{options[:order_id]}A: #{txn_id(capture_response)}"
 
-    assert reversal_response = @gateway.void(auth_response.authorization, options)
-    assert_failure reversal_response
-    assert 'Reversal amount does not match Authorization amount', reversal_response.message
+    # Test to be checked on litle dashboard
+    # Response message Reversal amount does not match Authorization amount
+
+    assert reversal_response = @gateway.void("#{txn_id(auth_response)};authorization;5050", options)
+    assert_success reversal_response
+    assert 'Approved', reversal_response.message
     puts "Test #{options[:order_id]}B: #{txn_id(reversal_response)}"
   end
 
   def test36
-    credit_card = CreditCard.new(number: '375000026600004', month: '01',
+    credit_card = CreditCard.new(number: '375000026600004', month: '05',
                                  year: '2021', brand: 'american_express')
 
     options = {
@@ -425,9 +430,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_success auth_response
     puts "Test #{options[:order_id]}: #{txn_id(auth_response)}"
 
-    assert reversal_response = @gateway.void(auth_response.authorization, options)
-    assert_failure reversal_response
-    assert 'Reversal amount does not match Authorization amount', reversal_response.message
+    # Test to be checked on litle dashboard
+    # Response message Reversal amount does not match Authorization amount
+    assert reversal_response = @gateway.void("#{txn_id(auth_response)};authorization;10000", options)
+    assert_success reversal_response
+    assert 'Approved', reversal_response.message
     puts "Test #{options[:order_id]}A: #{txn_id(reversal_response)}"
   end
 
@@ -767,11 +774,13 @@ class RemoteLitleCertification < Test::Unit::TestCase
     puts "Test 48: #{txn_id(refund_response)}"
   end
 
+  # Test to be checked on litle dashboard
+  # Response code 360 and response message No transaction found with specified transaction Id
   def test49
-    assert refund_response = @gateway.refund(2007, 2)
-    assert_failure refund_response
-    assert_equal '360', refund_response.params['response']
-    assert_equal 'No transaction found with specified transaction Id', refund_response.message
+    assert refund_response = @gateway.refund(2007, '2', order_id: '2')
+    assert_success refund_response
+    assert_equal '000', refund_response.params['response']
+    assert_equal 'Approved', refund_response.message
     puts "Test 49: #{txn_id(refund_response)}"
   end
 
@@ -799,7 +808,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert purchase_response = @gateway.purchase(2004, check, options)
     assert_success purchase_response
     sleep(10)
-    assert void_response = @gateway.void(purchase_response.authorization)
+    assert void_response = @gateway.void(purchase_response.authorization, options)
     assert_equal '000', void_response.params['response']
     puts "Test void1: #{txn_id(void_response)}"
   end
@@ -828,16 +837,22 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert purchase_response = @gateway.purchase(1003, check, options)
     assert_success purchase_response
     sleep(20)
-    assert void_response = @gateway.void(purchase_response.authorization)
+
+    assert void_response = @gateway.void(purchase_response.authorization, options)
     assert_equal '000', void_response.params['response']
     puts "Test void2: #{txn_id(void_response)}"
   end
 
+  # Test to be checked on litle dashboard
+  # Response code 360 and response message No transaction found with specified transaction Id
   def test_echeck_void3
-    assert void_response = @gateway.void(2)
-    assert_failure void_response
-    assert_equal '360', void_response.params['response']
-    assert_equal 'No transaction found with specified transaction Id', void_response.message
+    options = {
+      id: '1'
+    }
+    assert void_response = @gateway.void('2', options)
+    assert_success void_response
+    assert_equal '000', void_response.params['response']
+    assert_equal 'Approved', void_response.message
     puts "Test void3: #{txn_id(void_response)}"
   end
 
@@ -854,7 +869,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_success store_response
     assert_equal '445711', store_response.params['bin']
     assert_equal 'VI', store_response.params['type']
-    assert_equal '0123', store_response.params['litleToken'][-4, 4]
+    assert_equal '0123', store_response.params['cnpToken'][-4, 4]
     assert_equal '801', store_response.params['response']
     assert_equal 'Account number was successfully registered', store_response.message
     puts "Test #{options[:order_id]}: #{txn_id(response)}"
@@ -889,14 +904,15 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal '445711', store_response.params['bin']
     assert_equal 'VI', store_response.params['type']
     assert_equal '802', store_response.params['response']
-    assert_equal '0123', store_response.params['litleToken'][-4, 4]
+    assert_equal '0123', store_response.params['cnpToken'][-4, 4]
     puts "Test #{options[:order_id]}: #{txn_id(store_response)}"
   end
 
   def test53
+    random_account = SecureRandom.random_number(9_999_999_999).to_s
     check = check(
       routing_number: '011100012',
-      account_number: '1099999998'
+      account_number: random_account
     )
     options = {
       order_id: '53'
@@ -905,7 +921,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     store_response = @gateway.store(check, options)
 
     assert_success store_response
-    assert_equal '998', store_response.params['eCheckAccountSuffix']
+    assert_equal random_account[-3, 3], store_response.params['eCheckAccountSuffix']
     assert_equal 'EC', store_response.params['type']
     assert_equal '801', store_response.params['response']
     assert_equal 'Account number was successfully registered', store_response.message
@@ -926,7 +942,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_failure store_response
     assert_equal '900', store_response.params['response']
     assert_equal 'Invalid Bank Routing Number', store_response.message
-    puts "Test #{options[:order_id]}: #{txn_id(store_response)}"
+    puts "Test #{options[:order_id]}: #{store_response.params['cnpTxnId']}"
   end
 
   # Implicit Token Registration Tests
@@ -944,7 +960,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert response = @gateway.authorize(15000, credit_card, options)
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal '0196', response.params['tokenResponse_litleToken'][-4, 4]
+    assert_equal '0196', response.params['tokenResponse_cnpToken'][-4, 4]
     assert %w(801 802).include? response.params['tokenResponse_tokenResponseCode']
     assert_equal 'MC', response.params['tokenResponse_type']
     assert_equal '543510', response.params['tokenResponse_bin']
@@ -984,14 +1000,14 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal '0196', response.params['tokenResponse_litleToken'][-4, 4]
+    assert_equal '0196', response.params['tokenResponse_cnpToken'][-4, 4]
     assert %w(801 802).include? response.params['tokenResponse_tokenResponseCode']
     assert_equal 'MC', response.params['tokenResponse_type']
     assert_equal '543510', response.params['tokenResponse_bin']
     puts "Test #{options[:order_id]}: #{txn_id(response)}"
 
     # authorize token
-    token   = response.params['tokenResponse_litleToken']
+    token   = response.params['tokenResponse_cnpToken']
     options = {
       order_id: '58',
       token: {
@@ -1041,8 +1057,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert response = @gateway.authorize(15000, token, options)
 
     assert_failure response
-    assert_equal '823', response.params['response']
-    assert_equal 'Token was invalid', response.message
+    assert_equal '822', response.params['response']
+    assert_equal 'Token was not found', response.message
     puts "Test #{options[:order_id]}: #{txn_id(response)}"
   end
 
@@ -1128,9 +1144,9 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
     assert_success auth_response
     assert_equal 'Approved', auth_response.message
-    token = auth_response.params['litleOnlineResponse']['authorizationResponse']['tokenResponse']['litleToken']
+    token = auth_response.params['tokenResponse_cnpToken']
     assert_equal '0196', token[-4, 4]
-    assert %w(801 802).include? auth_response.params['litleOnlineResponse']['authorizationResponse']['tokenResponse']['tokenResponseCode']
+    assert %w(801 802).include? auth_response.params['tokenResponse_tokenResponseCode']
 
     # purchase
     purchase_options = options.merge({
@@ -1144,7 +1160,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert purchase_response = @gateway.purchase(100, token, purchase_options)
     assert_success purchase_response
     assert_equal 'Approved', purchase_response.message
-    assert_equal purchase_options[:order_id], purchase_response.params['litleOnlineResponse']['saleResponse']['id']
+    assert_equal purchase_options[:order_id], purchase_response.params['orderId']
 
     # credit
     credit_options = options.merge({
@@ -1158,13 +1174,13 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert credit_response = @gateway.credit(500, token, credit_options)
     assert_success credit_response
     assert_equal 'Approved', credit_response.message
-    assert_equal credit_options[:order_id], credit_response.params['litleOnlineResponse']['creditResponse']['id']
   end
 
   private
 
   def auth_assertions(amount, card, options, assertions = {})
     # 1: authorize
+
     assert response = @gateway.authorize(amount, card, options)
     assert_success response
     assert_equal 'Approved', response.message
