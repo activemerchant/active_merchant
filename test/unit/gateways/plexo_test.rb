@@ -110,6 +110,15 @@ class PlexoTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_authorize_with_finger_print
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ finger_print: 'USABJHABSFASNJKN123532' }))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['BrowserDetails']['DeviceFingerprint'], 'USABJHABSFASNJKN123532'
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_successful_reordering_of_amount_in_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
@@ -201,7 +210,7 @@ class PlexoTest < Test::Unit::TestCase
   def test_successful_refund
     refund_options = {
       reference_id: 'reference123',
-      type: 'partial-refund',
+      refund_type: 'partial-refund',
       description: 'my description',
       reason: 'reason abc'
     }
@@ -210,7 +219,7 @@ class PlexoTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['ReferenceId'], refund_options[:reference_id]
-      assert_equal request['Type'], refund_options[:type]
+      assert_equal request['Type'], refund_options[:refund_type]
       assert_equal request['Description'], refund_options[:description]
       assert_equal request['Reason'], refund_options[:reason]
       assert_includes endpoint, '123456abcdef'
