@@ -19,7 +19,10 @@ class MerchantESolutionsTest < Test::Unit::TestCase
       recurring_pmt_num: 11,
       recurring_pmt_count: 10,
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      card_on_file: 'Y',
+      cit_mit_indicator: 'C101',
+      account_data_source: 'Y'
     }
   end
 

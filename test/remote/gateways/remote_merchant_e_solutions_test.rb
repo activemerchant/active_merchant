@@ -22,7 +22,10 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
         zip: '55555',
         phone: '555-555-5555',
         recurring_pmt_num: 11,
-        recurring_pmt_count: 10
+        recurring_pmt_count: 10,
+        card_on_file: 'Y',
+        cit_mit_indicator: 'C101',
+        account_data_source: 'Y'
       }
     }
   end
