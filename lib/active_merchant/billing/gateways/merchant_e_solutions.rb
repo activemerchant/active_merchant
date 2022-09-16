@@ -27,13 +27,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard_or_card_id, options = {})
         post = {}
-        post[:client_reference_number] = options[:customer] if options[:customer]
-        post[:moto_ecommerce_ind] = options[:moto_ecommerce_ind] if options[:moto_ecommerce_ind]
-        post[:recurring_pmt_num] = options[:recurring_pmt_num] if options[:recurring_pmt_num]
-        post[:recurring_pmt_count] = options[:recurring_pmt_count] if options[:recurring_pmt_count]
-        post[:card_on_file] = options[:card_on_file] if options[:card_on_file]
-        post[:cit_mit_indicator] = options[:cit_mit_indicator] if options[:cit_mit_indicator]
-        post[:account_data_source] = options[:account_data_source] if options[:account_data_source]
+        add_stored_credentials(post, options)
         add_invoice(post, options)
         add_payment_source(post, creditcard_or_card_id, options)
         add_address(post, options)
@@ -43,13 +37,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, creditcard_or_card_id, options = {})
         post = {}
-        post[:client_reference_number] = options[:customer] if options[:customer]
-        post[:moto_ecommerce_ind] = options[:moto_ecommerce_ind] if options[:moto_ecommerce_ind]
-        post[:recurring_pmt_num] = options[:recurring_pmt_num] if options[:recurring_pmt_num]
-        post[:recurring_pmt_count] = options[:recurring_pmt_count] if options[:recurring_pmt_count]
-        post[:card_on_file] = options[:card_on_file] if options[:card_on_file]
-        post[:cit_mit_indicator] = options[:cit_mit_indicator] if options[:cit_mit_indicator]
-        post[:account_data_source] = options[:account_data_source] if options[:account_data_source]
+        add_stored_credentials(post, options)
         add_invoice(post, options)
         add_payment_source(post, creditcard_or_card_id, options)
         add_address(post, options)
@@ -131,6 +119,16 @@ module ActiveMerchant #:nodoc:
         post[:client_reference_number] = options[:customer] if options.has_key?(:customer)
         add_creditcard(post, creditcard, options)
         commit('T', nil, post)
+      end
+
+      def add_stored_credentials(post, options)
+        post[:client_reference_number] = options[:customer] if options[:customer]
+        post[:moto_ecommerce_ind] = options[:moto_ecommerce_ind] if options[:moto_ecommerce_ind]
+        post[:recurring_pmt_num] = options[:recurring_pmt_num] if options[:recurring_pmt_num]
+        post[:recurring_pmt_count] = options[:recurring_pmt_count] if options[:recurring_pmt_count]
+        post[:card_on_file] = options[:card_on_file] if options[:card_on_file]
+        post[:cit_mit_indicator] = options[:cit_mit_indicator] if options[:cit_mit_indicator]
+        post[:account_data_source] = options[:account_data_source] if options[:account_data_source]
       end
 
       def add_address(post, options)

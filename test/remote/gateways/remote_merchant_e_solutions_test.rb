@@ -12,21 +12,21 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
 
     @options = {
       order_id: '123',
-      billing_address: {
-        name: 'John Doe',
+      recurring_pmt_num: 11,
+      recurring_pmt_count: 10,
+      card_on_file: 'Y',
+      cit_mit_indicator: 'C101',
+      account_data_source: 'Y',
+    billing_address: {
+      name: 'John Doe',
         address1: '123 State Street',
         address2: 'Apartment 1',
         city: 'Nowhere',
         state: 'MT',
         country: 'US',
         zip: '55555',
-        phone: '555-555-5555',
-        recurring_pmt_num: 11,
-        recurring_pmt_count: 10,
-        card_on_file: 'Y',
-        cit_mit_indicator: 'C101',
-        account_data_source: 'Y'
-      }
+        phone: '555-555-5555'
+    }
     }
   end
 
@@ -34,6 +34,17 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
   # authorization
   def let_mes_catch_up
     sleep 1
+  end
+
+  def test_successful_purchase_to_check_request_params
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert @options[:card_on_file], 'Y'
+    assert @options[:cit_mit_indicator], 'C101'
+    assert @options[:account_data_source], 'Y'
+    assert @options[:recurring_pmt_count], '10'
+    assert @options[:recurring_pmt_num], '11'
+    assert_equal 'This transaction has been approved', response.message
   end
 
   def test_successful_purchase

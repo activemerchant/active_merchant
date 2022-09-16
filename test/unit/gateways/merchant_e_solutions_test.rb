@@ -35,6 +35,20 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_to_check_request_params
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert @options[:card_on_file], 'Y'
+    assert @options[:cit_mit_indicator], 'C101'
+    assert @options[:account_data_source], 'Y'
+    assert @options[:recurring_pmt_count], '10'
+    assert @options[:recurring_pmt_num], '11'
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '5547cc97dae23ea6ad1a4abd33445c91', response.authorization
+    assert response.test?
+  end
+
   def test_successful_purchase_with_moto_ecommerce_ind
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, { moto_ecommerce_ind: '7' })
