@@ -183,7 +183,7 @@ module ActiveMerchant #:nodoc:
 
       def add_transaction(post, options)
         post[:transaction] = {}
-        post[:transaction][:invoice] = options[:invoice] || rand.to_s[2..11]
+        post[:transaction][:invoice] = options[:invoice] || Time.new.to_i.to_s[1..3] + rand.to_s[2..7]
         post[:transaction][:notes] = options[:notes] if options[:notes].present?
 
         add_purchase_card(post[:transaction], options)
