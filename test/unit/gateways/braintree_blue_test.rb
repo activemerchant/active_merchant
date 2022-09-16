@@ -228,6 +228,23 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.authorize(100, credit_card('41111111111111111111'), venmo_profile_id: 'profile_id')
   end
 
+  def test_customer_has_default_payment_method
+    options = {
+      payment_method_nonce: 'fake-paypal-future-nonce',
+      store: true,
+      device_data: 'device_data',
+      paypal: {
+        paypal_flow_type: 'checkout_with_vault'
+      }
+    }
+
+    Braintree::TransactionGateway.any_instance.expects(:sale).returns(braintree_result(paypal: { implicitly_vaulted_payment_method_token: 'abc123' }))
+
+    Braintree::CustomerGateway.any_instance.expects(:update).with(nil, { default_payment_method_token: 'abc123' }).returns(nil)
+
+    @gateway.authorize(100, 'fake-paypal-future-nonce', options)
+  end
+
   def test_risk_data_can_be_specified
     risk_data = {
       customer_browser: 'User-Agent Header',
