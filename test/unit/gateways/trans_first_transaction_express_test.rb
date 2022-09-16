@@ -257,6 +257,15 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_equal nil, response.message
   end
 
+  def test_transaction_code_xml_tag_added_with_correct_prefix
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      doc = Nokogiri::XML(data)
+      assert_not_empty doc.xpath('//v1:tranCode', 'v1' => 'http://postilion/realtime/merchantframework/xsd/v1/')
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
