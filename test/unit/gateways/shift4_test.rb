@@ -97,6 +97,22 @@ class Shift4Test < Test::Unit::TestCase
       assert_equal request['customer']['firstName'], @credit_card.first_name
       assert_equal request['customer']['lastName'], @credit_card.last_name
     end.respond_with(successful_purchase_response)
+
+    customer[:billing_address][:zip] = nil
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(customer))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_nil request['customer']['postalCode']
+    end.respond_with(successful_purchase_response)
+
+    customer[:billing_address][:zip] = ''
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(customer))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_nil request['customer']['postalCode']
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_purchase_with_stored_credential_framework

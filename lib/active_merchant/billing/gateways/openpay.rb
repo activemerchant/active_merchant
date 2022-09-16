@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class OpenpayGateway < Gateway
-      self.live_url = 'https://api.openpay.mx/v1/'
-      self.test_url = 'https://sandbox-api.openpay.mx/v1/'
+      self.live_url = 'https://api.openpay.co/v1/'
+      self.test_url = 'https://sandbox-api.openpay.co/v1/'
 
       self.supported_countries = %w(CO MX)
       self.supported_cardtypes = %i[visa master american_express carnet]

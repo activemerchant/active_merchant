@@ -218,7 +218,7 @@ module ActiveMerchant #:nodoc:
 
         post[:customer] = {}
         post[:customer][:addressLine1] = address[:address1] if address[:address1]
-        post[:customer][:postalCode] = address[:zip]
+        post[:customer][:postalCode] = address[:zip] if address[:zip] && !address[:zip]&.to_s&.empty?
         post[:customer][:firstName] = card.first_name if card.is_a?(CreditCard) && card.first_name
         post[:customer][:lastName] = card.last_name if card.is_a?(CreditCard) && card.last_name
         post[:customer][:emailAddress] = options[:email] if options[:email]

@@ -38,6 +38,11 @@ class RemotePlexoTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_finger_print
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ finger_print: 'USABJHABSFASNJKN123532' }))
+    assert_success response
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -94,7 +99,7 @@ class RemotePlexoTest < Test::Unit::TestCase
   end
 
   def test_partial_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    purchase = @gateway.purchase(@amount, @credit_card, @options.merge({ refund_type: 'partial-refund' }))
     assert_success purchase
 
     assert refund = @gateway.refund(@amount - 1, purchase.authorization, @cancel_options.merge({ type: 'partial-refund' }))
