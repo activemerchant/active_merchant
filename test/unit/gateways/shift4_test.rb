@@ -34,6 +34,11 @@ class Shift4Test < Test::Unit::TestCase
   def test_successful_capture
     response = stub_comms do
       @gateway.capture(@amount, '1111g66gw3ryke06', @options)
+    end.check_request do |_endpoint, data, headers|
+      request = JSON.parse(data)
+      assert_nil request['card']['present'], 'N'
+      assert_nil request['card']['entryMode']
+      assert_nil headers['Invoice']
     end.respond_with(successful_capture_response)
 
     assert response.success?
@@ -217,6 +222,7 @@ class Shift4Test < Test::Unit::TestCase
       request = JSON.parse(data)
       assert_equal request['card']['present'], 'N'
       assert_equal request['card']['expirationDate'], '1235'
+      assert_nil request['card']['entryMode']
     end.respond_with(successful_refund_response)
 
     assert response.success?
@@ -273,6 +279,44 @@ class Shift4Test < Test::Unit::TestCase
     assert_failure response
     assert_nil response.authorization
     assert response.test?
+  end
+
+  def test_successful_verify_fields
+    card_on_file_fields = {
+      usage_indicator: '02',
+      indicator: '01',
+      scheduled_indicator: '02',
+      transaction_id: 'TXID00001293'
+    }
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options.merge(card_on_file_fields))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['transaction']['cardOnFile']['usageIndicator'], card_on_file_fields[:usage_indicator]
+      assert_equal request['transaction']['cardOnFile']['indicator'], card_on_file_fields[:indicator]
+      assert_equal request['transaction']['cardOnFile']['scheduledIndicator'], card_on_file_fields[:scheduled_indicator]
+      assert_equal request['transaction']['cardOnFile']['transactionId'], card_on_file_fields[:transaction_id]
+      assert_not_nil request['dateTime']
+      assert !request['customer'].nil? && !request['customer'].empty?
+    end.respond_with(successful_verify_response)
+
+    assert_success response
+  end
+
+  def test_successful_verify_with_stored_credential_framework
+    stored_credential_options = {
+      reason_type: 'recurring',
+      network_transaction_id: '123abcdefg'
+    }
+    stub_comms do
+      @gateway.verify(@credit_card, @options.merge({ stored_credential: stored_credential_options }))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)['transaction']
+      assert_equal request['cardOnFile']['usageIndicator'], '02'
+      assert_equal request['cardOnFile']['indicator'], '01'
+      assert_equal request['cardOnFile']['scheduledIndicator'], '01'
+      assert_equal request['cardOnFile']['transactionId'], stored_credential_options[:network_transaction_id]
+    end.respond_with(successful_verify_response)
   end
 
   def test_card_present_field
@@ -774,6 +818,56 @@ class Shift4Test < Test::Unit::TestCase
               "invoice": "0000000001",
               "responseCode": "A",
               "saleFlag": "S"
+            }
+          }
+        ]
+      }
+    RESPONSE
+  end
+
+  def successful_verify_response
+    <<-RESPONSE
+      {
+        "result": [
+          {
+            "dateTime": "2022-09-16T01:40:51.000-07:00",
+            "card": {
+              "type": "VS",
+              "entryMode": "M",
+              "number": "XXXXXXXXXXXX2224",
+              "present": "N",
+              "securityCode": {
+                "result": "M",
+                "valid": "Y"
+              },
+              "token": {
+                "value": "2224xzsetmjksx13"
+              }
+            },
+            "customer": {
+              "firstName": "John",
+              "lastName": "Smith"
+            },
+            "device": {
+              "capability": {
+                "magstripe": "Y",
+                "manualEntry": "Y"
+              }
+            },
+            "merchant": {
+              "name": "Spreedly - ECom"
+            },
+            "server": {
+              "name": "UTGAPI12CE"
+            },
+            "transaction": {
+              "authorizationCode": "OK684Z",
+              "authSource": "E",
+              "responseCode": "A",
+              "saleFlag": "S"
+            },
+            "universalToken": {
+              "value": "400010-2F1AA405-001AA4-000026B7-1766C44E9E8"
             }
           }
         ]

@@ -127,6 +127,7 @@
 * Openpay: Update url endpoints [ajawadmirza] #4573
 * Shift4: refuse `postalCode` when its null [ajawadmirza] #4574
 * Plexo: Update param key to `refund_type` [ajawadmirza] #4575
+* Shift4: Update request params for `verify`, `capture`, and `refund` [ajawadmirza] #4577
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

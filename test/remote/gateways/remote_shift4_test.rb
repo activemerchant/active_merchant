@@ -140,6 +140,26 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_verify_with_card_on_file_fields
+    card_on_file_fields = {
+      usage_indicator: '01',
+      indicator: '01',
+      scheduled_indicator: '01'
+    }
+    first_response = @gateway.purchase(@amount, @credit_card, @options.merge(card_on_file_fields))
+    assert_success first_response
+    ntxid = first_response.params['result'].first['transaction']['cardOnFile']['transactionId']
+
+    card_on_file_fields = {
+      usage_indicator: '02',
+      indicator: '01',
+      scheduled_indicator: '02',
+      transaction_id: ntxid
+    }
+    response = @gateway.verify(@credit_card, @options.merge(card_on_file_fields))
+    assert_success response
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.authorize(@amount, @credit_card, @options)
