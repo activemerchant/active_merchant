@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         post = {}
         post[:ReferenceId] = options[:reference_id] || generate_unique_id
-        post[:Type] = options[:type] || 'refund'
+        post[:Type] = options[:refund_type] || 'refund'
         post[:Description] = options[:description]
         post[:Reason] = options[:reason]
         post[:Amount] = amount(money)
