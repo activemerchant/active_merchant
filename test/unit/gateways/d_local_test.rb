@@ -123,6 +123,24 @@ class DLocalTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_successful_inquire_with_payment_id
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.inquire({ payment_id: 'D-15104-f9e16b85-5fc8-40f0-a4d8-4e73a892594f' }, {})
+    end.check_request do |_method, endpoint, data, _headers|
+      refute_match(/"https:\/\/sandbox.dlocal.com\/payments\/D-15104-f9e16b85-5fc8-40f0-a4d8-4e73a892594f\/status\/"/, endpoint)
+      refute_match(nil, data)
+    end.respond_with(successful_payment_status_response)
+  end
+
+  def test_successful_inquire_with_order_id
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.inquire({ order_id: '62595c5db10fdf7b5d5bb3a16d130992' }, {})
+    end.check_request do |_method, endpoint, data, _headers|
+      refute_match(/"https:\/\/sandbox.dlocal.com\/orders\/62595c5db10fdf7b5d5bb3a16d130992\/"/, endpoint)
+      refute_match(nil, data)
+    end.respond_with(successful_orders_response)
+  end
+
   def test_passing_country_as_string
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -437,6 +455,14 @@ class DLocalTest < Test::Unit::TestCase
 
   def successful_refund_response
     '{"id":"REF-15104-a9cc29e5-1895-4cec-94bd-aa16c3b92570","payment_id":"D-15104-f9e16b85-5fc8-40f0-a4d8-4e73a892594f","status":"SUCCESS","currency":"BRL","created_date":"2018-12-06T20:28:37.000+0000","amount":1.00,"status_code":200,"status_detail":"The refund was paid","notification_url":"http://example.com","amount_refunded":1.00,"id_payment":"D-15104-f9e16b85-5fc8-40f0-a4d8-4e73a892594f"}'
+  end
+
+  def successful_payment_status_response
+    '{"code":100,"message":"The payment is pending."}'
+  end
+
+  def successful_orders_response
+    '{"order_id":"b809a1aa481b88aaa858144798da656d","payment_id":"T-15104-15f4044d-c4b1-4a38-9b47-bb8be126491d","currency":"BRL","amount":2.0,"created_date":"2022-09-19T13:16:22.000+0000","approved_date":"2022-09-19T13:16:22.000+0000","status":"PAID","status_detail":"The payment was paid.","status_code":"200"}'
   end
 
   # I can't invoke a pending response and there is no example in docs, so this response is speculative

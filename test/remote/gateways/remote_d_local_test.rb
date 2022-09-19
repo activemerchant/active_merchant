@@ -68,6 +68,32 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_match 'The payment was paid', response.message
   end
 
+  def test_successful_inquire_with_payment_id
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+
+    gateway_transaction_id = response.params['id']
+    response = @gateway.inquire({ payment_id: gateway_transaction_id }, @options)
+    assert_success response
+    assert_match 'PAID', response.params['status']
+    assert_match 'The payment was paid.', response.params['status_detail']
+  end
+
+  def test_successful_iquire_with_order_id
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+
+    purchase_payment_id = response.params['id']
+    order_id = response.params['order_id']
+
+    response = @gateway.inquire({ order_id: order_id }, @options)
+    check_payment_id = response.params['payment_id']
+    assert_success response
+    assert_match purchase_payment_id, check_payment_id
+  end
+
   def test_successful_purchase_with_more_options
     options = @options.merge(
       order_id: '1',

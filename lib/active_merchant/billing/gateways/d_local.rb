@@ -69,6 +69,11 @@ module ActiveMerchant #:nodoc:
           gsub(%r((\"cvv\\\":\\\")\d+), '\1[FILTERED]')
       end
 
+      def inquire(parameters, options)
+        action = parameters[:payment_id] ? 'status' : 'orders'
+        commit(action, parameters, options)
+      end
+
       private
 
       def add_auth_purchase_params(post, money, card, action, options)
@@ -170,7 +175,11 @@ module ActiveMerchant #:nodoc:
         url = url(action, parameters, options)
         post = post_data(action, parameters)
         begin
-          raw = ssl_post(url, post, headers(post, options))
+          raw = if %w(status orders).include?(action)
+                  ssl_get(url, headers(nil, options))
+                else
+                  ssl_post(url, post, headers(post, options))
+                end
           response = parse(raw)
         rescue ResponseError => e
           raw = e.response.body
@@ -229,6 +238,10 @@ module ActiveMerchant #:nodoc:
           'payments'
         when 'void'
           "payments/#{parameters[:authorization_id]}/cancel"
+        when 'status'
+          "payments/#{parameters[:payment_id]}/status"
+        when 'orders'
+          "orders/#{parameters[:order_id]}"
         end
       end
 
