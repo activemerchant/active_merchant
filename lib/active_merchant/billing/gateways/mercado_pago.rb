@@ -61,6 +61,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def inquire(authorization, options = {})
+        commit('inquire', inquire_path(authorization, options), {})
+      end
+
       def supports_scrubbing?
         true
       end
@@ -261,6 +265,10 @@ module ActiveMerchant #:nodoc:
       def commit(action, path, parameters)
         if %w[capture void].include?(action)
           response = parse(ssl_request(:put, url(path), post_data(parameters), headers))
+        elsif action == 'inquire'
+          response = parse(ssl_get(url(path), headers))
+
+          response = response[0]["results"][0] if response.is_a?(Array)
         else
           response = parse(ssl_post(url(path), post_data(parameters), headers(parameters)))
         end
@@ -293,6 +301,15 @@ module ActiveMerchant #:nodoc:
 
       def post_data(parameters = {})
         parameters.clone.tap { |p| p.delete(:device_id) }.to_json
+      end
+
+      def inquire_path(authorization, options)
+        if authorization
+          authorization, = authorization.split('|')
+          "payments/#{authorization}"
+        else
+          "payments/search?external_reference=#{options[:order_id] || options[:external_reference]}"
+        end
       end
 
       def error_code_from(action, response)
