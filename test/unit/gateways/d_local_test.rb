@@ -125,7 +125,7 @@ class DLocalTest < Test::Unit::TestCase
 
   def test_successful_inquire_with_payment_id
     stub_comms(@gateway, :ssl_request) do
-      @gateway.inquire({ payment_id: 'D-15104-f9e16b85-5fc8-40f0-a4d8-4e73a892594f' }, {})
+      @gateway.inquire('D-15104-f9e16b85-5fc8-40f0-a4d8-4e73a892594f', {})
     end.check_request do |_method, endpoint, data, _headers|
       refute_match(/"https:\/\/sandbox.dlocal.com\/payments\/D-15104-f9e16b85-5fc8-40f0-a4d8-4e73a892594f\/status\/"/, endpoint)
       refute_match(nil, data)
@@ -134,7 +134,7 @@ class DLocalTest < Test::Unit::TestCase
 
   def test_successful_inquire_with_order_id
     stub_comms(@gateway, :ssl_request) do
-      @gateway.inquire({ order_id: '62595c5db10fdf7b5d5bb3a16d130992' }, {})
+      @gateway.inquire(nil, { order_id: '62595c5db10fdf7b5d5bb3a16d130992' })
     end.check_request do |_method, endpoint, data, _headers|
       refute_match(/"https:\/\/sandbox.dlocal.com\/orders\/62595c5db10fdf7b5d5bb3a16d130992\/"/, endpoint)
       refute_match(nil, data)

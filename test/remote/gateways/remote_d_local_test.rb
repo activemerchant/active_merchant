@@ -73,14 +73,14 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_success response
     assert_match 'The payment was paid', response.message
 
-    gateway_transaction_id = response.params['id']
-    response = @gateway.inquire({ payment_id: gateway_transaction_id }, @options)
+    authorization = response.params['id']
+    response = @gateway.inquire(authorization, @options)
     assert_success response
     assert_match 'PAID', response.params['status']
     assert_match 'The payment was paid.', response.params['status_detail']
   end
 
-  def test_successful_iquire_with_order_id
+  def test_successful_inquire_with_order_id
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_match 'The payment was paid', response.message
@@ -88,7 +88,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
     purchase_payment_id = response.params['id']
     order_id = response.params['order_id']
 
-    response = @gateway.inquire({ order_id: order_id }, @options)
+    response = @gateway.inquire(nil, { order_id: order_id })
     check_payment_id = response.params['payment_id']
     assert_success response
     assert_match purchase_payment_id, check_payment_id

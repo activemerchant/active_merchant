@@ -58,6 +58,13 @@ module ActiveMerchant #:nodoc:
         authorize(0, credit_card, options.merge(verify: 'true'))
       end
 
+      def inquire(authorization, options = {})
+        post = {}
+        post[:payment_id] = authorization
+        action = authorization ? 'status' : 'orders'
+        commit(action, post, options)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -67,11 +74,6 @@ module ActiveMerchant #:nodoc:
           gsub(%r((X-Trans-Key: )\w+), '\1[FILTERED]').
           gsub(%r((\"number\\\":\\\")\d+), '\1[FILTERED]').
           gsub(%r((\"cvv\\\":\\\")\d+), '\1[FILTERED]')
-      end
-
-      def inquire(parameters, options)
-        action = parameters[:payment_id] ? 'status' : 'orders'
-        commit(action, parameters, options)
       end
 
       private
@@ -241,7 +243,7 @@ module ActiveMerchant #:nodoc:
         when 'status'
           "payments/#{parameters[:payment_id]}/status"
         when 'orders'
-          "orders/#{parameters[:order_id]}"
+          "orders/#{options[:order_id]}"
         end
       end
 
