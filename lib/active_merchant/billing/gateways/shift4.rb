@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
 
       RECURRING_TYPE_TRANSACTIONS = %w(recurring installment)
       TRANSACTIONS_WITHOUT_RESPONSE_CODE = %w(accesstoken add)
-      SUCCESS_TRANSACTION_STATUS = %w(A R)
+      SUCCESS_TRANSACTION_STATUS = %w(A)
       DISALLOWED_ENTRY_MODE_ACTIONS = %w(capture refund)
       URL_POSTFIX_MAPPING = {
         'accesstoken' => 'credentials',
@@ -266,7 +266,7 @@ module ActiveMerchant #:nodoc:
 
       def handle_response(response)
         case response.code.to_i
-        when 200...300, 400, 401
+        when 200...300, 400, 401, 500
           response.body
         else
           raise ResponseError.new(response)
@@ -322,7 +322,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def error(response)
-        response['result'].first['error']
+        server_error = { 'longText' => response['error'] } if response['error']
+        server_error || response['result'].first['error']
       end
 
       def current_date_time(options = {})

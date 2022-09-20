@@ -131,6 +131,7 @@
 * CyberSource: Add support for `sec_code` [rachelkirk] #4581
 * BraintreeBlue: Correctly vault payment method token for PayPal Checkout with Vault [almalee24] #4579
 * BpPlus: Allow spaces in card number [ajawadmirza] #4585
+* Shift4: Decline referral transactions and parse message for internal server errors [ajawadmirza] #4583
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

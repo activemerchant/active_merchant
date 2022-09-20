@@ -10,6 +10,7 @@ class RemoteShift4Test < Test::Unit::TestCase
     @amount = 500
     @credit_card = credit_card('4000100011112224', verification_value: '333', first_name: 'John', last_name: 'Smith')
     @declined_card = credit_card('400030001111220', first_name: 'John', last_name: 'Doe')
+    @unsupported_card = credit_card('4000100011112224', verification_value: '333', first_name: 'John', last_name: '成龙')
     @options = {}
     @extra_options = {
       clerk_id: '1576',
@@ -176,10 +177,22 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert_include response.message, 'Card  for Merchant Id 0008628968 not found'
   end
 
+  def test_failure_on_referral_transactions
+    response = @gateway.purchase(67800, @credit_card, @options)
+    assert_failure response
+    assert_include 'Transaction declined', response.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
     assert_include response.message, 'Card  for Merchant Id 0008628968 not found'
+  end
+
+  def test_failed_authorize_with_error_message
+    response = @gateway.authorize(@amount, @unsupported_card, @options)
+    assert_failure response
+    assert_equal response.message, 'Format \'UTF8: An unexpected continuatio\' invalid or incompatible with argument'
   end
 
   def test_failed_capture
