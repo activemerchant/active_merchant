@@ -245,6 +245,15 @@ class Shift4Test < Test::Unit::TestCase
     assert_nil response.authorization
   end
 
+  def test_invoice_on_failed_purchase
+    @gateway.expects(:ssl_request).returns(failed_purchase_response)
+
+    response = @gateway.purchase(@amount, 'abc', @options)
+    assert_failure response
+    assert response.invoice.present?
+    assert_nil response.authorization
+  end
+
   def test_failed_authorize
     @gateway.expects(:ssl_request).returns(failed_authorize_response)
 

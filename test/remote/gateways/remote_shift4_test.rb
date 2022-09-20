@@ -176,6 +176,13 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert_include response.message, 'Card  for Merchant Id 0008628968 not found'
   end
 
+  def test_invoice_on_failed_purchase
+    response = @gateway.purchase(@amount, @declined_card, @options)
+    assert_failure response
+    assert response.invoice.present?
+    assert_include response.message, 'Card  for Merchant Id 0008628968 not found'
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response

@@ -130,6 +130,7 @@
 * Shift4: Update request params for `verify`, `capture`, and `refund` [ajawadmirza] #4577
 * CyberSource: Add support for `sec_code` [rachelkirk] #4581
 * BraintreeBlue: Correctly vault payment method token for PayPal Checkout with Vault [almalee24] #4579
+* Shift4: Custom `new_exception_response` to expose `invoice` used in the request [ali-hassan] #4586
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373

@@ -260,7 +260,8 @@ module ActiveMerchant #:nodoc:
           response,
           authorization: authorization_from(action, response),
           test: test?,
-          error_code: error_code_from(action, response)
+          error_code: error_code_from(action, response),
+          invoice: exception_response(action, response, parameters, option)
         )
       end
 
@@ -287,6 +288,12 @@ module ActiveMerchant #:nodoc:
         return unless success_from(action, response)
 
         STANDARD_ERROR_CODE_MAPPING[response['primaryCode']]
+      end
+
+      def exception_response(action, response, parameters, options)
+        return if success_from(action, response)
+
+        options[:invoice] || parameters[:transaction] && parameters[:transaction][:invoice]
       end
 
       def authorization_from(action, response)
