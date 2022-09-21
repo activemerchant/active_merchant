@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
       RECURRING_TYPE_TRANSACTIONS = %w(recurring installment)
       TRANSACTIONS_WITHOUT_RESPONSE_CODE = %w(accesstoken add)
       SUCCESS_TRANSACTION_STATUS = %w(A)
-      DISALLOWED_ENTRY_MODE_ACTIONS = %w(capture refund)
+      DISALLOWED_ENTRY_MODE_ACTIONS = %w(capture refund add verify)
       URL_POSTFIX_MAPPING = {
         'accesstoken' => 'credentials',
         'add' => 'tokens',
@@ -292,7 +292,10 @@ module ActiveMerchant #:nodoc:
       def authorization_from(action, response)
         return unless success_from(action, response)
 
-        "#{response.dig('result', 0, 'card', 'token', 'value')}|#{response.dig('result', 0, 'transaction', 'invoice')}"
+        authorization = response.dig('result', 0, 'card', 'token', 'value').to_s
+        invoice = response.dig('result', 0, 'transaction', 'invoice')
+        authorization += "|#{invoice}" if invoice
+        authorization
       end
 
       def get_card_token(authorization)

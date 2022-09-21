@@ -209,6 +209,7 @@ class Shift4Test < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['clerk']['numericId'], @extra_options[:clerk_id]
+      assert_nil request['card']['entryMode']
     end.respond_with(successful_store_response)
 
     assert response.success?
@@ -298,6 +299,7 @@ class Shift4Test < Test::Unit::TestCase
       assert_equal request['transaction']['cardOnFile']['transactionId'], card_on_file_fields[:transaction_id]
       assert_not_nil request['dateTime']
       assert !request['customer'].nil? && !request['customer'].empty?
+      assert_nil request['card']['entryMode']
     end.respond_with(successful_verify_response)
 
     assert_success response
