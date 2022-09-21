@@ -76,7 +76,7 @@ class RemoteAleloTest < Test::Unit::TestCase
 
   def test_successful_purchase
     set_credentials!
-    @options[:uuid] = '53141521-afc8-4a08-af0c-f0382aef43c1'
+    @gateway.options[:encryption_uuid] = '53141521-afc8-4a08-af0c-f0382aef43c1'
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_success response
@@ -84,7 +84,7 @@ class RemoteAleloTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_no_predefined_credentials
-    @options[:uuid] = '53141521-afc8-4a08-af0c-f0382aef43c1'
+    @gateway.options[:encryption_uuid] = '53141521-afc8-4a08-af0c-f0382aef43c1'
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_success response
@@ -95,7 +95,7 @@ class RemoteAleloTest < Test::Unit::TestCase
 
   def test_unsuccessful_purchase_with_merchant_discredited
     set_credentials!
-    @options[:uuid] = '7c82f46e-64f7-4745-9c60-335a689b8e90'
+    @gateway.options[:encryption_uuid] = '7c82f46e-64f7-4745-9c60-335a689b8e90'
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_failure response
@@ -104,7 +104,7 @@ class RemoteAleloTest < Test::Unit::TestCase
 
   def test_unsuccessful_purchase_with_insuffieicent_funds
     set_credentials!
-    @options[:uuid] = 'a36aa740-d505-4d47-8aa6-6c31c7526a68'
+    @gateway.options[:encryption_uuid] = 'a36aa740-d505-4d47-8aa6-6c31c7526a68'
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_failure response
@@ -113,7 +113,7 @@ class RemoteAleloTest < Test::Unit::TestCase
 
   def test_unsuccessful_purchase_with_invalid_fields
     set_credentials!
-    @options[:uuid] = 'd7aff4a6-1ea1-4e74-b81a-934589385958'
+    @gateway.options[:encryption_uuid] = 'd7aff4a6-1ea1-4e74-b81a-934589385958'
     response = @gateway.purchase(@amount, @declined_card, @options)
 
     assert_failure response
@@ -122,20 +122,11 @@ class RemoteAleloTest < Test::Unit::TestCase
 
   def test_unsuccessful_purchase_with_blocked_card
     set_credentials!
-    @options[:uuid] = 'd2a0350d-e872-47bf-a543-2d36c2ad693e'
+    @gateway.options[:encryption_uuid] = 'd2a0350d-e872-47bf-a543-2d36c2ad693e'
     response = @gateway.purchase(@amount, @declined_card, @options)
 
     assert_failure response
     assert_match %r(Bloqueado), response.message
-  end
-
-  def test_successful_without_uuid_purchase
-    set_credentials!
-    SecureRandom.expects(:uuid).returns('53141521-afc8-4a08-af0c-f0382aef43c1')
-    response = @gateway.purchase(@amount, @credit_card, @options)
-
-    assert_success response
-    assert_match %r(Confirmada), response.message
   end
 
   def test_successful_purchase_with_geolocalitation
@@ -162,7 +153,7 @@ class RemoteAleloTest < Test::Unit::TestCase
   def test_transcript_scrubbing
     set_credentials!
     transcript = capture_transcript(@gateway) do
-      @options[:uuid] = '53141521-afc8-4a08-af0c-f0382aef43c1'
+      @gateway.options[:encryption_uuid] = '53141521-afc8-4a08-af0c-f0382aef43c1'
       @gateway.purchase(@amount, @credit_card, @options)
     end
     transcript = @gateway.scrub(transcript)
@@ -193,10 +184,12 @@ class RemoteAleloTest < Test::Unit::TestCase
       credentials = @gateway.send :ensure_credentials, {}
       AleloCredentials.instance.access_token = credentials[:access_token]
       AleloCredentials.instance.key = credentials[:key]
+      AleloCredentials.instance.uuid = credentials[:uuid]
     end
 
     @gateway.options[:access_token] = AleloCredentials.instance.access_token
     @gateway.options[:encryption_key] = AleloCredentials.instance.key
+    @gateway.options[:encryption_uuid] = AleloCredentials.instance.uuid
   end
 end
 
@@ -205,5 +198,5 @@ end
 class AleloCredentials
   include Singleton
 
-  attr_accessor :access_token, :key
+  attr_accessor :access_token, :key, :uuid
 end

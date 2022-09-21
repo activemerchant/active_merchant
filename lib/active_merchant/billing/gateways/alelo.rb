@@ -3,8 +3,11 @@ require 'jose'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class AleloGateway < Gateway
+      class_attribute :prelive_url
+
       self.test_url = 'https://sandbox-api.alelo.com.br/alelo/sandbox/'
-      self.live_url = 'https://desenvolvedor.alelo.com.br'
+      self.live_url = 'https://api.alelo.com.br/alelo/prd/'
+      self.prelive_url = 'https://api.homologacaoalelo.com.br/alelo/uat/'
 
       self.supported_countries = ['BR']
       self.default_currency = 'BRL'
@@ -22,7 +25,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_order(post, options)
         add_amount(post, money)
-        add_payment(post, payment, options)
+        add_payment(post, payment)
         add_geolocation(post, options)
         add_extra_data(post, options)
 
@@ -56,11 +59,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(post, money)
-        post[:amount] = amount(money)
+        post[:amount] = amount(money).to_f
       end
 
       def add_order(post, options)
-        post[:request_id] = options[:order_id]
+        post[:requestId] = options[:order_id]
       end
 
       def add_extra_data(post, options)
@@ -82,12 +85,12 @@ module ActiveMerchant #:nodoc:
         })
       end
 
-      def add_payment(post, payment, options)
+      def add_payment(post, payment)
         post.merge!({
           cardNumber: payment.number,
           cardholderName: payment.name,
           expirationMonth: payment.month,
-          expirationYear: format(payment.year, :two_digits),
+          expirationYear: format(payment.year, :two_digits).to_i,
           securityCode: payment.verification_value
         })
       end
@@ -110,7 +113,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def remote_encryption_key(access_token)
-        response = parse(ssl_get(url('capture/key?format=json'), request_headers(access_token)))
+        response = parse(ssl_get(url('capture/key'), request_headers(access_token)))
         Response.new(true, response[:publicKey], response)
       end
 
@@ -118,20 +121,24 @@ module ActiveMerchant #:nodoc:
         multiresp = MultiResponse.new
         access_token = @options[:access_token]
         key = @options[:encryption_key]
+        uuid = @options[:encryption_uuid]
 
         if access_token.blank?
           multiresp.process { fetch_access_token }
           access_token = multiresp.message
           key = nil
+          uuid = nil
         end
 
         if key.blank?
           multiresp.process { remote_encryption_key(access_token) }
           key = multiresp.message
+          uuid = multiresp.params['uuid']
         end
 
         {
           key: key,
+          uuid: uuid,
           access_token: access_token,
           multiresp: multiresp.responses.present? ? multiresp : nil
         }
@@ -153,7 +160,7 @@ module ActiveMerchant #:nodoc:
 
         encrypted_body = {
           token: token,
-          uuid: options[:uuid] || SecureRandom.uuid
+          uuid: credentials[:uuid]
         }
 
         encrypted_body.to_json
@@ -183,16 +190,17 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: authorization_from(response, options),
-          avs_result: AVSResult.new(code: response['some_avs_response_key']),
-          cvv_result: CVVResult.new(response['some_cvv_response_key']),
           test: test?
         )
 
         return resp unless credentials[:multiresp].present?
 
         multiresp = credentials[:multiresp]
-        resp.params['access_token'] = credentials[:access_token]
-        resp.params['encryption_key'] = credentials[:key]
+        resp.params.merge!({
+          'access_token' => credentials[:access_token],
+          'encryption_key' => credentials[:key],
+          'encryption_uuid' => credentials[:uuid]
+        })
         multiresp.process { resp }
 
         multiresp
@@ -224,10 +232,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, options)
-        [options[:uuid]].join('#')
+        [response[:requestId]].join('#')
       end
 
       def url(action)
+        return prelive_url if @options[:url_override] == 'prelive'
+
         "#{test? ? test_url : live_url}#{action}"
       end
 

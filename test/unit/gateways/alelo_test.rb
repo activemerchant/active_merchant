@@ -9,7 +9,7 @@ class AleloTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      order_id: '1',
+      order_id: 'f63b625e-331e-490a-b15c-50b4087ca64f',
       establishment_code: '000002007690360',
       sub_merchant_mcc: '5499',
       player_identification: '1',
@@ -56,6 +56,7 @@ class AleloTest < Test::Unit::TestCase
 
     assert_kind_of Response, resp
     assert_equal 'def456', resp.message
+    assert_equal 'some-uuid', resp.params['uuid']
   end
 
   def test_successful_purchase_with_provided_credentials
@@ -70,12 +71,12 @@ class AleloTest < Test::Unit::TestCase
       decrypted = JOSE::JWE.block_decrypt(secret_key, JSON.parse(data)['token']).first
       request = JSON.parse(decrypted, symbolize_names: true)
 
-      assert_equal @options[:order_id], request[:request_id]
-      assert_equal '1.00', request[:amount]
+      assert_equal @options[:order_id], request[:requestId]
+      assert_equal 1.0, request[:amount]
       assert_equal @credit_card.number, request[:cardNumber]
       assert_equal @credit_card.name, request[:cardholderName]
       assert_equal @credit_card.month, request[:expirationMonth]
-      assert_equal '23', request[:expirationYear]
+      assert_equal 23, request[:expirationYear]
       assert_equal '3', request[:captureType]
       assert_equal @credit_card.verification_value, request[:securityCode]
       assert_equal @options[:establishment_code], request[:establishmentCode]
@@ -85,13 +86,18 @@ class AleloTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
 
     assert_success response
-    assert_equal '49bc3a5c-2e0f-11ed-a261-0242ac120002', response.authorization
+    assert_equal 'f63b625e-331e-490a-b15c-50b4087ca64f', response.authorization
+
+    # Check new values for credentials
+    assert_nil response.params['access_token']
+    assert_nil response.params['encryption_key']
+    assert_nil response.params['encryption_uuid']
   end
 
   def test_successful_purchase_with_no_provided_credentials
     key = test_key
     @gateway.expects(:ssl_post).times(2).returns({ access_token: 'abc123' }.to_json, successful_capture_response)
-    @gateway.expects(:ssl_get).returns({ publicKey: key }.to_json)
+    @gateway.expects(:ssl_get).returns({ publicKey: key, uuid: 'some-uuid' }.to_json)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
 
@@ -99,6 +105,11 @@ class AleloTest < Test::Unit::TestCase
     assert_equal 3, response.responses.size
     assert_equal 'abc123', response.responses.first.message
     assert_equal key, response.responses[1].message
+
+    # Check new values for credentials
+    assert_equal 'abc123', response.params['access_token']
+    assert_equal key, response.params['encryption_key']
+    assert_equal 'some-uuid', response.params['encryption_uuid']
   end
 
   def test_sucessful_retry_with_expired_credentials
@@ -115,7 +126,7 @@ class AleloTest < Test::Unit::TestCase
       times(3).
       raises(ActiveMerchant::ResponseError.new(stub('401 Response', code: '401'))).
       then.returns({ access_token: 'abc123' }.to_json, successful_capture_response)
-    @gateway.expects(:ssl_get).returns({ publicKey: key }.to_json)
+    @gateway.expects(:ssl_get).returns({ publicKey: key, uuid: 'some-uuid' }.to_json)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
 
@@ -170,6 +181,7 @@ class AleloTest < Test::Unit::TestCase
   def test_success_payload_encryption
     @gateway.options[:access_token] = 'abc123'
     @gateway.options[:encryption_key] = test_key
+    @gateway.options[:encryption_uuid] = SecureRandom.uuid
 
     credentials = @gateway.send(:ensure_credentials)
     jwe, = @gateway.send(:encrypt_payload, { hello: 'world' }, credentials, {})
@@ -231,6 +243,14 @@ class AleloTest < Test::Unit::TestCase
     assert_equal 2, credentials[:multiresp].responses.size
   end
 
+  def test_credit_card_year_should_be_an_integer
+    post = {}
+    @gateway.send :add_payment, post, @credit_card
+
+    assert_kind_of Integer, post[:expirationYear]
+    assert_equal 2, post[:expirationYear].digits.size
+  end
+
   private
 
   def test_key(with_sk = false)
@@ -247,7 +267,7 @@ class AleloTest < Test::Unit::TestCase
   end
 
   def access_token_expectation!(gateway, access_token = 'abc123')
-    url = 'https://sandbox-api.alelo.com.br/alelo/sandbox/captura-oauth-provider/oauth/token'
+    url = "#{@gateway.class.test_url}captura-oauth-provider/oauth/token"
     params = [
       'grant_type=client_credentials',
       'client_id=abc123',
@@ -264,7 +284,7 @@ class AleloTest < Test::Unit::TestCase
   end
 
   def encryption_key_expectation!(gateway, public_key = 'def456')
-    url = 'https://sandbox-api.alelo.com.br/alelo/sandbox/capture/key?format=json'
+    url = "#{@gateway.class.test_url}capture/key"
     headers = {
       'Accept' => 'application/json',
       'X-IBM-Client-Id' => gateway.options[:client_id],
@@ -273,12 +293,12 @@ class AleloTest < Test::Unit::TestCase
       'Authorization' => 'Bearer abc123'
     }
 
-    @gateway.expects(:ssl_get).with(url, headers).returns({ publicKey: public_key }.to_json)
+    @gateway.expects(:ssl_get).with(url, headers).returns({ publicKey: public_key, uuid: 'some-uuid' }.to_json)
   end
 
   def successful_capture_response
     {
-      requestId: '5dce2c96-58f6-411e-bc8e-47b52ecbaa4e',
+      requestId: 'f63b625e-331e-490a-b15c-50b4087ca64f',
       dateTime: '211105181958',
       returnCode: '00',
       nsu: '00123',
