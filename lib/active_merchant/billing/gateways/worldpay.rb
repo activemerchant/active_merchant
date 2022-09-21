@@ -144,6 +144,11 @@ module ActiveMerchant #:nodoc:
         store_request(credit_card, options)
       end
 
+      def inquire(authorization, options = {})
+        order_id = order_id_from_authorization(authorization.to_s) || options[:order_id]
+        commit('direct_inquiry', build_order_inquiry_request(order_id, options), :ok, options)
+      end
+
       def supports_scrubbing
         true
       end
@@ -927,6 +932,8 @@ module ActiveMerchant #:nodoc:
         case action
         when 'store'
           raw[:token].present?
+        when 'direct_inquiry'
+          raw[:last_event].present?
         else
           false
         end

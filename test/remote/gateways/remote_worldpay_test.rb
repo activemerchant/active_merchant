@@ -1156,6 +1156,31 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success purchase
   end
 
+  # There is a delay of up to 5 minutes for a transaction to be recorded by Worldpay. Inquiring
+  # too soon will result in an error "Order not ready". Leaving commented out due to included sleeps.
+  # def test_successful_inquire_with_order_id
+  #   order_id = @options[:order_id]
+  #   assert auth = @gateway.authorize(@amount, @credit_card, @options)
+  #   assert_success auth
+  #   assert auth.authorization
+  #   sleep 60
+
+  #   assert inquire = @gateway.inquire(nil, { order_id: order_id })
+  #   assert_success inquire
+  #   assert auth.authorization == inquire.authorization
+  # end
+
+  # def test_successful_inquire_with_authorization
+  #   assert auth = @gateway.authorize(@amount, @credit_card, @options)
+  #   assert_success auth
+  #   assert auth.authorization
+  #   sleep 60
+
+  #   assert inquire = @gateway.inquire(auth.authorization, {})
+  #   assert_success inquire
+  #   assert auth.authorization == inquire.authorization
+  # end
+
   private
 
   def risk_data

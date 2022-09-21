@@ -1374,6 +1374,26 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_inquire_with_order_id
+    response = stub_comms do
+      @gateway.inquire(nil, { order_id: @options[:order_id].to_s })
+    end.check_request do |_endpoint, data, _headers|
+      assert_tag_with_attributes('orderInquiry', { 'orderCode' => @options[:order_id].to_s }, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+    assert_equal 'R50704213207145707', response.authorization
+  end
+
+  def test_successful_inquire_with_authorization
+    response = stub_comms do
+      @gateway.inquire(@options[:order_id].to_s, {})
+    end.check_request do |_endpoint, data, _headers|
+      assert_tag_with_attributes('orderInquiry', { 'orderCode' => @options[:order_id].to_s }, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+    assert_equal 'R50704213207145707', response.authorization
+  end
+
   private
 
   def assert_date_element(expected_date_hash, date_element)
