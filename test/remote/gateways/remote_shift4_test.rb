@@ -43,6 +43,7 @@ class RemoteShift4Test < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_not_empty response.authorization
+    assert_not_include response.authorization, '|'
 
     response = @gateway.authorize(@amount, response.authorization, @options)
     assert_success response
