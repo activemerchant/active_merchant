@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
-      self.homepage_url = 'http://www.vantiv.com/'
+      self.homepage_url = 'https://www.fisglobal.com/'
       self.display_name = 'Vantiv eCommerce'
 
       def initialize(options = {})
