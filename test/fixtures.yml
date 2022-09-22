@@ -765,11 +765,6 @@ paypal_signature:
   password: HBC6A84QLRWC923A
   signature: AFcWxV21C7fd0v3bYYYRCpSSRl31AC-11AKBL8FFO9tjImL311y8a0hx
 
-paypal_commerce_platform:
-  client_id:
-  secret:
-  bn_code:
-
 payscout:
   username: demo
   password: password
