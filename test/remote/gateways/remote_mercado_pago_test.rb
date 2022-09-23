@@ -320,6 +320,26 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_match %r{cc_rejected_other_reason}, response.message
   end
 
+  def test_successful_inquire_with_id
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'pending_capture', auth.message
+
+    assert inquire = @gateway.inquire(auth.authorization)
+    assert_success inquire
+    assert_equal auth.message, inquire.message
+  end
+
+  def test_successful_inquire_with_external_reference
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: 'abcd1234'))
+    assert_success auth
+    assert auth.params['external_reference'] = 'abcd1234'
+
+    assert inquire = @gateway.inquire(nil, { external_reference: 'abcd1234' })
+    assert_success inquire
+    assert_equal auth.authorization, inquire.authorization
+  end
+
   def test_invalid_login
     gateway = MercadoPagoGateway.new(access_token: '')
 

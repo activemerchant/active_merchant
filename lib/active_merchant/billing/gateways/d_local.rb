@@ -58,6 +58,13 @@ module ActiveMerchant #:nodoc:
         authorize(0, credit_card, options.merge(verify: 'true'))
       end
 
+      def inquire(authorization, options = {})
+        post = {}
+        post[:payment_id] = authorization
+        action = authorization ? 'status' : 'orders'
+        commit(action, post, options)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -170,7 +177,11 @@ module ActiveMerchant #:nodoc:
         url = url(action, parameters, options)
         post = post_data(action, parameters)
         begin
-          raw = ssl_post(url, post, headers(post, options))
+          raw = if %w(status orders).include?(action)
+                  ssl_get(url, headers(nil, options))
+                else
+                  ssl_post(url, post, headers(post, options))
+                end
           response = parse(raw)
         rescue ResponseError => e
           raw = e.response.body
@@ -229,6 +240,10 @@ module ActiveMerchant #:nodoc:
           'payments'
         when 'void'
           "payments/#{parameters[:authorization_id]}/cancel"
+        when 'status'
+          "payments/#{parameters[:payment_id]}/status"
+        when 'orders'
+          "orders/#{options[:order_id]}"
         end
       end
 

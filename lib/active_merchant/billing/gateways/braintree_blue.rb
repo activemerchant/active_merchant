@@ -484,10 +484,18 @@ module ActiveMerchant #:nodoc:
         transaction_params = create_transaction_parameters(money, credit_card_or_vault_id, options)
         commit do
           result = @braintree_gateway.transaction.send(transaction_type, transaction_params)
+          make_default_payment_method_token(result) if options.dig(:paypal, :paypal_flow_type) == 'checkout_with_vault' && result.success?
           response = Response.new(result.success?, message_from_transaction_result(result), response_params(result), response_options(result))
           response.cvv_result['message'] = ''
           response
         end
+      end
+
+      def make_default_payment_method_token(result)
+        @braintree_gateway.customer.update(
+          result.transaction.customer_details.id,
+          default_payment_method_token: result.transaction.paypal_details.implicitly_vaulted_payment_method_token
+        )
       end
 
       def extract_refund_args(args)

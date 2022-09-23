@@ -10,6 +10,7 @@ class RemoteShift4Test < Test::Unit::TestCase
     @amount = 500
     @credit_card = credit_card('4000100011112224', verification_value: '333', first_name: 'John', last_name: 'Smith')
     @declined_card = credit_card('400030001111220', first_name: 'John', last_name: 'Doe')
+    @unsupported_card = credit_card('4000100011112224', verification_value: '333', first_name: 'John', last_name: '成龙')
     @options = {}
     @extra_options = {
       clerk_id: '1576',
@@ -42,6 +43,7 @@ class RemoteShift4Test < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_not_empty response.authorization
+    assert_not_include response.authorization, '|'
 
     response = @gateway.authorize(@amount, response.authorization, @options)
     assert_success response
@@ -140,6 +142,26 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_verify_with_card_on_file_fields
+    card_on_file_fields = {
+      usage_indicator: '01',
+      indicator: '01',
+      scheduled_indicator: '01'
+    }
+    first_response = @gateway.purchase(@amount, @credit_card, @options.merge(card_on_file_fields))
+    assert_success first_response
+    ntxid = first_response.params['result'].first['transaction']['cardOnFile']['transactionId']
+
+    card_on_file_fields = {
+      usage_indicator: '02',
+      indicator: '01',
+      scheduled_indicator: '02',
+      transaction_id: ntxid
+    }
+    response = @gateway.verify(@credit_card, @options.merge(card_on_file_fields))
+    assert_success response
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -156,10 +178,22 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert_include response.message, 'Card  for Merchant Id 0008628968 not found'
   end
 
+  def test_failure_on_referral_transactions
+    response = @gateway.purchase(67800, @credit_card, @options)
+    assert_failure response
+    assert_include 'Transaction declined', response.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
     assert_include response.message, 'Card  for Merchant Id 0008628968 not found'
+  end
+
+  def test_failed_authorize_with_error_message
+    response = @gateway.authorize(@amount, @unsupported_card, @options)
+    assert_failure response
+    assert_equal response.message, 'Format \'UTF8: An unexpected continuatio\' invalid or incompatible with argument'
   end
 
   def test_failed_capture

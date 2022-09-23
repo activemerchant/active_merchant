@@ -2,6 +2,11 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* dLocal: Add transaction query API(s) request [almalee24] #4584
+* MercadoPago: Add transaction inquire request [molbrown] #4588
+* Worldpay: Add transaction inquire request [molbrown] #4592
+
+== Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512
 * Maestro: Adding missing BIN ranges [bradbroge] #4423
 * Simetrik: Fix integer and float types, update scrub method [rachelkirk] #4405
@@ -124,9 +129,16 @@
 * Shift4: Add `usage_indicator`, `indicator`, `scheduled_indicator`, and `transaction_id` fields [ajawadmirza] #4564
 * Shift4: Retrieve `access_token` once [naashton] #4572
 * Redsys: Update Base64 encryption handling for secret key [jcreiff] #4565
-* Openpay: Update url endpoints [ajawadmirza] #4573
 * Shift4: refuse `postalCode` when its null [ajawadmirza] #4574
 * Plexo: Update param key to `refund_type` [ajawadmirza] #4575
+* Shift4: Update request params for `verify`, `capture`, and `refund` [ajawadmirza] #4577
+* CyberSource: Add support for `sec_code` [rachelkirk] #4581
+* BraintreeBlue: Correctly vault payment method token for PayPal Checkout with Vault [almalee24] #4579
+* BpPlus: Allow spaces in card number [ajawadmirza] #4585
+* Shift4: Decline referral transactions and parse message for internal server errors [ajawadmirza] #4583
+* Litle: Update homepage_url [gasb150] #4491
+* Priority: Update credential handling [therufs] #4571
+* Shift4: Fix authorization and remove `entryMode` from verify and store transactions [ajawadmirza] #4589
 * MerchantE: add `card_on_file`, 'account_data_source' and `cit_mit_indicator` fields if present [ali-hassan] #4576
 
 == Version 1.126.0 (April 15th, 2022)

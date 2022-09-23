@@ -233,6 +233,13 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
+  def test_successful_bank_account_purchase_with_sec_code
+    options = @options.merge(sec_code: 'WEB')
+    bank_account = check({ account_number: '4100', routing_number: '011000015' })
+    assert response = @gateway.purchase(@amount, bank_account, options)
+    assert_successful_response(response)
+  end
+
   def test_unsuccessful_authorization
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert response.test?

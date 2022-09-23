@@ -270,6 +270,14 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
+  def test_bank_account_purchase_includes_sec_code
+    stub_comms do
+      @gateway.purchase(@amount, @check, order_id: '1', sec_code: 'WEB')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<check>.*<secCode>WEB</secCode>.*</check>)m, data)
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_successful_check_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 

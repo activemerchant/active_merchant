@@ -892,7 +892,7 @@ plugnpay:
   password: PASSWORD
 
 priority:
-  key: SANDBOX_KEY
+  api_key: SANDBOX_KEY
   secret: SECRET
   merchant_id: MERCHANT_ID
 

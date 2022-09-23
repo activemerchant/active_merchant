@@ -459,7 +459,7 @@ module ActiveMerchant #:nodoc:
         add_address(xml, payment_method, options[:billing_address], options)
         add_purchase_data(xml, options[:setup_fee] || 0, true, options)
         if card_brand(payment_method) == 'check'
-          add_check(xml, payment_method)
+          add_check(xml, payment_method, options)
           add_check_payment_method(xml)
           options[:payment_method] = :check
         else
@@ -680,11 +680,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_check(xml, check)
+      def add_check(xml, check, options)
         xml.tag! 'check' do
           xml.tag! 'accountNumber', check.account_number
           xml.tag! 'accountType', check.account_type[0]
           xml.tag! 'bankTransitNumber', check.routing_number
+          xml.tag! 'secCode', options[:sec_code] if options[:sec_code]
         end
       end
 
@@ -916,7 +917,7 @@ module ActiveMerchant #:nodoc:
           add_address(xml, payment_method_or_reference, options[:billing_address], options)
           add_purchase_data(xml, money, true, options)
           add_installments(xml, options)
-          add_check(xml, payment_method_or_reference)
+          add_check(xml, payment_method_or_reference, options)
         else
           add_address(xml, payment_method_or_reference, options[:billing_address], options)
           add_address(xml, payment_method_or_reference, options[:shipping_address], options, true)
