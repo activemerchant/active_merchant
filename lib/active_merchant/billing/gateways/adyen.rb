@@ -21,8 +21,12 @@ module ActiveMerchant #:nodoc:
       RECURRING_API_VERSION = 'v68'
 
       STANDARD_ERROR_CODE_MAPPING = {
+        '0' => STANDARD_ERROR_CODE[:processing_error],
+        '10' => STANDARD_ERROR_CODE[:config_error],
+        '100' => STANDARD_ERROR_CODE[:invalid_amount],
         '101' => STANDARD_ERROR_CODE[:incorrect_number],
         '103' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '104' => STANDARD_ERROR_CODE[:incorrect_address],
         '131' => STANDARD_ERROR_CODE[:incorrect_address],
         '132' => STANDARD_ERROR_CODE[:incorrect_address],
         '133' => STANDARD_ERROR_CODE[:incorrect_address],

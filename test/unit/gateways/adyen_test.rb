@@ -258,6 +258,54 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal '702', response.error_code
   end
 
+  def test_billing_address_error_code_mapping
+    @gateway.expects(:ssl_post).returns(failed_billing_address_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal AdyenGateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+  end
+
+  def test_cvc_length_error_code_mapping
+    @gateway.expects(:ssl_post).returns(failed_cvc_validation_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal AdyenGateway::STANDARD_ERROR_CODE[:invalid_cvc], response.error_code
+  end
+
+  def test_invalid_card_number_error_code_mapping
+    @gateway.expects(:ssl_post).returns(failed_invalid_card_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal AdyenGateway::STANDARD_ERROR_CODE[:incorrect_number], response.error_code
+  end
+
+  def test_invalid_amount_error_code_mapping
+    @gateway.expects(:ssl_post).returns(failed_invalid_amount_response)
+
+    response = @gateway.authorize(nil, @credit_card, @options)
+    assert_failure response
+    assert_equal AdyenGateway::STANDARD_ERROR_CODE[:invalid_amount], response.error_code
+  end
+
+  def test_invalid_access_error_code_mapping
+    @gateway.expects(:ssl_post).returns(failed_not_allowed_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal AdyenGateway::STANDARD_ERROR_CODE[:config_error], response.error_code
+  end
+
+  def test_unknown_reason_error_code_mapping
+    @gateway.expects(:ssl_post).returns(failed_unknown_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal AdyenGateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
+  end
+
   def test_failed_authorise3d
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
@@ -1629,6 +1677,72 @@ class AdyenTest < Test::Unit::TestCase
       "resultCode":"Authorised",
       "authCode":"31265"
     }
+    RESPONSE
+  end
+
+  def failed_unknown_response
+    <<~RESPONSE
+      {
+        "status": 422,
+        "errorCode": "0",
+        "message": "An unknown error occurred",
+        "errorType": "validation"
+      }
+    RESPONSE
+  end
+
+  def failed_not_allowed_response
+    <<~RESPONSE
+      {
+        "status": 422,
+        "errorCode": "10",
+        "message": "You are not allowed to perform this action",
+        "errorType": "validation"
+      }
+    RESPONSE
+  end
+
+  def failed_invalid_amount_response
+    <<~RESPONSE
+      {
+        "status": 422,
+        "errorCode": "100",
+        "message": "There is no amount specified in the request",
+        "errorType": "validation"
+      }
+    RESPONSE
+  end
+
+  def failed_invalid_card_response
+    <<~RESPONSE
+      {
+        "status": 422,
+        "errorCode": "101",
+        "message": "The specified card number is not valid",
+        "errorType": "validation"
+      }
+    RESPONSE
+  end
+
+  def failed_cvc_validation_response
+    <<~RESPONSE
+      {
+        "status": 422,
+        "errorCode": "103",
+        "message": "The length of the CVC code is not correct for the given card number",
+        "errorType": "validation"
+      }
+    RESPONSE
+  end
+
+  def failed_billing_address_response
+    <<~RESPONSE
+      {
+        "status": 422,
+        "errorCode": "104",
+        "message": "There was an error in the specified billing address fields",
+        "errorType": "validation"
+      }
     RESPONSE
   end
 

@@ -140,6 +140,7 @@
 * Litle: Update homepage_url [gasb150] #4491
 * Priority: Update credential handling [therufs] #4571
 * Shift4: Fix authorization and remove `entryMode` from verify and store transactions [ajawadmirza] #4589
+* Adyen: Map standard error codes for `processing_error`, `config_error`, `invalid_amount`, and `incorrect_address` [ajawadmirza] #4593
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
