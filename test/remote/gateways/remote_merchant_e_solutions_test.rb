@@ -25,6 +25,15 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
         recurring_pmt_count: 10
       }
     }
+    @stored_credential_options = {
+      moto_ecommerce_ind: '7',
+      client_reference_number: '345892',
+      recurring_pmt_num: 11,
+      recurring_pmt_count: 10,
+      card_on_file: 'Y',
+      cit_mit_indicator: 'C101',
+      account_data_source: 'Y'
+    }
   end
 
   # MES has a race condition with immediately trying to operate on an
@@ -40,7 +49,7 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_moto_ecommerce_ind
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge({ moto_ecommerce_ind: '7' }))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@stored_credential_options))
     assert_success response
     assert_equal 'This transaction has been approved', response.message
   end
@@ -190,13 +199,6 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-  end
-
-  def test_connection_failure_with_purchase
-    @gateway.test_url = 'https://cert.merchante-solutions.com/mes-api/tridentApiasdasd'
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_equal 'Failed with 401 Unauthorized', response.message
   end
 
   def test_successful_purchase_with_3dsecure_params

@@ -16,10 +16,18 @@ class MerchantESolutionsTest < Test::Unit::TestCase
 
     @options = {
       order_id: '1',
-      recurring_pmt_num: 11,
-      recurring_pmt_count: 10,
       billing_address: address,
       description: 'Store Purchase'
+    }
+
+    @stored_credential_options = {
+      moto_ecommerce_ind: '7',
+      client_reference_number: '345892',
+      recurring_pmt_num: 11,
+      recurring_pmt_count: 10,
+      card_on_file: 'Y',
+      cit_mit_indicator: 'C101',
+      account_data_source: 'Y'
     }
   end
 
@@ -32,11 +40,17 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_purchase_with_moto_ecommerce_ind
+  def test_successful_purchase_with_stored_credentials
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, { moto_ecommerce_ind: '7' })
+      @gateway.purchase(@amount, @credit_card, @stored_credential_options)
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/moto_ecommerce_ind=7/, data)
+      assert_match(/client_reference_number=345892/, data)
+      assert_match(/recurring_pmt_num=11/, data)
+      assert_match(/recurring_pmt_count=10/, data)
+      assert_match(/card_on_file=Y/, data)
+      assert_match(/cit_mit_indicator=C101/, data)
+      assert_match(/account_data_source=Y/, data)
     end.respond_with(successful_purchase_response)
   end
 
