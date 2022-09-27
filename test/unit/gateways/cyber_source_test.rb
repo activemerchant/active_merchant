@@ -73,6 +73,14 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_purchase_totals_data
+    stub_comms do
+      @gateway.purchase(100, @credit_card, @options.merge(discount_management_indicator: 'T', purchase_tax_amount: 7.89))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<purchaseTotals>\s+<currency>USD<\/currency>\s+<discountManagementIndicator>T<\/discountManagementIndicator>\s+<taxAmount>7.89<\/taxAmount>\s+<grandTotalAmount>1.00<\/grandTotalAmount>\s+<\/purchaseTotals>/m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_authorize_with_national_tax_indicator
     national_tax_indicator = 1
     stub_comms do
@@ -231,9 +239,10 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_authorize_includes_installment_data
     stub_comms do
-      @gateway.authorize(100, @credit_card, order_id: '1', installment_total_count: 5, installment_plan_type: 1, first_installment_date: '300101')
+      @gateway.authorize(100, @credit_card, order_id: '1', installment_total_count: 5, installment_plan_type: 1, first_installment_date: '300101', installment_total_amount: 5.05, installment_annual_interest_rate: 1.09)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<installment>\s+<totalCount>5<\/totalCount>\s+<planType>1<\/planType>\s+<firstInstallmentDate>300101<\/firstInstallmentDate>\s+<\/installment>/, data)
+      assert_xml_valid_to_xsd(data)
+      assert_match(/<installment>\s+<totalCount>5<\/totalCount>\s+<totalAmount>5.05<\/totalAmount>\s+<planType>1<\/planType>\s+<firstInstallmentDate>300101<\/firstInstallmentDate>\s+<annualInterestRate>1.09<\/annualInterestRate>\s+<\/installment>/, data)
     end.respond_with(successful_authorization_response)
   end
 

@@ -22,8 +22,8 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor'
 
       # Schema files can be found here: https://ics2ws.ic3.com/commerce/1.x/transactionProcessor/
-      TEST_XSD_VERSION = '1.198'
-      PRODUCTION_XSD_VERSION = '1.198'
+      TEST_XSD_VERSION = '1.201'
+      PRODUCTION_XSD_VERSION = '1.201'
       ECI_BRAND_MAPPING = {
         visa: 'vbv',
         master: 'spa',
@@ -594,6 +594,8 @@ module ActiveMerchant #:nodoc:
       def add_purchase_data(xml, money = 0, include_grand_total = false, options = {})
         xml.tag! 'purchaseTotals' do
           xml.tag! 'currency', options[:currency] || currency(money)
+          xml.tag!('discountManagementIndicator', options[:discount_management_indicator]) if options[:discount_management_indicator]
+          xml.tag!('taxAmount', options[:purchase_tax_amount]) if options[:purchase_tax_amount]
           xml.tag!('grandTotalAmount', localized_amount(money.to_i, options[:currency] || default_currency)) if include_grand_total
         end
       end
@@ -933,8 +935,10 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'installment' do
           xml.tag! 'totalCount', options[:installment_total_count]
+          xml.tag!('totalAmount', options[:installment_total_amount]) if options[:installment_total_amount]
           xml.tag!('planType', options[:installment_plan_type]) if options[:installment_plan_type]
           xml.tag!('firstInstallmentDate', options[:first_installment_date]) if options[:first_installment_date]
+          xml.tag!('annualInterestRate', options[:installment_annual_interest_rate]) if options[:installment_annual_interest_rate]
         end
       end
 

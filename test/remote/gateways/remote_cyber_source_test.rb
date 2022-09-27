@@ -209,7 +209,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization_with_installment_data
-    options = @options.merge(installment_total_count: 5, installment_plan_type: 1, first_installment_date: '300101')
+    options = @options.merge(installment_total_count: 2, installment_total_amount: 0.50, installment_plan_type: 1, first_installment_date: '300101', installment_annual_interest_rate: 1.09)
     assert response = @gateway.authorize(@amount, @credit_card, options)
     assert_successful_response(response)
     assert !response.authorization.blank?
@@ -717,6 +717,11 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   def test_successful_authorize_with_nonfractional_currency
     assert response = @gateway.authorize(100, @credit_card, @options.merge(currency: 'JPY'))
     assert_equal '1', response.params['amount']
+    assert_successful_response(response)
+  end
+
+  def test_successful_authorize_with_additional_purchase_totals_data
+    assert response = @gateway.authorize(100, @credit_card, @options.merge(discount_management_indicator: 'T', purchase_tax_amount: 7.89))
     assert_successful_response(response)
   end
 
