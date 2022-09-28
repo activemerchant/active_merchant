@@ -99,7 +99,6 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_clerk(post, options)
         add_transaction(post, options)
-        add_customer(post, authorization, options)
         add_card(action, post, get_card_token(authorization), options)
         add_card_present(post, options)
 
@@ -129,7 +128,6 @@ module ActiveMerchant #:nodoc:
         action = 'add'
 
         add_datetime(post, options)
-        add_clerk(post, options)
         add_card(action, post, credit_card, options)
         add_customer(post, credit_card, options)
 

@@ -208,8 +208,8 @@ class Shift4Test < Test::Unit::TestCase
       @gateway.store(@credit_card, @options.merge(@extra_options.except(:tax)))
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
-      assert_equal request['clerk']['numericId'], @extra_options[:clerk_id]
       assert_nil request['card']['entryMode']
+      assert_nil request['clerk']
     end.respond_with(successful_store_response)
 
     assert response.success?
@@ -224,6 +224,7 @@ class Shift4Test < Test::Unit::TestCase
       assert_equal request['card']['present'], 'N'
       assert_equal request['card']['expirationDate'], '1235'
       assert_nil request['card']['entryMode']
+      assert_nil request['customer']
     end.respond_with(successful_refund_response)
 
     assert response.success?
