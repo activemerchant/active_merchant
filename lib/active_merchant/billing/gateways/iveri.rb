@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
           xml[:soap].Envelope 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema', 'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' do
             xml[:soap].Body do
               xml.Execute 'xmlns' => 'http://iveri.com/' do
-                xml.validateRequest 'true'
+                xml.validateRequest(test? ? 'false' : 'true')
                 xml.protocol 'V_XML'
                 xml.protocolVersion '2.0'
                 xml.request vxml
@@ -118,8 +118,9 @@ module ActiveMerchant #:nodoc:
       def add_auth_purchase_params(post, money, payment_method, options)
         add_card_holder_authentication(post, options)
         add_amount(post, money, options)
-        add_electronic_commerce_indicator(post, options)
+        add_electronic_commerce_indicator(post, options) unless options[:three_d_secure]
         add_payment_method(post, payment_method, options)
+        add_three_ds(post, options)
       end
 
       def add_amount(post, money, options)
@@ -248,6 +249,34 @@ module ActiveMerchant #:nodoc:
           gsub(/([a-z\d])([A-Z])/, '\1_\2').
           tr('-', '_').
           downcase
+      end
+
+      def add_three_ds(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post.ElectronicCommerceIndicator(formatted_three_ds_eci(three_d_secure[:eci])) if three_d_secure[:eci]
+        post.CardHolderAuthenticationID(three_d_secure[:xid]) if three_d_secure[:xid]
+        post.CardHolderAuthenticationData(three_d_secure[:cavv]) if three_d_secure[:cavv]
+        post.ThreeDSecure_ProtocolVersion(three_d_secure[:version]) if three_d_secure[:version]
+        post.ThreeDSecure_DSTransID(three_d_secure[:ds_transaction_id]) if three_d_secure[:ds_transaction_id]
+        post.ThreeDSecure_VEResEnrolled(formatted_enrollment(three_d_secure[:enrolled])) if three_d_secure[:enrolled]
+      end
+
+      def formatted_enrollment(val)
+        case val
+        when 'Y', 'N', 'U' then val
+        when true, 'true' then 'Y'
+        when false, 'false' then 'N'
+        end
+      end
+
+      def formatted_three_ds_eci(val)
+        case val
+        when '05', '02' then 'ThreeDSecure'
+        when '06', '01' then 'ThreeDSecureAttempted'
+        when '07' then 'SecureChannel'
+        else val
+        end
       end
     end
   end
