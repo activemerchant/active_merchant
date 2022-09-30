@@ -9,6 +9,7 @@ class RemoteIveriTest < Test::Unit::TestCase
     @bad_card = credit_card('2121212121212121')
     @timeout_card = credit_card('5454545454545454')
     @invalid_card = credit_card('1111222233334444')
+    @three_ds_2_card = credit_card('4069425217889137')
     @options = {
       order_id: generate_unique_id,
       billing_address: address,
@@ -38,12 +39,16 @@ class RemoteIveriTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_3ds_params
     options = {
-      eci: 'ThreeDSecure',
-      xid: SecureRandom.hex(14),
-      cavv: SecureRandom.hex(14)
+      three_d_secure: {
+        eci: 'ThreeDSecure',
+        xid: 'uE3eoyx9TB2QJPOY7u22/uTRiT4=',
+        cavv: 'AJkBADJAQgAAABOIcQECdISCkYQ=',
+        version: '2.1.0',
+        ds_transaction_id: 'fafd7e7e-8f43-440a-8b1f-07da705029de'
+      }
     }
 
-    response = @gateway.purchase(@amount, @credit_card, options)
+    response = @gateway.purchase(5000, @three_ds_2_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end

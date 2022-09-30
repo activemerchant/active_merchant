@@ -149,8 +149,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_card_holder_authentication(post, options)
-        post.CardHolderAuthenticationID(options[:xid]) if options[:xid]
-        post.CardHolderAuthenticationData(options[:cavv]) if options[:cavv]
+        return unless threeds2 = options[:three_d_secure]
+        post.ElectronicCommerceIndicator('ThreeDSecure') # ThreeDSecure (ECI “05”, “02”), ThreeDSecureAttempted (“ECI “06” or “01”) or SecureChannel (ECI “07”)
+        post.CardHolderAuthenticationID(threeds2[:xid]) if threeds2[:xid]
+        post.CardHolderAuthenticationData(threeds2[:cavv]) if threeds2[:cavv]
+        post.ThreeDSecure_ProtocolVersion(threeds2[:version]) if threeds2[:version]
+        # post.ThreeDSecure_AuthenticationType('01')
+        post.ThreeDSecure_DSTransID(threeds2[:ds_transaction_id]) if threeds2[:ds_transaction_id]
+        post.ThreeDSecure_VEResEnrolled(threeds2[:enrolled]) if threeds2[:enrolled]
       end
 
       def commit(post)
