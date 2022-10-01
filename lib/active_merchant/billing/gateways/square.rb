@@ -162,6 +162,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_details(post, options)
+        post[:note] = options[:note] if options[:note].present?
+        post[:reference_id] = options[:reference_id] if options[:reference_id].present?
+        post[:location_id] = options[:location_id] if options[:location_id].present?
+      end
+
       def create_post_for_auth_or_purchase(money, payment, options)
         post = {}
 
@@ -171,6 +177,7 @@ module ActiveMerchant #:nodoc:
         add_idempotency_key(post, options)
         add_amount(post, money, options)
         add_application_fee(post, options[:application_fee], options)
+        add_details(post, options)
 
         post
       end
