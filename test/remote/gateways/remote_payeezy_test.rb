@@ -41,6 +41,15 @@ class RemotePayeezyTest < Test::Unit::TestCase
         initiator: 'cardholder'
       }
     }
+    @apple_pay_card = network_tokenization_credit_card(
+      '4761209980011439',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '11',
+      year: '2022',
+      eci: 5,
+      source: :apple_pay,
+      verification_value: 569
+    )
   end
 
   def test_successful_store
@@ -69,6 +78,11 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_match(/Transaction Normal/, response.message)
     assert_equal '100', response.params['bank_resp_code']
     assert_equal nil, response.error_code
+    assert_success response
+  end
+
+  def test_successful_purchase_with_apple_pay
+    assert response = @gateway.purchase(@amount, @apple_pay_card, @options)
     assert_success response
   end
 

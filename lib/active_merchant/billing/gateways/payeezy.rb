@@ -178,6 +178,8 @@ module ActiveMerchant
           add_echeck(params, payment_method, options)
         elsif payment_method.is_a? String
           add_token(params, payment_method, options)
+        elsif payment_method.is_a? NetworkTokenizationCreditCard
+          add_network_tokenization(params, payment_method, options)
         else
           add_creditcard(params, payment_method)
         end
@@ -231,6 +233,22 @@ module ActiveMerchant
         card[:exp_date] = format_exp_date(payment_method.month, payment_method.year)
         card[:cvv] = payment_method.verification_value if payment_method.verification_value?
         card
+      end
+
+      def add_network_tokenization(params, payment_method, options)
+        nt_card = {}
+        nt_card[:type] = 'D'
+        nt_card[:cardholder_name] = payment_method.first_name
+        nt_card[:card_number] = payment_method.number
+        nt_card[:exp_date] = format_exp_date(payment_method.month, payment_method.year)
+        nt_card[:cvv] = payment_method.verification_value
+        nt_card[:xid] = payment_method.payment_cryptogram
+        nt_card[:cavv] = payment_method.payment_cryptogram
+        nt_card[:wallet_provider_id] = 'APPLE_PAY'
+
+        params['3DS'] = nt_card
+        params[:method] = '3DS'
+        params[:eci_indicator] = payment_method.eci
       end
 
       def format_exp_date(month, year)

@@ -46,6 +46,15 @@ class PayeezyGateway < Test::Unit::TestCase
         merchant_contact_info: '8885551212'
       }
     }
+    @apple_pay_card = network_tokenization_credit_card(
+      '4761209980011439',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '11',
+      year: '2022',
+      eci: 5,
+      source: :apple_pay,
+      verification_value: 569
+    )
   end
 
   def test_invalid_credentials
@@ -85,6 +94,17 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal 'ET114541|55083431|credit_card|1', response.authorization
     assert response.test?
     assert_equal 'Transaction Normal - Approved', response.message
+  end
+
+  def test_successful_purchase_with_apple_pay
+    stub_comms do
+      @gateway.purchase(@amount, @apple_pay_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['method'], '3DS'
+      assert_equal request['3DS']['type'], 'D'
+      assert_equal request['3DS']['wallet_provider_id'], 'APPLE_PAY'
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_store
