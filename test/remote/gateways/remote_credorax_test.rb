@@ -448,7 +448,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_success purchase
   end
 
-  def test_purchase_using_stored_credential_recurring_mit
+  def test_failed_purchase_using_stored_credential_recurring_mit
     initial_options = stored_credential_options(:merchant, :recurring, :initial)
     assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
     assert_success purchase
@@ -456,6 +456,19 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert network_transaction_id = purchase.params['Z13']
 
     used_options = stored_credential_options(:merchant, :recurring, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_failure purchase
+    assert_match 'Parameter g6 is invalid', purchase.message
+  end
+
+  def test_successful_purchase_using_stored_credential_recurring_mit
+    initial_options = stored_credential_options(:merchant, :recurring, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert_equal '1', purchase.params['A9']
+    assert initial_network_transaction_id = purchase.params['Z50']
+
+    used_options = stored_credential_options(:merchant, :recurring, id: initial_network_transaction_id)
     assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
     assert_success purchase
   end
