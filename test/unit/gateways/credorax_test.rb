@@ -888,7 +888,7 @@ class CredoraxTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/a9=1/, data)
     end.respond_with(successful_authorize_response)
-
+    assert_match(/z50=abc123/, successful_authorize_response)
     assert_success response
   end
 
@@ -997,6 +997,7 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/a9=2/, data)
+      assert_match(/g6=abc123/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -1069,7 +1070,7 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def successful_authorize_response
-    'M=SPREE978&O=2&T=03%2F09%2F2016+03%3A08%3A58&V=413&a1=90f7449d555f7bed0a2c5d780475f0bf&a2=2&a4=100&a9=6&z1=8a829449535154bc0153595952a2517a&z13=606944188284&z14=U&z15=100&z2=0&z3=Transaction+has+been+executed+successfully.&z4=006597&z5=0&z6=00&z9=X&K=00effd2c80ab7ecd45b499c0bbea3d20'
+    'M=SPREE978&O=2&T=03%2F09%2F2016+03%3A08%3A58&V=413&a1=90f7449d555f7bed0a2c5d780475f0bf&a2=2&a4=100&a9=6&z1=8a829449535154bc0153595952a2517a&z13=606944188284&z14=U&z15=100&z2=0&z3=Transaction+has+been+executed+successfully.&z4=006597&z5=0&z6=00&z9=X&K=00effd2c80ab7ecd45b499c0bbea3d20z50=abc123'
   end
 
   def failed_authorize_response
