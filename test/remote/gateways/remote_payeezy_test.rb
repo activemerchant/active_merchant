@@ -72,6 +72,23 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_apple_pay
+    apple_pay_config = {
+      data: 'sETsMq0fFAIbi3pzGtgKARViasmXlAAs96YkAboRF0oJ7X/Tt5HGuVJJqej2Vl0reWQzAwvxTHeGYYUMc514H6+GSvJHOu3KGSX86DEBvLmBLIirVTMXVem55LmBG/DL1Nu9S/QNttwB5uDrJIZoi8jmEw/kl0j0IcROkIxMIvKaPr8elgcCK37a1jgbGVAIyeVaw4leKFdG+zWVVeNUegmgT2tSP9/iT8tt8um3M2RyxnhIUVcQeqYxervfCG/XbAUbQlCwl102WGnscz55LIeK9cmkPa+ukLuFQGPWe2SbCYO7OKKrmKmFo3lBKV8iRLpafZ46oAzNSil+Nj0JCO3ksKmcrnlEJ4C9c4URaSZpl5PzdommSxWmhBG/m7y/Mwm/GBGkzosoNL98rxeHqr+Oa8Fk8pkAAsHHGIUOJxGvgbzf3m5jtvCMWGhVEZQ61QXKiRd/rb0f',
+      application_data_hash: '94ee059335e587e501cc4bf90613e0814f00a7b08bc7c648fd865a2af6a22cc2',
+      ephemeral_public_key: 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEiaU1SbkYTJy/j5L1t51vtGDh4KlNl5MFPWzo/C8r0WcrktWriz5pdRaDVUDvU++KlDu2iuQsd2xSNKJlFscbDQ==',
+      public_key_hash: 'YmSWN7lj4+A6fVJVPicP8TgS7gI7ougD8rEWB5LXtMM=',
+      transaction_id: '3331333233333334333533363337',
+      signature: 'MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCAMIIB0zCCAXkCAQEwCQYHKoZIzj0EATB2MQswCQYDVQQGEwJVUzELMAkGA1UECAwCTkoxFDASBgNVBAcMC0plcnNleSBDaXR5MRMwEQYDVQQKDApGaXJzdCBEYXRhMRIwEAYDVQQLDAlGaXJzdCBBUEkxGzAZBgNVBAMMEmQxZHZ0bDEwMDAuMWRjLmNvbTAeFw0xOTA3MjUxNjI3NDlaFw0zOTA3MjAxNjI3NDlaMHYxCzAJBgNVBAYTAlVTMQswCQYDVQQIDAJOSjEUMBIGA1UEBwwLSmVyc2V5IENpdHkxEzARBgNVBAoMCkZpcnN0IERhdGExEjAQBgNVBAsMCUZpcnN0IEFQSTEbMBkGA1UEAwwSZDFkdnRsMTAwMC4xZGMuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErnHhPM18HFbOomJMUiLiPL7nrJuWvfPy0Gg3xsX3m8q0oWhTs1QcQDTT+TR3yh4sDRPqXnsTUwcvbrCOzdUEeTAJBgcqhkjOPQQBA0kAMEYCIQCXW2kjA36LdnEqc0qHb82FIYShdEk3hgPGxZDf6PfXygIhANrrpo/SY2YorozC73ZuQDtsGK3PHTdQZja5AgdEXy0yAAAxggFUMIIBUAIBATB7MHYxCzAJBgNVBAYTAlVTMQswCQYDVQQIDAJOSjEUMBIGA1UEBwwLSmVyc2V5IENpdHkxEzARBgNVBAoMCkZpcnN0IERhdGExEjAQBgNVBAsMCUZpcnN0IEFQSTEbMBkGA1UEAwwSZDFkdnRsMTAwMC4xZGMuY29tAgEBMA0GCWCGSAFlAwQCAQUAoGkwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTkwNzI2MTYxNDAyWjAvBgkqhkiG9w0BCQQxIgQgbmzGcR3bTze2zqaMtSu/QbfOwUzfmhaP4Wglfgbg7OUwCgYIKoZIzj0EAwIESDBGAiEAo2WF2FOLp1cN5rxiJsLuaVfgtT6hiVZvJENps+WNWLYCIQCe2dcNpPXN8+DHm01uVFIF6JJzPapGa44Y3USa2GeTowAAAAAAAA=',
+      version: 'EC_v1',
+      application_data: 'VEVTVA==',
+      merchant_identifier: 'PPO004.SandBoxApp'
+    }
+    apple_pay = network_tokenization_credit_card('4242424242424242', payment_cryptogram: '111111111100cryptogram', brand: 'apple_pay')
+    assert response = @gateway.purchase(@amount, apple_pay, @options.merge({ apple_pay: apple_pay_config }))
+    assert_success response
+  end
+
   def test_successful_purchase_with_echeck
     options = @options.merge({ customer_id_type: '1', customer_id_number: '1', client_email: 'test@example.com' })
     assert response = @gateway.purchase(@amount, @check, options)

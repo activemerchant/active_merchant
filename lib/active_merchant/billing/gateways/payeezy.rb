@@ -24,6 +24,7 @@ module ActiveMerchant
         'jcb' => 'JCB',
         'diners_club' => 'Diners Club'
       }
+      NETWORK_TOKENIZED_PAYMENT = %w(apple_pay google_pay)
 
       def initialize(options = {})
         requires!(options, :apikey, :apisecret, :token)
@@ -178,6 +179,8 @@ module ActiveMerchant
           add_echeck(params, payment_method, options)
         elsif payment_method.is_a? String
           add_token(params, payment_method, options)
+        elsif NETWORK_TOKENIZED_PAYMENT.include?(card_brand(payment_method))
+          add_network_tokenization(params, payment_method, options)
         else
           add_creditcard(params, payment_method)
         end
@@ -231,6 +234,25 @@ module ActiveMerchant
         card[:exp_date] = format_exp_date(payment_method.month, payment_method.year)
         card[:cvv] = payment_method.verification_value if payment_method.verification_value?
         card
+      end
+
+      def add_network_tokenization(params, payment_method, options)
+        return unless options[:apple_pay]
+
+        nt_card = {}
+        nt_card[:type] = 'A' if card_brand(payment_method) == 'apple_pay'
+        nt_card[:data] = options[:apple_pay][:data] if options[:apple_pay][:data]
+        nt_card[:header] = {}
+        nt_card[:header][:applicationDataHash] = options[:apple_pay][:application_data_hash] if options[:apple_pay][:application_data_hash]
+        nt_card[:header][:ephemeralPublicKey] = options[:apple_pay][:ephemeral_public_key] if options[:apple_pay][:ephemeral_public_key]
+        nt_card[:header][:publicKeyHash] = options[:apple_pay][:public_key_hash] if options[:apple_pay][:public_key_hash]
+        nt_card[:header][:transactionId] = options[:apple_pay][:transaction_id] if options[:apple_pay][:transaction_id]
+        nt_card[:signature] = options[:apple_pay][:signature] if options[:apple_pay][:signature]
+        nt_card[:version] = options[:apple_pay][:version] if options[:apple_pay][:version]
+        nt_card[:applicationData] = options[:apple_pay][:application_data] if options[:apple_pay][:application_data]
+        nt_card[:merchantIdentifier] = options[:apple_pay][:merchant_identifier] if options[:apple_pay][:merchant_identifier]
+        params['3DS'] = nt_card
+        params[:method] = '3ds'
       end
 
       def format_exp_date(month, year)
