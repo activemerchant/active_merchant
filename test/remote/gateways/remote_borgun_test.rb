@@ -8,7 +8,7 @@ class RemoteBorgunTest < Test::Unit::TestCase
     @gateway = BorgunGateway.new(fixtures(:borgun))
 
     @amount = 100
-    @credit_card = credit_card('5587402000012011', year: 2022, month: 9, verification_value: 415)
+    @credit_card = credit_card('5587402000012011', year: 2027, month: 9, verification_value: 415)
     @declined_card = credit_card('4155520000000002')
 
     @options = {
@@ -24,6 +24,12 @@ class RemoteBorgunTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_preauth_3ds
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ merchant_return_url: 'http://localhost/index.html', apply_3d_secure: '1' }))
     assert_success response
     assert_equal 'Succeeded', response.message
   end
