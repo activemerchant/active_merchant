@@ -82,6 +82,19 @@ class PaymentExpressTest < Test::Unit::TestCase
     assert_equal 'my-custom-id', response.token
   end
 
+  def test_successful_card_store_with_invalid_byte_sequence_in_gateway_response
+    invalid_utf8_byte_sequence = "H\xE5VARD - Håvard "
+    @gateway.expects(:ssl_post).returns(
+      successful_store_response.gsub("<CardHolderName>", "<CardHolderName>#{invalid_utf8_byte_sequence}")
+    )
+
+    assert response = @gateway.store(@visa)
+    assert_success response
+    assert response.test?
+    assert_equal '0000030000141581', response.authorization
+    assert_equal response.authorization, response.token
+  end
+
   def test_unsuccessful_card_store
     @gateway.expects(:ssl_post).returns(unsuccessful_store_response)
 
