@@ -220,6 +220,11 @@ clearhaus_secure:
     InviQqJd1KTGRDmWIGrE5YACVmW2JSszD9t5VKxkAA==
     -----END RSA PRIVATE KEY-----
 
+commerce_hub:
+  api_key: API KEY
+  api_secret: API SECRET
+  merchant_id: MERCHANT ID
+  terminal_id: TERMINAL ID
 
 # Contact Support at it_support@commercegate.com for credentials and offer/site
 commercegate:

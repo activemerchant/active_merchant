@@ -35,6 +35,7 @@
 * Payeezy: Scrub Cryptogram [naashton] #4633
 * Checkout: Fix for `[:source][:stored]` in stored credentials [marioarranzr] #4629
 * Mundipagg: send authorization_secret_key on all transaction types [edgarv09] #4635
+* CommerceHub: Add new gateway [naashton] #4640
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512
