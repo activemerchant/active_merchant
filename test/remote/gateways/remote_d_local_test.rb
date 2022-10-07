@@ -94,6 +94,13 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_match purchase_payment_id, check_payment_id
   end
 
+  def test_successful_purchase_with_original_order_id
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(original_order_id: '123ABC'))
+    assert_success response
+    assert_match 'The payment was paid', response.message
+    assert_match '123ABC', response.params['original_order_id']
+  end
+
   def test_successful_purchase_with_more_options
     options = @options.merge(
       order_id: '1',

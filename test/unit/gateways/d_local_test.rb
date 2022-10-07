@@ -74,6 +74,14 @@ class DLocalTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_original_order_id
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(original_order_id: '123ABC'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal '123ABC', JSON.parse(data)['original_order_id']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 

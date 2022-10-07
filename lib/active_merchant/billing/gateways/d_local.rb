@@ -87,6 +87,7 @@ module ActiveMerchant #:nodoc:
         add_card(post, card, action, options)
         add_additional_data(post, options)
         post[:order_id] = options[:order_id] || generate_unique_id
+        post[:original_order_id] = options[:original_order_id] if options[:original_order_id]
         post[:description] = options[:description] if options[:description]
       end
 
