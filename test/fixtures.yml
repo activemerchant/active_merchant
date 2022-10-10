@@ -548,11 +548,11 @@ migs:
   advanced_login: activemerchant
   advanced_password: test12345
 
-# Working credentials, no need to replace
+# Working credentials, no need to replace IVCA33721 '147' 0002HA98HS IGECPJ0QOJJCEHUI
 mit:
   commerce_id: '147'
-  user: IVCA33721
-  api_key: IGECPJ0QOJJCEHUI
+  user: 'IVCA33721'
+  api_key:  IGECPJ0QOJJCEHUI
   key_session: CB0DC4887DD1D5CEA205E66EE934E430
   test: true
 

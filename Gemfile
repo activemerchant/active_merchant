@@ -2,6 +2,7 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'jruby-openssl', platforms: :jruby
+gem 'rexml', '~> 3.2', '>= 3.2.5'
 gem 'rubocop', '~> 0.62.0', require: false
 
 group :test, :remote_test do

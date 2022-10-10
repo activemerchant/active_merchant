@@ -91,6 +91,7 @@ module ActiveMerchant #:nodoc:
         # Payments contains the card information
         add_payment(post, payment)
         add_customer_data(post, options)
+        add_3ds(post, options) if options[:execute_threed]
         post[:key_session] = @options[:key_session]
 
         post_to_json = post.to_json
@@ -107,9 +108,9 @@ module ActiveMerchant #:nodoc:
           commerce_id: @options[:commerce_id],
           user: @options[:user],
           apikey: @options[:api_key],
-            testMode: (test? ? 'YES' : 'NO'),
-            transaction_id: authorization,
-            amount: amount(money)
+          testMode: (test? ? 'YES' : 'NO'),
+          transaction_id: authorization,
+          amount: amount(money)
         }
         post[:key_session] = @options[:key_session]
 
@@ -232,6 +233,17 @@ module ActiveMerchant #:nodoc:
         post[:email] = options[:email] || 'nadie@mit.test'
       end
 
+      def add_3ds(post, options)
+        post[:redirect_type] = options[:redirect_type]
+        post[:billing_address1] = options[:billing_address1]
+        post[:billing_city] = options[:billing_city]
+        post[:billing_zip] = options[:billing_zip]
+        post[:billing_country] = options[:billing_country]
+        post[:billing_phone_number] = options[:billing_phone_number]
+        post[:redirect_url] = options[:redirect_url]
+        post[:callback_url] = options[:callback_url]
+      end
+
       def add_invoice(post, money, options)
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money))
@@ -254,6 +266,12 @@ module ActiveMerchant #:nodoc:
         cleaned_str = json_str.gsub('\n', '')
         raw_response = ssl_post(url, cleaned_str, { 'Content-type' => 'application/json' })
         response = JSON.parse(decrypt(raw_response, @options[:key_session]))
+
+        if response.key?('url')
+          response['response'] = 'approved'
+          response['reference'] = ''
+          response['message'] = ''
+        end
 
         Response.new(
           success_from(response),
