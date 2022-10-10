@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
           xml[:soap].Envelope 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema', 'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' do
             xml[:soap].Body do
               xml.Execute 'xmlns' => 'http://iveri.com/' do
-                xml.validateRequest(test? ? 'false' : 'true')
+                xml.validateRequest('false')
                 xml.protocol 'V_XML'
                 xml.protocolVersion '2.0'
                 xml.request vxml

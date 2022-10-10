@@ -13,6 +13,7 @@
 * TransFirst Transaction Express: Update xml prefixing to be compatible with Nokogiri 1.13.4 [dsmcclain] #4582
 * Iveri: Adding support for external MPI 3DS2 [heavyblade] #4598
 * Credorax: Pass Network Transaction ID on MIT [jherreraa] #4600
+* iVeri: Remove schema validation on Live requests [curiousepic] #4606
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512
