@@ -9,6 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(AT AU BE BG BR CH CY CZ DE DK EE ES FI FR GB GI GR HK HU IE IS IT LI LT LU LV MC MT MX NL NO PL PT RO SE SG SK SI US)
       self.default_currency = 'USD'
       self.currencies_without_fractions = %w(CVE DJF GNF IDR JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
+      self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LYD OMR TND)
       self.supported_cardtypes = %i[visa master american_express diners_club jcb dankort maestro discover elo naranja cabal unionpay]
 
       self.money_format = :cents
@@ -60,6 +61,7 @@ module ActiveMerchant #:nodoc:
         add_splits(post, options)
         add_recurring_contract(post, options)
         add_network_transaction_reference(post, options)
+        add_application_info(post, options)
         commit('authorise', post, options)
       end
 
@@ -217,7 +219,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def add_extra_data(post, payment, options)
-        post[:telephoneNumber] = options[:billing_address][:phone] if options.dig(:billing_address, :phone)
+        post[:telephoneNumber] = (options[:billing_address][:phone_number] if options.dig(:billing_address, :phone_number)) || (options[:billing_address][:phone] if options.dig(:billing_address, :phone)) || ''
         post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
         post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
         post[:selectedBrand] ||= NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
@@ -424,8 +426,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_transaction_reference(post, options)
+        return unless ntid = options[:network_transaction_id] || options.dig(:stored_credential, :network_transaction_id)
+
         post[:additionalData] = {} unless post[:additionalData]
-        post[:additionalData][:networkTxReference] = options[:network_transaction_id] if options[:network_transaction_id]
+        post[:additionalData][:networkTxReference] = ntid
       end
 
       def add_reference(post, authorization, options = {})
@@ -449,6 +453,32 @@ module ActiveMerchant #:nodoc:
         }
 
         post[:recurring] = recurring
+      end
+
+      def add_application_info(post, options)
+        post[:applicationInfo] ||= {}
+        add_external_platform(post, options)
+        add_merchant_application(post, options)
+      end
+
+      def add_external_platform(post, options)
+        options.update(externalPlatform: application_id) if application_id
+
+        return unless options[:externalPlatform]
+
+        post[:applicationInfo][:externalPlatform] = {
+          name: options[:externalPlatform][:name],
+          version: options[:externalPlatform][:version]
+        }
+      end
+
+      def add_merchant_application(post, options)
+        return unless options[:merchantApplication]
+
+        post[:applicationInfo][:merchantApplication] = {
+          name: options[:merchantApplication][:name],
+          version: options[:merchantApplication][:version]
+        }
       end
 
       def add_installments(post, options)

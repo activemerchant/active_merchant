@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaywayDotComGateway < Gateway
-      self.test_url = 'https://devedgilpayway.net/PaywayWS/Payment/CreditCard'
-      self.live_url = 'https://edgilpayway.com/PaywayWS/Payment/CreditCard'
+      self.test_url = 'https://paywaywsdev.com/PaywayWS/Payment/CreditCard'
+      self.live_url = 'https://paywayws.com/PaywayWS/Payment/CreditCard'
 
       self.supported_countries = %w[US CA]
       self.default_currency = 'USD'
@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
 
         return response['paywayCode'] + '-' + 'success' if success
 
-        response['paywayCode'] + '-' + response['paywayMessage']
+        response['paywayCode']
       end
 
       def authorization_from(response)

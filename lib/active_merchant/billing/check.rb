@@ -14,13 +14,13 @@ module ActiveMerchant #:nodoc:
       attr_accessor :institution_number, :transit_number
 
       # Canadian Institution Numbers
-      # Found here: https://en.wikipedia.org/wiki/Routing_number_(Canada)
+      # Partial list found here: https://en.wikipedia.org/wiki/Routing_number_(Canada)
       CAN_INSTITUTION_NUMBERS = %w(
-        001 002 003 004	006 010 016 030 039 117 127 177 219 245 260 269 270 308
-        309 310 315 320	338 340 509 540 608 614 623 809 815 819 828 829 837 839
+        001 002 003 004 006 010 016 030 039 117 127 177 219 245 260 269 270 308
+        309 310 315 320 338 340 509 540 608 614 623 809 815 819 828 829 837 839
         865 879 889 899 241 242 248 250 265 275 277 290 294 301 303 307 311 314
         321 323 327 328 330 332 334 335 342 343 346 352 355 361 362 366 370 372
-        376 378 807 853
+        376 378 807 853 890
       )
 
       def name
@@ -71,11 +71,8 @@ module ActiveMerchant #:nodoc:
             (7 * (digits[1] + digits[4] + digits[7])) +
             (digits[2] + digits[5] + digits[8])) % 10
 
-          return checksum == 0
+          return checksum == 0 || CAN_INSTITUTION_NUMBERS.include?(routing_number[1..3])
         end
-
-        return CAN_INSTITUTION_NUMBERS.include?(routing_number[0..2]) if digits.size == 8
-
         false
       end
     end

@@ -21,7 +21,10 @@ class WorldpayTest < Test::Unit::TestCase
       brand: 'elo')
     @nt_credit_card = network_tokenization_credit_card('4895370015293175',
       brand: 'visa',
-      eci: '07',
+      eci: 5,
+      source: :network_token,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+    @nt_credit_card_without_eci = network_tokenization_credit_card('4895370015293175',
       source: :network_token,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
     @credit_card_with_two_digits_year = credit_card('4514 1600 0000 0008',
@@ -36,6 +39,29 @@ class WorldpayTest < Test::Unit::TestCase
       customer: '59424549c291397379f30c5c082dbed8',
       email: 'wow@example.com'
     }
+    @sub_merchant_options = {
+      sub_merchant_data: {
+        pf_id: '12345678901',
+        sub_name: 'Example Shop',
+        sub_id: '1234567'
+      }
+    }
+
+    @apple_play_network_token = network_tokenization_credit_card('4895370015293175',
+      month: 10,
+      year: 24,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      source: :apple_pay)
+
+    @google_pay_network_token = network_tokenization_credit_card('4444333322221111',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      month: '01',
+      year: Time.new.year + 2,
+      source: :google_pay,
+      transaction_id: '123456789',
+      eci: '05')
   end
 
   def test_successful_authorize
@@ -159,6 +185,18 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_passes_sub_merchant_data
+    options = @options.merge(@sub_merchant_options)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<pfId>12345678901</pfId>), data
+      assert_match %r(<subName>Example Shop</subName>), data
+      assert_match %r(<subId>1234567</subId>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -175,6 +213,14 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_sub_merchant_data
+    options = @options.merge(@sub_merchant_options)
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
   def test_successful_purchase_skipping_capture
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(skip_capture: true))
@@ -187,6 +233,24 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @nt_credit_card, @options)
     end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_successful_authorize_with_network_token_with_eci
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<eciIndicator>05</eciIndicator>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_successful_authorize_with_network_token_without_eci
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card_without_eci, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<eciIndicator>07</eciIndicator>), data
+    end.respond_with(successful_authorize_response)
     assert_success response
   end
 
@@ -860,6 +924,10 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_transcript_scrubbing_on_network_token
+    assert_equal network_token_transcript_scrubbed, @gateway.scrub(network_token_transcript)
+  end
+
   def test_3ds_version_1_request
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option(version: '1.0.2', xid: 'xid')))
@@ -1134,6 +1202,40 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.refund(@amount, @options[:order_id], @options)
     end.respond_with(failed_refund_synchronous_response)
     assert_failure response
+  end
+
+  def test_network_token_type_assignation_when_apple_token
+    stub_comms do
+      @gateway.authorize(@amount, @apple_play_network_token, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="APPLEPAY">), data
+    end
+  end
+
+  def test_network_token_type_assignation_when_network_token
+    stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="NETWORKTOKEN">), data
+    end
+  end
+
+  def test_network_token_type_assignation_when_google_pay
+    stub_comms do
+      @gateway.authorize(@amount, @google_pay_network_token, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="GOOGLEPAY">), data
+    end
+  end
+
+  def test_order_id_crop_and_clean
+    @options[:order_id] = "abc1234 abc1234 'abc1234' <abc1234> \"abc1234\" | abc1234 abc1234 abc1234 abc1234 abc1234"
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<order orderCode="abc1234abc1234abc1234abc1234abc1234abc1234abc1234abc1234abc1234ab">), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
   end
 
   private
@@ -1869,6 +1971,72 @@ class WorldpayTest < Test::Unit::TestCase
         </submit>
       </paymentService>
     TRANSCRIPT
+  end
+
+  def network_token_transcript
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+          <submit>
+              <order orderCode="c293b34a70aee391193a1c08168b6c91">
+                  <description>Purchase</description>
+                  <amount value="100" currencyCode="GBP" exponent="2" />
+                  <paymentDetails>
+                      <EMVCO_TOKEN-SSL type="APPLEPAY">
+                          <tokenNumber>4895370015293175</tokenNumber>
+                          <expiryDate>
+                              <date month="10" year="2024" />
+                          </expiryDate>
+                          <cardHolderName>PedroPerez</cardHolderName>
+                          <cryptogram>axxxxxxxxx</cryptogram>
+                          <eciIndicator>07</eciIndicator>
+                      </EMVCO_TOKEN-SSL>
+                  </paymentDetails>
+                  <shopper>
+                      <shopperEmailAddress>wow@ example.com</shopperEmailAddress>
+                      <browser>
+                          <acceptHeader />
+                          <userAgentHeader />
+                      </browser>
+                  </shopper>
+              </order>
+          </submit>
+      </paymentService>
+    RESPONSE
+  end
+
+  def network_token_transcript_scrubbed
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+          <submit>
+              <order orderCode="c293b34a70aee391193a1c08168b6c91">
+                  <description>Purchase</description>
+                  <amount value="100" currencyCode="GBP" exponent="2" />
+                  <paymentDetails>
+                      <EMVCO_TOKEN-SSL type="APPLEPAY">
+                          <tokenNumber>[FILTERED]</tokenNumber>
+                          <expiryDate>
+                              <date month="10" year="2024" />
+                          </expiryDate>
+                          <cardHolderName>PedroPerez</cardHolderName>
+                          <cryptogram>[FILTERED]</cryptogram>
+                          <eciIndicator>07</eciIndicator>
+                      </EMVCO_TOKEN-SSL>
+                  </paymentDetails>
+                  <shopper>
+                      <shopperEmailAddress>wow@ example.com</shopperEmailAddress>
+                      <browser>
+                          <acceptHeader />
+                          <userAgentHeader />
+                      </browser>
+                  </shopper>
+              </order>
+          </submit>
+      </paymentService>
+    RESPONSE
   end
 
   def failed_with_unknown_card_response

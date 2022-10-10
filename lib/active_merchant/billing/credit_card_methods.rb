@@ -1,3 +1,5 @@
+require 'set'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # Convenience methods that can be included into a custom Credit Card object, such as an ActiveRecord based Credit Card object.
@@ -19,7 +21,7 @@ module ActiveMerchant #:nodoc:
             MAESTRO_BINS.any? { |bin| num.slice(0, bin.size) == bin }
           )
         },
-        'maestro_no_luhn'    => ->(num) { num =~ /^(501080|501081|501082)\d{10}$/ },
+        'maestro_no_luhn'    => ->(num) { num =~ /^(501080|501081|501082)\d{6,13}$/ },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
         'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{10}$/ },
         'alia'               => ->(num) { num =~ /^(504997|505878|601030|601073|505874)\d{10}$/ },
@@ -35,7 +37,8 @@ module ActiveMerchant #:nodoc:
         'olimpica' => ->(num) { num =~ /^636853\d{10}$/ },
         'creditel' => ->(num) { num =~ /^601933\d{10}$/ },
         'confiable' => ->(num) { num =~ /^560718\d{10}$/ },
-        'synchrony' => ->(num) { num =~ /^700600\d{10}$/ }
+        'synchrony' => ->(num) { num =~ /^700600\d{10}$/ },
+        'routex' => ->(num) { num =~ /^(700676|700678)\d{13}$/ }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
@@ -198,7 +201,7 @@ module ActiveMerchant #:nodoc:
 
       # https://www.discoverglobalnetwork.com/content/dam/discover/en_us/dgn/pdfs/IPP-VAR-Enabler-Compliance.pdf
       UNIONPAY_RANGES = [
-        62212600..62379699, 62400000..62699999, 62820000..62889999,
+        62000000..62000000, 62212600..62379699, 62400000..62699999, 62820000..62889999,
         81000000..81099999, 81100000..81319999, 81320000..81519999, 81520000..81639999, 81640000..81719999
       ]
 

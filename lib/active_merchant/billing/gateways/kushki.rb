@@ -82,6 +82,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(action, post, amount, options)
         add_payment_method(post, payment_method, options)
         add_full_response(post, options)
+        add_metadata(post, options)
 
         commit(action, post)
       end
@@ -94,6 +95,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(action, post, amount, options)
         add_contact_details(post, options[:contact_details]) if options[:contact_details]
         add_full_response(post, options)
+        add_metadata(post, options)
 
         commit(action, post)
       end
@@ -105,6 +107,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization, options)
         add_invoice(action, post, amount, options)
         add_full_response(post, options)
+        add_metadata(post, options)
 
         commit(action, post)
       end
@@ -175,6 +178,10 @@ module ActiveMerchant #:nodoc:
 
       def add_full_response(post, options)
         post[:fullResponse] = options[:full_response].to_s.casecmp('true').zero? if options[:full_response]
+      end
+
+      def add_metadata(post, options)
+        post[:metadata] = options[:metadata] if options[:metadata]
       end
 
       ENDPOINT = {

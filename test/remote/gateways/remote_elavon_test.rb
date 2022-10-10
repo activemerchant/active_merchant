@@ -251,17 +251,23 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_equal 'APPROVAL', purchase.message
   end
 
+  # This test is essentially replicating a test on line 373 in order to get it passing.
+  # This test was part of the work to enable recurring transactions for Elavon. Recurring
+  # transactions aren't possible with Elavon unless cards are stored there as well. This work
+  # will be removed in a later cleanup ticket.
   def test_successful_purchase_with_ssl_token
+    store_response = @tokenization_gateway.store(@credit_card, @options)
+    token = store_response.params['token']
     options = {
       email: 'paul@domain.com',
       description: 'Test Transaction',
       billing_address: address,
       ip: '203.0.113.0',
       merchant_initiated_unscheduled: 'Y',
-      ssl_token: '4000000000000002'
+      ssl_token: token
     }
 
-    purchase = @gateway.purchase(@amount, @credit_card, options)
+    purchase = @tokenization_gateway.purchase(@amount, token, options)
 
     assert_success purchase
     assert_equal 'APPROVAL', purchase.message
@@ -373,6 +379,7 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert response = @tokenization_gateway.purchase(@amount, token, @options)
     assert_success response
     assert response.test?
+    assert_not_empty response.params['token']
     assert_equal 'APPROVAL', response.message
   end
 

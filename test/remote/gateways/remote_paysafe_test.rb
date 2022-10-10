@@ -5,8 +5,8 @@ class RemotePaysafeTest < Test::Unit::TestCase
     @gateway = PaysafeGateway.new(fixtures(:paysafe))
 
     @amount = 100
-    @credit_card = credit_card('4107857757053670')
-    @mastercard = credit_card('5186750368967720', brand: 'mastercard')
+    @credit_card = credit_card('4037111111000000')
+    @mastercard = credit_card('5200400000000009', brand: 'master')
     @pm_token = 'Ci3S9DWyOP9CiJ5'
     @options = {
       billing_address: address,
@@ -61,12 +61,55 @@ class RemotePaysafeTest < Test::Unit::TestCase
         version: '1.0.2'
       }
     }
+    @airline_details = {
+      airline_travel_details: {
+        passenger_name: 'Joe Smith',
+        departure_date: '2026-11-30',
+        origin: 'SXF',
+        computerized_reservation_system: 'DATS',
+        ticket: {
+          ticket_number: 9876789,
+          is_restricted_ticket: false
+        },
+        customer_reference_number: 107854099,
+        travel_agency: {
+          name: 'Sally Travel',
+          code: 'AGENTS'
+        },
+        trip_legs: {
+          leg1: {
+            flight: {
+              carrier_code: 'LH',
+              flight_number: '344'
+            },
+            service_class: 'F',
+            is_stop_over_allowed: true,
+            destination: 'ISL',
+            fare_basis: 'VMAY',
+            departure_date: '2026-11-30'
+          },
+          leg2: {
+            flight: {
+              carrier_code: 'TK',
+              flight_number: '999'
+            },
+            service_class: 'F',
+            is_stop_over_allowed: true,
+            destination: 'SOF',
+            fare_basis: 'VMAY',
+            departure_date: '2026-11-30'
+          }
+        }
+      }
+    }
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'COMPLETED', response.message
+    assert_equal 0, response.params['availableToSettle']
+    assert_not_nil response.params['authCode']
   end
 
   def test_successful_purchase_with_more_options
@@ -78,40 +121,97 @@ class RemotePaysafeTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
     assert_success response
     assert_equal 'COMPLETED', response.message
+    assert_equal '127.0.0.1', response.params['customerIp']
+  end
+
+  # Merchant account must be setup to support split pay transactions using a specific account_id
+  def test_successful_purchase_with_split_payouts
+    @split_pay = PaysafeGateway.new(fixtures(:paysafe_split_pay))
+    options = {
+      split_pay: [
+        {
+          linked_account: '1002179730',
+          percent: 50
+        }
+      ]
+    }
+    response = @split_pay.purchase(5000, @credit_card, @options.merge(options))
+    assert_success response
+    assert_equal 2500, response.params['settlements'].first['splitpay'].first['amount']
+  end
+
+  def test_successful_purchase_with_airline_details
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(@airline_details))
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+    assert_equal 'LH', response.params['airlineTravelDetails']['tripLegs']['leg1']['flight']['carrierCode']
+    assert_equal 'F', response.params['airlineTravelDetails']['tripLegs']['leg2']['serviceClass']
   end
 
   def test_successful_purchase_with_token
     response = @gateway.purchase(200, @pm_token, @options)
     assert_success response
     assert_equal 'COMPLETED', response.message
+    assert_equal 0, response.params['availableToSettle']
+    assert_not_nil response.params['authCode']
   end
 
   def test_successful_purchase_with_token_3ds2
     response = @gateway.purchase(200, @pm_token, @options.merge(@visa_three_d_secure_2_options))
     assert_success response
     assert_equal 'COMPLETED', response.message
+    assert_not_nil response.params['authCode']
   end
 
   def test_successful_purchase_with_mastercard_3ds1
     response = @gateway.purchase(@amount, @mastercard, @options.merge(@mc_three_d_secure_1_options))
     assert_success response
     assert_equal 'COMPLETED', response.message
+    assert_not_nil response.params['authCode']
   end
 
   def test_successful_purchase_with_mastercard_3ds2
     response = @gateway.purchase(@amount, @mastercard, @options.merge(@mc_three_d_secure_2_options))
     assert_success response
     assert_equal 'COMPLETED', response.message
+    assert_not_nil response.params['authCode']
   end
 
   def test_successful_purchase_with_visa_3ds1
     response = @gateway.purchase(@amount, @credit_card, @options.merge(@visa_three_d_secure_1_options))
     assert_success response
     assert_equal 'COMPLETED', response.message
+    assert_not_nil response.params['authCode']
   end
 
   def test_successful_purchase_with_visa_3ds2
     response = @gateway.purchase(@amount, @credit_card, @options.merge(@visa_three_d_secure_2_options))
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+    assert_not_nil response.params['authCode']
+  end
+
+  def test_successful_purchase_with_stored_credentials
+    initial_options = @options.merge(
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring'
+      }
+    )
+
+    initial_response = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_response
+    assert_not_nil initial_response.params['storedCredential']
+    network_transaction_id = initial_response.params['id']
+
+    stored_options = @options.merge(
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'installment',
+        network_transaction_id: network_transaction_id
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, stored_options)
     assert_success response
     assert_equal 'COMPLETED', response.message
   end
@@ -129,6 +229,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
     assert_equal 'PENDING', capture.message
+    assert_equal @amount, capture.params['availableToRefund']
   end
 
   def test_successful_authorize_and_capture_with_token
@@ -138,24 +239,28 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
     assert_equal 'PENDING', capture.message
+    assert_equal @amount, capture.params['availableToRefund']
   end
 
   def test_successful_authorize_with_token
     response = @gateway.authorize(250, @pm_token, @options)
     assert_success response
     assert_equal 'COMPLETED', response.message
+    assert_not_nil response.params['authCode']
   end
 
   def test_successful_authorize_with_token_3ds1
     response = @gateway.authorize(200, @pm_token, @options.merge(@visa_three_d_secure_1_options))
     assert_success response
     assert_equal 'COMPLETED', response.message
+    assert_not_nil response.params['authCode']
   end
 
   def test_successful_authorize_with_token_3ds2
     response = @gateway.authorize(200, @pm_token, @options.merge(@visa_three_d_secure_2_options))
     assert_success response
     assert_equal 'COMPLETED', response.message
+    assert_not_nil response.params['authCode']
   end
 
   def test_failed_authorize
@@ -244,14 +349,27 @@ class RemotePaysafeTest < Test::Unit::TestCase
   def test_successful_store
     response = @gateway.store(credit_card('4111111111111111'), @profile_options)
     assert_success response
+    assert_equal 'ACTIVE', response.params['status']
+    assert_equal 1979, response.params['dateOfBirth']['year']
+    assert_equal '456 My Street', response.params['addresses'].first['street']
   end
 
-  def test_successful_store_and_redact
+  def test_successful_store_and_purchase
+    response = @gateway.store(credit_card('4111111111111111'), @profile_options)
+    assert_success response
+    token = response.authorization
+
+    purchase = @gateway.purchase(300, token, @options)
+    assert_success purchase
+    assert_match 'COMPLETED', purchase.message
+  end
+
+  def test_successful_store_and_unstore
     response = @gateway.store(credit_card('4111111111111111'), @profile_options)
     assert_success response
     id = response.authorization
-    redact = @gateway.redact(id)
-    assert_success redact
+    unstore = @gateway.unstore(id)
+    assert_success unstore
   end
 
   def test_invalid_login

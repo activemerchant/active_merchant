@@ -128,6 +128,35 @@ class SafeChargeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_authorize_with_not_use_cvv
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ not_use_cvv: true }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_NotUseCVV=1/, data)
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ not_use_cvv: 'true' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_NotUseCVV=1/, data)
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ not_use_cvv: false }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_NotUseCVV=0/, data)
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ not_use_cvv: 'false' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_NotUseCVV=0/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert response.test?
+  end
+
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
@@ -146,6 +175,16 @@ class SafeChargeTest < Test::Unit::TestCase
                  'AAlAHMAfABoADEALAA8ADQAewB8ADsAewBiADsANQBoACwAeAA/AGQAXQAjAF' \
                  'EAYgBVAHIAMwA=|month|year|1.00|currency', response.authorization
     assert response.test?
+  end
+
+  def test_successful_capture_with_options
+    capture = stub_comms do
+      @gateway.capture(@amount, 'auth|transaction_id|token|month|year|amount|currency', @options.merge(email: 'slowturtle86@aol.com'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_Email/, data)
+    end.respond_with(successful_capture_response)
+
+    assert_success capture
   end
 
   def test_failed_capture
@@ -209,31 +248,13 @@ class SafeChargeTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_verify
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, successful_void_response)
-
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
-
-    assert_equal '111534|101508189855|MQBVAG4ASABkAEgAagB3AEsAbgAtACoAWgAzAFwAW' \
-                 'wBNAF8ATQBUAD0AegBQAGwAQAAtAD0AXAB5AFkALwBtAFAALABaAHoAOgBFAE' \
-                 'wAUAA1AFUAMwA=|%02d|%d|1.00|USD' % [@credit_card.month, @credit_card.year.to_s[-2..-1]], response.authorization
-    assert response.test?
-  end
-
-  def test_successful_verify_with_failed_void
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, failed_void_response)
-
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
-  end
-
-  def test_failed_verify
-    @gateway.expects(:ssl_post).returns(failed_authorize_response)
-
-    response = @gateway.verify(@credit_card, @options)
-    assert_failure response
-    assert_equal '0', response.error_code
+  def test_verify_sends_zero_amount
+    stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_TransType=Auth/, data)
+      assert_match(/sg_Amount=0.00/, data)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_scrub

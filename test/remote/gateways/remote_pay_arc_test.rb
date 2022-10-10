@@ -106,7 +106,15 @@ class RemotePayArcTest < Test::Unit::TestCase
       PayArcGateway::SUCCESS_STATUS.include? response.message
     end
 
-    assert_equal '8772036624', response.params['receipt_phone']
+    assert_equal '8772036624', response.params['data']['phone_number']
+  end
+
+  def test_successful_purchase_without_billing_address
+    @options.delete(:billing_address)
+    response = @gateway.purchase(250, @credit_card, @options)
+
+    assert_nil response.params['data']['card']['data']['address1']
+    assert_success response
   end
 
   def test_failed_purchase

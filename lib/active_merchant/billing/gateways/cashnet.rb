@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_object, options = {})
         post = {}
         add_creditcard(post, payment_object)
-        add_invoice(post, options)
+        add_invoice(post, money, options)
         add_address(post, options)
         add_customer_data(post, options)
         commit('SALE', money, post)
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, identification, options = {})
         post = {}
         post[:origtx] = identification
-        add_invoice(post, options)
+        add_invoice(post, money, options)
         add_customer_data(post, options)
         commit('REFUND', money, post)
       end
@@ -69,7 +69,6 @@ module ActiveMerchant #:nodoc:
       private
 
       def commit(action, money, fields)
-        fields[:amount] = amount(money)
         url = (test? ? test_url : live_url) + CGI.escape(@options[:merchant_gateway_name])
         raw_response = ssl_post(url, post_data(action, fields))
         parsed_response = parse(raw_response)
@@ -92,6 +91,7 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         post = {}
+
         post[:command]        = action
         post[:merchant]       = @options[:merchant]
         post[:operator]       = @options[:operator]
@@ -110,9 +110,19 @@ module ActiveMerchant #:nodoc:
         post[:lname]           = creditcard.last_name
       end
 
-      def add_invoice(post, options)
+      def add_invoice(post, money, options)
         post[:order_number] = options[:order_id] if options[:order_id].present?
-        post[:itemcode] = (options[:item_code] || @options[:default_item_code])
+
+        if options[:item_codes].present?
+          codes_and_amounts = options[:item_codes].transform_keys { |key| key.to_s.delete('_') }
+          codes_and_amounts.each do |key, value|
+            post[key] = value if key.start_with?('itemcode')
+            post[key] = amount(value.to_i) if key.start_with?('amount')
+          end
+        else
+          post[:itemcode] = (options[:item_code] || @options[:default_item_code])
+          post[:amount] = amount(money.to_i)
+        end
       end
 
       def add_address(post, options)

@@ -23,13 +23,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options = {})
-        if options[:execute_threed]
-          authorize(money, payment, options)
-        else
-          MultiResponse.run do |r|
-            r.process { authorize(money, payment, options) }
-            r.process { capture(money, r.authorization, options) }
-          end
+        MultiResponse.run do |r|
+          r.process { authorize(money, payment, options) }
+          r.process { capture(money, r.authorization, options) }
         end
       end
 
@@ -188,6 +184,7 @@ module ActiveMerchant #:nodoc:
           cap_decrypted = decrypt(cap_origin, @options[:key_session])
           cap_json = JSON.parse(cap_decrypted)
           cap_json['apikey'] = '[FILTERED]'
+          cap_json['key_session'] = '[FILTERED]'
           cap_to_json = cap_json.to_json
           cap_tagged = '<capture>' + cap_to_json + '</capture>'
           ret_transcript = ret_transcript.gsub(/<capture>(.*?)<\/capture>/, cap_tagged)
@@ -198,6 +195,7 @@ module ActiveMerchant #:nodoc:
           ref_decrypted = decrypt(ref_origin, @options[:key_session])
           ref_json = JSON.parse(ref_decrypted)
           ref_json['apikey'] = '[FILTERED]'
+          ref_json['key_session'] = '[FILTERED]'
           ref_to_json = ref_json.to_json
           ref_tagged = '<refund>' + ref_to_json + '</refund>'
           ret_transcript = ret_transcript.gsub(/<refund>(.*?)<\/refund>/, ref_tagged)
@@ -261,10 +259,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        url = live_url
-        json_str = parameters.to_json
+        json_str = JSON.generate(parameters)
         cleaned_str = json_str.gsub('\n', '')
-        raw_response = ssl_post(url, cleaned_str, { 'Content-type' => 'application/json' })
+        raw_response = ssl_post(live_url, cleaned_str, { 'Content-type' => 'application/json' })
         response = JSON.parse(decrypt(raw_response, @options[:key_session]))
 
         if response.key?('url')

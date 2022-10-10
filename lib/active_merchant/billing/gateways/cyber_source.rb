@@ -158,9 +158,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(payment, options = {})
+        amount = eligible_for_zero_auth?(payment, options) ? 0 : 100
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, payment, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { authorize(amount, payment, options) }
+          r.process(:ignore_result) { void(r.authorization, options) } unless amount == 0
         end
       end
 
@@ -291,6 +292,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
+        add_other_tax(xml, options)
         add_threeds_2_ucaf_data(xml, creditcard_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
@@ -349,6 +351,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
+        add_other_tax(xml, options)
         add_threeds_2_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
@@ -500,6 +503,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_line_item_data(xml, options)
+        return unless options[:line_items]
+
         options[:line_items].each_with_index do |value, index|
           xml.tag! 'item', { 'id' => index } do
             xml.tag! 'unitPrice', localized_amount(value[:declared_value].to_i, options[:currency] || default_currency)
@@ -507,6 +512,8 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'productCode', value[:code] || 'shipping_only'
             xml.tag! 'productName', value[:description]
             xml.tag! 'productSKU', value[:sku]
+            xml.tag! 'taxAmount', value[:tax_amount] if value[:tax_amount]
+            xml.tag! 'nationalTax', value[:national_tax] if value[:national_tax]
           end
         end
       end
@@ -522,10 +529,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_merchant_descriptor(xml, options)
-        return unless options[:merchant_descriptor]
+        return unless options[:merchant_descriptor] || options[:user_po] || options[:taxable]
 
         xml.tag! 'invoiceHeader' do
-          xml.tag! 'merchantDescriptor', options[:merchant_descriptor]
+          xml.tag! 'merchantDescriptor', options[:merchant_descriptor] if options[:merchant_descriptor]
+          xml.tag! 'userPO', options[:user_po] if options[:user_po]
+          xml.tag! 'taxable', options[:taxable] if options[:taxable]
         end
       end
 
@@ -628,11 +637,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_other_tax(xml, options)
-        return unless options[:local_tax_amount] || options[:national_tax_amount]
+        return unless options[:local_tax_amount] || options[:national_tax_amount] || options[:national_tax_indicator]
 
         xml.tag! 'otherTax' do
           xml.tag! 'localTaxAmount', options[:local_tax_amount] if options[:local_tax_amount]
           xml.tag! 'nationalTaxAmount', options[:national_tax_amount] if options[:national_tax_amount]
+          xml.tag! 'nationalTaxIndicator', options[:national_tax_indicator] if options[:national_tax_indicator]
         end
       end
 
@@ -887,6 +897,7 @@ module ActiveMerchant #:nodoc:
         else
           add_address(xml, payment_method_or_reference, options[:billing_address], options)
           add_address(xml, payment_method_or_reference, options[:shipping_address], options, true)
+          add_line_item_data(xml, options)
           add_purchase_data(xml, money, true, options)
           add_installments(xml, options)
           add_creditcard(xml, payment_method_or_reference)
@@ -1068,6 +1079,10 @@ module ActiveMerchant #:nodoc:
         else
           response[:message]
         end
+      end
+
+      def eligible_for_zero_auth?(payment_method, options = {})
+        payment_method.is_a?(CreditCard) && options[:zero_amount_auth]
       end
     end
   end

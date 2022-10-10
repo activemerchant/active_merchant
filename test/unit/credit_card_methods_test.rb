@@ -208,6 +208,8 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'maestro_no_luhn', CreditCard.brand?('5010800000000000')
     assert_equal 'maestro_no_luhn', CreditCard.brand?('5010810000000000')
     assert_equal 'maestro_no_luhn', CreditCard.brand?('5010820000000000')
+    assert_equal 'maestro_no_luhn', CreditCard.brand?('501082000000')
+    assert_equal 'maestro_no_luhn', CreditCard.brand?('5010820000000000000')
   end
 
   def test_maestro_no_luhn_number_not_validated
@@ -228,6 +230,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
 
   def test_should_detect_vr_card
     assert_equal 'vr', CreditCard.brand?('6370364495764400')
+    assert_equal 'vr', CreditCard.brand?('6274160000000001')
   end
 
   def test_should_detect_elo_card
@@ -280,10 +283,18 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'unionpay', CreditCard.brand?('814400000000000000')
     assert_equal 'unionpay', CreditCard.brand?('8171999927660000')
     assert_equal 'unionpay', CreditCard.brand?('8171999900000000021')
+    assert_equal 'unionpay', CreditCard.brand?('6200000000000005')
   end
 
   def test_should_detect_synchrony_card
     assert_equal 'synchrony', CreditCard.brand?('7006000000000000')
+  end
+
+  def test_should_detect_routex_card
+    number = '7006760000000000000'
+    assert_equal 'routex', CreditCard.brand?(number)
+    assert CreditCard.valid_number?(number)
+    assert_equal 'routex', CreditCard.brand?('7006789224703725591')
   end
 
   def test_should_detect_when_an_argument_brand_does_not_match_calculated_brand
@@ -359,6 +370,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
       6046220312312312
       6393889871239871
       5022751231231231
+      6275350000000001
     ]
     numbers.each do |num|
       assert_equal 16, num.length

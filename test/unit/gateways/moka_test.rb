@@ -83,6 +83,14 @@ class MokaTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_partial_refund
+    stub_comms do
+      @gateway.refund(50, 'Test-9732c2ce-08d9-4ff6-a89f-bd3fa345811c')
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal '0.50', JSON.parse(data)['PaymentDealerRequest']['Amount']
+    end.respond_with(successful_refund_response)
+  end
+
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
@@ -173,6 +181,24 @@ class MokaTest < Test::Unit::TestCase
         assert_equal product['UnitPrice'], (sprintf '%.2f', options[:basket_product][i][:unit_price] / 100)
         assert_equal product['Quantity'], options[:basket_product][i][:quantity]
       end
+    end.respond_with(successful_response)
+  end
+
+  def test_additional_auth_purchase_fields_are_passed
+    options = @options.merge({
+      description: 'custom purchase',
+      installment_number: 12,
+      sub_merchant_name: 'testco',
+      is_pool_payment: 1
+    })
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      response = JSON.parse(data)
+      assert_equal response['PaymentDealerRequest']['Description'], 'custom purchase'
+      assert_equal response['PaymentDealerRequest']['InstallmentNumber'], 12
+      assert_equal response['SubMerchantName'], 'testco'
+      assert_equal response['IsPoolPayment'], 1
     end.respond_with(successful_response)
   end
 

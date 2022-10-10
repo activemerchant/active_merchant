@@ -169,6 +169,20 @@ class RemoteElementTest < Test::Unit::TestCase
     assert_equal 'TransactionID required', response.message
   end
 
+  def test_successful_credit
+    credit_options = @options.merge({ ticket_number: '1', market_code: 'FoodRestaurant', merchant_supplied_transaction_id: '123' })
+    credit = @gateway.credit(@amount, @credit_card, credit_options)
+
+    assert_success credit
+  end
+
+  def test_failed_credit
+    credit = @gateway.credit(nil, @credit_card, @options)
+
+    assert_failure credit
+    assert_equal 'TransactionAmount required', credit.message
+  end
+
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth

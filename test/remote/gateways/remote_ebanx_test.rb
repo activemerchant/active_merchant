@@ -46,6 +46,13 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_equal 'Accepted', response.message
   end
 
+  def test_successful_purchase_passing_processing_type_in_header
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ processing_type: 'local' }))
+
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
   def test_successful_purchase_as_brazil_business_with_responsible_fields
     options = @options.update(document: '32593371000110',
                               person_type: 'business',
@@ -221,6 +228,26 @@ class RemoteEbanxTest < Test::Unit::TestCase
       })
     })
 
+    response = @gateway.verify(@credit_card, options)
+    assert_success response
+    assert_match %r{Accepted}, response.message
+  end
+
+  def test_successful_verify_for_mexico
+    options = @options.merge({
+      order_id: generate_unique_id,
+      ip: '127.0.0.1',
+      email: 'joao@example.com.mx',
+      birth_date: '10/11/1980',
+      billing_address: address({
+        address1: '1040 Rua E',
+        city: 'Toluca de Lerdo',
+        state: 'MX',
+        zip: '29269',
+        country: 'MX',
+        phone_number: '8522847035'
+      })
+    })
     response = @gateway.verify(@credit_card, options)
     assert_success response
     assert_match %r{Accepted}, response.message
