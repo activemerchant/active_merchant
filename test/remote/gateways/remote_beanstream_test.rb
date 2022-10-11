@@ -403,6 +403,35 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:api_key], clean_transcript)
   end
 
+  def test_successful_authorize_with_3ds_v1_options
+    @options[:three_d_secure] = {
+      version: '1.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
+    assert response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_authorize_with_3ds_v2_options
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'Y',
+      authentication_response_status: 'Y'
+    }
+
+    assert response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   private
 
   def generate_single_use_token(credit_card)
