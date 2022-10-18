@@ -50,6 +50,33 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_match 'The payment was paid', response.message
   end
 
+  def test_successful_purchase_with_network_tokens
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+  end
+
+  def test_successful_purchase_with_network_tokens_and_store_credential_type
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    response = @gateway.purchase(@amount, credit_card, @options.merge!(stored_credential_type: 'SUBSCRIPTION'))
+    assert_success response
+    assert_match 'SUBSCRIPTION', response.params['card']['stored_credential_type']
+    assert_match 'The payment was paid', response.message
+  end
+
+  def test_successful_purchase_with_network_tokens_and_store_credential_usage
+    options = @options.merge!(stored_credential: stored_credential(:merchant, :recurring, ntid: 'abc123'))
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    response = @gateway.purchase(@amount, credit_card, options)
+    assert_success response
+    assert_match 'USED', response.params['card']['stored_credential_usage']
+    assert_match 'The payment was paid', response.message
+  end
+
   def test_successful_purchase_with_installments
     response = @gateway.purchase(@amount, @credit_card, @options_argentina_installments)
     assert_success response
@@ -168,6 +195,14 @@ class RemoteDLocalTest < Test::Unit::TestCase
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @credit_card, @options.merge(description: '300'))
+    assert_failure response
+    assert_match 'The payment was rejected', response.message
+  end
+
+  def test_failed_purchase_with_network_tokens
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    response = @gateway.purchase(@amount, credit_card, @options.merge(description: '300'))
     assert_failure response
     assert_match 'The payment was rejected', response.message
   end
