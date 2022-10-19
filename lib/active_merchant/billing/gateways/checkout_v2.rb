@@ -204,23 +204,31 @@ module ActiveMerchant #:nodoc:
         post[:previous_payment_id] = options[:previous_charge_id] if options[:previous_charge_id]
       end
 
-      def add_stored_credential_options(post, options = {})
-        return unless options[:stored_credential]
+      def merchant_initiated_override(post, options)
+        post[:merchant_initiated] = true
+        post[:'source.stored'] = true
+        post[:previous_payment_id] = options[:merchant_initiated_transaction_id]
+      end
 
-        case options[:stored_credential][:initial_transaction]
-        when true
+      def add_stored_credentials_using_normalized_fields(post, options)
+        if options[:stored_credential][:initial_transaction] == true
           post[:merchant_initiated] = false
-        when false
+        else
           post[:'source.stored'] = true
           post[:previous_payment_id] = options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
           post[:merchant_initiated] = true
         end
+      end
 
-        case options[:stored_credential][:reason_type]
-        when 'recurring', 'installment'
-          post[:payment_type] = 'Recurring'
-        when 'unscheduled'
-          return
+      def add_stored_credential_options(post, options = {})
+        return unless options[:stored_credential]
+
+        post[:payment_type] = 'Recurring' if %w(recurring installment).include? options[:stored_credential][:reason_type]
+
+        if options[:merchant_initiated_transaction_id]
+          merchant_initiated_override(post, options)
+        else
+          add_stored_credentials_using_normalized_fields(post, options)
         end
       end
 
