@@ -33,7 +33,7 @@ class CardStreamTest < Test::Unit::TestCase
       three_d_secure: {
         enrolled: 'true',
         authentication_response_status: 'Y',
-        eci: 05,
+        eci: 5,
         cavv: 'Y2FyZGluYWxjb21tZXJjZWF1dGg',
         xid: '362DF058-6061-47F1-A504-CACCBDF422B7'
       }
