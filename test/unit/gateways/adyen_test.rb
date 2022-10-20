@@ -1208,6 +1208,80 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_level_2_data
+    level_2_options = {
+      total_tax_amount: '160',
+      customer_reference: '101'
+    }
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(level_2_data: level_2_options))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      additional_data = parsed['additionalData']
+      assert_equal additional_data['enhancedSchemeData.totalTaxAmount'], level_2_options[:total_tax_amount]
+      assert_equal additional_data['enhancedSchemeData.customerReference'], level_2_options[:customer_reference]
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_level_3_data
+    level_3_options = {
+      total_tax_amount: '12800',
+      customer_reference: '101',
+      freight_amount: '300',
+      destination_state_province_code: 'NYC',
+      ship_from_postal_code: '1082GM',
+      order_date: '101216',
+      destination_postal_code: '1082GM',
+      destination_country_code: 'NLD',
+      duty_amount: '500',
+      items: [
+        {
+          description: 'T16 Test products 1',
+          product_code: 'TEST120',
+          commodity_code: 'COMMCODE1',
+          quantity: '5',
+          unit_of_measure: 'm',
+          unit_price: '1000',
+          discount_amount: '60',
+          total_amount: '4940'
+        }
+      ]
+    }
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(level_3_data: level_3_options))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      additional_data = parsed['additionalData']
+      leve_3_keys = [ 'enhancedSchemeData.freightAmount', 'enhancedSchemeData.destinationStateProvinceCode',
+                     'enhancedSchemeData.shipFromPostalCode', 'enhancedSchemeData.orderDate', 'enhancedSchemeData.destinationPostalCode',
+                     'enhancedSchemeData.destinationCountryCode', 'enhancedSchemeData.dutyAmount',
+                     'enhancedSchemeData.itemDetailLine1.description', 'enhancedSchemeData.itemDetailLine1.productCode',
+                     'enhancedSchemeData.itemDetailLine1.commodityCode', 'enhancedSchemeData.itemDetailLine1.quantity',
+                     'enhancedSchemeData.itemDetailLine1.unitOfMeasure', 'enhancedSchemeData.itemDetailLine1.unitPrice',
+                     'enhancedSchemeData.itemDetailLine1.discountAmount', 'enhancedSchemeData.itemDetailLine1.totalAmount']
+
+      additional_data_keys = additional_data.keys
+      assert_all(leve_3_keys) { |item| additional_data_keys.include?(item) }
+
+      mapper = { "enhancedSchemeData.freightAmount": 'freight_amount',
+                "enhancedSchemeData.destinationStateProvinceCode": 'destination_state_province_code',
+                "enhancedSchemeData.shipFromPostalCode": 'ship_from_postal_code',
+                "enhancedSchemeData.orderDate": 'order_date',
+                "enhancedSchemeData.destinationPostalCode": 'destination_postal_code',
+                "enhancedSchemeData.destinationCountryCode": 'destination_country_code',
+                "enhancedSchemeData.dutyAmount": 'duty_amount' }
+
+      mapper.each do |item|
+        assert_equal additional_data[item[0]], level_3_options[item[1]]
+      end
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_extended_avs_response
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
