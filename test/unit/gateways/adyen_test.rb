@@ -929,7 +929,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_shopper_data
     post = { card: { billingAddress: {} } }
-    @gateway.send(:add_shopper_data, post, @options)
+    @gateway.send(:shopper_data, post, @options)
     assert_equal 'john.smith@test.com', post[:shopperEmail]
     assert_equal '77.110.174.153', post[:shopperIP]
   end
@@ -1204,6 +1204,51 @@ class AdyenTest < Test::Unit::TestCase
       assert additional_data['subMerchant.subSeller2.creditSettlementAgency']
       assert additional_data['subMerchant.subSeller2.creditSettlementAccountType']
       assert additional_data['subMerchant.subSeller2.creditSettlementAccount']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_level_2_data
+    level_2_options = {
+      total_tax_amount: '160',
+      customer_reference: '101'
+    }
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(level_2_options))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      additional_data = parsed['additionalData']
+      assert additional_data['enhancedSchemeData.totalTaxAmount']
+      assert additional_data['enhancedSchemeData.customerReference']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_level_3_data
+    level_3_options = {
+      total_tax_amount: '12800',
+      customer_reference: '101',
+      freight_amount: '300',
+      destination_state_province_code: 'NYC',
+      ship_from_postal_code: '1082GM',
+      order_date: '101216',
+      destination_postal_code: '1082GM'
+      destination_country_code: 'NLD',
+      duty_amount: '500'
+      items: [{
+        description: 'T16 Test products 1',
+        product_code: 'TEST120'
+      }]
+    }
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(level_3_options))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      additional_data = parsed['additionalData']
+      assert additional_data['enhancedSchemeData.totalTaxAmount']
+      assert additional_data['enhancedSchemeData.customerReference']
     end.respond_with(successful_authorize_response)
     assert_success response
   end

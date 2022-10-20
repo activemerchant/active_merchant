@@ -66,6 +66,8 @@ module ActiveMerchant #:nodoc:
         add_recurring_contract(post, options)
         add_network_transaction_reference(post, options)
         add_application_info(post, options)
+        add_level_2_data(post, options)
+        add_level_3_data(post, options)
         commit('authorise', post, options)
       end
 
@@ -246,6 +248,34 @@ module ActiveMerchant #:nodoc:
         add_merchant_data(post, options)
       end
 
+      def add_level_2_data(post, options)
+        post[:additionalData][:'enhancedSchemeData.totalTaxAmount'] = options[:total_tax_amount] if options[:total_tax_amount]
+        post[:additionalData][:'enhancedSchemeData.customerReference'] = options[:customer_reference] if options[:customer_reference]
+        post[:additionalData] = post[:additionalData].merge(options[:level_2_data]) if options[:level_2_data]
+      end
+
+      def add_level_3_data(post, options)
+        post[:additionalData][:'enhancedSchemeData.freightAmount'] = options[:freight_amount] if options[:freight_amount]
+        post[:additionalData][:'enhancedSchemeData.destinationStateProvinceCode'] = options[:destination_state_province_code] if options[:destination_state_province_code]
+        post[:additionalData][:'enhancedSchemeData.shipFromPostalCode'] = options[:ship_from_postal_code] if options[:ship_from_postal_code]
+        post[:additionalData][:'enhancedSchemeData.orderDate'] = options[:order_date] if options[:order_date]
+        post[:additionalData][:'enhancedSchemeData.destinationPostalCode'] = options[:destination_postal_code] if options[:destination_postal_code]
+        post[:additionalData][:'enhancedSchemeData.destinationCountryCode'] = options[:destination_country_code] if options[:destination_country_code]
+        post[:additionalData][:'enhancedSchemeData.dutyAmount'] = options[:duty_amount] if options[:duty_amount]
+        if options[:items]
+          options[:items].each.with_index(1) do |item, index|
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.description"] = item.description
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.productCode"] = item.product_code
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.quantity"] = item.quantity
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.unitOfMeasure"] = item.unit_of_measure
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.unitPrice"] = item.unit_price
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.discountAmount"] = item.discount_amount
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.totalAmount"] = item.total_amount
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.commodityCode"] = item.commodity_code
+          end
+        end
+      end
+      
       def add_shopper_data(post, options)
         post[:shopperEmail] = options[:email] if options[:email]
         post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
