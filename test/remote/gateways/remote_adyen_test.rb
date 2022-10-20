@@ -1379,6 +1379,85 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_authorize_with_level_2_data
+    level_2_data = {
+      total_tax_amount: '160',
+      customer_reference: '101'
+    }
+    assert response = @gateway.authorize(@amount, @avs_credit_card, @options.merge(level_2_data: level_2_data))
+    assert response.test?
+    refute response.authorization.blank?
+    assert_success response
+  end
+
+  def test_successful_purchase_with_level_2_data
+    level_2_data = {
+      total_tax_amount: '160',
+      customer_reference: '101'
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: level_2_data))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_authorize_with_level_3_data
+    level_3_data = {
+      total_tax_amount: '12800',
+      customer_reference: '101',
+      freight_amount: '300',
+      destination_state_province_code: 'NYC',
+      ship_from_postal_code: '1082GM',
+      order_date: '101216',
+      destination_postal_code: '1082GM',
+      destination_country_code: 'NLD',
+      duty_amount: '500',
+      items: [
+        {
+          description: 'T16 Test products 1',
+          product_code: 'TEST120',
+          commodity_code: 'COMMCODE1',
+          quantity: '5',
+          unit_of_measure: 'm',
+          unit_price: '1000',
+          discount_amount: '60',
+          total_amount: '4940'
+        }
+      ]
+    }
+    assert response = @gateway.authorize(@amount, @avs_credit_card, @options.merge(level_3_data: level_3_data))
+    assert response.test?
+    assert_success response
+  end
+
+  def test_successful_purchase_with_level_3_data
+    level_3_data = {
+      total_tax_amount: '12800',
+      customer_reference: '101',
+      freight_amount: '300',
+      destination_state_province_code: 'NYC',
+      ship_from_postal_code: '1082GM',
+      order_date: '101216',
+      destination_postal_code: '1082GM',
+      destination_country_code: 'NLD',
+      duty_amount: '500',
+      items: [
+        {
+          description: 'T16 Test products 1',
+          product_code: 'TEST120',
+          commodity_code: 'COMMCODE1',
+          quantity: '5',
+          unit_of_measure: 'm',
+          unit_price: '1000',
+          discount_amount: '60',
+          total_amount: '4940'
+        }
+      ]
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_3_data: level_3_data))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   def test_successful_cancel_or_refund
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
