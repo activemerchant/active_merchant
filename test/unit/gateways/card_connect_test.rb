@@ -47,6 +47,65 @@ class CardConnectTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_initial_purchase_with_stored_credential
+    stored_credential_options = {
+      initial_transaction: true,
+      reason_type: 'recurring',
+      initiator: 'merchant'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_options }))
+    end.check_request do |_verb, _url, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['cof'], 'M'
+      assert_equal request['cofscheduled'], 'Y'
+      assert_equal request['cofpermission'], 'Y'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_subsequent_purchase_with_stored_credential
+    stored_credential_options = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'cardholder'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_options }))
+    end.check_request do |_verb, _url, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['cof'], 'C'
+      assert_equal request['cofscheduled'], 'Y'
+      assert_equal request['cofpermission'], 'N'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_ecomind
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ ecomind: 't' }))
+    end.check_request do |_verb, _url, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['ecomind'], 'T'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_recurring
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ recurring: true }))
+    end.check_request do |_verb, _url, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['ecomind'], 'R'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_without_recurring
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ recurring: false }))
+    end.check_request do |_verb, _url, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['ecomind'], 'E'
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_allow_domains_without_ports
     assert CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'https://vendor.cardconnect.com/test')
   end
