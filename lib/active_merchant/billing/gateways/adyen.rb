@@ -264,16 +264,17 @@ module ActiveMerchant #:nodoc:
         post[:additionalData][:'enhancedSchemeData.dutyAmount'] = options[:duty_amount] if options[:duty_amount]
         if options[:items]
           options[:items].each.with_index(1) do |item, index|
-            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.description"] = item.description
-            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.productCode"] = item.product_code
-            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.quantity"] = item.quantity
-            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.unitOfMeasure"] = item.unit_of_measure
-            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.unitPrice"] = item.unit_price
-            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.discountAmount"] = item.discount_amount
-            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.totalAmount"] = item.total_amount
-            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.commodityCode"] = item.commodity_code
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.description"] = item[:description]
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.productCode"] = item[:product_code]
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.quantity"] = item[:quantity]
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.unitOfMeasure"] = item[:unit_of_measure]
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.unitPrice"] = item[:unit_price]
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.discountAmount"] = item[:discount_amount]
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.totalAmount"] = item[:total_amount]
+            post[:additionalData][:"enhancedSchemeData.itemDetailLine#{index}.commodityCode"] = item[:commodity_code]
           end
         end
+        post[:additionalData] = post[:additionalData].merge(options[:level_3_data]) if options[:level_3_data]
       end
       
       def add_shopper_data(post, options)

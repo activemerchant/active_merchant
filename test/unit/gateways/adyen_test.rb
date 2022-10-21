@@ -1233,13 +1233,21 @@ class AdyenTest < Test::Unit::TestCase
       destination_state_province_code: 'NYC',
       ship_from_postal_code: '1082GM',
       order_date: '101216',
-      destination_postal_code: '1082GM'
+      destination_postal_code: '1082GM',
       destination_country_code: 'NLD',
-      duty_amount: '500'
-      items: [{
+      duty_amount: '500',
+      items: [
+        {
         description: 'T16 Test products 1',
-        product_code: 'TEST120'
-      }]
+        product_code: 'TEST120',
+        commodity_code: 'COMMCODE1',
+        quantity: '5',
+        unit_of_measure: 'm',
+        unit_price: '1000',
+        discount_amount: '60',
+        total_amount: '4940'
+        }
+      ]
     }
 
     response = stub_comms do
@@ -1249,6 +1257,22 @@ class AdyenTest < Test::Unit::TestCase
       additional_data = parsed['additionalData']
       assert additional_data['enhancedSchemeData.totalTaxAmount']
       assert additional_data['enhancedSchemeData.customerReference']
+      assert additional_data['enhancedSchemeData.freightAmount']
+      assert additional_data['enhancedSchemeData.destinationStateProvinceCode']
+      assert additional_data['enhancedSchemeData.shipFromPostalCode']
+      assert additional_data['enhancedSchemeData.orderDate']
+      assert additional_data['enhancedSchemeData.destinationPostalCode']
+      assert additional_data['enhancedSchemeData.destinationCountryCode']
+      assert additional_data['enhancedSchemeData.dutyAmount']
+      assert additional_data['enhancedSchemeData.itemDetailLine1.description']
+      assert additional_data['enhancedSchemeData.itemDetailLine1.productCode']
+      assert additional_data['enhancedSchemeData.itemDetailLine1.commodityCode']
+      assert additional_data['enhancedSchemeData.itemDetailLine1.quantity']
+      assert additional_data['enhancedSchemeData.itemDetailLine1.unitOfMeasure']
+      assert additional_data['enhancedSchemeData.itemDetailLine1.unitPrice']
+      assert additional_data['enhancedSchemeData.itemDetailLine1.discountAmount']
+      assert additional_data['enhancedSchemeData.itemDetailLine1.totalAmount']
+      assert additional_data['enhancedSchemeData.itemDetailLine1.commodityCode']
     end.respond_with(successful_authorize_response)
     assert_success response
   end
