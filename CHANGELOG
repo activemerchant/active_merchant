@@ -16,6 +16,7 @@
 * iVeri: Remove schema validation on Live requests [curiousepic] #4606
 * Beanstream: Adding Third Party 3DS fields [heavyblade] #4602
 * Borgun: Add support for 3DS preauth [ajawadmirza] #4603
+* Cardstream: Add third party 3ds2 support [sainterman] #4570
 * Accept both formats of Canadian routing numbers [molbrown] #4568
 * DLocal: Add support for `original_order_id` [rachelkirk] #4605
 * CheckoutV2: Add support for `merchant_initiated_transaction_id` [rachelkirk] #4611
@@ -154,7 +155,6 @@
 * Litle: Update homepage_url [gasb150] #4491
 * Priority: Update credential handling [therufs] #4571
 * Shift4: Fix authorization and remove `entryMode` from verify and store transactions [ajawadmirza] #4589
-* Cardstream: Add third party 3ds2 support
 
 == Version 1.126.0 (April 15th, 2022)
 * Moneris: Add 3DS MPI field support [esmitperez] #4373
