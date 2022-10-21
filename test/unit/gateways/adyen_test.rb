@@ -929,7 +929,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_shopper_data
     post = { card: { billingAddress: {} } }
-    @gateway.send(:shopper_data, post, @options)
+    @gateway.send(:add_shopper_data, post, @options)
     assert_equal 'john.smith@test.com', post[:shopperEmail]
     assert_equal '77.110.174.153', post[:shopperIP]
   end
