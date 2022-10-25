@@ -112,7 +112,7 @@ class AleloTest < Test::Unit::TestCase
     assert_equal 'some-uuid', response.params['encryption_uuid']
   end
 
-  def test_sucessful_retry_with_expired_credentials
+  def test_sucessful_retry_with_expired_credentials_401
     key = test_key
     @gateway.options[:encryption_key] = key
     @gateway.options[:access_token] = 'abc123'
@@ -125,6 +125,25 @@ class AleloTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).
       times(3).
       raises(ActiveMerchant::ResponseError.new(stub('401 Response', code: '401'))).
+      then.returns({ access_token: 'abc123' }.to_json, successful_capture_response)
+    @gateway.expects(:ssl_get).returns({ publicKey: key, uuid: 'some-uuid' }.to_json)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_kind_of MultiResponse, response
+    assert_equal 3, response.responses.size
+    assert_equal 'abc123', response.responses.first.message
+    assert_equal key, response.responses[1].message
+  end
+
+  def test_sucessful_retry_with_missing_uuid_404
+    key = test_key
+    @gateway.options[:encryption_key] = key
+    @gateway.options[:access_token] = 'abc123'
+
+    @gateway.expects(:ssl_post).
+      times(3).
+      raises(ActiveMerchant::ResponseError.new(stub('404 Response', code: '404'))).
       then.returns({ access_token: 'abc123' }.to_json, successful_capture_response)
     @gateway.expects(:ssl_get).returns({ publicKey: key, uuid: 'some-uuid' }.to_json)
 

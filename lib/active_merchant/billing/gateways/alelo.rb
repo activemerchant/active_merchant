@@ -144,7 +144,7 @@ module ActiveMerchant #:nodoc:
         }
       rescue ResponseError => error
         # retry to generate a new access_token when the provided one is expired
-        raise error unless try_again && error.response.code == '401' && @options[:access_token].present?
+        raise error unless try_again && %w(401 404).include?(error.response.code) && @options[:access_token].present?
 
         @options.delete(:access_token)
         @options.delete(:encryption_key)
@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
         multiresp
       rescue ActiveMerchant::ResponseError => e
         # Retry on a possible expired encryption key
-        if try_again && e.response.code == '401' && @options[:encryption_key].present?
+        if try_again && %w(401 404).include?(e.response.code) && @options[:encryption_key].present?
           @options.delete(:access_token)
           @options.delete(:encryption_key)
           commit(action, body, options, false)
