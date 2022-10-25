@@ -21,6 +21,7 @@
 * DLocal: Add support for `original_order_id` [rachelkirk] #4605
 * CheckoutV2: Add support for `merchant_initiated_transaction_id` [rachelkirk] #4611
 * CardConnect: Add stored credential & pass any valid `ecomind` field [ajawadmirza] #4609
+* Alelo: Trigger access token refresh on 404 [curiousepic] #4614
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512
