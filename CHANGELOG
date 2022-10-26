@@ -39,6 +39,7 @@
 * CyberSource: Update installment data method [rachelkirk] #4642
 * Element: fix bug with billing address email [jcreiff] #4644
 * Openpay: set URL by merchant country [edgarv09] #4637
+* Alelo: Improving credentials refresh process [heavyblade] #4616
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512

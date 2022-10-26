@@ -112,13 +112,37 @@ class AleloTest < Test::Unit::TestCase
     assert_equal 'some-uuid', response.params['encryption_uuid']
   end
 
-  def test_sucessful_retry_with_expired_credentials_401
+  def test_sucessful_retry_with_expired_encryption_key
     key = test_key
     @gateway.options[:encryption_key] = key
     @gateway.options[:access_token] = 'abc123'
 
     # Expectations
-    # ssl_post => raises a 401
+    # ssl_post purchace => raises a 401
+    # ssl_get => key
+    # ssl_post => Final purchase success
+    @gateway.expects(:ssl_post).
+      times(2).
+      raises(ActiveMerchant::ResponseError.new(stub('401 Response', code: '401'))).
+      then.returns(successful_capture_response)
+
+    @gateway.expects(:ssl_get).returns({ publicKey: key, uuid: 'some-uuid' }.to_json)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_kind_of MultiResponse, response
+    assert_equal 2, response.responses.size
+    assert_equal key, response.responses.first.message
+  end
+
+  def test_sucessful_retry_with_expired_access_token_and_encryption_key
+    key = test_key
+    @gateway.options[:encryption_key] = key
+    @gateway.options[:access_token] = 'abc123'
+
+    # Expectations
+    # ssl_post purchace => raises a 401
+    # ssl_get get key => raise a 401
     # ssl_post => access_token
     # ssl_get => key
     # ssl_post => Final purchase success
@@ -126,7 +150,11 @@ class AleloTest < Test::Unit::TestCase
       times(3).
       raises(ActiveMerchant::ResponseError.new(stub('401 Response', code: '401'))).
       then.returns({ access_token: 'abc123' }.to_json, successful_capture_response)
-    @gateway.expects(:ssl_get).returns({ publicKey: key, uuid: 'some-uuid' }.to_json)
+
+    @gateway.expects(:ssl_get).
+      times(2).
+      raises(ActiveMerchant::ResponseError.new(stub('401 Response', code: '401'))).
+      then.returns({ publicKey: key, uuid: 'some-uuid' }.to_json)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
 
@@ -141,11 +169,21 @@ class AleloTest < Test::Unit::TestCase
     @gateway.options[:encryption_key] = key
     @gateway.options[:access_token] = 'abc123'
 
+    # Expectations
+    # ssl_post purchace => raises a 401
+    # ssl_get get key => raise a 401
+    # ssl_post => access_token
+    # ssl_get => key
+    # ssl_post => Final purchase success
     @gateway.expects(:ssl_post).
       times(3).
       raises(ActiveMerchant::ResponseError.new(stub('404 Response', code: '404'))).
       then.returns({ access_token: 'abc123' }.to_json, successful_capture_response)
-    @gateway.expects(:ssl_get).returns({ publicKey: key, uuid: 'some-uuid' }.to_json)
+
+    @gateway.expects(:ssl_get).
+      times(2).
+      raises(ActiveMerchant::ResponseError.new(stub('404 Response', code: '404'))).
+      then.returns({ publicKey: key, uuid: 'some-uuid' }.to_json)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
 

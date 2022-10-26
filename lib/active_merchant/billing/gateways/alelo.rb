@@ -46,7 +46,9 @@ module ActiveMerchant #:nodoc:
         force_utf8(transcript.encode).
           gsub(%r((Authorization: Bearer )[\w -]+), '\1[FILTERED]').
           gsub(%r((client_id=|Client-Id:)[\w -]+), '\1[FILTERED]\2').
-          gsub(%r((client_secret=|Client-Secret:)[\w -]+), '\1[FILTERED]\2')
+          gsub(%r((client_secret=|Client-Secret:)[\w -]+), '\1[FILTERED]\2').
+          gsub(%r((access_token\":\")[^\"]*), '\1[FILTERED]').
+          gsub(%r((publicKey\":\")[^\"]*), '\1[FILTERED]')
       end
 
       private
@@ -207,7 +209,6 @@ module ActiveMerchant #:nodoc:
       rescue ActiveMerchant::ResponseError => e
         # Retry on a possible expired encryption key
         if try_again && %w(401 404).include?(e.response.code) && @options[:encryption_key].present?
-          @options.delete(:access_token)
           @options.delete(:encryption_key)
           commit(action, body, options, false)
         else
