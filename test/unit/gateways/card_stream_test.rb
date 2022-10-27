@@ -33,7 +33,7 @@ class CardStreamTest < Test::Unit::TestCase
       three_d_secure: {
         enrolled: 'true',
         authentication_response_status: 'Y',
-        eci: 05,
+        eci: '05',
         cavv: 'Y2FyZGluYWxjb21tZXJjZWF1dGg',
         xid: '362DF058-6061-47F1-A504-CACCBDF422B7'
       }
@@ -330,7 +330,7 @@ class CardStreamTest < Test::Unit::TestCase
       assert_match(/threeDSRequired=Y/, data)
       assert_match(/threeDSEnrolled=Y/, data)
       assert_match(/threeDSAuthenticated=Y/, data)
-      assert_match(/threeDSECI=5/, data)
+      assert_match(/threeDSECI=05/, data)
       assert_match(/threeDSCAVV=Y2FyZGluYWxjb21tZXJjZWF1dGg/, data)
       assert_match(/threeDSXID=362DF058-6061-47F1-A504-CACCBDF422B7/, data)
     end
