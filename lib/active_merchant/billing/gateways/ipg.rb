@@ -27,32 +27,32 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options = {})
         xml = build_purchase_and_authorize_request(money, payment, options)
 
-        commit('sale', xml)
+        commit('sale', xml, options)
       end
 
       def authorize(money, payment, options = {})
         xml = build_purchase_and_authorize_request(money, payment, options)
 
-        commit('preAuth', xml)
+        commit('preAuth', xml, options)
       end
 
       def capture(money, authorization, options = {})
         xml = build_capture_and_refund_request(money, authorization, options)
 
-        commit('postAuth', xml)
+        commit('postAuth', xml, options)
       end
 
       def refund(money, authorization, options = {})
         xml = build_capture_and_refund_request(money, authorization, options)
 
-        commit('return', xml)
+        commit('return', xml, options)
       end
 
       def void(authorization, options = {})
         xml = Builder::XmlMarkup.new(indent: 2)
         add_transaction_details(xml, options.merge!({ order_id: authorization }))
 
-        commit('void', xml)
+        commit('void', xml, options)
       end
 
       def store(credit_card, options = {})
@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new(indent: 2)
         add_storage_item(xml, credit_card, options)
 
-        commit('vault', xml)
+        commit('vault', xml, options)
       end
 
       def unstore(hosted_data_id)
@@ -343,7 +343,12 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def commit(action, request)
+      def override_store_id(options)
+        @credentials[:store_id] = options[:store_id] if options[:store_id].present?
+      end
+
+      def commit(action, request, options = {})
+        override_store_id(options)
         url = (test? ? test_url : live_url)
         soap_request = build_soap_request(action, request)
         response = parse(ssl_post(url, soap_request, build_header))
