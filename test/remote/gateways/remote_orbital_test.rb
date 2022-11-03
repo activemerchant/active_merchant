@@ -349,6 +349,15 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
+  def test_successful_purchase_with_commercial_echeck
+    commercial_echeck = check(account_number: '072403004', account_type: 'checking', account_holder_type: 'business', routing_number: '072403004')
+
+    assert response = @echeck_gateway.purchase(20, commercial_echeck, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
   def test_successful_purchase_with_mit_stored_credentials
     mit_stored_credentials = {
       mit_msg_type: 'MUSE',
@@ -974,6 +983,26 @@ class BrandSpecificOrbitalTests < RemoteOrbitalGatewayTest
           zip: '03105',
           country: 'US'
         }
+      },
+      discover: {
+        card: {
+          number: '6011016011016011',
+          verification_value: '613',
+          brand: 'discover'
+        },
+        three_d_secure: {
+          eci: '6',
+          cavv: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
+          ds_transaction_id: '32b274ee-582d-4232-b20a-363f2acafa5a'
+        },
+        address: {
+          address1: '1 Northeastern Blvd',
+          address2: '',
+          city: 'Bedford',
+          state: 'NH',
+          zip: '03109',
+          country: 'US'
+        }
       }
     }
   end
@@ -1021,6 +1050,22 @@ class BrandSpecificOrbitalTests < RemoteOrbitalGatewayTest
   def test_successful_3ds_purchase_with_american_express
     cc = brand_specific_card(@brand_specific_fixtures[:american_express][:card])
     options = brand_specific_3ds_options(@brand_specific_fixtures[:american_express])
+
+    assert response = @three_ds_gateway.purchase(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_successful_3ds_authorization_with_discover
+    cc = brand_specific_card(@brand_specific_fixtures[:discover][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:discover])
+
+    assert response = @three_ds_gateway.authorize(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_successful_3ds_purchase_with_discover
+    cc = brand_specific_card(@brand_specific_fixtures[:discover][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:discover])
 
     assert response = @three_ds_gateway.purchase(100, cc, options)
     assert_success_with_authorization(response)

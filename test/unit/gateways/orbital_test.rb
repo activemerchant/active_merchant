@@ -136,6 +136,16 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '5F8E8BEE7299FD339A38F70CFF6E5D010EF55498;9baedc697f2cf06457de78', response.authorization
   end
 
+  def test_successful_purchase_with_commercial_echeck
+    commercial_echeck = check(account_number: '072403004', account_type: 'checking', account_holder_type: 'business', routing_number: '072403004')
+
+    stub_comms do
+      @gateway.purchase(50, commercial_echeck, order_id: '9baedc697f2cf06457de78')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<BankAccountType>X</BankAccountType>}, data
+    end.respond_with(successful_purchase_with_echeck_response)
+  end
+
   def test_failed_purchase_with_echeck
     @gateway.expects(:ssl_post).returns(failed_echeck_for_invalid_routing_response)
 
@@ -405,6 +415,24 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AEVV>TESTCAVV</AEVV>}, data
       assert_match %{<PymtBrandProgramCode>ASK</PymtBrandProgramCode>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_discover_purchase
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'discover'), @options.merge(@three_d_secure_options))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<DigitalTokenCryptogram>TESTCAVV</DigitalTokenCryptogram>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_discover_authorization
+    stub_comms do
+      @gateway.authorize(50, credit_card(nil, brand: 'discover'), @options.merge(@three_d_secure_options))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<DigitalTokenCryptogram>TESTCAVV</DigitalTokenCryptogram>}, data
     end.respond_with(successful_purchase_response)
   end
 
