@@ -69,6 +69,17 @@ class ReachTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successfully_build_a_purchase_with_fingerprint
+    stub_comms do
+      @options[:fingerprint] = '54fd66c2-b5b5-4dbd-ab89-12a8b6177347'
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(URI.decode_www_form(data)[0][1])
+      assert_equal request['DeviceFingerprint'], @options[:fingerprint]
+      assert_equal request['ViaAgent'], false
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_properly_set_capture_flag_on_purchase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)

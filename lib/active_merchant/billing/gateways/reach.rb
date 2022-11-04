@@ -40,6 +40,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment, options = {})
         request = build_checkout_request(money, payment, options)
+        add_custom_fields_data(request, options)
         add_customer_data(request, options, payment)
 
         post = { request: request, card: add_payment(payment) }
@@ -95,6 +96,30 @@ module ActiveMerchant #:nodoc:
           City: address[:city],
           Country: address[:country]
         }.compact
+      end
+
+      def add_custom_fields_data(request, options)
+        if options[:fingerprint].present?
+          request[:DeviceFingerprint] = options[:fingerprint]
+          request[:ViaAgent] = false
+        end
+        add_shipping_data(request, options) if options[:consumer_taxes].present?
+        request[:RateOfferId] = options[:rate_offer_id] if options[:rate_offer_id].present?
+        request[:Items] = options[:items] if options[:items].present?
+      end
+
+      def add_shipping_data(request, options)
+        request[:Shipping] = {
+          ConsumerPrice: options[:consumer_price],
+          ConsumerTaxes: options[:consumer_taxes],
+          ConsumerDuty: options[:consumer_duty]
+        }
+        request[:Consignee] = {
+          Name: options[:consignee_name],
+          Address: options[:consignee_address],
+          City: options[:consignee_city],
+          Country: options[:consignee_country]
+        }
       end
 
       def sign_body(body)
