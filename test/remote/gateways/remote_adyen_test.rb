@@ -1501,6 +1501,17 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_void_references_original_authorization(void, auth)
   end
 
+  def test_successful_authorize_with_alternate_kosovo_code
+    @options[:billing_address][:country] = 'XK'
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Billing address problem (Country XK invalid)', response.message
+
+    @options[:billing_address][:country] = 'QZ'
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   private
 
   def stored_credential_options(*args, ntid: nil)

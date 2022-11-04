@@ -1256,7 +1256,7 @@ class AdyenTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
       additional_data = parsed['additionalData']
-      leve_3_keys = [ 'enhancedSchemeData.freightAmount', 'enhancedSchemeData.destinationStateProvinceCode',
+      leve_3_keys = ['enhancedSchemeData.freightAmount', 'enhancedSchemeData.destinationStateProvinceCode',
                      'enhancedSchemeData.shipFromPostalCode', 'enhancedSchemeData.orderDate', 'enhancedSchemeData.destinationPostalCode',
                      'enhancedSchemeData.destinationCountryCode', 'enhancedSchemeData.dutyAmount',
                      'enhancedSchemeData.itemDetailLine1.description', 'enhancedSchemeData.itemDetailLine1.productCode',
