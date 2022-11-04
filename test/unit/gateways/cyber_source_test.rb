@@ -64,20 +64,19 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_purchase_with_national_tax_indicator
-    national_tax_indicator = 1
+  def test_successful_purchase_with_other_tax_fields
     stub_comms do
-      @gateway.purchase(100, @credit_card, @options.merge(national_tax_indicator: national_tax_indicator))
+      @gateway.purchase(100, @credit_card, @options.merge(national_tax_indicator: 1, vat_tax_rate: 1.01))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<otherTax>\s+<nationalTaxIndicator>#{national_tax_indicator}<\/nationalTaxIndicator>\s+<\/otherTax>/m, data)
+      assert_match(/<otherTax>\s+<vatTaxRate>1.01<\/vatTaxRate>\s+<nationalTaxIndicator>1<\/nationalTaxIndicator>\s+<\/otherTax>/m, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_successful_purchase_with_purchase_totals_data
     stub_comms do
-      @gateway.purchase(100, @credit_card, @options.merge(discount_management_indicator: 'T', purchase_tax_amount: 7.89))
+      @gateway.purchase(100, @credit_card, @options.merge(discount_management_indicator: 'T', purchase_tax_amount: 7.89, original_amount: 1.23, invoice_amount: 1.23))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<purchaseTotals>\s+<currency>USD<\/currency>\s+<discountManagementIndicator>T<\/discountManagementIndicator>\s+<taxAmount>7.89<\/taxAmount>\s+<grandTotalAmount>1.00<\/grandTotalAmount>\s+<\/purchaseTotals>/m, data)
+      assert_match(/<purchaseTotals>\s+<currency>USD<\/currency>\s+<discountManagementIndicator>T<\/discountManagementIndicator>\s+<taxAmount>7.89<\/taxAmount>\s+<grandTotalAmount>1.00<\/grandTotalAmount>\s+<originalAmount>1.23<\/originalAmount>\s+<invoiceAmount>1.23<\/invoiceAmount>\s+<\/purchaseTotals>/m, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -87,6 +86,14 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.authorize(100, @credit_card, @options.merge(national_tax_indicator: national_tax_indicator))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<otherTax>\s+<nationalTaxIndicator>#{national_tax_indicator}<\/nationalTaxIndicator>\s+<\/otherTax>/m, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_successful_authorize_with_cc_auth_service_fields
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(mobile_remote_payment_type: 'T'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<mobileRemotePaymentType>T<\/mobileRemotePaymentType>/, data)
     end.respond_with(successful_authorization_response)
   end
 
@@ -197,11 +204,21 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_purchase_includes_merchant_descriptor
+  def test_purchase_includes_invoice_header
     stub_comms do
-      @gateway.purchase(100, @credit_card, merchant_descriptor: 'Spreedly')
+      @gateway.purchase(100, @credit_card, merchant_descriptor: 'Spreedly', reference_data_code: '3A', invoice_number: '1234567')
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<merchantDescriptor>Spreedly<\/merchantDescriptor>/, data)
+      assert_match(/<referenceDataCode>3A<\/referenceDataCode>/, data)
+      assert_match(/<invoiceNumber>1234567<\/invoiceNumber>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_includes_tax_management_indicator
+    stub_comms do
+      @gateway.purchase(100, @credit_card, tax_management_indicator: 3)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<taxManagementIndicator>3<\/taxManagementIndicator>/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -239,10 +256,10 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_authorize_includes_installment_data
     stub_comms do
-      @gateway.authorize(100, @credit_card, order_id: '1', installment_total_count: 5, installment_plan_type: 1, first_installment_date: '300101', installment_total_amount: 5.05, installment_annual_interest_rate: 1.09)
+      @gateway.authorize(100, @credit_card, order_id: '1', installment_total_count: 5, installment_plan_type: 1, first_installment_date: '300101', installment_total_amount: 5.05, installment_annual_interest_rate: 1.09, installment_grace_period_duration: 3)
     end.check_request do |_endpoint, data, _headers|
       assert_xml_valid_to_xsd(data)
-      assert_match(/<installment>\s+<totalCount>5<\/totalCount>\s+<totalAmount>5.05<\/totalAmount>\s+<planType>1<\/planType>\s+<firstInstallmentDate>300101<\/firstInstallmentDate>\s+<annualInterestRate>1.09<\/annualInterestRate>\s+<\/installment>/, data)
+      assert_match(/<installment>\s+<totalCount>5<\/totalCount>\s+<totalAmount>5.05<\/totalAmount>\s+<planType>1<\/planType>\s+<firstInstallmentDate>300101<\/firstInstallmentDate>\s+<annualInterestRate>1.09<\/annualInterestRate>\s+<gracePeriodDuration>3<\/gracePeriodDuration>\s+<\/installment>/, data)
     end.respond_with(successful_authorization_response)
   end
 
@@ -491,6 +508,14 @@ class CyberSourceTest < Test::Unit::TestCase
       assert_match(/<userPO>ABC123<\/userPO>/, data)
       assert_match(/<taxable>true<\/taxable>/, data)
       assert_match(/<nationalTaxIndicator>1<\/nationalTaxIndicator>/, data)
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_capture_includes_gratuity_amount
+    stub_comms do
+      @gateway.capture(100, '1842651133440156177166', gratuity_amount: '3.05')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<gratuityAmount>3.05<\/gratuityAmount>/, data)
     end.respond_with(successful_capture_response)
   end
 
