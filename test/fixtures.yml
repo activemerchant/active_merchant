@@ -1120,6 +1120,10 @@ raven_pac_net:
   secret: "all good men die young"
   prn: 987743
 
+reach:
+  merchant_id: 'xxxxxxx'
+  secret: 'xxxxxxx' 
+
 realex:
   login: X
   password: Y
