@@ -119,9 +119,57 @@ class ReachTest < Test::Unit::TestCase
     refute @gateway.send(:success_from, response)
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
 
   def successful_purchase_response
     'response=%7B%22OrderId%22%3A%22e8f8c529-15c7-46c1-b28b-9d43bb5efe92%22%2C%22UnderReview%22%3Afalse%2C%22Expiry%22%3A%222022-11-03T12%3A47%3A21Z%22%2C%22Authorized%22%3Atrue%2C%22Completed%22%3Afalse%2C%22Captured%22%3Afalse%7D&signature=JqLa7Y68OYRgRcA5ALHOZwXXzdZFeNzqHma2RT2JWAg%3D'
   end
+end
+
+def pre_scrubbed
+  <<-PRE_SCRUBBED
+    <- "POST /v2.21/checkout HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: checkout.rch.how\r\nContent-Length: 756\r\n\r\n"
+    <- "request=%7B%22MerchantId%22%3A%22Some-30value-4for3-9test35-f93086cd7crednet1%22%2C%22ReferenceId%22%3A%22123%22%2C%22ConsumerCurrency%22%3A%22USD%22%2C%22Capture%22%3Atrue%2C%22PaymentMethod%22%3A%22VISA%22%2C%22Items%22%3A%5B%7B%22Sku%22%3A%22d99oJA8rkwgQANFJ%22%2C%22ConsumerPrice%22%3A100%2C%22Quantity%22%3A1%7D%5D%2C%22ViaAgent%22%3Atrue%2C%22Consumer%22%3A%7B%22Name%22%3A%22Longbob+Longsen%22%2C%22Email%22%3A%22johndoe%40reach.com%22%2C%22Address%22%3A%221670%22%2C%22City%22%3A%22Miami%22%2C%22Country%22%3A%22US%22%7D%7D&card=%7B%22Name%22%3A%22Longbob+Longsen%22%2C%22Number%22%3A%224444333322221111%22%2C%22Expiry%22%3A%7B%22Month%22%3A3%2C%22Year%22%3A2030%7D%2C%22VerificationCode%22%3A737%7D&signature=5nimSignatUre%3D"
+    -> "HTTP/1.1 200 OK\r\n"
+    -> "Date: Thu, 03 Nov 2022 23:04:01 GMT\r\n"
+    -> "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"
+    -> "Content-Length: 235\r\n"
+    -> "Connection: close\r\n"
+    -> "Server: ipCheckoutApi/unreleased ibiHttpServer\r\n"
+    -> "Strict-Transport-Security: max-age=60000\r\n"
+    -> "Cache-Control: no-cache\r\n"
+    -> "Access-Control-Allow-Origin: *\r\n"
+    -> "\r\n"
+    reading 235 bytes...
+    -> "response=%7B%22OrderId%22%3A%22621a0c76-69fb-4c05-854a-e7e731759ad3%22%2C%22UnderReview%22%3Afalse%2C%22Authorized%22%3Atrue%2C%22Completed%22%3Afalse%2C%22Captured%22%3Afalse%7D&signature=23475signature23123%3D"
+    read 235 bytes
+    Conn close
+  PRE_SCRUBBED
+end
+
+def post_scrubbed
+  <<-POST_SRCUBBED
+    <- "POST /v2.21/checkout HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: checkout.rch.how\r\nContent-Length: 756\r\n\r\n"
+    <- "request=%7B%22MerchantId%22%3A%22[FILTERED]%22%2C%22ReferenceId%22%3A%22123%22%2C%22ConsumerCurrency%22%3A%22USD%22%2C%22Capture%22%3Atrue%2C%22PaymentMethod%22%3A%22VISA%22%2C%22Items%22%3A%5B%7B%22Sku%22%3A%22d99oJA8rkwgQANFJ%22%2C%22ConsumerPrice%22%3A100%2C%22Quantity%22%3A1%7D%5D%2C%22ViaAgent%22%3Atrue%2C%22Consumer%22%3A%7B%22Name%22%3A%22Longbob+Longsen%22%2C%22Email%22%3A%22johndoe%40reach.com%22%2C%22Address%22%3A%221670%22%2C%22City%22%3A%22Miami%22%2C%22Country%22%3A%22US%22%7D%7D&card=%7B%22Name%22%3A%22Longbob+Longsen%22%2C%22Number%22%3A%22[FILTERED]%22%2C%22Expiry%22%3A%7B%22Month%22%3A3%2C%22Year%22%3A2030%7D%2C%22VerificationCode%22%3A[FILTERED]%7D&signature=[FILTERED]"
+    -> "HTTP/1.1 200 OK\r\n"
+    -> "Date: Thu, 03 Nov 2022 23:04:01 GMT\r\n"
+    -> "Content-Type: application/x-www-form-urlencoded; charset=utf-8\r\n"
+    -> "Content-Length: 235\r\n"
+    -> "Connection: close\r\n"
+    -> "Server: ipCheckoutApi/unreleased ibiHttpServer\r\n"
+    -> "Strict-Transport-Security: max-age=60000\r\n"
+    -> "Cache-Control: no-cache\r\n"
+    -> "Access-Control-Allow-Origin: *\r\n"
+    -> "\r\n"
+    reading 235 bytes...
+    -> "response=%7B%22OrderId%22%3A%22621a0c76-69fb-4c05-854a-e7e731759ad3%22%2C%22UnderReview%22%3Afalse%2C%22Authorized%22%3Atrue%2C%22Completed%22%3Afalse%2C%22Captured%22%3Afalse%7D&signature=[FILTERED]"
+    read 235 bytes
+    Conn close
+  POST_SRCUBBED
 end

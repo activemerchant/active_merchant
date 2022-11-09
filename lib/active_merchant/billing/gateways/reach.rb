@@ -56,6 +56,18 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r(((MerchantId%22%3A%22)[\w-]+)), '\2[FILTERED]').
+          gsub(%r((signature=)[\w%]+), '\1[FILTERED]\2').
+          gsub(%r((Number%22%3A%22)[\d]+), '\1[FILTERED]\2').
+          gsub(%r((VerificationCode%22%3A)[\d]+), '\1[FILTERED]\2')
+      end
+
       private
 
       def build_checkout_request(amount, payment, options)
