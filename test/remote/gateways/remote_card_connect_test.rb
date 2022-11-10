@@ -154,6 +154,31 @@ class RemoteCardConnectTest < Test::Unit::TestCase
     assert_success purchase_response
   end
 
+  def test_successful_purchase_using_stored_credential_framework
+    stored_credential_options = {
+      initial_transaction: true,
+      reason_type: 'recurring',
+      initiator: 'merchant'
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_options }))
+    assert_success response
+    assert_equal response.params['cof'], 'M'
+
+    stored_credential_options = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'merchant'
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_options }))
+    assert_success response
+    assert_equal response.params['cof'], 'M'
+  end
+
+  def test_successful_purchase_with_telephonic_ecomind
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ ecomind: 'T' }))
+    assert_success response
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response

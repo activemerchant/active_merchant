@@ -212,6 +212,27 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     assert_match 'MIT', response.params['ds_excep_sca']
   end
 
+  def test_successful_ntid_generation_with_verify
+    # This test validates a special use case for generating a network transaction id
+    # for payment methods that previously relied on the 'magic' fifteen-nines value.
+    # However, the transaction id will only be returned from a Redsys production
+    # environment, so this test simply validates that the zero-value request succeeds.
+
+    alternate_gateway = RedsysGateway.new(fixtures(:redsys_sha256_alternate))
+    options = @options.merge(
+      sca_exemption_behavior_override: 'endpoint_and_ntid',
+      sca_exemption: 'MIT',
+      terminal: 2,
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'recurring',
+        network_transaction_id: '999999999999999'
+      }
+    )
+    response = alternate_gateway.verify(@credit_card, options)
+    assert_success response
+  end
+
   def test_failed_3ds2_purchase_with_mit_exemption_but_missing_direct_payment_enabled
     options = @options.merge(execute_threed: true, terminal: 12)
     response = @gateway.purchase(@amount, @threeds2_credit_card, options.merge(sca_exemption: 'MIT'))
@@ -279,7 +300,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'SIS0093 ERROR', response.message
+    assert_equal 'Refusal with no specific reason', response.message
   end
 
   def test_purchase_and_refund
@@ -326,7 +347,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'SIS0093 ERROR', response.message
+    assert_equal 'Refusal with no specific reason', response.message
   end
 
   def test_successful_void
@@ -363,7 +384,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
   def test_unsuccessful_verify
     assert response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'SIS0093 ERROR', response.message
+    assert_equal 'Refusal with no specific reason', response.message
   end
 
   def test_transcript_scrubbing

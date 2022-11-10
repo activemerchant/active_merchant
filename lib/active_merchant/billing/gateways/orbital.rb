@@ -569,7 +569,7 @@ module ActiveMerchant #:nodoc:
         add_currency_fields(xml, options[:currency])
         xml.tag! :BCRtNum, check.routing_number
         xml.tag! :CheckDDA, check.account_number if check.account_number
-        xml.tag! :BankAccountType, ACCOUNT_TYPE[check.account_type] if ACCOUNT_TYPE[check.account_type]
+        add_bank_account_type(xml, check)
         xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method]
         xml.tag! :BankPmtDelv, options[:payment_delivery] || 'B'
         xml.tag! :AVSname, (check&.name ? check.name[0..29] : nil) if get_address(options).blank?
@@ -601,6 +601,17 @@ module ActiveMerchant #:nodoc:
       def add_currency_fields(xml, currency)
         xml.tag! :CurrencyCode, currency_code(currency)
         xml.tag! :CurrencyExponent, currency_exponents(currency)
+      end
+
+      def add_bank_account_type(xml, check)
+        bank_account_type =
+          if check.account_holder_type == 'business'
+            'X'
+          else
+            ACCOUNT_TYPE[check.account_type]
+          end
+
+        xml.tag! :BankAccountType, bank_account_type if bank_account_type
       end
 
       def add_card_indicators(xml, options)
@@ -757,10 +768,17 @@ module ActiveMerchant #:nodoc:
         xml.tag! :DPANInd, 'Y' unless industry_type == 'RC'
       end
 
-      def add_digital_token_cryptogram(xml, credit_card)
-        return unless credit_card.is_a?(NetworkTokenizationCreditCard)
+      def add_digital_token_cryptogram(xml, credit_card, three_d_secure)
+        return unless credit_card.is_a?(NetworkTokenizationCreditCard) || three_d_secure && credit_card.brand == 'discover'
 
-        xml.tag! :DigitalTokenCryptogram, credit_card.payment_cryptogram
+        cryptogram =
+          if three_d_secure && credit_card.brand == 'discover'
+            three_d_secure[:cavv]
+          else
+            credit_card.payment_cryptogram
+          end
+
+        xml.tag!(:DigitalTokenCryptogram, cryptogram)
       end
 
       #=====OTHER FIELDS=====
@@ -974,7 +992,7 @@ module ActiveMerchant #:nodoc:
             add_payment_action_ind(xml, parameters[:payment_action_ind])
             add_dpanind(xml, payment_source, parameters[:industry_type])
             add_aevv(xml, payment_source, three_d_secure)
-            add_digital_token_cryptogram(xml, payment_source)
+            add_digital_token_cryptogram(xml, payment_source, three_d_secure)
 
             xml.tag! :ECPSameDayInd, parameters[:same_day] if parameters[:same_day] && payment_source.is_a?(Check)
 

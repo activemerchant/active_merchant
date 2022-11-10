@@ -100,6 +100,13 @@ class RemoteIpgTest < Test::Unit::TestCase
     assert_equal 'SGS-050005', response.error_code
   end
 
+  def test_failed_purchase_with_passed_in_store_id
+    # passing in a bad store id results in a 401 unauthorized error
+    assert_raises(ActiveMerchant::ResponseError) do
+      @gateway.purchase(@amount, @declined_card, @options.merge({ store_id: '1234' }))
+    end
+  end
+
   def test_successful_authorize_and_capture
     order_id = generate_unique_id
     response = @gateway.authorize(@amount, @credit_card, @options.merge!({ order_id: order_id }))

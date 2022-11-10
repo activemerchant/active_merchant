@@ -66,6 +66,8 @@ module ActiveMerchant #:nodoc:
         add_recurring_contract(post, options)
         add_network_transaction_reference(post, options)
         add_application_info(post, options)
+        add_level_2_data(post, options)
+        add_level_3_data(post, options)
         commit('authorise', post, options)
       end
 
@@ -244,6 +246,48 @@ module ActiveMerchant #:nodoc:
         add_risk_data(post, options)
         add_shopper_reference(post, options)
         add_merchant_data(post, options)
+      end
+
+      def extract_and_transform(mapper, from)
+        mapper.each_with_object({}) do |key_map, hsh|
+          key, item_key = key_map[0], key_map[1]
+          hsh[key] = from[item_key.to_sym]
+        end
+      end
+
+      def add_level_2_data(post, options)
+        return unless options[:level_2_data].present?
+
+        mapper = {
+          "enhancedSchemeData.totalTaxAmount": 'total_tax_amount',
+          "enhancedSchemeData.customerReference": 'customer_reference'
+        }
+        post[:additionalData].merge!(extract_and_transform(mapper, options[:level_2_data]))
+      end
+
+      def add_level_3_data(post, options)
+        return unless options[:level_3_data].present?
+
+        mapper = { "enhancedSchemeData.freightAmount": 'freight_amount',
+          "enhancedSchemeData.destinationStateProvinceCode": 'destination_state_province_code',
+          "enhancedSchemeData.shipFromPostalCode": 'ship_from_postal_code',
+          "enhancedSchemeData.orderDate": 'order_date',
+          "enhancedSchemeData.destinationPostalCode": 'destination_postal_code',
+          "enhancedSchemeData.destinationCountryCode": 'destination_country_code',
+          "enhancedSchemeData.dutyAmount": 'duty_amount' }
+
+        post[:additionalData].merge!(extract_and_transform(mapper, options[:level_3_data]))
+
+        item_detail_keys = %w[description product_code quantity unit_of_measure unit_price discount_amount total_amount commodity_code]
+        if options[:level_3_data][:items].present?
+          options[:level_3_data][:items].last(9).each.with_index(1) do |item, index|
+            mapper = item_detail_keys.each_with_object({}) do |key, hsh|
+              hsh["enhancedSchemeData.itemDetailLine#{index}.#{key.camelize(:lower)}"] = key
+            end
+            post[:additionalData].merge!(extract_and_transform(mapper, item))
+          end
+        end
+        post[:additionalData].compact!
       end
 
       def add_shopper_data(post, options)

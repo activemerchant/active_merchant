@@ -394,6 +394,24 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_stored_credentials_merchant_initiated_transaction_id
+    response = stub_comms do
+      options = {
+        stored_credential: {
+          initial_transaction: false
+        },
+        merchant_initiated_transaction_id: 'pay_7jcf4ovmwnqedhtldca3fjli2y'
+      }
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r{"previous_payment_id":"pay_7jcf4ovmwnqedhtldca3fjli2y"}, data)
+      assert_match(%r{"source.stored":true}, data)
+    end.respond_with(successful_purchase_using_stored_credential_response)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_metadata
     response = stub_comms do
       options = {

@@ -69,6 +69,10 @@ module ActiveMerchant #:nodoc:
         true
       end
 
+      def supports_network_tokenization?
+        true
+      end
+
       def scrub(transcript)
         transcript.
           gsub(%r((X-Trans-Key: )\w+), '\1[FILTERED]').
@@ -155,11 +159,30 @@ module ActiveMerchant #:nodoc:
 
       def add_card(post, card, action, options = {})
         post[:card] = {}
+        if card.is_a?(NetworkTokenizationCreditCard)
+          post[:card][:network_token] = card.number
+          post[:card][:cryptogram] = card.payment_cryptogram
+          post[:card][:eci] = card.eci
+          # used case of Network Token: 'CARD_ON_FILE', 'SUBSCRIPTION', 'UNSCHEDULED_CARD_ON_FILE'
+          if options.dig(:stored_credential, :reason_type) == 'unscheduled'
+            if options.dig(:stored_credential, :initiator) == 'merchant'
+              post[:card][:stored_credential_type] = 'UNSCHEDULED_CARD_ON_FILE'
+            else
+              post[:card][:stored_credential_type] = 'CARD_ON_FILE'
+            end
+          else
+            post[:card][:stored_credential_type] = 'SUBSCRIPTION'
+          end
+          # required for MC debit recurrent in BR 'USED'(subsecuence Payments) . 'FIRST' an inital payment
+          post[:card][:stored_credential_usage] = (options[:stored_credential][:initial_transaction] ? 'FIRST' : 'USED') if options[:stored_credential]
+        else
+          post[:card][:number] = card.number
+          post[:card][:cvv] = card.verification_value
+        end
+
         post[:card][:holder_name] = card.name
         post[:card][:expiration_month] = card.month
         post[:card][:expiration_year] = card.year
-        post[:card][:number] = card.number
-        post[:card][:cvv] = card.verification_value
         post[:card][:descriptor] = options[:dynamic_descriptor] if options[:dynamic_descriptor]
         post[:card][:capture] = (action == 'purchase')
         post[:card][:installments] = options[:installments] if options[:installments]

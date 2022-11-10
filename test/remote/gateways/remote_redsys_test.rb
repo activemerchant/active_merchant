@@ -111,7 +111,7 @@ class RemoteRedsysTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'SIS0093 ERROR', response.message
+    assert_equal 'Refusal with no specific reason', response.message
   end
 
   def test_purchase_and_refund
@@ -158,7 +158,7 @@ class RemoteRedsysTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'SIS0093 ERROR', response.message
+    assert_equal 'Refusal with no specific reason', response.message
   end
 
   def test_successful_void
@@ -195,7 +195,7 @@ class RemoteRedsysTest < Test::Unit::TestCase
   def test_unsuccessful_verify
     assert response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'SIS0093 ERROR', response.message
+    assert_equal 'Refusal with no specific reason', response.message
   end
 
   def test_transcript_scrubbing

@@ -266,6 +266,18 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_stored_credentials_merchant_initiated_transaction_id
+    stored_options = @options.merge(
+      stored_credential: {
+        reason_type: 'installment'
+      },
+      merchant_initiated_transaction_id: 'pay_7emayabnrtjkhkrbohn4m2zyoa321'
+    )
+    response = @gateway.purchase(@amount, @credit_card, stored_options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_moto_flag
     response = @gateway.authorize(@amount, @credit_card, @options.merge(transaction_indicator: 3))
     assert_success response

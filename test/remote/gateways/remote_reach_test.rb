@@ -58,7 +58,7 @@ class RemoteReachTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_fingerprint
-    @options[:fingerprint] = '54fd66c2-b5b5-4dbd-ab89-12a8b6177347'
+    @options[:device_fingerprint] = '54fd66c2-b5b5-4dbd-ab89-12a8b6177347'
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_success response
@@ -67,9 +67,9 @@ class RemoteReachTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_shipping_data
-    @options[:consumer_price] = '1.01'
-    @options[:consumer_taxes] = '2.01'
-    @options[:consumer_duty] = '1.01'
+    @options[:price] = '1.01'
+    @options[:taxes] = '2.01'
+    @options[:duty] = '1.01'
 
     @options[:consignee_name] = 'Jane Doe'
     @options[:consignee_address] = '1670 NW 82ND STR'
@@ -84,8 +84,8 @@ class RemoteReachTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_incomplete_shipping_data
-    @options[:consumer_price] = '1.01'
-    @options[:consumer_taxes] = '2.01'
+    @options[:price] = '1.01'
+    @options[:taxes] = '2.01'
 
     @options[:consignee_name] = 'Jane Doe'
     @options[:consignee_address] = '1670 NW 82ND STR'
@@ -99,9 +99,9 @@ class RemoteReachTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_shipping_data_and_no_consignee_info
-    @options[:consumer_price] = '1.01'
-    @options[:consumer_taxes] = '2.01'
-    @options[:consumer_duty] = '1.01'
+    @options[:price] = '1.01'
+    @options[:taxes] = '2.01'
+    @options[:duty] = '1.01'
 
     response = @gateway.purchase(@amount, @credit_card, @options)
 

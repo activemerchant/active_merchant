@@ -280,6 +280,7 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((Authorization: Bearer )\w+), '\1[FILTERED]').
           gsub(%r((&?three_d_secure\[cryptogram\]=)[\w=]*(&?)), '\1[FILTERED]\2').
           gsub(%r(((\[card\]|card)\[cryptogram\]=)[^&]+(&?)), '\1[FILTERED]\3').
           gsub(%r(((\[card\]|card)\[cvc\]=)\d+), '\1[FILTERED]').
@@ -301,7 +302,7 @@ module ActiveMerchant #:nodoc:
       def delete_latest_test_external_account(account)
         return unless test?
 
-        auth_header = { 'Authorization': "Bearer #{options[:login]}" }
+        auth_header = { 'Authorization' => 'Basic ' + Base64.strict_encode64(options[:login].to_s + ':').strip }
         url = "#{live_url}accounts/#{CGI.escape(account)}/external_accounts"
         accounts_response = JSON.parse(ssl_get("#{url}?limit=100", auth_header))
         to_delete = accounts_response['data'].reject { |ac| ac['default_for_currency'] }

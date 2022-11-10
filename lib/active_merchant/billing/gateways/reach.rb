@@ -99,20 +99,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_custom_fields_data(request, options)
-        if options[:fingerprint].present?
-          request[:DeviceFingerprint] = options[:fingerprint]
+        if options[:device_fingerprint].present?
+          request[:DeviceFingerprint] = options[:device_fingerprint]
           request[:ViaAgent] = false
         end
-        add_shipping_data(request, options) if options[:consumer_taxes].present?
+        add_shipping_data(request, options) if options[:taxes].present?
         request[:RateOfferId] = options[:rate_offer_id] if options[:rate_offer_id].present?
         request[:Items] = options[:items] if options[:items].present?
       end
 
       def add_shipping_data(request, options)
         request[:Shipping] = {
-          ConsumerPrice: options[:consumer_price],
-          ConsumerTaxes: options[:consumer_taxes],
-          ConsumerDuty: options[:consumer_duty]
+          ConsumerPrice: options[:price],
+          ConsumerTaxes: options[:taxes],
+          ConsumerDuty: options[:duty]
         }
         request[:Consignee] = {
           Name: options[:consignee_name],
