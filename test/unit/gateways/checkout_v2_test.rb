@@ -386,8 +386,9 @@ class CheckoutV2Test < Test::Unit::TestCase
       }
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r{"previous_payment_id":"pay_7jcf4ovmwnqedhtldca3fjli2y"}, data)
-      assert_match(%r{"source.stored":true}, data)
+      request = JSON.parse(data)
+      assert_equal request['previous_payment_id'], 'pay_7jcf4ovmwnqedhtldca3fjli2y'
+      assert_equal request['source']['stored'], true
     end.respond_with(successful_purchase_using_stored_credential_response)
 
     assert_success response
@@ -404,8 +405,9 @@ class CheckoutV2Test < Test::Unit::TestCase
       }
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r{"previous_payment_id":"pay_7jcf4ovmwnqedhtldca3fjli2y"}, data)
-      assert_match(%r{"source.stored":true}, data)
+      request = JSON.parse(data)
+      assert_equal request['previous_payment_id'], 'pay_7jcf4ovmwnqedhtldca3fjli2y'
+      assert_equal request['source']['stored'], true
     end.respond_with(successful_purchase_using_stored_credential_response)
 
     assert_success response
