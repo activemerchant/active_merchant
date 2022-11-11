@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
 
       def merchant_initiated_override(post, options)
         post[:merchant_initiated] = true
-        post[:'source.stored'] = true
+        post[:source][:stored] = true
         post[:previous_payment_id] = options[:merchant_initiated_transaction_id]
       end
 
@@ -214,7 +214,7 @@ module ActiveMerchant #:nodoc:
         if options[:stored_credential][:initial_transaction] == true
           post[:merchant_initiated] = false
         else
-          post[:'source.stored'] = true
+          post[:source][:stored] = true
           post[:previous_payment_id] = options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
           post[:merchant_initiated] = true
         end
