@@ -57,6 +57,79 @@ class RemoteReachTest < Test::Unit::TestCase
     assert_equal 'NotATestCard', response.message
   end
 
+  def test_successful_purchase_with_fingerprint
+    @options[:device_fingerprint] = '54fd66c2-b5b5-4dbd-ab89-12a8b6177347'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert response.params['response'][:Authorized]
+    assert response.params['response'][:OrderId]
+  end
+
+  def test_successful_purchase_with_shipping_data
+    @options[:price] = '1.01'
+    @options[:taxes] = '2.01'
+    @options[:duty] = '1.01'
+
+    @options[:consignee_name] = 'Jane Doe'
+    @options[:consignee_address] = '1670 NW 82ND STR'
+    @options[:consignee_city] = 'Houston'
+    @options[:consignee_country] = 'US'
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert response.params['response'][:Authorized]
+    assert response.params['response'][:OrderId]
+  end
+
+  def test_failed_purchase_with_incomplete_shipping_data
+    @options[:price] = '1.01'
+    @options[:taxes] = '2.01'
+
+    @options[:consignee_name] = 'Jane Doe'
+    @options[:consignee_address] = '1670 NW 82ND STR'
+    @options[:consignee_city] = 'Houston'
+    @options[:consignee_country] = 'US'
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert_equal 'Invalid shipping values.', response.message
+  end
+
+  def test_failed_purchase_with_shipping_data_and_no_consignee_info
+    @options[:price] = '1.01'
+    @options[:taxes] = '2.01'
+    @options[:duty] = '1.01'
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert_equal 'Invalid JSON submitted', response.message
+  end
+
+  def test_successful_purchase_with_items
+    @options[:items] = [
+      {
+        Sku: SecureRandom.alphanumeric,
+        ConsumerPrice: '10',
+        Quantity: 1
+      },
+      {
+        Sku: SecureRandom.alphanumeric,
+        ConsumerPrice: '90',
+        Quantity: 1
+      }
+    ]
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert response.params['response'][:Authorized]
+    assert response.params['response'][:OrderId]
+  end
+
   # The Complete flag in the response returns false when capture is
   # in progress
   def test_successful_authorize_and_capture
