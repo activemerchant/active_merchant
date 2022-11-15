@@ -1,5 +1,6 @@
 begin
   require 'veritrans'
+  require "json"
 rescue LoadError
   raise 'Could not load the veritrans gem.  Use `gem install veritrans` to install it.'
 end
@@ -267,10 +268,27 @@ module ActiveMerchant #:nodoc:
 
       def contruct_refund_request(post, money, authorization, options={})
         post[:transaction_id] = authorization
+        post[:rail_code] = options[:rail_code] if options[:rail_code]
         post[:details] = {}
         post[:details][:amount] = money if money
         post[:details][:reason] = options[:reason] if options[:reason]
-        post[:details][:refund_key] = options[:order_id] if options[:order_id]
+        post[:details][:refund_key] = options[:refund_transaction_id] if options[:refund_transaction_id]
+      end
+
+      def handle_direct_refund(transaction_id, payload)
+        @uri = URI.parse("#{url()}/v2/#{transaction_id}/refund/online/direct")
+        begin
+          https = Net::HTTP.new(url.host, url.port)
+          request = Net::HTTP::Post.new(url)
+          request["Accept"] = "application/json"
+          request["Content-Type"] = "application/json"
+          request["Authorization"] = "Basic #{Base64.strict_encode64(@options["server_key"] + ':')}"
+          request.body = JSON.dump(payload)
+          response = https.request(request)
+          JSON.parse(response.body)        
+        rescue ResponseError => e
+          Response.new(false, e.response.message)
+        end
       end
 
       def commit(action, parameters)
@@ -283,7 +301,11 @@ module ActiveMerchant #:nodoc:
           when "void"
             gateway_response = @midtrans_gateway.cancel(parameters[:transaction_id])
           when "refund"
-            gateway_response = @midtrans_gateway.refund(parameters[:transaction_id], parameters[:details])
+            if ["card", "credit_card"].include?(parameters[:rail_code].downcase) 
+              gateway_response = @midtrans_gateway.refund(parameters[:transaction_id], parameters[:details])
+            else
+              gateway_response = handle_direct_refund(parameters[:transaction_id], parameters[:details])
+            end
           when "verify_credentials"
             gateway_response = @midtrans_gateway.create_snap_token(parameters)
           end
