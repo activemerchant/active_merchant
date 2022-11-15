@@ -447,6 +447,13 @@ class RemoteMidtransTest < Test::Unit::TestCase
     assert_equal refund_response.params["status_code"], "412"
   end
 
+  def test_refund_when_rail_not_card_success
+    purchase_response = @gateway.purchase(@amount, {}, @qris_shopeepay_payment_options)
+    assert_success purchase_response
+    options = {rail_code: "SHOPEEPAY"}
+    assert refund_response = @gateway.refund(@amount, purchase_response.authorization, options)
+  end
+
   def test_refund_when_invalid_tx_then_failure
     response = @gateway.refund(@amount, 'invalid_tx')
     assert_failure response
