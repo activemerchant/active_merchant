@@ -24,6 +24,16 @@ class RemoteIveriTest < Test::Unit::TestCase
     assert_equal '100', response.params['amount']
   end
 
+  def test_successful_purchase_with_iveri_url
+    credentials = fixtures(:iveri_url).merge(url_override: 'iveri')
+    @gateway = IveriGateway.new(credentials)
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '100', response.params['amount']
+  end
+
   def test_successful_purchase_with_more_options
     options = {
       ip: '127.0.0.1',

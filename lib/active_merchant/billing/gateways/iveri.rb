@@ -3,7 +3,10 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class IveriGateway < Gateway
+      class_attribute :iveri_url
+
       self.live_url = self.test_url = 'https://portal.nedsecure.co.za/iVeriWebService/Service.asmx'
+      self.iveri_url = 'https://portal.host.iveri.com/iVeriWebService/Service.asmx'
 
       self.supported_countries = %w[US ZA GB]
       self.default_currency = 'ZAR'
@@ -157,7 +160,7 @@ module ActiveMerchant #:nodoc:
       def commit(post)
         raw_response =
           begin
-            ssl_post(live_url, build_xml_envelope(post), headers(post))
+            ssl_post(url, build_xml_envelope(post), headers(post))
           rescue ActiveMerchant::ResponseError => e
             e.response.body
           end
@@ -177,6 +180,10 @@ module ActiveMerchant #:nodoc:
 
       def mode
         test? ? 'Test' : 'Live'
+      end
+
+      def url
+        @options[:url_override].to_s == 'iveri' ? iveri_url : live_url
       end
 
       def headers(post)
