@@ -276,10 +276,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def handle_direct_refund(transaction_id, payload)
-        @uri = URI.parse("#{url()}/v2/#{transaction_id}/refund/online/direct")
+        uri = URI.parse("#{url()}/v2/#{transaction_id}/refund/online/direct")
         begin
-          https = Net::HTTP.new(url.host, url.port)
-          request = Net::HTTP::Post.new(url)
+          https = Net::HTTP.new(uri.host, uri.port)
+          request = Net::HTTP::Post.new(uri)
           request["Accept"] = "application/json"
           request["Content-Type"] = "application/json"
           request["Authorization"] = "Basic #{Base64.strict_encode64(@options["server_key"] + ':')}"
