@@ -428,6 +428,10 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed_echeck), post_scrubbed_echeck
   end
 
+  def test_scrub_network_token
+    assert_equal @gateway.scrub(pre_scrubbed_network_token), post_scrubbed_network_token
+  end
+
   private
 
   def pre_scrubbed
@@ -604,6 +608,94 @@ class PayeezyGateway < Test::Unit::TestCase
       reading 266 bytes...
       -> "\n       Payeezy.callback({\n        \t\"status\":201,\n        \t\"results\":{\"correlation_id\":\"228.1574930196886\",\"status\":\"success\",\"type\":\"FDToken\",\"token\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"exp_date\":\"0919\",\"value\":\"2158545373614242\"}}\n        })\n      "
       read 266 bytes
+      Conn close
+    TRANSCRIPT
+  end
+
+  def pre_scrubbed_network_token
+    <<~TRANSCRIPT
+      opening connection to api-cert.payeezy.com:443...
+      opened
+      starting SSL for api-cert.payeezy.com:443...
+      SSL established
+      <- "POST /v1/transactions HTTP/1.1\r\nContent-Type: application/json\r\nApikey: oKB61AAxbN3xwC6gVAH3dp58FmioHSAT\r\nToken: fdoa-a480ce8951daa73262734cf102641994c1e55e7cdf4c02b6\r\nNonce: 2713241561.4909368\r\nTimestamp: 1668784714406\r\nAuthorization: NDU2ZWRiNmUwMmUxNGMwOGIwYjMxYTAxMDkzZDcwNWNhM2Y0ODExNmRmMTNjNDVjMTFhODMyNTg4NDdiNzZiNw==\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: api-cert.payeezy.com\r\nContent-Length: 462\r\n\r\n"
+      <- "{\"transaction_type\":\"purchase\",\"merchant_ref\":null,\"3DS\":{\"type\":\"D\",\"cardholder_name\":\"Longbob\",\"card_number\":\"4761209980011439\",\"exp_date\":\"1122\",\"cvv\":569,\"xid\":\"YwAAAAAABaYcCMX/OhNRQAAAAAA=\",\"cavv\":\"YwAAAAAABaYcCMX/OhNRQAAAAAA=\",\"wallet_provider_id\":\"APPLE_PAY\"},\"method\":\"3DS\",\"eci_indicator\":5,\"billing_address\":{\"street\":\"456 My Street\",\"city\":\"Ottawa\",\"state_province\":\"ON\",\"zip_postal_code\":\"K1C2N6\",\"country\":\"CA\"},\"currency_code\":\"USD\",\"amount\":\"100\"}"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Date: Fri, 18 Nov 2022 15:18:35 GMT\r\n"
+      -> "Content-Type: application/json;charset=UTF-8\r\n"
+      -> "Connection: close\r\n"
+      -> "X-Backside-Transport: OK OK,OK OK\r\n"
+      -> "Content-Language: en-US\r\n"
+      -> "X-Global-Transaction-ID: 7f41427d6377a24aa50b34df\r\n"
+      -> "Strict-Transport-Security: max-age=31536000; includeSubDomains\r\n"
+      -> "X-Xss-Protection: 1; mode=block\r\n"
+      -> "Cache-Control: no-store, no-cache, must-revalidate\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Referrer-Policy: strict-origin\r\n"
+      -> "Feature-Policy: vibrate 'self'\r\n"
+      -> "Content-Security-Policy: default-src 'none'; frame-ancestors 'self'; script-src 'unsafe-inline' 'self' *.googleapis.com *.klarna.com *.masterpass.com *.mastercard.com *.newrelic.com *.npci.org.in *.nr-data.net *.google-analytics.com *.google.com *.getsitecontrol.com *.gstatic.com *.kxcdn.com 'strict-dynamic' 'nonce-6f62fa22a79de4c553d2bbde' 'unsafe-eval' 'unsafe-inline'; connect-src 'self'; img-src 'self'; style-src 'self'; base-uri 'self';\r\n"
+      -> "Access-Control-Allow-Origin: http://localhost:8080\r\n"
+      -> "Access-Control-Request-Headers: origin, x-requested-with, accept, content-type\r\n"
+      -> "Access-Control-Max-Age: 3628800\r\n"
+      -> "Access-Control-Allow-Methods: GET, PUT, POST, DELETE\r\n"
+      -> "Access-Control-Allow-Headers: Content-Type, apikey, token\r\n"
+      -> "Via: 1.1 dca1-bit16021\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "\r\n"
+      -> "249\r\n"
+      reading 585 bytes...
+      -> "{\"correlation_id\":\"134.6878471461658\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET188163\",\"transaction_tag\":\"10032826722\",\"method\":\"3ds\",\"amount\":\"100\",\"currency\":\"USD\",\"avs\":\"4\",\"cvv2\":\"U\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"9324008290401439\"}},\"card\":{\"type\":\"VISA\",\"cardholder_name\":\"Longbob\",\"card_number\":\"1439\",\"exp_date\":\"1122\"},\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"eCommerce_flag\":\"5\",\"retrieval_ref_no\":\"221118\"}"
+      read 585 bytes
+      reading 2 bytes...
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
+    TRANSCRIPT
+  end
+
+  def post_scrubbed_network_token
+    <<~TRANSCRIPT
+      opening connection to api-cert.payeezy.com:443...
+      opened
+      starting SSL for api-cert.payeezy.com:443...
+      SSL established
+      <- "POST /v1/transactions HTTP/1.1\r\nContent-Type: application/json\r\nApikey: [FILTERED]\r\nToken: [FILTERED]\r\nNonce: 2713241561.4909368\r\nTimestamp: 1668784714406\r\nAuthorization: NDU2ZWRiNmUwMmUxNGMwOGIwYjMxYTAxMDkzZDcwNWNhM2Y0ODExNmRmMTNjNDVjMTFhODMyNTg4NDdiNzZiNw==\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: api-cert.payeezy.com\r\nContent-Length: 462\r\n\r\n"
+      <- "{\"transaction_type\":\"purchase\",\"merchant_ref\":null,\"3DS\":{\"type\":\"D\",\"cardholder_name\":\"Longbob\",\"card_number\":\"[FILTERED]\",\"exp_date\":\"1122\",\"cvv\":[FILTERED],\"xid\":[FILTERED],\"cavv\":[FILTERED],\"wallet_provider_id\":\"APPLE_PAY\"},\"method\":\"3DS\",\"eci_indicator\":5,\"billing_address\":{\"street\":\"456 My Street\",\"city\":\"Ottawa\",\"state_province\":\"ON\",\"zip_postal_code\":\"K1C2N6\",\"country\":\"CA\"},\"currency_code\":\"USD\",\"amount\":\"100\"}"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Date: Fri, 18 Nov 2022 15:18:35 GMT\r\n"
+      -> "Content-Type: application/json;charset=UTF-8\r\n"
+      -> "Connection: close\r\n"
+      -> "X-Backside-Transport: OK OK,OK OK\r\n"
+      -> "Content-Language: en-US\r\n"
+      -> "X-Global-Transaction-ID: 7f41427d6377a24aa50b34df\r\n"
+      -> "Strict-Transport-Security: max-age=31536000; includeSubDomains\r\n"
+      -> "X-Xss-Protection: 1; mode=block\r\n"
+      -> "Cache-Control: no-store, no-cache, must-revalidate\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Referrer-Policy: strict-origin\r\n"
+      -> "Feature-Policy: vibrate 'self'\r\n"
+      -> "Content-Security-Policy: default-src 'none'; frame-ancestors 'self'; script-src 'unsafe-inline' 'self' *.googleapis.com *.klarna.com *.masterpass.com *.mastercard.com *.newrelic.com *.npci.org.in *.nr-data.net *.google-analytics.com *.google.com *.getsitecontrol.com *.gstatic.com *.kxcdn.com 'strict-dynamic' 'nonce-6f62fa22a79de4c553d2bbde' 'unsafe-eval' 'unsafe-inline'; connect-src 'self'; img-src 'self'; style-src 'self'; base-uri 'self';\r\n"
+      -> "Access-Control-Allow-Origin: http://localhost:8080\r\n"
+      -> "Access-Control-Request-Headers: origin, x-requested-with, accept, content-type\r\n"
+      -> "Access-Control-Max-Age: 3628800\r\n"
+      -> "Access-Control-Allow-Methods: GET, PUT, POST, DELETE\r\n"
+      -> "Access-Control-Allow-Headers: Content-Type, apikey, token\r\n"
+      -> "Via: 1.1 dca1-bit16021\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "\r\n"
+      -> "249\r\n"
+      reading 585 bytes...
+      -> "{\"correlation_id\":\"134.6878471461658\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET188163\",\"transaction_tag\":\"10032826722\",\"method\":\"3ds\",\"amount\":\"100\",\"currency\":\"USD\",\"avs\":\"4\",\"cvv2\":\"U\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"9324008290401439\"}},\"card\":{\"type\":\"VISA\",\"cardholder_name\":\"Longbob\",\"card_number\":\"[FILTERED]\",\"exp_date\":\"1122\"},\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"eCommerce_flag\":\"5\",\"retrieval_ref_no\":\"221118\"}"
+      read 585 bytes
+      reading 2 bytes...
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
       Conn close
     TRANSCRIPT
   end

@@ -408,4 +408,14 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_scrubbed(@check.routing_number, transcript)
     assert_scrubbed(@gateway.options[:token], transcript)
   end
+
+  def test_transcript_scrubbing_network_token
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @apple_pay_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@apple_pay_card.payment_cryptogram, transcript)
+    assert_scrubbed(@apple_pay_card.verification_value, transcript)
+  end
 end

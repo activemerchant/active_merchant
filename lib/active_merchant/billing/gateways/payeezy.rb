@@ -125,6 +125,7 @@ module ActiveMerchant
           gsub(%r((Apikey: )(\w|-)+), '\1[FILTERED]').
           gsub(%r((\\?"card_number\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r((\\?"cvv\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r((\\?"cvv\\?":\\?)\d+), '\1[FILTERED]').
           gsub(%r((\\?"account_number\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r((\\?"routing_number\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r((\\?card_number=)\d+(&?)), '\1[FILTERED]').
@@ -132,7 +133,9 @@ module ActiveMerchant
           gsub(%r((\\?apikey=)\w+(&?)), '\1[FILTERED]').
           gsub(%r{(\\?"credit_card\.card_number\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]').
           gsub(%r{(\\?"credit_card\.cvv\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]').
-          gsub(%r{(\\?"apikey\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]')
+          gsub(%r{(\\?"apikey\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]').
+          gsub(%r{(\\?"cavv\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]').
+          gsub(%r{(\\?"xid\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]')
       end
 
       private
