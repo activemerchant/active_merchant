@@ -282,7 +282,8 @@ module ActiveMerchant #:nodoc:
           request = Net::HTTP::Post.new(uri)
           request["Accept"] = "application/json"
           request["Content-Type"] = "application/json"
-          request["Authorization"] = "Basic #{Base64.strict_encode64(@options["server_key"] + ':')}"
+          key = @options["server_key"] + ':'
+          request["Authorization"] = "Basic #{Base64.strict_encode64(key)}"
           request.body = JSON.dump(payload)
           response = https.request(request)
           JSON.parse(response.body)        
