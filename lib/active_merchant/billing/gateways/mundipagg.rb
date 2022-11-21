@@ -60,11 +60,13 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:code] = authorization
         add_invoice(post, money, options)
+        add_auth_key(post, options)
         commit('capture', post, authorization)
       end
 
       def refund(money, authorization, options = {})
         add_invoice(post = {}, money, options)
+        add_auth_key(post, options)
         commit('refund', post, authorization)
       end
 
@@ -77,6 +79,7 @@ module ActiveMerchant #:nodoc:
         options.update(name: payment.name)
         options = add_customer(options) unless options[:customer_id]
         add_payment(post, payment, options)
+        add_auth_key(post, options)
         commit('store', post, options[:customer_id])
       end
 
