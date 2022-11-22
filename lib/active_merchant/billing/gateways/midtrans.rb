@@ -279,6 +279,7 @@ module ActiveMerchant #:nodoc:
         uri = URI.parse("#{url()}/v2/#{transaction_id}/refund/online/direct")
         begin
           https = Net::HTTP.new(uri.host, uri.port)
+          https.use_ssl = true
           request = Net::HTTP::Post.new(uri)
           request["Accept"] = "application/json"
           request["Content-Type"] = "application/json"
