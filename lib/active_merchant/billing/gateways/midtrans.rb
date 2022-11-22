@@ -296,23 +296,23 @@ module ActiveMerchant #:nodoc:
 
         # Return whenever transaction is successful, based on <tt>status_code</tt>
         def success?
-          @data[:status_code] == '200' || @data[:status_code] == '201' || @data[:status_code] == '407'
+          @data["status_code"] == '200' || @data["status_code"] == '201' || @data["status_code"] == '407'
         end
 
         # Return <tt>"status_code"</tt> field of response
         # Docs https://api-docs.midtrans.com/#status-code
         def status_code
-          @data[:status_code].to_i
+          @data["status_code"].to_i
         end
 
         # Return <tt>"status_message"</tt> field of response
         def status_message
-          @data[:status_message]
+          @data["status_message"]
         end
 
         # Return <tt>"transaction_id"</tt> field of response
         def transaction_id
-          @data[:transaction_id]
+          @data["transaction_id"]
         end
 
         # Raw response body as String
