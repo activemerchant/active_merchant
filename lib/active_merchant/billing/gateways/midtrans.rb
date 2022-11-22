@@ -275,10 +275,20 @@ module ActiveMerchant #:nodoc:
         post[:details][:refund_key] = options[:refund_transaction_id] if options[:refund_transaction_id]
       end
       class RefundResponse
+        # Response body parsed as hash
+        attr_reader :data
+        # HTTP status code, should always be 200
+        attr_reader :status
+        # Excon::Response object
+        attr_reader :response
+        # Request options, a hash with :path, :method, :headers, :body
+        attr_reader :request_options
+        # Request full URL, e.g. "https://api.sandbox.midtrans.com/v2/charge"
+        attr_reader :url
 
         def initialize(response, url, request_options)
           @data = JSON.parse(response.body)
-          @status = response.status
+          @status = response.code
           @response = response
           @url = url
           @request_options = request_options
@@ -309,6 +319,7 @@ module ActiveMerchant #:nodoc:
         def body
           response.body
         end
+      end
 
 
       def handle_direct_refund(transaction_id, payload)
