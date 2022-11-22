@@ -274,6 +274,42 @@ module ActiveMerchant #:nodoc:
         post[:details][:reason] = options[:reason] if options[:reason]
         post[:details][:refund_key] = options[:refund_transaction_id] if options[:refund_transaction_id]
       end
+      class RefundResponse
+
+        def initialize(response, url, request_options)
+          @data = JSON.parse(response.body)
+          @status = response.status
+          @response = response
+          @url = url
+          @request_options = request_options
+        end
+
+        # Return whenever transaction is successful, based on <tt>status_code</tt>
+        def success?
+          @data[:status_code] == '200' || @data[:status_code] == '201' || @data[:status_code] == '407'
+        end
+
+        # Return <tt>"status_code"</tt> field of response
+        # Docs https://api-docs.midtrans.com/#status-code
+        def status_code
+          @data[:status_code].to_i
+        end
+
+        # Return <tt>"status_message"</tt> field of response
+        def status_message
+          @data[:status_message]
+        end
+
+        # Return <tt>"transaction_id"</tt> field of response
+        def transaction_id
+          @data[:transaction_id]
+        end
+
+        # Raw response body as String
+        def body
+          response.body
+        end
+
 
       def handle_direct_refund(transaction_id, payload)
         uri = URI.parse("#{url()}/v2/#{transaction_id}/refund/online/direct")
@@ -287,9 +323,10 @@ module ActiveMerchant #:nodoc:
           request["Authorization"] = "Basic #{Base64.strict_encode64(auth_key)}"
           request.body = JSON.dump(payload)
           response = https.request(request)
-          JSON.parse(response.body)
+          RefundResponse.new(response, "#{url()}/v2/#{transaction_id}/refund/online/direct" , request)
+
         rescue ResponseError => e
-          Response.new(false, e.response.message)
+          RefundResponse.new(e, "#{url()}/v2/#{transaction_id}/refund/online/direct" , request)
         end
       end
 
