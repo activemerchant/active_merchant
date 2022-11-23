@@ -355,7 +355,7 @@ module ActiveMerchant #:nodoc:
               gateway_response = @midtrans_gateway.refund(parameters[:transaction_id], parameters[:details])
             else
               payload = {
-                "amount": parameters[:details][:amount].to_i,
+                "amount": parameters[:details][:amount].first.to_i,
                 **parameters[:details]
               }
               gateway_response = handle_direct_refund(parameters[:transaction_id], payload)
