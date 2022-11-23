@@ -354,7 +354,11 @@ module ActiveMerchant #:nodoc:
             if ["card", "credit_card"].include?(parameters[:rail_code].downcase) 
               gateway_response = @midtrans_gateway.refund(parameters[:transaction_id], parameters[:details])
             else
-              gateway_response = handle_direct_refund(parameters[:transaction_id], parameters[:details])
+              payload = {
+                "amount": parameters[:details][:amount].to_i,
+                **parameters[:details]
+              }
+              gateway_response = handle_direct_refund(parameters[:transaction_id], payload)
             end
           when "verify_credentials"
             gateway_response = @midtrans_gateway.create_snap_token(parameters)
