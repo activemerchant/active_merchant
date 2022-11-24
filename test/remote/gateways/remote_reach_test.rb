@@ -22,7 +22,8 @@ class RemoteReachTest < Test::Unit::TestCase
         state: 'FL',
         zip: '32191',
         country: 'US'
-      }
+      },
+      device_fingerprint: fingerprint
     }
   end
 
@@ -140,6 +141,48 @@ class RemoteReachTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_store_credentials
+    @options[:stored_credential] = { initiator: 'cardholder', initial_transaction: true, reason_type: 'installment' }
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+
+    assert response.params['response'][:Authorized]
+    assert response.params['response'][:OrderId]
+  end
+
+  def test_successful_purchase_with_store_credentials_mit
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'recurring' }
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+
+    assert response.params['response'][:Authorized]
+    assert response.params['response'][:OrderId]
+  end
+
+  def test_successful_purchase_with_store_credentials_mit_and_network_transaction_id
+    @options[:stored_credential] = { initiator: 'cardholder', initial_transaction: true, reason_type: 'installment' }
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'unschedule', network_transaction_id: purchase.network_transaction_id }
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+
+    assert response.params['response'][:Authorized]
+    assert response.params['response'][:OrderId]
+  end
+
+  def test_failed_purchase_with_store_credentials_mit_and_network_transaction_id
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'unschedule', network_transaction_id: 'uhh123' }
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+
+    assert_equal response.message, 'InvalidPreviousNetworkPaymentReference'
+  end
+
   def test_failed_capture
     response = @gateway.capture(@amount, "#{@gateway.options[:merchant_id]}#123")
 
@@ -157,5 +200,12 @@ class RemoteReachTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:merchant_id], transcript)
     assert_scrubbed(@gateway.options[:secret], transcript)
+  end
+
+  def fingerprint
+    raw_response = @gateway.ssl_get @gateway.send(:url, "fingerprint?MerchantId=#{@gateway.options[:merchant_id]}")
+
+    fingerprint = raw_response.match(/(gip_device_fingerprint=')([\w -]+)/)[2]
+    fingerprint
   end
 end

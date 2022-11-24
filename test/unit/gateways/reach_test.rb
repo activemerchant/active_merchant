@@ -76,7 +76,6 @@ class ReachTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(URI.decode_www_form(data)[0][1])
       assert_equal request['DeviceFingerprint'], @options[:device_fingerprint]
-      assert_equal request['ViaAgent'], false
     end.respond_with(successful_purchase_response)
   end
 
@@ -130,6 +129,56 @@ class ReachTest < Test::Unit::TestCase
     refute @gateway.send(:success_from, response)
   end
 
+  def test_stored_credential
+    cases =
+      [
+        { { initial_transaction: true, initiator: 'cardholder', reason_type: 'installment' } => 'CIT-Setup-Scheduled' },
+        { { initial_transaction: true, initiator: 'cardholder', reason_type: 'unschedule' } => 'CIT-Setup-Unscheduled-MIT' },
+        { { initial_transaction: true, initiator: 'cardholder', reason_type: 'recurring' } => 'CIT-Setup-Unschedule' },
+        { { initial_transaction: false, initiator: 'cardholder', reason_type: 'unschedule' } => 'CIT-Subsequent-Unscheduled' },
+        { { initial_transaction: false, initiator: 'merchant', reason_type: 'recurring' } => 'MIT-Subsequent-Scheduled' },
+        { { initial_transaction: false, initiator: 'merchant', reason_type: 'unschedule' } => 'MIT-Subsequent-Unscheduled' }
+      ]
+
+    cases.each do |stored_credential_case|
+      stored_credential_options = stored_credential_case.keys[0]
+      expected = stored_credential_case[stored_credential_options]
+      @options[:stored_credential] = stored_credential_options
+      stub_comms do
+        @gateway.expects(:ssl_request).returns(succesful_query_response)
+        @gateway.purchase(@amount, @credit_card, @options)
+      end.check_request do |_endpoint, data, _headers|
+        request = JSON.parse(URI.decode_www_form(data)[0][1])
+        assert_equal expected, request['PaymentModel']
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
+  def test_stored_credential_with_no_store_credential_parameters
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(URI.decode_www_form(data)[0][1])
+      assert_equal 'CIT-One-Time', request['PaymentModel']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_stored_credential_with_wrong_combination_stored_credential_paramaters
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: true, reason_type: 'unschedule' }
+    e = assert_raise ArgumentError do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    assert_equal e.message, 'Unexpected combination of stored credential fields'
+  end
+
+  def test_stored_credential_with_at_lest_one_stored_credential_paramaters_nil
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: true, reason_type: nil }
+    e = assert_raise ArgumentError do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    assert_equal e.message, 'Unexpected combination of stored credential fields'
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
 
@@ -140,6 +189,10 @@ class ReachTest < Test::Unit::TestCase
 
   def successful_purchase_response
     'response=%7B%22OrderId%22%3A%22e8f8c529-15c7-46c1-b28b-9d43bb5efe92%22%2C%22UnderReview%22%3Afalse%2C%22Expiry%22%3A%222022-11-03T12%3A47%3A21Z%22%2C%22Authorized%22%3Atrue%2C%22Completed%22%3Afalse%2C%22Captured%22%3Afalse%7D&signature=JqLa7Y68OYRgRcA5ALHOZwXXzdZFeNzqHma2RT2JWAg%3D'
+  end
+
+  def succesful_query_response
+    'response=%7B%22Meta%22%3A%20null%2C%20%22Rate%22%3A%201.000000000000%2C%20%22Items%22%3A%20%5B%7B%22Sku%22%3A%20%22RLaP7OsSZjbR2pJK%22%2C%20%22Quantity%22%3A%201%2C%20%22ConsumerPrice%22%3A%20100.00%2C%20%22MerchantPrice%22%3A%20100.00%7D%5D%2C%20%22Store%22%3A%20null%2C%20%22Times%22%3A%20%7B%22Created%22%3A%20%222022-12-05T17%3A48%3A18.830991Z%22%2C%20%22Processed%22%3A%20null%2C%20%22Authorized%22%3A%20%222022-12-05T17%3A48%3A19.855608Z%22%7D%2C%20%22Action%22%3A%20null%2C%20%22Expiry%22%3A%20%222022-12-12T17%3A48%3A19.855608Z%22%2C%20%22Reason%22%3A%20null%2C%20%22Charges%22%3A%20null%2C%20%22OrderId%22%3A%20%226ec68268-a4a5-44dd-8997-e76df4aa9c97%22%2C%20%22Payment%22%3A%20%7B%22Class%22%3A%20%22Card%22%2C%20%22Expiry%22%3A%20%222030-03%22%2C%20%22Method%22%3A%20%22VISA%22%2C%20%22AccountIdentifier%22%3A%20%22444433******1111%22%2C%20%22NetworkPaymentReference%22%3A%20%22546646904394415%22%7D%2C%20%22Refunds%22%3A%20%5B%5D%2C%20%22Consumer%22%3A%20%7B%22City%22%3A%20%22Miami%22%2C%20%22Name%22%3A%20%22Longbob%20Longsen%22%2C%20%22Email%22%3A%20%22johndoe%40reach.com%22%2C%20%22Address%22%3A%20%221670%22%2C%20%22Country%22%3A%20%22US%22%2C%20%22EffectiveIpAddress%22%3A%20%22181.78.14.203%22%7D%2C%20%22Shipping%22%3A%20null%2C%20%22Consignee%22%3A%20null%2C%20%22Discounts%22%3A%20null%2C%20%22Financing%22%3A%20null%2C%20%22Chargeback%22%3A%20false%2C%20%22ContractId%22%3A%20null%2C%20%22MerchantId%22%3A%20%22testMerchantId%22%2C%20%22OrderState%22%3A%20%22PaymentAuthorized%22%2C%20%22RateOfferId%22%3A%20%22c754012f-e0fc-4630-9cb5-11c3450f462e%22%2C%20%22ReferenceId%22%3A%20%22123%22%2C%20%22UnderReview%22%3A%20false%2C%20%22ConsumerTotal%22%3A%20100.00%2C%20%22MerchantTotal%22%3A%20100.00%2C%20%22TransactionId%22%3A%20%22e08f6501-2607-4be1-9dba-97d6780dfe9a%22%2C%20%22ConsumerCurrency%22%3A%20%22USD%22%7D&signature=no%2BEojgxrO5JK4wt4EWtbuY9M7h1eVQ9SLezu10X%2Bn4%3D'
   end
 end
 
