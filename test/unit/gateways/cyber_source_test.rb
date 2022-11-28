@@ -263,15 +263,6 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
-  def test_authorize_includes_less_installment_data
-    stub_comms do
-      @gateway.authorize(100, @credit_card, order_id: '1', installment_grace_period_duration: 3)
-    end.check_request do |_endpoint, data, _headers|
-      assert_xml_valid_to_xsd(data)
-      assert_match(/<installment>\s+<gracePeriodDuration>3<\/gracePeriodDuration>\s+<\/installment>/, data)
-    end.respond_with(successful_authorization_response)
-  end
-
   def test_authorize_includes_customer_id
     stub_comms do
       @gateway.authorize(100, @credit_card, customer_id: '5afefb801188d70023b7debb')

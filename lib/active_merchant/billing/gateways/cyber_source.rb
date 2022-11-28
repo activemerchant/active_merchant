@@ -312,9 +312,9 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
+        add_other_tax(xml, options)
         add_threeds_2_ucaf_data(xml, creditcard_or_reference, options)
         add_decision_manager_fields(xml, options)
-        add_other_tax(xml, options)
         add_mdd_fields(xml, options)
         add_auth_service(xml, creditcard_or_reference, options)
         add_threeds_services(xml, options)
@@ -374,9 +374,9 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
+        add_other_tax(xml, options)
         add_threeds_2_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
-        add_other_tax(xml, options)
         add_mdd_fields(xml, options)
         if (!payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check') || reference_is_a_check?(payment_method_or_reference)
           add_check_service(xml)
@@ -681,7 +681,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_other_tax(xml, options)
-        return unless %i[vat_tax_rate local_tax_amount national_tax_amount national_tax_indicator].any? { |gsf| options.include?(gsf) }
+        return unless options[:local_tax_amount] || options[:national_tax_amount] || options[:national_tax_indicator]
 
         xml.tag! 'otherTax' do
           xml.tag! 'vatTaxRate', options[:vat_tax_rate] if options[:vat_tax_rate]
@@ -953,10 +953,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_installments(xml, options)
-        return unless %i[installment_total_count installment_total_amount installment_plan_type first_installment_date installment_annual_interest_rate installment_grace_period_duration].any? { |gsf| options.include?(gsf) }
+        return unless options[:installment_total_count]
 
         xml.tag! 'installment' do
-          xml.tag!('totalCount', options[:installment_total_count]) if options[:installment_total_count]
+          xml.tag! 'totalCount', options[:installment_total_count]
           xml.tag!('totalAmount', options[:installment_total_amount]) if options[:installment_total_amount]
           xml.tag!('planType', options[:installment_plan_type]) if options[:installment_plan_type]
           xml.tag!('firstInstallmentDate', options[:first_installment_date]) if options[:first_installment_date]
