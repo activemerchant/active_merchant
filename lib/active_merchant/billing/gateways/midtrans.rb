@@ -274,21 +274,70 @@ module ActiveMerchant #:nodoc:
         post[:details][:reason] = options[:reason] if options[:reason]
         post[:details][:refund_key] = options[:refund_transaction_id] if options[:refund_transaction_id]
       end
+      class RefundResponse
+        # Response body parsed as hash
+        attr_reader :data
+        # HTTP status code, should always be 200
+        attr_reader :status
+        # Excon::Response object
+        attr_reader :response
+        # Request options, a hash with :path, :method, :headers, :body
+        attr_reader :request_options
+        # Request full URL, e.g. "https://api.sandbox.midtrans.com/v2/charge"
+        attr_reader :url
+
+        def initialize(response, url, request_options)
+          @data = JSON.parse(response.body)
+          @status = response.code
+          @response = response
+          @url = url
+          @request_options = request_options
+        end
+
+        # Return whenever transaction is successful, based on <tt>status_code</tt>
+        def success?
+          @data["status_code"] == '200' || @data["status_code"] == '201' || @data["status_code"] == '407'
+        end
+
+        # Return <tt>"status_code"</tt> field of response
+        # Docs https://api-docs.midtrans.com/#status-code
+        def status_code
+          @data["status_code"].to_i
+        end
+
+        # Return <tt>"status_message"</tt> field of response
+        def status_message
+          @data["status_message"]
+        end
+
+        # Return <tt>"transaction_id"</tt> field of response
+        def transaction_id
+          @data["transaction_id"]
+        end
+
+        # Raw response body as String
+        def body
+          response.body
+        end
+      end
+
 
       def handle_direct_refund(transaction_id, payload)
         uri = URI.parse("#{url()}/v2/#{transaction_id}/refund/online/direct")
         begin
           https = Net::HTTP.new(uri.host, uri.port)
+          https.use_ssl = true
           request = Net::HTTP::Post.new(uri)
           request["Accept"] = "application/json"
           request["Content-Type"] = "application/json"
-          key = @options["server_key"] + ':'
-          request["Authorization"] = "Basic #{Base64.strict_encode64(key)}"
+          auth_key = @midtrans_gateway.config.server_key + ':'
+          request["Authorization"] = "Basic #{Base64.strict_encode64(auth_key)}"
           request.body = JSON.dump(payload)
           response = https.request(request)
-          JSON.parse(response.body)        
+          RefundResponse.new(response, "#{url()}/v2/#{transaction_id}/refund/online/direct" , request)
+
         rescue ResponseError => e
-          Response.new(false, e.response.message)
+          RefundResponse.new(e, "#{url()}/v2/#{transaction_id}/refund/online/direct" , request)
         end
       end
 
@@ -305,7 +354,11 @@ module ActiveMerchant #:nodoc:
             if ["card", "credit_card"].include?(parameters[:rail_code].downcase) 
               gateway_response = @midtrans_gateway.refund(parameters[:transaction_id], parameters[:details])
             else
-              gateway_response = handle_direct_refund(parameters[:transaction_id], parameters[:details])
+              payload = {
+                **parameters[:details],
+                "amount": parameters[:details][:amount].first.to_i,
+              }
+              gateway_response = handle_direct_refund(parameters[:transaction_id], payload)
             end
           when "verify_credentials"
             gateway_response = @midtrans_gateway.create_snap_token(parameters)
