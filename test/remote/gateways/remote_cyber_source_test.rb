@@ -236,6 +236,14 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_authorization_with_less_installment_data
+    options = @options.merge(installment_grace_period_duration: '1')
+
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
   def test_successful_authorization_with_merchant_tax_id
     options = @options.merge(merchant_tax_id: '123')
     assert response = @gateway.authorize(@amount, @credit_card, options)
@@ -258,6 +266,22 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     options = @options.merge(tax_management_indicator: '3')
     assert response = @gateway.authorize(@amount, @credit_card, options)
     assert_successful_response(response)
+  end
+
+  def test_successful_auth_with_less_tax_info
+    options = @options.merge(vat_tax_rate: '1')
+
+    assert response = @gateway.authorize(@amount, @master_credit_card, options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_less_tax_info
+    options = @options.merge(national_tax_amount: '0.05')
+
+    assert response = @gateway.purchase(@amount, @master_credit_card, options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
   end
 
   def test_successful_bank_account_purchase_with_sec_code
@@ -693,6 +717,26 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     assert auth = @gateway.purchase(@amount, credit_card, @options)
     assert_successful_response(auth)
+  end
+
+  def test_auth_and_capture_network_tokenization_mastercard
+    credit_card = network_tokenization_credit_card('5555555555554444',
+      brand: 'master',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+
+    options = { ignore_avs: true, order_id: generate_unique_id }
+    # the options included in this test are restricted to a few bc I was trying to recreate
+    # a failing transaction which had limited options
+    # national_tax_amount: '0.05'
+    # if this field or any child element of otherTax is added to the options, XML parse errors occur
+    # this only happens when a mastercard with network token is used
+
+    assert auth = @gateway.authorize(@amount, credit_card, options)
+    assert_successful_response(auth)
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_successful_response(capture)
   end
 
   def test_successful_authorize_with_mdd_fields

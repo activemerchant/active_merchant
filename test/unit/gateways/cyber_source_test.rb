@@ -64,6 +64,7 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  # unit test added here in original PR to cover other_tax fields
   def test_successful_purchase_with_other_tax_fields
     stub_comms do
       @gateway.purchase(100, @credit_card, @options.merge(national_tax_indicator: 1, vat_tax_rate: 1.01))
@@ -260,6 +261,15 @@ class CyberSourceTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_xml_valid_to_xsd(data)
       assert_match(/<installment>\s+<totalCount>5<\/totalCount>\s+<totalAmount>5.05<\/totalAmount>\s+<planType>1<\/planType>\s+<firstInstallmentDate>300101<\/firstInstallmentDate>\s+<annualInterestRate>1.09<\/annualInterestRate>\s+<gracePeriodDuration>3<\/gracePeriodDuration>\s+<\/installment>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorize_includes_less_installment_data
+    stub_comms do
+      @gateway.authorize(100, @credit_card, order_id: '1', installment_grace_period_duration: 3)
+    end.check_request do |_endpoint, data, _headers|
+      assert_xml_valid_to_xsd(data)
+      assert_match(/<installment>\s+<gracePeriodDuration>3<\/gracePeriodDuration>\s+<\/installment>/, data)
     end.respond_with(successful_authorization_response)
   end
 

@@ -312,10 +312,15 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
-        add_other_tax(xml, options)
+        # ucaf data added here, but not as part of NT. This is not causing problems. 
         add_threeds_2_ucaf_data(xml, creditcard_or_reference, options)
+        # if the NT ucaf data is added here instead of in the NT method block, it will satisfy the XSD
+        add_mastercard_network_tokenization_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
+        add_other_tax(xml, options)
         add_mdd_fields(xml, options)
+        # add_auth_service is called here but within this method, add_auth_network_tokenization is called
+        # which places the otherTax element ahead of the ucaf data in the request when a network token is used
         add_auth_service(xml, creditcard_or_reference, options)
         add_threeds_services(xml, options)
         add_business_rules_data(xml, creditcard_or_reference, options)
@@ -374,9 +379,10 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
-        add_other_tax(xml, options)
         add_threeds_2_ucaf_data(xml, payment_method_or_reference, options)
+        add_mastercard_network_tokenization_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
+        add_other_tax(xml, options)
         add_mdd_fields(xml, options)
         if (!payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check') || reference_is_a_check?(payment_method_or_reference)
           add_check_service(xml)
@@ -681,7 +687,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_other_tax(xml, options)
-        return unless options[:local_tax_amount] || options[:national_tax_amount] || options[:national_tax_indicator]
+        return unless %i[vat_tax_rate local_tax_amount national_tax_amount national_tax_indicator].any? { |gsf| options.include?(gsf) }
 
         xml.tag! 'otherTax' do
           xml.tag! 'vatTaxRate', options[:vat_tax_rate] if options[:vat_tax_rate]
@@ -776,8 +782,21 @@ module ActiveMerchant #:nodoc:
         return unless options[:three_d_secure] && card_brand(payment_method).to_sym == :master
 
         xml.tag! 'ucaf' do
+          # my primary question is how the value may be different for authenticationData here
+          # vs. a NT transaction
+          # or if there should just be one ucaf method with a conditional
+          # with if 3DS options[:three_d_secure][:cavv] else payment_method.payment_cryptogram
           xml.tag!('authenticationData', options[:three_d_secure][:cavv])
           xml.tag!('collectionIndicator', options[:collection_indicator] || DEFAULT_COLLECTION_INDICATOR)
+        end
+      end
+
+      def add_mastercard_network_tokenization_ucaf_data(xml, payment_method, options)
+        return unless network_tokenization?(payment_method) && card_brand(payment_method).to_sym == :master
+
+        xml.tag! 'ucaf' do
+          xml.tag!('authenticationData', payment_method.payment_cryptogram)
+          xml.tag!('collectionIndicator', DEFAULT_COLLECTION_INDICATOR)
         end
       end
 
@@ -804,16 +823,14 @@ module ActiveMerchant #:nodoc:
         case brand
         when :visa
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
+            # in the visa and amex blocks, payment_method.payment_cryptogram is set to cavv
             xml.tag!('cavv', payment_method.payment_cryptogram)
             xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
             xml.tag!('xid', payment_method.payment_cryptogram)
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
+          # ucaf and ccAuthService elements are both added in the mastercard NT
         when :master
-          xml.tag! 'ucaf' do
-            xml.tag!('authenticationData', payment_method.payment_cryptogram)
-            xml.tag!('collectionIndicator', DEFAULT_COLLECTION_INDICATOR)
-          end
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
             xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
@@ -953,10 +970,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_installments(xml, options)
-        return unless options[:installment_total_count]
+        return unless %i[installment_total_count installment_total_amount installment_plan_type first_installment_date installment_annual_interest_rate installment_grace_period_duration].any? { |gsf| options.include?(gsf) }
 
         xml.tag! 'installment' do
-          xml.tag! 'totalCount', options[:installment_total_count]
+          xml.tag!('totalCount', options[:installment_total_count]) if options[:installment_total_count]
           xml.tag!('totalAmount', options[:installment_total_amount]) if options[:installment_total_amount]
           xml.tag!('planType', options[:installment_plan_type]) if options[:installment_plan_type]
           xml.tag!('firstInstallmentDate', options[:first_installment_date]) if options[:first_installment_date]

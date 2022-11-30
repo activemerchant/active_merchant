@@ -1947,6 +1947,9 @@
 <xsd:element name="check" type="tns:Check" minOccurs="0"/>
 <xsd:element name="bml" type="tns:BML" minOccurs="0"/>
 <xsd:element name="gecc" type="tns:GECC" minOccurs="0"/>
+<!-- this ucaf parent element is added inside the add_auth_network_tokenization method for mastercards only. 
+add_auth_network_tokenization is called inside add_auth_service, which is called in build_auth_request and add_purchase_service. 
+but ucaf is also added in the add_threeds_2_ucaf_data in the build_auth and build_purchase request methods-->
 <xsd:element name="ucaf" type="tns:UCAF" minOccurs="0"/>
 <xsd:element name="fundTransfer" type="tns:FundTransfer" minOccurs="0"/>
 <xsd:element name="bankInfo" type="tns:BankInfo" minOccurs="0"/>
@@ -1954,6 +1957,10 @@
 <xsd:element name="recurringSubscriptionInfo" type="tns:RecurringSubscriptionInfo" minOccurs="0"/>
 <xsd:element name="tokenSource" type="tns:TokenSource" minOccurs="0"/>
 <xsd:element name="decisionManager" type="tns:DecisionManager" minOccurs="0"/>
+<!-- this is the parent element of several fields that a customer is requesting.
+The problem is that when a Mastercard network token is used, and child elements of otherTax are added to 
+options in the request, there is currently no way to avoid an XML parsing error because of the way things 
+are added to the request and the strictness of adhering to the order of the XSD.  -->
 <xsd:element name="otherTax" type="tns:OtherTax" minOccurs="0"/>
 <xsd:element name="paypal" type="tns:PayPal" minOccurs="0"/>
 <xsd:element name="merchantDefinedData" type="tns:MerchantDefinedData" minOccurs="0"/>
@@ -1964,6 +1971,8 @@
 <xsd:element name="linkToRequest" type="xsd:string" minOccurs="0"/>
 <xsd:element name="serviceFee" type="tns:ServiceFee" minOccurs="0"/>
 <xsd:element name="giftCard" type="tns:GiftCard" minOccurs="0"/>
+<!-- this parent element is added for mastercards in addition to ucaf, so two parent elements in the 
+network tokenization block for MC. For Visa and AMEX, only ccAuthService is added. -->
 <xsd:element name="ccAuthService" type="tns:CCAuthService" minOccurs="0"/>
 <xsd:element name="octService" type="tns:OCTService" minOccurs="0"/>
 <xsd:element name="ecAVSService" type="tns:ECAVSService" minOccurs="0"/>
