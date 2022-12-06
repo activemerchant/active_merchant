@@ -9,6 +9,17 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     @check = check
     @declined_card = credit_card('400030001111222')
 
+    @payment_token = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'dGVzdGNyeXB0b2dyYW1YWFhYWFhYWFhYWFg9PQ==',
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    )
+
     @options = {
       order_id: '1',
       email: 'anet@example.com',
@@ -50,6 +61,26 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_google_pay
+    @payment_token.source = :google_pay
+    response = @gateway.purchase(@amount, @payment_token, @options)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_apple_pay
+    @payment_token.source = :apple_pay
+    response = @gateway.purchase(@amount, @payment_token, @options)
+
     assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
