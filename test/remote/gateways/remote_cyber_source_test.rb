@@ -66,7 +66,6 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       sales_slip_number: '456',
       airline_agent_code: '7Q',
       tax_management_indicator: 1,
-      installment_grace_period_duration: '1',
       invoice_amount: '3',
       original_amount: '4',
       reference_data_code: 'ABC123',
@@ -231,6 +230,14 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       installment_annual_interest_rate: 1.09,
       installment_grace_period_duration: 1
     )
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_authorization_with_less_installment_data
+    options = @options.merge(installment_grace_period_duration: '1')
+
     assert response = @gateway.authorize(@amount, @credit_card, options)
     assert_successful_response(response)
     assert !response.authorization.blank?

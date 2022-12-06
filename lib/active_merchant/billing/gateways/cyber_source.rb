@@ -953,10 +953,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_installments(xml, options)
-        return unless options[:installment_total_count]
+        return unless %i[installment_total_count installment_total_amount installment_plan_type first_installment_date installment_annual_interest_rate installment_grace_period_duration].any? { |gsf| options.include?(gsf) }
 
         xml.tag! 'installment' do
-          xml.tag! 'totalCount', options[:installment_total_count]
+          xml.tag!('totalCount', options[:installment_total_count]) if options[:installment_total_count]
           xml.tag!('totalAmount', options[:installment_total_amount]) if options[:installment_total_amount]
           xml.tag!('planType', options[:installment_plan_type]) if options[:installment_plan_type]
           xml.tag!('firstInstallmentDate', options[:first_installment_date]) if options[:first_installment_date]
