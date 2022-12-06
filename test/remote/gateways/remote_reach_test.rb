@@ -24,6 +24,7 @@ class RemoteReachTest < Test::Unit::TestCase
         country: 'US'
       }
     }
+    @non_valid_authorization = SecureRandom.uuid
   end
 
   def test_successful_authorize
@@ -145,6 +146,88 @@ class RemoteReachTest < Test::Unit::TestCase
 
     assert_failure response
     assert_equal 'Not Found', response.message
+  end
+
+  def test_successful_refund
+    response = @gateway.refund(
+      @amount,
+      '5cd04b6a-7189-4a71-a335-faea4de9e11d',
+      { reference_id: 'REFUND_TAG' }
+    )
+
+    assert_success response
+    assert response.params.symbolize_keys[:response][:RefundId].present?
+  end
+
+  def test_failed_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.refund(@amount, purchase.authorization, { reference_id: 'REFUND_TAG' })
+
+    assert_failure response
+    assert_equal 'OrderStateInvalid', response.error_code
+    assert response.params.symbolize_keys[:response][:OrderId].present?
+  end
+
+  def test_successful_void
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
+    response = @gateway.void(authorize.authorization, @options)
+
+    assert_success response
+    assert response.params.symbolize_keys[:response][:OrderId].present?
+  end
+
+  def test_failed_void
+    response = @gateway.void(@non_valid_authorization, @options)
+    assert_failure response
+
+    assert_equal 'Not Found', response.message
+    assert response.params.blank?
+  end
+
+  def test_successful_partial_void
+    authorize = @gateway.authorize(@amount / 2, @credit_card, @options)
+    response = @gateway.void(authorize.authorization, @options)
+
+    assert_success response
+    assert response.params.symbolize_keys[:response][:OrderId].present?
+  end
+
+  def test_successful_void_higher_amount
+    authorize = @gateway.authorize(@amount * 2, @credit_card, @options)
+    response = @gateway.void(authorize.authorization, @options)
+
+    assert_success response
+    assert response.params.symbolize_keys[:response][:OrderId].present?
+  end
+
+  def test_successful_double_void_and_idempotent
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
+    response = @gateway.void(authorize.authorization, @options)
+
+    assert_success response
+    assert response.params.symbolize_keys[:response][:OrderId].present?
+
+    second_void_response = @gateway.void(authorize.authorization, @options)
+
+    assert_success second_void_response
+    assert second_void_response.params.symbolize_keys[:response][:OrderId].present?
+
+    assert_equal response.params.symbolize_keys[:response][:OrderId], second_void_response.params.symbolize_keys[:response][:OrderId]
+  end
+
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+
+    assert_success response
+    assert response.params.symbolize_keys[:response][:OrderId].present?
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@declined_card, @options)
+
+    assert_failure response
+    assert response.params.symbolize_keys[:response][:OrderId].present?
+    assert_equal 'PaymentAuthorizationFailed', response.error_code
   end
 
   def test_transcript_scrubbing

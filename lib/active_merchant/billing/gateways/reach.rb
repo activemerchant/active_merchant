@@ -69,6 +69,33 @@ module ActiveMerchant #:nodoc:
           gsub(%r((VerificationCode%22%3A)[\d]+), '\1[FILTERED]\2')
       end
 
+      def refund(amount, authorization, options = {})
+        post = {}
+        request = post[:request] = {}
+        request[:MerchantId] = @options[:merchant_id]
+        request[:OrderId] = authorization
+        request[:ReferenceId] = options[:reference_id]
+        request[:Amount] = amount
+
+        commit('refund', post)
+      end
+
+      def void(authorization, options = {})
+        post = {}
+        request = post[:request] = {}
+        request[:MerchantId] = @options[:merchant_id]
+        request[:OrderId] = authorization
+
+        commit('cancel', post)
+      end
+
+      def verify(credit_card, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       private
 
       def build_checkout_request(amount, payment, options)
