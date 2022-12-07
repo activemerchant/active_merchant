@@ -42,9 +42,20 @@ module ActiveMerchant #:nodoc:
         request = build_checkout_request(money, payment, options)
         add_custom_fields_data(request, options)
         add_customer_data(request, options, payment)
-
-        post = { request: request, card: add_payment(payment) }
-        commit('checkout', post)
+        add_stored_credentials(request, options)
+        post = { request: request, card: add_payment(payment, options) }
+        if options[:stored_credential]
+          MultiResponse.run(:use_first_response) do |r|
+            r.process { commit('checkout', post) }
+            r.process do
+              r2 = get_network_payment_reference(r.responses[0])
+              r.params[:network_transaction_id] = r2.message
+              r2
+            end
+          end
+        else
+          commit('checkout', post)
+        end
       end
 
       def purchase(money, payment, options = {})
@@ -63,7 +74,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r(((MerchantId%22%3A%22)[\w-]+)), '\2[FILTERED]').
+          gsub(%r(((MerchantId)[% \w]+[%]\d{2})[\w -]+), '\1[FILTERED]').
           gsub(%r((signature=)[\w%]+), '\1[FILTERED]\2').
           gsub(%r((Number%22%3A%22)[\d]+), '\1[FILTERED]\2').
           gsub(%r((VerificationCode%22%3A)[\d]+), '\1[FILTERED]\2')
@@ -109,18 +120,18 @@ module ActiveMerchant #:nodoc:
             Sku: options[:item_sku] || SecureRandom.alphanumeric,
             ConsumerPrice: amount,
             Quantity: (options[:item_quantity] || 1)
-          ],
-          ViaAgent: true # Indicates this is server to server API call
+          ]
         }
       end
 
-      def add_payment(payment)
+      def add_payment(payment, options)
+        ntid = options.dig(:stored_credential, :network_transaction_id)
+        cvv_or_previos_reference = (ntid ? { PreviousNetworkPaymentReference: ntid } : { VerificationCode: payment.verification_value })
         {
           Name: payment.name,
           Number: payment.number,
-          Expiry: { Month: payment.month, Year: payment.year },
-          VerificationCode: payment.verification_value
-        }
+          Expiry: { Month: payment.month, Year: payment.year }
+        }.merge!(cvv_or_previos_reference)
       end
 
       def add_customer_data(request, options, payment)
@@ -137,11 +148,41 @@ module ActiveMerchant #:nodoc:
         }.compact
       end
 
+      def add_stored_credentials(request, options)
+        request[:PaymentModel] = payment_model(options)
+        raise ArgumentError, 'Unexpected combination of stored credential fields' if request[:PaymentModel].nil?
+
+        request[:DeviceFingerprint] = options[:device_fingerprint] if options[:device_fingerprint] && request[:PaymentModel].match?(/CIT-/)
+      end
+
+      def payment_model(options)
+        stored_credential = options[:stored_credential]
+        return options[:payment_model] if options[:payment_model]
+        return 'CIT-One-Time' unless stored_credential
+
+        payment_model_options = {
+          initial_transaction: {
+            'cardholder' => {
+              'installment' => 'CIT-Setup-Scheduled',
+              'unschedule' => 'CIT-Setup-Unscheduled-MIT',
+              'recurring' => 'CIT-Setup-Unschedule'
+            }
+          },
+          no_initial_transaction: {
+            'cardholder' => {
+              'unschedule' => 'CIT-Subsequent-Unscheduled'
+            },
+            'merchant' => {
+              'recurring' => 'MIT-Subsequent-Scheduled',
+              'unschedule' => 'MIT-Subsequent-Unscheduled'
+            }
+          }
+        }
+        initial = (stored_credential[:initial_transaction] ? :initial_transaction : :no_initial_transaction)
+        payment_model_options[initial].dig(stored_credential[:initiator], stored_credential[:reason_type])
+      end
+
       def add_custom_fields_data(request, options)
-        if options[:device_fingerprint].present?
-          request[:DeviceFingerprint] = options[:device_fingerprint]
-          request[:ViaAgent] = false
-        end
         add_shipping_data(request, options) if options[:taxes].present?
         request[:RateOfferId] = options[:rate_offer_id] if options[:rate_offer_id].present?
         request[:Items] = options[:items] if options[:items].present?
@@ -177,6 +218,16 @@ module ActiveMerchant #:nodoc:
         post[:card] = post[:card].to_json if post[:card].present?
         post[:signature] = sign_body(post[:request])
         post
+      end
+
+      def get_network_payment_reference(response)
+        parameters = { request: { MerchantId: @options[:merchant_id], OrderId: response.params['response'][:OrderId] } }
+        body = post_data format_and_sign(parameters)
+
+        raw_response = ssl_request :post, url('query'), body, {}
+        response = parse(raw_response)
+        message = response.dig(:response, :Payment, :NetworkPaymentReference)
+        Response.new(true, message, {})
       end
 
       def commit(action, parameters)
