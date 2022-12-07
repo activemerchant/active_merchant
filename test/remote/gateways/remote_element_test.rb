@@ -50,6 +50,12 @@ class RemoteElementTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_billing_email
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(email: 'test@example.com'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_card_present_code
     response = @gateway.purchase(@amount, @credit_card, @options.merge(card_present_code: 'Present'))
     assert_success response

@@ -248,6 +248,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, options)
         if address = options[:billing_address] || options[:address]
+          address[:email] ||= options[:email]
           xml.address do
             xml.BillingAddress1 address[:address1] if address[:address1]
             xml.BillingAddress2 address[:address2] if address[:address2]
