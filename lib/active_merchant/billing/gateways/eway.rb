@@ -61,6 +61,9 @@ module ActiveMerchant #:nodoc:
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((<ewayCardNumber>)\d+(</ewayCardNumber>))i, '\1[FILTERED]\2').
           gsub(%r((<CCNumber>)\d+(</CCNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<eWAYCustomerID>)\w+(</eWAYCustomerID>))i, '\1[FILTERED]\2').
+          gsub(%r((<Username>).+(</Username>))i, '\1[FILTERED]\2').
+          gsub(%r((<Password>).+(</Password>))i, '\1[FILTERED]\2').
           gsub(%r((<ewayCVN>)\d+(</ewayCVN>))i, '\1[FILTERED]\2')
       end
 
