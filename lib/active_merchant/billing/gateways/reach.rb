@@ -168,7 +168,7 @@ module ActiveMerchant #:nodoc:
             'cardholder' => {
               'installment' => 'CIT-Setup-Scheduled',
               'unschedule' => 'CIT-Setup-Unscheduled-MIT',
-              'recurring' => 'CIT-Setup-Unschedule'
+              'recurring' => 'CIT-Setup-Unscheduled'
             }
           },
           no_initial_transaction: {
