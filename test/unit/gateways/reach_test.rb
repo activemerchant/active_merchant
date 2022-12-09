@@ -185,6 +185,14 @@ class ReachTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_raises_exceptio_when_card_brand_is_not_allowed
+    error = assert_raises(ArgumentError) do
+      @credit_card.brand = 'alelo'
+      @gateway.authorize(@amount, @credit_card, @options)
+    end
+    assert_equal 'Payment method alelo is not supported, check https://docs.withreach.com/docs/credit-cards#technical-considerations', error.message
+  end
+
   private
 
   def successful_purchase_response
