@@ -134,7 +134,7 @@ class ReachTest < Test::Unit::TestCase
       [
         { { initial_transaction: true, initiator: 'cardholder', reason_type: 'installment' } => 'CIT-Setup-Scheduled' },
         { { initial_transaction: true, initiator: 'cardholder', reason_type: 'unschedule' } => 'CIT-Setup-Unscheduled-MIT' },
-        { { initial_transaction: true, initiator: 'cardholder', reason_type: 'recurring' } => 'CIT-Setup-Unschedule' },
+        { { initial_transaction: true, initiator: 'cardholder', reason_type: 'recurring' } => 'CIT-Setup-Unscheduled' },
         { { initial_transaction: false, initiator: 'cardholder', reason_type: 'unschedule' } => 'CIT-Subsequent-Unscheduled' },
         { { initial_transaction: false, initiator: 'merchant', reason_type: 'recurring' } => 'MIT-Subsequent-Scheduled' },
         { { initial_transaction: false, initiator: 'merchant', reason_type: 'unschedule' } => 'MIT-Subsequent-Unscheduled' }
