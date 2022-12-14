@@ -17,6 +17,11 @@ module ActiveMerchant #:nodoc:
       SERVICE_TEST_URL = 'https://certservices.elementexpress.com/express.asmx'
       SERVICE_LIVE_URL = 'https://services.elementexpress.com/express.asmx'
 
+      NETWORK_TOKEN_TYPE = {
+        apple_pay: '2',
+        google_pay: '1'
+      }
+
       def initialize(options = {})
         requires!(options, :account_id, :account_token, :application_id, :acceptor_id, :application_name, :application_version)
         super
@@ -171,6 +176,8 @@ module ActiveMerchant #:nodoc:
           add_payment_account_id(xml, payment)
         elsif payment.is_a?(Check)
           add_echeck(xml, payment)
+        elsif payment.is_a?(NetworkTokenizationCreditCard)
+          add_network_tokenization_card(xml, payment)
         else
           add_credit_card(xml, payment)
         end
@@ -200,7 +207,7 @@ module ActiveMerchant #:nodoc:
           xml.TransactionID options[:trans_id] if options[:trans_id]
           xml.TransactionAmount amount(money.to_i) if money
           xml.MarketCode market_code(money, options) if options[:market_code] || money
-          xml.ReferenceNumber options[:order_id] || SecureRandom.hex(20)
+          xml.ReferenceNumber options[:order_id].present? ? options[:order_id][0, 50] : SecureRandom.hex(20)
           xml.TicketNumber options[:ticket_number] if options[:ticket_number]
           xml.MerchantSuppliedTransactionId options[:merchant_supplied_transaction_id] if options[:merchant_supplied_transaction_id]
           xml.PaymentType options[:payment_type] if options[:payment_type]
@@ -243,6 +250,18 @@ module ActiveMerchant #:nodoc:
           xml.AccountNumber payment.account_number
           xml.RoutingNumber payment.routing_number
           xml.DDAAccountType payment.account_type.capitalize
+        end
+      end
+
+      def add_network_tokenization_card(xml, payment)
+        xml.card do
+          xml.CardNumber payment.number
+          xml.ExpirationMonth format(payment.month, :two_digits)
+          xml.ExpirationYear format(payment.year, :two_digits)
+          xml.CardholderName "#{payment.first_name} #{payment.last_name}"
+          xml.Cryptogram payment.payment_cryptogram
+          xml.ElectronicCommerceIndicator payment.eci if payment.eci.present?
+          xml.WalletType NETWORK_TOKEN_TYPE.fetch(payment.source, '0')
         end
       end
 
