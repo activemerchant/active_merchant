@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
         },
         'maestro_no_luhn'    => ->(num) { num =~ /^(501080|501081|501082)\d{6,13}$/ },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
-        'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{10}$/ },
+        'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818|505864|505865)\d{10}$/ },
         'alia'               => ->(num) { num =~ /^(504997|505878|601030|601073|505874)\d{10}$/ },
         'vr'                 => ->(num) { num =~ /^(627416|637036)\d{10}$/ },
         'unionpay'           => ->(num) { (16..19).cover?(num&.size) && in_bin_range?(num.slice(0, 8), UNIONPAY_RANGES) },
@@ -41,8 +41,14 @@ module ActiveMerchant #:nodoc:
         'synchrony' => ->(num) { num =~ /^700600\d{10}$/ },
         'routex' => ->(num) { num =~ /^(700676|700678)\d{13}$/ },
         'mada' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MADA_RANGES) },
-        'bp_plus' => ->(num) { num =~ /^(7050\d\s\d{9}\s\d{3}$|705\d\s\d{8}\s\d{5}$)/ }
+        'bp_plus' => ->(num) { num =~ /^(7050\d\s\d{9}\s\d{3}$|705\d\s\d{8}\s\d{5}$)/ },
+        'passcard' => ->(num) { num =~ /^628026\d{10}$/ },
+        'edenred' => ->(num) { num =~ /^637483\d{10}$/ },
+        'anda' => ->(num) { num =~ /^603199\d{10}$/ },
+        'tarjeta-d' => ->(num) { num =~ /^601828\d{10}$/ }
       }
+
+      SODEXO_NO_LUHN = ->(num) { num =~ /^(505864|505865)\d{10}$/ }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
       ELECTRON_RANGES = [
@@ -388,16 +394,22 @@ module ActiveMerchant #:nodoc:
             %w[1 2 3 success failure error].include?(number)
         end
 
+        def sodexo_no_luhn?(numbers)
+          SODEXO_NO_LUHN.call(numbers)
+        end
+
         def valid_by_algorithm?(brand, numbers) #:nodoc:
           case brand
           when 'naranja'
             valid_naranja_algo?(numbers)
           when 'creditel'
             valid_creditel_algo?(numbers)
-          when 'alia', 'confiable', 'maestro_no_luhn'
+          when 'alia', 'confiable', 'maestro_no_luhn', 'anda', 'tarjeta-d'
             true
-          when 'bp_plus'
-            valid_bp_plus_algo?(numbers)
+          when 'sodexo'
+            sodexo_no_luhn?(numbers) ? true : valid_luhn?(numbers)
+          when 'bp_plus', 'passcard', 'edenred'
+            valid_luhn_non_zero_check_digit?(numbers)
           else
             valid_luhn?(numbers)
           end
@@ -463,7 +475,7 @@ module ActiveMerchant #:nodoc:
           (10 - (sum % 10)) % 10 == check_digit.to_i
         end
 
-        def valid_bp_plus_algo?(numbers)
+        def valid_luhn_non_zero_check_digit?(numbers)
           return valid_luhn?(numbers.delete(' ')) if numbers[5] == ' '
 
           check_digit = numbers[-1]

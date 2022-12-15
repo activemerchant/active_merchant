@@ -158,4 +158,109 @@ class RemotePlexoTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@gateway.options[:api_key], transcript)
   end
+
+  def test_successful_purchase_passcard
+    credit_card = credit_card('6280260025383009', month: '12', year: '2024',
+      verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
+
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_edenred
+    credit_card = credit_card('6374830000000823', month: '12', year: '2024',
+      verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
+
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_anda
+    credit_card = credit_card('6031991248204901', month: '12', year: '2024',
+      verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
+
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+  end
+
+  # This test is omitted until Plexo confirms that the transaction will indeed
+  # be declined as indicated in the documentation.
+  def test_successful_purchase_and_declined_refund_anda
+    omit
+    credit_card = credit_card('6031997614492616', month: '12', year: '2024',
+      verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
+
+    purchase = @gateway.purchase(@amount, credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, @cancel_options)
+    assert_failure refund
+    assert_equal 'An internal error occurred. Contact support.', refund.message
+  end
+
+  # This test is omitted until Plexo confirms that the transaction will indeed
+  # be declined as indicated in the documentation.
+  def test_successful_purchase_and_declined_cancellation_anda
+    omit
+    credit_card = credit_card('6031998427187914', month: '12', year: '2024',
+      verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
+
+    purchase = @gateway.purchase(@amount, credit_card, @options)
+    assert_success purchase
+
+    assert void = @gateway.void(purchase.authorization, @cancel_options)
+    assert_failure void
+  end
+
+  def test_successful_purchase_tarjetad
+    credit_card = credit_card('6018287227431046', month: '12', year: '2024',
+      verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
+
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+  end
+
+  def test_failure_purchase_tarjetad
+    credit_card = credit_card('6018282227431033', month: '12', year: '2024',
+      verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
+
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'denied', response.params['status']
+    assert_equal '10', response.error_code
+  end
+
+  def test_successful_purchase_sodexo
+    credit_card = credit_card('5058645584812145', month: '12', year: '2024',
+      verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
+
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+  end
+
+  # This test is omitted until Plexo confirms that the transaction will indeed
+  # be declined as indicated in the documentation.
+  def test_successful_purchase_and_declined_refund_sodexo
+    omit
+    credit_card = credit_card('5058647731868699', month: '12', year: '2024',
+      verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
+
+    purchase = @gateway.purchase(@amount, credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, @cancel_options)
+    assert_failure refund
+    assert_equal 'An internal error occurred. Contact support.', refund.message
+  end
+
+  def test_successful_purchase_and_declined_cancellation_sodexo
+    credit_card = credit_card('5058646599260130', month: '12', year: '2024',
+      verification_value: '111', first_name: 'Santiago', last_name: 'Navatta')
+
+    purchase = @gateway.purchase(@amount, credit_card, @options)
+    assert_success purchase
+
+    assert void = @gateway.void(purchase.authorization, @cancel_options)
+    assert_success void
+  end
 end
