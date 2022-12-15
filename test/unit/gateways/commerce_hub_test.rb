@@ -8,6 +8,29 @@ class CommerceHubTest < Test::Unit::TestCase
 
     @amount = 1204
     @credit_card = credit_card('4005550000000019', month: '02', year: '2035', verification_value: '123')
+    @google_pay = network_tokenization_credit_card('4005550000000019',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :google_pay,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      transaction_id: '13456789')
+    @apple_pay = network_tokenization_credit_card('4005550000000019',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :apple_pay,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      transaction_id: '13456789')
+    @no_supported_source = network_tokenization_credit_card('4005550000000019',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :no_source,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
     @declined_card = credit_card('4000300011112220', month: '02', year: '2035', verification_value: '123')
     @options = {}
   end
@@ -24,6 +47,57 @@ class CommerceHubTest < Test::Unit::TestCase
       assert_equal request['source']['card']['cardData'], @credit_card.number
       assert_equal request['source']['card']['securityCode'], @credit_card.verification_value
       assert_equal request['source']['card']['securityCodeIndicator'], 'PROVIDED'
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_google_pay
+    response = stub_comms do
+      @gateway.purchase(@amount, @google_pay, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['transactionDetails']['captureFlag'], true
+      assert_equal request['merchantDetails']['terminalId'], @gateway.options[:terminal_id]
+      assert_equal request['merchantDetails']['merchantId'], @gateway.options[:merchant_id]
+      assert_equal request['amount']['total'], (@amount / 100.0).to_f
+      assert_equal request['source']['card']['cardData'], @google_pay.number
+      assert_equal request['source']['cavv'], @google_pay.payment_cryptogram
+      assert_equal request['source']['walletType'], 'GOOGLE_PAY'
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_apple_pay
+    response = stub_comms do
+      @gateway.purchase(@amount, @apple_pay, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['transactionDetails']['captureFlag'], true
+      assert_equal request['merchantDetails']['terminalId'], @gateway.options[:terminal_id]
+      assert_equal request['merchantDetails']['merchantId'], @gateway.options[:merchant_id]
+      assert_equal request['amount']['total'], (@amount / 100.0).to_f
+      assert_equal request['source']['card']['cardData'], @apple_pay.number
+      assert_equal request['source']['cavv'], @apple_pay.payment_cryptogram
+      assert_equal request['source']['walletType'], 'APPLE_PAY'
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_no_supported_source_as_apple_pay
+    response = stub_comms do
+      @gateway.purchase(@amount, @no_supported_source, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['transactionDetails']['captureFlag'], true
+      assert_equal request['merchantDetails']['terminalId'], @gateway.options[:terminal_id]
+      assert_equal request['merchantDetails']['merchantId'], @gateway.options[:merchant_id]
+      assert_equal request['amount']['total'], (@amount / 100.0).to_f
+      assert_equal request['source']['card']['cardData'], @apple_pay.number
+      assert_equal request['source']['cavv'], @apple_pay.payment_cryptogram
+      assert_equal request['source']['walletType'], 'APPLE_PAY'
     end.respond_with(successful_purchase_response)
 
     assert_success response
