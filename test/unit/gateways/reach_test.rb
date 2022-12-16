@@ -104,27 +104,27 @@ class ReachTest < Test::Unit::TestCase
   end
 
   def test_successfull_retrieve_error_message
-    response = { response: { Error: { ReasonCode: 'is an error' } } }
+    response = { 'response' => { 'Error' => { 'ReasonCode' => 'is an error' } } }
 
     message = @gateway.send(:message_from, response)
     assert_equal 'is an error', message
   end
 
   def test_safe_retrieve_error_message
-    response = { response: { Error: { Code: 'is an error' } } }
+    response = { 'response' => { 'Error' => { 'Code' => 'is an error' } } }
 
     message = @gateway.send(:message_from, response)
     assert_nil message
   end
 
   def test_sucess_from_on_sucess_result
-    response = { response: { OrderId: '' } }
+    response = { 'response' => { OrderId: '' } }
 
     assert @gateway.send(:success_from, response)
   end
 
   def test_sucess_from_on_failure
-    response = { response: { Error: 'is an error' } }
+    response = { 'response' => { 'Error' => 'is an error' } }
 
     refute @gateway.send(:success_from, response)
   end
