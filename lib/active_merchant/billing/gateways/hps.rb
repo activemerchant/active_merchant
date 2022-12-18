@@ -27,7 +27,9 @@ module ActiveMerchant #:nodoc:
           add_customer_data(xml, card_or_token, options)
           add_details(xml, options)
           add_descriptor_name(xml, options)
-          add_payment(xml, card_or_token, options)
+          add_card_or_token_payment(xml, card_or_token, options)
+          add_three_d_secure(xml, card_or_token, options)
+          add_stored_credentials(xml, options)
         end
       end
 
@@ -38,14 +40,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def purchase(money, card_or_token, options={})
-        commit('CreditSale') do |xml|
-          add_amount(xml, money)
-          add_allow_dup(xml)
-          add_customer_data(xml, card_or_token,options)
-          add_details(xml, options)
-          add_descriptor_name(xml, options)
-          add_payment(xml, card_or_token, options)
+      def purchase(money, payment_method, options = {})
+        if payment_method.is_a?(Check)
+          commit_check_sale(money, payment_method, options)
+        elsif options.dig(:stored_credential, :reason_type) == 'recurring'
+          commit_recurring_billing_sale(money, payment_method, options)
+        else
+          commit_credit_sale(money, payment_method, options)
         end
       end
 
@@ -59,7 +60,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def verify(card_or_token, options={})
+      def credit(money, payment_method, options = {})
+        commit('CreditReturn') do |xml|
+          add_amount(xml, money)
+          add_allow_dup(xml)
+          add_card_or_token_payment(xml, payment_method, options)
+          add_details(xml, options)
+        end
+      end
+
+      def verify(card_or_token, options = {})
         commit('CreditAccountVerify') do |xml|
           add_customer_data(xml, card_or_token, options)
           add_descriptor_name(xml, options)
@@ -74,6 +84,43 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def commit_check_sale(money, check, options)
+        commit('CheckSale') do |xml|
+          add_check_payment(xml, check, options)
+          add_amount(xml, money)
+          add_sec_code(xml, options)
+          add_check_customer_data(xml, check, options)
+          add_details(xml, options)
+        end
+      end
+
+      def commit_credit_sale(money, card_or_token, options)
+        commit('CreditSale') do |xml|
+          add_amount(xml, money)
+          add_allow_dup(xml)
+          add_card_or_token_customer_data(xml, card_or_token, options)
+          add_details(xml, options)
+          add_descriptor_name(xml, options)
+          add_card_or_token_payment(xml, card_or_token, options)
+          add_three_d_secure(xml, card_or_token, options)
+          add_stored_credentials(xml, options)
+        end
+      end
+
+      def commit_recurring_billing_sale(money, card_or_token, options)
+        commit('RecurringBilling') do |xml|
+          add_amount(xml, money)
+          add_allow_dup(xml)
+          add_card_or_token_customer_data(xml, card_or_token, options)
+          add_details(xml, options)
+          add_descriptor_name(xml, options)
+          add_card_or_token_payment(xml, card_or_token, options)
+          add_three_d_secure(xml, card_or_token, options)
+          add_stored_credentials(xml, options)
+          add_stored_credentials_for_recurring_billing(xml, options)
+        end
+      end
 
       def add_reference(xml, transaction_id)
         xml.hps :GatewayTxnId, transaction_id
@@ -97,7 +144,7 @@ module ActiveMerchant #:nodoc:
             xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
             xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
             xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
-            xml.hps :CardHolderZip, billing_address[:zip] if billing_address[:zip]
+            xml.hps :CardHolderZip, alphanumeric_zip(billing_address[:zip]) if billing_address[:zip]
           end
         end
       end
@@ -140,7 +187,7 @@ module ActiveMerchant #:nodoc:
       def add_details(xml, options)
         xml.hps :AdditionalTxnFields do
           xml.hps :Description, options[:description] if options[:description]
-          xml.hps :InvoiceNbr, options[:order_id] if options[:order_id]
+          xml.hps :InvoiceNbr, options[:order_id][0..59] if options[:order_id]
           xml.hps :CustomerID, options[:customer_id] if options[:customer_id]
         end
       end
@@ -151,6 +198,73 @@ module ActiveMerchant #:nodoc:
 
       def add_descriptor_name(xml, options)
         xml.hps :TxnDescriptor, options[:descriptor_name] if options[:descriptor_name]
+      end
+
+      def add_three_d_secure(xml, card_or_token, options)
+        if card_or_token.is_a?(NetworkTokenizationCreditCard)
+          build_three_d_secure(xml, {
+            source: card_or_token.source,
+            cavv: card_or_token.payment_cryptogram,
+            eci: card_or_token.eci,
+            xid: card_or_token.transaction_id
+          })
+        elsif options[:three_d_secure]
+          options[:three_d_secure][:source] ||= card_brand(card_or_token)
+          build_three_d_secure(xml, options[:three_d_secure])
+        end
+      end
+
+      def build_three_d_secure(xml, three_d_secure)
+        # PaymentDataSource is required when supplying the SecureECommerce data group,
+        # and the gateway currently only allows the values within the mapping
+        return unless PAYMENT_DATA_SOURCE_MAPPING[three_d_secure[:source].to_sym]
+
+        xml.hps :SecureECommerce do
+          xml.hps :PaymentDataSource, PAYMENT_DATA_SOURCE_MAPPING[three_d_secure[:source].to_sym]
+          xml.hps :TypeOfPaymentData, '3DSecure' # Only type currently supported
+          xml.hps :PaymentData, three_d_secure[:cavv] if three_d_secure[:cavv]
+          # the gateway only allows a single character for the ECI
+          xml.hps :ECommerceIndicator, strip_leading_zero(three_d_secure[:eci]) if three_d_secure[:eci]
+          xml.hps :XID, three_d_secure[:xid] if three_d_secure[:xid]
+        end
+      end
+
+      # We do not currently support installments on this gateway.
+      # The HPS gateway treats recurring transactions as a seperate transaction type
+      def add_stored_credentials(xml, options)
+        return unless options[:stored_credential]
+
+        xml.hps :CardOnFileData do
+          if options[:stored_credential][:initiator] == 'customer'
+            xml.hps :CardOnFile, 'C'
+          elsif options[:stored_credential][:initiator] == 'merchant'
+            xml.hps :CardOnFile, 'M'
+          else
+            return
+          end
+
+          if options[:stored_credential][:network_transaction_id]
+            xml.hps :CardBrandTxnId, options[:stored_credential][:network_transaction_id]
+          else
+            return
+          end
+        end
+      end
+
+      def add_stored_credentials_for_recurring_billing(xml, options)
+        xml.hps :RecurringData do
+          if options[:stored_credential][:reason_type] = 'recurring'
+            xml.hps :OneTime, 'N'
+          else
+            xml.hps :OneTime, 'Y'
+          end
+        end
+      end
+
+      def strip_leading_zero(value)
+        return value unless value[0] == '0'
+
+        value[1, 1]
       end
 
       def build_request(action)
@@ -264,6 +378,10 @@ module ActiveMerchant #:nodoc:
 
       def test?
         (@options[:secret_api_key] && @options[:secret_api_key].include?('_cert_'))
+      end
+
+      def alphanumeric_zip(zip)
+        zip.gsub(/[^0-9a-z]/i, '')
       end
 
       ISSUER_MESSAGES = {

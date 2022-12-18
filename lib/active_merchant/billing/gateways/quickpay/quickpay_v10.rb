@@ -103,8 +103,10 @@ module ActiveMerchant
           post
         end
 
-        def capture_params(money, credit_card, options = {})
-          post = {}
+        Response.new(success, message_from(success, response), response,
+          test: test?,
+          authorization: authorization_from(response))
+      end
 
           add_amount(post, money, options)
           add_additional_params(:capture, post, options)
@@ -148,11 +150,9 @@ module ActiveMerchant
             response = json_error(response)
           end
 
-          Response.new(success, message_from(success, response), response,
-            :test => test?,
-            :authorization => authorization_from(response, params[:id])
-          )
-        end
+      def format_order_id(order_id)
+        truncate(order_id.to_s.delete('#'), 20)
+      end
 
         def authorization_from(response, auth_id)
           if response["token"]

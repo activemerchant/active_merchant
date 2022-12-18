@@ -223,9 +223,8 @@ module ActiveMerchant #:nodoc:
         response = parse(raw)
 
         EwayResponse.new(response[:success], response[:message], response,
-          :test => test?,
-          :authorization => response[:auth_code]
-        )
+          test: test?,
+          authorization: response[:auth_code])
       end
 
       # Where we build the full SOAP 1.2 request using builder
@@ -242,21 +241,20 @@ module ActiveMerchant #:nodoc:
                   default_customer_fields.merge(arguments)
                end
 
-        xml = Builder::XmlMarkup.new :indent => 2
-          xml.instruct!
-          xml.tag! 'soap12:Envelope', {'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema', 'xmlns:soap12' => 'http://www.w3.org/2003/05/soap-envelope'} do
-            xml.tag! 'soap12:Header' do
-              xml.tag! 'eWAYHeader', {'xmlns' => 'https://www.eway.com.au/gateway/managedpayment'} do
-                xml.tag! 'eWAYCustomerID', @options[:login]
-                xml.tag! 'Username', @options[:username]
-                xml.tag! 'Password', @options[:password]
-              end
+        xml = Builder::XmlMarkup.new indent: 2
+        xml.instruct!
+        xml.tag! 'soap12:Envelope', { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema', 'xmlns:soap12' => 'http://www.w3.org/2003/05/soap-envelope' } do
+          xml.tag! 'soap12:Header' do
+            xml.tag! 'eWAYHeader', { 'xmlns' => 'https://www.eway.com.au/gateway/managedpayment' } do
+              xml.tag! 'eWAYCustomerID', @options[:login]
+              xml.tag! 'Username', @options[:username]
+              xml.tag! 'Password', @options[:password]
             end
-            xml.tag! 'soap12:Body' do |x|
-              x.tag! "#{action}", {'xmlns' => 'https://www.eway.com.au/gateway/managedpayment'} do |y|
-                post.each do |key, value|
-                  y.tag! "#{key}", "#{value}"
-                end
+          end
+          xml.tag! 'soap12:Body' do |x|
+            x.tag! action, { 'xmlns' => 'https://www.eway.com.au/gateway/managedpayment' } do |y|
+              post.each do |key, value|
+                y.tag! key, value
               end
             end
           end

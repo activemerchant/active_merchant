@@ -83,8 +83,9 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_rebill(post, options) if options[:rebill]
         add_duplicate_override(post, options)
-        post[:TRANS_TYPE]  = 'AUTH'
-        commit('AUTH_ONLY', money, post)
+        add_stored_credential(post, options)
+        post[:TRANS_TYPE] = 'AUTH'
+        commit('AUTH_ONLY', money, post, options)
       end
 
       # Perform a purchase, which is essentially an authorization and capture in a single operation.
@@ -106,8 +107,9 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_rebill(post, options) if options[:rebill]
         add_duplicate_override(post, options)
-        post[:TRANS_TYPE]  = 'SALE'
-        commit('AUTH_CAPTURE', money, post)
+        add_stored_credential(post, options)
+        post[:TRANS_TYPE] = 'SALE'
+        commit('AUTH_CAPTURE', money, post, options)
       end
 
       # Captures the funds from an authorize transaction.
@@ -361,11 +363,10 @@ module ActiveMerchant #:nodoc:
         message = message_from(parsed)
         success = parsed[:response_code] == '1'
         Response.new(success, message, parsed,
-          :test          => test?,
-          :authorization => (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
-          :avs_result    => { :code => parsed[:avs_result_code] },
-          :cvv_result    => parsed[:card_code]
-        )
+          test: test?,
+          authorization: (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
+          avs_result: { code: parsed[:avs_result_code] },
+          cvv_result: parsed[:card_code])
       end
 
       def message_from(parsed)
@@ -458,6 +459,33 @@ module ActiveMerchant #:nodoc:
         post[:REB_FIRST_DATE]  = options[:rebill_start_date]
         post[:REB_EXPR]        = options[:rebill_expression]
         post[:REB_CYCLES]      = options[:rebill_cycles]
+      end
+
+      def add_stored_credential(post, options)
+        post[:cof] = initiator(options)
+        post[:cofscheduled] = scheduled(options)
+      end
+
+      def initiator(options)
+        return unless initiator = options.dig(:stored_credential, :initiator)
+
+        case initiator
+        when 'merchant'
+          'M'
+        when 'cardholder'
+          'C'
+        end
+      end
+
+      def scheduled(options)
+        return unless reason_type = options.dig(:stored_credential, :reason_type)
+
+        case reason_type
+        when 'recurring', 'installment'
+          'Y'
+        when 'unscheduled'
+          'N'
+        end
       end
 
       def post_data(action, parameters = {})

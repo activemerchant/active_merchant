@@ -35,7 +35,7 @@ class EwayManagedTest < Test::Unit::TestCase
 
   def test_should_require_billing_address_on_store
     assert_raise ArgumentError do
-      @gateway.store(@credit_card, { })
+      @gateway.store(@credit_card, {})
     end
     assert_raise ArgumentError do
       @gateway.store(@credit_card, { :billing_address => {} })
@@ -54,7 +54,7 @@ class EwayManagedTest < Test::Unit::TestCase
 
   def test_should_require_billing_address_on_update
     assert_raise ArgumentError do
-      @gateway.update(@valid_customer_id, @credit_card, { })
+      @gateway.update(@valid_customer_id, @credit_card, {})
     end
     assert_raise ArgumentError do
       @gateway.update(@valid_customer_id, @credit_card, { :billing_address => {} })

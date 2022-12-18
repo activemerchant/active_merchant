@@ -29,6 +29,17 @@ class RemotePayConexTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:api_accesskey], transcript)
  end
 
+  def test_transcript_scrubbing_with_check
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@check.routing_number, transcript)
+    assert_scrubbed(@gateway.options[:api_accesskey], transcript)
+  end
+
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response

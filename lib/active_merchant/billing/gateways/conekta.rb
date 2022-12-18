@@ -175,14 +175,20 @@ module ActiveMerchant #:nodoc:
 
       def headers(meta)
         {
-          "Accept" => "application/vnd.conekta-v#{options[:version]}+json",
-          "Accept-Language" => "es",
-          "Authorization" => "Basic " + Base64.encode64("#{options[:key]}:"),
-          "RaiseHtmlError" => "false",
-          "Conekta-Client-User-Agent" => {"agent"=>"Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}"}.to_json,
-          "X-Conekta-Client-User-Agent" => user_agent,
-          "X-Conekta-Client-User-Metadata" => meta.to_json
+          'Accept' => "application/vnd.conekta-v#{@options[:version]}+json",
+          'Accept-Language' => 'es',
+          'Authorization' => 'Basic ' + Base64.encode64("#{@options[:key]}:"),
+          'RaiseHtmlError' => 'false',
+          'Conekta-Client-User-Agent' => { 'agent' => "Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}" }.to_json,
+          'X-Conekta-Client-User-Agent' => conekta_client_user_agent(options),
+          'X-Conekta-Client-User-Metadata' => options[:meta].to_json
         }
+      end
+
+      def conekta_client_user_agent(options)
+        return user_agent unless options[:application]
+
+        JSON.dump(JSON.parse(user_agent).merge!({ application: options[:application] }))
       end
 
       def commit(method, url, parameters, options = {})

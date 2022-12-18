@@ -117,12 +117,11 @@ module ActiveMerchant #:nodoc:
         message = message_from(response)
         test_mode = (test? || message =~ /TESTMODE/)
         Response.new(success?(response), message, response,
-          :test => test_mode,
-          :authorization => response['transactionid'],
-          :fraud_review => fraud_review?(response),
-          :avs_result => { :code => response['avsresponse'] },
-          :cvv_result => response['cvvresponse']
-        )
+          test: test_mode,
+          authorization: response['transactionid'],
+          fraud_review: fraud_review?(response),
+          avs_result: { code: response['avsresponse'] },
+          cvv_result: response['cvvresponse'])
       end
 
       def message_from(response)

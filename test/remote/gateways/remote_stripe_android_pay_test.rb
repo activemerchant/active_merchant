@@ -19,8 +19,7 @@ class RemoteStripeAndroidPayTest < Test::Unit::TestCase
       payment_cryptogram: "EHuWW9PiBkWvqE5juRwDzAUFBAk=",
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal "charge", response.params["object"]
@@ -35,8 +34,7 @@ class RemoteStripeAndroidPayTest < Test::Unit::TestCase
       payment_cryptogram: "EHuWW9PiBkWvqE5juRwDzAUFBAk=",
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal "charge", response.params["object"]

@@ -113,7 +113,7 @@ class RemoteMigsTest < Test::Unit::TestCase
 
   def https_response(url, cookie = nil)
     retry_exceptions do
-      headers = cookie ? {'Cookie' => cookie} : {}
+      headers = cookie ? { 'Cookie' => cookie } : {}
       response = raw_ssl_request(:get, url, nil, headers)
       if response.is_a?(Net::HTTPRedirection)
         new_cookie = [cookie, response['Set-Cookie']].compact.join(';')

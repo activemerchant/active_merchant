@@ -132,12 +132,11 @@ module ActiveMerchant #:nodoc:
         message = (response[:status_message] || '').strip
 
         Response.new(success?(response), message, response,
-          :test          => test?,
-          :authorization => response[:credit_card_trans_id],
-          :fraud_review  => fraud_review?(response),
-          :avs_result    => { :code => avs_result(response) },
-          :cvv_result    => cvv_result(response)
-        )
+          test: test?,
+          authorization: response[:credit_card_trans_id],
+          fraud_review: fraud_review?(response),
+          avs_result: { code: avs_result(response) },
+          cvv_result: cvv_result(response))
       end
 
       def success?(response)

@@ -30,8 +30,8 @@ class RemoteAxcessmsTest < Test::Unit::TestCase
     assert_success auth, "Authorize failed"
     assert_match %r{Successful Processing - Request successfully processed}, auth.message
 
-    assert capture = @gateway.capture(@amount, auth.authorization, {mode: @mode})
-    assert_success capture, "Capture failed"
+    assert capture = @gateway.capture(@amount, auth.authorization, { mode: @mode })
+    assert_success capture, 'Capture failed'
     assert_match %r{Successful Processing - Request successfully processed}, capture.message
   end
 
@@ -40,8 +40,8 @@ class RemoteAxcessmsTest < Test::Unit::TestCase
     assert_success auth, "Authorize failed"
     assert_match %r{Successful Processing - Request successfully processed}, auth.message
 
-    assert capture = @gateway.capture(@amount-30, auth.authorization, {mode: @mode})
-    assert_success capture, "Capture failed"
+    assert capture = @gateway.capture(@amount - 30, auth.authorization, { mode: @mode })
+    assert_success capture, 'Capture failed'
     assert_match %r{Successful Processing - Request successfully processed}, capture.message
   end
 
@@ -50,8 +50,8 @@ class RemoteAxcessmsTest < Test::Unit::TestCase
     assert_success auth, "Authorize failed"
     assert_match %r{Successful Processing - Request successfully processed}, auth.message
 
-    assert void = @gateway.void(auth.authorization, {mode: @mode})
-    assert_success void, "Void failed"
+    assert void = @gateway.void(auth.authorization, { mode: @mode })
+    assert_success void, 'Void failed'
     assert_match %r{Successful Processing - Request successfully processed}, void.message
   end
 
@@ -82,8 +82,8 @@ class RemoteAxcessmsTest < Test::Unit::TestCase
     assert_success purchase, "Purchase failed"
     assert_match %r{Successful Processing - Request successfully processed}, purchase.message
 
-    assert refund = @gateway.refund(@amount, purchase.authorization, {mode: @mode})
-    assert_success refund, "Refund failed"
+    assert refund = @gateway.refund(@amount, purchase.authorization, { mode: @mode })
+    assert_success refund, 'Refund failed'
     assert_match %r{Successful Processing - Request successfully processed}, refund.message
   end
 
@@ -92,8 +92,8 @@ class RemoteAxcessmsTest < Test::Unit::TestCase
     assert_success purchase, "Purchase failed"
     assert_match %r{Successful Processing - Request successfully processed}, purchase.message
 
-    assert refund = @gateway.refund(@amount-50, purchase.authorization, {mode: @mode})
-    assert_success refund, "Refund failed"
+    assert refund = @gateway.refund(@amount - 50, purchase.authorization, { mode: @mode })
+    assert_success refund, 'Refund failed'
     assert_match %r{Successful Processing - Request successfully processed}, refund.message
   end
 
@@ -115,8 +115,8 @@ class RemoteAxcessmsTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth, "Authorize failed"
 
-    assert capture = @gateway.capture(@amount+30, auth.authorization, {mode: @mode})
-    assert_failure capture, "Capture failed"
+    assert capture = @gateway.capture(@amount + 30, auth.authorization, { mode: @mode })
+    assert_failure capture, 'Capture failed'
     assert_match %r{PA value exceeded}, capture.message
   end
 
@@ -127,13 +127,13 @@ class RemoteAxcessmsTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    assert refund = @gateway.refund(@amount, "invalid authorization", {mode: @mode})
+    assert refund = @gateway.refund(@amount, 'invalid authorization', { mode: @mode })
     assert_failure refund
     assert_match %r{Configuration Validation - Invalid payment data}, refund.message
   end
 
   def test_failed_void
-    void = @gateway.void("invalid authorization", {mode: @mode})
+    void = @gateway.void('invalid authorization', { mode: @mode })
     assert_failure void
     assert_match %r{Reference Error - reversal}, void.message
   end

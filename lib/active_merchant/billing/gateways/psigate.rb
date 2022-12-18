@@ -92,11 +92,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, post_data(money, creditcard, options)))
 
         Response.new(successful?(response), message_from(response), response,
-          :test => test?,
-          :authorization => build_authorization(response) ,
-          :avs_result => { :code => response[:avsresult] },
-          :cvv_result => response[:cardidresult]
-        )
+          test: test?,
+          authorization: build_authorization(response),
+          avs_result: { code: response[:avsresult] },
+          cvv_result: response[:cardidresult])
       end
 
       def url
@@ -108,7 +107,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(xml)
-        response = {:message => "Global Error Receipt", :complete => false}
+        response = { message: 'Global Error Receipt', complete: false }
 
         xml = REXML::Document.new(xml)
         xml.elements.each('//Result/*') do |node|

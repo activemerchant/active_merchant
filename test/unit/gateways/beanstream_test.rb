@@ -52,8 +52,9 @@ class BeanstreamTest < Test::Unit::TestCase
     }
 
     @recurring_options = @options.merge(
-      :interval => { :unit => :months, :length => 1 },
-      :occurrences => 5)
+      interval: { unit: :months, length: 1 },
+      occurrences: 5
+    )
   end
 
   def test_successful_purchase
@@ -232,6 +233,51 @@ class BeanstreamTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_defaults_state_and_zip_with_country
+    address = { country: 'AF' }
+    @options[:billing_address] = address
+    @options[:shipping_address] = address
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @decrypted_credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/ordProvince=--/, data)
+      assert_match(/ordPostalCode=000000/, data)
+      assert_match(/shipProvince=--/, data)
+      assert_match(/shipPostalCode=000000/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_no_state_and_zip_default_with_missing_country
+    address = {}
+    @options[:billing_address] = address
+    @options[:shipping_address] = address
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @decrypted_credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_no_match(/ordProvince=--/, data)
+      assert_no_match(/ordPostalCode=000000/, data)
+      assert_no_match(/shipProvince=--/, data)
+      assert_no_match(/shipPostalCode=000000/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_sends_email_without_addresses
+    @options[:billing_address] = nil
+    @options[:shipping_address] = nil
+    @options[:shipping_email] = 'ship@mail.com'
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @decrypted_credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/ordEmailAddress=xiaobozzz%40example.com/, data)
+      assert_match(/shipEmailAddress=ship%40mail.com/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
 
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)

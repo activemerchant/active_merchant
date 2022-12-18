@@ -205,6 +205,20 @@ class PayJunctionV2Test < Test::Unit::TestCase
     assert_match %r{Card Number is not a valid card number}, response.message
   end
 
+  def test_add_address
+    post = { card: { billingAddress: {} } }
+    @gateway.send(:add_address, post, @options)
+    assert_equal @options[:billing_address][:first_name], post[:billingFirstName]
+    assert_equal @options[:billing_address][:last_name], post[:billingLastName]
+    assert_equal @options[:billing_address][:company], post[:billingCompanyName]
+    assert_equal @options[:billing_address][:phone_number], post[:billingPhone]
+    assert_equal @options[:billing_address][:address1], post[:billingAddress]
+    assert_equal @options[:billing_address][:city], post[:billingCity]
+    assert_equal @options[:billing_address][:state], post[:billingState]
+    assert_equal @options[:billing_address][:country], post[:billingCountry]
+    assert_equal @options[:billing_address][:zip], post[:billingZip]
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed

@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
 
       # MiGS works by merchants being either purchase only or authorize/capture
       # So authorize is the same as purchase when in authorize mode
-      alias_method :authorize, :purchase
+      alias authorize purchase
 
       # ==== Options
       #
@@ -258,12 +258,11 @@ module ActiveMerchant #:nodoc:
         cvv_result_code = 'P' if cvv_result_code == "Unsupported"
 
         Response.new(success?(response), response[:Message], response,
-          :test => test?,
-          :authorization => response[:TransactionNo],
-          :fraud_review => fraud_review?(response),
-          :avs_result => { :code => avs_response_code },
-          :cvv_result => cvv_result_code
-        )
+          test: test?,
+          authorization: response[:TransactionNo],
+          fraud_review: fraud_review?(response),
+          avs_result: { code: avs_response_code },
+          cvv_result: cvv_result_code)
       end
 
       def success?(response)

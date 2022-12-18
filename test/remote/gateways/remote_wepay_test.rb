@@ -81,6 +81,33 @@ class RemoteWepayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_store_via_transfer_without_cvv
+    # special permission required
+    # POST /credit_card/transfer
+    response = @gateway.store(@credit_card_without_cvv, @options.merge(recurring: true))
+    assert_success response
+  end
+
+  def test_unsuccessful_store_via_create_with_cvv
+    response = @gateway.store(@credit_card_without_cvv, @options)
+
+    assert_failure response
+    assert_equal('This app does not have permissions to create credit cards without a cvv', response.message)
+  end
+
+  # # Requires commenting out `unless options[:recurring]` when building post hash in `store` method.
+  # def test_unsuccessful_store_via_transfer_with_cvv
+  #   response = @gateway.store(@credit_card, @options.merge(recurring: true))
+  #
+  #   assert_failure response
+  #   assert_equal('cvv parameter is unexpected', response.message)
+  # end
+
+  def test_successful_store_with_defaulted_email
+    response = @gateway.store(@credit_card, { billing_address: address })
+    assert_success response
+  end
+
   def test_failed_store
     response = @gateway.store(@declined_card, @options)
     assert_failure response

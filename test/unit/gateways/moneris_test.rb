@@ -13,7 +13,12 @@ class MonerisTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
-    @options = { :order_id => '1', :customer => '1', :billing_address => address}
+
+    # https://developer.moneris.com/livedemo/3ds2/reference/guide/php
+    @fully_authenticated_eci = 5
+    @no_liability_shift_eci = 7
+
+    @options = { order_id: '1', customer: '1', billing_address: address }
   end
 
   def test_default_options
@@ -30,12 +35,102 @@ class MonerisTest < Test::Unit::TestCase
     assert_equal '58-0_3;1026.1', response.authorization
   end
 
+  def test_successful_mpi_cavv_purchase
+    @gateway.expects(:ssl_post).returns(successful_cavv_purchase_response)
+
+    assert response = @gateway.purchase(100, @credit_card,
+      @options.merge(
+        three_d_secure: {
+          version: '2',
+          cavv: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+          eci: @fully_authenticated_eci,
+          three_ds_server_trans_id: 'd0f461f8-960f-40c9-a323-4e43a4e16aaa',
+          ds_transaction_id: '12345'
+        }
+      ))
+    assert_success response
+    assert_equal '69785-0_98;a131684dbecc1d89d9927c539ed3791b', response.authorization
+  end
+
+  def test_failed_mpi_cavv_purchase
+    @gateway.expects(:ssl_post).returns(failed_cavv_purchase_response)
+
+    assert response = @gateway.purchase(100, @credit_card,
+      @options.merge(
+        three_d_secure: {
+          version: '2',
+          cavv: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+          eci: @fully_authenticated_eci,
+          three_ds_server_trans_id: 'd0f461f8-960f-40c9-a323-4e43a4e16aaa',
+          ds_transaction_id: '12345'
+        }
+      ))
+    assert_failure response
+    assert_equal '69785-0_98;a131684dbecc1d89d9927c539ed3791b', response.authorization
+  end
+
+  def test_successful_first_purchase_with_credential_on_file
+    gateway = MonerisGateway.new(
+      login: 'store3',
+      password: 'yesguy'
+    )
+    gateway.expects(:ssl_post).returns(successful_first_cof_purchase_response)
+    assert response = gateway.purchase(
+      @amount,
+      @credit_card,
+      @options.merge(
+        issuer_id: '',
+        payment_indicator: 'C',
+        payment_information: '0'
+      )
+    )
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+    assert_not_empty response.params['issuer_id']
+  end
+
+  def test_successful_subsequent_purchase_with_credential_on_file
+    gateway = MonerisGateway.new(
+      login: 'store3',
+      password: 'yesguy'
+    )
+    gateway.expects(:ssl_post).returns(successful_first_cof_authorize_response)
+    assert response = gateway.authorize(
+      @amount,
+      @credit_card,
+      @options.merge(
+        issuer_id: '',
+        payment_indicator: 'C',
+        payment_information: '0'
+      )
+    )
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+
+    gateway.expects(:ssl_post).returns(successful_subsequent_cof_purchase_response)
+
+    assert response2 = gateway.purchase(
+      @amount,
+      @credit_card,
+      @options.merge(
+        order_id: response.authorization,
+        issuer_id: response.params['issuer_id'],
+        payment_indicator: 'U',
+        payment_information: '2'
+      )
+    )
+    assert_success response2
+    assert_equal 'Approved', response2.message
+    assert_false response2.authorization.blank?
+  end
+
   def test_successful_purchase_with_network_tokenization
     @gateway.expects(:ssl_post).returns(successful_purchase_network_tokenization)
     @credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: "BwABB4JRdgAAAAAAiFF2AAAAAAA=",
-      verification_value: nil
-    )
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      verification_value: nil)
     assert response = @gateway.purchase(100, @credit_card, @options)
     assert_success response
     assert_equal '101965-0_10;0bbb277b543a17b6781243889a689573', response.authorization
@@ -164,7 +259,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_purchase_with_vault
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     test_successful_store
-    assert response = @gateway.purchase(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
+    assert response = @gateway.purchase(100, @data_key, { order_id: generate_unique_id, customer: generate_unique_id })
     assert_success response
     assert_equal "Approved", response.message
     assert response.authorization.present?
@@ -173,9 +268,8 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_authorize_with_network_tokenization
     @gateway.expects(:ssl_post).returns(successful_authorization_network_tokenization)
     @credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: "BwABB4JRdgAAAAAAiFF2AAAAAAA=",
-      verification_value: nil
-    )
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      verification_value: nil)
     assert response = @gateway.authorize(100, @credit_card, @options)
     assert_success response
     assert_equal '109232-0_10;d88d9f5f3472898832c54d6b5572757e', response.authorization
@@ -184,7 +278,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_authorization_with_vault
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     test_successful_store
-    assert response = @gateway.authorize(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
+    assert response = @gateway.authorize(100, @data_key, { order_id: generate_unique_id, customer: generate_unique_id })
     assert_success response
     assert_equal "Approved", response.message
     assert response.authorization.present?
@@ -357,6 +451,152 @@ class MonerisTest < Test::Unit::TestCase
   </receipt>
 </response>
 
+    RESPONSE
+  end
+
+  def successful_cavv_purchase_response
+    <<~RESPONSE
+      <?xml version="1.0" standalone="yes"?>
+      <response>
+        <receipt>
+          <ReceiptId>a131684dbecc1d89d9927c539ed3791b</ReceiptId>
+          <ReferenceNum>660148420010137130</ReferenceNum>
+          <ResponseCode>027</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>655371</AuthCode>
+          <TransTime>18:26:32</TransTime>
+          <TransDate>2022-03-25</TransDate>
+          <TransType>00</TransType>
+          <Complete>true</Complete>
+          <Message>APPROVED * =</Message>
+          <TransAmount>1.00</TransAmount>
+          <CardType>V</CardType>
+          <TransID>69785-0_98</TransID>
+          <TimedOut>false</TimedOut>
+          <BankTotals>null</BankTotals>
+          <Ticket>null</Ticket>
+          <CorporateCard>false</CorporateCard>
+          <CavvResultCode>2</CavvResultCode>
+          <IsVisaDebit>false</IsVisaDebit>
+        </receipt>
+      </response>
+
+    RESPONSE
+  end
+
+  def failed_cavv_purchase_response
+    # this response is exactly the same as successful_cavv_purchase_response MINUS the CavvResultCode
+    <<~RESPONSE
+      <?xml version="1.0" standalone="yes"?>
+      <response>
+        <receipt>
+          <ReceiptId>a131684dbecc1d89d9927c539ed3791b</ReceiptId>
+          <ReferenceNum>660148420010137130</ReferenceNum>
+          <ResponseCode>027</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>655371</AuthCode>
+          <TransTime>18:26:32</TransTime>
+          <TransDate>2022-03-25</TransDate>
+          <TransType>00</TransType>
+          <Complete>true</Complete>
+          <Message>APPROVED * =</Message>
+          <TransAmount>1.00</TransAmount>
+          <CardType>V</CardType>
+          <TransID>69785-0_98</TransID>
+          <TimedOut>false</TimedOut>
+          <BankTotals>null</BankTotals>
+          <Ticket>null</Ticket>
+          <CorporateCard>false</CorporateCard>
+          <IsVisaDebit>false</IsVisaDebit>
+        </receipt>
+      </response>
+
+    RESPONSE
+  end
+
+  def successful_first_cof_purchase_response
+    <<~RESPONSE
+      <?xml version=\"1.0\" standalone=\"yes\"?>
+      <?xml version=“1.0” standalone=“yes”?>
+      <response>
+       <receipt>
+         <ReceiptId>a33ba7edd448b91ef8d2f85fea614b8d</ReceiptId>
+         <ReferenceNum>660114080015099160</ReferenceNum>
+         <ResponseCode>027</ResponseCode>
+         <ISO>01</ISO>
+         <AuthCode>822665</AuthCode>
+         <TransTime>07:43:28</TransTime>
+         <TransDate>2018-11-11</TransDate>
+         <TransType>00</TransType>
+         <Complete>true</Complete>
+         <Message>APPROVED           *                    =</Message>
+         <TransAmount>1.00</TransAmount>
+         <CardType>V</CardType>
+         <TransID>799655-0_11</TransID>
+         <TimedOut>false</TimedOut>
+         <BankTotals>null</BankTotals>
+         <Ticket>null</Ticket>
+         <IssuerId>355689484440192</IssuerId>
+         <IsVisaDebit>false</IsVisaDebit>
+       </receipt>
+      </response>
+    RESPONSE
+  end
+
+  def successful_first_cof_authorize_response
+    <<~RESPONSE
+      <?xml version=\"1.0\" standalone=\"yes\"?>
+      <response>
+        <receipt>
+          <ReceiptId>8dbc28468af2007779bbede7ec1bab6c</ReceiptId>
+          <ReferenceNum>660109300018229130</ReferenceNum>
+          <ResponseCode>027</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>718280</AuthCode>
+          <TransTime>07:50:53</TransTime>
+          <TransDate>2018-11-11</TransDate>
+          <TransType>01</TransType>
+          <Complete>true</Complete>
+          <Message>APPROVED           *                    =</Message>
+          <TransAmount>1.00</TransAmount>
+          <CardType>V</CardType>
+          <TransID>830724-0_11</TransID>
+          <TimedOut>false</TimedOut>
+          <BankTotals>null</BankTotals>
+          <Ticket>null</Ticket>
+          <MessageId>1A8315282537312</MessageId>
+          <IssuerId>550923784451193</IssuerId>
+          <IsVisaDebit>false</IsVisaDebit>
+        </receipt>
+      </response>
+    RESPONSE
+  end
+
+  def successful_subsequent_cof_purchase_response
+    <<~RESPONSE
+      <?xml version="1.0" standalone="yes"?>
+      <response>
+        <receipt>
+          <ReceiptId>830724-0_11;8dbc28468af2007779bbede7ec1bab6c</ReceiptId>
+          <ReferenceNum>660109490014038930</ReferenceNum>
+          <ResponseCode>027</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>111234</AuthCode>
+          <TransTime>07:50:54</TransTime>
+          <TransDate>2018-11-11</TransDate>
+          <TransType>00</TransType>
+          <Complete>true</Complete>
+          <Message>APPROVED           *                    =</Message>
+          <TransAmount>1.00</TransAmount>
+          <CardType>V</CardType>
+          <TransID>455422-0_11</TransID>
+          <TimedOut>false</TimedOut>
+          <BankTotals>null</BankTotals>
+          <Ticket>null</Ticket>
+          <IssuerId>762097792112819</IssuerId>
+          <IsVisaDebit>false</IsVisaDebit>
+        </receipt>
+      </response>
     RESPONSE
   end
 
@@ -580,7 +820,7 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def pre_scrub
-    <<-pre_scrub
+    <<-REQUEST
       opening connection to esqa.moneris.com:443...
       opened
       starting SSL for esqa.moneris.com:443...
@@ -604,11 +844,11 @@ class MonerisTest < Test::Unit::TestCase
       -> "0\r\n"
       -> "\r\n"
       Conn close
-    pre_scrub
+    REQUEST
   end
 
   def post_scrub
-    <<-post_scrub
+    <<-REQUEST
       opening connection to esqa.moneris.com:443...
       opened
       starting SSL for esqa.moneris.com:443...
@@ -632,6 +872,6 @@ class MonerisTest < Test::Unit::TestCase
       -> "0\r\n"
       -> "\r\n"
       Conn close
-    post_scrub
+    REQUEST
   end
 end

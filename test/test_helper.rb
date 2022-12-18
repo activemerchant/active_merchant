@@ -213,8 +213,7 @@ module ActiveMerchant
       ActiveMerchant::Billing::ApplePayPaymentToken.new(defaults[:payment_data],
         payment_instrument_name: defaults[:payment_instrument_name],
         payment_network: defaults[:payment_network],
-        transaction_identifier: defaults[:transaction_identifier]
-      )
+        transaction_identifier: defaults[:transaction_identifier])
     end
 
     def address(options = {})
@@ -230,6 +229,49 @@ module ActiveMerchant
         phone:    '(555)555-5555',
         fax:      '(555)555-6666'
       }.update(options)
+    end
+
+    def shipping_address(options = {})
+      {
+        name:     'Jon Smith',
+        address1: '123 Your Street',
+        address2: 'Apt 2',
+        city:     'Toronto',
+        state:    'ON',
+        zip:      'K2C3N7',
+        country:  'CA',
+        phone_number: '(123)456-7890'
+      }.update(options)
+    end
+
+    def statement_address(options = {})
+      {
+        address1: '456 My Street',
+        address2: 'Apt 1',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6'
+      }.update(options)
+    end
+
+    def stored_credential(*args, **options)
+      id = options.delete(:id) || options.delete(:network_transaction_id)
+
+      stored_credential = {
+        network_transaction_id: id,
+        initial_transaction: false
+      }
+
+      stored_credential[:initial_transaction] = true if args.include?(:initial)
+
+      stored_credential[:reason_type] = 'recurring' if args.include?(:recurring)
+      stored_credential[:reason_type] = 'unscheduled' if args.include?(:unscheduled)
+      stored_credential[:reason_type] = 'installment' if args.include?(:installment)
+
+      stored_credential[:initiator] = 'cardholder' if args.include?(:cardholder)
+      stored_credential[:initiator] = 'merchant' if args.include?(:merchant)
+
+      stored_credential
     end
 
     def generate_unique_id

@@ -5,9 +5,10 @@ class QbmsTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = QbmsGateway.new(
-      :login  => "test",
-      :ticket => "abc123",
-      :pem    => 'PEM')
+      login: 'test',
+      ticket: 'abc123',
+      pem: 'PEM'
+    )
 
     @amount = 100
     @card = credit_card('4111111111111111')

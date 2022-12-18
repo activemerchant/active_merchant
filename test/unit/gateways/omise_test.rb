@@ -46,8 +46,8 @@ class OmiseTest < Test::Unit::TestCase
   end
 
   def test_post_data
-    post_data = @gateway.send(:post_data, { card: {number: '4242424242424242'} })
-    assert_equal "{\"card\":{\"number\":\"4242424242424242\"}}", post_data
+    post_data = @gateway.send(:post_data, { card: { number: '4242424242424242' } })
+    assert_equal '{"card":{"number":"4242424242424242"}}', post_data
   end
 
   def test_parse_response
@@ -134,7 +134,7 @@ class OmiseTest < Test::Unit::TestCase
   def test_add_customer_without_card
     result = {}
     customer_id = 'cust_test_4zjzcgm8kpdt4xdhdw2'
-    @gateway.send(:add_customer, result, {customer_id: customer_id})
+    @gateway.send(:add_customer, result, { customer_id: customer_id })
     assert_equal 'cust_test_4zjzcgm8kpdt4xdhdw2', result[:customer]
   end
 
@@ -142,15 +142,22 @@ class OmiseTest < Test::Unit::TestCase
     result = {}
     customer_id   = 'cust_test_4zjzcgm8kpdt4xdhdw2'
     result[:card] = 'card_test_4zguktjcxanu3dw171a'
-    @gateway.send(:add_customer, result, {customer_id: customer_id})
+    @gateway.send(:add_customer, result, { customer_id: customer_id })
     assert_equal customer_id, result[:customer]
   end
 
   def test_add_amount
     result = {}
     desc = 'Charge for order 3947'
-    @gateway.send(:add_amount, result, @amount, {description: desc})
+    @gateway.send(:add_amount, result, @amount, { description: desc })
     assert_equal desc, result[:description]
+  end
+
+  def test_add_amount_with_correct_currency
+    result = {}
+    jpy_currency = 'JPY'
+    @gateway.send(:add_amount, result, @amount, { currency: jpy_currency })
+    assert_equal jpy_currency, result[:currency]
   end
 
   def test_commit_transaction

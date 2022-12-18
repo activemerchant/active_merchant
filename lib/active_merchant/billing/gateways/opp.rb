@@ -264,7 +264,7 @@ module ActiveMerchant #:nodoc:
       def add_options(post, options)
         post[:createRegistration] = options[:create_registration] if options[:create_registration] && !options[:registrationId]
         post[:testMode] = options[:test_mode] if test? && options[:test_mode]
-        options.each {|key, value| post[key] = value if key.to_s.match('customParameters\[[a-zA-Z0-9\._]{3,64}\]') }
+        options.each { |key, value| post[key] = value if key.to_s =~ /'customParameters\[[a-zA-Z0-9\._]{3,64}\]'/ }
         post['customParameters[SHOPPER_pluginId]'] = 'activemerchant'
       end
 
@@ -306,8 +306,34 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def success_from(raw_response)
-        raw_response.code.to_i.between?(200,299)  
+      def headers
+        {
+          'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8',
+          'Authorization' => "Bearer #{@options[:access_token]}"
+        }
+      end
+
+      def parse(body)
+        JSON.parse(body)
+      rescue JSON::ParserError
+        json_error(body)
+      end
+
+      def json_error(body)
+        message = "Invalid response received #{body.inspect}"
+        { 'result' => { 'description' => message, 'code' => 'unknown' } }
+      end
+
+      def success_from(response)
+        return false unless response['result']
+
+        success_regex = /^(000\.000\.|000\.100\.1|000\.[36])/
+
+        if success_regex.match?(response['result']['code'])
+          true
+        else
+          false
+        end
       end
 
       def message_from(response)

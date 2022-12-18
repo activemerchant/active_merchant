@@ -27,7 +27,8 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_billing_address(post, payment_method, options)
         add_shipping_address(post, options)
-        post[:action] = "sale"
+        add_xdata(post, options)
+        post[:action] = 'sale'
 
         commit(:post, post)
       end
@@ -39,7 +40,8 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_billing_address(post, payment_method, options)
         add_shipping_address(post, options)
-        post[:action] = "authorize"
+        add_xdata(post, options)
+        post[:action] = 'authorize'
 
         commit(:post, post)
       end
@@ -105,6 +107,20 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(post, money, options)
         post[:authorization_amount] = amount(money)
+      end
+
+      def add_service_fee(post, options)
+        post[:service_fee_amount] = options[:service_fee_amount] if options[:service_fee_amount]
+      end
+
+      def add_xdata(post, options)
+        post[:xdata] = {}
+        if xdata = options[:xdata]
+          (1..9).each do |n|
+            field = "xdata_#{n}".to_sym
+            post[:xdata][field] = xdata[field] if xdata[field]
+          end
+        end
       end
 
       def add_billing_address(post, payment, options)

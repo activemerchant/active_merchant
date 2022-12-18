@@ -42,8 +42,8 @@ class PlugnpayTest < Test::Unit::TestCase
   end
 
   def test_capture_full_amount
-    @gateway.expects(:ssl_post).with(anything, all_of(regexp_matches(/mode=mark/), regexp_matches(/card_amount=1.00/)), anything).returns("")
-    @gateway.expects(:parse).returns({'auth_msg' => 'Blah blah blah Transaction may not be reauthorized'}, {})
+    @gateway.expects(:ssl_post).with(anything, all_of(regexp_matches(/mode=mark/), regexp_matches(/card_amount=1.00/)), anything).returns('')
+    @gateway.expects(:parse).returns({ 'auth_msg' => 'Blah blah blah Transaction may not be reauthorized' }, {})
     @gateway.capture(@amount, @credit_card, @options)
   end
 
@@ -70,7 +70,7 @@ class PlugnpayTest < Test::Unit::TestCase
   def test_add_address_outsite_north_america
     result = PlugnpayGateway::PlugnpayPostData.new
 
-    @gateway.send(:add_addresses, result, :billing_address => {:address1 => '164 Waverley Street', :country => 'DE', :state => 'Dortmund'} )
+    @gateway.send(:add_addresses, result, billing_address: { address1: '164 Waverley Street', country: 'DE', state: 'Dortmund' })
 
     assert_equal result[:state], 'ZZ'
     assert_equal result[:province], 'Dortmund'
@@ -86,7 +86,7 @@ class PlugnpayTest < Test::Unit::TestCase
   def test_add_address
     result = PlugnpayGateway::PlugnpayPostData.new
 
-    @gateway.send(:add_addresses, result, :billing_address => {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'} )
+    @gateway.send(:add_addresses, result, billing_address: { address1: '164 Waverley Street', country: 'US', state: 'CO' })
 
     assert_equal result[:card_state], 'CO'
     assert_equal result[:card_address1], '164 Waverley Street'

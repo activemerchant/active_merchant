@@ -112,8 +112,7 @@ module ActiveMerchant #:nodoc:
                 TRANSACTION_APPROVED_MSG :
                 TRANSACTION_DECLINED_MSG,
                 response,
-                :test => test?
-              )
+                test: test?)
             else
               build_error_response(message, response)
             end

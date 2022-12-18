@@ -16,6 +16,11 @@ module BraintreeCommon
     transcript.
       gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
       gsub(%r((&?ccnumber=)\d*(&?)), '\1[FILTERED]\2').
-      gsub(%r((&?cvv=)\d*(&?)), '\1[FILTERED]\2')
+      gsub(%r((&?cvv=)\d*(&?)), '\1[FILTERED]\2').
+      gsub(%r((<account-number>)\d+(</account-number>)), '\1[FILTERED]\2').
+      gsub(%r((<payment-method-nonce>)[^<]+(</payment-method-nonce>)), '\1[FILTERED]\2').
+      gsub(%r((<payment-method-token>)[^<]+(</payment-method-token>)), '\1[FILTERED]\2').
+      gsub(%r((<value>)[^<]{100,}(</value>)), '\1[FILTERED]\2').
+      gsub(%r((<token>)[^<]+(</token>)), '\1[FILTERED]\2')
   end
 end

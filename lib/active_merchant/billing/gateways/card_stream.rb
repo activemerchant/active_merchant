@@ -78,21 +78,13 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, credit_card_or_reference, options = {})
         post = {}
-        add_pair(post, :captureDelay, -1)
-        add_amount(post, money, options)
-        add_invoice(post, credit_card_or_reference, money, options)
-        add_credit_card_or_reference(post, credit_card_or_reference)
-        add_customer_data(post, options)
+        add_auth_purchase(post, -1, money, credit_card_or_reference, options)
         commit('SALE', post)
       end
 
       def purchase(money, credit_card_or_reference, options = {})
         post = {}
-        add_pair(post, :captureDelay, 0)
-        add_amount(post, money, options)
-        add_invoice(post, credit_card_or_reference, money, options)
-        add_credit_card_or_reference(post, credit_card_or_reference)
-        add_customer_data(post, options)
+        add_auth_purchase(post, 0, money, credit_card_or_reference, options)
         commit('SALE', post)
       end
 
@@ -108,7 +100,18 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_pair(post, :xref, authorization)
         add_amount(post, money, options)
-        commit('REFUND', post)
+        add_remote_address(post, options)
+        add_country_code(post, options)
+        response = commit('REFUND_SALE', post)
+
+        return response if response.success?
+        return response unless options[:force_full_refund_if_unsettled]
+
+        if response.params['responseCode'] == '65541'
+          void(authorization, options)
+        else
+          response
+        end
       end
 
       def void(authorization, options = {})
@@ -136,6 +139,17 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_auth_purchase(post, pair_value, money, credit_card_or_reference, options)
+        add_pair(post, :captureDelay, pair_value)
+        add_amount(post, money, options)
+        add_invoice(post, credit_card_or_reference, money, options)
+        add_credit_card_or_reference(post, credit_card_or_reference)
+        add_customer_data(post, options)
+        add_remote_address(post, options)
+        add_country_code(post, options)
+        add_threeds_fields(post, options)
+      end
 
       def add_amount(post, money, options)
         add_pair(post, :amount, amount(money), :required => true)
@@ -198,7 +212,29 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_threeds_required(post, options)
-        add_pair(post, :threeDSRequired, (options[:threeds_required] || @threeds_required) ? 'Y' : 'N')
+        add_pair(post, :threeDSRequired, options[:threeds_required] || @threeds_required ? 'Y' : 'N')
+      end
+
+      def add_threeds_fields(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        add_pair(post, :threeDSEnrolled, formatted_enrollment(three_d_secure[:enrolled]))
+        if three_d_secure[:enrolled] == 'true'
+          add_pair(post, :threeDSAuthenticated, three_d_secure[:authentication_response_status])
+          if three_d_secure[:authentication_response_status] == 'Y'
+            post[:threeDSECI]  = three_d_secure[:eci]
+            post[:threeDSCAVV] = three_d_secure[:cavv]
+            post[:threeDSXID] = three_d_secure[:xid] || three_d_secure[:ds_transaction_id]
+          end
+        end
+      end
+
+      def add_remote_address(post, options = {})
+        add_pair(post, :remoteAddress, options[:ip] || '1.1.1.1')
+      end
+
+      def add_country_code(post, options)
+        post[:countryCode] = options[:country_code] || self.supported_countries[0]
       end
 
       def normalize_line_endings(str)
@@ -224,7 +260,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        parameters.update(:countryCode => self.supported_countries[0]) unless ['CAPTURE', 'CANCEL'].include?(action)
         parameters.update(
           :merchantID => @options[:login],
           :action => action
@@ -278,6 +313,13 @@ module ActiveMerchant #:nodoc:
         post[key] = value if !value.blank? || options[:required]
       end
 
+      def formatted_enrollment(val)
+        case val
+        when 'Y', 'N', 'U' then val
+        when true, 'true' then 'Y'
+        when false, 'false' then 'N'
+        end
+      end
     end
   end
 end

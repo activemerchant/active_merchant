@@ -150,9 +150,10 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal "P", response.cvv_result["code"]
 
     # 6A. void
-    assert response = @gateway.void(response.authorization, {:order_id => '6A'})
-    assert_equal '360', response.params['litleOnlineResponse']['voidResponse']['response']
-    assert_equal 'No transaction found with specified litleTxnId', response.message
+    assert response = @gateway.void(response.authorization, { order_id: '6A' })
+    assert_equal '360', response.params['response']
+    assert_equal 'No transaction found with specified transaction Id', response.message
+    puts "Test #{options[:order_id]}A: #{txn_id(response)}"
   end
 
   def test7
@@ -475,6 +476,65 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_failure response
     assert_equal '823', response.params['litleOnlineResponse']['authorizationResponse']['response']
     assert_equal 'Token was invalid', response.message
+    puts "Test #{options[:order_id]}: #{txn_id(response)}"
+  end
+
+  def test_apple_pay_purchase
+    options = {
+      order_id: transaction_id
+    }
+    decrypted_apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      {
+        month: '01',
+        year: '2021',
+        brand: 'visa',
+        number:  '4457000300000007',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+      }
+    )
+
+    assert response = @gateway.purchase(10010, decrypted_apple_pay, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_android_pay_purchase
+    options = {
+      order_id: transaction_id
+    }
+    decrypted_android_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      {
+        source: :android_pay,
+        month: '01',
+        year: '2021',
+        brand: 'visa',
+        number:  '4457000300000007',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+      }
+    )
+
+    assert response = @gateway.purchase(10010, decrypted_android_pay, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_three_d_secure
+    three_d_secure_assertions('3DS1', '4100200300000004', 'visa', '3dsAuthenticated', '0')
+    three_d_secure_assertions('3DS2', '4100200300000012', 'visa', '3dsAuthenticated', '1')
+    three_d_secure_assertions('3DS3', '4100200300000103', 'visa', '3dsAuthenticated', '2')
+    three_d_secure_assertions('3DS4', '4100200300001002', 'visa', '3dsAuthenticated', 'A')
+    three_d_secure_assertions('3DS5', '4100200300000020', 'visa', '3dsAuthenticated', '3')
+    three_d_secure_assertions('3DS6', '4100200300000038', 'visa', '3dsAuthenticated', '4')
+    three_d_secure_assertions('3DS7', '4100200300000046', 'visa', '3dsAuthenticated', '5')
+    three_d_secure_assertions('3DS8', '4100200300000053', 'visa', '3dsAuthenticated', '6')
+    three_d_secure_assertions('3DS9', '4100200300000061', 'visa', '3dsAuthenticated', '7')
+    three_d_secure_assertions('3DS10', '4100200300000079', 'visa', '3dsAuthenticated', '8')
+    three_d_secure_assertions('3DS11', '4100200300000087', 'visa', '3dsAuthenticated', '9')
+    three_d_secure_assertions('3DS12', '4100200300000095', 'visa', '3dsAuthenticated', 'B')
+    three_d_secure_assertions('3DS13', '4100200300000111', 'visa', '3dsAuthenticated', 'C')
+    three_d_secure_assertions('3DS14', '4100200300000129', 'visa', '3dsAuthenticated', 'D')
+    three_d_secure_assertions('3DS15', '5112010200000001', 'master', '3dsAttempted', nil)
+    three_d_secure_assertions('3DS16', '5112010200000001', 'master', '3dsAttempted', nil)
   end
 
   def test_authorize_and_purchase_and_credit_with_token
@@ -546,20 +606,17 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal options[:order_id], response.params['litleOnlineResponse']['authorizationResponse']['id']
 
     # 1A: capture
-    id = transaction_id
-    assert response = @gateway.capture(amount, response.authorization, {:id => id})
+    assert response = @gateway.capture(amount, response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
     assert_equal id, response.params['litleOnlineResponse']['captureResponse']['id']
 
     # 1B: credit
-    id = transaction_id
-    assert response = @gateway.credit(amount, response.authorization, {:id => id})
+    assert response = @gateway.credit(amount, response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
     assert_equal id, response.params['litleOnlineResponse']['creditResponse']['id']
 
     # 1C: void
-    id = transaction_id
-    assert response = @gateway.void(response.authorization, {:id => id})
+    assert response = @gateway.void(response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
     assert_equal id, response.params['litleOnlineResponse']['voidResponse']['id']
   end
@@ -583,14 +640,12 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal options[:order_id], response.params['litleOnlineResponse']['saleResponse']['id']
 
     # 1B: credit
-    id = transaction_id
-    assert response = @gateway.credit(amount, response.authorization, {:id => id})
+    assert response = @gateway.credit(amount, response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
     assert_equal id, response.params['litleOnlineResponse']['creditResponse']['id']
 
     # 1C: void
-    id = transaction_id
-    assert response = @gateway.void(response.authorization, {:id => id})
+    assert response = @gateway.void(response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
     assert_equal id, response.params['litleOnlineResponse']['voidResponse']['id']
   end

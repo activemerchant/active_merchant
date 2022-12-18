@@ -96,7 +96,7 @@ class DataCashTest < Test::Unit::TestCase
 
   def test_purchase_does_not_raise_exception_with_missing_billing_address
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert @gateway.authorize(100, @credit_card, {:order_id => generate_unique_id }).is_a?(ActiveMerchant::Billing::Response)
+    assert @gateway.authorize(100, @credit_card, { order_id: generate_unique_id }).is_a?(ActiveMerchant::Billing::Response)
   end
 
   def test_continuous_authority_purchase_with_missing_continuous_authority_reference

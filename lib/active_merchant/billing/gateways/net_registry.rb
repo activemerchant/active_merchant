@@ -144,8 +144,7 @@ module ActiveMerchant
         response = parse( ssl_post(self.live_url, post_data(action, params)) )
 
         Response.new(response['status'] == 'approved', message_from(response), response,
-          :authorization => authorization_from(response, action)
-        )
+          authorization: authorization_from(response, action))
       end
 
       def post_data(action, params)

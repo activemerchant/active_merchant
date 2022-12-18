@@ -165,11 +165,29 @@ module ActiveMerchant
         end
       end
 
-      def verify(credit_card, options = {})
+      def verify(payment_method, options = {})
+        amount = amount_for_verify(options)
+
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { authorize(amount, payment_method, options) }
+          r.process(:ignore_result) { void(r.authorization, options) } unless amount == 0
         end
+      rescue ArgumentError => e
+        Response.new(false, e.message)
+      end
+
+      def amount_for_verify(options)
+        return 100 unless options[:verify_amount].present?
+
+        amount = options[:verify_amount]
+        raise ArgumentError.new 'verify_amount value must be an integer' unless amount.is_a?(Integer) && !amount.negative? || amount.is_a?(String) && amount.match?(/^\d+$/) && !amount.to_i.negative?
+        raise ArgumentError.new 'Billing address including zip code is required for a 0 amount verify' if amount.to_i.zero? && !validate_billing_address_values?(options)
+
+        amount.to_i
+      end
+
+      def validate_billing_address_values?(options)
+        options.dig(:billing_address, :zip).present? && options.dig(:billing_address, :address1).present?
       end
 
       def store(credit_card, options = {})
@@ -234,6 +252,9 @@ module ActiveMerchant
           add_market_type_device_type(xml, payment, options)
           add_settings(xml, payment, options)
           add_user_fields(xml, amount, options)
+          add_ship_from_address(xml, options)
+          add_processing_options(xml, options)
+          add_subsequent_auth_information(xml, options)
         end
       end
 
@@ -351,7 +372,7 @@ module ActiveMerchant
 
       def add_settings(xml, source, options)
         xml.transactionSettings do
-          if options[:recurring]
+          if options[:recurring] || subsequent_recurring_transaction?(options)
             xml.setting do
               xml.settingName("recurringBilling")
               xml.settingValue("true")
@@ -502,9 +523,16 @@ module ActiveMerchant
 
         xml.customerIP(options[:ip]) unless empty?(options[:ip])
 
-        xml.cardholderAuthentication do
-          xml.authenticationIndicator(options[:authentication_indicator])
-          xml.cardholderAuthenticationValue(options[:cardholder_authentication_value])
+        if !empty?(options.fetch(:three_d_secure, {})) || options[:authentication_indicator] || options[:cardholder_authentication_value]
+          xml.cardholderAuthentication do
+            three_d_secure = options.fetch(:three_d_secure, {})
+            xml.authenticationIndicator(
+              options[:authentication_indicator] || three_d_secure[:eci]
+            )
+            xml.cardholderAuthenticationValue(
+              options[:cardholder_authentication_value] || three_d_secure[:cavv]
+            )
+          end
         end
       end
 
@@ -575,6 +603,76 @@ module ActiveMerchant
         end
       end
 
+      def add_tax_fields(xml, options)
+        tax = options[:tax]
+        if tax.is_a?(Hash)
+          xml.tax do
+            xml.amount(amount(tax[:amount].to_i))
+            xml.name(tax[:name])
+            xml.description(tax[:description])
+          end
+        end
+      end
+
+      def add_duty_fields(xml, options)
+        duty = options[:duty]
+        if duty.is_a?(Hash)
+          xml.duty do
+            xml.amount(amount(duty[:amount].to_i))
+            xml.name(duty[:name])
+            xml.description(duty[:description])
+          end
+        end
+      end
+
+      def add_shipping_fields(xml, options)
+        shipping = options[:shipping]
+        if shipping.is_a?(Hash)
+          xml.shipping do
+            xml.amount(amount(shipping[:amount].to_i))
+            xml.name(shipping[:name])
+            xml.description(shipping[:description])
+          end
+        end
+      end
+
+      def add_tax_exempt_status(xml, options)
+        xml.taxExempt(options[:tax_exempt]) if options[:tax_exempt]
+      end
+
+      def add_po_number(xml, options)
+        xml.poNumber(options[:po_number]) if options[:po_number]
+      end
+
+      def add_extra_options_for_cim(xml, options)
+        xml.extraOptions("x_delim_char=#{options[:delimiter]}") if options[:delimiter]
+      end
+
+      def add_processing_options(xml, options)
+        return unless options[:stored_credential]
+
+        xml.processingOptions do
+          if options[:stored_credential][:initial_transaction] && options[:stored_credential][:reason_type] == 'recurring'
+            xml.isFirstRecurringPayment 'true'
+          elsif options[:stored_credential][:initial_transaction]
+            xml.isFirstSubsequentAuth 'true'
+          elsif options[:stored_credential][:initiator] == 'cardholder'
+            xml.isStoredCredentials 'true'
+          else
+            xml.isSubsequentAuth 'true'
+          end
+        end
+      end
+
+      def add_subsequent_auth_information(xml, options)
+        return unless options.dig(:stored_credential, :initiator) == 'merchant'
+
+        xml.subsequentAuthInformation do
+          xml.reason options[:stored_credential_reason_type_override] if options[:stored_credential_reason_type_override]
+          xml.originalNetworkTransId options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
+        end
+      end
+
       def create_customer_payment_profile(credit_card, options)
         commit(:cim_store_update) do |xml|
           xml.customerProfileId options[:customer_profile_id]
@@ -621,6 +719,18 @@ module ActiveMerchant
         else
           [options[:first_name], options[:last_name]]
         end
+      end
+
+      def state_from(address, options)
+        if %w[US CA].include?(address[:country])
+          address[:state] || 'NC'
+        else
+          address[:state] || 'n/a'
+        end
+      end
+
+      def subsequent_recurring_transaction?(options)
+        options.dig(:stored_credential, :reason_type) == 'recurring' && !options.dig(:stored_credential, :initial_transaction)
       end
 
       def headers
@@ -701,7 +811,7 @@ module ActiveMerchant
         doc = Nokogiri::XML(body)
         doc.remove_namespaces!
 
-        response = {action: action}
+        response = { action: action }
 
         response[:response_code] = if(element = doc.at_xpath("//transactionResponse/responseCode"))
           (empty?(element.content) ? nil : element.content.to_i)
@@ -748,6 +858,11 @@ module ActiveMerchant
         response[:test_request] = if(element = doc.at_xpath("//testRequest"))
           (empty?(element.content) ? nil : element.content)
         end
+
+        response[:network_trans_id] =
+          if element = doc.at_xpath('//networkTransId')
+            empty?(element.content) ? nil : element.content
+          end
 
         response
       end

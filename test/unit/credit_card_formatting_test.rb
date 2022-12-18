@@ -6,6 +6,11 @@ class CreditCardFormattingTest < Test::Unit::TestCase
   def test_should_format_number_by_rule
     assert_equal 2005, format(2005, :steven_colbert)
 
+    assert_equal '2022', format(22, :four_digits_year)
+    assert_equal '2022', format(2022, :four_digits_year)
+    assert_equal '2022', format('22', :four_digits_year)
+    assert_equal '2022', format('2022', :four_digits_year)
+
     assert_equal '0005', format(05, :four_digits)
     assert_equal '2005', format(2005, :four_digits)
 

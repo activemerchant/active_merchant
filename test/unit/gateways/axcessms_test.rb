@@ -129,9 +129,9 @@ class AxcessmsTest < Test::Unit::TestCase
 
   def test_setting_mode_sets_proper_element
     stub_comms do
-      @gateway.purchase(@amount, "MY_AUTHORIZE_VALUE", {mode: "CRAZY_TEST_MODE"})
-    end.check_request do |endpoint, body, headers|
-      assert_xpath_text(body, "//Transaction/@mode", "CRAZY_TEST_MODE")
+      @gateway.purchase(@amount, 'MY_AUTHORIZE_VALUE', { mode: 'CRAZY_TEST_MODE' })
+    end.check_request do |_endpoint, body, _headers|
+      assert_xpath_text(body, '//Transaction/@mode', 'CRAZY_TEST_MODE')
     end.respond_with(successful_authorize_response)
   end
 

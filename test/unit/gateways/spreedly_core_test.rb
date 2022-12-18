@@ -241,6 +241,43 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_equal "Succeeded!", response.message
   end
 
+  def test_successful_find
+    @gateway.expects(:raw_ssl_request).returns(successful_find_response)
+    response = @gateway.find(@existing_transaction)
+    assert_success response
+
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'LKA3RchoqYO0njAfhHVw60ohjrC', response.authorization
+  end
+
+  def test_failed_find
+    @gateway.expects(:raw_ssl_request).returns(failed_find_response)
+    response = @gateway.find(@not_found_transaction)
+    assert_failure response
+
+    assert_match %r(Unable to find the transaction), response.message
+    assert_match %r(#{@not_found_transaction}), response.message
+  end
+
+  def test_gateway_specific_response_fileds_returned_correctly
+    @gateway.expects(:raw_ssl_request).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @payment_method_token)
+    assert_success response
+
+    assert_not_empty response.params['gateway_specific_response_fields']
+    assert_includes response.params['gateway_specific_response_fields'].keys, 'migs'
+
+    migs_response_fields = response.params.dig('gateway_specific_response_fields', 'migs')
+    assert_equal migs_response_fields['batch_no'], '20122018'
+    assert_equal migs_response_fields['receipt_no'], 'rxI320t'
+    assert_equal migs_response_fields['authorize_id'], '800385'
+  end
+
+  def test_scrubbing
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
 
   private
   def successful_purchase_response
@@ -274,6 +311,13 @@ class SpreedlyCoreTest < Test::Unit::TestCase
           <created_at type="datetime">2012-12-06T20:28:14Z</created_at>
           <updated_at type="datetime">2012-12-06T20:28:14Z</updated_at>
         </response>
+        <gateway_specific_response_fields>
+          <migs>
+           <batch_no>20122018</batch_no>
+           <authorize_id>800385</authorize_id>
+           <receipt_no>rxI320t</receipt_no>
+          </migs>
+        </gateway_specific_response_fields>
         <payment_method>
           <token>5WxC03VQ0LmmkYvIHl7XsPKIpUb</token>
           <created_at type="datetime">2012-12-06T20:20:29Z</created_at>
@@ -799,4 +843,319 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     XML
   end
 
+  def pre_scrubbed
+    <<-REQUEST
+      opening connection to core.spreedly.com:443...
+      opened
+      starting SSL for core.spreedly.com:443...
+      SSL established
+      <- "POST /v1/payment_methods.xml HTTP/1.1\r\nContent-Type: text/xml\r\nAuthorization: Basic NFk5YlZrT0NwWWVzUFFPZkRpN1RYUXlVdzUwOlkyaTdBamdVMDNTVWp3WTR4bk9QcXpkc3Y0ZE1iUERDUXpvckFrOEJjb3kwVThFSVZFNGlubkdqdW9NUXY3TU4=\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: core.spreedly.com\r\nContent-Length: 404\r\n\r\n"
+      <- "<?xml version=\"1.0\"?>\n<payment_method>\n  <credit_card>\n    <number>5555555555554444</number>\n    <verification_value>123</verification_value>\n    <first_name>Longbob</first_name>\n    <last_name>Longsen</last_name>\n    <month>9</month>\n    <year>2019</year>\n    <email/>\n    <address1/>\n    <address2/>\n    <city/>\n    <state/>\n    <zip/>\n    <country/>\n  </credit_card>\n  <data></data>\n</payment_method>\n"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Date: Sat, 10 Mar 2018 22:04:06 GMT\r\n"
+      -> "Content-Type: application/xml; charset=utf-8\r\n"
+      -> "Content-Length: 1875\r\n"
+      -> "Connection: close\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "X-XSS-Protection: 1; mode=block\r\n"
+      -> "X-Content-Type-Options: nosniff\r\n"
+      -> "ETag: W/\"c4ef6dfc389a5514d6b6ffd8bac8786c\"\r\n"
+      -> "Cache-Control: max-age=0, private, must-revalidate\r\n"
+      -> "X-Request-Id: b227ok4du2hrj7mrtt10.core_dcaa82760687b3ef\r\n"
+      -> "Server: nginx\r\n"
+      -> "Strict-Transport-Security: max-age=31536000; includeSubdomains;\r\n"
+      -> "\r\n"
+      reading 1875 bytes...
+      -> "<transaction>\n  <token>NRBpydUCWn658GHV8h2kVlUzB0i</token>\n  <created_at type=\"dateTime\">2018-03-10T22:04:06Z</created_at>\n  <updated_at type=\"dateTime\">2018-03-10T22:04:06Z</updated_at>\n  <succeeded type=\"boolean\">true</succeeded>\n  <transaction_type>AddPaymentMethod</transaction_type>\n  <retained type=\"boolean\">false</retained>\n  <state>succeeded</state>\n  <message key=\"messages.transaction_succeeded\">Succeeded!</message>\n  <payment_method>\n    <token>Wd25UIrH1uopTkZZ4UDdb5XmSDd</token>\n    <created_at type=\"dateTime\">2018-03-10T22:04:06Z</created_at>\n    <updated_at type=\"dateTime\">2018-03-10T22:04:06Z</updated_at>\n    <email nil=\"true\"/>\n    <data nil=\"true\"/>\n    <storage_state>cached</storage_state>\n    <test type=\"boolean\">true</test>\n    <last_four_digits>4444</last_four_digits>\n    <first_six_digits>555555</first_six_digits>\n    <card_type>master</card_type>\n    <first_name>Longbob</first_name>\n    <last_name>Longsen</last_name>\n    <month type=\"integer\">9</month>\n    <year type=\"integer\">2019</year>\n    <address1 nil=\"true\"/>\n    <address2 nil=\"true\"/>\n    <city nil=\"true\"/>\n    <state nil=\"true\"/>\n    <zip nil=\"true\"/>\n    <country nil=\"true\"/>\n    <phone_number nil=\"true\"/>\n    <company nil=\"true\"/>\n    <full_name>Longbob Longsen</full_name>\n    <eligible_for_card_updater type=\"boolean\">true</eligible_for_card_updater>\n    <shipping_address1 nil=\"true\"/>\n    <shipping_address2 nil=\"true\"/>\n    <shipping_city nil=\"true\"/>\n    <shipping_state nil=\"true\"/>\n    <shipping_zip nil=\"true\"/>\n    <shipping_country nil=\"true\"/>\n    <shipping_phone_number nil=\"true\"/>\n    <payment_method_type>credit_card</payment_method_type>\n    <errors>\n    </errors>\n    <verification_value>XXX</verification_value>\n    <number>XXXX-XXXX-XXXX-4444</number>\n    <fingerprint>125370bb396dff6fed4f581f85a91a9e5317</fingerprint>\n  </payment_method>\n</transaction>\n"
+      read 1875 bytes
+      Conn close
+    REQUEST
+  end
+
+  def post_scrubbed
+    <<-REQUEST
+      opening connection to core.spreedly.com:443...
+      opened
+      starting SSL for core.spreedly.com:443...
+      SSL established
+      <- "POST /v1/payment_methods.xml HTTP/1.1\r\nContent-Type: text/xml\r\nAuthorization: Basic [FILTERED]=\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: core.spreedly.com\r\nContent-Length: 404\r\n\r\n"
+      <- "<?xml version=\"1.0\"?>\n<payment_method>\n  <credit_card>\n    <number>[FILTERED]</number>\n    <verification_value>[FILTERED]</verification_value>\n    <first_name>Longbob</first_name>\n    <last_name>Longsen</last_name>\n    <month>9</month>\n    <year>2019</year>\n    <email/>\n    <address1/>\n    <address2/>\n    <city/>\n    <state/>\n    <zip/>\n    <country/>\n  </credit_card>\n  <data></data>\n</payment_method>\n"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Date: Sat, 10 Mar 2018 22:04:06 GMT\r\n"
+      -> "Content-Type: application/xml; charset=utf-8\r\n"
+      -> "Content-Length: 1875\r\n"
+      -> "Connection: close\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "X-XSS-Protection: 1; mode=block\r\n"
+      -> "X-Content-Type-Options: nosniff\r\n"
+      -> "ETag: W/\"c4ef6dfc389a5514d6b6ffd8bac8786c\"\r\n"
+      -> "Cache-Control: max-age=0, private, must-revalidate\r\n"
+      -> "X-Request-Id: b227ok4du2hrj7mrtt10.core_dcaa82760687b3ef\r\n"
+      -> "Server: nginx\r\n"
+      -> "Strict-Transport-Security: max-age=31536000; includeSubdomains;\r\n"
+      -> "\r\n"
+      reading 1875 bytes...
+      -> "<transaction>\n  <token>NRBpydUCWn658GHV8h2kVlUzB0i</token>\n  <created_at type=\"dateTime\">2018-03-10T22:04:06Z</created_at>\n  <updated_at type=\"dateTime\">2018-03-10T22:04:06Z</updated_at>\n  <succeeded type=\"boolean\">true</succeeded>\n  <transaction_type>AddPaymentMethod</transaction_type>\n  <retained type=\"boolean\">false</retained>\n  <state>succeeded</state>\n  <message key=\"messages.transaction_succeeded\">Succeeded!</message>\n  <payment_method>\n    <token>Wd25UIrH1uopTkZZ4UDdb5XmSDd</token>\n    <created_at type=\"dateTime\">2018-03-10T22:04:06Z</created_at>\n    <updated_at type=\"dateTime\">2018-03-10T22:04:06Z</updated_at>\n    <email nil=\"true\"/>\n    <data nil=\"true\"/>\n    <storage_state>cached</storage_state>\n    <test type=\"boolean\">true</test>\n    <last_four_digits>4444</last_four_digits>\n    <first_six_digits>555555</first_six_digits>\n    <card_type>master</card_type>\n    <first_name>Longbob</first_name>\n    <last_name>Longsen</last_name>\n    <month type=\"integer\">9</month>\n    <year type=\"integer\">2019</year>\n    <address1 nil=\"true\"/>\n    <address2 nil=\"true\"/>\n    <city nil=\"true\"/>\n    <state nil=\"true\"/>\n    <zip nil=\"true\"/>\n    <country nil=\"true\"/>\n    <phone_number nil=\"true\"/>\n    <company nil=\"true\"/>\n    <full_name>Longbob Longsen</full_name>\n    <eligible_for_card_updater type=\"boolean\">true</eligible_for_card_updater>\n    <shipping_address1 nil=\"true\"/>\n    <shipping_address2 nil=\"true\"/>\n    <shipping_city nil=\"true\"/>\n    <shipping_state nil=\"true\"/>\n    <shipping_zip nil=\"true\"/>\n    <shipping_country nil=\"true\"/>\n    <shipping_phone_number nil=\"true\"/>\n    <payment_method_type>credit_card</payment_method_type>\n    <errors>\n    </errors>\n    <verification_value>[FILTERED]</verification_value>\n    <number>[FILTERED]</number>\n    <fingerprint>125370bb396dff6fed4f581f85a91a9e5317</fingerprint>\n  </payment_method>\n</transaction>\n"
+      read 1875 bytes
+      Conn close
+    REQUEST
+  end
+
+  def successful_verify_response
+    MockResponse.succeeded <<-XML
+      <transaction>
+        <on_test_gateway type="boolean">true</on_test_gateway>
+        <created_at type="dateTime">2018-02-24T00:47:56Z</created_at>
+        <updated_at type="dateTime">2018-02-24T00:47:56Z</updated_at>
+        <succeeded type="boolean">true</succeeded>
+        <state>succeeded</state>
+        <token>891hWyHKmfCggQQ7Q35sGVcEC01</token>
+        <transaction_type>Verification</transaction_type>
+        <order_id nil="true"/>
+        <ip nil="true"/>
+        <description nil="true"/>
+        <email nil="true"/>
+        <merchant_name_descriptor nil="true"/>
+        <merchant_location_descriptor nil="true"/>
+        <gateway_specific_fields nil="true"/>
+        <gateway_specific_response_fields>
+        </gateway_specific_response_fields>
+        <gateway_transaction_id>67</gateway_transaction_id>
+        <gateway_latency_ms type="integer">27</gateway_latency_ms>
+        <currency_code>USD</currency_code>
+        <retain_on_success type="boolean">false</retain_on_success>
+        <payment_method_added type="boolean">false</payment_method_added>
+        <message key="messages.transaction_succeeded">Succeeded!</message>
+        <gateway_token>3gLeg4726V5P0HK7cq7QzHsL0a6</gateway_token>
+        <gateway_type>test</gateway_type>
+        <shipping_address>
+          <name>Jim TesterDude</name>
+          <address1 nil="true"/>
+          <address2 nil="true"/>
+          <city nil="true"/>
+          <state nil="true"/>
+          <zip nil="true"/>
+          <country nil="true"/>
+          <phone_number nil="true"/>
+        </shipping_address>
+        <response>
+          <success type="boolean">true</success>
+          <message>Successful verify</message>
+          <avs_code nil="true"/>
+          <avs_message nil="true"/>
+          <cvv_code nil="true"/>
+          <cvv_message nil="true"/>
+          <pending type="boolean">false</pending>
+          <result_unknown type="boolean">false</result_unknown>
+          <error_code></error_code>
+          <error_detail nil="true"/>
+          <cancelled type="boolean">false</cancelled>
+          <fraud_review nil="true"/>
+          <created_at type="dateTime">2018-02-24T00:47:56Z</created_at>
+          <updated_at type="dateTime">2018-02-24T00:47:56Z</updated_at>
+        </response>
+        <payment_method>
+          <token>9AjLflWs7SOKuqJLveOZya9bixa</token>
+          <created_at type="dateTime">2012-12-07T19:08:15Z</created_at>
+          <updated_at type="dateTime">2018-02-24T00:35:45Z</updated_at>
+          <email nil="true"/>
+          <data>
+            <how_many>2</how_many>
+          </data>
+          <storage_state>retained</storage_state>
+          <test type="boolean">true</test>
+          <last_four_digits>4444</last_four_digits>
+          <first_six_digits>555555</first_six_digits>
+          <card_type>master</card_type>
+          <first_name>Jim</first_name>
+          <last_name>TesterDude</last_name>
+          <month type="integer">9</month>
+          <year type="integer">2022</year>
+          <address1 nil="true"/>
+          <address2 nil="true"/>
+          <city nil="true"/>
+          <state nil="true"/>
+          <zip nil="true"/>
+          <country nil="true"/>
+          <phone_number nil="true"/>
+          <company nil="true"/>
+          <full_name>Jim TesterDude</full_name>
+          <eligible_for_card_updater nil="true"/>
+          <shipping_address1 nil="true"/>
+          <shipping_address2 nil="true"/>
+          <shipping_city nil="true"/>
+          <shipping_state nil="true"/>
+          <shipping_zip nil="true"/>
+          <shipping_country nil="true"/>
+          <shipping_phone_number nil="true"/>
+          <payment_method_type>credit_card</payment_method_type>
+          <errors>
+          </errors>
+          <verification_value></verification_value>
+          <number>XXXX-XXXX-XXXX-4444</number>
+          <fingerprint>125370bb396dff6fed4f581f85a91a9e5317</fingerprint>
+        </payment_method>
+      </transaction>
+    XML
+  end
+
+  def failed_verify_response
+    MockResponse.failed <<-XML
+      <transaction>
+        <on_test_gateway type="boolean">true</on_test_gateway>
+        <created_at type="dateTime">2018-02-24T00:53:58Z</created_at>
+        <updated_at type="dateTime">2018-02-24T00:53:58Z</updated_at>
+        <succeeded type="boolean">false</succeeded>
+        <state>gateway_processing_failed</state>
+        <token>RwmpyTCRmCpji1YtSD5f5fQDpkS</token>
+        <transaction_type>Verification</transaction_type>
+        <order_id nil="true"/>
+        <ip nil="true"/>
+        <description nil="true"/>
+        <email nil="true"/>
+        <merchant_name_descriptor nil="true"/>
+        <merchant_location_descriptor nil="true"/>
+        <gateway_specific_fields nil="true"/>
+        <gateway_specific_response_fields>
+        </gateway_specific_response_fields>
+        <gateway_transaction_id nil="true"/>
+        <gateway_latency_ms type="integer">24</gateway_latency_ms>
+        <currency_code>USD</currency_code>
+        <retain_on_success type="boolean">false</retain_on_success>
+        <payment_method_added type="boolean">false</payment_method_added>
+        <message>Unable to process the verify transaction.</message>
+        <gateway_token>3gLeg4726V5P0HK7cq7QzHsL0a6</gateway_token>
+        <gateway_type>test</gateway_type>
+        <shipping_address>
+          <name>Longbob Longsen</name>
+          <address1 nil="true"/>
+          <address2 nil="true"/>
+          <city nil="true"/>
+          <state nil="true"/>
+          <zip nil="true"/>
+          <country nil="true"/>
+          <phone_number nil="true"/>
+        </shipping_address>
+        <response>
+          <success type="boolean">false</success>
+          <message>Unable to process the verify transaction.</message>
+          <avs_code nil="true"/>
+          <avs_message nil="true"/>
+          <cvv_code nil="true"/>
+          <cvv_message nil="true"/>
+          <pending type="boolean">false</pending>
+          <result_unknown type="boolean">false</result_unknown>
+          <error_code></error_code>
+          <error_detail nil="true"/>
+          <cancelled type="boolean">false</cancelled>
+          <fraud_review nil="true"/>
+          <created_at type="dateTime">2018-02-24T00:53:58Z</created_at>
+          <updated_at type="dateTime">2018-02-24T00:53:58Z</updated_at>
+        </response>
+        <payment_method>
+          <token>UzUKWHwI7GtZe3gz1UU5FiZ6DxH</token>
+          <created_at type="dateTime">2018-02-24T00:53:56Z</created_at>
+          <updated_at type="dateTime">2018-02-24T00:53:56Z</updated_at>
+          <email nil="true"/>
+          <data nil="true"/>
+          <storage_state>cached</storage_state>
+          <test type="boolean">true</test>
+          <last_four_digits>1881</last_four_digits>
+          <first_six_digits>401288</first_six_digits>
+          <card_type>visa</card_type>
+          <first_name>Longbob</first_name>
+          <last_name>Longsen</last_name>
+          <month type="integer">9</month>
+          <year type="integer">2019</year>
+          <address1 nil="true"/>
+          <address2 nil="true"/>
+          <city nil="true"/>
+          <state nil="true"/>
+          <zip nil="true"/>
+          <country nil="true"/>
+          <phone_number nil="true"/>
+          <company nil="true"/>
+          <full_name>Longbob Longsen</full_name>
+          <eligible_for_card_updater nil="true"/>
+          <shipping_address1 nil="true"/>
+          <shipping_address2 nil="true"/>
+          <shipping_city nil="true"/>
+          <shipping_state nil="true"/>
+          <shipping_zip nil="true"/>
+          <shipping_country nil="true"/>
+          <shipping_phone_number nil="true"/>
+          <payment_method_type>credit_card</payment_method_type>
+          <errors>
+          </errors>
+          <verification_value>XXX</verification_value>
+          <number>XXXX-XXXX-XXXX-1881</number>
+          <fingerprint>db33a42fcf2908a3795bd4ea881de2e0f015</fingerprint>
+        </payment_method>
+      </transaction>
+    XML
+  end
+
+  def successful_find_response
+    MockResponse.succeeded <<-XML
+      <transaction>
+        <token>LKA3RchoqYO0njAfhHVw60ohjrC</token>
+        <created_at type="dateTime">2012-12-07T19:03:50Z</created_at>
+        <updated_at type="dateTime">2012-12-07T19:03:50Z</updated_at>
+        <succeeded type="boolean">true</succeeded>
+        <transaction_type>AddPaymentMethod</transaction_type>
+        <retained type="boolean">false</retained>
+        <state>succeeded</state>
+        <message key="messages.transaction_succeeded">Succeeded!</message>
+        <payment_method>
+          <token>67KlSyyvBAt9VUMJg3lUeWbBaWX</token>
+          <created_at type="dateTime">2012-12-07T19:03:50Z</created_at>
+          <updated_at type="dateTime">2017-07-29T23:25:21Z</updated_at>
+          <email nil="true"/>
+          <data>
+            <how_many>2</how_many>
+          </data>
+          <storage_state>redacted</storage_state>
+          <test type="boolean">false</test>
+          <last_four_digits>4444</last_four_digits>
+          <first_six_digits nil="true"/>
+          <card_type>master</card_type>
+          <first_name>Jim</first_name>
+          <last_name>TesterDude</last_name>
+          <month type="integer">9</month>
+          <year type="integer">2022</year>
+          <address1 nil="true"/>
+          <address2 nil="true"/>
+          <city nil="true"/>
+          <state nil="true"/>
+          <zip nil="true"/>
+          <country nil="true"/>
+          <phone_number nil="true"/>
+          <company nil="true"/>
+          <full_name>Jim TesterDude</full_name>
+          <eligible_for_card_updater type="boolean">true</eligible_for_card_updater>
+          <shipping_address1 nil="true"/>
+          <shipping_address2 nil="true"/>
+          <shipping_city nil="true"/>
+          <shipping_state nil="true"/>
+          <shipping_zip nil="true"/>
+          <shipping_country nil="true"/>
+          <shipping_phone_number nil="true"/>
+          <payment_method_type>credit_card</payment_method_type>
+          <errors>
+          </errors>
+          <verification_value></verification_value>
+          <number></number>
+          <fingerprint nil="true"/>
+        </payment_method>
+      </transaction>
+    XML
+  end
+
+  def failed_find_response
+    MockResponse.failed <<-XML
+      <errors>
+        <error key="errors.transaction_not_found">Unable to find the transaction AdyQXaG0SVpSoMPdmFlvd3aA3uz.</error>
+      </errors>
+    XML
+  end
 end

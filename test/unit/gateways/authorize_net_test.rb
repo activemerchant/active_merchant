@@ -17,7 +17,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @credit_card = credit_card
     @check = check
     @apple_pay_payment_token = ActiveMerchant::Billing::ApplePayPaymentToken.new(
-      {data: 'encoded_payment_data'},
+      { data: 'encoded_payment_data' },
       payment_instrument_name: 'SomeBank Visa',
       payment_network: 'Visa',
       transaction_identifier: 'transaction123'
@@ -118,8 +118,8 @@ class AuthorizeNetTest < Test::Unit::TestCase
     [TRACK1_DATA, TRACK2_DATA].each do |track|
       @credit_card.track_data = track
       stub_comms do
-        @gateway.purchase(@amount, @credit_card, {device_type: 1})
-      end.check_request do |endpoint, data, headers|
+        @gateway.purchase(@amount, @credit_card, { device_type: 1 })
+      end.check_request do |_endpoint, data, _headers|
         parse(data) do |doc|
           assert_not_nil doc.at_xpath('//retail')
           assert_equal "2", doc.at_xpath('//retail/marketType').content
@@ -386,6 +386,41 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'Street address and 5-digit postal code match.', response.avs_result['message']
   end
 
+  def test_successful_purchase_using_stored_card_and_custom_delimiter
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    @gateway.expects(:ssl_post).returns(successful_purchase_using_stored_card_response_with_pipe_delimiter)
+
+    response = @gateway.purchase(@amount, store.authorization, { delimiter: '|', description: 'description, with, commas' })
+    assert_success response
+
+    assert_equal '2235700270#XXXX2224#cim_purchase', response.authorization
+    assert_equal 'Y', response.avs_result['code']
+    assert response.avs_result['street_match']
+    assert response.avs_result['postal_match']
+    assert_equal 'Street address and 5-digit postal code match.', response.avs_result['message']
+    assert_equal 'description, with, commas', response.params['order_description']
+  end
+
+  def test_successful_purchase_using_stored_card_and_custom_delimiter_with_quotes
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    @gateway.expects(:ssl_post).returns(successful_purchase_using_stored_card_response_with_pipe_delimiter_and_quotes)
+
+    response = @gateway.purchase(@amount, store.authorization, { delimiter: '|', description: 'description, with, commas' })
+    assert_success response
+
+    assert_equal '12345667#XXXX1111#cim_purchase', response.authorization
+    assert_equal 'Y', response.avs_result['code']
+    assert response.avs_result['street_match']
+    assert response.avs_result['postal_match']
+    assert_equal 'Street address and 5-digit postal code match.', response.avs_result['message']
+  end
+
   def test_failed_purchase_using_stored_card
     @gateway.expects(:ssl_post).returns(successful_store_response)
     store = @gateway.store(@credit_card, @options)
@@ -421,6 +456,167 @@ class AuthorizeNetTest < Test::Unit::TestCase
     capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
     assert_equal "This transaction has been approved.", capture.message
+  end
+
+  def test_successful_auth_with_initial_reccuring_stored_credential
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'recurring',
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isFirstRecurringPayment').content
+      assert_not_match(/isFirstSubsequentAuth/, doc)
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_initial_unscheduled_stored_credential
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'unscheduled',
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isFirstSubsequentAuth').content
+      assert_not_match(/isFirstRecurringPayment/, doc)
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_initial_installment_stored_credential
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'installment',
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isFirstSubsequentAuth').content
+      assert_not_match(/isFirstRecurringPayment/, doc)
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_installment_stored_credential
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'installment',
+      initiator: 'merchant',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isSubsequentAuth').content
+      assert_equal '0123', doc.at_xpath('//subsequentAuthInformation/originalNetworkTransId').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_unscheduled_stored_credential
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'unscheduled',
+      initiator: 'merchant',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isSubsequentAuth').content
+      assert_equal '0123', doc.at_xpath('//subsequentAuthInformation/originalNetworkTransId').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_recurring_stored_credential
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'merchant',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isSubsequentAuth').content
+      assert_equal '0123', doc.at_xpath('//subsequentAuthInformation/originalNetworkTransId').content
+      assert_equal 'recurringBilling', doc.at_xpath('//transactionSettings/setting/settingName').content
+      assert_equal 'true', doc.at_xpath('//transactionSettings/setting/settingValue').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_installment_stored_credential_and_cardholder_initiator
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'installment',
+      initiator: 'cardholder',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isStoredCredentials').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_unscheduled_stored_credential_and_cardholder_initiator
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'unscheduled',
+      initiator: 'cardholder',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isStoredCredentials').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_recurring_stored_credential_and_cardholder_initiator
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'cardholder',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isStoredCredentials').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
   end
 
   def test_failed_authorize_using_stored_card
@@ -512,7 +708,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_verify
     response = stub_comms do
-      @gateway.verify(@credit_card)
+      @gateway.verify(@credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal '1.00', doc.at_xpath('//transactionRequest/amount').content if doc.at_xpath('//transactionRequest/transactionType').content == 'authOnlyTransaction'
     end.respond_with(successful_authorize_response, successful_void_response)
     assert_success response
   end
@@ -523,6 +722,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
     assert_match %r{This transaction has been approved}, response.message
+  end
+
+  def test_successful_verify_with_0_auth_card
+    options = {
+      verify_amount: 0,
+      billing_address: {
+        address1: '123 St',
+        zip: '88888'
+      }
+    }
+    response = stub_comms do
+      @gateway.verify(@credit_card, options)
+    end.respond_with(successful_authorize_response)
+    assert_success response
   end
 
   def test_unsuccessful_verify
@@ -590,26 +803,78 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_address
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', country: 'US', state: 'CO', phone: '(555)555-5555', fax: '(555)555-4444'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.authorize(@amount, @credit_card, billing_address: { address1: '164 Waverley Street', country: 'US', state: 'CO', phone: '(555)555-5555', fax: '(555)555-4444' })
+    end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
-        assert_equal "CO", doc.at_xpath("//billTo/state").content, data
-        assert_equal "164 Waverley Street", doc.at_xpath("//billTo/address").content, data
-        assert_equal "US", doc.at_xpath("//billTo/country").content, data
-        assert_equal "(555)555-5555", doc.at_xpath("//billTo/phoneNumber").content
-        assert_equal "(555)555-4444", doc.at_xpath("//billTo/faxNumber").content
+        assert_equal 'CO', doc.at_xpath('//billTo/state').content, data
+        assert_equal '164 Waverley Street', doc.at_xpath('//billTo/address').content, data
+        assert_equal 'US', doc.at_xpath('//billTo/country').content, data
+        assert_equal '(555)555-5555', doc.at_xpath('//billTo/phoneNumber').content
+        assert_equal '(555)555-4444', doc.at_xpath('//billTo/faxNumber').content
+      end
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_address_with_empty_billing_address
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert_equal '', doc.at_xpath('//billTo/address').content, data
+        assert_equal '', doc.at_xpath('//billTo/city').content, data
+        assert_equal 'n/a', doc.at_xpath('//billTo/state').content, data
+        assert_equal '', doc.at_xpath('//billTo/zip').content, data
+        assert_equal '', doc.at_xpath('//billTo/country').content, data
+      end
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_address_with_address2_present
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, billing_address: { address1: '164 Waverley Street', address2: 'Apt 1234', country: 'US', state: 'CO', phone: '(555)555-5555', fax: '(555)555-4444' })
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert_equal 'CO', doc.at_xpath('//billTo/state').content, data
+        assert_equal '164 Waverley Street Apt 1234', doc.at_xpath('//billTo/address').content, data
+        assert_equal 'US', doc.at_xpath('//billTo/country').content, data
+        assert_equal '(555)555-5555', doc.at_xpath('//billTo/phoneNumber').content
+        assert_equal '(555)555-4444', doc.at_xpath('//billTo/faxNumber').content
+      end
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_address_north_america_with_defaults
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, billing_address: { address1: '164 Waverley Street', country: 'US' })
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert_equal 'NC', doc.at_xpath('//billTo/state').content, data
+        assert_equal '164 Waverley Street', doc.at_xpath('//billTo/address').content, data
+        assert_equal 'US', doc.at_xpath('//billTo/country').content, data
       end
     end.respond_with(successful_authorize_response)
   end
 
   def test_address_outsite_north_america
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', country: 'DE', state: ''})
-    end.check_request do |endpoint, data, headers|
+      @gateway.authorize(@amount, @credit_card, billing_address: { address1: '164 Waverley Street', country: 'DE' })
+    end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
-        assert_equal "n/a", doc.at_xpath("//billTo/state").content, data
-        assert_equal "164 Waverley Street", doc.at_xpath("//billTo/address").content, data
-        assert_equal "DE", doc.at_xpath("//billTo/country").content, data
+        assert_equal 'n/a', doc.at_xpath('//billTo/state').content, data
+        assert_equal '164 Waverley Street', doc.at_xpath('//billTo/address').content, data
+        assert_equal 'DE', doc.at_xpath('//billTo/country').content, data
+      end
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_address_outsite_north_america_with_address2_present
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, billing_address: { address1: '164 Waverley Street', address2: 'Apt 1234', country: 'DE' })
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert_equal 'n/a', doc.at_xpath('//billTo/state').content, data
+        assert_equal '164 Waverley Street Apt 1234', doc.at_xpath('//billTo/address').content, data
+        assert_equal 'DE', doc.at_xpath('//billTo/country').content, data
       end
     end.respond_with(successful_authorize_response)
   end
@@ -639,6 +904,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal "E0Mvq8AAABEiMwARIjNEVWZ3iJk=", doc.at_xpath("//cardholderAuthentication/cardholderAuthenticationValue").content
         assert_equal "2", doc.at_xpath("//cardholderAuthentication/authenticationIndicator").content
         assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_does_not_add_cardholder_authentication_element_without_relevant_values
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert !doc.at_xpath('//cardholderAuthentication'), data
       end
     end.respond_with(successful_purchase_response)
   end
@@ -870,9 +1145,8 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_truncation
     card = credit_card('4242424242424242',
-      first_name: "a" * 51,
-      last_name: "a" * 51,
-    )
+      first_name: 'a' * 51,
+      last_name: 'a' * 51)
 
     options = {
       order_id: "a" * 21,
@@ -945,8 +1219,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_apple_pay_authorization_with_network_tokenization
     credit_card = network_tokenization_credit_card('4242424242424242',
-      :payment_cryptogram => "111111111100cryptogram"
-    )
+      payment_cryptogram: '111111111100cryptogram')
 
     response = stub_comms do
       @gateway.authorize(@amount, credit_card)
@@ -961,6 +1234,22 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal '508141794', response.authorization.split('#')[0]
+  end
+
+  def test_failed_apple_pay_authorization_with_network_tokenization_not_supported
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: '111111111100cryptogram')
+
+    response = stub_comms do
+      @gateway.authorize(@amount, credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert_equal credit_card.payment_cryptogram, doc.at_xpath('//creditCard/cryptogram').content
+        assert_equal credit_card.number, doc.at_xpath('//creditCard/cardNumber').content
+      end
+    end.respond_with(network_tokenization_not_supported_response)
+
+    assert_equal Gateway::STANDARD_ERROR_CODE[:unsupported_feature], response.error_code
   end
 
   def test_supports_network_tokenization_true
@@ -1003,7 +1292,85 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert !@gateway.verify_credentials
   end
 
-  private
+  def test_0_amount_verify_with_no_zip
+    @options[:verify_amount] = 0
+    @options[:billing_address] = { zip: nil, address1: 'XYZ' }
+
+    response = @gateway.verify(@credit_card, @options)
+
+    assert_failure response
+    assert_equal 'Billing address including zip code is required for a 0 amount verify', response.message
+  end
+
+  def test_verify_transcript_with_0_auth
+    stub_comms do
+      @options[:verify_amount] = 0
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal '0.00', doc.at_xpath('//transactionRequest/amount').content if doc.at_xpath('//transactionRequest/transactionType').content == 'authOnlyTransaction'
+    end
+  end
+
+  def test_verify_amount_with_bad_string
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 'dog'
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_boolean
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: true
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_decimal
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 0.125
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_negative
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: -100
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_string_as_number
+    assert_equal 200, @gateway.send(:amount_for_verify, verify_amount: '200')
+  end
+
+  def test_verify_amount_with_zero_without_zip
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 0, billing_address: { address1: 'street' }
+    end
+
+    assert_equal 'Billing address including zip code is required for a 0 amount verify', error.message
+  end
+
+  def test_verify_amount_with_zero_without_address
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 0, billing_address: { zip: '051052' }
+    end
+
+    assert_equal 'Billing address including zip code is required for a 0 amount verify', error.message
+  end
+
+  def test_verify_amount_without_gsf
+    assert_equal 100, @gateway.send(:amount_for_verify, {})
+  end
+
+  def test_verify_amount_with_nil_value
+    assert_equal 100, @gateway.send(:amount_for_verify, { verify_amount: nil })
+  end
 
   def pre_scrubbed
     <<-PRE_SCRUBBED
@@ -1094,7 +1461,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -1127,11 +1494,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def fraud_review_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -1164,11 +1531,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def address_not_provided_avs_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -1201,11 +1568,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def no_match_cvv_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -1238,11 +1605,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def no_match_avs_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -1275,11 +1642,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </errors>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def failed_purchase_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -1321,11 +1688,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </userFields>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def no_message_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -1357,11 +1724,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </userFields>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def successful_purchase_response_test_mode
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -1394,11 +1761,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def successful_authorize_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -1440,11 +1807,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </userFields>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def failed_authorize_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -1486,11 +1853,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </userFields>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def successful_capture_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema xmlns=AnetApi/xml/v1/schema/AnetApiSchema.xsd">
       <refId/>
@@ -1521,11 +1888,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
       </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def already_actioned_capture_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema xmlns=AnetApi/xml/v1/schema/AnetApiSchema.xsd">
       <refId/>
@@ -1556,11 +1923,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
       </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def failed_capture_response
-    <<-eos
+    <<-XML
       <createTransactionResponse xmlns:xsi=
                                  http://www.w3.org/2001/XMLSchema-instance xmlns:xsd=http://www.w3.org/2001/XMLSchema xmlns=AnetApi/xml/v1/schema/AnetApiSchema.xsd><refId/><messages>
       <resultCode>Error</resultCode>
@@ -1589,11 +1956,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
       <shipTo/>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def successful_refund_response
-    <<-eos
+    <<-XML
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
       <messages>
@@ -1623,11 +1990,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def failed_refund_response
-    <<-eos
+    <<-XML
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
       <messages>
@@ -1657,11 +2024,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </errors>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def successful_void_response
-    <<-eos
+    <<-XML
     <?xml version="1.0" encoding="utf-8"?>
     <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -1692,11 +2059,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
       </messages>
     </transactionResponse>
     </createTransactionResponse>
-    eos
+    XML
   end
 
   def failed_void_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -1728,11 +2095,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         <shipTo/>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def successful_credit_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId>1</refId>
@@ -1769,11 +2136,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </userFields>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def failed_credit_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId>1</refId>
@@ -1810,11 +2177,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </userFields>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def successful_store_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
       <messages>
@@ -1831,11 +2198,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
       <customerShippingAddressIdList />
       <validationDirectResponseList />
       </createCustomerProfileResponse>
-    eos
+    XML
   end
 
   def failed_store_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
       <messages>
@@ -1849,11 +2216,41 @@ class AuthorizeNetTest < Test::Unit::TestCase
       <customerShippingAddressIdList />
       <validationDirectResponseList />
       </createCustomerProfileResponse>
-    eos
+    XML
+  end
+
+  def successful_unstore_response
+    <<-XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <deleteCustomerProfileResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+      </deleteCustomerProfileResponse>
+    XML
+  end
+
+  def failed_unstore_response
+    <<-XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <deleteCustomerProfileResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00040</code>
+            <text>The record cannot be found.</text>
+          </message>
+        </messages>
+      </deleteCustomerProfileResponse>
+    XML
   end
 
   def successful_store_new_payment_profile_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerPaymentProfileResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <messages>
@@ -1866,11 +2263,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         <customerProfileId>38392170</customerProfileId>
         <customerPaymentProfileId>34896759</customerPaymentProfileId>
       </createCustomerPaymentProfileResponse>
-    eos
+    XML
   end
 
   def failed_store_new_payment_profile_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerPaymentProfileResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <messages>
@@ -1883,11 +2280,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         <customerProfileId>38392767</customerProfileId>
         <customerPaymentProfileId>34897359</customerPaymentProfileId>
       </createCustomerPaymentProfileResponse>
-    eos
+    XML
   end
 
   def successful_purchase_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
       <refId>1</refId>
@@ -1900,11 +2297,32 @@ class AuthorizeNetTest < Test::Unit::TestCase
       </messages>
       <directResponse>1,1,1,This transaction has been approved.,8HUT72,Y,2235700270,1,Store Purchase,1.01,CC,auth_capture,e385c780422f4bd182c4,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,4A20EEAF89018FF075899DDB332E9D35,,2,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
+  end
+
+  def successful_purchase_using_stored_card_response_with_pipe_delimiter
+    <<-XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <refId>1</refId>
+      <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+          <code>I00001</code>
+          <text>Successful.</text>
+          </message>
+      </messages>
+      <directResponse>1|1|1|This transaction has been approved.|8HUT72|Y|2235700270|1|description, with, commas|1.01|CC|auth_capture|e385c780422f4bd182c4|Longbob|Longsen||||n/a|||||||||||||||||||4A20EEAF89018FF075899DDB332E9D35||2|||||||||||XXXX2224|Visa||||||||||||||||</directResponse>
+      </createCustomerProfileTransactionResponse>
+    XML
+  end
+
+  def successful_purchase_using_stored_card_response_with_pipe_delimiter_and_quotes
+    "\xEF\xBB\xBF<?xml version=\"1.0\" encoding=\"utf-8\"?><createCustomerProfileTransactionResponse xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"AnetApi/xml/v1/schema/AnetApiSchema.xsd\"><refId>12345</refId><messages><resultCode>Ok</resultCode><message><code>I00001</code><text>Successful.</text></message></messages><directResponse>\"1\"|\"1\"|\"1\"|\"This transaction has been approved.\"|\"001234\"|\"Y\"|\"12345667\"|\"654321\"|\"\"|\"39.95\"|\"CC\"|\"auth_capture\"|\"54321\"|\"Jane\"|\"Doe\"|\"\"|\"1 Main St.\"|\"Durham\"|\"NC\"|\"27707\"|\"US\"|\"\"|\"\"|\"test@example.com\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"XXXX1111\"|\"Visa\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"</directResponse></createCustomerProfileTransactionResponse>"
   end
 
   def failed_purchase_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId>1</refId>
@@ -1917,11 +2335,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>3,1,6,The credit card number is invalid.,,P,0,1,Store Purchase,1.01,CC,auth_capture,2da01d7b583c706106e2,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,13BA28EEA3593C13E2E3BC109D16E5D2,,,,,,,,,,,,,XXXX1222,,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def successful_authorize_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId>1</refId>
@@ -1934,11 +2352,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>1,1,1,This transaction has been approved.,GGHQ5R,Y,2235700640,1,Store Purchase,1.01,CC,auth_only,0bde9d39f8eb9443f2af,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,E47E5CA4F1239B00D39A7F8C147215D3,,2,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def failed_authorize_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId>1</refId>
@@ -1951,11 +2369,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>3,1,6,The credit card number is invalid.,,P,0,1,Store Purchase,1.01,CC,auth_only,f632442ce056f9f82ee9,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,13BA28EEA3593C13E2E3BC109D16E5D2,,,,,,,,,,,,,XXXX1222,,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def successful_capture_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId />
@@ -1968,11 +2386,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>1,1,1,This transaction has been approved.,GGHQ5R,P,2235700640,1,,1.01,CC,prior_auth_capture,0bde9d39f8eb9443f2af,,,,,,,,,,,,,,,,,,,,,,,,,E47E5CA4F1239B00D39A7F8C147215D3,,,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def failed_capture_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId />
@@ -1985,11 +2403,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>3,2,47,The amount requested for settlement cannot be greater than the original amount authorized.,,P,0,,,41.01,CC,prior_auth_capture,,,,,,,,,,,,,,,,,,,,,,,,,,8A556B125A1DA070AF5A84B798B7FBF7,,,,,,,,,,,,,,Visa,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def failed_refund_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId>1</refId>
@@ -2001,12 +2419,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </message>
         </messages>
       </createCustomerProfileTransactionResponse>
-    eos
-
+    XML
   end
 
   def successful_void_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId />
@@ -2019,11 +2436,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>1,1,1,This transaction has been approved.,3R9YE2,P,2235701141,1,,0.00,CC,void,becdb509b35a32c30e97,,,,,,,,,,,,,,,,,,,,,,,,,C3C4B846B9D5A37D14462C2BF5B924FD,,,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def failed_void_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId />
@@ -2036,11 +2453,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>1,1,310,This transaction has already been voided.,,P,0,,,0.00,CC,void,,,,,,,,,,,,,,,,,,,,,,,,,,FD9FAE70BEF461997A6C15D7D597658D,,,,,,,,,,,,,,Visa,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def network_tokenization_not_supported_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -2082,11 +2499,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </userFields>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def credentials_are_legit_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <authenticateTestResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <messages>
@@ -2097,11 +2514,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </message>
         </messages>
       </authenticateTestResponse>
-    eos
+    XML
   end
 
   def credentials_are_bogus_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <authenticateTestResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <messages>
@@ -2112,6 +2529,84 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </message>
         </messages>
       </authenticateTestResponse>
-    eos
+    XML
+  end
+
+  def failed_refund_for_unsettled_payment_response
+    <<-XML
+    <?xml version="1.0" encoding="utf-8"?>
+      <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00027</code>
+            <text>The transaction was unsuccessful.</text>
+          </message>
+        </messages>
+        <transactionResponse>
+          <responseCode>3</responseCode>
+          <authCode/>
+          <avsResultCode>P</avsResultCode>
+          <cvvResultCode/>
+          <cavvResultCode/>
+          <transId>0</transId>
+          <refTransID/>
+          <transHash/>
+          <testRequest>0</testRequest>
+          <accountNumber>XXXX0001</accountNumber>
+          <accountType>Visa</accountType>
+          <errors>
+            <error>
+              <errorCode>54</errorCode>
+              <errorText>The referenced transaction does not meet the criteria for issuing a credit.</errorText>
+            </error>
+          </errors>
+          <userFields/>
+          <transHashSha2/>
+        </transactionResponse>
+      </createTransactionResponse>
+    XML
+  end
+
+  def unsuccessful_authorize_response_for_jcb_card
+    <<-XML
+    <?xml version="1.0" encoding="utf-8"?>
+      <createTransactionResponse xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"AnetApi/xml/v1/schema/AnetApiSchema.xsd\">
+      <refId>1</refId>
+      <messages>
+        <resultCode>Error</resultCode>
+        <message>
+          <code>E00027</code>
+          <text>The transaction was unsuccessful.</text>
+        </message>
+      </messages>
+      <transactionResponse>
+        <responseCode>3</responseCode>
+        <authCode />
+        <avsResultCode>P</avsResultCode>
+        <cvvResultCode />
+        <cavvResultCode />
+        <transId>0</transId>
+        <refTransID />
+        <transHash />
+        <testRequest>0</testRequest>
+        <accountNumber>XXXX0017</accountNumber>
+        <accountType>JCB</accountType>
+        <errors>
+          <error>
+            <errorCode>289</errorCode>
+            <errorText>This processor does not accept zero dollar authorization for this card type.</errorText>
+          </error>
+        </errors>
+        <userFields>
+          <userField>
+            <name>x_currency_code</name>
+            <value>USD</value>
+          </userField>
+        </userFields>
+        <transHashSha2 />
+      </transactionResponse>
+    </createTransactionResponse>
+    XML
   end
 end

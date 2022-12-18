@@ -6,8 +6,10 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AL', 'AD', 'AM', 'AT', 'AZ', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'GE', 'DE', 'GR', 'HU', 'IS', 'IE', 'IT', 'KZ', 'LV', 'LI', 'LT', 'LU', 'MK', 'MT', 'MD', 'MC', 'ME', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'TR', 'UA', 'GB', 'VA']
       self.default_currency = 'EUR'
+      self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND IQD JOD LYD)
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb dankort maestro]
+      self.currencies_without_fractions = %w(CVE DJF GNF IDR JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
 
       self.homepage_url = 'https://www.barclaycardsmartpay.com/'
       self.display_name = 'Barclaycard Smartpay'
@@ -67,7 +69,29 @@ module ActiveMerchant #:nodoc:
         post[:amount] = amount_hash(money, options[:currency])
         post[:card] = credit_card_hash(creditcard)
 
-        commit('refundWithData', post)
+        if options[:third_party_payout]
+          post[:recurring] = options[:recurring_contract] || { contract: 'PAYOUT' }
+          MultiResponse.run do |r|
+            r.process {
+              commit(
+                'storeDetailAndSubmitThirdParty',
+                post,
+                @options[:store_payout_account],
+                @options[:store_payout_password]
+              )
+            }
+            r.process {
+              commit(
+                'confirmThirdParty',
+                modification_request(r.authorization, @options),
+                @options[:review_payout_account],
+                @options[:review_payout_password]
+              )
+            }
+          end
+        else
+          commit('refundWithData', post)
+        end
       end
 
       def void(identification, options = {})
@@ -85,7 +109,7 @@ module ActiveMerchant #:nodoc:
       def store(creditcard, options = {})
         post = store_request(options)
         post[:card] = credit_card_hash(creditcard)
-        post[:recurring] = {:contract => 'RECURRING'}
+        post[:recurring] = { contract: 'RECURRING' }
 
         commit('store', post)
       end

@@ -146,7 +146,7 @@ module ActiveMerchant #:nodoc:
           doc = REXML::Document.new(result)
           extract_xml(doc.root).merge(:container => doc.root.name)
         else
-          {:result => result}
+          { result: result }
         end
       end
 

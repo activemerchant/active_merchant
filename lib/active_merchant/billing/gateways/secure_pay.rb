@@ -57,12 +57,11 @@ module ActiveMerchant #:nodoc:
         message = message_from(response)
 
         Response.new(success?(response), message, response,
-          :test => test?,
-          :authorization => response[:transaction_id],
-          :fraud_review => fraud_review?(response),
-          :avs_result => { :code => response[:avs_result_code] },
-          :cvv_result => response[:card_code]
-        )
+          test: test?,
+          authorization: response[:transaction_id],
+          fraud_review: fraud_review?(response),
+          avs_result: { code: response[:avs_result_code] },
+          cvv_result: response[:card_code])
       end
 
       def success?(response)

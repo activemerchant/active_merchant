@@ -74,6 +74,15 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
   end
 
+  def test_successful_purchase_with_custom_eci
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(eci: 1))
+    assert_success response
+    assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
+    assert_equal '1', response.params['ECI']
+    assert_equal @options[:currency], response.params['currency']
+    assert_equal @options[:order_id], response.order_id
+  end
+
   def test_successful_with_non_numeric_order_id
     @options[:order_id] = "##{@options[:order_id][0...26]}.12"
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -91,7 +100,7 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'No brand', response.message
+    assert_equal 'No brand or invalid card number', response.message
   end
 
   def test_successful_authorize_with_mastercard
@@ -112,7 +121,7 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   def test_unsuccessful_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'No card no, no exp date, no brand', response.message
+    assert_equal 'No card no, no exp date, no brand or invalid card number', response.message
   end
 
   def test_successful_void

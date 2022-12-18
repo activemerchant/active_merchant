@@ -72,9 +72,8 @@ module ActiveMerchant #:nodoc:
         authorization = response[:unique_id]
 
         Response.new(success, message, response,
-          :authorization => authorization,
-          :test => (response[:mode] != "LIVE")
-        )
+          authorization: authorization,
+          test: (response[:mode] != 'LIVE'))
       end
 
       def parse(body)

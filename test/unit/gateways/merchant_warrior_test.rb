@@ -21,6 +21,25 @@ class MerchantWarriorTest < Test::Unit::TestCase
     }
   end
 
+  def test_successful_authorize
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    assert response = @gateway.authorize(@success_amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+    assert response.test?
+    assert_equal '1336-20be3569-b600-11e6-b9c3-005056b209e0', response.authorization
+  end
+
+  def test_failed_authorize
+    @gateway.expects(:ssl_post).returns(nil)
+
+    assert response = @gateway.authorize(@success_amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Invalid gateway response', response.message
+    assert response.test?
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 

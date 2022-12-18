@@ -50,14 +50,95 @@ class RemoteLitleTest < Test::Unit::TestCase
       {
         month: '01',
         year: '2012',
-        brand: "visa",
-        number:  "44444444400009",
-        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
-      })
+        brand: 'visa',
+        number:  '44444444400009',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+      }
+    )
+    @decrypted_android_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      {
+        source: :android_pay,
+        month: '01',
+        year: '2021',
+        brand: 'visa',
+        number:  '4457000300000007',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+      }
+    )
+
+    @decrypted_google_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      {
+        source: :google_pay,
+        month: '01',
+        year: '2021',
+        brand: 'visa',
+        number:  '4457000300000007',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+      }
+    )
+    @check = check(
+      name: 'Tom Black',
+      routing_number:  '011075150',
+      account_number: '4099999992',
+      account_type: 'checking'
+    )
+    @authorize_check = check(
+      name: 'John Smith',
+      routing_number: '011075150',
+      account_number: '1099999999',
+      account_type: 'checking'
+    )
+    @store_check = check(
+      routing_number: '011100012',
+      account_number: '1099999998'
+    )
   end
 
   def test_successful_authorization
     assert response = @gateway.authorize(10010, @credit_card1, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_authorization_with_merchant_data
+    options = @options.merge(
+      affiliate: 'some-affiliate',
+      campaign: 'super-awesome-campaign',
+      merchant_grouping_id: 'brilliant-group'
+    )
+    assert @gateway.authorize(10010, @credit_card1, options)
+  end
+
+  def test_successful_capture_with_customer_id
+    options = @options.merge(customer_id: '8675309')
+    assert response = @gateway.authorize(1000, @credit_card1, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_succesful_purchase_with_customer_id
+    options = @options.merge(customer_id: '8675309')
+    assert response = @gateway.purchase(1000, @credit_card1, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_refund_with_customer_id
+    options = @options.merge(customer_id: '8675309')
+
+    assert purchase = @gateway.purchase(100, @credit_card1, options)
+
+    assert refund = @gateway.refund(444, purchase.authorization, options)
+    assert_success refund
+    assert_equal 'Approved', refund.message
+  end
+
+  def test_successful_authorization_with_echeck
+    options = @options.merge({
+      order_id: '38',
+      order_source: 'telephone'
+    })
+    assert response = @gateway.authorize(3002, @authorize_check, options)
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -71,17 +152,16 @@ class RemoteLitleTest < Test::Unit::TestCase
   def test_unsuccessful_authorization
     assert response = @gateway.authorize(60060, @credit_card2,
       {
-        :order_id=>'6',
-        :billing_address=>{
-          :name      => 'Joe Green',
-          :address1  => '6 Main St.',
-          :city      => 'Derry',
-          :state     => 'NH',
-          :zip       => '03038',
-          :country   => 'US'
-        },
-      }
-    )
+        order_id: '6',
+        billing_address: {
+          name: 'Joe Green',
+          address1: '6 Main St.',
+          city: 'Derry',
+          state: 'NH',
+          zip: '03038',
+          country: 'US'
+        }
+      })
     assert_failure response
     assert_equal 'Insufficient Funds', response.message
   end
@@ -103,14 +183,188 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_truncated_billing_address
+    assert response = @gateway.purchase(10010, @credit_card1, {
+      order_id: '1',
+      email: 'test@example.com',
+      billing_address: {
+        address1: '1234 Supercalifragilisticexpialidocious',
+        address2: 'Unit 6',
+        city: '‎Lake Chargoggagoggmanchauggagoggchaubunagungamaugg',
+        state: 'ME',
+        zip: '09901',
+        country: 'US'
+      }
+    })
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_debt_repayment_flag
     assert response = @gateway.purchase(10010, @credit_card1, @options.merge(debt_repayment: true))
     assert_success response
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_fraud_filter_override_flag
+    assert response = @gateway.purchase(10010, @credit_card1, @options.merge(fraud_filter_override: true))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_failed_purchase_when_fraud_filter_override_flag_not_sent_as_boolean
+    assert response = @gateway.purchase(10010, @credit_card1, @options.merge(fraud_filter_override: 'hey'))
+    assert_failure response
+  end
+
+  def test_successful_purchase_with_3ds_fields
+    options = @options.merge({
+      order_source: '3dsAuthenticated',
+      xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+      cavv: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+    })
+    assert response = @gateway.purchase(10010, @credit_card1, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_apple_pay
     assert response = @gateway.purchase(10010, @decrypted_apple_pay)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_android_pay
+    assert response = @gateway.purchase(10000, @decrypted_android_pay)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_google_pay
+    assert response = @gateway.purchase(10000, @decrypted_google_pay)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_two_data_visa
+    options = @options.merge(
+      level_2_data: {
+        sales_tax: 200
+      }
+    )
+    assert response = @gateway.purchase(10010, @credit_card1, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_two_data_master
+    credit_card = CreditCard.new(
+      first_name: 'John',
+      last_name: 'Smith',
+      month: '01',
+      year: '2024',
+      brand: 'master',
+      number: '5555555555554444',
+      verification_value: '349'
+    )
+
+    options = @options.merge(
+      level_2_data: {
+        total_tax_amount: 200,
+        customer_code: 'PO12345',
+        card_acceptor_tax_id: '011234567',
+        tax_included_in_total: 'true',
+        tax_amount: 50
+      }
+    )
+    assert response = @gateway.purchase(10010, credit_card, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_three_data_visa
+    options = @options.merge(
+      level_3_data: {
+        discount_amount: 50,
+        shipping_amount: 50,
+        duty_amount: 20,
+        tax_included_in_total: true,
+        tax_amount: 100,
+        tax_rate: 0.05,
+        tax_type_identifier: '01',
+        card_acceptor_tax_id: '361531321',
+        line_items: [{
+          item_sequence_number: 1,
+          item_commodity_code: 300,
+          item_description: 'ramdom-object',
+          product_code: 'TB123',
+          quantity: 2,
+          unit_of_measure: 'EACH',
+          unit_cost: 25,
+          discount_per_line_item: 5,
+          line_item_total: 300,
+          tax_included_in_total: true,
+          tax_amount: 100,
+          tax_rate: 0.05,
+          tax_type_identifier: '01',
+          card_acceptor_tax_id: '361531321'
+        }]
+      }
+    )
+    assert response = @gateway.purchase(10010, @credit_card1, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_three_data_master
+    credit_card = CreditCard.new(
+      first_name: 'John',
+      last_name: 'Smith',
+      month: '01',
+      year: '2024',
+      brand: 'master',
+      number: '5555555555554444',
+      verification_value: '349'
+    )
+
+    options = @options.merge(
+      level_3_data: {
+        total_tax_amount: 200,
+        customer_code: 'PO12345',
+        card_acceptor_tax_id: '011234567',
+        tax_amount: 50,
+        line_items: [{
+          item_description: 'ramdom-object',
+          product_code: 'TB123',
+          quantity: 2,
+          unit_of_measure: 'EACH',
+          line_item_total: 300
+        }]
+      }
+    )
+
+    assert response = @gateway.purchase(10010, credit_card, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_merchant_data
+    options = @options.merge(
+      affiliate: 'some-affiliate',
+      campaign: 'super-awesome-campaign',
+      merchant_grouping_id: 'brilliant-group'
+    )
+    assert response = @gateway.purchase(10010, @credit_card1, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_echeck
+    options = @options.merge({
+      order_id: '42',
+      order_source: 'telephone'
+    })
+    assert response = @gateway.purchase(2004, @check, options)
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -162,6 +416,18 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert void = @gateway.void("123456789012345360;authorization;100")
     assert_failure void
     assert_equal 'No transaction found with specified litleTxnId', void.message
+  end
+
+  def test_successful_credit
+    assert credit = @gateway.credit(123456, @credit_card1, @options)
+    assert_success credit
+    assert_equal 'Approved', credit.message
+  end
+
+  def test_failed_credit
+    @credit_card1.number = '1234567890'
+    assert credit = @gateway.credit(1, @credit_card1, @options)
+    assert_failure credit
   end
 
   def test_partial_refund
@@ -255,6 +521,31 @@ class RemoteLitleTest < Test::Unit::TestCase
     credit_card = CreditCard.new(@credit_card_hash.merge(:number => '4100280190123000'))
     assert store_response = @gateway.store(credit_card, :order_id => '50')
     assert_success store_response
+
+    token = store_response.authorization
+    assert_equal store_response.params['litleToken'], token
+
+    assert response = @gateway.purchase(10010, token)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_purchase_with_token_and_date_successful
+    assert store_response = @gateway.store(@credit_card1, order_id: '50')
+    assert_success store_response
+
+    token = store_response.authorization
+    assert_equal store_response.params['litleToken'], token
+
+    assert response = @gateway.purchase(10010, token, { basis_expiration_month: '01', basis_expiration_year: '2024' })
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_echeck_store_and_purchase
+    assert store_response = @gateway.store(@store_check)
+    assert_success store_response
+    assert_equal 'Account number was successfully registered', store_response.message
 
     token = store_response.authorization
     assert_equal store_response.params['litleToken'], token

@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! transaction_type + 'Req', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! transaction_type + 'Request', 'xmlns:n2' => EBAY_NAMESPACE do
-            xml.tag! 'n2:Version', API_VERSION
+            xml.tag! 'n2:Version', api_version(options)
             xml.tag! 'n2:' + transaction_type + 'RequestDetails' do
               xml.tag! 'n2:ReferenceID', reference_id if transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:PaymentAction', action
@@ -83,6 +83,12 @@ module ActiveMerchant #:nodoc:
         end
 
         xml.target!
+      end
+
+      def api_version(options)
+        return API_VERSION_3DS2 if options.dig(:three_d_secure, :version) =~ /^2/
+
+        API_VERSION
       end
 
       def add_credit_card(xml, credit_card, address, options)
@@ -114,6 +120,19 @@ module ActiveMerchant #:nodoc:
       def add_descriptors(xml, options)
         xml.tag! 'n2:SoftDescriptor', options[:soft_descriptor] unless options[:soft_descriptor].blank?
         xml.tag! 'n2:SoftDescriptorCity', options[:soft_descriptor_city] unless options[:soft_descriptor_city].blank?
+      end
+
+      def add_three_d_secure(xml, options)
+        three_d_secure = options[:three_d_secure]
+        xml.tag! 'ThreeDSecureRequest' do
+          xml.tag! 'MpiVendor3ds', 'Y'
+          xml.tag! 'AuthStatus3ds', three_d_secure[:authentication_response_status] || three_d_secure[:trans_status] if three_d_secure[:authentication_response_status] || three_d_secure[:trans_status]
+          xml.tag! 'Cavv', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
+          xml.tag! 'Eci3ds', three_d_secure[:eci] unless three_d_secure[:eci].blank?
+          xml.tag! 'Xid', three_d_secure[:xid] unless three_d_secure[:xid].blank?
+          xml.tag! 'ThreeDSVersion', three_d_secure[:version] unless three_d_secure[:version].blank?
+          xml.tag! 'DSTransactionId', three_d_secure[:ds_transaction_id] unless three_d_secure[:ds_transaction_id].blank?
+        end
       end
 
       def credit_card_type(type)

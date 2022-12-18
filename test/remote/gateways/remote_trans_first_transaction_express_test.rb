@@ -284,4 +284,12 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:gateway_id], clean_transcript)
     assert_scrubbed(@gateway.options[:reg_key], clean_transcript)
   end
+
+  def test_transcript_scrubbing_account_number
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@check.account_number, clean_transcript)
+  end
 end

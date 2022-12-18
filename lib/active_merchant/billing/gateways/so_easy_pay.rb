@@ -157,8 +157,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(soap_action, soap, options)
-        headers = {"SOAPAction" => "\"urn:Interface##{soap_action}\"",
-                   "Content-Type" => "text/xml; charset=utf-8"}
+        headers = { 'SOAPAction' => "\"urn:Interface##{soap_action}\"",
+                   'Content-Type' => 'text/xml; charset=utf-8' }
         response_string = ssl_post(test? ? self.test_url : self.live_url, soap, headers)
         response = parse(response_string, soap_action)
         return Response.new(response['errorcode'] == '000',
@@ -172,15 +172,16 @@ module ActiveMerchant #:nodoc:
         retval = Builder::XmlMarkup.new(:indent => 2)
         retval.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
         retval.tag!('soap:Envelope', {
-            'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
-            'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
-            'xmlns:soapenc' => 'http://schemas.xmlsoap.org/soap/encoding/',
-            'xmlns:tns' => 'urn:Interface',
-            'xmlns:types' => 'urn:Interface/encodedTypes',
-            'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'}) do
-          retval.tag!('soap:Body', {'soap:encodingStyle'=>'http://schemas.xmlsoap.org/soap/encoding/'}) do
+          'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
+          'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
+          'xmlns:soapenc' => 'http://schemas.xmlsoap.org/soap/encoding/',
+          'xmlns:tns' => 'urn:Interface',
+          'xmlns:types' => 'urn:Interface/encodedTypes',
+          'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'
+        }) do
+          retval.tag!('soap:Body', { 'soap:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/' }) do
             retval.tag!("tns:#{request}") do
-              retval.tag!("#{request}Request", {'xsi:type'=>"tns:#{request}Request"}) do
+              retval.tag!("#{request}Request", { 'xsi:type' => "tns:#{request}Request" }) do
                 yield retval
               end
             end

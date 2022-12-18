@@ -5,8 +5,17 @@ class MonerisRemoteTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = MonerisGateway.new(fixtures(:moneris))
+
+    # https://developer.moneris.com/More/Testing/Penny%20Value%20Simulator
     @amount = 100
-    @credit_card = credit_card('4242424242424242')
+    @fail_amount = 105
+
+    # https://developer.moneris.com/livedemo/3ds2/reference/guide/php
+    @fully_authenticated_eci = 5
+    @no_liability_shift_eci = 7
+
+    @credit_card = credit_card('4242424242424242', verification_value: '012')
+    @visa_credit_card_3ds = credit_card('4606633870436092', verification_value: '012')
     @options = {
       :order_id => generate_unique_id,
       :customer => generate_unique_id,
@@ -19,6 +28,79 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
+  end
+
+  def test_successful_cavv_purchase
+    # See https://developer.moneris.com/livedemo/3ds2/cavv_purchase/tool/php
+    assert response = @gateway.purchase(@amount, @visa_credit_card_3ds,
+      @options.merge(
+        three_d_secure: {
+          version: '2',
+          cavv: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+          eci: @fully_authenticated_eci,
+          three_ds_server_trans_id: 'd0f461f8-960f-40c9-a323-4e43a4e16aaa',
+          ds_transaction_id: '12345'
+        }
+      ))
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_first_purchase_with_credential_on_file
+    gateway = MonerisGateway.new(fixtures(:moneris))
+    assert response = gateway.purchase(@amount, @credit_card, @options.merge(issuer_id: '', payment_indicator: 'C', payment_information: '0'))
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+    assert_not_empty response.params['issuer_id']
+  end
+
+  def test_successful_purchase_with_cof_enabled_and_no_cof_options
+    gateway = MonerisGateway.new(fixtures(:moneris))
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_non_cof_purchase_with_cof_enabled_and_only_issuer_id_sent
+    gateway = MonerisGateway.new(fixtures(:moneris))
+    assert response = gateway.purchase(@amount, @credit_card, @options.merge(issuer_id: ''))
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+    assert_nil response.params['issuer_id']
+  end
+
+  def test_successful_subsequent_purchase_with_credential_on_file
+    gateway = MonerisGateway.new(fixtures(:moneris))
+    assert response = gateway.authorize(
+      @amount,
+      @credit_card,
+      @options.merge(
+        issuer_id: '',
+        payment_indicator: 'C',
+        payment_information: '0'
+      )
+    )
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+
+    assert response2 = gateway.purchase(
+      @amount,
+      @credit_card,
+      @options.merge(
+        order_id: response.authorization,
+        issuer_id: response.params['issuer_id'],
+        payment_indicator: 'U',
+        payment_information: '2'
+      )
+    )
+    assert_success response2
+    assert_equal 'Approved', response2.message
+    assert_false response2.authorization.blank?
   end
 
   def test_successful_purchase_with_network_tokenization
@@ -39,7 +121,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
   end
 
   def test_failed_authorization
-    response = @gateway.authorize(105, @credit_card, @options)
+    response = @gateway.authorize(@fail_amount, @credit_card, @options)
     assert_failure response
   end
 
@@ -71,6 +153,63 @@ class MonerisRemoteTest < Test::Unit::TestCase
 
     void = @gateway.void(response.authorization)
     assert_success void
+  end
+
+  def test_successful_cavv_authorization
+    # see https://developer.moneris.com/livedemo/3ds2/cavv_preauth/tool/php
+    # also see https://github.com/Moneris/eCommerce-Unified-API-PHP/blob/3cd3f0bd5a92432c1b4f9727d1ca6334786d9066/Examples/CA/TestCavvPreAuth.php
+    response = @gateway.authorize(@amount, @visa_credit_card_3ds,
+      @options.merge(
+        three_d_secure: {
+          version: '2',
+          cavv: 'AAABBJg0VhI0VniQEjRWAAAAAAA=',
+          eci: '7',
+          three_ds_server_trans_id: 'e11d4985-8d25-40ed-99d6-c3803fe5e68f',
+          ds_transaction_id: '12345'
+        }
+      ))
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_cavv_authorization_and_capture
+    # see https://developer.moneris.com/livedemo/3ds2/cavv_preauth/tool/php
+    # also see https://github.com/Moneris/eCommerce-Unified-API-PHP/blob/3cd3f0bd5a92432c1b4f9727d1ca6334786d9066/Examples/CA/TestCavvPreAuth.php
+    response = @gateway.authorize(@amount, @visa_credit_card_3ds,
+      @options.merge(
+        three_d_secure: {
+          version: '2',
+          cavv: 'AAABBJg0VhI0VniQEjRWAAAAAAA=',
+          eci: @fully_authenticated_eci,
+          three_ds_server_trans_id: 'e11d4985-8d25-40ed-99d6-c3803fe5e68f',
+          ds_transaction_id: '12345'
+        }
+      ))
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+
+    response = @gateway.capture(@amount, response.authorization)
+    assert_success response
+  end
+
+  def test_failed_cavv_authorization
+    omit('There is no way to currently create a failed cavv authorization scenario')
+    # see https://developer.moneris.com/livedemo/3ds2/cavv_preauth/tool/php
+    # also see https://github.com/Moneris/eCommerce-Unified-API-PHP/blob/3cd3f0bd5a92432c1b4f9727d1ca6334786d9066/Examples/CA/TestCavvPreAuth.php
+    response = @gateway.authorize(@fail_amount, @visa_credit_card_3ds,
+      @options.merge(
+        three_d_secure: {
+          version: '2',
+          cavv: 'AAABBJg0VhI0VniQEjRWAAAAAAA=',
+          eci: @no_liability_shift_eci,
+          three_ds_server_trans_id: 'e11d4985-8d25-40ed-99d6-c3803fe5e68f',
+          ds_transaction_id: '12345'
+        }
+      ))
+
+    assert_failure response
   end
 
   def test_successful_authorization_with_network_tokenization
@@ -111,7 +250,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
   def test_failed_purchase_from_error
     assert response = @gateway.purchase(150, @credit_card, @options)
     assert_failure response
-    assert_equal 'Declined', response.message
+    assert_equal 'Card declined do not retry card declined do not retry', response.message
   end
 
   def test_successful_verify
@@ -161,27 +300,27 @@ class MonerisRemoteTest < Test::Unit::TestCase
 
   def test_failed_authorization_with_vault
     test_successful_store
-    response = @gateway.authorize(105, @data_key, @options)
+    response = @gateway.authorize(@fail_amount, @data_key, @options)
     assert_failure response
   end
 
   def test_cvv_match_when_not_enabled
     assert response = @gateway.purchase(1039, @credit_card, @options)
     assert_success response
-    assert_equal({'code' => nil, 'message' => nil}, response.cvv_result)
+    assert_equal({ 'code' => nil, 'message' => nil }, response.cvv_result)
   end
 
   def test_cvv_no_match_when_not_enabled
     assert response = @gateway.purchase(1053, @credit_card, @options)
     assert_success response
-    assert_equal({'code' => nil, 'message' => nil}, response.cvv_result)
+    assert_equal({ 'code' => nil, 'message' => nil }, response.cvv_result)
   end
 
   def test_cvv_match_when_enabled
     gateway = MonerisGateway.new(fixtures(:moneris).merge(cvv_enabled: true))
     assert response = gateway.purchase(1039, @credit_card, @options)
     assert_success response
-    assert_equal({'code' => 'M', 'message' => 'CVV matches'}, response.cvv_result)
+    assert_equal({ 'code' => 'M', 'message' => 'CVV matches' }, response.cvv_result)
   end
 
   def test_avs_result_valid_when_enabled

@@ -12,8 +12,12 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners]
 
-      def initialize(options={})
-        requires!(options, :username, :password, :merchant)
+      CVV_CODE_MAPPING = {
+        'S' => 'D'
+      }
+
+      def initialize(options = {})
+        requires!(options, :username, :password, :merchant, :pem)
         super
       end
 
@@ -24,23 +28,76 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_verification_value(post, payment_method)
         add_customer_data(post, options)
+        add_soft_descriptors(post, options)
+        add_customer_reference(post, options)
 
         commit("capture", post)
       end
 
-      def refund(amount, authorization, options={})
+      def authorize(amount, payment_method, options = {})
+        post = {}
+        add_invoice(post, amount, options)
+        add_order_number(post, options)
+        add_payment_method(post, payment_method)
+        add_verification_value(post, payment_method)
+        add_stored_credential_data(post, payment_method, options)
+        add_customer_data(post, options)
+        add_soft_descriptors(post, options)
+        add_customer_reference(post, options)
+
+        commit('preauth', post)
+      end
+
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization, options)
         add_customer_data(post, options)
+        add_soft_descriptors(post, options)
+        add_customer_reference(post, options)
 
-        commit("refund", post)
+        commit('captureWithoutAuth', post)
+      end
+
+      def refund(amount, authorization, options = {})
+        post = {}
+        add_invoice(post, amount, options)
+        add_reference(post, authorization, options)
+        add_customer_data(post, options)
+        add_soft_descriptors(post, options)
+        post['order.ECI'] = options[:eci] || 'SSL'
+        add_customer_reference(post, options)
+
+        commit('refund', post)
+      end
+
+      # Credit requires the merchant account to be enabled for "Adhoc Refunds"
+      def credit(amount, payment_method, options = {})
+        post = {}
+        add_invoice(post, amount, options)
+        add_order_number(post, options)
+        add_payment_method(post, payment_method)
+        add_customer_data(post, options)
+        add_soft_descriptors(post, options)
+        add_customer_reference(post, options)
+
+        commit('refund', post)
+      end
+
+      def void(authorization, options = {})
+        post = {}
+        add_reference(post, authorization, options)
+        add_customer_data(post, options)
+        add_soft_descriptors(post, options)
+        add_customer_reference(post, options)
+
+        commit('reversal', post)
       end
 
       def store(payment_method, options = {})
         post = {}
         add_payment_method(post, payment_method)
-        add_card_reference(post)
+        add_card_reference(post, options)
 
         commit("registerAccount", post)
       end
@@ -69,18 +126,67 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(post, payment_method)
-        post["card.cardHolderName"] = payment_method.name
-        post["card.PAN"] = payment_method.number
-        post["card.expiryYear"] = format(payment_method.year, :two_digits)
-        post["card.expiryMonth"] = format(payment_method.month, :two_digits)
+        post['card.cardHolderName'] = payment_method.name
+        post['card.PAN'] = payment_method.number
+        post['card.expiryYear'] = format(payment_method.year, :two_digits)
+        post['card.expiryMonth'] = format(payment_method.month, :two_digits)
+      end
+
+      def add_stored_credential_data(post, payment_method, options)
+        post['order.ECI'] = options[:eci] || eci(options)
+        if (stored_credential = options[:stored_credential]) && %w(visa master).include?(payment_method.brand)
+          post['card.posEntryMode'] = stored_credential[:initial_transaction] ? 'MANUAL' : 'STORED_CREDENTIAL'
+          stored_credential_usage(post, payment_method, options) unless stored_credential[:initiator] && stored_credential[:initiator] == 'cardholder'
+          post['order.authTraceId'] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
+        end
+      end
+
+      def stored_credential_usage(post, payment_method, options)
+        return unless payment_method.brand == 'visa'
+
+        stored_credential = options[:stored_credential]
+        if stored_credential[:reason_type] == 'unscheduled'
+          if stored_credential[:initiator] == 'merchant'
+            post['card.storedCredentialUsage'] = 'UNSCHEDULED_MIT'
+          elsif stored_credential[:initiator] == 'customer'
+            post['card.storedCredentialUsage'] = 'UNSCHEDULED_CIT'
+          end
+        elsif stored_credential[:reason_type] == 'recurring'
+          post['card.storedCredentialUsage'] = 'RECURRING'
+        elsif stored_credential[:reason_type] == 'installment'
+          post['card.storedCredentialUsage'] = 'INSTALLMENT'
+        end
+      end
+
+      def eci(options)
+        if options.dig(:stored_credential, :initial_transaction)
+          'SSL'
+        elsif options.dig(:stored_credential, :initiator) && options[:stored_credential][:initiator] == 'cardholder'
+          'MTO'
+        elsif options.dig(:stored_credential, :reason_type)
+          case options[:stored_credential][:reason_type]
+          when 'recurring'
+            'REC'
+          when 'installment'
+            'INS'
+          when 'unscheduled'
+            'MTO'
+          end
+        else
+          'SSL'
+        end
       end
 
       def add_verification_value(post, payment_method)
         post["card.CVN"] = payment_method.verification_value
       end
 
-      def add_card_reference(post)
-        post["customer.customerReferenceNumber"] = options[:order_id]
+      def add_card_reference(post, options)
+        post['customer.customerReferenceNumber'] = options[:customer_reference_number] || options[:order_id]
+      end
+
+      def add_customer_reference(post, options)
+        post['customer.customerReferenceNumber'] = options[:customer_reference_number] if options[:customer_reference_number]
       end
 
       def add_reference(post, authorization, options)

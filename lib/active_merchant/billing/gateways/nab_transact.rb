@@ -234,17 +234,15 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
 
         Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(action, response)
-        )
+          test: test?,
+          authorization: authorization_from(action, response))
       end
 
       def commit_periodic(action, request)
         response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, build_periodic_request(action, request)))
         Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(action, response)
-        )
+          test: test?,
+          authorization: authorization_from(action, response))
       end
 
       def success?(response)

@@ -80,8 +80,8 @@ module ActiveMerchant #:nodoc:
       CURRENCY_CODES["PEN"] = 604
 
       def add_invoice(params, money, options)
-        # Visanet Peru expects a 9-digit numeric purchaseNumber
-        params[:purchaseNumber] = (SecureRandom.random_number(900_000_000) + 100_000_000).to_s
+        # Visanet Peru expects a 12-digit alphanumeric purchaseNumber
+        params[:purchaseNumber] = generate_purchase_number_stamp
         params[:externalTransactionId] = options[:order_id]
         params[:amount] = amount(money)
         params[:currencyId] = CURRENCY_CODES[options[:currency] || currency(money)]
@@ -118,25 +118,40 @@ module ActiveMerchant #:nodoc:
         params[:antifraud] = antifraud
       end
 
-      def commit(action, params)
-        begin
-          raw_response = ssl_request(method(action), url(action, params), params.to_json, headers)
-          response = parse(raw_response)
-        rescue ResponseError => e
-          raw_response = e.response.body
-          response_error(raw_response)
-        rescue JSON::ParserError
-          unparsable_response(raw_response)
-        else
-          Response.new(
-            success_from(response),
-            message_from(response),
-            response,
-            :test => test?,
-            :authorization => authorization_from(params),
-            :error_code => response["errorCode"]
-          )
-        end
+      def prepare_refund_data(params, authorization, options)
+        params.delete(:purchaseNumber)
+        params[:externalReferenceId] = params.delete(:externalTransactionId)
+        _, transaction_id = split_authorization(authorization)
+
+        options.update(transaction_id: transaction_id)
+        params[:ruc] = options[:ruc]
+      end
+
+      def split_authorization(authorization)
+        authorization.split('|')
+      end
+
+      def generate_purchase_number_stamp
+        Time.now.to_f.to_s.delete('.')[1..10] + rand(99).to_s
+      end
+
+      def commit(action, params, options = {})
+        raw_response = ssl_request(method(action), url(action, params, options), params.to_json, headers)
+        response = parse(raw_response)
+      rescue ResponseError => e
+        raw_response = e.response.body
+        response_error(raw_response, options, action)
+      rescue JSON::ParserError
+        unparsable_response(raw_response)
+      else
+        Response.new(
+          success_from(response),
+          message_from(response, options, action),
+          response,
+          test: test?,
+          authorization: authorization_from(params, response, options),
+          error_code: response['errorCode']
+        )
       end
 
       def headers

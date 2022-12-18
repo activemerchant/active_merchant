@@ -17,8 +17,8 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     @mastercard          = credit_card('5100000010001004')
     @declined_mastercard = credit_card('5100000020002000')
 
-    @amex                = credit_card('371100001000131', {:verification_value => 1234})
-    @declined_amex       = credit_card('342400001000180')
+    @amex                = credit_card('371100001000131', { verification_value: 1234 })
+    @declined_amex       = credit_card('342400001000180', { verification_value: 1234 })
 
     # Canadian EFT
     @check               = check(
@@ -49,8 +49,9 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     }
 
     @recurring_options = @options.merge(
-      :interval => { :unit => :months, :length => 1 },
-      :occurences => 5)
+      interval: { unit: :months, length: 1 },
+      occurences: 5
+    )
   end
 
   def test_successful_visa_purchase
@@ -276,6 +277,35 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_scrubbed(@visa.number, clean_transcript)
     assert_scrubbed(@visa.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:password], clean_transcript)
+  end
+
+  def test_successful_authorize_with_3ds_v1_options
+    @options[:three_d_secure] = {
+      version: '1.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
+    assert response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_authorize_with_3ds_v2_options
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'Y',
+      authentication_response_status: 'Y'
+    }
+
+    assert response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
   end
 
   private

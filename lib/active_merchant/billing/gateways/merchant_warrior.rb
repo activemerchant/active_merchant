@@ -137,6 +137,8 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         xml = REXML::Document.new(body)
 
+        return { response_message: 'Invalid gateway response' } unless xml.root.present?
+
         response = {}
         xml.root.elements.to_a.each do |node|
           parse_element(response, node)

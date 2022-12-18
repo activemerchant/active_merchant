@@ -65,7 +65,7 @@ class QuickpayV10Test < Test::Unit::TestCase
       assert response.test?
     end.check_request do |endpoint, data, headers|
       assert_match %r{/payments/1145/cancel}, endpoint
-    end.respond_with({'id' => 1145}.to_json)
+    end.respond_with({ 'id' => 1145 }.to_json)
   end
 
   def test_failed_authorization
@@ -103,7 +103,7 @@ class QuickpayV10Test < Test::Unit::TestCase
       assert response.test?
     end.check_request do |endpoint, data, headers|
       assert_match %r{/cards/\d+/cancel}, endpoint
-    end.respond_with({'id' => '123'}.to_json)
+    end.respond_with({ 'id' => '123' }.to_json)
   end
 
   def test_successful_verify
@@ -117,7 +117,7 @@ class QuickpayV10Test < Test::Unit::TestCase
   def test_failed_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
-    end.respond_with(failed_authorization_response, {'id' => 1145}.to_json)
+    end.respond_with(failed_authorization_response, { 'id' => 1145 }.to_json)
     assert_failure response
     assert_equal "Validation error", response.message
   end
@@ -190,18 +190,18 @@ class QuickpayV10Test < Test::Unit::TestCase
 
   def successful_capture_response
     {
-      "id"          =>1145,
-      "order_id"    =>"310f59c57a",
-      "accepted"    =>true,
-      "test_mode"   =>true,
-      "branding_id" =>nil,
-      "variables"   =>{},
-      "acquirer"    =>"clearhaus",
-      "operations"  =>[],
-      "metadata"    =>{"type"=>"card", "brand"=>"quickpay-test-card", "last4"=>"0008", "exp_month"=>9, "exp_year"=>2016, "country"=>"DK", "is_3d_secure"=>false, "customer_ip"=>nil, "customer_country"=>nil},
-      "created_at"  =>"2015-03-30T16:56:17Z",
-      "balance"     =>0,
-      "currency"    =>"DKK"
+      'id' => 1145,
+      'order_id' => '310f59c57a',
+      'accepted' => true,
+      'test_mode' => true,
+      'branding_id' => nil,
+      'variables' => {},
+      'acquirer' => 'clearhaus',
+      'operations' => [],
+      'metadata' => { 'type' => 'card', 'brand' => 'quickpay-test-card', 'last4' => '0008', 'exp_month' => 9, 'exp_year' => 2016, 'country' => 'DK', 'is_3d_secure' => false, 'customer_ip' => nil, 'customer_country' => nil },
+      'created_at' => '2015-03-30T16:56:17Z',
+      'balance' => 0,
+      'currency' => 'DKK'
     }.to_json
   end
 

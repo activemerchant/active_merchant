@@ -11,14 +11,12 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://merchantwarehouse.com/merchantware'
       self.display_name = 'MerchantWARE'
 
-      ENV_NAMESPACES = { "xmlns:xsi"  => "http://www.w3.org/2001/XMLSchema-instance",
-                         "xmlns:xsd"  => "http://www.w3.org/2001/XMLSchema",
-                         "xmlns:env" => "http://schemas.xmlsoap.org/soap/envelope/"
-                       }
-      ENV_NAMESPACES_V4 = { "xmlns:xsi"  => "http://www.w3.org/2001/XMLSchema-instance",
-                            "xmlns:xsd"  => "http://www.w3.org/2001/XMLSchema",
-                            "xmlns:soap" => "http://schemas.xmlsoap.org/soap/envelope/"
-                          }
+      ENV_NAMESPACES = { 'xmlns:xsi'  => 'http://www.w3.org/2001/XMLSchema-instance',
+                         'xmlns:xsd'  => 'http://www.w3.org/2001/XMLSchema',
+                         'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/' }
+      ENV_NAMESPACES_V4 = { 'xmlns:xsi'  => 'http://www.w3.org/2001/XMLSchema-instance',
+                            'xmlns:xsd'  => 'http://www.w3.org/2001/XMLSchema',
+                            'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' }
 
       TX_NAMESPACE = "http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail"
       TX_NAMESPACE_V4 = "http://schemas.merchantwarehouse.com/merchantware/40/Credit/"
@@ -274,7 +272,7 @@ module ActiveMerchant #:nodoc:
           response[element.name] = element.text
         end
 
-        response[:message] = response["faultstring"].to_s.gsub("\n", " ")
+        response[:message] = response['faultstring'].to_s.tr("\n", ' ')
         response
       rescue REXML::ParseException
         response[:http_body]        = http_response.body
@@ -293,20 +291,18 @@ module ActiveMerchant #:nodoc:
       def commit(action, request, v4 = false)
         begin
           data = ssl_post(url(v4), request,
-                   "Content-Type" => 'text/xml; charset=utf-8',
-                   "SOAPAction"   => soap_action(action, v4)
-                 )
+            'Content-Type' => 'text/xml; charset=utf-8',
+            'SOAPAction'   => soap_action(action, v4))
           response = parse(action, data)
         rescue ActiveMerchant::ResponseError => e
           response = parse_error(e.response)
         end
 
         Response.new(response[:success], response[:message], response,
-          :test => test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => response["AVSResponse"] },
-          :cvv_result => response["CVResponse"]
-        )
+          test: test?,
+          authorization: authorization_from(response),
+          avs_result: { code: response['AVSResponse'] },
+          cvv_result: response['CVResponse'])
       end
 
       def authorization_from(response)

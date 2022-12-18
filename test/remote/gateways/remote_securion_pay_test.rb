@@ -66,6 +66,18 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     assert_match CHARGE_ID_REGEX, response.authorization
   end
 
+  def test_successful_purchase_with_three_ds_data
+    @options[:three_d_secure] = {
+      version: '1.0.2',
+      eci: '05',
+      cavv: '3q2+78r+ur7erb7vyv66vv////8=',
+      acs_transaction_id: '6546464645623455665165+qe-jmhabcdefg',
+      authentication_response_status: 'Y'
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_unsuccessful_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response

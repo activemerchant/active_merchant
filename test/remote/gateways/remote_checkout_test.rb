@@ -60,7 +60,7 @@ class RemoteCheckoutTest < Test::Unit::TestCase
     auth = @gateway.authorize(100, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(100, auth.authorization, {currency: "CAD"})
+    assert capture = @gateway.capture(100, auth.authorization, { currency: 'CAD' })
     assert_success capture
     assert_equal 'Successful', capture.message
   end
@@ -101,7 +101,7 @@ class RemoteCheckoutTest < Test::Unit::TestCase
     assert response = @gateway.purchase(100, @credit_card, @options)
     assert_success response
 
-    assert refund = @gateway.refund(100, response.authorization, {currency: "CAD"})
+    assert refund = @gateway.refund(100, response.authorization, { currency: 'CAD' })
     assert_success refund
     assert_equal "Successful", refund.message
   end
@@ -110,7 +110,7 @@ class RemoteCheckoutTest < Test::Unit::TestCase
     assert response = @gateway.purchase(100, @credit_card, @options)
     assert_success response
 
-    assert refund = @gateway.refund(100, '||||', {currency: "CAD"})
+    assert refund = @gateway.refund(100, '||||', { currency: 'CAD' })
     assert_failure refund
   end
 

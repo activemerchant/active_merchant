@@ -54,8 +54,8 @@ module ActiveMerchant #:nodoc:
 
       def void(identification, options = {})
         requires!(options, :order_id)
-        original_transaction_id, _ = identification.split(";")
-        commit(:void_transaction, {:reference_number => format_reference_number(options[:order_id]), :transaction_id => original_transaction_id})
+        original_transaction_id, = identification.split(';')
+        commit(:void_transaction, { reference_number: format_reference_number(options[:order_id]), transaction_id: original_transaction_id })
       end
 
       def voice_authorize(money, authorization_code, creditcard, options = {})
@@ -148,11 +148,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(action, parameters), 'Content-Type' => 'text/xml'))
 
         Response.new(success?(response), message_from(response[:result_message]), response,
-          :test => test?,
-          :authorization => authorization_from(response, parameters),
-          :avs_result => { :code => response[:avs_response_code] },
-          :cvv_result => response[:cvv_response_code]
-        )
+          test: test?,
+          authorization: authorization_from(response, parameters),
+          avs_result: { code: response[:avs_response_code] },
+          cvv_result: response[:cvv_response_code])
       end
 
       def success?(response)

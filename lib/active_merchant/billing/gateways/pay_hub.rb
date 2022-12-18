@@ -171,7 +171,7 @@ module ActiveMerchant #:nodoc:
         success = false
 
         begin
-          raw_response = ssl_post(live_url, post.to_json, {'Content-Type' => 'application/json'} )
+          raw_response = ssl_post(live_url, post.to_json, { 'Content-Type' => 'application/json' })
           response = parse(raw_response)
           success = (response['RESPONSE_CODE'] == "00")
         rescue ResponseError => e
@@ -185,11 +185,10 @@ module ActiveMerchant #:nodoc:
           response_message(response),
           response,
           test: test?,
-          avs_result: {code: response['AVS_RESULT_CODE']},
+          avs_result: { code: response['AVS_RESULT_CODE'] },
           cvv_result: response['VERIFICATION_RESULT_CODE'],
           error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['RESPONSE_CODE']]),
-          authorization: response['TRANSACTION_ID']
-        )
+          authorization: response['TRANSACTION_ID'])
       end
 
       def response_error(raw_response)

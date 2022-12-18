@@ -6,6 +6,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4530910000012345')
+    @credit_card_no_match_cvv = credit_card('4530910000012345', { verification_value: 666 })
     @declined_amount = 11
     @options = {
       billing_address: address,
@@ -20,6 +21,22 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert_equal response.authorization, response.params['id']
   end
 
+  def test_successful_purchase_avs_no_match_cvv
+    response = @gateway.purchase(@amount, @credit_card_no_match_cvv, @options)
+    assert_success response
+    assert_equal 'X', response.avs_result['code']
+    assert_equal 'N', response.cvv_result['code']
+  end
+
+  def split_names(full_name)
+    names = (full_name || '').split
+    return [nil, nil] if names.size == 0
+
+    last_name  = names.pop
+    first_name = names.join(' ')
+    [first_name, last_name]
+  end
+
   def test_successful_purchase_with_more_options
     options = {
       order_id: SecureRandom.uuid,
@@ -28,9 +45,15 @@ class RemoteNetbanxTest < Test::Unit::TestCase
       email: "joe@example.com"
     }
 
+    first_name, last_name = split_names(address[:name])
+
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_equal 'OK', response.message
     assert_equal response.authorization, response.params['id']
+    assert_equal first_name, response.params['profile']['firstName']
+    assert_equal last_name, response.params['profile']['lastName']
+    assert_equal options[:email], response.params['profile']['email']
+    assert_equal options[:ip], response.params['customerIp']
   end
 
   def test_failed_purchase
@@ -195,7 +218,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
 
   def test_successful_purchase_using_stored_card
     merchant_customer_id = SecureRandom.hex
-    assert store = @gateway.store(@credit_card, @options.merge({locale: 'en_GB', merchant_customer_id: merchant_customer_id, email: 'email@example.com'}))
+    assert store = @gateway.store(@credit_card, @options.merge({ locale: 'en_GB', merchant_customer_id: merchant_customer_id, email: 'email@example.com' }))
     assert_success store
 
     assert response = @gateway.purchase(@amount, store.authorization.split('|').last)

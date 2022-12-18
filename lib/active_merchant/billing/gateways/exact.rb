@@ -5,31 +5,22 @@ module ActiveMerchant #:nodoc:
 
       API_VERSION = "8.5"
 
-      TEST_LOGINS = [ {:login => "A00049-01", :password => "test1"},
-                      {:login => "A00427-01", :password => "testus"} ]
-
-      TRANSACTIONS = { :sale          => "00",
-                       :authorization => "01",
-                       :capture       => "32",
-                       :credit        => "34" }
+      TEST_LOGINS = [{ login: 'A00049-01', password: 'test1' },
+                     { login: 'A00427-01', password: 'testus' }]
 
 
       ENVELOPE_NAMESPACES = { 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
                               'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/',
-                              'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance'
-                            }
+                              'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance' }
 
-      SEND_AND_COMMIT_ATTRIBUTES = { 'xmlns:n1' => "http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/Request",
-                                     'env:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/'
-                                   }
+      SEND_AND_COMMIT_ATTRIBUTES = { 'xmlns:n1' => 'http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/Request',
+                                     'env:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/' }
 
       SEND_AND_COMMIT_SOURCE_ATTRIBUTES = { 'xmlns:n2' => 'http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/encodedTypes',
-                                            'xsi:type' => 'n2:Transaction'
-                                          }
+                                            'xsi:type' => 'n2:Transaction' }
 
-      POST_HEADERS = { 'soapAction' => "http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/SendAndCommit",
-                       'Content-Type' => 'text/xml'
-                     }
+      POST_HEADERS = { 'soapAction' => 'http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/SendAndCommit',
+                       'Content-Type' => 'text/xml' }
 
       SUCCESS = "true"
 
@@ -170,6 +161,11 @@ module ActiveMerchant #:nodoc:
            :cvv_result => response[:cvv2]
          )
 
+        Response.new(successful?(response), message_from(response), response,
+          test: test?,
+          authorization: authorization_from(response),
+          avs_result: { code: response[:avs] },
+          cvv_result: response[:cvv2])
       rescue ResponseError => e
         case e.response.code
         when '401'

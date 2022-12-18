@@ -219,7 +219,7 @@ module ActiveMerchant #:nodoc:
         hmac_signature = OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha1'), oauth_signing_key, oauth_signature_base_string)
 
         # append signature to required OAuth parameters
-        oauth_parameters[:oauth_signature] = CGI.escape(Base64.encode64(hmac_signature).chomp.gsub(/\n/, ''))
+        oauth_parameters[:oauth_signature] = CGI.escape(Base64.encode64(hmac_signature).chomp.delete("\n"))
 
         # prepare Authorization header string
         oauth_parameters = Hash[oauth_parameters.sort_by {|k, _| k}]

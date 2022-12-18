@@ -20,7 +20,94 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Transaction Approved Successful", response.message
+    assert_equal 'Transaction Approved Successful', response.message
+
+    customer = response.params['Customer']
+
+    assert_address_match(customer, @options[:billing_address])
+  end
+
+  def test_successful_purchase_with_address
+    @options[:billing_address] = nil
+    @options[:address] = address
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    customer = response.params['Customer']
+
+    assert_address_match(customer, @options[:address])
+  end
+
+  def test_successful_purchase_without_address
+    email = 'test@example.com'
+
+    @options[:billing_address] = nil
+    @options[:email] = email
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    customer = response.params['Customer']
+
+    assert_equal customer['FirstName'], @credit_card.first_name
+    assert_equal customer['LastName'], @credit_card.last_name
+    assert_equal customer['Email'], email
+  end
+
+  def test_successful_purchase_with_3ds1
+    eci = '05'
+    cavv = 'AgAAAAAA4n1uzQPRaATeQAAAAAA='
+    xid = 'AAAAAAAA4n1uzQPRaATeQAAAAAA='
+    authentication_response_status = 'Y'
+    @options[:three_d_secure] = {
+      eci: eci,
+      cavv: cavv,
+      xid: xid,
+      authentication_response_status: authentication_response_status
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+  end
+
+  def test_successful_purchase_with_3ds2
+    eci = '05'
+    cavv = 'AgAAAAAA4n1uzQPRaATeQAAAAAA='
+    authentication_response_status = 'Y'
+    version = '2.1.0'
+    ds_transaction_id = '8fe2e850-a028-407e-9a18-c8cf7598ca10'
+
+    @options[:three_d_secure] = {
+      version: version,
+      eci: eci,
+      cavv: cavv,
+      ds_transaction_id: ds_transaction_id,
+      authentication_response_status: authentication_response_status
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+  end
+
+  def test_successful_purchase_with_shipping_address
+    @options[:shipping_address] = address
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    # eWAY Rapid does not include the shipping address in the request response,
+    # so we can only test that the transaction is successful.
   end
 
   def test_fully_loaded_purchase
@@ -49,19 +136,18 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
         fax:      "(555)555-6666"
       },
       shipping_address: {
-        title:    "Ms.",
-        name:     "Baker",
-        company:  "Elsewhere Inc.",
-        address1: "4321 Their St.",
-        address2: "Apt 2",
-        city:     "Chicago",
-        state:    "IL",
-        zip:      "60625",
-        country:  "US",
-        phone:    "1115555555",
-        fax:      "1115556666"
-      }
-    )
+        title:    'Ms.',
+        name:     'Baker',
+        company:  'Elsewhere Inc.',
+        address1: '4321 Their St.',
+        address2: 'Apt 2',
+        city:     'Chicago',
+        state:    'IL',
+        zip:      '60625',
+        country:  'US',
+        phone:    '1115555555',
+        fax:      '1115556666'
+      })
     assert_success response
   end
 

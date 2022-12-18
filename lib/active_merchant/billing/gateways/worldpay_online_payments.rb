@@ -32,17 +32,16 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options={})
         if authorization
-          commit(:post, "orders/#{CGI.escape(authorization)}/capture", {"captureAmount"=>money}, options, 'capture')
+          commit(:post, "orders/#{CGI.escape(authorization)}/capture", { 'captureAmount' => money }, options, 'capture')
         else
           Response.new(false,
             'FAILED',
             'FAILED',
-            :test => test?,
-            :authorization => false,
-            :avs_result => {},
-            :cvv_result => {},
-            :error_code => false
-          )
+            test: test?,
+            authorization: false,
+            avs_result: {},
+            cvv_result: {},
+            error_code: false)
         end
       end
 
@@ -55,8 +54,8 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def refund(money, orderCode, options={})
-        obj = money ? {"refundAmount" => money} : {}
+      def refund(money, orderCode, options = {})
+        obj = money ? { 'refundAmount' => money } : {}
         commit(:post, "orders/#{CGI.escape(orderCode)}/refund", obj, options, 'refund')
       end
 
@@ -87,7 +86,7 @@ module ActiveMerchant #:nodoc:
           },
           "clientKey"=> @client_key
         }
-        token_response = commit(:post, 'tokens', obj, {'Authorization' => @service_key}, 'token')
+        token_response = commit(:post, 'tokens', obj, { 'Authorization' => @service_key }, 'token')
         token_response
       end
 
@@ -119,11 +118,11 @@ module ActiveMerchant #:nodoc:
 
       def headers(options = {})
         headers = {
-          "Authorization" => @service_key,
-          "Content-Type" => 'application/json',
-          "User-Agent" => "Worldpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "X-Worldpay-Client-User-Agent" => user_agent,
-          "X-Worldpay-Client-User-Metadata" => {:ip => options[:ip]}.to_json
+          'Authorization' => @service_key,
+          'Content-Type' => 'application/json',
+          'User-Agent' => "Worldpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'X-Worldpay-Client-User-Agent' => user_agent,
+          'X-Worldpay-Client-User-Metadata' => { ip: options[:ip] }.to_json
         }
         if options['Authorization']
           headers['Authorization'] = options['Authorization']
@@ -179,12 +178,11 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           success ? "SUCCESS" : response["message"],
           response,
-          :test => test?,
-          :authorization => authorization,
-          :avs_result => {},
-          :cvv_result => {},
-          :error_code => success ? nil : response["customCode"]
-        )
+          test: test?,
+          authorization: authorization,
+          avs_result: {},
+          cvv_result: {},
+          error_code: success ? nil : response['customCode'])
       end
 
       def test?

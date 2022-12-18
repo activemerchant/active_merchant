@@ -65,6 +65,17 @@ class ConektaTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_installments
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ monthly_installments: '3' }))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{monthly_installments=3}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert response.test?
+  end
+
   def test_unsuccessful_refund
     @gateway.expects(:ssl_request).returns(failed_refund_response)
     assert response = @gateway.refund(@amount, "1", @options)
@@ -131,6 +142,26 @@ class ConektaTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
+  end
+
+  def test_adds_application_and_meta_headers
+    application = {
+      name: 'app',
+      version: '1.0',
+      url: 'https://example.com'
+    }
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, 'tok_xxxxxxxxxxxxxxxx', @options.merge(application: application, meta: { its_so_meta: 'even this acronym' }))
+    end.check_request do |_method, _endpoint, _data, headers|
+      assert_match(/\"application\"/, headers['X-Conekta-Client-User-Agent'])
+      assert_match(/\"name\":\"app\"/, headers['X-Conekta-Client-User-Agent'])
+      assert_match(/\"version\":\"1.0\"/, headers['X-Conekta-Client-User-Agent'])
+      assert_match(/\"url\":\"https:\/\/example.com\"/, headers['X-Conekta-Client-User-Agent'])
+      assert_match(/\"its_so_meta\":\"even this acronym\"/, headers['X-Conekta-Client-User-Metadata'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_transcript_scrubbing

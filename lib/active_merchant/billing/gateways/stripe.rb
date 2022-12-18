@@ -21,11 +21,13 @@ module ActiveMerchant #:nodoc:
         'unchecked' => 'P'
       }
 
-      self.supported_countries = %w(AT AU BE BR CA CH DE DK ES FI FR GB HK IE IT JP LU MX NL NO NZ PT SE SG US)
+      DEFAULT_API_VERSION = '2020-08-27'
+
+      self.supported_countries = %w(AE AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK HU IE IN IT JP LT LU LV MT MX MY NL NO NZ PL PT RO SE SG SI SK US)
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
-      self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW MGA PYG RWF VND VUV XAF XOF XPF)
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro unionpay]
+      self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW MGA PYG RWF VND VUV XAF XOF XPF UGX)
 
       self.homepage_url = 'https://stripe.com/'
       self.display_name = 'Stripe'
@@ -43,7 +45,9 @@ module ActiveMerchant #:nodoc:
         'call_issuer' => STANDARD_ERROR_CODE[:call_issuer],
         'processing_error' => STANDARD_ERROR_CODE[:processing_error],
         'incorrect_pin' => STANDARD_ERROR_CODE[:incorrect_pin],
-        'test_mode_live_card' => STANDARD_ERROR_CODE[:test_mode_live_card]
+        'test_mode_live_card' => STANDARD_ERROR_CODE[:test_mode_live_card],
+        'pickup_card' => STANDARD_ERROR_CODE[:pickup_card],
+        'amount_too_small' => STANDARD_ERROR_CODE[:invalid_amount]
       }
 
       BANK_ACCOUNT_HOLDER_TYPE_MAPPING = {
@@ -210,15 +214,12 @@ module ActiveMerchant #:nodoc:
             # The /cards endpoint does not update other customer parameters.
             r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", params, options) }
 
-            if options[:set_default] and r.success? and !r.params['id'].blank?
-              post[:default_card] = r.params['id']
-            end
+            post[:default_card] = r.params['id'] if options[:set_default] && r.success? && !r.params['id'].blank?
 
-            if post.count > 0
-              r.process { update_customer(options[:customer], post) }
-            end
+            r.process { update_customer(options[:customer], post.merge(expand: [:sources])) } if post.count > 0
           end
         else
+          post[:expand] = [:sources]
           commit(:post, 'customers', post.merge(params), options)
         end
       end
@@ -271,19 +272,33 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((Authorization: Bearer )\w+), '\1[FILTERED]').
           gsub(%r((&?three_d_secure\[cryptogram\]=)[\w=]*(&?)), '\1[FILTERED]\2').
-          gsub(%r((card\[cryptogram\]=)[^&]+(&?)), '\1[FILTERED]\2').
-          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]').
-          gsub(%r((card\[emv_approval_data\]=)[^&]+(&?)), '\1[FILTERED]\2').
-          gsub(%r((card\[emv_auth_data\]=)[^&]+(&?)), '\1[FILTERED]\2').
-          gsub(%r((card\[encrypted_pin\]=)[^&]+(&?)), '\1[FILTERED]\2').
-          gsub(%r((card\[encrypted_pin_key_id\]=)[\w=]+(&?)), '\1[FILTERED]\2').
-          gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
-          gsub(%r((card\[swipe_data\]=)[^&]+(&?)), '\1[FILTERED]\2')
+          gsub(%r(((\[card\]|card)\[cryptogram\]=)[^&]+(&?)), '\1[FILTERED]\3').
+          gsub(%r(((\[card\]|card)\[cvc\]=)\d+), '\1[FILTERED]').
+          gsub(%r(((\[card\]|card)\[emv_approval_data\]=)[^&]+(&?)), '\1[FILTERED]\3').
+          gsub(%r(((\[card\]|card)\[emv_auth_data\]=)[^&]+(&?)), '\1[FILTERED]\3').
+          gsub(%r(((\[card\]|card)\[encrypted_pin\]=)[^&]+(&?)), '\1[FILTERED]\3').
+          gsub(%r(((\[card\]|card)\[encrypted_pin_key_id\]=)[\w=]+(&?)), '\1[FILTERED]\3').
+          gsub(%r(((\[card\]|card)\[number\]=)\d+), '\1[FILTERED]').
+          gsub(%r(((\[card\]|card)\[swipe_data\]=)[^&]+(&?)), '\1[FILTERED]\3').
+          gsub(%r(((\[bank_account\]|bank_account)\[account_number\]=)\d+), '\1[FILTERED]').
+          gsub(%r(((\[payment_method_data\]|payment_method_data)\[card\]\[token\]=)[^&]+(&?)), '\1[FILTERED]\3')
       end
 
       def supports_network_tokenization?
         true
+      end
+
+      # Helper method to prevent hitting the external_account limit from remote test runs
+      def delete_latest_test_external_account(account)
+        return unless test?
+
+        auth_header = { 'Authorization' => 'Basic ' + Base64.strict_encode64(options[:login].to_s + ':').strip }
+        url = "#{live_url}accounts/#{CGI.escape(account)}/external_accounts"
+        accounts_response = JSON.parse(ssl_get("#{url}?limit=100", auth_header))
+        to_delete = accounts_response['data'].reject { |ac| ac['default_for_currency'] }
+        ssl_request(:delete, "#{url}/#{to_delete.first['id']}", nil, auth_header)
       end
 
       private
@@ -292,6 +307,49 @@ module ActiveMerchant #:nodoc:
         def type
           'stripe'
         end
+      end
+
+      def create_source(money, payment, type, options = {})
+        post = {}
+        add_amount(post, money, options, true)
+        post[:type] = type
+        if type == 'card'
+          add_creditcard(post, payment, options, true)
+          add_source_owner(post, payment, options)
+        elsif type == 'three_d_secure'
+          post[:three_d_secure] = { card: payment }
+          post[:redirect] = { return_url: options[:redirect_url] }
+        end
+        commit(:post, 'sources', post, options)
+      end
+
+      def show_source(source_id, options)
+        commit(:get, "sources/#{source_id}", nil, options)
+      end
+
+      def create_webhook_endpoint(options, events)
+        post = {}
+        post[:url] = options[:callback_url]
+        post[:enabled_events] = events
+        post[:connect] = true if options[:stripe_account]
+        options.delete(:stripe_account)
+        commit(:post, 'webhook_endpoints', post, options)
+      end
+
+      def delete_webhook_endpoint(options)
+        commit(:delete, "webhook_endpoints/#{options[:webhook_id]}", {}, options)
+      end
+
+      def show_webhook_endpoint(options)
+        options.delete(:stripe_account)
+        commit(:get, "webhook_endpoints/#{options[:webhook_id]}", nil, options)
+      end
+
+      def list_webhook_endpoints(options)
+        params = {}
+        params[:limit] = options[:limit] if options[:limit]
+        options.delete(:stripe_account)
+        commit(:get, "webhook_endpoints?#{post_data(params)}", nil, options)
       end
 
       def create_post_for_auth_or_purchase(money, payment, options)
@@ -314,8 +372,12 @@ module ActiveMerchant #:nodoc:
         end
 
         add_metadata(post, options)
+        add_shipping_address(post, payment, options)
         add_application_fee(post, options)
         add_destination(post, options)
+        add_level_three(post, options)
+        add_connected_account(post, options)
+        add_radar_data(post, options)
         post
       end
 
@@ -435,13 +497,64 @@ module ActiveMerchant #:nodoc:
         post[:metadata] = options[:metadata] || {}
         post[:metadata][:email] = options[:email] if options[:email]
         post[:metadata][:order_id] = options[:order_id] if options[:order_id]
-        post.delete(:metadata) if post[:metadata].empty?
       end
 
       def fetch_application_fees(identification, options = {})
         options.merge!(:key => @fee_refund_api_key)
 
-        commit(:get, "application_fees?charge=#{identification}", nil, options)
+      def add_shipping_address(post, payment, options = {})
+        return unless shipping = options[:shipping_address]
+        return unless shipping_name = shipping[:name]
+
+        post[:shipping] = {}
+
+        post[:shipping][:name] = shipping_name
+        post[:shipping][:address] = {}
+        post[:shipping][:address][:line1] = shipping[:address1]
+        post[:shipping][:address][:line2] = shipping[:address2] if shipping[:address2]
+        post[:shipping][:address][:city] = shipping[:city] if shipping[:city]
+        post[:shipping][:address][:country] = shipping[:country] if shipping[:country]
+        post[:shipping][:address][:state] = shipping[:state] if shipping[:state]
+        post[:shipping][:address][:postal_code] = shipping[:zip] if shipping[:zip]
+        post[:shipping][:phone] = shipping[:phone_number] if shipping[:phone_number]
+      end
+
+      def add_source_owner(post, creditcard, options)
+        post[:owner] = {}
+        post[:owner][:name] = creditcard.name if creditcard.name
+        post[:owner][:email] = options[:email] if options[:email]
+
+        if address = options[:billing_address] || options[:address]
+          owner_address = {}
+          owner_address[:line1] = address[:address1] if address[:address1]
+          owner_address[:line2] = address[:address2] if address[:address2]
+          owner_address[:country] = address[:country] if address[:country]
+          owner_address[:postal_code] = address[:zip] if address[:zip]
+          owner_address[:state] = address[:state] if address[:state]
+          owner_address[:city] = address[:city] if address[:city]
+
+          post[:owner][:phone] = address[:phone] if address[:phone]
+          post[:owner][:address] = owner_address
+        end
+      end
+
+      def add_connected_account(post, options = {})
+        post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
+
+        return unless options[:transfer_destination]
+
+        post[:transfer_data] = { destination: options[:transfer_destination] }
+        post[:transfer_data][:amount] = options[:transfer_amount] if options[:transfer_amount]
+        post[:transfer_group] = options[:transfer_group] if options[:transfer_group]
+        post[:application_fee_amount] = options[:application_fee_amount] if options[:application_fee_amount]
+      end
+
+      def add_radar_data(post, options = {})
+        radar_options = {}
+        radar_options[:session] = options[:radar_session_id] if options[:radar_session_id]
+        radar_options[:skip_rules] = ['all'] if options[:skip_radar_rules]
+
+        post[:radar_options] = radar_options unless radar_options.empty?
       end
 
       def parse(body)
@@ -472,15 +585,21 @@ module ActiveMerchant #:nodoc:
         idempotency_key = options[:idempotency_key]
 
         headers = {
-          "Authorization" => "Basic " + Base64.encode64(key.to_s + ":").strip,
-          "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "Stripe-Version" => api_version(options),
-          "X-Stripe-Client-User-Agent" => user_agent,
-          "X-Stripe-Client-User-Metadata" => {:ip => options[:ip]}.to_json
+          'Authorization' => 'Basic ' + Base64.strict_encode64(key.to_s + ':').strip,
+          'User-Agent' => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'Stripe-Version' => api_version(options),
+          'X-Stripe-Client-User-Agent' => stripe_client_user_agent(options),
+          'X-Stripe-Client-User-Metadata' => { ip: options[:ip] }.to_json
         }
         headers.merge!("Idempotency-Key" => idempotency_key) if idempotency_key
         headers.merge!("Stripe-Account" => options[:stripe_account]) if options[:stripe_account]
         headers
+      end
+
+      def stripe_client_user_agent(options)
+        return user_agent unless options[:application]
+
+        JSON.dump(JSON.parse(user_agent).merge!({ application: options[:application] }))
       end
 
       def api_version(options)
@@ -508,19 +627,17 @@ module ActiveMerchant #:nodoc:
         success = !response.key?("error")
 
         card = card_from_response(response)
-        avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
-        cvc_code = CVC_CODE_TRANSLATOR[card["cvc_check"]]
-
+        avs_code = AVS_CODE_TRANSLATOR["line1: #{card['address_line1_check']}, zip: #{card['address_zip_check']}"]
+        cvc_code = CVC_CODE_TRANSLATOR[card['cvc_check']]
         Response.new(success,
           success ? "Transaction approved" : response["error"]["message"],
           response,
-          :test => response_is_test?(response),
-          :authorization => authorization_from(success, url, method, response),
-          :avs_result => { :code => avs_code },
-          :cvv_result => cvc_code,
-          :emv_authorization => emv_authorization_from_response(response),
-          :error_code => success ? nil : error_code_from(response)
-        )
+          test: response_is_test?(response),
+          authorization: authorization_from(success, url, method, response),
+          avs_result: { code: avs_code },
+          cvv_result: cvc_code,
+          emv_authorization: emv_authorization_from_response(response),
+          error_code: success ? nil : error_code_from(response))
       end
 
       def authorization_from(success, url, method, response)
@@ -533,6 +650,14 @@ module ActiveMerchant #:nodoc:
         else
           response["id"]
         end
+      end
+
+      def message_from(success, response)
+        success ? 'Transaction approved' : response.fetch('error', { 'message' => 'No error details' })['message']
+      end
+
+      def success_from(response, options)
+        !response.key?('error') && response['status'] != 'failed'
       end
 
       def response_error(raw_response)
@@ -595,8 +720,8 @@ module ActiveMerchant #:nodoc:
             country: 'US',
             currency: 'usd',
             routing_number: bank_account.routing_number,
-            name: bank_account.name,
-            account_holder_type: account_holder_type,
+            account_holder_name: bank_account.name,
+            account_holder_type: account_holder_type
           }
         }
 

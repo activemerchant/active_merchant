@@ -36,6 +36,15 @@ class BluePayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, check, @options.merge(:email=>'foo@example.com'))
     assert_success response
     assert response.test?
+    assert_equal 'ACH Accepted', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_stored_credential
+    options = @options.merge(stored_credential: { initiator: 'cardholder', reason_type: 'recurring' })
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert response.test?
     assert_equal 'This transaction has been approved', response.message
     assert response.authorization
   end
@@ -170,6 +179,24 @@ class BluePayTest < Test::Unit::TestCase
     ActiveMerchant::Billing::BluePayGateway.application_id = nil
   end
 
+  def test_successful_refund_with_check
+    assert response = @gateway.purchase(@amount, check, @options.merge(email: 'foo@example.com'))
+    assert_success response
+    assert response.test?
+    assert_equal 'ACH Accepted', response.message
+    assert response.authorization
+
+    assert refund = @gateway.refund(@amount, response.authorization, @options.merge(doc_type: 'PPD'))
+    assert_success refund
+    assert_equal 'ACH VOIDED', refund.message
+  end
+
+  def test_successful_credit_with_check
+    assert credit = @gateway.credit(@amount, check, @options.merge(doc_type: 'PPD'))
+    assert_success credit
+    assert_equal 'ACH Accepted', credit.message
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -178,5 +205,14 @@ class BluePayTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
+
+  def test_account_number_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, check, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(check.account_number, clean_transcript)
   end
 end

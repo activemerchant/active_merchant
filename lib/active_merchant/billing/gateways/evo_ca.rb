@@ -153,7 +153,7 @@ module ActiveMerchant #:nodoc:
       # The <tt>identification</tt> parameter is the transaction ID, retrieved
       # from {Response#authorization}.
       def refund(money, identification)
-        post = {:transactionid => identification}
+        post = { transactionid: identification }
         commit('refund', money, post)
       end
 
@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
       # The <tt>identification</tt> parameter is the transaction ID, retrieved
       # from {Response#authorization}.
       def void(identification)
-        post = {:transactionid => identification}
+        post = { transactionid: identification }
         commit('void', nil, post)
       end
 
@@ -192,7 +192,7 @@ module ActiveMerchant #:nodoc:
       # The <tt>identification</tt> parameter is the transaction ID, retrieved
       # from {Response#authorization}.
       def update(identification, options)
-        post = {:transactionid => identification}
+        post = { transactionid: identification }
         add_order(post, options)
         commit('update', nil, post)
       end
@@ -280,11 +280,10 @@ module ActiveMerchant #:nodoc:
         message = message_from(response)
 
         Response.new(success?(response), message, response,
-          :test          => test?,
-          :authorization => response['transactionid'],
-          :avs_result    => { :code => response['avsresponse'] },
-          :cvv_result    => response['cvvresponse']
-        )
+          test: test?,
+          authorization: response['transactionid'],
+          avs_result: { code: response['avsresponse'] },
+          cvv_result: response['cvvresponse'])
       end
 
       def message_from(response)
@@ -292,7 +291,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, parameters = {})
-        post = {:type => action}
+        post = { type: action }
 
         if test?
           post[:username] = 'demo'

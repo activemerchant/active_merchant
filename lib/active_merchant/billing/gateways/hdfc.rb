@@ -81,14 +81,14 @@ module ActiveMerchant #:nodoc:
         post[:udf2] = escape(options[:email]) if options[:email]
         if address = (options[:billing_address] || options[:address])
           post[:udf3] = escape(address[:phone]) if address[:phone]
-          post[:udf4] = escape(<<EOA)
-#{address[:name]}
-#{address[:company]}
-#{address[:address1]}
-#{address[:address2]}
-#{address[:city]} #{address[:state]} #{address[:zip]}
-#{address[:country]}
-EOA
+          post[:udf4] = escape(<<~ADDRESS)
+            #{address[:name]}
+            #{address[:company]}
+            #{address[:address1]}
+            #{address[:address2]}
+            #{address[:city]} #{address[:state]} #{address[:zip]}
+            #{address[:country]}
+          ADDRESS
         end
       end
 

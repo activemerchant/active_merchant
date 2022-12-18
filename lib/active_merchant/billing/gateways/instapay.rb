@@ -140,11 +140,10 @@ module ActiveMerchant #:nodoc:
         data = ssl_post self.live_url, post_data(action, parameters)
         response = parse(data)
 
-        Response.new(response[:success] , response[:message], response,
-          :authorization => response[:transaction_id],
-          :avs_result => { :code => response[:avs_result] },
-          :cvv_result => response[:cvv_result]
-        )
+        Response.new(response[:success], response[:message], response,
+          authorization: response[:transaction_id],
+          avs_result: { code: response[:avs_result] },
+          cvv_result: response[:cvv_result])
       end
 
       def post_data(action, parameters = {})

@@ -6,7 +6,7 @@ class RemoteMerchantWareTest < Test::Unit::TestCase
 
     @amount = rand(1000) + 200
 
-    @credit_card = credit_card('5424180279791732', {:brand => 'master'})
+    @credit_card = credit_card('5424180279791732', { brand: 'master' })
 
     @options = {
       :order_id => generate_unique_id,

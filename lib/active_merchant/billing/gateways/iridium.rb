@@ -291,12 +291,13 @@ module ActiveMerchant #:nodoc:
         order_id, cross_reference, _ = authorization.split(";")
         build_request(options) do |xml|
           if money
-            details = {'CurrencyCode' => currency_code(options[:currency] || default_currency), 'Amount' => amount(money)}
+            currency = options[:currency] || currency(money)
+            details = { 'CurrencyCode' => currency_code(currency), 'Amount' => localized_amount(money, currency) }
           else
-            details = {'CurrencyCode' => currency_code(default_currency), 'Amount' => '0'}
+            details = { 'CurrencyCode' => currency_code(default_currency), 'Amount' => '0' }
           end
           xml.tag! 'TransactionDetails', details do
-            xml.tag! 'MessageDetails', {'TransactionType' => type, 'CrossReference' => cross_reference}
+            xml.tag! 'MessageDetails', { 'TransactionType' => type, 'CrossReference' => cross_reference }
             xml.tag! 'OrderID', (options[:order_id] || order_id)
           end
         end
@@ -308,9 +309,9 @@ module ActiveMerchant #:nodoc:
         xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
         xml.tag! 'soap:Envelope', { 'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/',
                                     'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
-                                    'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema'} do
+                                    'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema' } do
           xml.tag! 'soap:Body' do
-            xml.tag! options[:action], {'xmlns' => "https://www.thepaymentgateway.net/"} do
+            xml.tag! options[:action], { 'xmlns' => 'https://www.thepaymentgateway.net/' } do
               xml.tag! 'PaymentMessage' do
                 add_merchant_data(xml, options)
                 yield(xml)
@@ -328,8 +329,8 @@ module ActiveMerchant #:nodoc:
 
       def add_purchase_data(xml, type, money, options)
         requires!(options, :order_id)
-        xml.tag! 'TransactionDetails', {'Amount' => amount(money), 'CurrencyCode' => currency_code(options[:currency] || currency(money))} do
-          xml.tag! 'MessageDetails', {'TransactionType' => type}
+        xml.tag! 'TransactionDetails', { 'Amount' => localized_amount(money, currency), 'CurrencyCode' => currency_code(currency) } do
+          xml.tag! 'MessageDetails', { 'TransactionType' => type }
           xml.tag! 'OrderID', options[:order_id]
           xml.tag! 'TransactionControl' do
             xml.tag! 'ThreeDSecureOverridePolicy', 'FALSE'
@@ -371,14 +372,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_merchant_data(xml, options)
-        xml.tag! 'MerchantAuthentication', {"MerchantID" => @options[:login], "Password" => @options[:password]}
+        xml.tag! 'MerchantAuthentication', { 'MerchantID' => @options[:login], 'Password' => @options[:password] }
       end
 
       def commit(request, options)
         requires!(options, :action)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request,
-                              {"SOAPAction" => "https://www.thepaymentgateway.net/" + options[:action],
-                               "Content-Type" => "text/xml; charset=utf-8" }))
+          { 'SOAPAction' => 'https://www.thepaymentgateway.net/' + options[:action],
+           'Content-Type' => 'text/xml; charset=utf-8' }))
 
         success = response[:transaction_result][:status_code] == "0"
         message = response[:transaction_result][:message]
@@ -391,15 +392,14 @@ module ActiveMerchant #:nodoc:
             :street_match => AVS_CODE[ response[:transaction_output_data][:address_numeric_check_result] ],
             :postal_match => AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ],
           },
-          :cvv_result => CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ]
-        )
+          cvv_result: CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ])
       end
 
       def parse(xml)
         reply = {}
         xml = REXML::Document.new(xml)
-        if (root = REXML::XPath.first(xml, "//CardDetailsTransactionResponse")) or
-              (root = REXML::XPath.first(xml, "//CrossReferenceTransactionResponse"))
+        if (root = REXML::XPath.first(xml, '//CardDetailsTransactionResponse')) ||
+           (root = REXML::XPath.first(xml, '//CrossReferenceTransactionResponse'))
           root.elements.to_a.each do |node|
             case node.name
             when 'Message'

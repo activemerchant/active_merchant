@@ -53,6 +53,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(params, amount, options)
         add_customer_data(params, options)
         add_credit_card(params, payment_method, options)
+        add_3ds_authenticated_data(params, options) if options[:three_d_secure]
         params['Method'] = payment_method.respond_to?(:number) ? 'ProcessPayment' : 'TokenPayment'
         commit(url_for('Transaction'), params)
       end
@@ -197,7 +198,19 @@ module ActiveMerchant #:nodoc:
         params
       end
 
-      def add_invoice(params, money, options, key = "Payment")
+      def add_3ds_authenticated_data(params, options)
+        three_d_secure_options = options[:three_d_secure]
+        params['PaymentInstrument'] ||= {} if params['PaymentInstrument'].nil?
+        threed_secure_auth = params['PaymentInstrument']['ThreeDSecureAuth'] = {}
+        threed_secure_auth['Cryptogram'] = three_d_secure_options[:cavv]
+        threed_secure_auth['ECI'] = three_d_secure_options[:eci]
+        threed_secure_auth['XID'] = three_d_secure_options[:xid]
+        threed_secure_auth['AuthStatus'] = three_d_secure_options[:authentication_response_status]
+        threed_secure_auth['dsTransactionId'] = three_d_secure_options[:ds_transaction_id]
+        threed_secure_auth['Version'] = three_d_secure_options[:version]
+      end
+
+      def add_invoice(params, money, options, key = 'Payment')
         currency_code = options[:currency] || currency(money)
         params[key] = {
           'TotalAmount' => localized_amount(money, currency_code),
@@ -219,7 +232,41 @@ module ActiveMerchant #:nodoc:
         add_address(params['ShippingAddress'], options[:shipping_address], {:skip_company => true})
       end
 
-      def add_address(params, address, options={})
+      def add_customer_fields(params, options, payment_method)
+        key = 'Customer'
+        params[key] ||= {}
+
+        customer_address = options[:billing_address] || options[:address]
+
+        add_name_and_email(params[key], customer_address, options[:email], payment_method)
+        add_address(params[key], customer_address)
+      end
+
+      def add_shipping_fields(params, options)
+        key = 'ShippingAddress'
+        params[key] = {}
+
+        add_name_and_email(params[key], options[:shipping_address], options[:email])
+        add_address(params[key], options[:shipping_address], { skip_company: true })
+      end
+
+      def add_name_and_email(params, address, email, payment_method = nil)
+        if address.present?
+          params['FirstName'], params['LastName'] = split_names(address[:name])
+        elsif payment_method_name_available?(payment_method)
+          params['FirstName'] = payment_method.first_name
+          params['LastName'] = payment_method.last_name
+        end
+
+        params['Email'] = email
+      end
+
+      def payment_method_name_available?(payment_method)
+        payment_method.respond_to?(:first_name) && payment_method.respond_to?(:last_name) &&
+          payment_method.first_name.present? && payment_method.last_name.present?
+      end
+
+      def add_address(params, address, options = {})
         return unless address
 
         params['FirstName'], params['LastName'] = split_names(address[:name])
@@ -279,7 +326,7 @@ module ActiveMerchant #:nodoc:
           :cvv_result => cvv_result_from(raw)
         )
       rescue ActiveMerchant::ResponseError => e
-        return ActiveMerchant::Billing::Response.new(false, e.response.message, {:status_code => e.response.code}, :test => test?)
+        return ActiveMerchant::Billing::Response.new(false, e.response.message, { status_code: e.response.code }, test: test?)
       end
 
       def parse(data)
@@ -325,15 +372,16 @@ module ActiveMerchant #:nodoc:
 
       def avs_result_from(response)
         verification = response['Verification'] || {}
-        code = case verification['Address']
-        when "Valid"
-          "M"
-        when "Invalid"
-          "N"
-        else
-          "I"
-        end
-        {:code => code}
+        code =
+          case verification['Address']
+          when 'Valid'
+            'M'
+          when 'Invalid'
+            'N'
+          else
+            'I'
+          end
+        { code: code }
       end
 
       def cvv_result_from(response)

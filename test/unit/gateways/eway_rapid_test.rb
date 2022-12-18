@@ -25,6 +25,96 @@ class EwayRapidTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_purchase_passes_customer_data_from_payment_method_when_no_address_is_provided
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { email: @email })
+    end.check_request do |_endpoint, data, _headers|
+      assert_customer_data_passed(
+        data,
+        @credit_card.first_name,
+        @credit_card.last_name,
+        @email
+      )
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_passes_customer_data_from_billing_address
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { billing_address: @address, email: @email })
+    end.check_request do |_endpoint, data, _headers|
+      assert_customer_data_passed(
+        data,
+        @address[:name].split[0],
+        @address[:name].split[1],
+        @email,
+        @address
+      )
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_passes_customer_data_from_address
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { address: @address, email: @email })
+    end.check_request do |_endpoint, data, _headers|
+      assert_customer_data_passed(
+        data,
+        @address[:name].split[0],
+        @address[:name].split[1],
+        @email,
+        @address
+      )
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_passes_shipping_data
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { shipping_address: @shipping_address, email: @email })
+    end.check_request do |_endpoint, data, _headers|
+      assert_shipping_data_passed(data, @shipping_address, @email)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_3ds1_data
+    eci = '05'
+    cavv = 'AgAAAAAA4n1uzQPRaATeQAAAAAA='
+    xid = 'AAAAAAAA4n1uzQPRaATeQAAAAAA='
+    authentication_response_status = 'Y'
+    options_with_3ds1 = {
+      eci: eci,
+      cavv: cavv,
+      xid: xid,
+      authentication_response_status: authentication_response_status
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { three_d_secure: options_with_3ds1 })
+    end.check_request do |_endpoint, data, _headers|
+      assert_3ds_data_passed(data, options_with_3ds1)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_3ds2_data
+    eci = '05'
+    cavv = 'AgAAAAAA4n1uzQPRaATeQAAAAAA='
+    authentication_response_status = 'Y'
+    version = '2.1.0'
+    ds_transaction_id = '8fe2e850-a028-407e-9a18-c8cf7598ca10'
+
+    options_with_3ds2 = {
+      version: version,
+      eci: eci,
+      cavv: cavv,
+      ds_transaction_id: ds_transaction_id,
+      authentication_response_status: authentication_response_status
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { three_d_secure: options_with_3ds2 })
+    end.check_request do |_endpoint, data, _headers|
+      assert_3ds_data_passed(data, options_with_3ds2)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_localized_currency
     stub_comms do
       @gateway.purchase(100, @credit_card, :currency => 'CAD')
@@ -98,21 +188,20 @@ class EwayRapidTest < Test::Unit::TestCase
           :phone    => "(555)555-5555",
           :fax      => "(555)555-6666"
         },
-        :shipping_address => {
-          :title    => "Ms.",
-          :name     => "Baker",
-          :company  => "Elsewhere Inc.",
-          :address1 => "4321 Their St.",
-          :address2 => "Apt 2",
-          :city     => "Chicago",
-          :state    => "IL",
-          :zip      => "60625",
-          :country  => "US",
-          :phone    => "1115555555",
-          :fax      => "1115556666"
-        }
-      )
-    end.check_request do |endpoint, data, headers|
+        shipping_address: {
+          title: 'Ms.',
+          name: 'Baker',
+          company: 'Elsewhere Inc.',
+          address1: '4321 Their St.',
+          address2: 'Apt 2',
+          city: 'Chicago',
+          state: 'IL',
+          zip: '60625',
+          country: 'US',
+          phone: '1115555555',
+          fax: '1115556666'
+        })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{"TransactionType":"CustomTransactionType"}, data)
       assert_match(%r{"RedirectUrl":"http://awesomesauce.com"}, data)
       assert_match(%r{"CustomerIP":"0.0.0.0"}, data)
@@ -374,6 +463,58 @@ class EwayRapidTest < Test::Unit::TestCase
   end
 
   private
+
+  def assert_customer_data_passed(data, first_name, last_name, email, address = nil)
+    parsed_data = JSON.parse(data)
+    customer = parsed_data['Customer']
+
+    assert_equal customer['FirstName'], first_name
+    assert_equal customer['LastName'], last_name
+    assert_equal customer['Email'], email
+
+    if address
+      assert_equal customer['Title'],       address[:title]
+      assert_equal customer['CompanyName'], address[:company]
+      assert_equal customer['Street1'],     address[:address1]
+      assert_equal customer['Street2'],     address[:address2]
+      assert_equal customer['City'],        address[:city]
+      assert_equal customer['State'],       address[:state]
+      assert_equal customer['PostalCode'],  address[:zip]
+      assert_equal customer['Country'],     address[:country].downcase
+      assert_equal customer['Phone'],       address[:phone]
+      assert_equal customer['Fax'],         address[:fax]
+    end
+  end
+
+  def assert_3ds_data_passed(data, threedsoption)
+    parsed_data = JSON.parse(data)
+    threeds = parsed_data['PaymentInstrument']['ThreeDSecureAuth']
+
+    assert_equal threeds['Cryptogram'], threedsoption[:cavv]
+    assert_equal threeds['ECI'], threedsoption[:eci]
+    assert_equal threeds['XID'], threedsoption[:xid]
+    assert_equal threeds['AuthStatus'], threedsoption[:authentication_response_status]
+    assert_equal threeds['dsTransactionId'], threedsoption[:ds_transaction_id]
+    assert_equal threeds['Version'], threedsoption[:version]
+  end
+
+  def assert_shipping_data_passed(data, address, email)
+    parsed_data = JSON.parse(data)
+    shipping = parsed_data['ShippingAddress']
+
+    assert_equal shipping['FirstName'],   address[:name].split[0]
+    assert_equal shipping['LastName'],    address[:name].split[1]
+    assert_equal shipping['Title'],       address[:title]
+    assert_equal shipping['Street1'],     address[:address1]
+    assert_equal shipping['Street2'],     address[:address2]
+    assert_equal shipping['City'],        address[:city]
+    assert_equal shipping['State'],       address[:state]
+    assert_equal shipping['PostalCode'],  address[:zip]
+    assert_equal shipping['Country'],     address[:country].downcase
+    assert_equal shipping['Phone'],       address[:phone_number]
+    assert_equal shipping['Fax'],         address[:fax]
+    assert_equal shipping['Email'],       email
+  end
 
   def successful_purchase_response(options = {})
     verification_status = options[:verification_status] || 0

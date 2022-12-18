@@ -8,8 +8,11 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('5555555555554444')
     @declined_card = credit_card('4012888888881881')
-    @existing_payment_method = '9AjLflWs7SOKuqJLveOZya9bixa'
-    @declined_payment_method = 'n3JElNt9joT1mJ3CxvWjyEN39N'
+    @check = check({ routing_number: '021000021', account_number: '9876543210' })
+    @existing_payment_method = '3rEkRlZur2hXKbwwRBidHJAIUTO'
+    @declined_payment_method = 'UPfh3J3JbekLeYC88BP741JWnS5'
+    @existing_transaction = 'PJ5ICgM6h7v9pBNxDCJjRHDDxBC'
+    @not_found_transaction = 'AdyQXaG0SVpSoMPdmFlvd3aA3uz'
   end
 
   def test_successful_purchase_with_token

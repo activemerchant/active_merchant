@@ -38,8 +38,8 @@ class RemoteWebpayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, { :email => "email@example.com" })
     assert_equal "email@example.com", response.params["description"], "Use the email if no description is specified."
 
-    assert response = @gateway.purchase(@amount, @credit_card, { })
-    assert_nil response.params["description"], "No description or email specified."
+    assert response = @gateway.purchase(@amount, @credit_card, {})
+    assert_nil response.params['description'], 'No description or email specified.'
   end
 
   def test_unsuccessful_purchase
@@ -104,7 +104,7 @@ class RemoteWebpayTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    assert response = @gateway.store(@credit_card, {:description => "Active Merchant Test Customer", :email => "email@example.com"})
+    assert response = @gateway.store(@credit_card, { description: 'Active Merchant Test Customer', email: 'email@example.com' })
     assert_success response
     assert_equal "customer", response.params["object"]
     assert_equal "Active Merchant Test Customer", response.params["description"]
@@ -113,7 +113,7 @@ class RemoteWebpayTest < Test::Unit::TestCase
   end
 
   def test_successful_update
-    creation = @gateway.store(@credit_card, {:description => "Active Merchant Update Customer"})
+    creation = @gateway.store(@credit_card, { description: 'Active Merchant Update Customer' })
     assert response = @gateway.update(creation.params['id'], @new_credit_card)
     assert_success response
     assert_equal "Active Merchant Update Customer", response.params["description"]
@@ -121,7 +121,7 @@ class RemoteWebpayTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore
-    creation = @gateway.store(@credit_card, {:description => "Active Merchant Unstore Customer"})
+    creation = @gateway.store(@credit_card, { description: 'Active Merchant Unstore Customer' })
     assert response = @gateway.unstore(creation.params['id'])
     assert_success response
     assert_equal true, response.params["deleted"]

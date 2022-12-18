@@ -167,7 +167,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
-    assert response = @gateway.store(@credit_card, {:billing_id => 'test3', :amount => 123})
+    assert response = @gateway.store(@credit_card, { billing_id: 'test3', amount: 123 })
     assert_instance_of Response, response
     assert_equal "Successful", response.message
     assert_equal 'test3', response.params['client_id']

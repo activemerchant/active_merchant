@@ -22,16 +22,15 @@ class RemoteSagePayTest < Test::Unit::TestCase
     )
 
     @maestro = CreditCard.new(
-      :number => '5641820000000005',
-      :month => 12,
-      :year => next_year,
-      :issue_number => '01',
-      :start_month => 12,
-      :start_year => next_year - 2,
-      :verification_value => 123,
-      :first_name => 'Tekin',
-      :last_name => 'Suleyman',
-      :brand => 'maestro'
+      number: '5641820000000005',
+      month: 12,
+      year: next_year,
+      start_month: 12,
+      start_year: next_year - 2,
+      verification_value: 123,
+      first_name: 'Tekin',
+      last_name: 'Suleyman',
+      brand: 'maestro'
     )
 
     @visa = CreditCard.new(
@@ -116,12 +115,38 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_via_reference
+    assert initial_response = @gateway.purchase(@amount, @mastercard, @options)
+    assert_success initial_response
+
+    options = @options.merge(order_id: generate_unique_id)
+    assert first_reference_response = @gateway.purchase(@amount, initial_response.authorization, options)
+    assert_success first_reference_response
+
+    options = @options.merge(order_id: generate_unique_id)
+    assert second_reference_response = @gateway.purchase(@amount, first_reference_response.authorization, options)
+    assert_success second_reference_response
+  end
+
   def test_successful_authorization_and_capture
     assert auth = @gateway.authorize(@amount, @mastercard, @options)
     assert_success auth
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
+  end
+
+  def test_successful_authorization_and_capture_and_refund
+    assert auth = @gateway.authorize(@amount, @mastercard, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+
+    assert refund = @gateway.refund(@amount, capture.authorization,
+      description: 'Crediting trx',
+      order_id: generate_unique_id)
+    assert_success refund
   end
 
   def test_successful_authorization_and_void
@@ -145,9 +170,8 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, purchase.authorization,
-      :description => 'Crediting trx',
-      :order_id => generate_unique_id
-    )
+      description: 'Crediting trx',
+      order_id: generate_unique_id)
 
     assert_success refund
   end
@@ -229,7 +253,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
     @options[:apply_avscv2] = 1
     response = @gateway.purchase(@amount, @visa, @options)
     assert_success response
-    assert_equal "Y", response.cvv_result['code']
+    assert_equal 'M', response.cvv_result['code']
   end
 
   def test_successful_purchase_with_pay_pal_callback_url

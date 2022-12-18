@@ -190,7 +190,7 @@ class PayHubTest < Test::Unit::TestCase
   def test_unsuccessful_request
     @gateway.expects(:ssl_request).returns(failed_purchase_or_authorize_response)
 
-    @gateway.options.merge!({:mode => 'live', :test => false})
+    @gateway.options.merge!({ mode: 'live', test: false })
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -200,7 +200,7 @@ class PayHubTest < Test::Unit::TestCase
   def test_unsuccessful_authorize
     @gateway.expects(:ssl_request).returns(failed_purchase_or_authorize_response)
 
-    @gateway.options.merge!({:mode => 'live', :test => false})
+    @gateway.options.merge!({ mode: 'live', test: false })
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response

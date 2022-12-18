@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # ==== Customer Information Manager (CIM)
@@ -564,6 +565,8 @@ module ActiveMerchant #:nodoc:
 
       def build_get_customer_profile_request(xml, options)
         xml.tag!('customerProfileId', options[:customer_profile_id])
+        xml.tag!('unmaskExpirationDate', options[:unmask_expiration_date]) if options[:unmask_expiration_date]
+        xml.tag!('includeIssuerInfo', options[:include_issuer_info]) if options[:include_issuer_info]
         xml.target!
       end
 
@@ -575,6 +578,7 @@ module ActiveMerchant #:nodoc:
         xml.tag!('customerProfileId', options[:customer_profile_id])
         xml.tag!('customerPaymentProfileId', options[:customer_payment_profile_id])
         xml.tag!('unmaskExpirationDate', options[:unmask_expiration_date]) if options[:unmask_expiration_date]
+        xml.tag!('includeIssuerInfo', options[:include_issuer_info]) if options[:include_issuer_info]
         xml.target!
       end
 
@@ -882,7 +886,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_direct_response(params)
         delimiter = @options[:delimiter] || ','
-        direct_response = {'raw' => params}
+        direct_response = { 'raw' => params }
         direct_response_fields = params.split(delimiter)
         direct_response.merge(
           {

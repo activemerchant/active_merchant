@@ -36,8 +36,8 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     )
 
     cc_method = [
-      {:name => "My CC", :sort => 5, :method => @credit_card},
-      {:name => "Other CC", :sort => 12, :method => @credit_card}
+      { name: 'My CC', sort: 5, method: @credit_card },
+      { name: 'Other CC', sort: 12, method: @credit_card }
     ]
 
     @options = {
@@ -173,6 +173,14 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     @options.merge!(@update_customer_options.merge!(:customer_number => customer_number))
     response = @gateway.update_customer(@options)
     assert response.params['update_customer_return']
+  end
+
+  def test_quick_update_customer
+    response = @gateway.add_customer(@options.merge(@customer_options))
+    customer_number = response.params['add_customer_return']
+
+    response = @gateway.quick_update_customer({ customer_number: customer_number, update_data: @update_customer_options })
+    assert response.params['quick_update_customer_return']
   end
 
   def test_enable_disable_customer

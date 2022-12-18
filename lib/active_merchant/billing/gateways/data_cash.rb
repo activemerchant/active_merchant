@@ -263,9 +263,8 @@ module ActiveMerchant
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request))
 
         Response.new(response[:status] == '1', response[:reason], response,
-          :test => test?,
-          :authorization => "#{response[:datacash_reference]};#{response[:authcode]};#{response[:ca_reference]}"
-        )
+          test: test?,
+          authorization: "#{response[:datacash_reference]};#{response[:authcode]};#{response[:ca_reference]}")
       end
 
       def format_date(month, year)
@@ -299,7 +298,7 @@ module ActiveMerchant
 
       def parse_authorization_string(authorization)
         reference, auth_code, ca_reference = authorization.to_s.split(';')
-        {:reference => reference, :auth_code => auth_code, :ca_reference => ca_reference}
+        { reference: reference, auth_code: auth_code, ca_reference: ca_reference }
       end
     end
   end

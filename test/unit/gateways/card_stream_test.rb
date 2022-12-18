@@ -10,11 +10,10 @@ class CardStreamTest < Test::Unit::TestCase
     )
 
     @visacreditcard = credit_card('4929421234600821',
-      :month => '12',
-      :year => '2014',
-      :verification_value => '356',
-      :brand => :visa
-    )
+      month: '12',
+      year: '2014',
+      verification_value: '356',
+      brand: :visa)
 
     @visacredit_options = {
       :billing_address => {
@@ -26,6 +25,18 @@ class CardStreamTest < Test::Unit::TestCase
       },
       :order_id => generate_unique_id,
       :description => 'AM test purchase'
+    }
+
+    @visacredit_three_ds_options = {
+      threeds_required: true,
+      three_ds_version: '2.1.0',
+      three_d_secure: {
+        enrolled: 'true',
+        authentication_response_status: 'Y',
+        eci: '05',
+        cavv: 'Y2FyZGluYWxjb21tZXJjZWF1dGg',
+        xid: '362DF058-6061-47F1-A504-CACCBDF422B7'
+      }
     }
 
     @visacredit_descriptor_options = {
@@ -40,10 +51,15 @@ class CardStreamTest < Test::Unit::TestCase
       :dynamic_descriptor => 'product'
     }
 
+    @amex = credit_card('374245455400001',
+      month: '12',
+      year: 2014,
+      verification_value: '4887',
+      brand: :american_express)
+
     @declined_card = credit_card('4000300011112220',
-      :month => '9',
-      :year => '2014'
-    )
+      month: '9',
+      year: '2014')
   end
 
   def test_successful_visacreditcard_authorization
@@ -181,7 +197,7 @@ class CardStreamTest < Test::Unit::TestCase
 
   def test_successful_purchase_without_street_address
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = @gateway.purchase(142, @visacreditcard, billing_address: {state: "Northampton"})
+    assert response = @gateway.purchase(142, @visacreditcard, billing_address: { state: 'Northampton' })
     assert_equal 'APPROVED', response.message
   end
 
@@ -189,6 +205,16 @@ class CardStreamTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(142, @visacreditcard)
     assert_equal 'APPROVED', response.message
+  end
+
+  def test_adding_country_code
+    %i[authorize purchase refund].each do |action|
+      stub_comms do
+        @gateway.send(action, 142, @visacreditcard, @visacredit_options.merge(country_code: 'US'))
+      end.check_request do |_endpoint, data, _headers|
+        assert_match(/&countryCode=US/, data)
+      end.respond_with(successful_purchase_response)
+    end
   end
 
   def test_hmac_signature_added_to_post
@@ -236,6 +262,40 @@ class CardStreamTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/threeDSRequired=N/, data)
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_3ds2_data
+    stub_comms do
+      @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match(/threeDSRequired=Y/, data)
+      assert_match(/threeDSEnrolled=Y/, data)
+      assert_match(/threeDSAuthenticated=Y/, data)
+      assert_match(/threeDSECI=05/, data)
+      assert_match(/threeDSCAVV=Y2FyZGluYWxjb21tZXJjZWF1dGg/, data)
+      assert_match(/threeDSXID=362DF058-6061-47F1-A504-CACCBDF422B7/, data)
+    end
+  end
+
+  def test_3ds2_not_enrolled
+    stub_comms do
+      @visacredit_three_ds_options[:three_d_secure][:enrolled] = 'false'
+      @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match(/threeDSRequired=Y/, data)
+      assert_match(/threeDSEnrolled=N/, data)
+    end
+  end
+
+  def test_3ds2_not_authenticated
+    stub_comms do
+      @visacredit_three_ds_options[:three_d_secure][:authentication_response_status] = 'N'
+      @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match(/threeDSRequired=Y/, data)
+      assert_match(/threeDSEnrolled=Y/, data)
+      assert_match(/threeDSAuthenticated=N/, data)
+    end
   end
 
   def test_transcript_scrubbing
@@ -293,16 +353,16 @@ class CardStreamTest < Test::Unit::TestCase
   end
 
   def transcript
-    <<-eos
+    <<-REQUEST
      POST /direct/ HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: gateway.cardstream.com\r\nContent-Length: 501\r\n\r\n"
      amount=&currencyCode=826&transactionUnique=a017ca2ac0569188517ad8368c36a06d&orderRef=AM+test+purchase&customerName=Longbob+Longsen&cardNumber=4929421234600821&cardExpiryMonth=12&cardExpiryYear=14&cardCVV=356&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerPostCode=NN17+8YG+&merchantID=102922&action=SALE&type=1&countryCode=GB&threeDSRequired=N&signature=970b3fe099a85c9922a79af46c2cb798616b9fbd044a921ac5eb46cd1907a5e89b8c720aae59c7eb1d81a59563f209d5db51aa3c270838199f2bfdcbe2c1149d
-     eos
+    REQUEST
   end
 
   def scrubbed_transcript
-     <<-eos
+    <<-REQUEST
      POST /direct/ HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: gateway.cardstream.com\r\nContent-Length: 501\r\n\r\n"
      amount=&currencyCode=826&transactionUnique=a017ca2ac0569188517ad8368c36a06d&orderRef=AM+test+purchase&customerName=Longbob+Longsen&cardNumber=[FILTERED]&cardExpiryMonth=12&cardExpiryYear=14&cardCVV=[FILTERED]&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerPostCode=NN17+8YG+&merchantID=102922&action=SALE&type=1&countryCode=GB&threeDSRequired=N&signature=970b3fe099a85c9922a79af46c2cb798616b9fbd044a921ac5eb46cd1907a5e89b8c720aae59c7eb1d81a59563f209d5db51aa3c270838199f2bfdcbe2c1149d
-    eos
+    REQUEST
   end
 end

@@ -17,7 +17,46 @@ class PayeezyGateway < Test::Unit::TestCase
     @options = {
       :billing_address => address
     }
-    @authorization = "ET1700|106625152|credit_card|4738"
+    @options_stored_credentials = {
+      cardbrand_original_transaction_id: 'abc123',
+      sequence: 'FIRST',
+      is_scheduled: true,
+      initiator: 'MERCHANT',
+      auth_type_override: 'A'
+    }
+    @options_standardized_stored_credentials = {
+      stored_credential: {
+        network_transaction_id: 'abc123',
+        initial_transaction: false,
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    }
+    @authorization = 'ET1700|106625152|credit_card|4738'
+    @reversal_id = SecureRandom.random_number(1000000).to_s
+
+    @options_mdd = {
+      soft_descriptors: {
+        dba_name: 'Caddyshack',
+        street: '1234 Any Street',
+        city: 'Durham',
+        region: 'North Carolina',
+        mid: 'mid_1234',
+        mcc: 'mcc_5678',
+        postal_code: '27701',
+        country_code: 'US',
+        merchant_contact_info: '8885551212'
+      }
+    }
+    @apple_pay_card = network_tokenization_credit_card(
+      '4761209980011439',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '11',
+      year: '2022',
+      eci: 5,
+      source: :apple_pay,
+      verification_value: 569
+    )
   end
 
   def test_invalid_credentials
@@ -59,11 +98,106 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal 'Transaction Normal - Approved', response.message
   end
 
+  def test_successful_purchase_with_apple_pay
+    stub_comms do
+      @gateway.purchase(@amount, @apple_pay_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['method'], '3DS'
+      assert_equal request['3DS']['type'], 'D'
+      assert_equal request['3DS']['wallet_provider_id'], 'APPLE_PAY'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_store
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    end.respond_with(successful_store_response)
+
+    assert_success response
+    assert_equal 'Token successfully created.', response.message
+    assert response.test?
+  end
+
+  def test_successful_store_and_purchase
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    end.respond_with(successful_store_response)
+
+    assert_success response
+    assert_match %r{Token successfully created}, response.message
+
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    purchase = @gateway.purchase(@amount, response.authorization, @options)
+    assert_success purchase
+  end
+
+  def test_failed_store
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@bad_credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    end.respond_with(failed_store_response)
+
+    assert_failure response
+    assert_equal 'The credit card number check failed', response.message
+    assert response.test?
+  end
+
   def test_successful_purchase_with_echeck
     @gateway.expects(:ssl_post).returns(successful_purchase_echeck_response)
     assert response = @gateway.purchase(@amount, @check, @options)
     assert_success response
     assert_equal 'ET133078|69864362|tele_check|100', response.authorization
+    assert response.test?
+    assert_equal 'Transaction Normal - Approved', response.message
+  end
+
+  def test_successful_purchase_defaulting_check_number
+    check_without_number = check(number: nil)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, check_without_number, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/001/, data)
+    end.respond_with(successful_purchase_echeck_response)
+
+    assert_success response
+    assert_equal 'ET133078|69864362|tele_check|100', response.authorization
+    assert response.test?
+    assert_equal 'Transaction Normal - Approved', response.message
+  end
+
+  def test_successful_purchase_with_customer_ref
+    options = @options.merge(level2: { customer_ref: 'An important customer' })
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"level2":{"customer_ref":"An important customer"}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(@options_stored_credentials))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/stored_credentials/, data)
+    end.respond_with(successful_purchase_stored_credentials_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'Transaction Normal - Approved', response.message
+  end
+
+  def test_successful_purchase_with_standardized_stored_credentials
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(@options_standardized_stored_credentials))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/stored_credentials/, data)
+    end.respond_with(successful_purchase_stored_credentials_response)
+
+    assert_success response
     assert response.test?
     assert_equal 'Transaction Normal - Approved', response.message
   end
@@ -74,6 +208,15 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
     assert_equal response.error_code, "card_expired"
+  end
+
+  def test_failed_purchase_with_insufficient_funds
+    response = stub_comms do
+      @gateway.purchase(530200, @credit_card, @options)
+    end.respond_with(failed_purchase_response_for_insufficient_funds)
+
+    assert_failure response
+    assert_equal '302', response.error_code
   end
 
   def test_successful_authorize
@@ -120,10 +263,59 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_refund_with_soft_descriptors
+    response = stub_comms do
+      @gateway.refund(@amount, @authorization, @options.merge(@options_mdd))
+    end.check_request do |_endpoint, data, _headers|
+      json = '{"transaction_type":"refund","method":"credit_card","transaction_tag":"106625152","currency_code":"USD","amount":"100","soft_descriptors":{"dba_name":"Caddyshack","street":"1234 Any Street","city":"Durham","region":"North Carolina","mid":"mid_1234","mcc":"mcc_5678","postal_code":"27701","country_code":"US","merchant_contact_info":"8885551212"},"merchant_ref":null}'
+      assert_match json, data
+    end.respond_with(successful_refund_response)
+
+    assert_success response
+  end
+
+  def test_successful_refund_with_order_id
+    response = stub_comms do
+      @gateway.refund(@amount, @authorization, @options.merge(order_id: 1234))
+    end.check_request do |_endpoint, data, _headers|
+      json = '{"transaction_type":"refund","method":"credit_card","transaction_tag":"106625152","currency_code":"USD","amount":"100","merchant_ref":1234}'
+      assert_match json, data
+    end.respond_with(successful_refund_response)
+
+    assert_success response
+  end
+
   def test_failed_refund
     @gateway.expects(:ssl_post).raises(failed_refund_response)
     assert response = @gateway.refund(@amount, @authorization)
     assert_failure response
+  end
+
+  def test_successful_general_credit
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    assert response = @gateway.credit(@amount, @credit_card)
+    assert_success response
+  end
+
+  def test_successful_general_credit_with_soft_descriptors
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card, @options.merge(@options_mdd))
+    end.check_request do |_endpoint, data, _headers|
+      soft_descriptors_regex = %r("soft_descriptors":{"dba_name":"Caddyshack","street":"1234 Any Street","city":"Durham","region":"North Carolina","mid":"mid_1234","mcc":"mcc_5678","postal_code":"27701","country_code":"US","merchant_contact_info":"8885551212"})
+      assert_match soft_descriptors_regex, data
+    end.respond_with(successful_refund_response)
+
+    assert_success response
+  end
+
+  def test_successful_general_credit_with_order_id
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card, @options.merge(order_id: 1234))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/\"merchant_ref\":1234/, data)
+    end.respond_with(successful_refund_response)
+
+    assert_success response
   end
 
   def test_successful_void
@@ -158,8 +350,10 @@ class PayeezyGateway < Test::Unit::TestCase
     assert response = @gateway.capture(@amount, @authorization)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal response.error_code, "server_error"
-    assert_equal response.message, "ProcessedBad Request (69) - Invalid Transaction Tag"
+    error_msg = response.params['Error']['messages']
+    error_code = error_msg.map { |x| x.values[0] }
+    assert_equal error_code[0], 'server_error'
+    assert_equal response.message, 'ProcessedBad Request (69) - Invalid Transaction Tag'
   end
 
   def test_supported_countries
@@ -209,6 +403,10 @@ class PayeezyGateway < Test::Unit::TestCase
   def test_scrub_echeck
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed_echeck), post_scrubbed_echeck
+  end
+
+  def test_scrub_network_token
+    assert_equal @gateway.scrub(pre_scrubbed_network_token), post_scrubbed_network_token
   end
 
   private
@@ -335,6 +533,94 @@ class PayeezyGateway < Test::Unit::TestCase
     TRANSCRIPT
   end
 
+  def pre_scrubbed_network_token
+    <<~TRANSCRIPT
+      opening connection to api-cert.payeezy.com:443...
+      opened
+      starting SSL for api-cert.payeezy.com:443...
+      SSL established
+      <- "POST /v1/transactions HTTP/1.1\r\nContent-Type: application/json\r\nApikey: oKB61AAxbN3xwC6gVAH3dp58FmioHSAT\r\nToken: fdoa-a480ce8951daa73262734cf102641994c1e55e7cdf4c02b6\r\nNonce: 2713241561.4909368\r\nTimestamp: 1668784714406\r\nAuthorization: NDU2ZWRiNmUwMmUxNGMwOGIwYjMxYTAxMDkzZDcwNWNhM2Y0ODExNmRmMTNjNDVjMTFhODMyNTg4NDdiNzZiNw==\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: api-cert.payeezy.com\r\nContent-Length: 462\r\n\r\n"
+      <- "{\"transaction_type\":\"purchase\",\"merchant_ref\":null,\"3DS\":{\"type\":\"D\",\"cardholder_name\":\"Longbob\",\"card_number\":\"4761209980011439\",\"exp_date\":\"1122\",\"cvv\":569,\"xid\":\"YwAAAAAABaYcCMX/OhNRQAAAAAA=\",\"cavv\":\"YwAAAAAABaYcCMX/OhNRQAAAAAA=\",\"wallet_provider_id\":\"APPLE_PAY\"},\"method\":\"3DS\",\"eci_indicator\":5,\"billing_address\":{\"street\":\"456 My Street\",\"city\":\"Ottawa\",\"state_province\":\"ON\",\"zip_postal_code\":\"K1C2N6\",\"country\":\"CA\"},\"currency_code\":\"USD\",\"amount\":\"100\"}"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Date: Fri, 18 Nov 2022 15:18:35 GMT\r\n"
+      -> "Content-Type: application/json;charset=UTF-8\r\n"
+      -> "Connection: close\r\n"
+      -> "X-Backside-Transport: OK OK,OK OK\r\n"
+      -> "Content-Language: en-US\r\n"
+      -> "X-Global-Transaction-ID: 7f41427d6377a24aa50b34df\r\n"
+      -> "Strict-Transport-Security: max-age=31536000; includeSubDomains\r\n"
+      -> "X-Xss-Protection: 1; mode=block\r\n"
+      -> "Cache-Control: no-store, no-cache, must-revalidate\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Referrer-Policy: strict-origin\r\n"
+      -> "Feature-Policy: vibrate 'self'\r\n"
+      -> "Content-Security-Policy: default-src 'none'; frame-ancestors 'self'; script-src 'unsafe-inline' 'self' *.googleapis.com *.klarna.com *.masterpass.com *.mastercard.com *.newrelic.com *.npci.org.in *.nr-data.net *.google-analytics.com *.google.com *.getsitecontrol.com *.gstatic.com *.kxcdn.com 'strict-dynamic' 'nonce-6f62fa22a79de4c553d2bbde' 'unsafe-eval' 'unsafe-inline'; connect-src 'self'; img-src 'self'; style-src 'self'; base-uri 'self';\r\n"
+      -> "Access-Control-Allow-Origin: http://localhost:8080\r\n"
+      -> "Access-Control-Request-Headers: origin, x-requested-with, accept, content-type\r\n"
+      -> "Access-Control-Max-Age: 3628800\r\n"
+      -> "Access-Control-Allow-Methods: GET, PUT, POST, DELETE\r\n"
+      -> "Access-Control-Allow-Headers: Content-Type, apikey, token\r\n"
+      -> "Via: 1.1 dca1-bit16021\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "\r\n"
+      -> "249\r\n"
+      reading 585 bytes...
+      -> "{\"correlation_id\":\"134.6878471461658\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET188163\",\"transaction_tag\":\"10032826722\",\"method\":\"3ds\",\"amount\":\"100\",\"currency\":\"USD\",\"avs\":\"4\",\"cvv2\":\"U\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"9324008290401439\"}},\"card\":{\"type\":\"VISA\",\"cardholder_name\":\"Longbob\",\"card_number\":\"1439\",\"exp_date\":\"1122\"},\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"eCommerce_flag\":\"5\",\"retrieval_ref_no\":\"221118\"}"
+      read 585 bytes
+      reading 2 bytes...
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
+    TRANSCRIPT
+  end
+
+  def post_scrubbed_network_token
+    <<~TRANSCRIPT
+      opening connection to api-cert.payeezy.com:443...
+      opened
+      starting SSL for api-cert.payeezy.com:443...
+      SSL established
+      <- "POST /v1/transactions HTTP/1.1\r\nContent-Type: application/json\r\nApikey: [FILTERED]\r\nToken: [FILTERED]\r\nNonce: 2713241561.4909368\r\nTimestamp: 1668784714406\r\nAuthorization: NDU2ZWRiNmUwMmUxNGMwOGIwYjMxYTAxMDkzZDcwNWNhM2Y0ODExNmRmMTNjNDVjMTFhODMyNTg4NDdiNzZiNw==\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: api-cert.payeezy.com\r\nContent-Length: 462\r\n\r\n"
+      <- "{\"transaction_type\":\"purchase\",\"merchant_ref\":null,\"3DS\":{\"type\":\"D\",\"cardholder_name\":\"Longbob\",\"card_number\":\"[FILTERED]\",\"exp_date\":\"1122\",\"cvv\":[FILTERED],\"xid\":[FILTERED],\"cavv\":[FILTERED],\"wallet_provider_id\":\"APPLE_PAY\"},\"method\":\"3DS\",\"eci_indicator\":5,\"billing_address\":{\"street\":\"456 My Street\",\"city\":\"Ottawa\",\"state_province\":\"ON\",\"zip_postal_code\":\"K1C2N6\",\"country\":\"CA\"},\"currency_code\":\"USD\",\"amount\":\"100\"}"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Date: Fri, 18 Nov 2022 15:18:35 GMT\r\n"
+      -> "Content-Type: application/json;charset=UTF-8\r\n"
+      -> "Connection: close\r\n"
+      -> "X-Backside-Transport: OK OK,OK OK\r\n"
+      -> "Content-Language: en-US\r\n"
+      -> "X-Global-Transaction-ID: 7f41427d6377a24aa50b34df\r\n"
+      -> "Strict-Transport-Security: max-age=31536000; includeSubDomains\r\n"
+      -> "X-Xss-Protection: 1; mode=block\r\n"
+      -> "Cache-Control: no-store, no-cache, must-revalidate\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Referrer-Policy: strict-origin\r\n"
+      -> "Feature-Policy: vibrate 'self'\r\n"
+      -> "Content-Security-Policy: default-src 'none'; frame-ancestors 'self'; script-src 'unsafe-inline' 'self' *.googleapis.com *.klarna.com *.masterpass.com *.mastercard.com *.newrelic.com *.npci.org.in *.nr-data.net *.google-analytics.com *.google.com *.getsitecontrol.com *.gstatic.com *.kxcdn.com 'strict-dynamic' 'nonce-6f62fa22a79de4c553d2bbde' 'unsafe-eval' 'unsafe-inline'; connect-src 'self'; img-src 'self'; style-src 'self'; base-uri 'self';\r\n"
+      -> "Access-Control-Allow-Origin: http://localhost:8080\r\n"
+      -> "Access-Control-Request-Headers: origin, x-requested-with, accept, content-type\r\n"
+      -> "Access-Control-Max-Age: 3628800\r\n"
+      -> "Access-Control-Allow-Methods: GET, PUT, POST, DELETE\r\n"
+      -> "Access-Control-Allow-Headers: Content-Type, apikey, token\r\n"
+      -> "Via: 1.1 dca1-bit16021\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "\r\n"
+      -> "249\r\n"
+      reading 585 bytes...
+      -> "{\"correlation_id\":\"134.6878471461658\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET188163\",\"transaction_tag\":\"10032826722\",\"method\":\"3ds\",\"amount\":\"100\",\"currency\":\"USD\",\"avs\":\"4\",\"cvv2\":\"U\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"9324008290401439\"}},\"card\":{\"type\":\"VISA\",\"cardholder_name\":\"Longbob\",\"card_number\":\"[FILTERED]\",\"exp_date\":\"1122\"},\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"eCommerce_flag\":\"5\",\"retrieval_ref_no\":\"221118\"}"
+      read 585 bytes
+      reading 2 bytes...
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
+    TRANSCRIPT
+  end
+
   def successful_purchase_response
     <<-RESPONSE
     {\"method\":\"credit_card\",\"amount\":\"1\",\"currency\":\"USD\",\"avs\":\"4\",\"card\":{\"type\":\"Visa\",\"cardholder_name\":\"Bobsen 995\",\"card_number\":\"4242\",\"exp_date\":\"0816\"},\"token\":{\"token_type\":\"transarmor\",\"token_data\":{\"value\":\"0152552999534242\"}},\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET114541\",\"transaction_tag\":\"55083431\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"correlation_id\":\"124.1433862672836\"}
@@ -386,6 +672,10 @@ response: !ruby/object:Net::HTTPBadRequest
 message:
     RESPONSE
     YAML.load(yamlexcep)
+  end
+
+  def failed_purchase_response_for_insufficient_funds
+    '{"correlation_id":"124.1342365067332","transaction_status":"declined","validation_status":"success","transaction_type":"purchase","transaction_tag":"4611610442","method":"credit_card","amount":"530200","currency":"USD","avs":"4","cvv2":"M","token":{"token_type":"FDToken", "token_data":{"value":"0788934280684242"}},"card":{"type":"Visa","cardholder_name":"Longbob Longsen","card_number":"4242","exp_date":"0922"},"bank_resp_code":"302","bank_message":"Insufficient Funds","gateway_resp_code":"00","gateway_message":"Transaction Normal"}'
   end
 
   def successful_authorize_response

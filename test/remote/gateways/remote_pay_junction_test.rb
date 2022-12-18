@@ -118,10 +118,9 @@ class PayJunctionTest < Test::Unit::TestCase
 
   def test_successful_recurring
     assert response = @gateway.recurring(AMOUNT, @credit_card,
-                        :periodicity  => :monthly,
-                        :payments     => 12,
-                        :order_id => generate_unique_id[0..15]
-                      )
+      periodicity: :monthly,
+      payments: 12,
+      order_id: generate_unique_id[0..15])
 
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
     assert_equal 'charge', response.params["transaction_action"]

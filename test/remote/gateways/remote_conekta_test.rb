@@ -7,12 +7,12 @@ class RemoteConektaTest < Test::Unit::TestCase
     @amount = 300
 
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
-      number:             "4242424242424242",
-      verification_value: "183",
-      month:              "01",
-      year:               "2018",
-      first_name:         "Mario F.",
-      last_name:          "Moreno Reyes"
+      number:             '4242424242424242',
+      verification_value: '183',
+      month:              '12',
+      year:                Date.today.year + 2,
+      first_name:         'Mario F.',
+      last_name:          'Moreno Reyes'
     )
 
     @declined_card = ActiveMerchant::Billing::CreditCard.new(
@@ -44,6 +44,17 @@ class RemoteConektaTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal nil, response.message
+  end
+
+  def test_successful_purchase_with_installments
+    assert response = @gateway.purchase(@amount * 300, @credit_card, @options.merge({ monthly_installments: 3 }))
+    assert_success response
+    assert_equal nil, response.message
+  end
+
+  def test_unsuccessful_purchase_with_not_supported_currency
+    assert response = @gateway.purchase(8000, @credit_card, @options.merge({ currency: 'COP' }))
+    assert_equal 'At this time we process only Mexican pesos or U.S. dollars.', response.params['message']
   end
 
   def test_unsuccessful_purchase
@@ -151,10 +162,10 @@ class RemoteConektaTest < Test::Unit::TestCase
     }
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(more_options))
     assert_success response
-    assert_equal "Wanaque", response.params['details']['shipment']['address']['city']
-    assert_equal "Wooden", response.params['details']['line_items'][-1]['description']
-    assert_equal "TheCustomerName", response.params['details']['name']
-    assert_equal "Guerrero", response.params['details']['billing_address']['city']
+    assert_equal 'Wanaque', response.params['details']['shipment']['address']['city']
+    assert_equal 'Wooden', response.params['details']['line_items'][-1]['description']
+    assert_equal 'TheCustomerName', response.params['details']['name']
+    assert_equal 'Guerrero', response.params['details']['billing_address']['city']
   end
 
   def test_invalid_key

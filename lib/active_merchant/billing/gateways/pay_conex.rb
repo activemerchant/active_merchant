@@ -81,7 +81,9 @@ module ActiveMerchant #:nodoc:
         force_utf8(transcript).
           gsub(%r((api_accesskey=)\w+), '\1[FILTERED]').
           gsub(%r((card_number=)\w+), '\1[FILTERED]').
-          gsub(%r((card_verification=)\w+), '\1[FILTERED]')
+          gsub(%r((card_verification=)\w+), '\1[FILTERED]').
+          gsub(%r((bank_account_number=)\w+), '\1[FILTERED]').
+          gsub(%r((bank_routing_number=)\w+), '\1[FILTERED]')
       end
 
       private

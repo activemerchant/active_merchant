@@ -164,11 +164,13 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, params, options={})
         begin
-          response = parse(ssl_post(
-            ((test? ? test_url : live_url) + action),
-            params.to_json,
-            headers(options)
-          ))
+          response = parse(
+            ssl_post(
+              ((test? ? test_url : live_url) + action),
+              params.to_json,
+              headers(options)
+            )
+          )
         rescue ResponseError => e
           response = parse(e.response.body)
         end

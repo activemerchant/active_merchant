@@ -19,15 +19,14 @@ class PayflowExpressTest < Test::Unit::TestCase
       :password => 'PASSWORD'
     )
 
-    @address = { :address1 => '1234 My Street',
-                 :address2 => 'Apt 1',
-                 :company => 'Widgets Inc',
-                 :city => 'Ottawa',
-                 :state => 'ON',
-                 :zip => 'K1C2N6',
-                 :country => 'Canada',
-                 :phone => '(555)555-5555'
-               }
+    @address = { address1: '1234 My Street',
+                 address2: 'Apt 1',
+                 company: 'Widgets Inc',
+                 city: 'Ottawa',
+                 state: 'ON',
+                 zip: 'K1C2N6',
+                 country: 'Canada',
+                 phone: '(555)555-5555' }
   end
   
   def teardown
@@ -136,40 +135,41 @@ class PayflowExpressTest < Test::Unit::TestCase
   end
   
   private
-  
-  def successful_get_express_details_response(options={:street => "111 Main St."})
-    <<-RESPONSE
-<XMLPayResponse xmlns='http://www.verisign.com/XMLPay'>
-  <ResponseData>
-    <Vendor>TEST</Vendor>
-    <Partner>verisign</Partner>
-    <TransactionResults>
-      <TransactionResult>
-        <Result>0</Result>
-        <Message>Approved</Message>
-        <PayPalResult>
-          <EMail>Buyer1@paypal.com</EMail>
-          <PayerID>12345678901234567</PayerID>
-          <Token>EC-2OPN7UJGFWK9OYFV</Token>
-          <FeeAmount>0</FeeAmount>
-          <PayerStatus>verified</PayerStatus>
-          <Name>Joe</Name>
-          <ShipTo>
-            <Address>
-              <Street>#{options[:street]}</Street>
-              <City>San Jose</City>
-              <State>CA</State>
-              <Zip>95100</Zip>
-              <Country>US</Country>
-            </Address>
-          </ShipTo>
-          <CorrelationID>9c3706997455e</CorrelationID>
-        </PayPalResult>
-        <ExtData Name='LASTNAME' Value='Smith'/>
-      </TransactionResult>
-    </TransactionResults>
-  </ResponseData>
-  </XMLPayResponse>
+
+  def successful_get_express_details_response(options = { street: '111 Main St.' })
+    <<~RESPONSE
+      <XMLPayResponse xmlns='http://www.verisign.com/XMLPay'>
+        <ResponseData>
+          <Vendor>TEST</Vendor>
+          <Partner>verisign</Partner>
+          <TransactionResults>
+            <TransactionResult>
+              <Result>0</Result>
+              <Message>Approved</Message>
+              <PayPalResult>
+                <EMail>Buyer1@paypal.com</EMail>
+                <PayerID>12345678901234567</PayerID>
+                <Token>EC-2OPN7UJGFWK9OYFV</Token>
+                <FeeAmount>0</FeeAmount>
+                <PayerStatus>verified</PayerStatus>
+                <Name>Joe</Name>
+                <Phone>555-555-5555</Phone>
+                <ShipTo>
+                  <Address>
+                    <Street>#{options[:street]}</Street>
+                    <City>San Jose</City>
+                    <State>CA</State>
+                    <Zip>95100</Zip>
+                    <Country>US</Country>
+                  </Address>
+                </ShipTo>
+                <CorrelationID>9c3706997455e</CorrelationID>
+              </PayPalResult>
+              <ExtData Name='LASTNAME' Value='Smith'/>
+            </TransactionResult>
+          </TransactionResults>
+        </ResponseData>
+        </XMLPayResponse>
     RESPONSE
   end
   

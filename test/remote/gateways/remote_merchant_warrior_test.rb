@@ -68,8 +68,23 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 
   def test_failed_refund
     assert refund = @gateway.refund(@success_amount, 'invalid-transaction-id')
-    assert_match %r{Invalid transactionID}, refund.message
+    assert_match %r{MW - 011:Invalid transactionID}, refund.message
     assert_failure refund
+  end
+
+  def test_successful_void
+    assert purchase = @gateway.purchase(@success_amount, @credit_card, @options)
+    assert_success purchase
+
+    assert void = @gateway.void(purchase.authorization, amount: @success_amount)
+    assert_success void
+    assert_equal 'Transaction approved', void.message
+  end
+
+  def test_failed_void
+    assert void = @gateway.void('invalid-transaction-id', amount: @success_amount)
+    assert_match %r{MW - 011:Invalid transactionID}, void.message
+    assert_failure void
   end
 
   def test_capture_too_much

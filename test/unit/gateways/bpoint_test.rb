@@ -225,7 +225,7 @@ class BpointTest < Test::Unit::TestCase
     </soap:Envelope>
     )
   end
-  alias_method :successful_verify_response, :successful_authorize_response
+  alias successful_verify_response successful_authorize_response
 
   def failed_authorize_response
     %(
@@ -252,7 +252,7 @@ class BpointTest < Test::Unit::TestCase
     </soap:Envelope>
     )
   end
-  alias_method :failed_verify_response, :failed_authorize_response
+  alias failed_verify_response failed_authorize_response
 
   def successful_capture_response
     %(

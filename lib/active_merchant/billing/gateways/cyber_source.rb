@@ -15,16 +15,25 @@ module ActiveMerchant #:nodoc:
     #   CyberSource what kind of item you are selling.  It is used when
     #   calculating tax/VAT.
     # * All transactions use dollar values.
-    # * To process pinless debit cards through the pinless debit card
-    #   network, your Cybersource merchant account must accept pinless
-    #   debit card payments.
     # * The order of the XML elements does matter, make sure to follow the order in
     #   the documentation exactly.
     class CyberSourceGateway < Gateway
       self.test_url = 'https://ics2wstesta.ic3.com/commerce/1.x/transactionProcessor'
       self.live_url = 'https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor'
 
-      XSD_VERSION = "1.121"
+      # Schema files can be found here: https://ics2ws.ic3.com/commerce/1.x/transactionProcessor/
+      TEST_XSD_VERSION = '1.201'
+      PRODUCTION_XSD_VERSION = '1.201'
+      ECI_BRAND_MAPPING = {
+        visa: 'vbv',
+        master: 'spa',
+        maestro: 'spa',
+        american_express: 'aesk',
+        jcb: 'js',
+        discover: 'pb',
+        diners_club: 'pb'
+      }.freeze
+      DEFAULT_COLLECTION_INDICATOR = 2
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.supported_countries = %w(US BR CA CN DK FI FR DE JP MX NO SE GB SG LB)
@@ -43,44 +52,74 @@ module ActiveMerchant #:nodoc:
       }
 
       @@response_codes = {
-        :r100 => "Successful transaction",
-        :r101 => "Request is missing one or more required fields" ,
-        :r102 => "One or more fields contains invalid data",
-        :r150 => "General failure",
-        :r151 => "The request was received but a server time-out occurred",
-        :r152 => "The request was received, but a service timed out",
-        :r200 => "The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the AVS check",
-        :r201 => "The issuing bank has questions about the request",
-        :r202 => "Expired card",
-        :r203 => "General decline of the card",
-        :r204 => "Insufficient funds in the account",
-        :r205 => "Stolen or lost card",
-        :r207 => "Issuing bank unavailable",
-        :r208 => "Inactive card or card not authorized for card-not-present transactions",
-        :r209 => "American Express Card Identifiction Digits (CID) did not match",
-        :r210 => "The card has reached the credit limit",
-        :r211 => "Invalid card verification number",
-        :r221 => "The customer matched an entry on the processor's negative file",
-        :r230 => "The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the card verification check",
-        :r231 => "Invalid account number",
-        :r232 => "The card type is not accepted by the payment processor",
-        :r233 => "General decline by the processor",
-        :r234 => "A problem exists with your CyberSource merchant configuration",
-        :r235 => "The requested amount exceeds the originally authorized amount",
-        :r236 => "Processor failure",
-        :r237 => "The authorization has already been reversed",
-        :r238 => "The authorization has already been captured",
-        :r239 => "The requested transaction amount must match the previous transaction amount",
-        :r240 => "The card type sent is invalid or does not correlate with the credit card number",
-        :r241 => "The request ID is invalid",
-        :r242 => "You requested a capture, but there is no corresponding, unused authorization record.",
-        :r243 => "The transaction has already been settled or reversed",
-        :r244 => "The bank account number failed the validation check",
-        :r246 => "The capture or credit is not voidable because the capture or credit information has already been submitted to your processor",
-        :r247 => "You requested a credit for a capture that was previously voided",
-        :r250 => "The request was received, but a time-out occurred with the payment processor",
-        :r254 => "Your CyberSource account is prohibited from processing stand-alone refunds",
-        :r255 => "Your CyberSource account is not configured to process the service in the country you specified"
+        r100: 'Successful transaction',
+        r101: 'Request is missing one or more required fields',
+        r102: 'One or more fields contains invalid data',
+        r104: 'The merchantReferenceCode sent with this authorization request matches the merchantReferenceCode of another authorization request that you sent in the last 15 minutes.', r110: 'Partial amount was approved',
+        r150: 'General failure',
+        r151: 'The request was received but a server time-out occurred',
+        r152: 'The request was received, but a service timed out',
+        r200: 'The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the AVS check',
+        r201: 'The issuing bank has questions about the request',
+        r202: 'Expired card',
+        r203: 'General decline of the card',
+        r204: 'Insufficient funds in the account',
+        r205: 'Stolen or lost card',
+        r207: 'Issuing bank unavailable',
+        r208: 'Inactive card or card not authorized for card-not-present transactions',
+        r209: 'American Express Card Identifiction Digits (CID) did not match',
+        r210: 'The card has reached the credit limit',
+        r211: 'Invalid card verification number',
+        r220: 'Generic Decline.',
+        r221: "The customer matched an entry on the processor's negative file",
+        r222: 'customer\'s account is frozen',
+        r230: 'The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the card verification check',
+        r231: 'Invalid account number',
+        r232: 'The card type is not accepted by the payment processor',
+        r233: 'General decline by the processor',
+        r234: 'A problem exists with your CyberSource merchant configuration',
+        r235: 'The requested amount exceeds the originally authorized amount',
+        r236: 'Processor failure',
+        r237: 'The authorization has already been reversed',
+        r238: 'The authorization has already been captured',
+        r239: 'The requested transaction amount must match the previous transaction amount',
+        r240: 'The card type sent is invalid or does not correlate with the credit card number',
+        r241: 'The request ID is invalid',
+        r242: 'You requested a capture, but there is no corresponding, unused authorization record.',
+        r243: 'The transaction has already been settled or reversed',
+        r244: 'The bank account number failed the validation check',
+        r246: 'The capture or credit is not voidable because the capture or credit information has already been submitted to your processor',
+        r247: 'You requested a credit for a capture that was previously voided',
+        r248: 'The boleto request was declined by your processor.',
+        r250: 'The request was received, but a time-out occurred with the payment processor',
+        r251: 'The Pinless Debit card\'s use frequency or maximum amount per use has been exceeded.',
+        r254: 'Your CyberSource account is prohibited from processing stand-alone refunds',
+        r255: 'Your CyberSource account is not configured to process the service in the country you specified',
+        r400: 'Soft Decline - Fraud score exceeds threshold.',
+        r450: 'Apartment number missing or not found.',
+        r451: 'Insufficient address information.',
+        r452: 'House/Box number not found on street.',
+        r453: 'Multiple address matches were found.',
+        r454: 'P.O. Box identifier not found or out of range.',
+        r455: 'Route service identifier not found or out of range.',
+        r456: 'Street name not found in Postal code.',
+        r457: 'Postal code not found in database.',
+        r458: 'Unable to verify or correct address.',
+        r459: 'Multiple addres matches were found (international)',
+        r460: 'Address match not found (no reason given)',
+        r461: 'Unsupported character set',
+        r475: 'The cardholder is enrolled in Payer Authentication. Please authenticate the cardholder before continuing with the transaction.',
+        r476: 'Encountered a Payer Authentication problem. Payer could not be authenticated.',
+        r478: 'Strong customer authentication (SCA) is required for this transaction.',
+        r480: 'The order is marked for review by Decision Manager',
+        r481: 'The order has been rejected by Decision Manager',
+        r490: 'Your aggregator or acquirer is not accepting transactions from you at this time.',
+        r491: 'Your aggregator or acquirer is not accepting this transaction.',
+        r520: 'Soft Decline - The authorization request was approved by the issuing bank but declined by CyberSource based on your Smart Authorization settings.',
+        r700: 'The customer matched the Denied Parties List',
+        r701: 'Export bill_country/ship_country match',
+        r702: 'Export email_country match',
+        r703: 'Export hostname_country/ip_country match'
       }
 
       # These are the options that can be used when creating a new CyberSource
@@ -117,7 +156,6 @@ module ActiveMerchant #:nodoc:
         commit(build_capture_request(money, authorization, options), :capture, money, options)
       end
 
-      # options[:pinless_debit_card] => true # attempts to process as pinless debit card
       def purchase(money, payment_method_or_reference, options = {})
         setup_address_hash(options)
         commit(build_purchase_request(money, payment_method_or_reference, options), :purchase, money, options)
@@ -131,10 +169,15 @@ module ActiveMerchant #:nodoc:
         commit(build_refund_request(money, identification, options), :refund, money, options)
       end
 
+      def adjust(money, authorization, options = {})
+        commit(build_adjust_request(money, authorization, options), :adjust, money, options)
+      end
+
       def verify(payment, options = {})
+        amount = eligible_for_zero_auth?(payment, options) ? 0 : 100
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, payment, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { authorize(amount, payment, options) }
+          r.process(:ignore_result) { void(r.authorization, options) } unless amount == 0
         end
       end
 
@@ -202,12 +245,6 @@ module ActiveMerchant #:nodoc:
         commit(build_tax_calculation_request(creditcard, options), :calculate_tax, nil, options)
       end
 
-      # Determines if a card can be used for Pinless Debit Card transactions
-      def validate_pinless_debit_card(creditcard, options = {})
-        requires!(options, :order_id)
-        commit(build_validate_pinless_debit_request(creditcard,options), :validate_pinless_debit_card, nil, options)
-      end
-
       def supports_scrubbing?
         true
       end
@@ -233,8 +270,9 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      # Create all address hash key value pairs so that we still function if we
-      # were only provided with one or two of them or even none
+      # Create all required address hash key value pairs
+      # If a value of nil is received, that value will be passed on to the gateway and will not be replaced with a default value
+      # Billing address fields received without an override value or with an empty string value will be replaced with the default_address values
       def setup_address_hash(options)
         default_address = {
           :address1 => 'Unspecified',
@@ -243,17 +281,51 @@ module ActiveMerchant #:nodoc:
           :zip => '00000',
           :country => 'US'
         }
-        options[:billing_address] = options[:billing_address] || options[:address] || default_address
+
+        submitted_address = options[:billing_address] || options[:address] || default_address
+        options[:billing_address] = default_address.merge(submitted_address.symbolize_keys) { |_k, default, submitted| check_billing_field_value(default, submitted) }
         options[:shipping_address] = options[:shipping_address] || {}
       end
 
+      def check_billing_field_value(default, submitted)
+        if submitted.nil?
+          nil
+        elsif submitted.blank?
+          default
+        else
+          submitted
+        end
+      end
+
       def build_auth_request(money, creditcard_or_reference, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
+        add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
+        add_other_tax(xml, options)
+        add_threeds_2_ucaf_data(xml, creditcard_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
         add_auth_service(xml, creditcard_or_reference, options)
+        add_threeds_services(xml, options)
         add_business_rules_data(xml, creditcard_or_reference, options)
+        add_airline_data(xml, options)
+        add_sales_slip_number(xml, options)
+        add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
+        add_tax_management_indicator(xml, options)
+        add_stored_credential_subsequent_auth(xml, options)
+        add_issuer_additional_data(xml, options)
+        add_partner_solution_id(xml)
+        add_stored_credential_options(xml, options)
+        add_merchant_description(xml, options)
+        xml.target!
+      end
+
+      def build_adjust_request(money, authorization, options)
+        _, request_id = authorization.split(';')
+
+        xml = Builder::XmlMarkup.new indent: 2
+        add_purchase_data(xml, money, true, options)
+        add_incremental_auth_service(xml, request_id, options)
         xml.target!
       end
 
@@ -265,6 +337,7 @@ module ActiveMerchant #:nodoc:
         add_purchase_data(xml, 0, false, options)
         add_tax_service(xml)
         add_business_rules_data(xml, creditcard, options)
+        add_tax_management_indicator(xml, options)
         xml.target!
       end
 
@@ -274,23 +347,53 @@ module ActiveMerchant #:nodoc:
 
         xml = Builder::XmlMarkup.new :indent => 2
         add_purchase_data(xml, money, true, options)
-        add_capture_service(xml, request_id, request_token)
+        add_other_tax(xml, options)
+        add_mdd_fields(xml, options)
+        add_capture_service(xml, request_id, request_token, options)
         add_business_rules_data(xml, authorization, options)
+        add_tax_management_indicator(xml, options)
+        add_issuer_additional_data(xml, options)
+        add_merchant_description(xml, options)
+        add_partner_solution_id(xml)
+
         xml.target!
       end
 
       def build_purchase_request(money, payment_method_or_reference, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
+        add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
+        add_other_tax(xml, options)
+        add_threeds_2_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
-        if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
+        if (!payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check') || reference_is_a_check?(payment_method_or_reference)
           add_check_service(xml)
+          add_airline_data(xml, options)
+          add_sales_slip_number(xml, options)
+          add_tax_management_indicator(xml, options)
+          add_issuer_additional_data(xml, options)
+          add_partner_solution_id(xml)
+          options[:payment_method] = :check
         else
           add_purchase_service(xml, payment_method_or_reference, options)
-          add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
+          add_threeds_services(xml, options)
+          add_business_rules_data(xml, payment_method_or_reference, options)
+          add_airline_data(xml, options)
+          add_sales_slip_number(xml, options)
+          add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
+          add_tax_management_indicator(xml, options)
+          add_stored_credential_subsequent_auth(xml, options)
+          add_issuer_additional_data(xml, options)
+          add_partner_solution_id(xml)
+          add_stored_credential_options(xml, options)
+          options[:payment_method] = :credit_card
         end
         xml.target!
+      end
+
+      def reference_is_a_check?(payment_method_or_reference)
+        payment_method_or_reference.is_a?(String) && payment_method_or_reference.split(';')[7] == 'check'
       end
 
       def build_void_request(identification, options)
@@ -313,7 +416,10 @@ module ActiveMerchant #:nodoc:
 
         xml = Builder::XmlMarkup.new :indent => 2
         add_purchase_data(xml, money, true, options)
-        add_credit_service(xml, request_id, request_token)
+        add_credit_service(xml, request_id: request_id,
+                                request_token: request_token,
+                                use_check_service: reference_is_a_check?(identification))
+        add_partner_solution_id(xml)
 
         xml.target!
       end
@@ -321,15 +427,17 @@ module ActiveMerchant #:nodoc:
       def build_credit_request(money, reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
 
-        add_purchase_data(xml, money, true, options)
-        add_subscription(xml, options, reference)
-        add_credit_service(xml)
+        add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
+        add_mdd_fields(xml, options)
+        add_credit_service(xml, use_check_service: creditcard_or_reference.is_a?(Check))
+        add_issuer_additional_data(xml, options)
+        add_merchant_description(xml, options)
 
         xml.target!
       end
 
       def build_create_subscription_request(payment_method, options)
-        default_subscription_params = {:frequency => "on-demand", :amount => 0, :automatic_renew => false}
+        default_subscription_params = { frequency: 'on-demand', amount: 0, automatic_renew: false }
         options[:subscription] = default_subscription_params.update(
           options[:subscription] || {}
         )
@@ -338,11 +446,13 @@ module ActiveMerchant #:nodoc:
         add_address(xml, payment_method, options[:billing_address], options)
         add_purchase_data(xml, options[:setup_fee] || 0, true, options)
         if card_brand(payment_method) == 'check'
-          add_check(xml, payment_method)
+          add_check(xml, payment_method, options)
           add_check_payment_method(xml)
+          options[:payment_method] = :check
         else
           add_creditcard(xml, payment_method)
           add_creditcard_payment_method(xml)
+          options[:payment_method] = :credit_card
         end
         add_subscription(xml, options)
         if options[:setup_fee]
@@ -354,6 +464,7 @@ module ActiveMerchant #:nodoc:
         end
         add_subscription_create_service(xml, options)
         add_business_rules_data(xml, payment_method, options)
+        add_tax_management_indicator(xml, options)
         xml.target!
       end
 
@@ -366,6 +477,7 @@ module ActiveMerchant #:nodoc:
         add_subscription(xml, options, reference)
         add_subscription_update_service(xml, options)
         add_business_rules_data(xml, creditcard, options)
+        add_tax_management_indicator(xml, options)
         xml.target!
       end
 
@@ -383,20 +495,13 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_validate_pinless_debit_request(creditcard,options)
-        xml = Builder::XmlMarkup.new :indent => 2
-        add_creditcard(xml, creditcard)
-        add_validate_pinless_debit_service(xml)
-        xml.target!
-      end
-
       def add_business_rules_data(xml, payment_method, options)
         prioritized_options = [options, @options]
 
         unless network_tokenization?(payment_method)
           xml.tag! 'businessRules' do
-            xml.tag!('ignoreAVSResult', 'true') if extract_option(prioritized_options, :ignore_avs)
-            xml.tag!('ignoreCVResult', 'true') if extract_option(prioritized_options, :ignore_cvv)
+            xml.tag!('ignoreAVSResult', 'true') if extract_option(prioritized_options, :ignore_avs).to_s == 'true'
+            xml.tag!('ignoreCVResult', 'true') if extract_option(prioritized_options, :ignore_cvv).to_s == 'true'
           end
         end
       end
@@ -409,13 +514,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_line_item_data(xml, options)
+        return unless options[:line_items]
+
         options[:line_items].each_with_index do |value, index|
-          xml.tag! 'item', {'id' => index} do
+          xml.tag! 'item', { 'id' => index } do
             xml.tag! 'unitPrice', localized_amount(value[:declared_value].to_i, options[:currency] || default_currency)
             xml.tag! 'quantity', value[:quantity]
             xml.tag! 'productCode', value[:code] || 'shipping_only'
             xml.tag! 'productName', value[:description]
             xml.tag! 'productSKU', value[:sku]
+            xml.tag! 'taxAmount', value[:tax_amount] if value[:tax_amount]
+            xml.tag! 'nationalTax', value[:national_tax] if value[:national_tax]
           end
         end
       end
@@ -428,17 +537,72 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'clientEnvironment' , RUBY_PLATFORM
       end
 
-      def add_purchase_data(xml, money = 0, include_grand_total = false, options={})
+      def add_merchant_descriptor(xml, options)
+        return unless options[:merchant_descriptor] || options[:user_po] || options[:taxable] || options[:reference_data_code] || options[:invoice_number]
+
+        xml.tag! 'invoiceHeader' do
+          xml.tag! 'merchantDescriptor', options[:merchant_descriptor] if options[:merchant_descriptor]
+          xml.tag! 'userPO', options[:user_po] if options[:user_po]
+          xml.tag! 'taxable', options[:taxable] if options[:taxable]
+          xml.tag! 'referenceDataCode', options[:reference_data_code] if options[:reference_data_code]
+          xml.tag! 'invoiceNumber', options[:invoice_number] if options[:invoice_number]
+        end
+      end
+
+      def add_customer_id(xml, options)
+        return unless options[:customer_id]
+
+        xml.tag! 'customerID', options[:customer_id]
+      end
+
+      def add_merchant_description(xml, options)
+        return unless options[:merchant_descriptor_name] || options[:merchant_descriptor_address1] || options[:merchant_descriptor_locality]
+
+        xml.tag! 'merchantInformation' do
+          xml.tag! 'merchantDescriptor' do
+            xml.tag! 'name', options[:merchant_descriptor_name] if options[:merchant_descriptor_name]
+            xml.tag! 'address1', options[:merchant_descriptor_address1] if options[:merchant_descriptor_address1]
+            xml.tag! 'locality', options[:merchant_descriptor_locality] if options[:merchant_descriptor_locality]
+          end
+        end
+      end
+
+      def add_sales_slip_number(xml, options)
+        xml.tag! 'salesSlipNumber', options[:sales_slip_number] if options[:sales_slip_number]
+      end
+
+      def add_airline_data(xml, options)
+        return unless options[:airline_agent_code]
+
+        xml.tag! 'airlineData' do
+          xml.tag! 'agentCode', options[:airline_agent_code]
+        end
+      end
+
+      def add_tax_management_indicator(xml, options)
+        return unless options[:tax_management_indicator]
+
+        xml.tag! 'taxManagementIndicator', options[:tax_management_indicator] if options[:tax_management_indicator]
+      end
+
+      def add_purchase_data(xml, money = 0, include_grand_total = false, options = {})
         xml.tag! 'purchaseTotals' do
           xml.tag! 'currency', options[:currency] || currency(money)
-          xml.tag!('grandTotalAmount', localized_amount(money.to_i, options[:currency] || default_currency))  if include_grand_total
+          xml.tag!('discountManagementIndicator', options[:discount_management_indicator]) if options[:discount_management_indicator]
+          xml.tag!('taxAmount', options[:purchase_tax_amount]) if options[:purchase_tax_amount]
+          xml.tag!('grandTotalAmount', localized_amount(money.to_i, options[:currency] || default_currency)) if include_grand_total
+          xml.tag!('originalAmount', options[:original_amount]) if options[:original_amount]
+          xml.tag!('invoiceAmount', options[:invoice_amount]) if options[:invoice_amount]
         end
       end
 
       def add_address(xml, payment_method, address, options, shipTo = false)
+        first_name, last_name = address_names(address[:name], payment_method)
+        bill_to_merchant_tax_id = options[:merchant_tax_id] unless shipTo
+
         xml.tag! shipTo ? 'shipTo' : 'billTo' do
-          xml.tag! 'firstName',             payment_method.first_name             if payment_method
-          xml.tag! 'lastName',              payment_method.last_name              if payment_method
+          xml.tag! 'firstName',             first_name if first_name
+          xml.tag! 'lastName',              last_name if last_name
           xml.tag! 'street1',               address[:address1]
           xml.tag! 'street2',               address[:address2]                unless address[:address2].blank?
           xml.tag! 'city',                  address[:city]
@@ -452,7 +616,18 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'ipAddress',             options[:ip]                      unless options[:ip].blank? || shipTo
           xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
           xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
+          xml.tag! 'merchantTaxID',         bill_to_merchant_tax_id           unless bill_to_merchant_tax_id.blank?
         end
+      end
+
+      def address_names(address_name, payment_method)
+        names = split_names(address_name)
+        return names if names.any?(&:present?)
+
+        [
+          payment_method&.first_name,
+          payment_method&.last_name
+        ]
       end
 
       def add_creditcard(xml, creditcard)
@@ -460,7 +635,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'accountNumber', creditcard.number
           xml.tag! 'expirationMonth', format(creditcard.month, :two_digits)
           xml.tag! 'expirationYear', format(creditcard.year, :four_digits)
-          xml.tag!('cvNumber', creditcard.verification_value) unless (@options[:ignore_cvv] || creditcard.verification_value.blank? )
+          xml.tag!('cvNumber', creditcard.verification_value) unless @options[:ignore_cvv].to_s == 'true' || creditcard.verification_value.blank?
           xml.tag! 'cardType', @@credit_card_codes[card_brand(creditcard).to_sym]
         end
       end
@@ -472,25 +647,45 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_issuer_additional_data(xml, options)
+        return unless options[:issuer_additional_data]
+
+        xml.tag! 'issuer' do
+          xml.tag! 'additionalData', options[:issuer_additional_data]
+        end
+      end
+
+      def add_other_tax(xml, options)
+        return unless options[:local_tax_amount] || options[:national_tax_amount] || options[:national_tax_indicator]
+
+        xml.tag! 'otherTax' do
+          xml.tag! 'vatTaxRate', options[:vat_tax_rate] if options[:vat_tax_rate]
+          xml.tag! 'localTaxAmount', options[:local_tax_amount] if options[:local_tax_amount]
+          xml.tag! 'nationalTaxAmount', options[:national_tax_amount] if options[:national_tax_amount]
+          xml.tag! 'nationalTaxIndicator', options[:national_tax_indicator] if options[:national_tax_indicator]
+        end
+      end
+
       def add_mdd_fields(xml, options)
         xml.tag! 'merchantDefinedData' do
           (1..100).each do |each|
             key = "mdd_field_#{each}".to_sym
-            xml.tag!("field#{each}", options[key]) if options[key]
+            xml.tag!('mddField', options[key], 'id' => each) if options[key]
           end
         end
       end
 
-      def add_check(xml, check)
+      def add_check(xml, check, options)
         xml.tag! 'check' do
           xml.tag! 'accountNumber', check.account_number
           xml.tag! 'accountType', check.account_type[0]
           xml.tag! 'bankTransitNumber', check.routing_number
+          xml.tag! 'secCode', options[:sec_code] if options[:sec_code]
         end
       end
 
       def add_tax_service(xml)
-        xml.tag! 'taxService', {'run' => 'true'} do
+        xml.tag! 'taxService', { 'run' => 'true' } do
           xml.tag!('nexus', @options[:nexus]) unless @options[:nexus].blank?
           xml.tag!('sellerRegistration', @options[:vat_reg_number]) unless @options[:vat_reg_number].blank?
         end
@@ -500,7 +695,73 @@ module ActiveMerchant #:nodoc:
         if network_tokenization?(payment_method)
           add_network_tokenization(xml, payment_method, options)
         else
-          xml.tag! 'ccAuthService', {'run' => 'true'}
+          xml.tag! 'ccAuthService', { 'run' => 'true' } do
+            if options[:three_d_secure]
+              add_normalized_threeds_2_data(xml, payment_method, options)
+            else
+              indicator = options[:commerce_indicator] || stored_credential_commerce_indicator(options)
+              xml.tag!('commerceIndicator', indicator) if indicator
+            end
+            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+            xml.tag!('mobileRemotePaymentType', options[:mobile_remote_payment_type]) if options[:mobile_remote_payment_type]
+          end
+        end
+      end
+
+      def add_incremental_auth_service(xml, authorization, options)
+        xml.tag! 'ccIncrementalAuthService', { 'run' => 'true' } do
+          xml.tag! 'authRequestID', authorization
+        end
+        xml.tag! 'subsequentAuthReason', options[:auth_reason]
+      end
+
+      def add_normalized_threeds_2_data(xml, payment_method, options)
+        threeds_2_options = options[:three_d_secure]
+        cc_brand = card_brand(payment_method).to_sym
+
+        return if threeds_2_options[:cavv].blank? && infer_commerce_indicator?(options, cc_brand)
+
+        xid = threeds_2_options[:xid]
+
+        xml.tag!('cavv', threeds_2_options[:cavv]) if threeds_2_options[:cavv] && cc_brand != :master
+        xml.tag!('cavvAlgorithm', threeds_2_options[:cavv_algorithm]) if threeds_2_options[:cavv_algorithm]
+        xml.tag!('paSpecificationVersion', threeds_2_options[:version]) if threeds_2_options[:version]
+        xml.tag!('directoryServerTransactionID', threeds_2_options[:ds_transaction_id]) if threeds_2_options[:ds_transaction_id]
+        xml.tag!('commerceIndicator', options[:commerce_indicator] || ECI_BRAND_MAPPING[cc_brand])
+        xml.tag!('eciRaw', threeds_2_options[:eci]) if threeds_2_options[:eci]
+
+        if xid.present?
+          xml.tag!('xid', xid)
+        elsif threeds_2_options[:version]&.start_with?('2') && cc_brand != :master
+          cavv = threeds_2_options[:cavv]
+          xml.tag!('xid', cavv) if cavv.present?
+        end
+
+        xml.tag!('veresEnrolled', threeds_2_options[:enrolled]) if threeds_2_options[:enrolled]
+        xml.tag!('paresStatus', threeds_2_options[:authentication_response_status]) if threeds_2_options[:authentication_response_status]
+      end
+
+      def infer_commerce_indicator?(options, cc_brand)
+        options[:commerce_indicator].blank? && ECI_BRAND_MAPPING[cc_brand].present?
+      end
+
+      def add_threeds_2_ucaf_data(xml, payment_method, options)
+        return unless options[:three_d_secure] && card_brand(payment_method).to_sym == :master
+
+        xml.tag! 'ucaf' do
+          xml.tag!('authenticationData', options[:three_d_secure][:cavv])
+          xml.tag!('collectionIndicator', options[:collection_indicator] || DEFAULT_COLLECTION_INDICATOR)
+        end
+      end
+
+      def stored_credential_commerce_indicator(options)
+        return unless options[:stored_credential]
+
+        return if options[:stored_credential][:initial_transaction]
+
+        case options[:stored_credential][:reason_type]
+        when 'installment' then 'install'
+        when 'recurring' then 'recurring'
         end
       end
 
@@ -513,26 +774,31 @@ module ActiveMerchant #:nodoc:
 
         case card_brand(payment_method).to_sym
         when :visa
-          xml.tag! 'ccAuthService', {'run' => 'true'} do
-            xml.tag!("cavv", payment_method.payment_cryptogram)
-            xml.tag!("commerceIndicator", "vbv")
-            xml.tag!("xid", payment_method.payment_cryptogram)
+          xml.tag! 'ccAuthService', { 'run' => 'true' } do
+            xml.tag!('cavv', payment_method.payment_cryptogram)
+            xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
+            xml.tag!('xid', payment_method.payment_cryptogram)
+            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         when :mastercard
           xml.tag! 'ucaf' do
             xml.tag!("authenticationData", payment_method.payment_cryptogram)
             xml.tag!("collectionIndicator", "2")
           end
-          xml.tag! 'ccAuthService', {'run' => 'true'} do
-            xml.tag!("commerceIndicator", "spa")
+          xml.tag! 'ccAuthService', { 'run' => 'true' } do
+            xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
+            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         when :american_express
           cryptogram = Base64.decode64(payment_method.payment_cryptogram)
-          xml.tag! 'ccAuthService', {'run' => 'true'} do
-            xml.tag!("cavv", Base64.encode64(cryptogram[0...20]))
-            xml.tag!("commerceIndicator", "aesk")
-            xml.tag!("xid", Base64.encode64(cryptogram[20...40]))
+          xml.tag! 'ccAuthService', { 'run' => 'true' } do
+            xml.tag!('cavv', Base64.encode64(cryptogram[0...20]))
+            xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
+            xml.tag!('xid', Base64.encode64(cryptogram[20...40])) if cryptogram.bytes.count > 20
+            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
+        else
+          raise ArgumentError.new("Payment method #{brand} is not supported, check https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/CreatingOnlineAuth/CreatingAuthReqPNT.html")
         end
 
         xml.tag! 'paymentNetworkToken' do
@@ -540,61 +806,65 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_capture_service(xml, request_id, request_token)
-        xml.tag! 'ccCaptureService', {'run' => 'true'} do
+      def add_capture_service(xml, request_id, request_token, options)
+        xml.tag! 'ccCaptureService', { 'run' => 'true' } do
           xml.tag! 'authRequestID', request_id
           xml.tag! 'authRequestToken', request_token
+          xml.tag! 'gratuityAmount', options[:gratuity_amount] if options[:gratuity_amount]
+          xml.tag! 'reconciliationID', options[:reconciliation_id] if options[:reconciliation_id]
         end
       end
 
       def add_purchase_service(xml, payment_method, options)
-        if options[:pinless_debit_card]
-          xml.tag! 'pinlessDebitService', {'run' => 'true'}
-        else
-          add_auth_service(xml, payment_method, options)
-          xml.tag! 'ccCaptureService', {'run' => 'true'}
+        add_auth_service(xml, payment_method, options)
+        xml.tag! 'ccCaptureService', { 'run' => 'true' } do
+          xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
         end
       end
 
       def add_void_service(xml, request_id, request_token)
-        xml.tag! 'voidService', {'run' => 'true'} do
+        xml.tag! 'voidService', { 'run' => 'true' } do
           xml.tag! 'voidRequestID', request_id
           xml.tag! 'voidRequestToken', request_token
         end
       end
 
       def add_auth_reversal_service(xml, request_id, request_token)
-        xml.tag! 'ccAuthReversalService', {'run' => 'true'} do
+        xml.tag! 'ccAuthReversalService', { 'run' => 'true' } do
           xml.tag! 'authRequestID', request_id
           xml.tag! 'authRequestToken', request_token
         end
       end
 
-      def add_credit_service(xml, request_id = nil, request_token = nil)
-        xml.tag! 'ccCreditService', {'run' => 'true'} do
-          xml.tag! 'captureRequestID', request_id if request_id
-          xml.tag! 'captureRequestToken', request_token if request_token
+      def add_credit_service(xml, options = {})
+        service = options[:use_check_service] ? 'ecCreditService' : 'ccCreditService'
+        request_tag = options[:use_check_service] ? 'debitRequestID' : 'captureRequestID'
+        options.delete :request_token if options[:use_check_service]
+
+        xml.tag! service, { 'run' => 'true' } do
+          xml.tag! request_tag, options[:request_id] if options[:request_id]
+          xml.tag! 'captureRequestToken', options[:request_token] if options[:request_token]
         end
       end
 
       def add_check_service(xml)
-        xml.tag! 'ecDebitService', {'run' => 'true'}
+        xml.tag! 'ecDebitService', { 'run' => 'true' }
       end
 
       def add_subscription_create_service(xml, options)
-        xml.tag! 'paySubscriptionCreateService', {'run' => 'true'}
+        xml.tag! 'paySubscriptionCreateService', { 'run' => 'true' }
       end
 
       def add_subscription_update_service(xml, options)
-        xml.tag! 'paySubscriptionUpdateService', {'run' => 'true'}
+        xml.tag! 'paySubscriptionUpdateService', { 'run' => 'true' }
       end
 
       def add_subscription_delete_service(xml, options)
-        xml.tag! 'paySubscriptionDeleteService', {'run' => 'true'}
+        xml.tag! 'paySubscriptionDeleteService', { 'run' => 'true' }
       end
 
       def add_subscription_retrieve_service(xml, options)
-        xml.tag! 'paySubscriptionRetrieveService', {'run' => 'true'}
+        xml.tag! 'paySubscriptionRetrieveService', { 'run' => 'true' }
       end
 
       def add_subscription(xml, options, reference = nil)
@@ -638,17 +908,37 @@ module ActiveMerchant #:nodoc:
         elsif card_brand(payment_method_or_reference) == 'check'
           add_address(xml, payment_method_or_reference, options[:billing_address], options)
           add_purchase_data(xml, money, true, options)
-          add_check(xml, payment_method_or_reference)
+          add_installments(xml, options)
+          add_check(xml, payment_method_or_reference, options)
         else
           add_address(xml, payment_method_or_reference, options[:billing_address], options)
           add_address(xml, payment_method_or_reference, options[:shipping_address], options, true)
+          add_line_item_data(xml, options)
           add_purchase_data(xml, money, true, options)
           add_creditcard(xml, payment_method_or_reference)
         end
       end
 
-      def add_validate_pinless_debit_service(xml)
-        xml.tag!'pinlessDebitValidateService', {'run' => 'true'}
+      def add_installments(xml, options)
+        return unless %i[installment_total_count installment_total_amount installment_plan_type first_installment_date installment_annual_interest_rate installment_grace_period_duration].any? { |gsf| options.include?(gsf) }
+
+        xml.tag! 'installment' do
+          xml.tag!('totalCount', options[:installment_total_count]) if options[:installment_total_count]
+          xml.tag!('totalAmount', options[:installment_total_amount]) if options[:installment_total_amount]
+          xml.tag!('planType', options[:installment_plan_type]) if options[:installment_plan_type]
+          xml.tag!('firstInstallmentDate', options[:first_installment_date]) if options[:first_installment_date]
+          xml.tag!('annualInterestRate', options[:installment_annual_interest_rate]) if options[:installment_annual_interest_rate]
+          xml.tag!('gracePeriodDuration', options[:installment_grace_period_duration]) if options[:installment_grace_period_duration]
+        end
+      end
+
+      def add_threeds_services(xml, options)
+        xml.tag! 'payerAuthEnrollService', { 'run' => 'true' } if options[:payer_auth_enroll_service]
+        if options[:payer_auth_validate_service]
+          xml.tag! 'payerAuthValidateService', { 'run' => 'true' } do
+            xml.tag! 'signedPARes', options[:pares]
+          end
+        end
       end
 
       def lookup_country_code(country_field)
@@ -658,24 +948,26 @@ module ActiveMerchant #:nodoc:
 
       # Where we actually build the full SOAP request using builder
       def build_request(body, options)
-        xml = Builder::XmlMarkup.new :indent => 2
-          xml.instruct!
-          xml.tag! 's:Envelope', {'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/'} do
-            xml.tag! 's:Header' do
-              xml.tag! 'wsse:Security', {'s:mustUnderstand' => '1', 'xmlns:wsse' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd'} do
-                xml.tag! 'wsse:UsernameToken' do
-                  xml.tag! 'wsse:Username', @options[:login]
-                  xml.tag! 'wsse:Password', @options[:password], 'Type' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText'
-                end
-              end
-            end
-            xml.tag! 's:Body', {'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema'} do
-              xml.tag! 'requestMessage', {'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{XSD_VERSION}"} do
-                add_merchant_data(xml, options)
-                xml << body
+        xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
+
+        xml = Builder::XmlMarkup.new indent: 2
+        xml.instruct!
+        xml.tag! 's:Envelope', { 'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
+          xml.tag! 's:Header' do
+            xml.tag! 'wsse:Security', { 's:mustUnderstand' => '1', 'xmlns:wsse' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd' } do
+              xml.tag! 'wsse:UsernameToken' do
+                xml.tag! 'wsse:Username', @options[:login]
+                xml.tag! 'wsse:Password', @options[:password], 'Type' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText'
               end
             end
           end
+          xml.tag! 's:Body', { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema' } do
+            xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
+              add_merchant_data(xml, options)
+              xml << body
+            end
+          end
+        end
         xml.target!
       end
 
@@ -693,11 +985,11 @@ module ActiveMerchant #:nodoc:
         authorization = success ? [ options[:order_id], response[:requestID], response[:requestToken], action, amount, options[:currency]].compact.join(";") : nil
 
         Response.new(success, message, response,
-          :test => test?,
-          :authorization => authorization,
-          :avs_result => { :code => response[:avsCode] },
-          :cvv_result => response[:cvCode]
-        )
+          test: test?,
+          authorization: authorization,
+          fraud_review: in_fraud_review?(response),
+          avs_result: { code: response[:avsCode] },
+          cvv_result: response[:cvCode])
       end
 
       # Parse the SOAP response
@@ -733,6 +1025,39 @@ module ActiveMerchant #:nodoc:
           end
         end
         return reply
+      end
+
+      def reason_message(reason_code)
+        return if reason_code.blank?
+
+        @@response_codes[:"r#{reason_code}"]
+      end
+
+      def authorization_from(response, action, amount, options)
+        [options[:order_id], response[:requestID], response[:requestToken], action, amount,
+         options[:currency], response[:subscriptionID], options[:payment_method]].join(';')
+      end
+
+      def in_fraud_review?(response)
+        response[:decision] == @@decision_codes[:review]
+      end
+
+      def success?(response)
+        response[:decision] == @@decision_codes[:accept]
+      end
+
+      def message_from(response)
+        if response[:reasonCode] == '101' && response[:missingField]
+          "#{response[:message]}: #{response[:missingField]}"
+        elsif response[:reasonCode] == '102' && response[:invalidField]
+          "#{response[:message]}: #{response[:invalidField]}"
+        else
+          response[:message]
+        end
+      end
+
+      def eligible_for_zero_auth?(payment_method, options = {})
+        payment_method.is_a?(CreditCard) && options[:zero_amount_auth]
       end
     end
   end

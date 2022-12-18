@@ -6,13 +6,12 @@ class RemoteNetbillingTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4444111111111119')
 
-    @address = {  :address1 => '1600 Amphitheatre Parkway',
-                  :city => 'Mountain View',
-                  :state => 'CA',
-                  :country => 'US',
-                  :zip => '94043',
-                  :phone => '650-253-0001'
-                }
+    @address = {  address1: '1600 Amphitheatre Parkway',
+                  city: 'Mountain View',
+                  state: 'CA',
+                  country: 'US',
+                  zip: '94043',
+                  phone: '650-253-0001' }
 
     @options = {
       :billing_address => @address,

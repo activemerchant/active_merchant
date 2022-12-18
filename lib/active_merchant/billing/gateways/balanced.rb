@@ -154,18 +154,22 @@ module ActiveMerchant #:nodoc:
         post[:meta] = options[:meta]
       end
 
-      def commit(entity_name, path, post, method=:post)
-        raw_response = begin
-          parse(ssl_request(
-            method,
-            live_url + "/#{path}",
-            post_data(post),
-            headers
-          ))
-        rescue ResponseError => e
-          raise unless(e.response.code.to_s =~ /4\d\d/)
-          parse(e.response.body)
-        end
+      def commit(entity_name, path, post, method = :post)
+        raw_response =
+          begin
+            parse(
+              ssl_request(
+                method,
+                live_url + "/#{path}",
+                post_data(post),
+                headers
+              )
+            )
+          rescue ResponseError => e
+            raise unless e.response.code.to_s =~ /4\d\d/
+
+            parse(e.response.body)
+          end
 
         Response.new(
           success_from(entity_name, raw_response),

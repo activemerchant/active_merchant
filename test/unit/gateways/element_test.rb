@@ -155,6 +155,180 @@ class ElementTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_purchase_with_card_present_code
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(card_present_code: 'Present'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<CardPresentCode>Present</CardPresentCode>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_payment_type
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(payment_type: 'NotUsed'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<PaymentType>NotUsed</PaymentType>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_submission_type
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(submission_type: 'NotUsed'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<SubmissionType>NotUsed</SubmissionType>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_duplicate_check_disable_flag
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateCheckDisableFlag>True</DuplicateCheckDisableFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'true'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateCheckDisableFlag>True</DuplicateCheckDisableFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: false))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'xxx'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'False'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    # when duplicate_check_disable_flag is NOT passed, should not be in XML at all
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      assert_no_match %r(<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>), data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_duplicate_override_flag
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>True</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'true'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>True</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: false))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>False</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'xxx'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>False</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'False'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>False</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    # when duplicate_override_flag is NOT passed, should not be in XML at all
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      assert_no_match %r(<DuplicateOverrideFlag>False</DuplicateOverrideFlag>), data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_terminal_id
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(terminal_id: '02'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<TerminalID>02</TerminalID>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_merchant_descriptor
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(merchant_descriptor: 'Flowerpot Florists'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<MerchantDescriptor>Flowerpot Florists</MerchantDescriptor>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_billing_email
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(email: 'test@example.com'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<BillingEmail>test@example.com</BillingEmail>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_credit_with_extra_fields
+    credit_options = @options.merge({ ticket_number: '1', market_code: 'FoodRestaurant', merchant_supplied_transaction_id: '123' })
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, credit_options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<CreditCardCredit', data
+      assert_match '<TicketNumber>1</TicketNumber', data
+      assert_match '<MarketCode>FoodRestaurant</MarketCode>', data
+      assert_match '<MerchantSuppliedTransactionId>123</MerchantSuppliedTransactionId>', data
+    end.respond_with(successful_credit_response)
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -195,6 +369,12 @@ class ElementTest < Test::Unit::TestCase
   def successful_purchase_with_payment_account_token_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><CreditCardSaleResponse xmlns="https://transaction.elementexpress.com"><response><ExpressResponseCode>0</ExpressResponseCode><ExpressResponseMessage>Approved</ExpressResponseMessage><ExpressTransactionDate>20151202</ExpressTransactionDate><ExpressTransactionTime>090144</ExpressTransactionTime><ExpressTransactionTimezone>UTC-05:00</ExpressTransactionTimezone><HostResponseCode>000</HostResponseCode><HostResponseMessage>AP</HostResponseMessage><Credentials /><Batch><BatchCloseType>Regular</BatchCloseType><BatchQueryType>Totals</BatchQueryType><HostBatchID>1</HostBatchID><HostItemID>155</HostItemID><HostBatchAmount>2995.00</HostBatchAmount><BatchGroupingCode>FullBatch</BatchGroupingCode><BatchIndexCode>Current</BatchIndexCode></Batch><Card><EncryptedFormat>Default</EncryptedFormat><AVSResponseCode>N</AVSResponseCode><CardLogo>Visa</CardLogo></Card><Transaction><TransactionID>2005838405</TransactionID><ApprovalNumber>000001</ApprovalNumber><ReferenceNumber>c0d498aa3c2c07169d13a989a7af91af5bc4e6a0</ReferenceNumber><ReversalType>System</ReversalType><MarketCode>Default</MarketCode><AcquirerData>aVb001234567810425c0425d5e00</AcquirerData><BillPaymentFlag>False</BillPaymentFlag><DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag><DuplicateOverrideFlag>False</DuplicateOverrideFlag><RecurringFlag>False</RecurringFlag><ProcessorName>NULL_PROCESSOR_TEST</ProcessorName><TransactionStatus>Approved</TransactionStatus><TransactionStatusCode>1</TransactionStatusCode><PartialApprovedFlag>False</PartialApprovedFlag><ApprovedAmount>1.00</ApprovedAmount><EMVEncryptionFormat>Default</EMVEncryptionFormat><ReversalReason>Unknown</ReversalReason></Transaction><PaymentAccount><PaymentAccountID>C875D86C-5913-487D-822E-76B27E2C2A4E</PaymentAccountID><PaymentAccountType>CreditCard</PaymentAccountType><PaymentAccountReferenceNumber>147b0b90f74faac13afb618fdabee3a4e75bf03b</PaymentAccountReferenceNumber><PASSUpdaterBatchStatus>Null</PASSUpdaterBatchStatus><PASSUpdaterOption>Null</PASSUpdaterOption></PaymentAccount><Address><BillingAddress1>456 My Street</BillingAddress1><BillingZipcode>K1C2N6</BillingZipcode></Address><ScheduledTask><RunFrequency>OneTimeFuture</RunFrequency><RunUntilCancelFlag>False</RunUntilCancelFlag><ScheduledTaskStatus>Active</ScheduledTaskStatus></ScheduledTask><DemandDepositAccount><DDAAccountType>Checking</DDAAccountType><CheckType>Personal</CheckType></DemandDepositAccount><TransactionSetup><TransactionSetupMethod>Null</TransactionSetupMethod><Device>Null</Device><Embedded>False</Embedded><CVVRequired>False</CVVRequired><AutoReturn>False</AutoReturn><DeviceInputCode>NotUsed</DeviceInputCode></TransactionSetup><Terminal><TerminalType>Unknown</TerminalType><CardPresentCode>UseDefault</CardPresentCode><CardholderPresentCode>UseDefault</CardholderPresentCode><CardInputCode>UseDefault</CardInputCode><CVVPresenceCode>UseDefault</CVVPresenceCode><TerminalCapabilityCode>UseDefault</TerminalCapabilityCode><TerminalEnvironmentCode>UseDefault</TerminalEnvironmentCode><MotoECICode>UseDefault</MotoECICode><CVVResponseType>Regular</CVVResponseType><ConsentCode>NotUsed</ConsentCode><TerminalEncryptionFormat>Default</TerminalEncryptionFormat></Terminal><AutoRental><AutoRentalVehicleClassCode>Unused</AutoRentalVehicleClassCode><AutoRentalDistanceUnit>Unused</AutoRentalDistanceUnit><AutoRentalAuditAdjustmentCode>NoAdjustments</AutoRentalAuditAdjustmentCode></AutoRental><Healthcare><HealthcareFlag>False</HealthcareFlag><HealthcareFirstAccountType>NotSpecified</HealthcareFirstAccountType><HealthcareFirstAmountType>LedgerBalance</HealthcareFirstAmountType><HealthcareFirstAmountSign>Positive</HealthcareFirstAmountSign><HealthcareSecondAccountType>NotSpecified</HealthcareSecondAccountType><HealthcareSecondAmountType>LedgerBalance</HealthcareSecondAmountType><HealthcareSecondAmountSign>Positive</HealthcareSecondAmountSign><HealthcareThirdAccountType>NotSpecified</HealthcareThirdAccountType><HealthcareThirdAmountType>LedgerBalance</HealthcareThirdAmountType><HealthcareThirdAmountSign>Positive</HealthcareThirdAmountSign><HealthcareFourthAccountType>NotSpecified</HealthcareFourthAccountType><HealthcareFourthAmountType>LedgerBalance</HealthcareFourthAmountType><HealthcareFourthAmountSign>Positive</HealthcareFourthAmountSign></Healthcare><Lodging><LodgingPrestigiousPropertyCode>NonParticipant</LodgingPrestigiousPropertyCode><LodgingSpecialProgramCode>Default</LodgingSpecialProgramCode><LodgingChargeType>Default</LodgingChargeType></Lodging><BIN /><EnhancedBIN /><Token><TokenProvider>Null</TokenProvider></Token></response></CreditCardSaleResponse></soap:Body></soap:Envelope>
+    XML
+  end
+
+  def successful_credit_response
+    <<~XML
+      <?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><CreditCardCreditResponse xmlns=\"https://transaction.elementexpress.com\"><response><ExpressResponseCode>0</ExpressResponseCode><ExpressResponseMessage>Approved</ExpressResponseMessage><ExpressTransactionDate>20211122</ExpressTransactionDate><ExpressTransactionTime>174635</ExpressTransactionTime><ExpressTransactionTimezone>UTC-06:00</ExpressTransactionTimezone><HostResponseCode>000</HostResponseCode><HostResponseMessage>AP</HostResponseMessage><Credentials /><Batch><BatchCloseType>Regular</BatchCloseType><BatchQueryType>Totals</BatchQueryType><HostBatchID>1</HostBatchID><HostItemID>102</HostItemID><HostBatchAmount>103.00</HostBatchAmount><BatchGroupingCode>FullBatch</BatchGroupingCode><BatchIndexCode>Current</BatchIndexCode></Batch><Card><CardLogo>Visa</CardLogo><BIN>400010</BIN></Card><Transaction><TransactionID>122816253</TransactionID><ApprovalNumber>000046</ApprovalNumber><ReferenceNumber>1</ReferenceNumber><ReversalType>System</ReversalType><MarketCode>Default</MarketCode><BillPaymentFlag>False</BillPaymentFlag><DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag><DuplicateOverrideFlag>False</DuplicateOverrideFlag><RecurringFlag>False</RecurringFlag><ProcessorName>NULL_PROCESSOR_TEST</ProcessorName><TransactionStatus>Approved</TransactionStatus><TransactionStatusCode>1</TransactionStatusCode><PartialApprovedFlag>False</PartialApprovedFlag><EMVEncryptionFormat>Default</EMVEncryptionFormat><ReversalReason>Unknown</ReversalReason><PaymentType>NotUsed</PaymentType><SubmissionType>NotUsed</SubmissionType></Transaction><PaymentAccount><PaymentAccountType>CreditCard</PaymentAccountType><PASSUpdaterBatchStatus>Null</PASSUpdaterBatchStatus><PASSUpdaterOption>Null</PASSUpdaterOption></PaymentAccount><Address /><ScheduledTask><RunFrequency>OneTimeFuture</RunFrequency><RunUntilCancelFlag>False</RunUntilCancelFlag><ScheduledTaskStatus>Active</ScheduledTaskStatus></ScheduledTask><DemandDepositAccount><CheckType>Personal</CheckType></DemandDepositAccount><TransactionSetup><TransactionSetupMethod>Null</TransactionSetupMethod><Device>Null</Device><Embedded>False</Embedded><CVVRequired>False</CVVRequired><AutoReturn>False</AutoReturn><DeviceInputCode>NotUsed</DeviceInputCode></TransactionSetup><Terminal><TerminalType>Unknown</TerminalType><CardPresentCode>UseDefault</CardPresentCode><CardholderPresentCode>UseDefault</CardholderPresentCode><CardInputCode>UseDefault</CardInputCode><CVVPresenceCode>UseDefault</CVVPresenceCode><TerminalCapabilityCode>UseDefault</TerminalCapabilityCode><TerminalEnvironmentCode>UseDefault</TerminalEnvironmentCode><MotoECICode>UseDefault</MotoECICode><CVVResponseType>Regular</CVVResponseType><ConsentCode>NotUsed</ConsentCode><TerminalEncryptionFormat>Default</TerminalEncryptionFormat></Terminal><AutoRental><AutoRentalVehicleClassCode>Unused</AutoRentalVehicleClassCode><AutoRentalDistanceUnit>Unused</AutoRentalDistanceUnit><AutoRentalAuditAdjustmentCode>NoAdjustments</AutoRentalAuditAdjustmentCode></AutoRental><Healthcare><HealthcareFlag>False</HealthcareFlag><HealthcareFirstAccountType>NotSpecified</HealthcareFirstAccountType><HealthcareFirstAmountType>LedgerBalance</HealthcareFirstAmountType><HealthcareFirstAmountSign>Positive</HealthcareFirstAmountSign><HealthcareSecondAccountType>NotSpecified</HealthcareSecondAccountType><HealthcareSecondAmountType>LedgerBalance</HealthcareSecondAmountType><HealthcareSecondAmountSign>Positive</HealthcareSecondAmountSign><HealthcareThirdAccountType>NotSpecified</HealthcareThirdAccountType><HealthcareThirdAmountType>LedgerBalance</HealthcareThirdAmountType><HealthcareThirdAmountSign>Positive</HealthcareThirdAmountSign><HealthcareFourthAccountType>NotSpecified</HealthcareFourthAccountType><HealthcareFourthAmountType>LedgerBalance</HealthcareFourthAmountType><HealthcareFourthAmountSign>Positive</HealthcareFourthAmountSign></Healthcare><Lodging><LodgingPrestigiousPropertyCode>NonParticipant</LodgingPrestigiousPropertyCode><LodgingSpecialProgramCode>Default</LodgingSpecialProgramCode><LodgingChargeType>Default</LodgingChargeType></Lodging><BIN /><EnhancedBIN /><Token /></response></CreditCardCreditResponse></soap:Body></soap:Envelope>
     XML
   end
 

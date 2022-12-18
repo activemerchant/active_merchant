@@ -48,6 +48,10 @@ module ActiveMerchant #:nodoc:
         authorize(0, payment, options)
       end
 
+      def store(payment, options = {})
+        raise ArgumentError, 'Store is not supported on Payflow gateways'
+      end
+
       def verify_credentials
         response = void("0")
         response.params["result"] != "26"
@@ -71,6 +75,7 @@ module ActiveMerchant #:nodoc:
         options[:name] = credit_card.name if options[:name].blank? && credit_card
         request = build_recurring_request(options[:profile_id] ? :modify : :add, money, options) do |xml|
           add_credit_card(xml, credit_card, options) if credit_card
+          add_stored_credential(xml, options[:stored_credential])
         end
         commit(request, options.merge(:request_type => :recurring))
       end
@@ -120,6 +125,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
               xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
               xml.tag! 'DiscountAmt', options[:discountamt] unless options[:discountamt].blank?
+              xml.tag! 'MerchDescr', options[:merch_descr] unless options[:merch_descr].blank?
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
@@ -132,6 +138,7 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'ExtData', 'Name' => 'ORIGID', 'Value' =>  reference
               end
             end
+            add_stored_credential(xml, options[:stored_credential])
           end
         end
         xml.target!
@@ -152,6 +159,8 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
               xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
               xml.tag! 'DiscountAmt', options[:discountamt] unless options[:discountamt].blank?
+              xml.tag! 'EMail', options[:email] unless options[:email].nil?
+              xml.tag! 'MerchDescr', options[:merch_descr] unless options[:merch_descr].blank?
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
@@ -160,12 +169,77 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end
 
+            if %i(authorization purchase).include? action
+              add_mpi_3ds(xml, options[:three_d_secure]) if options[:three_d_secure]
+            end
+
             xml.tag! 'Tender' do
               add_credit_card(xml, credit_card, options)
             end
+            add_stored_credential(xml, options[:stored_credential])
           end
         end
-        xml.target!
+        add_level_two_three_fields(xml.target!, options)
+      end
+
+      def add_mpi_3ds(xml, three_d_secure_options)
+        # structure as per https://developer.paypal.com/api/nvp-soap/payflow/3d-secure-mpi/
+        authentication_id = three_d_secure_options[:authentication_id]
+        authentication_status = three_d_secure_options[:authentication_response_status]
+
+        eci = three_d_secure_options[:eci]
+        cavv = three_d_secure_options[:cavv]
+        xid = three_d_secure_options[:xid]
+        version = three_d_secure_options[:version]
+
+        # 3DS2 only
+        ds_transaction_id = three_d_secure_options[:ds_transaction_id] if version_2_or_newer?(three_d_secure_options)
+
+        xml.tag!('ExtData', 'Name' => 'AUTHENTICATION_ID', 'Value' => authentication_id) unless authentication_id.blank?
+        xml.tag!('ExtData', 'Name' => 'AUTHENTICATION_STATUS', 'Value' => authentication_status) unless authentication_status.blank?
+
+        xml.tag!('ExtData', 'Name' => 'CAVV', 'Value' => cavv) unless cavv.blank?
+        xml.tag!('ExtData', 'Name' => 'ECI', 'Value' => eci) unless eci.blank?
+        xml.tag!('ExtData', 'Name' => 'XID', 'Value' => xid) unless xid.blank?
+        xml.tag!('ExtData', 'Name' => 'THREEDSVERSION', 'Value' => version) unless version.blank?
+        xml.tag!('ExtData', 'Name' => 'DSTRANSACTIONID', 'Value' => ds_transaction_id) unless ds_transaction_id.blank?
+      end
+
+      def add_level_two_three_fields(xml_string, options)
+        if options[:level_two_fields] || options[:level_three_fields]
+          xml_doc = Nokogiri::XML.parse(xml_string)
+          %i[level_two_fields level_three_fields].each do |fields|
+            xml_string = add_fields(xml_doc, options[fields]) if options[fields]
+          end
+        end
+        xml_string
+      end
+
+      def check_fields(parent, fields, xml_doc)
+        fields.each do |k, v|
+          if v.is_a? String
+            new_node = Nokogiri::XML::Node.new(k, xml_doc)
+            new_node.add_child(v)
+            xml_doc.at_css(parent).add_child(new_node)
+          else
+            check_subparent_before_continuing(parent, k, xml_doc)
+            check_fields(k, v, xml_doc)
+          end
+        end
+        xml_doc
+      end
+
+      def check_subparent_before_continuing(parent, subparent, xml_doc)
+        unless xml_doc.at_css(subparent)
+          subparent_node = Nokogiri::XML::Node.new(subparent, xml_doc)
+          xml_doc.at_css(parent).add_child(subparent_node)
+        end
+      end
+
+      def add_fields(xml_doc, options_fields)
+        fields_to_add = JSON.parse(options_fields)
+        check_fields('Invoice', fields_to_add, xml_doc)
+        xml_doc.root.to_s
       end
 
       def build_check_request(action, money, check, options)
@@ -176,6 +250,8 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
+              xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
+              xml.tag! 'MerchDescr', options[:merch_descr] unless options[:merch_descr].blank?
               xml.tag! 'BillTo' do
                 xml.tag! 'Name', check.name
               end
@@ -188,6 +264,7 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'ABA', check.routing_number
               end
             end
+            add_stored_credential(xml, options[:stored_credential])
           end
         end
         xml.target!
@@ -201,25 +278,72 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'NameOnCard', credit_card.first_name
           xml.tag! 'CVNum', credit_card.verification_value if credit_card.verification_value?
 
-          if options[:three_d_secure]
-            three_d_secure = options[:three_d_secure]
-            xml.tag! 'BuyerAuthResult' do
-              xml.tag! 'Status', three_d_secure[:status] unless three_d_secure[:status].blank?
-              xml.tag! 'AuthenticationId', three_d_secure[:authentication_id] unless three_d_secure[:authentication_id].blank?
-              xml.tag! 'PAReq', three_d_secure[:pareq] unless three_d_secure[:pareq].blank?
-              xml.tag! 'ACSUrl', three_d_secure[:acs_url] unless three_d_secure[:acs_url].blank?
-              xml.tag! 'ECI', three_d_secure[:eci] unless three_d_secure[:eci].blank?
-              xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
-              xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
-            end
+          add_three_d_secure(options, xml)
+
+          xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' => credit_card.last_name
+        end
+      end
+
+      def add_stored_credential(xml, stored_credential)
+        return unless stored_credential
+
+        xml.tag! 'CardOnFile', add_card_on_file_type(stored_credential)
+        xml.tag! 'TxnId', stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
+      end
+
+      def card_on_file_initiator(initator)
+        case initator
+        when 'merchant'
+          'MIT'
+        when 'cardholder'
+          'CIT'
+        end
+      end
+
+      def card_on_file_reason(stored_credential)
+        return 'I' if stored_credential[:initial_transaction] && stored_credential[:reason_type] == 'unscheduled'
+
+        case stored_credential[:reason_type]
+        when 'recurring', 'installment'
+          'R'
+        when 'unscheduled'
+          'U'
+        end
+      end
+
+      def add_card_on_file_type(stored_credential)
+        card_on_file_initiator(stored_credential[:initiator]).to_s + card_on_file_reason(stored_credential).to_s
+      end
+
+      def add_three_d_secure(options, xml)
+        if options[:three_d_secure]
+          three_d_secure = options[:three_d_secure]
+          xml.tag! 'BuyerAuthResult' do
+            authentication_status(three_d_secure, xml)
+            xml.tag! 'AuthenticationId', three_d_secure[:authentication_id] unless three_d_secure[:authentication_id].blank?
+            xml.tag! 'PAReq', three_d_secure[:pareq] unless three_d_secure[:pareq].blank?
+            xml.tag! 'ACSUrl', three_d_secure[:acs_url] unless three_d_secure[:acs_url].blank?
+            xml.tag! 'ECI', three_d_secure[:eci] unless three_d_secure[:eci].blank?
+            xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
+            xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
+            xml.tag! 'ThreeDSVersion', three_d_secure[:version] unless three_d_secure[:version].blank?
+            xml.tag! 'DSTransactionID', three_d_secure[:ds_transaction_id] unless three_d_secure[:ds_transaction_id].blank?
           end
 
-          if requires_start_date_or_issue_number?(credit_card)
-            xml.tag!('ExtData', 'Name' => 'CardStart', 'Value' => startdate(credit_card)) unless credit_card.start_month.blank? || credit_card.start_year.blank?
-            xml.tag!('ExtData', 'Name' => 'CardIssue', 'Value' => format(credit_card.issue_number, :two_digits)) unless credit_card.issue_number.blank?
-          end
-          xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' =>  credit_card.last_name
+      def authentication_status(three_d_secure, xml)
+        status = if three_d_secure[:authentication_response_status].present?
+                   three_d_secure[:authentication_response_status]
+                 elsif three_d_secure[:directory_response_status].present?
+                   three_d_secure[:directory_response_status]
+                 end
+        if status.present?
+          xml.tag! 'Status', status
+          xml.tag! 'AuthenticationStatus', status if version_2_or_newer?(three_d_secure)
         end
+      end
+
+      def version_2_or_newer?(three_d_secure)
+        three_d_secure[:version]&.start_with?('2')
       end
 
       def credit_card_type(credit_card)

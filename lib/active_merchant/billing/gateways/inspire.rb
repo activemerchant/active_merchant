@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
         authorize(100, creditcard, options.merge(:store => billing_id))
       end
 
-      alias_method :unstore, :delete
+      alias unstore delete
 
       private
       def add_customer_data(post, options)
@@ -175,13 +175,11 @@ module ActiveMerchant #:nodoc:
 
         response = parse( ssl_post(self.live_url, post_data(action,parameters)) )
 
-        Response.new(response["response"] == "1", message_from(response), response,
-          :authorization => response["transactionid"],
-          :test => test?,
-          :cvv_result => response["cvvresponse"],
-          :avs_result => { :code => response["avsresponse"] }
-        )
-
+        Response.new(response['response'] == '1', message_from(response), response,
+          authorization: response['transactionid'],
+          test: test?,
+          cvv_result: response['cvvresponse'],
+          avs_result: { code: response['avsresponse'] })
       end
 
       def message_from(response)

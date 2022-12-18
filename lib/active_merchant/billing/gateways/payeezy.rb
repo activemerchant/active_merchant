@@ -37,23 +37,29 @@ module ActiveMerchant
         add_payment_method(params, payment_method)
         add_address(params, options)
         add_amount(params, amount, options)
+        add_soft_descriptors(params, options)
+        add_level2_data(params, options)
+        add_stored_credentials(params, options)
 
         commit(params, options)
       end
 
       def authorize(amount, payment_method, options = {})
-        params = {transaction_type: 'authorize'}
+        params = { transaction_type: 'authorize' }
 
         add_invoice(params, options)
         add_payment_method(params, payment_method)
         add_address(params, options)
         add_amount(params, amount, options)
+        add_soft_descriptors(params, options)
+        add_level2_data(params, options)
+        add_stored_credentials(params, options)
 
         commit(params, options)
       end
 
       def capture(amount, authorization, options = {})
-        params = {transaction_type: 'capture'}
+        params = { transaction_type: 'capture' }
 
         add_authorization_info(params, authorization)
         add_amount(params, amount, options)
@@ -62,16 +68,36 @@ module ActiveMerchant
       end
 
       def refund(amount, authorization, options = {})
-        params = {transaction_type: 'refund'}
+        params = { transaction_type: 'refund' }
 
         add_authorization_info(params, authorization)
         add_amount(params, (amount || amount_from_authorization(authorization)), options)
+        add_soft_descriptors(params, options)
+        add_invoice(params, options)
+
+        commit(params, options)
+      end
+
+      def credit(amount, payment_method, options = {})
+        params = { transaction_type: 'refund' }
+
+        add_amount(params, amount, options)
+        add_payment_method(params, payment_method, options)
+        add_soft_descriptors(params, options)
+        add_invoice(params, options)
+        commit(params, options)
+      end
+
+      def store(payment_method, options = {})
+        params = { transaction_type: 'store' }
+
+        add_creditcard_for_tokenization(params, payment_method, options)
 
         commit(params, options)
       end
 
       def void(authorization, options = {})
-        params = {transaction_type: 'void'}
+        params = { transaction_type: 'void' }
 
         add_authorization_info(params, authorization)
         add_amount(params, amount_from_authorization(authorization), options)
@@ -95,8 +121,17 @@ module ActiveMerchant
           gsub(%r((Token: )(\w|-)+), '\1[FILTERED]').
           gsub(%r((\\?"card_number\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r((\\?"cvv\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r((\\?"cvv\\?":\\?)\d+), '\1[FILTERED]').
           gsub(%r((\\?"account_number\\?":\\?")\d+), '\1[FILTERED]').
-          gsub(%r((\\?"routing_number\\?":\\?")\d+), '\1[FILTERED]')
+          gsub(%r((\\?"routing_number\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r((\\?card_number=)\d+(&?)), '\1[FILTERED]').
+          gsub(%r((\\?cvv=)\d+(&?)), '\1[FILTERED]').
+          gsub(%r((\\?apikey=)\w+(&?)), '\1[FILTERED]').
+          gsub(%r{(\\?"credit_card\.card_number\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]').
+          gsub(%r{(\\?"credit_card\.cvv\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]').
+          gsub(%r{(\\?"apikey\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]').
+          gsub(%r{(\\?"cavv\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]').
+          gsub(%r{(\\?"xid\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]')
       end
 
       private
@@ -118,7 +153,11 @@ module ActiveMerchant
 
       def add_payment_method(params, payment_method)
         if payment_method.is_a? Check
-          add_echeck(params, payment_method)
+          add_echeck(params, payment_method, options)
+        elsif payment_method.is_a? String
+          add_token(params, payment_method, options)
+        elsif payment_method.is_a? NetworkTokenizationCreditCard
+          add_network_tokenization(params, payment_method, options)
         else
           add_creditcard(params, payment_method)
         end
@@ -140,14 +179,24 @@ module ActiveMerchant
       def add_echeck(params, echeck)
         tele_check = {}
 
-        tele_check[:check_number] = echeck.number
-        tele_check[:check_type] = "P"
-        tele_check[:routing_number] = echeck.routing_number
-        tele_check[:account_number] = echeck.account_number
-        tele_check[:accountholder_name] = "#{echeck.first_name} #{echeck.last_name}"
+      def add_network_tokenization(params, payment_method, options)
+        nt_card = {}
+        nt_card[:type] = 'D'
+        nt_card[:cardholder_name] = payment_method.first_name
+        nt_card[:card_number] = payment_method.number
+        nt_card[:exp_date] = format_exp_date(payment_method.month, payment_method.year)
+        nt_card[:cvv] = payment_method.verification_value
+        nt_card[:xid] = payment_method.payment_cryptogram
+        nt_card[:cavv] = payment_method.payment_cryptogram
+        nt_card[:wallet_provider_id] = 'APPLE_PAY'
 
-        params[:method] = 'tele_check'
-        params[:tele_check] = tele_check
+        params['3DS'] = nt_card
+        params[:method] = '3DS'
+        params[:eci_indicator] = payment_method.eci
+      end
+
+      def format_exp_date(month, year)
+        "#{format(month, :two_digits)}#{format(year, :two_digits)}"
       end
 
       def add_address(params, options)
@@ -167,6 +216,46 @@ module ActiveMerchant
       def add_amount(params, money, options)
         params[:currency_code] = (options[:currency] || default_currency).upcase
         params[:amount] = amount(money)
+      end
+
+      def add_soft_descriptors(params, options)
+        params[:soft_descriptors] = options[:soft_descriptors] if options[:soft_descriptors]
+      end
+
+      def add_level2_data(params, options)
+        return unless level2_data = options[:level2]
+
+        params[:level2] = {}
+        params[:level2][:customer_ref] = level2_data[:customer_ref]
+      end
+
+      def add_stored_credentials(params, options)
+        if options[:sequence] || options[:stored_credential]
+          params[:stored_credentials] = {}
+          params[:stored_credentials][:cardbrand_original_transaction_id] = original_transaction_id(options) if original_transaction_id(options)
+          params[:stored_credentials][:initiator] = initiator(options) if initiator(options)
+          params[:stored_credentials][:sequence] = options[:sequence] || sequence(options[:stored_credential][:initial_transaction])
+          params[:stored_credentials][:is_scheduled] = options[:is_scheduled] || is_scheduled(options[:stored_credential][:reason_type])
+          params[:stored_credentials][:auth_type_override] = options[:auth_type_override] if options[:auth_type_override]
+        end
+      end
+
+      def original_transaction_id(options)
+        return options[:cardbrand_original_transaction_id] if options[:cardbrand_original_transaction_id]
+        return options[:stored_credential][:network_transaction_id] if options.dig(:stored_credential, :network_transaction_id)
+      end
+
+      def initiator(options)
+        return options[:initiator] if options[:initiator]
+        return options[:stored_credential][:initiator].upcase if options.dig(:stored_credential, :initiator)
+      end
+
+      def sequence(initial_transaction)
+        initial_transaction ? 'FIRST' : 'SUBSEQUENT'
+      end
+
+      def is_scheduled(reason_type)
+        reason_type == 'recurring' ? 'true' : 'false'
       end
 
       def commit(params, options)
@@ -191,15 +280,16 @@ module ActiveMerchant
           response = json_error(raw_response)
         end
 
+        success = success_from(response)
         Response.new(
-          success_from(response),
-          handle_message(response, success_from(response)),
+          success,
+          handle_message(response, success),
           response,
           test: test?,
           authorization: authorization_from(params, response),
-          avs_result: {code: response['avs']},
+          avs_result: { code: response['avs'] },
           cvv_result: response['cvv2'],
-          error_code: error_code(response, success_from(response))
+          error_code: success ? nil : error_code_from(response)
         )
       end
 
@@ -241,9 +331,16 @@ module ActiveMerchant
         }
       end
 
-      def error_code(response, success)
-        return if success
-        response['Error'].to_h['messages'].to_a.map { |e| e['code'] }.join(', ')
+      def error_code_from(response)
+        error_code = nil
+        if response['bank_resp_code'] == '100'
+          return
+        elsif response['bank_resp_code']
+          error_code = response['bank_resp_code']
+        elsif error_code = response['Error'].to_h['messages'].to_a.map { |e| e['code'] }.join(', ')
+        end
+
+        error_code
       end
 
       def handle_message(response, success)
@@ -273,7 +370,7 @@ module ActiveMerchant
       end
 
       def json_error(raw_response)
-        {"error" => "Unable to parse response: #{raw_response.inspect}"}
+        { 'error' => "Unable to parse response: #{raw_response.inspect}" }
       end
     end
   end

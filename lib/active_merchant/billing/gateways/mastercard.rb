@@ -164,7 +164,8 @@ module ActiveMerchant
 
       def add_3dsecure_id(post, options)
         return unless options[:threed_secure_id]
-        post.merge!({"3DSecureId" => options[:threed_secure_id]})
+
+        post.merge!({ '3DSecureId' => options[:threed_secure_id] })
       end
 
       def country_code(country)

@@ -114,10 +114,10 @@ module ActiveMerchant #:nodoc:
           post[:cc] = credit_card.verification_value if credit_card.verification_value?
         end
 
-        def add_token(post, token)
-          post[:fp] = "t"    # turn on "future payments" - what paystation calls Token Billing
-          post[:ft] = token
-        end
+        PaystationResponse.new(success?(response), message, response,
+          test: (response[:tm]&.casecmp('t')&.zero?),
+          authorization: response[:paystation_transaction_id])
+      end
 
         def store_credit_card(post, options)
           post[:fp] = "t"                                # turn on "future payments" - what paystation calls Token Billing

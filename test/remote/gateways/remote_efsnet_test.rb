@@ -12,9 +12,8 @@ class RemoteEfsnetTest < Test::Unit::TestCase
     @amount = 100
     @declined_amount = 156
 
-    @options = { :order_id => generate_unique_id, 
-                 :billing_address => address
-               }
+    @options = { order_id: generate_unique_id,
+                 billing_address: address }
   end
   
   def test_successful_purchase

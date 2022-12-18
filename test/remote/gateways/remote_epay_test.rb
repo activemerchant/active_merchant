@@ -10,7 +10,8 @@ class RemoteEpayTest < Test::Unit::TestCase
     @credit_card_declined = credit_card('3333333333333102')
 
     @amount = 100
-    @options = {order_id: '1'}
+    @options_xid = { order_id: generate_unique_id, three_d_secure: { eci: '7', xid: '123', cavv: '456', version: '2', ds_transaction_id: nil } }
+    @options_ds_transaction_id = { order_id: generate_unique_id, three_d_secure: { eci: '7', xid: nil, cavv: '456', version: '2', ds_transaction_id: '798' } }
   end
 
   def test_successful_purchase

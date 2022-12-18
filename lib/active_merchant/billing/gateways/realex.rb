@@ -143,6 +143,12 @@ module ActiveMerchant
           add_card(xml, credit_card)
           xml.tag! 'autosettle', 'flag' => auto_settle_flag(action)
           add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card.number)
+          if credit_card.is_a?(NetworkTokenizationCreditCard)
+            add_network_tokenization_card(xml, credit_card)
+          else
+            add_three_d_secure(xml, options)
+          end
+          add_stored_credential(xml, options)
           add_comments(xml, options)
           add_address_and_customer_info(xml, options)
         end
@@ -252,6 +258,53 @@ module ActiveMerchant
             xml.tag! 'presind', (options['presind'] || (credit_card.verification_value? ? 1 : nil))
           end
         end
+      end
+
+      def add_network_tokenization_card(xml, payment)
+        xml.tag! 'mpi' do
+          xml.tag! 'cavv', payment.payment_cryptogram
+          xml.tag! 'eci', payment.eci
+        end
+        xml.tag! 'supplementarydata' do
+          xml.tag! 'item', 'type' => 'mobile' do
+            xml.tag! 'field01', payment.source.to_s.tr('_', '-')
+          end
+        end
+      end
+
+      def add_three_d_secure(xml, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        version = three_d_secure.fetch(:version, '')
+        xml.tag! 'mpi' do
+          if /^2/.match?(version)
+            xml.tag! 'authentication_value', three_d_secure[:cavv]
+            xml.tag! 'ds_trans_id', three_d_secure[:ds_transaction_id]
+          else
+            xml.tag! 'cavv', three_d_secure[:cavv]
+            xml.tag! 'xid', three_d_secure[:xid]
+            version = '1'
+          end
+          xml.tag! 'eci', three_d_secure[:eci]
+          xml.tag! 'message_version', version
+        end
+      end
+
+      def add_stored_credential(xml, options)
+        return unless stored_credential = options[:stored_credential]
+
+        xml.tag! 'storedcredential' do
+          xml.tag! 'type', stored_credential_type(stored_credential[:reason_type])
+          xml.tag! 'initiator', stored_credential[:initiator]
+          xml.tag! 'sequence', stored_credential[:initial_transaction] ? 'first' : 'subsequent'
+          xml.tag! 'srd', stored_credential[:network_transaction_id]
+        end
+      end
+
+      def stored_credential_type(reason)
+        return 'oneoff' if reason == 'unscheduled'
+
+        reason
       end
 
       def format_address_code(address)

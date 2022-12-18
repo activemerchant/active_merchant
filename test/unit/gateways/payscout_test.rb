@@ -231,7 +231,7 @@ class PayscoutTest < Test::Unit::TestCase
 
   def test_add_invoice
     post = {}
-    options = {description: 'Order Description', order_id: '123'}
+    options = { description: 'Order Description', order_id: '123' }
     @gateway.send(:add_invoice, post, options)
 
     assert_equal 'Order Description', post[:orderdescription]
@@ -282,25 +282,25 @@ class PayscoutTest < Test::Unit::TestCase
   end
 
   def test_message_from_for_approved_response
-    assert_equal 'The transaction has been approved', @gateway.send(:message_from, {'response' => '1'})
+    assert_equal 'The transaction has been approved', @gateway.send(:message_from, { 'response' => '1' })
   end
 
   def test_message_from_for_declined_response
-    assert_equal 'The transaction has been declined', @gateway.send(:message_from, {'response' => '2'})
+    assert_equal 'The transaction has been declined', @gateway.send(:message_from, { 'response' => '2' })
   end
 
   def test_message_from_for_failed_response
-    assert_equal 'Error message', @gateway.send(:message_from, {'response' => '3', 'responsetext' => 'Error message'})
+    assert_equal 'Error message', @gateway.send(:message_from, { 'response' => '3', 'responsetext' => 'Error message' })
   end
 
   def test_success
-    assert @gateway.send(:success?, {'response' => '1'})
-    refute @gateway.send(:success?, {'response' => '2'})
-    refute @gateway.send(:success?, {'response' => '3'})
+    assert @gateway.send(:success?, { 'response' => '1' })
+    refute @gateway.send(:success?, { 'response' => '2' })
+    refute @gateway.send(:success?, { 'response' => '3' })
   end
 
   def test_post_data
-    parameters = {param1: 'value1', param2: 'value2'}
+    parameters = { param1: 'value1', param2: 'value2' }
     result = @gateway.send(:post_data, 'auth', parameters)
 
     assert_match "username=xxx", result

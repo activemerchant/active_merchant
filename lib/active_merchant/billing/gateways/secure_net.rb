@@ -70,11 +70,10 @@ module ActiveMerchant #:nodoc:
         response = parse(data)
 
         Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => build_authorization(response),
-          :avs_result => { :code => response[:avs_result_code] },
-          :cvv_result => response[:card_code_response_code]
-        )
+          test: test?,
+          authorization: build_authorization(response),
+          avs_result: { code: response[:avs_result_code] },
+          cvv_result: response[:card_code_response_code])
       end
 
       def build_request(request)

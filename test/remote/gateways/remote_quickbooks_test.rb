@@ -13,8 +13,7 @@ class RemoteTest < Test::Unit::TestCase
       order_id: '1',
       billing_address: address({ zip: 90210,
                                  country: 'US',
-                                 state: 'CA'
-                               }),
+                                 state: 'CA' }),
       description: 'Store Purchase'
     }
   end

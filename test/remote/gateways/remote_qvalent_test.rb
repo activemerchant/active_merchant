@@ -11,7 +11,8 @@ class RemoteQvalentTest < Test::Unit::TestCase
     @options = {
       order_id: generate_unique_id,
       billing_address: address,
-      description: "Store Purchase"
+      description: 'Store Purchase',
+      customer_reference_number: generate_unique_id
     }
   end
 
@@ -32,7 +33,40 @@ class RemoteQvalentTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_soft_descriptors
+    options = {
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: 'Store Purchase',
+      customer_merchant_name: 'Some Merchant',
+      customer_merchant_street_address: '42 Wallaby Way',
+      customer_merchant_location: 'Sydney',
+      customer_merchant_country: 'AU',
+      customer_merchant_post_code: '2060',
+      customer_merchant_state: 'NSW'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_3d_secure
+    options = {
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: 'Store Purchase',
+      xid: 'sgf7h125tr8gh24abmah',
+      cavv: 'MTIzNDU2Nzg5MDEyMzQ1Njc4OTA=',
+      eci: 'INS'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_purchase

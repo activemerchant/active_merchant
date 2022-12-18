@@ -19,14 +19,117 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
     @avs_address = @options
     @avs_address.update(billing_address: {
-        name:     'Jim Smith',
-        street:   'Test AVS result',
-        houseNumberOrName: '2',
-        city:     'Cupertino',
-        state:    'CA',
-        zip:      '95014',
-        country:  'US'
-        })
+      name:     'Jim Smith',
+      street:   'Test AVS result',
+      houseNumberOrName: '2',
+      city:     'Cupertino',
+      state:    'CA',
+      zip:      '95014',
+      country:  'US'
+    })
+
+    @normalized_3ds_2_options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: address(),
+      order_id: '123',
+      stored_credential: { reason_type: 'unscheduled' },
+      three_ds_2: {
+        channel: 'browser',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 100,
+          java: false,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown'
+        },
+        notification_url: 'https://example.com/notification'
+      }
+    }
+  end
+
+  def test_successful_purchase
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+
+    assert_success response
+    assert_equal '7914002629995504#8814002632606717', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorize_with_alternate_address
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options_with_alternate_address)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/billingAddress.houseNumberOrName=%E6%96%B0%E5%8C%97%E5%B8%82%E5%BA%97%E6%BA%AA%E8%B7%AF3579%E8%99%9F139%E6%A8%93/, data)
+      assert_match(/billingAddress.street=Not\+Provided/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal '7914002629995504', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorize_with_house_number_and_street
+    response = stub_comms do
+      @gateway.authorize(@amount,
+        @credit_card,
+        @options_with_house_number_and_street)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/billingAddress.street=Top\+Level\+Drive/, data)
+      assert_match(/billingAddress.houseNumberOrName=1000/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert response
+    assert_success response
+    assert_equal '7914002629995504', response.authorization
+  end
+
+  def test_successful_authorize_with_shipping_house_number_and_street
+    response = stub_comms do
+      @gateway.authorize(@amount,
+        @credit_card,
+        @options_with_shipping_house_number_and_shipping_street)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/billingAddress.street=Top\+Level\+Drive/, data)
+      assert_match(/billingAddress.houseNumberOrName=1000/, data)
+      assert_match(/deliveryAddress.street=Downtown\+Loop/, data)
+      assert_match(/deliveryAddress.houseNumberOrName=999/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert response
+    assert_success response
+    assert_equal '7914002629995504', response.authorization
+  end
+
+  def test_successful_authorize_with_extra_options
+    shopper_interaction = 'ContAuth'
+    shopper_statement   = 'One-year premium subscription'
+    device_fingerprint  = 'abcde123'
+
+    response = stub_comms do
+      @gateway.authorize(
+        @amount,
+        @credit_card,
+        @options.merge(
+          shopper_interaction: shopper_interaction,
+          device_fingerprint: device_fingerprint,
+          shopper_statement: shopper_statement
+        )
+      )
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/shopperInteraction=#{shopper_interaction}/, data)
+      assert_match(/shopperStatement=#{Regexp.quote(CGI.escape(shopper_statement))}/, data)
+      assert_match(/deviceFingerprint=#{device_fingerprint}/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
   end
 
   def test_successful_authorize
@@ -93,6 +196,41 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_credit_contains_all_fields
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card, @options_with_credit_fields)
+    end.check_request do |endpoint, data, _headers|
+      assert_match(%r{/refundWithData}, endpoint)
+      assert_match(/dateOfBirth=1990-10-11&/, data)
+      assert_match(/entityType=NaturalPerson&/, data)
+      assert_match(/nationality=US&/, data)
+      assert_match(/shopperName.firstName=Longbob&/, data)
+    end.respond_with(successful_credit_response)
+
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_third_party_payout
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card, @options_with_credit_fields.merge({ third_party_payout: true }))
+    end.check_request do |endpoint, data, _headers|
+      if /storeDetailAndSubmitThirdParty/.match?(endpoint)
+        assert_match(%r{/storeDetailAndSubmitThirdParty}, endpoint)
+        assert_match(/dateOfBirth=1990-10-11&/, data)
+        assert_match(/entityType=NaturalPerson&/, data)
+        assert_match(/nationality=US&/, data)
+        assert_match(/shopperName.firstName=Longbob&/, data)
+        assert_match(/recurring\.contract=PAYOUT/, data)
+      else
+        assert_match(/originalReference=/, data)
+      end
+    end.respond_with(successful_payout_store_response, successful_payout_confirm_response)
+
+    assert_success response
+    assert response.test?
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
@@ -140,6 +278,60 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_failure response
     assert response.test?
+  end
+
+  def test_execute_threed_false_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options.merge({ execute_threed: false }))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/additionalData.scaExemption/, data)
+      assert_match(/additionalData.executeThreeD=false/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_if_execute_threed_missing_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options.merge({ scaExemption: 'lowValue' }))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/additionalData.scaExemption/, data)
+      refute_match(/additionalData.executeThreeD=false/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_and_execute_threed_false_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options.merge({ sca_exemption: 'lowValue', execute_threed: false }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/additionalData.scaExemption=lowValue/, data)
+      assert_match(/additionalData.executeThreeD=false/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_and_execute_threed_true_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options.merge({ sca_exemption: 'lowValue', execute_threed: true }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/additionalData.scaExemption=lowValue/, data)
+      assert_match(/additionalData.executeThreeD=true/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_when_execute_threed_true_3ds1
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ sca_exemption: 'lowValue', execute_threed: true }))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/additionalData.scaExemption/, data)
+      assert_match(/additionalData.executeThreeD=true/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_when_execute_threed_false_3ds1
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ sca_exemption: 'lowValue', execute_threed: false }))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/additionalData.scaExemption/, data)
+      refute_match(/additionalData.executeThreeD/, data)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_avs_result

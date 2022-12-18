@@ -22,6 +22,35 @@ class Cashnet < Test::Unit::TestCase
     assert_equal '1234', response.authorization
   end
 
+  def test_successful_purchase_with_multiple_items
+    options = { item_codes: { item_code: 'APPFEE', item_code2: 'LOBSTER', item_code3: 'CODES', amount: 100, amount2: 1234, amount3: 4321 } }
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('itemcode=APPFEE&itemcode2=LOBSTER&itemcode3=CODES&amount=1.00&amount2=12.34&amount3=43.21', data)
+    end.respond_with(successful_purchase_response)
+
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '1234', response.authorization
+  end
+
+  def test_successful_purchase_with_filtered_itemcodes
+    options = { item_codes: { item_code: 'APPFEE', item_code2: 'LOBSTER', item_code3: 'CODES', bad_key: 'BADVALUE', amount: 100, amount2: 1234, amount3: 4321 } }
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('itemcode=APPFEE&itemcode2=LOBSTER&itemcode3=CODES&amount=1.00&amount2=12.34&amount3=43.21', data)
+      refute_match('badkey=BADVALUE', data)
+    end.respond_with(successful_purchase_response)
+
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '1234', response.authorization
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
@@ -60,7 +89,7 @@ class Cashnet < Test::Unit::TestCase
 
   def test_add_invoice
     result = {}
-    @gateway.send(:add_invoice, result, order_id: '#1001')
+    @gateway.send(:add_invoice, result, 1000, order_id: '#1001')
     assert_equal '#1001', result[:order_number]
   end
 
@@ -76,7 +105,7 @@ class Cashnet < Test::Unit::TestCase
   def test_add_address
     result = {}
 
-    @gateway.send(:add_address, result, billing_address: {address1: '123 Test St.', address2: '5F', city: 'Testville', zip: '12345', state: 'AK'} )
+    @gateway.send(:add_address, result, billing_address: { address1: '123 Test St.', address2: '5F', city: 'Testville', zip: '12345', state: 'AK' })
 
     assert_equal ["addr_g", "city_g", "state_g", "zip_g"], result.stringify_keys.keys.sort
     assert_equal '123 Test St.,5F', result[:addr_g]
@@ -97,7 +126,7 @@ class Cashnet < Test::Unit::TestCase
     }
 
     @gateway.send(:add_creditcard, params, @credit_card)
-    @gateway.send(:add_invoice, params, {})
+    @gateway.send(:add_invoice, params, 101, {})
 
     assert data = @gateway.send(:post_data, 'SALE', params)
     minimum_requirements.each do |key|

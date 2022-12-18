@@ -73,7 +73,7 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_credit_uses_refund
-    options = {:foo => :bar}
+    options = { foo: :bar }
     @gateway.expects(:refund).with(1000, '1337', options)
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
       @gateway.credit(1000, '1337', options)
@@ -165,26 +165,26 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_authorize_emv
-    approve_response = @gateway.authorize(1000, credit_card('123', {icc_data: 'DEADBEEF'}))
+    approve_response = @gateway.authorize(1000, credit_card('123', { icc_data: 'DEADBEEF' }))
     assert approve_response.success?
     assert_equal '8A023030', approve_response.emv_authorization
-    decline_response = @gateway.authorize(1005, credit_card('123', {icc_data: 'DEADBEEF'}))
+    decline_response = @gateway.authorize(1005, credit_card('123', { icc_data: 'DEADBEEF' }))
     refute decline_response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], decline_response.error_code
     assert_equal '8A023035', decline_response.emv_authorization
     e = assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.authorize(1001, credit_card('123', {icc_data: 'DEADBEEF'}))
+      @gateway.authorize(1001, credit_card('123', { icc_data: 'DEADBEEF' }))
     end
     assert_equal("Bogus Gateway: Use amount ending in 00 for success, 05 for failure and anything else for exception", e.message)
   end
 
   def test_purchase_emv
-    assert  @gateway.purchase(1000, credit_card('123', {icc_data: 'DEADBEEF'})).success?
-    response = @gateway.purchase(1005, credit_card('123', {icc_data: 'DEADBEEF'}))
+    assert @gateway.purchase(1000, credit_card('123', { icc_data: 'DEADBEEF' })).success?
+    response = @gateway.purchase(1005, credit_card('123', { icc_data: 'DEADBEEF' }))
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     e = assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.purchase(1001, credit_card('123', {icc_data: 'DEADBEEF'}))
+      @gateway.purchase(1001, credit_card('123', { icc_data: 'DEADBEEF' }))
     end
     assert_equal("Bogus Gateway: Use amount ending in 00 for success, 05 for failure and anything else for exception", e.message)
   end

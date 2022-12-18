@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
           response,
           authorization: response['transID'],
           test: test?,
-          avs_result: {code: response['avsCode']},
+          avs_result: { code: response['avsCode'] },
           cvv_result: response['cvvCode']
         )
       end

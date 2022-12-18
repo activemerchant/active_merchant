@@ -25,7 +25,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_short_country
-    options = @options.merge({billing_address: address(country: 'DK')})
+    options = @options.merge({ billing_address: address(country: 'DK') })
     assert response = @gateway.purchase(@amount, @valid_card, options)
 
     assert_equal 'OK', response.message
@@ -35,7 +35,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_order_id_format
-    options = @options.merge({order_id: "##{Time.new.to_f}"})
+    options = @options.merge({ order_id: "##{Time.new.to_f}" })
     assert response = @gateway.purchase(@amount, @valid_card, options)
 
     assert_equal 'OK', response.message

@@ -90,8 +90,7 @@ module ActiveMerchant
         { 'code' => code,
           'message' => message,
           'street_match' => street_match,
-          'postal_match' => postal_match
-        }
+          'postal_match' => postal_match }
       end
     end
   end

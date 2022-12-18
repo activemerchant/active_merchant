@@ -106,6 +106,25 @@ module ActiveMerchant #:nodoc:
         commit("payment_methods/#{authorization}/redact.xml", '', :put)
       end
 
+      # Public: Get the transaction with the given token.
+      def find(transaction_token)
+        commit("transactions/#{transaction_token}.xml", nil, :get)
+      end
+
+      alias status find
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<number>).+(</number>)), '\1[FILTERED]\2').
+          gsub(%r((<verification_value>).+(</verification_value>)), '\1[FILTERED]\2').
+          gsub(%r((<payment_method_token>).+(</payment_method_token>)), '\1[FILTERED]\2')
+      end
+
       private
 
       def save_card(retain, credit_card, options)
@@ -197,11 +216,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def childnode_to_response(response, node, childnode)
-        name = "#{node.name.downcase}_#{childnode.name.downcase}"
-        if name == 'payment_method_data' && !childnode.elements.empty?
-          response[name.to_sym] = Hash.from_xml(childnode.to_s).values.first
+        node_name = node.name.downcase
+        childnode_name = childnode.name.downcase
+        composed_name = "#{node_name}_#{childnode_name}"
+
+        childnodes_present = !childnode.elements.empty?
+
+        if childnodes_present && composed_name == 'payment_method_data'
+          response[composed_name.to_sym] = Hash.from_xml(childnode.to_s).values.first
+        elsif childnodes_present && node_name == 'gateway_specific_response_fields'
+          response[node_name.to_sym] = {
+            childnode_name => Hash.from_xml(childnode.to_s).values.first
+          }
         else
-          response[name.to_sym] = childnode.text
+          response[composed_name.to_sym] = childnode.text
         end
       end
 

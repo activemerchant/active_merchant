@@ -427,7 +427,7 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   end
 
   def successful_authorize_response
-    <<-END
+    <<-XML
       <?xml version="1.0"?><ncresponse
         orderID="1233680882919266242708828"
         PAYID="3014726"
@@ -448,11 +448,11 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
         BRAND="VISA"
         ALIAS="2">
       </ncresponse>
-    END
+    XML
   end
 
   def successful_purchase_response
-    <<-END
+    <<-XML
       <?xml version="1.0"?><ncresponse
         orderID="1233680882919266242708828"
         PAYID="3014726"
@@ -473,11 +473,11 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
         BRAND="VISA"
         ALIAS="2">
       </ncresponse>
-    END
+    XML
   end
 
   def successful_3dsecure_purchase_response
-    <<-END
+    <<-XML
       <?xml version="1.0"?><ncresponse
         orderID="1233680882919266242708828"
         PAYID="3014726"
@@ -570,11 +570,11 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
         cmV0dXJuIDE7CiAgfQp9CnNlbGYuZG9jdW1lbnQuZm9ybXMuZG93bmxvYWRm
         b3JtM0Quc3VibWl0KCk7Ci8vLS0+CjwvU0NSSVBUPgo=\n</HTML_ANSWER>
       </ncresponse>
-    END
+    XML
   end
 
   def failed_purchase_response
-    <<-END
+    <<-XML
       <?xml version="1.0"?>
       <ncresponse
       orderID=""
@@ -590,11 +590,11 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
       BRAND=""
       ALIAS="2">
       </ncresponse>
-    END
+    XML
   end
 
   def successful_capture_response
-    <<-END
+    <<-XML
       <?xml version="1.0"?>
       <ncresponse
       orderID="1234956106974734203514539"
@@ -609,11 +609,11 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
       currency="EUR"
       ALIAS="2">
       </ncresponse>
-    END
+    XML
   end
 
   def successful_void_response
-    <<-END
+    <<-XML
     <?xml version="1.0"?>
     <ncresponse
     orderID="1234961140253559268757474"
@@ -628,11 +628,11 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     currency="EUR"
     ALIAS="2">
     </ncresponse>
-    END
+    XML
   end
 
   def successful_referenced_credit_response
-    <<-END
+    <<-XML
     <?xml version="1.0"?>
     <ncresponse
     orderID="1234976251872867104376350"
@@ -647,11 +647,11 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     currency="EUR"
     ALIAS="2">
     </ncresponse>
-    END
+    XML
   end
 
   def successful_unreferenced_credit_response
-    <<-END
+    <<-XML
     <?xml version="1.0"?><ncresponse
     orderID="1234976330656672481134758"
     PAYID="3049654"
@@ -672,11 +672,11 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     BRAND="VISA"
     ALIAS="2">
     </ncresponse>
-    END
+    XML
   end
 
   def test_failed_authorization_due_to_unknown_order_number
-    <<-END
+    <<-XML
     <?xml version="1.0"?>
     <ncresponse
     orderID="#1019.22"
@@ -692,7 +692,7 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     BRAND=""
     ALIAS="2">
     </ncresponse>
-    END
+    XML
   end
 
   def transcript

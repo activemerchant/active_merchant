@@ -9,12 +9,30 @@ class RemoteOgoneTest < Test::Unit::TestCase
     @credit_card     = credit_card('4000100011112224')
     @mastercard      = credit_card('5399999999999999', :brand => "mastercard")
     @declined_card   = credit_card('1111111111111111')
-    @credit_card_d3d = credit_card('4000000000000002', :verification_value => '111')
+    @credit_card_d3d = credit_card('4000000000000002', verification_value: '111')
+    @credit_card_d3d_2_challenge = credit_card('4874970686672022', verification_value: '123')
+    @credit_card_d3d_2_frictionless = credit_card('4186455175836497', verification_value: '123')
     @options = {
       :order_id => generate_unique_id[0...30],
       :billing_address => address,
       :description => 'Store Purchase',
       :currency => fixtures(:ogone)[:currency] || 'EUR'
+    }
+    @options_browser_info = {
+      three_ds_2: {
+        browser_info:  {
+          "width": 390,
+          "height": 400,
+          "depth": 24,
+          "timezone": 300,
+          "user_agent": 'Spreedly Agent',
+          "java": false,
+          "javascript": true,
+          "language": 'en-US',
+          "browser_size": '05',
+          "accept_header": 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+        }
+      }
     }
   end
 
@@ -67,12 +85,61 @@ class RemoteOgoneTest < Test::Unit::TestCase
   end
 
   # NOTE: You have to contact Ogone to make sure your test account allow 3D Secure transactions before running this test
-  def test_successful_purchase_with_3d_secure
-    assert response = @gateway.purchase(@amount, @credit_card_d3d, @options.merge(:d3d => true))
+  def test_successful_purchase_with_3d_secure_v1
+    assert response = @gateway.purchase(@amount, @credit_card_d3d, @options.merge(d3d: true))
     assert_success response
     assert_equal '46', response.params["STATUS"]
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
-    assert response.params["HTML_ANSWER"]
+    assert response.params['HTML_ANSWER']
+    assert_match 'mpi-v1', Base64.decode64(response.params['HTML_ANSWER'])
+  end
+
+  def test_successful_purchase_with_3d_secure_v2
+    assert response = @gateway.purchase(@amount, @credit_card_d3d_2_challenge, @options_browser_info.merge(d3d: true))
+    assert_success response
+    assert_equal '46', response.params['STATUS']
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+    assert response.params['HTML_ANSWER']
+    assert_match 'mpi-v2', Base64.decode64(response.params['HTML_ANSWER'])
+  end
+
+  def test_successful_purchase_with_3d_secure_v2_frictionless
+    assert response = @gateway.purchase(@amount, @credit_card_d3d_2_frictionless, @options_browser_info.merge(d3d: true))
+    assert_success response
+    assert_includes response.params, 'PAYID'
+    assert_equal '0', response.params['NCERROR']
+    assert_equal '9', response.params['STATUS']
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  end
+
+  def test_successful_purchase_with_3d_secure_v2_recomended_parameters
+    options = @options.merge(@options_browser_info)
+    assert response = @gateway.authorize(@amount, @credit_card_d3d_2_challenge, options.merge(d3d: true))
+    assert_success response
+    assert_equal '46', response.params['STATUS']
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+    assert response.params['HTML_ANSWER']
+    assert_match 'mpi-v2', Base64.decode64(response.params['HTML_ANSWER'])
+  end
+
+  def test_successful_purchase_with_3d_secure_v2_optional_parameters
+    options = @options.merge(@options_browser_info).merge(mpi: { threeDSRequestorChallengeIndicator: '04' })
+    assert response = @gateway.authorize(@amount, @credit_card_d3d_2_challenge, options.merge(d3d: true))
+    assert_success response
+    assert_equal '46', response.params['STATUS']
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+    assert response.params['HTML_ANSWER']
+    assert_match 'mpi-v2', Base64.decode64(response.params['HTML_ANSWER'])
+  end
+
+  def test_unsuccessful_purchase_with_3d_secure_v2
+    @credit_card_d3d_2_challenge.number = '4419177274955460'
+    assert response = @gateway.purchase(@amount, @credit_card_d3d_2_challenge, @options_browser_info.merge(d3d: true))
+    assert_failure response
+    assert_includes response.params, 'PAYID'
+    assert_equal response.params['NCERROR'], '40001134'
+    assert_equal response.params['STATUS'], '2'
+    assert_equal response.params['NCERRORPLUS'], 'Authentication failed. Please retry or cancel.'
   end
 
   def test_successful_with_non_numeric_order_id
@@ -116,7 +183,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'No brand', response.message
+    assert_equal 'No brand or invalid card number', response.message
   end
 
   def test_successful_authorize_with_mastercard
@@ -146,7 +213,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_unsuccessful_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'No card no, no exp date, no brand', response.message
+    assert_equal 'No card no, no exp date, no brand or invalid card number', response.message
   end
 
   def test_successful_void
@@ -214,7 +281,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal "No brand", response.message
+    assert_equal 'No brand or invalid card number', response.message
   end
 
   def test_reference_transactions

@@ -79,21 +79,23 @@ module ActiveMerchant #:nodoc:
       # :test_mode_live_card - Card was declined. Request was in test mode, but used a non test card.
 
       STANDARD_ERROR_CODE = {
-        :incorrect_number => 'incorrect_number',
-        :invalid_number => 'invalid_number',
-        :invalid_expiry_date => 'invalid_expiry_date',
-        :invalid_cvc => 'invalid_cvc',
-        :expired_card => 'expired_card',
-        :incorrect_cvc => 'incorrect_cvc',
-        :incorrect_zip => 'incorrect_zip',
-        :incorrect_address => 'incorrect_address',
-        :incorrect_pin => 'incorrect_pin',
-        :card_declined => 'card_declined',
-        :processing_error => 'processing_error',
-        :call_issuer => 'call_issuer',
-        :pickup_card => 'pick_up_card',
-        :config_error => 'config_error',
-        :test_mode_live_card => 'test_mode_live_card'
+        incorrect_number: 'incorrect_number',
+        invalid_number: 'invalid_number',
+        invalid_expiry_date: 'invalid_expiry_date',
+        invalid_cvc: 'invalid_cvc',
+        expired_card: 'expired_card',
+        incorrect_cvc: 'incorrect_cvc',
+        incorrect_zip: 'incorrect_zip',
+        incorrect_address: 'incorrect_address',
+        incorrect_pin: 'incorrect_pin',
+        card_declined: 'card_declined',
+        processing_error: 'processing_error',
+        call_issuer: 'call_issuer',
+        pickup_card: 'pick_up_card',
+        config_error: 'config_error',
+        test_mode_live_card: 'test_mode_live_card',
+        unsupported_feature: 'unsupported_feature',
+        invalid_amount: 'invalid_amount'
       }
 
       cattr_reader :implementations
@@ -160,7 +162,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def self.supported_countries
-        @supported_countries ||= []
+        @supported_countries ||= (self.superclass.supported_countries || [])
       end
 
       def supported_countries

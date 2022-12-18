@@ -84,11 +84,11 @@ module ActiveMerchant #:nodoc:
       # More operations are supported by the gateway itself, but
       # are not supported in this library.
       SUPPORTED_TRANSACTIONS = {
-        :purchase   => 'A',
-        :authorize  => '1',
-        :capture    => '2',
-        :refund     => '3',
-        :cancel     => '9'
+        purchase:   '0',
+        authorize:  '1',
+        capture:    '2',
+        refund:     '3',
+        cancel:     '9'
       }
 
       # These are the text meanings sent back by the acquirer when
@@ -101,24 +101,25 @@ module ActiveMerchant #:nodoc:
         500 => "Reconciliation Accepted",
         900 => "Refund / Confirmation approved",
 
-        101 => "Card expired",
-        102 => "Card blocked temporarily or under susciption of fraud",
-        104 => "Transaction not permitted",
-        107 => "Contact the card issuer",
-        109 => "Invalid identification by merchant or POS terminal",
-        110 => "Invalid amount",
-        114 => "Card cannot be used to the requested transaction",
-        116 => "Insufficient credit",
-        118 => "Non-registered card",
-        125 => "Card not effective",
-        129 => "CVV2/CVC2 Error",
-        167 => "Contact the card issuer: suspected fraud",
-        180 => "Card out of service",
-        181 => "Card with credit or debit restrictions",
-        182 => "Card with credit or debit restrictions",
-        184 => "Authentication error",
-        190 => "Refusal with no specific reason",
-        191 => "Expiry date incorrect",
+        101 => 'Card expired',
+        102 => 'Card blocked temporarily or under susciption of fraud',
+        104 => 'Transaction not permitted',
+        107 => 'Contact the card issuer',
+        109 => 'Invalid identification by merchant or POS terminal',
+        110 => 'Invalid amount',
+        114 => 'Card cannot be used to the requested transaction',
+        116 => 'Insufficient credit',
+        118 => 'Non-registered card',
+        125 => 'Card not effective',
+        129 => 'CVV2/CVC2 Error',
+        167 => 'Contact the card issuer: suspected fraud',
+        180 => 'Card out of service',
+        181 => 'Card with credit or debit restrictions',
+        182 => 'Card with credit or debit restrictions',
+        184 => 'Authentication error',
+        190 => 'Refusal with no specific reason',
+        191 => 'Expiry date incorrect',
+        195 => 'Requires SCA authentication',
 
         201 => "Card expired",
         202 => "Card blocked temporarily or under suspicion of fraud",
@@ -163,6 +164,10 @@ module ActiveMerchant #:nodoc:
         9914 => "KO Confirmation"
       }
 
+      # Expected values as per documentation
+      THREE_DS_V1 = '1.0.2'
+      THREE_DS_V2 = '2.1.0'
+
       # Creates a new instance
       #
       # Redsys requires a login and secret_key, and optionally also accepts a
@@ -190,8 +195,13 @@ module ActiveMerchant #:nodoc:
         add_amount(data, money, options)
         add_order(data, options[:order_id])
         add_payment(data, payment)
+        add_external_mpi_fields(data, options)
+        add_three_ds_data(data, options) if options[:execute_threed]
+        add_stored_credential_options(data, options)
         data[:description] = options[:description]
         data[:store_in_vault] = options[:store]
+        data[:sca_exemption] = options[:sca_exemption]
+        data[:sca_exemption_direct_payment_enabled] = options[:sca_exemption_direct_payment_enabled]
 
         commit data
       end
@@ -204,8 +214,13 @@ module ActiveMerchant #:nodoc:
         add_amount(data, money, options)
         add_order(data, options[:order_id])
         add_payment(data, payment)
+        add_external_mpi_fields(data, options)
+        add_three_ds_data(data, options) if options[:execute_threed]
+        add_stored_credential_options(data, options)
         data[:description] = options[:description]
         data[:store_in_vault] = options[:store]
+        data[:sca_exemption] = options[:sca_exemption]
+        data[:sca_exemption_direct_payment_enabled] = options[:sca_exemption_direct_payment_enabled]
 
         commit data
       end
@@ -244,9 +259,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(creditcard, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, creditcard, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+        if options[:sca_exemption_behavior_override] == 'endpoint_and_ntid'
+          purchase(0, creditcard, options)
+        else
+          MultiResponse.run(:use_first_response) do |r|
+            r.process { authorize(100, creditcard, options) }
+            r.process(:ignore_result) { void(r.authorization, options) }
+          end
         end
       end
 
@@ -288,6 +307,10 @@ module ActiveMerchant #:nodoc:
         test? ? test_url : live_url
       end
 
+      def webservice_url
+        test? ? 'https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2' : 'https://sis.redsys.es/sis/services/SerClsWSEntradaV2'
+      end
+
       def add_payment(data, card)
         if card.is_a?(String)
           data[:credit_card_token] = card
@@ -304,17 +327,100 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(data)
-        parse(ssl_post(url, "entrada=#{CGI.escape(xml_request_from(data))}", headers))
+      def add_external_mpi_fields(data, options)
+        return unless options[:three_d_secure]
+
+        if options[:three_d_secure][:version] == THREE_DS_V2
+          data[:threeDSServerTransID] = options[:three_d_secure][:three_ds_server_trans_id] if options[:three_d_secure][:three_ds_server_trans_id]
+          data[:dsTransID] = options[:three_d_secure][:ds_transaction_id] if options[:three_d_secure][:ds_transaction_id]
+          data[:authenticacionValue] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
+          data[:protocolVersion] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
+          data[:authenticacionMethod] = options[:authentication_method] if options[:authentication_method]
+          data[:authenticacionType] = options[:authentication_type] if options[:authentication_type]
+          data[:authenticacionFlow] = options[:authentication_flow] if options[:authentication_flow]
+          data[:eci_v2] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
+        elsif options[:three_d_secure][:version] == THREE_DS_V1
+          data[:txid] = options[:three_d_secure][:xid] if options[:three_d_secure][:xid]
+          data[:cavv] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
+          data[:eci_v1] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
+        end
       end
 
-      def headers
-        {
-          'Content-Type' => 'application/x-www-form-urlencoded'
-        }
+      def add_stored_credential_options(data, options)
+        return unless options[:stored_credential]
+
+        case options[:stored_credential][:initial_transaction]
+        when true
+          data[:DS_MERCHANT_COF_INI] = 'S'
+        when false
+          data[:DS_MERCHANT_COF_INI] = 'N'
+          data[:DS_MERCHANT_COF_TXNID] = options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
+        end
+
+        case options[:stored_credential][:reason_type]
+        when 'recurring'
+          data[:DS_MERCHANT_COF_TYPE] = 'R'
+        when 'installment'
+          data[:DS_MERCHANT_COF_TYPE] = 'I'
+        when 'unscheduled'
+          return
+        end
       end
 
-      def xml_request_from(data)
+      def add_three_ds_data(data, options)
+        data[:three_ds_data] = { threeDSInfo: 'CardData' } if options[:execute_threed] == true
+      end
+
+      def determine_peticion_type(data)
+        three_ds_info = data.dig(:three_ds_data, :threeDSInfo)
+        return 'iniciaPeticion' if three_ds_info == 'CardData'
+        return 'trataPeticion' if three_ds_info == 'AuthenticationData' ||
+                                  three_ds_info == 'ChallengeResponse' ||
+                                  data[:sca_exemption] == 'MIT'
+      end
+
+      def use_webservice_endpoint?(data, options)
+        options[:use_webservice_endpoint].to_s == 'true' || data[:three_ds_data] || data[:sca_exemption] == 'MIT'
+      end
+
+      def commit(data, options = {})
+        xmlreq = xml_request_from(data, options)
+
+        if use_webservice_endpoint?(data, options)
+          peticion_type = determine_peticion_type(data)
+
+          request = <<-REQUEST
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:apachesoap="http://xml.apache.org/xml-soap" xmlns:impl="http://webservice.sis.sermepa.es" xmlns:intf="http://webservice.sis.sermepa.es" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" >
+            <soapenv:Header/>
+            <soapenv:Body>
+              <intf:#{peticion_type} xmlns:intf="http://webservice.sis.sermepa.es">
+                <intf:datoEntrada>
+                <![CDATA[#{xmlreq}]]>
+                </intf:datoEntrada>
+              </intf:#{peticion_type}>
+            </soapenv:Body>
+          </soapenv:Envelope>
+          REQUEST
+          parse(ssl_post(webservice_url, request, headers(peticion_type)), peticion_type)
+        else
+          parse(ssl_post(url, "entrada=#{CGI.escape(xmlreq)}", headers), peticion_type)
+        end
+      end
+
+      def headers(peticion_type = nil)
+        if peticion_type
+          {
+            'Content-Type' => 'text/xml',
+            'SOAPAction' => peticion_type
+          }
+        else
+          {
+            'Content-Type' => 'application/x-www-form-urlencoded'
+          }
+        end
+      end
+
+      def xml_request_from(data, options = {})
         if sha256_authentication?
           build_sha256_xml_request(data)
         else
@@ -367,7 +473,9 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_merchant_data(xml, data)
+      def build_merchant_data(xml, data, options = {})
+        # See https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2/wsdl/SerClsWSEntradaV2.wsdl
+        # (which results from calling #webservice_url + '?WSDL', https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2?WSDL)
         xml.DATOSENTRADA do
           # Basic elements
           xml.DS_Version 0.1
@@ -375,25 +483,77 @@ module ActiveMerchant #:nodoc:
           xml.DS_MERCHANT_AMOUNT             data[:amount]
           xml.DS_MERCHANT_ORDER              data[:order_id]
           xml.DS_MERCHANT_TRANSACTIONTYPE    data[:action]
-          xml.DS_MERCHANT_PRODUCTDESCRIPTION data[:description]
-          xml.DS_MERCHANT_TERMINAL           @options[:terminal]
+          if data[:description] && use_webservice_endpoint?(data, options)
+            xml.DS_MERCHANT_PRODUCTDESCRIPTION CGI.escape(data[:description])
+          else
+            xml.DS_MERCHANT_PRODUCTDESCRIPTION data[:description]
+          end
+          xml.DS_MERCHANT_TERMINAL           options[:terminal] || @options[:terminal]
           xml.DS_MERCHANT_MERCHANTCODE       @options[:login]
           xml.DS_MERCHANT_MERCHANTSIGNATURE  build_signature(data) unless sha256_authentication?
 
+          peticion_type = determine_peticion_type(data) if data[:three_ds_data]
+          if peticion_type == 'iniciaPeticion' && data[:sca_exemption]
+            xml.DS_MERCHANT_EXCEP_SCA 'Y'
+          else
+            xml.DS_MERCHANT_EXCEP_SCA data[:sca_exemption] if data[:sca_exemption]
+            xml.DS_MERCHANT_DIRECTPAYMENT data[:sca_exemption_direct_payment_enabled] || 'true' if data[:sca_exemption] == 'MIT'
+          end
+
           # Only when card is present
           if data[:card]
-            xml.DS_MERCHANT_TITULAR    data[:card][:name]
+            if data[:card][:name] && use_webservice_endpoint?(data, options)
+              xml.DS_MERCHANT_TITULAR    CGI.escape(data[:card][:name])
+            else
+              xml.DS_MERCHANT_TITULAR    data[:card][:name]
+            end
             xml.DS_MERCHANT_PAN        data[:card][:pan]
             xml.DS_MERCHANT_EXPIRYDATE data[:card][:date]
             xml.DS_MERCHANT_CVV2       data[:card][:cvv]
             xml.DS_MERCHANT_IDENTIFIER 'REQUIRED' if data[:store_in_vault]
+
+            build_merchant_mpi_external(xml, data)
+
           elsif data[:credit_card_token]
             xml.DS_MERCHANT_IDENTIFIER data[:credit_card_token]
+          end
+
+          # Set moto flag only if explicitly requested via moto field
+          # Requires account configuration to be able to use
+          xml.DS_MERCHANT_DIRECTPAYMENT 'moto' if options.dig(:moto) && options.dig(:metadata, :manual_entry)
+
+          xml.DS_MERCHANT_EMV3DS data[:three_ds_data].to_json if data[:three_ds_data]
+
+          if options[:stored_credential]
+            xml.DS_MERCHANT_COF_INI data[:DS_MERCHANT_COF_INI]
+            xml.DS_MERCHANT_COF_TYPE data[:DS_MERCHANT_COF_TYPE]
+            xml.DS_MERCHANT_COF_TXNID data[:DS_MERCHANT_COF_TXNID] if data[:DS_MERCHANT_COF_TXNID]
           end
         end
       end
 
-      def parse(data)
+      def build_merchant_mpi_external(xml, data)
+        return unless data[:txid] || data[:threeDSServerTransID]
+
+        ds_merchant_mpi_external = {}
+        ds_merchant_mpi_external[:TXID] = data[:txid] if data[:txid]
+        ds_merchant_mpi_external[:CAVV] = data[:cavv] if data[:cavv]
+        ds_merchant_mpi_external[:ECI] = data[:eci_v1] if data[:eci_v1]
+
+        ds_merchant_mpi_external[:threeDSServerTransID] = data[:threeDSServerTransID] if data[:threeDSServerTransID]
+        ds_merchant_mpi_external[:dsTransID] = data[:dsTransID] if data[:dsTransID]
+        ds_merchant_mpi_external[:authenticacionValue] = data[:authenticacionValue] if data[:authenticacionValue]
+        ds_merchant_mpi_external[:protocolVersion] = data[:protocolVersion] if data[:protocolVersion]
+        ds_merchant_mpi_external[:Eci] = data[:eci_v2] if data[:eci_v2]
+        ds_merchant_mpi_external[:authenticacionMethod] = data[:authenticacionMethod] if data[:authenticacionMethod]
+        ds_merchant_mpi_external[:authenticacionType] = data[:authenticacionType] if data[:authenticacionType]
+        ds_merchant_mpi_external[:authenticacionFlow] = data[:authenticacionFlow] if data[:authenticacionFlow]
+
+        xml.DS_MERCHANT_MPIEXTERNAL ds_merchant_mpi_external.to_json unless ds_merchant_mpi_external.empty?
+        xml.target!
+      end
+
+      def parse(data, action)
         params  = {}
         success = false
         message = ""
@@ -463,7 +623,7 @@ module ActiveMerchant #:nodoc:
       def response_text(code)
         code = code.to_i
         code = 0 if code < 100
-        RESPONSE_TEXTS[code] || "Unkown code, please check in manual"
+        RESPONSE_TEXTS[code] || 'Unknown code, please check in manual'
       end
 
       def is_success_response?(code)
@@ -493,7 +653,7 @@ module ActiveMerchant #:nodoc:
         cipher = OpenSSL::Cipher::Cipher.new('DES3')
         cipher.encrypt
 
-        cipher.key = Base64.strict_decode64(key)
+        cipher.key = Base64.urlsafe_decode64(key)
         # The OpenSSL default of an all-zeroes ("\\0") IV is used.
         cipher.padding = 0
 
