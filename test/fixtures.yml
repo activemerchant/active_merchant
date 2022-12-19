@@ -376,6 +376,11 @@ federated_canada:
   login: demo
   password: password
 
+fifth_dl:
+  apikey: ""
+  mkey: ""
+  apiname: ""
+
 finansbank:
   login: FINANSAPI
   password: FINANS06

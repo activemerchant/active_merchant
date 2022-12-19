@@ -1,3 +1,5 @@
+require 'rack'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FifthDlGateway < Gateway
@@ -107,7 +109,6 @@ module ActiveMerchant #:nodoc:
         "#{month}#{year}"
       end
 
-      require 'rack/utils'
       def parse(body)
         Rack::Utils.parse_nested_query(body)
       end
