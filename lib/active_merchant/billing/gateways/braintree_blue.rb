@@ -607,7 +607,7 @@ module ActiveMerchant #:nodoc:
           'vault_customer'          => vault_customer,
           'merchant_account_id'     => transaction.merchant_account_id,
           'risk_data'               => risk_data,
-          'network_transaction_id'  => transaction.network_transaction_id || nil,
+          'network_transaction_id'  => transaction.try(:network_transaction_id) || nil,
           'processor_response_code' => response_code_from_result(result),
           'recurring'               => transaction.recurring
         }
