@@ -480,6 +480,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def additional_processor_response_from_result(result)
+        result.transaction&.additional_processor_response
+      end
+
       def create_transaction(transaction_type, money, credit_card_or_vault_id, options)
         transaction_params = create_transaction_parameters(money, credit_card_or_vault_id, options)
         commit do
@@ -537,7 +541,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def transaction_hash(result)
-        return { 'processor_response_code' => response_code_from_result(result) } unless result.success?
+        unless result.success?
+          return { 'processor_response_code' => response_code_from_result(result),
+                   'additional_processor_response' => additional_processor_response_from_result(result) }
+        end
 
         transaction = result.transaction
         if transaction.vault_customer
