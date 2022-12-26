@@ -218,7 +218,7 @@ class MitTest < Test::Unit::TestCase
     starting SSL for wpy.mitec.com.mx:443...
     SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384
     <- "POST /ModuloUtilWS/activeCDP.htm HTTP/1.1\r\nContent-Type: application/json\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: wpy.mitec.com.mx\r\nContent-Length: 607\r\n\r\n"
-    <- "{\"payload\":\"<authorization>{"operation":"Authorize","commerce_id":"147","user":"IVCA33721","apikey":"[FILTERED]","testMode":"YES","amount":"11.15","currency":"MXN","reference":"721","transaction_id":"721","installments":1,"card":"[FILTERED]","expmonth":9,"expyear":2025,"cvv":"[FILTERED]","name_client":"Pedro Flores Valdes","email":"nadie@mit.test","key_session":"[FILTERED]"}</authorization><dataID>IVCA33721</dataID>\"}"
+    <- "{\"payload\":\"<authorization>{\"operation\":\"Authorize\",\"commerce_id\":\"147\",\"user\":\"IVCA33721\",\"apikey\":\"[FILTERED]\",\"testMode\":\"YES\",\"amount\":\"11.15\",\"currency\":\"MXN\",\"reference\":\"721\",\"transaction_id\":\"721\",\"installments\":1,\"card\":\"[FILTERED]\",\"expmonth\":9,\"expyear\":2025,\"cvv\":\"[FILTERED]\",\"name_client\":\"Pedro Flores Valdes\",\"email\":\"nadie@mit.test\",\"key_session\":\"[FILTERED]\"}</authorization><dataID>IVCA33721</dataID>\"}"
     -> "HTTP/1.1 200 \r\n"
     -> "Strict-Transport-Security: max-age=31536000;includeSubDomains\r\n"
     -> "X-Content-Type-Options: nosniff\r\n"
@@ -230,14 +230,16 @@ class MitTest < Test::Unit::TestCase
     -> "Server: \r\n"
     -> "Set-Cookie: UqZBpD3n=v1I4cyJQ__N2M; Expires=Mon, 06-Sep-2021 19:03:38 GMT; Path=/; Secure; HttpOnly\r\n"
     -> "\r\n"
-    response: {"folio_cdp":"095492846","auth":"928468","response":"approved","message":"0C- Pago aprobado (test)","id_comercio":"147","reference":"721","amount":"11.15","time":"19:02:08 06:09:2021","operation":"Authorize"}read 320 bytes
+    reading 320 bytes...
+    -> "hl0spHqAAamtY47Vo+W+dZcpDyK8QRqpx/gWzIM1F3X1VFV/zNUcKCuqaSL6F4S7MqOGUMOC3BXIZYaS9TpJf6xsMYeRDyMpiv+sE0VpY2a4gULhLv1ztgGHgF3OpMjD8ucgLbd9FMA5OZjd8wlaqn46JCiYNcNIPV7hkHWNCqSWow+C+SSkWZeaa9YpNT3E6udixbog30/li1FcSI+Ti80EWBIdH3JDcQvjQbqecNb87JYad0EhgqL1o7ZEMehfZ2kW9FG6OXjGzWyhiWd2GEFKe8em4vEJxARFdXsaHe3tX0jqnF2gYOiFRclqFkbk"
+    read 320 bytes
     Conn close
     opening connection to wpy.mitec.com.mx:443...
     opened
     starting SSL for wpy.mitec.com.mx:443...
     SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384
     <- "POST /ModuloUtilWS/activeCDP.htm HTTP/1.1\r\nContent-Type: application/json\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: wpy.mitec.com.mx\r\nContent-Length: 359\r\n\r\n"
-    <- "{\"payload\":\"<capture>{"operation":"Capture","commerce_id":"147","user":"IVCA33721","apikey":"[FILTERED]","testMode":"YES","transaction_id":"721","amount":"11.15","key_session":"[FILTERED]"}</capture><dataID>IVCA33721</dataID>\"}"
+    <- "{\"payload\":\"<capture>{\"operation\":\"Capture\",\"commerce_id\":\"147\",\"user\":\"IVCA33721\",\"apikey\":\"[FILTERED]\",\"testMode\":\"YES\",\"transaction_id\":\"721\",\"amount\":\"11.15\",\"key_session\":\"[FILTERED]\"}</capture><dataID>IVCA33721</dataID>\"}"
     -> "HTTP/1.1 200 \r\n"
     -> "Strict-Transport-Security: max-age=31536000;includeSubDomains\r\n"
     -> "X-Content-Type-Options: nosniff\r\n"
@@ -249,7 +251,9 @@ class MitTest < Test::Unit::TestCase
     -> "Server: \r\n"
     -> "Set-Cookie: UqZBpD3n=v1JocyJQ__9tu; Expires=Mon, 06-Sep-2021 19:03:39 GMT; Path=/; Secure; HttpOnly\r\n"
     -> "\r\n"
-    response: {"folio_cdp":"095492915","auth":"929151","response":"approved","message":"0C- ","id_comercio":"147","reference":"721","amount":"11.15","time":"19:02:09 06:09:2021","operation":"Capture"}read 280 bytes
+    reading 280 bytes...
+    -> "BnuAgMOx9USBreICk027VY2ZqJA7xQcRT9Ytz8WpabDnqIglj43J/I03pKLtDlFrerKIAzhW1YCroDOS7mvtA5YnWezLstoOK0LbIcYqLzj1dCFW2zLb9ssTCxJa6ZmEQdzQdl8pyY4mC0QQ0JrOrsSA9QfX1XhkdcSVnsxQV1cEooL8/6EsVFCb6yVIMhVnGL6GRCc2J+rPigHsljLWRovgRKqFIURJjNWbfqepDRPG2hCNKsabM/lE2DFtKLMs4J5iwY9HiRbrAMG6BaGNiQ=="
+    read 280 bytes
     Conn close
     POST_SCRUBBED
   end
