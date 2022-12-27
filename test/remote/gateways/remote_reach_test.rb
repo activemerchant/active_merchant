@@ -142,6 +142,36 @@ class RemoteReachTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_store_credentials_with_payment_model_option
+    @options[:payment_model] = 'CIT-Subsequent-Unscheduled'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+
+    assert response.params['response']['Authorized']
+    assert response.params['response']['OrderId']
+  end
+
+  def test_successful_purchase_store_credentials_with_payment_model_option_mit
+    @options[:payment_model] = 'MIT-Subsequent-Scheduled'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+
+    assert response.params['response']['Authorized']
+    assert response.params['response']['OrderId']
+  end
+
+  def test_successful_purchase_store_credentials_with_payment_model_option_cit
+    @options[:payment_model] = 'CIT-One-Time'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+
+    assert response.params['response']['Authorized']
+    assert response.params['response']['OrderId']
+  end
+
   def test_successful_purchase_with_store_credentials
     @options[:stored_credential] = { initiator: 'cardholder', initial_transaction: true, reason_type: 'installment' }
     response = @gateway.purchase(@amount, @credit_card, @options)

@@ -163,6 +163,27 @@ class ReachTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_stored_credential_with_reach_payment_model
+    reach_options = [
+      'CIT-Setup-Scheduled',
+      'CIT-Setup-Unscheduled-MIT',
+      'CIT-Setup-Unscheduled',
+      'CIT-Subsequent-Unscheduled',
+      'MIT-Subsequent-Scheduled',
+      'MIT-Subsequent-Unscheduled'
+    ]
+
+    reach_options.each do |payment_model|
+      @options[:payment_model] = payment_model
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card, @options)
+      end.check_request do |_endpoint, data, _headers|
+        request = JSON.parse(URI.decode_www_form(data)[0][1])
+        assert_equal payment_model, request['PaymentModel']
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
   def test_stored_credential_with_wrong_combination_stored_credential_paramaters
     @options[:stored_credential] = { initiator: 'merchant', initial_transaction: true, reason_type: 'unschedule' }
     e = assert_raise ArgumentError do
