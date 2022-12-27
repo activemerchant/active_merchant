@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
         add_operation(post)
         add_invoice(post, money, options)
         add_customer_data(post, payment, options)
-        add_card_or_token(post, payment)
+        add_card_or_token(post, payment, options)
         add_address(post, options)
         add_customer_responsible_person(post, payment, options)
         add_additional_data(post, options)
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
         add_operation(post)
         add_invoice(post, money, options)
         add_customer_data(post, payment, options)
-        add_card_or_token(post, payment)
+        add_card_or_token(post, payment, options)
         add_address(post, options)
         add_customer_responsible_person(post, payment, options)
         add_additional_data(post, options)
@@ -188,10 +188,11 @@ module ActiveMerchant #:nodoc:
         post[:payment][:order_number] = options[:order_id][0..39] if options[:order_id]
       end
 
-      def add_card_or_token(post, payment)
+      def add_card_or_token(post, payment, options)
         payment, brand = payment.split('|') if payment.is_a?(String)
         post[:payment][:payment_type_code] = payment.is_a?(String) ? brand : CARD_BRAND[payment.brand.to_sym]
         post[:payment][:creditcard] = payment_details(payment)
+        post[:payment][:creditcard][:soft_descriptor] = options[:soft_descriptor] if options[:soft_descriptor]
       end
 
       def add_payment_details(post, payment)
