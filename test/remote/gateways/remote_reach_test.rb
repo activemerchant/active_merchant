@@ -9,6 +9,12 @@ class RemoteReachTest < Test::Unit::TestCase
       year: 2030,
       verification_value: 737
     })
+    @not_supported_cc = credit_card('4444333322221111', {
+      month: 3,
+      year: 2030,
+      verification_value: 737,
+      brand: 'alelo'
+    })
     @declined_card = credit_card('4000300011112220')
     @options = {
       email: 'johndoe@reach.com',
@@ -189,6 +195,14 @@ class RemoteReachTest < Test::Unit::TestCase
     assert_failure response
 
     assert_equal response.message, 'InvalidPreviousNetworkPaymentReference'
+  end
+
+  def test_failed_purchase_payment_model_nil
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'installment', network_transaction_id: 'uhh123' }
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert_equal 'Invalid PaymentModel', response.message
   end
 
   def test_failed_capture
