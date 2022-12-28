@@ -173,7 +173,7 @@ class RemoteReachTest < Test::Unit::TestCase
     @options[:stored_credential] = { initiator: 'cardholder', initial_transaction: true, reason_type: 'installment' }
     purchase = @gateway.purchase(@amount, @credit_card, @options)
 
-    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'unschedule', network_transaction_id: purchase.network_transaction_id }
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'unscheduled', network_transaction_id: purchase.network_transaction_id }
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_success response
@@ -183,7 +183,7 @@ class RemoteReachTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_store_credentials_mit_and_network_transaction_id
-    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'unschedule', network_transaction_id: 'uhh123' }
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'unscheduled', network_transaction_id: 'uhh123' }
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_failure response
