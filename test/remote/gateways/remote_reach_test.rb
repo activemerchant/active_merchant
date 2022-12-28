@@ -191,11 +191,22 @@ class RemoteReachTest < Test::Unit::TestCase
     assert_equal 'Not Found', response.message
   end
 
-  def test_successful_refund
+  def test_successful_refund_with_reference_id
     response = @gateway.refund(
       @amount,
       '5cd04b6a-7189-4a71-a335-faea4de9e11d',
       { reference_id: 'REFUND_TAG' }
+    )
+
+    assert_success response
+    assert response.params['response']['RefundId'].present?
+  end
+
+  def test_successful_refund_with_order_id
+    response = @gateway.refund(
+      @amount,
+      '5cd04b6a-7189-4a71-a335-faea4de9e11d',
+      { order_id: 'REFUND_TAG' }
     )
 
     assert_success response
