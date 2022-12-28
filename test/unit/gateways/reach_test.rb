@@ -164,33 +164,33 @@ class ReachTest < Test::Unit::TestCase
   end
 
   def test_stored_credential_with_wrong_combination_stored_credential_paramaters
-    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: true, reason_type: 'unschedule' }
-    e = assert_raise ArgumentError do
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: true, reason_type: 'unscheduled' }
+    @gateway.expects(:get_network_payment_reference).returns(stub(message: 'abc123', "success?": true))
+
+    stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end
-    assert_equal e.message, 'Unexpected combination of stored credential fields'
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(URI.decode_www_form(data)[0][1])
+      assert_empty request['PaymentModel']
+    end.respond_with(successful_purchase_response)
   end
 
   def test_stored_credential_with_at_lest_one_stored_credential_paramaters_nil
     @options[:stored_credential] = { initiator: 'merchant', initial_transaction: true, reason_type: nil }
-    e = assert_raise ArgumentError do
+    @gateway.expects(:get_network_payment_reference).returns(stub(message: 'abc123', "success?": true))
+
+    stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end
-    assert_equal e.message, 'Unexpected combination of stored credential fields'
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(URI.decode_www_form(data)[0][1])
+      assert_empty request['PaymentModel']
+    end.respond_with(successful_purchase_response)
   end
 
   def test_scrub
     assert @gateway.supports_scrubbing?
 
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
-  end
-
-  def test_raises_exceptio_when_card_brand_is_not_allowed
-    error = assert_raises(ArgumentError) do
-      @credit_card.brand = 'alelo'
-      @gateway.authorize(@amount, @credit_card, @options)
-    end
-    assert_equal 'Payment method alelo is not supported, check https://docs.withreach.com/docs/credit-cards#technical-considerations', error.message
   end
 
   private

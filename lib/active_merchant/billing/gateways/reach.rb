@@ -114,14 +114,12 @@ module ActiveMerchant #:nodoc:
       private
 
       def build_checkout_request(amount, payment, options)
-        raise ArgumentError.new("Payment method #{payment.brand} is not supported, check https://docs.withreach.com/docs/credit-cards#technical-considerations") if PAYMENT_METHOD_MAP[payment.brand.to_sym].blank?
-
         {
           MerchantId: @options[:merchant_id],
           ReferenceId: options[:order_id],
           ConsumerCurrency: options[:currency] || currency(options[:amount]),
           Capture: options[:capture] || false,
-          PaymentMethod: PAYMENT_METHOD_MAP[payment.brand.to_sym],
+          PaymentMethod: PAYMENT_METHOD_MAP.fetch(payment.brand.to_sym, 'unsupported'),
           Items: [
             Sku: options[:item_sku] || SecureRandom.alphanumeric,
             ConsumerPrice: amount,
