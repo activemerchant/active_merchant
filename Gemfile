@@ -4,9 +4,7 @@ gemspec
 gem 'jruby-openssl', platforms: :jruby
 gem 'rubocop', '~> 0.62.0', require: false
 
-if RUBY_VERSION >= '3.0'
-  gem 'rexml'
-end
+gem 'rexml' if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('3.0')
 
 group :test, :remote_test do
   # gateway-specific dependencies, keeping these gems out of the gemspec
