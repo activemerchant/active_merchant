@@ -153,8 +153,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_stored_credentials(request, options)
-        request[:PaymentModel] = payment_model(options) || ''
-        request[:DeviceFingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
+        request[:PaymentModel] = payment_model(options)
+        raise ArgumentError, 'Unexpected combination of stored credential fields' if request[:PaymentModel].nil?
+
+        request[:DeviceFingerprint] = options[:device_fingerprint] if options[:device_fingerprint] && request[:PaymentModel].match?(/CIT-/)
       end
 
       def payment_model(options)
