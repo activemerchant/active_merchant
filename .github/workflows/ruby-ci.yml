@@ -27,6 +27,8 @@ jobs:
           - gemfiles/Gemfile.rails60
           - gemfiles/Gemfile.rails_master
         include:
+          - version: 3.2
+            gemfile: gemfiles/Gemfile.rails70
           - version: 3.1
             gemfile: gemfiles/Gemfile.rails70
           - version: '3.0'
