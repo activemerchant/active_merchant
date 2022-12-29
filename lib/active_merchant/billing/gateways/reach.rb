@@ -166,21 +166,21 @@ module ActiveMerchant #:nodoc:
           initial_transaction: {
             'cardholder' => {
               'installment' => 'CIT-Setup-Scheduled',
-              'unscheduled' => 'CIT-Setup-Unscheduled-MIT',
+              'unschedule' => 'CIT-Setup-Unscheduled-MIT',
               'recurring' => 'CIT-Setup-Unscheduled'
             }
           },
           no_initial_transaction: {
             'cardholder' => {
-              'unscheduled' => 'CIT-Subsequent-Unscheduled'
+              'unschedule' => 'CIT-Subsequent-Unscheduled'
             },
             'merchant' => {
               'recurring' => 'MIT-Subsequent-Scheduled',
-              'unscheduled' => 'MIT-Subsequent-Unscheduled'
+              'unschedule' => 'MIT-Subsequent-Unscheduled'
             }
           }
         }
-        initial = stored_credential[:initial_transaction] ? :initial_transaction : :no_initial_transaction
+        initial = (stored_credential[:initial_transaction] ? :initial_transaction : :no_initial_transaction)
         payment_model_options[initial].dig(stored_credential[:initiator], stored_credential[:reason_type])
       end
 
