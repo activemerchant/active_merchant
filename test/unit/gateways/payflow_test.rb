@@ -1144,7 +1144,7 @@ class PayflowTest < Test::Unit::TestCase
 
   def threeds_xpath_for_extdata(attr_name, tx_type: 'Authorization')
     xpath_prefix = xpath_prefix_for_transaction_type(tx_type)
-    %(string(#{xpath_prefix}/PayData/ExtData[@Name='#{attr_name}']/@Value)")
+    %(string(#{xpath_prefix}/PayData/ExtData[@Name='#{attr_name}']/@Value))
   end
 
   def authorize_buyer_auth_result_path
