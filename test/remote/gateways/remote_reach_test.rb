@@ -9,6 +9,12 @@ class RemoteReachTest < Test::Unit::TestCase
       year: 2030,
       verification_value: 737
     })
+    @not_supported_cc = credit_card('4444333322221111', {
+      month: 3,
+      year: 2030,
+      verification_value: 737,
+      brand: 'alelo'
+    })
     @declined_card = credit_card('4000300011112220')
     @options = {
       email: 'johndoe@reach.com',
@@ -43,6 +49,13 @@ class RemoteReachTest < Test::Unit::TestCase
 
     assert_failure response
     assert_equal 'Invalid ConsumerCurrency', response.message
+  end
+
+  def test_failed_authorize_with_not_supported_payment_method
+    response = @gateway.authorize(@amount, @not_supported_cc, @options)
+
+    assert_failure response
+    assert_equal 'PaymentMethodUnsupported', response.error_code
   end
 
   def test_successful_purchase
@@ -166,7 +179,7 @@ class RemoteReachTest < Test::Unit::TestCase
     @options[:stored_credential] = { initiator: 'cardholder', initial_transaction: true, reason_type: 'installment' }
     purchase = @gateway.purchase(@amount, @credit_card, @options)
 
-    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'unschedule', network_transaction_id: purchase.network_transaction_id }
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'unscheduled', network_transaction_id: purchase.network_transaction_id }
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_success response
@@ -176,12 +189,20 @@ class RemoteReachTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_store_credentials_mit_and_network_transaction_id
-    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'unschedule', network_transaction_id: 'uhh123' }
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'unscheduled', network_transaction_id: 'uhh123' }
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_failure response
 
     assert_equal response.message, 'InvalidPreviousNetworkPaymentReference'
+  end
+
+  def test_failed_purchase_payment_model_nil
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'installment', network_transaction_id: 'uhh123' }
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert_equal 'Invalid PaymentModel', response.message
   end
 
   def test_failed_capture
@@ -191,11 +212,22 @@ class RemoteReachTest < Test::Unit::TestCase
     assert_equal 'Not Found', response.message
   end
 
-  def test_successful_refund
+  def test_successful_refund_with_reference_id
     response = @gateway.refund(
       @amount,
       '5cd04b6a-7189-4a71-a335-faea4de9e11d',
       { reference_id: 'REFUND_TAG' }
+    )
+
+    assert_success response
+    assert response.params['response']['RefundId'].present?
+  end
+
+  def test_successful_refund_with_order_id
+    response = @gateway.refund(
+      @amount,
+      '5cd04b6a-7189-4a71-a335-faea4de9e11d',
+      { order_id: 'REFUND_TAG' }
     )
 
     assert_success response
