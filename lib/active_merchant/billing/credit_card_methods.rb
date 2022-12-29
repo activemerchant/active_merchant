@@ -5,28 +5,28 @@ module ActiveMerchant #:nodoc:
     # Convenience methods that can be included into a custom Credit Card object, such as an ActiveRecord based Credit Card object.
     module CreditCardMethods
       CARD_COMPANY_DETECTORS = {
-        'visa'               => ->(num) { num =~ /^4\d{12}(\d{3})?(\d{3})?$/ },
+        'visa'               => ->(num) { num.to_s =~ /^4\d{12}(\d{3})?(\d{3})?$/ },
         'master'             => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MASTERCARD_RANGES) },
         'elo'                => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), ELO_RANGES) },
         'cabal'              => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 8), CABAL_RANGES) },
         'alelo'              => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), ALELO_RANGES) },
-        'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12,15}$/ },
-        'american_express'   => ->(num) { num =~ /^3[47]\d{13}$/ },
+        'discover'           => ->(num) { num.to_s =~ /^(6011|65\d{2}|64[4-9]\d)\d{12,15}$/ },
+        'american_express'   => ->(num) { num.to_s =~ /^3[47]\d{13}$/ },
         'naranja'            => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), NARANJA_RANGES) },
-        'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11,16}$/ },
+        'diners_club'        => ->(num) { num.to_s =~ /^3(0[0-5]|[68]\d)\d{11,16}$/ },
         'jcb'                => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 4), JCB_RANGES) },
-        'dankort'            => ->(num) { num =~ /^5019\d{12}$/ },
+        'dankort'            => ->(num) { num.to_s =~ /^5019\d{12}$/ },
         'maestro'            => lambda { |num|
           (12..19).cover?(num&.size) && (
             in_bin_range?(num.slice(0, 6), MAESTRO_RANGES) ||
             MAESTRO_BINS.any? { |bin| num.slice(0, bin.size) == bin }
           )
         },
-        'maestro_no_luhn'    => ->(num) { num =~ /^(501080|501081|501082)\d{6,13}$/ },
-        'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
-        'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818|505864|505865)\d{10}$/ },
-        'alia'               => ->(num) { num =~ /^(504997|505878|601030|601073|505874)\d{10}$/ },
-        'vr'                 => ->(num) { num =~ /^(627416|637036)\d{10}$/ },
+        'maestro_no_luhn'    => ->(num) { num.to_s =~ /^(501080|501081|501082)\d{6,13}$/ },
+        'forbrugsforeningen' => ->(num) { num.to_s =~ /^600722\d{10}$/ },
+        'sodexo'             => ->(num) { num.to_s =~ /^(606071|603389|606070|606069|606068|600818|505864|505865)\d{10}$/ },
+        'alia'               => ->(num) { num.to_s =~ /^(504997|505878|601030|601073|505874)\d{10}$/ },
+        'vr'                 => ->(num) { num.to_s =~ /^(627416|637036)\d{10}$/ },
         'unionpay'           => ->(num) { (16..19).cover?(num&.size) && in_bin_range?(num.slice(0, 8), UNIONPAY_RANGES) },
         'carnet'             => lambda { |num|
           num&.size == 16 && (
@@ -35,20 +35,20 @@ module ActiveMerchant #:nodoc:
           )
         },
         'cartes_bancaires' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), CARTES_BANCAIRES_RANGES) },
-        'olimpica' => ->(num) { num =~ /^636853\d{10}$/ },
-        'creditel' => ->(num) { num =~ /^601933\d{10}$/ },
-        'confiable' => ->(num) { num =~ /^560718\d{10}$/ },
-        'synchrony' => ->(num) { num =~ /^700600\d{10}$/ },
-        'routex' => ->(num) { num =~ /^(700676|700678)\d{13}$/ },
+        'olimpica' => ->(num) { num.to_s =~ /^636853\d{10}$/ },
+        'creditel' => ->(num) { num.to_s =~ /^601933\d{10}$/ },
+        'confiable' => ->(num) { num.to_s =~ /^560718\d{10}$/ },
+        'synchrony' => ->(num) { num.to_s =~ /^700600\d{10}$/ },
+        'routex' => ->(num) { num.to_s =~ /^(700676|700678)\d{13}$/ },
         'mada' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MADA_RANGES) },
-        'bp_plus' => ->(num) { num =~ /^(7050\d\s\d{9}\s\d{3}$|705\d\s\d{8}\s\d{5}$)/ },
-        'passcard' => ->(num) { num =~ /^628026\d{10}$/ },
-        'edenred' => ->(num) { num =~ /^637483\d{10}$/ },
-        'anda' => ->(num) { num =~ /^603199\d{10}$/ },
-        'tarjeta-d' => ->(num) { num =~ /^601828\d{10}$/ }
+        'bp_plus' => ->(num) { num.to_s =~ /^(7050\d\s\d{9}\s\d{3}$|705\d\s\d{8}\s\d{5}$)/ },
+        'passcard' => ->(num) { num.to_s =~ /^628026\d{10}$/ },
+        'edenred' => ->(num) { num.to_s =~ /^637483\d{10}$/ },
+        'anda' => ->(num) { num.to_s =~ /^603199\d{10}$/ },
+        'tarjeta-d' => ->(num) { num.to_s =~ /^601828\d{10}$/ }
       }
 
-      SODEXO_NO_LUHN = ->(num) { num =~ /^(505864|505865)\d{10}$/ }
+      SODEXO_NO_LUHN = ->(num) { num.to_s =~ /^(505864|505865)\d{10}$/ }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
       ELECTRON_RANGES = [
