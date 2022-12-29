@@ -82,24 +82,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(amount, authorization, options = {})
-        post = {
-          request: {
-            MerchantId: @options[:merchant_id],
-            OrderId: authorization,
-            ReferenceId: options[:order_id] || options[:reference_id],
-            Amount: amount
-          }
-        }
+        post = {}
+        request = post[:request] = {}
+        request[:MerchantId] = @options[:merchant_id]
+        request[:OrderId] = authorization
+        request[:ReferenceId] = options[:reference_id]
+        request[:Amount] = amount
+
         commit('refund', post)
       end
 
       def void(authorization, options = {})
-        post = {
-          request: {
-            MerchantId: @options[:merchant_id],
-            OrderId: authorization
-          }
-        }
+        post = {}
+        request = post[:request] = {}
+        request[:MerchantId] = @options[:merchant_id]
+        request[:OrderId] = authorization
 
         commit('cancel', post)
       end
