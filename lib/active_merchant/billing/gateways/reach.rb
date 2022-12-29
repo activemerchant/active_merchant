@@ -82,21 +82,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(amount, authorization, options = {})
-        post = {}
-        request = post[:request] = {}
-        request[:MerchantId] = @options[:merchant_id]
-        request[:OrderId] = authorization
-        request[:ReferenceId] = options[:reference_id]
-        request[:Amount] = amount
-
+        post = {
+          request: {
+            MerchantId: @options[:merchant_id],
+            OrderId: authorization,
+            ReferenceId: options[:order_id] || options[:reference_id],
+            Amount: amount
+          }
+        }
         commit('refund', post)
       end
 
       def void(authorization, options = {})
-        post = {}
-        request = post[:request] = {}
-        request[:MerchantId] = @options[:merchant_id]
-        request[:OrderId] = authorization
+        post = {
+          request: {
+            MerchantId: @options[:merchant_id],
+            OrderId: authorization
+          }
+        }
 
         commit('cancel', post)
       end
@@ -111,14 +114,12 @@ module ActiveMerchant #:nodoc:
       private
 
       def build_checkout_request(amount, payment, options)
-        raise ArgumentError.new("Payment method #{payment.brand} is not supported, check https://docs.withreach.com/docs/credit-cards#technical-considerations") if PAYMENT_METHOD_MAP[payment.brand.to_sym].blank?
-
         {
           MerchantId: @options[:merchant_id],
           ReferenceId: options[:order_id],
           ConsumerCurrency: options[:currency] || currency(options[:amount]),
           Capture: options[:capture] || false,
-          PaymentMethod: PAYMENT_METHOD_MAP[payment.brand.to_sym],
+          PaymentMethod: PAYMENT_METHOD_MAP.fetch(payment.brand.to_sym, 'unsupported'),
           Items: [
             Sku: options[:item_sku] || SecureRandom.alphanumeric,
             ConsumerPrice: amount,
@@ -152,10 +153,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_stored_credentials(request, options)
-        request[:PaymentModel] = payment_model(options)
-        raise ArgumentError, 'Unexpected combination of stored credential fields' if request[:PaymentModel].nil?
-
-        request[:DeviceFingerprint] = options[:device_fingerprint] if options[:device_fingerprint] && request[:PaymentModel].match?(/CIT-/)
+        request[:PaymentModel] = payment_model(options) || ''
+        request[:DeviceFingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
       end
 
       def payment_model(options)
@@ -167,21 +166,21 @@ module ActiveMerchant #:nodoc:
           initial_transaction: {
             'cardholder' => {
               'installment' => 'CIT-Setup-Scheduled',
-              'unschedule' => 'CIT-Setup-Unscheduled-MIT',
+              'unscheduled' => 'CIT-Setup-Unscheduled-MIT',
               'recurring' => 'CIT-Setup-Unscheduled'
             }
           },
           no_initial_transaction: {
             'cardholder' => {
-              'unschedule' => 'CIT-Subsequent-Unscheduled'
+              'unscheduled' => 'CIT-Subsequent-Unscheduled'
             },
             'merchant' => {
               'recurring' => 'MIT-Subsequent-Scheduled',
-              'unschedule' => 'MIT-Subsequent-Unscheduled'
+              'unscheduled' => 'MIT-Subsequent-Unscheduled'
             }
           }
         }
-        initial = (stored_credential[:initial_transaction] ? :initial_transaction : :no_initial_transaction)
+        initial = stored_credential[:initial_transaction] ? :initial_transaction : :no_initial_transaction
         payment_model_options[initial].dig(stored_credential[:initiator], stored_credential[:reason_type])
       end
 
