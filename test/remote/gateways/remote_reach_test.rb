@@ -45,13 +45,6 @@ class RemoteReachTest < Test::Unit::TestCase
     assert_equal 'Invalid ConsumerCurrency', response.message
   end
 
-  def test_failed_authorize_with_not_supported_payment_method
-    response = @gateway.authorize(@amount, @not_supported_cc, @options)
-
-    assert_failure response
-    assert_equal 'PaymentMethodUnsupported', response.error_code
-  end
-
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
 
