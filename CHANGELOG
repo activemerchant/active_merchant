@@ -38,6 +38,10 @@
 * CommerceHub: Add new gateway [naashton] #4640
 * CyberSource: Update installment data method [rachelkirk] #4642
 * Element: fix bug with billing address email [jcreiff] #4644
+* Openpay: set URL by merchant country [edgarv09] #4637
+* Alelo: Improving credentials refresh process [heavyblade] #4616
+* Decidir: Add transaction inquire request [almalee24] #4649
+* EBANX: add soft_descriptor field [jcreiff] #4658
 * CommerceHub: Add Apple Pay and Google Pay [gasb150] #4648
 
 == Version 1.127.0 (September 20th, 2022)

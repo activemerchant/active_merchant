@@ -274,6 +274,18 @@ class RemoteDecidirTest < Test::Unit::TestCase
     assert_match %r{PEDIR AUTORIZACION | request_authorization_card}, response.message
   end
 
+  def test_successful_inquire
+    response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+
+    response = @gateway_for_purchase.inquire(response.params['id'])
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+  end
+
   def test_invalid_login_without_api_key
     gateway = DecidirGateway.new(api_key: '')
 

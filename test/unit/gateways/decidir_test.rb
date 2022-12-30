@@ -368,6 +368,16 @@ class DecidirTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_inquire_with_authorization
+    @gateway_for_purchase.expects(:ssl_request).returns(successful_inquire_response)
+    response = @gateway_for_purchase.inquire('818423490')
+    assert_success response
+
+    assert_equal 544453, response.authorization
+    assert_equal 'rejected', response.message
+    assert response.test?
+  end
+
   def test_scrub
     assert @gateway_for_purchase.supports_scrubbing?
     assert_equal @gateway_for_purchase.scrub(pre_scrubbed), post_scrubbed
@@ -584,6 +594,12 @@ class DecidirTest < Test::Unit::TestCase
   def failed_void_response
     %(
       {"error_type":"not_found_error","entity_name":"","id":""}
+    )
+  end
+
+  def successful_inquire_response
+    %(
+      { "id": 544453,"site_transaction_id": "52139443","token": "ef4504fc-21f1-4608-bb75-3f73aa9b9ede","user_id": null,"card_brand": "visa","bin": "483621","amount": 10,"currency": "ars","installments": 1,"description": "","payment_type": "single","sub_payments": [],"status": "rejected","status_details": null,"date": "2016-12-15T15:12Z","merchant_id": null,"fraud_detection": {}}
     )
   end
 

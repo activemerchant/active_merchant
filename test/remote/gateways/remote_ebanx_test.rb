@@ -23,7 +23,8 @@ class RemoteEbanxTest < Test::Unit::TestCase
         metadata_1: 'test',
         metadata_2: 'test2'
       },
-      tags: EbanxGateway::TAGS
+      tags: EbanxGateway::TAGS,
+      soft_descriptor: 'ActiveMerchant'
     }
   end
 

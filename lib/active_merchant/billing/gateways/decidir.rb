@@ -83,6 +83,11 @@ module ActiveMerchant #:nodoc:
         commit(:post, "payments/#{authorization}/refunds", post)
       end
 
+      def inquire(authorization, options = {})
+        options[:action] = 'inquire'
+        commit(:get, "payments/#{authorization}", nil, options)
+      end
+
       def verify(credit_card, options = {})
         raise ArgumentError, 'Verify is not supported on Decidir gateways unless the preauth_mode option is enabled' unless @options[:preauth_mode]
 
@@ -267,7 +272,7 @@ module ActiveMerchant #:nodoc:
           response = parse(raw_response)
         end
 
-        success = success_from(response)
+        success = success_from(response, options)
         Response.new(
           success,
           message_from(success, response),
@@ -279,7 +284,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(parameters = {})
-        parameters.to_json
+        parameters&.to_json
       end
 
       def parse(body)
@@ -311,8 +316,14 @@ module ActiveMerchant #:nodoc:
         message
       end
 
-      def success_from(response)
-        response['status'] == 'approved' || response['status'] == 'pre_approved'
+      def success_from(response, options)
+        status = %w(approved pre_approved)
+
+        if options[:action] == 'inquire'
+          status.include?(response['status']) || response['status'] == 'rejected'
+        else
+          status.include?(response['status'])
+        end
       end
 
       def authorization_from(response)

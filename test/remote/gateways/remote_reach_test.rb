@@ -9,6 +9,12 @@ class RemoteReachTest < Test::Unit::TestCase
       year: 2030,
       verification_value: 737
     })
+    @not_supported_cc = credit_card('4444333322221111', {
+      month: 3,
+      year: 2030,
+      verification_value: 737,
+      brand: 'alelo'
+    })
     @declined_card = credit_card('4000300011112220')
     @options = {
       email: 'johndoe@reach.com',
@@ -32,8 +38,8 @@ class RemoteReachTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
 
     assert_success response
-    assert response.params['response'][:Authorized]
-    assert response.params['response'][:OrderId]
+    assert response.params['response']['Authorized']
+    assert response.params['response']['OrderId']
   end
 
   def test_failed_authorize
@@ -45,12 +51,19 @@ class RemoteReachTest < Test::Unit::TestCase
     assert_equal 'Invalid ConsumerCurrency', response.message
   end
 
+  def test_failed_authorize_with_not_supported_payment_method
+    response = @gateway.authorize(@amount, @not_supported_cc, @options)
+
+    assert_failure response
+    assert_equal 'PaymentMethodUnsupported', response.error_code
+  end
+
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_success response
-    assert response.params['response'][:Authorized]
-    assert response.params['response'][:OrderId]
+    assert response.params['response']['Authorized']
+    assert response.params['response']['OrderId']
   end
 
   def test_failed_purchase
@@ -64,8 +77,8 @@ class RemoteReachTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_success response
-    assert response.params['response'][:Authorized]
-    assert response.params['response'][:OrderId]
+    assert response.params['response']['Authorized']
+    assert response.params['response']['OrderId']
   end
 
   def test_successful_purchase_with_shipping_data
@@ -81,8 +94,8 @@ class RemoteReachTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_success response
-    assert response.params['response'][:Authorized]
-    assert response.params['response'][:OrderId]
+    assert response.params['response']['Authorized']
+    assert response.params['response']['OrderId']
   end
 
   def test_failed_purchase_with_incomplete_shipping_data
@@ -128,8 +141,8 @@ class RemoteReachTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_success response
-    assert response.params['response'][:Authorized]
-    assert response.params['response'][:OrderId]
+    assert response.params['response']['Authorized']
+    assert response.params['response']['OrderId']
   end
 
   # The Complete flag in the response returns false when capture is
@@ -148,8 +161,8 @@ class RemoteReachTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert response.params['response'][:Authorized]
-    assert response.params['response'][:OrderId]
+    assert response.params['response']['Authorized']
+    assert response.params['response']['OrderId']
   end
 
   def test_successful_purchase_with_store_credentials_mit
@@ -158,30 +171,38 @@ class RemoteReachTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert response.params['response'][:Authorized]
-    assert response.params['response'][:OrderId]
+    assert response.params['response']['Authorized']
+    assert response.params['response']['OrderId']
   end
 
   def test_successful_purchase_with_store_credentials_mit_and_network_transaction_id
     @options[:stored_credential] = { initiator: 'cardholder', initial_transaction: true, reason_type: 'installment' }
     purchase = @gateway.purchase(@amount, @credit_card, @options)
 
-    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'unschedule', network_transaction_id: purchase.network_transaction_id }
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'unscheduled', network_transaction_id: purchase.network_transaction_id }
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_success response
 
-    assert response.params['response'][:Authorized]
-    assert response.params['response'][:OrderId]
+    assert response.params['response']['Authorized']
+    assert response.params['response']['OrderId']
   end
 
   def test_failed_purchase_with_store_credentials_mit_and_network_transaction_id
-    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'unschedule', network_transaction_id: 'uhh123' }
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'unscheduled', network_transaction_id: 'uhh123' }
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_failure response
 
     assert_equal response.message, 'InvalidPreviousNetworkPaymentReference'
+  end
+
+  def test_failed_purchase_payment_model_nil
+    @options[:stored_credential] = { initiator: 'merchant', initial_transaction: false, reason_type: 'installment', network_transaction_id: 'uhh123' }
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert_equal 'Invalid PaymentModel', response.message
   end
 
   def test_failed_capture
@@ -191,7 +212,7 @@ class RemoteReachTest < Test::Unit::TestCase
     assert_equal 'Not Found', response.message
   end
 
-  def test_successful_refund
+  def test_successful_refund_with_reference_id
     response = @gateway.refund(
       @amount,
       '5cd04b6a-7189-4a71-a335-faea4de9e11d',
@@ -199,7 +220,18 @@ class RemoteReachTest < Test::Unit::TestCase
     )
 
     assert_success response
-    assert response.params.symbolize_keys[:response][:RefundId].present?
+    assert response.params['response']['RefundId'].present?
+  end
+
+  def test_successful_refund_with_order_id
+    response = @gateway.refund(
+      @amount,
+      '5cd04b6a-7189-4a71-a335-faea4de9e11d',
+      { order_id: 'REFUND_TAG' }
+    )
+
+    assert_success response
+    assert response.params['response']['RefundId'].present?
   end
 
   def test_failed_refund
@@ -208,7 +240,7 @@ class RemoteReachTest < Test::Unit::TestCase
 
     assert_failure response
     assert_equal 'OrderStateInvalid', response.error_code
-    assert response.params.symbolize_keys[:response][:OrderId].present?
+    assert response.params['response']['OrderId'].present?
   end
 
   def test_successful_void
@@ -216,7 +248,7 @@ class RemoteReachTest < Test::Unit::TestCase
     response = @gateway.void(authorize.authorization, @options)
 
     assert_success response
-    assert response.params.symbolize_keys[:response][:OrderId].present?
+    assert response.params['response']['OrderId'].present?
   end
 
   def test_failed_void
@@ -232,7 +264,7 @@ class RemoteReachTest < Test::Unit::TestCase
     response = @gateway.void(authorize.authorization, @options)
 
     assert_success response
-    assert response.params.symbolize_keys[:response][:OrderId].present?
+    assert response.params['response']['OrderId'].present?
   end
 
   def test_successful_void_higher_amount
@@ -240,7 +272,7 @@ class RemoteReachTest < Test::Unit::TestCase
     response = @gateway.void(authorize.authorization, @options)
 
     assert_success response
-    assert response.params.symbolize_keys[:response][:OrderId].present?
+    assert response.params['response']['OrderId'].present?
   end
 
   def test_successful_double_void_and_idempotent
@@ -248,28 +280,28 @@ class RemoteReachTest < Test::Unit::TestCase
     response = @gateway.void(authorize.authorization, @options)
 
     assert_success response
-    assert response.params.symbolize_keys[:response][:OrderId].present?
+    assert response.params['response']['OrderId'].present?
 
     second_void_response = @gateway.void(authorize.authorization, @options)
 
     assert_success second_void_response
-    assert second_void_response.params.symbolize_keys[:response][:OrderId].present?
+    assert second_void_response.params['response']['OrderId'].present?
 
-    assert_equal response.params.symbolize_keys[:response][:OrderId], second_void_response.params.symbolize_keys[:response][:OrderId]
+    assert_equal response.params['response']['OrderId'], second_void_response.params['response']['OrderId']
   end
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
 
     assert_success response
-    assert response.params.symbolize_keys[:response][:OrderId].present?
+    assert response.params['response']['OrderId'].present?
   end
 
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
 
     assert_failure response
-    assert response.params.symbolize_keys[:response][:OrderId].present?
+    assert response.params['response']['OrderId'].present?
     assert_equal 'PaymentAuthorizationFailed', response.error_code
   end
 
