@@ -97,7 +97,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((Authorization: )[a-zA-Z0-9+./=]+), '\1[FILTERED]').
           gsub(%r((Api-Key: )\w+), '\1[FILTERED]').
           gsub(%r(("cardData\\?":\\?")\d+), '\1[FILTERED]').
-          gsub(%r(("securityCode\\?":\\?")\d+), '\1[FILTERED]')
+          gsub(%r(("securityCode\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r(("cavv\\?":\\?")\w+), '\1[FILTERED]')
       end
 
       private
@@ -223,11 +224,24 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_decrypted_wallet(source, payment, options)
+        source[:sourceType] = 'DecryptedWallet'
+        source[:card] = {}
+        source[:card][:cardData] = payment.number
+        source[:card][:expirationMonth] = format(payment.month, :two_digits)
+        source[:card][:expirationYear] = format(payment.year, :four_digits)
+        source[:cavv] = payment.payment_cryptogram
+        source[:walletType] = payment.source.to_s.upcase
+      end
+
       def add_payment(post, payment, options = {})
         source = {}
-        if payment.is_a?(CreditCard)
+        case payment
+        when NetworkTokenizationCreditCard
+          add_decrypted_wallet(source, payment, options)
+        when CreditCard
           add_credit_card(source, payment, options)
-        elsif payment.is_a?(String)
+        when String
           add_payment_token(source, payment, options)
         end
         post[:source] = source

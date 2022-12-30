@@ -5,7 +5,28 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     @gateway = CommerceHubGateway.new(fixtures(:commerce_hub))
 
     @amount = 1204
-    @credit_card = credit_card('4005550000000019', month: '02', year: '2035', verification_value: '123')
+    @credit_card = credit_card('4005550000000019', month: '02', year: '2035', verification_value: '111')
+    @google_pay = network_tokenization_credit_card('4005550000000019',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :google_pay,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+    @apple_pay = network_tokenization_credit_card('4005550000000019',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :apple_pay,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+    @declined_apple_pay = network_tokenization_credit_card('4000300011112220',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :apple_pay,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
     @declined_card = credit_card('4000300011112220', month: '02', year: '2035', verification_value: '123')
     @options = {}
   end
@@ -132,6 +153,26 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_google_pay
+    response = @gateway.purchase(@amount, @google_pay, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_equal 'DecryptedWallet', response.params['source']['sourceType']
+  end
+
+  def test_successful_purchase_with_apple_pay
+    response = @gateway.purchase(@amount, @apple_pay, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_equal 'DecryptedWallet', response.params['source']['sourceType']
+  end
+
+  def test_failed_purchase_with_declined_apple_pay
+    response = @gateway.purchase(@amount, @declined_apple_pay, @options)
+    assert_failure response
+    assert_equal 'Unable to assign card to brand: Invalid.', response.message
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -142,5 +183,17 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:api_key], transcript)
     assert_scrubbed(@gateway.options[:api_secret], transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
+  end
+
+  def test_transcript_scrubbing_apple_pay
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @apple_pay, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@apple_pay.number, transcript)
+    assert_scrubbed(@gateway.options[:api_key], transcript)
+    assert_scrubbed(@gateway.options[:api_secret], transcript)
+    assert_scrubbed(@apple_pay.payment_cryptogram, transcript)
   end
 end
