@@ -1451,3 +1451,8 @@ worldpay_us:
   acctid: MPNAB
   subid: SPREE
   merchantpin: "1234567890"
+
+# Working test credentials, no need to replace
+place_to_pay_default:
+  login: 11caf20f5cd408c9b22c7f0693e2f676
+  secret_key: yLb0x2IO2lO65zq7
