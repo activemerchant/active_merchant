@@ -76,7 +76,7 @@ class AleloTest < Test::Unit::TestCase
       assert_equal @credit_card.number, request[:cardNumber]
       assert_equal @credit_card.name, request[:cardholderName]
       assert_equal @credit_card.month, request[:expirationMonth]
-      assert_equal 23, request[:expirationYear]
+      assert_equal @credit_card.year - 2000, request[:expirationYear]
       assert_equal '3', request[:captureType]
       assert_equal @credit_card.verification_value, request[:securityCode]
       assert_equal @options[:establishment_code], request[:establishmentCode]
