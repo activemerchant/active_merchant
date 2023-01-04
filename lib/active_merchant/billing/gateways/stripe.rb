@@ -145,6 +145,7 @@ module ActiveMerchant #:nodoc:
 
       def void(identification, options = {})
         post = {}
+        post[:reverse_transfer] = options[:reverse_transfer] if options[:reverse_transfer]
         post[:metadata] = options[:metadata] if options[:metadata]
         post[:reason] = options[:reason] if options[:reason]
         post[:expand] = [:charge]
