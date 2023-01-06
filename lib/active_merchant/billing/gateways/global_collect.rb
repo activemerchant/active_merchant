@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
         add_creator_info(post, options)
         add_fraud_fields(post, options)
         add_external_cardholder_authentication_data(post, options)
-        commit(:authorize, post, options: options)
+        commit(:post, :authorize, post, options: options)
       end
 
       def capture(money, authorization, options = {})
@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
         add_order(post, money, options, capture: true)
         add_customer_data(post, options)
         add_creator_info(post, options)
-        commit(:capture, post, authorization: authorization)
+        commit(:post, :capture, post, authorization: authorization)
       end
 
       def refund(money, authorization, options = {})
@@ -52,13 +52,13 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_refund_customer_data(post, options)
         add_creator_info(post, options)
-        commit(:refund, post, authorization: authorization)
+        commit(:post, :refund, post, authorization: authorization)
       end
 
       def void(authorization, options = {})
         post = nestable_hash
         add_creator_info(post, options)
-        commit(:void, post, authorization: authorization)
+        commit(:post, :void, post, authorization: authorization)
       end
 
       def verify(payment, options = {})
@@ -66,6 +66,10 @@ module ActiveMerchant #:nodoc:
           r.process { authorize(100, payment, options) }
           r.process { void(r.authorization, options) }
         end
+      end
+
+      def inquire(authorization)
+        commit(:get, :inquire, nil, authorization: authorization)
       end
 
       def supports_scrubbing?
@@ -413,6 +417,8 @@ module ActiveMerchant #:nodoc:
           uri + "payments/#{authorization}/refund"
         when :void
           uri + "payments/#{authorization}/cancel"
+        when :inquire
+          uri + "payments/#{authorization}"
         end
       end
 
@@ -420,9 +426,9 @@ module ActiveMerchant #:nodoc:
         "x-gcs-idempotence-key:#{options[:idempotency_key]}" if options[:idempotency_key]
       end
 
-      def commit(action, post, authorization: nil, options: {})
+      def commit(method, action, post, authorization: nil, options: {})
         begin
-          raw_response = ssl_post(url(action, authorization), post.to_json, headers(action, post, authorization, options))
+          raw_response = ssl_request(method, url(action, authorization), post&.to_json, headers(method, action, post, authorization, options))
           response = parse(raw_response)
         rescue ResponseError => e
           response = parse(e.response.body) if e.response.code.to_i >= 400
@@ -448,10 +454,10 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def headers(action, post, authorization = nil, options = {})
+      def headers(method, action, post, authorization = nil, options = {})
         headers = {
           'Content-Type' => content_type,
-          'Authorization' => auth_digest(action, post, authorization, options),
+          'Authorization' => auth_digest(method, action, post, authorization, options),
           'Date' => date
         }
 
@@ -459,9 +465,9 @@ module ActiveMerchant #:nodoc:
         headers
       end
 
-      def auth_digest(action, post, authorization = nil, options = {})
+      def auth_digest(method, action, post, authorization = nil, options = {})
         data = <<~REQUEST
-          POST
+          #{method.to_s.upcase}
           #{content_type}
           #{date}
           #{idempotency_key_for_signature(options)}
