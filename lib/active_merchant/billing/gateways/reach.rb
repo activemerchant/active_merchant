@@ -1,10 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class ReachGateway < Gateway
-      # TODO: Things to check
-      # * The list of three digit fractions but only accept 2
-      # * Not sure the list of countries and currencies
-
       self.test_url = 'https://checkout.rch.how/'
       self.live_url = 'https://checkout.rch.io/'
 
@@ -82,12 +78,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(amount, authorization, options = {})
+        currency = options[:currency] || currency(options[:amount])
         post = {
           request: {
             MerchantId: @options[:merchant_id],
             OrderId: authorization,
             ReferenceId: options[:order_id] || options[:reference_id],
-            Amount: amount
+            Amount: localized_amount(amount, currency)
           }
         }
         commit('refund', post)
@@ -114,15 +111,16 @@ module ActiveMerchant #:nodoc:
       private
 
       def build_checkout_request(amount, payment, options)
+        currency = options[:currency] || currency(options[:amount])
         {
           MerchantId: @options[:merchant_id],
           ReferenceId: options[:order_id],
-          ConsumerCurrency: options[:currency] || currency(options[:amount]),
+          ConsumerCurrency: currency,
           Capture: options[:capture] || false,
           PaymentMethod: PAYMENT_METHOD_MAP.fetch(payment.brand.to_sym, 'unsupported'),
           Items: [
             Sku: options[:item_sku] || SecureRandom.alphanumeric,
-            ConsumerPrice: amount,
+            ConsumerPrice: localized_amount(amount, currency),
             Quantity: (options[:item_quantity] || 1)
           ]
         }

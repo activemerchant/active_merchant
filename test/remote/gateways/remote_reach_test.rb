@@ -215,7 +215,7 @@ class RemoteReachTest < Test::Unit::TestCase
   def test_successful_refund_with_reference_id
     response = @gateway.refund(
       @amount,
-      '5cd04b6a-7189-4a71-a335-faea4de9e11d',
+      '7d689cc1-4478-4e92-8cd9-f05528cde2f4',
       { reference_id: 'REFUND_TAG' }
     )
 
@@ -226,7 +226,7 @@ class RemoteReachTest < Test::Unit::TestCase
   def test_successful_refund_with_order_id
     response = @gateway.refund(
       @amount,
-      '5cd04b6a-7189-4a71-a335-faea4de9e11d',
+      '7d689cc1-4478-4e92-8cd9-f05528cde2f4',
       { order_id: 'REFUND_TAG' }
     )
 
