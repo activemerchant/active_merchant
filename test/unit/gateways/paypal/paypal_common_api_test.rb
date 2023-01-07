@@ -44,25 +44,25 @@ class PaypalCommonApiTest < Test::Unit::TestCase
   end
 
   def test_add_payment_details_adds_express_only_payment_details_when_necessary
-    options = {express_request: true}
+    options = { express_request: true }
     @gateway.expects(:add_express_only_payment_details)
     @gateway.send(:add_payment_details, xml_builder, 100, 'USD', options)
   end
 
   def test_add_payment_details_adds_items_details
-    options = {items: [1]}
+    options = { items: [1] }
     @gateway.expects(:add_payment_details_items_xml)
     @gateway.send(:add_payment_details, xml_builder, 100, 'USD', options)
   end
 
   def test_add_payment_details_adds_address
-    options = {shipping_address: @address}
+    options = { shipping_address: @address }
     @gateway.expects(:add_address)
     @gateway.send(:add_payment_details, xml_builder, 100, 'USD', options)
   end
 
   def test_add_payment_details_adds_items_details_elements
-    options = {items: [{name: 'foo'}]}
+    options = { items: [{ name: 'foo' }] }
     request = wrap_xml do |xml|
       @gateway.send(:add_payment_details, xml, 100, 'USD', options)
     end
@@ -105,7 +105,7 @@ class PaypalCommonApiTest < Test::Unit::TestCase
 
   def test_add_express_only_payment_details_adds_non_blank_fields
     request = wrap_xml do |xml|
-      @gateway.send(:add_express_only_payment_details, xml, {payment_action: 'Sale', payment_request_id: ''})
+      @gateway.send(:add_express_only_payment_details, xml, { payment_action: 'Sale', payment_request_id: '' })
     end
     assert_equal 'Sale', REXML::XPath.first(request, '//n2:PaymentAction').text
     assert_nil REXML::XPath.first(request, '//n2:PaymentRequestID')
@@ -135,19 +135,19 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     assert_equal '1', REXML::XPath.first(request, '//GetBalanceReq/GetBalanceRequest/ReturnAllCurrencies').text
   end
 
-  def test_balance_cleans_up_currencies_values_like_1
+  def test_balance_cleans_up_currencies_values_like_one
     @gateway.stubs(:commit)
-    [1, '1', true].each do |values_like_1|
+    [1, '1', true].each do |values_like_one|
       @gateway.expects(:build_get_balance).with('1')
-      @gateway.balance(values_like_1)
+      @gateway.balance(values_like_one)
     end
   end
 
-  def test_balance_cleans_up_currencies_values_like_0
+  def test_balance_cleans_up_currencies_values_like_zero
     @gateway.stubs(:commit)
-    [0, '0', false, nil, :foo].each do |values_like_0|
+    [0, '0', false, nil, :foo].each do |values_like_zero|
       @gateway.expects(:build_get_balance).with('0')
-      @gateway.balance(values_like_0)
+      @gateway.balance(values_like_zero)
     end
   end
 

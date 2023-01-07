@@ -13,12 +13,12 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars
       self.supported_cardtypes = %i[visa master american_express discover]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :merchant_id, :password, :user_id)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
         commit('Sale', post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
         commit('Auth', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
         commit('SpecialForce', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_void_required_elements(post)
         add_reference(post, authorization)
@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
         commit('Void', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
         commit('SpecialReturn', post)
       end
 
-      def credit(amount, payment_method, options={})
+      def credit(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
         commit('Credit', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -198,18 +198,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def envelope(body)
-        <<-EOS
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:acr="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common" xmlns:acr1="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.v6.Common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-<soapenv:Header/>
-   <soapenv:Body>
-      <tem:ProcessCreditCard>
-         <tem:request>
-           #{body}
-         </tem:request>
-      </tem:ProcessCreditCard>
-   </soapenv:Body>
-</soapenv:Envelope>
-        EOS
+        <<~XML
+          <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:acr="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common" xmlns:acr1="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.v6.Common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+          <soapenv:Header/>
+             <soapenv:Body>
+                <tem:ProcessCreditCard>
+                   <tem:request>
+                     #{body}
+                   </tem:request>
+                </tem:ProcessCreditCard>
+             </soapenv:Body>
+          </soapenv:Envelope>
+        XML
       end
 
       def parse(xml)
@@ -250,7 +250,7 @@ module ActiveMerchant #:nodoc:
         '257' => STANDARD_ERROR_CODE[:invalid_cvc],
         '333' => STANDARD_ERROR_CODE[:expired_card],
         '1' => STANDARD_ERROR_CODE[:card_declined],
-        '99' => STANDARD_ERROR_CODE[:processing_error],
+        '99' => STANDARD_ERROR_CODE[:processing_error]
       }
 
       def authorization_from(request, response)

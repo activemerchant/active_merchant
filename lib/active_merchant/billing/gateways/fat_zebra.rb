@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, "purchases/#{CGI.escape(txn_id)}/capture", post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         txn_id, = authorization.to_s.split('|')
         post = {}
 
@@ -69,13 +69,13 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'refunds', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         txn_id, endpoint = authorization.to_s.split('|')
 
         commit(:post, "#{endpoint}/void?id=#{txn_id}", {})
       end
 
-      def store(creditcard, options={})
+      def store(creditcard, options = {})
         post = {}
 
         add_creditcard(post, creditcard)
@@ -125,11 +125,13 @@ module ActiveMerchant #:nodoc:
       def add_extra_options(post, options)
         extra = {}
         extra[:ecm] = '32' if options[:recurring]
-        extra[:cavv] = options[:cavv] if options[:cavv]
-        extra[:xid] = options[:xid] if options[:xid]
-        extra[:sli] = options[:sli] if options[:sli]
+        extra[:cavv] = options[:cavv] || options.dig(:three_d_secure, :cavv) if options[:cavv] || options.dig(:three_d_secure, :cavv)
+        extra[:xid] = options[:xid] || options.dig(:three_d_secure, :xid) if options[:xid] || options.dig(:three_d_secure, :xid)
+        extra[:sli] = options[:sli] || options.dig(:three_d_secure, :eci) if options[:sli] || options.dig(:three_d_secure, :eci)
         extra[:name] = options[:merchant] if options[:merchant]
         extra[:location] = options[:merchant_location] if options[:merchant_location]
+        extra[:card_on_file] = options.dig(:extra, :card_on_file) if options.dig(:extra, :card_on_file)
+        extra[:auth_reason]  = options.dig(:extra, :auth_reason) if options.dig(:extra, :auth_reason)
         post[:extra] = extra if extra.any?
       end
 
@@ -145,7 +147,7 @@ module ActiveMerchant #:nodoc:
         post[:metadata] = options.fetch(:metadata, {})
       end
 
-      def commit(method, uri, parameters=nil)
+      def commit(method, uri, parameters = nil)
         response =
           begin
             parse(ssl_request(method, get_url(uri), parameters.to_json, headers))

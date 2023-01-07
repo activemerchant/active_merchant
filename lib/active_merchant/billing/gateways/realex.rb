@@ -151,6 +151,7 @@ module ActiveMerchant
           else
             add_three_d_secure(xml, options)
           end
+          add_stored_credential(xml, options)
           add_comments(xml, options)
           add_address_and_customer_info(xml, options)
         end
@@ -300,7 +301,7 @@ module ActiveMerchant
         end
         xml.tag! 'supplementarydata' do
           xml.tag! 'item', 'type' => 'mobile' do
-            xml.tag! 'field01', payment.source.to_s.gsub('_', '-')
+            xml.tag! 'field01', payment.source.to_s.tr('_', '-')
           end
         end
       end
@@ -316,10 +317,28 @@ module ActiveMerchant
           else
             xml.tag! 'cavv', three_d_secure[:cavv]
             xml.tag! 'xid', three_d_secure[:xid]
+            version = '1'
           end
           xml.tag! 'eci', three_d_secure[:eci]
           xml.tag! 'message_version', version
         end
+      end
+
+      def add_stored_credential(xml, options)
+        return unless stored_credential = options[:stored_credential]
+
+        xml.tag! 'storedcredential' do
+          xml.tag! 'type', stored_credential_type(stored_credential[:reason_type])
+          xml.tag! 'initiator', stored_credential[:initiator]
+          xml.tag! 'sequence', stored_credential[:initial_transaction] ? 'first' : 'subsequent'
+          xml.tag! 'srd', stored_credential[:network_transaction_id]
+        end
+      end
+
+      def stored_credential_type(reason)
+        return 'oneoff' if reason == 'unscheduled'
+
+        reason
       end
 
       def format_address_code(address)

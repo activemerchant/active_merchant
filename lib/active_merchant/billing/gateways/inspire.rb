@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
         authorize(100, creditcard, options.merge(store: billing_id))
       end
 
-      alias_method :unstore, :delete
+      alias unstore delete
 
       private
 
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
         post[:orderdescription] = options[:description]
       end
 
-      def add_payment_source(params, source, options={})
+      def add_payment_source(params, source, options = {})
         case determine_funding_source(source)
         when :vault       then add_customer_vault_id(params, source)
         when :credit_card then add_creditcard(params, source, options)
@@ -176,8 +176,7 @@ module ActiveMerchant #:nodoc:
           authorization: response['transactionid'],
           test: test?,
           cvv_result: response['cvvresponse'],
-          avs_result: { code: response['avsresponse'] }
-        )
+          avs_result: { code: response['avsresponse'] })
       end
 
       def message_from(response)

@@ -20,16 +20,16 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars
       self.supported_cardtypes = %i[visa master diners_club american_express]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :merchant_id, :terminal_id, :secret_key)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         authorize(amount, payment_method, options)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         if payment_method.is_a?(String)
           action = :tokenpay
         else
@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         action = :capture
         post = {}
         add_credentials(post)
@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         action = :void
         post = {}
         add_credentials(post)
@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         action = :refund
         post = {}
         add_credentials(post)
@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(1000, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
         response.message.include? 'Transaction not found'
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         action = :tokenize
         post = {}
         post[:partnerid] = options[:partner_id] if options[:partner_id]
@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def invalidate(authorization, options={})
+      def invalidate(authorization, options = {})
         action = :invalidate
         post = {}
         post[:partnerid] = options[:partner_id] if options[:partner_id]
@@ -205,7 +205,7 @@ module ActiveMerchant #:nodoc:
         refund: 'SingleCallGenericReverse',
         tokenize: 'SingleCallTokenServlet',
         invalidate: 'SingleCallInvalidateToken',
-        tokenpay: 'SingleCallTokenTransaction',
+        tokenpay: 'SingleCallTokenTransaction'
       }
 
       def commit(action, params)

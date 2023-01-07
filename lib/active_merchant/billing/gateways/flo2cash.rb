@@ -19,19 +19,19 @@ module ActiveMerchant #:nodoc:
         'diners_club' => 'DINERS'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :username, :password, :account_id)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         MultiResponse.run do |r|
           r.process { authorize(amount, payment_method, options) }
           r.process { capture(amount, r.authorization, options) }
         end
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         commit('ProcessAuthorise', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
         commit('ProcessCapture', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new { |h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
+      CURRENCY_CODES = Hash.new { |_h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
       CURRENCY_CODES['NZD'] = '554'
 
       def add_invoice(post, money, options)
@@ -142,16 +142,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def envelope_wrap(action, body)
-        <<-EOS
-<?xml version="1.0" encoding="utf-8"?>
-<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
-  <soap12:Body>
-    <#{action} xmlns="http://www.flo2cash.co.nz/webservices/paymentwebservice">
-      #{body}
-    </#{action}>
-  </soap12:Body>
-</soap12:Envelope>
-        EOS
+        <<~XML
+          <?xml version="1.0" encoding="utf-8"?>
+          <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+            <soap12:Body>
+              <#{action} xmlns="http://www.flo2cash.co.nz/webservices/paymentwebservice">
+                #{body}
+              </#{action}>
+            </soap12:Body>
+          </soap12:Envelope>
+        XML
       end
 
       def url
@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
         'Bank Declined Transaction' => STANDARD_ERROR_CODE[:card_declined],
         'Insufficient Funds' => STANDARD_ERROR_CODE[:card_declined],
         'Transaction Declined - Bank Error' => STANDARD_ERROR_CODE[:processing_error],
-        'No Reply from Bank' => STANDARD_ERROR_CODE[:processing_error],
+        'No Reply from Bank' => STANDARD_ERROR_CODE[:processing_error]
       }
 
       def error_code_from(succeeded, response)

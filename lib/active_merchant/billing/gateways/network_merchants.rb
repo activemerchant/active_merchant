@@ -203,9 +203,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success, raw['responsetext'], raw,
           test: test?,
           authorization: authorization,
-          avs_result: { code: raw['avsresponse']},
-          cvv_result: raw['cvvresponse']
-        )
+          avs_result: { code: raw['avsresponse'] },
+          cvv_result: raw['cvvresponse'])
       end
 
       def build_request(action, parameters)

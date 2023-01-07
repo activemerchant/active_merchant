@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -159,7 +159,7 @@ module ActiveMerchant #:nodoc:
         xml.trackid(trackid) if trackid
       end
 
-      def commit(action, amount=nil, options={}, &builder)
+      def commit(action, amount = nil, options = {}, &builder)
         response = parse_xml(ssl_post(live_url, build_xml(action, &builder)))
         Response.new(
           (response[:responsecode] == '0'),

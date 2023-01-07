@@ -37,6 +37,18 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert_not_nil response.authorization
   end
 
+  def test_successful_purchase_with_avs_fields
+    options = {
+      enable_avs_data: 0,
+      avs_action: 3
+    }
+
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'The Transaction was approved', response.message
+    assert_not_nil response.authorization
+  end
+
   def test_declined_purchase
     assert response = @gateway.purchase(@amount, credit_card('5431111111111228'), @options)
     assert_match %r{declined}i, response.message
@@ -72,7 +84,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '999')
     assert_failure response
-    assert_equal 'DpsTxnRef Invalid', response.message
+    assert_equal 'The transaction has not been processed.', response.message
   end
 
   def test_invalid_login
@@ -83,6 +95,14 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_match %r{Invalid Credentials}i, response.message
     assert_failure response
+  end
+
+  def test_verify
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'The Transaction was approved', response.message
+    assert_not_nil token = response.authorization
+    assert_equal token, response.token
   end
 
   def test_store_credit_card

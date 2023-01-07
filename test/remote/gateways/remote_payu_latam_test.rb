@@ -3,14 +3,16 @@ require 'test_helper'
 class RemotePayuLatamTest < Test::Unit::TestCase
   def setup
     @gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(payment_country: 'AR'))
+    @colombia_gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(payment_country: 'CO', account_id: '512321'))
 
     @amount = 4000
-    @credit_card = credit_card('4097440000000004', verification_value: '444', first_name: 'APPROVED', last_name: '')
-    @declined_card = credit_card('4097440000000004', verification_value: '444', first_name: 'REJECTED', last_name: '')
-    @pending_card = credit_card('4097440000000004', verification_value: '444', first_name: 'PENDING', last_name: '')
+    @credit_card = credit_card('4097440000000004', month: 6, year: 2035, verification_value: '777', first_name: 'APPROVED', last_name: '')
+    @declined_card = credit_card('4097440000000004', verification_value: '777', first_name: 'REJECTED', last_name: '')
+    @pending_card = credit_card('4097440000000004', verification_value: '777', first_name: 'PENDING', last_name: '')
     @naranja_credit_card = credit_card('5895620000000002', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'naranja')
     @cabal_credit_card = credit_card('5896570000000004', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'cabal')
     @invalid_cabal_card = credit_card('6271700000000000', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'cabal')
+    @condensa_card = credit_card('5907120000000009', month: 6, year: 2035, verification_value: '777', first_name: 'APPROVED', brand: 'condensa')
 
     @options = {
       dni_number: '5415668464654',
@@ -62,6 +64,13 @@ class RemotePayuLatamTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_cabal_card
     response = @gateway.purchase(@amount, @cabal_credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_condensa_card
+    response = @colombia_gateway.purchase(@amount, @condensa_card, @options.merge(currency: 'COP'))
     assert_success response
     assert_equal 'APPROVED', response.message
     assert response.test?
@@ -232,15 +241,28 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@amount, @declined_card, @options)
+    response = @gateway.purchase(@amount, @declined_card)
     assert_failure response
     assert_equal 'DECLINED', response.params['transactionResponse']['state']
   end
 
+  # Published API does not currently provide a way to request a CONTACT_THE_ENTITY
+  # def test_failed_purchase_correct_message_when_payment_network_response_error_present
+  #   response = @gateway.purchase(@amount, @credit_card, @options)
+  #   assert_failure response
+  #   assert_equal 'CONTACT_THE_ENTITY | Contactar con entidad emisora', response.message
+  #   assert_equal 'Contactar con entidad emisora', response.params['transactionResponse']['paymentNetworkResponseErrorMessage']
+
+  #   response = @gateway.purchase(@amount, @credit_card, @options)
+  #   assert_failure response
+  #   assert_equal 'CONTACT_THE_ENTITY', response.message
+  #   assert_nil response.params['transactionResponse']['paymentNetworkResponseErrorMessage']
+  # end
+
   def test_failed_purchase_with_cabal_card
     response = @gateway.purchase(@amount, @invalid_cabal_card, @options)
     assert_failure response
-    assert_equal 'DECLINED', response.params['transactionResponse']['state']
+    assert_equal 'ERROR', response.params['code']
   end
 
   def test_failed_purchase_with_no_options
@@ -285,7 +307,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(@amount, @pending_card, @options)
+    response = @gateway.authorize(@amount, @declined_card)
     assert_failure response
     assert_equal 'DECLINED', response.params['transactionResponse']['state']
   end
@@ -297,40 +319,43 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_equal 'Credenciales inválidas', response.message
   end
 
-  # As noted above, capture transactions are currently not supported, but in the hope
-  # they will one day be, here you go
+  def test_successful_capture
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert_match %r(^\d+\|(\w|-)+$), response.authorization
 
-  # def test_successful_capture
-  #   response = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success response
-  #   assert_equal 'APPROVED', response.message
-  #   assert_match %r(^\d+\|(\w|-)+$), response.authorization
+    capture = @gateway.capture(@amount, response.authorization, @options)
+    assert_success capture
+    assert_equal 'APPROVED', response.message
+    assert response.test?
+  end
 
-  #   capture = @gateway.capture(@amount, response.authorization, @options)
-  #   assert_success capture
-  #   assert_equal 'APPROVED', response.message
-  #   assert response.test?
-  # end
+  def test_successful_partial_capture
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert_match %r(^\d+\|(\w|-)+$), response.authorization
 
-  # def test_successful_partial_capture
-  #   response = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success response
-  #   assert_equal 'APPROVED', response.message
-  #   assert_match %r(^\d+\|(\w|-)+$), response.authorization
+    capture = @gateway.capture(@amount - 1, response.authorization, @options)
+    assert_success capture
+    assert_equal 'APPROVED', response.message
+    assert response.test?
+  end
 
-  #   capture = @gateway.capture(@amount - 1, response.authorization, @options)
-  #   assert_success capture
-  #   assert_equal 'APPROVED', response.message
-  #   assert_equal '39.99', response.params['TX_VALUE']['value']
-  #   assert response.test?
-  # end
+  def test_failed_capture
+    response = @gateway.capture(@amount, '')
+    assert_failure response
+    assert_match(/may not be null/, response.message)
+  end
 
-  def test_well_formed_refund_fails_as_expected
+  def test_successful_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, purchase.authorization, @options)
-    assert_equal 'The payment plan id cannot be empty', refund.message
+    assert_success refund
+    assert_equal 'APPROVED', refund.message
   end
 
   def test_failed_refund
@@ -355,12 +380,6 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     response = @gateway.void('', language: 'es')
     assert_failure response
     assert_match(/property: parentTransactionId, message: No puede ser vacio/, response.message)
-  end
-
-  def test_failed_capture
-    response = @gateway.capture(@amount, '')
-    assert_failure response
-    assert_match(/must not be null/, response.message)
   end
 
   def test_verify_credentials
@@ -392,17 +411,17 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   end
 
   def test_failed_verify_with_specified_amount
-    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 499))
+    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 0))
 
     assert_failure verify
-    assert_equal 'The order value is less than minimum allowed. Minimum value allowed 5 ARS', verify.message
+    assert_equal 'INVALID_TRANSACTION | [The given payment value [0] is inferior than minimum configured value [0.01]]', verify.message
   end
 
   def test_failed_verify_with_specified_language
-    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 499, language: 'es'))
+    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 0, language: 'es'))
 
     assert_failure verify
-    assert_equal 'The order value is less than minimum allowed. Minimum value allowed 5 ARS', verify.message
+    assert_equal 'INVALID_TRANSACTION | [El valor recibido [0] es inferior al valor mínimo configurado [0,01]]', verify.message
   end
 
   def test_transcript_scrubbing
@@ -420,5 +439,11 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     store = @gateway.store(@credit_card, @options)
     assert_success store
     assert_equal 'SUCCESS', store.message
+  end
+
+  def test_successful_purchase_with_extra_fields
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ extra_1: '123456', extra_2: 'abcdef', extra_3: 'testing' }))
+    assert_success response
+    assert_equal 'APPROVED', response.message
   end
 end

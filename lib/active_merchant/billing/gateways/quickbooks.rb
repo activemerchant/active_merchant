@@ -151,8 +151,9 @@ module ActiveMerchant #:nodoc:
         if address = options[:billing_address] || options[:address]
           card_address[:streetAddress] = address[:address1]
           card_address[:city] = address[:city]
-          card_address[:region] = address[:state] || address[:region]
-          card_address[:country] = address[:country]
+          region = address[:state] || address[:region]
+          card_address[:region] = region if region.present?
+          card_address[:country] = address[:country] if address[:country].present?
           card_address[:postalCode] = address[:zip] if address[:zip]
         end
         post[:card][:address] = card_address
@@ -259,7 +260,7 @@ module ActiveMerchant #:nodoc:
         hmac_signature = OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha1'), oauth_signing_key, oauth_signature_base_string)
 
         # append signature to required OAuth parameters
-        oauth_parameters[:oauth_signature] = CGI.escape(Base64.encode64(hmac_signature).chomp.gsub(/\n/, ''))
+        oauth_parameters[:oauth_signature] = CGI.escape(Base64.encode64(hmac_signature).chomp.delete("\n"))
 
         # prepare Authorization header string
         oauth_parameters = Hash[oauth_parameters.sort_by { |k, _| k }]

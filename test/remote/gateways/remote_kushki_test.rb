@@ -23,6 +23,19 @@ class RemoteKushkiTest < Test::Unit::TestCase
         subtotal_iva: '10',
         iva: '1.54',
         ice: '3.50'
+      },
+      contact_details: {
+        document_type: 'CC',
+        document_number: '123456',
+        email: 'who_dis@monkeys.tv',
+        first_name: 'Who',
+        last_name: 'Dis',
+        second_last_name: 'Buscemi',
+        phone_number: '+13125556789'
+      },
+      metadata: {
+        productos: 'bananas',
+        nombre_apellido: 'Kirk'
       }
     }
 
@@ -31,6 +44,74 @@ class RemoteKushkiTest < Test::Unit::TestCase
       options[:amount][:subtotal_iva].to_f +
       options[:amount][:iva].to_f +
       options[:amount][:ice].to_f
+    )
+
+    response = @gateway.purchase(amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_successful_purchase_with_extra_taxes_cop
+    options = {
+      currency: 'COP',
+      amount: {
+        subtotal_iva_0: '4.95',
+        subtotal_iva: '10',
+        iva: '1.54',
+        ice: '3.50',
+        extra_taxes: {
+          propina: 0.1,
+          tasa_aeroportuaria: 0.2,
+          agencia_de_viaje: 0.3,
+          iac: 0.4
+        }
+      }
+    }
+
+    amount = 100 * (
+      options[:amount][:subtotal_iva_0].to_f +
+      options[:amount][:subtotal_iva].to_f +
+      options[:amount][:iva].to_f +
+      options[:amount][:ice].to_f +
+      options[:amount][:extra_taxes][:propina].to_f +
+      options[:amount][:extra_taxes][:tasa_aeroportuaria].to_f +
+      options[:amount][:extra_taxes][:agencia_de_viaje].to_f +
+      options[:amount][:extra_taxes][:iac].to_f
+    )
+
+    response = @gateway.purchase(amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_successful_purchase_with_extra_taxes_usd
+    options = {
+      currency: 'USD',
+      amount: {
+        subtotal_iva_0: '4.95',
+        subtotal_iva: '10',
+        iva: '1.54',
+        ice: '3.50',
+        extra_taxes: {
+          propina: 0.1,
+          tasa_aeroportuaria: 0.2,
+          agencia_de_viaje: 0.3,
+          iac: 0.4
+        }
+      }
+    }
+
+    amount = 100 * (
+      options[:amount][:subtotal_iva_0].to_f +
+      options[:amount][:subtotal_iva].to_f +
+      options[:amount][:iva].to_f +
+      options[:amount][:ice].to_f +
+      options[:amount][:extra_taxes][:propina].to_f +
+      options[:amount][:extra_taxes][:tasa_aeroportuaria].to_f +
+      options[:amount][:extra_taxes][:agencia_de_viaje].to_f +
+      options[:amount][:extra_taxes][:iac].to_f
     )
 
     response = @gateway.purchase(amount, @credit_card, options)
@@ -53,10 +134,20 @@ class RemoteKushkiTest < Test::Unit::TestCase
 
   def test_successful_authorize
     # Kushki only allows preauthorization for PEN, CLP, and UF.
-    response = @gateway.authorize(@amount, @credit_card, {currency: 'PEN'})
+    response = @gateway.authorize(@amount, @credit_card, { currency: 'PEN' })
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_approval_code_comes_back_when_passing_full_response
+    options = {
+      full_response: true
+    }
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_not_empty response.params.dig('details', 'approvalCode')
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_authorize

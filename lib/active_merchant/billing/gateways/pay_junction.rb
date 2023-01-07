@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
       # transaction_id that can be used later to postauthorize (capture) the funds.
       def authorize(money, payment_source, options = {})
         parameters = {
-          transaction_amount: amount(money),
+          transaction_amount: amount(money)
         }
 
         add_payment_source(parameters, payment_source)
@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
       # Execute authorization and capture in a single step.
       def purchase(money, payment_source, options = {})
         parameters = {
-          transaction_amount: amount(money),
+          transaction_amount: amount(money)
         }
 
         add_payment_source(parameters, payment_source)
@@ -339,8 +339,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response), response,
           test: test?,
-          authorization: response[:transaction_id] || parameters[:transaction_id]
-        )
+          authorization: response[:transaction_id] || parameters[:transaction_id])
       end
 
       def successful?(response)
@@ -367,7 +366,7 @@ module ActiveMerchant #:nodoc:
         params[:version] = API_VERSION
         params[:transaction_type] = action
 
-        params.reject { |k, v| v.blank? }.collect { |k, v| "dc_#{k}=#{CGI.escape(v.to_s)}" }.join('&')
+        params.reject { |_k, v| v.blank? }.collect { |k, v| "dc_#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def parse(body)

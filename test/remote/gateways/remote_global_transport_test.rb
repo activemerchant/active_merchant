@@ -9,7 +9,7 @@ class RemoteGlobalTransportTest < Test::Unit::TestCase
     @options = {
       email: 'john@example.com',
       order_id: '1',
-      billing_address: address,
+      billing_address: address
     }
   end
 

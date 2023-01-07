@@ -26,12 +26,12 @@ module ActiveMerchant #:nodoc:
         'discover' => 'O'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_key, :company_number, :merchant_number)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         requires!(options, :order_id)
         post = {}
         add_terminal_number(post, options)
@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
         payment.is_a?(String) ? commit('purchaseWithToken', post) : commit('purchase', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         requires!(options, :order_id)
         post = {}
         add_money(post, money)
@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
         payment.is_a?(String) ? commit('preAuthorizationWithToken', post) : commit('preAuthorization', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         requires!(options, :order_id)
         post = {}
         add_invoice(post, money, options)
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
         commit('completion', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         requires!(options, :order_id)
         post = {}
         add_invoice(post, money, options)
@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
         commit('refundWithoutCard', post)
       end
 
-      def credit(money, payment, options={})
+      def credit(money, payment, options = {})
         requires!(options, :order_id)
         post = {}
         add_terminal_number(post, options)
@@ -100,7 +100,7 @@ module ActiveMerchant #:nodoc:
         payment.is_a?(String) ? commit('refundWithToken', post) : commit('refund', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         post[:InputType] = 'I'
         post[:LanguageCode] = 'E'
@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
         commit('void', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         requires!(options, :order_id)
         post = {}
         add_terminal_number(post, options)
@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
         commit('verifyAccount', post)
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         requires!(options, :email)
         post = {
           LanguageCode: 'E',
@@ -228,7 +228,7 @@ module ActiveMerchant #:nodoc:
             r.process {
               split_auth = split_authorization(r.authorization)
               auth = (action.include?('recur') ? split_auth[4] : split_auth[0])
-              action.include?('recur') ? commit_raw('recur/ack', {ID: auth}) : commit_raw('ack', {TransactionNumber: auth})
+              action.include?('recur') ? commit_raw('recur/ack', { ID: auth }) : commit_raw('ack', { TransactionNumber: auth })
             }
           end
         end

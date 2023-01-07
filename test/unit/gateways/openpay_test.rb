@@ -31,6 +31,40 @@ class OpenpayTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_mexico_url
+    gateway = OpenpayGateway.new(
+      key: 'key',
+      merchant_id: 'merchant_id',
+      merchant_country: 'MX'
+    )
+
+    gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert_equal gateway.gateway_url, OpenpayGateway.mx_test_url
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'tay1mauq3re4iuuk8bm4', response.authorization
+    assert response.test?
+  end
+
+  def test_default_url_when_merchant_country_is_not_present
+    gateway = OpenpayGateway.new(
+      key: 'key',
+      merchant_id: 'merchant_id'
+    )
+    assert_equal 'https://sandbox-api.openpay.co/v1/', gateway.gateway_url
+  end
+
+  def test_set_mexico_url_using_merchant_country_flag
+    gateway = OpenpayGateway.new(
+      key: 'key',
+      merchant_id: 'merchant_id',
+      merchant_country: 'MX'
+    )
+    assert_equal 'https://sandbox-api.openpay.mx/v1/', gateway.gateway_url
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
 
@@ -113,7 +147,7 @@ class OpenpayTest < Test::Unit::TestCase
   def test_successful_purchase_with_card_id
     @gateway.expects(:ssl_request).returns(successful_purchase_response)
 
-    assert response = @gateway.purchase(@amount, {credit_card: 'a2b79p8xmzeyvmolqfja'}, @options)
+    assert response = @gateway.purchase(@amount, { credit_card: 'a2b79p8xmzeyvmolqfja' }, @options)
     assert_instance_of Response, response
     assert_success response
 
@@ -171,7 +205,7 @@ class OpenpayTest < Test::Unit::TestCase
   def test_passing_device_session_id
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, device_session_id: 'TheDeviceSessionID')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(%r{"device_session_id":"TheDeviceSessionID"}, data)
     end.respond_with(successful_purchase_response)
 
@@ -181,7 +215,7 @@ class OpenpayTest < Test::Unit::TestCase
   def test_passing_payment_installments
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, payments: '6')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(%r{"payments":"6"}, data)
       assert_match(%r{"payment_plan":}, data)
     end.respond_with(successful_purchase_response)
@@ -208,225 +242,225 @@ class OpenpayTest < Test::Unit::TestCase
   private
 
   def successful_new_card
-    <<-RESPONSE
-{
-   "type":"debit",
-   "brand":"mastercard",
-   "address":{
-      "line1":"Av 5 de Febrero",
-      "line2":"Roble 207",
-      "line3":"col carrillo",
-      "state":"Queretaro",
-      "city":"Queretaro",
-      "postal_code":"76900",
-      "country_code":"MX"
-   },
-   "id":"kgipbqixvjg3gbzowl7l",
-   "card_number":"1111",
-   "holder_name":"Juan Perez Ramirez",
-   "expiration_year":"20",
-   "expiration_month":"12",
-   "allows_charges":true,
-   "allows_payouts":false,
-   "creation_date":"2013-12-12T17:50:00-06:00",
-   "bank_name":"DESCONOCIDO",
-   "bank_code":"000",
-   "customer_id":"a2b79p8xmzeyvmolqfja"
-}
+    <<~RESPONSE
+      {
+         "type":"debit",
+         "brand":"mastercard",
+         "address":{
+            "line1":"Av 5 de Febrero",
+            "line2":"Roble 207",
+            "line3":"col carrillo",
+            "state":"Queretaro",
+            "city":"Queretaro",
+            "postal_code":"76900",
+            "country_code":"MX"
+         },
+         "id":"kgipbqixvjg3gbzowl7l",
+         "card_number":"1111",
+         "holder_name":"Juan Perez Ramirez",
+         "expiration_year":"20",
+         "expiration_month":"12",
+         "allows_charges":true,
+         "allows_payouts":false,
+         "creation_date":"2013-12-12T17:50:00-06:00",
+         "bank_name":"DESCONOCIDO",
+         "bank_code":"000",
+         "customer_id":"a2b79p8xmzeyvmolqfja"
+      }
     RESPONSE
   end
 
   def successful_new_customer
-    <<-RESPONSE
-{
-   "id":"a2b79p8xmzeyvmolqfja",
-   "name":"Anacleto",
-   "last_name":"Morones",
-   "email":"morones.an@elllano.com",
-   "phone_number":"44209087654",
-   "status":"active",
-   "balance":0,
-   "clabe":"646180109400003235",
-   "address":{
-      "line1":"Camino Real",
-      "line2":"Col. San Pablo",
-      "state":"Queretaro",
-      "city":"Queretaro",
-      "postal_code":"76000",
-      "country_code":"MX"
-   },
-   "creation_date":"2013-12-12T16:29:11-06:00"
-}
+    <<~RESPONSE
+      {
+         "id":"a2b79p8xmzeyvmolqfja",
+         "name":"Anacleto",
+         "last_name":"Morones",
+         "email":"morones.an@elllano.com",
+         "phone_number":"44209087654",
+         "status":"active",
+         "balance":0,
+         "clabe":"646180109400003235",
+         "address":{
+            "line1":"Camino Real",
+            "line2":"Col. San Pablo",
+            "state":"Queretaro",
+            "city":"Queretaro",
+            "postal_code":"76000",
+            "country_code":"MX"
+         },
+         "creation_date":"2013-12-12T16:29:11-06:00"
+      }
     RESPONSE
   end
 
   def successful_refunded_response
-    <<-RESPONSE
-{
-    "amount": 1.00,
-    "authorization": "801585",
-    "method": "card",
-    "operation_type": "in",
-    "transaction_type": "charge",
-    "card": {
-        "type": "debit",
-        "brand": "mastercard",
-        "address": {
-            "line1": "1234 My Street",
-            "line2": "Apt 1",
-            "line3": null,
-            "state": "ON",
-            "city": "Ottawa",
-            "postal_code": "K1C2N6",
-            "country_code": "CA"
-        },
-        "card_number": "1111",
-        "holder_name": "Longbob Longsen",
-        "expiration_year": "15",
-        "expiration_month": "09",
-        "allows_charges": true,
-        "allows_payouts": false,
-        "creation_date": "2014-01-20T17:08:43-06:00",
-        "bank_name": "DESCONOCIDO",
-        "bank_code": "000",
-        "customer_id": null
-    },
-    "status": "completed",
-    "refund": {
-        "amount": 1.00,
-        "authorization": "030706",
-        "method": "card",
-        "operation_type": "out",
-        "transaction_type": "refund",
-        "status": "completed",
-        "currency": "MXN",
-        "id": "tspoc4u9msdbnkkhpcmi",
-        "creation_date": "2014-01-20T17:08:44-06:00",
-        "description": "Store Purchase",
-        "error_message": null,
-        "order_id": null
-    },
-    "currency": "MXN",
-    "id": "tei4hnvyp4agt5ecnbow",
-    "creation_date": "2014-01-20T17:08:43-06:00",
-    "description": "Store Purchase",
-    "error_message": null,
-    "order_id": null,
-    "error_code": null
-}
+    <<~RESPONSE
+      {
+          "amount": 1.00,
+          "authorization": "801585",
+          "method": "card",
+          "operation_type": "in",
+          "transaction_type": "charge",
+          "card": {
+              "type": "debit",
+              "brand": "mastercard",
+              "address": {
+                  "line1": "1234 My Street",
+                  "line2": "Apt 1",
+                  "line3": null,
+                  "state": "ON",
+                  "city": "Ottawa",
+                  "postal_code": "K1C2N6",
+                  "country_code": "CA"
+              },
+              "card_number": "1111",
+              "holder_name": "Longbob Longsen",
+              "expiration_year": "15",
+              "expiration_month": "09",
+              "allows_charges": true,
+              "allows_payouts": false,
+              "creation_date": "2014-01-20T17:08:43-06:00",
+              "bank_name": "DESCONOCIDO",
+              "bank_code": "000",
+              "customer_id": null
+          },
+          "status": "completed",
+          "refund": {
+              "amount": 1.00,
+              "authorization": "030706",
+              "method": "card",
+              "operation_type": "out",
+              "transaction_type": "refund",
+              "status": "completed",
+              "currency": "MXN",
+              "id": "tspoc4u9msdbnkkhpcmi",
+              "creation_date": "2014-01-20T17:08:44-06:00",
+              "description": "Store Purchase",
+              "error_message": null,
+              "order_id": null
+          },
+          "currency": "MXN",
+          "id": "tei4hnvyp4agt5ecnbow",
+          "creation_date": "2014-01-20T17:08:43-06:00",
+          "description": "Store Purchase",
+          "error_message": null,
+          "order_id": null,
+          "error_code": null
+      }
     RESPONSE
   end
 
   def successful_capture_response
-    <<-RESPONSE
-{
-    "amount": 1.00,
-    "authorization": "801585",
-    "method": "card",
-    "operation_type": "in",
-    "transaction_type": "charge",
-    "card": {
-        "type": "debit",
-        "brand": "mastercard",
-        "address": null,
-        "card_number": "1111",
-        "holder_name": "Longbob Longsen",
-        "expiration_year": "15",
-        "expiration_month": "09",
-        "allows_charges": true,
-        "allows_payouts": false,
-        "creation_date": "2014-01-18T21:01:10-06:00",
-        "bank_name": "DESCONOCIDO",
-        "bank_code": "000",
-        "customer_id": null
-    },
-    "status": "completed",
-    "currency": "MXN",
-    "id": "tubpycc6gtsk71fu3tsd",
-    "creation_date": "2014-01-18T21:01:10-06:00",
-    "description": "Store Purchase",
-    "error_message": null,
-    "order_id": null,
-    "error_code": null
-}
+    <<~RESPONSE
+      {
+          "amount": 1.00,
+          "authorization": "801585",
+          "method": "card",
+          "operation_type": "in",
+          "transaction_type": "charge",
+          "card": {
+              "type": "debit",
+              "brand": "mastercard",
+              "address": null,
+              "card_number": "1111",
+              "holder_name": "Longbob Longsen",
+              "expiration_year": "15",
+              "expiration_month": "09",
+              "allows_charges": true,
+              "allows_payouts": false,
+              "creation_date": "2014-01-18T21:01:10-06:00",
+              "bank_name": "DESCONOCIDO",
+              "bank_code": "000",
+              "customer_id": null
+          },
+          "status": "completed",
+          "currency": "MXN",
+          "id": "tubpycc6gtsk71fu3tsd",
+          "creation_date": "2014-01-18T21:01:10-06:00",
+          "description": "Store Purchase",
+          "error_message": null,
+          "order_id": null,
+          "error_code": null
+      }
     RESPONSE
   end
 
   def successful_authorization_response
-    <<-RESPONSE
-{
-    "amount": 1.00,
-    "authorization": "801585",
-    "method": "card",
-    "operation_type": "in",
-    "transaction_type": "charge",
-    "card": {
-        "type": "debit",
-        "brand": "mastercard",
-        "address": null,
-        "card_number": "1111",
-        "holder_name": "Longbob Longsen",
-        "expiration_year": "15",
-        "expiration_month": "09",
-        "allows_charges": true,
-        "allows_payouts": false,
-        "creation_date": "2014-01-18T21:01:10-06:00",
-        "bank_name": "DESCONOCIDO",
-        "bank_code": "000",
-        "customer_id": null
-    },
-    "status": "in_progress",
-    "currency": "MXN",
-    "id": "tubpycc6gtsk71fu3tsd",
-    "creation_date": "2014-01-18T21:01:10-06:00",
-    "description": "Store Purchase",
-    "error_message": null,
-    "order_id": null,
-    "error_code": null
-}
+    <<~RESPONSE
+      {
+          "amount": 1.00,
+          "authorization": "801585",
+          "method": "card",
+          "operation_type": "in",
+          "transaction_type": "charge",
+          "card": {
+              "type": "debit",
+              "brand": "mastercard",
+              "address": null,
+              "card_number": "1111",
+              "holder_name": "Longbob Longsen",
+              "expiration_year": "15",
+              "expiration_month": "09",
+              "allows_charges": true,
+              "allows_payouts": false,
+              "creation_date": "2014-01-18T21:01:10-06:00",
+              "bank_name": "DESCONOCIDO",
+              "bank_code": "000",
+              "customer_id": null
+          },
+          "status": "in_progress",
+          "currency": "MXN",
+          "id": "tubpycc6gtsk71fu3tsd",
+          "creation_date": "2014-01-18T21:01:10-06:00",
+          "description": "Store Purchase",
+          "error_message": null,
+          "order_id": null,
+          "error_code": null
+      }
     RESPONSE
   end
 
   def successful_purchase_response(status = 'completed')
-    <<-RESPONSE
-{
-    "amount": 1.00,
-    "authorization": "801585",
-    "method": "card",
-    "operation_type": "in",
-    "transaction_type": "charge",
-    "card": {
-        "type": "debit",
-        "brand": "mastercard",
-        "address": {
-            "line1": "1234 My Street",
-            "line2": "Apt 1",
-            "line3": null,
-            "state": "ON",
-            "city": "Ottawa",
-            "postal_code": "K1C2N6",
-            "country_code": "CA"
-        },
-        "card_number": "1111",
-        "holder_name": "Longbob Longsen",
-        "expiration_year": "15",
-        "expiration_month": "09",
-        "allows_charges": true,
-        "allows_payouts": false,
-        "creation_date": "2014-01-18T21:49:38-06:00",
-        "bank_name": "BANCOMER",
-        "bank_code": "012",
-        "customer_id": null
-    },
-    "status": "#{status}",
-    "currency": "MXN",
-    "id": "tay1mauq3re4iuuk8bm4",
-    "creation_date": "2014-01-18T21:49:38-06:00",
-    "description": "Store Purchase",
-    "error_message": null,
-    "order_id": null,
-    "error_code": null
-}
+    <<~RESPONSE
+      {
+          "amount": 1.00,
+          "authorization": "801585",
+          "method": "card",
+          "operation_type": "in",
+          "transaction_type": "charge",
+          "card": {
+              "type": "debit",
+              "brand": "mastercard",
+              "address": {
+                  "line1": "1234 My Street",
+                  "line2": "Apt 1",
+                  "line3": null,
+                  "state": "ON",
+                  "city": "Ottawa",
+                  "postal_code": "K1C2N6",
+                  "country_code": "CA"
+              },
+              "card_number": "1111",
+              "holder_name": "Longbob Longsen",
+              "expiration_year": "15",
+              "expiration_month": "09",
+              "allows_charges": true,
+              "allows_payouts": false,
+              "creation_date": "2014-01-18T21:49:38-06:00",
+              "bank_name": "BANCOMER",
+              "bank_code": "012",
+              "customer_id": null
+          },
+          "status": "#{status}",
+          "currency": "MXN",
+          "id": "tay1mauq3re4iuuk8bm4",
+          "creation_date": "2014-01-18T21:49:38-06:00",
+          "description": "Store Purchase",
+          "error_message": null,
+          "order_id": null,
+          "error_code": null
+      }
     RESPONSE
   end
 
@@ -435,26 +469,26 @@ class OpenpayTest < Test::Unit::TestCase
   end
 
   def failed_purchase_response
-    <<-RESPONSE
-{
-    "category": "gateway",
-    "description": "The card was declined",
-    "http_code": 402,
-    "error_code": 3001,
-    "request_id": "337cf033-9cd6-4314-a880-c71700e1625f"
-}
+    <<~RESPONSE
+      {
+          "category": "gateway",
+          "description": "The card was declined",
+          "http_code": 402,
+          "error_code": 3001,
+          "request_id": "337cf033-9cd6-4314-a880-c71700e1625f"
+      }
     RESPONSE
   end
 
   def failed_authorize_response
-    <<-RESPONSE
-{
-    "category":"gateway",
-    "description":"The card is not supported on online transactions",
-    "http_code":412,
-    "error_code":3008,
-    "request_id":"a4001ef2-7613-4ec8-a23b-4de45154dbe4"
-}
+    <<~RESPONSE
+      {
+          "category":"gateway",
+          "description":"The card is not supported on online transactions",
+          "http_code":412,
+          "error_code":3008,
+          "request_id":"a4001ef2-7613-4ec8-a23b-4de45154dbe4"
+      }
     RESPONSE
   end
 

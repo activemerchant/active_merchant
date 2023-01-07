@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class VisanetPeruTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = VisanetPeruGateway.new(fixtures(:visanet_peru))
 
@@ -35,6 +37,29 @@ class VisanetPeruTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 400, response.error_code
     assert_equal 'Operacion Denegada.', response.message
+  end
+
+  def test_nonconsecutive_purchase_numbers
+    pn1, pn2 = nil
+
+    response1 = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      pn1 = JSON.parse(data)['purchaseNumber']
+    end.respond_with(successful_authorize_response)
+
+    # unit test is unrealistically speedy relative to real-world performance
+    sleep 0.1
+
+    response2 = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      pn2 = JSON.parse(data)['purchaseNumber']
+    end.respond_with(successful_authorize_response)
+
+    assert_success response1
+    assert_success response2
+    assert_not_equal(pn1, pn2)
   end
 
   def test_successful_authorize

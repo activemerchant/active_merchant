@@ -11,7 +11,7 @@ class RemoteNetbillingTest < Test::Unit::TestCase
                   state: 'CA',
                   country: 'US',
                   zip: '94043',
-                  phone: '650-253-0001'}
+                  phone: '650-253-0001' }
 
     @options = {
       billing_address: @address,

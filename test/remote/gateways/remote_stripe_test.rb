@@ -13,7 +13,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     @check = check({
       bank_name: 'STRIPE TEST BANK',
       account_number: '000123456789',
-      routing_number: '110000000',
+      routing_number: '110000000'
     })
     @verified_bank_account = fixtures(:stripe_verified_bank_account)
 
@@ -25,14 +25,23 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
+    credit_card = credit_card('4242424242424242', verification_value: '745')
     transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @credit_card, @options)
+      @gateway.purchase(@amount, credit_card, @options)
     end
     transcript = @gateway.scrub(transcript)
 
-    assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(credit_card.number, transcript)
+    assert_scrubbed(credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
+  end
+
+  def test_check_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.store(@check)
+    end
+    transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@check.account_number, transcript)
   end
 
   def test_successful_purchase
@@ -46,7 +55,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_blank_referer
-    options = @options.merge({referrer: ''})
+    options = @options.merge({ referrer: '' })
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -109,7 +118,7 @@ class RemoteStripeTest < Test::Unit::TestCase
         'product_description' => 'A totes different item',
         'tax_amount' => 10,
         'unit_cost' => 50,
-        'quantity' => 1,
+        'quantity' => 1
       }
     ]
 
@@ -120,6 +129,33 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response.params['paid']
     assert_equal 'ActiveMerchant Test Purchase', response.params['description']
     assert_equal 'wow@example.com', response.params['metadata']['email']
+  end
+
+  def test_successful_purchase_with_shipping_address
+    @options[:shipping_address] = {}
+    @options[:shipping_address][:name] = 'Jim Doe'
+    @options[:shipping_address][:phone_number] = '9194041014'
+    @options[:shipping_address][:address1] = '100 W Main St'
+    @options[:shipping_address][:address2] = 'Apt 2'
+    @options[:shipping_address][:city] = 'Baltimore'
+    @options[:shipping_address][:state] = 'MD'
+    @options[:shipping_address][:zip] = '21201'
+    @options[:shipping_address][:country] = 'US'
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'charge', response.params['object']
+    assert_equal response.authorization, response.params['id']
+    assert response.params['paid']
+    assert_equal 'ActiveMerchant Test Purchase', response.params['description']
+    assert_equal 'Jim Doe', response.params['shipping']['name']
+    assert_equal '9194041014', response.params['shipping']['phone']
+    assert_equal '100 W Main St', response.params['shipping']['address']['line1']
+    assert_equal 'Apt 2', response.params['shipping']['address']['line2']
+    assert_equal 'Baltimore', response.params['shipping']['address']['city']
+    assert_equal 'MD', response.params['shipping']['address']['state']
+    assert_equal '21201', response.params['shipping']['address']['postal_code']
+    assert_equal 'US', response.params['shipping']['address']['country']
   end
 
   def test_purchase_with_connected_account
@@ -144,6 +180,23 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal transfer_group, response.params['transfer_group']
     assert_equal destination, response.params['on_behalf_of']
     assert_equal destination, response.params.dig('transfer_data', 'destination')
+  end
+
+  def test_successful_purchase_with_radar_session
+    options = @options.merge(radar_session_id: 'rse_1JXSfZAWOtgoysogUpPJa4sm')
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'charge', response.params['object']
+    assert response.params['paid']
+    assert_equal 'ActiveMerchant Test Purchase', response.params['description']
+    assert_equal 'wow@example.com', response.params['metadata']['email']
+  end
+
+  def test_successful_purchase_with_skip_radar_rules
+    options = @options.merge(skip_radar_rules: true)
+    assert purchase = @gateway.purchase(@amount, @credit_card, options)
+    assert_success purchase
+    assert_equal ['all'], purchase.params['radar_options']['skip_rules']
   end
 
   def test_unsuccessful_purchase
@@ -231,6 +284,18 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success authorization
     refute authorization.params['captured']
     assert_equal destination, authorization.params['destination']
+    assert_equal 'ActiveMerchant Test Purchase', authorization.params['description']
+    assert_equal 'wow@example.com', authorization.params['metadata']['email']
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+  end
+
+  def test_successful_authorization_and_capture_with_radar_session
+    options = @options.merge(radar_session_id: 'rse_1JXSfZAWOtgoysogUpPJa4sm')
+    assert authorization = @gateway.authorize(@amount, @credit_card, options)
+    assert_success authorization
+    refute authorization.params['captured']
     assert_equal 'ActiveMerchant Test Purchase', authorization.params['description']
     assert_equal 'wow@example.com', authorization.params['metadata']['email']
 
@@ -478,9 +543,10 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_successful_store_with_existing_account
     account = fixtures(:stripe_destination)[:stripe_user_id]
-
     assert response = @gateway.store(@debit_card, account: account)
     assert_success response
+    # Delete the stored external account to prevent hitting the limit
+    @gateway.delete_latest_test_external_account(account)
     assert_equal 'card', response.params['object']
   end
 
@@ -519,7 +585,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore
-    creation = @gateway.store(@credit_card, {description: 'Active Merchant Unstore Customer'})
+    creation = @gateway.store(@credit_card, { description: 'Active Merchant Unstore Customer' })
     card_id = creation.params['sources']['data'].first['id']
 
     assert response = @gateway.unstore(creation.authorization)
@@ -530,7 +596,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore_using_deprecated_api
-    creation = @gateway.store(@credit_card, {description: 'Active Merchant Unstore Customer'})
+    creation = @gateway.store(@credit_card, { description: 'Active Merchant Unstore Customer' })
     card_id = creation.params['sources']['data'].first['id']
     customer_id = creation.params['id']
 
@@ -583,7 +649,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   # These "track data present" tests fail with invalid expiration dates. The
   # test track data probably needs to be updated.
   def test_card_present_purchase
-    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^2205101130504392?'
+    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^2705101130504392?'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -591,7 +657,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_card_present_authorize_and_capture
-    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^2205101130504392?'
+    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^2705101130504392?'
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
     refute authorization.params['captured']
@@ -615,7 +681,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_update
-    creation    = @gateway.store(@credit_card, {description: 'Active Merchant Update Credit Card'})
+    creation    = @gateway.store(@credit_card, { description: 'Active Merchant Update Credit Card' })
     customer_id = creation.params['id']
     card_id     = creation.params['sources']['data'].first['id']
 

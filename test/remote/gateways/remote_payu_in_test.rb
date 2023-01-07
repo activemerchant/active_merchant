@@ -82,30 +82,28 @@ class RemotePayuInTest < Test::Unit::TestCase
     assert_failure response
     assert_equal '3D-secure enrolled cards are not supported.', response.message
 
-=begin
-    # This is handy for testing that 3DS is working with PayU
-    response = response.responses.first
-
-    # You'll probably need a new bin from http://requestb.in
-    bin = "<requestb.in key>"
-    File.open("3ds.html", "w") do |f|
-      f.puts %(
-        <html>
-        <body>
-          <form action="#{response.params["post_uri"]}" method="POST">
-            <input type="hidden" name="PaReq" value="#{response.params["form_post_vars"]["PaReq"]}" />
-            <input type="hidden" name="MD" value="#{response.params["form_post_vars"]["MD"]}" />
-            <input type="hidden" name="TermUrl" value="http://requestb.in/#{bin}" />
-            <input type="submit" />
-          </form>
-        </body>
-        </html>
-      )
-    end
-    puts "Test 3D-secure via `open 3ds.html`"
-    puts "View results at http://requestb.in/#{bin}?inspect"
-    puts "Finalize with: `curl -v -d PaRes='' -d MD='' '#{response.params["form_post_vars"]["TermUrl"]}'`"
-=end
+    #     # This is handy for testing that 3DS is working with PayU
+    #     response = response.responses.first
+    #
+    #     # You'll probably need a new bin from http://requestb.in
+    #     bin = "<requestb.in key>"
+    #     File.open("3ds.html", "w") do |f|
+    #       f.puts %(
+    #         <html>
+    #         <body>
+    #           <form action="#{response.params["post_uri"]}" method="POST">
+    #             <input type="hidden" name="PaReq" value="#{response.params["form_post_vars"]["PaReq"]}" />
+    #             <input type="hidden" name="MD" value="#{response.params["form_post_vars"]["MD"]}" />
+    #             <input type="hidden" name="TermUrl" value="http://requestb.in/#{bin}" />
+    #             <input type="submit" />
+    #           </form>
+    #         </body>
+    #         </html>
+    #       )
+    #     end
+    #     puts "Test 3D-secure via `open 3ds.html`"
+    #     puts "View results at http://requestb.in/#{bin}?inspect"
+    #     puts "Finalize with: `curl -v -d PaRes='' -d MD='' '#{response.params["form_post_vars"]["TermUrl"]}'`"
   end
 
   def test_transcript_scrubbing

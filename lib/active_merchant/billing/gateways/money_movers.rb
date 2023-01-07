@@ -116,9 +116,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success?(response), message, response,
           test: test?,
           authorization: response['transactionid'],
-          avs_result: {code: response['avsresponse']},
-          cvv_result: response['cvvresponse']
-        )
+          avs_result: { code: response['avsresponse'] },
+          cvv_result: response['cvvresponse'])
       end
 
       def success?(response)

@@ -31,17 +31,17 @@ module ActiveMerchant #:nodoc:
         'expired_token' => STANDARD_ERROR_CODE[:card_declined]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :secret_key)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = create_post_for_auth_or_purchase(money, payment, options)
         commit('charges', post, options)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = create_post_for_auth_or_purchase(money, payment, options)
         post[:captured] = 'false'
         commit('charges', post, options)
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         commit("charges/#{CGI.escape(authorization)}/refund", {}, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -133,11 +133,46 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, payment, options)
         add_customer(post, payment, options)
         add_customer_data(post, options)
+        add_external_three_ds(post, options)
         if options[:email]
           post[:metadata] = {}
           post[:metadata][:email] = options[:email]
         end
         post
+      end
+
+      def add_external_three_ds(post, options)
+        return if options[:three_d_secure].blank?
+
+        post[:threeDSecure] = {
+          external: {
+            version: options[:three_d_secure][:version],
+            authenticationValue: options[:three_d_secure][:cavv],
+            acsTransactionId: options[:three_d_secure][:acs_transaction_id],
+            status: options[:three_d_secure][:authentication_response_status],
+            eci: options[:three_d_secure][:eci]
+          }.merge(xid_or_ds_trans_id(options[:three_d_secure]))
+        }
+      end
+
+      def xid_or_ds_trans_id(three_ds)
+        if three_ds[:version].to_f >= 2.0
+          { dsTransactionId: three_ds[:ds_transaction_id] }
+        else
+          { xid: three_ds[:xid] }
+        end
+      end
+
+      def validate_three_ds_params(three_ds)
+        errors = {}
+        supported_version = %w{1.0.2 2.1.0 2.2.0}.include?(three_ds[:version])
+        supported_auth_response = ['Y', 'N', 'U', 'R', 'E', 'A', nil].include?(three_ds[:status])
+
+        errors[:three_ds_version] = 'ThreeDs version not supported' unless supported_version
+        errors[:auth_response] = 'Authentication response value not supported' unless supported_auth_response
+        errors.compact!
+
+        errors.present? ? Response.new(false, 'ThreeDs data is invalid', errors) : nil
       end
 
       def add_amount(post, money, options, include_currency = false)
@@ -182,6 +217,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(url, parameters = nil, options = {}, method = nil)
+        if parameters.present? && parameters[:threeDSecure].present?
+          three_ds_errors = validate_three_ds_params(parameters[:threeDSecure][:external])
+          return three_ds_errors if three_ds_errors
+        end
+
         response = api_request(url, parameters, options, method)
         success = !response.key?('error')
 
@@ -190,8 +230,7 @@ module ActiveMerchant #:nodoc:
           response,
           test: test?,
           authorization: (success ? response['id'] : response['error']['charge']),
-          error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['error']['code']])
-        )
+          error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['error']['code']]))
       end
 
       def headers(options = {})

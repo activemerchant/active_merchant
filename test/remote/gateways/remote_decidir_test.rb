@@ -18,6 +18,18 @@ class RemoteDecidirTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @sub_payments = [
+      {
+        site_id: '04052018',
+        installments: '1',
+        amount: '1500'
+      },
+      {
+        site_id: '04052018',
+        installments: 1,
+        amount: 1500
+      }
+    ]
   end
 
   def test_successful_purchase
@@ -74,10 +86,43 @@ class RemoteDecidirTest < Test::Unit::TestCase
       card_holder_identification_type: 'dni',
       card_holder_identification_number: '123456',
       establishment_name: 'Heavenly Buffaloes',
+      device_unique_identifier: '1',
       fraud_detection: {
         send_to_cs: false,
         channel: 'Web',
-        dispatch_method: 'Store Pick Up'
+        dispatch_method: 'Store Pick Up',
+        csmdds: [
+          {
+            code: 17,
+            description: 'Campo MDD17'
+          }
+        ],
+        device_unique_id: '1',
+        bill_to: {
+          postal_code: '12345',
+          last_name: 'Smith',
+          country: 'US',
+          street1: '123 Mockingbird Lane',
+          state: 'TN',
+          email: 'dootdoot@hotmail.com',
+          customer_id: '111111',
+          phone_number: '555-5555',
+          first_name: 'Joe',
+          city: 'Pantsville'
+        },
+        customer_in_site: {
+          password: '',
+          is_guest: false,
+          street: '123 Mockingbird Lane',
+          cellphone_number: '555-1212',
+          num_of_transactions: 48,
+          date_of_birth: '8-4-80',
+          days_in_site: 105
+        },
+        purchase_totals: {
+          currency: 'USD',
+          amount: 100
+        }
       },
       installments: '12',
       site_id: '99999999'
@@ -88,14 +133,44 @@ class RemoteDecidirTest < Test::Unit::TestCase
     assert_equal 'approved', response.message
     assert_equal 'Heavenly Buffaloes', response.params['establishment_name']
     assert_equal '99999999', response.params['site_id']
-    assert_equal({'status' => nil}, response.params['fraud_detection'])
+    assert_equal({ 'status' => nil }, response.params['fraud_detection'])
     assert response.authorization
+  end
+
+  def test_successful_purchase_with_sub_payments
+    options = @options.merge(sub_payments: @sub_payments)
+
+    assert response = @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'approved', response.message
+  end
+
+  def test_failed_purchase_with_bad_csmdds
+    options = {
+      fraud_detection: {
+        send_to_cs: false,
+        channel: 'Web',
+        dispatch_method: 'Store Pick Up',
+        csmdds: [
+          {
+            codee: 17,
+            descriptione: 'Campo MDD17'
+          }
+        ]
+      }
+    }
+
+    response = @gateway_for_purchase.purchase(@amount, credit_card('4509790112684851'), @options.merge(options))
+    assert_failure response
+    assert_equal 'param_required: fraud_detection.csmdds.[0].code, param_required: fraud_detection.csmdds.[0].description', response.message
+    assert_equal(nil, response.params['fraud_detection'])
   end
 
   def test_failed_purchase
     response = @gateway_for_purchase.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'COMERCIO INVALIDO | invalid_card', response.message
+    assert_equal '3, config_error', response.error_code
     assert_match Gateway::STANDARD_ERROR_CODE[:config_error], response.error_code
   end
 
@@ -103,7 +178,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
     response = @gateway_for_purchase.purchase(@amount, @declined_card, @options.merge(installments: -1))
     assert_failure response
     assert_equal 'invalid_param: installments', response.message
-    assert_match 'invalid_request_error', response.error_code
+    assert_equal 'invalid_request_error', response.error_code
   end
 
   def test_successful_authorize_and_capture
@@ -121,8 +196,8 @@ class RemoteDecidirTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway_for_auth.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'TARJETA INVALIDA | invalid_number', response.message
-    assert_match Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+    assert_equal 'PEDIR AUTORIZACION | request_authorization_card', response.message
+    assert_match '1, call_issuer', response.error_code
   end
 
   def test_failed_partial_capture
@@ -196,11 +271,31 @@ class RemoteDecidirTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway_for_auth.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{TARJETA INVALIDA | invalid_number}, response.message
+    assert_match %r{PEDIR AUTORIZACION | request_authorization_card}, response.message
+  end
+
+  def test_successful_inquire
+    response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+
+    response = @gateway_for_purchase.inquire(response.params['id'])
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+  end
+
+  def test_invalid_login_without_api_key
+    gateway = DecidirGateway.new(api_key: '')
+
+    response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match %r{No API key found in request}, response.message
   end
 
   def test_invalid_login
-    gateway = DecidirGateway.new(api_key: '')
+    gateway = DecidirGateway.new(api_key: 'xxxxxxx')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
         commit(:unstore, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -248,7 +248,7 @@ module ActiveMerchant #:nodoc:
           add_pair(post, :BillingAddress1, truncate(billing_address[:address1], 100))
           add_pair(post, :BillingAddress2, truncate(billing_address[:address2], 100))
           add_pair(post, :BillingCity, truncate(billing_address[:city], 40))
-          add_pair(post, :BillingState, truncate(billing_address[:state], 2)) if is_usa(billing_address[:country])
+          add_pair(post, :BillingState, truncate(billing_address[:state], 2)) if usa?(billing_address[:country])
           add_pair(post, :BillingCountry, truncate(billing_address[:country], 2))
           add_pair(post, :BillingPhone, sanitize_phone(billing_address[:phone]))
           add_pair(post, :BillingPostCode, truncate(billing_address[:zip], 10))
@@ -261,7 +261,7 @@ module ActiveMerchant #:nodoc:
           add_pair(post, :DeliveryAddress1, truncate(shipping_address[:address1], 100))
           add_pair(post, :DeliveryAddress2, truncate(shipping_address[:address2], 100))
           add_pair(post, :DeliveryCity, truncate(shipping_address[:city], 40))
-          add_pair(post, :DeliveryState, truncate(shipping_address[:state], 2)) if is_usa(shipping_address[:country])
+          add_pair(post, :DeliveryState, truncate(shipping_address[:state], 2)) if usa?(shipping_address[:country])
           add_pair(post, :DeliveryCountry, truncate(shipping_address[:country], 2))
           add_pair(post, :DeliveryPhone, sanitize_phone(shipping_address[:phone]))
           add_pair(post, :DeliveryPostCode, truncate(shipping_address[:zip], 10))
@@ -317,7 +317,7 @@ module ActiveMerchant #:nodoc:
         truncate(cleansed, 20)
       end
 
-      def is_usa(country)
+      def usa?(country)
         truncate(country, 2) == 'US'
       end
 
@@ -351,10 +351,9 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response, parameters, action),
           avs_result: {
             street_match: AVS_CODE[response['AddressResult']],
-            postal_match: AVS_CODE[response['PostCodeResult']],
+            postal_match: AVS_CODE[response['PostCodeResult']]
           },
-          cvv_result: CVV_CODE[response['CV2Result']]
-        )
+          cvv_result: CVV_CODE[response['CV2Result']])
       end
 
       def authorization_from(response, params, action)
@@ -428,7 +427,7 @@ module ActiveMerchant #:nodoc:
       def past_purchase_reference?(payment_method)
         return false unless payment_method.is_a?(String)
 
-        payment_method.split(';').last == 'purchase'
+        %w(purchase repeat).include?(payment_method.split(';').last)
       end
     end
   end

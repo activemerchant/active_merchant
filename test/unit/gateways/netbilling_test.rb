@@ -47,7 +47,7 @@ class NetbillingTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/site_tag=dummy-site-tag/, data)
     end.respond_with(successful_purchase_response)
 
@@ -57,7 +57,7 @@ class NetbillingTest < Test::Unit::TestCase
   def test_site_tag_not_sent_if_not_provided
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(/site_tag/, data)
     end.respond_with(successful_purchase_response)
 

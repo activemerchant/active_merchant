@@ -22,7 +22,8 @@ class RemotePayflowTest < Test::Unit::TestCase
       description: 'Description string',
       order_desc: 'OrderDesc string',
       comment: 'Comment string',
-      comment2: 'Comment2 string'
+      comment2: 'Comment2 string',
+      merch_descr: 'MerchDescr string'
     }
 
     @check = check(
@@ -61,6 +62,28 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert !response.fraud_review?
   end
 
+  def test_successful_purchase_with_stored_credential
+    @options[:stored_credential] = {
+      initial_transaction: true,
+      reason_type: 'recurring',
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    }
+    assert response = @gateway.purchase(100000, @credit_card, @options)
+    assert_equal 'Approved', response.message
+    assert_success response
+
+    @options[:stored_credential] = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'merchant',
+      network_transaction_id: response.authorization
+    }
+    assert response = @gateway.purchase(100000, @credit_card, @options)
+    assert_equal 'Approved', response.message
+    assert_success response
+  end
+
   def test_successful_purchase_with_extra_options
     assert response = @gateway.purchase(100000, @credit_card, @options.merge(@extra_options))
     assert_equal 'Approved', response.message
@@ -68,6 +91,19 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert response.test?
     assert_not_nil response.authorization
     assert !response.fraud_review?
+  end
+
+  def test_successful_purchase_with_application_id
+    ActiveMerchant::Billing::PayflowGateway.application_id = 'partner_id'
+
+    assert response = @gateway.purchase(100000, @credit_card, @options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+    assert !response.fraud_review?
+  ensure
+    ActiveMerchant::Billing::PayflowGateway.application_id = nil
   end
 
   # In order for this remote test to pass, you must go into your Payflow test
@@ -117,6 +153,20 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
     assert_not_nil response.authorization
+  end
+
+  def test_successful_purchase_with_l3_fields_and_application_id
+    ActiveMerchant::Billing::PayflowGateway.application_id = 'partner_id'
+
+    options = @options.merge(level_three_fields: @l3_json)
+
+    assert response = @gateway.purchase(100000, @credit_card, options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+  ensure
+    ActiveMerchant::Billing::PayflowGateway.application_id = nil
   end
 
   def test_declined_purchase
@@ -174,6 +224,19 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert auth.authorization
     assert capture = @gateway.capture(100, auth.authorization)
     assert_success capture
+  end
+
+  def test_successful_authorize_with_application_id
+    ActiveMerchant::Billing::PayflowGateway.application_id = 'partner_id'
+
+    assert response = @gateway.authorize(100000, @credit_card, @options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+    assert !response.fraud_review?
+  ensure
+    ActiveMerchant::Billing::PayflowGateway.application_id = nil
   end
 
   def test_authorize_and_partial_capture
@@ -387,8 +450,7 @@ class RemotePayflowTest < Test::Unit::TestCase
         initial_transaction: {
           type: :purchase,
           amount: 500
-        }
-      )
+        })
     end
 
     assert_success response
@@ -460,7 +522,9 @@ class RemotePayflowTest < Test::Unit::TestCase
         authentication_response_status: 'Y',
         eci: '02',
         cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA=',
+        version: '2.2.0',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
       }
     }
   end

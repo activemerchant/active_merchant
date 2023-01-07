@@ -137,13 +137,13 @@ class JetpayTest < Test::Unit::TestCase
   def test_purchase_sends_order_origin
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<Origin>RECURRING<\/Origin>/)).returns(successful_purchase_response)
 
-    @gateway.purchase(@amount, @credit_card, {origin: 'RECURRING'})
+    @gateway.purchase(@amount, @credit_card, { origin: 'RECURRING' })
   end
 
   private
 
   def successful_purchase_response
-    <<-EOF
+    <<-XML
     <JetPayResponse>
       <TransactionID>8afa688fd002821362</TransactionID>
       <ActionCode>000</ActionCode>
@@ -155,21 +155,21 @@ class JetpayTest < Test::Unit::TestCase
       <ZipMatch>Y</ZipMatch>
       <AVS>Y</AVS>
     </JetPayResponse>
-    EOF
+    XML
   end
 
   def failed_purchase_response
-    <<-EOF
+    <<-XML
       <JetPayResponse>
         <TransactionID>7605f7c5d6e8f74deb</TransactionID>
         <ActionCode>005</ActionCode>
         <ResponseText>DECLINED</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def successful_authorize_response
-    <<-EOF
+    <<-XML
       <JetPayResponse>
         <TransactionID>cbf902091334a0b1aa</TransactionID>
         <ActionCode>000</ActionCode>
@@ -181,44 +181,44 @@ class JetpayTest < Test::Unit::TestCase
         <ZipMatch>Y</ZipMatch>
         <AVS>Y</AVS>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def successful_capture_response
-    <<-EOF
+    <<-XML
       <JetPayResponse>
         <TransactionID>010327153017T10018</TransactionID>
         <ActionCode>000</ActionCode>
         <Approval>502F6B</Approval>
         <ResponseText>APPROVED</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def successful_void_response
-    <<-EOF
+    <<-XML
       <JetPayResponse>
         <TransactionID>010327153x17T10418</TransactionID>
         <ActionCode>000</ActionCode>
         <Approval>502F7B</Approval>
         <ResponseText>VOID PROCESSED</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def successful_credit_response
-    <<-EOF
+    <<-XML
       <JetPayResponse>
         <TransactionID>010327153017T10017</TransactionID>
         <ActionCode>000</ActionCode>
         <Approval>002F6B</Approval>
         <ResponseText>APPROVED</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def transcript
-    <<-EOF
+    <<-XML
     <TerminalID>TESTTERMINAL</TerminalID>
     <TransactionType>SALE</TransactionType>
     <TransactionID>e23c963a1247fd7aad</TransactionID>
@@ -227,11 +227,11 @@ class JetpayTest < Test::Unit::TestCase
     <CardExpYear>16</CardExpYear>
     <CardName>Longbob Longsen</CardName>
     <CVV2>123</CVV2>
-    EOF
+    XML
   end
 
   def scrubbed_transcript
-    <<-EOF
+    <<-XML
     <TerminalID>TESTTERMINAL</TerminalID>
     <TransactionType>SALE</TransactionType>
     <TransactionID>e23c963a1247fd7aad</TransactionID>
@@ -240,6 +240,6 @@ class JetpayTest < Test::Unit::TestCase
     <CardExpYear>16</CardExpYear>
     <CardName>Longbob Longsen</CardName>
     <CVV2>[FILTERED]</CVV2>
-    EOF
+    XML
   end
 end

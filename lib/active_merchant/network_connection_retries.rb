@@ -17,7 +17,7 @@ module ActiveMerchant
       base.send(:attr_accessor, :retry_safe)
     end
 
-    def retry_exceptions(options={})
+    def retry_exceptions(options = {})
       connection_errors = DEFAULT_CONNECTION_ERRORS.merge(options[:connection_exceptions] || {})
 
       retry_network_exceptions(options) do
@@ -34,7 +34,7 @@ module ActiveMerchant
       end
     end
 
-    def self.log(logger, level, message, tag=nil)
+    def self.log(logger, level, message, tag = nil)
       tag ||= self.class.to_s
       message = "[#{tag}] #{message}"
       logger&.send(level, message)

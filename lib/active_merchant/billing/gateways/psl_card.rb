@@ -263,8 +263,7 @@ module ActiveMerchant
           test: test?,
           authorization: response[:CrossReference],
           cvv_result: CVV_CODE[response[:AVSCV2Check]],
-          avs_result: { code: AVS_CODE[response[:AVSCV2Check]] }
-        )
+          avs_result: { code: AVS_CODE[response[:AVSCV2Check]] })
       end
 
       # Put the passed data into a format that can be submitted to PSL

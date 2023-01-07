@@ -8,17 +8,29 @@ module CommStub
       @check = nil
     end
 
-    def check_request(&block)
-      @check = block
-      self
+    def check_request(skip_response: false, &block)
+      if skip_response
+        @complete = true
+        overwrite_gateway_method do |*args|
+          block&.call(*args) || ''
+        end
+        @action.call
+      else
+        @check = block
+        self
+      end
+    end
+
+    def overwrite_gateway_method(&block)
+      singleton_class = (class << @gateway; self; end)
+      singleton_class.send(:undef_method, @method_to_stub)
+      singleton_class.send(:define_method, @method_to_stub, &block)
     end
 
     def respond_with(*responses)
       @complete = true
       check = @check
-      singleton_class = (class << @gateway; self; end)
-      singleton_class.send(:undef_method, @method_to_stub)
-      singleton_class.send(:define_method, @method_to_stub) do |*args|
+      overwrite_gateway_method do |*args|
         check&.call(*args)
         (responses.size == 1 ? responses.last : responses.shift)
       end
@@ -40,7 +52,7 @@ module CommStub
     @last_comm_stub ||= Stub::Complete.new
   end
 
-  def stub_comms(gateway=@gateway, method_to_stub=:ssl_post, &action)
+  def stub_comms(gateway = @gateway, method_to_stub = :ssl_post, &action)
     assert last_comm_stub.complete?, "Tried to stub communications when there's a stub already in progress."
     @last_comm_stub = Stub.new(gateway, method_to_stub, action)
   end

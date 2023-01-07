@@ -47,17 +47,18 @@ module ActiveMerchant #:nodoc:
       #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object where authorization is the Transaction ID on success
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         params = {}
         add_metadata(params, options)
         add_invoice(params, amount, options)
         add_customer_data(params, options, payment_method)
         add_credit_card(params, payment_method, options)
+        add_3ds_authenticated_data(params, options) if options[:three_d_secure]
         params['Method'] = payment_method.respond_to?(:number) ? 'ProcessPayment' : 'TokenPayment'
         commit(url_for('Transaction'), params)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         params = {}
         add_metadata(params, options)
         add_invoice(params, amount, options)
@@ -197,6 +198,18 @@ module ActiveMerchant #:nodoc:
         params
       end
 
+      def add_3ds_authenticated_data(params, options)
+        three_d_secure_options = options[:three_d_secure]
+        params['PaymentInstrument'] ||= {} if params['PaymentInstrument'].nil?
+        threed_secure_auth = params['PaymentInstrument']['ThreeDSecureAuth'] = {}
+        threed_secure_auth['Cryptogram'] = three_d_secure_options[:cavv]
+        threed_secure_auth['ECI'] = three_d_secure_options[:eci]
+        threed_secure_auth['XID'] = three_d_secure_options[:xid]
+        threed_secure_auth['AuthStatus'] = three_d_secure_options[:authentication_response_status]
+        threed_secure_auth['dsTransactionId'] = three_d_secure_options[:ds_transaction_id]
+        threed_secure_auth['Version'] = three_d_secure_options[:version]
+      end
+
       def add_invoice(params, money, options, key = 'Payment')
         currency_code = options[:currency] || currency(money)
         params[key] = {
@@ -204,7 +217,7 @@ module ActiveMerchant #:nodoc:
           'InvoiceReference' => truncate(options[:order_id], 50),
           'InvoiceNumber' => truncate(options[:invoice] || options[:order_id], 12),
           'InvoiceDescription' => truncate(options[:description], 64),
-          'CurrencyCode' => currency_code,
+          'CurrencyCode' => currency_code
         }
       end
 
@@ -232,7 +245,7 @@ module ActiveMerchant #:nodoc:
         params[key] = {}
 
         add_name_and_email(params[key], options[:shipping_address], options[:email])
-        add_address(params[key], options[:shipping_address], {skip_company: true})
+        add_address(params[key], options[:shipping_address], { skip_company: true })
       end
 
       def add_name_and_email(params, address, email, payment_method = nil)
@@ -251,7 +264,7 @@ module ActiveMerchant #:nodoc:
           payment_method.first_name.present? && payment_method.last_name.present?
       end
 
-      def add_address(params, address, options={})
+      def add_address(params, address, options = {})
         return unless address
 
         params['Title'] = address[:title]
@@ -310,7 +323,7 @@ module ActiveMerchant #:nodoc:
           cvv_result: cvv_result_from(raw)
         )
       rescue ActiveMerchant::ResponseError => e
-        return ActiveMerchant::Billing::Response.new(false, e.response.message, {status_code: e.response.code}, test: test?)
+        return ActiveMerchant::Billing::Response.new(false, e.response.message, { status_code: e.response.code }, test: test?)
       end
 
       def parse(data)
@@ -365,7 +378,7 @@ module ActiveMerchant #:nodoc:
           else
             'I'
           end
-        {code: code}
+        { code: code }
       end
 
       def cvv_result_from(response)
@@ -558,7 +571,7 @@ module ActiveMerchant #:nodoc:
         'V6150' => 'Invalid Refund Amount',
         'V6151' => 'Refund amount greater than original transaction',
         'V6152' => 'Original transaction already refunded for total amount',
-        'V6153' => 'Card type not support by merchant',
+        'V6153' => 'Card type not support by merchant'
       }
     end
   end

@@ -89,7 +89,7 @@ class PaystationTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/0008813023-01/, data)
     end.respond_with(successful_refund_response)
 

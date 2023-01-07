@@ -5,22 +5,25 @@ module ActiveMerchant #:nodoc:
     class LitleGateway < Gateway
       SCHEMA_VERSION = '9.14'
 
+      class_attribute :postlive_url
+
       self.test_url = 'https://www.testvantivcnp.com/sandbox/communicator/online'
+      self.postlive_url = 'https://payments.vantivpostlive.com/vap/communicator/online'
       self.live_url = 'https://payments.vantivcnp.com/vap/communicator/online'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
-      self.homepage_url = 'http://www.vantiv.com/'
+      self.homepage_url = 'https://www.fisglobal.com/'
       self.display_name = 'Vantiv eCommerce'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :login, :password, :merchant_id)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           if check?(payment_method)
@@ -36,7 +39,97 @@ module ActiveMerchant #:nodoc:
         check?(payment_method) ? commit(:echeckSales, request, money) : commit(:sale, request, money)
       end
 
-      def authorize(money, payment_method, options={})
+      def add_level_two_data(doc, payment_method, options = {})
+        level_2_data = options[:level_2_data]
+        if level_2_data
+          doc.enhancedData do
+            case payment_method.brand
+            when 'visa'
+              doc.salesTax(level_2_data[:sales_tax]) if level_2_data[:sales_tax]
+            when 'master'
+              doc.customerReference(level_2_data[:customer_code]) if level_2_data[:customer_code]
+              doc.salesTax(level_2_data[:total_tax_amount]) if level_2_data[:total_tax_amount]
+              doc.detailTax do
+                doc.taxIncludedInTotal(level_2_data[:tax_included_in_total]) if level_2_data[:tax_included_in_total]
+                doc.taxAmount(level_2_data[:tax_amount]) if level_2_data[:tax_amount]
+                doc.cardAcceptorTaxId(level_2_data[:card_acceptor_tax_id]) if level_2_data[:card_acceptor_tax_id]
+              end
+            end
+          end
+        end
+      end
+
+      def add_level_three_data(doc, payment_method, options = {})
+        level_3_data = options[:level_3_data]
+        if level_3_data
+          doc.enhancedData do
+            case payment_method.brand
+            when 'visa'
+              add_level_three_information_tags_visa(doc, payment_method, level_3_data)
+            when 'master'
+              add_level_three_information_tags_master(doc, payment_method, level_3_data)
+            end
+          end
+        end
+      end
+
+      def add_level_three_information_tags_visa(doc, payment_method, level_3_data)
+        doc.discountAmount(level_3_data[:discount_amount]) if level_3_data[:discount_amount]
+        doc.shippingAmount(level_3_data[:shipping_amount]) if level_3_data[:shipping_amount]
+        doc.dutyAmount(level_3_data[:duty_amount]) if level_3_data[:duty_amount]
+        doc.detailTax do
+          doc.taxIncludedInTotal(level_3_data[:tax_included_in_total]) if level_3_data[:tax_included_in_total]
+          doc.taxAmount(level_3_data[:tax_amount]) if level_3_data[:tax_amount]
+          doc.taxRate(level_3_data[:tax_rate]) if level_3_data[:tax_rate]
+          doc.taxTypeIdentifier(level_3_data[:tax_type_identifier]) if level_3_data[:tax_type_identifier]
+          doc.cardAcceptorTaxId(level_3_data[:card_acceptor_tax_id]) if level_3_data[:card_acceptor_tax_id]
+        end
+        add_line_item_information_for_level_three_visa(doc, payment_method, level_3_data)
+      end
+
+      def add_level_three_information_tags_master(doc, payment_method, level_3_data)
+        doc.customerReference :customerReference, level_3_data[:customer_code] if level_3_data[:customer_code]
+        doc.salesTax(level_3_data[:total_tax_amount]) if level_3_data[:total_tax_amount]
+        doc.detailTax do
+          doc.taxIncludedInTotal(level_3_data[:tax_included_in_total]) if level_3_data[:tax_included_in_total]
+          doc.taxAmount(level_3_data[:tax_amount]) if level_3_data[:tax_amount]
+          doc.cardAcceptorTaxId :cardAcceptorTaxId, level_3_data[:card_acceptor_tax_id] if level_3_data[:card_acceptor_tax_id]
+        end
+        doc.lineItemData do
+          level_3_data[:line_items].each do |line_item|
+            doc.itemDescription(line_item[:item_description]) if line_item[:item_description]
+            doc.productCode(line_item[:product_code]) if line_item[:product_code]
+            doc.quantity(line_item[:quantity]) if line_item[:quantity]
+            doc.unitOfMeasure(line_item[:unit_of_measure]) if line_item[:unit_of_measure]
+            doc.lineItemTotal(line_item[:line_item_total]) if line_item[:line_item_total]
+          end
+        end
+      end
+
+      def add_line_item_information_for_level_three_visa(doc, payment_method, level_3_data)
+        doc.lineItemData do
+          level_3_data[:line_items].each do |line_item|
+            doc.itemSequenceNumber(line_item[:item_sequence_number]) if line_item[:item_sequence_number]
+            doc.commodityCode(line_item[:commodity_code]) if line_item[:commodity_code]
+            doc.itemDescription(line_item[:item_description]) if line_item[:item_description]
+            doc.productCode(line_item[:product_code]) if line_item[:product_code]
+            doc.quantity(line_item[:quantity]) if line_item[:quantity]
+            doc.unitOfMeasure(line_item[:unit_of_measure]) if line_item[:unit_of_measure]
+            doc.taxAmount(line_item[:tax_amount]) if line_item[:tax_amount]
+            doc.itemDiscountAmount(line_item[:discount_per_line_item]) unless line_item[:discount_per_line_item] < 0
+            doc.unitCost(line_item[:unit_cost]) unless line_item[:unit_cost] < 0
+            doc.detailTax do
+              doc.taxIncludedInTotal(line_item[:tax_included_in_total]) if line_item[:tax_included_in_total]
+              doc.taxAmount(line_item[:tax_amount]) if line_item[:tax_amount]
+              doc.taxRate(line_item[:tax_rate]) if line_item[:tax_rate]
+              doc.taxTypeIdentifier(line_item[:tax_type_identifier]) if line_item[:tax_type_identifier]
+              doc.cardAcceptorTaxId(line_item[:card_acceptor_tax_id]) if line_item[:card_acceptor_tax_id]
+            end
+          end
+        end
+      end
+
+      def authorize(money, payment_method, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           if check?(payment_method)
@@ -52,7 +145,7 @@ module ActiveMerchant #:nodoc:
         check?(payment_method) ? commit(:echeckVerification, request, money) : commit(:authorization, request, money)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         transaction_id, = split_authorization(authorization)
 
         request = build_xml_request do |doc|
@@ -72,7 +165,7 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
-      def refund(money, payment, options={})
+      def refund(money, payment, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           add_descriptor(doc, options)
@@ -84,7 +177,7 @@ module ActiveMerchant #:nodoc:
             elsif check?(payment)
               add_echeck_purchase_params(doc, money, payment, options)
             else
-              add_auth_purchase_params(doc, money, payment, options)
+              add_credit_params(doc, money, payment, options)
             end
           end
         end
@@ -99,7 +192,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         transaction_id, kind, money = split_authorization(authorization)
 
         request = build_xml_request do |doc|
@@ -222,12 +315,26 @@ module ActiveMerchant #:nodoc:
         add_payment_method(doc, payment_method, options)
         add_pos(doc, payment_method)
         add_descriptor(doc, options)
+        add_level_two_data(doc, payment_method, options)
+        add_level_three_data(doc, payment_method, options)
         add_merchant_data(doc, options)
         add_debt_repayment(doc, options)
         add_stored_credential_params(doc, options)
+        add_fraud_filter_override(doc, options)
       end
 
-      def add_merchant_data(doc, options={})
+      def add_credit_params(doc, money, payment_method, options)
+        doc.orderId(truncate(options[:order_id], 24))
+        doc.amount(money)
+        add_order_source(doc, payment_method, options)
+        add_billing_address(doc, payment_method, options)
+        add_payment_method(doc, payment_method, options)
+        add_pos(doc, payment_method)
+        add_descriptor(doc, options)
+        add_merchant_data(doc, options)
+      end
+
+      def add_merchant_data(doc, options = {})
         if options[:affiliate] || options[:campaign] || options[:merchant_grouping_id]
           doc.merchantData do
             doc.affiliate(options[:affiliate]) if options[:affiliate]
@@ -259,6 +366,10 @@ module ActiveMerchant #:nodoc:
         doc.debtRepayment(true) if options[:debt_repayment] == true
       end
 
+      def add_fraud_filter_override(doc, options)
+        doc.fraudFilterOverride(options[:fraud_filter_override]) if options[:fraud_filter_override]
+      end
+
       def add_payment_method(doc, payment_method, options)
         if payment_method.is_a?(String)
           doc.token do
@@ -274,7 +385,7 @@ module ActiveMerchant #:nodoc:
             doc.accType(payment_method.account_type.capitalize)
             doc.accNum(payment_method.account_number)
             doc.routingNum(payment_method.routing_number)
-            doc.checkNum(payment_method.number)
+            doc.checkNum(payment_method.number) if payment_method.number
           end
         else
           doc.card do
@@ -296,7 +407,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_stored_credential_params(doc, options={})
+      def add_stored_credential_params(doc, options = {})
         return unless options[:stored_credential]
 
         if options[:stored_credential][:initial_transaction]
@@ -357,9 +468,9 @@ module ActiveMerchant #:nodoc:
         return unless address
 
         doc.companyName(address[:company]) unless address[:company].blank?
-        doc.addressLine1(address[:address1]) unless address[:address1].blank?
-        doc.addressLine2(address[:address2]) unless address[:address2].blank?
-        doc.city(address[:city]) unless address[:city].blank?
+        doc.addressLine1(truncate(address[:address1], 35)) unless address[:address1].blank?
+        doc.addressLine2(truncate(address[:address2], 35)) unless address[:address2].blank?
+        doc.city(truncate(address[:city], 35)) unless address[:city].blank?
         doc.state(address[:state]) unless address[:state].blank?
         doc.zip(address[:zip]) unless address[:zip].blank?
         doc.country(address[:country]) unless address[:country].blank?
@@ -372,7 +483,7 @@ module ActiveMerchant #:nodoc:
           doc.orderSource(order_source)
         elsif payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :apple_pay
           doc.orderSource('applepay')
-        elsif payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :android_pay
+        elsif payment_method.is_a?(NetworkTokenizationCreditCard) && %i[google_pay android_pay].include?(payment_method.source)
           doc.orderSource('androidpay')
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.orderSource('retail')
@@ -381,7 +492,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def order_source(options={})
+      def order_source(options = {})
         return options[:order_source] unless options[:stored_credential]
 
         order_source = nil
@@ -426,8 +537,10 @@ module ActiveMerchant #:nodoc:
 
       def parse(kind, xml)
         parsed = {}
-
         doc = Nokogiri::XML(xml).remove_namespaces!
+
+        parsed['duplicate'] = doc.at_xpath('//saleResponse').try(:[], 'duplicate') == 'true' if kind == :sale
+
         doc.xpath("//litleOnlineResponse/#{kind}Response/*").each do |node|
           if node.elements.empty?
             parsed[node.name.to_sym] = node.text
@@ -448,7 +561,7 @@ module ActiveMerchant #:nodoc:
         parsed
       end
 
-      def commit(kind, request, money=nil)
+      def commit(kind, request, money = nil)
         parsed = parse(kind, ssl_post(url, request, headers))
 
         options = {
@@ -480,8 +593,8 @@ module ActiveMerchant #:nodoc:
         attributes = {}
         attributes[:id] = truncate(options[:id] || options[:order_id], 24)
         attributes[:reportGroup] = options[:merchant] || 'Default Report Group'
-        attributes[:customerId] = options[:customer]
-        attributes.delete_if { |key, value| value == nil }
+        attributes[:customerId] = options[:customer_id]
+        attributes.delete_if { |_key, value| value == nil }
         attributes
       end
 
@@ -502,6 +615,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def url
+        return postlive_url if @options[:url_override].to_s == 'postlive'
+
         test? ? test_url : live_url
       end
 

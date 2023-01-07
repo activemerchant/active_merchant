@@ -16,12 +16,12 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.payu.in/'
       self.display_name = 'PayU India'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :key, :salt)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         requires!(options, :order_id)
 
         post = {}
@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         raise ArgumentError, 'Amount is required' unless money
 
         post = {}

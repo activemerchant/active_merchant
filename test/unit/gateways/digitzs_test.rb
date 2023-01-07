@@ -38,7 +38,7 @@ class DigitzsTest < Test::Unit::TestCase
   def test_successful_card_split_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options_with_split)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       if /"cardSplit"/.match?(data)
         assert_match(%r(split), data)
         assert_match(%r("merchantId":"spreedly-susanswidg-32270590-2095203-148657924"), data)
@@ -52,7 +52,7 @@ class DigitzsTest < Test::Unit::TestCase
   def test_successful_token_split_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options_with_split)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       if /"tokenSplit"/.match?(data)
         assert_match(%r(split), data)
         assert_match(%r("merchantId":"spreedly-susanswidg-32270590-2095203-148657924"), data)
@@ -103,7 +103,7 @@ class DigitzsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_get).returns(customer_id_exists_response)
     @gateway.expects(:ssl_post).times(3).returns(successful_app_token_response, successful_create_customer_response, successful_token_response)
 
-    assert response = @gateway.store(@credit_card, @options.merge({customer_id: 'pre_existing_customer_id'}))
+    assert response = @gateway.store(@credit_card, @options.merge({ customer_id: 'pre_existing_customer_id' }))
     assert_success response
     assert_equal 'spreedly-susanswidg-32268973-2091076-148408385-2894006614343495-148710226|c0302d83-a694-4bec-9086-d1886b9eefd9-148710226', response.authorization
   end

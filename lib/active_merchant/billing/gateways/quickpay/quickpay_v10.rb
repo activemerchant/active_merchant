@@ -68,7 +68,7 @@ module ActiveMerchant
         commit(synchronized_path("/payments/#{identification}/refund"), post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -155,8 +155,7 @@ module ActiveMerchant
 
         Response.new(success, message_from(success, response), response,
           test: test?,
-          authorization: authorization_from(response)
-        )
+          authorization: authorization_from(response))
       end
 
       def authorization_from(response)
@@ -264,7 +263,7 @@ module ActiveMerchant
       end
 
       def format_order_id(order_id)
-        truncate(order_id.to_s.gsub(/#/, ''), 20)
+        truncate(order_id.to_s.delete('#'), 20)
       end
 
       def headers

@@ -55,7 +55,7 @@ class ClearhausTest < Test::Unit::TestCase
       response = @gateway.authorize(@amount, @credit_card, @options.merge(pares: '123'))
       assert_success response
       assert response.test?
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       expr = { card: { pares: '123' } }.to_query
       assert_match expr, data
     end.respond_with(successful_authorize_response)
@@ -66,9 +66,9 @@ class ClearhausTest < Test::Unit::TestCase
       response = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '123', text_on_statement: 'test'))
       assert_success response
       assert response.test?
-    end.check_request do |endpoint, data, headers|
-      order_expr = { reference: '123'}.to_query
-      tos_expr   = { text_on_statement: 'test'}.to_query
+    end.check_request do |_endpoint, data, _headers|
+      order_expr = { reference: '123' }.to_query
+      tos_expr   = { text_on_statement: 'test' }.to_query
 
       assert_match order_expr, data
       assert_match tos_expr, data
@@ -82,7 +82,7 @@ class ClearhausTest < Test::Unit::TestCase
 
       assert_equal '84412a34-fa29-4369-a098-0165a80e8fda', response.authorization
       assert response.test?
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, _data, _headers|
       assert_match %r{/cards/4110/authorizations}, endpoint
     end.respond_with(successful_authorize_response)
   end
@@ -222,7 +222,7 @@ class ClearhausTest < Test::Unit::TestCase
 
       assert_equal '84412a34-fa29-4369-a098-0165a80e8fda', response.authorization
       assert response.test?
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, _data, headers|
       assert headers['Signature']
       assert_match %r{7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2 RS256-hex}, headers['Signature']
       assert_match %r{25f8283c3cc43911d7$}, headers['Signature']
@@ -241,7 +241,7 @@ class ClearhausTest < Test::Unit::TestCase
 
       assert_equal '84412a34-fa29-4369-a098-0165a80e8fda', response.authorization
       assert response.test?
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, _data, headers|
       assert headers['Signature']
       assert_match %r{7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2 RS256-hex}, headers['Signature']
       assert_match %r{25f8283c3cc43911d7$}, headers['Signature']
@@ -269,7 +269,7 @@ class ClearhausTest < Test::Unit::TestCase
   def test_nonfractional_currency_handling
     stub_comms do
       @gateway.authorize(200, @credit_card, @options.merge(currency: 'JPY'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/amount=2&card/, data)
     end.respond_with(successful_authorize_response)
   end
@@ -445,8 +445,8 @@ Conn close
         'captures' => {
           'href' => '/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/captures'
         },
-        'voids' => { 'href' => '/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/voids'},
-        'refunds' => { 'href' => '/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/refunds'}
+        'voids' => { 'href' => '/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/voids' },
+        'refunds' => { 'href' => '/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/refunds' }
       }
     }
   end
@@ -476,6 +476,6 @@ Conn close
   end
 
   def failed_ch_response
-    { 'status' => { 'code' => 40000, 'message' => 'General input error' }}.to_json
+    { 'status' => { 'code' => 40000, 'message' => 'General input error' } }.to_json
   end
 end

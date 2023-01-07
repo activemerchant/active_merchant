@@ -1,10 +1,17 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class OpenpayGateway < Gateway
-      self.live_url = 'https://api.openpay.mx/v1/'
-      self.test_url = 'https://sandbox-api.openpay.mx/v1/'
+      class_attribute :mx_live_url, :mx_test_url
+      class_attribute :co_live_url, :co_test_url
 
-      self.supported_countries = ['MX']
+      self.co_live_url = 'https://api.openpay.co/v1/'
+      self.co_test_url = 'https://sandbox-api.openpay.co/v1/'
+      self.mx_live_url = 'https://api.openpay.mx/v1/'
+      self.mx_test_url = 'https://sandbox-api.openpay.mx/v1/'
+      self.live_url = self.co_live_url
+      self.test_url = self.co_test_url
+
+      self.supported_countries = %w(CO MX)
       self.supported_cardtypes = %i[visa master american_express carnet]
       self.homepage_url = 'http://www.openpay.mx/'
       self.display_name = 'Openpay'
@@ -22,6 +29,16 @@ module ActiveMerchant #:nodoc:
         @api_key = options[:key]
         @merchant_id = options[:merchant_id]
         super
+      end
+
+      def gateway_url(options = {})
+        country = options[:merchant_country] || @options[:merchant_country]
+
+        if country == 'MX'
+          test? ? mx_test_url : mx_live_url
+        else
+          test? ? co_test_url : co_live_url
+        end
       end
 
       def purchase(money, creditcard, options = {})
@@ -116,7 +133,7 @@ module ActiveMerchant #:nodoc:
         post[:device_session_id] = options[:device_session_id]
         post[:currency] = (options[:currency] || currency(money)).upcase
         post[:use_card_points] = options[:use_card_points] if options[:use_card_points]
-        post[:payment_plan] = {payments: options[:payments]} if options[:payments]
+        post[:payment_plan] = { payments: options[:payments] } if options[:payments]
         add_creditcard(post, creditcard, options)
         post
       end
@@ -188,12 +205,11 @@ module ActiveMerchant #:nodoc:
           (success ? response['error_code'] : response['description']),
           response,
           test: test?,
-          authorization: response['id']
-        )
+          authorization: response['id'])
       end
 
-      def http_request(method, resource, parameters={}, options={})
-        url = (test? ? self.test_url : self.live_url) + @merchant_id + '/' + resource
+      def http_request(method, resource, parameters = {}, options = {})
+        url = gateway_url(options) + @merchant_id + '/' + resource
         raw_response = nil
         begin
           raw_response = ssl_request(method, url, (parameters ? parameters.to_json : nil), headers(options))

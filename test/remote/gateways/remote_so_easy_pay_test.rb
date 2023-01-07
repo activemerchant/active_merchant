@@ -5,7 +5,7 @@ class RemoteSoEasyPayTest < Test::Unit::TestCase
     @gateway = SoEasyPayGateway.new(fixtures(:so_easy_pay))
 
     @amount = 100
-    @credit_card = credit_card('4111111111111111', {verification_value: '000', month: '12', year: '2015'})
+    @credit_card = credit_card('4111111111111111', { verification_value: '000', month: '12', year: '2015' })
     @declined_card = credit_card('4000300011112220')
 
     @options = {

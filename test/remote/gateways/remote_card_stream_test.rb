@@ -10,34 +10,29 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       month: '12',
       year: Time.now.year + 1,
       verification_value: '4887',
-      brand: :american_express
-    )
+      brand: :american_express)
 
     @mastercard = credit_card('5301250070000191',
       month: '12',
       year: Time.now.year + 1,
       verification_value: '419',
-      brand: :master
-    )
+      brand: :master)
 
     @visacreditcard = credit_card('4929421234600821',
       month: '12',
       year: Time.now.year + 1,
       verification_value: '356',
-      brand: :visa
-    )
+      brand: :visa)
 
     @visadebitcard = credit_card('4539791001730106',
       month: '12',
       year: Time.now.year + 1,
       verification_value: '289',
-      brand: :visa
-    )
+      brand: :visa)
 
     @declined_card = credit_card('4000300011112220',
       month: '9',
-      year: Time.now.year + 1
-    )
+      year: Time.now.year + 1)
 
     @amex_options = {
       billing_address: {
@@ -78,7 +73,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       order_id: generate_unique_id,
       merchant_name: 'merchant',
       dynamic_descriptor: 'product',
-      ip: '1.1.1.1',
+      ip: '1.1.1.1'
     }
 
     @visacredit_reference_options = {
@@ -117,8 +112,18 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     @three_ds_enrolled_card = credit_card('4012001037141112',
       month: '12',
       year: '2020',
-      brand: :visa
-    )
+      brand: :visa)
+
+    @visacredit_three_ds_options = {
+      threeds_required: true,
+      three_d_secure: {
+        enrolled: 'true',
+        authentication_response_status: 'Y',
+        eci: '05',
+        cavv: 'Y2FyZGluYWxjb21tZXJjZWF1dGg',
+        xid: '00000000000004717472'
+      }
+    }
   end
 
   def test_successful_visacreditcard_authorization_and_capture
@@ -314,7 +319,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   end
 
   def test_successful_visacreditcard_purchase_via_reference
-    assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge({type: '9'}))
+    assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge({ type: '9' }))
     assert_equal 'APPROVED', response.message
     assert_success response
     assert response.test?
@@ -424,6 +429,38 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert !response.params['threeDSACSURL'].blank?
     assert !response.params['threeDSMD'].blank?
     assert !response.params['threeDSPaReq'].blank?
+  end
+
+  def test_3dsecure2_auth_authenticated_card
+    assert response = @gateway.authorize(1202, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    assert_equal 'APPROVED', response.message
+    assert_equal '0', response.params['responseCode']
+    assert_equal 'Success', response.params['threeDSResponseMessage']
+    assert response.success?
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
+  def test_3dsecure2_auth_not_authenticated_card
+    @visacredit_three_ds_options[:three_d_secure][:authentication_response_status] = 'N'
+    assert response = @gateway.authorize(1202, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    assert_equal '3DS DECLINED', response.message
+    assert_equal '65803', response.params['responseCode']
+    assert_equal 'not authenticated', response.params['threeDSCheck']
+    refute response.success?
+    assert response.test?
+    refute response.authorization.blank?
+  end
+
+  def test_3dsecure2_auth_not_enrolled_card
+    @visacredit_three_ds_options[:three_d_secure][:enrolled] = 'false'
+    assert response = @gateway.authorize(1202, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    assert_equal '3DS DECLINED', response.message
+    assert_equal '65803', response.params['responseCode']
+    assert_equal 'not checked', response.params['threeDSCheck']
+    refute response.success?
+    assert response.test?
+    refute response.authorization.blank?
   end
 
   def test_transcript_scrubbing

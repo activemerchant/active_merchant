@@ -119,14 +119,14 @@ class RemoteWirecardTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_german_address_no_state_and_invalid_phone
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: @german_address.merge({state: nil, phone: '1234'})))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: @german_address.merge({ state: nil, phone: '1234' })))
 
     assert_success response
     assert response.message[/THIS IS A DEMO/]
   end
 
   def test_successful_purchase_with_german_address_and_valid_phone
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: @german_address.merge({phone: '+049-261-1234-123'})))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: @german_address.merge({ phone: '+049-261-1234-123' })))
 
     assert_success response
     assert response.message[/THIS IS A DEMO/]

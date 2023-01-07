@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = new_request
         add_amount(post, money, options)
         add_invoice(post, options)
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         authorize(0, credit_card, options)
       end
 
@@ -179,8 +179,7 @@ module ActiveMerchant #:nodoc:
 
         PaystationResponse.new(success?(response), message, response,
           test: (response[:tm]&.casecmp('t')&.zero?),
-          authorization: response[:paystation_transaction_id]
-        )
+          authorization: response[:paystation_transaction_id])
       end
 
       def success?(response)

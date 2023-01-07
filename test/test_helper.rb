@@ -31,7 +31,7 @@ end
 
 module ActiveMerchant
   module Assertions
-    AssertionClass = defined?(Minitest) ? MiniTest::Assertion : Test::Unit::AssertionFailedError
+    ASSERTION_CLASS = defined?(Minitest) ? MiniTest::Assertion : Test::Unit::AssertionFailedError
 
     def assert_field(field, value)
       clean_backtrace do
@@ -68,20 +68,20 @@ module ActiveMerchant
     #
     # A message will automatically show the inspection of the response
     # object if things go afoul.
-    def assert_success(response, message=nil)
+    def assert_success(response, message = nil)
       clean_backtrace do
         assert response.success?, build_message(nil, "#{message + "\n" if message}Response expected to succeed: <?>", response)
       end
     end
 
     # The negative of +assert_success+
-    def assert_failure(response, message=nil)
+    def assert_failure(response, message = nil)
       clean_backtrace do
         assert !response.success?, build_message(nil, "#{message + "\n" if message}Response expected to fail: <?>", response)
       end
     end
 
-    def assert_valid(model, message=nil)
+    def assert_valid(model, message = nil)
       errors = model.validate
 
       clean_backtrace do
@@ -101,7 +101,7 @@ module ActiveMerchant
       errors
     end
 
-    def assert_deprecation_warning(message=nil)
+    def assert_deprecation_warning(message = nil)
       ActiveMerchant.expects(:deprecated).with(message || anything)
       yield
     end
@@ -129,9 +129,9 @@ module ActiveMerchant
 
     def clean_backtrace(&block)
       yield
-    rescue AssertionClass => e
+    rescue ASSERTION_CLASS => e
       path = File.expand_path(__FILE__)
-      raise AssertionClass, e.message, (e.backtrace.reject { |line| File.expand_path(line).match?(/#{path}/) })
+      raise ASSERTION_CLASS, e.message, (e.backtrace.reject { |line| File.expand_path(line).match?(/#{path}/) })
     end
   end
 
@@ -168,7 +168,7 @@ module ActiveMerchant
       exp_date = default_expiration_date.strftime('%y%m')
 
       defaults = {
-        track_data: "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?",
+        track_data: "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?"
       }.update(options)
 
       Billing::CreditCard.new(defaults)
@@ -216,8 +216,7 @@ module ActiveMerchant
       ActiveMerchant::Billing::ApplePayPaymentToken.new(defaults[:payment_data],
         payment_instrument_name: defaults[:payment_instrument_name],
         payment_network: defaults[:payment_network],
-        transaction_identifier: defaults[:transaction_identifier]
-      )
+        transaction_identifier: defaults[:transaction_identifier])
     end
 
     def address(options = {})
@@ -232,6 +231,19 @@ module ActiveMerchant
         country:  'CA',
         phone:    '(555)555-5555',
         fax:      '(555)555-6666'
+      }.update(options)
+    end
+
+    def shipping_address(options = {})
+      {
+        name:     'Jon Smith',
+        address1: '123 Your Street',
+        address2: 'Apt 2',
+        city:     'Toronto',
+        state:    'ON',
+        zip:      'K2C3N7',
+        country:  'CA',
+        phone_number: '(123)456-7890'
       }.update(options)
     end
 
@@ -293,7 +305,7 @@ module ActiveMerchant
       return unless hash.is_a?(Hash)
 
       hash.symbolize_keys!
-      hash.each { |k, v| symbolize_keys(v) }
+      hash.each { |_k, v| symbolize_keys(v) }
     end
   end
 end
@@ -322,49 +334,19 @@ Test::Unit::TestCase.class_eval do
   end
 end
 
-module ActionViewHelperTestHelper
-  def self.included(base)
-    base.send(:include, ActiveMerchant::Billing::Integrations::ActionViewHelper)
-    base.send(:include, ActionView::Helpers::FormHelper)
-    base.send(:include, ActionView::Helpers::FormTagHelper)
-    base.send(:include, ActionView::Helpers::UrlHelper)
-    base.send(:include, ActionView::Helpers::TagHelper)
-    base.send(:include, ActionView::Helpers::CaptureHelper)
-    base.send(:include, ActionView::Helpers::TextHelper)
-    base.send(:attr_accessor, :output_buffer)
-  end
-
-  def setup
-    @controller = Class.new do
-      attr_reader :url_for_options
-      def url_for(options, *parameters_for_method_reference)
-        @url_for_options = options
-      end
-    end
-    @controller = @controller.new
-    @output_buffer = ''
-  end
-
-  protected
-
-  def protect_against_forgery?
-    false
-  end
-end
-
 class MockResponse
   attr_reader   :code, :body, :message
   attr_accessor :headers
 
-  def self.succeeded(body, message='')
+  def self.succeeded(body, message = '')
     MockResponse.new(200, body, message)
   end
 
-  def self.failed(body, http_status_code=422, message='')
+  def self.failed(body, http_status_code = 422, message = '')
     MockResponse.new(http_status_code, body, message)
   end
 
-  def initialize(code, body, message='', headers={})
+  def initialize(code, body, message = '', headers = {})
     @code, @body, @message, @headers = code, body, message, headers
   end
 

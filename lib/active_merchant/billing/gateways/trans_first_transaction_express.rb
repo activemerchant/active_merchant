@@ -152,7 +152,7 @@ module ActiveMerchant #:nodoc:
         'R1' => 'The transaction was declined or returned, because the cardholder requested that payment of all recurring or installment payment transactions for a specific merchant account be stopped/ Reserved for client-specific use (declined)',
         'Q1' => 'Card Authentication failed/ Reserved for client-specific use (declined)',
         'XA' => 'Forward to Issuer/ Reserved for client-specific use (declined)',
-        'XD' => 'Forward to Issuer/ Reserved for client-specific use (declined)',
+        'XD' => 'Forward to Issuer/ Reserved for client-specific use (declined)'
       }
 
       EXTENDED_RESPONSE_MESSAGES = {
@@ -179,15 +179,15 @@ module ActiveMerchant #:nodoc:
         refund_echeck: 16,
         void_echeck: 16,
 
-        wallet_sale: 14,
+        wallet_sale: 14
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :gateway_id, :reg_key)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         if credit_card?(payment_method)
           action = :purchase
           request = build_xml_transaction_request do |doc|
@@ -216,7 +216,7 @@ module ActiveMerchant #:nodoc:
         commit(action, request)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         if credit_card?(payment_method)
           request = build_xml_transaction_request do |doc|
             add_credit_card(doc, payment_method)
@@ -234,7 +234,7 @@ module ActiveMerchant #:nodoc:
         commit(:authorize, request)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         transaction_id = split_authorization(authorization)[1]
         request = build_xml_transaction_request do |doc|
           add_amount(doc, amount)
@@ -244,7 +244,7 @@ module ActiveMerchant #:nodoc:
         commit(:capture, request)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         action, transaction_id = split_authorization(authorization)
 
         request = build_xml_transaction_request do |doc|
@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
         commit(void_type(action), request)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         action, transaction_id = split_authorization(authorization)
 
         request = build_xml_transaction_request do |doc|
@@ -265,7 +265,7 @@ module ActiveMerchant #:nodoc:
         commit(refund_type(action), request)
       end
 
-      def credit(amount, payment_method, options={})
+      def credit(amount, payment_method, options = {})
         request = build_xml_transaction_request do |doc|
           add_pan(doc, payment_method)
           add_amount(doc, amount)
@@ -274,7 +274,7 @@ module ActiveMerchant #:nodoc:
         commit(:credit, request)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         request = build_xml_transaction_request do |doc|
           add_credit_card(doc, credit_card)
           add_contact(doc, credit_card.name, options)
@@ -283,7 +283,7 @@ module ActiveMerchant #:nodoc:
         commit(:verify, request)
       end
 
-      def store(payment_method, options={})
+      def store(payment_method, options = {})
         store_customer_request = build_xml_payment_storage_request do |doc|
           store_customer_details(doc, payment_method.name, options)
         end
@@ -317,12 +317,13 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<[^>]+pan>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<[^>]+sec>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<[^>]+id>)[^<]+(<))i, '\1[FILTERED]\2').
-          gsub(%r((<[^>]+regKey>)[^<]+(<))i, '\1[FILTERED]\2')
+          gsub(%r((<[^>]+regKey>)[^<]+(<))i, '\1[FILTERED]\2').
+          gsub(%r((<[^>]+acctNr>)[^<]+(<))i, '\1[FILTERED]\2')
       end
 
       private
 
-      CURRENCY_CODES = Hash.new { |h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
+      CURRENCY_CODES = Hash.new { |_h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
       CURRENCY_CODES['USD'] = '840'
 
       def headers
@@ -462,7 +463,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_xml_request(wrapper, merchant_product_type=nil)
+      def build_xml_request(wrapper, merchant_product_type = nil)
         Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
           xml['soapenv'].Envelope('xmlns:soapenv' => SOAPENV_NAMESPACE) do
             xml['soapenv'].Body do
@@ -481,11 +482,11 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML::Document.parse(request)
         merc_nodeset = doc.xpath('//v1:merc', 'v1' => V1_NAMESPACE)
-        merc_nodeset.after "<tranCode>#{TRANSACTION_CODES[action]}</tranCode>"
+        merc_nodeset.after "<v1:tranCode>#{TRANSACTION_CODES[action]}</v1:tranCode>"
         doc.root.to_xml
       end
 
-      def add_merchant(doc, product_type=nil)
+      def add_merchant(doc, product_type = nil)
         doc['v1'].merc do
           doc['v1'].id @options[:gateway_id]
           doc['v1'].regKey @options[:reg_key]

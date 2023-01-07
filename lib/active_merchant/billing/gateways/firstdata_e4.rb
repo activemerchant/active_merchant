@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         discover: 'Discover'
       }
 
-      E4_BRANDS = BRANDS.merge({mastercard: 'Mastercard'})
+      E4_BRANDS = BRANDS.merge({ mastercard: 'Mastercard' })
 
       DEFAULT_ECI = '07'
 
@@ -302,7 +302,8 @@ module ActiveMerchant #:nodoc:
           first_name: params[2],
           last_name: params[3],
           month: params[4],
-          year: params[5])
+          year: params[5]
+        )
 
         xml.tag! 'TransarmorToken', params[0]
         xml.tag! 'Expiry_Date', expdate(credit_card)
@@ -356,10 +357,9 @@ module ActiveMerchant #:nodoc:
         Response.new(successful?(response), message_from(response), response,
           test: test?,
           authorization: successful?(response) ? response_authorization(action, response, credit_card) : '',
-          avs_result: {code: response[:avs]},
+          avs_result: { code: response[:avs] },
           cvv_result: response[:cvv2],
-          error_code: standard_error_code(response)
-        )
+          error_code: standard_error_code(response))
       end
 
       def successful?(response)
@@ -395,7 +395,7 @@ module ActiveMerchant #:nodoc:
             credit_card.last_name,
             credit_card.month,
             credit_card.year
-          ].map { |value| value.to_s.gsub(/;/, '') }.join(';')
+          ].map { |value| value.to_s.delete(';') }.join(';')
         else
           raise StandardError, "TransArmor support is not enabled on your #{display_name} account"
         end
@@ -439,7 +439,7 @@ module ActiveMerchant #:nodoc:
           parse_elements(response, root)
         end
 
-        response.delete_if { |k, v| SENSITIVE_FIELDS.include?(k) }
+        response.delete_if { |k, _v| SENSITIVE_FIELDS.include?(k) }
       end
 
       def parse_elements(response, root)

@@ -86,8 +86,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(response[:result_code] == 1, message_from(response), response,
           test: test?,
-          authorization: response[:merchant_transaction_reference]
-        )
+          authorization: response[:merchant_transaction_reference])
       end
 
       def message_from(result)

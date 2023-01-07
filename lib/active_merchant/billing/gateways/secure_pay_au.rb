@@ -185,8 +185,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success?(response), message_from(response), response,
           test: test?,
-          authorization: authorization_from(response)
-        )
+          authorization: authorization_from(response))
       end
 
       def build_periodic_item(action, money, credit_card, options)
@@ -242,8 +241,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success?(response), message_from(response), response,
           test: test?,
-          authorization: authorization_from(response)
-        )
+          authorization: authorization_from(response))
       end
 
       def success?(response)

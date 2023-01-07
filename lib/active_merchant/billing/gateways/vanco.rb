@@ -15,19 +15,28 @@ module ActiveMerchant
       self.homepage_url = 'http://vancopayments.com/'
       self.display_name = 'Vanco Payment Solutions'
 
-      def initialize(options={})
+      SECONDS_PER_DAY = 3600 * 24
+      BUFFER_TIME_IN_SECS = 60 * 3
+
+      def initialize(options = {})
         requires!(options, :user_id, :password, :client_id)
         super
       end
 
-      def purchase(money, payment_method, options={})
-        MultiResponse.run do |r|
-          r.process { login }
-          r.process { commit(purchase_request(money, payment_method, r.params['response_sessionid'], options), :response_transactionref) }
+      def purchase(money, payment_method, options = {})
+        moment_less_than_24_hours_ago = Time.now - SECONDS_PER_DAY - BUFFER_TIME_IN_SECS
+
+        if options[:session_id] && options[:session_id][:created_at] >= moment_less_than_24_hours_ago
+          commit(purchase_request(money, payment_method, options[:session_id][:id], options), :response_transactionref)
+        else
+          MultiResponse.run do |r|
+            r.process { login }
+            r.process { commit(purchase_request(money, payment_method, r.params['response_sessionid'], options), :response_transactionref) }
+          end
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         MultiResponse.run do |r|
           r.process { login }
           r.process { commit(refund_request(money, authorization, r.params['response_sessionid']), :response_creditrequestreceived) }

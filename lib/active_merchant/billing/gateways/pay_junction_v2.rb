@@ -12,12 +12,12 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars
       self.supported_cardtypes = %i[visa master american_express discover]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_login, :api_password, :api_key)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
         commit('purchase', post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         post[:status] = 'HOLD'
         add_invoice(post, amount, options)
@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
         commit('authorize', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         post[:status] = 'CAPTURE'
         post[:transactionId] = authorization
@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         post[:status] = 'VOID'
         post[:transactionId] = authorization
@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
         commit('void', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         post[:action] = 'REFUND'
         post[:transactionId] = authorization
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         commit('refund', post)
       end
 
-      def credit(amount, payment_method, options={})
+      def credit(amount, payment_method, options = {})
         post = {}
         post[:action] = 'REFUND'
         add_invoice(post, amount, options)
@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
         commit('credit', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
         params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
-      def url(params={})
+      def url(params = {})
         test? ? "#{test_url}/#{params[:transactionId]}" : "#{live_url}/#{params[:transactionId]}"
       end
 

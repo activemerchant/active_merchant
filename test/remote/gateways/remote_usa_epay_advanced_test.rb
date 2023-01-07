@@ -36,13 +36,13 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     )
 
     cc_method = [
-      {name: 'My CC', sort: 5, method: @credit_card},
-      {name: 'Other CC', sort: 12, method: @credit_card}
+      { name: 'My CC', sort: 5, method: @credit_card },
+      { name: 'Other CC', sort: 12, method: @credit_card }
     ]
 
     @options = {
       client_ip: '127.0.0.1',
-      billing_address: address,
+      billing_address: address
     }
 
     @transaction_options = {
@@ -167,7 +167,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     response = @gateway.add_customer(@options.merge(@customer_options))
     customer_number = response.params['add_customer_return']
 
-    response = @gateway.quick_update_customer({customer_number: customer_number, update_data: @update_customer_options})
+    response = @gateway.quick_update_customer({ customer_number: customer_number, update_data: @update_customer_options })
     assert response.params['quick_update_customer_return']
   end
 

@@ -46,6 +46,26 @@ class RemoteForteTest < Test::Unit::TestCase
     assert_equal 'PPD', response.params['echeck']['sec_code']
   end
 
+  def test_successful_purchase_with_xdata
+    @options = @options.merge({
+      xdata: {
+        xdata_1: 'some customer metadata',
+        xdata_2: 'some customer metadata',
+        xdata_3: 'some customer metadata',
+        xdata_4: 'some customer metadata',
+        xdata_5: 'some customer metadata',
+        xdata_6: 'some customer metadata',
+        xdata_7: 'some customer metadata',
+        xdata_8: 'some customer metadata',
+        xdata_9: 'some customer metadata'
+      }
+    })
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    (1..9).each { |n| assert_equal 'some customer metadata', response.params['xdata']["xdata_#{n}"] }
+  end
+
   def test_successful_purchase_with_echeck_with_more_options
     options = {
       sec_code: 'WEB'
@@ -212,6 +232,16 @@ class RemoteForteTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
+  end
+
+  def test_account_number_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, clean_transcript)
   end
 
   private

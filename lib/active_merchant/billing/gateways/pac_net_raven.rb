@@ -129,8 +129,7 @@ module ActiveMerchant #:nodoc:
             postal_match: AVS_POSTAL_CODES[response['AVSPostalResponseCode']],
             street_match: AVS_ADDRESS_CODES[response['AVSAddressResponseCode']]
           },
-          cvv_result: CVV2_CODES[response['CVV2ResponseCode']]
-        )
+          cvv_result: CVV2_CODES[response['CVV2ResponseCode']])
       end
 
       def url(action)
@@ -149,9 +148,9 @@ module ActiveMerchant #:nodoc:
 
       def success?(response)
         if %w(cc_settle cc_debit cc_preauth cc_refund).include?(response[:action])
-          !response['ApprovalCode'].nil? and response['ErrorCode'].nil? and response['Status'] == 'Approved'
+          !response['ApprovalCode'].nil? && response['ErrorCode'].nil? && (response['Status'] == 'Approved')
         elsif response[:action] = 'void'
-          !response['ApprovalCode'].nil? and response['ErrorCode'].nil? and response['Status'] == 'Voided'
+          !response['ApprovalCode'].nil? && response['ErrorCode'].nil? && (response['Status'] == 'Voided')
         end
       end
 
