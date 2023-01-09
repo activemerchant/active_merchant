@@ -108,6 +108,39 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'succeeded', response.params['status']
   end
 
+  def test_successful_purchase_with_level3_data
+    options = {
+      currency: 'USD',
+      customer: @customer,
+      merchant_reference: 123,
+      customer_reference: 456,
+      shipping_address_zip: 71601,
+      shipping_from_zip: 71601,
+      shipping_amount: 10,
+      line_items: [
+        {
+          'product_code' => 1234,
+          'product_description' => 'An item',
+          'unit_cost' => 15,
+          'quantity' => 2,
+          'tax_amount' => 0
+        },
+        {
+          'product_code' => 999,
+          'product_description' => 'A totes different item',
+          'tax_amount' => 10,
+          'unit_cost' => 50,
+          'quantity' => 1
+        }
+      ]
+    }
+
+    assert response = @gateway.purchase(100, @visa_card, options)
+    assert_success response
+    assert_equal 'succeeded', response.params['status']
+    assert response.params.dig('charges', 'data')[0]['captured']
+  end
+
   def test_unsuccessful_purchase_google_pay_with_invalid_card_number
     options = {
       currency: 'GBP'

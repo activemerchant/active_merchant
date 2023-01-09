@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
             add_error_on_requires_action(post, options)
             add_fulfillment_date(post, options)
             request_three_d_secure(post, options)
+            add_level_three(post, options)
 
             CREATE_INTENT_ATTRIBUTES.each do |attribute|
               add_whitelisted_attribute(post, options, attribute)
@@ -282,6 +283,19 @@ module ActiveMerchant #:nodoc:
         super
 
         post[:metadata][:event_type] = options[:event_type] if options[:event_type]
+      end
+
+      def add_level_three(post, options = {})
+        level_three = {}
+
+        level_three[:merchant_reference] = options[:merchant_reference] if options[:merchant_reference]
+        level_three[:customer_reference] = options[:customer_reference] if options[:customer_reference]
+        level_three[:shipping_address_zip] = options[:shipping_address_zip] if options[:shipping_address_zip]
+        level_three[:shipping_from_zip] = options[:shipping_from_zip] if options[:shipping_from_zip]
+        level_three[:shipping_amount] = options[:shipping_amount] if options[:shipping_amount]
+        level_three[:line_items] = options[:line_items] if options[:line_items]
+
+        post[:level3] = level_three unless level_three.empty?
       end
 
       def add_return_url(post, options)

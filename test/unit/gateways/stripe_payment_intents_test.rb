@@ -291,6 +291,39 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal 'succeeded', verify.params['status']
   end
 
+  def test_successful_purchase_with_level3_data
+    @options[:merchant_reference] = 123
+    @options[:customer_reference] = 456
+    @options[:shipping_address_zip] = 98765
+    @options[:shipping_from_zip] = 54321
+    @options[:shipping_amount] = 40
+    @options[:line_items] = [
+      {
+        'product_code' => 1234,
+        'product_description' => 'An item',
+        'unit_cost' => 60,
+        'quantity' => 7,
+        'tax_amount' => 0
+      },
+      {
+        'product_code' => 999,
+        'tax_amount' => 888
+      }
+    ]
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('level3[merchant_reference]=123', data)
+      assert_match('level3[customer_reference]=456', data)
+      assert_match('level3[shipping_address_zip]=98765', data)
+      assert_match('level3[shipping_amount]=40', data)
+      assert_match('level3[shipping_from_zip]=54321', data)
+      assert_match('level3[line_items][0][product_description]=An+item', data)
+      assert_match('level3[line_items][1][product_code]=999', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_succesful_purchase_with_stored_credentials
     [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
       network_transaction_id = '1098510912210968'
