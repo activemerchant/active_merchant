@@ -241,7 +241,7 @@ module ActiveMerchant
       def add_network_tokenization(params, payment_method, options)
         nt_card = {}
         nt_card[:type] = 'D'
-        nt_card[:cardholder_name] = payment_method.first_name
+        nt_card[:cardholder_name] = payment_method.first_name || name_from_address(options)
         nt_card[:card_number] = payment_method.number
         nt_card[:exp_date] = format_exp_date(payment_method.month, payment_method.year)
         nt_card[:cvv] = payment_method.verification_value
@@ -256,6 +256,11 @@ module ActiveMerchant
 
       def format_exp_date(month, year)
         "#{format(month, :two_digits)}#{format(year, :two_digits)}"
+      end
+
+      def name_from_address(options)
+        return unless address = options[:billing_address]
+        return address[:name] if address[:name]
       end
 
       def add_address(params, options)

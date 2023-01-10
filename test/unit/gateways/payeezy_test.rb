@@ -107,6 +107,18 @@ class PayeezyGateway < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_failed_purchase_no_name
+    @apple_pay_card.first_name = nil
+    @apple_pay_card.last_name = nil
+    @options[:billing_address] = nil
+    stub_comms do
+      @gateway.purchase(@amount, @apple_pay_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal nil, request['cardholder_name']
+    end.respond_with(failed_purchase_no_name_response)
+  end
+
   def test_successful_store
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.store(@credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
@@ -806,6 +818,12 @@ class PayeezyGateway < Test::Unit::TestCase
   def below_minimum_response
     <<~RESPONSE
       {\"correlation_id\":\"123.1234678982\",\"transaction_status\":\"declined\",\"validation_status\":\"success\",\"transaction_type\":\"authorize\",\"transaction_tag\":\"92384753\",\"method\":\"credit_card\",\"amount\":\"250\",\"currency\":\"USD\",\"card\":{\"type\":\"Mastercard\",\"cardholder_name\":\"Omri Test\",\"card_number\":\"[FILTERED]\",\"exp_date\":\"0123\"},\"gateway_resp_code\":\"36\",\"gateway_message\":\"Below Minimum Sale\"}
+    RESPONSE
+  end
+
+  def failed_purchase_no_name_response
+    <<~RESPONSE
+      {\"correlation_id\":\"29.7337367613551\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET106024\",\"transaction_tag\":\"10049930801\",\"method\":\"3ds\",\"amount\":\"100\",\"currency\":\"USD\",\"avs\":\"4\",\"cvv2\":\"U\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"1141044316391439\"}},\"card\":{\"type\":\"VISA\",\"cardholder_name\":\"Jim Smith\",\"card_number\":\"1439\",\"exp_date\":\"1124\"},\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"eCommerce_flag\":\"5\",\"retrieval_ref_no\":\"230110\"}
     RESPONSE
   end
 
