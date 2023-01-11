@@ -50,6 +50,7 @@
 * Stripe PI: Add Level 3 support [almalee24] #4673
 * Braintree: return additional processor response [jcreiff] #4653
 * Payeezy: name from `billing_address` on `purchase` [naashton] #4674
+* Stripe: add reverse_transfer to void transactions [jcreiff] #4668
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512
