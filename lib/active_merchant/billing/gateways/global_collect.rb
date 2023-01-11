@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def inquire(authorization)
+      def inquire(authorization, options = {})
         commit(:get, :inquire, nil, authorization: authorization)
       end
 
