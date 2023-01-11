@@ -278,7 +278,7 @@ module ActiveMerchant #:nodoc:
       end
 
       %w(month year start_month start_year).each do |m|
-        class_eval %(
+        class_eval <<~RUBY, __FILE__, __LINE__ + 1
           def #{m}=(v)
             @#{m} = case v
             when "", nil, 0
@@ -287,7 +287,7 @@ module ActiveMerchant #:nodoc:
               v.to_i
             end
           end
-        )
+        RUBY
       end
 
       def verification_value?
