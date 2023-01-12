@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['UY']
       self.default_currency = 'UYU'
-      self.supported_cardtypes = %i[visa master american_express discover]
+      self.supported_cardtypes = %i[visa master american_express discover passcard edenred anda tarjeta-d]
 
       self.homepage_url = 'https://www.plexo.com.uy'
       self.display_name = 'Plexo'

@@ -53,6 +53,7 @@
 * Stripe: add reverse_transfer to void transactions [jcreiff] #4668
 * Global Collect: fix bug on transaction inquire request [almalee24] #4676
 * Credorax: Support google pay and apple pay [edgarv09] #4661
+* Plexo: Add support for 5 new credit card brands (passcard, edenred, anda, tarjeta-d, sodexo) [edgarv09] #4652
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512
