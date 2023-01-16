@@ -62,7 +62,13 @@ class RemoteCredoraxTest < Test::Unit::TestCase
       year: Time.new.year + 2,
       source: :google_pay,
       transaction_id: '123456789',
-      eci: '05')
+      eci: '07')
+
+    @nt_credit_card = network_tokenization_credit_card('4176661000001015',
+      brand: 'visa',
+      eci: '07',
+      source: :network_token,
+      payment_cryptogram: 'AgAAAAAAosVKVV7FplLgQRYAAAA=')
   end
 
   def test_successful_purchase_with_apple_pay
@@ -74,6 +80,13 @@ class RemoteCredoraxTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_google_pay
     response = @gateway.purchase(@amount, @google_pay_card, @options)
+    assert_success response
+    assert_equal '1', response.params['H9']
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_network_token
+    response = @gateway.purchase(@amount, @nt_credit_card, @options)
     assert_success response
     assert_equal '1', response.params['H9']
     assert_equal 'Succeeded', response.message

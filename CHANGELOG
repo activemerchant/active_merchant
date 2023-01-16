@@ -55,6 +55,7 @@
 * Credorax: Support google pay and apple pay [edgarv09] #4661
 * Plexo: Add support for 5 new credit card brands (passcard, edenred, anda, tarjeta-d, sodexo) [edgarv09] #4652
 * Authorize.net: Google pay token support [sainterman] #4659
+* Credorax: Add support for Network Tokens [jherreraa] #4679
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512
