@@ -30,7 +30,8 @@ module ActiveMerchant #:nodoc:
 
       NETWORK_TOKENIZATION_CARD_SOURCE = {
         'apple_pay' => 'applepay',
-        'google_pay' => 'googlepay'
+        'google_pay' => 'googlepay',
+        'network_token' => 'vts_mdes_token'
       }
 
       RESPONSE_MESSAGES = {
@@ -284,12 +285,18 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method)
         post[:c1] = payment_method&.name || ''
-        post[:b21] = NETWORK_TOKENIZATION_CARD_SOURCE[payment_method.source.to_s] if payment_method.is_a? NetworkTokenizationCreditCard
+        add_network_tokenization_card(post, payment_method) if payment_method.is_a? NetworkTokenizationCreditCard
         post[:b2] = CARD_TYPES[payment_method.brand] || ''
         post[:b1] = payment_method.number
         post[:b5] = payment_method.verification_value
         post[:b4] = format(payment_method.year, :two_digits)
         post[:b3] = format(payment_method.month, :two_digits)
+      end
+
+      def add_network_tokenization_card(post, payment_method)
+        post[:b21] = NETWORK_TOKENIZATION_CARD_SOURCE[payment_method.source.to_s]
+        post[:token_eci] = payment_method&.eci if payment_method.source.to_s == 'network_token'
+        post[:token_crypto] = payment_method&.payment_cryptogram if payment_method.source.to_s == 'network_token'
       end
 
       def add_stored_credential(post, options)
