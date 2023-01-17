@@ -72,9 +72,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       transaction_indicator: 2,
       previous_charge_id: 'pay_123',
       processing_channel_id: 'pc_123',
-      marketplace: {
-        sub_entity_id: 'ent_123'
-      }
+      amount_allocation: [
+        {
+          id: 'ent_123',
+          amount: @amount
+        }
+      ]
     )
     @additional_options_3ds = @options.merge(
       execute_threed: true,
