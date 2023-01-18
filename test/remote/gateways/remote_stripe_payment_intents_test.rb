@@ -1204,6 +1204,13 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'Your card was declined.', verify.message
   end
 
+  def test_verify_stores_response_for_payment_method_creation
+    assert verify = @gateway.verify(@visa_card)
+
+    assert_equal 2, verify.responses.count
+    assert_match 'pm_', verify.responses.first.params['id']
+  end
+
   def test_moto_enabled_card_requires_action_when_not_marked
     options = {
       currency: 'GBP',

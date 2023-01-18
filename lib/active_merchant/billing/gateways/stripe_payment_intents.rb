@@ -117,20 +117,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_setup_intent(payment_method, options = {})
-        post = {}
-        add_customer(post, options)
-        result = add_payment_method_token(post, payment_method, options)
-        return result if result.is_a?(ActiveMerchant::Billing::Response)
+        MultiResponse.run do |r|
+          r.process do
+            post = {}
+            add_customer(post, options)
+            result = add_payment_method_token(post, payment_method, options, r)
+            return result if result.is_a?(ActiveMerchant::Billing::Response)
 
-        add_metadata(post, options)
-        add_return_url(post, options)
-        add_fulfillment_date(post, options)
-        request_three_d_secure(post, options)
-        post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
-        post[:usage] = options[:usage] if %w(on_session off_session).include?(options[:usage])
-        post[:description] = options[:description] if options[:description]
+            add_metadata(post, options)
+            add_return_url(post, options)
+            add_fulfillment_date(post, options)
+            request_three_d_secure(post, options)
+            post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
+            post[:usage] = options[:usage] if %w(on_session off_session).include?(options[:usage])
+            post[:description] = options[:description] if options[:description]
 
-        commit(:post, 'setup_intents', post, options)
+            commit(:post, 'setup_intents', post, options)
+          end
+        end
       end
 
       def retrieve_setup_intent(setup_intent_id, options = {})
@@ -305,7 +309,7 @@ module ActiveMerchant #:nodoc:
         post[:return_url] = options[:return_url] if options[:return_url]
       end
 
-      def add_payment_method_token(post, payment_method, options)
+      def add_payment_method_token(post, payment_method, options, responses = [])
         case payment_method
         when StripePaymentToken
           post[:payment_method_data] = {
@@ -318,7 +322,7 @@ module ActiveMerchant #:nodoc:
         when String
           extract_token_from_string_and_maybe_add_customer_id(post, payment_method)
         when ActiveMerchant::Billing::CreditCard
-          get_payment_method_data_from_card(post, payment_method, options)
+          get_payment_method_data_from_card(post, payment_method, options, responses)
         end
       end
 
@@ -358,16 +362,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def get_payment_method_data_from_card(post, payment_method, options)
-        return create_payment_method_and_extract_token(post, payment_method, options) unless off_session_request?(options)
+      def get_payment_method_data_from_card(post, payment_method, options, responses)
+        return create_payment_method_and_extract_token(post, payment_method, options, responses) unless off_session_request?(options)
 
         post[:payment_method_data] = add_payment_method_data(payment_method, options)
       end
 
-      def create_payment_method_and_extract_token(post, payment_method, options)
+      def create_payment_method_and_extract_token(post, payment_method, options, responses)
         payment_method_response = create_payment_method(payment_method, options)
         return payment_method_response if payment_method_response.failure?
 
+        responses << payment_method_response
         add_payment_method_token(post, payment_method_response.params['id'], options)
       end
 
