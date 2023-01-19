@@ -155,6 +155,8 @@ module ActiveMerchant
       def add_authorization_info(params, authorization, options = {})
         transaction_id, transaction_tag, method, = authorization.split('|')
         params[:method] = method == 'token' ? 'credit_card' : method
+        # If the previous transaction `method` value was 3DS, it needs to be set to `credit_card` on follow up transactions
+        params[:method] = 'credit_card' if method == '3DS'
 
         if options[:reversal_id]
           params[:reversal_id] = options[:reversal_id]

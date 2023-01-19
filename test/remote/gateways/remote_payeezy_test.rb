@@ -86,6 +86,14 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_authorize_and_capture_with_apple_pay
+    assert auth = @gateway.authorize(@amount, @apple_pay_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+
   def test_successful_purchase_with_echeck
     options = @options.merge({ customer_id_type: '1', customer_id_number: '1', client_email: 'test@example.com' })
     assert response = @gateway.purchase(@amount, @check, options)
