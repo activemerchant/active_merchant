@@ -90,19 +90,26 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((X-Pj-Application-Key: )[\w-]+), '\1[FILTERED]').
+          gsub(%r((tokenId=)\w+), '\1[FILTERED]').
           gsub(%r((cardNumber=)\d+), '\1[FILTERED]').
           gsub(%r((cardCvv=)\d+), '\1[FILTERED]')
       end
 
       private
-
+      
       def add_invoice(post, money, options)
         post[:amountBase] = amount(money) if money
         post[:invoiceNumber] = options[:order_id] if options[:order_id]
       end
+      
+      def add_token(post, token)
+        post[:tokenId] = token
+      end
 
       def add_payment_method(post, payment_method)
-        if payment_method.is_a? Integer
+        if payment_method.is_a? String
+          add_token(post, payment_method)
+        elsif payment_method.is_a? Integer
           post[:transactionId] = payment_method
         else
           post[:cardNumber] = payment_method.number

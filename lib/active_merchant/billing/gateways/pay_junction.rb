@@ -283,13 +283,19 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def add_token(post, token)
+        post[:token_id] = token
+      end
+
       def test_login?
         @options[:login] == TEST_LOGIN && @options[:password] == TEST_PASSWORD
       end
 
-      # add fields depending on payment source selected (cc or transaction id)
+      # add fields depending on payment source selected (token, cc, or transaction id)
       def add_payment_source(params, source)
-        if source.is_a?(String)
+        if source.is_a?(String) && source.length == 22
+          add_token(params, source)
+        elsif source.is_a?(String)
           add_billing_id(params, source)
         else
           add_creditcard(params, source)
