@@ -307,18 +307,14 @@ module ActiveMerchant #:nodoc:
         if stored_credential[:initiator] == 'merchant'
           case stored_credential[:reason_type]
           when 'recurring'
-            recurring_properties(post, stored_credential)
+            post[:a9] = stored_credential[:initial_transaction] ? '1' : '2'
           when 'installment', 'unscheduled'
             post[:a9] = '8'
           end
+          post[:g6] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
         else
           post[:a9] = '9'
         end
-      end
-
-      def recurring_properties(post, stored_credential)
-        post[:a9] = stored_credential[:initial_transaction] ? '1' : '2'
-        post[:g6] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
       end
 
       def add_customer_data(post, options)
