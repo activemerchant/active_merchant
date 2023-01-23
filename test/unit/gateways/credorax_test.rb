@@ -1003,6 +1003,7 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/a9=8/, data)
+      assert_match(/g6=abc123/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response

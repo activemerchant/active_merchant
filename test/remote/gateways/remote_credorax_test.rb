@@ -546,7 +546,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
     assert_success purchase
     assert_equal '8', purchase.params['A9']
-    assert network_transaction_id = purchase.params['Z13']
+    assert network_transaction_id = purchase.params['Z50']
 
     used_options = stored_credential_options(:merchant, :installment, id: network_transaction_id)
     assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
@@ -570,7 +570,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
     assert_success purchase
     assert_equal '8', purchase.params['A9']
-    assert network_transaction_id = purchase.params['Z13']
+    assert network_transaction_id = purchase.params['Z50']
 
     used_options = stored_credential_options(:merchant, :unscheduled, id: network_transaction_id)
     assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
