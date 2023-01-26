@@ -557,6 +557,15 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert auth.params['_links']['redirect']
   end
 
+  def test_allow_upgrade_with_direct_3ds
+    auth = @gateway.authorize(@amount, @threeds_card, @options.merge(execute_threed: true, allow_upgrade: true))
+
+    # using this assertion to show that the allow_upgrade field is accepted with the direct 3DS
+    # implementation. Remote test requests stay in pending state with direct 3DS so the entire
+    # flow is not able to be completed within one test.
+    assert_equal 'Y', auth.params['3ds']['enrolled']
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(12314, @credit_card, @options)
     assert_failure response

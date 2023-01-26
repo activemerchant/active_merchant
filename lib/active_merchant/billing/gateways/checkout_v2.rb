@@ -280,6 +280,7 @@ module ActiveMerchant #:nodoc:
           post[:'3ds'][:attempt_n3d] = options[:attempt_n3d] if options[:attempt_n3d]
           post[:'3ds'][:challenge_indicator] = options[:challenge_indicator] if options[:challenge_indicator]
           post[:'3ds'][:exemption] = options[:exemption] if options[:exemption]
+          post[:'3ds'][:allow_upgrade] = options[:allow_upgrade] if options[:allow_upgrade]
         end
 
         if options[:three_d_secure]

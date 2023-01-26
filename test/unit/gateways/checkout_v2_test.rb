@@ -115,6 +115,15 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_allow_upgrade
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { execute_threed: true, allow_upgrade: true })
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+      assert_equal(request_data['3ds']['allow_upgrade'], true)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_passing_capture_type
     stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, 'abc', { capture_type: 'NonFinal' })
@@ -518,6 +527,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       options = {
         execute_threed: true,
         attempt_n3d: true,
+        allow_upgrade: true,
         three_d_secure: {
           version: '1.0.2',
           eci: '05',
@@ -543,6 +553,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       options = {
         execute_threed: true,
+        allow_upgrade: true,
         three_d_secure: {
           version: '2.0.0',
           eci: '05',
