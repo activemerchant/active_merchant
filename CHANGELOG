@@ -33,6 +33,9 @@
 * Redsys: Missing cardnumber params in xml_signed_fields [nerburish] #2628
 * Bogus: allow authorizing with a tokenized card [Azdaroth] #2703
 
+== Version 1.79.3 (January 26, 2023)
+* Fix cert file
+
 == Version 1.79.2 (June 2, 2018)
 * Fix Gateway#max_version= overwriting min_version [bdewater]
 
