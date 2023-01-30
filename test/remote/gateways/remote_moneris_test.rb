@@ -15,6 +15,15 @@ class MonerisRemoteTest < Test::Unit::TestCase
     @no_liability_shift_eci = 7
 
     @credit_card = credit_card('4242424242424242', verification_value: '012')
+    @network_tokenization_credit_card = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      verification_value: nil
+    )
+    @apple_pay_credit_card = @network_tokenization_credit_card
+    @apple_pay_credit_card.source = :apple_pay
+    @google_pay_credit_card = @network_tokenization_credit_card
+    @google_pay_credit_card.source = :google_pay
     @visa_credit_card_3ds = credit_card('4606633870436092', verification_value: '012')
     @options = {
       order_id: generate_unique_id,
@@ -104,38 +113,74 @@ class MonerisRemoteTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_network_tokenization
-    @credit_card = network_tokenization_credit_card(
-      '4242424242424242',
-      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: nil
-    )
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.purchase(@amount, @network_tokenization_credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
   end
 
   def test_successful_purchase_with_network_tokenization_apple_pay_source
-    @credit_card = network_tokenization_credit_card(
-      '4242424242424242',
-      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: nil,
-      source: :apple_pay
-    )
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.purchase(@amount, @apple_pay_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_network_tokenization_apple_pay_source_with_nil_order_id
+    @options[:order_id] = nil
+    assert response = @gateway.purchase(@amount, @apple_pay_credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
   end
 
   def test_successful_purchase_with_network_tokenization_google_pay_source
-    @credit_card = network_tokenization_credit_card(
-      '4242424242424242',
-      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: nil,
-      source: :google_pay
-    )
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.purchase(@amount, @google_pay_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_network_tokenization_google_pay_source_with_nil_order_id
+    @options[:order_id] = nil
+    assert response = @gateway.purchase(@amount, @google_pay_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_authorize_with_network_tokenization
+    assert response = @gateway.authorize(@amount, @network_tokenization_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_authorize_with_network_tokenization_apple_pay_source
+    assert response = @gateway.authorize(@amount, @apple_pay_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_authorize_with_network_tokenization_apple_pay_source_with_nil_order_id
+    @options[:order_id] = nil
+    assert response = @gateway.authorize(@amount, @apple_pay_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_authorize_with_network_tokenization_google_pay_source
+    assert response = @gateway.authorize(@amount, @google_pay_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_authorize_with_network_tokenization_google_pay_source_with_nil_order_id
+    @options[:order_id] = nil
+    assert response = @gateway.authorize(@amount, @google_pay_credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
