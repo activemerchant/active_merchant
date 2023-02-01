@@ -1081,7 +1081,7 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @apple_pay_card)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/b21=applepay/, data)
-      assert_not_match(/token_eci=/, data)
+      assert_match(/token_eci=07/, data)
       assert_not_match(/token_crypto=/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
