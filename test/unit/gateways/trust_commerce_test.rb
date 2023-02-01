@@ -167,6 +167,22 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert_equal scrubbed_echeck_transcript, @gateway.scrub(echeck_transcript)
   end
 
+  def test_successful_verify
+    stub_comms do
+      @gateway.verify(@credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r{action=verify}, data)
+    end.respond_with(successful_verify_response)
+  end
+
+  def test_unsuccessful_verify
+    bad_credit_card = credit_card('42909090990')
+    @gateway.expects(:ssl_post).returns(unsuccessful_verify_response)
+    assert response = @gateway.verify(bad_credit_card)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
   private
 
   def successful_authorize_response
@@ -232,6 +248,23 @@ class TrustCommerceTest < Test::Unit::TestCase
     <<~RESPONSE
       transid=026-0193346231
       status=rejected
+    RESPONSE
+  end
+
+  def successful_verify_response
+    <<~RESPONSE
+      transid=039-0170402443
+      status=approved
+      avs=0
+      cvv=M
+    RESPONSE
+  end
+
+  def unsuccessful_verify_response
+    <<~RESPONSE
+      offenders=cc
+      error=badformat
+      status=baddata
     RESPONSE
   end
 
