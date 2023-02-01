@@ -249,8 +249,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
-        add_creditcard(options, credit_card)
-        commit('verify', options)
+        parameters = {}
+        add_creditcard(parameters, credit_card)
+        commit('verify', parameters)
       end
 
       # recurring() a TrustCommerce account that is activated for Citadel, TrustCommerce's
