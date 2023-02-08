@@ -52,8 +52,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
+        payment = authorization.split('|').first
         post = build_refund_request(money, options)
-        commit("payments/#{authorization}/refunds", post)
+        commit("payments/#{payment}/refunds", post)
       end
 
       def credit(money, payment, options = {})
@@ -64,7 +65,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         payment, amount = authorization.split('|')
         post = build_void_request(amount)
-        commit("/pts/v2/payments/#{payment}/reversals", post)
+        commit("payments/#{payment}/reversals", post)
       end
 
       def verify(credit_card, options = {})
