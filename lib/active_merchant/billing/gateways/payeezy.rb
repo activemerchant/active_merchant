@@ -155,6 +155,8 @@ module ActiveMerchant
       def add_authorization_info(params, authorization, options = {})
         transaction_id, transaction_tag, method, = authorization.split('|')
         params[:method] = method == 'token' ? 'credit_card' : method
+        # If the previous transaction `method` value was 3DS, it needs to be set to `credit_card` on follow up transactions
+        params[:method] = 'credit_card' if method == '3DS'
 
         if options[:reversal_id]
           params[:reversal_id] = options[:reversal_id]
@@ -241,21 +243,26 @@ module ActiveMerchant
       def add_network_tokenization(params, payment_method, options)
         nt_card = {}
         nt_card[:type] = 'D'
-        nt_card[:cardholder_name] = payment_method.first_name
+        nt_card[:cardholder_name] = payment_method.first_name || name_from_address(options)
         nt_card[:card_number] = payment_method.number
         nt_card[:exp_date] = format_exp_date(payment_method.month, payment_method.year)
         nt_card[:cvv] = payment_method.verification_value
-        nt_card[:xid] = payment_method.payment_cryptogram
-        nt_card[:cavv] = payment_method.payment_cryptogram
+        nt_card[:xid] = payment_method.payment_cryptogram unless payment_method.payment_cryptogram.empty?
+        nt_card[:cavv] = payment_method.payment_cryptogram unless payment_method.payment_cryptogram.empty?
         nt_card[:wallet_provider_id] = 'APPLE_PAY'
 
         params['3DS'] = nt_card
         params[:method] = '3DS'
-        params[:eci_indicator] = payment_method.eci
+        params[:eci_indicator] = payment_method.eci.nil? ? '5' : payment_method.eci
       end
 
       def format_exp_date(month, year)
         "#{format(month, :two_digits)}#{format(year, :two_digits)}"
+      end
+
+      def name_from_address(options)
+        return unless address = options[:billing_address]
+        return address[:name] if address[:name]
       end
 
       def add_address(params, options)

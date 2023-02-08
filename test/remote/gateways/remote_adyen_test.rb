@@ -1161,7 +1161,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     card = credit_card('4242424242424242', month: 16)
     assert response = @gateway.purchase(@amount, card, @options)
     assert_failure response
-    assert_equal 'The provided Expiry Date is not valid.: Expiry month should be between 1 and 12 inclusive', response.message
+    assert_equal 'The provided Expiry Date is not valid.: Expiry month should be between 1 and 12 inclusive: 16', response.message
   end
 
   def test_invalid_expiry_year_for_purchase
@@ -1341,6 +1341,39 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, auth.authorization, @options.merge(network_transaction_id: auth.network_transaction_id))
     assert_success refund
+  end
+
+  def test_purchase_with_skip_mpi_data
+    options = {
+      reference: '345123',
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
+      shopper_reference: 'shopper 123',
+      billing_address: address(country: 'US', state: 'CA')
+    }
+    first_options = options.merge(
+      order_id: generate_unique_id,
+      shopper_interaction: 'Ecommerce',
+      recurring_processing_model: 'Subscription'
+    )
+    assert auth = @gateway.authorize(@amount, @apple_pay_card, first_options)
+    assert_success auth
+
+    assert_equal 'Subscription', auth.params['additionalData']['recurringProcessingModel']
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal '[capture-received]', capture.message
+
+    used_options = options.merge(
+      order_id: generate_unique_id,
+      skip_mpi_data: 'Y',
+      shopper_interaction: 'ContAuth',
+      recurring_processing_model: 'Subscription',
+      network_transaction_id: auth.network_transaction_id
+    )
+
+    assert purchase = @gateway.purchase(@amount, @apple_pay_card, used_options)
+    assert_success purchase
   end
 
   def test_successful_authorize_with_sub_merchant_data

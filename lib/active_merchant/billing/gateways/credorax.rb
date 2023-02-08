@@ -28,6 +28,12 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.supported_cardtypes = %i[visa master maestro american_express jcb discover diners_club]
 
+      NETWORK_TOKENIZATION_CARD_SOURCE = {
+        'apple_pay' => 'applepay',
+        'google_pay' => 'googlepay',
+        'network_token' => 'vts_mdes_token'
+      }
+
       RESPONSE_MESSAGES = {
         '00' => 'Approved or completed successfully',
         '01' => 'Refer to card issuer',
@@ -278,12 +284,19 @@ module ActiveMerchant #:nodoc:
       }
 
       def add_payment_method(post, payment_method)
-        post[:c1] = payment_method.name
+        post[:c1] = payment_method&.name || ''
+        add_network_tokenization_card(post, payment_method) if payment_method.is_a? NetworkTokenizationCreditCard
         post[:b2] = CARD_TYPES[payment_method.brand] || ''
         post[:b1] = payment_method.number
         post[:b5] = payment_method.verification_value
         post[:b4] = format(payment_method.year, :two_digits)
         post[:b3] = format(payment_method.month, :two_digits)
+      end
+
+      def add_network_tokenization_card(post, payment_method)
+        post[:b21] = NETWORK_TOKENIZATION_CARD_SOURCE[payment_method.source.to_s]
+        post[:token_eci] = payment_method&.eci if payment_method.source.to_s == 'network_token'
+        post[:token_crypto] = payment_method&.payment_cryptogram if payment_method.source.to_s == 'network_token'
       end
 
       def add_stored_credential(post, options)
@@ -294,18 +307,14 @@ module ActiveMerchant #:nodoc:
         if stored_credential[:initiator] == 'merchant'
           case stored_credential[:reason_type]
           when 'recurring'
-            recurring_properties(post, stored_credential)
+            post[:a9] = stored_credential[:initial_transaction] ? '1' : '2'
           when 'installment', 'unscheduled'
             post[:a9] = '8'
           end
+          post[:g6] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
         else
           post[:a9] = '9'
         end
-      end
-
-      def recurring_properties(post, stored_credential)
-        post[:a9] = stored_credential[:initial_transaction] ? '1' : '2'
-        post[:g6] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
       end
 
       def add_customer_data(post, options)

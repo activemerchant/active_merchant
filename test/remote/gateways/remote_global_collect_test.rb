@@ -434,6 +434,16 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_failure repeat_void
   end
 
+  def test_successful_inquire
+    response = @gateway.purchase(@accepted_amount, @credit_card, @options)
+    assert_success response
+
+    response = @gateway.inquire(response.params['payment']['id'])
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response

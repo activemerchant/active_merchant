@@ -343,6 +343,19 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 'fraudulent', void.params['reason']
   end
 
+  def test_successful_void_with_reverse_transfer
+    destination = fixtures(:stripe_destination)[:stripe_user_id]
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(destination: destination))
+    assert_success response
+
+    @gateway.capture(@amount, response.authorization)
+
+    assert void = @gateway.void(response.authorization, reverse_transfer: true)
+    assert_match %r{trr_}, void.params['transfer_reversal']
+    assert_success void
+    assert_equal 'Transaction approved', void.message
+  end
+
   def test_unsuccessful_void
     assert void = @gateway.void('active_merchant_fake_charge')
     assert_failure void

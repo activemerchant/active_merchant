@@ -431,10 +431,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def wallet_indicator(token_source)
-        return 'APP' if token_source == 'apple_pay'
-        return 'ANP' if token_source == 'android_pay'
-
-        nil
+        return {
+          'apple_pay' => 'APP',
+          'google_pay' => 'GPP',
+          'android_pay' => 'ANP'
+        }[token_source]
       end
 
       def message_from(message)

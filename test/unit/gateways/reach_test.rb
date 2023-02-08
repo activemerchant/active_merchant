@@ -49,9 +49,19 @@ class ReachTest < Test::Unit::TestCase
     assert formatted[:signature].present?
   end
 
+  def test_properly_format_on_zero_decilmal
+    @options[:currency] = 'BYR'
+    stub_comms do
+      @gateway.authorize(1000, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(URI.decode_www_form(data)[0][1])
+      assert_equal '10', request['Items'].first['ConsumerPrice']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successfully_build_a_purchase
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options)
+      @gateway.authorize(1250, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(URI.decode_www_form(data)[0][1])
       card = JSON.parse(URI.decode_www_form(data)[1][1])
@@ -61,6 +71,7 @@ class ReachTest < Test::Unit::TestCase
       assert_equal request['Consumer']['Email'], @options[:email]
       assert_equal request['ConsumerCurrency'], @options[:currency]
       assert_equal request['Capture'], false
+      assert_equal '12.50', request['Items'].first['ConsumerPrice']
 
       # card
       assert_equal card['Number'], @credit_card.number

@@ -45,7 +45,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
       '4761209980011439',
       payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
       month: '11',
-      year: '2022',
+      year: Time.now.year + 1,
       eci: 5,
       source: :apple_pay,
       verification_value: 569
@@ -86,6 +86,14 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_authorize_and_capture_with_apple_pay
+    assert auth = @gateway.authorize(@amount, @apple_pay_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+
   def test_successful_purchase_with_echeck
     options = @options.merge({ customer_id_type: '1', customer_id_number: '1', client_email: 'test@example.com' })
     assert response = @gateway.purchase(@amount, @check, options)
@@ -115,6 +123,23 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@options_standardized_stored_credentials))
     assert_match(/Transaction Normal/, response.message)
     assert_success response
+  end
+
+  def test_successful_purchase_with_apple_pay_name_from_billing_address
+    @apple_pay_card.first_name = nil
+    @apple_pay_card.last_name = nil
+    assert response = @gateway.purchase(@amount, @apple_pay_card, @options)
+    assert_success response
+    assert_equal 'Jim Smith', response.params['card']['cardholder_name']
+  end
+
+  def test_failed_purchase_with_apple_pay_no_name
+    @options[:billing_address] = nil
+    @apple_pay_card.first_name = nil
+    @apple_pay_card.last_name = nil
+    assert response = @gateway.purchase(@amount, @apple_pay_card, @options)
+    assert_failure response
+    assert_equal 'Bad Request (27) - Invalid Card Holder', response.message
   end
 
   def test_failed_purchase

@@ -2,6 +2,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Element: Include Apple Pay - Google pay methods [jherrera] #4647
 * dLocal: Add transaction query API(s) request [almalee24] #4584
 * MercadoPago: Add transaction inquire request [molbrown] #4588
 * Worldpay: Add transaction inquire request [molbrown] #4592
@@ -44,6 +45,21 @@
 * EBANX: add soft_descriptor field [jcreiff] #4658
 * CommerceHub: Add Apple Pay and Google Pay [gasb150] #4648
 * Global Collect & Alelo: Fixing year dependent failing tests [heavyblade] #4665
+* Moneris: Add Google Pay [sinourain] #4666
+* Global Collect: Add transaction inquire request [almalee24] #4669
+* Stripe PI: Add Level 3 support [almalee24] #4673
+* Braintree: return additional processor response [jcreiff] #4653
+* Payeezy: name from `billing_address` on `purchase` [naashton] #4674
+* Stripe: add reverse_transfer to void transactions [jcreiff] #4668
+* Global Collect: fix bug on transaction inquire request [almalee24] #4676
+* Credorax: Support google pay and apple pay [edgarv09] #4661
+* Plexo: Add support for 5 new credit card brands (passcard, edenred, anda, tarjeta-d, sodexo) [edgarv09] #4652
+* Authorize.net: Google pay token support [sainterman] #4659
+* Credorax: Add support for Network Tokens [jherreraa] #4679
+* Stripe PI: use MultiResponse in create_setup_intent [jcreiff] #4683
+* Credorax: Correct NTID logic for MIT transactions [aenand] #4686
+* Adyen: Add support for `skip_mpi_data` flag [rachelkirk] #4654
+* Add Canadian Institution Numbers [jcreiff] #4687
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512

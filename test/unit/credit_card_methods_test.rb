@@ -257,6 +257,61 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'olimpica', CreditCard.brand?('6368530000000000')
   end
 
+  def test_should_detect_sodexo_no_luhn_card
+    number1 = '5058645584812145'
+    number2 = '5058655584812145'
+    assert_equal 'sodexo', CreditCard.brand?(number1)
+    assert CreditCard.valid_number?(number1)
+    assert_equal 'sodexo', CreditCard.brand?(number2)
+    assert CreditCard.valid_number?(number2)
+  end
+
+  def test_should_validate_sodexo_no_luhn_card
+    assert_true CreditCard.valid_number?('5058645584812145')
+    assert_false CreditCard.valid_number?('5058665584812110')
+  end
+
+  def test_should_detect_passcard_card
+    assert_equal 'passcard', CreditCard.brand?('6280260025383009')
+    assert_equal 'passcard', CreditCard.brand?('6280260025383280')
+    assert_equal 'passcard', CreditCard.brand?('6280260025383298')
+    assert_equal 'passcard', CreditCard.brand?('6280260025383306')
+    assert_equal 'passcard', CreditCard.brand?('6280260025383314')
+  end
+
+  def test_should_validate_passcard_card
+    assert_true CreditCard.valid_number?('6280260025383009')
+    # numbers with invalid formats
+    assert_false CreditCard.valid_number?('6280_26002538_0005')
+    # numbers that are luhn-invalid
+    assert_false CreditCard.valid_number?('6280260025380991')
+  end
+
+  def test_should_detect_edenred_card
+    assert_equal 'edenred', CreditCard.brand?('6374830000000823')
+    assert_equal 'edenred', CreditCard.brand?('6374830000000799')
+    assert_equal 'edenred', CreditCard.brand?('6374830000000807')
+    assert_equal 'edenred', CreditCard.brand?('6374830000000815')
+    assert_equal 'edenred', CreditCard.brand?('6374830000000823')
+  end
+
+  def test_should_validate_edenred_card
+    assert_true CreditCard.valid_number?('6374830000000369')
+    # numbers with invalid formats
+    assert_false CreditCard.valid_number?('6374 8300000 00369')
+    # numbers that are luhn-invalid
+    assert_false CreditCard.valid_number?('6374830000000111')
+  end
+
+  def test_should_detect_anda_card
+    assert_equal 'anda', CreditCard.brand?('6031998427187914')
+  end
+
+  # Creditos directos a.k.a tarjeta d
+  def test_should_detect_tarjetad_card
+    assert_equal 'tarjeta-d', CreditCard.brand?('6018282227431033')
+  end
+
   def test_should_detect_creditel_card
     assert_equal 'creditel', CreditCard.brand?('6019330047539016')
   end
