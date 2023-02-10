@@ -310,7 +310,8 @@ module ActiveMerchant #:nodoc:
       def parse(xml_string)
         response = {}
 
-        xml = REXML::Document.new(xml_string.scrub)
+        utf8_xml_string = xml_string.encode('UTF-8', invalid: :replace, undef: :replace, replace: '?')
+        xml = REXML::Document.new(utf8_xml_string)
 
         # Gather all root elements such as HelpText
         xml.elements.each('Txn/*') do |element|
