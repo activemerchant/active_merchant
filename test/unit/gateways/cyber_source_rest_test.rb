@@ -149,7 +149,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
   end
 
   def test_url_building
-    assert_equal "#{@gateway.class.test_url}/action", @gateway.send(:url, '/action')
+    assert_equal "#{@gateway.class.test_url}/pts/v2/action", @gateway.send(:url, 'action')
   end
 
   private

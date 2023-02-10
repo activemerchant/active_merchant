@@ -45,7 +45,17 @@ module ActiveMerchant #:nodoc:
 
         yield post if block_given?
 
-        commit('/pts/v2/payments/', post)
+        commit('payments/', post)
+      end
+
+      def refund(money, options = {})
+        post = build_refund_request(money, options)
+        commit("payments/#{options[:order_id]}/refunds", post)
+      end
+
+      def credit(money, payment, options = {})
+        post = build_credit_request(money, payment, options)
+        commit('credits', post)
       end
 
       def supports_scrubbing?
@@ -71,6 +81,23 @@ module ActiveMerchant #:nodoc:
           add_amount(post, amount)
           add_address(post, payment, options[:billing_address], options, :billTo)
           add_address(post, payment, options[:shipping_address], options, :shipTo)
+        end.compact
+      end
+
+      def build_refund_request(amount, options)
+        { clientReferenceInformation: {}, orderInformation: {} }.tap do |post|
+          add_code(post, options)
+          add_amount(post, amount)
+        end.compact
+      end
+
+      def build_credit_request(amount, payment, options)
+        { clientReferenceInformation: {}, paymentInformation: {}, orderInformation: {} }.tap do |post|
+          add_code(post, options)
+          add_credit_card(post, payment)
+          add_amount(post, amount)
+          add_address(post, payment, options[:billing_address], options, :billTo)
+          add_merchant_description(post, options)
         end.compact
       end
 
@@ -130,8 +157,17 @@ module ActiveMerchant #:nodoc:
         }.compact
       end
 
+      def add_merchant_description(post, options)
+        return unless options[:merchant_descriptor_name] || options[:merchant_descriptor_address1] || options[:merchant_descriptor_locality]
+
+        merchant = post[:merchantInformation][:merchantDescriptor] = {}
+        merchant[:name] = options[:merchant_descriptor_name] if options[:merchant_descriptor_name]
+        merchant[:address1] = options[:merchant_descriptor_address1] if options[:merchant_descriptor_address1]
+        merchant[:locality] = options[:merchant_descriptor_locality] if options[:merchant_descriptor_locality]
+      end
+
       def url(action)
-        "#{(test? ? test_url : live_url)}#{action}"
+        "#{(test? ? test_url : live_url)}/pts/v2/#{action}"
       end
 
       def host
@@ -161,7 +197,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response['status'] == 'AUTHORIZED'
+        %w(AUTHORIZED PENDING).include?(response['status'])
       end
 
       def message_from(response)
@@ -184,7 +220,7 @@ module ActiveMerchant #:nodoc:
         string_to_sign = {
           host: host,
           date: gmtdatetime,
-          "(request-target)": "#{http_method} #{resource}",
+          "(request-target)": "#{http_method} /pts/v2/#{resource}",
           digest: digest,
           "v-c-merchant-id": @options[:merchant_id]
         }.map { |k, v| "#{k}: #{v}" }.join("\n").force_encoding(Encoding::UTF_8)
