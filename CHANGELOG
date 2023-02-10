@@ -69,6 +69,7 @@
 * CommerceHub: Fixing verify status and prevent tokenization [heavyblade] #4716
 * Payeezy: Update Stored Credentials [almalee24] #4711
 * CheckoutV2: Add store/unstore [gasb150] #4712
+* CybersourceREST - Refund | Credit [sinourain] #4700
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512

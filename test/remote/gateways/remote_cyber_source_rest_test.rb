@@ -70,6 +70,77 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_nil response.params['_links']['capture']
   end
 
+  def test_successful_refund
+    purchase = @gateway.purchase(@amount, @visa_card, @options)
+    response = @gateway.refund(@amount, purchase.authorization, @options)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'PENDING', response.message
+    assert response.params['id'].present?
+    assert response.params['_links']['void'].present?
+  end
+
+  def test_failure_refund
+    purchase = @gateway.purchase(@amount, @card_without_funds, @options)
+    response = @gateway.refund(@amount, purchase.authorization, @options)
+
+    assert_failure response
+    assert response.test?
+    assert_match %r{Declined - One or more fields in the request contains invalid data}, response.params['message']
+    assert_equal 'INVALID_DATA', response.params['reason']
+  end
+
+  def test_successful_partial_refund
+    purchase = @gateway.purchase(@amount, @visa_card, @options)
+    response = @gateway.refund(@amount / 2, purchase.authorization, @options)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'PENDING', response.message
+    assert response.params['id'].present?
+    assert response.params['_links']['void'].present?
+  end
+
+  def test_successful_repeat_refund_transaction
+    purchase = @gateway.purchase(@amount, @visa_card, @options)
+    response1 = @gateway.refund(@amount, purchase.authorization, @options)
+
+    assert_success response1
+    assert response1.test?
+    assert_equal 'PENDING', response1.message
+    assert response1.params['id'].present?
+    assert response1.params['_links']['void']
+
+    response2 = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_success response2
+    assert response2.test?
+    assert_equal 'PENDING', response2.message
+    assert response2.params['id'].present?
+    assert response2.params['_links']['void']
+
+    assert_not_equal response1.params['_links']['void'], response2.params['_links']['void']
+  end
+
+  def test_successful_credit
+    response = @gateway.credit(@amount, @visa_card, @options)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'PENDING', response.message
+    assert response.params['id'].present?
+    assert_nil response.params['_links']['capture']
+  end
+
+  def test_failure_credit
+    response = @gateway.credit(@amount, @card_without_funds, @options)
+
+    assert_failure response
+    assert response.test?
+    assert_match %r{Decline - Invalid account number}, response.message
+    assert_equal 'INVALID_ACCOUNT', response.error_code
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.authorize(@amount, @visa_card, @options)
