@@ -99,12 +99,10 @@ module ActiveMerchant #:nodoc:
         result.try(:cvv_result) || responses.last.try(:cvv_result)
       end
 
-      %w(params message test authorization error_code emv_authorization test? fraud_review?).each do |m|
-        class_eval %(
-          def #{m}
-            (@responses.empty? ? nil : primary_response.#{m})
-          end
-        )
+      %i(params message test authorization error_code emv_authorization test? fraud_review?).each do |m|
+        define_method m do |*args, &block|
+          @responses.empty? ? nil : primary_response.send(m, *args, &block)
+        end
       end
     end
   end
