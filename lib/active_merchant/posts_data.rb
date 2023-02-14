@@ -46,9 +46,21 @@ module ActiveMerchant #:nodoc:
       handle_response(raw_ssl_request(method, endpoint, data, headers))
     end
 
+    def show_as_curl(url, method, body = '', headers = {})
+      command = ["curl -X #{method.upcase} '#{url}'"]
+      headers.each { |k, v| command << "-H '#{k}: #{v}'" }
+      command << "--data-raw '#{body}'" if body.present?
+
+      puts 'x' * 100
+      puts command.join(" \\\n")
+      puts 'x' * 100
+    end
+
     def raw_ssl_request(method, endpoint, data, headers = {})
       logger&.warn "#{self.class} using ssl_strict=false, which is insecure" unless ssl_strict
       logger&.warn "#{self.class} posting to plaintext endpoint, which is insecure" unless endpoint.to_s =~ /^https:/
+
+      show_as_curl(endpoint, method, data, headers) if ENV['PRINT_CURL']
 
       connection = new_connection(endpoint)
       connection.open_timeout = open_timeout

@@ -82,4 +82,10 @@ class PostsDataTests < Test::Unit::TestCase
       @gateway.ssl_post(@url, '')
     end
   end
+
+  def test_show_as_curl_with_get_call; end
+
+  def test_show_as_curl_with_post_call; end
+
+  def test_show_as_curl_with_post_body; end
 end
