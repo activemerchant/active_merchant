@@ -476,9 +476,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(action, data)
-        authorization = data['transid']
-        authorization = "#{authorization}|#{action}" if authorization && VOIDABLE_ACTIONS.include?(action)
-        authorization
+        case action
+        when 'store'
+          data['billingid']
+        when *VOIDABLE_ACTIONS
+          "#{data['transid']}|#{action}"
+        else
+          data['transid']
+        end
       end
 
       def split_authorization(authorization)
