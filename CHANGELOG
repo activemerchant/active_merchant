@@ -62,6 +62,7 @@
 * Add Canadian Institution Numbers [jcreiff] #4687
 * Tns: update test URL [almalee24] #4698
 * TrustCommerce: Update `authorization_from` to handle `store` response [jherreraa] #4691
+* TrustCommerce: Verify feature added [jherreraa] #4692
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512

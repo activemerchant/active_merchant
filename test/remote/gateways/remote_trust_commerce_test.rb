@@ -202,7 +202,12 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, store.params['billingid'], @options)
     assert_equal 'Y', response.avs_result['code']
     assert_match %r{The transaction was successful}, response.message
+  end
 
+  def test_successful_verify
+    assert response = @gateway.verify(@credit_card)
+    assert_equal 'approved', response.params['status']
+    assert_match %r{The transaction was successful}, response.message
     assert_success response
   end
 
