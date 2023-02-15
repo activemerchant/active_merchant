@@ -39,6 +39,15 @@ class RapydTest < Test::Unit::TestCase
     }
 
     @ewallet_id = 'ewallet_1a867a32b47158b30a8c17d42f12f3f1'
+
+    @address_object = address(line_1: '123 State Street', line_2: 'Apt. 34', phone_number: '12125559999')
+
+    @customer_object = {
+      name: 'John Doe',
+      phone_number: '1234567890',
+      email: 'est@example.com',
+      addresses: [@address_object]
+    }
   end
 
   def test_successful_purchase
@@ -64,7 +73,7 @@ class RapydTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_token
-    @options.merge(customer_id: 'cus_9e1b5a357b2b7f25f8dd98827fbc4f22')
+    @options[:customer_id] = 'cus_9e1b5a357b2b7f25f8dd98827fbc4f22'
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @authorization, @options)
     end.check_request do |_method, _endpoint, data, _headers|
@@ -206,6 +215,27 @@ class RapydTest < Test::Unit::TestCase
     assert_success unstore
     assert_equal true, unstore.params.dig('data', 'deleted')
     assert_equal customer_id, unstore.params.dig('data', 'id')
+  end
+
+  def test_failed_purchase_without_customer_object
+    @options[:pm_type] = 'us_debit_visa_card'
+    @gateway.expects(:ssl_request).returns(failed_purchase_response)
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'ERROR_PROCESSING_CARD - [05]', response.params['status']['error_code']
+  end
+
+  def test_successful_purchase_with_customer_object
+    stub_comms(@gateway, :ssl_request) do
+      @options[:customer] = @customer_object
+      @options[:pm_type] = 'us_debit_mastercard_card'
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      assert_match(/"name":"Jim Reynolds"/, data)
+      assert_match(/"email":"test@example.com"/, data)
+      assert_match(/"phone_number":"5555555555"/, data)
+      assert_match(/"address1":"456 My Street","address2":"Apt 1","company":"Widgets Inc","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"/, data)
+    end
   end
 
   def test_successful_store_with_customer_object
