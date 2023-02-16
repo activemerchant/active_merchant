@@ -48,6 +48,10 @@ module ActiveMerchant #:nodoc:
         commit('/pts/v2/payments/', post)
       end
 
+      def store(payment, options = {})
+        build_store_request(payment, options)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -62,6 +66,26 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def create_instrument_identifier
+        commit('tms/v1/instrumentidentifiers')
+      end
+
+      def create_customer(payment, options)
+        { buyerInformation: {}, clientReferenceInformation: {}, merchantDefinedInformation: [] }.tap do |post|
+          post[:buyerInformation][:merchantCustomerId] = options[:customer_id]
+          post[:buyerInformation][:email] = options[:email].presence || 'null@cybersource.com'
+          add_code(post, options)
+          post[:merchantDefinedInformation] = [ { name: 'data1', value: 'x' } ]
+        end.compact
+      end
+
+      def build_store_request(payment, options)
+        customer = create_customer(payment, options)
+        require 'pry'
+        binding.pry
+        response = commit('/tms/v2/customers/', customer)
+      end
 
       def build_auth_request(amount, payment, options)
         { clientReferenceInformation: {}, paymentInformation: {}, orderInformation: {} }.tap do |post|
@@ -144,7 +168,6 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post)
         response = parse(ssl_post(url(action), post.to_json, auth_headers(action, post)))
-
         Response.new(
           success_from(response),
           message_from(response),
@@ -198,11 +221,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def sign_payload(payload)
+        require 'pry'
+        binding.pry
         decoded_key = Base64.decode64(@options[:private_key])
         Base64.strict_encode64(OpenSSL::HMAC.digest('sha256', decoded_key, payload))
       end
 
       def auth_headers(action, post, http_method = 'post')
+        require 'pry'
+        binding.pry
         digest = "SHA-256=#{Digest::SHA256.base64digest(post.to_json)}" if post.present?
         date = Time.now.httpdate
 

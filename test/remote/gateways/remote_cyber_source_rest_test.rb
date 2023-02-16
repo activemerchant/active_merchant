@@ -70,6 +70,11 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_nil response.params['_links']['capture']
   end
 
+  def test_successful_store
+    response = @gateway.store(@visa_card, @options.merge(customer_id: '10'))
+    assert_success response
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.authorize(@amount, @visa_card, @options)
