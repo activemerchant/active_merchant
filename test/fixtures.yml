@@ -198,6 +198,10 @@ checkout_v2:
   client_id: CLIENT_ID_FOR_OAUTH_TRANSACTIONS
   client_secret: CLIENT_SECRET_FOR_OAUTH_TRANSACTIONS
 
+checkout_v2_token:
+  secret_key: sk_sbox_xxxxxxxxxxxxxxxxx
+  public_key: pk_sbox_xxxxxxxxxxxxxxxxx
+
 citrus_pay:
   userid: CPF00001
   password: 7c70414732de7e0ba3a04db5f24fcec8

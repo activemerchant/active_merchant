@@ -3,8 +3,10 @@ require 'test_helper'
 class RemoteCheckoutV2Test < Test::Unit::TestCase
   def setup
     gateway_fixtures = fixtures(:checkout_v2)
+    gateway_token_fixtures = fixtures(:checkout_v2_token)
     @gateway = CheckoutV2Gateway.new(secret_key: gateway_fixtures[:secret_key])
     @gateway_oauth = CheckoutV2Gateway.new({ client_id: gateway_fixtures[:client_id], client_secret: gateway_fixtures[:client_secret] })
+    @gateway_token = CheckoutV2Gateway.new(secret_key: gateway_token_fixtures[:secret_key], public_key: gateway_token_fixtures[:public_key])
 
     @amount = 200
     @credit_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2025')
@@ -132,6 +134,16 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_scrubbed(@apple_pay_network_token.payment_cryptogram, transcript)
     assert_scrubbed(@apple_pay_network_token.number, transcript)
     assert_scrubbed(@gateway.options[:secret_key], transcript)
+  end
+
+  def test_store_transcript_scrubbing
+    response = nil
+    transcript = capture_transcript(@gateway) do
+      response = @gateway_token.store(@credit_card, @options)
+    end
+    token = response.responses.first.params['token']
+    transcript = @gateway.scrub(transcript)
+    assert_scrubbed(token, transcript)
   end
 
   def test_successful_purchase
@@ -583,6 +595,60 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_store
+    response = @gateway_token.store(@credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_unstore_after_store
+    store = @gateway_token.store(@credit_card, @options)
+    assert_success store
+    assert_equal 'Succeeded', store.message
+    source_id = store.params['id']
+    response = @gateway_token.unstore(source_id, @options)
+    assert_success response
+    assert_equal response.params['response_code'], '204'
+  end
+
+  def test_successful_unstore_after_purchase
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    source_id = purchase.params['source']['id']
+    response = @gateway.unstore(source_id, @options)
+    assert_success response
+    assert_equal response.params['response_code'], '204'
+  end
+
+  def test_successful_purchase_after_purchase_with_google_pay
+    purchase = @gateway.purchase(@amount, @google_pay_master_cryptogram_3ds_network_token, @options)
+    source_id = purchase.params['source']['id']
+    response = @gateway.purchase(@amount, source_id, @options.merge(source_id: source_id, source_type: 'id'))
+    assert_success response
+  end
+
+  def test_successful_store_apple_pay
+    response = @gateway.store(@apple_pay_network_token, @options)
+    assert_success response
+  end
+
+  def test_successful_unstore_after_purchase_with_google_pay
+    purchase = @gateway.purchase(@amount, @google_pay_master_cryptogram_3ds_network_token, @options)
+    source_id = purchase.params['source']['id']
+    response = @gateway.unstore(source_id, @options)
+    assert_success response
+  end
+
+  def test_success_store_with_google_pay
+    response = @gateway.store(@google_pay_visa_cryptogram_3ds_network_token, @options)
+    assert_success response
+  end
+
+  def test_failed_store_oauth
+    response = @gateway_oauth.store(@credit_card, @options)
+    assert_failure response
+    assert_equal '401: Unauthorized', response.message
+  end
+
   def test_successful_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -646,6 +712,15 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
+  end
+
+  def test_successful_purchase_store_after_verify
+    verify = @gateway.verify(@apple_pay_network_token, @options)
+    assert_success verify
+    source_id = verify.params['source']['id']
+    response = @gateway.purchase(@amount, source_id, @options.merge(source_id: source_id, source_type: 'id'))
+    assert_success response
+    assert_success verify
   end
 
   def test_successful_void_via_oauth
