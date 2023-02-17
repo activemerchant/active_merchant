@@ -202,6 +202,9 @@ module ActiveMerchant #:nodoc:
           if /tok/.match?(payment_method)
             post[:type] = 'token'
             post[:token] = payment_method
+          elsif /src/.match?(payment_method)
+            post[key][:type] = 'id'
+            post[key][:id] = payment_method
           else
             add_source(post, options)
           end
@@ -318,7 +321,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, authorization = nil, method = :post)
         begin
-          raw_response = ssl_request(method, url(action, authorization), post.to_json, headers(action))
+          raw_response = ssl_request(method, url(action, authorization), post.nil? ? nil : post.to_json, headers(action))
           response = parse(raw_response)
           response['id'] = response['_links']['payment']['href'].split('/')[-1] if action == :capture && response.key?('_links')
           source_id = authorization if action == :unstore

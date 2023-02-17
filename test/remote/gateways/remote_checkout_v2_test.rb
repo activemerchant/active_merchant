@@ -638,15 +638,39 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_success_store_with_google_pay
+  def test_success_store_with_google_pay_3ds
     response = @gateway.store(@google_pay_visa_cryptogram_3ds_network_token, @options)
     assert_success response
   end
 
-  def test_failed_store_oauth
+  def test_failed_store_oauth_credit_card
     response = @gateway_oauth.store(@credit_card, @options)
     assert_failure response
     assert_equal '401: Unauthorized', response.message
+  end
+
+  def test_successful_purchase_oauth_after_store_credit_card
+    store = @gateway_token.store(@credit_card, @options)
+    assert_success store
+    token = store.params['id']
+    response = @gateway_oauth.purchase(@amount, token, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_after_store_with_apple_pay
+    store = @gateway.store(@apple_pay_network_token, @options)
+    assert_success store
+    token = store.params['id']
+    response = @gateway.purchase(@amount, token, @options)
+    assert_success response
+  end
+
+  def test_success_purchase_oauth_after_store_ouath_with_apple_pay
+    store = @gateway_oauth.store(@apple_pay_network_token, @options)
+    assert_success store
+    token = store.params['id']
+    response = @gateway_oauth.purchase(@amount, token, @options)
+    assert_success response
   end
 
   def test_successful_refund

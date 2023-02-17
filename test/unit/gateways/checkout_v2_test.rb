@@ -492,7 +492,16 @@ class CheckoutV2Test < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.verify_payment('testValue')
     end.respond_with(successful_verify_payment_response)
+    assert_success response
+  end
 
+  def test_verify_payment_request
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify_payment('testValue')
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_equal nil, data
+      assert_equal "https://api.sandbox.checkout.com/payments/testValue", endpoint
+    end.respond_with(successful_verify_payment_response)
     assert_success response
   end
 
