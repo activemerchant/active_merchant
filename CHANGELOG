@@ -64,6 +64,7 @@
 * TrustCommerce: Update `authorization_from` to handle `store` response [jherreraa] #4691
 * TrustCommerce: Verify feature added [jherreraa] #4692
 * Rapyd: Add customer object to transactions [javierpedrozaing] #4664
+* CybersourceRest: Add new gateway with authorize and purchase [heavyblade] #4690
 * CheckoutV2: Add store/unstore [gasb150] #4677
 
 == Version 1.127.0 (September 20th, 2022)
