@@ -2,6 +2,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* EBANX: Add new gateway [flaaviaa] #4701
 * Element: Include Apple Pay - Google pay methods [jherrera] #4647
 * dLocal: Add transaction query API(s) request [almalee24] #4584
 * MercadoPago: Add transaction inquire request [molbrown] #4588
