@@ -6,20 +6,12 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(BR MX CO CL AR PE)
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express discover diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club elo hipercard]
 
       self.homepage_url = 'http://www.ebanx.com/'
       self.display_name = 'EBANX'
 
       TAGS = ['Spreedly']
-
-      CARD_BRAND = {
-        visa: 'visa',
-        master: 'master_card',
-        american_express: 'amex',
-        discover: 'discover',
-        diners_club: 'diners'
-      }
 
       URL_MAP = {
         purchase: 'direct',
@@ -199,14 +191,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_card_or_token(post, payment, options)
-        payment, brand = payment.split('|') if payment.is_a?(String)
-        post[:payment][:payment_type_code] = payment.is_a?(String) ? brand : CARD_BRAND[payment.brand.to_sym]
+        payment = payment.split('|')[0] if payment.is_a?(String)
+        post[:payment][:payment_type_code] = 'creditcard'
         post[:payment][:creditcard] = payment_details(payment)
         post[:payment][:creditcard][:soft_descriptor] = options[:soft_descriptor] if options[:soft_descriptor]
       end
 
       def add_payment_details(post, payment)
-        post[:payment_type_code] = CARD_BRAND[payment.brand.to_sym]
+        post[:payment_type_code] = 'creditcard'
         post[:creditcard] = payment_details(payment)
       end
 
@@ -290,7 +282,11 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(action, parameters, response)
         if action == :store
-          "#{response.try(:[], 'token')}|#{CARD_BRAND[parameters[:payment_type_code].to_sym]}"
+          if success_from(action, response)
+            "#{response.try(:[], 'token')}|#{response['payment_type_code']}"
+          else
+            response.try(:[], 'token')
+          end
         else
           response.try(:[], 'payment').try(:[], 'hash')
         end

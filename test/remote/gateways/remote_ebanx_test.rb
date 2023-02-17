@@ -26,10 +26,31 @@ class RemoteEbanxTest < Test::Unit::TestCase
       tags: EbanxGateway::TAGS,
       soft_descriptor: 'ActiveMerchant'
     }
+
+    @hiper_card = credit_card('6062825624254001')
+    @elo_card = credit_card('6362970000457013')
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_successful_purchase_hipercard
+    response = @gateway.purchase(@amount, @hiper_card, @options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_successful_purchase_elocard
+    response = @gateway.purchase(@amount, @elo_card, @options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_successful_store_elocard
+    response = @gateway.purchase(@amount, @elo_card, @options)
     assert_success response
     assert_equal 'Accepted', response.message
   end
@@ -194,6 +215,23 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
     store = @gateway.store(@credit_card, options)
     assert_success store
+    assert_equal store.authorization.split('|')[1], 'visa'
+
+    assert purchase = @gateway.purchase(@amount, store.authorization, options)
+    assert_success purchase
+    assert_equal 'Accepted', purchase.message
+  end
+
+  def test_successful_store_and_purchase_as_brazil_business_with_hipercard
+    options = @options.update(document: '32593371000110',
+                              person_type: 'business',
+                              responsible_name: 'Business Person',
+                              responsible_document: '32593371000111',
+                              responsible_birth_date: '1/11/1975')
+
+    store = @gateway.store(@hiper_card, options)
+    assert_success store
+    assert_equal store.authorization.split('|')[1], 'hipercard'
 
     assert purchase = @gateway.purchase(@amount, store.authorization, options)
     assert_success purchase
