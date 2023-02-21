@@ -49,7 +49,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(payment, options = {})
-        build_store_request(payment, options)
+        MultiResponse.run do |r|
+          customer = create_customer(payment, options)
+          customer_response = r.process { commit('/tms/v2/customers/', customer) }
+          r.process { create_instrument_identifier(payment, options) }
+          r.process { create_customer_payment_instrument(payment, options, customer_response, r.params['id']) }
+        end
+      end
+
+      def unstore(options = {})
+        customer_token_id = options[:customer_token_id]
+        payment_instrument_token_id = options[:payment_instrument_id]
+        commit("/tms/v2/customers/#{customer_token_id}/payment-instruments/#{payment_instrument_token_id}", {}, :delete)
       end
 
       def supports_scrubbing?
@@ -67,24 +78,46 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def create_instrument_identifier
-        commit('tms/v1/instrumentidentifiers')
-      end
-
       def create_customer(payment, options)
         { buyerInformation: {}, clientReferenceInformation: {}, merchantDefinedInformation: [] }.tap do |post|
           post[:buyerInformation][:merchantCustomerId] = options[:customer_id]
           post[:buyerInformation][:email] = options[:email].presence || 'null@cybersource.com'
           add_code(post, options)
-          post[:merchantDefinedInformation] = [ { name: 'data1', value: 'x' } ]
+          post[:merchantDefinedInformation] = []
         end.compact
       end
 
-      def build_store_request(payment, options)
-        customer = create_customer(payment, options)
-        require 'pry'
-        binding.pry
-        response = commit('/tms/v2/customers/', customer)
+      def create_instrument_identifier(payment, options)
+        instrument_identifier = {
+          card: {
+            number: payment.number
+          }
+        }
+        commit('/tms/v1/instrumentidentifiers', instrument_identifier)
+      end
+
+      def create_customer_payment_instrument(payment, options, customer_token, instrument_identifier)
+        post = {}
+        post[:deafult] = 'true'
+        post[:card] = {}
+        post[:card][:type] = CREDIT_CARD_CODES[payment.brand.to_sym]
+        post[:card][:expirationMonth] = payment.month.to_s
+        post[:card][:expirationYear] = payment.year.to_s
+        post[:billTo] = {
+          firstName: options[:billing_address][:name].split.first,
+          lastName: options[:billing_address][:name].split.last,
+          company: options[:company],
+          address1: options[:billing_address][:address1],
+          locality: options[:billing_address][:city],
+          administrativeArea: options[:billing_address][:state],
+          postalCode: options[:billing_address][:zip],
+          country: options[:billing_address][:country],
+          email: options[:email],
+          phoneNumber: options[:billing_address][:phone]
+        }
+        post[:instrumentIdentifier] = {}
+        post[:instrumentIdentifier][:id] = instrument_identifier
+        commit("/tms/v2/customers/#{customer_token.params['id']}/payment-instruments", post)
       end
 
       def build_auth_request(amount, payment, options)
@@ -166,29 +199,35 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(action, post)
-        response = parse(ssl_post(url(action), post.to_json, auth_headers(action, post)))
+      def commit(action, post, http_method = 'post')
+        response = parse(ssl_post(url(action), post.to_json, auth_headers(action, post, http_method)))
+
         Response.new(
-          success_from(response),
-          message_from(response),
+          success_from(action, response),
+          message_from(action, response),
           response,
           authorization: authorization_from(response),
           avs_result: AVSResult.new(code: response.dig('processorInformation', 'avs', 'code')),
           # cvv_result: CVVResult.new(response['some_cvv_response_key']),
           test: test?,
-          error_code: error_code_from(response)
+          error_code: error_code_from(action, response)
         )
       rescue ActiveMerchant::ResponseError => e
         response = e.response.body.present? ? parse(e.response.body) : { 'response' => { 'rmsg' => e.response.msg } }
         Response.new(false, response.dig('response', 'rmsg'), response, test: test?)
       end
 
-      def success_from(response)
-        response['status'] == 'AUTHORIZED'
+      def success_from(action, response)
+        case action
+        when /payments/
+          response['status'] == 'AUTHORIZED'
+        else
+          !response['id'].nil?
+        end
       end
 
-      def message_from(response)
-        return response['status'] if success_from(response)
+      def message_from(action, response)
+        return response['status'] if success_from(action, response)
 
         response['errorInformation']['message']
       end
@@ -197,8 +236,8 @@ module ActiveMerchant #:nodoc:
         response['id']
       end
 
-      def error_code_from(response)
-        response['errorInformation']['reason'] unless success_from(response)
+      def error_code_from(action, response)
+        response['errorInformation']['reason'] unless success_from(action, response)
       end
 
       # This implementation follows the Cybersource guide on how create the request signature, see:
@@ -221,20 +260,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def sign_payload(payload)
-        require 'pry'
-        binding.pry
         decoded_key = Base64.decode64(@options[:private_key])
         Base64.strict_encode64(OpenSSL::HMAC.digest('sha256', decoded_key, payload))
       end
 
       def auth_headers(action, post, http_method = 'post')
-        require 'pry'
-        binding.pry
         digest = "SHA-256=#{Digest::SHA256.base64digest(post.to_json)}" if post.present?
         date = Time.now.httpdate
-
+        accept = /payments/.match?(action) ? 'application/hal+json;charset=utf-8' : 'application/json;charset=utf-8'
         {
-          'Accept' => 'application/hal+json;charset=utf-8',
+          'Accept' => accept,
           'Content-Type' => 'application/json;charset=utf-8',
           'V-C-Merchant-Id' => @options[:merchant_id],
           'Date' => date,

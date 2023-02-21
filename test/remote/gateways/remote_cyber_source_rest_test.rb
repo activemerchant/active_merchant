@@ -71,8 +71,19 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
   end
 
   def test_successful_store
+    @options[:billing_address] = @billing_address
     response = @gateway.store(@visa_card, @options.merge(customer_id: '10'))
     assert_success response
+  end
+
+  def test_successful_unstore
+    @options[:billing_address] = @billing_address
+    store_transaction = @gateway.store(@visa_card, @options.merge(customer_id: '10'))
+    @options[:customer_token_id] = store_transaction.params['id']
+    @options[:payment_instrument_id] = store_transaction.params['instrumentIdentifier']['id']
+    unstore = @gateway.unstore(@options)
+
+    assert_success unstore
   end
 
   def test_transcript_scrubbing
