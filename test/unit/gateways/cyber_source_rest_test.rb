@@ -583,6 +583,35 @@ class CyberSourceRestTest < Test::Unit::TestCase
     CyberSourceRestGateway.application_id = nil
   end
 
+  def test_successful_store
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options.merge(merchant_customer_id: 'merchant_test'))
+    end.check_request do |_method, endpoint, data, _headers|
+      request = JSON.parse(data)
+      case endpoint
+      when /instrumentidentifiers/
+        assert_equal request['card']['number'], '4111111111111111'
+      when /paymentinstruments/
+        assert_equal request['card']['expirationMonth'], '12'
+        assert_equal request['card']['expirationYear'],  '2031'
+        assert_equal request['card']['type'], 'visa'
+        assert_equal request['instrumentIdentifier']['id'], '7010000000016241111'
+        assert_includes request, 'billTo'
+      when /payment-instruments/
+        assert_equal request['card']['expirationMonth'], '12'
+        assert_equal request['card']['expirationYear'],  '2031'
+        assert_equal request['card']['type'], '001'
+        assert_equal request['instrumentIdentifier']['id'], '7010000000016241111'
+        assert_includes request, 'billTo'
+      when /customers/
+        assert_equal request['buyerInformation']['email'], 'test@cybs.com'
+        assert_includes request['buyerInformation'], 'merchantCustomerId'
+        assert_includes request, 'clientReferenceInformation'
+        assert_includes request, 'merchantDefinedInformation'
+      end
+    end.respond_with(successful_create_customer, successful_create_instrument_identifiers, successful_store_response)
+  end
+
   private
 
   def parse_signature(signature)
