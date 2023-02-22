@@ -13,6 +13,9 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
       month: 12,
       year: 2031)
 
+    @master_card = credit_card('2222420000001113', brand: 'master')
+    @discover_card = credit_card('6011111111111117', brand: 'discover')
+
     @apple_pay = network_tokenization_credit_card(
       '4111111111111111',
       payment_cryptogram: 'AceY+igABPs3jdwNaDg3MAACAAA=',
@@ -97,7 +100,6 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
 
   def test_successful_authorize
     response = @gateway.authorize(@amount, @visa_card, @options)
-
     assert_success response
     assert response.test?
     assert_equal 'AUTHORIZED', response.message
