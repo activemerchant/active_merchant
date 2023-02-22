@@ -114,6 +114,7 @@ module ActiveMerchant #:nodoc:
           add_amount(post, amount)
           add_address(post, payment, options[:billing_address], options, :billTo)
           add_address(post, payment, options[:shipping_address], options, :shipTo)
+          add_stored_credentials(post, payment, options)
         end.compact
       end
 
@@ -156,7 +157,6 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(post, amount)
         currency = options[:currency] || currency(amount)
-
         post[:orderInformation][:amountDetails] = {
           totalAmount: localized_amount(amount, currency),
           currency: currency
@@ -251,6 +251,63 @@ module ActiveMerchant #:nodoc:
         merchant[:locality] = options[:merchant_descriptor_locality] if options[:merchant_descriptor_locality]
       end
 
+      def add_stored_credentials(post, payment, options)
+        return unless stored_credential = options[:stored_credential]
+
+        options = stored_credential_options(stored_credential, options.fetch(:reason_code, ''))
+        post[:processingInformation][:commerceIndicator] = options.fetch(:transaction_type, 'internet')
+        stored_credential[:initial_transaction] ? initial_transaction(post, options) : subsequent_transaction(post, options)
+      end
+
+      def stored_credential_options(options, reason_code)
+        transaction_type = options[:reason_type]
+        transaction_type = 'install' if transaction_type == 'installment'
+        initiator = options[:initiator] if  options[:initiator]
+        initiator = 'customer' if initiator == 'cardholder'
+        stored_on_file = options[:reason_type] == 'recurring'
+        options.merge({
+          transaction_type: transaction_type,
+          initiator: initiator,
+          reason_code: reason_code,
+          stored_on_file: stored_on_file
+        })
+      end
+
+      def add_processing_information(initiator, merchant_initiated_transaction_hash = {})
+        {
+          authorizationOptions: {
+            initiator: {
+              type: initiator,
+              merchantInitiatedTransaction: merchant_initiated_transaction_hash,
+              storedCredentialUsed: true
+            }
+          }
+        }.compact
+      end
+
+      def initial_transaction(post, options)
+        processing_information = add_processing_information(options[:initiator], {
+          reason: options[:reason_code]
+        })
+
+        post[:processingInformation].merge!(processing_information)
+      end
+
+      def subsequent_transaction(post, options)
+        network_transaction_id = options[:network_transaction_id] || options.dig(:stored_credential, :network_transaction_id) || ''
+        processing_information = add_processing_information(options[:initiator], {
+          originalAuthorizedAmount: post.dig(:orderInformation, :amountDetails, :totalAmount),
+          previousTransactionID: network_transaction_id,
+          reason: options[:reason_code],
+          storedCredentialUsed: options[:stored_on_file]
+        })
+        post[:processingInformation].merge!(processing_information)
+      end
+
+      def network_transaction_id_from(response)
+        response.dig('processorInformation', 'networkTransactionId')
+      end
+
       def url(action)
         "#{(test? ? test_url : live_url)}/pts/v2/#{action}"
       end
@@ -272,6 +329,7 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response),
           avs_result: AVSResult.new(code: response.dig('processorInformation', 'avs', 'code')),
           # cvv_result: CVVResult.new(response['some_cvv_response_key']),
+          network_transaction_id: network_transaction_id_from(response),
           test: test?,
           error_code: error_code_from(response)
         )

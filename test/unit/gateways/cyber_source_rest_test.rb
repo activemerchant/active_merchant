@@ -233,6 +233,47 @@ class CyberSourceRestTest < Test::Unit::TestCase
     assert_equal "#{@gateway.class.test_url}/pts/v2/action", @gateway.send(:url, 'action')
   end
 
+  def test_stored_credential_cit_initial
+    @options[:stored_credential] = stored_credential(:cardholder, :internet, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'internet', request['processingInformation']['commerceIndicator']
+      assert_equal 'customer', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_cit
+    @options[:stored_credential] = stored_credential(:cardholder, :recurring)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'recurring', request['processingInformation']['commerceIndicator']
+      assert_equal 'customer', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
+      assert_equal true, request.dig('processingInformation', 'authorizationOptions', 'initiator', 'merchantInitiatedTransaction', 'storedCredentialUsed')
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_mit_ntid
+    @options[:stored_credential] = stored_credential(:merchant, :recurring, ntid: '123456789619999')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'recurring', request['processingInformation']['commerceIndicator']
+      assert_equal 'merchant', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
+      assert_equal true, request.dig('processingInformation', 'authorizationOptions', 'initiator', 'merchantInitiatedTransaction', 'storedCredentialUsed')
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   private
 
   def parse_signature(signature)

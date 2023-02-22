@@ -270,6 +270,7 @@ module ActiveMerchant
       stored_credential[:reason_type] = 'recurring' if args.include?(:recurring)
       stored_credential[:reason_type] = 'unscheduled' if args.include?(:unscheduled)
       stored_credential[:reason_type] = 'installment' if args.include?(:installment)
+      stored_credential[:reason_type] = 'internet' if args.include?(:internet)
 
       stored_credential[:initiator] = 'cardholder' if args.include?(:cardholder)
       stored_credential[:initiator] = 'merchant' if args.include?(:merchant)
