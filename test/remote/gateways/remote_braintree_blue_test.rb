@@ -201,6 +201,15 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_paypal_options
+    options = @options.merge(
+      paypal_custom_field: 'abc',
+      paypal_description: 'shoes'
+    )
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+  end
+
   # Follow instructions found at https://developer.paypal.com/braintree/articles/guides/payment-methods/venmo#multiple-profiles
   # for sandbox control panel https://sandbox.braintreegateway.com/login to create a venmo profile.
   # Insert your Profile Id into fixtures.

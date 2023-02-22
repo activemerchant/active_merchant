@@ -264,6 +264,15 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.authorize(100, credit_card('41111111111111111111'), hold_in_escrow: true)
   end
 
+  def test_paypal_options_can_be_specified
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:options][:paypal][:custom_field] == 'abc')
+      (params[:options][:paypal][:description] == 'shoes')
+    end.returns(braintree_result)
+
+    @gateway.authorize(100, credit_card('4111111111111111'), paypal_custom_field: 'abc', paypal_description: 'shoes')
+  end
+
   def test_merchant_account_id_absent_if_not_provided
     Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
       not params.has_key?(:merchant_account_id)
