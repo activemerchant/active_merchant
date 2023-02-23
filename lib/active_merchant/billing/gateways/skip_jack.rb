@@ -311,7 +311,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_line(line)
-        line.split(/","/).collect { |key| key.sub(/"*([^"]*)"*/, '\1').strip; }
+        line.split(/","/).collect { |key| key.sub(/"*([^"]*)"*/, '\1').strip }
       end
 
       def authorize_response_map(body)

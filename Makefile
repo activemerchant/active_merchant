@@ -1,5 +1,5 @@
 build:
-	docker-compose build
+	docker-compose build gem
 
 bash:
 	docker-compose run --rm gem bash

@@ -12,6 +12,18 @@ services:
     environment:
       GITHUB_USERNAME: ${GITHUB_USERNAME}
       GITHUB_TOKEN: ${GITHUB_TOKEN}
+  gem27:
+    build:
+      context: .
+      dockerfile: Dockerfile-ruby27
+      args:
+        - GITHUB_USERNAME
+        - GITHUB_TOKEN
+    volumes:
+      - .:/var/app
+    environment:
+      GITHUB_USERNAME: ${GITHUB_USERNAME}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
 
   postgres:
     image: postgres:9.5
@@ -20,4 +32,3 @@ services:
     environment:
       POSTGRES_DB: "postgres"
       POSTGRES_HOST_AUTH_METHOD: "trust"
-
