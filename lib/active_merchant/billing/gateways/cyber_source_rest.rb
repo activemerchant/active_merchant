@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
       def store(payment, options = {})
         MultiResponse.run do |r|
           customer = create_customer(payment, options)
-          customer_response = r.process { commit('/tms/v2/customers/', customer) }
+          customer_response = r.process { commit('/tms/v2/customers', customer) }
           r.process { create_instrument_identifier(payment, options) }
           r.process { create_customer_payment_instrument(payment, options, customer_response, r.params['id']) }
         end
@@ -60,7 +60,8 @@ module ActiveMerchant #:nodoc:
       def unstore(options = {})
         customer_token_id = options[:customer_token_id]
         payment_instrument_token_id = options[:payment_instrument_id]
-        commit("/tms/v2/customers/#{customer_token_id}/payment-instruments/#{payment_instrument_token_id}", {}, :delete)
+        #/tms/v2/customers/{customerTokenId}/payment-instruments/{paymentInstrumentTokenId}
+        commit("/tms/v2/customers/#{customer_token_id}/payment-instruments/#{payment_instrument_token_id}", nil, :delete)
       end
 
       def supports_scrubbing?
@@ -199,8 +200,8 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(action, post, http_method = 'post')
-        response = parse(ssl_post(url(action), post.to_json, auth_headers(action, post, http_method)))
+      def commit(action, post, http_method = :post)
+        response = parse(ssl_request(http_method, url(action), post.to_json, auth_headers(action, post, http_method)))
 
         Response.new(
           success_from(action, response),
@@ -242,7 +243,7 @@ module ActiveMerchant #:nodoc:
 
       # This implementation follows the Cybersource guide on how create the request signature, see:
       # https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/GenerateHeader/httpSignatureAuthentication.html
-      def get_http_signature(resource, digest, http_method = 'post', gmtdatetime = Time.now.httpdate)
+      def get_http_signature(resource, digest, http_method = :post, gmtdatetime = Time.now.httpdate)
         string_to_sign = {
           host: host,
           date: gmtdatetime,
@@ -264,11 +265,12 @@ module ActiveMerchant #:nodoc:
         Base64.strict_encode64(OpenSSL::HMAC.digest('sha256', decoded_key, payload))
       end
 
-      def auth_headers(action, post, http_method = 'post')
+      def auth_headers(action, post, http_method = :post)
         digest = "SHA-256=#{Digest::SHA256.base64digest(post.to_json)}" if post.present?
+
         date = Time.now.httpdate
         accept = /payments/.match?(action) ? 'application/hal+json;charset=utf-8' : 'application/json;charset=utf-8'
-        {
+        headers = {
           'Accept' => accept,
           'Content-Type' => 'application/json;charset=utf-8',
           'V-C-Merchant-Id' => @options[:merchant_id],
@@ -277,6 +279,8 @@ module ActiveMerchant #:nodoc:
           'Signature' => get_http_signature(action, digest, http_method, date),
           'Digest' => digest
         }
+
+        headers
       end
     end
   end
