@@ -52,16 +52,16 @@ module ActiveMerchant #:nodoc:
         MultiResponse.run do |r|
           customer = create_customer(payment, options)
           customer_response = r.process { commit('/tms/v2/customers', customer) }
-          r.process { create_instrument_identifier(payment, options) }
-          r.process { create_customer_payment_instrument(payment, options, customer_response, r.params['id']) }
+          instrument_identifier = r.process { create_instrument_identifier(payment, options) }
+          r.process { create_payment_instrument(payment, instrument_identifier, options) }
+          r.process { create_customer_payment_instrument(payment, options, customer_response, instrument_identifier) }
         end
       end
 
       def unstore(options = {})
         customer_token_id = options[:customer_token_id]
-        payment_instrument_token_id = options[:payment_instrument_id]
-        #/tms/v2/customers/{customerTokenId}/payment-instruments/{paymentInstrumentTokenId}
-        commit("/tms/v2/customers/#{customer_token_id}/payment-instruments/#{payment_instrument_token_id}", nil, :delete)
+        payment_instrument_id = options[:payment_instrument_id]
+        commit("/tms/v2/customers/#{customer_token_id}/payment-instruments/#{payment_instrument_id}/", nil, :delete)
       end
 
       def supports_scrubbing?
@@ -97,6 +97,32 @@ module ActiveMerchant #:nodoc:
         commit('/tms/v1/instrumentidentifiers', instrument_identifier)
       end
 
+      def create_payment_instrument(payment, instrument_identifier, options)
+        post = {
+          card: {
+            expirationMonth: payment.month.to_s,
+            expirationYear: payment.year.to_s,
+            type: payment.brand
+          },
+          billTo: {
+            firstName: options[:billing_address][:name].split.first,
+            lastName: options[:billing_address][:name].split.last,
+            company: options[:company],
+            address1: options[:billing_address][:address1],
+            locality: options[:billing_address][:city],
+            administrativeArea: options[:billing_address][:state],
+            postalCode: options[:billing_address][:zip],
+            country: options[:billing_address][:country],
+            email: options[:email],
+            phoneNumber: options[:billing_address][:phone]
+          },
+          instrumentIdentifier: {
+            id: instrument_identifier.params['id']
+          }
+        }
+        commit('/tms/v1/paymentinstruments', post)
+      end
+
       def create_customer_payment_instrument(payment, options, customer_token, instrument_identifier)
         post = {}
         post[:deafult] = 'true'
@@ -117,7 +143,7 @@ module ActiveMerchant #:nodoc:
           phoneNumber: options[:billing_address][:phone]
         }
         post[:instrumentIdentifier] = {}
-        post[:instrumentIdentifier][:id] = instrument_identifier
+        post[:instrumentIdentifier][:id] = instrument_identifier.params['id']
         commit("/tms/v2/customers/#{customer_token.params['id']}/payment-instruments", post)
       end
 
@@ -202,7 +228,6 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, http_method = :post)
         response = parse(ssl_request(http_method, url(action), post.to_json, auth_headers(action, post, http_method)))
-
         Response.new(
           success_from(action, response),
           message_from(action, response),
@@ -255,7 +280,7 @@ module ActiveMerchant #:nodoc:
         {
           keyid: @options[:public_key],
           algorithm: 'HmacSHA256',
-          headers: "host date (request-target)#{digest.present? ? ' digest' : ''} v-c-merchant-id",
+          headers: "host#{http_method == :delete ? '' : ' date'} (request-target)#{digest.present? ? ' digest' : ''} v-c-merchant-id",
           signature: sign_payload(string_to_sign)
         }.map { |k, v| %{#{k}="#{v}"} }.join(', ')
       end
@@ -274,12 +299,11 @@ module ActiveMerchant #:nodoc:
           'Accept' => accept,
           'Content-Type' => 'application/json;charset=utf-8',
           'V-C-Merchant-Id' => @options[:merchant_id],
-          'Date' => date,
           'Host' => host,
           'Signature' => get_http_signature(action, digest, http_method, date),
           'Digest' => digest
         }
-
+        headers.merge!(http_method == :delete ? { 'v-c-date' => date } : { 'date' => date })
         headers
       end
     end
