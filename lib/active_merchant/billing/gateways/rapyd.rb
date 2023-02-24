@@ -11,6 +11,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.rapyd.net/'
       self.display_name = 'Rapyd Gateway'
 
+      USA_PAYMENT_METHODS = %w[us_debit_discover_card us_debit_mastercard_card us_debit_visa_card us_ach_bank]
+
       STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options = {})
@@ -98,6 +100,7 @@ module ActiveMerchant #:nodoc:
       def add_auth_purchase(post, money, payment, options)
         add_invoice(post, money, options)
         add_payment(post, payment, options)
+        add_customer_object(post, payment, options)
         add_3ds(post, payment, options)
         add_address(post, payment, options)
         add_metadata(post, options)
@@ -211,9 +214,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_object(post, payment, options)
-        post[:name] = "#{payment.first_name} #{payment.last_name}"
-        post[:phone_number] = options[:billing_address][:phone].gsub(/\D/, '') if options[:billing_address]
-        post[:email] = options[:email] if options[:email]
+        post[:name] = "#{payment.first_name} #{payment.last_name}" unless payment.is_a?(String)
+        phone = options.dig(:billing_address, :phone) .gsub(/\D/, '') unless options[:billing_address].nil?
+        post[:phone_number] = phone || options.dig(:customer, :phone_number)
+        post[:email] = options[:email] || options.dig(:customer, :email)
+        post[:addresses] = options.dig(:customer, :addresses) if USA_PAYMENT_METHODS.include?(options[:pm_type])
       end
 
       def add_customer_id(post, options)

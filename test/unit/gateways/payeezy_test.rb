@@ -107,6 +107,19 @@ class PayeezyGateway < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_apple_pay_no_cryptogram
+    @apple_pay_card.payment_cryptogram = ''
+    @apple_pay_card.eci = nil
+    stub_comms do
+      @gateway.purchase(@amount, @apple_pay_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['eci_indicator'], '5'
+      assert_nil request['xid']
+      assert_nil request['cavv']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_purchase_no_name
     @apple_pay_card.first_name = nil
     @apple_pay_card.last_name = nil

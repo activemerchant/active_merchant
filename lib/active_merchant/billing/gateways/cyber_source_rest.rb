@@ -10,10 +10,12 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ActiveMerchant::Billing::CyberSourceGateway.supported_countries
       self.default_currency = 'USD'
+      self.currencies_without_fractions = ActiveMerchant::Billing::CyberSourceGateway.currencies_without_fractions
+
       self.supported_cardtypes = %i[visa master american_express discover diners_club jcb maestro elo union_pay cartes_bancaires mada]
 
       self.homepage_url = 'http://www.cybersource.com'
-      self.display_name = 'CyberSourceRest'
+      self.display_name = 'Cybersource REST'
 
       CREDIT_CARD_CODES = {
         american_express: '003',
@@ -35,15 +37,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options = {})
-        authorize(money, payment, options) do |post|
-          post[:processingInformation] = { capture: true }
-        end
+        authorize(money, payment, options, true)
       end
 
-      def authorize(money, payment, options = {})
+      def authorize(money, payment, options = {}, capture = false)
         post = build_auth_request(money, payment, options)
-
-        yield post if block_given?
+        post[:processingInformation] = { capture: true } if capture
 
         commit('/pts/v2/payments/', post)
       end
@@ -217,7 +216,7 @@ module ActiveMerchant #:nodoc:
         response = e.response.body.present? ? parse(e.response.body) : { 'response' => { 'rmsg' => e.response.msg } }
         Response.new(false, response.dig('response', 'rmsg'), response, test: test?)
       end
-
+      
       def success_from(action, response)
         case action
         when /payments/
@@ -279,7 +278,6 @@ module ActiveMerchant #:nodoc:
           'Signature' => get_http_signature(action, digest, http_method, date),
           'Digest' => digest
         }
-
         headers
       end
     end
