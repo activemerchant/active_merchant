@@ -36,11 +36,14 @@ class CommerceHubTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
+    @options[:order_id] = 'abc123'
+
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['transactionDetails']['captureFlag'], true
+      assert_equal request['transactionDetails']['merchantOrderId'], 'abc123'
       assert_equal request['merchantDetails']['terminalId'], @gateway.options[:terminal_id]
       assert_equal request['merchantDetails']['merchantId'], @gateway.options[:merchant_id]
       assert_equal request['amount']['total'], (@amount / 100.0).to_f
@@ -125,7 +128,7 @@ class CommerceHubTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'HOST', response.error_code
+    assert_equal 'string', response.error_code
   end
 
   def test_successful_parsing_of_billing_and_shipping_addresses
@@ -208,19 +211,53 @@ class CommerceHubTest < Test::Unit::TestCase
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |endpoint, data, _headers|
       request = JSON.parse(data)
-      assert_equal request['transactionDetails']['captureFlag'], false
-      assert_equal request['transactionDetails']['primaryTransactionType'], 'AUTH_ONLY'
-      assert_equal request['transactionDetails']['accountVerification'], true
+      assert_match %r{verification}, endpoint
+      assert_equal request['source']['sourceType'], 'PaymentCard'
     end.respond_with(successful_authorize_response)
 
     assert_success response
   end
 
+  def test_getting_avs_cvv_from_response
+    gateway_resp = {
+      'paymentReceipt' => {
+        'processorResponseDetails' => {
+          'bankAssociationDetails' => {
+            'associationResponseCode' => 'V000',
+            'avsSecurityCodeResponse' => {
+              'streetMatch' => 'NONE',
+               'postalCodeMatch' => 'NONE',
+               'securityCodeMatch' => 'NOT_CHECKED',
+               'association' => {
+                 'securityCodeResponse' => 'X',
+                 'avsCode' => 'Y'
+               }
+            }
+          }
+        }
+      }
+    }
+
+    assert_equal 'X', @gateway.send(:get_avs_cvv, gateway_resp, 'cvv')
+    assert_equal 'Y', @gateway.send(:get_avs_cvv, gateway_resp, 'avs')
+  end
+
   def test_successful_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_uses_order_id_to_keep_transaction_references_when_provided
+    @options[:order_id] = 'abc123'
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'order_id=abc123', response.authorization
   end
 
   private

@@ -18,7 +18,8 @@ module ActiveMerchant #:nodoc:
         'sale' => '/payments/v1/charges',
         'void' => '/payments/v1/cancels',
         'refund' => '/payments/v1/refunds',
-        'vault' => '/payments-vas/v1/tokens'
+        'vault' => '/payments-vas/v1/tokens',
+        'verify' => '/payments-vas/v1/accounts/verification'
       }
 
       def initialize(options = {})
@@ -29,7 +30,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options = {})
         post = {}
         options[:capture_flag] = true
-        add_transaction_details(post, options)
+        add_transaction_details(post, options, 'sale')
         build_purchase_and_auth_request(post, money, payment, options)
 
         commit('sale', post, options)
@@ -38,7 +39,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options = {})
         post = {}
         options[:capture_flag] = false
-        add_transaction_details(post, options)
+        add_transaction_details(post, options, 'sale')
         build_purchase_and_auth_request(post, money, payment, options)
 
         commit('sale', post, options)
@@ -82,10 +83,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
-        verify_amount = options[:verify_amount] || 0
-        options[:primary_transaction_type] = 'AUTH_ONLY'
-        options[:account_verification] = true
-        authorize(verify_amount, credit_card, options)
+        post = {}
+        add_payment(post, credit_card, options)
+        add_billing_address(post, credit_card, options)
+
+        commit('verify', post, options)
       end
 
       def supports_scrubbing?
@@ -113,6 +115,12 @@ module ActiveMerchant #:nodoc:
       def add_transaction_details(post, options, action = nil)
         post[:transactionDetails] = {}
         post[:transactionDetails][:captureFlag] = options[:capture_flag] unless options[:capture_flag].nil?
+
+        if options[:order_id].present? && action == 'sale'
+          post[:transactionDetails][:merchantOrderId] = options[:order_id]
+          post[:transactionDetails][:merchantTransactionId] = options[:order_id]
+        end
+
         if action != 'capture'
           post[:transactionDetails][:merchantInvoiceNumber] = options[:merchant_invoice_number] || rand.to_s[2..13]
           post[:transactionDetails][:primaryTransactionType] = options[:primary_transaction_type] if options[:primary_transaction_type]
@@ -177,10 +185,14 @@ module ActiveMerchant #:nodoc:
 
       def add_reference_transaction_details(post, authorization, options, action = nil)
         post[:referenceTransactionDetails] = {}
-        post[:referenceTransactionDetails][:referenceTransactionId] = authorization
+        post[:referenceTransactionDetails][:referenceTransactionId] = authorization unless authorization.match?(/^order_id/)
+
         if action != 'capture'
           post[:referenceTransactionDetails][:referenceTransactionType] = options[:reference_transaction_type] || 'CHARGES'
-          post[:referenceTransactionDetails][:referenceMerchantTransactionId] = options[:reference_merchant_transaction_id]
+
+          order_id = authorization.split('=').last if authorization.match?(/^order_id/)
+          post[:referenceTransactionDetails][:referenceMerchantTransactionId] = order_id || options[:reference_merchant_transaction_id]
+          post[:referenceTransactionDetails][:referenceMerchantOrderId] = order_id || options[:reference_merchant_order_id]
         end
       end
 
@@ -283,11 +295,24 @@ module ActiveMerchant #:nodoc:
 
         Response.new(
           success_from(response),
-          message_from(response),
+          message_from(response, action),
           response,
-          authorization: authorization_from(action, response),
+          authorization: authorization_from(action, response, options),
           test: test?,
-          error_code: error_code_from(response)
+          error_code: error_code_from(response),
+          avs_result: AVSResult.new(code: get_avs_cvv(response, 'avs')),
+          cvv_result: CVVResult.new(get_avs_cvv(response, 'cvv'))
+        )
+      end
+
+      def get_avs_cvv(response, type = 'avs')
+        response.dig(
+          'paymentReceipt',
+          'processorResponseDetails',
+          'bankAssociationDetails',
+          'avsSecurityCodeResponse',
+          'association',
+          type == 'avs' ? 'avsCode' : 'securityCodeResponse'
         )
       end
 
@@ -304,17 +329,26 @@ module ActiveMerchant #:nodoc:
         (response.dig('paymentReceipt', 'processorResponseDetails', 'responseCode') || response.dig('paymentTokens', 0, 'tokenResponseCode')) == '000'
       end
 
-      def message_from(response)
-        response.dig('paymentReceipt', 'processorResponseDetails', 'responseMessage') || response.dig('error', 0, 'message') || response.dig('gatewayResponse', 'transactionType')
+      def message_from(response, action = nil)
+        return response.dig('error', 0, 'message') if response['error'].present?
+        return response.dig('gatewayResponse', 'transactionState') if action == 'verify'
+
+        response.dig('paymentReceipt', 'processorResponseDetails', 'responseMessage') || response.dig('gatewayResponse', 'transactionType')
       end
 
-      def authorization_from(action, response)
-        return response.dig('gatewayResponse', 'transactionProcessingDetails', 'transactionId') unless action == 'vault'
-        return response.dig('paymentTokens', 0, 'tokenData') if action == 'vault'
+      def authorization_from(action, response, options)
+        case action
+        when 'vault'
+          response.dig('paymentTokens', 0, 'tokenData')
+        when 'sale'
+          options[:order_id].present? ? "order_id=#{options[:order_id]}" : response.dig('gatewayResponse', 'transactionProcessingDetails', 'transactionId')
+        else
+          response.dig('gatewayResponse', 'transactionProcessingDetails', 'transactionId')
+        end
       end
 
       def error_code_from(response)
-        response.dig('error', 0, 'type') unless success_from(response)
+        response.dig('error', 0, 'code') unless success_from(response)
       end
     end
   end
