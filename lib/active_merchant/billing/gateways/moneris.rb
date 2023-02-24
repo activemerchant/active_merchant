@@ -9,6 +9,8 @@ module ActiveMerchant #:nodoc:
     # Response Values", available at Moneris' {eSelect Plus Documentation
     # Centre}[https://www3.moneris.com/connect/en/documents/index.html].
     class MonerisGateway < Gateway
+      WALLETS = %w(APP GPP)
+
       self.test_url = 'https://esqa.moneris.com/gateway2/servlet/MpgRequest'
       self.live_url = 'https://www3.moneris.com/gateway2/servlet/MpgRequest'
 
@@ -47,7 +49,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_payment_source(post, creditcard_or_datakey, options)
         post[:amount] = amount(money)
-        post[:order_id] = options[:order_id]
+        post[:order_id] = format_order_id(post[:wallet_indicator], options[:order_id])
         post[:address] = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         add_external_mpi_fields(post, options)
@@ -71,7 +73,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_payment_source(post, creditcard_or_datakey, options)
         post[:amount] = amount(money)
-        post[:order_id] = options[:order_id]
+        post[:order_id] = format_order_id(post[:wallet_indicator], options[:order_id])
         post[:address] = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         add_external_mpi_fields(post, options)
@@ -436,6 +438,18 @@ module ActiveMerchant #:nodoc:
           'google_pay' => 'GPP',
           'android_pay' => 'ANP'
         }[token_source]
+      end
+
+      def format_order_id(wallet_indicator_code, order_id = nil)
+        # Truncate (max 100 characters) order id for
+        # google pay and apple pay (specific wallets / token sources)
+        return truncate_order_id(order_id) if WALLETS.include?(wallet_indicator_code)
+
+        order_id
+      end
+
+      def truncate_order_id(order_id = nil)
+        order_id.present? ? order_id[0, 100] : SecureRandom.alphanumeric(100)
       end
 
       def message_from(message)

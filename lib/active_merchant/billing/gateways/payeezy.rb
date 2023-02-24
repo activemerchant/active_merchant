@@ -247,13 +247,13 @@ module ActiveMerchant
         nt_card[:card_number] = payment_method.number
         nt_card[:exp_date] = format_exp_date(payment_method.month, payment_method.year)
         nt_card[:cvv] = payment_method.verification_value
-        nt_card[:xid] = payment_method.payment_cryptogram
-        nt_card[:cavv] = payment_method.payment_cryptogram
+        nt_card[:xid] = payment_method.payment_cryptogram unless payment_method.payment_cryptogram.empty?
+        nt_card[:cavv] = payment_method.payment_cryptogram unless payment_method.payment_cryptogram.empty?
         nt_card[:wallet_provider_id] = 'APPLE_PAY'
 
         params['3DS'] = nt_card
         params[:method] = '3DS'
-        params[:eci_indicator] = payment_method.eci
+        params[:eci_indicator] = payment_method.eci.nil? ? '5' : payment_method.eci
       end
 
       def format_exp_date(month, year)

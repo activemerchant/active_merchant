@@ -4,7 +4,7 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
   def setup
     @gateway = CyberSourceRestGateway.new(fixtures(:cybersource_rest))
     @amount = 10221
-    @card_with_out_funds = credit_card('42423482938483873')
+    @card_without_funds = credit_card('42423482938483873')
     @visa_card = credit_card('4111111111111111',
       verification_value: '987',
       month: 12,
@@ -54,7 +54,7 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
   end
 
   def test_failure_authorize_with_declined_credit_card
-    response = @gateway.authorize(@amount, @card_with_out_funds, @options)
+    response = @gateway.authorize(@amount, @card_without_funds, @options)
 
     assert_failure response
     assert_match %r{Invalid account}, response.message

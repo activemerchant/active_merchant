@@ -248,6 +248,11 @@ module ActiveMerchant #:nodoc:
         commit(action, parameters)
       end
 
+      def verify(credit_card, options = {})
+        add_creditcard(options, credit_card)
+        commit('verify', options)
+      end
+
       # recurring() a TrustCommerce account that is activated for Citadel, TrustCommerce's
       # hosted customer billing info database.
       #
@@ -476,9 +481,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(action, data)
-        authorization = data['transid']
-        authorization = "#{authorization}|#{action}" if authorization && VOIDABLE_ACTIONS.include?(action)
-        authorization
+        case action
+        when 'store'
+          data['billingid']
+        when *VOIDABLE_ACTIONS
+          "#{data['transid']}|#{action}"
+        else
+          data['transid']
+        end
       end
 
       def split_authorization(authorization)
