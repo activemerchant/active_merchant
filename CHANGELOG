@@ -84,6 +84,7 @@
 * CheckoutV2: Add Idempotency key support [yunnydang] #4728
 * Adyen: Add support for shopper_statement field for capture [yunnydang] #4736
 * CheckoutV2: Update idempotency_key name [yunnydang] #4737
+* Payeezy: Enable external 3DS [jherreraa] #4715
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512
