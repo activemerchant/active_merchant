@@ -43,6 +43,7 @@ class CommerceHubTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['transactionDetails']['captureFlag'], true
+      assert_equal request['transactionDetails']['createToken'], false
       assert_equal request['transactionDetails']['merchantOrderId'], 'abc123'
       assert_equal request['merchantDetails']['terminalId'], @gateway.options[:terminal_id]
       assert_equal request['merchantDetails']['merchantId'], @gateway.options[:merchant_id]
@@ -209,15 +210,13 @@ class CommerceHubTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = stub_comms do
+    stub_comms do
       @gateway.verify(@credit_card, @options)
     end.check_request do |endpoint, data, _headers|
       request = JSON.parse(data)
       assert_match %r{verification}, endpoint
       assert_equal request['source']['sourceType'], 'PaymentCard'
     end.respond_with(successful_authorize_response)
-
-    assert_success response
   end
 
   def test_getting_avs_cvv_from_response
@@ -258,6 +257,26 @@ class CommerceHubTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'order_id=abc123', response.authorization
+  end
+
+  def test_detect_success_state_for_verify_on_success_transaction
+    gateway_resp = {
+      'gatewayResponse' => {
+        'transactionState' => 'VERIFIED'
+      }
+    }
+
+    assert @gateway.send :success_from, gateway_resp, 'verify'
+  end
+
+  def test_detect_success_state_for_verify_on_failure_transaction
+    gateway_resp = {
+      'gatewayResponse' => {
+        'transactionState' => 'NOT_VERIFIED'
+      }
+    }
+
+    refute @gateway.send :success_from, gateway_resp, 'verify'
   end
 
   private

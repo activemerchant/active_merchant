@@ -30,6 +30,8 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options = {})
         post = {}
         options[:capture_flag] = true
+        options[:create_token] = false
+
         add_transaction_details(post, options, 'sale')
         build_purchase_and_auth_request(post, money, payment, options)
 
@@ -39,6 +41,8 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options = {})
         post = {}
         options[:capture_flag] = false
+        options[:create_token] = false
+
         add_transaction_details(post, options, 'sale')
         build_purchase_and_auth_request(post, money, payment, options)
 
@@ -113,19 +117,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_transaction_details(post, options, action = nil)
-        post[:transactionDetails] = {}
-        post[:transactionDetails][:captureFlag] = options[:capture_flag] unless options[:capture_flag].nil?
+        details = { captureFlag: options[:capture_flag], createToken: options[:create_token] }
 
         if options[:order_id].present? && action == 'sale'
-          post[:transactionDetails][:merchantOrderId] = options[:order_id]
-          post[:transactionDetails][:merchantTransactionId] = options[:order_id]
+          details[:merchantOrderId] = options[:order_id]
+          details[:merchantTransactionId] = options[:order_id]
         end
 
         if action != 'capture'
-          post[:transactionDetails][:merchantInvoiceNumber] = options[:merchant_invoice_number] || rand.to_s[2..13]
-          post[:transactionDetails][:primaryTransactionType] = options[:primary_transaction_type] if options[:primary_transaction_type]
-          post[:transactionDetails][:accountVerification] = options[:account_verification] unless options[:account_verification].nil?
+          details[:merchantInvoiceNumber] = options[:merchant_invoice_number] || rand.to_s[2..13]
+          details[:primaryTransactionType] = options[:primary_transaction_type]
+          details[:accountVerification] = options[:account_verification]
         end
+
+        post[:transactionDetails] = details.compact
       end
 
       def add_billing_address(post, payment, options)
@@ -294,12 +299,12 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, parameters.to_json, headers(parameters.to_json, options)))
 
         Response.new(
-          success_from(response),
+          success_from(response, action),
           message_from(response, action),
           response,
           authorization: authorization_from(action, response, options),
           test: test?,
-          error_code: error_code_from(response),
+          error_code: error_code_from(response, action),
           avs_result: AVSResult.new(code: get_avs_cvv(response, 'avs')),
           cvv_result: CVVResult.new(get_avs_cvv(response, 'cvv'))
         )
@@ -325,7 +330,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def success_from(response)
+      def success_from(response, action = nil)
+        return message_from(response, action) == 'VERIFIED' if action == 'verify'
+
         (response.dig('paymentReceipt', 'processorResponseDetails', 'responseCode') || response.dig('paymentTokens', 0, 'tokenResponseCode')) == '000'
       end
 
@@ -347,8 +354,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def error_code_from(response)
-        response.dig('error', 0, 'code') unless success_from(response)
+      def error_code_from(response, action)
+        response.dig('error', 0, 'code') unless success_from(response, action)
       end
     end
   end

@@ -66,6 +66,7 @@
 * Rapyd: Add customer object to transactions [javierpedrozaing] #4664
 * CybersourceRest: Add new gateway with authorize and purchase [heavyblade] #4690
 * Litle: Add prelive_url option [aenand] #4710
+* CommerceHub: Fixing verify status and prevent tokenization [heavyblade] #4716
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512
