@@ -85,8 +85,6 @@ module ActiveMerchant
           result =
             case method
             when :get
-              raise ArgumentError, 'GET requests do not support a request body' if body
-
               http.get(endpoint.request_uri, headers)
             when :post
               debug body
