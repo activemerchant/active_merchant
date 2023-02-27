@@ -343,6 +343,19 @@ class BlueSnapTest < Test::Unit::TestCase
     assert_equal '1012082893', response.authorization
   end
 
+  def test_successful_authorize_with_descriptor_phone_number
+    options_with_phone_number = {
+      descriptor_phone_number: '321-321-4321'
+    }
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.authorize(@amount, @credit_card, options_with_phone_number)
+    end.check_request do |_method, _url, data|
+      assert_match('<descriptor-phone-number>321-321-4321</descriptor-phone-number>', data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
   def test_successful_authorize_with_3ds_auth
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options_3ds2)
