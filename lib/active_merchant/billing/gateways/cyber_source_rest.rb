@@ -42,8 +42,8 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment, options = {}, capture = false)
         post = build_auth_request(money, payment, options)
-        post[:processingInformation] = { capture: true } if capture
-
+        post[:processingInformation] = { capture: true } if capture && !options[:third_party_token]
+        post[:paymentInformation][:customer] = { id: options[:third_party_token] } if options[:third_party_token]
         commit('/pts/v2/payments/', post)
       end
 
@@ -83,7 +83,6 @@ module ActiveMerchant #:nodoc:
           post[:buyerInformation][:merchantCustomerId] = options[:customer_id]
           post[:buyerInformation][:email] = options[:email].presence || 'null@cybersource.com'
           add_code(post, options)
-          post[:merchantDefinedInformation] = []
         end.compact
       end
 
@@ -148,12 +147,12 @@ module ActiveMerchant #:nodoc:
 
       def build_auth_request(amount, payment, options)
         { clientReferenceInformation: {}, paymentInformation: {}, orderInformation: {} }.tap do |post|
-          add_customer_id(post, options)
+          add_customer_id(post, options) unless options[:third_party_token]
           add_code(post, options)
-          add_credit_card(post, payment)
+          add_credit_card(post, payment) unless options[:third_party_token]
           add_amount(post, amount)
-          add_address(post, payment, options[:billing_address], options, :billTo)
-          add_address(post, payment, options[:shipping_address], options, :shipTo)
+          add_address(post, payment, options[:billing_address], options, :billTo) unless options[:third_party_token]
+          add_address(post, payment, options[:shipping_address], options, :shipTo) unless options[:third_party_token]
         end.compact
       end
 
@@ -222,37 +221,40 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        JSON.parse(body)
+        JSON.parse(body.nil? ? '{}' : body)
       end
 
       def commit(action, post, http_method = :post)
-        response = parse(ssl_request(http_method, url(action), post.to_json, auth_headers(action, post, http_method)))
+        headers = http_method == :delete ? auth_headers_delete(action, post, http_method) : auth_headers(action, post, http_method)
+        response = parse(ssl_request(http_method, url(action), post.nil? || post.empty? ? nil : post.to_json, headers))
         Response.new(
-          success_from(action, response),
-          message_from(action, response),
+          success_from(action, response, http_method),
+          message_from(action, response, http_method),
           response,
           authorization: authorization_from(response),
           avs_result: AVSResult.new(code: response.dig('processorInformation', 'avs', 'code')),
           # cvv_result: CVVResult.new(response['some_cvv_response_key']),
           test: test?,
-          error_code: error_code_from(action, response)
+          error_code: error_code_from(action, response, http_method)
         )
       rescue ActiveMerchant::ResponseError => e
         response = e.response.body.present? ? parse(e.response.body) : { 'response' => { 'rmsg' => e.response.msg } }
         Response.new(false, response.dig('response', 'rmsg'), response, test: test?)
       end
 
-      def success_from(action, response)
+      def success_from(action, response, http_method)
         case action
         when /payments/
           response['status'] == 'AUTHORIZED'
         else
-          !response['id'].nil?
+          return response['id'].present? unless http_method == :delete
+
+          return true
         end
       end
 
-      def message_from(action, response)
-        return response['status'] if success_from(action, response)
+      def message_from(action, response, http_method)
+        return response['status'] if success_from(action, response, http_method)
 
         response['errorInformation']['message']
       end
@@ -261,8 +263,8 @@ module ActiveMerchant #:nodoc:
         response['id']
       end
 
-      def error_code_from(action, response)
-        response['errorInformation']['reason'] unless success_from(action, response)
+      def error_code_from(action, response, http_method)
+        response['errorInformation']['reason'] unless success_from(action, response, http_method)
       end
 
       # This implementation follows the Cybersource guide on how create the request signature, see:
@@ -275,18 +277,34 @@ module ActiveMerchant #:nodoc:
           digest: digest,
           "v-c-merchant-id": @options[:merchant_id]
         }.map { |k, v| "#{k}: #{v}" }.join("\n").force_encoding(Encoding::UTF_8)
+        delete_string_to_sign = {
+          host: host,
+          "v-c-date": gmtdatetime,
+          "(request-target)": "#{http_method} #{resource}",
+          "v-c-merchant-id": @options[:merchant_id]
+        }.map { |k, v| "#{k}: #{v}" }.join("\n").force_encoding(Encoding::UTF_8)
 
         {
           keyid: @options[:public_key],
           algorithm: 'HmacSHA256',
-          headers: "host#{http_method == :delete ? '' : ' date'} (request-target)#{digest.present? ? ' digest' : ''} v-c-merchant-id",
-          signature: sign_payload(string_to_sign)
+          headers: "host#{http_method == :delete ? ' v-c-date' : ' date'} (request-target)#{digest.present? ? ' digest' : ''} v-c-merchant-id",
+          signature: sign_payload(http_method == :delete ? delete_string_to_sign : string_to_sign)
         }.map { |k, v| %{#{k}="#{v}"} }.join(', ')
       end
 
       def sign_payload(payload)
         decoded_key = Base64.decode64(@options[:private_key])
         Base64.strict_encode64(OpenSSL::HMAC.digest('sha256', decoded_key, payload))
+      end
+
+      def auth_headers_delete(action, post, http_method)
+        date = Time.now.httpdate
+        {
+          'v-c-date' => date,
+          'V-C-Merchant-Id' => @options[:merchant_id],
+          'Host' => host,
+          'Signature' => get_http_signature(action, nil, http_method, date)
+        }
       end
 
       def auth_headers(action, post, http_method = :post)

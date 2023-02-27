@@ -76,11 +76,23 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_stored_card
+    @options[:billing_address] = @billing_address
+    stored = @gateway.store(@visa_card, @options.merge(customer_id: '10'))
+    response = @gateway.purchase(@amount, @visa_card, @options.merge(third_party_token: stored.params['id']))
+
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
   def test_successful_unstore
     @options[:billing_address] = @billing_address
     store_transaction = @gateway.store(@visa_card, @options.merge(customer_id: '10'))
-    @options[:customer_token_id] = store_transaction.params['id']
-    @options[:payment_instrument_id] = store_transaction.params['instrumentIdentifier']['id']
+    @options[:customer_token_id] = store_transaction.responses[0].params['id']
+    @options[:payment_instrument_id] = store_transaction.responses[2].params['id']
+
     unstore = @gateway.unstore(@options)
 
     assert_success unstore

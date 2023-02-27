@@ -79,6 +79,13 @@ class CyberSourceRestTest < Test::Unit::TestCase
     assert_equal 'host date (request-target) v-c-merchant-id', parsed['headers']
   end
 
+  def test_should_create_an_http_signature_for_a_delete
+    signature = @gateway.send :get_http_signature, @resource, nil, :delete, @gmt_time
+
+    parsed = parse_signature(signature)
+    assert_equal 'host v-c-date (request-target) v-c-merchant-id', parsed['headers']
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
