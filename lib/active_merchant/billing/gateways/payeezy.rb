@@ -41,6 +41,7 @@ module ActiveMerchant
         add_soft_descriptors(params, options)
         add_level2_data(params, options)
         add_stored_credentials(params, options)
+        add_external_three_ds(params, payment_method, options)
 
         commit(params, options)
       end
@@ -56,6 +57,7 @@ module ActiveMerchant
         add_soft_descriptors(params, options)
         add_level2_data(params, options)
         add_stored_credentials(params, options)
+        add_external_three_ds(params, payment_method, options)
 
         commit(params, options)
       end
@@ -139,6 +141,26 @@ module ActiveMerchant
       end
 
       private
+
+      def add_external_three_ds(params, payment_method, options)
+        return unless three_ds = options[:three_d_secure]
+
+        params[:'3DS'] = {
+          program_protocol: three_ds[:version][0],
+          directory_server_transaction_id: three_ds[:ds_transaction_id],
+          cardholder_name: payment_method.name,
+          card_number: payment_method.number,
+          exp_date: format_exp_date(payment_method.month, payment_method.year),
+          cvv: payment_method.verification_value,
+          xid: three_ds[:acs_transaction_id],
+          cavv: three_ds[:cavv],
+          wallet_provider_id: 'NO_WALLET',
+          type: 'D'
+        }.compact
+
+        params[:eci_indicator] = three_ds[:eci]
+        params[:method] = '3DS'
+      end
 
       def add_invoice(params, options)
         params[:merchant_ref] = options[:order_id]
