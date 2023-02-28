@@ -277,6 +277,12 @@ cyber_source_latam_pe:
   password: soap_key
 
 # Working credentials, no need to replace
+cybersource_rest:
+  merchant_id: "testrest"
+  public_key: "08c94330-f618-42a3-b09d-e1e43be5efda"
+  private_key: "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="
+
+# Working credentials, no need to replace
 d_local:
   login: aeaf9bbfa1
   trans_key: 9de3769b7e

@@ -16,7 +16,7 @@ class PayeezyGateway < Test::Unit::TestCase
       ta_token: '123'
     }
     @options_stored_credentials = {
-      cardbrand_original_transaction_id: 'abc123',
+      cardbrand_original_transaction_id: 'original_transaction_id_abc123',
       sequence: 'FIRST',
       is_scheduled: true,
       initiator: 'MERCHANT',
@@ -24,7 +24,7 @@ class PayeezyGateway < Test::Unit::TestCase
     }
     @options_standardized_stored_credentials = {
       stored_credential: {
-        network_transaction_id: 'abc123',
+        network_transaction_id: 'stored_credential_abc123',
         initial_transaction: false,
         reason_type: 'recurring',
         initiator: 'cardholder'
@@ -205,7 +205,8 @@ class PayeezyGateway < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(@options_stored_credentials))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/stored_credentials/, data)
+      stored_credentials = JSON.parse(data)['stored_credentials']['cardbrand_original_transaction_id']
+      assert_equal stored_credentials, 'original_transaction_id_abc123'
     end.respond_with(successful_purchase_stored_credentials_response)
 
     assert_success response
@@ -217,7 +218,38 @@ class PayeezyGateway < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(@options_standardized_stored_credentials))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/stored_credentials/, data)
+      stored_credentials = JSON.parse(data)['stored_credentials']['cardbrand_original_transaction_id']
+      assert_equal stored_credentials, 'stored_credential_abc123'
+    end.respond_with(successful_purchase_stored_credentials_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'Transaction Normal - Approved', response.message
+  end
+
+  def test_successful_purchase_with__stored_credential_and_cardbrand_original_transaction_id
+    options = @options_standardized_stored_credentials.merge!(cardbrand_original_transaction_id: 'original_transaction_id_abc123')
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(options))
+    end.check_request do |_endpoint, data, _headers|
+      stored_credentials = JSON.parse(data)['stored_credentials']['cardbrand_original_transaction_id']
+      assert_equal stored_credentials, 'original_transaction_id_abc123'
+    end.respond_with(successful_purchase_stored_credentials_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'Transaction Normal - Approved', response.message
+  end
+
+  def test_successful_purchase_with_no_ntid
+    @options_standardized_stored_credentials[:stored_credential].delete(:network_transaction_id)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(@options_standardized_stored_credentials))
+    end.check_request do |_endpoint, data, _headers|
+      stored_credentials = JSON.parse(data)['stored_credentials']
+      assert_equal stored_credentials.include?(:cardbrand_original_transaction_id), false
     end.respond_with(successful_purchase_stored_credentials_response)
 
     assert_success response

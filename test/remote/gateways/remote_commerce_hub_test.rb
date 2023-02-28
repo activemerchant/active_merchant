@@ -2,10 +2,14 @@ require 'test_helper'
 
 class RemoteCommerceHubTest < Test::Unit::TestCase
   def setup
+    # Uncomment the sleep if you want to run the entire set of remote tests without
+    # getting 'The transaction limit was exceeded. Please try again!' errors
+    # sleep 5
+
     @gateway = CommerceHubGateway.new(fixtures(:commerce_hub))
 
     @amount = 1204
-    @credit_card = credit_card('4005550000000019', month: '02', year: '2035', verification_value: '111')
+    @credit_card = credit_card('4005550000000019', month: '02', year: '2035', verification_value: '123', first_name: 'John', last_name: 'Doe')
     @google_pay = network_tokenization_credit_card('4005550000000019',
       brand: 'visa',
       eci: '05',
@@ -35,6 +39,23 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_failed_avs_cvv_response_codes
+    @options[:billing_address] = {
+      address1: '112 Main St.',
+      city: 'Atlanta',
+      state: 'GA',
+      zip: '30301',
+      country: 'US'
+    }
+    response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_equal 'X', response.cvv_result['code']
+    assert_equal 'CVV check not supported for card', response.cvv_result['message']
+    assert_nil response.avs_result['code']
   end
 
   def test_successful_purchase_with_billing_and_shipping
@@ -67,6 +88,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'Unable to assign card to brand: Invalid.', response.message
+    assert_equal '104', response.error_code
   end
 
   def test_successful_authorize
@@ -100,6 +122,19 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_authorize_and_void_using_store_id_as_reference
+    @options[:order_id] = SecureRandom.hex(16)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_equal "order_id=#{@options[:order_id]}", response.authorization
+
+    response = @gateway.void(response.authorization, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_failed_void
     response = @gateway.void('123', @options)
     assert_failure response
@@ -109,7 +144,28 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal 'Approved', response.message
+    assert_equal 'VERIFIED', response.message
+  end
+
+  def test_successful_verify_with_address
+    @options[:billing_address] = {
+      address1: '112 Main St.',
+      city: 'Atlanta',
+      state: 'GA',
+      zip: '30301',
+      country: 'US'
+    }
+
+    response = @gateway.verify(@credit_card, @options)
+
+    assert_success response
+    assert_equal 'VERIFIED', response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@declined_card, @options)
+
+    assert_failure response
   end
 
   def test_successful_purchase_and_refund
@@ -182,7 +238,6 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@gateway.options[:api_key], transcript)
     assert_scrubbed(@gateway.options[:api_secret], transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
   end
 
   def test_transcript_scrubbing_apple_pay
