@@ -30,6 +30,10 @@ module ActiveMerchant #:nodoc:
         unionpay: '062',
         visa: '001'
       }
+      PAYMENT_SOLUTION = {
+        apple_pay: '001',
+        google_pay: '012'
+      }
 
       def initialize(options = {})
         requires!(options, :merchant_id, :public_key, :private_key)
@@ -42,7 +46,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment, options = {}, capture = false)
         post = build_auth_request(money, payment, options)
-        post[:processingInformation] = { capture: true } if capture
+        post[:processingInformation][:capture] = true if capture
 
         commit('payments', post)
       end
@@ -76,7 +80,7 @@ module ActiveMerchant #:nodoc:
         { clientReferenceInformation: {}, paymentInformation: {}, orderInformation: {} }.tap do |post|
           add_customer_id(post, options)
           add_code(post, options)
-          add_credit_card(post, payment)
+          add_payment(post, payment, options)
           add_amount(post, amount)
           add_address(post, payment, options[:billing_address], options, :billTo)
           add_address(post, payment, options[:shipping_address], options, :shipTo)
@@ -119,6 +123,38 @@ module ActiveMerchant #:nodoc:
           totalAmount: localized_amount(amount, currency),
           currency: currency
         }
+      end
+
+      def add_payment(post, payment, options)
+        post[:processingInformation] = {}
+        if payment.is_a?(NetworkTokenizationCreditCard)
+          add_network_tokenization_card(post, payment, options)
+        else
+          add_credit_card(post, payment)
+        end
+      end
+
+      def add_network_tokenization_card(post, payment, options)
+        post[:processingInformation][:paymentSolution] = PAYMENT_SOLUTION[payment.source]
+        post[:processingInformation][:commerceIndicator] = 'internet' unless card_brand(payment) == 'jcb'
+
+        post[:paymentInformation][:tokenizedCard] = {
+          number: payment.number,
+          expirationMonth: payment.month,
+          expirationYear: payment.year,
+          cryptogram: payment.payment_cryptogram,
+          transactionType: '1',
+          type:  CREDIT_CARD_CODES[card_brand(payment).to_sym]
+        }
+
+        if card_brand(payment) == 'master'
+          post[:consumerAuthenticationInformation] = {
+            ucafAuthenticationData: payment.payment_cryptogram,
+            ucafCollectionIndicator: '2'
+          }
+        else
+          post[:consumerAuthenticationInformation] = { cavv: payment.payment_cryptogram }
+        end
       end
 
       def add_credit_card(post, creditcard)

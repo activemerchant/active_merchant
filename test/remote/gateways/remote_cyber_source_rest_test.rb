@@ -10,6 +10,64 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
       month: 12,
       year: 2031)
 
+    @apple_pay = network_tokenization_credit_card(
+      '4111111111111111',
+      payment_cryptogram: 'AceY+igABPs3jdwNaDg3MAACAAA=',
+      month: '11',
+      year: Time.now.year + 1,
+      source: :apple_pay,
+      verification_value: 569
+    )
+
+    @google_pay = network_tokenization_credit_card(
+      '4111111111111111',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '11',
+      year: Time.now.year + 1,
+      source: :google_pay,
+      verification_value: 569
+    )
+
+    @google_pay_master = network_tokenization_credit_card(
+      '5555555555554444',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '11',
+      year: Time.now.year + 1,
+      source: :google_pay,
+      verification_value: 569,
+      brand: 'master'
+    )
+
+    @apple_pay_jcb = network_tokenization_credit_card(
+      '3566111111111113',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '11',
+      year: Time.now.year + 1,
+      source: :apple_pay,
+      verification_value: 569,
+      brand: 'jcb'
+    )
+
+    @apple_pay_american_express = network_tokenization_credit_card(
+      '378282246310005',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '11',
+      year: Time.now.year + 1,
+      source: :apple_pay,
+      verification_value: 569,
+      brand: 'american_express'
+    )
+
+    @google_pay_discover = network_tokenization_credit_card(
+      '6011111111111117',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '11',
+      year: Time.now.year + 1,
+      source: :google_pay,
+      verification_value: 569,
+      brand: 'discover'
+    )
+
     @billing_address = {
       name:     'John Doe',
       address1: '1 Market St',
@@ -139,6 +197,50 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert response.test?
     assert_match %r{Decline - Invalid account number}, response.message
     assert_equal 'INVALID_ACCOUNT', response.error_code
+  end
+
+  def test_successful_authorize_with_apple_pay
+    response = @gateway.authorize(@amount, @apple_pay, @options)
+
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+    refute_empty response.params['_links']['capture']
+  end
+
+  def test_successful_authorize_with_google_pay
+    response = @gateway.authorize(@amount, @apple_pay, @options)
+
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+    refute_empty response.params['_links']['capture']
+  end
+
+  def test_successful_purchase_with_apple_pay_jcb
+    response = @gateway.purchase(@amount, @apple_pay_jcb, @options)
+
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+  end
+
+  def test_successful_purchase_with_apple_pay_american_express
+    response = @gateway.purchase(@amount, @apple_pay_american_express, @options)
+
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+  end
+
+  def test_successful_purchase_with_google_pay_master
+    response = @gateway.purchase(@amount, @google_pay_master, @options)
+
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+  end
+
+  def test_successful_authorize_with_google_pay_discover
+    response = @gateway.purchase(@amount, @google_pay_discover, @options)
+
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
   end
 
   def test_transcript_scrubbing
