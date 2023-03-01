@@ -13,6 +13,34 @@ class CyberSourceRestTest < Test::Unit::TestCase
       verification_value: '987',
       month: 12,
       year: 2031)
+    @apple_pay = network_tokenization_credit_card(
+      '4111111111111111',
+      payment_cryptogram: 'AceY+igABPs3jdwNaDg3MAACAAA=',
+      month: '11',
+      year: Time.now.year + 1,
+      source: :apple_pay,
+      verification_value: 569
+    )
+
+    @google_pay_mc = network_tokenization_credit_card(
+      '5555555555554444',
+      payment_cryptogram: 'AceY+igABPs3jdwNaDg3MAACAAA=',
+      month: '11',
+      year: Time.now.year + 1,
+      source: :google_pay,
+      verification_value: 569,
+      brand: 'master'
+    )
+
+    @apple_pay_jcb = network_tokenization_credit_card(
+      '3566111111111113',
+      payment_cryptogram: 'AceY+igABPs3jdwNaDg3MAACAAA=',
+      month: '11',
+      year: Time.now.year + 1,
+      source: :apple_pay,
+      verification_value: 569,
+      brand: 'jcb'
+    )
     @amount = 100
     @options = {
       order_id: '1',
@@ -146,6 +174,50 @@ class CyberSourceRestTest < Test::Unit::TestCase
     assert_equal 'US', address[:country]
     assert_equal 'test@cybs.com', address[:email]
     assert_equal '4158880000', address[:phoneNumber]
+  end
+
+  def test_authorize_apple_pay_visa
+    stub_comms do
+      @gateway.authorize(100, @apple_pay, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '001', request['paymentInformation']['tokenizedCard']['type']
+      assert_equal '1', request['paymentInformation']['tokenizedCard']['transactionType']
+      assert_equal 'AceY+igABPs3jdwNaDg3MAACAAA=', request['paymentInformation']['tokenizedCard']['cryptogram']
+      assert_nil request['paymentInformation']['tokenizedCard']['requestorId']
+      assert_equal '001', request['processingInformation']['paymentSolution']
+      assert_equal 'internet', request['processingInformation']['commerceIndicator']
+      assert_include request['consumerAuthenticationInformation'], 'cavv'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_google_pay_master_card
+    stub_comms do
+      @gateway.authorize(100, @google_pay_mc, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '002', request['paymentInformation']['tokenizedCard']['type']
+      assert_equal '1', request['paymentInformation']['tokenizedCard']['transactionType']
+      assert_nil request['paymentInformation']['tokenizedCard']['requestorId']
+      assert_equal '012', request['processingInformation']['paymentSolution']
+      assert_equal 'internet', request['processingInformation']['commerceIndicator']
+      assert_equal request['consumerAuthenticationInformation']['ucafCollectionIndicator'], '2'
+      assert_include request['consumerAuthenticationInformation'], 'ucafAuthenticationData'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_apple_pay_jcb
+    stub_comms do
+      @gateway.authorize(100, @apple_pay_jcb, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '007', request['paymentInformation']['tokenizedCard']['type']
+      assert_equal '1', request['paymentInformation']['tokenizedCard']['transactionType']
+      assert_nil request['paymentInformation']['tokenizedCard']['requestorId']
+      assert_equal '001', request['processingInformation']['paymentSolution']
+      assert_nil request['processingInformation']['commerceIndicator']
+      assert_include request['consumerAuthenticationInformation'], 'cavv'
+    end.respond_with(successful_purchase_response)
   end
 
   def test_url_building
