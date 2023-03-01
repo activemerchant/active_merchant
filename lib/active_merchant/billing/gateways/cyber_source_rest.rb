@@ -61,6 +61,20 @@ module ActiveMerchant #:nodoc:
         commit('credits', post)
       end
 
+      def void(authorization, options = {})
+        payment, amount = authorization.split('|')
+        post = build_void_request(amount)
+        commit("/pts/v2/payments/#{payment}/reversals", post)
+      end
+
+      def verify(credit_card, options = {})
+        amount = eligible_for_zero_auth?(credit_card, options) ? 0 : 100
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(amount, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       def supports_scrubbing?
         true
       end
@@ -75,6 +89,12 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def build_void_request(amount = nil)
+        { reversalInformation: { amountDetails: { totalAmount: nil } } }.tap do |post|
+          add_reversal_amount(post, amount.to_i) if amount.present?
+        end.compact
+      end
 
       def build_auth_request(amount, payment, options)
         { clientReferenceInformation: {}, paymentInformation: {}, orderInformation: {} }.tap do |post|
@@ -114,6 +134,14 @@ module ActiveMerchant #:nodoc:
         return unless options[:customer_id].present?
 
         post[:paymentInformation][:customer] = { customerId: options[:customer_id] }
+      end
+
+      def add_reversal_amount(post, amount)
+        currency = options[:currency] || currency(amount)
+
+        post[:reversalInformation][:amountDetails] = {
+          totalAmount: localized_amount(amount, currency)
+        }
       end
 
       def add_amount(post, amount)
@@ -232,7 +260,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        %w(AUTHORIZED PENDING).include?(response['status'])
+        %w(AUTHORIZED PENDING REVERSED).include?(response['status'])
       end
 
       def message_from(response)
@@ -242,7 +270,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response['id']
+        id = response['id']
+        has_amount = response['orderInformation'] && response['orderInformation']['amountDetails'] && response['orderInformation']['amountDetails']['authorizedAmount']
+        amount = response['orderInformation']['amountDetails']['authorizedAmount'].delete('.') if has_amount
+
+        return id if amount.blank?
+
+        [id, amount].join('|')
       end
 
       def error_code_from(response)

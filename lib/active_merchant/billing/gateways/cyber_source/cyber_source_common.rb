@@ -27,6 +27,10 @@ module ActiveMerchant #:nodoc:
         country_code = Country.find(country_field)
         country_code&.code(:alpha2)
       end
+
+      def eligible_for_zero_auth?(payment_method, options = {})
+        payment_method.is_a?(CreditCard) && options[:zero_amount_auth]
+      end
     end
   end
 end

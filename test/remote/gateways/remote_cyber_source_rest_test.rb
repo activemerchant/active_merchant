@@ -121,7 +121,6 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @visa_card, @options)
-
     assert_success response
     assert response.test?
     assert_equal 'AUTHORIZED', response.message
@@ -195,6 +194,38 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
 
     assert_failure response
     assert response.test?
+    assert_match %r{Decline - Invalid account number}, response.message
+    assert_equal 'INVALID_ACCOUNT', response.error_code
+  end
+
+  def test_successful_void
+    authorize = @gateway.authorize(@amount, @visa_card, @options)
+    response = @gateway.void(authorize.authorization, @options)
+    assert_success response
+    assert response.params['id'].present?
+    assert_equal 'REVERSED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
+  def test_failure_void_using_card_without_funds
+    authorize = @gateway.authorize(@amount, @card_without_funds, @options)
+    response = @gateway.void(authorize.authorization, @options)
+    assert_failure response
+    assert_match %r{Declined - The request is missing one or more fields}, response.params['message']
+    assert_equal 'INVALID_REQUEST', response.params['status']
+  end
+
+  def test_successful_verify
+    response = @gateway.verify(@visa_card, @options)
+    assert_success response
+    assert response.params['id'].present?
+    assert_equal 'AUTHORIZED', response.message
+    refute_empty response.params['_links']['capture']
+  end
+
+  def test_failure_verify
+    response = @gateway.verify(@card_without_funds, @options)
+    assert_failure response
     assert_match %r{Decline - Invalid account number}, response.message
     assert_equal 'INVALID_ACCOUNT', response.error_code
   end
