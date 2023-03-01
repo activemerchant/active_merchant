@@ -30,6 +30,7 @@ module ActiveMerchant #:nodoc:
         unionpay: '062',
         visa: '001'
       }
+
       PAYMENT_SOLUTION = {
         apple_pay: '001',
         google_pay: '012'
@@ -83,6 +84,7 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(/(\\?"number\\?":\\?")\d+/, '\1[FILTERED]').
+          gsub(/(\\?"routingNumber\\?":\\?")\d+/, '\1[FILTERED]').
           gsub(/(\\?"securityCode\\?":\\?")\d+/, '\1[FILTERED]').
           gsub(/(signature=")[^"]*/, '\1[FILTERED]').
           gsub(/(keyid=")[^"]*/, '\1[FILTERED]').
@@ -154,10 +156,22 @@ module ActiveMerchant #:nodoc:
         }
       end
 
+      def add_ach(post, payment)
+        post[:paymentInformation][:bank] = {
+          account: {
+            type: payment.account_type == 'checking' ? 'C' : 'S',
+            number: payment.account_number
+          },
+          routingNumber: payment.routing_number
+        }
+      end
+
       def add_payment(post, payment, options)
         post[:processingInformation] = {}
         if payment.is_a?(NetworkTokenizationCreditCard)
           add_network_tokenization_card(post, payment, options)
+        elsif payment.is_a?(Check)
+          add_ach(post, payment)
         else
           add_credit_card(post, payment)
         end
@@ -244,7 +258,6 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post)
         response = parse(ssl_post(url(action), post.to_json, auth_headers(action, post)))
-
         Response.new(
           success_from(response),
           message_from(response),
