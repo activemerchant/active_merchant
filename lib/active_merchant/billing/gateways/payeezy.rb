@@ -247,7 +247,7 @@ module ActiveMerchant
         nt_card[:card_number] = payment_method.number
         nt_card[:exp_date] = format_exp_date(payment_method.month, payment_method.year)
         nt_card[:cvv] = payment_method.verification_value
-        nt_card[:xid] = payment_method.payment_cryptogram unless payment_method.payment_cryptogram.empty?
+        nt_card[:xid] = payment_method.payment_cryptogram unless payment_method.payment_cryptogram.empty? || payment_method.brand.include?('american_express')
         nt_card[:cavv] = payment_method.payment_cryptogram unless payment_method.payment_cryptogram.empty?
         nt_card[:wallet_provider_id] = 'APPLE_PAY'
 

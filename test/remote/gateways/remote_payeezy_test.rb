@@ -50,6 +50,16 @@ class RemotePayeezyTest < Test::Unit::TestCase
       source: :apple_pay,
       verification_value: 569
     )
+    @apple_pay_card_amex = network_tokenization_credit_card(
+      '373953192351004',
+      brand: 'american_express',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '11',
+      year: Time.now.year + 1,
+      eci: 5,
+      source: :apple_pay,
+      verification_value: 569
+    )
   end
 
   def test_successful_store
@@ -83,6 +93,11 @@ class RemotePayeezyTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_apple_pay
     assert response = @gateway.purchase(@amount, @apple_pay_card, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_apple_pay_amex
+    assert response = @gateway.purchase(@amount, @apple_pay_card_amex, @options)
     assert_success response
   end
 

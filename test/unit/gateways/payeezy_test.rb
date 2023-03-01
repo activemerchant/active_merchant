@@ -55,6 +55,16 @@ class PayeezyGateway < Test::Unit::TestCase
       source: :apple_pay,
       verification_value: 569
     )
+    @apple_pay_card_amex = network_tokenization_credit_card(
+      '373953192351004',
+      brand: 'american_express',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '11',
+      year: Time.now.year + 1,
+      eci: 5,
+      source: :apple_pay,
+      verification_value: 569
+    )
   end
 
   def test_invalid_credentials
@@ -115,8 +125,18 @@ class PayeezyGateway < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['eci_indicator'], '5'
-      assert_nil request['xid']
-      assert_nil request['cavv']
+      assert_nil request['3DS']['xid']
+      assert_nil request['3DS']['cavv']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_apple_pay_amex
+    stub_comms do
+      @gateway.purchase(@amount, @apple_pay_card_amex, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert request['3DS']['cavv'], @apple_pay_card_amex.payment_cryptogram
+      assert_nil request['3DS']['xid']
     end.respond_with(successful_purchase_response)
   end
 
