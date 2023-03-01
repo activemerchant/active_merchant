@@ -604,19 +604,20 @@ module ActiveMerchant #:nodoc:
         end
 
         {
-          'order_id'                => transaction.order_id,
-          'amount'                  => transaction.amount.to_s,
-          'status'                  => transaction.status,
-          'credit_card_details'     => credit_card_details,
-          'customer_details'        => customer_details,
-          'billing_details'         => billing_details,
-          'shipping_details'        => shipping_details,
-          'vault_customer'          => vault_customer,
-          'merchant_account_id'     => transaction.merchant_account_id,
-          'risk_data'               => risk_data,
-          'network_transaction_id'  => transaction.network_transaction_id || nil,
-          'processor_response_code' => response_code_from_result(result),
-          'recurring'               => transaction.recurring
+          'order_id'                     => transaction.order_id,
+          'amount'                       => transaction.amount.to_s,
+          'status'                       => transaction.status,
+          'credit_card_details'          => credit_card_details,
+          'customer_details'             => customer_details,
+          'billing_details'              => billing_details,
+          'shipping_details'             => shipping_details,
+          'vault_customer'               => vault_customer,
+          'merchant_account_id'          => transaction.merchant_account_id,
+          'risk_data'                    => risk_data,
+          'network_transaction_id'       => transaction.network_transaction_id || nil,
+          'processor_response_code'      => response_code_from_result(result),
+          'processor_authorization_code' => transaction.processor_authorization_code,
+          'recurring'                    => transaction.recurring
         }
       end
 
