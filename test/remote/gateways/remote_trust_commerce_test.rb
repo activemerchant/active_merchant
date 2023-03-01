@@ -211,6 +211,13 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_failed_verify_with_invalid_card
+    assert response = @gateway.verify(@declined_credit_card)
+    assert_equal 'baddata', response.params['status']
+    assert_match %r{A field was improperly formatted}, response.message
+    assert_failure response
+  end
+
   def test_successful_recurring
     assert response = @gateway.recurring(@amount, @credit_card, periodicity: :weekly)
 
