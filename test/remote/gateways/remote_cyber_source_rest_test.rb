@@ -5,6 +5,9 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     @gateway = CyberSourceRestGateway.new(fixtures(:cybersource_rest))
     @amount = 10221
     @card_without_funds = credit_card('42423482938483873')
+    @bank_account = check(account_number: '4100', routing_number: '121042882')
+    @declined_bank_account = check(account_number: '550111', routing_number: '121107882')
+
     @visa_card = credit_card('4111111111111111',
       verification_value: '987',
       month: 12,
@@ -282,5 +285,43 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     transcript = @gateway.scrub(transcript)
     assert_scrubbed(@visa_card.number, transcript)
     assert_scrubbed(@visa_card.verification_value, transcript)
+  end
+
+  def test_transcript_scrubbing_bank
+    @options[:billing_address] = @billing_address
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @bank_account, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@bank_account.account_number, transcript)
+    assert_scrubbed(@bank_account.routing_number, transcript)
+  end
+
+  def test_successful_authorize_with_bank_account
+    @options[:billing_address] = @billing_address
+    response = @gateway.authorize(@amount, @bank_account, @options)
+    assert_success response
+    assert_equal 'PENDING', response.message
+  end
+
+  def test_successful_purchase_with_bank_account
+    @options[:billing_address] = @billing_address
+    response = @gateway.purchase(@amount, @bank_account, @options)
+    assert_success response
+    assert_equal 'PENDING', response.message
+  end
+
+  def test_failed_authorize_with_bank_account
+    @options[:billing_address] = @billing_address
+    response = @gateway.authorize(@amount, @declined_bank_account, @options)
+    assert_failure response
+    assert_equal 'Decline - General decline by the processor.', response.message
+  end
+
+  def test_failed_authorize_with_bank_account_missing_country_code
+    response = @gateway.authorize(@amount, @bank_account, @options.except(:billing_address))
+    assert_failure response
+    assert_equal 'Declined - The request is missing one or more fields', response.params['message']
   end
 end

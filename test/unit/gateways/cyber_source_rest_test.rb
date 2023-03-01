@@ -9,6 +9,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
       public_key: 'def345',
       private_key: "NYlM1sgultLjvgaraWvDCXykdz1buqOW8yXE3pMlmxQ=\n"
     )
+    @bank_account = check(account_number: '4100', routing_number: '121042882')
     @credit_card = credit_card('4111111111111111',
       verification_value: '987',
       month: 12,
@@ -56,7 +57,6 @@ class CyberSourceRestTest < Test::Unit::TestCase
       },
       email: 'test@cybs.com'
     }
-
     @gmt_time = Time.now.httpdate
     @digest = 'SHA-256=gXWufV4Zc7VkN9Wkv9jh/JuAVclqDusx3vkyo3uJFWU='
     @resource = '/pts/v2/payments/'
@@ -141,6 +141,15 @@ class CyberSourceRestTest < Test::Unit::TestCase
     assert_equal '12', card[:expirationMonth]
     assert_equal '987', card[:securityCode]
     assert_equal '001', card[:type]
+  end
+
+  def test_add_ach
+    post = { paymentInformation: {} }
+    @gateway.send :add_ach, post, @bank_account
+
+    bank = post[:paymentInformation][:bank]
+    assert_equal @bank_account.account_number, bank[:account][:number]
+    assert_equal @bank_account.routing_number, bank[:routingNumber]
   end
 
   def test_add_billing_address
