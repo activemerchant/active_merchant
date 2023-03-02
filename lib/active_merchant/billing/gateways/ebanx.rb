@@ -27,7 +27,8 @@ module ActiveMerchant #:nodoc:
         capture: 'capture',
         refund: 'refund',
         void: 'cancel',
-        store: 'token'
+        store: 'token',
+        inquire: 'query'
       }
 
       HTTP_METHOD = {
@@ -36,7 +37,8 @@ module ActiveMerchant #:nodoc:
         capture: :get,
         refund: :post,
         void: :get,
-        store: :post
+        store: :post,
+        inquire: :get
       }
 
       VERIFY_AMOUNT_PER_COUNTRY = {
@@ -124,6 +126,14 @@ module ActiveMerchant #:nodoc:
           r.process { authorize(VERIFY_AMOUNT_PER_COUNTRY[customer_country(options)], credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
+      end
+
+      def inquire(authorization, options = {})
+        post = {}
+        add_integration_key(post)
+        add_authorization(post, authorization)
+
+        commit(:inquire, post)
       end
 
       def supports_scrubbing?
@@ -257,13 +267,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(action, response)
+        payment_status = response.try(:[], 'payment').try(:[], 'status')
+
         if %i[purchase capture refund].include?(action)
-          response.try(:[], 'payment').try(:[], 'status') == 'CO'
+          payment_status == 'CO'
         elsif action == :authorize
-          response.try(:[], 'payment').try(:[], 'status') == 'PE'
+          payment_status == 'PE'
         elsif action == :void
-          response.try(:[], 'payment').try(:[], 'status') == 'CA'
-        elsif action == :store
+          payment_status == 'CA'
+        elsif %i[store inquire].include?(action)
           response.try(:[], 'status') == 'SUCCESS'
         else
           false
@@ -298,7 +310,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def requires_http_get(action)
-        return true if %i[capture void].include?(action)
+        return true if %i[capture void inquire].include?(action)
 
         false
       end

@@ -261,6 +261,16 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_match %r{Invalid card or card type}, response.message
   end
 
+  def test_successful_inquire
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    inquire = @gateway.inquire(purchase.authorization)
+    assert_success inquire
+
+    assert_equal 'Accepted', purchase.message
+  end
+
   def test_invalid_login
     gateway = EbanxGateway.new(integration_key: '')
 
