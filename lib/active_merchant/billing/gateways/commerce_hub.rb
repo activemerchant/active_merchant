@@ -189,16 +189,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference_transaction_details(post, authorization, options, action = nil)
-        post[:referenceTransactionDetails] = {}
-        post[:referenceTransactionDetails][:referenceTransactionId] = authorization unless authorization.match?(/^order_id/)
+        reference_details = {}
+        merchant_reference = authorization.match?(/^order_id/) ? authorization.split('=').last : options[:reference_merchant_transaction_id]
 
-        if action != 'capture'
-          post[:referenceTransactionDetails][:referenceTransactionType] = options[:reference_transaction_type] || 'CHARGES'
+        reference_details[merchant_reference ? :referenceMerchantTransactionId : :referenceTransactionId] = merchant_reference || authorization
 
-          order_id = authorization.split('=').last if authorization.match?(/^order_id/)
-          post[:referenceTransactionDetails][:referenceMerchantTransactionId] = order_id || options[:reference_merchant_transaction_id]
-          post[:referenceTransactionDetails][:referenceMerchantOrderId] = order_id || options[:reference_merchant_order_id]
+        unless action == 'capture' # capture only needs referenceTransactionId or referenceMerchantTransactionId
+          reference_details[:referenceTransactionType] = options[:reference_transaction_type] || 'CHARGES'
+          reference_details[:referenceMerchantOrderId] = merchant_reference || options[:reference_merchant_order_id]
         end
+
+        post[:referenceTransactionDetails] = reference_details.compact
       end
 
       def add_invoice(post, money, options)
