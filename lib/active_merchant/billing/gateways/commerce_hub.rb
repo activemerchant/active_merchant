@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
         options[:capture_flag] = true
         add_invoice(post, money, options)
         add_transaction_details(post, options, 'capture')
-        add_reference_transaction_details(post, authorization, options, 'capture')
+        add_reference_transaction_details(post, authorization, options, :capture)
 
         commit('sale', post, options)
       end
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, money, options) if money
         add_transaction_details(post, options)
-        add_reference_transaction_details(post, authorization, options)
+        add_reference_transaction_details(post, authorization, options, :refund)
 
         commit('refund', post, options)
       end
@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         post = {}
         add_transaction_details(post, options)
-        add_reference_transaction_details(post, authorization, options)
+        add_reference_transaction_details(post, authorization, options, :void)
 
         commit('void', post, options)
       end
@@ -190,15 +190,15 @@ module ActiveMerchant #:nodoc:
 
       def add_reference_transaction_details(post, authorization, options, action = nil)
         reference_details = {}
-        merchant_reference = authorization.match?(/^order_id/) ? authorization.split('=').last : options[:reference_merchant_transaction_id]
+        merchant_reference, transaction_id = authorization.include?('|') ? authorization.split('|') : [nil, authorization]
 
-        reference_details[merchant_reference ? :referenceMerchantTransactionId : :referenceTransactionId] = merchant_reference || authorization
-
-        unless action == 'capture' # capture only needs referenceTransactionId or referenceMerchantTransactionId
-          reference_details[:referenceTransactionType] = options[:reference_transaction_type] || 'CHARGES'
-          reference_details[:referenceMerchantOrderId] = merchant_reference || options[:reference_merchant_order_id]
+        if action == :refund
+          reference_details[:referenceTransactionId] = transaction_id
+        else
+          reference_details[merchant_reference.present? ? :referenceMerchantTransactionId : :referenceTransactionId] = merchant_reference.presence || transaction_id
         end
 
+        reference_details[:referenceTransactionType] = (options[:reference_transaction_type] || 'CHARGES') unless action == :capture
         post[:referenceTransactionDetails] = reference_details.compact
       end
 
@@ -349,7 +349,7 @@ module ActiveMerchant #:nodoc:
         when 'vault'
           response.dig('paymentTokens', 0, 'tokenData')
         when 'sale'
-          options[:order_id].present? ? "order_id=#{options[:order_id]}" : response.dig('gatewayResponse', 'transactionProcessingDetails', 'transactionId')
+          [options[:order_id] || '', response.dig('gatewayResponse', 'transactionProcessingDetails', 'transactionId')].join('|')
         else
           response.dig('gatewayResponse', 'transactionProcessingDetails', 'transactionId')
         end
