@@ -122,6 +122,30 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_equal 'INVALID_ACCOUNT', response.error_code
   end
 
+  def test_successful_capture
+    authorize = @gateway.authorize(@amount, @visa_card, @options)
+    response = @gateway.capture(@amount, authorize.authorization, @options)
+
+    assert_success response
+    assert_equal 'PENDING', response.message
+  end
+
+  def test_successful_capture_with_partial_amount
+    authorize = @gateway.authorize(@amount, @visa_card, @options)
+    response = @gateway.capture(@amount - 10, authorize.authorization, @options)
+
+    assert_success response
+    assert_equal 'PENDING', response.message
+  end
+
+  def test_failure_capture_with_higher_amount
+    authorize = @gateway.authorize(@amount, @visa_card, @options)
+    response = @gateway.capture(@amount + 10, authorize.authorization, @options)
+
+    assert_failure response
+    assert_match(/exceeds/, response.params['message'])
+  end
+
   def test_successful_purchase
     response = @gateway.purchase(@amount, @visa_card, @options)
     assert_success response
