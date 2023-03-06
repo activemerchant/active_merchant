@@ -52,9 +52,16 @@ module ActiveMerchant #:nodoc:
         commit('payments', post)
       end
 
+      def capture(money, authorization, options = {})
+        payment = authorization.split('|').first
+        post = build_reference_request(money, options)
+
+        commit("payments/#{payment}/captures", post)
+      end
+
       def refund(money, authorization, options = {})
         payment = authorization.split('|').first
-        post = build_refund_request(money, options)
+        post = build_reference_request(money, options)
         commit("payments/#{payment}/refunds", post)
       end
 
@@ -110,7 +117,7 @@ module ActiveMerchant #:nodoc:
         end.compact
       end
 
-      def build_refund_request(amount, options)
+      def build_reference_request(amount, options)
         { clientReferenceInformation: {}, orderInformation: {} }.tap do |post|
           add_code(post, options)
           add_amount(post, amount)
@@ -280,7 +287,7 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         return response['status'] if success_from(response)
 
-        response['errorInformation']['message']
+        response['errorInformation']['message'] || response['message']
       end
 
       def authorization_from(response)

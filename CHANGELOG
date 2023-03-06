@@ -77,6 +77,7 @@
 * CybersourceREST - Void | Verify [sinourain] #4695
 * Credorax: Set default ECI values for token transactions [sainterman] #4693
 * CyberSourceRest: Add ACH Support [edgarv09] #4722
+* CybersourceREST: Add capture request [heavyblade] #4726
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512
