@@ -14,6 +14,12 @@ class PinTest < Test::Unit::TestCase
       ip: '127.0.0.1'
     }
 
+    @three_d_secure = {
+      enabled: true,
+      fallback_ok: true,
+      callback_url: 'https://yoursite.com/authentication_complete'
+    }
+
     @three_d_secure_v1 = {
       version: '1.0.2',
       eci: '05',
@@ -365,6 +371,14 @@ class PinTest < Test::Unit::TestCase
     @gateway.send(:add_creditcard, post, 'cus_XZg1ULpWaROQCOT5PdwLkQ')
     assert_equal 'cus_XZg1ULpWaROQCOT5PdwLkQ', post[:customer_token]
     assert_false post.has_key?(:card)
+  end
+
+  def test_add_3ds
+    post = {}
+    @gateway.send(:add_3ds, post, @options.merge(three_d_secure: @three_d_secure))
+    assert_equal true, post[:three_d_secure][:enabled]
+    assert_equal true, post[:three_d_secure][:fallback_ok]
+    assert_equal 'https://yoursite.com/authentication_complete', post[:three_d_secure][:callback_url]
   end
 
   def test_add_3ds_v1

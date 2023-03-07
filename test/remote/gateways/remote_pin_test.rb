@@ -17,12 +17,20 @@ class RemotePinTest < Test::Unit::TestCase
       description: "Store Purchase #{DateTime.now.to_i}"
     }
 
-    @additional_options_3ds = @options.merge(
+    @additional_options_3ds_passthrough = @options.merge(
       three_d_secure: {
         version: '1.0.2',
         eci: '06',
         cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
         xid: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY='
+      }
+    )
+
+    @additional_options_3ds = @options.merge(
+      three_d_secure: {
+        enabled: true,
+        fallback_ok: true,
+        callback_url: 'https://yoursite.com/authentication_complete'
       }
     )
   end
@@ -77,6 +85,16 @@ class RemotePinTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture_with_passthrough_3ds
+    authorization = @gateway.authorize(@amount, @credit_card, @additional_options_3ds_passthrough)
+    assert_success authorization
+    assert_equal false, authorization.params['response']['captured']
+
+    response = @gateway.capture(@amount, authorization.authorization, @options)
+    assert_success response
+    assert_equal true, response.params['response']['captured']
+  end
+
+  def test_successful_authorize_and_capture_with_3ds
     authorization = @gateway.authorize(@amount, @credit_card, @additional_options_3ds)
     assert_success authorization
     assert_equal false, authorization.params['response']['captured']
