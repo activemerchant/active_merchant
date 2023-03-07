@@ -303,6 +303,15 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_inquire_with_transaction_id
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    gateway_transaction_id = response.authorization
+    response = @gateway.inquire(gateway_transaction_id, @options)
+    assert_success response
+  end
+
   def test_invalid_login
     gateway = PaymentezGateway.new(application_code: '9z8y7w6x', app_key: '1a2b3c4d')
 
