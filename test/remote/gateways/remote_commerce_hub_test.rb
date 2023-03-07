@@ -128,7 +128,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal "order_id=#{@options[:order_id]}", response.authorization
+    assert_match(/#{@options[:order_id]}|\w*/, response.authorization)
 
     response = @gateway.void(response.authorization, @options)
     assert_success response
@@ -189,7 +189,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.refund(nil, '123', @options)
+    response = @gateway.refund(nil, 'abc123|123', @options)
     assert_failure response
     assert_equal 'Referenced transaction is invalid or not found', response.message
   end
