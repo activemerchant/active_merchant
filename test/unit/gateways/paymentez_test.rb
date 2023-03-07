@@ -341,6 +341,18 @@ class PaymentezTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_successful_inquire_with_transaction_id
+    response = stub_comms(@gateway, :ssl_get) do
+      @gateway.inquire('CI-635')
+    end.check_request do |method, _endpoint, _data, _headers|
+      assert_match('https://ccapi-stg.paymentez.com/v2/transaction/CI-635', method)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'CI-635', response.authorization
+    assert response.test?
+  end
+
   private
 
   def pre_scrubbed
