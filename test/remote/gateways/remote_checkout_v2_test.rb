@@ -819,4 +819,10 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'request_invalid: card_expired', response.message
     assert_equal 'request_invalid: card_expired', response.error_code
   end
+
+  def test_successful_purchase_with_idempotency_key
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(cko_idempotency_key: 'test123'))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
 end

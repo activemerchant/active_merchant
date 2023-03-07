@@ -434,6 +434,17 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_optional_idempotency_key_header
+    stub_comms(@gateway, :ssl_request) do
+      options = {
+        cko_idempotency_key: 'test123'
+      }
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _url, _data, headers|
+      assert_equal 'test123', headers['Cko-Idempotency-Key']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_successful_authorize_and_capture_with_metadata
     response = stub_comms(@gateway, :ssl_request) do
       options = {

@@ -81,6 +81,7 @@
 * Paymentez: Add transaction inquire request [aenand] #4729
 * Ebanx: Add transaction inquire request [almalee24] #4725
 * Ebanx: Add support for Elo & Hipercard [almalee24] #4702
+* CheckoutV2: Add Idempotency key support [yunnydang] #4728
 
 == Version 1.127.0 (September 20th, 2022)
 * BraintreeBlue: Add venmo profile_id [molbrown] #4512

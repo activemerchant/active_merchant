@@ -34,14 +34,14 @@ module ActiveMerchant #:nodoc:
         post = {}
         build_auth_or_purchase(post, amount, payment_method, options)
 
-        commit(:purchase, post)
+        commit(:purchase, post, options)
       end
 
       def authorize(amount, payment_method, options = {})
         post = {}
         post[:capture] = false
         build_auth_or_purchase(post, amount, payment_method, options)
-        options[:incremental_authorization] ? commit(:incremental_authorize, post, options[:incremental_authorization]) : commit(:authorize, post)
+        options[:incremental_authorization] ? commit(:incremental_authorize, post, options, options[:incremental_authorization]) : commit(:authorize, post, options)
       end
 
       def capture(amount, authorization, options = {})
@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_metadata(post, options)
 
-        commit(:capture, post, authorization)
+        commit(:capture, post, options, authorization)
       end
 
       def credit(amount, payment, options = {})
@@ -63,14 +63,14 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment, options, :destination)
         add_source(post, options)
 
-        commit(:credit, post)
+        commit(:credit, post, options)
       end
 
       def void(authorization, _options = {})
         post = {}
         add_metadata(post, options)
 
-        commit(:void, post, authorization)
+        commit(:void, post, options, authorization)
       end
 
       def refund(amount, authorization, options = {})
@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_metadata(post, options)
 
-        commit(:refund, post, authorization)
+        commit(:refund, post, options, authorization)
       end
 
       def verify(credit_card, options = {})
@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify_payment(authorization, option = {})
-        commit(:verify_payment, nil, authorization, :get)
+        commit(:verify_payment, nil, options, authorization, :get)
       end
 
       def supports_scrubbing?
@@ -121,13 +121,13 @@ module ActiveMerchant #:nodoc:
             add_payment_method(post, token, options)
             post.merge!(post.delete(:source))
             add_customer_data(post, options)
-            r.process { commit(:store, post) }
+            r.process { commit(:store, post, options) }
           end
         end
       end
 
       def unstore(id, options = {})
-        commit(:unstore, nil, id, :delete)
+        commit(:unstore, nil, options, id, :delete)
       end
 
       private
@@ -319,9 +319,9 @@ module ActiveMerchant #:nodoc:
         response['access_token']
       end
 
-      def commit(action, post, authorization = nil, method = :post)
+      def commit(action, post, options, authorization = nil, method = :post)
         begin
-          raw_response = ssl_request(method, url(action, authorization), post.nil? || post.empty? ? nil : post.to_json, headers(action))
+          raw_response = ssl_request(method, url(action, authorization), post.nil? || post.empty? ? nil : post.to_json, headers(action, options))
           response = parse(raw_response)
           response['id'] = response['_links']['payment']['href'].split('/')[-1] if action == :capture && response.key?('_links')
           source_id = authorization if action == :unstore
@@ -354,13 +354,15 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def headers(action)
+      def headers(action, options)
         auth_token = @access_token ? "Bearer #{@access_token}" : @options[:secret_key]
         auth_token = @options[:public_key] if action == :tokens
-        {
+        headers = {
           'Authorization' => auth_token,
           'Content-Type' => 'application/json;charset=UTF-8'
         }
+        headers['Cko-Idempotency-Key'] = options[:cko_idempotency_key] if options[:cko_idempotency_key]
+        headers
       end
 
       def tokenize(payment_method, options = {})
@@ -368,7 +370,7 @@ module ActiveMerchant #:nodoc:
         add_authorization_type(post, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
-        commit(:tokens, post[:source])
+        commit(:tokens, post[:source], options)
       end
 
       def url(action, authorization)
