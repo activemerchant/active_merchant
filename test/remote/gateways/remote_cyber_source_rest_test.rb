@@ -12,6 +12,10 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
       verification_value: '987',
       month: 12,
       year: 2031)
+    @expired_visa_card = credit_card('4111111111111111',
+      verification_value: '987',
+      month: 12,
+      year: Time.now.year - 1)
 
     @master_card = credit_card('2222420000001113', brand: 'master')
     @discover_card = credit_card('6011111111111117', brand: 'discover')
@@ -346,6 +350,59 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'AUTHORIZED', response.message
+  end
+
+  def test_successful_store
+    @options[:billing_address] = @billing_address
+    response = @gateway.store(@visa_card, @options)
+    assert_success response
+  end
+
+  def test_successful_store_with_customer_id
+    @options[:billing_address] = @billing_address
+    response = @gateway.store(@visa_card, @options.merge(customer_id: 'F66C3BB943783F02E053AF598E0A17C9'))
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_card
+    @options[:billing_address] = @billing_address
+    stored = @gateway.store(@visa_card, @options)
+    assert_success stored
+
+    response = @gateway.purchase(@amount, stored.authorization, @options)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
+  def test_successful_purchase_with_stored_card_with_customer_id
+    @options[:billing_address] = @billing_address
+    stored = @gateway.store(@visa_card, @options.merge(customer_id: 'F66C3BB943783F02E053AF598E0A17C9'))
+    response = @gateway.purchase(@amount, stored.authorization, @options)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
+  def test_successful_unstore
+    @options[:billing_address] = @billing_address
+    store_transaction = @gateway.store(@visa_card, @options)
+    unstore = @gateway.unstore(store_transaction.authorization)
+
+    assert_success unstore
+  end
+
+  def test_failed_store_becuase_customer_id
+    @options[:billing_address] = @billing_address
+    response = @gateway.store(@visa_card, @options.
+      merge(customer_id: 'aso3er'))
+    assert_failure response
+    assert_equal 'notFound', response.params['errors'][0]['type']
+    assert_equal 'Token not found', response.params['errors'][0]['message']
   end
 
   def test_transcript_scrubbing

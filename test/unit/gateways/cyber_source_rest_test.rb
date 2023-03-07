@@ -72,9 +72,9 @@ class CyberSourceRestTest < Test::Unit::TestCase
   end
 
   def test_properly_format_on_zero_decilmal
-    stub_comms do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(1000, @credit_card, @options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       request = JSON.parse(data)
       card = request['paymentInformation']['card']
       amount_details = request['orderInformation']['amountDetails']
@@ -110,16 +110,6 @@ class CyberSourceRestTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
-  end
-
-  def test_including_customer_if_customer_id_present
-    post = { paymentInformation: {} }
-
-    @gateway.send :add_customer_id, post, {}
-    assert_nil post[:paymentInformation][:customer]
-
-    @gateway.send :add_customer_id, post, { customer_id: 10 }
-    assert_equal 10, post[:paymentInformation][:customer][:customerId]
   end
 
   def test_add_ammount_and_currency
@@ -186,9 +176,9 @@ class CyberSourceRestTest < Test::Unit::TestCase
   end
 
   def test_authorize_apple_pay_visa
-    stub_comms do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(100, @apple_pay, @options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal '001', request['paymentInformation']['tokenizedCard']['type']
       assert_equal '1', request['paymentInformation']['tokenizedCard']['transactionType']
@@ -201,9 +191,9 @@ class CyberSourceRestTest < Test::Unit::TestCase
   end
 
   def test_authorize_google_pay_master_card
-    stub_comms do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(100, @google_pay_mc, @options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal '002', request['paymentInformation']['tokenizedCard']['type']
       assert_equal '1', request['paymentInformation']['tokenizedCard']['transactionType']
@@ -216,9 +206,9 @@ class CyberSourceRestTest < Test::Unit::TestCase
   end
 
   def test_authorize_apple_pay_jcb
-    stub_comms do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(100, @apple_pay_jcb, @options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal '007', request['paymentInformation']['tokenizedCard']['type']
       assert_equal '1', request['paymentInformation']['tokenizedCard']['transactionType']
@@ -392,6 +382,46 @@ class CyberSourceRestTest < Test::Unit::TestCase
     CyberSourceRestGateway.application_id = nil
   end
 
+  def test_successful_store
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options.merge(merchant_customer_id: 'merchant_test'))
+    end.check_request do |_method, endpoint, data, _headers|
+      request = JSON.parse(data)
+      case endpoint
+      when /instrumentidentifiers/
+        assert_equal request['card']['number'], '4111111111111111'
+      when /paymentinstruments/
+        assert_equal request['card']['expirationMonth'], '12'
+        assert_equal request['card']['expirationYear'],  '2031'
+        assert_equal request['card']['type'], 'visa'
+        assert_equal request['instrumentIdentifier']['id'], '7010000000016241111'
+        assert_includes request, 'billTo'
+      when /payment-instruments/
+        assert_equal request['card']['expirationMonth'], '12'
+        assert_equal request['card']['expirationYear'],  '2031'
+        assert_equal request['card']['type'], '001'
+        assert_equal request['instrumentIdentifier']['id'], '7010000000016241111'
+        assert_includes request, 'billTo'
+      when /customers/
+        assert_equal request['buyerInformation']['email'], 'test@cybs.com'
+        assert_includes request['buyerInformation'], 'merchantCustomerId'
+        assert_includes request, 'clientReferenceInformation'
+        assert_includes request, 'merchantDefinedInformation'
+      end
+    end.respond_with(successful_create_customer, successful_create_instrument_identifiers, successful_store_response)
+  end
+
+  def test_use_customer_id_from_third_party_token_instead_of_options
+    payment_method_tpv = 'customer_id|payment_instrument_id'
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(100, payment_method_tpv, @options.merge(customer_id: 'other_customer_id'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'customer_id', request['paymentInformation']['customer']['id']
+      assert_equal 'payment_instrument_id', request['paymentInstrument']['id']
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def parse_signature(signature)
@@ -530,6 +560,35 @@ class CyberSourceRestTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_create_customer
+    <<-RESPONSE
+    {
+      "_links": {
+        "self": {
+          "href": "/tms/v2/customers/F67E19FBC55DF3AAE053AF598E0A2EA6"
+        },
+        "paymentInstruments": {
+          "href": "/tms/v2/customers/F67E19FBC55DF3AAE053AF598E0A2EA6/payment-instruments"
+        },
+        "shippingAddresses": {
+          "href": "/tms/v2/customers/F67E19FBC55DF3AAE053AF598E0A2EA6/shipping-addresses"
+        }
+      },
+      "id": "F67E19FBC55DF3AAE053AF598E0A2EA6",
+      "buyerInformation": {
+        "email": "test@cybs.com"
+      },
+      "clientReferenceInformation": {
+        "code": "cd513d9d789f38222d44554a602a0f7c"
+      },
+      "merchantDefinedInformation": [],
+      "metadata": {
+        "creator": "testrest"
+      }
+    }
+    RESPONSE
+  end
+
   def successful_credit_response
     <<-RESPONSE
     {
@@ -576,6 +635,100 @@ class CyberSourceRestTest < Test::Unit::TestCase
       "reconciliationId": "70391830ZFKZI570",
       "status": "PENDING",
       "submitTimeUtc": "2023-03-27T20:45:09Z"
+    }
+    RESPONSE
+  end
+
+  def successful_create_instrument_identifiers
+    <<-RESPONSE
+    {
+      "_links": {
+        "self": {
+          "href": "https://apitest.cybersource.com/tms/v1/instrumentidentifiers/7010000000016241111"
+        },
+        "paymentInstruments": {
+          "href": "https://apitest.cybersource.com/tms/v1/instrumentidentifiers/7010000000016241111/paymentinstruments"
+        }
+      },
+      "id": "7010000000016241111",
+      "object": "instrumentIdentifier",
+      "state": "ACTIVE",
+      "card": {
+        "number": "411111XXXXXX1111"
+      },
+      "metadata": {
+        "creator": "testrest"
+      }
+    }
+    RESPONSE
+  end
+
+  def successful_store_response
+    <<-RESPONSE
+    {
+      "_links": {
+        "self": {
+          "href": "/tms/v2/customers/F67E19FBC55DF3AAE053AF598E0A2EA6/payment-instruments/F67E1AD76368096DE053AF598E0A21F0"
+        },
+        "customer": {
+          "href": "/tms/v2/customers/F67E19FBC55DF3AAE053AF598E0A2EA6"
+        }
+      },
+      "id": "F67E1AD76368096DE053AF598E0A21F0",
+      "default": true,
+      "state": "ACTIVE",
+      "card": {
+        "expirationMonth": "12",
+        "expirationYear": "2031",
+        "type": "001"
+      },
+      "billTo": {
+        "firstName": "John",
+        "lastName": "Doe",
+        "address1": "1 Market St",
+        "locality": "san francisco",
+        "administrativeArea": "CA",
+        "postalCode": "94105",
+        "country": "US",
+        "email": "test@cybs.com",
+        "phoneNumber": "4158880000"
+      },
+      "instrumentIdentifier": {
+        "id": "7010000000016241111"
+      },
+      "metadata": {
+        "creator": "testrest"
+      },
+      "_embedded": {
+        "instrumentIdentifier": {
+          "_links": {
+            "self": {
+              "href": "/tms/v1/instrumentidentifiers/7010000000016241111"
+            },
+            "paymentInstruments": {
+              "href": "/tms/v1/instrumentidentifiers/7010000000016241111/paymentinstruments"
+            }
+          },
+          "id": "7010000000016241111",
+          "object": "instrumentIdentifier",
+          "state": "ACTIVE",
+          "card": {
+            "number": "411111XXXXXX1111"
+          },
+          "processingInformation": {
+            "authorizationOptions": {
+              "initiator": {
+                "merchantInitiatedTransaction": {
+                  "previousTransactionId": "123456789619999"
+                }
+              }
+            }
+          },
+          "metadata": {
+            "creator": "testrest"
+          }
+        }
+      }
     }
     RESPONSE
   end

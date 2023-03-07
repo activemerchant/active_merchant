@@ -84,6 +84,26 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def store(payment, options = {})
+        MultiResponse.run do |r|
+          if options[:customer_id].nil?
+            customer_id = r.process { create_customer_request(payment, options) }.params['id']
+            return r unless r.success?
+          else
+            customer_id = options[:customer_id]
+          end
+          instrument_identifier = r.process { create_instrument_identifier_request(payment, options) }
+          return instrument_identifier unless instrument_identifier.success?
+
+          r.process { create_customer_payment_instrument_request(payment, options, customer_id, instrument_identifier) }
+        end
+      end
+
+      def unstore(stored_token)
+        customer_id, payment_instrument_id = stored_token.split('|')
+        commit("customers/#{customer_id}/payment-instruments/#{payment_instrument_id}/", nil, :delete)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -118,6 +138,8 @@ module ActiveMerchant #:nodoc:
           add_business_rules_data(post, payment, options)
           add_partner_solution_id(post)
           add_stored_credentials(post, payment, options)
+          add_payment(post, payment, options)
+          add_order_id(post, options)
         end.compact
       end
 
@@ -127,12 +149,13 @@ module ActiveMerchant #:nodoc:
           add_mdd_fields(post, options)
           add_amount(post, amount, options)
           add_partner_solution_id(post)
+          add_order_id(post, options)
         end.compact
       end
 
       def build_credit_request(amount, payment, options)
         { clientReferenceInformation: {}, paymentInformation: {}, orderInformation: {} }.tap do |post|
-          add_code(post, options)
+          add_order_id(post, options)
           add_credit_card(post, payment)
           add_mdd_fields(post, options)
           add_amount(post, amount, options)
@@ -141,16 +164,41 @@ module ActiveMerchant #:nodoc:
         end.compact
       end
 
-      def add_code(post, options)
+      def create_customer_request(payment, options)
+        customer = { buyerInformation: {}, clientReferenceInformation: {}, merchantDefinedInformation: [] }.tap do |post|
+          post[:buyerInformation][:merchantCustomerId] = options[:merchant_customer_id] if options[:merchant_customer_id]
+          post[:buyerInformation][:email] = options[:email].presence || 'null@cybersource.com'
+          add_order_id(post, options)
+        end.compact
+        commit('customers', customer)
+      end
+
+      def create_instrument_identifier_request(payment, options)
+        instrument_identifier = {
+          card: {
+            number: payment.number
+          }
+        }
+        commit('instrumentidentifiers', instrument_identifier)
+      end
+
+      def create_customer_payment_instrument_request(payment, options, customer_id, instrument_identifier)
+        post = {}
+        post[:default] = 'true'
+        post[:card] = {}
+        post[:card][:type] = CREDIT_CARD_CODES[payment.brand.to_sym]
+        post[:card][:expirationMonth] = payment.month.to_s
+        post[:card][:expirationYear] = payment.year.to_s
+        add_address(post, payment, options[:billing_address], options, :billTo, nil)
+        post[:instrumentIdentifier] = {}
+        post[:instrumentIdentifier][:id] = instrument_identifier.params['id']
+        commit("customers/#{customer_id}/payment-instruments", post)
+      end
+
+      def add_order_id(post, options)
         return unless options[:order_id].present?
 
         post[:clientReferenceInformation][:code] = options[:order_id]
-      end
-
-      def add_customer_id(post, options)
-        return unless options[:customer_id].present?
-
-        post[:paymentInformation][:customer] = { customerId: options[:customer_id] }
       end
 
       def add_reversal_amount(post, amount)
@@ -185,9 +233,21 @@ module ActiveMerchant #:nodoc:
           add_network_tokenization_card(post, payment, options)
         elsif payment.is_a?(Check)
           add_ach(post, payment)
+        elsif payment.is_a?(String)
+          add_stored_payment(post, payment, options)
         else
           add_credit_card(post, payment)
         end
+      end
+
+      def add_stored_payment(post, payment, options)
+        customer_id, payment_instrument_id = payment.split('|')
+        post[:paymentInstrument] = {
+          id: payment_instrument_id
+        }
+        post[:paymentInformation][:customer] = {
+          id: customer_id
+        }
       end
 
       def add_network_tokenization_card(post, payment, options)
@@ -223,12 +283,11 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_address(post, payment_method, address, options, address_type)
+      def add_address(post, payment_method, address, options, address_type, order = :orderInformation)
         return unless address.present?
 
         first_name, last_name = address_names(address[:name], payment_method)
-
-        post[:orderInformation][address_type] = {
+        address_hash = {
           firstName:             first_name,
           lastName:              last_name,
           address1:              address[:address1],
@@ -238,14 +297,19 @@ module ActiveMerchant #:nodoc:
           postalCode:            address[:zip],
           country:               lookup_country_code(address[:country])&.value,
           email:                 options[:email].presence || 'null@cybersource.com',
-          phoneNumber:           address[:phone]
+          phoneNumber:           address[:phone],
           # merchantTaxID:         ship_to ? options[:merchant_tax_id] : nil,
-          # company:               address[:company],
+          company:               address[:company]
           # companyTaxID:          address[:companyTaxID],
           # ipAddress:             options[:ip],
           # driversLicenseNumber:  options[:drivers_license_number],
           # driversLicenseState:   options[:drivers_license_state],
         }.compact
+        if order.nil?
+          post[address_type] = address_hash
+        else
+          post[order][address_type] = address_hash
+        end
       end
 
       def add_merchant_description(post, options)
@@ -315,7 +379,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action)
-        "#{(test? ? test_url : live_url)}/pts/v2/#{action}"
+        case action
+        when /customers/
+          "#{(test? ? test_url : live_url)}/tms/v2/#{action}"
+        when 'instrumentidentifiers', 'paymentinstruments'
+          "#{(test? ? test_url : live_url)}/tms/v1/#{action}"
+        else
+          "#{(test? ? test_url : live_url)}/pts/v2/#{action}"
+        end
       end
 
       def host
@@ -323,24 +394,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
+        return {} if body.blank?
+
         JSON.parse(body)
       end
 
-      def commit(action, post, options = {})
-        add_reconciliation_id(post, options)
-        add_sec_code(post, options)
-        add_invoice_number(post, options)
-        response = parse(ssl_post(url(action), post.to_json, auth_headers(action, post)))
+      def commit(action, post, http_method = :post)
+        response = parse(ssl_request(http_method, url(action), post.nil? || post.empty? ? nil : post.to_json, auth_headers(action, post, http_method)))
+        succeeded = success_from(action, response, http_method)
+        body = action == :delete ? { response_code: response.to_s } : response
         Response.new(
-          success_from(response),
-          message_from(response),
+          succeeded,
+          message_from(body, succeeded, http_method),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(response, action),
           avs_result: AVSResult.new(code: response.dig('processorInformation', 'avs', 'code')),
           # cvv_result: CVVResult.new(response['some_cvv_response_key']),
           network_transaction_id: network_transaction_id_from(response),
           test: test?,
-          error_code: error_code_from(response)
+          error_code: error_code_from(response, succeeded)
         )
       rescue ActiveMerchant::ResponseError => e
         response = e.response.body.present? ? parse(e.response.body) : { 'response' => { 'rmsg' => e.response.msg } }
@@ -348,40 +420,56 @@ module ActiveMerchant #:nodoc:
         Response.new(false, message, response, test: test?)
       end
 
-      def success_from(response)
-        %w(AUTHORIZED PENDING REVERSED).include?(response['status'])
+      def success_from(action, response, http_method)
+        return response.empty? if http_method == :delete
+
+        case action
+        when /payments/
+          %w(AUTHORIZED PENDING REVERSED).include?(response['status'])
+        else
+          return response['id'].present? && !response['errorInformation'].present? unless http_method == :delete
+        end
       end
 
-      def message_from(response)
-        return response['status'] if success_from(response)
+      def message_from(response, succeeded, http_method)
+        return 'OK' if succeeded && http_method == :delete
+        return response['status'] if succeeded
 
         response['errorInformation']['message'] || response['message']
       end
 
-      def authorization_from(response)
+      def authorization_from(response, action)
         id = response['id']
         has_amount = response['orderInformation'] && response['orderInformation']['amountDetails'] && response['orderInformation']['amountDetails']['authorizedAmount']
         amount = response['orderInformation']['amountDetails']['authorizedAmount'].delete('.') if has_amount
-
+        if /payment-instruments/.match(action) && !response.empty?
+          customer_id = response['_links']['customer']['href'].split('/').last
+          payment_instrument_id = response['id']
+          return [customer_id, payment_instrument_id].join('|')
+        end
         return id if amount.blank?
 
         [id, amount].join('|')
       end
 
-      def error_code_from(response)
-        response['errorInformation']['reason'] unless success_from(response)
+      def error_code_from(response, succeeded)
+        response['errorInformation']['reason'] unless succeeded
       end
 
       # This implementation follows the Cybersource guide on how create the request signature, see:
       # https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/GenerateHeader/httpSignatureAuthentication.html
       def get_http_signature(resource, digest, http_method = 'post', gmtdatetime = Time.now.httpdate)
-        string_to_sign = {
+        target = URI.parse(url(resource)).path
+
+        hash_to_sign = {
           host: host,
           date: gmtdatetime,
-          "(request-target)": "#{http_method} /pts/v2/#{resource}",
+          "(request-target)": "#{http_method} #{target}",
           digest: digest,
           "v-c-merchant-id": @options[:merchant_id]
-        }.map { |k, v| "#{k}: #{v}" }.join("\n").force_encoding(Encoding::UTF_8)
+        }
+        hash_to_sign.delete(:digest) if http_method == :delete
+        string_to_sign = hash_to_sign.map { |k, v| "#{k}: #{v}" }.join("\n").force_encoding(Encoding::UTF_8)
 
         {
           keyid: @options[:public_key],
@@ -399,9 +487,8 @@ module ActiveMerchant #:nodoc:
       def auth_headers(action, post, http_method = 'post')
         digest = "SHA-256=#{Digest::SHA256.base64digest(post.to_json)}" if post.present?
         date = Time.now.httpdate
-
         {
-          'Accept' => 'application/hal+json;charset=utf-8',
+          'Accept' => 'application/hal+json, application/json;charset=utf-8',
           'Content-Type' => 'application/json;charset=utf-8',
           'V-C-Merchant-Id' => @options[:merchant_id],
           'Date' => date,
