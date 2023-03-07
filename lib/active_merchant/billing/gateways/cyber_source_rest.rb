@@ -48,21 +48,19 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options = {}, capture = false)
         post = build_auth_request(money, payment, options)
         post[:processingInformation][:capture] = true if capture
-
-        commit('payments', post, options)
+        commit('payments', post, :post, options)
       end
 
       def capture(money, authorization, options = {})
         payment = authorization.split('|').first
         post = build_reference_request(money, options)
-
-        commit("payments/#{payment}/captures", post, options)
+        commit(endpoint_url('capture', payment), post, :post, options)
       end
 
       def refund(money, authorization, options = {})
         payment = authorization.split('|').first
         post = build_reference_request(money, options)
-        commit("payments/#{payment}/refunds", post, options)
+        commit(endpoint_url('refund', payment), post, :post, options)
       end
 
       def credit(money, payment, options = {})
@@ -73,7 +71,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         payment, amount = authorization.split('|')
         post = build_void_request(amount)
-        commit("payments/#{payment}/reversals", post)
+        commit(endpoint_url('void', payment), post, :post, options)
       end
 
       def verify(credit_card, options = {})
@@ -100,8 +98,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def unstore(stored_token)
-        customer_id, payment_instrument_id = stored_token.split('|')
-        commit("customers/#{customer_id}/payment-instruments/#{payment_instrument_id}/", nil, :delete)
+        payment = stored_token.split('|').drop(2)
+        commit(endpoint_url('unstore', payment), nil, :delete)
       end
 
       def supports_scrubbing?
@@ -138,7 +136,6 @@ module ActiveMerchant #:nodoc:
           add_business_rules_data(post, payment, options)
           add_partner_solution_id(post)
           add_stored_credentials(post, payment, options)
-          add_order_id(post, options)
         end.compact
       end
 
@@ -147,7 +144,7 @@ module ActiveMerchant #:nodoc:
           add_order_id(post, options)
           add_code(post, options)
           add_mdd_fields(post, options)
-          add_amount(post, amount)
+          add_amount(post, amount, options)
           add_partner_solution_id(post)
         end.compact
       end
@@ -163,6 +160,18 @@ module ActiveMerchant #:nodoc:
         end.compact
       end
 
+      def add_code(post, options)
+        return unless options[:order_id].present?
+
+        post[:clientReferenceInformation][:code] = options[:order_id]
+      end
+
+      def add_customer_id(post, options)
+        return unless options[:customer_id].present?
+
+        post[:paymentInformation][:customer] = { customerId: options[:customer_id] }
+      end
+
       def create_customer_request(payment, options)
         customer = { buyerInformation: {}, clientReferenceInformation: {}, merchantDefinedInformation: [] }.tap do |post|
           post[:buyerInformation][:merchantCustomerId] = options[:merchant_customer_id] if options[:merchant_customer_id]
@@ -173,25 +182,43 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_instrument_identifier_request(payment, options)
-        instrument_identifier = {
-          card: {
-            number: payment.number
+        if payment.is_a?(Check)
+          instrument_identifier = {
+            bankAccount: {
+              number: payment.number,
+              routingNumber: payment.routing_number
+            }
           }
-        }
+        else
+          instrument_identifier = {
+            card: {
+              number: payment.number
+            }
+          }
+        end
         commit('instrumentidentifiers', instrument_identifier)
       end
 
       def create_customer_payment_instrument_request(payment, options, customer_id, instrument_identifier)
         post = {}
-        post[:default] = 'true'
-        post[:card] = {}
-        post[:card][:type] = CREDIT_CARD_CODES[payment.brand.to_sym]
-        post[:card][:expirationMonth] = payment.month.to_s
-        post[:card][:expirationYear] = payment.year.to_s
+        if payment.is_a?(Check)
+          add_bank_account_information(payment, post)
+        else
+          post[:default] = 'true'
+          post[:card] = {}
+          post[:card][:type] = CREDIT_CARD_CODES[payment.brand.to_sym]
+          post[:card][:expirationMonth] = payment.month.to_s
+          post[:card][:expirationYear] = payment.year.to_s
+        end
         add_address(post, payment, options[:billing_address], options, :billTo, nil)
         post[:instrumentIdentifier] = {}
         post[:instrumentIdentifier][:id] = instrument_identifier.params['id']
-        commit("customers/#{customer_id}/payment-instruments", post)
+        commit(endpoint_url('customer-payment', customer_id), post, :post, options)
+      end
+
+      def add_bank_account_information(payment, post)
+        post[:bankAccount] = {}
+        post[:bankAccount][:type] = 'savings'
       end
 
       def add_order_id(post, options)
@@ -240,7 +267,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_stored_payment(post, payment, options)
-        customer_id, payment_instrument_id = payment.split('|')
+        customer_id, payment_instrument_id = payment.split('|').drop(2)
         post[:paymentInstrument] = {
           id: payment_instrument_id
         }
@@ -405,7 +432,6 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_request(http_method, url(action), post.nil? || post.empty? ? nil : post.to_json, auth_headers(action, post, http_method)))
         succeeded = success_from(action, response, http_method)
         body = action == :delete ? { response_code: response.to_s } : response
-
         Response.new(
           succeeded,
           message_from(body, succeeded, http_method),
@@ -448,11 +474,8 @@ module ActiveMerchant #:nodoc:
         if /payment-instruments/.match(action) && !response.empty?
           customer_id = response['_links']['customer']['href'].split('/').last
           payment_instrument_id = response['id']
-          return [customer_id, payment_instrument_id].join('|')
         end
-        return id if amount.blank?
-
-        [id, amount].join('|')
+        [id, amount, customer_id, payment_instrument_id].join('|')
       end
 
       def error_code_from(response, succeeded)
@@ -540,6 +563,23 @@ module ActiveMerchant #:nodoc:
         return unless application_id
 
         post[:clientReferenceInformation][:partner] = { solutionId: application_id }
+      end
+
+      def endpoint_url(action, param = '')
+        case action
+        when 'capture'
+          "payments/#{param}/captures"
+        when 'refund'
+          "payments/#{param}/refunds"
+        when 'void'
+          "payments/#{param}/reversals"
+        when 'unstore'
+          "customers/#{param[0]}/payment-instruments/#{param[1]}/"
+        when 'customer-payment'
+          "customers/#{param}/payment-instruments"
+        else
+          ''
+        end
       end
     end
   end

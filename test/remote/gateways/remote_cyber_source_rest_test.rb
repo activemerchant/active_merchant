@@ -358,6 +358,19 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_store_with_bank_account
+    @options[:billing_address] = @billing_address
+    response = @gateway.store(@bank_account, @options)
+    assert_success response
+  end
+
+  def test_failed_store_with_invalid_instrument
+    @options[:billing_address] = @billing_address
+    @visa_card.number = '41111'
+    response = @gateway.store(@visa_card, @options)
+    assert_failure response
+  end
+
   def test_successful_store_with_customer_id
     @options[:billing_address] = @billing_address
     response = @gateway.store(@visa_card, @options.merge(customer_id: 'F66C3BB943783F02E053AF598E0A17C9'))

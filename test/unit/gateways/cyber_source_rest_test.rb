@@ -223,196 +223,8 @@ class CyberSourceRestTest < Test::Unit::TestCase
     assert_equal "#{@gateway.class.test_url}/pts/v2/action", @gateway.send(:url, 'action')
   end
 
-  def test_stored_credential_cit_initial
-    @options[:stored_credential] = stored_credential(:cardholder, :internet, :initial)
-    response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |_endpoint, data, _headers|
-      request = JSON.parse(data)
-      assert_equal 'internet', request['processingInformation']['commerceIndicator']
-      assert_equal 'customer', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
-    end.respond_with(successful_purchase_response)
-
-    assert_success response
-  end
-
-  def test_stored_credential_recurring_cit
-    @options[:stored_credential] = stored_credential(:cardholder, :recurring)
-    response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |_endpoint, data, _headers|
-      request = JSON.parse(data)
-      assert_equal 'recurring', request['processingInformation']['commerceIndicator']
-      assert_equal 'customer', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
-      assert_equal true, request.dig('processingInformation', 'authorizationOptions', 'initiator', 'merchantInitiatedTransaction', 'storedCredentialUsed')
-    end.respond_with(successful_purchase_response)
-
-    assert_success response
-  end
-
-  def test_stored_credential_recurring_mit_ntid
-    @options[:stored_credential] = stored_credential(:merchant, :recurring, ntid: '123456789619999')
-    response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |_endpoint, data, _headers|
-      request = JSON.parse(data)
-      assert_equal 'recurring', request['processingInformation']['commerceIndicator']
-      assert_equal 'merchant', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
-      assert_equal true, request.dig('processingInformation', 'authorizationOptions', 'initiator', 'merchantInitiatedTransaction', 'storedCredentialUsed')
-    end.respond_with(successful_purchase_response)
-
-    assert_success response
-  end
-
-  def test_successful_credit_card_purchase_single_request_ignore_avs
-    stub_comms do
-      options = @options.merge(ignore_avs: true)
-      @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |_endpoint, request_body, _headers|
-      json_body = JSON.parse(request_body)
-      assert_equal json_body['processingInformation']['authorizationOptions']['ignoreAvsResult'], 'true'
-      assert_nil json_body['processingInformation']['authorizationOptions']['ignoreCvResult']
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_successful_credit_card_purchase_single_request_without_ignore_avs
-    stub_comms do
-      # globally ignored AVS for gateway instance:
-      options = @options.merge(ignore_avs: false)
-      @gateway.options[:ignore_avs] = true
-      @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |_endpoint, request_body, _headers|
-      json_body = JSON.parse(request_body)
-      assert_nil json_body['processingInformation']['authorizationOptions']['ignoreAvsResult']
-      assert_nil json_body['processingInformation']['authorizationOptions']['ignoreCvResult']
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_successful_credit_card_purchase_single_request_ignore_ccv
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(ignore_cvv: true))
-    end.check_request do |_endpoint, request_body, _headers|
-      json_body = JSON.parse(request_body)
-      assert_nil json_body['processingInformation']['authorizationOptions']['ignoreAvsResult']
-      assert_equal json_body['processingInformation']['authorizationOptions']['ignoreCvResult'], 'true'
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_successful_credit_card_purchase_single_request_without_ignore_ccv
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(ignore_cvv: false))
-    end.check_request do |_endpoint, request_body, _headers|
-      json_body = JSON.parse(request_body)
-      assert_nil json_body['processingInformation']['authorizationOptions']['ignoreAvsResult']
-      assert_nil json_body['processingInformation']['authorizationOptions']['ignoreCvResult']
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_authorize_includes_mdd_fields
-    stub_comms do
-      @gateway.authorize(100, @credit_card, order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
-    end.check_request do |_endpoint, data, _headers|
-      json_data = JSON.parse(data)
-      assert_equal json_data['merchantDefinedInformation'][0]['key'], 'mdd_field_2'
-      assert_equal json_data['merchantDefinedInformation'][0]['value'], 'CustomValue2'
-      assert_equal json_data['merchantDefinedInformation'].count, 2
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_capture_includes_mdd_fields
-    stub_comms do
-      @gateway.capture(100, '1846925324700976124593', order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
-    end.check_request do |_endpoint, data, _headers|
-      json_data = JSON.parse(data)
-      assert_equal json_data['merchantDefinedInformation'][0]['key'], 'mdd_field_2'
-      assert_equal json_data['merchantDefinedInformation'][0]['value'], 'CustomValue2'
-      assert_equal json_data['merchantDefinedInformation'].count, 2
-    end.respond_with(successful_capture_response)
-  end
-
-  def test_credit_includes_mdd_fields
-    stub_comms do
-      @gateway.credit(@amount, @credit_card, mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
-    end.check_request do |_endpoint, data, _headers|
-      json_data = JSON.parse(data)
-      assert_equal json_data['merchantDefinedInformation'][0]['key'], 'mdd_field_2'
-      assert_equal json_data['merchantDefinedInformation'][0]['value'], 'CustomValue2'
-      assert_equal json_data['merchantDefinedInformation'].count, 2
-    end.respond_with(successful_credit_response)
-  end
-
-  def test_authorize_includes_reconciliation_id
-    stub_comms do
-      @gateway.authorize(100, @credit_card, order_id: '1', reconciliation_id: '181537')
-    end.check_request do |_endpoint, data, _headers|
-      json_data = JSON.parse(data)
-      assert_equal json_data['clientReferenceInformation']['reconciliationId'], '181537'
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_bank_account_purchase_includes_sec_code
-    stub_comms do
-      @gateway.purchase(@amount, @bank_account, order_id: '1', sec_code: 'WEB')
-    end.check_request do |_endpoint, data, _headers|
-      json_data = JSON.parse(data)
-      assert_equal json_data['processingInformation']['bankTransferOptions']['secCode'], 'WEB'
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_purchase_includes_invoice_number
-    stub_comms do
-      @gateway.purchase(100, @credit_card, invoice_number: '1234567')
-    end.check_request do |_endpoint, data, _headers|
-      json_data = JSON.parse(data)
-      assert_equal json_data['orderInformation']['invoiceDetails']['invoiceNumber'], '1234567'
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_adds_application_id_as_partner_solution_id
-    partner_id = 'partner_id'
-    CyberSourceRestGateway.application_id = partner_id
-
-    stub_comms do
-      @gateway.authorize(100, @credit_card, @options)
-    end.check_request do |_endpoint, data, _headers|
-      json_data = JSON.parse(data)
-      assert_equal json_data['clientReferenceInformation']['partner']['solutionId'], partner_id
-    end.respond_with(successful_purchase_response)
-  ensure
-    CyberSourceRestGateway.application_id = nil
-  end
-
-  def test_successful_store
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.store(@credit_card, @options.merge(merchant_customer_id: 'merchant_test'))
-    end.check_request do |_method, endpoint, data, _headers|
-      request = JSON.parse(data)
-      case endpoint
-      when /instrumentidentifiers/
-        assert_equal request['card']['number'], '4111111111111111'
-      when /paymentinstruments/
-        assert_equal request['card']['expirationMonth'], '12'
-        assert_equal request['card']['expirationYear'],  '2031'
-        assert_equal request['card']['type'], 'visa'
-        assert_equal request['instrumentIdentifier']['id'], '7010000000016241111'
-        assert_includes request, 'billTo'
-      when /payment-instruments/
-        assert_equal request['card']['expirationMonth'], '12'
-        assert_equal request['card']['expirationYear'],  '2031'
-        assert_equal request['card']['type'], '001'
-        assert_equal request['instrumentIdentifier']['id'], '7010000000016241111'
-        assert_includes request, 'billTo'
-      when /customers/
-        assert_equal request['buyerInformation']['email'], 'test@cybs.com'
-        assert_includes request['buyerInformation'], 'merchantCustomerId'
-        assert_includes request, 'clientReferenceInformation'
-        assert_includes request, 'merchantDefinedInformation'
-      end
-    end.respond_with(successful_create_customer, successful_create_instrument_identifiers, successful_store_response)
-  end
-
   def test_use_customer_id_from_third_party_token_instead_of_options
-    payment_method_tpv = 'customer_id|payment_instrument_id'
+    payment_method_tpv = 'id|amount|customer_id|payment_instrument_id'
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(100, payment_method_tpv, @options.merge(customer_id: 'other_customer_id'))
     end.check_request do |_method, _endpoint, data, _headers|
@@ -420,15 +232,13 @@ class CyberSourceRestTest < Test::Unit::TestCase
       assert_equal 'customer_id', request['paymentInformation']['customer']['id']
       assert_equal 'payment_instrument_id', request['paymentInstrument']['id']
     end.respond_with(successful_purchase_response)
-
-    assert_success response
   end
 
   def test_stored_credential_cit_initial
     @options[:stored_credential] = stored_credential(:cardholder, :internet, :initial)
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal 'internet', request['processingInformation']['commerceIndicator']
       assert_equal 'customer', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
@@ -439,9 +249,9 @@ class CyberSourceRestTest < Test::Unit::TestCase
 
   def test_stored_credential_recurring_cit
     @options[:stored_credential] = stored_credential(:cardholder, :recurring)
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal 'recurring', request['processingInformation']['commerceIndicator']
       assert_equal 'customer', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
@@ -453,9 +263,9 @@ class CyberSourceRestTest < Test::Unit::TestCase
 
   def test_stored_credential_recurring_mit_ntid
     @options[:stored_credential] = stored_credential(:merchant, :recurring, ntid: '123456789619999')
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal 'recurring', request['processingInformation']['commerceIndicator']
       assert_equal 'merchant', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
@@ -829,36 +639,6 @@ class CyberSourceRestTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_capture_response
-    <<-RESPONSE
-    {
-      "_links": {
-        "void": {
-          "method": "POST",
-          "href": "/pts/v2/captures/6799471903876585704951/voids"
-        },
-        "self": {
-          "method": "GET",
-          "href": "/pts/v2/captures/6799471903876585704951"
-        }
-      },
-      "clientReferenceInformation": {
-        "code": "TC50171_3"
-      },
-      "id": "6799471903876585704951",
-      "orderInformation": {
-        "amountDetails": {
-          "totalAmount": "102.21",
-          "currency": "USD"
-        }
-      },
-      "reconciliationId": "78243988SD9YL291",
-      "status": "PENDING",
-      "submitTimeUtc": "2023-03-27T19:59:50Z"
-    }
-    RESPONSE
-  end
-
   def successful_create_instrument_identifiers
     <<-RESPONSE
     {
@@ -949,56 +729,6 @@ class CyberSourceRestTest < Test::Unit::TestCase
           }
         }
       }
-    }
-    RESPONSE
-  end
-
-  def successful_credit_response
-    <<-RESPONSE
-    {
-      "_links": {
-        "void": {
-          "method": "POST",
-          "href": "/pts/v2/credits/6799499091686234304951/voids"
-        },
-        "self": {
-          "method": "GET",
-          "href": "/pts/v2/credits/6799499091686234304951"
-        }
-      },
-      "clientReferenceInformation": {
-        "code": "12345678"
-      },
-      "creditAmountDetails": {
-        "currency": "usd",
-        "creditAmount": "200.00"
-      },
-      "id": "6799499091686234304951",
-      "orderInformation": {
-        "amountDetails": {
-          "currency": "usd"
-        }
-      },
-      "paymentAccountInformation": {
-        "card": {
-          "type": "001"
-        }
-      },
-      "paymentInformation": {
-        "tokenizedCard": {
-          "type": "001"
-        },
-        "card": {
-          "type": "001"
-        }
-      },
-      "processorInformation": {
-        "approvalCode": "888888",
-        "responseCode": "100"
-      },
-      "reconciliationId": "70391830ZFKZI570",
-      "status": "PENDING",
-      "submitTimeUtc": "2023-03-27T20:45:09Z"
     }
     RESPONSE
   end
