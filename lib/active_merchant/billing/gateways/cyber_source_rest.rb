@@ -277,7 +277,8 @@ module ActiveMerchant #:nodoc:
         )
       rescue ActiveMerchant::ResponseError => e
         response = e.response.body.present? ? parse(e.response.body) : { 'response' => { 'rmsg' => e.response.msg } }
-        Response.new(false, response.dig('response', 'rmsg'), response, test: test?)
+        message = response.dig('response', 'rmsg') || response.dig('message')
+        Response.new(false, message, response, test: test?)
       end
 
       def success_from(response)
