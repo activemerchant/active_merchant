@@ -111,9 +111,12 @@ module ActiveMerchant #:nodoc:
 
       def add_transaction_interaction(post, options)
         post[:transactionInteraction] = {}
-        post[:transactionInteraction][:origin] = options[:transaction_origin] || 'ECOM'
+        post[:transactionInteraction][:origin] = options[:origin] || 'ECOM'
         post[:transactionInteraction][:eciIndicator] = options[:eci_indicator] || 'CHANNEL_ENCRYPTED'
         post[:transactionInteraction][:posConditionCode] = options[:pos_condition_code] || 'CARD_NOT_PRESENT_ECOM'
+        post[:transactionInteraction][:posEntryMode] = options[:pos_entry_mode] || 'MANUAL'
+        post[:transactionInteraction][:additionalPosInformation] = {}
+        post[:transactionInteraction][:additionalPosInformation][:dataEntrySource] = options[:data_entry_source] || 'UNSPECIFIED'
       end
 
       def add_transaction_details(post, options, action = nil)
@@ -190,14 +193,9 @@ module ActiveMerchant #:nodoc:
 
       def add_reference_transaction_details(post, authorization, options, action = nil)
         reference_details = {}
-        merchant_reference, transaction_id = authorization.include?('|') ? authorization.split('|') : [nil, authorization]
+        _merchant_reference, transaction_id = authorization.include?('|') ? authorization.split('|') : [nil, authorization]
 
-        if action == :refund
-          reference_details[:referenceTransactionId] = transaction_id
-        else
-          reference_details[merchant_reference.present? ? :referenceMerchantTransactionId : :referenceTransactionId] = merchant_reference.presence || transaction_id
-        end
-
+        reference_details[:referenceTransactionId] = transaction_id
         reference_details[:referenceTransactionType] = (options[:reference_transaction_type] || 'CHARGES') unless action == :capture
         post[:referenceTransactionDetails] = reference_details.compact
       end

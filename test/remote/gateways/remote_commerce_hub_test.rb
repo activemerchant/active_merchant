@@ -4,7 +4,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
   def setup
     # Uncomment the sleep if you want to run the entire set of remote tests without
     # getting 'The transaction limit was exceeded. Please try again!' errors
-    # sleep 5
+    # sleep 10
 
     @gateway = CommerceHubGateway.new(fixtures(:commerce_hub))
 
@@ -32,11 +32,33 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
       source: :apple_pay,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
     @declined_card = credit_card('4000300011112220', month: '02', year: '2035', verification_value: '123')
+    @master_card = credit_card('5454545454545454', brand: 'master')
     @options = {}
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_gsf_mit
+    @options[:data_entry_source] = 'ELECTRONIC_PAYMENT_TERMINAL'
+    @options[:pos_entry_mode] = 'CONTACTLESS'
+    response = @gateway.purchase(@amount, @master_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_cit_with_gsf
+    stored_credential_options = {
+      initial_transaction: true,
+      reason_type: 'cardholder',
+      initiator: 'unscheduled'
+    }
+    @options[:eci_indicator] = 'CHANNEL_ENCRYPTED'
+    @options[:stored_credential] = stored_credential_options
+    response = @gateway.purchase(@amount, @master_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -116,19 +138,6 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
-
-    response = @gateway.void(response.authorization, @options)
-    assert_success response
-    assert_equal 'Approved', response.message
-  end
-
-  def test_successful_authorize_and_void_using_store_id_as_reference
-    @options[:order_id] = SecureRandom.hex(16)
-
-    response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success response
-    assert_equal 'Approved', response.message
-    assert_match(/#{@options[:order_id]}|\w*/, response.authorization)
 
     response = @gateway.void(response.authorization, @options)
     assert_success response
