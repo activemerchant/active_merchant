@@ -157,7 +157,7 @@ class CommerceHubTest < Test::Unit::TestCase
       @gateway.void('abc123|authorization123', @options)
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
-      assert_equal 'abc123', request['referenceTransactionDetails']['referenceMerchantTransactionId']
+      assert_equal 'authorization123', request['referenceTransactionDetails']['referenceTransactionId']
       assert_equal 'CHARGES', request['referenceTransactionDetails']['referenceTransactionType']
       assert_nil request['transactionDetails']['captureFlag']
     end.respond_with(successful_void_and_refund_response)
@@ -192,6 +192,46 @@ class CommerceHubTest < Test::Unit::TestCase
     end.respond_with(successful_void_and_refund_response)
 
     assert_success response
+  end
+
+  def test_successful_purchase_cit_with_gsf
+    options = stored_credential_options(:cardholder, :unscheduled, :initial)
+    options[:data_entry_source] = 'MOBILE_WEB'
+    options[:pos_entry_mode] = 'MANUAL'
+    response = stub_comms do
+      @gateway.purchase(@amount, 'authorization123', options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['transactionInteraction']['origin'], 'ECOM'
+      assert_equal request['transactionInteraction']['eciIndicator'], 'CHANNEL_ENCRYPTED'
+      assert_equal request['transactionInteraction']['posConditionCode'], 'CARD_NOT_PRESENT_ECOM'
+      assert_equal request['transactionInteraction']['posEntryMode'], 'MANUAL'
+      assert_equal request['transactionInteraction']['additionalPosInformation']['dataEntrySource'], 'MOBILE_WEB'
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_mit_with_gsf
+    options = stored_credential_options(:merchant, :recurring)
+    options.merge!(origin: 'POS', pos_condition_code: 'CARD_PRESENT', pos_entry_mode: 'MANUAL')
+    response = stub_comms do
+      @gateway.purchase(@amount, 'authorization123', options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['transactionInteraction']['origin'], 'POS'
+      assert_equal request['transactionInteraction']['eciIndicator'], 'CHANNEL_ENCRYPTED'
+      assert_equal request['transactionInteraction']['posConditionCode'], 'CARD_PRESENT'
+      assert_equal request['transactionInteraction']['posEntryMode'], 'MANUAL'
+      assert_equal request['transactionInteraction']['additionalPosInformation']['dataEntrySource'], 'UNSPECIFIED'
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def stored_credential_options(*args, ntid: nil)
+    {
+      order_id: '#1001',
+      stored_credential: stored_credential(*args, ntid: ntid)
+    }
   end
 
   def test_successful_store
@@ -285,17 +325,7 @@ class CommerceHubTest < Test::Unit::TestCase
 
     @gateway.send :add_reference_transaction_details, @post, authorization, {}, :capture
     assert_equal '922e-59fc86a36c03', @post[:referenceTransactionDetails][:referenceTransactionId]
-    assert_nil @post[:referenceTransactionDetails][:referenceMerchantTransactionId]
     assert_nil @post[:referenceTransactionDetails][:referenceTransactionType]
-  end
-
-  def test_add_reference_transaction_details_capture_order_id
-    authorization = 'abc123|922e-59fc86a36c03'
-
-    @gateway.send :add_reference_transaction_details, @post, authorization, {}, :capture
-    assert_equal 'abc123', @post[:referenceTransactionDetails][:referenceMerchantTransactionId]
-    assert_nil @post[:referenceTransactionDetails][:referenceTransactionType]
-    assert_nil @post[:referenceTransactionDetails][:referenceTransactionId]
   end
 
   def test_add_reference_transaction_details_void_reference_id
@@ -306,25 +336,8 @@ class CommerceHubTest < Test::Unit::TestCase
     assert_equal 'CHARGES', @post[:referenceTransactionDetails][:referenceTransactionType]
   end
 
-  def test_add_reference_transaction_details_void_order_id
-    authorization = 'abc123|922e-59fc86a36c03'
-
-    @gateway.send :add_reference_transaction_details, @post, authorization, {}, :void
-    assert_equal 'abc123', @post[:referenceTransactionDetails][:referenceMerchantTransactionId]
-    assert_equal 'CHARGES', @post[:referenceTransactionDetails][:referenceTransactionType]
-    assert_nil @post[:referenceTransactionDetails][:referenceTransactionId]
-  end
-
   def test_add_reference_transaction_details_refund_reference_id
     authorization = '|922e-59fc86a36c03'
-
-    @gateway.send :add_reference_transaction_details, @post, authorization, {}, :refund
-    assert_equal '922e-59fc86a36c03', @post[:referenceTransactionDetails][:referenceTransactionId]
-    assert_equal 'CHARGES', @post[:referenceTransactionDetails][:referenceTransactionType]
-  end
-
-  def test_add_reference_transaction_details_refund_order_id
-    authorization = 'abc123|922e-59fc86a36c03'
 
     @gateway.send :add_reference_transaction_details, @post, authorization, {}, :refund
     assert_equal '922e-59fc86a36c03', @post[:referenceTransactionDetails][:referenceTransactionId]
