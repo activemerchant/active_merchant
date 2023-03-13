@@ -1343,6 +1343,14 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_successful_capture_with_shopper_statement
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge(shopper_statement: 'test1234'))
+    assert_success capture
+  end
+
   def test_purchase_with_skip_mpi_data
     options = {
       reference: '345123',

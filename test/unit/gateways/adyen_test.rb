@@ -340,6 +340,14 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_capture_with_shopper_statement
+    stub_comms do
+      @gateway.capture(@amount, '7914775043909934', @options.merge(shopper_statement: 'test1234'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'test1234', JSON.parse(data)['additionalData']['shopperStatement']
+    end.respond_with(successful_capture_response)
+  end
+
   def test_successful_purchase_with_credit_card
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
