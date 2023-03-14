@@ -361,7 +361,7 @@ module ActiveMerchant #:nodoc:
           'Authorization' => auth_token,
           'Content-Type' => 'application/json;charset=UTF-8'
         }
-        headers['Cko-Idempotency-Key'] = options[:cko_idempotency_key] if options[:cko_idempotency_key]
+        headers['Cko-Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
         headers
       end
 

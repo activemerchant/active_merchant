@@ -821,7 +821,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_idempotency_key
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(cko_idempotency_key: 'test123'))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(idempotency_key: 'test123'))
     assert_success response
     assert_equal 'Succeeded', response.message
   end

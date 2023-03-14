@@ -437,7 +437,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   def test_optional_idempotency_key_header
     stub_comms(@gateway, :ssl_request) do
       options = {
-        cko_idempotency_key: 'test123'
+        idempotency_key: 'test123'
       }
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_method, _url, _data, headers|
