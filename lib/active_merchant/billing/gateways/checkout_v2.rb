@@ -208,6 +208,7 @@ module ActiveMerchant #:nodoc:
           else
             add_source(post, options)
           end
+          post[:merchant_initiated] = true if options[:third_party_token_merchant_initiator] == 'merchant'
         elsif payment_method.try(:year)
           post[key][:expiry_year] = format(payment_method.year, :four_digits)
           post[key][:expiry_month] = format(payment_method.month, :two_digits)

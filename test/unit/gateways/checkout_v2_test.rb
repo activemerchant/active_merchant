@@ -789,6 +789,14 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal %w[AD AE AR AT AU BE BG BH BR CH CL CN CO CY CZ DE DK EE EG ES FI FR GB GR HK HR HU IE IS IT JO JP KW LI LT LU LV MC MT MX MY NL NO NZ OM PE PL PT QA RO SA SE SG SI SK SM TR US], @gateway.supported_countries
   end
 
+  def test_set_merchant_initiator_using_third_party_token_merchant_initiator
+    post = {}
+    @gateway.send(:add_payment_method, post, 'src_vhzsyc6mgl3etbxfnqqobdjh3i', { third_party_token_merchant_initiator: 'merchant' })
+    assert_equal post[:source][:type], 'id'
+    assert_equal post[:source][:id], 'src_vhzsyc6mgl3etbxfnqqobdjh3i'
+    assert_equal post[:merchant_initiated], true
+  end
+
   private
 
   def pre_scrubbed
