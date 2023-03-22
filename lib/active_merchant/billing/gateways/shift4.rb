@@ -306,7 +306,7 @@ module ActiveMerchant #:nodoc:
 
       def request_headers(action, options)
         headers = {
-          'Content-Type' => 'application/x-www-form-urlencoded'
+          'Content-Type' => 'application/json'
         }
         headers['AccessToken'] = @access_token
         headers['Invoice'] = options[:invoice] if action != 'capture' && options[:invoice].present?
