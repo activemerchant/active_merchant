@@ -4,7 +4,6 @@ class EbanxTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = EbanxGateway.new(integration_key: 'key')
     @credit_card = credit_card
     @amount = 100
 
@@ -15,200 +14,373 @@ class EbanxTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_purchase
-    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "expecting successful purchase for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).returns(successful_purchase_response)
+      response = @gateway.purchase(@amount, @credit_card, @options)
 
-    assert_success response
+      assert_success response
 
-    assert_equal '592db57ad6933455efbb62a48d1dfa091dd7cd092109db99', response.authorization
-    assert response.test?
+      assert_equal '592db57ad6933455efbb62a48d1dfa091dd7cd092109db99', response.authorization
+      assert response.test?
+    end
   end
 
-  def test_successful_purchase_with_optional_processing_type_header
-    response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@accepted_amount, @credit_card, @options.merge(processing_type: 'local'))
-    end.check_request do |_method, _endpoint, _data, headers|
-      assert_equal 'local', headers['x-ebanx-api-processing-type']
-    end.respond_with(successful_purchase_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "successful purchase with optional processing type header for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    assert_success response
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      response = stub_comms(@gateway, :ssl_request) do
+        @gateway.purchase(@accepted_amount, @credit_card, @options.merge(processing_type: 'local'))
+      end.check_request do |_method, _endpoint, _data, headers|
+        assert_equal 'local', headers['x-ebanx-api-processing-type']
+      end.respond_with(successful_purchase_response)
+
+      assert_success response
+    end
   end
 
-  def test_successful_purchase_with_soft_descriptor
-    response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge(soft_descriptor: 'ActiveMerchant'))
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match %r{"soft_descriptor\":\"ActiveMerchant\"}, data
-    end.respond_with(successful_purchase_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "successful purchase with soft descriptor for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    assert_success response
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      response = stub_comms(@gateway, :ssl_request) do
+        @gateway.purchase(@amount, @credit_card, @options.merge(soft_descriptor: 'ActiveMerchant'))
+      end.check_request do |_method, _endpoint, data, _headers|
+        assert_match %r{"soft_descriptor\":\"ActiveMerchant\"}, data
+      end.respond_with(successful_purchase_response)
+
+      assert_success response
+    end
   end
 
-  def test_failed_purchase
-    @gateway.expects(:ssl_request).returns(failed_purchase_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "failed purchase for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_equal 'NOK', response.error_code
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).returns(failed_purchase_response)
+
+      response = @gateway.purchase(@amount, @credit_card, @options)
+      assert_failure response
+      assert_equal 'NOK', response.error_code
+    end
   end
 
-  def test_successful_authorize
-    @gateway.expects(:ssl_request).returns(successful_authorize_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "test successful authorize for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success response
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).returns(successful_authorize_response)
 
-    assert_equal '592dc02dbe421478a132bf5c2ecfe52c86ac01b454ae799b', response.authorization
-    assert response.test?
+      response = @gateway.authorize(@amount, @credit_card, @options)
+      assert_success response
+
+      assert_equal '592dc02dbe421478a132bf5c2ecfe52c86ac01b454ae799b', response.authorization
+      assert response.test?
+    end
   end
 
-  def test_failed_authorize
-    @gateway.expects(:ssl_request).returns(failed_authorize_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "failed_authorize for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_equal 'NOK', response.error_code
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).returns(failed_authorize_response)
+
+      response = @gateway.purchase(@amount, @credit_card, @options)
+      assert_failure response
+      assert_equal 'NOK', response.error_code
+    end
   end
 
-  def test_successful_capture
-    @gateway.expects(:ssl_request).returns(successful_capture_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "successful capture for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.capture(@amount, 'authorization', @options)
-    assert_success response
-    assert_equal '5dee94502bd59660b801c441ad5a703f2c4123f5fc892ccb', response.authorization
-    assert_equal 'Accepted', response.message
-    assert response.test?
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).returns(successful_capture_response)
+
+      response = @gateway.capture(@amount, 'authorization', @options)
+      assert_success response
+      assert_equal '5dee94502bd59660b801c441ad5a703f2c4123f5fc892ccb', response.authorization
+      assert_equal 'Accepted', response.message
+      assert response.test?
+    end
   end
 
-  def test_failed_partial_capture
-    @gateway.expects(:ssl_request).returns(failed_partial_capture_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "failed partial capture for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.capture(@amount, 'authorization', @options.merge(include_capture_amount: true))
-    assert_failure response
-    assert_equal 'BP-CAP-11', response.error_code
-    assert_equal 'Partial capture not available', response.message
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).returns(failed_partial_capture_response)
+
+      response = @gateway.capture(@amount, 'authorization', @options.merge(include_capture_amount: true))
+      assert_failure response
+      assert_equal 'BP-CAP-11', response.error_code
+      assert_equal 'Partial capture not available', response.message
+    end
   end
 
-  def test_failed_capture
-    @gateway.expects(:ssl_request).returns(failed_capture_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "failed capture for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.capture(@amount, '', @options)
-    assert_failure response
-    assert_equal 'BP-CAP-1', response.error_code
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).returns(failed_capture_response)
+
+      response = @gateway.capture(@amount, '', @options)
+      assert_failure response
+      assert_equal 'BP-CAP-1', response.error_code
+    end
   end
 
-  def test_successful_refund
-    @gateway.expects(:ssl_request).returns(successful_refund_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "successful refund for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.refund(@amount, 'authorization', @options)
-    assert_success response
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).returns(successful_refund_response)
 
-    assert_equal '59306246f2a0c5f327a15dd6492687e197aca7eda179da08', response.authorization
-    assert response.test?
+      response = @gateway.refund(@amount, 'authorization', @options)
+      assert_success response
+
+      assert_equal '59306246f2a0c5f327a15dd6492687e197aca7eda179da08', response.authorization
+      assert response.test?
+    end
   end
 
-  def test_failed_refund
-    @gateway.expects(:ssl_request).returns(failed_refund_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "failed refund for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.refund(@amount, '', @options)
-    assert_failure response
-    assert_equal 'BP-REF-CAN-2', response.error_code
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).returns(failed_refund_response)
+
+      response = @gateway.refund(@amount, '', @options)
+      assert_failure response
+      assert_equal 'BP-REF-CAN-2', response.error_code
+    end
   end
 
-  def test_successful_void
-    @gateway.expects(:ssl_request).returns(successful_void_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "successful void for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.void('authorization', @options)
-    assert_success response
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).returns(successful_void_response)
 
-    assert_equal '5930629dde0899dc53b3557ea9887aa8f3d264a91d115d40', response.authorization
-    assert response.test?
+      response = @gateway.void('authorization', @options)
+      assert_success response
+
+      assert_equal '5930629dde0899dc53b3557ea9887aa8f3d264a91d115d40', response.authorization
+      assert response.test?
+    end
   end
 
-  def test_failed_void
-    @gateway.expects(:ssl_request).returns(failed_void_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "failed void #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.void('', @options)
-    assert_failure response
-    assert_equal 'BP-CAN-1', response.error_code
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).returns(failed_void_response)
+
+      response = @gateway.void('', @options)
+      assert_failure response
+      assert_equal 'BP-CAN-1', response.error_code
+    end
   end
 
-  def test_successful_verify
-    @gateway.expects(:ssl_request).times(2).returns(successful_authorize_response, successful_void_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "successful verify for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
-    assert_equal nil, response.error_code
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).times(2).returns(successful_authorize_response, successful_void_response)
+
+      response = @gateway.verify(@credit_card, @options)
+      assert_success response
+      assert_equal nil, response.error_code
+    end
   end
 
-  def test_successful_verify_with_failed_void
-    @gateway.expects(:ssl_request).times(2).returns(successful_authorize_response, failed_void_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "successful verify with failed void for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
-    assert_equal nil, response.error_code
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).times(2).returns(successful_authorize_response, failed_void_response)
+
+      response = @gateway.verify(@credit_card, @options)
+      assert_success response
+      assert_equal nil, response.error_code
+    end
   end
 
-  def test_failed_verify
-    @gateway.expects(:ssl_request).returns(failed_authorize_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "failed verify for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.verify(@credit_card, @options)
-    assert_failure response
-    assert_equal 'NOK', response.error_code
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).returns(failed_authorize_response)
+
+      response = @gateway.verify(@credit_card, @options)
+      assert_failure response
+      assert_equal 'NOK', response.error_code
+    end
   end
 
-  def test_successful_store_and_purchase
-    @gateway.expects(:ssl_request).returns(successful_store_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "successful store and purchase #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    store = @gateway.store(@credit_card, @options)
-    assert_success store
-    assert_equal 'a61a7c98535718801395991b5112f888d359c2d632e2c3bb8afe75aa23f3334d7fd8dc57d7721f8162503773063de59ee85901b5714a92338c6d9c0352aee78c|visa', store.authorization
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).returns(successful_store_response)
 
-    @gateway.expects(:ssl_request).returns(successful_purchase_with_stored_card_response)
+      store = @gateway.store(@credit_card, @options)
+      assert_success store
+      assert_equal 'a61a7c98535718801395991b5112f888d359c2d632e2c3bb8afe75aa23f3334d7fd8dc57d7721f8162503773063de59ee85901b5714a92338c6d9c0352aee78c|visa', store.authorization
 
-    response = @gateway.purchase(@amount, store.authorization, @options)
-    assert_success response
+      @gateway.expects(:ssl_request).returns(successful_purchase_with_stored_card_response)
+
+      response = @gateway.purchase(@amount, store.authorization, @options)
+      assert_success response
+    end
   end
 
-  def test_successful_purchase_and_inquire
-    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "successful purchase and inquire #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
+      @gateway = EbanxGateway.new(fixtures(:ebanx))
 
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
+      @gateway.expects(:ssl_get).returns(gateway_version('v1'))
+      @gateway.expects(:ssl_request).returns(successful_purchase_response)
 
-    @gateway.expects(:ssl_request).returns(successful_purchase_response)
-    response = @gateway.inquire(purchase.authorization)
+      purchase = @gateway.purchase(@amount, @credit_card, @options)
+      assert_success purchase
 
-    assert_success response
+      @gateway.expects(:ssl_request).returns(successful_purchase_response)
+      response = @gateway.inquire(purchase.authorization)
+
+      assert_success response
+    end
   end
 
-  def test_error_response_with_invalid_creds
-    @gateway.expects(:ssl_request).returns(invalid_cred_response)
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "error response with invalid creds for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
 
-    response = @gateway.store(@credit_card, @options)
-    assert_failure response
-    assert_equal 'Invalid integration key', response.message
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      @gateway.expects(:ssl_request).returns(invalid_cred_response)
+
+      response = @gateway.store(@credit_card, @options)
+      assert_failure response
+      assert_equal 'Invalid integration key', response.message
+    end
   end
 
-  def test_scrub
-    assert @gateway.supports_scrubbing?
-    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  [
+    [:ebanx, 'v1'],
+    [:ebanx_v2, 'v2'],
+  ].each do |integration_key, version|
+    test "scrub for #{version}" do
+      @gateway = EbanxGateway.new(fixtures(integration_key))
+
+      @gateway.expects(:ssl_get).returns(gateway_version(version))
+      assert @gateway.supports_scrubbing?
+      assert_equal @gateway.scrub(pre_scrubbed(version)), post_scrubbed(version)
+    end
   end
 
   private
 
-  def pre_scrubbed
-    %q(
+  def pre_scrubbed(version)
+    if version === 'v1'
+      %q(
       request_body={\"integration_key\":\"Ac1EwnH0ud2UIndICS37l0\",\"operation\":\"request\",\"payment\":{\"amount_total\":\"1.00\",\"currency_code\":\"USD\",\"merchant_payment_code\":\"2bed75b060e936834e354d944aeaa892\",\"name\":\"Longbob Longsen\",\"email\":\"unspecified@example.com\",\"document\":\"853.513.468-93\",\"payment_type_code\":\"visa\",\"creditcard\":{\"card_number\":\"4111111111111111\",\"card_name\":\"Longbob Longsen\",\"card_due_date\":\"9/2018\",\"card_cvv\":\"123\"},\"address\":\"Rua E\",\"street_number\":\"1040\",\"city\":\"Maracana\u{fa}\",\"state\":\"CE\",\"zipcode\":\"61919-230\",\"country\":\"BR\",\"phone_number\":\"(555)555-5555\"}}
     )
+    else
+      %q(
+      {\"options\":{\"order_id\":\"1\",\"billing_address\":{\"name\":\"Jim Smith\",\"address1\":\"456 My Street\",\"address2\":\"Apt 1\",\"company\":\"Widgets Inc\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\",\"country\":\"CA\",\"phone\":\"(555)555-5555\",\"fax\":\"(555)555-6666\"},\"description\":\"Store Purchase\",\"currency\":\"USD\"},\"amount\":\"1.00\",\"creditcard\":{\"number\":\"4242424242424242\", \"first_name\":\"Longbob\", \"last_name\":\"Longsen\", \"month\":9, \"year\":2024, \"verification_value\":\"123\", \"brand\":\"visa\"}}
+    )
+    end
   end
 
-  def post_scrubbed
-    %q(
+  def post_scrubbed(version)
+    if version === 'v1'
+      %q(
       request_body={\"integration_key\":\"[FILTERED]\",\"operation\":\"request\",\"payment\":{\"amount_total\":\"1.00\",\"currency_code\":\"USD\",\"merchant_payment_code\":\"2bed75b060e936834e354d944aeaa892\",\"name\":\"Longbob Longsen\",\"email\":\"unspecified@example.com\",\"document\":\"853.513.468-93\",\"payment_type_code\":\"visa\",\"creditcard\":{\"card_number\":\"[FILTERED]\",\"card_name\":\"Longbob Longsen\",\"card_due_date\":\"9/2018\",\"card_cvv\":\"[FILTERED]\"},\"address\":\"Rua E\",\"street_number\":\"1040\",\"city\":\"Maracana\u{fa}\",\"state\":\"CE\",\"zipcode\":\"61919-230\",\"country\":\"BR\",\"phone_number\":\"(555)555-5555\"}}
     )
+    else
+      %q(
+      {\"options\":{\"order_id\":\"1\",\"billing_address\":{\"name\":\"Jim Smith\",\"address1\":\"456 My Street\",\"address2\":\"Apt 1\",\"company\":\"Widgets Inc\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\",\"country\":\"CA\",\"phone\":\"(555)555-5555\",\"fax\":\"(555)555-6666\"},\"description\":\"Store Purchase\",\"currency\":\"USD\"},\"amount\":\"1.00\",\"creditcard\":{\"number\":\"[FILTERED]\", \"first_name\":\"Longbob\", \"last_name\":\"Longsen\", \"month\":9, \"year\":2024, \"verification_value\":\"[FILTERED]\", \"brand\":\"visa\"}}
+    )
+    end
+
   end
 
   def successful_purchase_response
@@ -292,6 +464,12 @@ class EbanxTest < Test::Unit::TestCase
   def invalid_cred_response
     %(
       {"status":"ERROR","status_code":"DA-1","status_message":"Invalid integration key"}
+    )
+  end
+
+  def gateway_version(version)
+    %(
+      {"gateway": "#{version}"}
     )
   end
 end
