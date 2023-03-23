@@ -160,6 +160,7 @@ module ActiveMerchant #:nodoc:
         request = build_request(action, post, options)
         raw = ssl_post(url(action), request, headers)
         pairs = parse(raw, options)
+        clean_3ds_form(pairs)
         success = success_from(pairs)
 
         Response.new(
@@ -260,6 +261,14 @@ module ActiveMerchant #:nodoc:
 
       def six_random_digits
         (0...6).map { rand(48..57).chr }.join
+      end
+
+      def clean_3ds_form(pairs)
+        return unless raw_html = pairs[:redirecttoacsform]
+
+        parsed = Nokogiri::HTML([raw_html].pack('H*'))
+        html_form = parsed.xpath('//form')
+        pairs[:redirecttoacsform] = html_form.first.to_html.unpack1('H*') unless html_form.empty?
       end
     end
   end

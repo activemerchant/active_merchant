@@ -152,6 +152,15 @@ class BorgunTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_successful_clear_3ds_form
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ merchant_return_url: 'http://localhost/index.html', apply_3d_secure: '1', sale_description: 'product description' }))
+    end.respond_with(successful_get_3ds_authentication_response)
+
+    refute_match(/<html>/, [response.params['redirecttoacsform']].pack('H*'))
+    assert_match(/<form/, [response.params['redirecttoacsform']].pack('H*'))
+  end
+
   private
 
   def successful_purchase_response
