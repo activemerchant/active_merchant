@@ -219,7 +219,7 @@ module ActiveMerchant
         tele_check[:check_type] = 'P'
         tele_check[:routing_number] = echeck.routing_number
         tele_check[:account_number] = echeck.account_number
-        tele_check[:accountholder_name] = "#{echeck.first_name} #{echeck.last_name}"
+        tele_check[:accountholder_name] = name_from_payment_method(echeck)
         tele_check[:customer_id_type] = options[:customer_id_type] if options[:customer_id_type]
         tele_check[:customer_id_number] = options[:customer_id_number] if options[:customer_id_number]
         tele_check[:client_email] = options[:client_email] if options[:client_email]
@@ -265,7 +265,7 @@ module ActiveMerchant
       def add_network_tokenization(params, payment_method, options)
         nt_card = {}
         nt_card[:type] = 'D'
-        nt_card[:cardholder_name] = payment_method.first_name || name_from_address(options)
+        nt_card[:cardholder_name] = name_from_payment_method(payment_method) || name_from_address(options)
         nt_card[:card_number] = payment_method.number
         nt_card[:exp_date] = format_exp_date(payment_method.month, payment_method.year)
         nt_card[:cvv] = payment_method.verification_value
@@ -285,6 +285,12 @@ module ActiveMerchant
       def name_from_address(options)
         return unless address = options[:billing_address]
         return address[:name] if address[:name]
+      end
+
+      def name_from_payment_method(payment_method)
+        return unless payment_method.first_name && payment_method.last_name
+
+        return "#{payment_method.first_name} #{payment_method.last_name}"
       end
 
       def add_address(params, options)
