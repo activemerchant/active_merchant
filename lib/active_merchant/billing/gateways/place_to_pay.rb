@@ -30,14 +30,6 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'gateway/process', post)
       end
 
-      def capture(money, authorization, options = {})
-        post = {}
-        add_auth(post, options)
-        add_amount(post, options)
-        post[:reference] = options[:reference]
-        commit(:post, 'gateway/search', post)
-      end
-
       def void(authorization, options = {})
         post = {}
         add_auth(post, options)

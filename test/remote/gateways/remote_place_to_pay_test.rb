@@ -70,34 +70,6 @@ class RemotePlaceToPayTest < Test::Unit::TestCase
     assert_equal 'Rechazada', response.message
   end
 
-  def test_partial_capture
-    @purchase_options[:payment][:reference] = "TEST_" + Time.now.strftime("%Y%m%d_%H%M%S%3N")
-    purchase = @default_gateway.purchase(@amount, @credit_card_approved_visa, @purchase_options)
-    assert_success purchase
-    assert_equal 'Aprobada', purchase.message
-
-    capture_options = { 
-      reference: @purchase_options[:payment][:reference],
-      currency: @default_gateway.default_currency,
-      total: @amount
-    }
-
-    assert capture = @default_gateway.capture(@amount, purchase.authorization, capture_options)
-    assert_success capture
-  end
-
-  def test_failed_capture
-    capture_options = { 
-      reference: "TEST_NON_EXISTING_" + Time.now.strftime("%Y%m%d_%H%M%S%3N"),
-      currency: @default_gateway.default_currency,
-      total: @amount
-    }
-
-    assert capture = @default_gateway.capture(@amount, purchase.authorization, capture_options)
-    assert_equal 'No se ha encontrado información con los datos proporcionados', capture.message
-    #assert_failure capture
-  end
-
   def test_successful_refund
     @purchase_options[:payment][:reference] = "TEST_" + Time.now.strftime("%Y%m%d_%H%M%S%3N")
     purchase = @default_gateway.purchase(@amount, @credit_card_approved_visa, @purchase_options)

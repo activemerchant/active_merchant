@@ -56,11 +56,6 @@ class PlaceToPayTest < Test::Unit::TestCase
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
-
-  # def test_successful_capture; end
-
-  # def test_failed_capture; end
-
   # def test_successful_refund; end
 
   # def test_failed_refund; end
