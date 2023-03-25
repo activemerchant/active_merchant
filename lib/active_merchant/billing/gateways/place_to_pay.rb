@@ -65,7 +65,6 @@ module ActiveMerchant #:nodoc:
         post[:currency] = (options[:currency] || currency(money))
       end
 
-
       def build_url(action, base)
         url = base
         url += action
@@ -76,20 +75,11 @@ module ActiveMerchant #:nodoc:
         base_url = (test? ? test_url : live_url)
         url = build_url(action, base_url)
 
-        # puts "URL: " + url
-
-        # puts "Request body: "
-        # puts JSON.pretty_generate(parameters)
-
         begin
-          #raw_response = ssl_post(url,post_data(action, parameters),request_headers())
-          #parse(ssl_request(method, url, body, headers(rel_path, body)))
-
           url = (test? ? test_url : live_url) + action.to_s
           rel_path = "#{method}/v1/#{action}"
           response = api_request(method, url, rel_path, parameters)
 
-          #response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
           response = parse(raw_response)
@@ -196,16 +186,9 @@ module ActiveMerchant #:nodoc:
 
       def api_request(method, url, rel_path, params)
         params == {} ? body = '' : body = params.to_json
-
         raw_response = ssl_request(method, url, body, request_headers())
-        # puts "Raw response: "
-        # puts JSON.pretty_generate(raw_response)
-
         response = parse(raw_response)
         
-        # puts "Response: "
-        # puts JSON.pretty_generate(response)
-      
         return response
       end
 

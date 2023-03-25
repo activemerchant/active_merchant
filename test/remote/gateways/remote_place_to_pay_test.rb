@@ -76,7 +76,6 @@ class RemotePlaceToPayTest < Test::Unit::TestCase
     assert_success purchase
     assert_equal 'Aprobada', purchase.message
 
-    #puts purchase.inspect
 
     refund_options =  { internalReference: purchase.network_transaction_id }
     refund = @default_gateway.refund(
