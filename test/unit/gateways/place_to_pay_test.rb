@@ -268,10 +268,6 @@ class PlaceToPayTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_capture_response; end
-
-  def failed_capture_response; end
-
   def successful_refund_response; end
 
   def failed_refund_response; end
