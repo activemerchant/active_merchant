@@ -56,9 +56,6 @@ class PlaceToPayTest < Test::Unit::TestCase
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
-  # def test_successful_authorize; end
-
-  # def test_failed_authorize; end
 
   # def test_successful_capture; end
 
@@ -272,22 +269,6 @@ class PlaceToPayTest < Test::Unit::TestCase
         "bin": "411076",
         "expiration": "1212"
       }
-    }
-    RESPONSE
-  end
-
-  def successful_authorize_response; end
-
-  def failed_authorize_response
-    <<-RESPONSE
-    {
-      "status":
-        {
-          "status": "FAILED",
-          "reason": "401",
-          "message": "Autenticación fallida 103",
-          "date": "2022-12-30T10:03:45-05:00"
-        }
     }
     RESPONSE
   end
