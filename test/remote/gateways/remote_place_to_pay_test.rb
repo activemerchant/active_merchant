@@ -102,18 +102,18 @@ class RemotePlaceToPayTest < Test::Unit::TestCase
     @purchase_options[:payment][:reference] = "TEST_" + Time.now.strftime("%Y%m%d_%H%M%S%3N")
     purchase = @default_gateway.purchase(@amount, @credit_card_approved_visa, @purchase_options)
     assert_success purchase
-    assert_equal 'APPROVED', purchase.success
+    assert_equal 'Aprobada', purchase.message
 
     #puts purchase.inspect
 
     refund_options =  { internalReference: purchase.network_transaction_id }
-    assert refund = @default_gateway.refund(
-      :money => purchase.params[:amount], 
-      :authorization => purchase.authorization, 
-      :options => refund_options
+    refund = @default_gateway.refund(
+      money: purchase.params[:amount], 
+      authorization: purchase.authorization, 
+      options: refund_options
       )
     assert_success refund
-    assert_equal 'REFUNDED', refund.success
+    assert_equal 'Aprobada', refund.message
   end
 
   def test_failed_refund
