@@ -68,18 +68,11 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_customer_data(post, options); end
-
-      def add_address(post, creditcard, options); end
-
       def add_invoice(post, money, options)
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money))
       end
 
-      def parse(body)
-        {}
-      end
 
       def build_url(action, base)
         url = base
