@@ -70,10 +70,10 @@ class PlaceToPayTest < Test::Unit::TestCase
 
   # def test_failed_verify; end
 
-  # def test_scrub
-  #   assert @gateway.supports_scrubbing?
-  #   assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
-  # end
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
 
   private
 
