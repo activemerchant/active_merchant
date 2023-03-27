@@ -30,20 +30,13 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'gateway/process', post)
       end
 
-      def void(authorization, options = {})
-        post = {}
-        add_auth(post, options)
-        post[:internalReference] = options[:internalReference]
-        commit(:post, 'gateway/query', post)
-      end
-
-      def refund(money:, authorization:, options: {})
+      def refund(money, authorization, options = {})
         post = {}
         add_auth(post, options)
         post[:internalReference] = options[:internalReference]
         post[:authorization] = authorization                
         post[:action] = 'reverse' #Allowed values: reverse refund process void dispersion pre_authorization checkin checkout reauthorization 
-        commit('gateway/transaction', post)
+        commit(:post, 'gateway/transaction', post)
       end
 
 

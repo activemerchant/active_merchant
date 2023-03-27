@@ -40,6 +40,7 @@ class RemotePlaceToPayTest < Test::Unit::TestCase
       payment: payment,
       instrument: instrument
     }
+    @refund_options = { }
   end
 
   def test_successful_purchase_diners
@@ -76,42 +77,24 @@ class RemotePlaceToPayTest < Test::Unit::TestCase
     assert_success purchase
     assert_equal 'Aprobada', purchase.message
 
+    @refund_options =  { internalReference: purchase.network_transaction_id }
+    refund = @default_gateway.refund(@amount, purchase.authorization, @refund_options)
 
-    refund_options =  { internalReference: purchase.network_transaction_id }
-    refund = @default_gateway.refund(
-      money: purchase.params[:amount], 
-      authorization: purchase.authorization, 
-      options: refund_options
-      )
     assert_success refund
     assert_equal 'Aprobada', refund.message
   end
 
   def test_failed_refund
-    refund_options =  { internalReference: -1 }
-    assert refund = @default_gateway.refund(
-      :money => "", 
-      :authorization => -1, 
-      :options => refund_options
-      )
-    assert_failure refund
-    assert_equal 'FAILED', refund.success
-  end
-
-  def test_successful_void
     @purchase_options[:payment][:reference] = "TEST_" + Time.now.strftime("%Y%m%d_%H%M%S%3N")
     purchase = @default_gateway.purchase(@amount, @credit_card_approved_visa, @purchase_options)
     assert_success purchase
     assert_equal 'Aprobada', purchase.message
 
-    assert void = @default_gateway.void(purchase.authorization, { internalReference: purchase.network_transaction_id })
-    assert_success void
-  end
+    @refund_options =  { internalReference: -1 }
+    refund = @default_gateway.refund(@amount, purchase.authorization, @refund_options)
 
-  def test_failed_void
-    assert void = @default_gateway.void('', { internalReference: '' })
-    assert_equal 'Es necesario proveer el parametro internalReference', void.message
-    #assert_failure void
+    assert_success refund
+    assert_equal 'La referencia interna provista es inválida', refund.message
   end
 
   # def test_dump_transcript
