@@ -326,6 +326,7 @@ module ActiveMerchant #:nodoc: ALL
       def add_action_group(post, options, payment = nil)
         post[:IsOffline] = %w[Y N].include?(options[:offline]) ? options[:offline] : 'N'
         post[:VerifyCard] = 'N' if card_token?(payment) # don't need verification for tokens
+        post[:CheckDuplicate] = 'Y'
       end
 
       # Add the Request Extend Group of options
