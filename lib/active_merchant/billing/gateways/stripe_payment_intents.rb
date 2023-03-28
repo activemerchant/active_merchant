@@ -215,7 +215,7 @@ module ActiveMerchant #:nodoc:
             options = format_idempotency_key(options, 'customer')
             post[:expand] = [:sources]
             customer = commit(:post, 'customers', post, options)
-            return customer unless response.success?
+            return customer unless customer.success?
 
             customer_id = customer.params['id']
           end
