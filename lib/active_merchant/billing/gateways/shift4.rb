@@ -153,6 +153,8 @@ module ActiveMerchant #:nodoc:
         add_datetime(post, options)
 
         response = commit('accesstoken', post, request_headers('accesstoken', options))
+        raise ArgumentError, response.params.fetch('result', [{}]).first.dig('error', 'longText') unless response.success?
+
         response.params['result'].first['credential']['accessToken']
       end
 

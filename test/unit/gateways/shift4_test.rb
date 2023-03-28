@@ -1,15 +1,5 @@
 require 'test_helper'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-    class Shift4Gateway
-      def setup_access_token
-        '12345678'
-      end
-    end
-  end
-end
-
 class Shift4Test < Test::Unit::TestCase
   include CommStub
   def setup
@@ -363,6 +353,20 @@ class Shift4Test < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_setup_access_token_should_rise_an_exception_under_unsuccessful_request
+    @gateway.expects(:ssl_post).returns(failed_auth_response)
+
+    assert_raises(ArgumentError) do
+      @gateway.setup_access_token
+    end
+  end
+
+  def test_setup_access_token_should_successfully_extract_the_token_from_response
+    @gateway.expects(:ssl_post).returns(sucess_auth_response)
+
+    assert_equal 'abc123', @gateway.setup_access_token
   end
 
   private
@@ -991,6 +995,40 @@ class Shift4Test < Test::Unit::TestCase
             },
             "server": {
               "name": "UTGAPI09CE"
+            }
+          }
+        ]
+      }
+    RESPONSE
+  end
+
+  def failed_auth_response
+    <<-RESPONSE
+      {
+        "result": [
+          {
+            "error": {
+              "longText": "AuthToken not valid ENGINE22CE",
+              "primaryCode": 9862,
+              "secondaryCode": 4,
+              "shortText ": "AuthToken"
+            },
+            "server": {
+              "name": "UTGAPI03CE"
+            }
+          }
+        ]
+      }
+    RESPONSE
+  end
+
+  def sucess_auth_response
+    <<-RESPONSE
+      {
+        "result": [
+          {
+            "credential": {
+              "accessToken": "abc123"
             }
           }
         ]
