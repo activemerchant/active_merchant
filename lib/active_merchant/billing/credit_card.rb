@@ -18,6 +18,11 @@ module ActiveMerchant #:nodoc:
     # * Dankort
     # * Maestro
     # * Forbrugsforeningen
+    # * Sodexo
+    # * Vr
+    # * Carnet
+    # * Synchrony
+    # * Routex
     # * Elo
     # * Alelo
     # * Cabal
@@ -25,6 +30,14 @@ module ActiveMerchant #:nodoc:
     # * UnionPay
     # * Alia
     # * Olimpica
+    # * Creditel
+    # * Confiable
+    # * Mada
+    # * BpPlus
+    # * Passcard
+    # * Edenred
+    # * Anda
+    # * Creditos directos (Tarjeta D)
     #
     # For testing purposes, use the 'bogus' credit card brand. This skips the vast majority of
     # validations, allowing you to focus on your core concerns until you're ready to be more concerned
@@ -54,6 +67,8 @@ module ActiveMerchant #:nodoc:
     class CreditCard < Model
       include CreditCardMethods
 
+      BRANDS_WITH_SPACES_IN_NUMBER = %w(bp_plus)
+
       class << self
         # Inherited, but can be overridden w/o changing parent's value
         attr_accessor :require_verification_value
@@ -69,7 +84,7 @@ module ActiveMerchant #:nodoc:
       attr_reader :number
 
       def number=(value)
-        @number = (empty?(value) ? value : value.to_s.gsub(/[^\d]/, ''))
+        @number = (empty?(value) ? value : filter_number(value))
       end
 
       # Returns or sets the expiry month for the card.
@@ -95,6 +110,11 @@ module ActiveMerchant #:nodoc:
       # * +'dankort'+
       # * +'maestro'+
       # * +'forbrugsforeningen'+
+      # * +'sodexo'+
+      # * +'vr'+
+      # * +'carnet'+
+      # * +'synchrony'+
+      # * +'routex'+
       # * +'elo'+
       # * +'alelo'+
       # * +'cabal'+
@@ -103,6 +123,13 @@ module ActiveMerchant #:nodoc:
       # * +'alia'+
       # * +'olimpica'+
       # * +'creditel'+
+      # * +'confiable'+
+      # * +'mada'+
+      # * +'bp_plus'+
+      # * +'passcard'+
+      # * +'edenred'+
+      # * +'anda'+
+      # * +'tarjeta-d'+
       #
       # Or, if you wish to test your implementation, +'bogus'+.
       #
@@ -324,7 +351,20 @@ module ActiveMerchant #:nodoc:
         icc_data.present?
       end
 
+      def allow_spaces_in_card?(number = nil)
+        BRANDS_WITH_SPACES_IN_NUMBER.include?(self.class.brand?(self.number || number))
+      end
+
       private
+
+      def filter_number(value)
+        regex = if allow_spaces_in_card?(value)
+                  /[^\d ]/
+                else
+                  /[^\d]/
+                end
+        value.to_s.gsub(regex, '')
+      end
 
       def validate_essential_attributes #:nodoc:
         errors = []

@@ -31,6 +31,40 @@ class OpenpayTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_mexico_url
+    gateway = OpenpayGateway.new(
+      key: 'key',
+      merchant_id: 'merchant_id',
+      merchant_country: 'MX'
+    )
+
+    gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert_equal gateway.gateway_url, OpenpayGateway.mx_test_url
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'tay1mauq3re4iuuk8bm4', response.authorization
+    assert response.test?
+  end
+
+  def test_default_url_when_merchant_country_is_not_present
+    gateway = OpenpayGateway.new(
+      key: 'key',
+      merchant_id: 'merchant_id'
+    )
+    assert_equal 'https://sandbox-api.openpay.co/v1/', gateway.gateway_url
+  end
+
+  def test_set_mexico_url_using_merchant_country_flag
+    gateway = OpenpayGateway.new(
+      key: 'key',
+      merchant_id: 'merchant_id',
+      merchant_country: 'MX'
+    )
+    assert_equal 'https://sandbox-api.openpay.mx/v1/', gateway.gateway_url
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
 

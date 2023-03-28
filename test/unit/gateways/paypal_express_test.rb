@@ -88,6 +88,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'FWRVKNRRZ3WUC', response.payer_id
     assert_equal 'buyer@jadedpallet.com', response.email
     assert_equal 'This is a test note', response.note
+    assert_equal 'PaymentActionNotInitiated', response.checkout_status
 
     assert address = response.address
     assert_equal 'Fred Brooks', address['name']
@@ -553,6 +554,30 @@ class PaypalExpressTest < Test::Unit::TestCase
         payment_type: 'Any',
         invoice_id: 'invoice_id',
         description: 'Description',
+        ip: '127.0.0.1',
+        merchant_session_id: 'example_merchant_session_id'
+      }))
+
+    assert_equal '124', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:Version').text
+    assert_equal 'ref_id', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:ReferenceID').text
+    assert_equal 'Sale', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentAction').text
+    assert_equal 'Any', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentType').text
+    assert_equal '20.00', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentDetails/n2:OrderTotal').text
+    assert_equal 'Description', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentDetails/n2:OrderDescription').text
+    assert_equal 'invoice_id', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentDetails/n2:InvoiceID').text
+    assert_equal 'ActiveMerchant_FOO', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentDetails/n2:ButtonSource').text
+    assert_equal '127.0.0.1', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:IPAddress').text
+    assert_equal 'example_merchant_session_id', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:MerchantSessionId').text
+  end
+
+  def test_build_reference_transaction_without_merchant_session_test
+    PaypalExpressGateway.application_id = 'ActiveMerchant_FOO'
+    xml = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 'Sale', 2000,
+      {
+        reference_id: 'ref_id',
+        payment_type: 'Any',
+        invoice_id: 'invoice_id',
+        description: 'Description',
         ip: '127.0.0.1'
       }))
 
@@ -565,6 +590,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'invoice_id', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentDetails/n2:InvoiceID').text
     assert_equal 'ActiveMerchant_FOO', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentDetails/n2:ButtonSource').text
     assert_equal '127.0.0.1', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:IPAddress').text
+    assert_nil REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:MerchantSessionId')
   end
 
   def test_build_details_billing_agreement_request_test

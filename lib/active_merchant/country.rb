@@ -184,6 +184,7 @@ module ActiveMerchant #:nodoc:
       { alpha2: 'KP', name: 'Korea, Democratic People\'s Republic of', alpha3: 'PRK', numeric: '408' },
       { alpha2: 'KR', name: 'Korea, Republic of', alpha3: 'KOR', numeric: '410' },
       { alpha2: 'XK', name: 'Kosovo', alpha3: 'XKX', numeric: '900' },
+      { alpha2: 'QZ', name: 'Kosovo', alpha3: 'XKX', numeric: '900' },
       { alpha2: 'KW', name: 'Kuwait', alpha3: 'KWT', numeric: '414' },
       { alpha2: 'KG', name: 'Kyrgyzstan', alpha3: 'KGZ', numeric: '417' },
       { alpha2: 'LA', name: 'Lao People\'s Democratic Republic', alpha3: 'LAO', numeric: '418' },

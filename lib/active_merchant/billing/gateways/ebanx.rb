@@ -6,18 +6,12 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(BR MX CO CL AR PE)
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express discover diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club elo hipercard]
 
       self.homepage_url = 'http://www.ebanx.com/'
       self.display_name = 'EBANX'
 
-      CARD_BRAND = {
-        visa: 'visa',
-        master: 'master_card',
-        american_express: 'amex',
-        discover: 'discover',
-        diners_club: 'diners'
-      }
+      TAGS = ['Spreedly']
 
       URL_MAP = {
         purchase: 'direct',
@@ -25,7 +19,8 @@ module ActiveMerchant #:nodoc:
         capture: 'capture',
         refund: 'refund',
         void: 'cancel',
-        store: 'token'
+        store: 'token',
+        inquire: 'query'
       }
 
       HTTP_METHOD = {
@@ -34,16 +29,17 @@ module ActiveMerchant #:nodoc:
         capture: :get,
         refund: :post,
         void: :get,
-        store: :post
+        store: :post,
+        inquire: :get
       }
 
       VERIFY_AMOUNT_PER_COUNTRY = {
         'br' => 100,
         'ar' => 100,
-        'co' => 100,
+        'co' => 50000,
         'pe' => 300,
-        'mx' => 300,
-        'cl' => 5000
+        'mx' => 2000,
+        'cl' => 80000
       }
 
       def initialize(options = {})
@@ -57,7 +53,7 @@ module ActiveMerchant #:nodoc:
         add_operation(post)
         add_invoice(post, money, options)
         add_customer_data(post, payment, options)
-        add_card_or_token(post, payment)
+        add_card_or_token(post, payment, options)
         add_address(post, options)
         add_customer_responsible_person(post, payment, options)
         add_additional_data(post, options)
@@ -71,7 +67,7 @@ module ActiveMerchant #:nodoc:
         add_operation(post)
         add_invoice(post, money, options)
         add_customer_data(post, payment, options)
-        add_card_or_token(post, payment)
+        add_card_or_token(post, payment, options)
         add_address(post, options)
         add_customer_responsible_person(post, payment, options)
         add_additional_data(post, options)
@@ -122,6 +118,14 @@ module ActiveMerchant #:nodoc:
           r.process { authorize(VERIFY_AMOUNT_PER_COUNTRY[customer_country(options)], credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
+      end
+
+      def inquire(authorization, options = {})
+        post = {}
+        add_integration_key(post)
+        add_authorization(post, authorization)
+
+        commit(:inquire, post)
       end
 
       def supports_scrubbing?
@@ -183,16 +187,18 @@ module ActiveMerchant #:nodoc:
         post[:payment][:currency_code] = (options[:currency] || currency(money))
         post[:payment][:merchant_payment_code] = Digest::MD5.hexdigest(options[:order_id])
         post[:payment][:instalments] = options[:instalments] || 1
+        post[:payment][:order_number] = options[:order_id][0..39] if options[:order_id]
       end
 
-      def add_card_or_token(post, payment)
-        payment, brand = payment.split('|') if payment.is_a?(String)
-        post[:payment][:payment_type_code] = payment.is_a?(String) ? brand : CARD_BRAND[payment.brand.to_sym]
+      def add_card_or_token(post, payment, options)
+        payment = payment.split('|')[0] if payment.is_a?(String)
+        post[:payment][:payment_type_code] = 'creditcard'
         post[:payment][:creditcard] = payment_details(payment)
+        post[:payment][:creditcard][:soft_descriptor] = options[:soft_descriptor] if options[:soft_descriptor]
       end
 
       def add_payment_details(post, payment)
-        post[:payment_type_code] = CARD_BRAND[payment.brand.to_sym]
+        post[:payment_type_code] = 'creditcard'
         post[:creditcard] = payment_details(payment)
       end
 
@@ -214,6 +220,8 @@ module ActiveMerchant #:nodoc:
         post[:metadata] = options[:metadata] if options[:metadata]
         post[:metadata] = {} if post[:metadata].nil?
         post[:metadata][:merchant_payment_code] = options[:order_id] if options[:order_id]
+        post[:processing_type] = options[:processing_type] if options[:processing_type]
+        post[:payment][:tags] = TAGS
       end
 
       def parse(body)
@@ -222,7 +230,8 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         url = url_for((test? ? test_url : live_url), action, parameters)
-        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), { 'x-ebanx-client-user-agent': "ActiveMerchant/#{ActiveMerchant::VERSION}" }))
+
+        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), headers(parameters)))
 
         success = success_from(action, response)
 
@@ -236,14 +245,29 @@ module ActiveMerchant #:nodoc:
         )
       end
 
+      def headers(params)
+        processing_type = params[:processing_type]
+        commit_headers = { 'x-ebanx-client-user-agent': "ActiveMerchant/#{ActiveMerchant::VERSION}" }
+
+        add_processing_type_to_commit_headers(commit_headers, processing_type) if processing_type == 'local'
+
+        commit_headers
+      end
+
+      def add_processing_type_to_commit_headers(commit_headers, processing_type)
+        commit_headers['x-ebanx-api-processing-type'] = processing_type
+      end
+
       def success_from(action, response)
+        payment_status = response.try(:[], 'payment').try(:[], 'status')
+
         if %i[purchase capture refund].include?(action)
-          response.try(:[], 'payment').try(:[], 'status') == 'CO'
+          payment_status == 'CO'
         elsif action == :authorize
-          response.try(:[], 'payment').try(:[], 'status') == 'PE'
+          payment_status == 'PE'
         elsif action == :void
-          response.try(:[], 'payment').try(:[], 'status') == 'CA'
-        elsif action == :store
+          payment_status == 'CA'
+        elsif %i[store inquire].include?(action)
           response.try(:[], 'status') == 'SUCCESS'
         else
           false
@@ -258,7 +282,11 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(action, parameters, response)
         if action == :store
-          "#{response.try(:[], 'token')}|#{CARD_BRAND[parameters[:payment_type_code].to_sym]}"
+          if success_from(action, response)
+            "#{response.try(:[], 'token')}|#{response['payment_type_code']}"
+          else
+            response.try(:[], 'token')
+          end
         else
           response.try(:[], 'payment').try(:[], 'hash')
         end
@@ -278,7 +306,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def requires_http_get(action)
-        return true if %i[capture void].include?(action)
+        return true if %i[capture void inquire].include?(action)
 
         false
       end

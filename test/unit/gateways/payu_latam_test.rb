@@ -13,6 +13,8 @@ class PayuLatamTest < Test::Unit::TestCase
     @no_cvv_visa_card = credit_card('4097440000000004', verification_value: ' ')
     @no_cvv_amex_card = credit_card('4097440000000004', verification_value: ' ', brand: 'american_express')
     @cabal_credit_card = credit_card('5896570000000004', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'cabal')
+    @maestro_card = credit_card('6759000000000000005', verification_value: '123', first_name: 'APPROVED', brand: 'maestro')
+    @codensa_card = credit_card('5907120000000009', verification_value: '123', first_name: 'APPROVED', brand: 'maestro')
 
     @options = {
       dni_number: '5415668464654',
@@ -202,6 +204,31 @@ class PayuLatamTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_phone_number
+    options = @options.merge(billing_address: {}, shipping_address: { phone_number: 5555555555 })
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 5555555555, JSON.parse(data)['transaction']['order']['buyer']['contactPhone']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_card_type_maestro_maps_to_mastercard
+    stub_comms do
+      @gateway.purchase(@amount, @maestro_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'MASTERCARD', JSON.parse(data)['transaction']['paymentMethod']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_card_type_codensa
+    stub_comms do
+      @gateway.purchase(@amount, @codensa_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'CODENSA', JSON.parse(data)['transaction']['paymentMethod']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_verify_good_credentials
     @gateway.expects(:ssl_post).returns(credentials_are_legit_response)
     assert @gateway.verify_credentials
@@ -287,7 +314,7 @@ class PayuLatamTest < Test::Unit::TestCase
         state: 'SP',
         country: 'BR',
         zip: '01019-030',
-        phone: '(11)756312345'
+        phone_number: '(11)756312345'
       ),
       buyer: {
         name: 'Jorge Borges',
@@ -361,7 +388,7 @@ class PayuLatamTest < Test::Unit::TestCase
         state: 'SP',
         country: 'BR',
         zip: '01019-030',
-        phone: '(11)756312633'
+        phone_number: '(11)756312633'
       ),
       buyer: {
         cnpj: '32593371000110'
@@ -396,7 +423,7 @@ class PayuLatamTest < Test::Unit::TestCase
         state: 'Bogota DC',
         country: 'CO',
         zip: '01019-030',
-        phone: '(11)756312633'
+        phone_number: '(11)756312633'
       ),
       tx_tax: '3193',
       tx_tax_return_base: '16806'
@@ -430,7 +457,7 @@ class PayuLatamTest < Test::Unit::TestCase
         state: 'Jalisco',
         country: 'MX',
         zip: '01019-030',
-        phone: '(11)756312633'
+        phone_number: '(11)756312633'
       ),
       birth_date: '1985-05-25'
     }
@@ -439,6 +466,16 @@ class PayuLatamTest < Test::Unit::TestCase
       gateway.purchase(@amount, @credit_card, @options.update(options_mexico))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/\"birthdate\":\"1985-05-25\"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_extra_parameters_fields
+    stub_comms(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ extra_1: '123456', extra_2: 'abcdef', extra_3: 'testing' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/\"EXTRA1\":\"123456\"/, data)
+      assert_match(/\"EXTRA2\":\"abcdef\"/, data)
+      assert_match(/\"EXTRA3\":\"testing\"/, data)
     end.respond_with(successful_purchase_response)
   end
 

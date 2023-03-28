@@ -374,6 +374,15 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_scrubbed(credit_card.payment_cryptogram, transcript)
   end
 
+  def test_account_number_scrubbing
+    options = @options.merge(company_name: 'Hot Buttered Toast Incorporated')
+    transcript = capture_transcript(@check_gateway) do
+      @check_gateway.purchase(@check_amount, @check, options)
+    end
+    clean_transcript = @check_gateway.scrub(transcript)
+    assert_scrubbed(@check.account_number, clean_transcript)
+  end
+
   def test_successful_purchase_with_apple_pay_raw_cryptogram_with_eci
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',

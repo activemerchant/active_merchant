@@ -50,6 +50,33 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_match 'The payment was paid', response.message
   end
 
+  def test_successful_purchase_with_network_tokens
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+  end
+
+  def test_successful_purchase_with_network_tokens_and_store_credential_type
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    response = @gateway.purchase(@amount, credit_card, @options.merge!(stored_credential_type: 'SUBSCRIPTION'))
+    assert_success response
+    assert_match 'SUBSCRIPTION', response.params['card']['stored_credential_type']
+    assert_match 'The payment was paid', response.message
+  end
+
+  def test_successful_purchase_with_network_tokens_and_store_credential_usage
+    options = @options.merge!(stored_credential: stored_credential(:merchant, :recurring, ntid: 'abc123'))
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    response = @gateway.purchase(@amount, credit_card, options)
+    assert_success response
+    assert_match 'USED', response.params['card']['stored_credential_usage']
+    assert_match 'The payment was paid', response.message
+  end
+
   def test_successful_purchase_with_installments
     response = @gateway.purchase(@amount, @credit_card, @options_argentina_installments)
     assert_success response
@@ -68,16 +95,67 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_match 'The payment was paid', response.message
   end
 
+  def test_successful_inquire_with_payment_id
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+
+    authorization = response.params['id']
+    response = @gateway.inquire(authorization, @options)
+    assert_success response
+    assert_match 'PAID', response.params['status']
+    assert_match 'The payment was paid.', response.params['status_detail']
+  end
+
+  def test_successful_inquire_with_order_id
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+
+    purchase_payment_id = response.params['id']
+    order_id = response.params['order_id']
+
+    response = @gateway.inquire(nil, { order_id: order_id })
+    check_payment_id = response.params['payment_id']
+    assert_success response
+    assert_match purchase_payment_id, check_payment_id
+  end
+
+  def test_successful_purchase_with_original_order_id
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(original_order_id: '123ABC'))
+    assert_success response
+    assert_match 'The payment was paid', response.message
+    assert_match '123ABC', response.params['original_order_id']
+  end
+
   def test_successful_purchase_with_more_options
     options = @options.merge(
       order_id: '1',
       ip: '127.0.0.1',
+      device_id: '123',
       email: 'joe@example.com',
       birth_date: '03-01-1970',
       document2: '87648987569',
       idempotency_key: generate_unique_id,
       user_reference: generate_unique_id
     )
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+  end
+
+  def test_successful_purchase_with_additional_data
+    options = @options.merge(
+      additional_data: { submerchant: { name: 'socks' } }
+    )
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+  end
+
+  def test_successful_purchase_with_force_type_debit
+    options = @options.merge(force_type: 'DEBIT')
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
@@ -117,6 +195,14 @@ class RemoteDLocalTest < Test::Unit::TestCase
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @credit_card, @options.merge(description: '300'))
+    assert_failure response
+    assert_match 'The payment was rejected', response.message
+  end
+
+  def test_failed_purchase_with_network_tokens
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    response = @gateway.purchase(@amount, credit_card, @options.merge(description: '300'))
     assert_failure response
     assert_match 'The payment was rejected', response.message
   end
@@ -214,13 +300,15 @@ class RemoteDLocalTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match %r{The payment was authorized}, response.message
+    assert_equal 0, response.params['amount']
+    assert_match %r{The payment was verified}, response.message
   end
 
   def test_successful_verify_with_cabal
     response = @gateway.verify(@cabal_credit_card, @options)
     assert_success response
-    assert_match %r{The payment was authorized}, response.message
+    assert_equal 0, response.params['amount']
+    assert_match %r{The payment was verified}, response.message
   end
 
   def test_failed_verify
@@ -247,5 +335,33 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:trans_key], transcript)
+  end
+
+  def test_successful_authorize_with_3ds_v1_options
+    @options[:three_d_secure] = {
+      version: '1.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_match 'The payment was authorized', auth.message
+  end
+
+  def test_successful_authorize_with_3ds_v2_options
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'Y',
+      authentication_response_status: 'Y'
+    }
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_match 'The payment was authorized', auth.message
   end
 end

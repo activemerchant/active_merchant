@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CardConnectGateway < Gateway
-      self.test_url = 'https://fts.cardconnect.com:6443/cardconnect/rest/'
-      self.live_url = 'https://fts.cardconnect.com:8443/cardconnect/rest/'
+      self.test_url = 'https://fts-uat.cardconnect.com/cardconnect/rest/'
+      self.live_url = 'https://fts.cardconnect.com/cardconnect/rest/'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -61,6 +61,8 @@ module ActiveMerchant #:nodoc:
         '60' => STANDARD_ERROR_CODE[:pickup_card]
       }
 
+      SCHEDULED_PAYMENT_TYPES = %w(recurring installment)
+
       def initialize(options = {})
         requires!(options, :merchant_id, :username, :password)
         require_valid_domain!(options, :domain)
@@ -87,8 +89,9 @@ module ActiveMerchant #:nodoc:
           add_currency(post, money, options)
           add_address(post, options)
           add_customer_data(post, options)
-          add_3DS(post, options)
+          add_three_ds_mpi_data(post, options)
           add_additional_data(post, options)
+          add_stored_credential(post, options)
           post[:capture] = 'Y'
           commit('auth', post)
         end
@@ -102,8 +105,9 @@ module ActiveMerchant #:nodoc:
         add_payment(post, payment)
         add_address(post, options)
         add_customer_data(post, options)
-        add_3DS(post, options)
+        add_three_ds_mpi_data(post, options)
         add_additional_data(post, options)
+        add_stored_credential(post, options)
         commit('auth', post)
       end
 
@@ -169,7 +173,7 @@ module ActiveMerchant #:nodoc:
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
           post[:address] = address[:address1] if address[:address1]
-          post[:address].concat(" #{address[:address2]}") if address[:address2]
+          post[:address2] = address[:address2] if address[:address2]
           post[:city] = address[:city] if address[:city]
           post[:region] = address[:state] if address[:state]
           post[:country] = address[:country] if address[:country]
@@ -188,7 +192,11 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:orderid] = options[:order_id]
-        post[:ecomind] = (options[:recurring] ? 'R' : 'E')
+        post[:ecomind] = if options[:ecomind]
+                           options[:ecomind].capitalize
+                         else
+                           (options[:recurring] ? 'R' : 'E')
+                         end
       end
 
       def add_payment(post, payment)
@@ -241,10 +249,20 @@ module ActiveMerchant #:nodoc:
         post[:userfields] = options[:user_fields] if options[:user_fields]
       end
 
-      def add_3DS(post, options)
-        post[:secureflag] = options[:secure_flag] if options[:secure_flag]
-        post[:securevalue] = options[:secure_value] if options[:secure_value]
-        post[:securexid] = options[:secure_xid] if options[:secure_xid]
+      def add_three_ds_mpi_data(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post[:secureflag]  = three_d_secure[:eci]
+        post[:securevalue] = three_d_secure[:cavv]
+        post[:securedstid] = three_d_secure[:ds_transaction_id]
+      end
+
+      def add_stored_credential(post, options)
+        return unless stored_credential = options[:stored_credential]
+
+        post[:cof] = stored_credential[:initiator] == 'merchant' ? 'M' : 'C'
+        post[:cofscheduled] = SCHEDULED_PAYMENT_TYPES.include?(stored_credential[:reason_type]) ? 'Y' : 'N'
+        post[:cofpermission] = stored_credential[:initial_transaction] ? 'Y' : 'N'
       end
 
       def headers

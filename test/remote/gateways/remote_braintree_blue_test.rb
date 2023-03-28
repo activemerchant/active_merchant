@@ -2,7 +2,8 @@ require 'test_helper'
 
 class RemoteBraintreeBlueTest < Test::Unit::TestCase
   def setup
-    @gateway = BraintreeGateway.new(fixtures(:braintree_blue))
+    fixture_key = method_name.match?(/bank_account/i) ? :braintree_blue_with_ach_enabled : :braintree_blue
+    @gateway = BraintreeGateway.new(fixtures(fixture_key))
     @braintree_backend = @gateway.instance_eval { @braintree_gateway }
 
     @amount = 100
@@ -14,6 +15,21 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       order_id: '1',
       billing_address: address(country_name: 'Canada'),
       description: 'Store Purchase'
+    }
+
+    ach_mandate = 'By clicking "Checkout", I authorize Braintree, a service of PayPal, ' \
+      'on behalf of My Company (i) to verify my bank account information ' \
+      'using bank information and consumer reports and (ii) to debit my bank account.'
+
+    @check_required_options = {
+      billing_address: {
+        address1: '1670',
+        address2: '1670 NW 82ND AVE',
+        city: 'Miami',
+        state: 'FL',
+        zip: '32191'
+      },
+      ach_mandate: ach_mandate
     }
   end
 
@@ -65,6 +81,13 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal('5100', response.params['braintree_transaction']['credit_card_details']['last_4'])
     assert_equal('MasterCard', response.params['braintree_transaction']['credit_card_details']['card_type'])
     assert_equal('510510', response.params['braintree_transaction']['credit_card_details']['bin'])
+  end
+
+  def test_successful_setup_purchase
+    assert response = @gateway.setup_purchase
+    assert_success response
+    assert_equal 'Client token created', response.message
+    assert_not_nil response.params['client_token']
   end
 
   def test_successful_authorize_with_order_id
@@ -178,6 +201,36 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_paypal_options
+    options = @options.merge(
+      paypal_custom_field: 'abc',
+      paypal_description: 'shoes'
+    )
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+  end
+
+  # Follow instructions found at https://developer.paypal.com/braintree/articles/guides/payment-methods/venmo#multiple-profiles
+  # for sandbox control panel https://sandbox.braintreegateway.com/login to create a venmo profile.
+  # Insert your Profile Id into fixtures.
+  def test_successful_purchase_with_venmo_profile_id
+    options = @options.merge(venmo_profile_id: fixtures(:braintree_blue)[:venmo_profile_id], payment_method_nonce: 'fake-venmo-account-nonce')
+    assert response = @gateway.purchase(@amount, 'fake-venmo-account-nonce', options)
+    assert_success response
+  end
+
+  def test_successful_partial_capture
+    options = @options.merge(venmo_profile_id: fixtures(:braintree_blue)[:venmo_profile_id], payment_method_nonce: 'fake-venmo-account-nonce')
+    assert auth = @gateway.authorize(@amount, 'fake-venmo-account-nonce', options)
+    assert_success auth
+    assert_equal '1000 Approved', auth.message
+    assert auth.authorization
+    assert capture_one = @gateway.capture(50, auth.authorization, { partial_capture: true })
+    assert_success capture_one
+    assert capture_two = @gateway.capture(50, auth.authorization, { partial_capture: true })
+    assert_success capture_two
+  end
+
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
@@ -197,6 +250,14 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_match 'OK', response.message
     assert_equal 'M', response.cvv_result['code']
     assert_equal 'P', response.avs_result['code']
+  end
+
+  def test_failed_credit_card_verification
+    credit_card = credit_card('378282246310005', verification_value: '544')
+
+    assert response = @gateway.verify(credit_card, @options.merge({ allow_card_verification: true }))
+    assert_failure response
+    assert_match 'CVV must be 4 digits for American Express and 3 digits for other card types. (81707)', response.message
   end
 
   def test_successful_verify_with_device_data
@@ -580,7 +641,13 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, credit_card('51051051051051000'))
     assert_failure response
     assert_match %r{Credit card number is invalid\. \(81715\)}, response.message
-    assert_equal({ 'processor_response_code' => '91577' }, response.params['braintree_transaction'])
+    assert_equal('91577', response.params['braintree_transaction']['processor_response_code'])
+  end
+
+  def test_unsuccessful_purchase_with_additional_processor_response
+    assert response = @gateway.purchase(204700, @credit_card)
+    assert_failure response
+    assert_equal('2047 : Call Issuer. Pick Up Card.', response.params['braintree_transaction']['additional_processor_response'])
   end
 
   def test_authorize_and_capture
@@ -681,7 +748,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert failed_void = @gateway.void(auth.authorization)
     assert_failure failed_void
     assert_match('Transaction can only be voided if status is authorized', failed_void.message)
-    assert_equal({ 'processor_response_code' => '91504' }, failed_void.params['braintree_transaction'])
+    assert_equal('91504', failed_void.params['braintree_transaction']['processor_response_code'])
   end
 
   def test_failed_capture_with_invalid_transaction_id
@@ -965,6 +1032,202 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success response
     assert_equal '1000 Approved', response.message
     assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+  end
+
+  def test_successful_cardholder_purchase_initial_setup
+    creds_options = { initiator: 'merchant', reason_type: 'recurring_first', initial_transaction: true }
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_not_nil response.params['braintree_transaction']['network_transaction_id']
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+    assert_equal true, response.params['braintree_transaction']['recurring']
+  end
+
+  def test_successful_cardholder_purchase_initial_moto
+    creds_options = { initiator: 'merchant', reason_type: 'moto', initial_transaction: true }
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_not_nil response.params['braintree_transaction']['network_transaction_id']
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+  end
+
+  def test_successful_store_bank_account_with_a_new_customer
+    bank_account = check({ account_number: '1000000000', routing_number: '011000015' })
+    response = @gateway.store(bank_account, @options.merge(@check_required_options))
+
+    assert_success response
+    assert response.params['bank_account_token']
+    assert response.params['verified']
+
+    customer = @braintree_backend.customer.find(response.params['customer_vault_id'])
+    bank_accounts = customer.us_bank_accounts
+    created_bank_account = bank_accounts.first
+
+    assert_equal 1, bank_accounts.size
+    assert created_bank_account.verified
+    assert_equal bank_account.routing_number, created_bank_account.routing_number
+    assert_equal bank_account.account_number[-4..-1], created_bank_account.last_4
+    assert_equal 'checking', created_bank_account.account_type
+    assert_equal 'Jim', customer.first_name
+    assert_equal 'Smith', customer.last_name
+  end
+
+  def test_successful_store_bank_account_with_existing_customer
+    customer_id = generate_unique_id
+    bank_account = check({ account_number: '1000000000', routing_number: '011000015' })
+    response = @gateway.store(bank_account, @options.merge(customer: customer_id).merge(@check_required_options))
+
+    assert response
+    assert_success response
+
+    bank_account = check({ account_number: '1000000001', routing_number: '011000015' })
+    response = @gateway.store(bank_account, @options.merge(customer: customer_id).merge(@check_required_options))
+
+    assert response
+    assert_success response
+
+    customer = @braintree_backend.customer.find(customer_id)
+    bank_accounts = customer.us_bank_accounts
+
+    assert_equal 2, bank_accounts.size
+    assert bank_accounts.first.verified
+    assert bank_accounts.last.verified
+  end
+
+  def test_successful_store_bank_account_with_customer_id_not_in_merchant_account
+    customer_id = generate_unique_id
+    bank_account = check({ account_number: '1000000000', routing_number: '011000015' })
+    response = @gateway.store(bank_account, @options.merge(customer: customer_id).merge(@check_required_options))
+
+    assert response
+    assert_success response
+    assert response.params['bank_account_token']
+    assert response.params['verified']
+    assert_equal response.params['customer_vault_id'], customer_id
+
+    customer = @braintree_backend.customer.find(customer_id)
+    bank_accounts = customer.us_bank_accounts
+    created_bank_account = bank_accounts.first
+
+    assert created_bank_account.verified
+    assert_equal 1, bank_accounts.size
+    assert_equal bank_account.routing_number, created_bank_account.routing_number
+    assert_equal bank_account.account_number[-4..-1], created_bank_account.last_4
+    assert_equal customer_id, customer.id
+    assert_equal 'checking', created_bank_account.account_type
+    assert_equal 'Jim', customer.first_name
+    assert_equal 'Smith', customer.last_name
+  end
+
+  def test_successful_store_business_savings_bank_account
+    customer_id = generate_unique_id
+    bank_account = check({ account_type: 'savings', account_holder_type: 'business', account_number: '1000000000', routing_number: '011000015' })
+    response = @gateway.store(bank_account, @options.merge(customer: customer_id).merge(@check_required_options))
+
+    assert response
+    assert_success response
+
+    customer = @braintree_backend.customer.find(customer_id)
+    bank_accounts = customer.us_bank_accounts
+    created_bank_account = bank_accounts.first
+    assert created_bank_account.verified
+    assert_equal 1, bank_accounts.size
+    assert_equal 'savings', bank_account.account_type
+    assert_equal 'business', (created_bank_account.instance_eval { @ownership_type })
+  end
+
+  def test_unsuccessful_store_an_unverified_bank_account
+    customer_id = generate_unique_id
+    bank_account = check({ account_number: '1000000004', routing_number: '011000015' })
+    options = @options.merge(customer: customer_id).merge(@check_required_options)
+    response = @gateway.store(bank_account, options)
+
+    assert response
+    assert_failure response
+    assert_equal 'verification_status: [processor_declined], processor_response: [2046-Declined]', response.message
+
+    customer = @braintree_backend.customer.find(customer_id)
+    bank_accounts = customer.us_bank_accounts
+    created_bank_account = bank_accounts.first
+
+    refute created_bank_account.verified
+    assert_equal 1, bank_accounts.size
+  end
+
+  def test_sucessful_purchase_using_a_bank_account_token
+    bank_account = check({ account_number: '1000000000', routing_number: '011000015' })
+    response = @gateway.store(bank_account, @options.merge(@check_required_options))
+
+    assert response
+    assert_success response
+    payment_method_token = response.params['bank_account_token']
+    sleep 2
+
+    assert response = @gateway.purchase(@amount, payment_method_token, @options.merge(payment_method_token: true))
+    assert_success response
+    assert_equal '4002 Settlement Pending', response.message
+  end
+
+  def test_successful_purchase_with_the_same_bank_account_several_times
+    bank_account = check({ account_number: '1000000000', routing_number: '011000015' })
+    response = @gateway.store(bank_account, @options.merge(@check_required_options))
+
+    assert response
+    assert_success response
+
+    payment_method_token = response.params['bank_account_token']
+    sleep 2
+
+    # Purchase # 1
+    assert response = @gateway.purchase(@amount, payment_method_token, @options.merge(payment_method_token: true))
+    assert_success response
+    assert_equal '4002 Settlement Pending', response.message
+
+    # Purchase # 2
+    assert response = @gateway.purchase(120, payment_method_token, @options.merge(payment_method_token: true))
+    assert_success response
+    assert_equal '4002 Settlement Pending', response.message
+  end
+
+  def test_successful_purchase_with_processor_authorization_code
+    assert response = @gateway.purchase(@amount, @credit_card)
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_not_nil response.params['braintree_transaction']['processor_authorization_code']
+  end
+
+  def test_unsucessful_purchase_using_a_bank_account_token_not_verified
+    bank_account = check({ account_number: '1000000002', routing_number: '011000015' })
+    response = @gateway.store(bank_account, @options.merge(@check_required_options))
+
+    assert response
+    assert_failure response
+
+    payment_method_token = response.params['bank_account_token']
+    assert response = @gateway.purchase(@amount, payment_method_token, @options.merge(payment_method_token: true))
+
+    assert_failure response
+    assert_equal 'US bank account payment method must be verified prior to transaction. (915172)', response.message
+  end
+
+  def test_unsuccessful_store_with_incomplete_bank_account
+    bank_account = check({ account_type: 'blah',
+                           account_holder_type: 'blah',
+                           account_number: nil,
+                           routing_number: nil,
+                           name: nil })
+
+    response = @gateway.store(bank_account, @options.merge(@check_required_options))
+
+    assert response
+    assert_failure response
+    assert_equal 'cannot be empty', response.message[:account_number].first
+    assert_equal 'cannot be empty', response.message[:routing_number].first
+    assert_equal 'cannot be empty', response.message[:name].first
+    assert_equal 'must be checking or savings', response.message[:account_type].first
+    assert_equal 'must be personal or business', response.message[:account_holder_type].first
   end
 
   private

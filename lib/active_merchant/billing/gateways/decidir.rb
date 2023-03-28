@@ -83,6 +83,11 @@ module ActiveMerchant #:nodoc:
         commit(:post, "payments/#{authorization}/refunds", post)
       end
 
+      def inquire(authorization, options = {})
+        options[:action] = 'inquire'
+        commit(:get, "payments/#{authorization}", nil, options)
+      end
+
       def verify(credit_card, options = {})
         raise ArgumentError, 'Verify is not supported on Decidir gateways unless the preauth_mode option is enabled' unless @options[:preauth_mode]
 
@@ -117,11 +122,11 @@ module ActiveMerchant #:nodoc:
         post[:establishment_name] = options[:establishment_name] if options[:establishment_name]
         post[:fraud_detection] = add_fraud_detection(options[:fraud_detection]) if options[:fraud_detection].present?
         post[:site_id] = options[:site_id] if options[:site_id]
-        post[:sub_payments] = []
 
         add_invoice(post, money, options)
         add_payment(post, credit_card, options)
         add_aggregate_data(post, options) if options[:aggregate_data]
+        add_sub_payments(post, options)
       end
 
       def add_payment_method_id(credit_card, options)
@@ -210,6 +215,22 @@ module ActiveMerchant #:nodoc:
         post[:aggregate_data] = aggregate_data
       end
 
+      def add_sub_payments(post, options)
+        # sub_payments field is required for purchase transactions, even if empty
+        post[:sub_payments] = []
+
+        return unless sub_payments = options[:sub_payments]
+
+        sub_payments.each do |sub_payment|
+          sub_payment_hash = {
+            site_id: sub_payment[:site_id],
+            installments: sub_payment[:installments].to_i,
+            amount: sub_payment[:amount].to_i
+          }
+          post[:sub_payments] << sub_payment_hash
+        end
+      end
+
       def add_fraud_detection(options = {})
         {}.tap do |hsh|
           hsh[:send_to_cs] = options[:send_to_cs] if valid_fraud_detection_option?(options[:send_to_cs]) # true/false
@@ -251,7 +272,7 @@ module ActiveMerchant #:nodoc:
           response = parse(raw_response)
         end
 
-        success = success_from(response)
+        success = success_from(response, options)
         Response.new(
           success,
           message_from(success, response),
@@ -263,7 +284,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(parameters = {})
-        parameters.to_json
+        parameters&.to_json
       end
 
       def parse(body)
@@ -282,15 +303,27 @@ module ActiveMerchant #:nodoc:
         if error = response.dig('status_details', 'error')
           message = "#{error.dig('reason', 'description')} | #{error['type']}"
         elsif response['error_type']
-          message = response['validation_errors'].map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ') if response['validation_errors']
+          if response['validation_errors'].is_a?(Array)
+            message = response['validation_errors'].map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ')
+          elsif response['validation_errors'].is_a?(Hash)
+            errors = response['validation_errors'].map { |k, v| "#{k}: #{v}" }.join(', ')
+            message = "#{response['error_type']} - #{errors}"
+          end
+
           message ||= response['error_type']
         end
 
         message
       end
 
-      def success_from(response)
-        response['status'] == 'approved' || response['status'] == 'pre_approved'
+      def success_from(response, options)
+        status = %w(approved pre_approved)
+
+        if options[:action] == 'inquire'
+          status.include?(response['status']) || response['status'] == 'rejected'
+        else
+          status.include?(response['status'])
+        end
       end
 
       def authorization_from(response)

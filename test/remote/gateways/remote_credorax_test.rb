@@ -6,10 +6,10 @@ class RemoteCredoraxTest < Test::Unit::TestCase
 
     @amount = 100
     @adviser_amount = 1000001
-    @credit_card = credit_card('4176661000001015', verification_value: '281', month: '12', year: '2022')
-    @fully_auth_card = credit_card('5223450000000007', brand: 'mastercard', verification_value: '090', month: '12', year: '2025')
-    @declined_card = credit_card('4176661000001111', verification_value: '681', month: '12', year: '2022')
-    @three_ds_card = credit_card('4761739000060016', verification_value: '212', month: '12', year: '2027')
+    @credit_card = credit_card('4176661000001015', verification_value: '281', month: '12')
+    @fully_auth_card = credit_card('5223450000000007', brand: 'mastercard', verification_value: '090', month: '12')
+    @declined_card = credit_card('4176661000001111', verification_value: '681', month: '12')
+    @three_ds_card = credit_card('4761739000060016', verification_value: '212', month: '12')
     @options = {
       order_id: '1',
       currency: 'EUR',
@@ -44,6 +44,61 @@ class RemoteCredoraxTest < Test::Unit::TestCase
         }
       }
     }
+
+    @apple_pay_card = network_tokenization_credit_card('4176661000001015',
+      month: 10,
+      year: Time.new.year + 2,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      eci: '07',
+      transaction_id: 'abc123',
+      source: :apple_pay)
+
+    @google_pay_card = network_tokenization_credit_card('4176661000001015',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      month: '01',
+      year: Time.new.year + 2,
+      source: :google_pay,
+      transaction_id: '123456789',
+      eci: '07')
+
+    @nt_credit_card = network_tokenization_credit_card('4176661000001015',
+      brand: 'visa',
+      source: :network_token,
+      payment_cryptogram: 'AgAAAAAAosVKVV7FplLgQRYAAAA=')
+  end
+
+  def test_successful_purchase_with_apple_pay
+    response = @gateway.purchase(@amount, @apple_pay_card, @options)
+    assert_success response
+    assert_equal '1', response.params['H9']
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_google_pay
+    response = @gateway.purchase(@amount, @google_pay_card, @options)
+    assert_success response
+    assert_equal '1', response.params['H9']
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_network_token
+    response = @gateway.purchase(@amount, @nt_credit_card, @options)
+    assert_success response
+    assert_equal '1', response.params['H9']
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_transcript_scrubbing_network_tokenization_card
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @apple_pay_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@apple_pay_card.number, transcript)
+    assert_scrubbed(@apple_pay_card.payment_cryptogram, transcript)
   end
 
   def test_invalid_login
@@ -61,6 +116,13 @@ class RemoteCredoraxTest < Test::Unit::TestCase
 
   def test_successful_purchase_and_amount_for_non_decimal_currency
     response = @gateway.purchase(14200, @credit_card, @options.merge(currency: 'JPY'))
+    assert_success response
+    assert_equal '142', response.params['A4']
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_and_amount_for_isk
+    response = @gateway.purchase(14200, @credit_card, @options.merge(currency: 'ISK'))
     assert_success response
     assert_equal '142', response.params['A4']
     assert_equal 'Succeeded', response.message
@@ -331,6 +393,22 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', refund.message
   end
 
+  def test_successful_refund_with_recipient_fields
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    refund_options = {
+      recipient_street_address: 'street',
+      recipient_city: 'chicago',
+      recipient_province_code: '312',
+      recipient_country_code: 'USA'
+    }
+
+    refund = @gateway.refund(@amount, response.authorization, refund_options)
+    assert_success refund
+    assert_equal 'Succeeded', refund.message
+  end
+
   def test_successful_refund_and_void
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -390,12 +468,12 @@ class RemoteCredoraxTest < Test::Unit::TestCase
   end
 
   def test_successful_credit
-    response = @gateway.credit(@amount, @credit_card, @options)
+    response = @gateway.credit(@amount, @credit_card, @options.merge(first_name: 'Test', last_name: 'McTest'))
     assert_success response
     assert_equal 'Succeeded', response.message
   end
 
-  def test_failed_credit
+  def test_failed_credit_with_zero_amount
     response = @gateway.credit(0, @declined_card, @options)
     assert_failure response
     assert_equal 'Invalid amount', response.message
@@ -425,7 +503,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_success purchase
   end
 
-  def test_purchase_using_stored_credential_recurring_mit
+  def test_failed_purchase_using_stored_credential_recurring_mit
     initial_options = stored_credential_options(:merchant, :recurring, :initial)
     assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
     assert_success purchase
@@ -433,6 +511,19 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert network_transaction_id = purchase.params['Z13']
 
     used_options = stored_credential_options(:merchant, :recurring, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_failure purchase
+    assert_match 'Parameter g6 is invalid', purchase.message
+  end
+
+  def test_successful_purchase_using_stored_credential_recurring_mit
+    initial_options = stored_credential_options(:merchant, :recurring, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert_equal '1', purchase.params['A9']
+    assert initial_network_transaction_id = purchase.params['Z50']
+
+    used_options = stored_credential_options(:merchant, :recurring, id: initial_network_transaction_id)
     assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
     assert_success purchase
   end
@@ -454,7 +545,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
     assert_success purchase
     assert_equal '8', purchase.params['A9']
-    assert network_transaction_id = purchase.params['Z13']
+    assert network_transaction_id = purchase.params['Z50']
 
     used_options = stored_credential_options(:merchant, :installment, id: network_transaction_id)
     assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
@@ -478,7 +569,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
     assert_success purchase
     assert_equal '8', purchase.params['A9']
-    assert network_transaction_id = purchase.params['Z13']
+    assert network_transaction_id = purchase.params['Z50']
 
     used_options = stored_credential_options(:merchant, :unscheduled, id: network_transaction_id)
     assert purchase = @gateway.purchase(@amount, @credit_card, used_options)

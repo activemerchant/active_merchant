@@ -42,3 +42,5 @@ jobs:
 
       - name: Test
         run: bundle exec rake test
+      - name: Linter
+        run: bundle exec rubocop

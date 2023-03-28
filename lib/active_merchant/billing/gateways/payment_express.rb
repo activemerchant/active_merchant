@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(payment_source, options = {})
-        request = build_purchase_or_authorization_request(nil, payment_source, options)
+        request = build_purchase_or_authorization_request(100, payment_source, options)
         commit(:validate, request)
       end
 

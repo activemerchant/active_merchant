@@ -27,6 +27,18 @@ class CardStreamTest < Test::Unit::TestCase
       description: 'AM test purchase'
     }
 
+    @visacredit_three_ds_options = {
+      threeds_required: true,
+      three_ds_version: '2.1.0',
+      three_d_secure: {
+        enrolled: 'true',
+        authentication_response_status: 'Y',
+        eci: '05',
+        cavv: 'Y2FyZGluYWxjb21tZXJjZWF1dGg',
+        xid: '362DF058-6061-47F1-A504-CACCBDF422B7'
+      }
+    }
+
     @visacredit_descriptor_options = {
       billing_address: {
         address1: 'Flat 6, Primrose Rise',
@@ -246,6 +258,16 @@ class CardStreamTest < Test::Unit::TestCase
     assert_equal 'APPROVED', response.message
   end
 
+  def test_adding_country_code
+    %i[authorize purchase refund].each do |action|
+      stub_comms do
+        @gateway.send(action, 142, @visacreditcard, @visacredit_options.merge(country_code: 'US'))
+      end.check_request do |_endpoint, data, _headers|
+        assert_match(/&countryCode=US/, data)
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
   def test_hmac_signature_added_to_post
     post_params = "action=SALE&amount=10000&captureDelay=0&cardCVV=356&cardExpiryMonth=12&cardExpiryYear=14&cardNumber=4929421234600821&countryCode=GB&currencyCode=826&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerCountryCode=GB&customerName=Longbob+Longsen&customerPostCode=NN17+8YG+&merchantID=login&orderRef=AM+test+purchase&remoteAddress=1.1.1.1&threeDSRequired=N&transactionUnique=#{@visacredit_options[:order_id]}&type=1"
     expected_signature = Digest::SHA512.hexdigest("#{post_params}#{@gateway.options[:shared_secret]}")
@@ -299,6 +321,40 @@ class CardStreamTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/threeDSRequired=N/, data)
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_3ds2_data
+    stub_comms do
+      @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match(/threeDSRequired=Y/, data)
+      assert_match(/threeDSEnrolled=Y/, data)
+      assert_match(/threeDSAuthenticated=Y/, data)
+      assert_match(/threeDSECI=05/, data)
+      assert_match(/threeDSCAVV=Y2FyZGluYWxjb21tZXJjZWF1dGg/, data)
+      assert_match(/threeDSXID=362DF058-6061-47F1-A504-CACCBDF422B7/, data)
+    end
+  end
+
+  def test_3ds2_not_enrolled
+    stub_comms do
+      @visacredit_three_ds_options[:three_d_secure][:enrolled] = 'false'
+      @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match(/threeDSRequired=Y/, data)
+      assert_match(/threeDSEnrolled=N/, data)
+    end
+  end
+
+  def test_3ds2_not_authenticated
+    stub_comms do
+      @visacredit_three_ds_options[:three_d_secure][:authentication_response_status] = 'N'
+      @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match(/threeDSRequired=Y/, data)
+      assert_match(/threeDSEnrolled=Y/, data)
+      assert_match(/threeDSAuthenticated=N/, data)
+    end
   end
 
   def test_transcript_scrubbing

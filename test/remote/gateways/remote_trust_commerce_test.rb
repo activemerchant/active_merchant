@@ -182,10 +182,39 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert_bad_data_response(response)
   end
 
+  def test_successful_unstore
+    assert store = @gateway.store(@credit_card)
+    assert_equal 'approved', store.params['status']
+    assert response = @gateway.unstore(store.params['billingid'])
+    assert_success response
+  end
+
   def test_unstore_failure
     assert response = @gateway.unstore('does-not-exist')
 
     assert_match %r{A field was longer or shorter than the server allows}, response.message
+    assert_failure response
+  end
+
+  def test_successful_purchase_after_store
+    assert store = @gateway.store(@credit_card)
+    assert_success store
+    assert response = @gateway.purchase(@amount, store.params['billingid'], @options)
+    assert_equal 'Y', response.avs_result['code']
+    assert_match %r{The transaction was successful}, response.message
+  end
+
+  def test_successful_verify
+    assert response = @gateway.verify(@credit_card)
+    assert_equal 'approved', response.params['status']
+    assert_match %r{The transaction was successful}, response.message
+    assert_success response
+  end
+
+  def test_failed_verify_with_invalid_card
+    assert response = @gateway.verify(@declined_credit_card)
+    assert_equal 'baddata', response.params['status']
+    assert_match %r{A field was improperly formatted}, response.message
     assert_failure response
   end
 
@@ -211,6 +240,15 @@ class TrustCommerceTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
+
+  def test_transcript_scrubbing_echeck
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, clean_transcript)
   end
 
   private

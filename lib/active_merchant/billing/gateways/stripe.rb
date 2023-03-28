@@ -23,10 +23,10 @@ module ActiveMerchant #:nodoc:
         'unchecked' => 'P'
       }
 
-      DEFAULT_API_VERSION = '2015-04-07'
+      DEFAULT_API_VERSION = '2020-08-27'
       CONNECTED_ACCOUNT_PREFIX = 'acct_'
 
-      self.supported_countries = %w(AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MT MX NL NO NZ PL PT RO SE SG SI SK US)
+      self.supported_countries = %w(AE AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK HU IE IN IT JP LT LU LV MT MX MY NL NO NZ PL PT RO SE SG SI SK US)
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro unionpay]
@@ -49,7 +49,8 @@ module ActiveMerchant #:nodoc:
         'processing_error' => STANDARD_ERROR_CODE[:processing_error],
         'incorrect_pin' => STANDARD_ERROR_CODE[:incorrect_pin],
         'test_mode_live_card' => STANDARD_ERROR_CODE[:test_mode_live_card],
-        'pickup_card' => STANDARD_ERROR_CODE[:pickup_card]
+        'pickup_card' => STANDARD_ERROR_CODE[:pickup_card],
+        'amount_too_small' => STANDARD_ERROR_CODE[:invalid_amount]
       }
 
       BANK_ACCOUNT_HOLDER_TYPE_MAPPING = {
@@ -145,6 +146,7 @@ module ActiveMerchant #:nodoc:
 
       def void(identification, options = {})
         post = {}
+        post[:reverse_transfer] = options[:reverse_transfer] if options[:reverse_transfer]
         post[:metadata] = options[:metadata] if options[:metadata]
         post[:reason] = options[:reason] if options[:reason]
         post[:expand] = [:charge]
@@ -204,6 +206,7 @@ module ActiveMerchant #:nodoc:
         elsif payment.is_a?(Check)
           bank_token_response = tokenize_bank_account(payment)
           return bank_token_response unless bank_token_response.success?
+
           params = { source: bank_token_response.params['token']['id'] }
         else
           add_creditcard(params, payment, options)
@@ -226,11 +229,11 @@ module ActiveMerchant #:nodoc:
 
               post[:default_card] = r.params['id'] if options[:set_default] && r.success? && !r.params['id'].blank?
 
-              r.process { update_customer(options[:customer], post) } if post.count > 0
+              r.process { update_customer(options[:customer], post.merge(expand: [:sources])) } if post.count > 0
             end
           end
         else
-          post[:expand] = ['sources']
+          post[:expand] = [:sources]
           commit(:post, 'customers', post.merge(params), options)
         end
       end
@@ -283,6 +286,7 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((Authorization: Bearer )\w+), '\1[FILTERED]').
           gsub(%r((&?three_d_secure\[cryptogram\]=)[\w=]*(&?)), '\1[FILTERED]\2').
           gsub(%r(((\[card\]|card)\[cryptogram\]=)[^&]+(&?)), '\1[FILTERED]\3').
           gsub(%r(((\[card\]|card)\[cvc\]=)\d+), '\1[FILTERED]').
@@ -291,11 +295,24 @@ module ActiveMerchant #:nodoc:
           gsub(%r(((\[card\]|card)\[encrypted_pin\]=)[^&]+(&?)), '\1[FILTERED]\3').
           gsub(%r(((\[card\]|card)\[encrypted_pin_key_id\]=)[\w=]+(&?)), '\1[FILTERED]\3').
           gsub(%r(((\[card\]|card)\[number\]=)\d+), '\1[FILTERED]').
-          gsub(%r(((\[card\]|card)\[swipe_data\]=)[^&]+(&?)), '\1[FILTERED]\3')
+          gsub(%r(((\[card\]|card)\[swipe_data\]=)[^&]+(&?)), '\1[FILTERED]\3').
+          gsub(%r(((\[bank_account\]|bank_account)\[account_number\]=)\d+), '\1[FILTERED]').
+          gsub(%r(((\[payment_method_data\]|payment_method_data)\[card\]\[token\]=)[^&]+(&?)), '\1[FILTERED]\3')
       end
 
       def supports_network_tokenization?
         true
+      end
+
+      # Helper method to prevent hitting the external_account limit from remote test runs
+      def delete_latest_test_external_account(account)
+        return unless test?
+
+        auth_header = { 'Authorization' => 'Basic ' + Base64.strict_encode64(options[:login].to_s + ':').strip }
+        url = "#{live_url}accounts/#{CGI.escape(account)}/external_accounts"
+        accounts_response = JSON.parse(ssl_get("#{url}?limit=100", auth_header))
+        to_delete = accounts_response['data'].reject { |ac| ac['default_for_currency'] }
+        ssl_request(:delete, "#{url}/#{to_delete.first['id']}", nil, auth_header)
       end
 
       private
@@ -374,18 +391,20 @@ module ActiveMerchant #:nodoc:
           add_customer_data(post, options)
           post[:description] = options[:description]
           post[:statement_descriptor] = options[:statement_description]
-          post[:statement_descriptor_suffix] = options[:statement_descriptor_suffix]
+          post[:statement_descriptor_suffix] = options[:statement_descriptor_suffix] if options[:statement_descriptor_suffix]
           post[:receipt_email] = options[:receipt_email] if options[:receipt_email]
           add_customer(post, payment, options)
           add_flags(post, options)
         end
 
         add_metadata(post, options)
+        add_shipping_address(post, payment, options)
         add_application_fee(post, options)
         add_exchange_rate(post, options)
         add_destination(post, options)
         add_level_three(post, options)
         add_connected_account(post, options)
+        add_radar_data(post, options)
         post
       end
 
@@ -550,12 +569,28 @@ module ActiveMerchant #:nodoc:
         post[:metadata].merge!(options[:metadata]) if options[:metadata]
         post[:metadata][:email] = options[:email] if options[:email]
         post[:metadata][:order_id] = options[:order_id] if options[:order_id]
-        post.delete(:metadata) if post[:metadata].empty?
       end
 
       def add_emv_metadata(post, creditcard)
         post[:metadata] ||= {}
         post[:metadata][:card_read_method] = creditcard.read_method if creditcard.respond_to?(:read_method)
+      end
+
+      def add_shipping_address(post, payment, options = {})
+        return unless shipping = options[:shipping_address]
+        return unless shipping_name = shipping[:name]
+
+        post[:shipping] = {}
+
+        post[:shipping][:name] = shipping_name
+        post[:shipping][:address] = {}
+        post[:shipping][:address][:line1] = shipping[:address1]
+        post[:shipping][:address][:line2] = shipping[:address2] if shipping[:address2]
+        post[:shipping][:address][:city] = shipping[:city] if shipping[:city]
+        post[:shipping][:address][:country] = shipping[:country] if shipping[:country]
+        post[:shipping][:address][:state] = shipping[:state] if shipping[:state]
+        post[:shipping][:address][:postal_code] = shipping[:zip] if shipping[:zip]
+        post[:shipping][:phone] = shipping[:phone_number] if shipping[:phone_number]
       end
 
       def add_source_owner(post, creditcard, options)
@@ -586,6 +621,14 @@ module ActiveMerchant #:nodoc:
         post[:transfer_data][:amount] = options[:transfer_amount] if options[:transfer_amount]
         post[:transfer_group] = options[:transfer_group] if options[:transfer_group]
         post[:application_fee_amount] = options[:application_fee_amount] if options[:application_fee_amount]
+      end
+
+      def add_radar_data(post, options = {})
+        radar_options = {}
+        radar_options[:session] = options[:radar_session_id] if options[:radar_session_id]
+        radar_options[:skip_rules] = ['all'] if options[:skip_radar_rules]
+
+        post[:radar_options] = radar_options unless radar_options.empty?
       end
 
       def parse(body)
@@ -676,7 +719,6 @@ module ActiveMerchant #:nodoc:
         card = card_from_response(response)
         avs_code = AVS_CODE_TRANSLATOR["line1: #{card['address_line1_check']}, zip: #{card['address_zip_check']}"]
         cvc_code = CVC_CODE_TRANSLATOR[card['cvc_check']]
-
         Response.new(success,
           message_from(success, response),
           response,
@@ -772,7 +814,7 @@ module ActiveMerchant #:nodoc:
             country: 'US',
             currency: 'usd',
             routing_number: bank_account.routing_number,
-            name: bank_account.name,
+            account_holder_name: bank_account.name,
             account_holder_type: account_holder_type
           }
         }

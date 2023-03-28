@@ -317,7 +317,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<[^>]+pan>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<[^>]+sec>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<[^>]+id>)[^<]+(<))i, '\1[FILTERED]\2').
-          gsub(%r((<[^>]+regKey>)[^<]+(<))i, '\1[FILTERED]\2')
+          gsub(%r((<[^>]+regKey>)[^<]+(<))i, '\1[FILTERED]\2').
+          gsub(%r((<[^>]+acctNr>)[^<]+(<))i, '\1[FILTERED]\2')
       end
 
       private
@@ -481,7 +482,7 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML::Document.parse(request)
         merc_nodeset = doc.xpath('//v1:merc', 'v1' => V1_NAMESPACE)
-        merc_nodeset.after "<tranCode>#{TRANSACTION_CODES[action]}</tranCode>"
+        merc_nodeset.after "<v1:tranCode>#{TRANSACTION_CODES[action]}</v1:tranCode>"
         doc.root.to_xml
       end
 

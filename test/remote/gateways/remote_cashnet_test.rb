@@ -22,6 +22,15 @@ class CashnetTest < Test::Unit::TestCase
     assert_equal 'Success', purchase.message
   end
 
+  def test_successful_purchase_with_multiple_items
+    options = @options.merge({ item_codes: { item_code: 'FEE', item_code2: 'LOBSTER', item_code3: 'CODES', amount: 5679, amount2: 1234, amount3: 4321 } })
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, options)
+    assert_success purchase
+    assert purchase.test?
+    assert_equal 'Success', purchase.message
+  end
+
   def test_successful_purchase_and_refund
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -48,6 +57,15 @@ class CashnetTest < Test::Unit::TestCase
     assert_failure response
     assert_match %r{Negative amount is not allowed}, response.message
     assert_equal '5', response.params['result']
+  end
+
+  def test_failed_purchase_with_multiple_items
+    options = @options.merge({ item_codes: { item_code2: 'NONE', amount2: 4321 } })
+
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_failure response
+    assert_match %r{Invalid item code, no code specified}, response.message
+    assert_equal '4', response.params['result']
   end
 
   def test_failed_refund

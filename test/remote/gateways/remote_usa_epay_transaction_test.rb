@@ -3,6 +3,7 @@ require 'test_helper'
 class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   def setup
     @gateway = UsaEpayTransactionGateway.new(fixtures(:usa_epay))
+    @gateway_with_pin = UsaEpayTransactionGateway.new(fixtures(:usa_epay_with_pin))
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
     @credit_card_with_track_data = credit_card_with_track_data('4000100011112224')
@@ -14,6 +15,26 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Success', response.message
+    assert_success response
+  end
+
+  def test_successful_purchase_with_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+
+    payment_token = response.authorization
+    assert response = @gateway.purchase(@amount, payment_token, @options)
+    assert_equal 'Success', response.message
+    assert_success response
+  end
+
+  def test_successful_authorize_with_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+
+    payment_token = response.authorization
+    assert response = @gateway.authorize(@amount, payment_token, @options)
     assert_equal 'Success', response.message
     assert_success response
   end
@@ -107,6 +128,20 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(line_items: line_items))
     assert_equal 'Success', response.message
     assert_success response
+  end
+
+  def test_successful_purchase_with_pin
+    assert response = @gateway_with_pin.purchase(@amount, @credit_card, @options)
+    assert_equal 'Success', response.message
+    assert_success response
+  end
+
+  def test_unsuccessful_purchase_with_bad_pin
+    gateway = UsaEpayTransactionGateway.new(fixtures(:usa_epay_with_pin).merge({ pin: 'bad_pin' }))
+
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Transaction authentication failed', response.message
+    assert_failure response
   end
 
   def test_unsuccessful_purchase

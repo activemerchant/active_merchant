@@ -53,10 +53,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
+        verify_amount = 100
+        verify_amount = options[:amount].to_i if options[:amount]
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(verify_amount, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
+      end
+
+      def inquire(authorization, options = {})
+        commit('inquire', inquire_path(authorization, options), {})
       end
 
       def supports_scrubbing?
@@ -129,6 +135,7 @@ module ActiveMerchant #:nodoc:
 
       def add_additional_data(post, options)
         post[:sponsor_id] = options[:sponsor_id]
+        post[:metadata] = options[:metadata] if options[:metadata]
         post[:device_id] = options[:device_id] if options[:device_id]
         post[:additional_info] = {
           ip_address: options[:ip_address]
@@ -143,7 +150,7 @@ module ActiveMerchant #:nodoc:
           email: options[:email],
           first_name: payment.first_name,
           last_name: payment.last_name
-        }
+        }.merge(options[:payer] || {})
       end
 
       def add_address(post, options)
@@ -191,7 +198,7 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         post[:installments] = options[:installments] ? options[:installments].to_i : 1
         post[:statement_descriptor] = options[:statement_descriptor] if options[:statement_descriptor]
-        post[:external_reference] = options[:order_id] || SecureRandom.hex(16)
+        post[:external_reference] = options[:order_id] || options[:external_reference] || SecureRandom.hex(16)
       end
 
       def add_payment(post, options)
@@ -258,6 +265,10 @@ module ActiveMerchant #:nodoc:
       def commit(action, path, parameters)
         if %w[capture void].include?(action)
           response = parse(ssl_request(:put, url(path), post_data(parameters), headers))
+        elsif action == 'inquire'
+          response = parse(ssl_get(url(path), headers))
+
+          response = response[0]['results'][0] if response.is_a?(Array)
         else
           response = parse(ssl_post(url(path), post_data(parameters), headers(parameters)))
         end
@@ -290,6 +301,15 @@ module ActiveMerchant #:nodoc:
 
       def post_data(parameters = {})
         parameters.clone.tap { |p| p.delete(:device_id) }.to_json
+      end
+
+      def inquire_path(authorization, options)
+        if authorization
+          authorization, = authorization.split('|')
+          "payments/#{authorization}"
+        else
+          "payments/search?external_reference=#{options[:order_id] || options[:external_reference]}"
+        end
       end
 
       def error_code_from(action, response)

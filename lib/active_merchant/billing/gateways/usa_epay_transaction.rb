@@ -16,7 +16,8 @@ module ActiveMerchant #:nodoc:
         refund: 'cc:refund',
         void: 'cc:void',
         void_release: 'cc:void:release',
-        check_purchase: 'check:sale'
+        check_purchase: 'check:sale',
+        store: 'cc:save'
       }
 
       STANDARD_ERROR_CODE_MAPPING = {
@@ -43,14 +44,14 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, credit_card, options = {})
+      def authorize(money, payment, options = {})
         post = {}
 
         add_amount(post, money)
         add_invoice(post, options)
-        add_payment(post, credit_card)
-        unless credit_card.track_data.present?
-          add_address(post, credit_card, options)
+        add_payment(post, payment)
+        unless payment.is_a?(CreditCard) && payment.track_data.present?
+          add_address(post, payment, options)
           add_customer_data(post, options)
         end
         add_split_payments(post, options)
@@ -95,6 +96,12 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money)
         add_test_mode(post, options)
         commit(:refund, post)
+      end
+
+      def store(payment, options = {})
+        post = {}
+        add_payment(post, payment, options)
+        commit(:store, post)
       end
 
       def verify(creditcard, options = {})
@@ -213,6 +220,8 @@ module ActiveMerchant #:nodoc:
         elsif payment.respond_to?(:track_data) && payment.track_data.present?
           post[:magstripe] = payment.track_data
           post[:cardpresent] = true
+        elsif payment.is_a?(String)
+          post[:card]   = payment
         else
           post[:card]   = payment.number
           post[:cvv2]   = payment.verification_value if payment.verification_value?
@@ -299,6 +308,7 @@ module ActiveMerchant #:nodoc:
           status: fields['UMstatus'],
           auth_code: fields['UMauthCode'],
           ref_num: fields['UMrefNum'],
+          card_ref: fields['UMcardRef'],
           batch: fields['UMbatch'],
           avs_result: fields['UMavsResult'],
           avs_result_code: fields['UMavsResultCode'],
@@ -321,7 +331,7 @@ module ActiveMerchant #:nodoc:
         error_code = (STANDARD_ERROR_CODE_MAPPING[response[:error_code]] || STANDARD_ERROR_CODE[:processing_error]) unless approved
         Response.new(approved, message_from(response), response,
           test: test?,
-          authorization: response[:ref_num],
+          authorization: authorization_from(action, response),
           cvv_result: response[:cvv2_result_code],
           avs_result: { code: response[:avs_result_code] },
           error_code: error_code)
@@ -337,13 +347,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def authorization_from(action, response)
+        return (action == :store ? response[:card_ref] : response[:ref_num])
+      end
+
       def post_data(action, parameters = {})
         parameters[:command]  = TRANSACTIONS[action]
         parameters[:key]      = @options[:login]
         parameters[:software] = 'Active Merchant'
         parameters[:testmode] = (@options[:test] ? 1 : 0) unless parameters.has_key?(:testmode)
         seed = SecureRandom.hex(32).upcase
-        hash = Digest::SHA1.hexdigest("#{parameters[:command]}:#{@options[:password]}:#{parameters[:amount]}:#{parameters[:invoice]}:#{seed}")
+        hash = Digest::SHA1.hexdigest("#{parameters[:command]}:#{@options[:pin] || @options[:password]}:#{parameters[:amount]}:#{parameters[:invoice]}:#{seed}")
         parameters[:hash] = "s/#{seed}/#{hash}/n"
 
         parameters.collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join('&')

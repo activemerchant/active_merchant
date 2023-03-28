@@ -17,6 +17,11 @@ module ActiveMerchant #:nodoc:
       SERVICE_TEST_URL = 'https://certservices.elementexpress.com/express.asmx'
       SERVICE_LIVE_URL = 'https://services.elementexpress.com/express.asmx'
 
+      NETWORK_TOKEN_TYPE = {
+        apple_pay: '2',
+        google_pay: '1'
+      }
+
       def initialize(options = {})
         requires!(options, :account_id, :account_token, :application_id, :acceptor_id, :application_name, :application_version)
         super
@@ -80,6 +85,19 @@ module ActiveMerchant #:nodoc:
         end
 
         commit('CreditCardReturn', request, money)
+      end
+
+      def credit(money, payment, options = {})
+        request = build_soap_request do |xml|
+          xml.CreditCardCredit(xmlns: 'https://transaction.elementexpress.com') do
+            add_credentials(xml)
+            add_payment_method(xml, payment)
+            add_transaction(xml, money, options)
+            add_terminal(xml, options)
+          end
+        end
+
+        commit('CreditCardCredit', request, money)
       end
 
       def void(authorization, options = {})
@@ -158,6 +176,8 @@ module ActiveMerchant #:nodoc:
           add_payment_account_id(xml, payment)
         elsif payment.is_a?(Check)
           add_echeck(xml, payment)
+        elsif payment.is_a?(NetworkTokenizationCreditCard)
+          add_network_tokenization_card(xml, payment)
         else
           add_credit_card(xml, payment)
         end
@@ -186,13 +206,20 @@ module ActiveMerchant #:nodoc:
           xml.ReversalType options[:reversal_type] if options[:reversal_type]
           xml.TransactionID options[:trans_id] if options[:trans_id]
           xml.TransactionAmount amount(money.to_i) if money
-          xml.MarketCode 'Default' if money
-          xml.ReferenceNumber options[:order_id] || SecureRandom.hex(20)
-
+          xml.MarketCode market_code(money, options) if options[:market_code] || money
+          xml.ReferenceNumber options[:order_id].present? ? options[:order_id][0, 50] : SecureRandom.hex(20)
+          xml.TicketNumber options[:ticket_number] if options[:ticket_number]
+          xml.MerchantSuppliedTransactionId options[:merchant_supplied_transaction_id] if options[:merchant_supplied_transaction_id]
           xml.PaymentType options[:payment_type] if options[:payment_type]
           xml.SubmissionType options[:submission_type] if options[:submission_type]
           xml.DuplicateCheckDisableFlag options[:duplicate_check_disable_flag].to_s == 'true' ? 'True' : 'False' unless options[:duplicate_check_disable_flag].nil?
+          xml.DuplicateOverrideFlag options[:duplicate_override_flag].to_s == 'true' ? 'True' : 'False' unless options[:duplicate_override_flag].nil?
+          xml.MerchantDescriptor options[:merchant_descriptor] if options[:merchant_descriptor]
         end
+      end
+
+      def market_code(money, options)
+        options[:market_code] || 'Default'
       end
 
       def add_terminal(xml, options)
@@ -226,8 +253,21 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_network_tokenization_card(xml, payment)
+        xml.card do
+          xml.CardNumber payment.number
+          xml.ExpirationMonth format(payment.month, :two_digits)
+          xml.ExpirationYear format(payment.year, :two_digits)
+          xml.CardholderName "#{payment.first_name} #{payment.last_name}"
+          xml.Cryptogram payment.payment_cryptogram
+          xml.ElectronicCommerceIndicator payment.eci if payment.eci.present?
+          xml.WalletType NETWORK_TOKEN_TYPE.fetch(payment.source, '0')
+        end
+      end
+
       def add_address(xml, options)
         if address = options[:billing_address] || options[:address]
+          address[:email] ||= options[:email]
           xml.address do
             xml.BillingAddress1 address[:address1] if address[:address1]
             xml.BillingAddress2 address[:address2] if address[:address2]

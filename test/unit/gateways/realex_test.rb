@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class RealexTest < Test::Unit::TestCase
+  include CommStub
+
   class ActiveMerchant::Billing::RealexGateway
     # For the purposes of testing, lets redefine some protected methods as public.
     public :build_purchase_or_authorization_request, :build_refund_request, :build_void_request,
@@ -114,6 +116,28 @@ class RealexTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
     assert response.test?
+  end
+
+  def test_purchase_passes_stored_credential
+    options = @options.merge({
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'unscheduled',
+        initiator: 'cardholder',
+        network_transaction_id: nil
+      }
+    })
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      stored_credential_params = Nokogiri::XML.parse(data).xpath('//storedcredential')
+
+      assert_equal stored_credential_params.xpath('type').text, 'oneoff'
+      assert_equal stored_credential_params.xpath('initiator').text, 'cardholder'
+      assert_equal stored_credential_params.xpath('sequence').text, 'first'
+      assert_equal stored_credential_params.xpath('srd').text, ''
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_refund
@@ -811,7 +835,6 @@ class RealexTest < Test::Unit::TestCase
     REQUEST
   end
 
-  require 'nokogiri'
   def assert_xml_equal(expected, actual)
     assert_xml_equal_recursive(Nokogiri::XML(expected).root, Nokogiri::XML(actual).root)
   end

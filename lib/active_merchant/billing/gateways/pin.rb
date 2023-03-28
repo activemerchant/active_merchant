@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'AUD'
       self.money_format = :cents
-      self.supported_countries = ['AU']
-      self.supported_cardtypes = %i[visa master american_express]
+      self.supported_countries = %w(AU NZ)
+      self.supported_cardtypes = %i[visa master american_express diners_club discover jcb]
       self.homepage_url = 'http://www.pinpayments.com/'
       self.display_name = 'Pin Payments'
 
@@ -46,6 +46,17 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'customers', post, options)
       end
 
+      # Unstore a customer and associated credit card.
+      def unstore(token)
+        customer_token =
+          if /cus_/.match?(token)
+            get_customer_token(token)
+          else
+            token
+          end
+        commit(:delete, "customers/#{CGI.escape(customer_token)}", {}, {})
+      end
+
       # Refund a transaction
       def refund(money, token, options = {})
         commit(:post, "charges/#{CGI.escape(token)}/refunds", { amount: amount(money) }, options)
@@ -63,6 +74,11 @@ module ActiveMerchant #:nodoc:
       # authorization is currently not supported.
       def capture(money, token, options = {})
         commit(:put, "charges/#{CGI.escape(token)}/capture", { amount: amount(money) }, options)
+      end
+
+      # Voids a previously authorized charge.
+      def void(token, options = {})
+        commit(:put, "charges/#{CGI.escape(token)}/void", {}, options)
       end
 
       # Updates the credit card for the customer.
@@ -190,7 +206,9 @@ module ActiveMerchant #:nodoc:
           body = parse(e.response.body)
         end
 
-        if body['response']
+        if body.nil?
+          no_content_response
+        elsif body['response']
           success_response(body)
         elsif body['error']
           error_response(body)
@@ -220,6 +238,15 @@ module ActiveMerchant #:nodoc:
         )
       end
 
+      def no_content_response
+        Response.new(
+          true,
+          nil,
+          {},
+          test: test?
+        )
+      end
+
       def unparsable_response(raw_response)
         message = 'Invalid JSON response received from Pin Payments. Please contact support@pinpayments.com if you continue to receive this message.'
         message += " (The raw response returned by the API was #{raw_response.inspect})"
@@ -235,7 +262,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        JSON.parse(body)
+        JSON.parse(body) unless body.nil? || body.length == 0
       end
 
       def post_data(parameters = {})

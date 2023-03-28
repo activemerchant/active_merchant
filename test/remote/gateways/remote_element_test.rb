@@ -12,6 +12,28 @@ class RemoteElementTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @google_pay_network_token = network_tokenization_credit_card('4444333322221111',
+      month: '01',
+      year: Time.new.year + 2,
+      first_name: 'Jane',
+      last_name: 'Doe',
+      verification_value: '888',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      eci: '05',
+      transaction_id: '123456789',
+      source: :google_pay)
+
+    @apple_pay_network_token = network_tokenization_credit_card('4895370015293175',
+      month: '10',
+      year: Time.new.year + 2,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      payment_cryptogram: 'CeABBJQ1AgAAAAAgJDUCAAAAAAA=',
+      eci: '07',
+      transaction_id: 'abc123',
+      source: :apple_pay)
   end
 
   def test_successful_purchase
@@ -46,6 +68,12 @@ class RemoteElementTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_shipping_address
     response = @gateway.purchase(@amount, @credit_card, @options.merge(shipping_address: address(address1: 'Shipping')))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_billing_email
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(email: 'test@example.com'))
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -86,8 +114,44 @@ class RemoteElementTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_duplicate_override_flag
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: true))
+    assert_success response
+    assert_equal 'Approved', response.message
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: false))
+    assert_success response
+    assert_equal 'Approved', response.message
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_overrride_flag: 'true'))
+    assert_success response
+    assert_equal 'Approved', response.message
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'xxx'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_terminal_id
     response = @gateway.purchase(@amount, @credit_card, @options.merge(terminal_id: '02'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_merchant_descriptor
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(merchant_descriptor: 'Flowerpot Florists'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_google_pay
+    response = @gateway.purchase(@amount, @google_pay_network_token, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_apple_pay
+    response = @gateway.purchase(@amount, @apple_pay_network_token, @options)
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -143,6 +207,20 @@ class RemoteElementTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, '')
     assert_failure response
     assert_equal 'TransactionID required', response.message
+  end
+
+  def test_successful_credit
+    credit_options = @options.merge({ ticket_number: '1', market_code: 'FoodRestaurant', merchant_supplied_transaction_id: '123' })
+    credit = @gateway.credit(@amount, @credit_card, credit_options)
+
+    assert_success credit
+  end
+
+  def test_failed_credit
+    credit = @gateway.credit(nil, @credit_card, @options)
+
+    assert_failure credit
+    assert_equal 'TransactionAmount required', credit.message
   end
 
   def test_successful_void

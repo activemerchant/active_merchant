@@ -5,7 +5,7 @@ class RemoteVposTest < Test::Unit::TestCase
     @gateway = VposGateway.new(fixtures(:vpos))
 
     @amount = 100000
-    @credit_card = credit_card('5418630110000014', month: 8, year: 2021, verification_value: '258')
+    @credit_card = credit_card('5418630110000014', month: 8, year: 2026, verification_value: '277')
     @declined_card = credit_card('4000300011112220')
     @options = {
       billing_address: address,
@@ -25,6 +25,41 @@ class RemoteVposTest < Test::Unit::TestCase
     assert_equal 'IMPORTE DE LA TRN INFERIOR AL M¿NIMO PERMITIDO', response.message
   end
 
+  def test_successful_refund_using_auth
+    shop_process_id = SecureRandom.random_number(10**15)
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    authorization = purchase.authorization
+
+    assert refund = @gateway.refund(@amount, authorization, @options.merge(shop_process_id: shop_process_id))
+    assert_success refund
+    assert_equal 'Transaccion aprobada', refund.message
+  end
+
+  def test_successful_refund_using_shop_process_id
+    shop_process_id = SecureRandom.random_number(10**15)
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options.merge(shop_process_id: shop_process_id))
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, nil, original_shop_process_id: shop_process_id) # 315300749110268, 21611732218038
+    assert_success refund
+    assert_equal 'Transaccion aprobada', refund.message
+  end
+
+  def test_successful_credit
+    assert credit = @gateway.credit(@amount, @credit_card)
+    assert_success credit
+    assert_equal 'Transaccion aprobada', credit.message
+  end
+
+  def test_failed_credit
+    response = @gateway.credit(@amount, @declined_card)
+    assert_failure response
+    assert_equal 'RefundsServiceError:TIPO DE TRANSACCION NO PERMITIDA PARA TARJETAS EXTRANJERAS', response.message
+  end
+
   def test_successful_void
     shop_process_id = SecureRandom.random_number(10**15)
     options = @options.merge({ shop_process_id: shop_process_id })
@@ -32,9 +67,9 @@ class RemoteVposTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_success purchase
 
-    assert void = @gateway.void(nil, options)
+    assert void = @gateway.void(purchase.authorization, options)
     assert_success void
-    assert_equal 'RollbackSuccessful', void.message
+    assert_equal 'RollbackSuccessful:Transacción Aprobada', void.message
   end
 
   def test_duplicate_void_fails
@@ -44,25 +79,25 @@ class RemoteVposTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_success purchase
 
-    assert void = @gateway.void(nil, options)
+    assert void = @gateway.void(purchase.authorization, options)
     assert_success void
-    assert_equal 'RollbackSuccessful', void.message
+    assert_equal 'RollbackSuccessful:Transacción Aprobada', void.message
 
-    assert duplicate_void = @gateway.void(nil, options)
+    assert duplicate_void = @gateway.void(purchase.authorization, options)
     assert_failure duplicate_void
-    assert_equal 'AlreadyRollbackedError', duplicate_void.message
+    assert_equal 'AlreadyRollbackedError:The payment has already been rollbacked.', duplicate_void.message
   end
 
   def test_failed_void
-    response = @gateway.void('')
+    response = @gateway.void('abc#123')
     assert_failure response
-    assert_equal 'BuyNotFoundError', response.message
+    assert_equal 'BuyNotFoundError:Business Error', response.message
   end
 
   def test_invalid_login
-    gateway = VposGateway.new(private_key: '', public_key: '', commerce: 123, commerce_branch: 45)
+    gateway = VposGateway.new(private_key: '', public_key: '', encryption_key: OpenSSL::PKey::RSA.new(512), commerce: 123, commerce_branch: 45)
 
-    response = gateway.void(nil)
+    response = gateway.void('')
     assert_failure response
     assert_match %r{InvalidPublicKeyError}, response.message
   end

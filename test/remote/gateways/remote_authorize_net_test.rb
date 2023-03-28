@@ -9,6 +9,17 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     @check = check
     @declined_card = credit_card('400030001111222')
 
+    @payment_token = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'dGVzdGNyeXB0b2dyYW1YWFhYWFhYWFhYWFg9PQ==',
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    )
+
     @options = {
       order_id: '1',
       email: 'anet@example.com',
@@ -50,6 +61,26 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_google_pay
+    @payment_token.source = :google_pay
+    response = @gateway.purchase(@amount, @payment_token, @options)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_apple_pay
+    @payment_token.source = :apple_pay
+    response = @gateway.purchase(@amount, @payment_token, @options)
+
     assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
@@ -387,7 +418,63 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
-    assert_success response.responses.last, 'The void should succeed'
+    assert_equal response.responses.count, 2
+  end
+
+  def test_successful_verify_with_no_address
+    @options[:billing_address] = nil
+    response = @gateway.verify(@credit_card, @options)
+
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+    assert_equal response.responses.count, 2
+  end
+
+  def test_successful_verify_with_verify_amount_and_billing_address
+    @options[:verify_amount] = 1
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+    assert_equal response.responses.count, 2
+  end
+
+  def test_successful_verify_after_store_with_custom_verify_amount
+    @options[:verify_amount] = 1
+    assert store = @gateway.store(@credit_card, @options)
+    assert_success store
+    response = @gateway.verify(store.authorization, @options)
+    assert_success response
+    assert_equal response.responses.count, 2
+  end
+
+  def test_successful_verify_with_apple_pay
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: '111111111100cryptogram')
+    response = @gateway.verify(credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
+  def test_successful_verify_with_check
+    response = @gateway.verify(@check, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
+  def test_successful_verify_with_nil_custom_verify_amount
+    @options[:verify_amount] = nil
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
+  def test_verify_tpt_with_custom_verify_amount_and_no_address
+    @options[:verify_amount] = 100
+    assert store = @gateway.store(@credit_card, @options)
+    assert_success store
+    @options[:billing_address] = nil
+    response = @gateway.verify(store.authorization, @options)
+    assert_success response
   end
 
   def test_failed_verify
@@ -825,6 +912,15 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_scrubbed(credit_card.number, transcript)
     assert_scrubbed(credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_account_number_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, clean_transcript)
   end
 
   def test_verify_credentials
