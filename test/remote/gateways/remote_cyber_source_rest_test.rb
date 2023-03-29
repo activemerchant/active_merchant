@@ -87,7 +87,16 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     @options = {
       order_id: generate_unique_id,
       currency: 'USD',
-      email: 'test@cybs.com'
+      email: 'test@cybs.com',
+      billing_address: {
+        name:     'John Doe',
+        address1: '1 Market St',
+        city:     'san francisco',
+        state:    'CA',
+        zip:      '94105',
+        country:  'US',
+        phone:    '4158880000'
+      }
     }
   end
 
@@ -422,5 +431,42 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@amount, @visa_card, options)
     assert purchase = @gateway.purchase(@amount, @visa_card, options.merge(network_transaction_id: auth.network_transaction_id))
     assert_success purchase
+  end
+
+  def test_successful_purchase_with_reconciliation_id
+    options = @options.merge(reconciliation_id: '1936831')
+    assert response = @gateway.purchase(@amount, @visa_card, options)
+    assert_success response
+  end
+
+  def test_successful_authorization_with_reconciliation_id
+    options = @options.merge(reconciliation_id: '1936831')
+    assert response = @gateway.authorize(@amount, @visa_card, options)
+    assert_success response
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_verify_zero_amount
+    @options[:zero_amount_auth] = true
+    response = @gateway.verify(@visa_card, @options)
+    assert_success response
+    assert_match '0.00', response.params['orderInformation']['amountDetails']['authorizedAmount']
+    assert_equal 'AUTHORIZED', response.message
+  end
+
+  def test_successful_bank_account_purchase_with_sec_code
+    options = @options.merge(sec_code: 'WEB')
+    response = @gateway.purchase(@amount, @bank_account, options)
+    assert_success response
+    assert_equal 'PENDING', response.message
+  end
+
+  def test_successful_purchase_with_solution_id
+    ActiveMerchant::Billing::CyberSourceRestGateway.application_id = 'A1000000'
+    assert response = @gateway.purchase(@amount, @visa_card, @options)
+    assert_success response
+    assert !response.authorization.blank?
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
   end
 end
