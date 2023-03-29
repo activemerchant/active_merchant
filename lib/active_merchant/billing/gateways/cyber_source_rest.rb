@@ -399,10 +399,14 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(action, post, http_method = :post)
+      def commit(action, post, http_method = :post, options = {})
+        add_reconciliation_id(post, options)
+        add_sec_code(post, options)
+        add_invoice_number(post, options)
         response = parse(ssl_request(http_method, url(action), post.nil? || post.empty? ? nil : post.to_json, auth_headers(action, post, http_method)))
         succeeded = success_from(action, response, http_method)
         body = action == :delete ? { response_code: response.to_s } : response
+
         Response.new(
           succeeded,
           message_from(body, succeeded, http_method),
@@ -500,8 +504,10 @@ module ActiveMerchant #:nodoc:
 
       def add_business_rules_data(post, payment, options)
         post[:processingInformation][:authorizationOptions] = {}
-        post[:processingInformation][:authorizationOptions][:ignoreAvsResult] = 'true' if options[:ignore_avs].to_s == 'true'
-        post[:processingInformation][:authorizationOptions][:ignoreCvResult] = 'true' if options[:ignore_cvv].to_s == 'true'
+        unless payment.is_a?(NetworkTokenizationCreditCard)
+          post[:processingInformation][:authorizationOptions][:ignoreAvsResult] = 'true' if options[:ignore_avs].to_s == 'true'
+          post[:processingInformation][:authorizationOptions][:ignoreCvResult] = 'true' if options[:ignore_cvv].to_s == 'true'
+        end
       end
 
       def add_mdd_fields(post, options)
