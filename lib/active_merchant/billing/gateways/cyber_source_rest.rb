@@ -144,9 +144,9 @@ module ActiveMerchant #:nodoc:
 
       def build_reference_request(amount, options)
         { clientReferenceInformation: {}, orderInformation: {} }.tap do |post|
+          add_order_id(post, options)
           add_code(post, options)
           add_mdd_fields(post, options)
-          add_order_id(post, options)
           add_amount(post, amount)
           add_partner_solution_id(post)
         end.compact
@@ -404,6 +404,7 @@ module ActiveMerchant #:nodoc:
         add_invoice_number(post, options)
         response = parse(ssl_request(http_method, url(action), post.nil? || post.empty? ? nil : post.to_json, auth_headers(action, post, http_method)))
         succeeded = success_from(action, response, http_method)
+        body = action == :delete ? { response_code: response.to_s } : response
 
         Response.new(
           succeeded,
