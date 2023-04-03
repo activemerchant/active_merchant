@@ -56,6 +56,11 @@ module ActiveMerchant #:nodoc:
         commit(:get, "payment_intents/#{intent_id}", nil, options)
       end
 
+      def create_test_customer
+        response = api_request(:post, 'customers')
+        response['id']
+      end
+
       def confirm_intent(intent_id, payment_method, options = {})
         post = {}
         result = add_payment_method_token(post, payment_method, options)
@@ -236,7 +241,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(payment_method, options = {})
-        create_setup_intent(payment_method, options.merge!(confirm: true))
+        create_setup_intent(payment_method, options.merge!({ confirm: true, verify: true }))
       end
 
       def setup_purchase(money, options = {})
@@ -322,6 +327,8 @@ module ActiveMerchant #:nodoc:
         when String
           extract_token_from_string_and_maybe_add_customer_id(post, payment_method)
         when ActiveMerchant::Billing::CreditCard
+          return create_payment_method_and_extract_token(post, payment_method, options, responses) if options[:verify]
+
           get_payment_method_data_from_card(post, payment_method, options, responses)
         end
       end
