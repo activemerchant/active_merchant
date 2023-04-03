@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteStripeIntentsTest < Test::Unit::TestCase
   def setup
     @gateway = StripePaymentIntentsGateway.new(fixtures(:stripe))
-    @customer = fixtures(:stripe_verified_bank_account)[:customer_id]
+    @customer = @gateway.create_test_customer
     @amount = 2000
     @three_ds_payment_method = 'pm_card_threeDSecure2Required'
     @visa_payment_method = 'pm_card_visa'
@@ -1191,7 +1191,8 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     options = {
       customer: @customer
     }
-    assert verify = @gateway.verify(@visa_payment_method, options)
+    assert verify = @gateway.verify(@visa_card, options)
+    assert_equal 'US', verify.responses[0].params.dig('card', 'country')
     assert_equal 'succeeded', verify.params['status']
   end
 
