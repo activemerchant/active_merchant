@@ -24,7 +24,8 @@ class RemoteEbanxTest < Test::Unit::TestCase
         metadata_2: 'test2'
       },
       tags: EbanxGateway::TAGS,
-      soft_descriptor: 'ActiveMerchant'
+      soft_descriptor: 'ActiveMerchant',
+      email: 'neymar@test.com'
     }
 
     @hiper_card = credit_card('6062825624254001')
@@ -131,6 +132,13 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Invalid card or card type', response.message
     assert_equal 'NOK', response.error_code
+  end
+
+  def test_failed_authorize_no_email
+    response = @gateway.authorize(@amount, @declined_card, @options.except(:email))
+    assert_failure response
+    assert_equal 'Field payment.email is required', response.message
+    assert_equal 'BP-DR-15', response.error_code
   end
 
   def test_successful_partial_capture_when_include_capture_amount_is_not_passed
