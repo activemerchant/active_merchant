@@ -62,6 +62,7 @@ class BorgunTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/MerchantReturnURL&gt;#{@options[:merchant_return_url]}/, data)
       assert_match(/SaleDescription&gt;#{@options[:sale_description]}/, data)
+      assert_match(/TrCurrencyExponent&gt;2/, data)
     end.respond_with(successful_get_3ds_authentication_response)
 
     assert_success response
@@ -76,6 +77,7 @@ class BorgunTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge({ three_ds_message_id: '98324_zzi_1234353' }))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/ThreeDSMessageId&gt;#{@options[:three_ds_message_id]}/, data)
+      assert_match(/TrCurrencyExponent&gt;0/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
