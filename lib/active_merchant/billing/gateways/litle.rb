@@ -279,6 +279,7 @@ module ActiveMerchant #:nodoc:
             doc.litleToken(payment_method)
             doc.expDate(options[:expiration_date]) if options[:expiration_date].present?
             doc.expDate(format_exp_date(options[:basis_expiration_month], options[:basis_expiration_year])) if options[:basis_expiration_month] && options[:basis_expiration_year]
+            doc.cardValidationNum('000') if options[:use_stored_cvn]
           end
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.card do
