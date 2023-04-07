@@ -36,7 +36,11 @@ class RemoteKushkiTest < Test::Unit::TestCase
       metadata: {
         productos: 'bananas',
         nombre_apellido: 'Kirk'
-      }
+      },
+      months: 2,
+      deferred_grace_months: '05',
+      deferred_credit_type: '01',
+      deferred_months: 3
     }
 
     amount = 100 * (

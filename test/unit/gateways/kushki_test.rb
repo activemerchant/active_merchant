@@ -41,7 +41,11 @@ class KushkiTest < Test::Unit::TestCase
       metadata: {
         productos: 'bananas',
         nombre_apellido: 'Kirk'
-      }
+      },
+      months: 2,
+      deferred_grace_months: '05',
+      deferred_credit_type: '01',
+      deferred_months: 3
     }
 
     amount = 100 * (
@@ -58,6 +62,10 @@ class KushkiTest < Test::Unit::TestCase
       @gateway.purchase(amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       assert_includes data, 'metadata'
+      assert_includes data, 'months'
+      assert_includes data, 'deferred_grace_month'
+      assert_includes data, 'deferred_credit_type'
+      assert_includes data, 'deferred_months'
     end.respond_with(successful_token_response, successful_charge_response)
 
     assert_success response
