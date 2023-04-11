@@ -173,7 +173,7 @@ class IpgTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'DECLINED', response.message
+    assert_match 'DECLINED', response.message
   end
 
   def test_successful_authorize
@@ -194,7 +194,7 @@ class IpgTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options.merge!({ order_id: 'ORD03' }))
     assert_failure response
-    assert_equal 'FAILED', response.message
+    assert_match 'FAILED', response.message
   end
 
   def test_successful_capture
@@ -215,7 +215,7 @@ class IpgTest < Test::Unit::TestCase
 
     response = @gateway.capture(@amount, '123', @options)
     assert_failure response
-    assert_equal 'FAILED', response.message
+    assert_match 'FAILED', response.message
   end
 
   def test_successful_refund
@@ -236,7 +236,7 @@ class IpgTest < Test::Unit::TestCase
 
     response = @gateway.refund(@amount, '123', @options)
     assert_failure response
-    assert_equal 'FAILED', response.message
+    assert_match 'FAILED', response.message
   end
 
   def test_successful_void
@@ -257,7 +257,7 @@ class IpgTest < Test::Unit::TestCase
 
     response = @gateway.void('', @options)
     assert_failure response
-    assert_equal 'FAILED', response.message
+    assert_match 'FAILED', response.message
   end
 
   def test_successful_verify
@@ -330,6 +330,16 @@ class IpgTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_message_from_just_with_transaction_result
+    am_response = { TransactionResult: 'success !' }
+    assert_equal 'success !', @gateway.send(:message_from, am_response)
+  end
+
+  def test_message_from_with_an_error
+    am_response = { TransactionResult: 'DECLINED', ErrorMessage: 'CODE: this is an error message' }
+    assert_equal 'DECLINED, this is an error message', @gateway.send(:message_from, am_response)
   end
 
   private

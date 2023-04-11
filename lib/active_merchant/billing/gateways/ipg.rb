@@ -396,7 +396,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response[:TransactionResult]
+        [response[:TransactionResult], response[:ErrorMessage]&.split(':')&.last&.strip].compact.join(', ')
       end
 
       def authorization_from(action, response)
