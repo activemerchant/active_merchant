@@ -337,10 +337,7 @@ class CheckoutV2Test < Test::Unit::TestCase
         card_on_file: true,
         transaction_indicator: 2,
         previous_charge_id: 'pay_123',
-        processing_channel_id: 'pc_123',
-        marketplace: {
-          sub_entity_id: 'ent_123'
-        }
+        processing_channel_id: 'pc_123'
       }
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_method, _endpoint, data, _headers|
@@ -348,7 +345,6 @@ class CheckoutV2Test < Test::Unit::TestCase
       assert_match(%r{"payment_type":"Recurring"}, data)
       assert_match(%r{"previous_payment_id":"pay_123"}, data)
       assert_match(%r{"processing_channel_id":"pc_123"}, data)
-      assert_match(/"marketplace\":{\"sub_entity_id\":\"ent_123\"}/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -787,6 +783,26 @@ class CheckoutV2Test < Test::Unit::TestCase
 
   def test_supported_countries
     assert_equal %w[AD AE AR AT AU BE BG BH BR CH CL CN CO CY CZ DE DK EE EG ES FI FR GB GR HK HR HU IE IS IT JO JP KW LI LT LU LV MC MT MX MY NL NO NZ OM PE PL PT QA RO SA SE SG SI SK SM TR US], @gateway.supported_countries
+  end
+
+  def test_add_shipping_address
+    options = {
+      shipping_address: address()
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['shipping']['address']['address_line1'], options[:shipping_address][:address1]
+      assert_equal request['shipping']['address']['address_line2'], options[:shipping_address][:address2]
+      assert_equal request['shipping']['address']['city'], options[:shipping_address][:city]
+      assert_equal request['shipping']['address']['state'], options[:shipping_address][:state]
+      assert_equal request['shipping']['address']['country'], options[:shipping_address][:country]
+      assert_equal request['shipping']['address']['zip'], options[:shipping_address][:zip]
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
   end
 
   private

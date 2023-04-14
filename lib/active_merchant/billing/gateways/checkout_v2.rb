@@ -49,6 +49,7 @@ module ActiveMerchant #:nodoc:
         post[:capture_type] = options[:capture_type] || 'Final'
         add_invoice(post, amount, options)
         add_customer_data(post, options)
+        add_shipping_address(post, options)
         add_metadata(post, options)
 
         commit(:capture, post, options, authorization)
@@ -121,6 +122,7 @@ module ActiveMerchant #:nodoc:
             add_payment_method(post, token, options)
             post.merge!(post.delete(:source))
             add_customer_data(post, options)
+            add_shipping_address(post, options)
             r.process { commit(:store, post, options) }
           end
         end
@@ -137,6 +139,7 @@ module ActiveMerchant #:nodoc:
         add_authorization_type(post, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
+        add_shipping_address(post, options)
         add_stored_credential_options(post, options)
         add_transaction_data(post, options)
         add_3ds(post, options)
@@ -233,6 +236,19 @@ module ActiveMerchant #:nodoc:
           post[:source][:billing_address][:state] = address[:state] unless address[:state].blank?
           post[:source][:billing_address][:country] = address[:country] unless address[:country].blank?
           post[:source][:billing_address][:zip] = address[:zip] unless address[:zip].blank?
+        end
+      end
+
+      def add_shipping_address(post, options)
+        if address = options[:shipping_address]
+          post[:shipping] = {}
+          post[:shipping][:address] = {}
+          post[:shipping][:address][:address_line1] = address[:address1] unless address[:address1].blank?
+          post[:shipping][:address][:address_line2] = address[:address2] unless address[:address2].blank?
+          post[:shipping][:address][:city] = address[:city] unless address[:city].blank?
+          post[:shipping][:address][:state] = address[:state] unless address[:state].blank?
+          post[:shipping][:address][:country] = address[:country] unless address[:country].blank?
+          post[:shipping][:address][:zip] = address[:zip] unless address[:zip].blank?
         end
       end
 
