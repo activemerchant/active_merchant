@@ -1,6 +1,10 @@
+require 'active_merchant/billing/gateways/ebanx/ebanx_v2'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class EbanxGateway < Gateway
+      include EbanxV2
+
       self.test_url = 'https://sandbox.ebanxpay.com/ws/'
       self.live_url = 'https://api.ebanxpay.com/ws/'
 
@@ -142,6 +146,9 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_integration_key(post)
+        get_gateway_version(post)
+        return if @gateway_version == 'v2'
+
         post[:integration_key] = @options[:integration_key].to_s
       end
 
@@ -246,6 +253,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(params)
+        return new_headers(params) if @gateway_version == 'v2'
+
         processing_type = params[:processing_type]
         commit_headers = { 'x-ebanx-client-user-agent': "ActiveMerchant/#{ActiveMerchant::VERSION}" }
 
@@ -295,11 +304,15 @@ module ActiveMerchant #:nodoc:
       def post_data(action, parameters = {})
         return nil if requires_http_get(action)
         return convert_to_url_form_encoded(parameters) if action == :refund
-
-        "request_body=#{parameters.to_json}"
+        if @gateway_version == 'v2'
+          "#{parameters.to_json}"
+        else
+          "request_body=#{parameters.to_json}"
+        end 
       end
 
       def url_for(hostname, action, parameters)
+        return url_for_v2 if @gateway_v2 == 'v2'
         return "#{hostname}#{URL_MAP[action]}?#{convert_to_url_form_encoded(parameters)}" if requires_http_get(action)
 
         "#{hostname}#{URL_MAP[action]}"

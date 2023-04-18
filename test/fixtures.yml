@@ -323,7 +323,10 @@ direc_pay:
 
 # Working credentials, no need to replace
 ebanx:
-  integration_key: 1231000
+  integration_key: test_ik_EXeKqadSh7RG79Ou-udqxQ
+
+ebanx_v2:
+  integration_key: test_ik_8siRsfSaYc0UZozPfMD2ug
 
 efsnet:
   login: X

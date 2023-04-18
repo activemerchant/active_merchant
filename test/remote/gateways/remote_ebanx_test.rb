@@ -3,6 +3,7 @@ require 'test_helper'
 class RemoteEbanxTest < Test::Unit::TestCase
   def setup
     @gateway = EbanxGateway.new(fixtures(:ebanx))
+    @gateway_v2 = EbanxGateway.new(fixtures(:ebanx_v2))
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
@@ -34,6 +35,12 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_successful_purchase_v2
+    response = @gateway_v2.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Accepted', response.message
   end
