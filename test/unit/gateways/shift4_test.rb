@@ -360,9 +360,11 @@ class Shift4Test < Test::Unit::TestCase
   def test_setup_access_token_should_rise_an_exception_under_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_auth_response)
 
-    assert_raises(ArgumentError) do
+    error = assert_raises(ActiveMerchant::OAuthResponseError) do
       @gateway.setup_access_token
     end
+
+    assert_match(/Failed with  AuthToken not valid ENGINE22CE/, error.message)
   end
 
   def test_setup_access_token_should_successfully_extract_the_token_from_response
@@ -1012,6 +1014,24 @@ class Shift4Test < Test::Unit::TestCase
             "error": {
               "longText": "AuthToken not valid ENGINE22CE",
               "primaryCode": 9862,
+              "secondaryCode": 4,
+              "shortText ": "AuthToken"
+            },
+            "server": {
+              "name": "UTGAPI03CE"
+            }
+          }
+        ]
+      }
+    RESPONSE
+  end
+
+  def failed_auth_response_no_message
+    <<-RESPONSE
+      {
+        "result": [
+          {
+            "error": {
               "secondaryCode": 4,
               "shortText ": "AuthToken"
             },

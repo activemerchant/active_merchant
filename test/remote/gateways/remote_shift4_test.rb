@@ -243,6 +243,13 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert_include response.message, 'Invoice Not Found'
   end
 
+  def test_failed_access_token
+    gateway = Shift4Gateway.new({ client_guid: 'YOUR_CLIENT_ID', auth_token: 'YOUR_AUTH_TOKEN' })
+    assert_raises(ActiveMerchant::OAuthResponseError) do
+      gateway.setup_access_token
+    end
+  end
+
   private
 
   def response_result(response)
