@@ -448,10 +448,8 @@ class RemoteMidtransTest < Test::Unit::TestCase
   end
 
   def test_refund_when_rail_not_card_success
-    purchase_response = @gateway.purchase(@amount, {}, @qris_shopeepay_payment_options)
-    assert_success purchase_response
-    options = {rail_code: "SHOPEEPAY"}
-    assert refund_response = @gateway.refund(@amount, purchase_response.authorization, options)
+    options = {rail_code: "SHOPEEPAY", reason: "cx cancelled", refund_transaction_id: "tx_4321" }
+    assert refund_response = @gateway.refund(@amount,"5d3718f7-946f-4064-a2a7-3ed2f66847a8", options)
   end
 
   def test_refund_when_invalid_tx_then_failure
