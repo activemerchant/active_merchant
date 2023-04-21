@@ -224,6 +224,7 @@ module ActiveMerchant #:nodoc:
         post[:additionalData][:adjustAuthorisationData] = options[:adjust_authorisation_data] if options[:adjust_authorisation_data]
         post[:additionalData][:industryUsage] = options[:industry_usage] if options[:industry_usage]
         post[:additionalData][:RequestedTestAcquirerResponseCode] = options[:requested_test_acquirer_response_code] if options[:requested_test_acquirer_response_code] && test?
+        post[:additionalData][:manualCapture ] = options[:manual_capture] if options[:manual_capture]
         post[:deviceFingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
         add_shopper_data(post, options)
         add_risk_data(post, options)
