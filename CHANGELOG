@@ -2,6 +2,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.128.0 (April 24th, 2023)
 * CheckoutV2: Add support for Shipping Address [nicolas-maalouf-cko] #4755
 * Element: Include Apple Pay - Google pay methods [jherrera] #4647
 * dLocal: Add transaction query API(s) request [almalee24] #4584
