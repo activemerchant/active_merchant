@@ -184,6 +184,33 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_match('google_pay', auth.params.dig('charges', 'data')[0]['payment_method_details']['card']['wallet']['type'])
   end
 
+  def test_successful_purchase_with_google_pay
+    options = {
+      currency: 'GBP'
+    }
+
+    purchase = @gateway.purchase(@amount, @google_pay, options)
+
+    assert_match('android_pay', purchase.responses.first.params.dig('token', 'card', 'tokenization_method'))
+    assert purchase.success?
+    assert_match('google_pay', purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['wallet']['type'])
+  end
+
+  def test_successful_purchase_with_google_pay_when_sending_the_billing_address
+    options = {
+      currency: 'GBP',
+      billing_address: address
+    }
+
+    purchase = @gateway.purchase(@amount, @google_pay, options)
+
+    assert_match('android_pay', purchase.responses.first.params.dig('token', 'card', 'tokenization_method'))
+    billing_address_line1 = purchase.responses.first.params.dig('token', 'card', 'address_line1')
+    assert_equal '456 My Street', billing_address_line1
+    assert purchase.success?
+    assert_match('google_pay', purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['wallet']['type'])
+  end
+
   def test_successful_purchase_with_apple_pay
     options = {
       currency: 'GBP'
@@ -191,6 +218,20 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     purchase = @gateway.purchase(@amount, @apple_pay, options)
     assert_match('apple_pay', purchase.responses.first.params.dig('token', 'card', 'tokenization_method'))
+    assert purchase.success?
+    assert_match('apple_pay', purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['wallet']['type'])
+  end
+
+  def test_successful_purchase_with_apple_pay_when_sending_the_billing_address
+    options = {
+      currency: 'GBP',
+      billing_address: address
+    }
+
+    purchase = @gateway.purchase(@amount, @apple_pay, options)
+    assert_match('apple_pay', purchase.responses.first.params.dig('token', 'card', 'tokenization_method'))
+    billing_address_line1 = purchase.responses.first.params.dig('token', 'card', 'address_line1')
+    assert_equal '456 My Street', billing_address_line1
     assert purchase.success?
     assert_match('apple_pay', purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['wallet']['type'])
   end

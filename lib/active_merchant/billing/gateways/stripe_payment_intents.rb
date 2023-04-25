@@ -358,6 +358,7 @@ module ActiveMerchant #:nodoc:
             cryptogram: payment.payment_cryptogram
           }
         }
+        add_billing_address_for_card_tokenization(post, options) if %i(apple_pay android_pay).include?(tokenization_method)
         token_response = api_request(:post, 'tokens', post, options)
         success = token_response['error'].nil?
         if success && token_response['id']
@@ -472,6 +473,17 @@ module ActiveMerchant #:nodoc:
         post[:setup_future_usage] = options[:setup_future_usage] if %w(on_session off_session).include?(options[:setup_future_usage])
         post[:off_session] = options[:off_session] if off_session_request?(options)
         post
+      end
+
+      def add_billing_address_for_card_tokenization(post, options = {})
+        return unless (billing = options[:billing_address] || options[:address])
+
+        post[:card][:address_city] = billing[:city] if billing[:city]
+        post[:card][:address_country] = billing[:country] if billing[:country]
+        post[:card][:address_line1] = billing[:address1] if billing[:address1]
+        post[:card][:address_line2] = billing[:address2] if billing[:address2]
+        post[:card][:address_zip] = billing[:zip] if billing[:zip]
+        post[:card][:address_state] = billing[:state] if billing[:state]
       end
 
       def add_billing_address(post, options = {})
