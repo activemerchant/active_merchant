@@ -2,6 +2,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Adyen: update selectedBrand mapping for Google Pay [jcreiff] #4763
 
 == Version 1.128.0 (April 24th, 2023)
 * CheckoutV2: Add support for Shipping Address [nicolas-maalouf-cko] #4755
