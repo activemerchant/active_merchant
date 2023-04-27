@@ -13,7 +13,8 @@ class Shift4Test < Test::Unit::TestCase
       tax: '2',
       customer_reference: 'D019D09309F2',
       destination_postal_code: '94719',
-      product_descriptors: %w(Hamburger Fries Soda Cookie)
+      product_descriptors: %w(Hamburger Fries Soda Cookie),
+      order_id: '123456'
     }
     @customer_address = {
       address1: '123 Street',
@@ -63,6 +64,7 @@ class Shift4Test < Test::Unit::TestCase
       request = JSON.parse(data)
       assert_equal request['clerk']['numericId'], @extra_options[:clerk_id]
       assert_equal request['transaction']['notes'], @extra_options[:notes]
+      assert_equal request['transaction']['vendorReference'], @extra_options[:order_id]
       assert_equal request['amount']['tax'], @extra_options[:tax].to_f
       assert_equal request['amount']['total'], (@amount / 100.0).to_s
       assert_equal request['transaction']['purchaseCard']['customerReference'], @extra_options[:customer_reference]
