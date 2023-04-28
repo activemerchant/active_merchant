@@ -705,8 +705,8 @@ module ActiveMerchant #:nodoc:
       def add_check(xml, check, options)
         xml.tag! 'check' do
           xml.tag! 'accountNumber', check.account_number
-          xml.tag! 'accountType', check.account_type[0]
-          xml.tag! 'bankTransitNumber', check.routing_number
+          xml.tag! 'accountType', check.account_type == 'checking' ? 'C' : 'S'
+          xml.tag! 'bankTransitNumber', format_routing_number(check.routing_number, options)
           xml.tag! 'secCode', options[:sec_code] if options[:sec_code]
         end
       end
@@ -1130,6 +1130,10 @@ module ActiveMerchant #:nodoc:
 
       def eligible_for_zero_auth?(payment_method, options = {})
         payment_method.is_a?(CreditCard) && options[:zero_amount_auth]
+      end
+
+      def format_routing_number(routing_number, options)
+        options[:currency] == 'CAD' && routing_number.length > 8 ? routing_number[-8..-1] : routing_number
       end
     end
   end

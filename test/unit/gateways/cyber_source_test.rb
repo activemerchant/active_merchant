@@ -1462,6 +1462,18 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_equal 'Payment method sodexo is not supported, check https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/CreatingOnlineAuth/CreatingAuthReqPNT.html', error.message
   end
 
+  def test_routing_number_formatting_with_regular_routing_number
+    assert_equal @gateway.send(:format_routing_number, '012345678', { currency: 'USD' }), '012345678'
+  end
+
+  def test_routing_number_formatting_with_canadian_routing_number
+    assert_equal @gateway.send(:format_routing_number, '12345678', { currency: 'USD' }), '12345678'
+  end
+
+  def test_routing_number_formatting_with_canadian_routing_number_and_padding
+    assert_equal @gateway.send(:format_routing_number, '012345678', { currency: 'CAD' }), '12345678'
+  end
+
   private
 
   def options_with_normalized_3ds(
