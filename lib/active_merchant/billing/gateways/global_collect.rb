@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'GlobalCollect'
       self.homepage_url = 'http://www.globalcollect.com/'
 
-      self.test_url = 'https://eu.sandbox.api-ingenico.com'
+      self.test_url = 'https://payment.preprod.direct.worldline-solutions.com'
       self.preproduction_url = 'https://world.preprod.api-ingenico.com'
       self.live_url = 'https://world.api-ingenico.com'
 
@@ -407,7 +407,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def uri(action, authorization)
-        uri = "/v1/#{@options[:merchant_id]}/"
+        uri = "/v2/#{@options[:merchant_id]}/"
         case action
         when :authorize
           uri + 'payments'

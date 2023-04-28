@@ -3,8 +3,8 @@ require 'test_helper'
 class RemoteGlobalCollectTest < Test::Unit::TestCase
   def setup
     @gateway = GlobalCollectGateway.new(fixtures(:global_collect))
-    @gateway_preprod = GlobalCollectGateway.new(fixtures(:global_collect_preprod))
-    @gateway_preprod.options[:url_override] = 'preproduction'
+    # @gateway_preprod = GlobalCollectGateway.new(fixtures(:global_collect_preprod))
+    # @gateway_preprod.options[:url_override] = 'preproduction'
 
     @amount = 100
     @credit_card = credit_card('4567350000427977')
@@ -56,7 +56,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_purchase
+  def test_successful_purchase_2
     response = @gateway.purchase(@accepted_amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
