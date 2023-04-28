@@ -372,6 +372,22 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
+  # To properly run this test couple of test your account needs to be enabled to
+  # handle canadian bank accounts.
+  def test_successful_purchase_with_a_canadian_bank_account_full_number
+    bank_account = check({ account_number: '4100', routing_number: '011000015' })
+    @options[:currency] = 'CAD'
+    assert response = @gateway.purchase(10000, bank_account, @options)
+    assert_successful_response(response)
+  end
+
+  def test_successful_purchase_with_a_canadian_bank_account_8_digit_number
+    bank_account = check({ account_number: '4100', routing_number: '11000015' })
+    @options[:currency] = 'CAD'
+    assert response = @gateway.purchase(10000, bank_account, @options)
+    assert_successful_response(response)
+  end
+
   def test_successful_purchase_with_bank_account_savings_account
     bank_account = check({ account_number: '4100', routing_number: '011000015', account_type: 'savings' })
     assert response = @gateway.purchase(10000, bank_account, @options)

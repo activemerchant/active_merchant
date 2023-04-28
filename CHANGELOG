@@ -10,6 +10,7 @@
 * Stripe PI: Add billing address details to Apple Pay and Google Pay tokenization request [BritneyS] #4761
 * Make gem compatible with Ruby 3+ [pi3r] #4768
 * Payu Latam - Update error code method to surface network code [yunnydang] #4773
+* CyberSource: Handling Canadian bank accounts [heavyblade] #4764
 
 == Version 1.128.0 (April 24th, 2023)
 * CheckoutV2: Add support for Shipping Address [nicolas-maalouf-cko] #4755
