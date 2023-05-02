@@ -1,0 +1,10 @@
+---
+onlinePayments.api.integrator: NamastayTest
+onlinePayments.api.endpoint.host: payment.preprod.direct.worldline-solutions.com
+# The following keys are optional and use the given value by default.
+onlinePayments.api.endpoint.scheme: https
+onlinePayments.api.endpoint.port: -1
+onlinePayments.api.connectTimeout: 5
+onlinePayments.api.socketTimeout: 300
+onlinePayments.api.maxConnections: 10
+onlinePayments.api.authorizationType: v1HMAC

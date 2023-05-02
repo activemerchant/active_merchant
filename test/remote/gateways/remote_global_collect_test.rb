@@ -56,7 +56,8 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_purchase_2
+  def test_successful_purchase
+    options = @preprod_options.merge(currency: 'EUR')
     response = @gateway.purchase(@accepted_amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
