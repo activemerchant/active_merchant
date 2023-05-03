@@ -9,7 +9,6 @@
 * Shift4: Add OAuth error [aenand] #4760
 * Stripe PI: Add billing address details to Apple Pay and Google Pay tokenization request [BritneyS] #4761
 * Make gem compatible with Ruby 3+ [pi3r] #4768
-* Mit: Update how payload is delivered to the gateway [alejandrofloresm] #4655
 
 == Version 1.128.0 (April 24th, 2023)
 * CheckoutV2: Add support for Shipping Address [nicolas-maalouf-cko] #4755

@@ -93,7 +93,8 @@ module ActiveMerchant #:nodoc:
         post_to_json_encrypt = encrypt(post_to_json, @options[:key_session])
 
         final_post = '<authorization>' + post_to_json_encrypt + '</authorization><dataID>' + @options[:user] + '</dataID>'
-        json_post = final_post
+        json_post = {}
+        json_post[:payload] = final_post
         commit('sale', json_post)
       end
 
@@ -113,7 +114,8 @@ module ActiveMerchant #:nodoc:
         post_to_json_encrypt = encrypt(post_to_json, @options[:key_session])
 
         final_post = '<capture>' + post_to_json_encrypt + '</capture><dataID>' + @options[:user] + '</dataID>'
-        json_post = final_post
+        json_post = {}
+        json_post[:payload] = final_post
         commit('capture', json_post)
       end
 
@@ -134,7 +136,8 @@ module ActiveMerchant #:nodoc:
         post_to_json_encrypt = encrypt(post_to_json, @options[:key_session])
 
         final_post = '<refund>' + post_to_json_encrypt + '</refund><dataID>' + @options[:user] + '</dataID>'
-        json_post = final_post
+        json_post = {}
+        json_post[:payload] = final_post
         commit('refund', json_post)
       end
 
@@ -146,7 +149,6 @@ module ActiveMerchant #:nodoc:
         ret_transcript = transcript
         auth_origin = ret_transcript[/<authorization>(.*?)<\/authorization>/, 1]
         unless auth_origin.nil?
-          auth_origin = auth_origin.gsub('\n', '')
           auth_decrypted = decrypt(auth_origin, @options[:key_session])
           auth_json = JSON.parse(auth_decrypted)
           auth_json['card'] = '[FILTERED]'
@@ -160,7 +162,6 @@ module ActiveMerchant #:nodoc:
 
         cap_origin = ret_transcript[/<capture>(.*?)<\/capture>/, 1]
         unless cap_origin.nil?
-          cap_origin = cap_origin.gsub('\n', '')
           cap_decrypted = decrypt(cap_origin, @options[:key_session])
           cap_json = JSON.parse(cap_decrypted)
           cap_json['apikey'] = '[FILTERED]'
@@ -172,7 +173,6 @@ module ActiveMerchant #:nodoc:
 
         ref_origin = ret_transcript[/<refund>(.*?)<\/refund>/, 1]
         unless ref_origin.nil?
-          ref_origin = ref_origin.gsub('\n', '')
           ref_decrypted = decrypt(ref_origin, @options[:key_session])
           ref_json = JSON.parse(ref_decrypted)
           ref_json['apikey'] = '[FILTERED]'
@@ -180,6 +180,17 @@ module ActiveMerchant #:nodoc:
           ref_to_json = ref_json.to_json
           ref_tagged = '<refund>' + ref_to_json + '</refund>'
           ret_transcript = ret_transcript.gsub(/<refund>(.*?)<\/refund>/, ref_tagged)
+        end
+
+        res_origin = ret_transcript[/#{Regexp.escape('reading ')}(.*?)#{Regexp.escape('read')}/m, 1]
+        loop do
+          break if res_origin.nil?
+
+          resp_origin = res_origin[/#{Regexp.escape('"')}(.*?)#{Regexp.escape('"')}/m, 1]
+          resp_decrypted = decrypt(resp_origin, @options[:key_session])
+          ret_transcript[/#{Regexp.escape('reading ')}(.*?)#{Regexp.escape('read')}/m, 1] = resp_decrypted
+          ret_transcript = ret_transcript.sub('reading ', 'response: ')
+          res_origin = ret_transcript[/#{Regexp.escape('reading ')}(.*?)#{Regexp.escape('read')}/m, 1]
         end
 
         ret_transcript
@@ -208,7 +219,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        raw_response = ssl_post(live_url, parameters, { 'Content-type' => 'text/plain' })
+        json_str = JSON.generate(parameters)
+        cleaned_str = json_str.gsub('\n', '')
+        raw_response = ssl_post(live_url, cleaned_str, { 'Content-type' => 'application/json' })
         response = JSON.parse(decrypt(raw_response, @options[:key_session]))
 
         Response.new(
