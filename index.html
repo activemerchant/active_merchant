@@ -1,0 +1,143 @@
+<html>
+
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"
+    integrity="sha512-E8QSvWZ0eCLGk4km3hxSsNmGWbLtSCSUcewDQPQWZF6pEU8GlT8a5fF32wOl1i8ftdMhssTrF/OhyGWwonTcXA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<body>
+  <h1>CommerceHub Purchase</h1>
+  <button id="purchase" type="submit">Purchase</button>
+  <script>
+
+    // xxxxxxxxxxxxx Credentials xxxxxxxxxxxxx
+    const apiKey = 'IQm0BA53FlfMgZoq7wOiqYwG7nK9oph0';
+    const secret = 'BAiIigupmK124hN1ShQSAsJ6BYvrTEdbYmR8gjKbxzl';
+    const terminalId = "10000001";
+    const merchantId = "100026000300313";
+
+    const keyId = "6d0b6b63-3658-4c90-b7a4-bffb8a928288";
+    const rsaAsymmerticPublicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvAXCQIoOlYUi2l7lWAL15olK07isPjxR/8uiqPsDc5liYeErVY180WnFAUMtZQrc2T0vg1aZn6cEEfMirJH21Ku/783cZWX2KDFQ+NtVXmJ6LRAEH/NoNkG7L8YIwZIximWBrL38f6NEbtlHSRlcRbxwdVm8BRZfMqk6S1JA+zshpk1E+nsmybtUHpvVowBWjjABcTgKcGsFZbjNobH4z/i3txxjSJyBSxy+TE+9nidQcA2Q37mitXOMh2xxYtwUH4wbrg99KQfqRUO1WeFMeDNVPY2l9H0pF7dE3POTUk86evwXk77JMIFOp7/LslxBZejci8F4kj7UGezVOaUliQIDAQAB"
+    // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+    // Utils
+    const toArrayBuffer = (str) => {
+      const buf = new ArrayBuffer(str.length);
+      const bufView = new Uint8Array(buf);
+      for (let i = 0; i < str.length; i++) {
+        bufView[i] = str.charCodeAt(i);
+      }
+      return buf;
+    };
+
+    const toBase64Encode = (arrayBuffer) => window.btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
+    // RSA Algorithm
+    const asymmerticallyEncrypt = async (base64PubKey, sourceString) => {
+      const keyBuf = toArrayBuffer(window.atob(base64PubKey));
+      const pubKeyDer = await window.crypto.subtle.importKey("spki", keyBuf, {name: "RSA-OAEP", hash: "SHA-256", }, true, ["encrypt"]);
+      const encryptedBlock = await window.crypto.subtle.encrypt({name: "RSA-OAEP", }, pubKeyDer, new TextEncoder().encode(sourceString));
+      return toBase64Encode(encryptedBlock);
+    };
+
+    // Request Signature
+    function Signature(requestBody) {
+      var ClientRequestId = Math.floor((Math.random() * 10000000) + 1);
+
+      var time = new Date().getTime();
+      var rawSignature = apiKey + ClientRequestId + time + requestBody;
+
+      var computedHash = CryptoJS.algo.HMAC.create(CryptoJS.algo.SHA256, secret.toString());
+      computedHash.update(rawSignature);
+      computedHash = computedHash.finalize();
+      var computedHmac = CryptoJS.enc.Base64.stringify(computedHash);
+
+      return {time: time, signature: computedHmac, ClientRequestId: ClientRequestId}
+    }
+
+    async function purchasePayload() {
+      const cardData = {
+        cardData: "4141414141414141",
+        nameOnCard: "Joe Bloggs",
+        expirationMonth: "01",
+        expirationYear: "2024",
+        securityCode: "123"
+      }
+
+      const encryptionBlock = await asymmerticallyEncrypt(rsaAsymmerticPublicKey, Object.values(cardData).join(""));
+      const encoder = new TextEncoder();
+      const encryptionBlockFields = Object.keys(cardData).map(key => `card.${key}:${encoder.encode(cardData[key]).length}`).join(',');
+      const requestBody = {
+        transactionDetails: {
+          captureFlag: true,
+          createToken: false,
+          merchantOrderId: "SddcAGkTNE2ydiJBuXJmCUYIcUeZt",
+          merchantTransactionId: "ScAGkTNE2ydiJBuXJmCUYIcUeZt",
+          merchantInvoiceNumber: "906181428766"
+        },
+        amount: {
+          total: 1.0,
+          currency: "USD"
+        },
+        source: {
+          sourceType: "PaymentCard",
+          encryptionData: {
+            keyId: keyId,
+            encryptionType: "RSA",
+            encryptionBlock: encryptionBlock,
+            encryptionBlockFields: encryptionBlockFields,
+            encryptionTarget: "MANUAL",
+          }
+        },
+        transactionInteraction: {
+          origin: "ECOM",
+          eciIndicator: "CHANNEL_ENCRYPTED",
+          posConditionCode: "CARD_NOT_PRESENT_ECOM",
+          posEntryMode: "MANUAL",
+          additionalPosInformation: {
+            dataEntrySource: "UNSPECIFIED"
+          }
+        },
+        merchantDetails: {
+          terminalId: terminalId,
+          merchantId: merchantId
+        }
+      }
+
+      return requestBody;
+    }
+
+    async function requestPurchase() {
+      const raw = await purchasePayload();
+      const body = JSON.stringify(raw);
+      const signature = Signature(body);
+
+      var myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+      myHeaders.append("Api-Key", apiKey);
+      myHeaders.append("Timestamp", signature.time);
+      myHeaders.append("Client-Request-Id", signature.ClientRequestId);
+      myHeaders.append("Authorization", signature.signature);
+      myHeaders.append("Auth-Token-Type", "HMAC");
+      myHeaders.append("Accept-Language", "en");
+
+      var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: body,
+      };
+
+      fetch("https://cert.api.fiservapps.com/ch/payments/v1/charges", requestOptions)
+        .then(response => response.text())
+        .then(result => console.log(result))
+        .catch(error => console.log('error', error));
+    }
+
+    window.addEventListener("load", () => {
+      document.getElementById("purchase").addEventListener("click", requestPurchase)
+    });
+  </script>
+</body>
+
+</html>
