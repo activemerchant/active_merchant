@@ -345,6 +345,23 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_network_token_purchase_single_request_ignore_avs
+    @gateway.expects(:ssl_post).with do |_host, request_body|
+      assert_match %r'<ignoreAVSResult>true</ignoreAVSResult>', request_body
+      assert_not_match %r'<ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      brand: 'visa',
+      transaction_id: '123',
+      eci: '05',
+      payment_cryptogram: '111111111100cryptogram')
+    options = @options.merge(ignore_avs: true)
+    assert response = @gateway.purchase(@amount, credit_card, options)
+    assert_success response
+  end
+
   def test_successful_credit_cart_purchase_single_request_without_ignore_avs
     @gateway.expects(:ssl_post).with do |_host, request_body|
       assert_not_match %r'<ignoreAVSResult>', request_body
@@ -380,6 +397,23 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
                                                                  ignore_cvv: true
                                                                ))
+    assert_success response
+  end
+
+  def test_successful_network_token_purchase_single_request_ignore_cvv
+    @gateway.expects(:ssl_post).with do |_host, request_body|
+      assert_not_match %r'<ignoreAVSResult>', request_body
+      assert_match %r'<ignoreCVResult>true</ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      brand: 'visa',
+      transaction_id: '123',
+      eci: '05',
+      payment_cryptogram: '111111111100cryptogram')
+    options = @options.merge(ignore_cvv: true)
+    assert response = @gateway.purchase(@amount, credit_card, options)
     assert_success response
   end
 
@@ -824,7 +858,7 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.authorize(@amount, credit_card, @options)
     end.check_request do |_endpoint, body, _headers|
       assert_xml_valid_to_xsd(body)
-      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>111111111100cryptogram</cavv>\n  <commerceIndicator>vbv</commerceIndicator>\n  <xid>111111111100cryptogram</xid>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', body
+      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>111111111100cryptogram</cavv>\n  <commerceIndicator>vbv</commerceIndicator>\n  <xid>111111111100cryptogram</xid>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', body
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -850,7 +884,7 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_auth_with_network_tokenization_for_mastercard
     @gateway.expects(:ssl_post).with do |_host, request_body|
       assert_xml_valid_to_xsd(request_body)
-      assert_match %r'<ucaf>\n  <authenticationData>111111111100cryptogram</authenticationData>\n  <collectionIndicator>2</collectionIndicator>\n</ucaf>\n<ccAuthService run=\"true\">\n  <commerceIndicator>spa</commerceIndicator>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
+      assert_match %r'<ucaf>\n  <authenticationData>111111111100cryptogram</authenticationData>\n  <collectionIndicator>2</collectionIndicator>\n</ucaf>\n<ccAuthService run=\"true\">\n  <commerceIndicator>spa</commerceIndicator>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
       true
     end.returns(successful_purchase_response)
 
@@ -867,7 +901,7 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_auth_with_network_tokenization_for_amex
     @gateway.expects(:ssl_post).with do |_host, request_body|
       assert_xml_valid_to_xsd(request_body)
-      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</cavv>\n  <commerceIndicator>aesk</commerceIndicator>\n  <xid>YW0=\n</xid>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
+      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</cavv>\n  <commerceIndicator>aesk</commerceIndicator>\n  <xid>YW0=\n</xid>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
       true
     end.returns(successful_purchase_response)
 

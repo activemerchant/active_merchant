@@ -413,10 +413,8 @@ module ActiveMerchant #:nodoc:
 
       def add_business_rules_data(post, payment, options)
         post[:processingInformation][:authorizationOptions] = {}
-        unless payment.is_a?(NetworkTokenizationCreditCard)
-          post[:processingInformation][:authorizationOptions][:ignoreAvsResult] = 'true' if options[:ignore_avs].to_s == 'true'
-          post[:processingInformation][:authorizationOptions][:ignoreCvResult] = 'true' if options[:ignore_cvv].to_s == 'true'
-        end
+        post[:processingInformation][:authorizationOptions][:ignoreAvsResult] = 'true' if options[:ignore_avs].to_s == 'true'
+        post[:processingInformation][:authorizationOptions][:ignoreCvResult] = 'true' if options[:ignore_cvv].to_s == 'true'
       end
 
       def add_mdd_fields(post, options)
