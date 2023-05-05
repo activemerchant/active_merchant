@@ -455,7 +455,7 @@ module ActiveMerchant #:nodoc:
         when 'verify_credentials'
           response['error'] || 'FAILED'
         else
-          response['transactionResponse']['errorCode'] || response['transactionResponse']['responseCode'] if response['transactionResponse']
+          response['transactionResponse']['paymentNetworkResponseCode'] || response['transactionResponse']['errorCode'] if response['transactionResponse']
         end
       end
 
