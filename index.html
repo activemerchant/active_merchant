@@ -58,16 +58,22 @@
 
     async function purchasePayload() {
       const cardData = {
-        cardData: "4141414141414141",
+        cardData: "4005550000000019",
         nameOnCard: "Joe Bloggs",
-        expirationMonth: "01",
-        expirationYear: "2024",
+        expirationMonth: "02",
+        expirationYear: "2035",
         securityCode: "123"
       }
+
+      alert(Object.values(cardData).join(""))
 
       const encryptionBlock = await asymmerticallyEncrypt(rsaAsymmerticPublicKey, Object.values(cardData).join(""));
       const encoder = new TextEncoder();
       const encryptionBlockFields = Object.keys(cardData).map(key => `card.${key}:${encoder.encode(cardData[key]).length}`).join(',');
+
+      console.log(encryptionBlock)
+      console.log(encryptionBlockFields)
+
       const requestBody = {
         transactionDetails: {
           captureFlag: true,
@@ -85,7 +91,8 @@
           encryptionData: {
             keyId: keyId,
             encryptionType: "RSA",
-            encryptionBlock: encryptionBlock,
+            // encryptionBlock: encryptionBlock,
+            encryptionBlock: window.prompt("encrypted"),
             encryptionBlockFields: encryptionBlockFields,
             encryptionTarget: "MANUAL",
           }
@@ -94,7 +101,7 @@
           origin: "ECOM",
           eciIndicator: "CHANNEL_ENCRYPTED",
           posConditionCode: "CARD_NOT_PRESENT_ECOM",
-          posEntryMode: "MANUAL",
+          // posEntryMode: "MANUAL",
           additionalPosInformation: {
             dataEntrySource: "UNSPECIFIED"
           }
