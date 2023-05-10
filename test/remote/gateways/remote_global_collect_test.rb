@@ -6,6 +6,9 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     @gateway_preprod = GlobalCollectGateway.new(fixtures(:global_collect_preprod))
     @gateway_preprod.options[:url_override] = 'preproduction'
 
+    @gateway_direct = GlobalCollectGateway.new(fixtures(:global_collect_direct))
+    @gateway_direct.options[:url_override] = 'ogone_direct'
+
     @amount = 100
     @credit_card = credit_card('4567350000427977')
     @naranja_card = credit_card('5895620033330020', brand: 'naranja')
@@ -57,10 +60,11 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    response = @gateway.purchase(@accepted_amount, @credit_card, @options)
+    options = @preprod_options.merge(requires_approval: false, currency: 'EUR')
+    response = @gateway_direct.purchase(@accepted_amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
-    assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
+    assert_equal 'PENDING_CAPTURE', response.params['payment']['status']
   end
 
   def test_successful_purchase_with_naranja
@@ -145,7 +149,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_installments
-    options = @options.merge(number_of_installments: 2)
+    options = @preprod_options.merge(number_of_installments: 2, currency: 'EUR')
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
@@ -188,6 +192,32 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     )
 
     response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_match 'jJ81HADVRtXfCBATEp01CJUAAAA=', response.params['payment']['paymentOutput']['cardPaymentMethodSpecificOutput']['threeDSecureResults']['cavv']
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_via_normalized_3ds2_fields_direct_api
+    options = @options.merge(
+      currency: 'EUR',
+      phone: '5555555555',
+      requires_approval: false,
+      ip: '127.0.0.1',
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '05',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
+        cavv_algorithm: 1,
+        authentication_response_status: 'Y',
+        challenge_indicator: 'no-challenge-requested',
+        flow: 'frictionless'
+      }
+    )
+
+    response = @gateway_direct.purchase(@amount, @credit_card, options)
     assert_success response
     assert_match 'jJ81HADVRtXfCBATEp01CJUAAAA=', response.params['payment']['paymentOutput']['cardPaymentMethodSpecificOutput']['threeDSecureResults']['cavv']
     assert_equal 'Succeeded', response.message
