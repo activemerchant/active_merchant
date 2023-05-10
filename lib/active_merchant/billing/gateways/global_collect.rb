@@ -2,6 +2,8 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class GlobalCollectGateway < Gateway
       class_attribute :preproduction_url
+      class_attribute :ogone_direct_test
+      class_attribute :ogone_direct_live
 
       self.display_name = 'GlobalCollect'
       self.homepage_url = 'http://www.globalcollect.com/'
@@ -9,6 +11,8 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://eu.sandbox.api-ingenico.com'
       self.preproduction_url = 'https://world.preprod.api-ingenico.com'
       self.live_url = 'https://world.api-ingenico.com'
+      self.ogone_direct_test = 'https://payment.preprod.direct.worldline-solutions.com'
+      self.ogone_direct_live = 'https://payment.direct.worldline-solutions.com'
 
       self.supported_countries = %w[AD AE AG AI AL AM AO AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BW BY BZ CA CC CD CF CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HN HR HT HU ID IE IL IM IN IS IT JM JO JP KE KG KH KI KM KN KR KW KY KZ LA LB LC LI LK LR LS LT LU LV MA MC MD ME MF MG MH MK MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PL PN PS PT PW QA RE RO RS RU RW SA SB SC SE SG SH SI SJ SK SL SM SN SR ST SV SZ TC TD TG TH TJ TL TM TN TO TR TT TV TW TZ UA UG US UY UZ VC VE VG VI VN WF WS ZA ZM ZW]
       self.default_currency = 'USD'
@@ -114,7 +118,7 @@ module ActiveMerchant #:nodoc:
         post['order']['references']['invoiceData'] = {
           'invoiceNumber' => options[:invoice]
         }
-        add_airline_data(post, options)
+        add_airline_data(post, options) unless ogone_direct?
         add_lodging_data(post, options)
         add_number_of_installments(post, options) if options[:number_of_installments]
       end
@@ -248,9 +252,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(post, money, options = {})
+        currency_ogone = 'EUR' if ogone_direct?
         post['amountOfMoney'] = {
           'amount' => amount(money),
-          'currencyCode' => options[:currency] || currency(money)
+          'currencyCode' => options[:currency] || currency_ogone || currency(money)
         }
       end
 
@@ -262,7 +267,7 @@ module ActiveMerchant #:nodoc:
         product_id = options[:payment_product_id] || BRAND_MAP[payment.brand]
         specifics_inputs = {
           'paymentProductId' => product_id,
-          'skipAuthentication' => 'true', # refers to 3DSecure
+          'skipAuthentication' => options[:skip_authentication] || 'true', # refers to 3DSecure
           'skipFraudService' => 'true',
           'authorizationMode' => pre_authorization
         }
@@ -377,18 +382,24 @@ module ActiveMerchant #:nodoc:
       def add_external_cardholder_authentication_data(post, options)
         return unless threeds_2_options = options[:three_d_secure]
 
-        authentication_data = {}
-        authentication_data[:acsTransactionId] = threeds_2_options[:acs_transaction_id] if threeds_2_options[:acs_transaction_id]
-        authentication_data[:cavv] = threeds_2_options[:cavv] if threeds_2_options[:cavv]
-        authentication_data[:cavvAlgorithm] = threeds_2_options[:cavv_algorithm] if threeds_2_options[:cavv_algorithm]
-        authentication_data[:directoryServerTransactionId] = threeds_2_options[:ds_transaction_id] if threeds_2_options[:ds_transaction_id]
-        authentication_data[:eci] = threeds_2_options[:eci] if threeds_2_options[:eci]
-        authentication_data[:threeDSecureVersion] = threeds_2_options[:version] if threeds_2_options[:version]
-        authentication_data[:validationResult] = threeds_2_options[:authentication_response_status] if threeds_2_options[:authentication_response_status]
-        authentication_data[:xid] = threeds_2_options[:xid] if threeds_2_options[:xid]
+        authentication_data = {
+          priorThreeDSecureData: { acsTransactionId: threeds_2_options[:acs_transaction_id] }.compact,
+          cavv: threeds_2_options[:cavv],
+          cavvAlgorithm: threeds_2_options[:cavv_algorithm],
+          directoryServerTransactionId: threeds_2_options[:ds_transaction_id],
+          eci: threeds_2_options[:eci],
+          threeDSecureVersion: threeds_2_options[:version] || options[:three_ds_version],
+          validationResult: threeds_2_options[:authentication_response_status],
+          xid: threeds_2_options[:xid],
+          acsTransactionId: threeds_2_options[:acs_transaction_id],
+          flow: threeds_2_options[:flow]
+        }.compact
 
         post['cardPaymentMethodSpecificInput'] ||= {}
         post['cardPaymentMethodSpecificInput']['threeDSecure'] ||= {}
+        post['cardPaymentMethodSpecificInput']['threeDSecure']['merchantFraudRate'] = threeds_2_options[:merchant_fraud_rate]
+        post['cardPaymentMethodSpecificInput']['threeDSecure']['exemptionRequest'] = threeds_2_options[:exemption_request]
+        post['cardPaymentMethodSpecificInput']['threeDSecure']['secureCorporatePayment'] = threeds_2_options[:secure_corporate_payment]
         post['cardPaymentMethodSpecificInput']['threeDSecure']['externalCardholderAuthenticationData'] = authentication_data unless authentication_data.empty?
       end
 
@@ -402,17 +413,28 @@ module ActiveMerchant #:nodoc:
 
       def url(action, authorization)
         return preproduction_url + uri(action, authorization) if @options[:url_override].to_s == 'preproduction'
+        return ogone_direct_url(action, authorization) if ogone_direct?
 
         (test? ? test_url : live_url) + uri(action, authorization)
       end
 
+      def ogone_direct_url(action, authorization)
+        (test? ? ogone_direct_test : ogone_direct_live) + uri(action, authorization)
+      end
+
+      def ogone_direct?
+        @options[:url_override].to_s == 'ogone_direct'
+      end
+
       def uri(action, authorization)
-        uri = "/v1/#{@options[:merchant_id]}/"
+        version = ogone_direct? ? 'v2' : 'v1'
+        uri = "/#{version}/#{@options[:merchant_id]}/"
         case action
         when :authorize
           uri + 'payments'
         when :capture
-          uri + "payments/#{authorization}/approve"
+          capture_name = ogone_direct? ? 'capture' : 'approve'
+          uri + "payments/#{authorization}/#{capture_name}"
         when :refund
           uri + "payments/#{authorization}/refund"
         when :void
@@ -423,7 +445,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def idempotency_key_for_signature(options)
-        "x-gcs-idempotence-key:#{options[:idempotency_key]}" if options[:idempotency_key]
+        "x-gcs-idempotence-key:#{options[:idempotency_key]}" if options[:idempotency_key] && !ogone_direct?
       end
 
       def commit(method, action, post, authorization: nil, options: {})
@@ -461,7 +483,7 @@ module ActiveMerchant #:nodoc:
           'Date' => date
         }
 
-        headers['X-GCS-Idempotence-Key'] = options[:idempotency_key] if options[:idempotency_key]
+        headers['X-GCS-Idempotence-Key'] = options[:idempotency_key] if options[:idempotency_key] && !ogone_direct?
         headers
       end
 
@@ -474,13 +496,13 @@ module ActiveMerchant #:nodoc:
           #{uri(action, authorization)}
         REQUEST
         data = data.each_line.reject { |line| line.strip == '' }.join
-        digest = OpenSSL::Digest.new('sha256')
+        digest = OpenSSL::Digest.new('SHA256')
         key = @options[:secret_api_key]
-        "GCS v1HMAC:#{@options[:api_key_id]}:#{Base64.strict_encode64(OpenSSL::HMAC.digest(digest, key, data))}"
+        "GCS v1HMAC:#{@options[:api_key_id]}:#{Base64.strict_encode64(OpenSSL::HMAC.digest(digest, key, data)).strip}"
       end
 
       def date
-        @date ||= Time.now.gmtime.strftime('%a, %d %b %Y %H:%M:%S %Z') # Must be same in digest and HTTP header
+        @date ||= Time.now.gmtime.strftime('%a, %d %b %Y %H:%M:%S GMT')
       end
 
       def content_type
