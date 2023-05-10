@@ -107,6 +107,11 @@ module ActiveMerchant #:nodoc:
           gsub(%r(("cavv\\?":\\?")\w+), '\1[FILTERED]')
       end
 
+      def asymetrical_encrypt(pub_key, source_string)
+        public_key = OpenSSL::PKey::RSA.new(pub_key)
+        Base64.urlsafe_encode64(public_key.public_encrypt(source_string, OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING))
+      end
+
       private
 
       def add_transaction_interaction(post, options)
@@ -114,7 +119,7 @@ module ActiveMerchant #:nodoc:
         post[:transactionInteraction][:origin] = options[:origin] || 'ECOM'
         post[:transactionInteraction][:eciIndicator] = options[:eci_indicator] || 'CHANNEL_ENCRYPTED'
         post[:transactionInteraction][:posConditionCode] = options[:pos_condition_code] || 'CARD_NOT_PRESENT_ECOM'
-        post[:transactionInteraction][:posEntryMode] = options[:pos_entry_mode] || 'MANUAL'
+        # post[:transactionInteraction][:posEntryMode] = options[:pos_entry_mode] || 'MANUAL'
         post[:transactionInteraction][:additionalPosInformation] = {}
         post[:transactionInteraction][:additionalPosInformation][:dataEntrySource] = options[:data_entry_source] || 'UNSPECIFIED'
       end
@@ -250,8 +255,37 @@ module ActiveMerchant #:nodoc:
         source[:walletType] = payment.source.to_s.upcase
       end
 
+      def build_payment_method_hash(payment_method)
+        payment_data = {}
+        payment_data[:cardData] = payment_method.number
+        payment_data[:nameOnCard] = payment_method.first_name + ' ' + payment_method.last_name
+        payment_data[:expirationMonth] = '02'
+        payment_data[:expirationYear] = '2035'
+        payment_data[:securityCode] = payment_method.verification_value
+        payment_data
+      end
+
+      def build_encrypted_payment_method(payment_method)
+        payment_method_hash = build_payment_method_hash(payment_method)
+        encryption_block = payment_method_hash.values.join
+        encryption_block_fields = payment_method_hash.map { |k, v| "card.#{k}:#{v.length}" }.join(',')
+        public_key = OpenSSL::PKey::RSA.new(File.read('public.key'))
+        encrypted_string = Base64.urlsafe_encode64(public_key.public_encrypt(encryption_block, OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING))
+        require 'pry'; binding.pry
+
+        encryption_data = {}
+        encryption_data[:keyId] = @options[:key_id]
+        encryption_data[:encryptionType] = @options[:encryption_type]
+        encryption_data[:encryptionBlock] = encrypted_string
+        encryption_data[:encryptionBlockFields] = encryption_block_fields
+        encryption_data[:encryptionTarget] = 'MANUAL'
+        encryption_data
+      end
+
       def add_payment(post, payment, options = {})
         source = {}
+        payment = build_encrypted_payment_method(payment)
+
         case payment
         when NetworkTokenizationCreditCard
           add_decrypted_wallet(source, payment, options)
@@ -259,6 +293,9 @@ module ActiveMerchant #:nodoc:
           add_credit_card(source, payment, options)
         when String
           add_payment_token(source, payment, options)
+        when Hash
+          source[:sourceType] = 'PaymentCard'
+          source[:encryptionData] = payment
         end
         post[:source] = source
       end
