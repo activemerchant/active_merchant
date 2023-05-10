@@ -269,9 +269,9 @@ module ActiveMerchant #:nodoc:
         payment_method_hash = build_payment_method_hash(payment_method)
         encryption_block = payment_method_hash.values.join
         encryption_block_fields = payment_method_hash.map { |k, v| "card.#{k}:#{v.length}" }.join(',')
-        public_key = OpenSSL::PKey::RSA.new(File.read('public.key'))
-        encrypted_string = Base64.urlsafe_encode64(public_key.public_encrypt(encryption_block, OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING))
-        require 'pry'; binding.pry
+
+        public_key = OpenSSL::PKey::RSA.new(Base64.decode64(@options[:encoded_public_key]))
+        encrypted_string = Base64.strict_encode64(public_key.public_encrypt(encryption_block, OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING))
 
         encryption_data = {}
         encryption_data[:keyId] = @options[:key_id]

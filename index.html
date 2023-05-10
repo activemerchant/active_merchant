@@ -10,47 +10,14 @@
   <h1>CommerceHub Purchase</h1>
   <button id="purchase" type="submit">Purchase</button>
   <script>
-
-    // xxxxxxxxxxxxx Credentials xxxxxxxxxxxxx
-    const apiKey = 'IQm0BA53FlfMgZoq7wOiqYwG7nK9oph0';
-    const secret = 'BAiIigupmK124hN1ShQSAsJ6BYvrTEdbYmR8gjKbxzl';
+   // xxxxxxxxxxxxx Credentials xxxxxxxxxxxxx
+    const apiKey = 'IQm0xxxx';
+    const secret = 'BAiIxxxxx';
     const terminalId = "10000001";
     const merchantId = "100026000300313";
 
     const keyId = "6d0b6b63-3658-4c90-b7a4-bffb8a928288";
-    // const rsaAsymmerticPublicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvAXCQIoOlYUi2l7lWAL15olK07isPjxR/8uiqPsDc5liYeErVY180WnFAUMtZQrc2T0vg1aZn6cEEfMirJH21Ku/783cZWX2KDFQ+NtVXmJ6LRAEH/NoNkG7L8YIwZIximWBrL38f6NEbtlHSRlcRbxwdVm8BRZfMqk6S1JA+zshpk1E+nsmybtUHpvVowBWjjABcTgKcGsFZbjNobH4z/i3txxjSJyBSxy+TE+9nidQcA2Q37mitXOMh2xxYtwUH4wbrg99KQfqRUO1WeFMeDNVPY2l9H0pF7dE3POTUk86evwXk77JMIFOp7/LslxBZejci8F4kj7UGezVOaUliQIDAQAB"
-    const rsaAsymmerticPublicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0iEqfpLmo987S7Hhsd2blxqGYDf5YPphgE5YtU2mINfsObPRi3h5crxtjh8ADHASljOc9ajKLPJpen9PB+qqd7jZgfIf1+CI/oRKPW1ny71z4KO4PNXKqTIwP/cFvhQXzh6+PSPRHBlKIzPbu84fK7opurqNcndx2OLQiFHbpQMrUz++uEvJ5N99kMGLX6WUnDL8QEwo7t/zer/kxlL1ULLrn6vycBhhrOpO8FiLpL2jp+oixGj5AkqHcHihUGfqm0fAV5lgiwAZNW3X72qJFbp7ot5etcmhScwxzw0irPiMq7G5/NFC7JKPNORwtUBUV6V1acW98JAGxngDe7zksQIDAQAB"
-    const rsaPrivateKey = "MIIEowIBAAKCAQEA0iEqfpLmo987S7Hhsd2blxqGYDf5YPphgE5YtU2mINfsObPRi3h5crxtjh8ADHASljOc9ajKLPJpen9PB+qqd7jZgfIf1+CI/oRKPW1ny71z4KO4PNXKqTIwP/cFvhQXzh6+PSPRHBlKIzPbu84fK7opurqNcndx2OLQiFHbpQMrUz++uEvJ5N99kMGLX6WUnDL8QEwo7t/zer/kxlL1ULLrn6vycBhhrOpO8FiLpL2jp+oixGj5AkqHcHihUGfqm0fAV5lgiwAZNW3X72qJFbp7ot5etcmhScwxzw0irPiMq7G5/NFC7JKPNORwtUBUV6V1acW98JAGxngDe7zksQIDAQABAoIBAGhrMMm7SD+Qs8+WspgHjsTU2oe/6P3HDmKLDEv0LSTPB8VY1T1gfcGFX0+rmgOUQbhAJ7Rvzx/synuj/erqMxHRWszXO/mzy3/mz1mdH2JAX+/2i5w3hUD0/sMahtEA/R9haZnKTaSP8KZzo7K86AJ7vTbcc2O5dWqYs5W6T9K8TI6+L9Z4OTmSmqi8aaoUk9uqKmuqQF8as70jJuuwgb7XLa8DJO7vz6LC0UHnxGNxNZoVQ9swpduRhpyc2+itNFkt3QsSl2HmumwbAEuZlRoMce1+4/16SGshsA+0pG2VkOEY0b3GGfgaaM7hITUEBaC0KWMnUqzpHBKZr3Jifr0CgYEA9XUNi8YSKIr11rAzBGjDjTTjxHbQGqOJSfdASUnUjwlDBRRcNS/1BRE1Nt39ZGTBXE5VXdEUamSoaBoQ0lfqpIuWR6iVbjOqCKqGEEaweGb3TMBu+iD7h6P5jTiIOgpG30a6gsnLkwyluRISaY8Vxd+pP+n7ij+He1KS6NJ8N0cCgYEA2yeqFAheR4M+5kdv8CEJveNiAR35YwewSI+SyX0Mams+R5NMoHjI00rvWYOtDUTEl9FbHosb44iMPp9BQ2Y/ZtprZDD2vLAZOlzotE8joQwy0DnpHsJtMa68bVDwPOiTbPZ2SxMLyfh+qU3XteZJyjpf4dXH0Eh2xJIrIIZR8EcCgYAR0QZDsAPfZ37Cr5V0a3pORJmHyCwA0wADG2xSJYbFPyHbO4gZ4DpDvOUE74YWBG44mgL+RU/bDSVgMQwpiHIisXMeDnGSRzO/X0lN4yOqCadHrewgQcagKNnTU1goBljwmfytw6IAMXnR/irR+K3W6A4r8nrspQHbhLnfJnAXvwKBgQCrcxlsuKtBWR0xPHwHKWGcq7H1W8TJw68W5TOZ6/l1m9bKWiNde4DpRDuCFTCiK8V9XCzj9UJpPF8zcpW1K924EnJnnKK7NS1Xam4m+a7PBGMQYe3NwZ95edEx2FtJ203StfIPg6P6ayx0OVDjnnjl+8sdO4kpmjdIS23v8QVTawKBgDQ+Vi+yWY5Y5dLwUMTWbhzWOak7E1eY9PXjXuEReCtWZbkiOWdTgeOCasvf+VYGSKtXChcoHp2bR/rGDj3RLRwMW9caztceNRYm10xlmo74eppc1bwOddAtJblKTfrAUEisbySe/dbS+zq+Ku4fcqYYaBWoWF2Zel5Pw97+wpp6"
-    const privateKey = 
-`-----BEGIN PRIVATE KEY-----
-MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDSISp+kuaj3ztL
-seGx3ZuXGoZgN/lg+mGATli1TaYg1+w5s9GLeHlyvG2OHwAMcBKWM5z1qMos8ml6
-f08H6qp3uNmB8h/X4Ij+hEo9bWfLvXPgo7g81cqpMjA/9wW+FBfOHr49I9EcGUoj
-M9u7zh8ruim6uo1yd3HY4tCIUdulAytTP764S8nk332QwYtfpZScMvxATCju3/N6
-v+TGUvVQsuufq/JwGGGs6k7wWIukvaOn6iLEaPkCSodweKFQZ+qbR8BXmWCLABk1
-bdfvaokVunui3l61yaFJzDHPDSKs+Iyrsbn80ULsko805HC1QFRXpXVpxb3wkAbG
-eAN7vOSxAgMBAAECggEAaGswybtIP5Czz5aymAeOxNTah7/o/ccOYosMS/QtJM8H
-xVjVPWB9wYVfT6uaA5RBuEAntG/PH+zKe6P96uozEdFazNc7+bPLf+bPWZ0fYkBf
-7/aLnDeFQPT+wxqG0QD9H2FpmcpNpI/wpnOjsrzoAnu9NtxzY7l1apizlbpP0rxM
-jr4v1ng5OZKaqLxpqhST26oqa6pAXxqzvSMm67CBvtctrwMk7u/PosLRQefEY3E1
-mhVD2zCl25GGnJzb6K00WS3dCxKXYea6bBsAS5mVGgxx7X7j/XpIayGwD7SkbZWQ
-4RjRvcYZ+BpozuEhNQQFoLQpYydSrOkcEpmvcmJ+vQKBgQD1dQ2LxhIoivXWsDME
-aMONNOPEdtAao4lJ90BJSdSPCUMFFFw1L/UFETU23f1kZMFcTlVd0RRqZKhoGhDS
-V+qki5ZHqJVuM6oIqoYQRrB4ZvdMwG76IPuHo/mNOIg6CkbfRrqCycuTDKW5EhJp
-jxXF36k/6fuKP4d7UpLo0nw3RwKBgQDbJ6oUCF5Hgz7mR2/wIQm942IBHfljB7BI
-j5LJfQxqaz5Hk0ygeMjTSu9Zg60NRMSX0VseixvjiIw+n0FDZj9m2mtkMPa8sBk6
-XOi0TyOhDDLQOekewm0xrrxtUPA86JNs9nZLEwvJ+H6pTde15knKOl/h1cfQSHbE
-kisghlHwRwKBgBHRBkOwA99nfsKvlXRrek5EmYfILADTAAMbbFIlhsU/Ids7iBng
-OkO85QTvhhYEbjiaAv5FT9sNJWAxDCmIciKxcx4OcZJHM79fSU3jI6oJp0et7CBB
-xqAo2dNTWCgGWPCZ/K3DogAxedH+KtH4rdboDivyeuylAduEud8mcBe/AoGBAKtz
-GWy4q0FZHTE8fAcpYZyrsfVbxMnDrxblM5nr+XWb1spaI117gOlEO4IVMKIrxX1c
-LOP1Qmk8XzNylbUr3bgScmecors1LVdqbib5rs8EYxBh7c3Bn3l50THYW0nbTdK1
-8g+Do/prLHQ5UOOeeOX7yx07iSmaN0hLbe/xBVNrAoGAND5WL7JZjljl0vBQxNZu
-HNY5qTsTV5j09eNe4RF4K1ZluSI5Z1OB44Jqy9/5VgZIq1cKFygenZtH+sYOPdEt
-HAxb1xrO1x41FibXTGWajvh6mlzVvA510C0luUpN+sBQSKxvJJ791tL7Or4q7h9y
-phhoFahYXZl6Xk/D3v7Cmno=
------END PRIVATE KEY-----`;
-
+    const rsaAsymmerticPublicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvAXCQIoOlYUi2l7lWAL15olK07isPjxR/8uiqPsDc5liYeErVY180WnFAUMtZQrc2T0vg1aZn6cEEfMirJH21Ku/783cZWX2KDFQ+NtVXmJ6LRAEH/NoNkG7L8YIwZIximWBrL38f6NEbtlHSRlcRbxwdVm8BRZfMqk6S1JA+zshpk1E+nsmybtUHpvVowBWjjABcTgKcGsFZbjNobH4z/i3txxjSJyBSxy+TE+9nidQcA2Q37mitXOMh2xxYtwUH4wbrg99KQfqRUO1WeFMeDNVPY2l9H0pF7dE3POTUk86evwXk77JMIFOp7/LslxBZejci8F4kj7UGezVOaUliQIDAQAB"
     // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
     // Utils
@@ -63,47 +30,15 @@ phhoFahYXZl6Xk/D3v7Cmno=
       return buf;
     };
 
-    const str2ab = toArrayBuffer;
-
     const toBase64Encode = (arrayBuffer) => window.btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
     // RSA Algorithm
     const asymmerticallyEncrypt = async (base64PubKey, sourceString) => {
       const keyBuf = toArrayBuffer(window.atob(base64PubKey));
       const pubKeyDer = await window.crypto.subtle.importKey("spki", keyBuf, {name: "RSA-OAEP", hash: "SHA-256", }, true, ["encrypt"]);
-      const encryptedBlock = await window.crypto.subtle.encrypt({name: "RSA-OAEP"}, pubKeyDer, new TextEncoder().encode(sourceString));
-      console.log(encryptedBlock)
+      const encryptedBlock = await window.crypto.subtle.encrypt({name: "RSA-OAEP", }, pubKeyDer, new TextEncoder().encode(sourceString));
       return toBase64Encode(encryptedBlock);
     };
-
-    const asymetricalDecrypt = async (base64PrivateKey, encrypted) => {
-      const importedKey = await importPrivateKey(base64PrivateKey)
-      const decrypted = await window.crypto.subtle.decrypt({name: "RSA-OAEP"}, importedKey, str2ab(window.atob(encrypted)));
-
-      console.log(new TextDecoder("utf-8").decode(decrypted))
-      return (new TextDecoder("utf-8").encode(decrypted));
-    }
-
-    async function importPrivateKey(pkcs8Pem) {
-      return await window.crypto.subtle.importKey(
-        "pkcs8",
-        getPkcs8Der(pkcs8Pem),
-        {
-          name: "RSA-OAEP",
-          hash: "SHA-256",
-        },
-        true,
-        ["decrypt"]
-      );
-    }
-
-    function getPkcs8Der(pkcs8Pem) {
-      const pemHeader = "-----BEGIN PRIVATE KEY-----";
-      const pemFooter = "-----END PRIVATE KEY-----";
-      var pemContents = pkcs8Pem.substring(pemHeader.length, pkcs8Pem.length - pemFooter.length);
-      var binaryDerString = window.atob(pemContents);
-      return str2ab(binaryDerString);
-    }
 
     // Request Signature
     function Signature(requestBody) {
@@ -122,24 +57,16 @@ phhoFahYXZl6Xk/D3v7Cmno=
 
     async function purchasePayload() {
       const cardData = {
-        cardData: "4005550000000019",
+        cardData: "4141414141414141",
         nameOnCard: "Joe Bloggs",
-        expirationMonth: "02",
-        expirationYear: "2035",
+        expirationMonth: "01",
+        expirationYear: "2024",
         securityCode: "123"
       }
-
-      alert(Object.values(cardData).join(""))
 
       const encryptionBlock = await asymmerticallyEncrypt(rsaAsymmerticPublicKey, Object.values(cardData).join(""));
       const encoder = new TextEncoder();
       const encryptionBlockFields = Object.keys(cardData).map(key => `card.${key}:${encoder.encode(cardData[key]).length}`).join(',');
-
-      console.log(encryptionBlock)
-      console.log(encryptionBlockFields)
-
-      asymetricalDecrypt(encryption_block, rsaPrivateKey);
-
       const requestBody = {
         transactionDetails: {
           captureFlag: true,
@@ -157,8 +84,7 @@ phhoFahYXZl6Xk/D3v7Cmno=
           encryptionData: {
             keyId: keyId,
             encryptionType: "RSA",
-            // encryptionBlock: encryptionBlock,
-            encryptionBlock: window.prompt("encrypted"),
+            encryptionBlock: encryptionBlock,
             encryptionBlockFields: encryptionBlockFields,
             encryptionTarget: "MANUAL",
           }
@@ -167,7 +93,6 @@ phhoFahYXZl6Xk/D3v7Cmno=
           origin: "ECOM",
           eciIndicator: "CHANNEL_ENCRYPTED",
           posConditionCode: "CARD_NOT_PRESENT_ECOM",
-          // posEntryMode: "MANUAL",
           additionalPosInformation: {
             dataEntrySource: "UNSPECIFIED"
           }

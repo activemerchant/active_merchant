@@ -9,7 +9,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     @gateway = CommerceHubGateway.new(fixtures(:commerce_hub))
 
     @amount = 1204
-    @credit_card = credit_card('4005550000000019', month: '02', year: '2035', verification_value: '123', first_name: 'John', last_name: 'Doe')
+    @credit_card = credit_card('4005550000000019', month: '02', year: '2035', verification_value: '123', first_name: 'Joe', last_name: 'Bloggs')
     @google_pay = network_tokenization_credit_card('4005550000000019',
       brand: 'visa',
       eci: '05',
