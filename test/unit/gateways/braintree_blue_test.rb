@@ -1011,41 +1011,6 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'transaction_id', response.authorization
   end
 
-  def test_android_pay_card
-    Braintree::TransactionGateway.any_instance.expects(:sale).
-      with(
-        amount: '1.00',
-        order_id: '1',
-        customer: { id: nil, email: nil, phone: nil,
-                   first_name: 'Longbob', last_name: 'Longsen' },
-        options: { store_in_vault: false, submit_for_settlement: nil, hold_in_escrow: nil },
-        custom_fields: nil,
-        google_pay_card: {
-          number: '4111111111111111',
-          expiration_month: '09',
-          expiration_year: (Time.now.year + 1).to_s,
-          cryptogram: '111111111100cryptogram',
-          google_transaction_id: '1234567890',
-          source_card_type: 'visa',
-          source_card_last_four: '1111',
-          eci_indicator: '05'
-        }
-      ).
-      returns(braintree_result(id: 'transaction_id'))
-
-    credit_card = network_tokenization_credit_card(
-      '4111111111111111',
-      brand: 'visa',
-      eci: '05',
-      payment_cryptogram: '111111111100cryptogram',
-      source: :android_pay,
-      transaction_id: '1234567890'
-    )
-
-    response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
-    assert_equal 'transaction_id', response.authorization
-  end
-
   def test_google_pay_card
     Braintree::TransactionGateway.any_instance.expects(:sale).
       with(
@@ -1076,6 +1041,38 @@ class BraintreeBlueTest < Test::Unit::TestCase
       source: :google_pay,
       transaction_id: '1234567890'
     )
+
+    response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
+    assert_equal 'transaction_id', response.authorization
+  end
+
+  def test_network_token_card
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      with(
+        amount: '1.00',
+        order_id: '1',
+        customer: { id: nil, email: nil, phone: nil,
+                   first_name: 'Longbob', last_name: 'Longsen' },
+        options: { store_in_vault: false, submit_for_settlement: nil, hold_in_escrow: nil },
+        custom_fields: nil,
+        credit_card: {
+          number: '4111111111111111',
+          expiration_month: '09',
+          expiration_year: (Time.now.year + 1).to_s,
+          cardholder_name: 'Longbob Longsen',
+          network_tokenization_attributes: {
+            cryptogram: '111111111100cryptogram',
+            ecommerce_indicator: '05'
+          }
+        }
+      ).
+      returns(braintree_result(id: 'transaction_id'))
+
+    credit_card = network_tokenization_credit_card('4111111111111111',
+                                                   brand: 'visa',
+                                                   eci: '05',
+                                                   source: :network_token,
+                                                   payment_cryptogram: '111111111100cryptogram')
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization

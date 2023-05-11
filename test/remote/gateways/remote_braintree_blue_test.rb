@@ -31,6 +31,12 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       },
       ach_mandate: ach_mandate
     }
+
+    @nt_credit_card = network_tokenization_credit_card('4111111111111111',
+                                                       brand: 'visa',
+                                                       eci: '05',
+                                                       source: :network_token,
+                                                       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
   end
 
   def test_credit_card_details_on_store
@@ -49,6 +55,13 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
 
   def test_successful_authorize
     assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'authorized', response.params['braintree_transaction']['status']
+  end
+
+  def test_successful_authorize_with_nt
+    assert response = @gateway.authorize(@amount, @nt_credit_card, @options)
     assert_success response
     assert_equal '1000 Approved', response.message
     assert_equal 'authorized', response.params['braintree_transaction']['status']
@@ -672,25 +685,6 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       brand: 'visa',
       eci: '05',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
-
-    assert auth = @gateway.authorize(@amount, credit_card, @options)
-    assert_success auth
-    assert_equal '1000 Approved', auth.message
-    assert auth.authorization
-    assert capture = @gateway.capture(@amount, auth.authorization)
-    assert_success capture
-  end
-
-  def test_authorize_and_capture_with_android_pay_card
-    credit_card = network_tokenization_credit_card(
-      '4111111111111111',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      month: '01',
-      year: '2024',
-      source: :android_pay,
-      transaction_id: '123456789',
-      eci: '05'
     )
 
     assert auth = @gateway.authorize(@amount, credit_card, @options)
