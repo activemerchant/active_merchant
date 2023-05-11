@@ -835,52 +835,84 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(parameters, credit_card_or_vault_id, options)
         if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
-          if options[:payment_method_token]
-            parameters[:payment_method_token] = credit_card_or_vault_id
-            options.delete(:billing_address)
-          elsif options[:payment_method_nonce]
-            parameters[:payment_method_nonce] = credit_card_or_vault_id
-          else
-            parameters[:customer_id] = credit_card_or_vault_id
-          end
+          add_third_party_token(parameters, credit_card_or_vault_id, options)
         else
           parameters[:customer].merge!(
             first_name: credit_card_or_vault_id.first_name,
             last_name: credit_card_or_vault_id.last_name
           )
           if credit_card_or_vault_id.is_a?(NetworkTokenizationCreditCard)
-            if credit_card_or_vault_id.source == :apple_pay
-              parameters[:apple_pay_card] = {
-                number: credit_card_or_vault_id.number,
-                expiration_month: credit_card_or_vault_id.month.to_s.rjust(2, '0'),
-                expiration_year: credit_card_or_vault_id.year.to_s,
-                cardholder_name: credit_card_or_vault_id.name,
-                cryptogram: credit_card_or_vault_id.payment_cryptogram,
-                eci_indicator: credit_card_or_vault_id.eci
-              }
-            elsif credit_card_or_vault_id.source == :android_pay || credit_card_or_vault_id.source == :google_pay
-              Braintree::Version::Major < 3 ? pay_card = :android_pay_card : pay_card = :google_pay_card
-              parameters[pay_card] = {
-                number: credit_card_or_vault_id.number,
-                cryptogram: credit_card_or_vault_id.payment_cryptogram,
-                expiration_month: credit_card_or_vault_id.month.to_s.rjust(2, '0'),
-                expiration_year: credit_card_or_vault_id.year.to_s,
-                google_transaction_id: credit_card_or_vault_id.transaction_id,
-                source_card_type: credit_card_or_vault_id.brand,
-                source_card_last_four: credit_card_or_vault_id.last_digits,
-                eci_indicator: credit_card_or_vault_id.eci
-              }
+            case credit_card_or_vault_id.source
+            when :apple_pay
+              add_apple_pay(parameters, credit_card_or_vault_id)
+            when :google_pay
+              add_google_pay(parameters, credit_card_or_vault_id)
+            else
+              add_network_tokenization_card(parameters, credit_card_or_vault_id)
             end
           else
-            parameters[:credit_card] = {
-              number: credit_card_or_vault_id.number,
-              cvv: credit_card_or_vault_id.verification_value,
-              expiration_month: credit_card_or_vault_id.month.to_s.rjust(2, '0'),
-              expiration_year: credit_card_or_vault_id.year.to_s,
-              cardholder_name: credit_card_or_vault_id.name
-            }
+            add_credit_card(parameters, credit_card_or_vault_id)
           end
         end
+      end
+
+      def add_third_party_token(parameters, payment_method, options)
+        if options[:payment_method_token]
+          parameters[:payment_method_token] = payment_method
+          options.delete(:billing_address)
+        elsif options[:payment_method_nonce]
+          parameters[:payment_method_nonce] = payment_method
+        else
+          parameters[:customer_id] = payment_method
+        end
+      end
+
+      def add_credit_card(parameters, payment_method)
+        parameters[:credit_card] = {
+          number: payment_method.number,
+          cvv: payment_method.verification_value,
+          expiration_month: payment_method.month.to_s.rjust(2, '0'),
+          expiration_year: payment_method.year.to_s,
+          cardholder_name: payment_method.name
+        }
+      end
+
+      def add_apple_pay(parameters, payment_method)
+        parameters[:apple_pay_card] = {
+          number: payment_method.number,
+          expiration_month: payment_method.month.to_s.rjust(2, '0'),
+          expiration_year: payment_method.year.to_s,
+          cardholder_name: payment_method.name,
+          cryptogram: payment_method.payment_cryptogram,
+          eci_indicator: payment_method.eci
+        }
+      end
+
+      def add_google_pay(parameters, payment_method)
+        Braintree::Version::Major < 3 ? pay_card = :android_pay_card : pay_card = :google_pay_card
+        parameters[pay_card] = {
+          number: payment_method.number,
+          cryptogram: payment_method.payment_cryptogram,
+          expiration_month: payment_method.month.to_s.rjust(2, '0'),
+          expiration_year: payment_method.year.to_s,
+          google_transaction_id: payment_method.transaction_id,
+          source_card_type: payment_method.brand,
+          source_card_last_four: payment_method.last_digits,
+          eci_indicator: payment_method.eci
+        }
+      end
+
+      def add_network_tokenization_card(parameters, payment_method)
+        parameters[:credit_card] = {
+          number: payment_method.number,
+          expiration_month: payment_method.month.to_s.rjust(2, '0'),
+          expiration_year: payment_method.year.to_s,
+          cardholder_name: payment_method.name,
+          network_tokenization_attributes: {
+            cryptogram: payment_method.payment_cryptogram,
+            ecommerce_indicator: payment_method.eci
+          }
+        }
       end
 
       def bank_account_errors(payment_method, options)

@@ -6,6 +6,7 @@
 * Adyen: Add option to elect which error message [aenand] #4843
 * Reach: Update list of supported countries [jcreiff] #4842
 * Paysafe: Truncate address fields [jcreiff] #4841
+* Braintree: Support third party Network Tokens [aenand] #4775
 
 == Version 1.134.0 (July 25, 2023)
 * Update required Ruby version [almalee24] #4823
