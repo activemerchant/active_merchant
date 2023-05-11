@@ -12,6 +12,7 @@
 * CommerceHub: Enabling multi-use public key encryption [jherreraa] #4771
 * Ogone: Enable 3ds Global for Ogone Gateway [javierpedrozaing] #4776
 * Borgun change default TrCurrencyExponent and MerchantReturnUrl [naashton] #4
+* Worldpay: Fix Google Pay [almalee24] #4774
 
 == Version 1.129.0 (May 3rd, 2023)
 * Adyen: Update selectedBrand mapping for Google Pay [jcreiff] #4763
