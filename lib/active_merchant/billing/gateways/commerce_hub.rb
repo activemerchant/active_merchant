@@ -114,7 +114,7 @@ module ActiveMerchant #:nodoc:
         post[:transactionInteraction][:origin] = options[:origin] || 'ECOM'
         post[:transactionInteraction][:eciIndicator] = options[:eci_indicator] || 'CHANNEL_ENCRYPTED'
         post[:transactionInteraction][:posConditionCode] = options[:pos_condition_code] || 'CARD_NOT_PRESENT_ECOM'
-        post[:transactionInteraction][:posEntryMode] = options[:pos_entry_mode] || 'MANUAL'
+        post[:transactionInteraction][:posEntryMode] = (options[:pos_entry_mode] || 'MANUAL') unless options[:encryption_data].present?
         post[:transactionInteraction][:additionalPosInformation] = {}
         post[:transactionInteraction][:additionalPosInformation][:dataEntrySource] = options[:data_entry_source] || 'UNSPECIFIED'
       end
@@ -256,7 +256,12 @@ module ActiveMerchant #:nodoc:
         when NetworkTokenizationCreditCard
           add_decrypted_wallet(source, payment, options)
         when CreditCard
-          add_credit_card(source, payment, options)
+          if options[:encryption_data].present?
+            source[:sourceType] = 'PaymentCard'
+            source[:encryptionData] = options[:encryption_data]
+          else
+            add_credit_card(source, payment, options)
+          end
         when String
           add_payment_token(source, payment, options)
         end

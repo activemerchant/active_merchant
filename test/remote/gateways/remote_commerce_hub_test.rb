@@ -109,7 +109,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Unable to assign card to brand: Invalid.', response.message
+    assert_equal 'Unable to assign card to brand: Invalid', response.message
     assert_equal '104', response.error_code
   end
 
@@ -131,7 +131,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Unable to assign card to brand: Invalid.', response.message
+    assert_equal 'Unable to assign card to brand: Invalid', response.message
   end
 
   def test_successful_authorize_and_void
@@ -235,7 +235,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
   def test_failed_purchase_with_declined_apple_pay
     response = @gateway.purchase(@amount, @declined_apple_pay, @options)
     assert_failure response
-    assert_equal 'Unable to assign card to brand: Invalid.', response.message
+    assert_equal 'Unable to assign card to brand: Invalid', response.message
   end
 
   def test_transcript_scrubbing
@@ -259,5 +259,19 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:api_key], transcript)
     assert_scrubbed(@gateway.options[:api_secret], transcript)
     assert_scrubbed(@apple_pay.payment_cryptogram, transcript)
+  end
+
+  def test_successful_purchase_with_encrypted_credit_card
+    @options[:encryption_data] = {
+      keyId: '6d0b6b63-3658-4c90-b7a4-bffb8a928288',
+      encryptionType: 'RSA',
+      encryptionBlock: 'udJ89RebrHLVxa3ofdyiQ/RrF2Y4xKC/qw4NuV1JYrTDEpNeIq9ZimVffMjgkyKL8dlnB2R73XFtWA4klHrpn6LZrRumYCgoqAkBRJCrk09+pE5km2t2LvKtf/Bj2goYQNFA9WLCCvNGwhofp8bNfm2vfGsBr2BkgL+PH/M4SqyRHz0KGKW/NdQ4Mbdh4hLccFsPjtDnNidkMep0P02PH3Se6hp1f5GLkLTbIvDLPSuLa4eNgzb5/hBBxrq5M5+5n9a1PhQnVT1vPU0WbbWe1SGdGiVCeSYmmX7n+KkVmc1lw0dD7NXBjKmD6aGFAWGU/ls+7JVydedDiuz4E7HSDQ==',
+      encryptionBlockFields: 'card.cardData:16,card.nameOnCard:10,card.expirationMonth:2,card.expirationYear:4,card.securityCode:3',
+      encryptionTarget: 'MANUAL'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
   end
 end
