@@ -469,4 +469,14 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
   ensure
     ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
   end
+
+  def test_successful_purchase_in_australian_dollars
+    @options[:currency] = 'AUD'
+    response = @gateway.purchase(@amount, @visa_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_nil response.params['_links']['capture']
+    assert_equal 'AUD', response.params['orderInformation']['amountDetails']['currency']
+  end
 end
