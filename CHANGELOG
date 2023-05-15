@@ -8,6 +8,7 @@
 * CyberSource: Allow business rules for requests with network tokens [aenand] #4764
 * Adyen: Update Mastercard error messaging [kylene-spreedly] #4770
 * Authorize.net: Update mapping for billing address phone number [jcreiff] #4778
+* Braintree: Update mapping for billing address phone number [jcreiff] #4779
 
 == Version 1.129.0 (May 3rd, 2023)
 * Adyen: Update selectedBrand mapping for Google Pay [jcreiff] #4763
