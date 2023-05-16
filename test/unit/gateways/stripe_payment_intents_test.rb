@@ -31,9 +31,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
       brand: 'visa',
       eci: '05',
       month: '09',
-      year: '2030',
-      first_name: 'Longbob',
-      last_name: 'Longsen'
+      year: '2030'
     )
 
     @apple_pay = network_tokenization_credit_card(
@@ -411,8 +409,11 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @google_pay, options)
     end.check_request do |_method, endpoint, data, _headers|
-      assert_match('card[tokenization_method]=android_pay', data) if %r{/tokens}.match?(endpoint)
-      assert_match('card[address_line1]=456+My+Street', data) if %r{/tokens}.match?(endpoint)
+      if %r{/tokens}.match?(endpoint)
+        assert_match('card[name]=Jim+Smith', data)
+        assert_match('card[tokenization_method]=android_pay', data)
+        assert_match('card[address_line1]=456+My+Street', data)
+      end
       assert_match('wallet[type]=google_pay', data) if %r{/wallet}.match?(endpoint)
       assert_match('payment_method=pi_', data) if %r{/payment_intents}.match?(endpoint)
     end.respond_with(successful_create_intent_response_with_google_pay_and_billing_address)

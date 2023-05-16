@@ -1208,6 +1208,20 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal store1.params['id'], store2.params['id']
   end
 
+  def test_successful_customer_creating
+    options = {
+      currency: 'GBP',
+      billing_address: address,
+      shipping_address: address
+    }
+    assert customer = @gateway.customer({}, @visa_card, options)
+
+    assert_equal customer.params['name'], 'Jim Smith'
+    assert_equal customer.params['phone'], '(555)555-5555'
+    assert_not_empty customer.params['shipping']
+    assert_not_empty customer.params['address']
+  end
+
   def test_successful_store_with_false_validate_option
     options = {
       currency: 'GBP',
