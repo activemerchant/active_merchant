@@ -849,9 +849,8 @@ module ActiveMerchant #:nodoc:
                 cryptogram: credit_card_or_vault_id.payment_cryptogram,
                 eci_indicator: credit_card_or_vault_id.eci
               }
-            elsif credit_card_or_vault_id.source == :android_pay || credit_card_or_vault_id.source == :google_pay
-              Braintree::Version::Major < 3 ? pay_card = :android_pay_card : pay_card = :google_pay_card
-              parameters[pay_card] = {
+            elsif credit_card_or_vault_id.source == :google_pay
+              parameters[:google_pay_card] = {
                 number: credit_card_or_vault_id.number,
                 cryptogram: credit_card_or_vault_id.payment_cryptogram,
                 expiration_month: credit_card_or_vault_id.month.to_s.rjust(2, '0'),

@@ -190,28 +190,6 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_purchase_using_android_pay_network_token
-    network_token = network_tokenization_credit_card(
-      '4242424242424242',
-      { source: :android_pay, eci: '05', payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA' }
-    )
-    response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, network_token)
-    end.check_request do |_method, _endpoint, data, _headers|
-      request_data = JSON.parse(data)
-
-      assert_equal(request_data['source']['type'], 'network_token')
-      assert_equal(request_data['source']['token'], network_token.number)
-      assert_equal(request_data['source']['token_type'], 'googlepay')
-      assert_equal(request_data['source']['eci'], '05')
-      assert_equal(request_data['source']['cryptogram'], network_token.payment_cryptogram)
-    end.respond_with(successful_purchase_with_network_token_response)
-
-    assert_success response
-    assert_equal '2FCFE326D92D4C27EDD699560F484', response.params['source']['payment_account_reference']
-    assert response.test?
-  end
-
   def test_successful_purchase_using_google_pay_network_token
     network_token = network_tokenization_credit_card(
       '4242424242424242',

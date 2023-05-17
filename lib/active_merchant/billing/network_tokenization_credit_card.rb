@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
       attr_accessor :payment_cryptogram, :eci, :transaction_id, :metadata
       attr_writer :source
 
-      SOURCES = %i(apple_pay android_pay google_pay network_token)
+      SOURCES = %i(apple_pay google_pay network_token)
 
       def source
         if defined?(@source) && SOURCES.include?(@source)

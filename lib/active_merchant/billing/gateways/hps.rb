@@ -21,7 +21,6 @@ module ActiveMerchant #:nodoc:
         visa:             'Visa 3DSecure',
         american_express: 'AMEX 3DSecure',
         discover:         'Discover 3DSecure',
-        android_pay:      'GooglePayApp',
         google_pay:       'GooglePayApp'
       }
 

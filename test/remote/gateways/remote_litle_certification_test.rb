@@ -1065,26 +1065,6 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
-  def test_android_pay_purchase
-    options = {
-      order_id: transaction_id
-    }
-    decrypted_android_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
-      {
-        source: :android_pay,
-        month: '01',
-        year: '2021',
-        brand: 'visa',
-        number:  '4457000300000007',
-        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
-      }
-    )
-
-    assert response = @gateway.purchase(10010, decrypted_android_pay, options)
-    assert_success response
-    assert_equal 'Approved', response.message
-  end
-
   def test_three_d_secure
     three_d_secure_assertions('3DS1', '4100200300000004', 'visa', '3dsAuthenticated', '0')
     three_d_secure_assertions('3DS2', '4100200300000012', 'visa', '3dsAuthenticated', '1')

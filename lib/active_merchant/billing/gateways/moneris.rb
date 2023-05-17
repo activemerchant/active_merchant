@@ -435,8 +435,7 @@ module ActiveMerchant #:nodoc:
       def wallet_indicator(token_source)
         return {
           'apple_pay' => 'APP',
-          'google_pay' => 'GPP',
-          'android_pay' => 'ANP'
+          'google_pay' => 'GPP'
         }[token_source]
       end
 

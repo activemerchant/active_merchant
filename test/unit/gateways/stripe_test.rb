@@ -1446,27 +1446,6 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_auth_with_network_tokenization_android_pay
-    @gateway.expects(:ssl_request).with do |method, _endpoint, data, _headers|
-      assert_equal :post, method
-      assert_match %r'card\[cryptogram\]=111111111100cryptogram&card\[eci\]=05&card\[tokenization_method\]=android_pay', data
-      true
-    end.returns(successful_authorization_response)
-
-    credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: '111111111100cryptogram',
-      verification_value: nil,
-      eci: '05',
-      source: :android_pay)
-
-    assert response = @gateway.authorize(@amount, credit_card, @options)
-    assert_instance_of Response, response
-    assert_success response
-
-    assert_equal 'ch_test_charge', response.authorization
-    assert response.test?
-  end
-
   def test_successful_purchase_with_network_tokenization_apple_pay
     @gateway.expects(:ssl_request).with do |method, _endpoint, data, _headers|
       assert_equal :post, method
@@ -1478,27 +1457,6 @@ class StripeTest < Test::Unit::TestCase
       payment_cryptogram: '111111111100cryptogram',
       verification_value: nil,
       eci: '05')
-
-    assert response = @gateway.purchase(@amount, credit_card, @options)
-    assert_instance_of Response, response
-    assert_success response
-
-    assert_equal 'ch_test_charge', response.authorization
-    assert response.test?
-  end
-
-  def test_successful_purchase_with_network_tokenization_android_pay
-    @gateway.expects(:ssl_request).with do |method, _endpoint, data, _headers|
-      assert_equal :post, method
-      assert_match %r'card\[cryptogram\]=111111111100cryptogram&card\[eci\]=05&card\[tokenization_method\]=android_pay', data
-      true
-    end.returns(successful_authorization_response)
-
-    credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: '111111111100cryptogram',
-      verification_value: nil,
-      eci: '05',
-      source: :android_pay)
 
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_instance_of Response, response

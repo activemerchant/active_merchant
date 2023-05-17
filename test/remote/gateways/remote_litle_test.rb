@@ -55,16 +55,6 @@ class RemoteLitleTest < Test::Unit::TestCase
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
       }
     )
-    @decrypted_android_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
-      {
-        source: :android_pay,
-        month: '01',
-        year: '2021',
-        brand: 'visa',
-        number:  '4457000300000007',
-        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
-      }
-    )
 
     @decrypted_google_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       {
@@ -242,12 +232,6 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert response = @gateway.purchase(10010, @decrypted_apple_pay)
     assert_success response
     assert_equal 'Partially Approved: The authorized amount is less than the requested amount.', response.message
-  end
-
-  def test_successful_purchase_with_android_pay
-    assert response = @gateway.purchase(10000, @decrypted_android_pay)
-    assert_success response
-    assert_equal 'Approved', response.message
   end
 
   def test_successful_purchase_with_google_pay

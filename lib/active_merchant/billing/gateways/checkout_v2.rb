@@ -490,7 +490,7 @@ module ActiveMerchant #:nodoc:
         case payment_method.source
         when :network_token
           payment_method.brand == 'visa' ? 'vts' : 'mdes'
-        when :google_pay, :android_pay
+        when :google_pay
           'googlepay'
         when :apple_pay
           'applepay'

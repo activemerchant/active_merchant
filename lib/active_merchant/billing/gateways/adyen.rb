@@ -222,7 +222,6 @@ module ActiveMerchant #:nodoc:
 
       NETWORK_TOKENIZATION_CARD_SOURCE = {
         'apple_pay' => 'applepay',
-        'android_pay' => 'androidpay',
         'google_pay' => 'googlepay'
       }
 

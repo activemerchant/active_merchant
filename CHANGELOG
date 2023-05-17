@@ -4,6 +4,7 @@
 == HEAD
 * Payu Latam - Update error code method to surface network code [yunnydang] #4773
 * CyberSource: Handling Canadian bank accounts [heavyblade] #4764
+* Remove Support for Android Pay [almalee] #4783
 
 == Version 1.129.0 (May 3rd, 2023)
 * Adyen: Update selectedBrand mapping for Google Pay [jcreiff] #4763
