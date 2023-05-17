@@ -327,6 +327,7 @@ module ActiveMerchant #:nodoc: ALL
         post[:IsOffline] = %w[Y N].include?(options[:offline]) ? options[:offline] : 'N'
         post[:VerifyCard] = 'N' if card_token?(payment) # don't need verification for tokens
         post[:CheckDuplicate] = 'Y' if options[:check_duplicate]
+        post[:IgnoreAVSResult] = 'N' if options[:check_avs]
       end
 
       # Add the Request Extend Group of options
