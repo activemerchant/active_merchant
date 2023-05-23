@@ -4,6 +4,7 @@
 == HEAD
 * Payu Latam - Update error code method to surface network code [yunnydang] #4773
 * CyberSource: Handling Canadian bank accounts [heavyblade] #4764
+* CommerceHub: Enabling multi-use public key encryption [jherreraa] #4771
 * CyberSource Rest: Fixing currency detection [heavyblade] #4777
 * CyberSource: Allow business rules for requests with network tokens [aenand] #4764
 * Adyen: Update Mastercard error messaging [kylene-spreedly] #4770
