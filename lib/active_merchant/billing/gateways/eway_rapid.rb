@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
         commit(url_for("Transaction"), params)
       end
 
-      def supports_scrubbing
+      def supports_scrubbing?
         true
       end
 
