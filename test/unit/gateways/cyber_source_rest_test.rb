@@ -125,7 +125,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
   def test_add_ammount_and_currency
     post = { orderInformation: {} }
 
-    @gateway.send :add_amount, post, 10221
+    @gateway.send :add_amount, post, 10221, {}
 
     assert_equal '102.21', post.dig(:orderInformation, :amountDetails, :totalAmount)
     assert_equal 'USD', post.dig(:orderInformation, :amountDetails, :currency)

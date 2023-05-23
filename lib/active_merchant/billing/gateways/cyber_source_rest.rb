@@ -112,7 +112,7 @@ module ActiveMerchant #:nodoc:
           add_code(post, options)
           add_payment(post, payment, options)
           add_mdd_fields(post, options)
-          add_amount(post, amount)
+          add_amount(post, amount, options)
           add_address(post, payment, options[:billing_address], options, :billTo)
           add_address(post, payment, options[:shipping_address], options, :shipTo)
           add_business_rules_data(post, payment, options)
@@ -125,7 +125,7 @@ module ActiveMerchant #:nodoc:
         { clientReferenceInformation: {}, orderInformation: {} }.tap do |post|
           add_code(post, options)
           add_mdd_fields(post, options)
-          add_amount(post, amount)
+          add_amount(post, amount, options)
           add_partner_solution_id(post)
         end.compact
       end
@@ -135,7 +135,7 @@ module ActiveMerchant #:nodoc:
           add_code(post, options)
           add_credit_card(post, payment)
           add_mdd_fields(post, options)
-          add_amount(post, amount)
+          add_amount(post, amount, options)
           add_address(post, payment, options[:billing_address], options, :billTo)
           add_merchant_description(post, options)
         end.compact
@@ -161,7 +161,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_amount(post, amount)
+      def add_amount(post, amount, options)
         currency = options[:currency] || currency(amount)
         post[:orderInformation][:amountDetails] = {
           totalAmount: localized_amount(amount, currency),
@@ -413,10 +413,8 @@ module ActiveMerchant #:nodoc:
 
       def add_business_rules_data(post, payment, options)
         post[:processingInformation][:authorizationOptions] = {}
-        unless payment.is_a?(NetworkTokenizationCreditCard)
-          post[:processingInformation][:authorizationOptions][:ignoreAvsResult] = 'true' if options[:ignore_avs].to_s == 'true'
-          post[:processingInformation][:authorizationOptions][:ignoreCvResult] = 'true' if options[:ignore_cvv].to_s == 'true'
-        end
+        post[:processingInformation][:authorizationOptions][:ignoreAvsResult] = 'true' if options[:ignore_avs].to_s == 'true'
+        post[:processingInformation][:authorizationOptions][:ignoreCvResult] = 'true' if options[:ignore_cvv].to_s == 'true'
       end
 
       def add_mdd_fields(post, options)

@@ -165,6 +165,42 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_nil response.params['_links']['capture']
   end
 
+  def test_successful_purchase_with_credit_card_ignore_avs
+    @options[:ignore_avs] = 'true'
+    response = @gateway.purchase(@amount, @visa_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
+  def test_successful_purchase_with_network_token_ignore_avs
+    @options[:ignore_avs] = 'true'
+    response = @gateway.purchase(@amount, @apple_pay, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
+  def test_successful_purchase_with_credit_card_ignore_cvv
+    @options[:ignore_cvv] = 'true'
+    response = @gateway.purchase(@amount, @visa_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
+  def test_successful_purchase_with_network_token_ignore_cvv
+    @options[:ignore_cvv] = 'true'
+    response = @gateway.purchase(@amount, @apple_pay, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
   def test_successful_refund
     purchase = @gateway.purchase(@amount, @visa_card, @options)
     response = @gateway.refund(@amount, purchase.authorization, @options)
@@ -468,5 +504,15 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   ensure
     ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_purchase_in_australian_dollars
+    @options[:currency] = 'AUD'
+    response = @gateway.purchase(@amount, @visa_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_nil response.params['_links']['capture']
+    assert_equal 'AUD', response.params['orderInformation']['amountDetails']['currency']
   end
 end

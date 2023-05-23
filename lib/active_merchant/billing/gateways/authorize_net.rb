@@ -604,6 +604,7 @@ module ActiveMerchant
           first_name, last_name = names_from(payment_source, address, options)
           state = state_from(address, options)
           full_address = "#{address[:address1]} #{address[:address2]}".strip
+          phone = address[:phone] || address[:phone_number] || ''
 
           xml.firstName(truncate(first_name, 50)) unless empty?(first_name)
           xml.lastName(truncate(last_name, 50)) unless empty?(last_name)
@@ -613,7 +614,7 @@ module ActiveMerchant
           xml.state(truncate(state, 40))
           xml.zip(truncate((address[:zip] || options[:zip]), 20))
           xml.country(truncate(address[:country], 60))
-          xml.phoneNumber(truncate(address[:phone], 25)) unless empty?(address[:phone])
+          xml.phoneNumber(truncate(phone, 25)) unless empty?(phone)
           xml.faxNumber(truncate(address[:fax], 25)) unless empty?(address[:fax])
         end
       end
