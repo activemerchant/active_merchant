@@ -328,6 +328,8 @@ module ActiveMerchant #:nodoc: ALL
         post[:VerifyCard] = 'N' if card_token?(payment) # don't need verification for tokens
         post[:CheckDuplicate] = 'Y' if options[:check_duplicate]
         post[:IgnoreAVSResult] = 'N' if options[:check_avs]
+        post[:CustomerZipCode] = options[:address][:zip] if options.dig(:address, :zip).present?
+        post[:CustomerAddress] = options[:address][:address1] if options.dig(:address, :address1).present?
       end
 
       # Add the Request Extend Group of options
