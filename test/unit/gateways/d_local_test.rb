@@ -36,6 +36,14 @@ class DLocalTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_purchase_with_save
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(save: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal true, JSON.parse(data)['card']['save']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
