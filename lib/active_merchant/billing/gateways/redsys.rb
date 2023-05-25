@@ -538,6 +538,7 @@ module ActiveMerchant #:nodoc:
             xml.DS_MERCHANT_COF_INI data[:DS_MERCHANT_COF_INI]
             xml.DS_MERCHANT_COF_TYPE data[:DS_MERCHANT_COF_TYPE]
             xml.DS_MERCHANT_COF_TXNID data[:DS_MERCHANT_COF_TXNID] if data[:DS_MERCHANT_COF_TXNID]
+            xml.DS_MERCHANT_DIRECTPAYMENT 'false' if options[:stored_credential][:initial_transaction]
           end
         end
       end

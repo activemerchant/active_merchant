@@ -14,6 +14,7 @@
 * Worldpay: Fix Google Pay [almalee24] #4774
 * Borgun change default TrCurrencyExponent and MerchantReturnUrl [naashton] #4788
 * CyberSource: Enable auto void on r230 [aenand] #4794
+* Redsys: Set appropriate request fields for stored credentials with CITs and MITs [BritneyS] #4784
 
 == Version 1.129.0 (May 3rd, 2023)
 * Adyen: Update selectedBrand mapping for Google Pay [jcreiff] #4763
