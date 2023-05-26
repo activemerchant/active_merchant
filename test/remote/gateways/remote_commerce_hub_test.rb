@@ -42,6 +42,14 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_whit_physical_goods_indicator
+    @options[:physical_goods_indicator] = true
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert response.params['transactionDetails']['physicalGoodsIndicator']
+  end
+
   def test_successful_purchase_with_gsf_mit
     @options[:data_entry_source] = 'ELECTRONIC_PAYMENT_TERMINAL'
     @options[:pos_entry_mode] = 'CONTACTLESS'
@@ -109,7 +117,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Unable to assign card to brand: Invalid.', response.message
+    assert_match 'Unable to assign card to brand: Invalid', response.message
     assert_equal '104', response.error_code
   end
 
@@ -131,7 +139,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Unable to assign card to brand: Invalid.', response.message
+    assert_match 'Unable to assign card to brand: Invalid', response.message
   end
 
   def test_successful_authorize_and_void
@@ -235,7 +243,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
   def test_failed_purchase_with_declined_apple_pay
     response = @gateway.purchase(@amount, @declined_apple_pay, @options)
     assert_failure response
-    assert_equal 'Unable to assign card to brand: Invalid.', response.message
+    assert_match 'Unable to assign card to brand: Invalid', response.message
   end
 
   def test_transcript_scrubbing

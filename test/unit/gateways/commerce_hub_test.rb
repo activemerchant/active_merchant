@@ -230,6 +230,21 @@ class CommerceHubTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_gsf_scheme_reference_transaction_id
+    @options = stored_credential_options(:cardholder, :unscheduled, :initial)
+    @options[:physical_goods_indicator] = true
+    @options[:scheme_reference_transaction_id] = '12345'
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['storedCredentials']['schemeReferenceTransactionId'], '12345'
+      assert_equal request['transactionDetails']['physicalGoodsIndicator'], true
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def stored_credential_options(*args, ntid: nil)
     {
       order_id: '#1001',

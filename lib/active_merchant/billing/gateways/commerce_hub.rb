@@ -120,7 +120,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_transaction_details(post, options, action = nil)
-        details = { captureFlag: options[:capture_flag], createToken: options[:create_token] }
+        details = {
+          captureFlag: options[:capture_flag],
+          createToken: options[:create_token],
+          physicalGoodsIndicator: [true, 'true'].include?(options[:physical_goods_indicator])
+        }
 
         if options[:order_id].present? && action == 'sale'
           details[:merchantOrderId] = options[:order_id]
@@ -214,7 +218,7 @@ module ActiveMerchant #:nodoc:
         post[:storedCredentials][:sequence] = stored_credential[:initial_transaction] ? 'FIRST' : 'SUBSEQUENT'
         post[:storedCredentials][:initiator] = stored_credential[:initiator] == 'merchant' ? 'MERCHANT' : 'CARD_HOLDER'
         post[:storedCredentials][:scheduled] = SCHEDULED_REASON_TYPES.include?(stored_credential[:reason_type])
-        post[:storedCredentials][:schemeReferenceTransactionId] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
+        post[:storedCredentials][:schemeReferenceTransactionId] = options[:scheme_reference_transaction_id] || stored_credential[:network_transaction_id]
       end
 
       def add_credit_card(source, payment, options)
