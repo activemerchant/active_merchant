@@ -46,7 +46,8 @@ class GlobalCollectTest < Test::Unit::TestCase
         ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
         acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
         cavv_algorithm: 1,
-        authentication_response_status: 'Y'
+        authentication_response_status: 'Y',
+        flow: 'frictionless'
       }
     )
   end
@@ -392,7 +393,8 @@ class GlobalCollectTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@accepted_amount, @credit_card, @options_3ds2)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"threeDSecure\":{\"externalCardholderAuthenticationData\":{/, data)
+      assert_match(/threeDSecure/, data)
+      assert_match(/externalCardholderAuthenticationData/, data)
       assert_match(/"eci\":\"05\"/, data)
       assert_match(/"cavv\":\"jJ81HADVRtXfCBATEp01CJUAAAA=\"/, data)
       assert_match(/"xid\":\"BwABBJQ1AgAAAAAgJDUCAAAAAAA=\"/, data)
