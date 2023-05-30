@@ -105,17 +105,17 @@ module ActiveMerchant #:nodoc:
 
       def add_3ds_preauth_fields(post, options)
         post[:SaleDescription] = options[:sale_description] || ''
-        post[:MerchantReturnURL] = options[:merchant_return_url] if options[:merchant_return_url]
+        post[:MerchantReturnURL] = options[:redirect_url] if options[:redirect_url]
       end
 
       def add_invoice(post, money, options)
         post[:TrAmount] = amount(money)
         post[:TrCurrency] = CURRENCY_CODES[options[:currency] || currency(money)]
         # The ISK currency must have a currency exponent of 2 on the 3DS request but not on the auth request
-        if post[:TrCurrency] == '352' && options[:apply_3d_secure] == '1'
-          post[:TrCurrencyExponent] = 2
-        else
+        if post[:TrCurrency] == '352' && options[:apply_3d_secure] != '1'
           post[:TrCurrencyExponent] = 0
+        else
+          post[:TrCurrencyExponent] = 2
         end
         post[:TerminalID] = options[:terminal_id] || '1'
       end
