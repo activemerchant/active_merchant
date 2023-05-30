@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post, options)
       end
 
-      def refund(money, authorization, options = {})
+      def refund(money, payment_method, options = {})
         post = {}
         action = 'refund'
 
@@ -99,11 +99,14 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_clerk(post, options)
         add_transaction(post, options)
-        add_card(action, post, get_card_token(authorization), options)
+        card_token = payment_method.is_a?(CreditCard) ? get_card_token(payment_method) : payment_method
+        add_card(action, post, card_token, options)
         add_card_present(post, options)
 
         commit(action, post, options)
       end
+
+      alias credit refund
 
       def void(authorization, options = {})
         options[:invoice] = get_invoice(authorization)
