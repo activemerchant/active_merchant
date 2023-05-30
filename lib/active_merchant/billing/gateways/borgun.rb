@@ -96,6 +96,7 @@ module ActiveMerchant #:nodoc:
       CURRENCY_CODES['ISK'] = '352'
       CURRENCY_CODES['EUR'] = '978'
       CURRENCY_CODES['USD'] = '840'
+      CURRENCY_CODES['GBP'] = '826'
 
       def add_3ds_fields(post, options)
         post[:ThreeDSMessageId] = options[:three_ds_message_id] if options[:three_ds_message_id]
