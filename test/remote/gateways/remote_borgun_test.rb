@@ -30,14 +30,14 @@ class RemoteBorgunTest < Test::Unit::TestCase
   end
 
   def test_successful_preauth_3ds
-    response = @gateway.purchase(@amount, @credit_card, @options.merge({ merchant_return_url: 'http://localhost/index.html', apply_3d_secure: '1' }))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ redirect_url: 'http://localhost/index.html', apply_3d_secure: '1' }))
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_not_nil response.params['redirecttoacsform']
   end
 
   def test_successful_preauth_frictionless_3ds
-    response = @gateway.purchase(@amount, @frictionless_3ds_card, @options.merge({ merchant_return_url: 'http://localhost/index.html', apply_3d_secure: '1' }))
+    response = @gateway.purchase(@amount, @frictionless_3ds_card, @options.merge({ redirect_url: 'http://localhost/index.html', apply_3d_secure: '1' }))
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_nil response.params['redirecttoacsform']
