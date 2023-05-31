@@ -3,7 +3,7 @@ module ActiveMerchant #:nodoc:
     # The Check object is a plain old Ruby object, similar to CreditCard. It supports validation
     # of necessary attributes such as checkholder's name, routing and account numbers, but it is
     # not backed by any database.
-    #
+    # ss
     # You may use Check in place of CreditCard with any gateway that supports it.
     class Check < Model
       attr_accessor :first_name, :last_name,
