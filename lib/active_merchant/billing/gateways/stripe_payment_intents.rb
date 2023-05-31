@@ -76,27 +76,22 @@ module ActiveMerchant #:nodoc:
 
       def create_payment_method(payment_method, options = {})
         post_data = add_payment_method_data(payment_method, options)
+
         options = format_idempotency_key(options, 'pm')
         commit(:post, 'payment_methods', post_data, options)
       end
 
       def add_payment_method_data(payment_method, options = {})
-        post = {
-          type: 'card',
-          card: {
-            number: payment_method.number,
-            exp_month: payment_method.month,
-            exp_year: payment_method.year
-          }
-        }
-
-        post[:card][:cvc] = payment_method.verification_value if payment_method.verification_value
-        if billing = options[:billing_address] || options[:address]
-          post[:billing_details] = add_address(billing, options)
-        end
-
-        add_name_only(post, payment_method) if post[:billing_details].nil?
-        post
+        post_data = {}
+        post_data[:type] = 'card'
+        post_data[:card] = {}
+        post_data[:card][:number] = payment_method.number
+        post_data[:card][:exp_month] = payment_method.month
+        post_data[:card][:exp_year] = payment_method.year
+        post_data[:card][:cvc] = payment_method.verification_value if payment_method.verification_value
+        add_billing_address(post_data, options)
+        add_name_only(post_data, payment_method) if post_data[:billing_details].nil?
+        post_data
       end
 
       def add_payment_method_card_data_token(post_data, payment_method)
@@ -217,7 +212,16 @@ module ActiveMerchant #:nodoc:
           result = add_payment_method_token(params, payment_method, options)
           return result if result.is_a?(ActiveMerchant::Billing::Response)
 
-          customer_id = options[:customer] || customer(post, payment_method, options).params['id']
+          if options[:customer]
+            customer_id = options[:customer]
+          else
+            post[:description] = options[:description] if options[:description]
+            post[:email] = options[:email] if options[:email]
+            options = format_idempotency_key(options, 'customer')
+            post[:expand] = [:sources]
+            customer = commit(:post, 'customers', post, options)
+            customer_id = customer.params['id']
+          end
           options = format_idempotency_key(options, 'attach')
           attach_parameters = { customer: customer_id }
           attach_parameters[:validate] = options[:validate] unless options[:validate].nil?
@@ -225,23 +229,6 @@ module ActiveMerchant #:nodoc:
         else
           super(payment_method, options)
         end
-      end
-
-      def customer(post, payment, options)
-        post[:description] = options[:description] if options[:description]
-        post[:expand] = [:sources]
-        post[:email] = options[:email]
-
-        if billing = options[:billing_address] || options[:address]
-          post.merge!(add_address(billing, options))
-        end
-
-        if shipping = options[:shipping_address]
-          post[:shipping] = add_address(shipping, options)
-        end
-
-        options = format_idempotency_key(options, 'customer')
-        commit(:post, 'customers', post, options)
       end
 
       def unstore(identification, options = {}, deprecated_options = {})
@@ -491,34 +478,30 @@ module ActiveMerchant #:nodoc:
       def add_billing_address_for_card_tokenization(post, options = {})
         return unless (billing = options[:billing_address] || options[:address])
 
-        address = add_address(billing, options)
-        modify_address = address[:address].transform_keys { |k| k == :postal_code ? :address_zip : k.to_s.prepend('address_').to_sym }.merge!({ name: address[:name] })
-
-        post[:card].merge!(modify_address)
+        post[:card][:address_city] = billing[:city] if billing[:city]
+        post[:card][:address_country] = billing[:country] if billing[:country]
+        post[:card][:address_line1] = billing[:address1] if billing[:address1]
+        post[:card][:address_line2] = billing[:address2] if billing[:address2]
+        post[:card][:address_zip] = billing[:zip] if billing[:zip]
+        post[:card][:address_state] = billing[:state] if billing[:state]
       end
 
-      def add_shipping_address(post, options = {})
-        return unless shipping = options[:shipping_address]
+      def add_billing_address(post, options = {})
+        return unless billing = options[:billing_address] || options[:address]
 
-        post[:shipping] = add_address(shipping, options)
-        post[:shipping][:carrier] = (shipping[:carrier] || options[:shipping_carrier]) if shipping[:carrier] || options[:shipping_carrier]
-        post[:shipping][:tracking_number] = (shipping[:tracking_number] || options[:shipping_tracking_number]) if shipping[:tracking_number] || options[:shipping_tracking_number]
-      end
+        email = billing[:email] || options[:email]
 
-      def add_address(address, options)
-        {
-          address: {
-            city: address[:city],
-            country: address[:country],
-            line1: address[:address1],
-            line2: address[:address2],
-            postal_code: address[:zip],
-            state: address[:state]
-          }.compact,
-          email: address[:email] || options[:email],
-          phone: address[:phone] || address[:phone_number],
-          name: address[:name]
-        }.compact
+        post[:billing_details] = {}
+        post[:billing_details][:address] = {}
+        post[:billing_details][:address][:city] = billing[:city] if billing[:city]
+        post[:billing_details][:address][:country] = billing[:country] if billing[:country]
+        post[:billing_details][:address][:line1] = billing[:address1] if billing[:address1]
+        post[:billing_details][:address][:line2] = billing[:address2] if billing[:address2]
+        post[:billing_details][:address][:postal_code] = billing[:zip] if billing[:zip]
+        post[:billing_details][:address][:state] = billing[:state] if billing[:state]
+        post[:billing_details][:email] = email if email
+        post[:billing_details][:name] = billing[:name] if billing[:name]
+        post[:billing_details][:phone] = billing[:phone] if billing[:phone]
       end
 
       def add_name_only(post, payment_method)
@@ -526,6 +509,27 @@ module ActiveMerchant #:nodoc:
 
         name = [payment_method.first_name, payment_method.last_name].compact.join(' ')
         post[:billing_details][:name] = name
+      end
+
+      def add_shipping_address(post, options = {})
+        return unless shipping = options[:shipping_address]
+
+        post[:shipping] = {}
+
+        # fields required by Stripe PI
+        post[:shipping][:address] = {}
+        post[:shipping][:address][:line1] = shipping[:address1]
+        post[:shipping][:name] = shipping[:name]
+
+        # fields considered optional by Stripe PI
+        post[:shipping][:address][:city] = shipping[:city] if shipping[:city]
+        post[:shipping][:address][:country] = shipping[:country] if shipping[:country]
+        post[:shipping][:address][:line2] = shipping[:address2] if shipping[:address2]
+        post[:shipping][:address][:postal_code] = shipping[:zip] if shipping[:zip]
+        post[:shipping][:address][:state] = shipping[:state] if shipping[:state]
+        post[:shipping][:phone] = shipping[:phone_number] if shipping[:phone_number]
+        post[:shipping][:carrier] = (shipping[:carrier] || options[:shipping_carrier]) if shipping[:carrier] || options[:shipping_carrier]
+        post[:shipping][:tracking_number] = (shipping[:tracking_number] || options[:shipping_tracking_number]) if shipping[:tracking_number] || options[:shipping_tracking_number]
       end
 
       def format_idempotency_key(options, suffix)
