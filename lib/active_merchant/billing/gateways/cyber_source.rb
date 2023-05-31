@@ -1053,12 +1053,22 @@ module ActiveMerchant #:nodoc:
         message = message_from(response)
         authorization = success || in_fraud_review?(response) ? authorization_from(response, action, amount, options) : nil
 
+        message = auto_void?(authorization_from(response, action, amount, options), response, message, options)
+
         Response.new(success, message, response,
           test: test?,
           authorization: authorization,
           fraud_review: in_fraud_review?(response),
           avs_result: { code: response[:avsCode] },
           cvv_result: response[:cvCode])
+      end
+
+      def auto_void?(authorization, response, message, options = {})
+        return message unless response[:reasonCode] == '230' && options[:auto_void_230]
+
+        response = void(authorization, options)
+        response&.success? ? message += ' - transaction has been auto-voided.' : message += ' - transaction could not be auto-voided.'
+        message
       end
 
       # Parse the SOAP response
