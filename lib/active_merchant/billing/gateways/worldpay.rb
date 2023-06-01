@@ -28,21 +28,6 @@ module ActiveMerchant #:nodoc:
         network_token: 'NETWORKTOKEN'
       }
 
-      CARD_CODES = {
-        'visa'             => 'VISA-SSL',
-        'master'           => 'ECMC-SSL',
-        'discover'         => 'DISCOVER-SSL',
-        'american_express' => 'AMEX-SSL',
-        'jcb'              => 'JCB-SSL',
-        'maestro'          => 'MAESTRO-SSL',
-        'diners_club'      => 'DINERS-SSL',
-        'elo'              => 'ELO-SSL',
-        'naranja'          => 'NARANJA-SSL',
-        'cabal'            => 'CABAL-SSL',
-        'unionpay'         => 'CHINAUNIONPAY-SSL',
-        'unknown'          => 'CARD-SSL'
-      }
-
       AVS_CODE_MAP = {
         'A' => 'M', # Match
         'B' => 'P', # Postcode matches, address not verified
@@ -646,7 +631,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_card_details(xml, payment_method, options)
-        xml.tag! card_code_for(payment_method) do
+        xml.tag! 'CARD-SSL' do
           add_card(xml, payment_method, options)
         end
       end
@@ -1032,10 +1017,6 @@ module ActiveMerchant #:nodoc:
         return 3 if three_decimal_currency?(currency)
 
         return 2
-      end
-
-      def card_code_for(payment_method)
-        CARD_CODES[card_brand(payment_method)] || CARD_CODES['unknown']
       end
 
       def eligible_for_0_auth?(payment_method, options = {})

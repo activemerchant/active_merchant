@@ -201,7 +201,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/4242424242424242/, data)
       assert_no_match(/cardHolderName/, data)
-      assert_match(/VISA-SSL/, data)
+      assert_match(/CARD-SSL/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
     assert_equal 'R50704213207145707', response.authorization
@@ -1174,7 +1174,7 @@ class WorldpayTest < Test::Unit::TestCase
       assert_match %r(4242424242424242), data
       assert_no_match %r(<order>), data
       assert_no_match %r(<paymentDetails>), data
-      assert_no_match %r(<VISA-SSL>), data
+      assert_no_match %r(<CARD-SSL>), data
     end.respond_with(successful_store_response)
 
     assert_success response
@@ -2136,7 +2136,7 @@ class WorldpayTest < Test::Unit::TestCase
           <amount value="100" exponent="2" currencyCode="HKD"/>
           <orderContent>Products Products Products</orderContent>
           <paymentDetails>
-            <VISA-SSL>
+            <CARD-SSL>
               <cardNumber>4242424242424242</cardNumber>
               <expiryDate>
                 <date month="09" year="2011"/>
@@ -2156,7 +2156,7 @@ class WorldpayTest < Test::Unit::TestCase
                   <telephoneNumber>(555)555-5555</telephoneNumber>
                 </address>
               </cardAddress>
-            </VISA-SSL>
+            </CARD-SSL>
             <session id="asfasfasfasdgvsdzvxzcvsd" shopperIPAddress="127.0.0.1"/>
           </paymentDetails>
           <shopper>
@@ -2179,7 +2179,7 @@ class WorldpayTest < Test::Unit::TestCase
             <description>Purchase</description>
             <amount value="100" currencyCode="GBP" exponent="2"/>
             <paymentDetails>
-              <VISA-SSL>
+              <CARD-SSL>
                 <cardNumber>4111111111111111</cardNumber>
                 <expiryDate>
                   <date month="09" year="2016"/>
@@ -2195,7 +2195,7 @@ class WorldpayTest < Test::Unit::TestCase
                     <countryCode>US</countryCode>
                   </address>
                 </cardAddress>
-              </VISA-SSL>
+              </CARD-SSL>
             </paymentDetails>
             <shopper>
               <shopperEmailAddress>wow@example.com</shopperEmailAddress>
@@ -2214,7 +2214,7 @@ class WorldpayTest < Test::Unit::TestCase
             <description>Purchase</description>
             <amount value="100" currencyCode="GBP" exponent="2"/>
             <paymentDetails>
-              <VISA-SSL>
+              <CARD-SSL>
                 <cardNumber>[FILTERED]</cardNumber>
                 <expiryDate>
                   <date month="09" year="2016"/>
@@ -2230,7 +2230,7 @@ class WorldpayTest < Test::Unit::TestCase
                     <countryCode>US</countryCode>
                   </address>
                 </cardAddress>
-              </VISA-SSL>
+              </CARD-SSL>
             </paymentDetails>
             <shopper>
               <shopperEmailAddress>wow@example.com</shopperEmailAddress>
