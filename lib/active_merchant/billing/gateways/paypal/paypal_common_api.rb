@@ -334,6 +334,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'CompleteType',  options[:complete_type] || 'Complete'
             xml.tag! 'InvoiceID', options[:order_id] unless options[:order_id].blank?
             xml.tag! 'Note', options[:description]
+            xml.tag! 'MsgSubID', options[:idempotency_key] if options[:idempotency_key]
           end
         end
 
@@ -350,6 +351,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'Amount', amount(money), 'currencyID' => (options[:currency] || currency(money)) if money.present?
             xml.tag! 'RefundType', (options[:refund_type] || (money.present? ? 'Partial' : 'Full'))
             xml.tag! 'Memo', options[:note] unless options[:note].blank?
+            xml.tag! 'MsgSubID', options[:idempotency_key] if options[:idempotency_key]
           end
         end
 
@@ -364,6 +366,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'AuthorizationID', authorization
             xml.tag! 'Note', options[:description]
+            xml.tag! 'MsgSubID', options[:idempotency_key] if options[:idempotency_key]
           end
         end
 
