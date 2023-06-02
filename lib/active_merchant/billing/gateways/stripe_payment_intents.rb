@@ -208,9 +208,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         # If customer option is provided, create a payment method and attach to customer id
         # Otherwise, create a customer, then attach
-        if payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
-          result = add_payment_method_token(params, payment_method, options)
-          return result if result.is_a?(ActiveMerchant::Billing::Response)
+        if payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(ActiveMerchant::Billing::CreditCard) || (payment_method.is_a?(ActiveMerchant::Billing::Check) && payment_method.country != 'US')
+          payment_method = add_payment_method_token(params, payment_method, options)
+          return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
 
           if options[:customer]
             customer_id = options[:customer]
@@ -220,6 +220,8 @@ module ActiveMerchant #:nodoc:
             options = format_idempotency_key(options, 'customer')
             post[:expand] = [:sources]
             customer = commit(:post, 'customers', post, options)
+            return customer unless customer.success?
+
             customer_id = customer.params['id']
           end
           options = format_idempotency_key(options, 'attach')
@@ -315,6 +317,32 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method_token(post, payment_method, options, responses = [])
+        return if payment_method.nil?
+
+        if payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
+          if off_session_request?(options)
+            post[:payment_method_data] = create_payment_method_data(payment_method, options)
+            return
+          else
+            p = create_payment_method(payment_method, options)
+            return p unless p.success?
+
+            payment_method = p.params['id']
+          end
+        end
+
+        if payment_method.is_a?(ActiveMerchant::Billing::Check)
+          if off_session_request?(options)
+            post[:payment_method_data] = create_payment_method_data(payment_method, options)
+            return
+          else
+            p = create_payment_method(payment_method, options)
+            return p unless p.success?
+
+            payment_method = p.params['id']
+          end
+        end
+
         case payment_method
         when StripePaymentToken
           post[:payment_method_data] = {
