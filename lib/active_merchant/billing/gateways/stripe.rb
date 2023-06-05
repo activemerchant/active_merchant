@@ -652,18 +652,19 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def headers(options = {})
-        key = options[:key] || @api_key
-        idempotency_key = options[:idempotency_key]
+      def key(options = {})
+        options[:key] || @api_key
+      end
 
+      def headers(options = {})
         headers = {
-          'Authorization' => 'Basic ' + Base64.strict_encode64(key.to_s + ':').strip,
+          'Authorization' => 'Basic ' + Base64.strict_encode64(key(options).to_s + ':').strip,
           'User-Agent' => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Stripe-Version' => api_version(options),
           'X-Stripe-Client-User-Agent' => stripe_client_user_agent(options),
           'X-Stripe-Client-User-Metadata' => { ip: options[:ip] }.to_json
         }
-        headers['Idempotency-Key'] = idempotency_key if idempotency_key
+        headers['Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
         headers['Stripe-Account'] = options[:stripe_account] if options[:stripe_account]
         headers
       end
@@ -694,6 +695,10 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, url, parameters = nil, options = {})
         add_expand_parameters(parameters, options) if parameters
+
+        return Response.new(false, 'Invalid API Key provided') if test? && !key(options).start_with?('sk_test')
+        return Response.new(false, 'Invalid API Key provided') if !test? && !key(options).start_with?('sk_live')
+
         response = api_request(method, url, parameters, options)
         response['webhook_id'] = options[:webhook_id] if options[:webhook_id]
         success = success_from(response, options)
