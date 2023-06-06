@@ -997,7 +997,7 @@ module ActiveMerchant #:nodoc:
         when String
           token_type_and_details(payment_method)
         else
-          type = payment_method.respond_to?(:source) ? :network_token : :credit
+          type = payment_method.respond_to?(:source || :payment_cryptogram) ? :network_token : :credit
 
           { payment_type: type }
         end
