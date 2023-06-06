@@ -185,7 +185,7 @@ module ActiveMerchant #:nodoc:
           post[key][:token_type] = token_type
           post[key][:cryptogram] = cryptogram if cryptogram
           post[key][:eci] = eci if eci
-        when CreditCard
+        when ->(pm) { pm.try(:credit_card?) }
           post[key][:type] = 'card'
           post[key][:name] = payment_method.name
           post[key][:number] = payment_method.number
