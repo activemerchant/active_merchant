@@ -266,13 +266,6 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_match 'Invalid API Key provided', response.message
   end
 
-  def test_invalid_login_live_transaction
-    gateway = StripePaymentIntentsGateway.new(login: 'sk_test_3422', test: false)
-    assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match 'Invalid API Key provided', response.message
-  end
-
   def test_failed_error_on_requires_action
     @gateway.expects(:ssl_request).returns(failed_with_set_error_on_requires_action_response)
 

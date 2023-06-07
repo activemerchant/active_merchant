@@ -697,7 +697,6 @@ module ActiveMerchant #:nodoc:
         add_expand_parameters(parameters, options) if parameters
 
         return Response.new(false, 'Invalid API Key provided') if test? && !key(options).start_with?('sk_test')
-        return Response.new(false, 'Invalid API Key provided') if !test? && !key(options).start_with?('sk_live')
 
         response = api_request(method, url, parameters, options)
         response['webhook_id'] = options[:webhook_id] if options[:webhook_id]

@@ -883,13 +883,6 @@ class StripeTest < Test::Unit::TestCase
     assert_match 'Invalid API Key provided', response.message
   end
 
-  def test_invalid_login_live_transaction
-    gateway = StripePaymentIntentsGateway.new(login: 'sk_test_3422', test: false)
-    assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match 'Invalid API Key provided', response.message
-  end
-
   def test_add_creditcard_with_credit_card
     post = {}
     @gateway.send(:add_creditcard, post, @credit_card, {})
