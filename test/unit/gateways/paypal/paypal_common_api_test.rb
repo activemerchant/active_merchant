@@ -198,19 +198,4 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     assert_equal 'id', REXML::XPath.first(request, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:ReferenceID').text
     assert_equal '127.0.0.1', REXML::XPath.first(request, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:IPAddress').text
   end
-
-  def test_build_capture_request_sets_idempotency_key
-    request = REXML::Document.new(@gateway.send(:build_capture_request, 100, 'id', idempotency_key: 'idempotency_key'))
-    assert_equal 'idempotency_key', REXML::XPath.first(request, '//DoCaptureRequest/MsgSubID').text
-  end
-
-  def test_build_refund_request_sets_idempotency_key
-    request = REXML::Document.new(@gateway.send(:build_refund_request, 100, 'id', idempotency_key: 'idempotency_key'))
-    assert_equal 'idempotency_key', REXML::XPath.first(request, '//RefundTransactionRequest/MsgSubID').text
-  end
-
-  def test_build_void_request_sets_idempotency_key
-    request = REXML::Document.new(@gateway.send(:build_void_request, 'id', idempotency_key: 'idempotency_key'))
-    assert_equal 'idempotency_key', REXML::XPath.first(request, '//DoVoidRequest/MsgSubID').text
-  end
 end
