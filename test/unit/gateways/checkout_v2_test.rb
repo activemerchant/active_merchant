@@ -805,6 +805,38 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_purchase_supports_alternate_credit_card_implementation
+    alternate_credit_card_class = Class.new
+    alternate_credit_card = alternate_credit_card_class.new
+
+    alternate_credit_card.expects(:credit_card?).returns(true)
+    alternate_credit_card.expects(:name).returns(@credit_card.name)
+    alternate_credit_card.expects(:number).returns(@credit_card.number)
+    alternate_credit_card.expects(:verification_value).returns(@credit_card.verification_value)
+    alternate_credit_card.expects(:first_name).at_least_once.returns(@credit_card.first_name)
+    alternate_credit_card.expects(:last_name).at_least_once.returns(@credit_card.first_name)
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, alternate_credit_card)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_supports_alternate_credit_card_implementation
+    alternate_credit_card_class = Class.new
+    alternate_credit_card = alternate_credit_card_class.new
+
+    alternate_credit_card.expects(:credit_card?).returns(true)
+    alternate_credit_card.expects(:name).returns(@credit_card.name)
+    alternate_credit_card.expects(:number).returns(@credit_card.number)
+    alternate_credit_card.expects(:verification_value).returns(@credit_card.verification_value)
+    alternate_credit_card.expects(:first_name).at_least_once.returns(@credit_card.first_name)
+    alternate_credit_card.expects(:last_name).at_least_once.returns(@credit_card.first_name)
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, alternate_credit_card)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def pre_scrubbed
