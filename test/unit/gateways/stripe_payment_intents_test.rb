@@ -659,6 +659,108 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), scrubbed
   end
 
+  def test_succesful_purchase_with_initial_cit_unscheduled
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, {
+        currency: 'USD',
+        confirm: true,
+        stored_credential_transaction_type: true,
+        stored_credential: {
+          initial_transaction: true,
+          initiator: 'cardholder',
+          reason_type: 'unscheduled'
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][stored_credential_transaction_type]=setup_off_session_unscheduled', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_succesful_purchase_with_initial_cit_recurring
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, {
+        currency: 'USD',
+        confirm: true,
+        stored_credential_transaction_type: true,
+        stored_credential: {
+          initial_transaction: true,
+          initiator: 'cardholder',
+          reason_type: 'recurring'
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][stored_credential_transaction_type]=setup_off_session_recurring', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_succesful_purchase_with_initial_cit_installment
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, {
+        currency: 'USD',
+        confirm: true,
+        stored_credential_transaction_type: true,
+        stored_credential: {
+          initial_transaction: true,
+          initiator: 'cardholder',
+          reason_type: 'installment'
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][stored_credential_transaction_type]=setup_on_session', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_succesful_purchase_with_subsequent_cit
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, {
+        currency: 'USD',
+        confirm: true,
+        stored_credential_transaction_type: true,
+        stored_credential: {
+          initial_transaction: false,
+          initiator: 'cardholder',
+          reason_type: 'installment'
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][stored_credential_transaction_type]=stored_on_session', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_succesful_purchase_with_mit_recurring
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, {
+        currency: 'USD',
+        confirm: true,
+        stored_credential_transaction_type: true,
+        stored_credential: {
+          initial_transaction: false,
+          initiator: 'merchant',
+          reason_type: 'recurring'
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][stored_credential_transaction_type]=stored_off_session_recurring', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_succesful_purchase_with_mit_unscheduled
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, {
+        currency: 'USD',
+        confirm: true,
+        stored_credential_transaction_type: true,
+        stored_credential: {
+          initial_transaction: false,
+          initiator: 'merchant',
+          reason_type: 'unscheduled'
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][stored_credential_transaction_type]=stored_off_session_unscheduled', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
   private
 
   def successful_setup_purchase
