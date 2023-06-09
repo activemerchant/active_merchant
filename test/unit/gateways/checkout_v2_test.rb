@@ -834,7 +834,7 @@ class CheckoutV2Test < Test::Unit::TestCase
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, alternate_credit_card)
-    end.respond_with(successful_purchase_response)
+    end.respond_with(successful_authorize_response)
   end
 
   private
