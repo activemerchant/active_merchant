@@ -3,6 +3,7 @@
 
 == HEAD
 * Redsys: Add supported countries [jcreiff] #4811
+* Authorize.net: Truncate nameOnAccount for bank refunds [jcreiff] #4808
 
 == Version 1.130.0 (June 13th, 2023)
 * Payu Latam - Update error code method to surface network code [yunnydang] #4773

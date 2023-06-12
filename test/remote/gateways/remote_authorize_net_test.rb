@@ -835,6 +835,18 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_match %r{The transaction cannot be found}, refund.message, 'Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise.'
   end
 
+  def test_successful_echeck_refund_truncates_long_account_name
+    check_with_long_name = check(name: 'Michelangelo Donatello-Raphael')
+    purchase = @gateway.purchase(@amount, check_with_long_name, @options)
+    assert_success purchase
+
+    @options.update(first_name: check_with_long_name.first_name, last_name: check_with_long_name.last_name, routing_number: check_with_long_name.routing_number,
+                    account_number: check_with_long_name.account_number, account_type: check_with_long_name.account_type)
+    refund = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_failure refund
+    assert_match %r{The transaction cannot be found}, refund.message, 'Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise.'
+  end
+
   def test_failed_credit
     response = @gateway.credit(@amount, @declined_card, @options)
     assert_failure response
