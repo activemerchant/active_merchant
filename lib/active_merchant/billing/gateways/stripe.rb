@@ -2,6 +2,9 @@ require 'active_support/core_ext/hash/slice'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    class StripeCustomerManyPaymentMethodWithoutDefault < RuntimeError; end
+    class StripeCustomerDoesNotExist < RuntimeError; end
+
     class StripeGateway < Gateway
       self.live_url = 'https://api.stripe.com/v1/'
 
@@ -394,7 +397,7 @@ module ActiveMerchant #:nodoc:
         return default_source if default_source
 
         if payment_methods.count > 1
-          raise "Customer has more than one payment method but doesn't have default one."
+          raise StripeCustomerManyPaymentMethodWithoutDefault, "Customer has more than one payment method but doesn't have default one."
         end
       end
 
@@ -403,13 +406,13 @@ module ActiveMerchant #:nodoc:
         return payment_methods.default_payment_method if payment_methods.default_payment_method
 
         if payment_methods.count > 1
-          raise "Customer has more than one payment method but doesn't have default one."
+          raise StripeCustomerManyPaymentMethodWithoutDefault, "Customer has more than one payment method but doesn't have default one."
         end
       end
 
       def customer_payment_methods(customer, payment_type)
         r = commit(:get, "payment_methods?customer=#{customer}&type=#{payment_type}", nil, options)
-        raise r.message unless r.success?
+        raise StripeCustomerDoesNotExist, r.message unless r.success?
 
         payment_methods = r.params["data"]
 
