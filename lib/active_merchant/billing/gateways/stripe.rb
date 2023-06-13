@@ -412,8 +412,8 @@ module ActiveMerchant #:nodoc:
 
       def customer_payment_methods(customer, payment_type)
         r = commit(:get, "payment_methods?customer=#{customer}&type=#{payment_type}", nil, options)
-        
-        raise StripeCustomerDoesNotExist, r.message unless r.success? && r.message.include?("No such customer:")
+
+        raise StripeCustomerDoesNotExist, r.message if !r.success? && r.message.include?("No such customer:")
 
         payment_methods = r.params["data"]
 
