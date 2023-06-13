@@ -188,6 +188,7 @@ module ActiveMerchant #:nodoc:
         post[:card][:installments] = options[:installments] if options[:installments]
         post[:card][:installments_id] = options[:installments_id] if options[:installments_id]
         post[:card][:force_type] = options[:force_type].to_s.upcase if options[:force_type]
+        post[:card][:save] = options[:save] if options[:save]
       end
 
       def parse(body)

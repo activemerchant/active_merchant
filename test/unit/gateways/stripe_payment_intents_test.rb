@@ -4,7 +4,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = StripePaymentIntentsGateway.new(login: 'login')
+    @gateway = StripePaymentIntentsGateway.new(login: 'sk_test_login')
 
     @credit_card = credit_card()
     @threeds_2_card = credit_card('4000000000003220')
@@ -257,6 +257,13 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal 'validation_error', create.params.dig('error', 'code')
     assert_equal 'You must verify a phone number on your Stripe account before you can send raw credit card numbers to the Stripe API. You can avoid this requirement by using Stripe.js, the Stripe mobile bindings, or Stripe Checkout. For more information, see https://dashboard.stripe.com/phone-verification.', create.params.dig('error', 'message')
     assert_equal 'invalid_request_error', create.params.dig('error', 'type')
+  end
+
+  def test_invalid_login_test_transaction
+    gateway = StripePaymentIntentsGateway.new(login: 'sk_live_3422')
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match 'Invalid API Key provided', response.message
   end
 
   def test_failed_error_on_requires_action

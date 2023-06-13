@@ -145,11 +145,35 @@ class WorldpayTest < Test::Unit::TestCase
     }
   end
 
+  def test_payment_type_for_network_card
+    payment = @gateway.send(:payment_details, @nt_credit_card)[:payment_type]
+    assert_equal payment, :network_token
+  end
+
+  def test_payment_type_for_credit_card
+    payment = @gateway.send(:payment_details, @credit_card)[:payment_type]
+    assert_equal payment, :credit
+  end
+
   def test_successful_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/4242424242424242/, data)
+      assert_match(/cardHolderName/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+    assert_equal 'R50704213207145707', response.authorization
+  end
+
+  def test_successful_authorize_without_name
+    credit_card = credit_card('4242424242424242', first_name: nil, last_name: nil)
+    response = stub_comms do
+      @gateway.authorize(@amount, credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/4242424242424242/, data)
+      assert_no_match(/cardHolderName/, data)
+      assert_match(/VISA-SSL/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
     assert_equal 'R50704213207145707', response.authorization

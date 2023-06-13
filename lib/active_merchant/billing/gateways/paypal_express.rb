@@ -108,6 +108,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:PaymentAction', action
               xml.tag! 'n2:Token', options[:token]
               xml.tag! 'n2:PayerID', options[:payer_id]
+              xml.tag! 'n2:MsgSubID', options[:idempotency_key] if options[:idempotency_key]
               add_payment_details(xml, money, currency_code, options)
             end
           end
@@ -251,6 +252,7 @@ module ActiveMerchant #:nodoc:
               add_payment_details(xml, money, currency_code, options)
               xml.tag! 'n2:IPAddress', options[:ip]
               xml.tag! 'n2:MerchantSessionId', options[:merchant_session_id] if options[:merchant_session_id].present?
+              xml.tag! 'n2:MsgSubID', options[:idempotency_key] if options[:idempotency_key]
             end
           end
         end

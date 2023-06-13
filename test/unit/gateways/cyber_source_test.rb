@@ -1442,6 +1442,38 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_equal 'c:billTo/c:postalCode', response.params['invalidField']
   end
 
+  def test_cvv_mismatch_successful_auto_void
+    @gateway.expects(:ssl_post).returns(cvv_mismatch_response)
+    @gateway.expects(:void).once.returns(ActiveMerchant::Billing::Response.new(true, 'Transaction successful'))
+
+    response = @gateway.authorize(@amount, credit_card, @options.merge!(auto_void_230: true))
+
+    assert_failure response
+    assert_equal '230', response.params['reasonCode']
+    assert_equal 'The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the card verification check - transaction has been auto-voided.', response.message
+  end
+
+  def test_cvv_mismatch
+    @gateway.expects(:ssl_post).returns(cvv_mismatch_response)
+    @gateway.expects(:void).never
+
+    response = @gateway.purchase(@amount, credit_card, @options)
+
+    assert_failure response
+    assert_equal '230', response.params['reasonCode']
+    assert_equal 'The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the card verification check', response.message
+  end
+
+  def test_cvv_mismatch_auto_void_failed
+    @gateway.expects(:ssl_post).returns(cvv_mismatch_response)
+    @gateway.expects(:void)
+    response = @gateway.purchase(@amount, credit_card, @options.merge!(auto_void_230: true))
+
+    assert_failure response
+    assert_equal '230', response.params['reasonCode']
+    assert_equal 'The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the card verification check - transaction could not be auto-voided.', response.message
+  end
+
   def test_able_to_properly_handle_40bytes_cryptogram
     long_cryptogram = "NZwc40C4eTDWHVDXPekFaKkNYGk26w+GYDZmU50cATbjqOpNxR/eYA==\n"
     credit_card = network_tokenization_credit_card('4111111111111111',
@@ -1818,6 +1850,15 @@ class CyberSourceTest < Test::Unit::TestCase
       <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
       <soap:Header>
       <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-1918753692"><wsu:Created>2019-09-05T14:10:46.665Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.155"><c:requestID>5676926465076767004068</c:requestID><c:decision>REJECT</c:decision><c:reasonCode>102</c:reasonCode><c:invalidField>c:billTo/c:postalCode</c:invalidField><c:requestToken>AhjzbwSTM78uTleCsJWkEAJRqivRidukDssiQgRm0ky3SA7oegDUiwLm</c:requestToken></c:replyMessage></soap:Body></soap:Envelope>
+
+    XML
+  end
+
+  def cvv_mismatch_response
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+      <soap:Header>
+      <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-1918753692"><wsu:Created>2019-09-05T14:10:46.665Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.155"><c:requestID>5676926465076767004068</c:requestID><c:decision>REJECT</c:decision><c:reasonCode>230</c:reasonCode><c:invalidField>c:billTo/c:postalCode</c:invalidField><c:requestToken>AhjzbwSTM78uTleCsJWkEAJRqivRidukDssiQgRm0ky3SA7oegDUiwLm</c:requestToken></c:replyMessage></soap:Body></soap:Envelope>
 
     XML
   end

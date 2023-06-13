@@ -58,9 +58,9 @@ class BorgunTest < Test::Unit::TestCase
 
   def test_successful_preauth_3ds
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge({ merchant_return_url: 'http://localhost/index.html', apply_3d_secure: '1', sale_description: 'product description' }))
+      @gateway.purchase(@amount, @credit_card, @options.merge({ redirect_url: 'http://localhost/index.html', apply_3d_secure: '1', sale_description: 'product description' }))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/MerchantReturnURL&gt;#{@options[:merchant_return_url]}/, data)
+      assert_match(/MerchantReturnURL&gt;#{@options[:redirect_url]}/, data)
       assert_match(/SaleDescription&gt;#{@options[:sale_description]}/, data)
       assert_match(/TrCurrencyExponent&gt;2/, data)
     end.respond_with(successful_get_3ds_authentication_response)
