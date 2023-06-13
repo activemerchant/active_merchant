@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://sis.redsys.es/sis/operaciones'
       self.test_url = 'https://sis-t.redsys.es:25443/sis/operaciones'
 
-      self.supported_countries = ['ES']
+      self.supported_countries = %w[ES FR GB IT PL PT]
       self.default_currency    = 'EUR'
       self.money_format        = :cents
 
