@@ -19,6 +19,7 @@
 * Add BIN for Maestro [jcreiff] #4799
 * D_Local: Add save field on card object [yunnydang] #4805
 * PayPal Express: Adds support for MsgSubID property on DoReferenceTransaction and DoExpressCheckoutPayment [wikiti] #4798
+* Shift4: Enable general credit feature [jherreraa] #4790
 
 == Version 1.129.0 (May 3rd, 2023)
 * Adyen: Update selectedBrand mapping for Google Pay [jcreiff] #4763

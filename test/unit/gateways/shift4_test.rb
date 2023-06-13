@@ -223,6 +223,18 @@ class Shift4Test < Test::Unit::TestCase
     assert_equal response.message, 'Transaction successful'
   end
 
+  def test_successful_credit
+    stub_comms do
+      @gateway.refund(@amount, @credit_card, @options.merge!(invoice: '4666309473', expiration_date: '1235'))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['card']['present'], 'N'
+      assert_equal request['card']['expirationDate'], '0924'
+      assert_nil request['card']['entryMode']
+      assert_nil request['customer']
+    end.respond_with(successful_refund_response)
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_void_response)
     response = @gateway.void('123')
