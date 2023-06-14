@@ -415,6 +415,8 @@ module ActiveMerchant #:nodoc:
 
         raise StripeCustomerDoesNotExist, r.message if !r.success? && r.message.include?("No such customer:")
 
+        raise RuntimeError, r.message unless r.success?
+
         payment_methods = r.params["data"]
 
         return OpenStruct.new(
