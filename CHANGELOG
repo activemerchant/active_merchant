@@ -4,6 +4,7 @@
 == HEAD
 * Stripe Payment Intents: Add support for new card on file field [aenand] #4807
 * Commerce Hub: Add `physicalGoodsIndicator` and `schemeReferenceTransactionId` GSFs [sinourain] #4786
+* VPos: Adding Panal Credit Card type [jherreraa] #4814
 
 == Version 1.131.0 (June 21, 2023)
 * Redsys: Add supported countries [jcreiff] #4811

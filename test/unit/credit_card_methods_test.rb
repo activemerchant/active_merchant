@@ -502,6 +502,10 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_false electron_test.call('42496200000000000')
   end
 
+  def test_should_detect_panal_card
+    assert_equal 'panal', CreditCard.brand?('6020490000000000')
+  end
+
   def test_credit_card?
     assert credit_card.credit_card?
   end
