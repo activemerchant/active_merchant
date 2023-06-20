@@ -1332,6 +1332,88 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_succesful_additional_airline_data
+    airline_data = {
+      agency_invoice_number: 'BAC123',
+      agency_plan_name: 'plan name',
+      airline_code: '434234',
+      airline_designator_code: '1234',
+      boarding_fee: '100',
+      computerized_reservation_system: 'abcd',
+      customer_reference_number: 'asdf1234',
+      document_type: 'cc',
+      leg: {
+        carrier_code: 'KL'
+      },
+      passenger: {
+        first_name: 'Joe',
+        last_name: 'Doe'
+      }
+    }
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(additional_data_airline: airline_data))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      additional_data = parsed['additionalData']
+      assert_equal additional_data['airline.agency_invoice_number'], airline_data[:agency_invoice_number]
+      assert_equal additional_data['airline.agency_plan_name'], airline_data[:agency_plan_name]
+      assert_equal additional_data['airline.airline_code'], airline_data[:airline_code]
+      assert_equal additional_data['airline.airline_designator_code'], airline_data[:airline_designator_code]
+      assert_equal additional_data['airline.boarding_fee'], airline_data[:boarding_fee]
+      assert_equal additional_data['airline.computerized_reservation_system'], airline_data[:computerized_reservation_system]
+      assert_equal additional_data['airline.customer_reference_number'], airline_data[:customer_reference_number]
+      assert_equal additional_data['airline.document_type'], airline_data[:document_type]
+      assert_equal additional_data['airline.flight_date'], airline_data[:flight_date]
+      assert_equal additional_data['airline.ticket_issue_address'], airline_data[:abcqwer]
+      assert_equal additional_data['airline.ticket_number'], airline_data[:ticket_number]
+      assert_equal additional_data['airline.travel_agency_code'], airline_data[:travel_agency_code]
+      assert_equal additional_data['airline.travel_agency_name'], airline_data[:travel_agency_name]
+      assert_equal additional_data['airline.passenger_name'], airline_data[:passenger_name]
+      assert_equal additional_data['airline.leg.carrier_code'], airline_data[:leg][:carrier_code]
+      assert_equal additional_data['airline.leg.class_of_travel'], airline_data[:leg][:class_of_travel]
+      assert_equal additional_data['airline.passenger.first_name'], airline_data[:passenger][:first_name]
+      assert_equal additional_data['airline.passenger.last_name'], airline_data[:passenger][:last_name]
+      assert_equal additional_data['airline.passenger.telephone_number'], airline_data[:passenger][:telephone_number]
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_additional_data_lodging
+    lodging_data = {
+      check_in_date: '20230822',
+      check_out_date: '20230830',
+      customer_service_toll_free_number: '234234',
+      fire_safety_act_indicator: 'abc123',
+      folio_cash_advances: '1234667',
+      folio_number: '32343',
+      food_beverage_charges: '1234',
+      no_show_indicator: 'Y',
+      prepaid_expenses: '100',
+      property_phone_number: '54545454',
+      number_of_nights: '5'
+    }
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(additional_data_lodging: lodging_data))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      additional_data = parsed['additionalData']
+      assert_equal additional_data['lodging.checkInDate'], lodging_data[:check_in_date]
+      assert_equal additional_data['lodging.checkOutDate'], lodging_data[:check_out_date]
+      assert_equal additional_data['lodging.customerServiceTollFreeNumber'], lodging_data[:customer_service_toll_free_number]
+      assert_equal additional_data['lodging.fireSafetyActIndicator'], lodging_data[:fire_safety_act_indicator]
+      assert_equal additional_data['lodging.folioCashAdvances'], lodging_data[:folio_cash_advances]
+      assert_equal additional_data['lodging.folioNumber'], lodging_data[:folio_number]
+      assert_equal additional_data['lodging.foodBeverageCharges'], lodging_data[:food_beverage_charges]
+      assert_equal additional_data['lodging.noShowIndicator'], lodging_data[:no_show_indicator]
+      assert_equal additional_data['lodging.prepaidExpenses'], lodging_data[:prepaid_expenses]
+      assert_equal additional_data['lodging.propertyPhoneNumber'], lodging_data[:property_phone_number]
+      assert_equal additional_data['lodging.room1.numberOfNights'], lodging_data[:number_of_nights]
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_extended_avs_response
     response = stub_comms do
       @gateway.verify(@credit_card, @options)

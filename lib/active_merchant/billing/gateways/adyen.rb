@@ -68,6 +68,8 @@ module ActiveMerchant #:nodoc:
         add_application_info(post, options)
         add_level_2_data(post, options)
         add_level_3_data(post, options)
+        add_data_airline(post, options)
+        add_data_lodging(post, options)
         commit('authorise', post, options)
       end
 
@@ -288,6 +290,84 @@ module ActiveMerchant #:nodoc:
             post[:additionalData].merge!(extract_and_transform(mapper, item))
           end
         end
+        post[:additionalData].compact!
+      end
+
+      def add_data_airline(post, options)
+        return unless options[:additional_data_airline]
+
+        mapper = %w[
+          agency_invoice_number
+          agency_plan_name
+          airline_code
+          airline_designator_code
+          boarding_fee
+          computerized_reservation_system
+          customer_reference_number
+          document_type
+          flight_date
+          ticket_issue_address
+          ticket_number
+          travel_agency_code
+          travel_agency_name
+          passenger_name
+        ].each_with_object({}) { |value, hash| hash["airline.#{value}"] = value }
+
+        post[:additionalData].merge!(extract_and_transform(mapper, options[:additional_data_airline]))
+
+        if options[:additional_data_airline][:leg].present?
+          leg_data = %w[
+            carrier_code
+            class_of_travel
+            date_of_travel
+            depart_airport
+            depart_tax
+            destination_code
+            fare_base_code
+            flight_number
+            stop_over_code
+          ].each_with_object({}) { |value, hash| hash["airline.leg.#{value}"] = value }
+
+          post[:additionalData].merge!(extract_and_transform(leg_data, options[:additional_data_airline][:leg]))
+        end
+
+        if options[:additional_data_airline][:passenger].present?
+          passenger_data = %w[
+            date_of_birth
+            first_name
+            last_name
+            telephone_number
+            traveller_type
+          ].each_with_object({}) { |value, hash| hash["airline.passenger.#{value}"] = value }
+
+          post[:additionalData].merge!(extract_and_transform(passenger_data, options[:additional_data_airline][:passenger]))
+        end
+        post[:additionalData].compact!
+      end
+
+      def add_data_lodging(post, options)
+        return unless options[:additional_data_lodging]
+
+        mapper = {
+          'lodging.checkInDate': 'check_in_date',
+          'lodging.checkOutDate': 'check_out_date',
+          'lodging.customerServiceTollFreeNumber': 'customer_service_toll_free_number',
+          'lodging.fireSafetyActIndicator': 'fire_safety_act_indicator',
+          'lodging.folioCashAdvances': 'folio_cash_advances',
+          'lodging.folioNumber': 'folio_number',
+          'lodging.foodBeverageCharges': 'food_beverage_charges',
+          'lodging.noShowIndicator': 'no_show_indicator',
+          'lodging.prepaidExpenses': 'prepaid_expenses',
+          'lodging.propertyPhoneNumber': 'property_phone_number',
+          'lodging.room1.numberOfNights': 'number_of_nights',
+          'lodging.room1.rate': 'rate',
+          'lodging.totalRoomTax': 'total_room_tax',
+          'lodging.totalTax': 'totalTax',
+          'travelEntertainmentAuthData.duration': 'duration',
+          'travelEntertainmentAuthData.market': 'market'
+        }
+
+        post[:additionalData].merge!(extract_and_transform(mapper, options[:additional_data_lodging]))
         post[:additionalData].compact!
       end
 

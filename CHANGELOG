@@ -12,6 +12,7 @@
 * NMI: Add shipping_firstname, shipping_lastname, shipping_email, and surcharge fields [jcreiff] #4825
 * Borgun: Update authorization_from & message_from [almalee24] #4826
 * Kushki: Add Brazil as supported country [almalee24] #4829
+* Adyen: Add additional data for airline and lodging [javierpedrozaing] #4815
 
 == Version 1.131.0 (June 21, 2023)
 * Redsys: Add supported countries [jcreiff] #4811
