@@ -1015,11 +1015,9 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Authorised', response.message
   end
 
-  # Adyen does not currently support recurring transactions with Cabal cards
-  def test_failed_store_with_cabal_card
+  def test_successful_store_with_cabal_card
     assert response = @gateway.store(@cabal_credit_card, @options)
-    assert_failure response
-    assert_equal 'Recurring transactions are not supported for this card type.', response.message
+    assert_success response
   end
 
   def test_successful_store_with_unionpay_card
@@ -1495,6 +1493,63 @@ class RemoteAdyenTest < Test::Unit::TestCase
       ]
     }
     response = @gateway.purchase(@amount, @credit_card, @options.merge(level_3_data: level_3_data))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_succesful_purchase_with_airline_data
+    airline_data = {
+      agency_invoice_number: 'BAC123',
+      agency_plan_name: 'plan name',
+      airline_code: '434234',
+      airline_designator_code: '1234',
+      boarding_fee: '100',
+      computerized_reservation_system: 'abcd',
+      customer_reference_number: 'asdf1234',
+      document_type: 'cc',
+      flight_date: '2023-09-08',
+      ticket_issue_address: 'abcqwer',
+      ticket_number: 'ABCASDF',
+      travel_agency_code: 'ASDF',
+      travel_agency_name: 'hopper',
+      passenger_name: 'Joe Doe',
+      leg: {
+        carrier_code: 'KL',
+        class_of_travel: 'F'
+      },
+      passenger: {
+        first_name: 'Joe',
+        last_name: 'Doe',
+        telephone_number: '432211111'
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(additional_data_airline: airline_data))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_succesful_purchase_with_lodging_data
+    lodging_data = {
+      check_in_date: '20230822',
+      check_out_date: '20230830',
+      customer_service_toll_free_number: '234234',
+      fire_safety_act_indicator: 'abc123',
+      folio_cash_advances: '1234667',
+      folio_number: '32343',
+      food_beverage_charges: '1234',
+      no_show_indicator: 'Y',
+      prepaid_expenses: '100',
+      property_phone_number: '54545454',
+      number_of_nights: '5',
+      rate: '100',
+      total_room_tax: '1000',
+      total_tax: '100',
+      duration: '2',
+      market: 'H'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(additional_data_lodging: lodging_data))
     assert_success response
     assert_equal '[capture-received]', response.message
   end
