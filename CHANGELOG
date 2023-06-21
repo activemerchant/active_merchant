@@ -2,8 +2,11 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.131.0 (June 21, 2023)
 * Redsys: Add supported countries [jcreiff] #4811
 * Authorize.net: Truncate nameOnAccount for bank refunds [jcreiff] #4808
+* CheckoutV2: Add support for several customer data fields [rachelkirk] #4800
 * Worldpay: check payment_method responds to payment_cryptogram and eci [bbraschi] #4812
 
 == Version 1.130.0 (June 13th, 2023)
