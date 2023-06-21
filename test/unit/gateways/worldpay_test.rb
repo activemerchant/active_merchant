@@ -150,6 +150,34 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal payment, :network_token
   end
 
+  def test_payment_type_returns_network_token_if_the_payment_method_responds_to_source_payment_cryptogram_and_eci
+    payment_method = mock
+    payment_method.stubs(source: nil, payment_cryptogram: nil, eci: nil)
+    result = @gateway.send(:payment_details, payment_method)
+    assert_equal({ payment_type: :network_token }, result)
+  end
+
+  def test_payment_type_returns_credit_if_the_payment_method_does_not_responds_to_source
+    payment_method = mock
+    payment_method.stubs(payment_cryptogram: nil, eci: nil)
+    result = @gateway.send(:payment_details, payment_method)
+    assert_equal({ payment_type: :credit }, result)
+  end
+
+  def test_payment_type_returns_credit_if_the_payment_method_does_not_responds_to_payment_cryptogram
+    payment_method = mock
+    payment_method.stubs(source: nil, eci: nil)
+    result = @gateway.send(:payment_details, payment_method)
+    assert_equal({ payment_type: :credit }, result)
+  end
+
+  def test_payment_type_returns_credit_if_the_payment_method_does_not_responds_to_eci
+    payment_method = mock
+    payment_method.stubs(source: nil, payment_cryptogram: nil)
+    result = @gateway.send(:payment_details, payment_method)
+    assert_equal({ payment_type: :credit }, result)
+  end
+
   def test_payment_type_for_credit_card
     payment = @gateway.send(:payment_details, @credit_card)[:payment_type]
     assert_equal payment, :credit
