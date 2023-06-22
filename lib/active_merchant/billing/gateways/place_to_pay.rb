@@ -145,7 +145,7 @@ module ActiveMerchant #:nodoc:
       def add_instrument(post, payment, options)
         post[:instrument] = options[:instrument]
         post[:instrument][:card][:number] = payment.number;
-        post[:instrument][:card][:expiration] = (payment.month).to_s + "/" + (payment.month).to_s;
+        post[:instrument][:card][:expiration] = (payment.month).to_s + "/" + (payment.year).to_s;
         post[:instrument][:card][:cvv] = payment.verification_value;        
       end
 
