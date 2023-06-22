@@ -3,8 +3,7 @@ require 'test_helper'
 class RemotePlaceToPayTest < Test::Unit::TestCase
   def setup
     @default_gateway = PlaceToPayGateway.new(fixtures(:place_to_pay_default))
-    #@default_gateway = PlaceToPayGateway.new(login: '11caf20f5cd408c9b22c7f0693e2f676', secret_key: 'yLb0x2IO2lO65zq7')
-    
+
     @amount = 100
 
     @payer = {
