@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
           response,
           test: test?,
           error_code: error_code_from(action, response, options),
-          authorization: response['authorization'],
+          authorization: authorization_from(response),
           network_transaction_id: response['internalReference'],
         )
       end
@@ -107,7 +107,9 @@ module ActiveMerchant #:nodoc:
           COMMON_MESSAGES[:missed]
       end
 
-      def authorization_from(response); end
+      def authorization_from(response); 
+        return response['authorization']
+      end
 
       def post_data(action, parameters = {})
         JSON.generate(parameters)
