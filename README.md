@@ -233,3 +233,12 @@ The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis
 ## API stability policy
 
 Functionality or APIs that are deprecated will be marked as such. Deprecated functionality is removed on major version changes - for example, deprecations from 2.x are removed in 3.x.
+
+# Development on m1
+
+```
+arch -x86_64 asdf install ruby 2.3.0
+gem install bundler -v 1.17
+bundle install
+rake test
+```

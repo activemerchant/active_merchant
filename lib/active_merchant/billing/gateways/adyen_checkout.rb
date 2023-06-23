@@ -168,6 +168,7 @@ module ActiveMerchant #:nodoc:
         post[:additionalData][:updateShopperStatement] = options[:update_shopper_statement] if options[:update_shopper_statement]
         post[:additionalData][:RequestedTestAcquirerResponseCode] = options[:requested_test_acquirer_response_code] if options[:requested_test_acquirer_response_code] && test?
         post[:deviceFingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
+        post[:storePaymentMethod] = true
         add_risk_data(post, options)
         add_shopper_reference(post, options)
       end

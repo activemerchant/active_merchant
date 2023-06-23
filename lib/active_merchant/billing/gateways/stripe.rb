@@ -2,6 +2,9 @@ require 'active_support/core_ext/hash/slice'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    class StripeCustomerManyPaymentMethodWithoutDefault < RuntimeError; end
+    class StripeCustomerDoesNotExist < RuntimeError; end
+
     class StripeGateway < Gateway
       self.live_url = 'https://api.stripe.com/v1/'
 
@@ -380,6 +383,7 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options)
         add_application_fee(post, options)
         add_destination(post, options)
+        add_level_3_data(post, options) if credit_card_payment?(options) && !physical_retail?(options)
 
         post
       end
@@ -393,7 +397,7 @@ module ActiveMerchant #:nodoc:
         return default_source if default_source
 
         if payment_methods.count > 1
-          raise "Customer has more than one payment method but doesn't have default one."
+          raise StripeCustomerManyPaymentMethodWithoutDefault, "Customer has more than one payment method but doesn't have default one."
         end
       end
 
@@ -402,13 +406,16 @@ module ActiveMerchant #:nodoc:
         return payment_methods.default_payment_method if payment_methods.default_payment_method
 
         if payment_methods.count > 1
-          raise "Customer has more than one payment method but doesn't have default one."
+          raise StripeCustomerManyPaymentMethodWithoutDefault, "Customer has more than one payment method but doesn't have default one."
         end
       end
 
       def customer_payment_methods(customer, payment_type)
         r = commit(:get, "payment_methods?customer=#{customer}&type=#{payment_type}", nil, options)
-        raise r.message unless r.success?
+
+        raise StripeCustomerDoesNotExist, r.message if !r.success? && r.message.include?("No such customer:")
+
+        raise RuntimeError, r.message unless r.success?
 
         payment_methods = r.params["data"]
 
@@ -563,6 +570,35 @@ module ActiveMerchant #:nodoc:
         post.delete(:metadata) if post[:metadata].empty?
       end
 
+      def add_level_3_data(post, options = {})
+        return unless options[:line_items].present?
+
+        post[:level3] = {}.tap do |level3|
+          level3[:merchant_reference] = options[:order_id]
+          level3[:customer_reference] = options[:customer_ref]
+          level3[:shipping_address_zip] = options[:shipping_address_zip]
+          level3[:shipping_from_zip] = options[:shipping_from_zip]
+
+          line_items = level_3_data_map_line_item(options[:line_items])
+
+          level3[:line_items] = line_items if line_items.present?
+        end
+      end
+
+      def level_3_data_map_line_item(line_items)
+        line_items.map do |item|
+          description = item[:description].size > 26 ? truncate(item[:description], 25) : item[:description]
+          {
+            product_code: item[:product_code],
+            product_description: description,
+            unit_cost: item[:price_in_cents],
+            quantity: item[:quantity],
+            tax_amount: item[:tax_amount_in_cents],
+            discount_amount: item[:discount_amount_in_cents]
+          }
+        end
+      end
+
       def fetch_application_fees(identification, options = {})
         options.merge!(:key => @fee_refund_api_key)
 
@@ -576,20 +612,36 @@ module ActiveMerchant #:nodoc:
       def post_data(params)
         return nil unless params
 
-        params.map do |key, value|
+        flatten_params([], params).join('&')
+      end
+
+      def flatten_params(flattened, params, prefix = nil)
+        params.each do |key, value|
           next if value != false && value.blank?
+
+          flattened_key = prefix.nil? ? key : "#{prefix}[#{key}]"
           if value.is_a?(Hash)
-            h = {}
-            value.each do |k, v|
-              h["#{key}[#{k}]"] = v unless v.blank?
-            end
-            post_data(h)
+            flatten_params(flattened, value, flattened_key)
           elsif value.is_a?(Array)
-            value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join("&")
+            flatten_array(flattened, value, flattened_key)
           else
-            "#{key}=#{CGI.escape(value.to_s)}"
+            flattened << "#{flattened_key}=#{CGI.escape(value.to_s)}"
           end
-        end.compact.join("&")
+        end
+        flattened
+      end
+
+      def flatten_array(flattened, array, prefix)
+        array.each_with_index do |item, idx|
+          key = "#{prefix}[#{idx}]"
+          if item.is_a?(Hash)
+            flatten_params(flattened, item, key)
+          elsif item.is_a?(Array)
+            flatten_array(flattened, item, key)
+          else
+            flattened << "#{key}=#{CGI.escape(item.to_s)}"
+          end
+        end
       end
 
       def headers(options = {})
@@ -777,6 +829,10 @@ module ActiveMerchant #:nodoc:
         DIRECT_DEBIT_SUPPORTED_CURRENCIES.include?(options[:currency])
       end
 
+      def credit_card_payment?(options)
+        options[:payment_type] == 'credit_card' ? true : false
+      end
+
       def payment_method_type_for_direct_debit(currency)
         payment_method_types = {
           sepa_debit: currency == "EUR",
@@ -900,6 +956,10 @@ module ActiveMerchant #:nodoc:
         else
           card_brand(payment_method) == "check"
         end
+      end
+
+      def physical_retail?(options)
+        !!options.dig(:metadata, :is_physical)
       end
     end
   end

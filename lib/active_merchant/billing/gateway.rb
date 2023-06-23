@@ -275,9 +275,20 @@ module ActiveMerchant #:nodoc:
         money.respond_to?(:currency) ? money.currency : self.default_currency
       end
 
-      def truncate(value, max_size)
+      # Truncate string to given length
+      #
+      # @example
+      #
+      #   truncate("12345", 3)
+      #   => "1234"
+      #
+      # @param [String] value Text which needs to be truncated
+      # @param [Integer] index_of_last_char Index on which truncation need to be performed.
+      #
+      # @return [String] truncated string
+      def truncate(value, index_of_last_char)
         return nil unless value
-        value.to_s[0, max_size]
+        value.to_s[0, index_of_last_char]
       end
 
       def split_names(full_name)

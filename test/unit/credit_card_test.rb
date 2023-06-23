@@ -4,7 +4,7 @@ class CreditCardTest < Test::Unit::TestCase
   def setup
     CreditCard.require_verification_value = false
     @visa = credit_card("4779139500118580",   :brand => "visa")
-    @solo = credit_card("676700000000000000", :brand => "solo", :issue_number => '01')
+    @solo = credit_card("676700000000000000", :brand => "maestro", :issue_number => '01')
   end
 
   def teardown
@@ -242,6 +242,8 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_require_valid_start_date_for_solo_or_switch
+    skip "solo became mastero so start month/year are not validatable"
+
     @solo.start_month  = nil
     @solo.start_year   = nil
     @solo.issue_number = nil
@@ -257,6 +259,8 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_require_a_valid_issue_number_for_solo_or_switch
+    skip "solo became mastero so issue_number is not validatable"
+
     @solo.start_month  = nil
     @solo.start_year   = 2005
     @solo.issue_number = nil
@@ -270,6 +274,8 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_require_a_validate_non_empty_issue_number_for_solo_or_switch
+    skip "solo became mastero so issue_number is not validatable"
+
     @solo.issue_number = "invalid"
 
     errors = assert_not_valid @solo
