@@ -799,23 +799,31 @@ module ActiveMerchant #:nodoc:
 
         brand = card_brand(payment_method).to_sym
 
+        # stored_credential_overrides is not documented on the gateway guide in docs
+        # I think the easiest way to solve for apple pay recurring is to create a new field within the hash
+        # commerce_indicator can be passed in as 'internet' but is assigned that value in an earlier method so will be overwritten by the card brand if there is not something done within this method
+        commerce_indicator = 'internet' if options.dig(:stored_credential_overrides, :type) == 'apple_pay'
+
         case brand
         when :visa
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
-            xml.tag!('cavv', payment_method.payment_cryptogram)
-            xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
-            xml.tag!('xid', payment_method.payment_cryptogram)
+            # these guard clauses need more consideration but work for the needs of this edge case remote test
+            xml.tag!('cavv', payment_method.payment_cryptogram) unless options[:stored_credential_overrides]
+            xml.commerceIndicator commerce_indicator.nil? ? ECI_BRAND_MAPPING[brand] : commerce_indicator
+            xml.tag!('xid', payment_method.payment_cryptogram) unless options[:stored_credential_overrides]
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         when :master
+          # mastercard is more finicky, has different fields required. no passing test yet.
           xml.tag! 'ucaf' do
-            xml.tag!('authenticationData', payment_method.payment_cryptogram)
+            xml.tag!('authenticationData', payment_method.payment_cryptogram) unless options[:stored_credential_overrides]
             xml.tag!('collectionIndicator', DEFAULT_COLLECTION_INDICATOR)
           end
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
-            xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
+            xml.commerceIndicator commerce_indicator.nil? ? ECI_BRAND_MAPPING[brand] : commerce_indicator
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
+        # AmEx isn't part of NTID scheme so not sure if this will work with AP that is underlying AmEx
         when :american_express
           cryptogram = Base64.decode64(payment_method.payment_cryptogram)
           xml.tag! 'ccAuthService', { 'run' => 'true' } do

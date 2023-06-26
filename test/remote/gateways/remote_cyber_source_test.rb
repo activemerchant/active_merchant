@@ -718,6 +718,26 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(auth)
   end
 
+  def test_purchase_with_apple_pay_network_tokenization
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      brand: 'visa',
+      eci: '05',
+      source: :apple_pay,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+    @options[:stored_credential_overrides] = {
+      subsequent_auth_stored_credential: true,
+      type: 'apple_pay'
+    }
+    @options[:stored_credential] = {
+      initiator: 'merchant',
+      reason_type: 'unscheduled',
+      network_transaction_id: '016150703802094'
+    }
+
+    assert auth = @gateway.purchase(@amount, credit_card, @options)
+    assert_successful_response(auth)
+  end
+
   def test_successful_authorize_with_mdd_fields
     (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
 
