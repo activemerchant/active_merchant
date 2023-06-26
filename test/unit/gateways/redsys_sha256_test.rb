@@ -391,7 +391,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['ES'], RedsysGateway.supported_countries
+    assert_equal %w[ES FR GB IT PL PT], RedsysGateway.supported_countries
   end
 
   def test_supported_cardtypes

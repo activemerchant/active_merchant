@@ -24,6 +24,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     })
     @credit_card = credit_card
     @amount = 100
+    @token = '2MPedsuenG2o8yFfrsdOBWmOuEf'
   end
 
   def test_successful_purchase
@@ -411,6 +412,36 @@ class CheckoutV2Test < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_extra_customer_data
+    stub_comms(@gateway, :ssl_request) do
+      options = {
+        phone_country_code: '1',
+        billing_address: address
+      }
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['source']['phone']['number'], '(555)555-5555'
+      assert_equal request['source']['phone']['country_code'], '1'
+      assert_equal request['customer']['name'], 'Longbob Longsen'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_no_customer_name_included_in_token_purchase
+    stub_comms(@gateway, :ssl_request) do
+      options = {
+        phone_country_code: '1',
+        billing_address: address
+      }
+      @gateway.purchase(@amount, @token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['source']['phone']['number'], '(555)555-5555'
+      assert_equal request['source']['phone']['country_code'], '1'
+      refute_includes data, 'name'
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_purchase_with_metadata
@@ -803,6 +834,38 @@ class CheckoutV2Test < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'Succeeded', response.message
+  end
+
+  def test_purchase_supports_alternate_credit_card_implementation
+    alternate_credit_card_class = Class.new
+    alternate_credit_card = alternate_credit_card_class.new
+
+    alternate_credit_card.expects(:credit_card?).returns(true)
+    alternate_credit_card.expects(:name).at_least_once.returns(@credit_card.name)
+    alternate_credit_card.expects(:number).returns(@credit_card.number)
+    alternate_credit_card.expects(:verification_value).returns(@credit_card.verification_value)
+    alternate_credit_card.expects(:first_name).at_least_once.returns(@credit_card.first_name)
+    alternate_credit_card.expects(:last_name).at_least_once.returns(@credit_card.first_name)
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, alternate_credit_card)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_supports_alternate_credit_card_implementation
+    alternate_credit_card_class = Class.new
+    alternate_credit_card = alternate_credit_card_class.new
+
+    alternate_credit_card.expects(:credit_card?).returns(true)
+    alternate_credit_card.expects(:name).at_least_once.returns(@credit_card.name)
+    alternate_credit_card.expects(:number).returns(@credit_card.number)
+    alternate_credit_card.expects(:verification_value).returns(@credit_card.verification_value)
+    alternate_credit_card.expects(:first_name).at_least_once.returns(@credit_card.first_name)
+    alternate_credit_card.expects(:last_name).at_least_once.returns(@credit_card.first_name)
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, alternate_credit_card)
+    end.respond_with(successful_authorize_response)
   end
 
   private

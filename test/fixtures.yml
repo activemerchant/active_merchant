@@ -439,8 +439,13 @@ garanti:
 
 global_collect:
   merchant_id: 2196
-  api_key_id: c91d6752cbbf9cf1
-  secret_api_key: xHjQr5gL9Wcihkqoj4w/UQugdSCNXM2oUQHG5C82jy4=
+  api_key_id: b2311c2c832dd238
+  secret_api_key: Av5wKihoVlLN8SnGm6669hBHyG4Y4aS4KwaZUCvEIbY=
+
+global_collect_direct:
+  merchant_id: "NamastayTest"
+  api_key_id: "CF4CDF3F45F13C5CCBD0"
+  secret_api_key: "mvcEXR7Rem+KJE/atKsQ3Luqv37VEvTe2VOH5/Ibqd90VDzQ71Ht41RBVVyJuebzGnFu30dYpptgdrCcNvAu5A=="
 
 global_transport:
   global_user_name: "USERNAME"

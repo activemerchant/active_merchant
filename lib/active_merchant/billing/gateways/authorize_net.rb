@@ -362,7 +362,7 @@ module ActiveMerchant
                   xml.accountType(options[:account_type])
                   xml.routingNumber(options[:routing_number])
                   xml.accountNumber(options[:account_number])
-                  xml.nameOnAccount("#{options[:first_name]} #{options[:last_name]}")
+                  xml.nameOnAccount(truncate("#{options[:first_name]} #{options[:last_name]}", 22))
                 end
               else
                 xml.creditCard do

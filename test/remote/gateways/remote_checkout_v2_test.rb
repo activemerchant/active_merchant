@@ -100,6 +100,10 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
         authentication_response_status: 'Y'
       }
     )
+    @extra_customer_data = @options.merge(
+      phone_country_code: '1',
+      phone: '9108675309'
+    )
   end
 
   def test_transcript_scrubbing
@@ -312,8 +316,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
-    assert_equal 'G', response.avs_result['code']
-    assert_equal 'Non-U.S. issuing bank does not support AVS.', response.avs_result['message']
+    assert_equal 'S', response.avs_result['code']
+    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result['message']
   end
 
   def test_successful_purchase_includes_avs_result_via_oauth
@@ -328,8 +332,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
-    assert_equal 'G', response.avs_result['code']
-    assert_equal 'Non-U.S. issuing bank does not support AVS.', response.avs_result['message']
+    assert_equal 'S', response.avs_result['code']
+    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result['message']
   end
 
   def test_successful_purchase_includes_cvv_result
@@ -337,6 +341,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_equal 'Y', response.cvv_result['code']
+  end
+
+  def test_successful_purchase_with_extra_customer_data
+    response = @gateway.purchase(@amount, @credit_card, @extra_customer_data)
+    assert_success response
+    assert_equal 'Succeeded', response.message
   end
 
   def test_successful_authorize_includes_cvv_result
@@ -432,7 +442,15 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_without_phone_number
-    response = @gateway.purchase(@amount, @credit_card, billing_address: address.update(phone: ''))
+    response = @gateway.purchase(@amount, @credit_card, billing_address: address.update(phone: nil))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_without_name
+    credit_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: Time.now.year + 1, first_name: nil, last_name: nil)
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_equal response.params['source']['name'], ''
     assert_success response
     assert_equal 'Succeeded', response.message
   end
@@ -446,7 +464,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(100, @credit_card_dnh, @options)
     assert_failure response
-    assert_equal 'Declined - Do Not Honour', response.message
+    assert_equal 'Invalid Card Number', response.message
   end
 
   def test_failed_purchase_via_oauth
@@ -470,7 +488,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_invalid_shipping_address
     response = @gateway.authorize(@amount, @credit_card, shipping_address: address.update(country: 'Canada'))
     assert_failure response
-    assert_equal 'request_invalid: address_country_invalid', response.message
+    assert_equal 'request_invalid: country_address_invalid', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -827,8 +845,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_expired_card_returns_error_code
     response = @gateway.purchase(@amount, @expired_card, @options)
     assert_failure response
-    assert_equal 'processing_error: card_expired', response.message
-    assert_equal 'processing_error: card_expired', response.error_code
+    assert_equal 'request_invalid: card_expired', response.message
+    assert_equal 'request_invalid: card_expired', response.error_code
   end
 
   def test_successful_purchase_with_idempotency_key

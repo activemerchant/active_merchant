@@ -215,6 +215,18 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert_include response.message, 'record not posted'
   end
 
+  def test_successful_credit
+    response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal response.message, 'Transaction successful'
+  end
+
+  def test_failed_credit
+    response = @gateway.credit(@amount, @declined_card, @options)
+    assert_failure response
+    assert_include response.message, 'Card type not recognized'
+  end
+
   def test_successful_refund
     res = @gateway.purchase(@amount, @credit_card, @options)
     assert_success res

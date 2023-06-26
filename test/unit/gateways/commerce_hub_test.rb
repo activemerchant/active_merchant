@@ -51,6 +51,7 @@ class CommerceHubTest < Test::Unit::TestCase
       assert_equal request['amount']['total'], (@amount / 100.0).to_f
       assert_equal request['source']['card']['cardData'], @credit_card.number
       assert_equal request['source']['card']['securityCode'], @credit_card.verification_value
+      assert_equal request['transactionInteraction']['posEntryMode'], 'MANUAL'
       assert_equal request['source']['card']['securityCodeIndicator'], 'PROVIDED'
     end.respond_with(successful_purchase_response)
 
@@ -360,6 +361,32 @@ class CommerceHubTest < Test::Unit::TestCase
     @gateway.send :add_reference_transaction_details, @post, authorization, {}, :refund
     assert_equal '922e-59fc86a36c03', @post[:referenceTransactionDetails][:referenceTransactionId]
     assert_equal 'CHARGES', @post[:referenceTransactionDetails][:referenceTransactionType]
+  end
+
+  def test_successful_purchase_when_encrypted_credit_card_present
+    @options[:order_id] = 'abc123'
+    @options[:encryption_data] = {
+      keyId: SecureRandom.uuid,
+      encryptionType: 'RSA',
+      encryptionBlock: SecureRandom.alphanumeric(20),
+      encryptionBlockFields: 'card.cardData:16,card.nameOnCard:8,card.expirationMonth:2,card.expirationYear:4,card.securityCode:3',
+      encryptionTarget: 'MANUAL'
+    }
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      refute_nil request['source']['encryptionData']
+      assert_equal request['source']['sourceType'], 'PaymentCard'
+      assert_equal request['source']['encryptionData']['keyId'], @options[:encryption_data][:keyId]
+      assert_equal request['source']['encryptionData']['encryptionType'], 'RSA'
+      assert_equal request['source']['encryptionData']['encryptionBlock'], @options[:encryption_data][:encryptionBlock]
+      assert_equal request['source']['encryptionData']['encryptionBlockFields'], @options[:encryption_data][:encryptionBlockFields]
+      assert_equal request['source']['encryptionData']['encryptionTarget'], 'MANUAL'
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   private

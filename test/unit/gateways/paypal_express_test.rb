@@ -773,6 +773,16 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal [], schema.validate(sub_doc)
   end
 
+  def test_build_reference_transaction_sets_idempotency_key
+    request = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 'Authorization', 100, idempotency_key: 'idempotency_key'))
+    assert_equal 'idempotency_key', REXML::XPath.first(request, '//n2:DoReferenceTransactionRequestDetails/n2:MsgSubID').text
+  end
+
+  def test_build_sale_or_authorization_request_sets_idempotency_key
+    request = REXML::Document.new(@gateway.send(:build_sale_or_authorization_request, 'Authorization', 100, idempotency_key: 'idempotency_key'))
+    assert_equal 'idempotency_key', REXML::XPath.first(request, '//n2:DoExpressCheckoutPaymentRequestDetails/n2:MsgSubID').text
+  end
+
   private
 
   def successful_create_billing_agreement_response

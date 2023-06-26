@@ -50,6 +50,15 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_match 'The payment was paid', response.message
   end
 
+  def test_successful_purchase_with_save_option
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(save: true))
+    assert_success response
+    assert_equal true, response.params['card']['save']
+    assert_equal 'CREDIT', response.params['card']['type']
+    assert_not_empty response.params['card']['card_id']
+    assert_match 'The payment was paid', response.message
+  end
+
   def test_successful_purchase_with_network_tokens
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')

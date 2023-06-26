@@ -683,7 +683,8 @@ module ActiveMerchant #:nodoc:
             'year' => format(payment_method.year, :four_digits_year)
           )
         end
-        xml.cardHolderName card_holder_name(payment_method, options)
+        name = card_holder_name(payment_method, options)
+        xml.cardHolderName name if name.present?
         xml.cvc payment_method.verification_value
 
         add_address(xml, (options[:billing_address] || options[:address]), options)
@@ -995,11 +996,17 @@ module ActiveMerchant #:nodoc:
         case payment_method
         when String
           token_type_and_details(payment_method)
-        when NetworkTokenizationCreditCard
-          { payment_type: :network_token }
         else
-          { payment_type: :credit }
+          type = network_token?(payment_method) ? :network_token : :credit
+
+          { payment_type: type }
         end
+      end
+
+      def network_token?(payment_method)
+        payment_method.respond_to?(:source) &&
+          payment_method.respond_to?(:payment_cryptogram) &&
+          payment_method.respond_to?(:eci)
       end
 
       def token_type_and_details(token)

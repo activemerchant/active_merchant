@@ -2,6 +2,16 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Stripe Payment Intents: Add support for new card on file field [aenand] #4807
+* Commerce Hub: Add `physicalGoodsIndicator` and `schemeReferenceTransactionId` GSFs [sinourain] #4786
+
+== Version 1.131.0 (June 21, 2023)
+* Redsys: Add supported countries [jcreiff] #4811
+* Authorize.net: Truncate nameOnAccount for bank refunds [jcreiff] #4808
+* CheckoutV2: Add support for several customer data fields [rachelkirk] #4800
+* Worldpay: check payment_method responds to payment_cryptogram and eci [bbraschi] #4812
+
+== Version 1.130.0 (June 13th, 2023)
 * Payu Latam - Update error code method to surface network code [yunnydang] #4773
 * CyberSource: Handling Canadian bank accounts [heavyblade] #4764
 * CyberSource Rest: Fixing currency detection [heavyblade] #4777
@@ -9,8 +19,19 @@
 * Adyen: Update Mastercard error messaging [kylene-spreedly] #4770
 * Authorize.net: Update mapping for billing address phone number [jcreiff] #4778
 * Braintree: Update mapping for billing address phone number [jcreiff] #4779
-* Commerce Hub: Add `physicalGoodsIndicator` and `schemeReferenceTransactionId` GSFs [sinourain] #4786
-
+* CommerceHub: Enabling multi-use public key encryption [jherreraa] #4771
+* Ogone: Enable 3ds Global for Ogone Gateway [javierpedrozaing] #4776
+* Worldpay: Fix Google Pay [almalee24] #4774
+* Borgun change default TrCurrencyExponent and MerchantReturnUrl [naashton] #4788
+* Borgun: support for GBP currency [naashton] #4789
+* CyberSource: Enable auto void on r230 [aenand] #4794
+* Redsys: Set appropriate request fields for stored credentials with CITs and MITs [BritneyS] #4784
+* Stripe & Stripe PI: Validate API Key [almalee24] #4801
+* Add BIN for Maestro [jcreiff] #4799
+* D_Local: Add save field on card object [yunnydang] #4805
+* PayPal Express: Adds support for MsgSubID property on DoReferenceTransaction and DoExpressCheckoutPayment [wikiti] #4798
+* Checkout_v2: use credit_card?, not case equality with CreditCard [bbraschi] #4803
+* Shift4: Enable general credit feature [jherreraa] #4790
 
 == Version 1.129.0 (May 3rd, 2023)
 * Adyen: Update selectedBrand mapping for Google Pay [jcreiff] #4763

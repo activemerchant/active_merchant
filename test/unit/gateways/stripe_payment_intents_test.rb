@@ -4,7 +4,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = StripePaymentIntentsGateway.new(login: 'login')
+    @gateway = StripePaymentIntentsGateway.new(login: 'sk_test_login')
 
     @credit_card = credit_card()
     @threeds_2_card = credit_card('4000000000003220')
@@ -257,6 +257,13 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal 'validation_error', create.params.dig('error', 'code')
     assert_equal 'You must verify a phone number on your Stripe account before you can send raw credit card numbers to the Stripe API. You can avoid this requirement by using Stripe.js, the Stripe mobile bindings, or Stripe Checkout. For more information, see https://dashboard.stripe.com/phone-verification.', create.params.dig('error', 'message')
     assert_equal 'invalid_request_error', create.params.dig('error', 'type')
+  end
+
+  def test_invalid_login_test_transaction
+    gateway = StripePaymentIntentsGateway.new(login: 'sk_live_3422')
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match 'Invalid API Key provided', response.message
   end
 
   def test_failed_error_on_requires_action
@@ -650,6 +657,108 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
   def test_scrub_filter_token
     assert_equal @gateway.scrub(pre_scrubbed), scrubbed
+  end
+
+  def test_succesful_purchase_with_initial_cit_unscheduled
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, {
+        currency: 'USD',
+        confirm: true,
+        stored_credential_transaction_type: true,
+        stored_credential: {
+          initial_transaction: true,
+          initiator: 'cardholder',
+          reason_type: 'unscheduled'
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][stored_credential_transaction_type]=setup_off_session_unscheduled', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_succesful_purchase_with_initial_cit_recurring
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, {
+        currency: 'USD',
+        confirm: true,
+        stored_credential_transaction_type: true,
+        stored_credential: {
+          initial_transaction: true,
+          initiator: 'cardholder',
+          reason_type: 'recurring'
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][stored_credential_transaction_type]=setup_off_session_recurring', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_succesful_purchase_with_initial_cit_installment
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, {
+        currency: 'USD',
+        confirm: true,
+        stored_credential_transaction_type: true,
+        stored_credential: {
+          initial_transaction: true,
+          initiator: 'cardholder',
+          reason_type: 'installment'
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][stored_credential_transaction_type]=setup_on_session', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_succesful_purchase_with_subsequent_cit
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, {
+        currency: 'USD',
+        confirm: true,
+        stored_credential_transaction_type: true,
+        stored_credential: {
+          initial_transaction: false,
+          initiator: 'cardholder',
+          reason_type: 'installment'
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][stored_credential_transaction_type]=stored_on_session', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_succesful_purchase_with_mit_recurring
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, {
+        currency: 'USD',
+        confirm: true,
+        stored_credential_transaction_type: true,
+        stored_credential: {
+          initial_transaction: false,
+          initiator: 'merchant',
+          reason_type: 'recurring'
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][stored_credential_transaction_type]=stored_off_session_recurring', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_succesful_purchase_with_mit_unscheduled
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, {
+        currency: 'USD',
+        confirm: true,
+        stored_credential_transaction_type: true,
+        stored_credential: {
+          initial_transaction: false,
+          initiator: 'merchant',
+          reason_type: 'unscheduled'
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][stored_credential_transaction_type]=stored_off_session_unscheduled', data)
+    end.respond_with(successful_create_intent_response)
   end
 
   private
