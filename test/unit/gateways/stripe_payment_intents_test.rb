@@ -257,11 +257,26 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal 'invalid_request_error', create.params.dig('error', 'type')
   end
 
-  def test_invalid_login_test_transaction
+  def test_invalid_test_login_for_sk_key
     gateway = StripePaymentIntentsGateway.new(login: 'sk_live_3422')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_match 'Invalid API Key provided', response.message
+  end
+
+  def test_invalid_test_login_for_rk_key
+    gateway = StripePaymentIntentsGateway.new(login: 'rk_live_3422')
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match 'Invalid API Key provided', response.message
+  end
+
+  def test_successful_purchase
+    gateway = StripePaymentIntentsGateway.new(login: '3422e230423s')
+
+    stub_comms(gateway, :ssl_request) do
+      gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_create_intent_response)
   end
 
   def test_failed_error_on_requires_action

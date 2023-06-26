@@ -696,7 +696,7 @@ module ActiveMerchant #:nodoc:
       def commit(method, url, parameters = nil, options = {})
         add_expand_parameters(parameters, options) if parameters
 
-        return Response.new(false, 'Invalid API Key provided') if test? && !key(options).start_with?('sk_test')
+        return Response.new(false, 'Invalid API Key provided') unless key_valid?(options)
 
         response = api_request(method, url, parameters, options)
         response['webhook_id'] = options[:webhook_id] if options[:webhook_id]
@@ -714,6 +714,18 @@ module ActiveMerchant #:nodoc:
           cvv_result: cvc_code,
           emv_authorization: emv_authorization_from_response(response),
           error_code: success ? nil : error_code_from(response))
+      end
+
+      def key_valid?(options)
+        return true unless test?
+
+        %w(sk rk).each do |k|
+          if key(options).start_with?(k)
+            return false unless key(options).start_with?("#{k}_test")
+          end
+        end
+
+        true
       end
 
       def authorization_from(success, url, method, response)
