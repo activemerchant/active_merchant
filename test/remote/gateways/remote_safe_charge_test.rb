@@ -282,6 +282,12 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_credit_with_customer_details
+    response = @gateway.credit(@amount, credit_card('4444436501403986'), @options.merge(email: 'test@example.com'))
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_failed_credit
     response = @gateway.credit(@amount, @declined_card, @options)
     assert_failure response

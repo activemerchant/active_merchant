@@ -86,6 +86,7 @@ module ActiveMerchant #:nodoc:
 
         add_payment(post, payment, options)
         add_transaction_data('Credit', post, money, options)
+        add_customer_details(post, payment, options)
 
         post[:sg_CreditType] = 1
 
