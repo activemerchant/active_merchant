@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class IpgGateway < Gateway
       self.test_url = 'https://test.ipg-online.com/ipgapi/services'
-      self.live_url = 'https://www5.ipg-online.com'
+      self.live_url = 'https://www5.ipg-online.com/ipgapi/services'
 
       self.supported_countries = %w(AR)
       self.default_currency = 'ARS'
