@@ -8,13 +8,15 @@ class RemotePaymentezTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4111111111111111', verification_value: '666')
     @otp_card = credit_card('36417002140808', verification_value: '666')
-    @elo_credit_card = credit_card('6362970000457013',
+    @elo_credit_card = credit_card(
+      '6362970000457013',
       month: 10,
       year: 2022,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo')
+      brand: 'elo'
+    )
     @declined_card = credit_card('4242424242424242', verification_value: '666')
     @options = {
       billing_address: address,

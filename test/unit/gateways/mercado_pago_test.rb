@@ -6,24 +6,30 @@ class MercadoPagoTest < Test::Unit::TestCase
   def setup
     @gateway = MercadoPagoGateway.new(access_token: 'access_token')
     @credit_card = credit_card
-    @elo_credit_card = credit_card('5067268650517446',
+    @elo_credit_card = credit_card(
+      '5067268650517446',
       month: 10,
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '737')
-    @cabal_credit_card = credit_card('6035227716427021',
+      verification_value: '737'
+    )
+    @cabal_credit_card = credit_card(
+      '6035227716427021',
       month: 10,
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '737')
-    @naranja_credit_card = credit_card('5895627823453005',
+      verification_value: '737'
+    )
+    @naranja_credit_card = credit_card(
+      '5895627823453005',
       month: 10,
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '123')
+      verification_value: '123'
+    )
     @amount = 100
 
     @options = {

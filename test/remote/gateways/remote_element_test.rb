@@ -13,7 +13,8 @@ class RemoteElementTest < Test::Unit::TestCase
       description: 'Store Purchase'
     }
 
-    @google_pay_network_token = network_tokenization_credit_card('4444333322221111',
+    @google_pay_network_token = network_tokenization_credit_card(
+      '4444333322221111',
       month: '01',
       year: Time.new.year + 2,
       first_name: 'Jane',
@@ -22,9 +23,11 @@ class RemoteElementTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       eci: '05',
       transaction_id: '123456789',
-      source: :google_pay)
+      source: :google_pay
+    )
 
-    @apple_pay_network_token = network_tokenization_credit_card('4895370015293175',
+    @apple_pay_network_token = network_tokenization_credit_card(
+      '4895370015293175',
       month: '10',
       year: Time.new.year + 2,
       first_name: 'John',
@@ -33,7 +36,8 @@ class RemoteElementTest < Test::Unit::TestCase
       payment_cryptogram: 'CeABBJQ1AgAAAAAgJDUCAAAAAAA=',
       eci: '07',
       transaction_id: 'abc123',
-      source: :apple_pay)
+      source: :apple_pay
+    )
   end
 
   def test_successful_purchase

@@ -316,9 +316,7 @@ class SagePayTest < Test::Unit::TestCase
     assert_success capture
 
     refund = stub_comms do
-      @gateway.refund(@amount, capture.authorization,
-        order_id: generate_unique_id,
-        description: 'Refund txn')
+      @gateway.refund(@amount, capture.authorization, order_id: generate_unique_id, description: 'Refund txn')
     end.respond_with(successful_refund_response)
     assert_success refund
   end

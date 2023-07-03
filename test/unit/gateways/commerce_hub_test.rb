@@ -8,29 +8,35 @@ class CommerceHubTest < Test::Unit::TestCase
 
     @amount = 1204
     @credit_card = credit_card('4005550000000019', month: '02', year: '2035', verification_value: '123')
-    @google_pay = network_tokenization_credit_card('4005550000000019',
+    @google_pay = network_tokenization_credit_card(
+      '4005550000000019',
       brand: 'visa',
       eci: '05',
       month: '02',
       year: '2035',
       source: :google_pay,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      transaction_id: '13456789')
-    @apple_pay = network_tokenization_credit_card('4005550000000019',
+      transaction_id: '13456789'
+    )
+    @apple_pay = network_tokenization_credit_card(
+      '4005550000000019',
       brand: 'visa',
       eci: '05',
       month: '02',
       year: '2035',
       source: :apple_pay,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      transaction_id: '13456789')
-    @no_supported_source = network_tokenization_credit_card('4005550000000019',
+      transaction_id: '13456789'
+    )
+    @no_supported_source = network_tokenization_credit_card(
+      '4005550000000019',
       brand: 'visa',
       eci: '05',
       month: '02',
       year: '2035',
       source: :no_source,
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
     @declined_card = credit_card('4000300011112220', month: '02', year: '2035', verification_value: '123')
     @options = {}
     @post = {}

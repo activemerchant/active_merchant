@@ -144,9 +144,9 @@ module ActiveMerchant #:nodoc:
           access_token: access_token,
           multiresp: multiresp.responses.present? ? multiresp : nil
         }
-      rescue ResponseError => error
+      rescue ResponseError => e
         # retry to generate a new access_token when the provided one is expired
-        raise error unless try_again && %w(401 404).include?(error.response.code) && @options[:access_token].present?
+        raise e unless try_again && %w(401 404).include?(e.response.code) && @options[:access_token].present?
 
         @options.delete(:access_token)
         @options.delete(:encryption_key)

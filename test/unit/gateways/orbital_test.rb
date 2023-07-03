@@ -558,9 +558,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_truncates_name
-    card = credit_card('4242424242424242',
-      first_name: 'John',
-      last_name: 'Jacob Jingleheimer Smith-Jones')
+    card = credit_card('4242424242424242', first_name: 'John', last_name: 'Jacob Jingleheimer Smith-Jones')
 
     response = stub_comms do
       @gateway.purchase(50, card, order_id: 1, billing_address: address)
@@ -649,8 +647,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       assert_deprecation_warning do
-        @gateway.add_customer_profile(credit_card,
-          billing_address: address_with_invalid_chars)
+        @gateway.add_customer_profile(credit_card, billing_address: address_with_invalid_chars)
       end
     end.check_request do |_endpoint, data, _headers|
       assert_match(/456 Main Street</, data)
@@ -661,9 +658,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_truncates_by_byte_length
-    card = credit_card('4242424242424242',
-      first_name: 'John',
-      last_name: 'Jacob Jingleheimer Smith-Jones')
+    card = credit_card('4242424242424242', first_name: 'John', last_name: 'Jacob Jingleheimer Smith-Jones')
 
     long_address = address(
       address1: '456 Stréêt Name is Really Long',
@@ -699,8 +694,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       assert_deprecation_warning do
-        @gateway.add_customer_profile(credit_card,
-          billing_address: long_address)
+        @gateway.add_customer_profile(credit_card, billing_address: long_address)
       end
     end.check_request do |_endpoint, data, _headers|
       assert_match(/456 Stréêt Name is Really Lo</, data)
@@ -777,9 +771,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       dest_country: 'US'
     )
 
-    card = credit_card('4242424242424242',
-      first_name: 'John',
-      last_name: 'Jacob Jingleheimer Smith-Jones')
+    card = credit_card('4242424242424242', first_name: 'John', last_name: 'Jacob Jingleheimer Smith-Jones')
 
     response = stub_comms do
       @gateway.purchase(50, card, order_id: 1, address: address)
@@ -817,9 +809,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_does_not_send_for_credit_card_with_no_address
-    card = credit_card('4242424242424242',
-      first_name: 'John',
-      last_name: 'Jacob Jingleheimer Smith-Jones')
+    card = credit_card('4242424242424242', first_name: 'John', last_name: 'Jacob Jingleheimer Smith-Jones')
 
     response = stub_comms do
       @gateway.purchase(50, card, order_id: 1, address: nil, billing_address: nil)
@@ -840,9 +830,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       country: 'US'
     )
 
-    card = credit_card('4242424242424242',
-      first_name: nil,
-      last_name: '')
+    card = credit_card('4242424242424242', first_name: nil, last_name: '')
 
     response = stub_comms do
       @gateway.purchase(50, card, order_id: 1, billing_address: billing_address)
@@ -863,9 +851,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       country: 'US'
     )
 
-    card = credit_card('4242424242424242',
-      first_name: nil,
-      last_name: nil)
+    card = credit_card('4242424242424242', first_name: nil, last_name: nil)
 
     response = stub_comms do
       @gateway.purchase(50, card, order_id: 1, billing_address: billing_address)
@@ -1091,13 +1077,15 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
         assert_deprecation_warning do
-          @gateway.add_customer_profile(credit_card,
+          @gateway.add_customer_profile(
+            credit_card,
             managed_billing: {
               start_date: '10-10-2014',
               end_date: '10-10-2015',
               max_dollar_value: 1500,
               max_transactions: 12
-            })
+            }
+          )
         end
       end
     end.check_request do |_endpoint, data, _headers|
@@ -1545,8 +1533,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = nil
 
     assert_deprecation_warning do
-      response = @gateway.add_customer_profile(credit_card,
-        billing_address: address)
+      response = @gateway.add_customer_profile(credit_card, billing_address: address)
     end
 
     assert_instance_of Response, response

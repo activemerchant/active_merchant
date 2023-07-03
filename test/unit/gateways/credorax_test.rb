@@ -43,13 +43,16 @@ class CredoraxTest < Test::Unit::TestCase
       }
     }
 
-    @nt_credit_card = network_tokenization_credit_card('4176661000001015',
+    @nt_credit_card = network_tokenization_credit_card(
+      '4176661000001015',
       brand: 'visa',
       eci: '07',
       source: :network_token,
-      payment_cryptogram: 'AgAAAAAAosVKVV7FplLgQRYAAAA=')
+      payment_cryptogram: 'AgAAAAAAosVKVV7FplLgQRYAAAA='
+    )
 
-    @apple_pay_card = network_tokenization_credit_card('4176661000001015',
+    @apple_pay_card = network_tokenization_credit_card(
+      '4176661000001015',
       month: 10,
       year: Time.new.year + 2,
       first_name: 'John',
@@ -58,7 +61,8 @@ class CredoraxTest < Test::Unit::TestCase
       payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
       eci: '07',
       transaction_id: 'abc123',
-      source: :apple_pay)
+      source: :apple_pay
+    )
   end
 
   def test_supported_card_types

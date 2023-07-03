@@ -139,7 +139,9 @@ module ActiveMerchant #:nodoc:
 
       def build_request_url(action, id = nil)
         base_url = (test? ? test_url : live_url)
-        base_url + ENDPOINTS[action].to_s % { id: id }
+        endpoint = ENDPOINTS[action].to_s
+        endpoint = id.present? ? endpoint % { id: id } : endpoint
+        base_url + endpoint
       end
 
       def add_referrer_data(post)

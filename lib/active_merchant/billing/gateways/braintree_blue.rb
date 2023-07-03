@@ -193,15 +193,20 @@ module ActiveMerchant #:nodoc:
             }
           }, options)[:credit_card]
 
-          result = @braintree_gateway.customer.update(vault_id,
+          result = @braintree_gateway.customer.update(
+            vault_id,
             first_name: creditcard.first_name,
             last_name: creditcard.last_name,
             email: scrub_email(options[:email]),
             phone: phone_from(options),
-            credit_card: credit_card_params)
-          Response.new(result.success?, message_from_result(result),
+            credit_card: credit_card_params
+          )
+          Response.new(
+            result.success?,
+            message_from_result(result),
             braintree_customer: (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
-            customer_vault_id: (result.customer.id if result.success?))
+            customer_vault_id: (result.customer.id if result.success?)
+          )
         end
       end
 
@@ -271,13 +276,16 @@ module ActiveMerchant #:nodoc:
             device_data: options[:device_data]
           }.merge credit_card_params
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
-          Response.new(result.success?, message_from_result(result),
+          Response.new(
+            result.success?,
+            message_from_result(result),
             {
               braintree_customer: (customer_hash(result.customer, :include_credit_cards) if result.success?),
               customer_vault_id: (result.customer.id if result.success?),
               credit_card_token: (result.customer.credit_cards[0].token if result.success?)
             },
-            authorization: (result.customer.id if result.success?))
+            authorization: (result.customer.id if result.success?)
+          )
         end
       end
 
@@ -371,8 +379,8 @@ module ActiveMerchant #:nodoc:
 
       def commit(&block)
         yield
-      rescue Braintree::BraintreeError => ex
-        Response.new(false, ex.class.to_s)
+      rescue Braintree::BraintreeError => e
+        Response.new(false, e.class.to_s)
       end
 
       def message_from_result(result)
@@ -901,13 +909,16 @@ module ActiveMerchant #:nodoc:
         message = message_from_result(result)
         message = not_verified_reason(result.payment_method) unless verified
 
-        Response.new(verified, message,
+        Response.new(
+          verified,
+          message,
           {
             customer_vault_id: options[:customer],
             bank_account_token: result.payment_method&.token,
             verified: verified
           },
-          authorization: result.payment_method&.token)
+          authorization: result.payment_method&.token
+        )
       end
 
       def not_verified_reason(bank_account)

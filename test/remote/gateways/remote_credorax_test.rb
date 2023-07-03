@@ -45,7 +45,8 @@ class RemoteCredoraxTest < Test::Unit::TestCase
       }
     }
 
-    @apple_pay_card = network_tokenization_credit_card('4176661000001015',
+    @apple_pay_card = network_tokenization_credit_card(
+      '4176661000001015',
       month: 10,
       year: Time.new.year + 2,
       first_name: 'John',
@@ -54,20 +55,25 @@ class RemoteCredoraxTest < Test::Unit::TestCase
       payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
       eci: '07',
       transaction_id: 'abc123',
-      source: :apple_pay)
+      source: :apple_pay
+    )
 
-    @google_pay_card = network_tokenization_credit_card('4176661000001015',
+    @google_pay_card = network_tokenization_credit_card(
+      '4176661000001015',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       month: '01',
       year: Time.new.year + 2,
       source: :google_pay,
       transaction_id: '123456789',
-      eci: '07')
+      eci: '07'
+    )
 
-    @nt_credit_card = network_tokenization_credit_card('4176661000001015',
+    @nt_credit_card = network_tokenization_credit_card(
+      '4176661000001015',
       brand: 'visa',
       source: :network_token,
-      payment_cryptogram: 'AgAAAAAAosVKVV7FplLgQRYAAAA=')
+      payment_cryptogram: 'AgAAAAAAosVKVV7FplLgQRYAAAA='
+    )
   end
 
   def test_successful_purchase_with_apple_pay

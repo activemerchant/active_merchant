@@ -886,13 +886,17 @@ module ActiveMerchant #:nodoc:
             request.call(remote_url(:secondary))
           end
 
-        Response.new(success?(response, message_type), message_from(response), response,
+        Response.new(
+          success?(response, message_type),
+          message_from(response),
+          response,
           {
             authorization: authorization_string(response[:tx_ref_num], response[:order_id]),
             test: self.test?,
             avs_result: OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
             cvv_result: OrbitalGateway::CVVResult.new(response[:cvv2_resp_code])
-          })
+          }
+        )
       end
 
       def remote_url(url = :primary)

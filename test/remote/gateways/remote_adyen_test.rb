@@ -12,67 +12,83 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @general_bank_account = check(name: 'A. Klaassen', account_number: '123456789', routing_number: 'NL13TEST0123456789')
 
-    @credit_card = credit_card('4111111111111111',
+    @credit_card = credit_card(
+      '4111111111111111',
       month: 3,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'visa')
+      brand: 'visa'
+    )
 
-    @avs_credit_card = credit_card('4400000000000008',
+    @avs_credit_card = credit_card(
+      '4400000000000008',
       month: 3,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'visa')
+      brand: 'visa'
+    )
 
-    @elo_credit_card = credit_card('5066 9911 1111 1118',
+    @elo_credit_card = credit_card(
+      '5066 9911 1111 1118',
       month: 3,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo')
+      brand: 'elo'
+    )
 
-    @three_ds_enrolled_card = credit_card('4917610000000000',
+    @three_ds_enrolled_card = credit_card(
+      '4917610000000000',
       month: 3,
       year: 2030,
       verification_value: '737',
-      brand: :visa)
+      brand: :visa
+    )
 
-    @cabal_credit_card = credit_card('6035 2277 1642 7021',
-      month: 3,
-      year: 2030,
-      first_name: 'John',
-      last_name: 'Smith',
-      verification_value: '737',
-      brand: 'cabal')
-
-    @invalid_cabal_credit_card = credit_card('6035 2200 0000 0006',
+    @cabal_credit_card = credit_card(
+      '6035 2277 1642 7021',
       month: 3,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'cabal')
+      brand: 'cabal'
+    )
 
-    @unionpay_credit_card = credit_card('8171 9999 0000 0000 021',
+    @invalid_cabal_credit_card = credit_card(
+      '6035 2200 0000 0006',
+      month: 3,
+      year: 2030,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      brand: 'cabal'
+    )
+
+    @unionpay_credit_card = credit_card(
+      '8171 9999 0000 0000 021',
       month: 10,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'unionpay')
+      brand: 'unionpay'
+    )
 
-    @invalid_unionpay_credit_card = credit_card('8171 9999 1234 0000 921',
+    @invalid_unionpay_credit_card = credit_card(
+      '8171 9999 1234 0000 921',
       month: 10,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'unionpay')
+      brand: 'unionpay'
+    )
 
     @declined_card = credit_card('4000300011112220')
 
@@ -148,44 +164,6 @@ class RemoteAdyenTest < Test::Unit::TestCase
     }
 
     @long_order_id = 'asdfjkl;asdfjkl;asdfj;aiwyutinvpoaieryutnmv;203987528752098375j3q-p489756ijmfpvbijpq348nmdf;vbjp3845'
-
-    @sub_seller_options = {
-      "subMerchant.numberOfSubSellers": '2',
-      "subMerchant.subSeller1.id": '111111111',
-      "subMerchant.subSeller1.name": 'testSub1',
-      "subMerchant.subSeller1.street": 'Street1',
-      "subMerchant.subSeller1.postalCode": '12242840',
-      "subMerchant.subSeller1.city": 'Sao jose dos campos',
-      "subMerchant.subSeller1.state": 'SP',
-      "subMerchant.subSeller1.country": 'BRA',
-      "subMerchant.subSeller1.taxId": '12312312340',
-      "subMerchant.subSeller1.mcc": '5691',
-      "subMerchant.subSeller1.debitSettlementBank": '1',
-      "subMerchant.subSeller1.debitSettlementAgency": '1',
-      "subMerchant.subSeller1.debitSettlementAccountType": '1',
-      "subMerchant.subSeller1.debitSettlementAccount": '1',
-      "subMerchant.subSeller1.creditSettlementBank": '1',
-      "subMerchant.subSeller1.creditSettlementAgency": '1',
-      "subMerchant.subSeller1.creditSettlementAccountType": '1',
-      "subMerchant.subSeller1.creditSettlementAccount": '1',
-      "subMerchant.subSeller2.id": '22222222',
-      "subMerchant.subSeller2.name": 'testSub2',
-      "subMerchant.subSeller2.street": 'Street2',
-      "subMerchant.subSeller2.postalCode": '12300000',
-      "subMerchant.subSeller2.city": 'Jacarei',
-      "subMerchant.subSeller2.state": 'SP',
-      "subMerchant.subSeller2.country": 'BRA',
-      "subMerchant.subSeller2.taxId": '12312312340',
-      "subMerchant.subSeller2.mcc": '5691',
-      "subMerchant.subSeller2.debitSettlementBank": '1',
-      "subMerchant.subSeller2.debitSettlementAgency": '1',
-      "subMerchant.subSeller2.debitSettlementAccountType": '1',
-      "subMerchant.subSeller2.debitSettlementAccount": '1',
-      "subMerchant.subSeller2.creditSettlementBank": '1',
-      "subMerchant.subSeller2.creditSettlementAgency": '1',
-      "subMerchant.subSeller2.creditSettlementAccountType": '1',
-      "subMerchant.subSeller2.creditSettlementAccount": '1'
-    }
   end
 
   def test_successful_authorize
@@ -343,13 +321,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   # with rule set in merchant account to skip 3DS for cards of this brand
   def test_successful_authorize_with_3ds_dynamic_rule_broken
-    mastercard_threed = credit_card('5212345678901234',
+    mastercard_threed = credit_card(
+      '5212345678901234',
       month: 3,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'mastercard')
+      brand: 'mastercard'
+    )
     assert response = @gateway.authorize(@amount, mastercard_threed, @options.merge(threed_dynamic: true))
     assert response.test?
     refute response.authorization.blank?
@@ -1412,6 +1392,43 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_sub_merchant_sub_seller_data
+    @sub_seller_options = {
+      "subMerchant.numberOfSubSellers": '2',
+      "subMerchant.subSeller1.id": '111111111',
+      "subMerchant.subSeller1.name": 'testSub1',
+      "subMerchant.subSeller1.street": 'Street1',
+      "subMerchant.subSeller1.postalCode": '12242840',
+      "subMerchant.subSeller1.city": 'Sao jose dos campos',
+      "subMerchant.subSeller1.state": 'SP',
+      "subMerchant.subSeller1.country": 'BRA',
+      "subMerchant.subSeller1.taxId": '12312312340',
+      "subMerchant.subSeller1.mcc": '5691',
+      "subMerchant.subSeller1.debitSettlementBank": '1',
+      "subMerchant.subSeller1.debitSettlementAgency": '1',
+      "subMerchant.subSeller1.debitSettlementAccountType": '1',
+      "subMerchant.subSeller1.debitSettlementAccount": '1',
+      "subMerchant.subSeller1.creditSettlementBank": '1',
+      "subMerchant.subSeller1.creditSettlementAgency": '1',
+      "subMerchant.subSeller1.creditSettlementAccountType": '1',
+      "subMerchant.subSeller1.creditSettlementAccount": '1',
+      "subMerchant.subSeller2.id": '22222222',
+      "subMerchant.subSeller2.name": 'testSub2',
+      "subMerchant.subSeller2.street": 'Street2',
+      "subMerchant.subSeller2.postalCode": '12300000',
+      "subMerchant.subSeller2.city": 'Jacarei',
+      "subMerchant.subSeller2.state": 'SP',
+      "subMerchant.subSeller2.country": 'BRA',
+      "subMerchant.subSeller2.taxId": '12312312340',
+      "subMerchant.subSeller2.mcc": '5691',
+      "subMerchant.subSeller2.debitSettlementBank": '1',
+      "subMerchant.subSeller2.debitSettlementAgency": '1',
+      "subMerchant.subSeller2.debitSettlementAccountType": '1',
+      "subMerchant.subSeller2.debitSettlementAccount": '1',
+      "subMerchant.subSeller2.creditSettlementBank": '1',
+      "subMerchant.subSeller2.creditSettlementAgency": '1',
+      "subMerchant.subSeller2.creditSettlementAccountType": '1',
+      "subMerchant.subSeller2.creditSettlementAccount": '1'
+    }
     assert response = @gateway.authorize(@amount, @avs_credit_card, @options.merge(sub_merchant_data: @sub_seller_options))
     assert response.test?
     refute response.authorization.blank?

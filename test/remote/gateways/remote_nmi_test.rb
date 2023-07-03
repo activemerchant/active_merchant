@@ -10,13 +10,15 @@ class RemoteNmiTest < Test::Unit::TestCase
       routing_number: '123123123',
       account_number: '123123123'
     )
-    @apple_pay_card = network_tokenization_credit_card('4111111111111111',
+    @apple_pay_card = network_tokenization_credit_card(
+      '4111111111111111',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       month: '01',
       year: '2024',
       source: :apple_pay,
       eci: '5',
-      transaction_id: '123456789')
+      transaction_id: '123456789'
+    )
     @options = {
       order_id: generate_unique_id,
       billing_address: address,

@@ -1318,9 +1318,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_includes_shipping_name_when_different_from_billing_name
-    card = credit_card('4242424242424242',
-      first_name: 'billing',
-      last_name: 'name')
+    card = credit_card('4242424242424242', first_name: 'billing', last_name: 'name')
 
     options = {
       order_id: 'a' * 21,
@@ -1341,9 +1339,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_includes_shipping_name_when_passed_as_options
-    card = credit_card('4242424242424242',
-      first_name: 'billing',
-      last_name: 'name')
+    card = credit_card('4242424242424242', first_name: 'billing', last_name: 'name')
 
     shipping_address = address(first_name: 'shipping', last_name: 'lastname')
     shipping_address.delete(:name)
@@ -1366,9 +1362,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_truncation
-    card = credit_card('4242424242424242',
-      first_name: 'a' * 51,
-      last_name: 'a' * 51)
+    card = credit_card('4242424242424242', first_name: 'a' * 51, last_name: 'a' * 51)
 
     options = {
       order_id: 'a' * 21,
@@ -1440,8 +1434,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_successful_apple_pay_authorization_with_network_tokenization
-    credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: '111111111100cryptogram')
+    credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: '111111111100cryptogram')
 
     response = stub_comms do
       @gateway.authorize(@amount, credit_card)
@@ -1459,8 +1452,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_failed_apple_pay_authorization_with_network_tokenization_not_supported
-    credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: '111111111100cryptogram')
+    credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: '111111111100cryptogram')
 
     response = stub_comms do
       @gateway.authorize(@amount, credit_card)

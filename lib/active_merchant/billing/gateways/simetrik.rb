@@ -280,12 +280,12 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters, url_params = {})
         begin
           response = JSON.parse ssl_post(url(action, url_params), post_data(parameters), authorized_headers())
-        rescue ResponseError => exception
-          case exception.response.code.to_i
+        rescue ResponseError => e
+          case e.response.code.to_i
           when 400...499
-            response = JSON.parse exception.response.body
+            response = JSON.parse e.response.body
           else
-            raise exception
+            raise e
           end
         end
 

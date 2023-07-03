@@ -4,9 +4,7 @@ class EwayTest < Test::Unit::TestCase
   def setup
     @gateway = EwayGateway.new(fixtures(:eway))
     @credit_card_success = credit_card('4444333322221111')
-    @credit_card_fail = credit_card('1234567812345678',
-      month: Time.now.month,
-      year: Time.now.year - 1)
+    @credit_card_fail = credit_card('1234567812345678', month: Time.now.month, year: Time.now.year - 1)
 
     @params = {
       order_id: '1230123',

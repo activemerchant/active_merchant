@@ -450,11 +450,15 @@ module ActiveMerchant #:nodoc:
         # to be considered successful, transaction status must be either "approved" or "accepted"
         success = SUCCESS_TYPES.include?(data['status'])
         message = message_from(data)
-        Response.new(success, message, data,
+        Response.new(
+          success,
+          message,
+          data,
           test: test?,
           authorization: authorization_from(action, data),
           cvv_result: data['cvv'],
-          avs_result: { code: data['avs'] })
+          avs_result: { code: data['avs'] }
+        )
       end
 
       def parse(body)

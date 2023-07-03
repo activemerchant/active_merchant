@@ -1068,12 +1068,16 @@ module ActiveMerchant #:nodoc:
 
         message = auto_void?(authorization_from(response, action, amount, options), response, message, options)
 
-        Response.new(success, message, response,
+        Response.new(
+          success,
+          message,
+          response,
           test: test?,
           authorization: authorization,
           fraud_review: in_fraud_review?(response),
           avs_result: { code: response[:avsCode] },
-          cvv_result: response[:cvCode])
+          cvv_result: response[:cvCode]
+        )
       end
 
       def auto_void?(authorization, response, message, options = {})

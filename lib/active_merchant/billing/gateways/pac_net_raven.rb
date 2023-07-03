@@ -121,7 +121,10 @@ module ActiveMerchant #:nodoc:
 
         test_mode = test? || message =~ /TESTMODE/
 
-        Response.new(success?(response), message, response,
+        Response.new(
+          success?(response),
+          message,
+          response,
           test: test_mode,
           authorization: response['TrackingNumber'],
           fraud_review: fraud_review?(response),
@@ -129,7 +132,8 @@ module ActiveMerchant #:nodoc:
             postal_match: AVS_POSTAL_CODES[response['AVSPostalResponseCode']],
             street_match: AVS_ADDRESS_CODES[response['AVSAddressResponseCode']]
           },
-          cvv_result: CVV2_CODES[response['CVV2ResponseCode']])
+          cvv_result: CVV2_CODES[response['CVV2ResponseCode']]
+        )
       end
 
       def url(action)

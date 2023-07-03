@@ -193,11 +193,15 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters)
         response = parse(ssl_post(self.live_url, post_data(action, parameters)))
 
-        Response.new(success?(response), message_from(response), response,
+        Response.new(
+          success?(response),
+          message_from(response),
+          response,
           test: test_response?(response),
           authorization: response[:trans_id],
           avs_result: { code: response[:avs_code] },
-          cvv_result: response[:cvv2_code])
+          cvv_result: response[:cvv2_code]
+        )
       rescue ActiveMerchant::ResponseError => e
         raise unless e.response.code =~ /^[67]\d\d$/
 

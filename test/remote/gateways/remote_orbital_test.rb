@@ -195,11 +195,13 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_master_card_network_tokenization_credit_card
-    network_card = network_tokenization_credit_card('4788250000028291',
+    network_card = network_tokenization_credit_card(
+      '4788250000028291',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: '111',
-      brand: 'master')
+      brand: 'master'
+    )
     assert response = @gateway.purchase(3000, network_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -249,11 +251,13 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_american_express_network_tokenization_credit_card
-    network_card = network_tokenization_credit_card('4788250000028291',
+    network_card = network_tokenization_credit_card(
+      '4788250000028291',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: '111',
-      brand: 'american_express')
+      brand: 'american_express'
+    )
     assert response = @gateway.purchase(3000, network_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -261,11 +265,13 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_discover_network_tokenization_credit_card
-    network_card = network_tokenization_credit_card('4788250000028291',
+    network_card = network_tokenization_credit_card(
+      '4788250000028291',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: '111',
-      brand: 'discover')
+      brand: 'discover'
+    )
     assert response = @gateway.purchase(3000, network_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -1226,11 +1232,13 @@ class TandemOrbitalTests < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_master_card_network_tokenization_credit_card
-    network_card = network_tokenization_credit_card('4788250000028291',
+    network_card = network_tokenization_credit_card(
+      '4788250000028291',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: '111',
-      brand: 'master')
+      brand: 'master'
+    )
     assert response = @tandem_gateway.purchase(3000, network_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -1238,11 +1246,13 @@ class TandemOrbitalTests < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_american_express_network_tokenization_credit_card
-    network_card = network_tokenization_credit_card('4788250000028291',
+    network_card = network_tokenization_credit_card(
+      '4788250000028291',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: '111',
-      brand: 'american_express')
+      brand: 'american_express'
+    )
     assert response = @tandem_gateway.purchase(3000, network_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -1250,11 +1260,13 @@ class TandemOrbitalTests < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_discover_network_tokenization_credit_card
-    network_card = network_tokenization_credit_card('4788250000028291',
+    network_card = network_tokenization_credit_card(
+      '4788250000028291',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: '111',
-      brand: 'discover')
+      brand: 'discover'
+    )
     assert response = @tandem_gateway.purchase(3000, network_card, @options)
     assert_success response
     assert_equal 'Approved', response.message

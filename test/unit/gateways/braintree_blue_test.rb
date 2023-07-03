@@ -945,14 +945,17 @@ class BraintreeBlueTest < Test::Unit::TestCase
         (params[:industry][:data][:lodging_name] == 'Best Hotel Ever')
     end.returns(braintree_result)
 
-    @gateway.purchase(100, credit_card('41111111111111111111'),
+    @gateway.purchase(
+      100,
+      credit_card('41111111111111111111'),
       travel_data: {
         travel_package: 'flight',
         departure_date: '2050-07-22',
         lodging_check_in_date: '2050-07-22',
         lodging_check_out_date: '2050-07-25',
         lodging_name: 'Best Hotel Ever'
-      })
+      }
+    )
   end
 
   def test_successful_purchase_with_lodging_data
@@ -964,13 +967,16 @@ class BraintreeBlueTest < Test::Unit::TestCase
         (params[:industry][:data][:room_rate] == '80.00')
     end.returns(braintree_result)
 
-    @gateway.purchase(100, credit_card('41111111111111111111'),
+    @gateway.purchase(
+      100,
+      credit_card('41111111111111111111'),
       lodging_data: {
         folio_number: 'ABC123',
         check_in_date: '2050-12-22',
         check_out_date: '2050-12-25',
         room_rate: '80.00'
-      })
+      }
+    )
   end
 
   def test_apple_pay_card
@@ -993,11 +999,13 @@ class BraintreeBlueTest < Test::Unit::TestCase
       ).
       returns(braintree_result(id: 'transaction_id'))
 
-    credit_card = network_tokenization_credit_card('4111111111111111',
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
       brand: 'visa',
       transaction_id: '123',
       eci: '05',
-      payment_cryptogram: '111111111100cryptogram')
+      payment_cryptogram: '111111111100cryptogram'
+    )
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization
@@ -1025,12 +1033,14 @@ class BraintreeBlueTest < Test::Unit::TestCase
       ).
       returns(braintree_result(id: 'transaction_id'))
 
-    credit_card = network_tokenization_credit_card('4111111111111111',
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
       brand: 'visa',
       eci: '05',
       payment_cryptogram: '111111111100cryptogram',
       source: :android_pay,
-      transaction_id: '1234567890')
+      transaction_id: '1234567890'
+    )
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization
@@ -1058,12 +1068,14 @@ class BraintreeBlueTest < Test::Unit::TestCase
       ).
       returns(braintree_result(id: 'transaction_id'))
 
-    credit_card = network_tokenization_credit_card('4111111111111111',
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
       brand: 'visa',
       eci: '05',
       payment_cryptogram: '111111111100cryptogram',
       source: :google_pay,
-      transaction_id: '1234567890')
+      transaction_id: '1234567890'
+    )
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization

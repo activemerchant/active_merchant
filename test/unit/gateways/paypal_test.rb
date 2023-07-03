@@ -260,21 +260,29 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_item_total_shipping_handling_and_tax_not_included_unless_all_are_present
-    xml = @gateway.send(:build_sale_or_authorization_request, 'Authorization', @amount, @credit_card,
+    xml = @gateway.send(
+      :build_sale_or_authorization_request,
+      'Authorization', @amount, @credit_card,
       tax: @amount,
       shipping: @amount,
-      handling: @amount)
+      handling: @amount
+    )
 
     doc = REXML::Document.new(xml)
     assert_nil REXML::XPath.first(doc, '//n2:PaymentDetails/n2:TaxTotal')
   end
 
   def test_item_total_shipping_handling_and_tax
-    xml = @gateway.send(:build_sale_or_authorization_request, 'Authorization', @amount, @credit_card,
+    xml = @gateway.send(
+      :build_sale_or_authorization_request,
+      'Authorization',
+      @amount,
+      @credit_card,
       tax: @amount,
       shipping: @amount,
       handling: @amount,
-      subtotal: 200)
+      subtotal: 200
+    )
 
     doc = REXML::Document.new(xml)
     assert_equal '1.00', REXML::XPath.first(doc, '//n2:PaymentDetails/n2:TaxTotal').text

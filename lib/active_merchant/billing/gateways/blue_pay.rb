@@ -344,9 +344,13 @@ module ActiveMerchant #:nodoc:
         success = parsed[:status] != 'error'
         message = parsed[:status]
 
-        Response.new(success, message, parsed,
+        Response.new(
+          success,
+          message,
+          parsed,
           test: test?,
-          authorization: parsed[:rebill_id])
+          authorization: parsed[:rebill_id]
+        )
       end
 
       def parse(body)
@@ -364,11 +368,15 @@ module ActiveMerchant #:nodoc:
         # normalize message
         message = message_from(parsed)
         success = parsed[:response_code] == '1'
-        Response.new(success, message, parsed,
+        Response.new(
+          success,
+          message,
+          parsed,
           test: test?,
           authorization: (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
           avs_result: { code: parsed[:avs_result_code] },
-          cvv_result: parsed[:card_code])
+          cvv_result: parsed[:card_code]
+        )
       end
 
       def message_from(parsed)

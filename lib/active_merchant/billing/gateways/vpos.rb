@@ -158,10 +158,10 @@ module ActiveMerchant #:nodoc:
         url = build_request_url(action)
         begin
           response = parse(ssl_post(url, post_data(parameters)))
-        rescue ResponseError => response
+        rescue ResponseError => e
           # Errors are returned with helpful data,
           # but get filtered out by `ssl_post` because of their HTTP status.
-          response = parse(response.response.body)
+          response = parse(e.response.body)
         end
 
         Response.new(

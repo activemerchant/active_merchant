@@ -28,7 +28,7 @@ class EbanxTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_optional_processing_type_header
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@accepted_amount, @credit_card, @options.merge(processing_type: 'local'))
+      @gateway.purchase(@amount, @credit_card, @options.merge(processing_type: 'local'))
     end.check_request do |_method, _endpoint, _data, headers|
       assert_equal 'local', headers['x-ebanx-api-processing-type']
     end.respond_with(successful_purchase_response)

@@ -10,10 +10,12 @@ class CyberSourceRestTest < Test::Unit::TestCase
       private_key: "NYlM1sgultLjvgaraWvDCXykdz1buqOW8yXE3pMlmxQ=\n"
     )
     @bank_account = check(account_number: '4100', routing_number: '121042882')
-    @credit_card = credit_card('4111111111111111',
+    @credit_card = credit_card(
+      '4111111111111111',
       verification_value: '987',
       month: 12,
-      year: 2031)
+      year: 2031
+    )
     @apple_pay = network_tokenization_credit_card(
       '4111111111111111',
       payment_cryptogram: 'AceY+igABPs3jdwNaDg3MAACAAA=',

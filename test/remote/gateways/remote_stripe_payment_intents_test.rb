@@ -11,30 +11,42 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     @three_ds_moto_enabled = 'pm_card_authenticationRequiredOnSetup'
     @three_ds_authentication_required = 'pm_card_authenticationRequired'
     @three_ds_authentication_required_setup_for_off_session = 'pm_card_authenticationRequiredSetupForOffSession'
-    @three_ds_off_session_credit_card = credit_card('4000002500003155',
+    @three_ds_off_session_credit_card = credit_card(
+      '4000002500003155',
       verification_value: '737',
       month: 10,
-      year: 2028)
-    @three_ds_1_credit_card = credit_card('4000000000003063',
+      year: 2028
+    )
+    @three_ds_1_credit_card = credit_card(
+      '4000000000003063',
       verification_value: '737',
       month: 10,
-      year: 2028)
-    @three_ds_credit_card = credit_card('4000000000003220',
+      year: 2028
+    )
+    @three_ds_credit_card = credit_card(
+      '4000000000003220',
       verification_value: '737',
       month: 10,
-      year: 2028)
-    @three_ds_not_required_card = credit_card('4000000000003055',
+      year: 2028
+    )
+    @three_ds_not_required_card = credit_card(
+      '4000000000003055',
       verification_value: '737',
       month: 10,
-      year: 2028)
-    @three_ds_external_data_card = credit_card('4000002760003184',
+      year: 2028
+    )
+    @three_ds_external_data_card = credit_card(
+      '4000002760003184',
       verification_value: '737',
       month: 10,
-      year: 2031)
-    @visa_card = credit_card('4242424242424242',
+      year: 2031
+    )
+    @visa_card = credit_card(
+      '4242424242424242',
       verification_value: '737',
       month: 10,
-      year: 2028)
+      year: 2028
+    )
 
     @google_pay = network_tokenization_credit_card(
       '4242424242424242',
@@ -744,7 +756,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
         confirm: true,
         off_session: true,
         stored_credential: {
-          network_transaction_id: '1098510912210968', # TEST env seems happy with any value :/
+          network_transaction_id: '1098510912210968' # TEST env seems happy with any value :/
         }
       })
 

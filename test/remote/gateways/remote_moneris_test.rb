@@ -41,7 +41,9 @@ class MonerisRemoteTest < Test::Unit::TestCase
 
   def test_successful_cavv_purchase
     # See https://developer.moneris.com/livedemo/3ds2/cavv_purchase/tool/php
-    assert response = @gateway.purchase(@amount, @visa_credit_card_3ds,
+    assert response = @gateway.purchase(
+      @amount,
+      @visa_credit_card_3ds,
       @options.merge(
         three_d_secure: {
           version: '2',
@@ -50,7 +52,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
           three_ds_server_trans_id: 'd0f461f8-960f-40c9-a323-4e43a4e16aaa',
           ds_transaction_id: '12345'
         }
-      ))
+      )
+    )
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
@@ -230,7 +233,9 @@ class MonerisRemoteTest < Test::Unit::TestCase
   def test_successful_cavv_authorization
     # see https://developer.moneris.com/livedemo/3ds2/cavv_preauth/tool/php
     # also see https://github.com/Moneris/eCommerce-Unified-API-PHP/blob/3cd3f0bd5a92432c1b4f9727d1ca6334786d9066/Examples/CA/TestCavvPreAuth.php
-    response = @gateway.authorize(@amount, @visa_credit_card_3ds,
+    response = @gateway.authorize(
+      @amount,
+      @visa_credit_card_3ds,
       @options.merge(
         three_d_secure: {
           version: '2',
@@ -239,7 +244,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
           three_ds_server_trans_id: 'e11d4985-8d25-40ed-99d6-c3803fe5e68f',
           ds_transaction_id: '12345'
         }
-      ))
+      )
+    )
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
@@ -248,7 +254,9 @@ class MonerisRemoteTest < Test::Unit::TestCase
   def test_successful_cavv_authorization_and_capture
     # see https://developer.moneris.com/livedemo/3ds2/cavv_preauth/tool/php
     # also see https://github.com/Moneris/eCommerce-Unified-API-PHP/blob/3cd3f0bd5a92432c1b4f9727d1ca6334786d9066/Examples/CA/TestCavvPreAuth.php
-    response = @gateway.authorize(@amount, @visa_credit_card_3ds,
+    response = @gateway.authorize(
+      @amount,
+      @visa_credit_card_3ds,
       @options.merge(
         three_d_secure: {
           version: '2',
@@ -257,7 +265,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
           three_ds_server_trans_id: 'e11d4985-8d25-40ed-99d6-c3803fe5e68f',
           ds_transaction_id: '12345'
         }
-      ))
+      )
+    )
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
@@ -270,7 +279,9 @@ class MonerisRemoteTest < Test::Unit::TestCase
     omit('There is no way to currently create a failed cavv authorization scenario')
     # see https://developer.moneris.com/livedemo/3ds2/cavv_preauth/tool/php
     # also see https://github.com/Moneris/eCommerce-Unified-API-PHP/blob/3cd3f0bd5a92432c1b4f9727d1ca6334786d9066/Examples/CA/TestCavvPreAuth.php
-    response = @gateway.authorize(@fail_amount, @visa_credit_card_3ds,
+    response = @gateway.authorize(
+      @fail_amount,
+      @visa_credit_card_3ds,
       @options.merge(
         three_d_secure: {
           version: '2',
@@ -279,7 +290,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
           three_ds_server_trans_id: 'e11d4985-8d25-40ed-99d6-c3803fe5e68f',
           ds_transaction_id: '12345'
         }
-      ))
+      )
+    )
 
     assert_failure response
   end

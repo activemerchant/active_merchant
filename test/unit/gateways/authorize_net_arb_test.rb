@@ -18,7 +18,9 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
   def test_successful_recurring
     @gateway.expects(:ssl_post).returns(successful_recurring_response)
 
-    response = @gateway.recurring(@amount, @credit_card,
+    response = @gateway.recurring(
+      @amount,
+      @credit_card,
       billing_address: address.merge(first_name: 'Jim', last_name: 'Smith'),
       interval: {
         length: 10,
@@ -27,7 +29,8 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
       duration: {
         start_date: Time.now.strftime('%Y-%m-%d'),
         occurrences: 30
-      })
+      }
+    )
 
     assert_instance_of Response, response
     assert response.success?

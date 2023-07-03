@@ -306,9 +306,13 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, request.to_s))
 
         # Return a response
-        PaymentExpressResponse.new(response[:success] == APPROVED, message_from(response), response,
+        PaymentExpressResponse.new(
+          response[:success] == APPROVED,
+          message_from(response),
+          response,
           test: response[:test_mode] == '1',
-          authorization: authorization_from(action, response))
+          authorization: authorization_from(action, response)
+        )
       end
 
       # Response XML documentation: http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#XMLTxnOutput

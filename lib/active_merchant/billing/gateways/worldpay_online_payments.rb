@@ -34,14 +34,16 @@ module ActiveMerchant #:nodoc:
         if authorization
           commit(:post, "orders/#{CGI.escape(authorization)}/capture", { 'captureAmount' => money }, options, 'capture')
         else
-          Response.new(false,
+          Response.new(
+            false,
             'FAILED',
             'FAILED',
             test: test?,
             authorization: false,
             avs_result: {},
             cvv_result: {},
-            error_code: false)
+            error_code: false
+          )
         end
       end
 
@@ -170,14 +172,16 @@ module ActiveMerchant #:nodoc:
           authorization = response['message']
         end
 
-        Response.new(success,
+        Response.new(
+          success,
           success ? 'SUCCESS' : response['message'],
           response,
           test: test?,
           authorization: authorization,
           avs_result: {},
           cvv_result: {},
-          error_code: success ? nil : response['customCode'])
+          error_code: success ? nil : response['customCode']
+        )
       end
 
       def test?

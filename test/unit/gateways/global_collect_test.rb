@@ -9,26 +9,32 @@ class GlobalCollectTest < Test::Unit::TestCase
                                         secret_api_key: '109H/288H*50Y18W4/0G8571F245KA=')
 
     @credit_card = credit_card('4567350000427977')
-    @apple_pay_network_token = network_tokenization_credit_card('4444333322221111',
+    @apple_pay_network_token = network_tokenization_credit_card(
+      '4444333322221111',
       month: 10,
       year: 24,
       first_name: 'John',
       last_name: 'Smith',
       eci: '05',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      source: :apple_pay)
+      source: :apple_pay
+    )
 
-    @google_pay_network_token = network_tokenization_credit_card('4444333322221111',
+    @google_pay_network_token = network_tokenization_credit_card(
+      '4444333322221111',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       month: '01',
       year: Time.new.year + 2,
       source: :google_pay,
       transaction_id: '123456789',
-      eci: '05')
+      eci: '05'
+    )
 
-    @google_pay_pan_only = credit_card('4444333322221111',
+    @google_pay_pan_only = credit_card(
+      '4444333322221111',
       month: '01',
-      year: Time.new.year + 2)
+      year: Time.new.year + 2
+    )
 
     @declined_card = credit_card('5424180279791732')
     @accepted_amount = 4005

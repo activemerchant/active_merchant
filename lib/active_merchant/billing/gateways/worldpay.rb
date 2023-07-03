@@ -38,14 +38,14 @@ module ActiveMerchant #:nodoc:
         'G' => 'C', # Address does not match, postcode not checked
         'H' => 'I', # Address and postcode not provided
         'I' => 'C', # Address not checked postcode does not match
-        'J' => 'C', # Address and postcode does not match
+        'J' => 'C' # Address and postcode does not match
       }
 
       CVC_CODE_MAP = {
         'A' => 'M', # CVV matches
         'B' => 'P', # Not provided
         'C' => 'P', # Not checked
-        'D' => 'N', # Does not match
+        'D' => 'N' # Does not match
       }
 
       def initialize(options = {})
@@ -832,7 +832,8 @@ module ActiveMerchant #:nodoc:
 
         # ensure cookie included on follow-up '3ds' and 'capture_request' calls, using the cookie saved from the preceding response
         # cookie should be present in options on the 3ds and capture calls, but also still saved in the instance var in case
-        cookie = options[:cookie] || @cookie || nil
+        cookie = defined?(@cookie) ? @cookie : nil
+        cookie = options[:cookie] || cookie
         headers['Cookie'] = cookie if cookie
 
         headers['Idempotency-Key'] = idempotency_key if idempotency_key

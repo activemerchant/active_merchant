@@ -470,8 +470,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_email
-    assert response = @gateway.purchase(@amount, @credit_card,
-      email: 'customer@example.com')
+    assert response = @gateway.purchase(@amount, @credit_card, email: 'customer@example.com')
     assert_success response
     transaction = response.params['braintree_transaction']
     assert_equal 'customer@example.com', transaction['customer_details']['email']
@@ -570,9 +569,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
 
   def test_purchase_using_specified_payment_method_token
     assert response = @gateway.store(
-      credit_card('4111111111111111',
-        first_name: 'Old First', last_name: 'Old Last',
-        month: 9, year: 2012),
+      credit_card('4111111111111111', first_name: 'Old First', last_name: 'Old Last', month: 9, year: 2012),
       email: 'old@example.com',
       phone: '321-654-0987'
     )
@@ -604,9 +601,12 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       zip: '60103',
       country_name: 'Mexico'
     }
-    assert response = @gateway.purchase(@amount, @credit_card,
+    assert response = @gateway.purchase(
+      @amount,
+      @credit_card,
       billing_address: billing_address,
-      shipping_address: shipping_address)
+      shipping_address: shipping_address
+    )
     assert_success response
     transaction = response.params['braintree_transaction']
     assert_equal '1 E Main St', transaction['billing_details']['street_address']
@@ -627,15 +627,13 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_three_d_secure_pass_thru
     three_d_secure_params = { version: '2.0', cavv: 'cavv', eci: '02', ds_transaction_id: 'trans_id', cavv_algorithm: 'algorithm', directory_response_status: 'directory', authentication_response_status: 'auth' }
-    response = @gateway.purchase(@amount, @credit_card,
-      three_d_secure: three_d_secure_params)
+    response = @gateway.purchase(@amount, @credit_card, three_d_secure: three_d_secure_params)
     assert_success response
   end
 
   def test_successful_purchase_with_some_three_d_secure_pass_thru_fields
     three_d_secure_params = { version: '2.0', cavv: 'cavv', eci: '02', ds_transaction_id: 'trans_id' }
-    response = @gateway.purchase(@amount, @credit_card,
-      three_d_secure: three_d_secure_params)
+    response = @gateway.purchase(@amount, @credit_card, three_d_secure: three_d_secure_params)
     assert_success response
   end
 
@@ -669,10 +667,12 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture_with_apple_pay_card
-    credit_card = network_tokenization_credit_card('4111111111111111',
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
       brand: 'visa',
       eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
 
     assert auth = @gateway.authorize(@amount, credit_card, @options)
     assert_success auth
@@ -683,13 +683,15 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture_with_android_pay_card
-    credit_card = network_tokenization_credit_card('4111111111111111',
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       month: '01',
       year: '2024',
       source: :android_pay,
       transaction_id: '123456789',
-      eci: '05')
+      eci: '05'
+    )
 
     assert auth = @gateway.authorize(@amount, credit_card, @options)
     assert_success auth
@@ -700,13 +702,15 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture_with_google_pay_card
-    credit_card = network_tokenization_credit_card('4111111111111111',
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       month: '01',
       year: '2024',
       source: :google_pay,
       transaction_id: '123456789',
-      eci: '05')
+      eci: '05'
+    )
 
     assert auth = @gateway.authorize(@amount, credit_card, @options)
     assert_success auth
@@ -817,9 +821,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
 
   def test_successful_update
     assert response = @gateway.store(
-      credit_card('4111111111111111',
-        first_name: 'Old First', last_name: 'Old Last',
-        month: 9, year: 2012),
+      credit_card('4111111111111111', first_name: 'Old First', last_name: 'Old Last', month: 9, year: 2012),
       email: 'old@example.com',
       phone: '321-654-0987'
     )
@@ -838,9 +840,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
 
     assert response = @gateway.update(
       customer_vault_id,
-      credit_card('5105105105105100',
-        first_name: 'New First', last_name: 'New Last',
-        month: 10, year: 2014),
+      credit_card('5105105105105100', first_name: 'New First', last_name: 'New Last', month: 10, year: 2014),
       email: 'new@example.com',
       phone: '987-765-5432'
     )
@@ -946,25 +946,31 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_authorize_with_travel_data
-    assert auth = @gateway.authorize(@amount, @credit_card,
+    assert auth = @gateway.authorize(
+      @amount,
+      @credit_card,
       travel_data: {
         travel_package: 'flight',
         departure_date: '2050-07-22',
         lodging_check_in_date: '2050-07-22',
         lodging_check_out_date: '2050-07-25',
         lodging_name: 'Best Hotel Ever'
-      })
+      }
+    )
     assert_success auth
   end
 
   def test_authorize_with_lodging_data
-    assert auth = @gateway.authorize(@amount, @credit_card,
+    assert auth = @gateway.authorize(
+      @amount,
+      @credit_card,
       lodging_data: {
         folio_number: 'ABC123',
         check_in_date: '2050-12-22',
         check_out_date: '2050-12-25',
         room_rate: '80.00'
-      })
+      }
+    )
     assert_success auth
   end
 

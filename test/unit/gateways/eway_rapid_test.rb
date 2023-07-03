@@ -194,7 +194,9 @@ class EwayRapidTest < Test::Unit::TestCase
 
   def test_purchase_with_all_options
     response = stub_comms do
-      @gateway.purchase(200, @credit_card,
+      @gateway.purchase(
+        200,
+        @credit_card,
         transaction_type: 'CustomTransactionType',
         redirect_url: 'http://awesomesauce.com',
         ip: '0.0.0.0',
@@ -230,7 +232,8 @@ class EwayRapidTest < Test::Unit::TestCase
           country: 'US',
           phone: '1115555555',
           fax: '1115556666'
-        })
+        }
+      )
     end.check_request do |_endpoint, data, _headers|
       assert_match(%r{"TransactionType":"CustomTransactionType"}, data)
       assert_match(%r{"RedirectUrl":"http://awesomesauce.com"}, data)

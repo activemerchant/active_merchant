@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
         'I5'  => 'M', #  +4 and Address Match
         'I6'  => 'W', #  +4 Match
         'I7'  => 'A', #  Address Match
-        'I8'  => 'C', #  No Match
+        'I8'  => 'C' #  No Match
       }
 
       PAYWAY_WS_SUCCESS = '5000'

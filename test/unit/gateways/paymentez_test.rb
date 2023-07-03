@@ -6,13 +6,15 @@ class PaymentezTest < Test::Unit::TestCase
   def setup
     @gateway = PaymentezGateway.new(application_code: 'foo', app_key: 'bar')
     @credit_card = credit_card
-    @elo_credit_card = credit_card('6362970000457013',
+    @elo_credit_card = credit_card(
+      '6362970000457013',
       month: 10,
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo')
+      brand: 'elo'
+    )
     @amount = 100
 
     @options = {

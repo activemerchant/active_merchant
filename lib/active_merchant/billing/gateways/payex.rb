@@ -385,11 +385,13 @@ module ActiveMerchant #:nodoc:
           'Content-Length' => request.size.to_s
         }
         response = parse(ssl_post(url, request, headers))
-        Response.new(success?(response),
+        Response.new(
+          success?(response),
           message_from(response),
           response,
           test: test?,
-          authorization: build_authorization(response))
+          authorization: build_authorization(response)
+        )
       end
 
       def build_authorization(response)

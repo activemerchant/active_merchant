@@ -84,9 +84,13 @@ module ActiveMerchant #:nodoc:
       def commit(action, post)
         response = parse(ssl_post(self.live_url, post_data(action, post)))
 
-        Response.new(response[:result_code] == 1, message_from(response), response,
+        Response.new(
+          response[:result_code] == 1,
+          message_from(response),
+          response,
           test: test?,
-          authorization: response[:merchant_transaction_reference])
+          authorization: response[:merchant_transaction_reference]
+        )
       end
 
       def message_from(result)

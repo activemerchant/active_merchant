@@ -387,11 +387,15 @@ module ActiveMerchant #:nodoc:
         # the Base64 encoded payload signature!
         response = parse(ssl_post(self.live_url, post_data(payload), 'Content-Type' => 'text/xml'))
 
-        Response.new(successful?(response), response[:error_message], response,
+        Response.new(
+          successful?(response),
+          response[:error_message],
+          response,
           test: test?,
           authorization: response[:xid],
           avs_result: { code: response[:avs_response] },
-          cvv_result: response[:cvv_response])
+          cvv_result: response[:cvv_response]
+        )
       end
 
       def post_data(payload)

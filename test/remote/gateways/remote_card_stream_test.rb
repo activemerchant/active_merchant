@@ -6,33 +6,43 @@ class RemoteCardStreamTest < Test::Unit::TestCase
 
     @gateway = CardStreamGateway.new(fixtures(:card_stream))
 
-    @amex = credit_card('374245455400001',
+    @amex = credit_card(
+      '374245455400001',
       month: '12',
       year: Time.now.year + 1,
       verification_value: '4887',
-      brand: :american_express)
+      brand: :american_express
+    )
 
-    @mastercard = credit_card('5301250070000191',
+    @mastercard = credit_card(
+      '5301250070000191',
       month: '12',
       year: Time.now.year + 1,
       verification_value: '419',
-      brand: :master)
+      brand: :master
+    )
 
-    @visacreditcard = credit_card('4929421234600821',
+    @visacreditcard = credit_card(
+      '4929421234600821',
       month: '12',
       year: Time.now.year + 1,
       verification_value: '356',
-      brand: :visa)
+      brand: :visa
+    )
 
-    @visadebitcard = credit_card('4539791001730106',
+    @visadebitcard = credit_card(
+      '4539791001730106',
       month: '12',
       year: Time.now.year + 1,
       verification_value: '289',
-      brand: :visa)
+      brand: :visa
+    )
 
-    @declined_card = credit_card('4000300011112220',
+    @declined_card = credit_card(
+      '4000300011112220',
       month: '9',
-      year: Time.now.year + 1)
+      year: Time.now.year + 1
+    )
 
     @amex_options = {
       billing_address: {
@@ -109,10 +119,12 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       ip: '1.1.1.1'
     }
 
-    @three_ds_enrolled_card = credit_card('4012001037141112',
+    @three_ds_enrolled_card = credit_card(
+      '4012001037141112',
       month: '12',
       year: '2020',
-      brand: :visa)
+      brand: :visa
+    )
 
     @visacredit_three_ds_options = {
       threeds_required: true,

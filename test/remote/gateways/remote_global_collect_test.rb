@@ -16,26 +16,32 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     @cabal_card = credit_card('6271701225979642', brand: 'cabal')
     @declined_card = credit_card('5424180279791732')
     @preprod_card = credit_card('4111111111111111')
-    @apple_pay = network_tokenization_credit_card('4567350000427977',
+    @apple_pay = network_tokenization_credit_card(
+      '4567350000427977',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       month: '01',
       year: Time.new.year + 2,
       first_name: 'John',
       last_name: 'Smith',
       eci: '05',
-      source: :apple_pay)
+      source: :apple_pay
+    )
 
-    @google_pay = network_tokenization_credit_card('4567350000427977',
+    @google_pay = network_tokenization_credit_card(
+      '4567350000427977',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       month: '01',
       year: Time.new.year + 2,
       source: :google_pay,
       transaction_id: '123456789',
-      eci: '05')
+      eci: '05'
+    )
 
-    @google_pay_pan_only = credit_card('4567350000427977',
+    @google_pay_pan_only = credit_card(
+      '4567350000427977',
       month: '01',
-      year: Time.new.year + 2)
+      year: Time.new.year + 2
+    )
 
     @accepted_amount = 4005
     @rejected_amount = 2997

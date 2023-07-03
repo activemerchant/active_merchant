@@ -146,9 +146,12 @@ module ActiveMerchant #:nodoc:
 
       def unstore(authorization, options = {})
         account_id, profile_id = authorization.split('|')
-        commit('profile', {},
+        commit(
+          'profile',
+          {},
           verb: :delete,
-          path: "/#{profile_id}/#{account_id}/#{@options[:merchant_id]}")
+          path: "/#{profile_id}/#{account_id}/#{@options[:merchant_id]}"
+        )
       end
 
       def supports_scrubbing?

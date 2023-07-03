@@ -8,10 +8,7 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     @bank_account = check(account_number: '4100', routing_number: '121042882')
     @declined_bank_account = check(account_number: '550111', routing_number: '121107882')
 
-    @visa_card = credit_card('4111111111111111',
-      verification_value: '987',
-      month: 12,
-      year: 2031)
+    @visa_card = credit_card('4111111111111111', verification_value: '987', month: 12, year: 2031)
 
     @master_card = credit_card('2222420000001113', brand: 'master')
     @discover_card = credit_card('6011111111111117', brand: 'discover')

@@ -201,11 +201,13 @@ module ActiveMerchant #:nodoc:
         response = http_request(method, resource, parameters, options)
         success = !error?(response)
 
-        Response.new(success,
+        Response.new(
+          success,
           (success ? response['error_code'] : response['description']),
           response,
           test: test?,
-          authorization: response['id'])
+          authorization: response['id']
+        )
       end
 
       def http_request(method, resource, parameters = {}, options = {})

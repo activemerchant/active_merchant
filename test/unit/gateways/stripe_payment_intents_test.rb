@@ -11,10 +11,12 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     @visa_token = 'pm_card_visa'
 
     @three_ds_authentication_required_setup_for_off_session = 'pm_card_authenticationRequiredSetupForOffSession'
-    @three_ds_off_session_credit_card = credit_card('4000002500003155',
+    @three_ds_off_session_credit_card = credit_card(
+      '4000002500003155',
       verification_value: '737',
       month: 10,
-      year: 2022)
+      year: 2022
+    )
 
     @amount = 2020
     @update_amount = 2050
@@ -426,7 +428,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
           confirm: true,
           off_session: true,
           stored_credential: {
-            network_transaction_id: network_transaction_id, # TEST env seems happy with any value :/
+            network_transaction_id: network_transaction_id # TEST env seems happy with any value :/
           }
         })
       end.check_request do |_method, _endpoint, data, _headers|
@@ -526,7 +528,6 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
   def test_purchase_with_shipping_carrier_and_tracking_number
     options = {
       currency: 'GBP',
-      customer: @customer,
       shipping_address: {
         name: 'John Adam',
         address1: 'block C'
@@ -534,6 +535,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
       shipping_tracking_number: 'TXNABC123',
       shipping_carrier: 'FEDEX'
     }
+    options[:customer] = @customer if defined?(@customer)
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @visa_token, options)
     end.check_request do |_method, _endpoint, data, _headers|

@@ -174,7 +174,7 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_identify_wrong_card_brand
-    c = credit_card(brand: 'master')
+    c = credit_card('4779139500118580', brand: 'master')
     assert_not_valid c
   end
 
