@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaywayDotComGateway < Gateway
       self.test_url = 'https://paywaywsdev.com/PaywayWS/Payment/CreditCard'
-      self.live_url = 'https://paywayws.com/PaywayWS/Payment/CreditCard'
+      self.live_url = 'https://paywayws.net/PaywayWS/Payment/CreditCard'
 
       self.supported_countries = %w[US CA]
       self.default_currency = 'USD'
