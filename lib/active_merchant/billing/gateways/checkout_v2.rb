@@ -363,9 +363,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def response(action, succeeded, response, source_id = nil)
-        successful_response = succeeded && action == :purchase || action == :authorize
-        avs_result = successful_response ? avs_result(response) : nil
-        cvv_result = successful_response ? cvv_result(response) : nil
         authorization = authorization_from(response) unless action == :unstore
         body = action == :unstore ? { response_code: response.to_s } : response
         Response.new(
@@ -375,8 +372,8 @@ module ActiveMerchant #:nodoc:
           authorization: authorization,
           error_code: error_code_from(succeeded, body),
           test: test?,
-          avs_result: avs_result,
-          cvv_result: cvv_result
+          avs_result: avs_result(response),
+          cvv_result: cvv_result(response)
         )
       end
 
@@ -427,11 +424,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def avs_result(response)
-        response['source'] && response['source']['avs_check'] ? AVSResult.new(code: response['source']['avs_check']) : nil
+        response.respond_to?(:dig) && response.dig('source', 'avs_check') ? AVSResult.new(code: response['source']['avs_check']) : nil
       end
 
       def cvv_result(response)
-        response['source'] && response['source']['cvv_check'] ? CVVResult.new(response['source']['cvv_check']) : nil
+        response.respond_to?(:dig) && response.dig('source', 'cvv_check') ? CVVResult.new(response['source']['cvv_check']) : nil
       end
 
       def parse(body, error: nil)
