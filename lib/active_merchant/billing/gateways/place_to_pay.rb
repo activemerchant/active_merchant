@@ -46,9 +46,9 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((tranKey)\w+), '\1[FILTERED]').
-          gsub(/(number\\?":\\?")(\d*)/, '\1[FILTERED]').
-          gsub(/(cvv\\?":\\?")(\d*)/, '\1[FILTERED]')
+        gsub(%r(("tranKey\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+        gsub(/(number\\?":\\?")(\d*)/, '\1[FILTERED]').
+        gsub(/(cvv\\?":\\?")(\d*)/, '\1[FILTERED]')
       end
 
       private
