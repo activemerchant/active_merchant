@@ -102,17 +102,18 @@ class RemotePlaceToPayTest < Test::Unit::TestCase
   #   # you can use that transcript as a reference while
   #   # implementing your scrubbing logic.  You can delete
   #   # this helper after completing your scrub implementation.
-  #   dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
+  #   @purchase_options[:payment][:reference] = "TEST_" + Time.now.strftime("%Y%m%d_%H%M%S%3N")
+  #   dump_transcript_and_fail(@default_gateway, @amount, @credit_card_approved_visa, @purchase_options)
   # end
 
-  # def test_transcript_scrubbing
-  #   transcript = capture_transcript(@gateway) do
-  #     @gateway.purchase(@amount, @credit_card, @options)
-  #   end
-  #   transcript = @gateway.scrub(transcript)
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@default_gateway) do
+      @purchase_options[:payment][:reference] = "TEST_" + Time.now.strftime("%Y%m%d_%H%M%S%3N")
+      @default_gateway.purchase(@amount, @credit_card_approved_visa, @purchase_options)
+    end
+    transcript = @default_gateway.scrub(transcript)
 
-  #   assert_scrubbed(@credit_card.number, transcript)
-  #   assert_scrubbed(@credit_card.verification_value, transcript)
-  #   assert_scrubbed(@gateway.options[:password], transcript)
-  # end
+    assert_scrubbed(@credit_card_approved_visa.number, transcript)
+  end
+  
 end
