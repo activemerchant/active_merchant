@@ -127,7 +127,7 @@ module ActiveMerchant #:nodoc:
           post[:shipping_address][:country] = shipping_address[:country]
           post[:shipping_address][:postal_code] = shipping_address[:zip]
           post[:shipping_address][:phone] = shipping_address[:phone]
-          post[:shipping_address][:email] = billing_address[:email]
+          post[:shipping_address][:email] = shipping_address[:email]
         end
 
         if (descriptor = options[:descriptors])
