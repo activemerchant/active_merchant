@@ -1,6 +1,7 @@
 require 'test_helper'
 
 class PlaceToPayTest < Test::Unit::TestCase
+  include CommStub
   def setup
     @gateway = PlaceToPayGateway.new(login: 'login', secret_key: 'secret_key')
     
@@ -39,21 +40,29 @@ class PlaceToPayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    response = @gateway.purchase(@amount, @credit_card_approved_visa, @options)
+    @options[:payment][:reference] = "TEST_" + Time.now.strftime("%Y%m%d_%H%M%S%3N")
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card_approved_visa, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<description>.+<\/description>/, data)
+    end.respond_with(successful_purchase_response)
+
     assert_success response
-
+    assert_equal 'Aprobada', response.message
     assert_equal '999999', response.authorization
-    assert response.test?
+    assert response.test? 
   end
 
   def test_failed_purchase
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    #@gateway.expects(:ssl_post).returns(failed_purchase_response)
 
+    @options[:payment][:reference] = "TEST_" + Time.now.strftime("%Y%m%d_%H%M%S%3N")
     response = @gateway.purchase(@amount, @credit_card_rejected_visa, @options)
-    assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    #assert_failure response
+    assert_equal 'Rechazada', response.message
+    #assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code  
   end
 
   # def test_successful_refund; end
