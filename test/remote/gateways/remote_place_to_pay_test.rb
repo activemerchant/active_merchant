@@ -96,6 +96,23 @@ class RemotePlaceToPayTest < Test::Unit::TestCase
     assert_equal 'La referencia interna provista es inválida', refund.message
   end
 
+  def test_already_refunded
+    @purchase_options[:payment][:reference] = "TEST_" + Time.now.strftime("%Y%m%d_%H%M%S%3N")
+    purchase = @default_gateway.purchase(@amount, @credit_card_approved_visa, @purchase_options)
+    assert_success purchase
+    assert_equal 'Aprobada', purchase.message
+
+    @refund_options =  { internalReference: purchase.network_transaction_id }
+    refund = @default_gateway.refund(@amount, purchase.authorization, @refund_options)
+
+    assert_success refund
+    assert_equal 'Aprobada', refund.message
+
+    refund = @default_gateway.refund(@amount, purchase.authorization, @refund_options)
+    assert_equal 'La transacción ya ha sido reversada', refund.message
+
+  end
+
   # def test_dump_transcript
   #   # This test will run a purchase transaction on your gateway
   #   # and dump a transcript of the HTTP conversation so that
