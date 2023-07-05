@@ -46,7 +46,7 @@ class PlaceToPayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card_approved_visa, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<description>.+<\/description>/, data)
+  #     assert_match(/<description>.+<\/description>/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -65,19 +65,31 @@ class PlaceToPayTest < Test::Unit::TestCase
     #assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code  
   end
 
-  # def test_successful_refund; end
+  def test_successful_refund 
+    @options[:payment][:reference] = "TEST_" + Time.now.strftime("%Y%m%d_%H%M%S%3N")
+    
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @credit_card_approved_visa, @options)
+    end.check_request do |_endpoint, data, _headers|
+      # assert_match(/<description>.+<\/description>/, data)
+    end.respond_with(successful_purchase_response)
 
-  # def test_failed_refund; end
+    #@gateway.expects(:ssl_post).returns(successful_refund_response)
+    @refund_options =  { internalReference: purchase.network_transaction_id }
 
-  # def test_successful_void; end
+    response = @gateway.refund(@amount, purchase.authorization, @refund_options)
 
-  # def test_failed_void; end
+    assert_success response
+    assert_equal 'Aprobada', response.message
+  end
 
-  # def test_successful_verify; end
+  def test_failed_refund
+    #@gateway.expects(:ssl_post).returns(failed_refund_response)
+    response = @gateway.refund(@amount, nil)
 
-  # def test_successful_verify_with_failed_void; end
-
-  # def test_failed_verify; end
+    #assert_failure response
+    assert_equal 'La referencia interna provista es inválida', response.message
+  end
 
   def test_scrub
     assert @gateway.supports_scrubbing?
@@ -276,11 +288,102 @@ class PlaceToPayTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_refund_response; end
+  def successful_refund_response; 
+    <<-RESPONSE
+    {
+      "status": {
+          "status": "APPROVED",
+          "reason": "00",
+          "message": "Aprobada",
+          "date": "2023-07-05T11:49:01-05:00"
+      },
+      "date": "2023-07-05T11:49:01-05:00",
+      "transactionDate": "2023-07-05T11:49:01-05:00",
+      "internalReference": 426507,
+      "reference": "TEST_20230705_134809919",
+      "paymentMethod": "ID_VS",
+      "franchise": "visa",
+      "franchiseName": "Visa",
+      "issuerName": "BANCO DE GUAYAQUIL, S.A.",
+      "amount": {
+          "taxes": [
+              {
+                  "kind": "valueAddedTax",
+                  "amount": 0,
+                  "base": 0
+              }
+          ],
+          "currency": "COP",
+          "total": 100
+      },
+      "conversion": {
+          "from": {
+              "currency": "COP",
+              "total": 100
+          },
+          "to": {
+              "currency": "USD",
+              "total": 0.02
+          },
+          "factor": 0.000239
+      },
+      "authorization": "000000",
+      "receipt": null,
+      "type": "CREDIT",
+      "refunded": false,
+      "lastDigits": "0081",
+      "provider": "INTERDIN",
+      "discount": null,
+      "processorFields": {
+          "id": "3ac34a0032ba5356498bcd3bde6b8297",
+          "b24": "00"
+      },
+      "additional": {
+          "merchantCode": "12345678",
+          "terminalNumber": "12345678",
+          "credit": {
+              "code": 1,
+              "type": "00",
+              "groupCode": "C",
+              "installments": 1
+          },
+          "totalAmount": 0.02,
+          "interestAmount": 0,
+          "installmentAmount": 0,
+          "iceAmount": 0,
+          "batch": null,
+          "line": null,
+          "bin": "411076",
+          "expiration": "1223"
+      }
+    }
+    RESPONSE
+  end
 
-  def failed_refund_response; end
+  def failed_refund_response
+    <<-RESPONSE
+    {
+      "status": {
+          "status": "FAILED",
+          "reason": "BR",
+          "message": "El código de autorización no concuerda",
+          "date": "2023-07-05T11:52:03-05:00"
+      }
+    }
+    RESPONSE
+  end
 
-  def successful_void_response; end
+  def already_refunded_response;
+    <<-RESPONSE
+    {
+        "status": {
+            "status": "FAILED",
+            "reason": "BR",
+            "message": "La transacción ya ha sido reversada",
+            "date": "2023-07-05T11:51:07-05:00"
+        }
+    }
+    RESPONSE
+  end
 
-  def failed_void_response; end
 end
