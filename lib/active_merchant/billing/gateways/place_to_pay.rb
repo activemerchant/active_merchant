@@ -11,7 +11,9 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.placetopay.com/'
       self.display_name = 'PlaceToPay'
 
-      STANDARD_ERROR_CODE_MAPPING = {}
+      STANDARD_ERROR_CODE_MAPPING = {
+        '401' => STANDARD_ERROR_CODE[:processing_error]
+      }
 
       ISO_FORMAT_DATE = '%Y-%m-%dT%H:%M:%S%:z'
 
@@ -19,7 +21,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login, :secret_key)
         @login, @secret_key = options.values_at(:login, :secret_key)
         super
-      end
+      end 
 
       def purchase(money, payment, options = {})
         post = {}
@@ -117,7 +119,6 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(action, response, options)
         unless success_from(action, response, options)
-          # TODO: lookup error code for this response
           STANDARD_ERROR_CODE_MAPPING[response['reason']]
         end
       end
