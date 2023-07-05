@@ -5,9 +5,9 @@ class RemoteIpgTest < Test::Unit::TestCase
     @gateway = IpgGateway.new(fixtures(:ipg))
 
     @amount = 100
-    @credit_card = credit_card('5165850000000008', brand: 'mastercard', verification_value: '530', month: '12', year: '2022')
+    @credit_card = credit_card('5165850000000008', brand: 'mastercard', verification_value: '987', month: '12', year: '2029')
     @declined_card = credit_card('4000300011112220', brand: 'mastercard', verification_value: '652', month: '12', year: '2022')
-    @visa_card = credit_card('4704550000000005', brand: 'visa', verification_value: '123', month: '12', year: '2022')
+    @visa_card = credit_card('4704550000000005', brand: 'visa', verification_value: '123', month: '12', year: '2029')
     @options = {
       currency: 'ARS'
     }
@@ -96,7 +96,7 @@ class RemoteIpgTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'DECLINED', response.message
+    assert_match 'DECLINED', response.message
     assert_equal 'SGS-050005', response.error_code
   end
 
@@ -121,14 +121,14 @@ class RemoteIpgTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'DECLINED', response.message
+    assert_equal 'DECLINED, Do not honour', response.message
     assert_equal 'SGS-050005', response.error_code
   end
 
   def test_failed_capture
     response = @gateway.capture(@amount, '', @options)
     assert_failure response
-    assert_equal 'FAILED', response.message
+    assert_match 'FAILED', response.message
     assert_equal 'SGS-005001', response.error_code
   end
 
@@ -159,7 +159,7 @@ class RemoteIpgTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '', @options)
     assert_failure response
-    assert_equal 'FAILED', response.message
+    assert_match 'FAILED', response.message
     assert_equal 'SGS-005001', response.error_code
   end
 
@@ -172,7 +172,7 @@ class RemoteIpgTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'DECLINED', response.message
+    assert_match 'DECLINED', response.message
     assert_equal 'SGS-050005', response.error_code
   end
 

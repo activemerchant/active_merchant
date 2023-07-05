@@ -83,6 +83,8 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method, options)
         add_full_response(post, options)
         add_metadata(post, options)
+        add_months(post, options)
+        add_deferred(post, options)
 
         commit(action, post)
       end
@@ -96,6 +98,8 @@ module ActiveMerchant #:nodoc:
         add_contact_details(post, options[:contact_details]) if options[:contact_details]
         add_full_response(post, options)
         add_metadata(post, options)
+        add_months(post, options)
+        add_deferred(post, options)
 
         commit(action, post)
       end
@@ -108,6 +112,8 @@ module ActiveMerchant #:nodoc:
         add_invoice(action, post, amount, options)
         add_full_response(post, options)
         add_metadata(post, options)
+        add_months(post, options)
+        add_deferred(post, options)
 
         commit(action, post)
       end
@@ -182,6 +188,20 @@ module ActiveMerchant #:nodoc:
 
       def add_metadata(post, options)
         post[:metadata] = options[:metadata] if options[:metadata]
+      end
+
+      def add_months(post, options)
+        post[:months] = options[:months] if options[:months]
+      end
+
+      def add_deferred(post, options)
+        return unless options[:deferred_grace_months] && options[:deferred_credit_type] && options[:deferred_months]
+
+        post[:deferred] = {
+          graceMonths: options[:deferred_grace_months],
+          creditType: options[:deferred_credit_type],
+          months: options[:deferred_months]
+        }
       end
 
       ENDPOINT = {

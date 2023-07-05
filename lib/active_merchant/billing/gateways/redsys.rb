@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://sis.redsys.es/sis/operaciones'
       self.test_url = 'https://sis-t.redsys.es:25443/sis/operaciones'
 
-      self.supported_countries = ['ES']
+      self.supported_countries = %w[ES FR GB IT PL PT]
       self.default_currency    = 'EUR'
       self.money_format        = :cents
 
@@ -538,6 +538,7 @@ module ActiveMerchant #:nodoc:
             xml.DS_MERCHANT_COF_INI data[:DS_MERCHANT_COF_INI]
             xml.DS_MERCHANT_COF_TYPE data[:DS_MERCHANT_COF_TYPE]
             xml.DS_MERCHANT_COF_TXNID data[:DS_MERCHANT_COF_TXNID] if data[:DS_MERCHANT_COF_TXNID]
+            xml.DS_MERCHANT_DIRECTPAYMENT 'false' if options[:stored_credential][:initial_transaction]
           end
         end
       end

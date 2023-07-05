@@ -18,7 +18,8 @@ class RemoteShift4Test < Test::Unit::TestCase
       tax: '2',
       customer_reference: 'D019D09309F2',
       destination_postal_code: '94719',
-      product_descriptors: %w(Hamburger Fries Soda Cookie)
+      product_descriptors: %w(Hamburger Fries Soda Cookie),
+      order_id: '123456'
     }
     @customer_address = {
       address1: '65 Easy St',
@@ -76,6 +77,12 @@ class RemoteShift4Test < Test::Unit::TestCase
   def test_successful_purchase_with_extra_options
     response = @gateway.purchase(@amount, @credit_card, @options.merge(@extra_options))
     assert_success response
+  end
+
+  def test_successful_purchase_passes_vendor_reference
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(@extra_options))
+    assert_success response
+    assert_equal response_result(response)['transaction']['vendorReference'], @extra_options[:order_id]
   end
 
   def test_successful_purchase_with_stored_credential_framework
@@ -208,6 +215,18 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert_include response.message, 'record not posted'
   end
 
+  def test_successful_credit
+    response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal response.message, 'Transaction successful'
+  end
+
+  def test_failed_credit
+    response = @gateway.credit(@amount, @declined_card, @options)
+    assert_failure response
+    assert_include response.message, 'Card type not recognized'
+  end
+
   def test_successful_refund
     res = @gateway.purchase(@amount, @credit_card, @options)
     assert_success res
@@ -234,6 +253,13 @@ class RemoteShift4Test < Test::Unit::TestCase
     response = @gateway.void('', @options)
     assert_failure response
     assert_include response.message, 'Invoice Not Found'
+  end
+
+  def test_failed_access_token
+    gateway = Shift4Gateway.new({ client_guid: 'YOUR_CLIENT_ID', auth_token: 'YOUR_AUTH_TOKEN' })
+    assert_raises(ActiveMerchant::OAuthResponseError) do
+      gateway.setup_access_token
+    end
   end
 
   private

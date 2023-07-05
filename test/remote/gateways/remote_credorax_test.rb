@@ -66,7 +66,6 @@ class RemoteCredoraxTest < Test::Unit::TestCase
 
     @nt_credit_card = network_tokenization_credit_card('4176661000001015',
       brand: 'visa',
-      eci: '07',
       source: :network_token,
       payment_cryptogram: 'AgAAAAAAosVKVV7FplLgQRYAAAA=')
   end

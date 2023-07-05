@@ -6,8 +6,12 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     @gateway_preprod = GlobalCollectGateway.new(fixtures(:global_collect_preprod))
     @gateway_preprod.options[:url_override] = 'preproduction'
 
+    @gateway_direct = GlobalCollectGateway.new(fixtures(:global_collect_direct))
+    @gateway_direct.options[:url_override] = 'ogone_direct'
+
     @amount = 100
     @credit_card = credit_card('4567350000427977')
+    @credit_card_challenge_3ds2 = credit_card('4874970686672022')
     @naranja_card = credit_card('5895620033330020', brand: 'naranja')
     @cabal_card = credit_card('6271701225979642', brand: 'cabal')
     @declined_card = credit_card('5424180279791732')
@@ -61,6 +65,14 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
+  end
+
+  def test_successful_purchase_ogone_direct
+    options = @preprod_options.merge(requires_approval: false, currency: 'EUR')
+    response = @gateway_direct.purchase(@accepted_amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'PENDING_CAPTURE', response.params['payment']['status']
   end
 
   def test_successful_purchase_with_naranja
@@ -145,8 +157,8 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_installments
-    options = @options.merge(number_of_installments: 2)
-    response = @gateway.purchase(@amount, @credit_card, options)
+    options = @preprod_options.merge(number_of_installments: 2, currency: 'EUR')
+    response = @gateway_direct.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
@@ -159,14 +171,19 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
-    assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
   end
 
   # When requires_approval is false, `purchase` will only make an `auth` call
   # to request capture (and no subsequent `capture` call).
+  def test_successful_purchase_with_requires_approval_false_ogone_direct
+    options = @options.merge(requires_approval: false)
+    response = @gateway_direct.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_requires_approval_false
     options = @options.merge(requires_approval: false)
-
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
@@ -190,6 +207,56 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, options)
     assert_success response
     assert_match 'jJ81HADVRtXfCBATEp01CJUAAAA=', response.params['payment']['paymentOutput']['cardPaymentMethodSpecificOutput']['threeDSecureResults']['cavv']
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_authorize_via_3ds2_fields_direct_api
+    options = @options.merge(
+      currency: 'EUR',
+      phone: '5555555555',
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '05',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
+        cavv_algorithm: 1,
+        authentication_response_status: 'Y',
+        challenge_indicator: 'no-challenge-requested',
+        flow: 'frictionless'
+      }
+    )
+
+    response = @gateway_direct.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_match 'PENDING_CAPTURE', response.params['payment']['status']
+    assert_match 'jJ81HADVRtXfCBATEp01CJUAAAA=', response.params['payment']['paymentOutput']['cardPaymentMethodSpecificOutput']['threeDSecureResults']['cavv']
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_via_3ds2_fields_direct_api_challenge
+    options = @options.merge(
+      currency: 'EUR',
+      phone: '5555555555',
+      is_recurring: true,
+      skip_authentication: false,
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '05',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
+        cavv_algorithm: 1,
+        authentication_response_status: 'Y',
+        challenge_indicator: 'challenge-required'
+      }
+    )
+
+    response = @gateway_direct.purchase(@amount, @credit_card_challenge_3ds2, options)
+    assert_success response
+    assert_match 'CAPTURE_REQUESTED', response.params['status']
     assert_equal 'Succeeded', response.message
   end
 
@@ -321,6 +388,14 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_unsuccessful_purchase_with_blank_name_ogone_direct
+    credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil })
+
+    response = @gateway_direct.purchase(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'PARAMETER_NOT_FOUND_IN_REQUEST', response.message
+  end
+
   def test_successful_purchase_with_pre_authorization_flag
     response = @gateway.purchase(@accepted_amount, @credit_card, @options.merge(pre_authorization: true))
     assert_success response
@@ -347,6 +422,12 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Not authorised', response.message
   end
 
+  def test_failed_purchase_ogone_direct
+    response = @gateway_direct.purchase(@rejected_amount, @declined_card, @options)
+    assert_failure response
+    assert_equal 'cardPaymentMethodSpecificInput.card.cardNumber does not match with cardPaymentMethodSpecificInput.paymentProductId.', response.message
+  end
+
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -368,13 +449,18 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Not authorised', response.message
   end
 
+  def test_failed_authorize_ogone_direct
+    response = @gateway_direct.authorize(@amount, @declined_card, @options)
+    assert_failure response
+    assert_equal 'cardPaymentMethodSpecificInput.card.cardNumber does not match with cardPaymentMethodSpecificInput.paymentProductId.', response.message
+  end
+
   def test_partial_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
     assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
-    assert_equal 99, capture.params['payment']['paymentOutput']['amountOfMoney']['amount']
   end
 
   def test_failed_capture
@@ -416,6 +502,15 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', void.message
   end
 
+  def test_successful_void_ogone_direct
+    auth = @gateway_direct.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert void = @gateway_direct.void(auth.authorization)
+    assert_success void
+    assert_equal 'Succeeded', void.message
+  end
+
   def test_failed_void
     response = @gateway.void('123')
     assert_failure response
@@ -450,10 +545,22 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_verify_ogone_direct
+    response = @gateway_direct.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_equal 'Not authorised', response.message
+  end
+
+  def test_failed_verify_ogone_direct
+    response = @gateway_direct.verify(@declined_card, @options)
+    assert_failure response
+    assert_equal false, response.params['paymentResult']['payment']['statusOutput']['isAuthorized']
   end
 
   def test_invalid_login

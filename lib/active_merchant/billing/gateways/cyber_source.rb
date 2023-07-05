@@ -519,11 +519,9 @@ module ActiveMerchant #:nodoc:
       def add_business_rules_data(xml, payment_method, options)
         prioritized_options = [options, @options]
 
-        unless network_tokenization?(payment_method)
-          xml.tag! 'businessRules' do
-            xml.tag!('ignoreAVSResult', 'true') if extract_option(prioritized_options, :ignore_avs).to_s == 'true'
-            xml.tag!('ignoreCVResult', 'true') if extract_option(prioritized_options, :ignore_cvv).to_s == 'true'
-          end
+        xml.tag! 'businessRules' do
+          xml.tag!('ignoreAVSResult', 'true') if extract_option(prioritized_options, :ignore_avs).to_s == 'true'
+          xml.tag!('ignoreCVResult', 'true') if extract_option(prioritized_options, :ignore_cvv).to_s == 'true'
         end
       end
 
@@ -705,8 +703,8 @@ module ActiveMerchant #:nodoc:
       def add_check(xml, check, options)
         xml.tag! 'check' do
           xml.tag! 'accountNumber', check.account_number
-          xml.tag! 'accountType', check.account_type[0]
-          xml.tag! 'bankTransitNumber', check.routing_number
+          xml.tag! 'accountType', check.account_type == 'checking' ? 'C' : 'S'
+          xml.tag! 'bankTransitNumber', format_routing_number(check.routing_number, options)
           xml.tag! 'secCode', options[:sec_code] if options[:sec_code]
         end
       end
@@ -1055,12 +1053,22 @@ module ActiveMerchant #:nodoc:
         message = message_from(response)
         authorization = success || in_fraud_review?(response) ? authorization_from(response, action, amount, options) : nil
 
+        message = auto_void?(authorization_from(response, action, amount, options), response, message, options)
+
         Response.new(success, message, response,
           test: test?,
           authorization: authorization,
           fraud_review: in_fraud_review?(response),
           avs_result: { code: response[:avsCode] },
           cvv_result: response[:cvCode])
+      end
+
+      def auto_void?(authorization, response, message, options = {})
+        return message unless response[:reasonCode] == '230' && options[:auto_void_230]
+
+        response = void(authorization, options)
+        response&.success? ? message += ' - transaction has been auto-voided.' : message += ' - transaction could not be auto-voided.'
+        message
       end
 
       # Parse the SOAP response
@@ -1130,6 +1138,10 @@ module ActiveMerchant #:nodoc:
 
       def eligible_for_zero_auth?(payment_method, options = {})
         payment_method.is_a?(CreditCard) && options[:zero_amount_auth]
+      end
+
+      def format_routing_number(routing_number, options)
+        options[:currency] == 'CAD' && routing_number.length > 8 ? routing_number[-8..-1] : routing_number
       end
     end
   end

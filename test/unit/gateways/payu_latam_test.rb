@@ -84,6 +84,7 @@ class PayuLatamTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'CONTACT_THE_ENTITY | Contactar con entidad emisora', response.message
+    assert_equal '290', response.error_code
     assert_equal 'Contactar con entidad emisora', response.params['transactionResponse']['paymentNetworkResponseErrorMessage']
 
     @gateway.expects(:ssl_post).returns(failed_purchase_response_when_payment_network_response_error_not_expected)
@@ -91,6 +92,7 @@ class PayuLatamTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'CONTACT_THE_ENTITY', response.message
+    assert_equal '51', response.error_code
     assert_nil response.params['transactionResponse']['paymentNetworkResponseErrorMessage']
   end
 
@@ -666,7 +668,7 @@ class PayuLatamTest < Test::Unit::TestCase
         "orderId": 7354347,
         "transactionId": "15b6cec0-9eec-4564-b6b9-c846b868203e",
         "state": "DECLINED",
-        "paymentNetworkResponseCode": null,
+        "paymentNetworkResponseCode": "51",
         "paymentNetworkResponseErrorMessage": null,
         "trazabilityCode": null,
         "authorizationCode": null,

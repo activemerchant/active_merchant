@@ -137,6 +137,10 @@ module ActiveMerchant #:nodoc:
         commit_card('delete', post)
       end
 
+      def inquire(authorization, options = {})
+        commit_transaction('inquire', authorization)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -232,12 +236,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit_raw(object, action, parameters)
-        url = "#{(test? ? test_url : live_url)}#{object}/#{action}"
-
-        begin
-          raw_response = ssl_post(url, post_data(parameters), headers)
-        rescue ResponseError => e
-          raw_response = e.response.body
+        if action == 'inquire'
+          url = "#{(test? ? test_url : live_url)}#{object}/#{parameters}"
+          begin
+            raw_response = ssl_get(url, headers)
+          rescue ResponseError => e
+            raw_response = e.response.body
+          end
+        else
+          url = "#{(test? ? test_url : live_url)}#{object}/#{action}"
+          begin
+            raw_response = ssl_post(url, post_data(parameters), headers)
+          rescue ResponseError => e
+            raw_response = e.response.body
+          end
         end
 
         begin

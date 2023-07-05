@@ -76,7 +76,35 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
+    assert_equal 'Approved', response.message
+    assert_equal '100000000000000006;sale;100', response.authorization
+    assert response.test?
+  end
 
+  def test_successful_purchase_with_010_response
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, _data, _headers|
+      # Counterpoint to test_successful_postlive_url:
+      assert_match(/www\.testvantivcnp\.com/, endpoint)
+    end.respond_with(successful_purchase_response('010', 'Partially Approved'))
+
+    assert_success response
+    assert_equal 'Partially Approved: The authorized amount is less than the requested amount.', response.message
+    assert_equal '100000000000000006;sale;100', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_001_response
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, _data, _headers|
+      # Counterpoint to test_successful_postlive_url:
+      assert_match(/www\.testvantivcnp\.com/, endpoint)
+    end.respond_with(successful_purchase_response('001', 'Transaction Received'))
+
+    assert_success response
+    assert_equal 'Transaction Received: This is sent to acknowledge that the submitted transaction has been received.', response.message
     assert_equal '100000000000000006;sale;100', response.authorization
     assert response.test?
   end
@@ -732,15 +760,15 @@ class LitleTest < Test::Unit::TestCase
     '63225578415568556365452427825'
   end
 
-  def successful_purchase_response
+  def successful_purchase_response(code = '000', message = 'Approved')
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <saleResponse id='1' reportGroup='Default Report Group' customerId=''>
           <litleTxnId>100000000000000006</litleTxnId>
           <orderId>1</orderId>
-          <response>000</response>
+          <response>#{code}</response>
           <responseTime>2014-03-31T11:34:39</responseTime>
-          <message>Approved</message>
+          <message>#{message}</message>
           <authCode>11111 </authCode>
           <fraudResult>
             <avsResult>01</avsResult>

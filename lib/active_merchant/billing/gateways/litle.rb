@@ -5,9 +5,10 @@ module ActiveMerchant #:nodoc:
     class LitleGateway < Gateway
       SCHEMA_VERSION = '9.14'
 
-      class_attribute :postlive_url
+      class_attribute :postlive_url, :prelive_url
 
       self.test_url = 'https://www.testvantivcnp.com/sandbox/communicator/online'
+      self.prelive_url = 'https://payments.vantivprelive.com/vap/communicator/online'
       self.postlive_url = 'https://payments.vantivpostlive.com/vap/communicator/online'
       self.live_url = 'https://payments.vantivcnp.com/vap/communicator/online'
 
@@ -571,13 +572,24 @@ module ActiveMerchant #:nodoc:
           cvv_result: parsed[:fraudResult_cardValidationResult]
         }
 
-        Response.new(success_from(kind, parsed), parsed[:message], parsed, options)
+        Response.new(success_from(kind, parsed), message_from(parsed), parsed, options)
       end
 
       def success_from(kind, parsed)
-        return (parsed[:response] == '000') unless kind == :registerToken
+        return %w(000 001 010).any?(parsed[:response]) unless kind == :registerToken
 
         %w(000 801 802).include?(parsed[:response])
+      end
+
+      def message_from(parsed)
+        case parsed[:response]
+        when '010'
+          return "#{parsed[:message]}: The authorized amount is less than the requested amount."
+        when '001'
+          return "#{parsed[:message]}: This is sent to acknowledge that the submitted transaction has been received."
+        else
+          parsed[:message]
+        end
       end
 
       def authorization_from(kind, parsed, money)
@@ -616,6 +628,7 @@ module ActiveMerchant #:nodoc:
 
       def url
         return postlive_url if @options[:url_override].to_s == 'postlive'
+        return prelive_url if @options[:url_override].to_s == 'prelive'
 
         test? ? test_url : live_url
       end

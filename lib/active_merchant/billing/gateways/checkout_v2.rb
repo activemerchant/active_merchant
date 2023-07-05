@@ -19,12 +19,14 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         @options = options
         @access_token = nil
-        begin
+
+        if options.has_key?(:secret_key)
           requires!(options, :secret_key)
-        rescue ArgumentError
+        else
           requires!(options, :client_id, :client_secret)
           @access_token = setup_access_token
         end
+
         super
       end
 
@@ -32,15 +34,14 @@ module ActiveMerchant #:nodoc:
         post = {}
         build_auth_or_purchase(post, amount, payment_method, options)
 
-        commit(:purchase, post)
+        commit(:purchase, post, options)
       end
 
       def authorize(amount, payment_method, options = {})
         post = {}
         post[:capture] = false
         build_auth_or_purchase(post, amount, payment_method, options)
-
-        options[:incremental_authorization] ? commit(:incremental_authorize, post, options[:incremental_authorization]) : commit(:authorize, post)
+        options[:incremental_authorization] ? commit(:incremental_authorize, post, options, options[:incremental_authorization]) : commit(:authorize, post, options)
       end
 
       def capture(amount, authorization, options = {})
@@ -48,9 +49,10 @@ module ActiveMerchant #:nodoc:
         post[:capture_type] = options[:capture_type] || 'Final'
         add_invoice(post, amount, options)
         add_customer_data(post, options)
+        add_shipping_address(post, options)
         add_metadata(post, options)
 
-        commit(:capture, post, authorization)
+        commit(:capture, post, options, authorization)
       end
 
       def credit(amount, payment, options = {})
@@ -62,14 +64,14 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment, options, :destination)
         add_source(post, options)
 
-        commit(:credit, post)
+        commit(:credit, post, options)
       end
 
       def void(authorization, _options = {})
         post = {}
         add_metadata(post, options)
 
-        commit(:void, post, authorization)
+        commit(:void, post, options, authorization)
       end
 
       def refund(amount, authorization, options = {})
@@ -78,7 +80,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_metadata(post, options)
 
-        commit(:refund, post, authorization)
+        commit(:refund, post, options, authorization)
       end
 
       def verify(credit_card, options = {})
@@ -86,7 +88,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify_payment(authorization, option = {})
-        commit(:verify_payment, authorization)
+        commit(:verify_payment, nil, options, authorization, :get)
       end
 
       def supports_scrubbing?
@@ -99,7 +101,35 @@ module ActiveMerchant #:nodoc:
           gsub(/("number\\":\\")\d+/, '\1[FILTERED]').
           gsub(/("cvv\\":\\")\d+/, '\1[FILTERED]').
           gsub(/("cryptogram\\":\\")\w+/, '\1[FILTERED]').
-          gsub(/(source\\":\{.*\\"token\\":\\")\d+/, '\1[FILTERED]')
+          gsub(/(source\\":\{.*\\"token\\":\\")\d+/, '\1[FILTERED]').
+          gsub(/("token\\":\\")\w+/, '\1[FILTERED]')
+      end
+
+      def store(payment_method, options = {})
+        post = {}
+        MultiResponse.run do |r|
+          if payment_method.is_a?(NetworkTokenizationCreditCard)
+            r.process { verify(payment_method, options) }
+            break r unless r.success?
+
+            r.params['source']['customer'] = r.params['customer']
+            r.process { response(:store, true, r.params['source']) }
+          else
+            r.process { tokenize(payment_method, options) }
+            break r unless r.success?
+
+            token = r.params['token']
+            add_payment_method(post, token, options)
+            post.merge!(post.delete(:source))
+            add_customer_data(post, options)
+            add_shipping_address(post, options)
+            r.process { commit(:store, post, options) }
+          end
+        end
+      end
+
+      def unstore(id, options = {})
+        commit(:unstore, nil, options, id, :delete)
       end
 
       private
@@ -109,6 +139,8 @@ module ActiveMerchant #:nodoc:
         add_authorization_type(post, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
+        add_extra_customer_data(post, payment_method, options)
+        add_shipping_address(post, options)
         add_stored_credential_options(post, options)
         add_transaction_data(post, options)
         add_3ds(post, options)
@@ -142,7 +174,8 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method, options, key = :source)
         post[key] = {}
-        if payment_method.is_a?(NetworkTokenizationCreditCard)
+        case payment_method
+        when NetworkTokenizationCreditCard
           token_type = token_type_from(payment_method)
           cryptogram = payment_method.payment_cryptogram
           eci = payment_method.eci || options[:eci]
@@ -153,7 +186,7 @@ module ActiveMerchant #:nodoc:
           post[key][:token_type] = token_type
           post[key][:cryptogram] = cryptogram if cryptogram
           post[key][:eci] = eci if eci
-        elsif payment_method.is_a?(CreditCard)
+        when ->(pm) { pm.try(:credit_card?) }
           post[key][:type] = 'card'
           post[key][:name] = payment_method.name
           post[key][:number] = payment_method.number
@@ -169,7 +202,17 @@ module ActiveMerchant #:nodoc:
             post[key][:last_name] = payment_method.last_name if payment_method.last_name
           end
         end
-        unless payment_method.is_a?(String)
+        if payment_method.is_a?(String)
+          if /tok/.match?(payment_method)
+            post[:type] = 'token'
+            post[:token] = payment_method
+          elsif /src/.match?(payment_method)
+            post[key][:type] = 'id'
+            post[key][:id] = payment_method
+          else
+            add_source(post, options)
+          end
+        elsif payment_method.try(:year)
           post[key][:expiry_year] = format(payment_method.year, :four_digits)
           post[key][:expiry_month] = format(payment_method.month, :two_digits)
         end
@@ -194,6 +237,28 @@ module ActiveMerchant #:nodoc:
           post[:source][:billing_address][:state] = address[:state] unless address[:state].blank?
           post[:source][:billing_address][:country] = address[:country] unless address[:country].blank?
           post[:source][:billing_address][:zip] = address[:zip] unless address[:zip].blank?
+        end
+      end
+
+      # created a separate method for these fields because they should not be included
+      # in all transaction types that include methods with source and customer fields
+      def add_extra_customer_data(post, payment_method, options)
+        post[:source][:phone] = {}
+        post[:source][:phone][:number] = options[:phone] || options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
+        post[:source][:phone][:country_code] = options[:phone_country_code] if options[:phone_country_code]
+        post[:customer][:name] = payment_method.name if payment_method.respond_to?(:name)
+      end
+
+      def add_shipping_address(post, options)
+        if address = options[:shipping_address]
+          post[:shipping] = {}
+          post[:shipping][:address] = {}
+          post[:shipping][:address][:address_line1] = address[:address1] unless address[:address1].blank?
+          post[:shipping][:address][:address_line2] = address[:address2] unless address[:address2].blank?
+          post[:shipping][:address][:city] = address[:city] unless address[:city].blank?
+          post[:shipping][:address][:state] = address[:state] unless address[:state].blank?
+          post[:shipping][:address][:country] = address[:country] unless address[:country].blank?
+          post[:shipping][:address][:zip] = address[:zip] unless address[:zip].blank?
         end
       end
 
@@ -280,11 +345,12 @@ module ActiveMerchant #:nodoc:
         response['access_token']
       end
 
-      def commit(action, post, authorization = nil)
+      def commit(action, post, options, authorization = nil, method = :post)
         begin
-          raw_response = (action == :verify_payment ? ssl_get("#{base_url}/payments/#{post}", headers) : ssl_post(url(post, action, authorization), post.to_json, headers))
+          raw_response = ssl_request(method, url(action, authorization), post.nil? || post.empty? ? nil : post.to_json, headers(action, options))
           response = parse(raw_response)
           response['id'] = response['_links']['payment']['href'].split('/')[-1] if action == :capture && response.key?('_links')
+          source_id = authorization if action == :unstore
         rescue ResponseError => e
           raise unless e.response.code.to_s =~ /4\d\d/
 
@@ -293,45 +359,64 @@ module ActiveMerchant #:nodoc:
 
         succeeded = success_from(action, response)
 
-        response(action, succeeded, response)
+        response(action, succeeded, response, source_id)
       end
 
-      def response(action, succeeded, response)
+      def response(action, succeeded, response, source_id = nil)
         successful_response = succeeded && action == :purchase || action == :authorize
         avs_result = successful_response ? avs_result(response) : nil
         cvv_result = successful_response ? cvv_result(response) : nil
-
+        authorization = authorization_from(response) unless action == :unstore
+        body = action == :unstore ? { response_code: response.to_s } : response
         Response.new(
           succeeded,
           message_from(succeeded, response),
-          response,
-          authorization: authorization_from(response),
-          error_code: error_code_from(succeeded, response),
+          body,
+          authorization: authorization,
+          error_code: error_code_from(succeeded, body),
           test: test?,
           avs_result: avs_result,
           cvv_result: cvv_result
         )
       end
 
-      def headers
+      def headers(action, options)
         auth_token = @access_token ? "Bearer #{@access_token}" : @options[:secret_key]
-        {
+        auth_token = @options[:public_key] if action == :tokens
+        headers = {
           'Authorization' => auth_token,
           'Content-Type' => 'application/json;charset=UTF-8'
         }
+        headers['Cko-Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
+        headers
       end
 
-      def url(_post, action, authorization)
-        if %i[authorize purchase credit].include?(action)
+      def tokenize(payment_method, options = {})
+        post = {}
+        add_authorization_type(post, options)
+        add_payment_method(post, payment_method, options)
+        add_customer_data(post, options)
+        commit(:tokens, post[:source], options)
+      end
+
+      def url(action, authorization)
+        case action
+        when :authorize, :purchase, :credit
           "#{base_url}/payments"
-        elsif action == :capture
+        when :unstore, :store
+          "#{base_url}/instruments/#{authorization}"
+        when :capture
           "#{base_url}/payments/#{authorization}/captures"
-        elsif action == :refund
+        when :refund
           "#{base_url}/payments/#{authorization}/refunds"
-        elsif action == :void
+        when :void
           "#{base_url}/payments/#{authorization}/voids"
-        elsif action == :incremental_authorize
+        when :incremental_authorize
           "#{base_url}/payments/#{authorization}/authorizations"
+        when :tokens
+          "#{base_url}/tokens"
+        when :verify_payment
+          "#{base_url}/payments/#{authorization}"
         else
           "#{base_url}/payments/#{authorization}/#{action}"
         end
@@ -363,7 +448,12 @@ module ActiveMerchant #:nodoc:
 
       def success_from(action, response)
         return response['status'] == 'Pending' if action == :credit
+        return true if action == :unstore && response == 204
 
+        store_response = response['token'] || response['id']
+        if store_response
+          return true if (action == :tokens && store_response.match(/tok/)) || (action == :store && store_response.match(/src_/))
+        end
         response['response_summary'] == 'Approved' || response['approved'] == true || !response.key?('response_summary') && response.key?('action_id')
       end
 
@@ -414,6 +504,16 @@ module ActiveMerchant #:nodoc:
           'googlepay'
         when :apple_pay
           'applepay'
+        end
+      end
+
+      def handle_response(response)
+        case response.code.to_i
+        # to get the response code after unstore(delete instrument), because the body is nil
+        when 200...300
+          response.body || response.code
+        else
+          raise ResponseError.new(response)
         end
       end
     end

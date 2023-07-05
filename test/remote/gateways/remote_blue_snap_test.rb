@@ -447,6 +447,13 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal 'Success', capture.message
   end
 
+  def test_successful_authorize_with_descriptor_phone_number
+    response = @gateway.authorize(@amount, @credit_card, @options.merge({ descriptor_phone_number: '321-321-4321' }))
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_authorize_and_capture_with_3ds2_auth
     auth = @gateway.authorize(@amount, @three_ds_master_card, @options_3ds2)
     assert_success auth

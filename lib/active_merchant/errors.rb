@@ -23,8 +23,11 @@ module ActiveMerchant #:nodoc:
     end
 
     def to_s
-      "Failed with #{response.code} #{response.message if response.respond_to?(:message)}"
+      "Failed with #{response.code if response.respond_to?(:code)} #{response.message if response.respond_to?(:message)}"
     end
+  end
+
+  class OAuthResponseError < ResponseError # :nodoc:
   end
 
   class ClientCertificateError < ActiveMerchantError # :nodoc

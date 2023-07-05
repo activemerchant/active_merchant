@@ -218,14 +218,7 @@ module ActiveMerchant
 
       def base_url
         if test?
-          case @options[:region]
-          when 'asia_pacific'
-            test_ap_url
-          when 'europe'
-            test_eu_url
-          when 'north_america', nil
-            test_na_url
-          end
+          test_url
         else
           case @options[:region]
           when 'asia_pacific'

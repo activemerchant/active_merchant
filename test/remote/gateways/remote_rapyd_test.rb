@@ -46,9 +46,50 @@ class RemoteRapydTest < Test::Unit::TestCase
       xid: '00000000000000000501',
       eci: '02'
     }
+
+    @address_object = address(line_1: '123 State Street', line_2: 'Apt. 34', phone_number: '12125559999')
+
+    @customer_object = {
+      name: 'John Doe',
+      phone_number: '1234567890',
+      email: 'est@example.com',
+      addresses: [@address_object]
+    }
   end
 
   def test_successful_purchase
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_authorize_with_customer_object
+    @options[:customer] = @customer_object
+    @options[:pm_type] = 'us_debit_mastercard_card'
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_customer_object
+    @options[:customer] = @customer_object
+    @options[:pm_type] = 'us_debit_mastercard_card'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_success_purchase_without_customer_fullname
+    @credit_card.first_name = ''
+    @credit_card.last_name = ''
+    @options[:pm_type] = 'us_debit_mastercard_card'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_success_purchase_without_address_object_customer
+    @options[:pm_type] = 'us_debit_discover_card'
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message

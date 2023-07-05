@@ -219,6 +219,16 @@ class SafeChargeTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_credit_sends_addtional_info
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, @options.merge(email: 'test@example.com'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_FirstName=Longbob/, data)
+      assert_match(/sg_LastName=Longsen/, data)
+      assert_match(/sg_Email/, data)
+    end.respond_with(successful_credit_response)
+  end
+
   def test_failed_credit
     @gateway.expects(:ssl_post).returns(failed_credit_response)
 

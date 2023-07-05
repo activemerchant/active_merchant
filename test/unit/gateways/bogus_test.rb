@@ -96,6 +96,17 @@ class BogusTest < Test::Unit::TestCase
     end
   end
 
+  def test_verify
+    assert @gateway.verify(credit_card(CC_SUCCESS_PLACEHOLDER)).success?
+    response = @gateway.verify(credit_card(CC_FAILURE_PLACEHOLDER))
+    refute response.success?
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
+    e = assert_raises(ActiveMerchant::Billing::Error) do
+      @gateway.verify(credit_card('123'))
+    end
+    assert_equal('Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error', e.message)
+  end
+
   def test_store
     assert @gateway.store(credit_card(CC_SUCCESS_PLACEHOLDER)).success?
     response = @gateway.store(credit_card(CC_FAILURE_PLACEHOLDER))

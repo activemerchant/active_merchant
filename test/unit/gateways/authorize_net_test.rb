@@ -940,6 +940,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_address_with_alternate_phone_number_field
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, billing_address: { address1: '164 Waverley Street', country: 'US', state: 'CO', phone_number: '(555)555-5555', fax: '(555)555-4444' })
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert_equal 'CO', doc.at_xpath('//billTo/state').content, data
+        assert_equal '164 Waverley Street', doc.at_xpath('//billTo/address').content, data
+        assert_equal 'US', doc.at_xpath('//billTo/country').content, data
+        assert_equal '(555)555-5555', doc.at_xpath('//billTo/phoneNumber').content
+        assert_equal '(555)555-4444', doc.at_xpath('//billTo/faxNumber').content
+      end
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_address_with_empty_billing_address
     stub_comms do
       @gateway.authorize(@amount, @credit_card)
@@ -1109,6 +1123,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal '123450987', doc.at_xpath('//transactionRequest/payment/bankAccount/routingNumber').content
         assert_equal '12345667', doc.at_xpath('//transactionRequest/payment/bankAccount/accountNumber').content
         assert_equal 'Louise Belcher', doc.at_xpath('//transactionRequest/payment/bankAccount/nameOnAccount').content
+      end
+    end.respond_with(successful_refund_response)
+    assert_success response
+  end
+
+  def test_successful_bank_refund_truncates_long_name
+    response = stub_comms do
+      @gateway.refund(50, '12345667', account_type: 'checking', routing_number: '123450987', account_number: '12345667', first_name: 'Louise', last_name: 'Belcher-Williamson')
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert_equal 'checking', doc.at_xpath('//transactionRequest/payment/bankAccount/accountType').content
+        assert_equal '123450987', doc.at_xpath('//transactionRequest/payment/bankAccount/routingNumber').content
+        assert_equal '12345667', doc.at_xpath('//transactionRequest/payment/bankAccount/accountNumber').content
+        assert_equal 'Louise Belcher-William', doc.at_xpath('//transactionRequest/payment/bankAccount/nameOnAccount').content
       end
     end.respond_with(successful_refund_response)
     assert_success response

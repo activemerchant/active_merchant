@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['PY']
       self.default_currency = 'PYG'
-      self.supported_cardtypes = %i[visa master]
+      self.supported_cardtypes = %i[visa master panal]
 
       self.homepage_url = 'https://comercios.bancard.com.py'
       self.display_name = 'vPOS'

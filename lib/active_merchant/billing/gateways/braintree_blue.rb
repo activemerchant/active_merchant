@@ -197,8 +197,7 @@ module ActiveMerchant #:nodoc:
             first_name: creditcard.first_name,
             last_name: creditcard.last_name,
             email: scrub_email(options[:email]),
-            phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
-              options[:billing_address][:phone]),
+            phone: phone_from(options),
             credit_card: credit_card_params)
           Response.new(result.success?, message_from_result(result),
             braintree_customer: (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
@@ -267,8 +266,7 @@ module ActiveMerchant #:nodoc:
             first_name: creditcard.first_name,
             last_name: creditcard.last_name,
             email: scrub_email(options[:email]),
-            phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
-              options[:billing_address][:phone]),
+            phone: phone_from(options),
             id: options[:customer],
             device_data: options[:device_data]
           }.merge credit_card_params
@@ -346,6 +344,10 @@ module ActiveMerchant #:nodoc:
           parameters[:credit_card][:billing_address] = address unless address.all? { |_k, v| empty?(v) }
         end
         parameters
+      end
+
+      def phone_from(options)
+        options[:phone] || options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
       end
 
       def map_address(address)
@@ -604,19 +606,20 @@ module ActiveMerchant #:nodoc:
         end
 
         {
-          'order_id'                => transaction.order_id,
-          'amount'                  => transaction.amount.to_s,
-          'status'                  => transaction.status,
-          'credit_card_details'     => credit_card_details,
-          'customer_details'        => customer_details,
-          'billing_details'         => billing_details,
-          'shipping_details'        => shipping_details,
-          'vault_customer'          => vault_customer,
-          'merchant_account_id'     => transaction.merchant_account_id,
-          'risk_data'               => risk_data,
-          'network_transaction_id'  => transaction.network_transaction_id || nil,
-          'processor_response_code' => response_code_from_result(result),
-          'recurring'               => transaction.recurring
+          'order_id'                     => transaction.order_id,
+          'amount'                       => transaction.amount.to_s,
+          'status'                       => transaction.status,
+          'credit_card_details'          => credit_card_details,
+          'customer_details'             => customer_details,
+          'billing_details'              => billing_details,
+          'shipping_details'             => shipping_details,
+          'vault_customer'               => vault_customer,
+          'merchant_account_id'          => transaction.merchant_account_id,
+          'risk_data'                    => risk_data,
+          'network_transaction_id'       => transaction.network_transaction_id || nil,
+          'processor_response_code'      => response_code_from_result(result),
+          'processor_authorization_code' => transaction.processor_authorization_code,
+          'recurring'                    => transaction.recurring
         }
       end
 
@@ -627,8 +630,7 @@ module ActiveMerchant #:nodoc:
           customer: {
             id: options[:store] == true ? '' : options[:store],
             email: scrub_email(options[:email]),
-            phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
-              options[:billing_address][:phone])
+            phone: phone_from(options)
           },
           options: {
             store_in_vault: options[:store] ? true : false,
@@ -652,6 +654,7 @@ module ActiveMerchant #:nodoc:
 
         add_descriptor(parameters, options)
         add_risk_data(parameters, options)
+        add_paypal_options(parameters, options)
         add_travel_data(parameters, options) if options[:travel_data]
         add_lodging_data(parameters, options) if options[:lodging_data]
         add_channel(parameters, options)
@@ -725,6 +728,15 @@ module ActiveMerchant #:nodoc:
         parameters[:risk_data] = {
           customer_browser: options[:risk_data][:customer_browser],
           customer_ip: options[:risk_data][:customer_ip]
+        }
+      end
+
+      def add_paypal_options(parameters, options)
+        return unless options[:paypal_custom_field] || options[:paypal_description]
+
+        parameters[:options][:paypal] = {
+          custom_field: options[:paypal_custom_field],
+          description: options[:paypal_description]
         }
       end
 
@@ -921,7 +933,7 @@ module ActiveMerchant #:nodoc:
           first_name: payment_method.first_name,
           last_name: payment_method.last_name,
           email: scrub_email(options[:email]),
-          phone: options[:phone] || options.dig(:billing_address, :phone),
+          phone: phone_from(options),
           device_data: options[:device_data]
         }.compact
 

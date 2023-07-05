@@ -6,6 +6,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @cftgateway = WorldpayGateway.new(fixtures(:world_pay_gateway_cft))
 
     @amount = 100
+    @year = (Time.now.year + 2).to_s[-2..-1].to_i
     @credit_card = credit_card('4111111111111111')
     @amex_card = credit_card('3714 496353 98431')
     @elo_credit_card = credit_card('4514 1600 0000 0008',
@@ -17,7 +18,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       brand: 'elo')
     @credit_card_with_two_digits_year = credit_card('4111111111111111',
       month: 10,
-      year: 22)
+      year: @year)
     @cabal_card = credit_card('6035220000000006')
     @naranja_card = credit_card('5895620000000002')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')

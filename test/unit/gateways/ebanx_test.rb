@@ -172,6 +172,18 @@ class EbanxTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_and_inquire
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+    response = @gateway.inquire(purchase.authorization)
+
+    assert_success response
+  end
+
   def test_error_response_with_invalid_creds
     @gateway.expects(:ssl_request).returns(invalid_cred_response)
 

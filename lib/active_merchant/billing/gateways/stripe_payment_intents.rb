@@ -34,9 +34,9 @@ module ActiveMerchant #:nodoc:
             add_connected_account(post, options)
             add_radar_data(post, options)
             add_shipping_address(post, options)
+            add_stored_credentials(post, options)
             setup_future_usage(post, options)
             add_exemption(post, options)
-            add_stored_credentials(post, options)
             add_ntid(post, options)
             add_claim_without_transaction_id(post, options)
             add_error_on_requires_action(post, options)
@@ -54,6 +54,11 @@ module ActiveMerchant #:nodoc:
 
       def show_intent(intent_id, options)
         commit(:get, "payment_intents/#{intent_id}", nil, options)
+      end
+
+      def create_test_customer
+        response = api_request(:post, 'customers')
+        response['id']
       end
 
       def confirm_intent(intent_id, payment_method, options = {})
@@ -236,7 +241,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(payment_method, options = {})
-        create_setup_intent(payment_method, options.merge!(confirm: true))
+        create_setup_intent(payment_method, options.merge!({ confirm: true, verify: true }))
       end
 
       def setup_purchase(money, options = {})
@@ -322,6 +327,8 @@ module ActiveMerchant #:nodoc:
         when String
           extract_token_from_string_and_maybe_add_customer_id(post, payment_method)
         when ActiveMerchant::Billing::CreditCard
+          return create_payment_method_and_extract_token(post, payment_method, options, responses) if options[:verify]
+
           get_payment_method_data_from_card(post, payment_method, options, responses)
         end
       end
@@ -351,6 +358,7 @@ module ActiveMerchant #:nodoc:
             cryptogram: payment.payment_cryptogram
           }
         }
+        add_billing_address_for_card_tokenization(post, options) if %i(apple_pay android_pay).include?(tokenization_method)
         token_response = api_request(:post, 'tokens', post, options)
         success = token_response['error'].nil?
         if success && token_response['id']
@@ -391,17 +399,19 @@ module ActiveMerchant #:nodoc:
         post[:payment_method_options][:card][:moto] = true if options[:moto]
       end
 
-      # Stripe Payment Intents does not pass any parameters for cardholder/merchant initiated
-      # it also does not support installments for any country other than Mexico (reason for this is unknown)
-      # The only thing that Stripe PI requires for stored credentials to work currently is the network_transaction_id
-      # network_transaction_id is created when the card is authenticated using the field `setup_for_future_usage` with the value `off_session` see def setup_future_usage below
+      # Stripe Payment Intents now supports specifying on a transaction level basis stored credential information.
+      # The feature is currently gated but is listed as `stored_credential_transaction_type` inside the
+      # `post[:payment_method_options][:card]` hash. Since this is a beta field adding an extra check to use
+      # the existing logic by default. To be able to utilize this field, you must reach out to Stripe.
 
       def add_stored_credentials(post, options = {})
         return unless options[:stored_credential] && !options[:stored_credential].values.all?(&:nil?)
 
-        stored_credential = options[:stored_credential]
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
+        add_stored_credential_transaction_type(post, options) if options[:stored_credential_transaction_type]
+
+        stored_credential = options[:stored_credential]
         post[:payment_method_options][:card][:mit_exemption] = {}
 
         # Stripe PI accepts network_transaction_id and ds_transaction_id via mit field under card.
@@ -409,6 +419,50 @@ module ActiveMerchant #:nodoc:
         # If it is sent is as its own field AND under stored credentials, the value sent under its own field is what will send.
         post[:payment_method_options][:card][:mit_exemption][:ds_transaction_id] = stored_credential[:ds_transaction_id] if stored_credential[:ds_transaction_id]
         post[:payment_method_options][:card][:mit_exemption][:network_transaction_id] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
+      end
+
+      def add_stored_credential_transaction_type(post, options = {})
+        stored_credential = options[:stored_credential]
+        # Do not add anything unless these are present.
+        return unless stored_credential[:reason_type] && stored_credential[:initiator]
+
+        # Not compatible with off_session parameter.
+        options.delete(:off_session)
+        if stored_credential[:initial_transaction]
+          # Initial transactions must by CIT
+          return unless stored_credential[:initiator] == 'cardholder'
+
+          initial_transaction_stored_credential(post, stored_credential[:reason_type])
+        else
+          # Subsequent transaction
+          subsequent_transaction_stored_credential(post, stored_credential[:initiator], stored_credential[:reason_type])
+        end
+      end
+
+      def initial_transaction_stored_credential(post, reason_type)
+        if reason_type == 'unscheduled'
+          # Charge on-session and store card for future one-off payment use
+          post[:payment_method_options][:card][:stored_credential_transaction_type] = 'setup_off_session_unscheduled'
+        elsif reason_type == 'recurring'
+          # Charge on-session and store card for future recurring payment use
+          post[:payment_method_options][:card][:stored_credential_transaction_type] = 'setup_off_session_recurring'
+        else
+          # Charge on-session and store card for future on-session payment use.
+          post[:payment_method_options][:card][:stored_credential_transaction_type] = 'setup_on_session'
+        end
+      end
+
+      def subsequent_transaction_stored_credential(post, initiator, reason_type)
+        if initiator == 'cardholder'
+          # Charge on-session customer using previously stored card.
+          post[:payment_method_options][:card][:stored_credential_transaction_type] = 'stored_on_session'
+        elsif reason_type == 'recurring'
+          # Charge off-session customer using previously stored card for recurring transaction
+          post[:payment_method_options][:card][:stored_credential_transaction_type] = 'stored_off_session_recurring'
+        else
+          # Charge off-session customer using previously stored card for one-off transaction
+          post[:payment_method_options][:card][:stored_credential_transaction_type] = 'stored_off_session_unscheduled'
+        end
       end
 
       def add_ntid(post, options = {})
@@ -465,6 +519,17 @@ module ActiveMerchant #:nodoc:
         post[:setup_future_usage] = options[:setup_future_usage] if %w(on_session off_session).include?(options[:setup_future_usage])
         post[:off_session] = options[:off_session] if off_session_request?(options)
         post
+      end
+
+      def add_billing_address_for_card_tokenization(post, options = {})
+        return unless (billing = options[:billing_address] || options[:address])
+
+        post[:card][:address_city] = billing[:city] if billing[:city]
+        post[:card][:address_country] = billing[:country] if billing[:country]
+        post[:card][:address_line1] = billing[:address1] if billing[:address1]
+        post[:card][:address_line2] = billing[:address2] if billing[:address2]
+        post[:card][:address_zip] = billing[:zip] if billing[:zip]
+        post[:card][:address_state] = billing[:state] if billing[:state]
       end
 
       def add_billing_address(post, options = {})

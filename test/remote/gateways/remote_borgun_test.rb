@@ -30,14 +30,14 @@ class RemoteBorgunTest < Test::Unit::TestCase
   end
 
   def test_successful_preauth_3ds
-    response = @gateway.purchase(@amount, @credit_card, @options.merge({ merchant_return_url: 'http://localhost/index.html', apply_3d_secure: '1' }))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ redirect_url: 'http://localhost/index.html', apply_3d_secure: '1' }))
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_not_nil response.params['redirecttoacsform']
   end
 
   def test_successful_preauth_frictionless_3ds
-    response = @gateway.purchase(@amount, @frictionless_3ds_card, @options.merge({ merchant_return_url: 'http://localhost/index.html', apply_3d_secure: '1' }))
+    response = @gateway.purchase(@amount, @frictionless_3ds_card, @options.merge({ redirect_url: 'http://localhost/index.html', apply_3d_secure: '1' }))
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_nil response.params['redirecttoacsform']
@@ -187,19 +187,19 @@ class RemoteBorgunTest < Test::Unit::TestCase
   # This test does not consistently pass. When run multiple times within 1 minute,
   # an ActiveMerchant::ConnectionError(<The remote server reset the connection>)
   # exception is raised.
-  def test_invalid_login
-    gateway = BorgunGateway.new(
-      processor: '0',
-      merchant_id: '0',
-      username: 'not',
-      password: 'right'
-    )
-    authentication_exception = assert_raise ActiveMerchant::ResponseError, 'Failed with 401 [ISS.0084.9001] Invalid credentials' do
-      gateway.purchase(@amount, @credit_card, @options)
-    end
-    assert response = authentication_exception.response
-    assert_match(/Access Denied/, response.body)
-  end
+  # def test_invalid_login
+  #   gateway = BorgunGateway.new(
+  #     processor: '0',
+  #     merchant_id: '0',
+  #     username: 'not',
+  #     password: 'right'
+  #   )
+  #   authentication_exception = assert_raise ActiveMerchant::ResponseError, 'Failed with 401 [ISS.0084.9001] Invalid credentials' do
+  #     gateway.purchase(@amount, @credit_card, @options)
+  #   end
+  #   assert response = authentication_exception.response
+  #   assert_match(/Access Denied/, response.body)
+  # end
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do

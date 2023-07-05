@@ -33,19 +33,25 @@ class CommerceHubTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
     @declined_card = credit_card('4000300011112220', month: '02', year: '2035', verification_value: '123')
     @options = {}
+    @post = {}
   end
 
   def test_successful_purchase
+    @options[:order_id] = 'abc123'
+
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['transactionDetails']['captureFlag'], true
+      assert_equal request['transactionDetails']['createToken'], false
+      assert_equal request['transactionDetails']['merchantOrderId'], 'abc123'
       assert_equal request['merchantDetails']['terminalId'], @gateway.options[:terminal_id]
       assert_equal request['merchantDetails']['merchantId'], @gateway.options[:merchant_id]
       assert_equal request['amount']['total'], (@amount / 100.0).to_f
       assert_equal request['source']['card']['cardData'], @credit_card.number
       assert_equal request['source']['card']['securityCode'], @credit_card.verification_value
+      assert_equal request['transactionInteraction']['posEntryMode'], 'MANUAL'
       assert_equal request['source']['card']['securityCodeIndicator'], 'PROVIDED'
     end.respond_with(successful_purchase_response)
 
@@ -125,7 +131,7 @@ class CommerceHubTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'HOST', response.error_code
+    assert_equal 'string', response.error_code
   end
 
   def test_successful_parsing_of_billing_and_shipping_addresses
@@ -149,11 +155,11 @@ class CommerceHubTest < Test::Unit::TestCase
 
   def test_successful_void
     response = stub_comms do
-      @gateway.void('authorization123', @options)
+      @gateway.void('abc123|authorization123', @options)
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
-      assert_equal request['referenceTransactionDetails']['referenceTransactionId'], 'authorization123'
-      assert_equal request['referenceTransactionDetails']['referenceTransactionType'], 'CHARGES'
+      assert_equal 'authorization123', request['referenceTransactionDetails']['referenceTransactionId']
+      assert_equal 'CHARGES', request['referenceTransactionDetails']['referenceTransactionType']
       assert_nil request['transactionDetails']['captureFlag']
     end.respond_with(successful_void_and_refund_response)
 
@@ -162,7 +168,7 @@ class CommerceHubTest < Test::Unit::TestCase
 
   def test_successful_refund
     response = stub_comms do
-      @gateway.refund(nil, 'authorization123', @options)
+      @gateway.refund(nil, 'abc123|authorization123', @options)
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['referenceTransactionDetails']['referenceTransactionId'], 'authorization123'
@@ -176,7 +182,7 @@ class CommerceHubTest < Test::Unit::TestCase
 
   def test_successful_partial_refund
     response = stub_comms do
-      @gateway.refund(@amount - 1, 'authorization123', @options)
+      @gateway.refund(@amount - 1, 'abc123|authorization123', @options)
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['referenceTransactionDetails']['referenceTransactionId'], 'authorization123'
@@ -187,6 +193,64 @@ class CommerceHubTest < Test::Unit::TestCase
     end.respond_with(successful_void_and_refund_response)
 
     assert_success response
+  end
+
+  def test_successful_purchase_cit_with_gsf
+    options = stored_credential_options(:cardholder, :unscheduled, :initial)
+    options[:data_entry_source] = 'MOBILE_WEB'
+    options[:pos_entry_mode] = 'MANUAL'
+    options[:pos_condition_code] = 'CARD_PRESENT'
+    response = stub_comms do
+      @gateway.purchase(@amount, 'authorization123', options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['transactionInteraction']['origin'], 'ECOM'
+      assert_equal request['transactionInteraction']['eciIndicator'], 'CHANNEL_ENCRYPTED'
+      assert_equal request['transactionInteraction']['posConditionCode'], 'CARD_PRESENT'
+      assert_equal request['transactionInteraction']['posEntryMode'], 'MANUAL'
+      assert_equal request['transactionInteraction']['additionalPosInformation']['dataEntrySource'], 'MOBILE_WEB'
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_mit_with_gsf
+    options = stored_credential_options(:merchant, :recurring)
+    options[:origin] = 'POS'
+    options[:pos_entry_mode] = 'MANUAL'
+    options[:data_entry_source] = 'MOBILE_WEB'
+    response = stub_comms do
+      @gateway.purchase(@amount, 'authorization123', options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['transactionInteraction']['origin'], 'POS'
+      assert_equal request['transactionInteraction']['eciIndicator'], 'CHANNEL_ENCRYPTED'
+      assert_equal request['transactionInteraction']['posConditionCode'], 'CARD_NOT_PRESENT_ECOM'
+      assert_equal request['transactionInteraction']['posEntryMode'], 'MANUAL'
+      assert_equal request['transactionInteraction']['additionalPosInformation']['dataEntrySource'], 'MOBILE_WEB'
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_gsf_scheme_reference_transaction_id
+    @options = stored_credential_options(:cardholder, :unscheduled, :initial)
+    @options[:physical_goods_indicator] = true
+    @options[:scheme_reference_transaction_id] = '12345'
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['storedCredentials']['schemeReferenceTransactionId'], '12345'
+      assert_equal request['transactionDetails']['physicalGoodsIndicator'], true
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def stored_credential_options(*args, ntid: nil)
+    {
+      order_id: '#1001',
+      stored_credential: stored_credential(*args, ntid: ntid)
+    }
   end
 
   def test_successful_store
@@ -206,21 +270,123 @@ class CommerceHubTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = stub_comms do
+    stub_comms do
       @gateway.verify(@credit_card, @options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |endpoint, data, _headers|
       request = JSON.parse(data)
-      assert_equal request['transactionDetails']['captureFlag'], false
-      assert_equal request['transactionDetails']['primaryTransactionType'], 'AUTH_ONLY'
-      assert_equal request['transactionDetails']['accountVerification'], true
+      assert_match %r{verification}, endpoint
+      assert_equal request['source']['sourceType'], 'PaymentCard'
     end.respond_with(successful_authorize_response)
+  end
 
-    assert_success response
+  def test_getting_avs_cvv_from_response
+    gateway_resp = {
+      'paymentReceipt' => {
+        'processorResponseDetails' => {
+          'bankAssociationDetails' => {
+            'associationResponseCode' => 'V000',
+            'avsSecurityCodeResponse' => {
+              'streetMatch' => 'NONE',
+               'postalCodeMatch' => 'NONE',
+               'securityCodeMatch' => 'NOT_CHECKED',
+               'association' => {
+                 'securityCodeResponse' => 'X',
+                 'avsCode' => 'Y'
+               }
+            }
+          }
+        }
+      }
+    }
+
+    assert_equal 'X', @gateway.send(:get_avs_cvv, gateway_resp, 'cvv')
+    assert_equal 'Y', @gateway.send(:get_avs_cvv, gateway_resp, 'avs')
   end
 
   def test_successful_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_uses_order_id_to_keep_transaction_references_when_provided
+    @options[:order_id] = 'abc123'
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'abc123|6304d53be8d94312a620962afc9c012d', response.authorization
+  end
+
+  def test_detect_success_state_for_verify_on_success_transaction
+    gateway_resp = {
+      'gatewayResponse' => {
+        'transactionState' => 'VERIFIED'
+      }
+    }
+
+    assert @gateway.send :success_from, gateway_resp, 'verify'
+  end
+
+  def test_detect_success_state_for_verify_on_failure_transaction
+    gateway_resp = {
+      'gatewayResponse' => {
+        'transactionState' => 'NOT_VERIFIED'
+      }
+    }
+
+    refute @gateway.send :success_from, gateway_resp, 'verify'
+  end
+
+  def test_add_reference_transaction_details_capture_reference_id
+    authorization = '|922e-59fc86a36c03'
+
+    @gateway.send :add_reference_transaction_details, @post, authorization, {}, :capture
+    assert_equal '922e-59fc86a36c03', @post[:referenceTransactionDetails][:referenceTransactionId]
+    assert_nil @post[:referenceTransactionDetails][:referenceTransactionType]
+  end
+
+  def test_add_reference_transaction_details_void_reference_id
+    authorization = '|922e-59fc86a36c03'
+
+    @gateway.send :add_reference_transaction_details, @post, authorization, {}, :void
+    assert_equal '922e-59fc86a36c03', @post[:referenceTransactionDetails][:referenceTransactionId]
+    assert_equal 'CHARGES', @post[:referenceTransactionDetails][:referenceTransactionType]
+  end
+
+  def test_add_reference_transaction_details_refund_reference_id
+    authorization = '|922e-59fc86a36c03'
+
+    @gateway.send :add_reference_transaction_details, @post, authorization, {}, :refund
+    assert_equal '922e-59fc86a36c03', @post[:referenceTransactionDetails][:referenceTransactionId]
+    assert_equal 'CHARGES', @post[:referenceTransactionDetails][:referenceTransactionType]
+  end
+
+  def test_successful_purchase_when_encrypted_credit_card_present
+    @options[:order_id] = 'abc123'
+    @options[:encryption_data] = {
+      keyId: SecureRandom.uuid,
+      encryptionType: 'RSA',
+      encryptionBlock: SecureRandom.alphanumeric(20),
+      encryptionBlockFields: 'card.cardData:16,card.nameOnCard:8,card.expirationMonth:2,card.expirationYear:4,card.securityCode:3',
+      encryptionTarget: 'MANUAL'
+    }
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      refute_nil request['source']['encryptionData']
+      assert_equal request['source']['sourceType'], 'PaymentCard'
+      assert_equal request['source']['encryptionData']['keyId'], @options[:encryption_data][:keyId]
+      assert_equal request['source']['encryptionData']['encryptionType'], 'RSA'
+      assert_equal request['source']['encryptionData']['encryptionBlock'], @options[:encryption_data][:encryptionBlock]
+      assert_equal request['source']['encryptionData']['encryptionBlockFields'], @options[:encryption_data][:encryptionBlockFields]
+      assert_equal request['source']['encryptionData']['encryptionTarget'], 'MANUAL'
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   private

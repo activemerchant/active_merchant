@@ -6,20 +6,12 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(BR MX CO CL AR PE)
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express discover diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club elo hipercard]
 
       self.homepage_url = 'http://www.ebanx.com/'
       self.display_name = 'EBANX'
 
       TAGS = ['Spreedly']
-
-      CARD_BRAND = {
-        visa: 'visa',
-        master: 'master_card',
-        american_express: 'amex',
-        discover: 'discover',
-        diners_club: 'diners'
-      }
 
       URL_MAP = {
         purchase: 'direct',
@@ -27,7 +19,8 @@ module ActiveMerchant #:nodoc:
         capture: 'capture',
         refund: 'refund',
         void: 'cancel',
-        store: 'token'
+        store: 'token',
+        inquire: 'query'
       }
 
       HTTP_METHOD = {
@@ -36,7 +29,8 @@ module ActiveMerchant #:nodoc:
         capture: :get,
         refund: :post,
         void: :get,
-        store: :post
+        store: :post,
+        inquire: :get
       }
 
       VERIFY_AMOUNT_PER_COUNTRY = {
@@ -126,6 +120,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def inquire(authorization, options = {})
+        post = {}
+        add_integration_key(post)
+        add_authorization(post, authorization)
+
+        commit(:inquire, post)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -153,7 +155,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, payment, options)
         post[:payment][:name] = customer_name(payment, options)
-        post[:payment][:email] = options[:email] || 'unspecified@example.com'
+        post[:payment][:email] = options[:email]
         post[:payment][:document] = options[:document]
         post[:payment][:birth_date] = options[:birth_date] if options[:birth_date]
       end
@@ -189,14 +191,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_card_or_token(post, payment, options)
-        payment, brand = payment.split('|') if payment.is_a?(String)
-        post[:payment][:payment_type_code] = payment.is_a?(String) ? brand : CARD_BRAND[payment.brand.to_sym]
+        payment = payment.split('|')[0] if payment.is_a?(String)
+        post[:payment][:payment_type_code] = 'creditcard'
         post[:payment][:creditcard] = payment_details(payment)
         post[:payment][:creditcard][:soft_descriptor] = options[:soft_descriptor] if options[:soft_descriptor]
       end
 
       def add_payment_details(post, payment)
-        post[:payment_type_code] = CARD_BRAND[payment.brand.to_sym]
+        post[:payment_type_code] = 'creditcard'
         post[:creditcard] = payment_details(payment)
       end
 
@@ -257,13 +259,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(action, response)
+        payment_status = response.try(:[], 'payment').try(:[], 'status')
+
         if %i[purchase capture refund].include?(action)
-          response.try(:[], 'payment').try(:[], 'status') == 'CO'
+          payment_status == 'CO'
         elsif action == :authorize
-          response.try(:[], 'payment').try(:[], 'status') == 'PE'
+          payment_status == 'PE'
         elsif action == :void
-          response.try(:[], 'payment').try(:[], 'status') == 'CA'
-        elsif action == :store
+          payment_status == 'CA'
+        elsif %i[store inquire].include?(action)
           response.try(:[], 'status') == 'SUCCESS'
         else
           false
@@ -278,7 +282,11 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(action, parameters, response)
         if action == :store
-          "#{response.try(:[], 'token')}|#{CARD_BRAND[parameters[:payment_type_code].to_sym]}"
+          if success_from(action, response)
+            "#{response.try(:[], 'token')}|#{response['payment_type_code']}"
+          else
+            response.try(:[], 'token')
+          end
         else
           response.try(:[], 'payment').try(:[], 'hash')
         end
@@ -298,7 +306,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def requires_http_get(action)
-        return true if %i[capture void].include?(action)
+        return true if %i[capture void inquire].include?(action)
 
         false
       end

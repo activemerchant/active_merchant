@@ -77,6 +77,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization, options)
         add_splits(post, options)
         add_network_transaction_reference(post, options)
+        add_shopper_statement(post, options)
         commit('capture', post, options)
       end
 
@@ -222,7 +223,7 @@ module ActiveMerchant #:nodoc:
       NETWORK_TOKENIZATION_CARD_SOURCE = {
         'apple_pay' => 'applepay',
         'android_pay' => 'androidpay',
-        'google_pay' => 'paywithgoogle'
+        'google_pay' => 'googlepay'
       }
 
       def add_extra_data(post, payment, options)
@@ -297,6 +298,14 @@ module ActiveMerchant #:nodoc:
         post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
         post[:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
         post[:additionalData][:updateShopperStatement] = options[:update_shopper_statement] if options[:update_shopper_statement]
+      end
+
+      def add_shopper_statement(post, options)
+        return unless options[:shopper_statement]
+
+        post[:additionalData] = {
+          shopperStatement: options[:shopper_statement]
+        }
       end
 
       def add_merchant_data(post, options)
@@ -694,8 +703,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize_message_from(response)
-        if response['refusalReason'] && response['additionalData'] && response['additionalData']['refusalReasonRaw']
-          "#{response['refusalReason']} | #{response['additionalData']['refusalReasonRaw']}"
+        if response['refusalReason'] && response['additionalData'] && (response['additionalData']['merchantAdviceCode'] || response['additionalData']['refusalReasonRaw'])
+          "#{response['refusalReason']} | #{response['additionalData']['merchantAdviceCode'] || response['additionalData']['refusalReasonRaw']}"
         else
           response['refusalReason'] || response['resultCode'] || response['message'] || response['result']
         end

@@ -324,6 +324,24 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_failed_authorise_visa
+    @gateway.expects(:ssl_post).returns(failed_authorize_visa_response)
+
+    response = @gateway.send(:commit, 'authorise', {}, {})
+
+    assert_equal 'Refused | 01: Refer to card issuer', response.message
+    assert_failure response
+  end
+
+  def test_failed_authorise_mastercard
+    @gateway.expects(:ssl_post).returns(failed_authorize_mastercard_response)
+
+    response = @gateway.send(:commit, 'authorise', {}, {})
+
+    assert_equal 'Refused | 01 : New account information available', response.message
+    assert_failure response
+  end
+
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     response = @gateway.capture(@amount, '7914775043909934')
@@ -338,6 +356,14 @@ class AdyenTest < Test::Unit::TestCase
     assert_nil response.authorization
     assert_equal 'Original pspReference required for this operation', response.message
     assert_failure response
+  end
+
+  def test_successful_capture_with_shopper_statement
+    stub_comms do
+      @gateway.capture(@amount, '7914775043909934', @options.merge(shopper_statement: 'test1234'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'test1234', JSON.parse(data)['additionalData']['shopperStatement']
+    end.respond_with(successful_capture_response)
   end
 
   def test_successful_purchase_with_credit_card
@@ -1642,6 +1668,35 @@ class AdyenTest < Test::Unit::TestCase
        },
        "pspReference":"8514775559925128",
        "refusalReason":"3D Not Authenticated",
+       "resultCode":"Refused"
+     }
+    RESPONSE
+  end
+
+  def failed_authorize_visa_response
+    <<-RESPONSE
+    {
+      "additionalData":
+      {
+        "refusalReasonRaw": "01: Refer to card issuer"
+       },
+       "refusalReason": "Refused",
+       "pspReference":"8514775559925128",
+       "resultCode":"Refused"
+     }
+    RESPONSE
+  end
+
+  def failed_authorize_mastercard_response
+    <<-RESPONSE
+    {
+      "additionalData":
+      {
+        "refusalReasonRaw": "01: Refer to card issuer",
+        "merchantAdviceCode": "01 : New account information available"
+       },
+       "refusalReason": "Refused",
+       "pspReference":"8514775559925128",
        "resultCode":"Refused"
      }
     RESPONSE

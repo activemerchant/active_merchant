@@ -1,15 +1,5 @@
 require 'test_helper'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-    class Shift4Gateway
-      def setup_access_token
-        '12345678'
-      end
-    end
-  end
-end
-
 class Shift4Test < Test::Unit::TestCase
   include CommStub
   def setup
@@ -23,7 +13,8 @@ class Shift4Test < Test::Unit::TestCase
       tax: '2',
       customer_reference: 'D019D09309F2',
       destination_postal_code: '94719',
-      product_descriptors: %w(Hamburger Fries Soda Cookie)
+      product_descriptors: %w(Hamburger Fries Soda Cookie),
+      order_id: '123456'
     }
     @customer_address = {
       address1: '123 Street',
@@ -73,6 +64,7 @@ class Shift4Test < Test::Unit::TestCase
       request = JSON.parse(data)
       assert_equal request['clerk']['numericId'], @extra_options[:clerk_id]
       assert_equal request['transaction']['notes'], @extra_options[:notes]
+      assert_equal request['transaction']['vendorReference'], @extra_options[:order_id]
       assert_equal request['amount']['tax'], @extra_options[:tax].to_f
       assert_equal request['amount']['total'], (@amount / 100.0).to_s
       assert_equal request['transaction']['purchaseCard']['customerReference'], @extra_options[:customer_reference]
@@ -231,6 +223,18 @@ class Shift4Test < Test::Unit::TestCase
     assert_equal response.message, 'Transaction successful'
   end
 
+  def test_successful_credit
+    stub_comms do
+      @gateway.refund(@amount, @credit_card, @options.merge!(invoice: '4666309473', expiration_date: '1235'))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['card']['present'], 'N'
+      assert_equal request['card']['expirationDate'], '0924'
+      assert_nil request['card']['entryMode']
+      assert_nil request['customer']
+    end.respond_with(successful_refund_response)
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_void_response)
     response = @gateway.void('123')
@@ -363,6 +367,22 @@ class Shift4Test < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_setup_access_token_should_rise_an_exception_under_unsuccessful_request
+    @gateway.expects(:ssl_post).returns(failed_auth_response)
+
+    error = assert_raises(ActiveMerchant::OAuthResponseError) do
+      @gateway.setup_access_token
+    end
+
+    assert_match(/Failed with  AuthToken not valid ENGINE22CE/, error.message)
+  end
+
+  def test_setup_access_token_should_successfully_extract_the_token_from_response
+    @gateway.expects(:ssl_post).returns(sucess_auth_response)
+
+    assert_equal 'abc123', @gateway.setup_access_token
   end
 
   private
@@ -991,6 +1011,58 @@ class Shift4Test < Test::Unit::TestCase
             },
             "server": {
               "name": "UTGAPI09CE"
+            }
+          }
+        ]
+      }
+    RESPONSE
+  end
+
+  def failed_auth_response
+    <<-RESPONSE
+      {
+        "result": [
+          {
+            "error": {
+              "longText": "AuthToken not valid ENGINE22CE",
+              "primaryCode": 9862,
+              "secondaryCode": 4,
+              "shortText ": "AuthToken"
+            },
+            "server": {
+              "name": "UTGAPI03CE"
+            }
+          }
+        ]
+      }
+    RESPONSE
+  end
+
+  def failed_auth_response_no_message
+    <<-RESPONSE
+      {
+        "result": [
+          {
+            "error": {
+              "secondaryCode": 4,
+              "shortText ": "AuthToken"
+            },
+            "server": {
+              "name": "UTGAPI03CE"
+            }
+          }
+        ]
+      }
+    RESPONSE
+  end
+
+  def sucess_auth_response
+    <<-RESPONSE
+      {
+        "result": [
+          {
+            "credential": {
+              "accessToken": "abc123"
             }
           }
         ]

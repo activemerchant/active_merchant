@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post, options)
       end
 
-      def refund(money, authorization, options = {})
+      def refund(money, payment_method, options = {})
         post = {}
         action = 'refund'
 
@@ -99,11 +99,14 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_clerk(post, options)
         add_transaction(post, options)
-        add_card(action, post, get_card_token(authorization), options)
+        card_token = payment_method.is_a?(CreditCard) ? get_card_token(payment_method) : payment_method
+        add_card(action, post, card_token, options)
         add_card_present(post, options)
 
         commit(action, post, options)
       end
+
+      alias credit refund
 
       def void(authorization, options = {})
         options[:invoice] = get_invoice(authorization)
@@ -153,6 +156,8 @@ module ActiveMerchant #:nodoc:
         add_datetime(post, options)
 
         response = commit('accesstoken', post, request_headers('accesstoken', options))
+        raise OAuthResponseError.new(response, response.params.fetch('result', [{}]).first.dig('error', 'longText')) unless response.success?
+
         response.params['result'].first['credential']['accessToken']
       end
 
@@ -183,6 +188,7 @@ module ActiveMerchant #:nodoc:
         post[:transaction] = {}
         post[:transaction][:invoice] = options[:invoice] || Time.new.to_i.to_s[1..3] + rand.to_s[2..7]
         post[:transaction][:notes] = options[:notes] if options[:notes].present?
+        post[:transaction][:vendorReference] = options[:order_id]
 
         add_purchase_card(post[:transaction], options)
         add_card_on_file(post[:transaction], options)
@@ -306,7 +312,7 @@ module ActiveMerchant #:nodoc:
 
       def request_headers(action, options)
         headers = {
-          'Content-Type' => 'application/x-www-form-urlencoded'
+          'Content-Type' => 'application/json'
         }
         headers['AccessToken'] = @access_token
         headers['Invoice'] = options[:invoice] if action != 'capture' && options[:invoice].present?

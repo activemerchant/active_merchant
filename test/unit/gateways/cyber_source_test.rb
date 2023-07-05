@@ -345,6 +345,23 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_network_token_purchase_single_request_ignore_avs
+    @gateway.expects(:ssl_post).with do |_host, request_body|
+      assert_match %r'<ignoreAVSResult>true</ignoreAVSResult>', request_body
+      assert_not_match %r'<ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      brand: 'visa',
+      transaction_id: '123',
+      eci: '05',
+      payment_cryptogram: '111111111100cryptogram')
+    options = @options.merge(ignore_avs: true)
+    assert response = @gateway.purchase(@amount, credit_card, options)
+    assert_success response
+  end
+
   def test_successful_credit_cart_purchase_single_request_without_ignore_avs
     @gateway.expects(:ssl_post).with do |_host, request_body|
       assert_not_match %r'<ignoreAVSResult>', request_body
@@ -380,6 +397,23 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
                                                                  ignore_cvv: true
                                                                ))
+    assert_success response
+  end
+
+  def test_successful_network_token_purchase_single_request_ignore_cvv
+    @gateway.expects(:ssl_post).with do |_host, request_body|
+      assert_not_match %r'<ignoreAVSResult>', request_body
+      assert_match %r'<ignoreCVResult>true</ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      brand: 'visa',
+      transaction_id: '123',
+      eci: '05',
+      payment_cryptogram: '111111111100cryptogram')
+    options = @options.merge(ignore_cvv: true)
+    assert response = @gateway.purchase(@amount, credit_card, options)
     assert_success response
   end
 
@@ -824,7 +858,7 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.authorize(@amount, credit_card, @options)
     end.check_request do |_endpoint, body, _headers|
       assert_xml_valid_to_xsd(body)
-      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>111111111100cryptogram</cavv>\n  <commerceIndicator>vbv</commerceIndicator>\n  <xid>111111111100cryptogram</xid>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', body
+      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>111111111100cryptogram</cavv>\n  <commerceIndicator>vbv</commerceIndicator>\n  <xid>111111111100cryptogram</xid>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', body
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -850,7 +884,7 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_auth_with_network_tokenization_for_mastercard
     @gateway.expects(:ssl_post).with do |_host, request_body|
       assert_xml_valid_to_xsd(request_body)
-      assert_match %r'<ucaf>\n  <authenticationData>111111111100cryptogram</authenticationData>\n  <collectionIndicator>2</collectionIndicator>\n</ucaf>\n<ccAuthService run=\"true\">\n  <commerceIndicator>spa</commerceIndicator>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
+      assert_match %r'<ucaf>\n  <authenticationData>111111111100cryptogram</authenticationData>\n  <collectionIndicator>2</collectionIndicator>\n</ucaf>\n<ccAuthService run=\"true\">\n  <commerceIndicator>spa</commerceIndicator>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
       true
     end.returns(successful_purchase_response)
 
@@ -867,7 +901,7 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_auth_with_network_tokenization_for_amex
     @gateway.expects(:ssl_post).with do |_host, request_body|
       assert_xml_valid_to_xsd(request_body)
-      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</cavv>\n  <commerceIndicator>aesk</commerceIndicator>\n  <xid>YW0=\n</xid>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
+      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</cavv>\n  <commerceIndicator>aesk</commerceIndicator>\n  <xid>YW0=\n</xid>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
       true
     end.returns(successful_purchase_response)
 
@@ -1408,6 +1442,38 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_equal 'c:billTo/c:postalCode', response.params['invalidField']
   end
 
+  def test_cvv_mismatch_successful_auto_void
+    @gateway.expects(:ssl_post).returns(cvv_mismatch_response)
+    @gateway.expects(:void).once.returns(ActiveMerchant::Billing::Response.new(true, 'Transaction successful'))
+
+    response = @gateway.authorize(@amount, credit_card, @options.merge!(auto_void_230: true))
+
+    assert_failure response
+    assert_equal '230', response.params['reasonCode']
+    assert_equal 'The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the card verification check - transaction has been auto-voided.', response.message
+  end
+
+  def test_cvv_mismatch
+    @gateway.expects(:ssl_post).returns(cvv_mismatch_response)
+    @gateway.expects(:void).never
+
+    response = @gateway.purchase(@amount, credit_card, @options)
+
+    assert_failure response
+    assert_equal '230', response.params['reasonCode']
+    assert_equal 'The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the card verification check', response.message
+  end
+
+  def test_cvv_mismatch_auto_void_failed
+    @gateway.expects(:ssl_post).returns(cvv_mismatch_response)
+    @gateway.expects(:void)
+    response = @gateway.purchase(@amount, credit_card, @options.merge!(auto_void_230: true))
+
+    assert_failure response
+    assert_equal '230', response.params['reasonCode']
+    assert_equal 'The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the card verification check - transaction could not be auto-voided.', response.message
+  end
+
   def test_able_to_properly_handle_40bytes_cryptogram
     long_cryptogram = "NZwc40C4eTDWHVDXPekFaKkNYGk26w+GYDZmU50cATbjqOpNxR/eYA==\n"
     credit_card = network_tokenization_credit_card('4111111111111111',
@@ -1460,6 +1526,18 @@ class CyberSourceTest < Test::Unit::TestCase
     end
 
     assert_equal 'Payment method sodexo is not supported, check https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/CreatingOnlineAuth/CreatingAuthReqPNT.html', error.message
+  end
+
+  def test_routing_number_formatting_with_regular_routing_number
+    assert_equal @gateway.send(:format_routing_number, '012345678', { currency: 'USD' }), '012345678'
+  end
+
+  def test_routing_number_formatting_with_canadian_routing_number
+    assert_equal @gateway.send(:format_routing_number, '12345678', { currency: 'USD' }), '12345678'
+  end
+
+  def test_routing_number_formatting_with_canadian_routing_number_and_padding
+    assert_equal @gateway.send(:format_routing_number, '012345678', { currency: 'CAD' }), '12345678'
   end
 
   private
@@ -1772,6 +1850,15 @@ class CyberSourceTest < Test::Unit::TestCase
       <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
       <soap:Header>
       <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-1918753692"><wsu:Created>2019-09-05T14:10:46.665Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.155"><c:requestID>5676926465076767004068</c:requestID><c:decision>REJECT</c:decision><c:reasonCode>102</c:reasonCode><c:invalidField>c:billTo/c:postalCode</c:invalidField><c:requestToken>AhjzbwSTM78uTleCsJWkEAJRqivRidukDssiQgRm0ky3SA7oegDUiwLm</c:requestToken></c:replyMessage></soap:Body></soap:Envelope>
+
+    XML
+  end
+
+  def cvv_mismatch_response
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+      <soap:Header>
+      <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-1918753692"><wsu:Created>2019-09-05T14:10:46.665Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.155"><c:requestID>5676926465076767004068</c:requestID><c:decision>REJECT</c:decision><c:reasonCode>230</c:reasonCode><c:invalidField>c:billTo/c:postalCode</c:invalidField><c:requestToken>AhjzbwSTM78uTleCsJWkEAJRqivRidukDssiQgRm0ky3SA7oegDUiwLm</c:requestToken></c:replyMessage></soap:Body></soap:Envelope>
 
     XML
   end

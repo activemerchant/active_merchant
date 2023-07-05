@@ -141,7 +141,7 @@ module ActiveMerchant #:nodoc:
       def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_email(post, options)
         add_3d_secure(post, options)
@@ -157,7 +157,7 @@ module ActiveMerchant #:nodoc:
       def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_email(post, options)
         add_3d_secure(post, options)
@@ -217,7 +217,7 @@ module ActiveMerchant #:nodoc:
       def credit(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_email(post, options)
         add_echo(post, options)
@@ -283,9 +283,9 @@ module ActiveMerchant #:nodoc:
         'maestro' => '9'
       }
 
-      def add_payment_method(post, payment_method)
+      def add_payment_method(post, payment_method, options)
         post[:c1] = payment_method&.name || ''
-        add_network_tokenization_card(post, payment_method) if payment_method.is_a? NetworkTokenizationCreditCard
+        add_network_tokenization_card(post, payment_method, options) if payment_method.is_a? NetworkTokenizationCreditCard
         post[:b2] = CARD_TYPES[payment_method.brand] || ''
         post[:b1] = payment_method.number
         post[:b5] = payment_method.verification_value
@@ -293,9 +293,10 @@ module ActiveMerchant #:nodoc:
         post[:b3] = format(payment_method.month, :two_digits)
       end
 
-      def add_network_tokenization_card(post, payment_method)
+      def add_network_tokenization_card(post, payment_method, options)
         post[:b21] = NETWORK_TOKENIZATION_CARD_SOURCE[payment_method.source.to_s]
-        post[:token_eci] = payment_method&.eci if payment_method.source.to_s == 'network_token'
+        post[:token_eci] = post[:b21] == 'vts_mdes_token' ? '07' : nil
+        post[:token_eci] = options[:eci] || payment_method&.eci || (payment_method.brand.to_s == 'master' ? '00' : '07')
         post[:token_crypto] = payment_method&.payment_cryptogram if payment_method.source.to_s == 'network_token'
       end
 

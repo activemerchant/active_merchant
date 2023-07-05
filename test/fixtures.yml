@@ -198,6 +198,10 @@ checkout_v2:
   client_id: CLIENT_ID_FOR_OAUTH_TRANSACTIONS
   client_secret: CLIENT_SECRET_FOR_OAUTH_TRANSACTIONS
 
+checkout_v2_token:
+  secret_key: sk_sbox_xxxxxxxxxxxxxxxxx
+  public_key: pk_sbox_xxxxxxxxxxxxxxxxx
+
 citrus_pay:
   userid: CPF00001
   password: 7c70414732de7e0ba3a04db5f24fcec8
@@ -271,6 +275,12 @@ cyber_source:
 cyber_source_latam_pe:
   login: merchant_id
   password: soap_key
+
+# Working credentials, no need to replace
+cybersource_rest:
+  merchant_id: "testrest"
+  public_key: "08c94330-f618-42a3-b09d-e1e43be5efda"
+  private_key: "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="
 
 # Working credentials, no need to replace
 d_local:
@@ -429,8 +439,13 @@ garanti:
 
 global_collect:
   merchant_id: 2196
-  api_key_id: c91d6752cbbf9cf1
-  secret_api_key: xHjQr5gL9Wcihkqoj4w/UQugdSCNXM2oUQHG5C82jy4=
+  api_key_id: b2311c2c832dd238
+  secret_api_key: Av5wKihoVlLN8SnGm6669hBHyG4Y4aS4KwaZUCvEIbY=
+
+global_collect_direct:
+  merchant_id: "NamastayTest"
+  api_key_id: "CF4CDF3F45F13C5CCBD0"
+  secret_api_key: "mvcEXR7Rem+KJE/atKsQ3Luqv37VEvTe2VOH5/Ibqd90VDzQ71Ht41RBVVyJuebzGnFu30dYpptgdrCcNvAu5A=="
 
 global_transport:
   global_user_name: "USERNAME"

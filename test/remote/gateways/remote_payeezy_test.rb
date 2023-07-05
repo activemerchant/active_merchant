@@ -50,6 +50,16 @@ class RemotePayeezyTest < Test::Unit::TestCase
       source: :apple_pay,
       verification_value: 569
     )
+    @apple_pay_card_amex = network_tokenization_credit_card(
+      '373953192351004',
+      brand: 'american_express',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '11',
+      year: Time.now.year + 1,
+      eci: 5,
+      source: :apple_pay,
+      verification_value: 569
+    )
   end
 
   def test_successful_store
@@ -83,6 +93,11 @@ class RemotePayeezyTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_apple_pay
     assert response = @gateway.purchase(@amount, @apple_pay_card, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_apple_pay_amex
+    assert response = @gateway.purchase(@amount, @apple_pay_card_amex, @options)
     assert_success response
   end
 
@@ -154,6 +169,48 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_failure response
     assert_equal '302', response.error_code
     assert_match(/Insufficient Funds/, response.message)
+  end
+
+  def test_successful_purchase_with_three_ds_data
+    @options[:three_d_secure] = {
+      version: '1',
+      eci: '05',
+      cavv: '3q2+78r+ur7erb7vyv66vv////8=',
+      acs_transaction_id: '6546464645623455665165+qe-jmhabcdefg'
+    }
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, response.message)
+    assert_equal '100', response.params['bank_resp_code']
+    assert_equal nil, response.error_code
+    assert_success response
+  end
+
+  def test_authorize_and_capture_three_ds_data
+    @options[:three_d_secure] = {
+      version: '1',
+      eci: '05',
+      cavv: '3q2+78r+ur7erb7vyv66vv////8=',
+      acs_transaction_id: '6546464645623455665165+qe-jmhabcdefg'
+    }
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert auth.authorization
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+
+  def test_purchase_with_three_ds_version_data
+    @options[:three_d_secure] = {
+      version: '1.0.2',
+      eci: '05',
+      cavv: '3q2+78r+ur7erb7vyv66vv////8=',
+      acs_transaction_id: '6546464645623455665165+qe-jmhabcdefg'
+    }
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, response.message)
+    assert_equal '100', response.params['bank_resp_code']
+    assert_equal nil, response.error_code
+    assert_success response
   end
 
   def test_authorize_and_capture
