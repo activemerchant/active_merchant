@@ -46,7 +46,8 @@ module ActiveMerchant #:nodoc:
         'edenred' => ->(num) { num =~ /^637483\d{10}$/ },
         'anda' => ->(num) { num =~ /^603199\d{10}$/ },
         'tarjeta-d' => ->(num) { num =~ /^601828\d{10}$/ },
-        'hipercard' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), HIPERCARD_RANGES) }
+        'hipercard' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), HIPERCARD_RANGES) },
+        'panal' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), PANAL_RANGES) }
       }
 
       SODEXO_NO_LUHN = ->(num) { num =~ /^(505864|505865)\d{10}$/ }
@@ -182,7 +183,8 @@ module ActiveMerchant #:nodoc:
         (601256..601276),
         (601640..601652),
         (601689..601700),
-        (602011..602050),
+        (602011..602048),
+        [602050],
         (630400..630499),
         (639000..639099),
         (670000..679999),
@@ -246,6 +248,8 @@ module ActiveMerchant #:nodoc:
         384100..384100, 384140..384140, 384160..384160, 606282..606282, 637095..637095,
         637568..637568, 637599..637599, 637609..637609, 637612..637612
       ]
+
+      PANAL_RANGES = [[602049]]
 
       def self.included(base)
         base.extend(ClassMethods)
