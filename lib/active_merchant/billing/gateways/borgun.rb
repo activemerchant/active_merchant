@@ -172,7 +172,7 @@ module ActiveMerchant #:nodoc:
           success,
           message_from(success, pairs),
           pairs,
-          authorization: authorization_from(pairs),
+          authorization: authorization_from(pairs, options),
           test: test?
         )
       end
@@ -185,12 +185,12 @@ module ActiveMerchant #:nodoc:
         if succeeded
           'Succeeded'
         else
-          response[:message] || "Error with ActionCode=#{response[:actioncode]}"
+          response[:message] || response[:status_errormessage] || "Error with ActionCode=#{response[:actioncode]}"
         end
       end
 
-      def authorization_from(response)
-        [
+      def authorization_from(response, options)
+        authorization = [
           response[:dateandtime],
           response[:batch],
           response[:transaction],
@@ -200,6 +200,8 @@ module ActiveMerchant #:nodoc:
           response[:tramount],
           response[:trcurrency]
         ].join('|')
+
+        authorization == '|||||||' ? nil : authorization
       end
 
       def split_authorization(authorization)

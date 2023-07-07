@@ -56,6 +56,20 @@ class BorgunTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_failed_preauth_3ds
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ redirect_url: 'http://localhost/index.html', apply_3d_secure: '1', sale_description: 'product description' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/MerchantReturnURL&gt;#{@options[:redirect_url]}/, data)
+      assert_match(/SaleDescription&gt;#{@options[:sale_description]}/, data)
+      assert_match(/TrCurrencyExponent&gt;2/, data)
+    end.respond_with(failed_get_3ds_authentication_response)
+
+    assert_failure response
+    assert_equal response.message, 'Exception in PostEnrollmentRequest.'
+    assert response.authorization.blank?
+  end
+
   def test_successful_preauth_3ds
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge({ redirect_url: 'http://localhost/index.html', apply_3d_secure: '1', sale_description: 'product description' }))
@@ -70,6 +84,7 @@ class BorgunTest < Test::Unit::TestCase
     assert !response.params['acsformfields_actionurl'].blank?
     assert !response.params['acsformfields_pareq'].blank?
     assert !response.params['threedsmessageid'].blank?
+    assert response.authorization.blank?
   end
 
   def test_successful_purchase_after_3ds
@@ -367,6 +382,25 @@ class BorgunTest < Test::Unit::TestCase
       </SOAP-ENV:Body>
       </SOAP-ENV:Envelope>
     RESPONSE
+  end
+
+  def failed_get_3ds_authentication_response
+    %(
+      <?xml version="1.0" encoding="UTF-8"?>
+      <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <SOAP-ENV:Header xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"></SOAP-ENV:Header><SOAP-ENV:Body>
+      <ser-root:get3DSAuthenticationResponse xmlns:ser-root="http://Borgun/Heimir/pub/ws/Authorization" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <getAuth3DSResXml>&lt;?xml version="1.0" encoding="iso-8859-1"?&gt;
+      &lt;get3DSAuthenticationReply&gt;
+        &lt;Status&gt;
+        &lt;ResultCode&gt;30&lt;/ResultCode&gt;
+        &lt;ResultText&gt;MPI returns error&lt;/ResultText&gt;
+        &lt;ErrorMessage&gt;Exception in PostEnrollmentRequest.&lt;/ErrorMessage&gt;
+        &lt;/Status&gt;
+      &lt;/get3DSAuthenticationReply&gt;</getAuth3DSResXml>
+      </ser-root:get3DSAuthenticationResponse></SOAP-ENV:Body>
+      </SOAP-ENV:Envelope>
+    )
   end
 
   def transcript
