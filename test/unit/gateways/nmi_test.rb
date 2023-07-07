@@ -125,6 +125,70 @@ class NmiTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_purchase_with_surcharge
+    options = @transaction_options.merge({ surcharge: '1.00' })
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      test_transaction_options(data)
+
+      assert_match(/surcharge=1.00/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_shipping_fields
+    options = @transaction_options.merge({ shipping_address: shipping_address })
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      test_transaction_options(data)
+
+      assert_match(/shipping_firstname=Jon/, data)
+      assert_match(/shipping_lastname=Smith/, data)
+      assert_match(/shipping_address1=123\+Your\+Street/, data)
+      assert_match(/shipping_address2=Apt\+2/, data)
+      assert_match(/shipping_city=Toronto/, data)
+      assert_match(/shipping_state=ON/, data)
+      assert_match(/shipping_country=CA/, data)
+      assert_match(/shipping_zip=K2C3N7/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_shipping_fields_omits_blank_name
+    options = @transaction_options.merge({ shipping_address: shipping_address(name: nil) })
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      test_transaction_options(data)
+
+      refute_match(/shipping_firstname/, data)
+      refute_match(/shipping_lastname/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_shipping_email
+    options = @transaction_options.merge({ shipping_address: shipping_address, shipping_email: 'test@example.com' })
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      test_transaction_options(data)
+
+      assert_match(/shipping_email=test%40example\.com/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_failed_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)

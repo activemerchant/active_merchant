@@ -193,6 +193,26 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_shipping_fields
+    options = @options.merge({ shipping_address: shipping_address, shipping_email: 'test@example.com' })
+
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_surcharge
+    options = @options.merge({ surcharge: '1.00' })
+
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
   def test_failed_authorization
     assert response = @gateway.authorize(99, @credit_card, @options)
     assert_failure response
