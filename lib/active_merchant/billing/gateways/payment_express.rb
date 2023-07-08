@@ -20,8 +20,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.windcave.com/'
       self.display_name = 'Windcave (formerly PaymentExpress)'
 
-      self.live_url = 'https://sec.paymentexpress.com/pxpost.aspx'
-      self.test_url = 'https://uat.paymentexpress.com/pxpost.aspx'
+      self.live_url = 'https://sec.windcave.com/pxpost.aspx'
+      self.test_url = 'https://uat.windcave.com/pxpost.aspx'
 
       APPROVED = '1'
 
