@@ -418,63 +418,73 @@ module ActiveMerchant #:nodoc:
       # the existing logic by default. To be able to utilize this field, you must reach out to Stripe.
 
       def add_stored_credentials(post, options = {})
-        return unless options[:stored_credential] && !options[:stored_credential].values.all?(&:nil?)
+        stored_credential = options[:stored_credential]
+        return unless stored_credential && !stored_credential.values.all?(&:nil?)
 
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
-        add_stored_credential_transaction_type(post, options) if options[:stored_credential_transaction_type]
 
-        stored_credential = options[:stored_credential]
-        post[:payment_method_options][:card][:mit_exemption] = {}
+        card_options = post[:payment_method_options][:card]
+        card_options[:mit_exemption] = {}
 
         # Stripe PI accepts network_transaction_id and ds_transaction_id via mit field under card.
         # The network_transaction_id can be sent in nested under stored credentials OR as its own field (add_ntid handles when it is sent in on its own)
         # If it is sent is as its own field AND under stored credentials, the value sent under its own field is what will send.
-        post[:payment_method_options][:card][:mit_exemption][:ds_transaction_id] = stored_credential[:ds_transaction_id] if stored_credential[:ds_transaction_id]
-        post[:payment_method_options][:card][:mit_exemption][:network_transaction_id] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
+        card_options[:mit_exemption][:ds_transaction_id] = stored_credential[:ds_transaction_id] if stored_credential[:ds_transaction_id]
+        unless options[:setup_future_usage] == 'off_session'
+          card_options[:mit_exemption][:network_transaction_id] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
+        end
+
+        add_stored_credential_transaction_type(post, options)
       end
 
       def add_stored_credential_transaction_type(post, options = {})
+        return unless options[:stored_credential_transaction_type]
+
         stored_credential = options[:stored_credential]
         # Do not add anything unless these are present.
         return unless stored_credential[:reason_type] && stored_credential[:initiator]
 
         # Not compatible with off_session parameter.
         options.delete(:off_session)
-        if stored_credential[:initial_transaction]
-          # Initial transactions must by CIT
-          return unless stored_credential[:initiator] == 'cardholder'
 
-          initial_transaction_stored_credential(post, stored_credential[:reason_type])
-        else
-          # Subsequent transaction
-          subsequent_transaction_stored_credential(post, stored_credential[:initiator], stored_credential[:reason_type])
-        end
+        stored_credential_type = if stored_credential[:initial_transaction]
+                                   return unless stored_credential[:initiator] == 'cardholder'
+
+                                   initial_transaction_stored_credential(post, stored_credential)
+                                 else
+                                   subsequent_transaction_stored_credential(post, stored_credential)
+                                 end
+
+        card_options = post[:payment_method_options][:card]
+        card_options[:stored_credential_transaction_type] = stored_credential_type
+        card_options[:mit_exemption].delete(:network_transaction_id) if stored_credential_type == 'setup_on_session'
       end
 
-      def initial_transaction_stored_credential(post, reason_type)
-        if reason_type == 'unscheduled'
+      def initial_transaction_stored_credential(post, stored_credential)
+        case stored_credential[:reason_type]
+        when 'unscheduled'
           # Charge on-session and store card for future one-off payment use
-          post[:payment_method_options][:card][:stored_credential_transaction_type] = 'setup_off_session_unscheduled'
-        elsif reason_type == 'recurring'
+          'setup_off_session_unscheduled'
+        when 'recurring'
           # Charge on-session and store card for future recurring payment use
-          post[:payment_method_options][:card][:stored_credential_transaction_type] = 'setup_off_session_recurring'
+          'setup_off_session_recurring'
         else
           # Charge on-session and store card for future on-session payment use.
-          post[:payment_method_options][:card][:stored_credential_transaction_type] = 'setup_on_session'
+          'setup_on_session'
         end
       end
 
-      def subsequent_transaction_stored_credential(post, initiator, reason_type)
-        if initiator == 'cardholder'
+      def subsequent_transaction_stored_credential(post, stored_credential)
+        if stored_credential[:initiator] == 'cardholder'
           # Charge on-session customer using previously stored card.
-          post[:payment_method_options][:card][:stored_credential_transaction_type] = 'stored_on_session'
-        elsif reason_type == 'recurring'
+          'stored_on_session'
+        elsif stored_credential[:reason_type] == 'recurring'
           # Charge off-session customer using previously stored card for recurring transaction
-          post[:payment_method_options][:card][:stored_credential_transaction_type] = 'stored_off_session_recurring'
+          'stored_off_session_recurring'
         else
           # Charge off-session customer using previously stored card for one-off transaction
-          post[:payment_method_options][:card][:stored_credential_transaction_type] = 'stored_off_session_unscheduled'
+          'stored_off_session_unscheduled'
         end
       end
 
@@ -485,7 +495,7 @@ module ActiveMerchant #:nodoc:
         post[:payment_method_options][:card] ||= {}
         post[:payment_method_options][:card][:mit_exemption] = {}
 
-        post[:payment_method_options][:card][:mit_exemption][:network_transaction_id] = options[:network_transaction_id] if options[:network_transaction_id]
+        post[:payment_method_options][:card][:mit_exemption][:network_transaction_id] = options[:network_transaction_id]
       end
 
       def add_claim_without_transaction_id(post, options = {})
