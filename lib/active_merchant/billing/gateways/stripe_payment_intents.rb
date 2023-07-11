@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
 
       def create_intent(money, payment_method, options = {})
         MultiResponse.run do |r|
-          if payment_method.is_a?(NetworkTokenizationCreditCard)
+          if payment_method.is_a?(NetworkTokenizationCreditCard) && digital_wallet_payment_method?(payment_method)
             r.process { tokenize_apple_google(payment_method, options) }
             payment_method = (r.params['token']['id']) if r.success?
           end
@@ -28,6 +28,7 @@ module ActiveMerchant #:nodoc:
             result = add_payment_method_token(post, payment_method, options)
             return result if result.is_a?(ActiveMerchant::Billing::Response)
 
+            add_network_token_cryptogram_and_eci(post, payment_method)
             add_external_three_d_secure_auth_data(post, options)
             add_metadata(post, options)
             add_return_url(post, options)
@@ -85,18 +86,18 @@ module ActiveMerchant #:nodoc:
         post = {
           type: 'card',
           card: {
-            number: payment_method.number,
             exp_month: payment_method.month,
             exp_year: payment_method.year
           }
         }
-
+        post[:card][:number] = payment_method.number unless adding_network_token_card_data?(payment_method)
         post[:card][:cvc] = payment_method.verification_value if payment_method.verification_value
         if billing = options[:billing_address] || options[:address]
           post[:billing_details] = add_address(billing, options)
         end
 
         add_name_only(post, payment_method) if post[:billing_details].nil?
+        add_network_token_data(post, payment_method, options)
         post
       end
 
@@ -268,7 +269,21 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'payment_intents', post, options)
       end
 
+      def supports_network_tokenization?
+        true
+      end
+
       private
+
+      def digital_wallet_payment_method?(payment_method)
+        payment_method.source == :google_pay || payment_method.source == :apple_pay
+      end
+
+      def adding_network_token_card_data?(payment_method)
+        return true if payment_method.is_a?(ActiveMerchant::Billing::NetworkTokenizationCreditCard) && payment_method.source == :network_token
+
+        false
+      end
 
       def off_session_request?(options = {})
         (options[:off_session] || options[:setup_future_usage]) && options[:confirm] == true
@@ -344,7 +359,33 @@ module ActiveMerchant #:nodoc:
           return create_payment_method_and_extract_token(post, payment_method, options, responses) if options[:verify]
 
           get_payment_method_data_from_card(post, payment_method, options, responses)
+        when ActiveMerchant::Billing::NetworkTokenizationCreditCard
+          get_payment_method_data_from_card(post, payment_method, options, responses)
         end
+      end
+
+      def add_network_token_data(post_data, payment_method, options)
+        return unless adding_network_token_card_data?(payment_method)
+
+        post_data[:card] ||= {}
+        post_data[:card][:last4] = options[:last_4]
+        post_data[:card][:network_token] = {}
+        post_data[:card][:network_token][:number] = payment_method.number
+        post_data[:card][:network_token][:exp_month] = payment_method.month
+        post_data[:card][:network_token][:exp_year] = payment_method.year
+        post_data[:card][:network_token][:payment_account_reference] = options[:payment_account_reference] if options[:payment_account_reference]
+
+        post_data
+      end
+
+      def add_network_token_cryptogram_and_eci(post, payment_method)
+        return unless adding_network_token_card_data?(payment_method)
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:network_token] ||= {}
+        post[:payment_method_options][:card][:network_token][:cryptogram] = payment_method.payment_cryptogram if payment_method.payment_cryptogram
+        post[:payment_method_options][:card][:network_token][:electronic_commerce_indicator] = payment_method.eci if payment_method.eci
       end
 
       def extract_token_from_string_and_maybe_add_customer_id(post, payment_method)
@@ -385,7 +426,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def get_payment_method_data_from_card(post, payment_method, options, responses)
-        return create_payment_method_and_extract_token(post, payment_method, options, responses) unless off_session_request?(options)
+        return create_payment_method_and_extract_token(post, payment_method, options, responses) unless off_session_request?(options) || adding_network_token_card_data?(payment_method)
 
         post[:payment_method_data] = add_payment_method_data(payment_method, options)
       end

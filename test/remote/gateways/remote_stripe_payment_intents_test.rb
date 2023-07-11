@@ -72,6 +72,17 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       last_name: 'Longsen'
     )
 
+    @network_token_credit_card = network_tokenization_credit_card(
+      '4000056655665556',
+      payment_cryptogram: 'AAEBAwQjSQAAXXXXXXXJYe0BbQA=',
+      source: :network_token,
+      brand: 'visa',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    )
+
     @destination_account = fixtures(:stripe_destination)[:stripe_user_id]
   end
 
@@ -210,6 +221,18 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_match('android_pay', purchase.responses.first.params.dig('token', 'card', 'tokenization_method'))
     assert purchase.success?
     assert_match('google_pay', purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['wallet']['type'])
+  end
+
+  def test_successful_purchase_with_tokenized_visa
+    options = {
+      currency: 'USD',
+      last_4: '4242'
+    }
+
+    purchase = @gateway.purchase(@amount, @network_token_credit_card, options)
+    assert_equal(nil, purchase.responses.first.params.dig('token', 'card', 'tokenization_method'))
+    assert purchase.success?
+    assert_not_nil(purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['network_token'])
   end
 
   def test_successful_purchase_with_google_pay_when_sending_the_billing_address
@@ -1021,6 +1044,24 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       confirm: true
     }
     assert create_response = @gateway.create_intent(@amount, @visa_payment_method, options)
+    intent_id = create_response.params['id']
+    assert_equal 'requires_capture', create_response.params['status']
+
+    assert capture_response = @gateway.capture(@amount, intent_id, options)
+    assert_equal 'succeeded', capture_response.params['status']
+    assert_equal 'Payment complete.', capture_response.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
+  end
+
+  def test_create_a_payment_intent_and_manually_capture_with_network_token
+    options = {
+      currency: 'GBP',
+      customer: @customer,
+      confirmation_method: 'manual',
+      capture_method: 'manual',
+      confirm: true,
+      last_4: '4242'
+    }
+    assert create_response = @gateway.create_intent(@amount, @network_token_credit_card, options)
     intent_id = create_response.params['id']
     assert_equal 'requires_capture', create_response.params['status']
 
