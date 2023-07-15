@@ -308,6 +308,11 @@ decidir_plus_preauth:
 decidir_purchase:
   api_key: 5df6b5764c3f4822aecdc82d56f26b9d
 
+deepstack:
+  publishable_api_key: pk_test_7H5GkZJ4ktV38eZxKDItVMZZvluUhORE
+  app_id: afa25dea-58e3-4da0-a51e-bb6dca949c90
+  shared_secret: 30lYhQ92gREPrwaHOAkyubaIqi88wV8PYy4+2AWJ2to=
+
 # No working test credentials
 dibs:
   merchant_id: SOMECREDENTIAL
