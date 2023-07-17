@@ -73,10 +73,10 @@ module ActiveMerchant #:nodoc:
         add_transaction_data('Credit', post, money, options.merge!({ currency: original_currency }))
         post[:sg_CreditType] = 2
         post[:sg_AuthCode] = auth
-        post[:sg_TransactionID] = transaction_id
         post[:sg_CCToken] = token
         post[:sg_ExpMonth] = exp_month
         post[:sg_ExpYear] = exp_year
+        post[:sg_TransactionID] = transaction_id unless options[:unreferenced_refund]
 
         commit(post)
       end

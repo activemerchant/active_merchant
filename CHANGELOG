@@ -14,6 +14,7 @@
 * Kushki: Add Brazil as supported country [almalee24] #4829
 * Adyen: Add additional data for airline and lodging [javierpedrozaing] #4815
 * MIT: Changed how the payload was sent to the gateway [alejandrofloresm] #4655
+* SafeCharge: Add unreferenced_refund field [yunnydang] #4831
 
 == Version 1.131.0 (June 21, 2023)
 * Redsys: Add supported countries [jcreiff] #4811

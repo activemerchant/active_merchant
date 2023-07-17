@@ -203,6 +203,26 @@ class SafeChargeTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_unreferenced_refund
+    refund = stub_comms do
+      @gateway.refund(@amount, 'auth|transaction_id|token|month|year|amount|currency', @options.merge(unreferenced_refund: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal(data.split('&').include?('sg_TransactionID=transaction_id'), false)
+    end.respond_with(successful_refund_response)
+
+    assert_success refund
+  end
+
+  def test_successful_refund_without_unreferenced_refund
+    refund = stub_comms do
+      @gateway.refund(@amount, 'auth|transaction_id|token|month|year|amount|currency', @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal(data.split('&').include?('sg_TransactionID=transaction_id'), true)
+    end.respond_with(successful_refund_response)
+
+    assert_success refund
+  end
+
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 

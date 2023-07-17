@@ -256,6 +256,18 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     assert_equal 'Transaction must contain a Card/Token/Account', response.message
   end
 
+  def test_successful_unreferenced_refund
+    option = {
+      unreferenced_refund: true
+    }
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, option)
+    assert_success refund
+    assert_equal 'Success', refund.message
+  end
+
   def test_successful_credit
     response = @gateway.credit(@amount, credit_card('4444436501403986'), @options)
     assert_success response
