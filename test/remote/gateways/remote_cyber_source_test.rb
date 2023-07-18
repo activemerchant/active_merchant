@@ -53,6 +53,18 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       year: (Time.now.year + 2).to_s,
       brand: :master
     )
+    @visa_network_token = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
+    @amex_network_token = network_tokenization_credit_card(
+      '378282246310005',
+      brand: 'american_express',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
 
     @amount = 100
 
@@ -118,20 +130,13 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_network_tokenization_transcript_scrubbing
-    credit_card = network_tokenization_credit_card(
-      '4111111111111111',
-      brand: 'visa',
-      eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
-
     transcript = capture_transcript(@gateway) do
-      @gateway.authorize(@amount, credit_card, @options)
+      @gateway.authorize(@amount, @visa_network_token, @options)
     end
     transcript = @gateway.scrub(transcript)
 
-    assert_scrubbed(credit_card.number, transcript)
-    assert_scrubbed(credit_card.payment_cryptogram, transcript)
+    assert_scrubbed(@visa_network_token.number, transcript)
+    assert_scrubbed(@visa_network_token.payment_cryptogram, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
 
@@ -681,14 +686,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_network_tokenization_authorize_and_capture
-    credit_card = network_tokenization_credit_card(
-      '4111111111111111',
-      brand: 'visa',
-      eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
-
-    assert auth = @gateway.authorize(@amount, credit_card, @options)
+    assert auth = @gateway.authorize(@amount, @visa_network_token, @options)
     assert_successful_response(auth)
 
     assert capture = @gateway.capture(@amount, auth.authorization)
@@ -696,14 +694,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_network_tokenization_with_amex_cc_and_basic_cryptogram
-    credit_card = network_tokenization_credit_card(
-      '378282246310005',
-      brand: 'american_express',
-      eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
-
-    assert auth = @gateway.authorize(@amount, credit_card, @options)
+    assert auth = @gateway.authorize(@amount, @amex_network_token, @options)
     assert_successful_response(auth)
 
     assert capture = @gateway.capture(@amount, auth.authorization)
@@ -729,12 +720,37 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_network_tokenization_with_amex_cc
-    credit_card = network_tokenization_credit_card(
-      '378282246310005',
-      brand: 'american_express',
-      eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
+    assert auth = @gateway.purchase(@amount, @amex_network_token, @options)
+    assert_successful_response(auth)
+  end
+
+  def test_purchase_with_apple_pay_network_tokenization_visa_subsequent_auth
+    credit_card = network_tokenization_credit_card('4111111111111111',
+                                                   brand: 'visa',
+                                                   eci: '05',
+                                                   source: :apple_pay,
+                                                   payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+    @options[:stored_credential] = {
+      initiator: 'merchant',
+      reason_type: 'unscheduled',
+      network_transaction_id: '016150703802094'
+    }
+
+    assert auth = @gateway.purchase(@amount, credit_card, @options)
+    assert_successful_response(auth)
+  end
+
+  def test_purchase_with_apple_pay_network_tokenization_mastercard_subsequent_auth
+    credit_card = network_tokenization_credit_card('5555555555554444',
+                                                   brand: 'master',
+                                                   eci: '05',
+                                                   source: :apple_pay,
+                                                   payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+    @options[:stored_credential] = {
+      initiator: 'merchant',
+      reason_type: 'unscheduled',
+      network_transaction_id: '0602MCC603474'
+    }
 
     assert auth = @gateway.purchase(@amount, credit_card, @options)
     assert_successful_response(auth)
