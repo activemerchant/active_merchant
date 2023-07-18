@@ -478,6 +478,53 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_network_token_purchase_subsequent_auth_visa
+    @gateway.expects(:ssl_post).with do |_host, request_body|
+      assert_not_match %r'<cavv>', request_body
+      assert_not_match %r'<xid>', request_body
+      assert_match %r'<commerceIndicator>internet</commerceIndicator>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    credit_card = network_tokenization_credit_card('4111111111111111',
+                                                   brand: 'visa',
+                                                   transaction_id: '123',
+                                                   eci: '05',
+                                                   payment_cryptogram: '111111111100cryptogram')
+    options = @options.merge({
+      stored_credential: {
+        initiator: 'merchant',
+        reason_type: 'unscheduled',
+        network_transaction_id: '016150703802094'
+      }
+    })
+    assert response = @gateway.purchase(@amount, credit_card, options)
+    assert_success response
+  end
+
+  def test_successful_network_token_purchase_subsequent_auth_mastercard
+    @gateway.expects(:ssl_post).with do |_host, request_body|
+      assert_not_match %r'<authenticationData>', request_body
+      assert_match %r'<commerceIndicator>internet</commerceIndicator>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    credit_card = network_tokenization_credit_card('5555555555554444',
+                                                   brand: 'master',
+                                                   transaction_id: '123',
+                                                   eci: '05',
+                                                   payment_cryptogram: '111111111100cryptogram')
+    options = @options.merge({
+      stored_credential: {
+        initiator: 'merchant',
+        reason_type: 'unscheduled',
+        network_transaction_id: '016150703802094'
+      }
+    })
+    assert response = @gateway.purchase(@amount, credit_card, options)
+    assert_success response
+  end
+
   def test_successful_reference_purchase
     @gateway.stubs(:ssl_post).returns(successful_create_subscription_response, successful_purchase_response)
 
