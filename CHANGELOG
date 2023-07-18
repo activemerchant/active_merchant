@@ -5,6 +5,7 @@
 
 == Version 1.134.0 (July 25, 2023)
 * Update required Ruby version [almalee24] #4823
+* Kushki: Enable 3ds2 [jherreraa] #4832
 
 == Version 1.133.0 (July 20, 2023)
 * CyberSource: remove credentials from tests [bbraschi] #4836

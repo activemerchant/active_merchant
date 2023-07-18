@@ -179,6 +179,86 @@ class RemoteKushkiTest < Test::Unit::TestCase
     assert_equal 'Monto de la transacción es diferente al monto de la venta inicial', response.message
   end
 
+  def test_successful_3ds2_authorize_with_visa_card
+    options = {
+      currency: 'PEN',
+      three_d_secure: {
+        version: '2.2.0',
+        cavv: 'AAABBoVBaZKAR3BkdkFpELpWIiE=',
+        xid: 'NEpab1F1MEdtaWJ2bEY3ckYxQzE=',
+        eci: '07'
+      }
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_successful_3ds2_authorize_with_master_card
+    options = {
+      currency: 'PEN',
+      three_d_secure: {
+        version: '2.2.0',
+        cavv: 'AAABBoVBaZKAR3BkdkFpELpWIiE=',
+        eci: '00',
+        ds_transaction_id: 'b23e0264-1209-41L6-Jca4-b82143c1a782'
+      }
+    }
+
+    credit_card = credit_card('5223450000000007', brand: 'master', verification_value: '777')
+    response = @gateway.authorize(@amount, credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_3ds2_purchase
+    options = {
+      three_d_secure: {
+        version: '2.2.0',
+        cavv: 'AAABBoVBaZKAR3BkdkFpELpWIiE=',
+        xid: 'NEpab1F1MEdtaWJ2bEY3ckYxQzE=',
+        eci: '07'
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_failed_3ds2_authorize
+    options = {
+      currency: 'PEN',
+      three_d_secure: {
+        version: '2.2.0',
+        authentication_response_status: 'Y',
+        cavv: 'AAABBoVBaZKAR3BkdkFpELpWIiE=',
+        xid: 'NEpab1F1MEdtaWJ2bEY3ckYxQzE='
+      }
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_failure response
+    assert_equal 'K001', response.responses.last.error_code
+  end
+
+  def test_failed_3ds2_authorize_with_different_card
+    options = {
+      currency: 'PEN',
+      three_d_secure: {
+        version: '2.2.0',
+        cavv: 'AAABBoVBaZKAR3BkdkFpELpWIiE=',
+        xid: 'NEpab1F1MEdtaWJ2bEY3ckYxQzE='
+      }
+    }
+    credit_card = credit_card('6011111111111117', brand: 'discover', verification_value: '777')
+    assert_raise ArgumentError do
+      @gateway.authorize(@amount, credit_card, options)
+    end
+  end
+
   def test_successful_capture
     auth = @gateway.authorize(@amount, @credit_card)
     assert_success auth
