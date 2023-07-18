@@ -807,26 +807,34 @@ module ActiveMerchant #:nodoc:
         payment_method.is_a?(NetworkTokenizationCreditCard)
       end
 
+      def subsequent_nt_auth(options)
+        return unless options[:stored_credential] || options[:stored_credential_overrides]
+
+        options.dig(:stored_credential_overrides, :subsequent_auth) || options.dig(:stored_credential, :initiator) == 'merchant'
+      end
+
       def add_auth_network_tokenization(xml, payment_method, options)
         return unless network_tokenization?(payment_method)
+
+        commerce_indicator = 'internet' if subsequent_nt_auth(options)
 
         brand = card_brand(payment_method).to_sym
 
         case brand
         when :visa
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
-            xml.tag!('cavv', payment_method.payment_cryptogram)
-            xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
-            xml.tag!('xid', payment_method.payment_cryptogram)
+            xml.tag!('cavv', payment_method.payment_cryptogram) unless commerce_indicator
+            xml.commerceIndicator commerce_indicator.nil? ? ECI_BRAND_MAPPING[brand] : commerce_indicator
+            xml.tag!('xid', payment_method.payment_cryptogram) unless commerce_indicator
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         when :master
           xml.tag! 'ucaf' do
-            xml.tag!('authenticationData', payment_method.payment_cryptogram)
+            xml.tag!('authenticationData', payment_method.payment_cryptogram) unless commerce_indicator
             xml.tag!('collectionIndicator', DEFAULT_COLLECTION_INDICATOR)
           end
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
-            xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
+            xml.commerceIndicator commerce_indicator.nil? ? ECI_BRAND_MAPPING[brand] : commerce_indicator
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         when :american_express
