@@ -20,14 +20,14 @@ module ActiveMerchant #:nodoc:
       def purchase(amount, payment_method, options = {})
         MultiResponse.run() do |r|
           r.process { tokenize(amount, payment_method, options) }
-          r.process { charge(amount, r.authorization, options) }
+          r.process { charge(amount, r.authorization, options, payment_method) }
         end
       end
 
       def authorize(amount, payment_method, options = {})
         MultiResponse.run() do |r|
           r.process { tokenize(amount, payment_method, options) }
-          r.process { preauthorize(amount, r.authorization, options) }
+          r.process { preauthorize(amount, r.authorization, options, payment_method) }
         end
       end
 
@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def charge(amount, authorization, options)
+      def charge(amount, authorization, options, payment_method = {})
         action = 'charge'
 
         post = {}
@@ -100,11 +100,12 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options)
         add_months(post, options)
         add_deferred(post, options)
+        add_three_d_secure(post, payment_method, options)
 
         commit(action, post)
       end
 
-      def preauthorize(amount, authorization, options)
+      def preauthorize(amount, authorization, options, payment_method = {})
         action = 'preAuthorization'
 
         post = {}
@@ -114,6 +115,7 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options)
         add_months(post, options)
         add_deferred(post, options)
+        add_three_d_secure(post, payment_method, options)
 
         commit(action, post)
       end
@@ -202,6 +204,36 @@ module ActiveMerchant #:nodoc:
           creditType: options[:deferred_credit_type],
           months: options[:deferred_months]
         }
+      end
+
+      def add_three_d_secure(post, payment_method, options)
+        three_d_secure = options[:three_d_secure]
+        return unless three_d_secure.present?
+
+        post[:threeDomainSecure] = {
+          eci: three_d_secure[:eci],
+          specificationVersion: three_d_secure[:version]
+        }
+
+        if payment_method.brand == 'master'
+          post[:threeDomainSecure][:acceptRisk] = three_d_secure[:eci] == '00'
+          post[:threeDomainSecure][:ucaf] = three_d_secure[:cavv]
+          post[:threeDomainSecure][:directoryServerTransactionID] = three_d_secure[:ds_transaction_id]
+          case three_d_secure[:eci]
+          when '07'
+            post[:threeDomainSecure][:collectionIndicator] = '0'
+          when '06'
+            post[:threeDomainSecure][:collectionIndicator] = '1'
+          else
+            post[:threeDomainSecure][:collectionIndicator] = '2'
+          end
+        elsif payment_method.brand == 'visa'
+          post[:threeDomainSecure][:acceptRisk] = three_d_secure[:eci] == '07'
+          post[:threeDomainSecure][:cavv] = three_d_secure[:cavv]
+          post[:threeDomainSecure][:xid] = three_d_secure[:xid]
+        else
+          raise ArgumentError.new 'Kushki supports 3ds2 authentication for only Visa and Mastercard brands.'
+        end
       end
 
       ENDPOINT = {
