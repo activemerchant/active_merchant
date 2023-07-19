@@ -813,6 +813,7 @@ module ActiveMerchant #:nodoc:
             xml.tag!('collectionIndicator', DEFAULT_COLLECTION_INDICATOR)
           end
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
+            xml.tag!('networkTokenCryptogram', payment_method.payment_cryptogram) if payment_method.payment_cryptogram
             xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
