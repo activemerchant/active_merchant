@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class AxcessmsGateway < Gateway
-      self.test_url = 'https://test.ctpe.io/payment/ctpe'
-      self.live_url = 'https://ctpe.io/payment/ctpe'
+      self.test_url = 'https://eu-test.oppwa.com/'
+      self.live_url = 'https://eu-prod.oppwa.com/'
 
       self.supported_countries = %w(AD AT BE BG BR CA CH CY CZ DE DK EE ES FI FO FR GB
                                     GI GR HR HU IE IL IM IS IT LI LT LU LV MC MT MX NL
@@ -15,164 +15,136 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars
       self.default_currency = 'GBP'
 
-      API_VERSION = '1.0'
-      PAYMENT_CODE_PREAUTHORIZATION = 'CC.PA'
-      PAYMENT_CODE_DEBIT = 'CC.DB'
-      PAYMENT_CODE_CAPTURE = 'CC.CP'
-      PAYMENT_CODE_REVERSAL = 'CC.RV'
-      PAYMENT_CODE_REFUND = 'CC.RF'
-      PAYMENT_CODE_REBILL = 'CC.RB'
+      API_VERSION = 'v1'
+      PAYMENT_CODE_PREAUTHORIZATION = 'PA'
+      PAYMENT_CODE_DEBIT = 'DB'
+      PAYMENT_CODE_CAPTURE = 'CP'
+      PAYMENT_CODE_REVERSAL = 'RV'
+      PAYMENT_CODE_REFUND = 'RF'
+      PAYMENT_CODE_REBILL = 'RB'
 
       def initialize(options = {})
-        requires!(options, :sender, :login, :password, :channel)
+        requires!(options, :token)
         super
       end
 
-      def purchase(money, payment, options = {})
-        payment_code = payment.respond_to?(:number) ? PAYMENT_CODE_DEBIT : PAYMENT_CODE_REBILL
-        commit(payment_code, money, payment, options)
+      def authorize(money, credit_card, options = {})
+        post = {}
+        add_card_details(post, credit_card, options)
+        add_request_details(post, PAYMENT_CODE_PREAUTHORIZATION, money, options)
+        commit(post)
       end
 
-      def authorize(money, authorization, options = {})
-        commit(PAYMENT_CODE_PREAUTHORIZATION, money, authorization, options)
+      def purchase(money, credit_card, options = {})
+        post = {}
+        add_card_details(post, credit_card, options)
+        add_request_details(post, PAYMENT_CODE_DEBIT, money, options)
+        commit(post)
       end
 
-      def capture(money, authorization, options = {})
-        commit(PAYMENT_CODE_CAPTURE, money, authorization, options)
+      def rebill(money, transaction_id, options = {})
+        post = {}
+        add_request_details(post, PAYMENT_CODE_REBILL, money, options)
+        commit(post, transaction_id)
       end
 
-      def refund(money, authorization, options = {})
-        commit(PAYMENT_CODE_REFUND, money, authorization, options)
+      def capture(money, transaction_id, options = {})
+        post = {}
+        add_request_details(post, PAYMENT_CODE_CAPTURE, money, options)
+        commit(post, transaction_id)
       end
 
-      def void(authorization, options = {})
-        commit(PAYMENT_CODE_REVERSAL, nil, authorization, options)
+      def refund(money, transaction_id, options = {})
+        post = {}
+        add_request_details(post, PAYMENT_CODE_REFUND, money, options)
+        commit(post, transaction_id)
       end
 
-      def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+      def void(money, transaction_id, options = {})
+        post = {}
+        add_request_details(post, PAYMENT_CODE_REVERSAL, money, options)
+        commit(post, transaction_id)
       end
 
       private
 
-      def commit(paymentcode, money, payment, options)
-        options[:mode] ||= (test? ? 'INTEGRATOR_TEST' : 'LIVE')
-        request = build_request(paymentcode, money, payment, options)
-
-        headers = {
-          'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8'
-        }
-
-        response = parse(ssl_post((test? ? test_url : live_url), "load=#{CGI.escape(request)}", headers))
-        success = (response[:result] == 'ACK')
-        message = "#{response[:reason]} - #{response[:return]}"
-        authorization = response[:unique_id]
-
-        Response.new(success, message, response,
-          authorization: authorization,
-          test: (response[:mode] != 'LIVE'))
-      end
-
-      def parse(body)
-        return {} if body.blank?
-
-        xml = REXML::Document.new(body)
-
-        response = {}
-        xml.root.elements.to_a.each do |node|
-          parse_element(response, node)
+      def add_card_details(post, credit_card, options)
+        post["paymentBrand"] = options["paymentBrand"]
+        post["card.number"] = credit_card["number"]
+        post["card.holder"] = credit_card["holder"]
+        post["card.expiryMonth"] = credit_card["expiryMonth"]
+        post["card.expiryYear"] = credit_card["expiryYear"]
+        post["card.cvv"] = credit_card["cvv"]
+        if options["billing"].present?
+          post["billing.street1"] = options["billing"]["street1"]
+          post["billing.street2"] = options["billing"]["street2"]
+          post["billing.city"] = options["billing"]["city"]
+          post["billing.postcode"] = options["billing"]["postcode"]
+          post["billing.state"] = options["billing"]["state"]
+          post["billing.country"] = options["billing"]["country"]
         end
-
-        response[:mode] = REXML::XPath.first(xml, '//Transaction').attributes['mode']
-
-        response
+        if options["shipping"].present?
+          post["shipping.street1"] = options["shipping"]["street1"]
+          post["shipping.street2"] = options["shipping"]["street2"]
+          post["shipping.city"] = options["shipping"]["city"]
+          post["shipping.postcode"] = options["shipping"]["postcode"]
+          post["shipping.state"] = options["shipping"]["state"]
+          post["shipping.country"] = options["shipping"]["country"]
+        end
+        if options["customer"].present?
+          post["customer.email"] = options["customer"]["email"]
+          post["customer.mobile"] = options["customer"]["mobile"]
+        end
       end
 
-      def parse_element(response, node)
-        node.attributes.each { |name, value| response["#{node.name}_#{name}".underscore.to_sym] = value } if node.has_attributes?
+      def add_request_details(post, payment_code, money, options)
+        post["entityId"] = options["entityId"]
+        post["amount"] = money
+        post["currency"] = options["currency"]
+        post["paymentType"] = payment_code
+      end
 
-        if node.has_elements?
-          node.elements.each { |element| parse_element(response, element) }
+      def commit(params, transaction_id = "")
+        path = "#{url}#{API_VERSION}/payments"
+        path = "#{path}/#{transaction_id}" if transaction_id.present?
+        uri = URI(path)
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        req = Net::HTTP::Post.new(uri.path)
+        req['Authorization'] = 'Bearer ' + @options[:token]
+        req.set_form_data(params)
+        res = http.request(req)
+        response_data = JSON.parse(res.body)
+        succeeded = success_from(res.message)
+        Response.new(
+          succeeded,
+          message_from(succeeded, response_data),
+          response_data,
+          authorization: authorization_from(response_data, params["paymentType"]),
+          test: test?
+        )
+      end
+
+      def url
+        test? ? test_url : live_url
+      end
+
+      def authorization_from(response, payment_type)
+        authorization = response["id"]
+        authorization = response["id"].present? ? response["id"] : "Failed"
+        [authorization, payment_type].join('#')
+      end
+
+      def message_from(succeeded, response)
+        if succeeded
+          'Succeeded'
         else
-          response[node.name.underscore.to_sym] = node.text
+          response["result"]["description"]
         end
       end
 
-      def build_request(payment_code, money, payment, options)
-        xml = Builder::XmlMarkup.new indent: 2
-        xml.instruct!
-        xml.tag! 'Request', 'version' => API_VERSION do
-          xml.tag! 'Header' do
-            xml.tag! 'Security', 'sender' => @options[:sender]
-          end
-          xml.tag! 'Transaction', 'mode' => options[:mode], 'channel' => @options[:channel], 'response' => 'SYNC' do
-            xml.tag! 'User', 'login' => @options[:login], 'pwd' => @options[:password]
-            xml.tag! 'Identification' do
-              xml.tag! 'TransactionID', options[:order_id] || generate_unique_id
-              xml.tag! 'ReferenceID', payment unless payment.respond_to?(:number)
-            end
-
-            xml.tag! 'Payment', 'code' => payment_code do
-              xml.tag! 'Memo', options[:memo] unless options[:memo].blank?
-              xml.tag! 'Presentation' do
-                xml.tag! 'Amount', amount(money)
-                xml.tag! 'Currency', (options[:currency] || currency(money))
-                xml.tag! 'Usage', options[:description]
-              end
-            end
-
-            if payment.respond_to?(:number)
-              add_payment(xml, payment)
-
-              xml.tag! 'Customer' do
-                add_customer_name(xml, payment)
-                add_address(xml, options[:billing_address] || options[:address])
-                add_contact(xml, options)
-              end
-            end
-          end
-        end
-
-        xml.target!
-      end
-
-      def add_contact(xml, options)
-        xml.tag! 'Contact' do
-          xml.tag! 'Email', (options[:email] || 'unknown@example.com')
-          xml.tag! 'Ip', (options[:ip] || '127.0.0.1')
-        end
-      end
-
-      def add_customer_name(xml, payment)
-        xml.tag! 'Name' do
-          xml.tag! 'Given', payment.first_name
-          xml.tag! 'Family', payment.last_name
-        end
-      end
-
-      def add_payment(xml, payment)
-        xml.tag! 'Account' do
-          xml.tag! 'Number', payment.number
-          xml.tag! 'Holder', payment.name
-          xml.tag! 'Brand', payment.brand
-          xml.tag! 'Expiry', 'month' => payment.month, 'year' => payment.year
-          xml.tag! 'Verification', payment.verification_value
-        end
-      end
-
-      def add_address(xml, address)
-        raise ArgumentError.new('Address is required') unless address
-
-        xml.tag! 'Address' do
-          xml.tag! 'Street', "#{address[:address1]} #{address[:address2]}".strip
-          xml.tag! 'City', address[:city]
-          xml.tag! 'State', address[:state]
-          xml.tag! 'Zip', address[:zip]
-          xml.tag! 'Country', address[:country]
-        end
+      def success_from(resonse_message)
+        resonse_message == "OK"
       end
     end
   end
