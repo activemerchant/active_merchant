@@ -132,6 +132,11 @@ module ActiveMerchant #:nodoc:
         r703: 'Export hostname_country/ip_country match'
       }
 
+      @@payment_solution = {
+        apple_pay: '001',
+        google_pay: '012'
+      }
+
       # These are the options that can be used when creating a new CyberSource
       # Gateway object.
       #
@@ -322,6 +327,7 @@ module ActiveMerchant #:nodoc:
         add_airline_data(xml, options)
         add_sales_slip_number(xml, options)
         add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
+        add_payment_solution(xml, creditcard_or_reference.source) if network_tokenization?(creditcard_or_reference)
         add_tax_management_indicator(xml, options)
         add_stored_credential_subsequent_auth(xml, options)
         add_issuer_additional_data(xml, options)
@@ -393,6 +399,7 @@ module ActiveMerchant #:nodoc:
           add_airline_data(xml, options)
           add_sales_slip_number(xml, options)
           add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
+          add_payment_solution(xml, payment_method_or_reference.source) if network_tokenization?(payment_method_or_reference)
           add_tax_management_indicator(xml, options)
           add_stored_credential_subsequent_auth(xml, options)
           add_issuer_additional_data(xml, options)
@@ -668,6 +675,12 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'enabled', options[:decision_manager_enabled] if options[:decision_manager_enabled]
           xml.tag! 'profile', options[:decision_manager_profile] if options[:decision_manager_profile]
         end
+      end
+
+      def add_payment_solution(xml, source)
+        return unless (payment_solution = @@payment_solution[source])
+
+        xml.tag! 'paymentSolution', payment_solution
       end
 
       def add_issuer_additional_data(xml, options)
