@@ -269,8 +269,8 @@ culqi:
 # Cybersource support to enable the recurring and pinless debit
 # services on your test account.
 cyber_source:
-  login: X
-  password: Y
+  login: "shopify_dev_test"
+  password: "3PasJd0w5+Dh/W4xcX8tS0cVZ67KO7FEp0b+IzW3tF9YkCpG/YTVspXDaq+4or21K3hQ1pULambN1we1tsGUOV3tu4z2POGgsMCiNwrm84FnnLofxtu7BFCzUpYaptpf0xMIG24awbDnt3iFFEWI1ly5sDQwzMgBnVgwPkqLmkczkEz2Ddq0oiuaOfskvlain0aP9oL7LxG7xQb6RIcBLxiAb2Hw3E1BCLB+RoikVfFNwat7goB+QQv8lrDIAztOmX34NH3HQiHpeUcqiu6RmuU3qflLor5PDD9Gs9FVNy4PxTsIRNsSMGdxCMj7SjrqZd8yFhoY0g2ogeGFnkAUUA=="
 
 cyber_source_latam_pe:
   login: merchant_id
@@ -1142,7 +1142,7 @@ raven_pac_net:
 
 reach:
   merchant_id: 'xxxxxxx'
-  secret: 'xxxxxxx' 
+  secret: 'xxxxxxx'
 
 realex:
   login: X
@@ -1289,7 +1289,7 @@ shift4:
 # Working credentials, no need to replace
 simetrik:
   client_id: 'wNhJBdrKDk3vTmkQMAWi5zWN7y21adO3'
-  client_secret: 'fq2riPpiDJaAwS4_UMAXZy1_nU1jNGz0F6gAFWOJFNmm_TfC8EFiHwMmGKAEDkwY' 
+  client_secret: 'fq2riPpiDJaAwS4_UMAXZy1_nU1jNGz0F6gAFWOJFNmm_TfC8EFiHwMmGKAEDkwY'
 
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:

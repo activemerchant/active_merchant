@@ -4,8 +4,11 @@
 == HEAD
 * Stripe Payment Intents: Add support for new card on file field [aenand] #4807
 * Commerce Hub: Add `physicalGoodsIndicator` and `schemeReferenceTransactionId` GSFs [sinourain] #4786
+* Nuvei (formerly SafeCharge): Add customer details to credit action [yunnydang] #4820
+* IPG: Update live url to correct endpoint [curiousepic] #4121
 * VPos: Adding Panal Credit Card type [jherreraa] #4814
 * Stripe PI: Update parameters for creation of customer [almalee24] #4782
+* WorldPay: Update xml tag for Credit Cards [almalee24] #4797
 * PaywayDotCom: update `live_url` [jcreiff] #4824
 * Stripe & Stripe PI: Update login key validation [almalee24] #4816
 * CheckoutV2: Parse the AVS and CVV checks more often [aenand] #4822
@@ -22,7 +25,6 @@
 * Authorize.net: Truncate nameOnAccount for bank refunds [jcreiff] #4808
 * CheckoutV2: Add support for several customer data fields [rachelkirk] #4800
 * Worldpay: check payment_method responds to payment_cryptogram and eci [bbraschi] #4812
-* IPG: Update live url to correct endpoint [curiousepic] #4121
 
 == Version 1.130.0 (June 13th, 2023)
 * Payu Latam - Update error code method to surface network code [yunnydang] #4773
