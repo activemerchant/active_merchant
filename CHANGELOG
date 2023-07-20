@@ -2,6 +2,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.132.0 (July 20, 2023)
 * Stripe Payment Intents: Add support for new card on file field [aenand] #4807
 * Commerce Hub: Add `physicalGoodsIndicator` and `schemeReferenceTransactionId` GSFs [sinourain] #4786
 * Nuvei (formerly SafeCharge): Add customer details to credit action [yunnydang] #4820
