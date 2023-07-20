@@ -2,6 +2,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.133.0 (July 20, 2023)
 * CyberSource: remove credentials from tests [bbraschi] #4836
 
 == Version 1.132.0 (July 20, 2023)
