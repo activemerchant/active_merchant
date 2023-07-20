@@ -214,6 +214,22 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_purchase_with_apple_pay_includes_payment_solution_001
+    stub_comms do
+      @gateway.purchase(100, network_tokenization_credit_card('4242424242424242', source: :apple_pay))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<paymentSolution>001<\/paymentSolution>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_google_pay_includes_payment_solution_012
+    stub_comms do
+      @gateway.purchase(100, network_tokenization_credit_card('4242424242424242', source: :google_pay))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<paymentSolution>012<\/paymentSolution>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_purchase_includes_tax_management_indicator
     stub_comms do
       @gateway.purchase(100, @credit_card, tax_management_indicator: 3)
@@ -277,6 +293,22 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.authorize(100, @credit_card, customer_id: '5afefb801188d70023b7debb')
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<customerID>5afefb801188d70023b7debb<\/customerID>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorize_with_apple_pay_includes_payment_solution_001
+    stub_comms do
+      @gateway.authorize(100, network_tokenization_credit_card('4242424242424242', source: :apple_pay))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<paymentSolution>001<\/paymentSolution>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorize_with_google_pay_includes_payment_solution_012
+    stub_comms do
+      @gateway.authorize(100, network_tokenization_credit_card('4242424242424242', source: :google_pay))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<paymentSolution>012<\/paymentSolution>/, data)
     end.respond_with(successful_authorization_response)
   end
 
