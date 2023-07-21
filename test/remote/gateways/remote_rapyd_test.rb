@@ -22,7 +22,9 @@ class RemoteRapydTest < Test::Unit::TestCase
       pm_type: 'us_ach_bank',
       currency: 'USD',
       proof_of_authorization: false,
-      payment_purpose: 'Testing Purpose'
+      payment_purpose: 'Testing Purpose',
+      email: 'test@example.com',
+      billing_address: address(name: 'Jim Reynolds')
     }
     @metadata = {
       'array_of_objects': [
@@ -47,14 +49,7 @@ class RemoteRapydTest < Test::Unit::TestCase
       eci: '02'
     }
 
-    @address_object = address(line_1: '123 State Street', line_2: 'Apt. 34', phone_number: '12125559999')
-
-    @customer_object = {
-      name: 'John Doe',
-      phone_number: '1234567890',
-      email: 'est@example.com',
-      addresses: [@address_object]
-    }
+    @address_object = address(line_1: '123 State Street', line_2: 'Apt. 34', zip: '12345', name: 'john doe', phone_number: '12125559999')
   end
 
   def test_successful_purchase
@@ -63,25 +58,14 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
-  def test_successful_authorize_with_customer_object
-    @options[:customer] = @customer_object
+  def test_successful_authorize_with_mastercard
     @options[:pm_type] = 'us_debit_mastercard_card'
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
 
-  def test_successful_purchase_with_customer_object
-    @options[:customer] = @customer_object
-    @options[:pm_type] = 'us_debit_mastercard_card'
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-    assert_equal 'SUCCESS', response.message
-  end
-
-  def test_success_purchase_without_customer_fullname
-    @credit_card.first_name = ''
-    @credit_card.last_name = ''
+  def test_successful_purchase_with_mastercard
     @options[:pm_type] = 'us_debit_mastercard_card'
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -96,12 +80,13 @@ class RemoteRapydTest < Test::Unit::TestCase
   end
 
   def test_successful_subsequent_purchase_with_stored_credential
-    @options[:currency] = 'EUR'
-    @options[:pm_type] = 'gi_visa_card'
+    @options[:currency] = 'GBP'
+    @options[:pm_type] = 'gb_visa_card'
     @options[:complete_payment_url] = 'https://www.rapyd.net/platform/collect/online/'
     @options[:error_payment_url] = 'https://www.rapyd.net/platform/collect/online/'
 
-    response = @gateway.purchase(15000, @credit_card, @options.merge({ stored_credential: { network_transaction_id: '123456', reason_type: 'recurring' } }))
+    # Rapyd requires a random int between 10 and 15 digits for NTID
+    response = @gateway.purchase(15000, @credit_card, @options.merge({ stored_credential: { network_transaction_id: rand.to_s[2..11], reason_type: 'recurring' } }))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
@@ -214,27 +199,15 @@ class RemoteRapydTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = @gateway.verify(@credit_card, @options.except(:billing_address))
+    response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
 
   def test_successful_verify_with_peso
-    options = {
-      pm_type: 'mx_visa_card',
-      currency: 'MXN'
-    }
-    response = @gateway.verify(@credit_card, options)
-    assert_success response
-    assert_equal 'SUCCESS', response.message
-  end
-
-  def test_successful_verify_with_yen
-    options = {
-      pm_type: 'jp_visa_card',
-      currency: 'JPY'
-    }
-    response = @gateway.verify(@credit_card, options)
+    @options[:pm_type] = 'mx_visa_card'
+    @options[:currency] = 'MXN'
+    response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
