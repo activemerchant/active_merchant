@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
       def store(payment, options = {})
         post = {}
         add_payment(post, payment, options)
-        add_customer_object(post, payment, options)
+        add_customer_data(post, payment, options, 'store')
         add_metadata(post, options)
         add_ewallet(post, options)
         add_payment_fields(post, options)
@@ -100,14 +100,13 @@ module ActiveMerchant #:nodoc:
       def add_auth_purchase(post, money, payment, options)
         add_invoice(post, money, options)
         add_payment(post, payment, options)
-        add_customer_object(post, payment, options)
+        add_customer_data(post, payment, options)
         add_3ds(post, payment, options)
         add_address(post, payment, options)
         add_metadata(post, options)
         add_ewallet(post, options)
         add_payment_fields(post, options)
         add_payment_urls(post, options)
-        add_customer_id(post, options)
       end
 
       def add_address(post, creditcard, options)
@@ -213,12 +212,42 @@ module ActiveMerchant #:nodoc:
         post[:error_payment_url] = options[:error_payment_url] if options[:error_payment_url]
       end
 
-      def add_customer_object(post, payment, options)
-        post[:name] = "#{payment.first_name} #{payment.last_name}" unless payment.is_a?(String)
-        phone = options.dig(:billing_address, :phone) .gsub(/\D/, '') unless options[:billing_address].nil?
-        post[:phone_number] = phone || options.dig(:customer, :phone_number)
-        post[:email] = options[:email] || options.dig(:customer, :email)
-        post[:addresses] = options.dig(:customer, :addresses) if USA_PAYMENT_METHODS.include?(options[:pm_type])
+      def add_customer_data(post, payment, options, action = '')
+        post[:phone_number] = options.dig(:billing_address, :phone) .gsub(/\D/, '') unless options[:billing_address].nil?
+        post[:email] = options[:email]
+        return add_customer_id(post, options) if options[:customer_id]
+
+        if action == 'store'
+          post.merge!(customer_fields(payment, options))
+        else
+          post[:customer] = customer_fields(payment, options)
+        end
+      end
+
+      def customer_fields(payment, options)
+        return if options[:customer_id]
+
+        customer_data = {}
+        customer_data[:name] = "#{payment.first_name} #{payment.last_name}" unless payment.is_a?(String)
+        customer_data[:addresses] = [address(options)]
+        customer_data
+      end
+
+      def address(options)
+        return unless address = options[:billing_address]
+
+        formatted_address = {}
+
+        formatted_address[:name] = address[:name] if address[:name]
+        formatted_address[:line_1] = address[:address1] if address[:address1]
+        formatted_address[:line_2] = address[:address2] if address[:address2]
+        formatted_address[:city] = address[:city] if address[:city]
+        formatted_address[:state] = address[:state] if address[:state]
+        formatted_address[:country] = address[:country] if address[:country]
+        formatted_address[:zip] = address[:zip] if address[:zip]
+        formatted_address[:phone_number] = address[:phone].gsub(/\D/, '') if address[:phone]
+
+        formatted_address
       end
 
       def add_customer_id(post, options)
