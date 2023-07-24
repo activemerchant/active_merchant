@@ -401,7 +401,7 @@ module ActiveMerchant #:nodoc:
       def post_data(parameters = {}, options = {})
         return unless parameters.present?
 
-        parameters[:merchantRefNum] = options[:merchant_ref_num] || SecureRandom.hex(16).to_s
+        parameters[:merchantRefNum] = options[:merchant_ref_num] || options[:order_id] || SecureRandom.hex(16).to_s
 
         parameters.to_json
       end

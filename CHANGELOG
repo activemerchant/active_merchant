@@ -2,6 +2,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Paysafe: Map order_id to merchantRefNum [jcreiff] #4839
 
 == Version 1.133.0 (July 20, 2023)
 * CyberSource: remove credentials from tests [bbraschi] #4836

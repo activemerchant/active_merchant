@@ -243,6 +243,26 @@ class PaysafeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_merchant_ref_num_and_order_id
+    options = @options.merge({ order_id: '12345678' })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"merchantRefNum":"12345678"/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    options = @options.merge({ order_id: '12345678', merchant_ref_num: '87654321' })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"merchantRefNum":"87654321"/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
