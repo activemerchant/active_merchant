@@ -4,7 +4,14 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://checkout.rch.how/'
       self.live_url = 'https://checkout.rch.io/'
 
-      self.supported_countries = ['US']
+      self.supported_countries = %w(AE AG AL AM AT AU AW AZ BA BB BD BE BF BG BH BJ BM BN BO BR BS BW BZ CA CD CF
+                                    CH CI CL CM CN CO CR CU CV CY CZ DE DJ DK DM DO DZ EE EG ES ET FI FJ FK FR GA
+                                    GB GD GE GG GH GI GN GR GT GU GW GY HK HN HR HU ID IE IL IM IN IS IT JE JM JO
+                                    JP KE KG KH KM KN KR KW KY KZ LA LC LK LR LT LU LV LY MA MD MK ML MN MO MR MS
+                                    MT MU MV MW MX MY MZ NA NC NE NG NI NL NO NP NZ OM PA PE PF PG PH PK PL PT PY
+                                    QA RO RS RW SA SB SC SE SG SH SI SK SL SN SO SR ST SV SY SZ TD TG TH TN TO TR
+                                    TT TV TW TZ UG US UY UZ VC VN VU WF WS YE ZM)
+
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa diners_club american_express jcb master discover maestro]
 
