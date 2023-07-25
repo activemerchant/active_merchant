@@ -706,7 +706,7 @@ module ActiveMerchant #:nodoc:
         success = success_from(action, response, options)
         Response.new(
           success,
-          message_from(action, response),
+          message_from(action, response, options),
           response,
           authorization: authorization_from(action, parameters, response),
           test: test?,
@@ -776,15 +776,25 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def message_from(action, response)
-        return authorize_message_from(response) if %w(authorise authorise3d authorise3ds2).include?(action.to_s)
+      def message_from(action, response, options = {})
+        return authorize_message_from(response, options) if %w(authorise authorise3d authorise3ds2).include?(action.to_s)
 
         response['response'] || response['message'] || response['result'] || response['resultCode']
       end
 
-      def authorize_message_from(response)
+      def authorize_message_from(response, options = {})
+        return raw_authorize_error_message(response) if options[:raw_error_message]
+
         if response['refusalReason'] && response['additionalData'] && (response['additionalData']['merchantAdviceCode'] || response['additionalData']['refusalReasonRaw'])
           "#{response['refusalReason']} | #{response['additionalData']['merchantAdviceCode'] || response['additionalData']['refusalReasonRaw']}"
+        else
+          response['refusalReason'] || response['resultCode'] || response['message'] || response['result']
+        end
+      end
+
+      def raw_authorize_error_message(response)
+        if response['refusalReason'] && response['additionalData'] && response['additionalData']['refusalReasonRaw']
+          "#{response['refusalReason']} | #{response['additionalData']['refusalReasonRaw']}"
         else
           response['refusalReason'] || response['resultCode'] || response['message'] || response['result']
         end
