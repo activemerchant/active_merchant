@@ -3,6 +3,7 @@
 
 == HEAD
 * PaymentExpress: Correct endpoints [steveh] #4827
+* Adyen: Add option to elect which error message [aenand] #4843
 
 == Version 1.134.0 (July 25, 2023)
 * Update required Ruby version [almalee24] #4823
