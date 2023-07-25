@@ -2,11 +2,14 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* Paysafe: Map order_id to merchantRefNum [jcreiff] #4839
-* Stripe PI: Gate sending NTID [almalee24] #4828
+
+== Version 1.134.0 (July 25, 2023)
+* Update required Ruby version [almalee24] #4823
 
 == Version 1.133.0 (July 20, 2023)
 * CyberSource: remove credentials from tests [bbraschi] #4836
+* Paysafe: Map order_id to merchantRefNum [jcreiff] #4839
+* Stripe PI: Gate sending NTID [almalee24] #4828
 
 == Version 1.132.0 (July 20, 2023)
 * Stripe Payment Intents: Add support for new card on file field [aenand] #4807
