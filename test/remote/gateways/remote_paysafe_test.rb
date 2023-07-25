@@ -148,6 +148,20 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert_equal 'F', response.params['airlineTravelDetails']['tripLegs']['leg2']['serviceClass']
   end
 
+  def test_successful_purchase_with_truncated_address
+    options = {
+      billing_address: {
+        address1: "This is an extremely long address, it is unreasonably long and we can't allow it.",
+        address2: "This is an extremely long address2, it is unreasonably long and we can't allow it.",
+        city: 'Lake Chargoggagoggmanchauggagoggchaubunagungamaugg',
+        state: 'NC',
+        zip: '27701'
+      }
+    }
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+  end
+
   def test_successful_purchase_with_token
     response = @gateway.purchase(200, @pm_token, @options)
     assert_success response

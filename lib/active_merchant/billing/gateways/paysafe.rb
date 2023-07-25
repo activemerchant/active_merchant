@@ -124,12 +124,13 @@ module ActiveMerchant #:nodoc:
         return unless address = options[:billing_address] || options[:address]
 
         post[:billingDetails] = {}
-        post[:billingDetails][:street] = address[:address1]
-        post[:billingDetails][:city] = address[:city]
-        post[:billingDetails][:state] = address[:state]
+        post[:billingDetails][:street] = truncate(address[:address1], 50)
+        post[:billingDetails][:street2] = truncate(address[:address2], 50)
+        post[:billingDetails][:city] = truncate(address[:city], 40)
+        post[:billingDetails][:state] = truncate(address[:state], 40)
         post[:billingDetails][:country] = address[:country]
-        post[:billingDetails][:zip] = address[:zip]
-        post[:billingDetails][:phone] = address[:phone]
+        post[:billingDetails][:zip] = truncate(address[:zip], 10)
+        post[:billingDetails][:phone] = truncate(address[:phone], 40)
       end
 
       # The add_address_for_vaulting method is applicable to the store method, as the APIs address
@@ -138,12 +139,12 @@ module ActiveMerchant #:nodoc:
         return unless address = options[:billing_address] || options[:address]
 
         post[:card][:billingAddress] = {}
-        post[:card][:billingAddress][:street] = address[:address1]
-        post[:card][:billingAddress][:street2] = address[:address2]
-        post[:card][:billingAddress][:city] = address[:city]
-        post[:card][:billingAddress][:zip] = address[:zip]
+        post[:card][:billingAddress][:street] = truncate(address[:address1], 50)
+        post[:card][:billingAddress][:street2] = truncate(address[:address2], 50)
+        post[:card][:billingAddress][:city] = truncate(address[:city], 40)
+        post[:card][:billingAddress][:zip] = truncate(address[:zip], 10)
         post[:card][:billingAddress][:country] = address[:country]
-        post[:card][:billingAddress][:state] = address[:state] if address[:state]
+        post[:card][:billingAddress][:state] = truncate(address[:state], 40) if address[:state]
       end
 
       # This data is specific to creating a profile at the gateway's vault level
