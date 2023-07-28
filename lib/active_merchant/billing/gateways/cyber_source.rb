@@ -556,7 +556,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_merchant_data(xml, options)
-        xml.tag! 'merchantID', @options[:login]
+        xml.tag! 'merchantID', options[:merchant_id] || @options[:login]
         xml.tag! 'merchantReferenceCode', options[:order_id] || generate_unique_id
         xml.tag! 'clientLibrary', 'Ruby Active Merchant'
         xml.tag! 'clientLibraryVersion', VERSION

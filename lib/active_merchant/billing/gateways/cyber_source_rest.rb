@@ -330,7 +330,7 @@ module ActiveMerchant #:nodoc:
         add_reconciliation_id(post, options)
         add_sec_code(post, options)
         add_invoice_number(post, options)
-        response = parse(ssl_post(url(action), post.to_json, auth_headers(action, post)))
+        response = parse(ssl_post(url(action), post.to_json, auth_headers(action, options, post)))
         Response.new(
           success_from(response),
           message_from(response),
@@ -396,14 +396,14 @@ module ActiveMerchant #:nodoc:
         Base64.strict_encode64(OpenSSL::HMAC.digest('sha256', decoded_key, payload))
       end
 
-      def auth_headers(action, post, http_method = 'post')
+      def auth_headers(action, options, post, http_method = 'post')
         digest = "SHA-256=#{Digest::SHA256.base64digest(post.to_json)}" if post.present?
         date = Time.now.httpdate
 
         {
           'Accept' => 'application/hal+json;charset=utf-8',
           'Content-Type' => 'application/json;charset=utf-8',
-          'V-C-Merchant-Id' => @options[:merchant_id],
+          'V-C-Merchant-Id' => options[:merchant_id] || @options[:merchant_id],
           'Date' => date,
           'Host' => host,
           'Signature' => get_http_signature(action, digest, http_method, date),

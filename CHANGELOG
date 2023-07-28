@@ -9,6 +9,7 @@
 * Braintree: Support third party Network Tokens [aenand] #4775
 * Kushki: Fix add amount default method for subtotalIva and subtotalIva0 [yunnydang] #4845
 * Rapyd: Add customer object to requests [aenand] #4838
+* CyberSource: Add merchant_id [almalee24] #4844
 
 == Version 1.134.0 (July 25, 2023)
 * Update required Ruby version [almalee24] #4823

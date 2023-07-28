@@ -204,9 +204,10 @@ class CyberSourceRestTest < Test::Unit::TestCase
 
   def test_authorize_google_pay_master_card
     stub_comms do
-      @gateway.authorize(100, @google_pay_mc, @options)
-    end.check_request do |_endpoint, data, _headers|
+      @gateway.authorize(100, @google_pay_mc, @options.merge(merchant_id: 'MerchantId'))
+    end.check_request do |_endpoint, data, headers|
       request = JSON.parse(data)
+      assert_equal 'MerchantId', headers['V-C-Merchant-Id']
       assert_equal '002', request['paymentInformation']['tokenizedCard']['type']
       assert_equal '1', request['paymentInformation']['tokenizedCard']['transactionType']
       assert_nil request['paymentInformation']['tokenizedCard']['requestorId']

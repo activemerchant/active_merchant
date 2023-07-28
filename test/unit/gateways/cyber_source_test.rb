@@ -66,8 +66,9 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_other_tax_fields
     stub_comms do
-      @gateway.purchase(100, @credit_card, @options.merge(national_tax_indicator: 1, vat_tax_rate: 1.01))
+      @gateway.purchase(100, @credit_card, @options.merge!(national_tax_indicator: 1, vat_tax_rate: 1.01, merchant_id: 'MerchantId'))
     end.check_request do |_endpoint, data, _headers|
+      assert_match(/<merchantID>MerchantId<\/merchantID>/, data)
       assert_match(/<otherTax>\s+<vatTaxRate>1.01<\/vatTaxRate>\s+<nationalTaxIndicator>1<\/nationalTaxIndicator>\s+<\/otherTax>/m, data)
     end.respond_with(successful_purchase_response)
   end
