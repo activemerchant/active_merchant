@@ -1,8 +1,14 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SecurionPayGateway < Gateway
+      class_attribute :shift4_v2_test_url
+      class_attribute :shift4_v2_live_url
+
       self.test_url = 'https://api.securionpay.com/'
       self.live_url = 'https://api.securionpay.com/'
+
+      self.shift4_v2_test_url = 'https://api.shift4.com/'
+      self.shift4_v2_live_url = 'https://api.shift4.com/'
 
       self.supported_countries = %w(AD BE BG CH CY CZ DE DK EE ES FI FO FR GI GL GR GS GT HR HU IE IS IT LI LR LT
                                     LU LV MC MT MU MV MW NL NO PL RO SE SI)
@@ -59,6 +65,11 @@ module ActiveMerchant #:nodoc:
         commit("charges/#{CGI.escape(authorization)}/refund", post, options)
       end
 
+      def credit(money, payment, options = {})
+        post = create_post_for_auth_or_purchase(money, payment, options)
+        commit('credits', post, options)
+      end
+
       def void(authorization, options = {})
         commit("charges/#{CGI.escape(authorization)}/refund", {}, options)
       end
@@ -101,7 +112,10 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
-          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]')
+          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]').
+          gsub(%r((card\[expMonth\]=)\d+), '\1[FILTERED]').
+          gsub(%r((card\[expYear\]=)\d+), '\1[FILTERED]').
+          gsub(%r((card\[cardholderName\]=)\w+[^ ]\w+), '\1[FILTERED]')
       end
 
       private
@@ -132,6 +146,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options, true)
         add_creditcard(post, payment, options)
         add_customer(post, payment, options)
+        add_stored_credentials(post, options)
         add_customer_data(post, options)
         add_external_three_ds(post, options)
         if options[:email]
@@ -153,6 +168,23 @@ module ActiveMerchant #:nodoc:
             eci: options[:three_d_secure][:eci]
           }.merge(xid_or_ds_trans_id(options[:three_d_secure]))
         }
+      end
+
+      def add_stored_credentials(post, options)
+        return unless options[:stored_credential]
+
+        initiator = options.dig(:stored_credential, :initiator)
+        reason_type = options.dig(:stored_credential, :reason_type)
+
+        if initiator == 'cardholder' && reason_type == 'recurring'
+          post[:type] = 'first_recurring'
+        elsif initiator == 'merchant' && reason_type == 'recurring'
+          post[:type] = 'subsequent_recurring'
+        elsif initiator == 'cardholder' && reason_type == 'unscheduled'
+          post[:type] = 'customer_initiated'
+        elsif initiator == 'merchant' && reason_type == 'installment'
+          post[:type] = 'merchant_initiated'
+        end
       end
 
       def xid_or_ds_trans_id(three_ds)
@@ -275,7 +307,8 @@ module ActiveMerchant #:nodoc:
         raw_response = response = nil
         begin
           if method.blank?
-            raw_response = ssl_post(self.live_url + endpoint, post_data(parameters), headers(options))
+            url = shift4_v2? ? self.shift4_v2_live_url : self.live_url
+            raw_response = ssl_post(url + endpoint, post_data(parameters), headers(options))
           else
             raw_response = ssl_request(method, self.live_url + endpoint, post_data(parameters), headers(options))
           end
@@ -287,6 +320,10 @@ module ActiveMerchant #:nodoc:
           response = json_error(raw_response)
         end
         response
+      end
+
+      def shift4_v2?
+        @options[:url_override].to_s == 'shift4_v2'
       end
 
       def json_error(raw_response)

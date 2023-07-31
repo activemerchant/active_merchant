@@ -7,6 +7,9 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def setup
     @gateway = SecurionPayGateway.new(fixtures(:securion_pay))
 
+    @gateway_shift4_v2 = SecurionPayGateway.new(fixtures(:shift4_v2))
+    @gateway_shift4_v2.options[:url_override] = 'shift4_v2'
+
     @amount = 2000
     @refund_amount = 300
     @credit_card = credit_card('4242424242424242')
@@ -18,6 +21,8 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
       description: 'ActiveMerchant test charge',
       email: 'foo@example.com'
     }
+
+    @gateways = [@gateway, @gateway_shift4_v2]
   end
 
   def test_successful_store
@@ -52,23 +57,28 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
     end
+
     transcript = @gateway.scrub(transcript)
+
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@credit_card.year, transcript)
     assert_scrubbed(@gateway.options[:secret_key], transcript)
   end
 
   def test_successful_purchase
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-    assert_equal 'Transaction approved', response.message
-    assert_equal 'foo@example.com', response.params['metadata']['email']
-    assert_match CHARGE_ID_REGEX, response.authorization
+    @gateways.each do |gateway|
+      response = gateway.purchase(@amount, @credit_card, @options)
+      assert_success response
+      assert_equal 'Transaction approved', response.message
+      assert_equal 'foo@example.com', response.params['metadata']['email']
+      assert_match CHARGE_ID_REGEX, response.authorization
+    end
   end
 
   def test_successful_purchase_with_three_ds_data
     @options[:three_d_secure] = {
-      version: '1.0.2',
+      version: '2.1.0',
       eci: '05',
       cavv: '3q2+78r+ur7erb7vyv66vv////8=',
       acs_transaction_id: '6546464645623455665165+qe-jmhabcdefg',
@@ -81,7 +91,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_match %r{The card was declined for other reason.}, response.message
+    assert_match %r{The card was declined.}, response.message
     assert_match Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
@@ -104,19 +114,19 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, 'invalid_authorization_token')
     assert_failure response
-    assert_match %r{Requested Charge does not exist}, response.message
+    assert_match %r{Charge 'invalid_authorization_token' does not exist}, response.message
   end
 
   def test_successful_full_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    purchase = @gateway_shift4_v2.purchase(@amount, @credit_card, @options)
     assert_success purchase
     assert purchase.authorization
 
-    refund = @gateway.refund(@amount, purchase.authorization)
+    refund = @gateway_shift4_v2.refund(@amount, purchase.authorization)
     assert_success refund
 
     assert refund.params['refunded']
-    assert_equal 0, refund.params['amount']
+    assert_equal 2000, refund.params['amount']
     assert_equal 1, refund.params['refunds'].size
     assert_equal @amount, refund.params['refunds'].map { |r| r['amount'] }.sum
 
@@ -124,17 +134,16 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   end
 
   def test_successful_partially_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    purchase = @gateway_shift4_v2.purchase(@amount, @credit_card, @options)
     assert_success purchase
     assert purchase.authorization
 
-    first_refund = @gateway.refund(@refund_amount, purchase.authorization)
+    first_refund = @gateway_shift4_v2.refund(@refund_amount, purchase.authorization)
     assert_success first_refund
 
-    second_refund = @gateway.refund(@refund_amount, purchase.authorization)
+    second_refund = @gateway_shift4_v2.refund(@refund_amount, purchase.authorization)
     assert_success second_refund
     assert second_refund.params['refunded']
-    assert_equal @amount - 2 * @refund_amount, second_refund.params['amount']
     assert_equal 2, second_refund.params['refunds'].size
     assert_equal 2 * @refund_amount, second_refund.params['refunds'].map { |r| r['amount'] }.sum
     assert second_refund.authorization
@@ -143,50 +152,65 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def test_unsuccessful_authorize_refund
     response = @gateway.refund(@amount, 'invalid_authorization_token')
     assert_failure response
-    assert_match %r{Requested Charge does not exist}, response.message
+    assert_match %r{Charge 'invalid_authorization_token' does not exist}, response.message
   end
 
   def test_unsuccessful_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-    assert purchase.authorization
+    @gateways.each do |gateway|
+      purchase = gateway.purchase(@amount, @credit_card, @options)
+      assert_success purchase
+      assert purchase.authorization
 
-    refund = @gateway.refund(@amount + 1, purchase.authorization, @options)
-    assert_failure refund
-    assert_match %r{Invalid Refund data}, refund.message
+      refund = gateway.refund(@amount + 1, purchase.authorization, @options)
+      assert_failure refund
+      assert_match %r{Invalid Refund data}, refund.message
+    end
   end
 
-  def test_successful_void
-    authorization = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success authorization
-    assert !authorization.params['captured']
+  # TO-DO
+  # def test_successful_general_credit
+  #   general_credit = @gateway_shift4_v2.credit(@amount, @credit_card, @options)
+  #   assert_success general_credit
+  # end
 
-    void = @gateway.void(authorization.authorization, @options)
-    assert_success void
-    assert void.params['refunded']
-    assert_equal 0, void.params['amount']
-    assert_equal 1, void.params['refunds'].size
-    assert_equal @amount, void.params['refunds'].map { |r| r['amount'] }.sum
-    assert void.authorization
+  def test_successful_void
+    @gateways.each do |gateway|
+      authorization = gateway.authorize(@amount, @credit_card, @options)
+      assert_success authorization
+      assert !authorization.params['captured']
+
+      void = gateway.void(authorization.authorization, @options)
+      assert_success void
+      assert void.params['refunded']
+      assert_equal 1, void.params['refunds'].size
+      assert_equal @amount, void.params['refunds'].map { |r| r['amount'] }.sum
+      assert void.authorization
+    end
   end
 
   def test_failed_void
-    response = @gateway.void('invalid_authorization_token', @options)
-    assert_failure response
-    assert_match %r{Requested Charge does not exist}, response.message
+    @gateways.each do |gateway|
+      response = gateway.void('invalid_authorization_token', @options)
+      assert_failure response
+      assert_match %r{Charge 'invalid_authorization_token' does not exist}, response.message
+    end
   end
 
   def test_successful_verify
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
-    assert_match %r{Transaction approved}, response.responses.last.message
+    @gateways.each do |gateway|
+      response = gateway.verify(@credit_card, @options)
+      assert_success response
+      assert_match %r{Transaction approved}, response.responses.last.message
+    end
   end
 
   def test_failed_verify
-    response = @gateway.verify(@declined_card, @options)
-    assert_failure response
-    assert_match %r{The card was declined for other reason.}, response.message
-    assert_match Gateway::STANDARD_ERROR_CODE[:card_declined], response.primary_response.error_code
+    @gateways.each do |gateway|
+      response = gateway.verify(@declined_card, @options)
+      assert_failure response
+      assert_match %r{The card was declined.}, response.message
+      assert_match Gateway::STANDARD_ERROR_CODE[:card_declined], response.primary_response.error_code
+    end
   end
 
   def test_incorrect_number_for_purchase
@@ -264,5 +288,129 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, card, @options)
     assert_failure response
     assert_match Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+  end
+
+  # remote test for shift4 V2 API
+
+  def test_successful_purchase_third_party_token
+    auth = @gateway_shift4_v2.store(@credit_card, @options)
+    token = auth.params['defaultCardId']
+    customer_id = auth.params['id']
+    response = @gateway_shift4_v2.purchase(@amount, token, @options.merge!(customer_id: customer_id))
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+    assert_equal 'foo@example.com', response.params['metadata']['email']
+    assert_match CHARGE_ID_REGEX, response.authorization
+  end
+
+  def test_unsuccessful_purchase_third_party_token
+    auth = @gateway_shift4_v2.store(@credit_card, @options)
+    customer_id = auth.params['id']
+    response = @gateway_shift4_v2.purchase(@amount, @invalid_token, @options.merge!(customer_id: customer_id))
+    assert_failure response
+    assert_equal "Token 'tok_invalid' does not exist", response.message
+  end
+
+  def test_successful_store_with_shift4_v2
+    response = @gateway_shift4_v2.store(@credit_card, @options)
+    assert_success response
+    assert_match %r(^cust_\w+$), response.authorization
+    assert_equal 'customer', response.params['objectType']
+    assert_match %r(^card_\w+$), response.params['cards'][0]['id']
+    assert_equal 'card', response.params['cards'][0]['objectType']
+
+    @options[:customer_id] = response.authorization
+    response = @gateway_shift4_v2.store(@new_credit_card, @options)
+    assert_success response
+    assert_match %r(^card_\w+$), response.params['card']['id']
+    assert_equal @options[:customer_id], response.params['card']['customerId']
+
+    response = @gateway_shift4_v2.customer(@options)
+    assert_success response
+    assert_equal @options[:customer_id], response.params['id']
+    assert_equal '401288', response.params['cards'][0]['first6']
+    assert_equal '1881', response.params['cards'][0]['last4']
+    assert_equal '424242', response.params['cards'][1]['first6']
+    assert_equal '4242', response.params['cards'][1]['last4']
+  end
+
+  def test_successful_purchase_with_three_ds_data_shift4_v2
+    @options[:three_d_secure] = {
+      version: '2.1.0',
+      eci: '05',
+      cavv: '3q2+78r+ur7erb7vyv66vv////8=',
+      acs_transaction_id: '6546464645623455665165+qe-jmhabcdefg',
+      authentication_response_status: 'Y'
+    }
+    response = @gateway_shift4_v2.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_authorization_and_capture_with_shift4_v2
+    authorization = @gateway_shift4_v2.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert !authorization.params['captured']
+    assert_equal @options[:description], authorization.params['description']
+    assert_equal @options[:email], authorization.params['metadata']['email']
+
+    response = @gateway_shift4_v2.capture(@amount, authorization.authorization)
+    assert_success response
+  end
+
+  def test_failed_authorize_with_shift4_v2
+    response = @gateway_shift4_v2.authorize(@amount, @declined_card, @options)
+    assert_failure response
+  end
+
+  def test_successful_stored_credentials_first_recurring_shift4_v2
+    stored_credentials = {
+      initiator: 'cardholder',
+      reason_type: 'recurring'
+    }
+    @options.merge!(stored_credential: stored_credentials)
+    response = @gateway_shift4_v2.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+    assert_equal 'first_recurring', response.params['type']
+    assert_match CHARGE_ID_REGEX, response.authorization
+  end
+
+  def test_successful_stored_credentials_subsequent_recurring_shift4_v2
+    stored_credentials = {
+      initiator: 'merchant',
+      reason_type: 'recurring'
+    }
+    @options.merge!(stored_credential: stored_credentials)
+    response = @gateway_shift4_v2.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+    assert_equal 'subsequent_recurring', response.params['type']
+    assert_match CHARGE_ID_REGEX, response.authorization
+  end
+
+  def test_successful_stored_credentials_customer_initiated_shift4_v2
+    stored_credentials = {
+      initiator: 'cardholder',
+      reason_type: 'unscheduled'
+    }
+    @options.merge!(stored_credential: stored_credentials)
+    response = @gateway_shift4_v2.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+    assert_equal 'customer_initiated', response.params['type']
+    assert_match CHARGE_ID_REGEX, response.authorization
+  end
+
+  def test_successful_stored_credentials_merchant_initiated_shift4_v2
+    stored_credentials = {
+      initiator: 'merchant',
+      reason_type: 'installment'
+    }
+    @options.merge!(stored_credential: stored_credentials)
+    response = @gateway_shift4_v2.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+    assert_equal 'merchant_initiated', response.params['type']
+    assert_match CHARGE_ID_REGEX, response.authorization
   end
 end

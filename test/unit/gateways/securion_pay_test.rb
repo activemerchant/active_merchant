@@ -29,6 +29,19 @@ class SecurionPayTest < Test::Unit::TestCase
     }
   end
 
+  def test_successful_shift4_v2_url
+    @gateway = SecurionPayGateway.new(
+      secret_key: 'pr_test_SyMyCpIJosFIAESEsZUd3TgN',
+      url_override: 'shift4_v2'
+    )
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card)
+    end.check_request do |_method, endpoint, _data, _headers|
+      assert_match(/api\.shift4\.com\//, endpoint)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
     @gateway.expects(:ssl_post).returns(successful_new_customer_response)
@@ -70,6 +83,42 @@ class SecurionPayTest < Test::Unit::TestCase
 
     assert_equal 'char_J10t4hOZCHGO2izfJPKLM9W5', response.authorization
     assert response.test?
+  end
+
+  def test_successful_stored_credentials_customer_initiated_shift4_v2
+    @options.merge!(stored_credential: stored_credential(:cardholder, :unscheduled))
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/type=customer_initiated/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_stored_credentials_first_recurring_shift4_v2
+    @options.merge!(stored_credential: stored_credential(:cardholder, :recurring))
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/type=first_recurring/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_stored_credentials_merchant_initiated_shift4_v2
+    @options.merge!(stored_credential: stored_credential(:merchant, :installment))
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/type=merchant_initiated/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_stored_credentials_subsequent_recurring_shift4_v2
+    @options.merge!(stored_credential: stored_credential(:merchant, :recurring, ntid: 'abc123'))
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/type=subsequent_recurring/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_three_ds_v1_object_construction
@@ -224,9 +273,9 @@ class SecurionPayTest < Test::Unit::TestCase
     assert_equal @options[:billing_address][:city], post[:card][:addressCity]
   end
 
-  def test_ensure_does_not_respond_to_credit
-    assert !@gateway.respond_to?(:credit)
-  end
+  # TO-DO
+  # def test_successfull_credit
+  # end
 
   def test_address_is_included_with_card_data
     stub_comms(@gateway, :ssl_request) do
@@ -433,7 +482,7 @@ class SecurionPayTest < Test::Unit::TestCase
       starting SSL for api.securionpay.com:443...
       SSL established
       <- "POST /charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: SecurionPay/v1 ActiveMerchantBindings/1.47.0\r\nAccept-Encoding: gzip;q=0,deflate;q=0.6\r\nAccept: */*\r\nConnection: close\r\nHost: api.securionpay.com\r\nContent-Length: 214\r\n\r\n"
-      <- "amount=2000&currency=usd&card[number]=[FILTERED]&card[expMonth]=9&card[expYear]=2016&card[cvc]=[FILTERED]&card[cardholderName]=Longbob+Longsen&description=ActiveMerchant+test+charge&metadata[email]=foo%40example.com"
+      <- "amount=2000&currency=usd&card[number]=[FILTERED]&card[expMonth]=[FILTERED]&card[expYear]=[FILTERED]&card[cvc]=[FILTERED]&card[cardholderName]=[FILTERED]&description=ActiveMerchant+test+charge&metadata[email]=foo%40example.com"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: cloudflare-nginx\r\n"
       -> "Date: Fri, 12 Jun 2015 21:36:39 GMT\r\n"
