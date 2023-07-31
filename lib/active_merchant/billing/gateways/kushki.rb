@@ -135,9 +135,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount_defaults(sum, money, options)
-        sum[:subtotalIva] = amount(money).to_f
+        sum[:subtotalIva] = 0
         sum[:iva] = 0
-        sum[:subtotalIva0] = 0
+        sum[:subtotalIva0] = amount(money).to_f
 
         sum[:ice] = 0 if sum[:currency] != 'COP'
       end
