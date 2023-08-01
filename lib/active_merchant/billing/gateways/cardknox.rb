@@ -263,6 +263,7 @@ module ActiveMerchant #:nodoc:
           result:            fields['xResult'],
           status:            fields['xStatus'],
           error:             fields['xError'],
+          error_code:        fields['xErrorCode'],
           auth_code:         fields['xAuthCode'],
           ref_num:           fields['xRefNum'],
           current_ref_num:   fields['xRefNumCurrent'],
