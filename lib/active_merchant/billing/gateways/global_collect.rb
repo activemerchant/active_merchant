@@ -138,6 +138,7 @@ module ActiveMerchant #:nodoc:
         airline_data['isThirdParty'] = options[:airline_data][:is_third_party] if options[:airline_data][:is_third_party]
         airline_data['issueDate'] = options[:airline_data][:issue_date] if options[:airline_data][:issue_date]
         airline_data['merchantCustomerId'] = options[:airline_data][:merchant_customer_id] if options[:airline_data][:merchant_customer_id]
+        airline_data['agentNumericCode'] = options[:airline_data][:agent_numeric_code] if options[:airline_data][:agent_numeric_code]
         airline_data['flightLegs'] = add_flight_legs(airline_options)
         airline_data['passengers'] = add_passengers(airline_options)
 
@@ -347,7 +348,8 @@ module ActiveMerchant #:nodoc:
         shipping_address = options[:shipping_address]
         if billing_address = options[:billing_address] || options[:address]
           post['order']['customer']['billingAddress'] = {
-            'street' => truncate(billing_address[:address1], 50),
+            'street' => truncate(split_address(billing_address[:address1])[1], 50),
+            'houseNumber' => split_address(billing_address[:address1])[0],
             'additionalInfo' => truncate(billing_address[:address2], 50),
             'zip' => billing_address[:zip],
             'city' => billing_address[:city],
@@ -357,7 +359,8 @@ module ActiveMerchant #:nodoc:
         end
         if shipping_address
           post['order']['customer']['shippingAddress'] = {
-            'street' => truncate(shipping_address[:address1], 50),
+            'street' => truncate(split_address(shipping_address[:address1])[1], 50),
+            'houseNumber' => split_address(shipping_address[:address1])[0],
             'additionalInfo' => truncate(shipping_address[:address2], 50),
             'zip' => shipping_address[:zip],
             'city' => shipping_address[:city],

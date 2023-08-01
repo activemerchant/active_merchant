@@ -278,6 +278,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
         is_third_party: 'true',
         issue_date: 'tday',
         merchant_customer_id: 'MIDs',
+        agent_numeric_code: '12345',
         passengers: [
           { first_name: 'Randi',
             surname: 'Smith',
@@ -416,7 +417,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 135, response.params['payment']['paymentOutput']['cardPaymentMethodSpecificOutput']['paymentProductId']
   end
 
-  def test_successful_purchase_with_truncated_address
+  def test_successful_purchase_with_truncated_split_address
     response = @gateway.purchase(@amount, @credit_card, @long_address)
     assert_success response
     assert_equal 'Succeeded', response.message

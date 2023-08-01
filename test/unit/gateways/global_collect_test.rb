@@ -238,6 +238,7 @@ class GlobalCollectTest < Test::Unit::TestCase
         name: 'Spreedly Airlines',
         flight_date: '20190810',
         passenger_name: 'Randi Smith',
+        agent_numeric_code: '12345',
         flight_legs: [
           { arrival_airport: 'BDL',
             origin_airport: 'RDU',
@@ -388,7 +389,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match %r("fraudFields":{"website":"www.example.com","giftMessage":"Happy Day!","customerIpAddress":"127.0.0.1"}), data
       assert_match %r("merchantReference":"123"), data
-      assert_match %r("customer":{"personalInformation":{"name":{"firstName":"Longbob","surname":"Longsen"}},"merchantCustomerId":"123987","contactDetails":{"emailAddress":"example@example.com","phoneNumber":"\(555\)555-5555"},"billingAddress":{"street":"456 My Street","additionalInfo":"Apt 1","zip":"K1C2N6","city":"Ottawa","state":"ON","countryCode":"CA"}}}), data
+      assert_match %r("customer":{"personalInformation":{"name":{"firstName":"Longbob","surname":"Longsen"}},"merchantCustomerId":"123987","contactDetails":{"emailAddress":"example@example.com","phoneNumber":"\(555\)555-5555"},"billingAddress":{"street":"My Street","houseNumber":"456","additionalInfo":"Apt 1","zip":"K1C2N6","city":"Ottawa","state":"ON","countryCode":"CA"}}}), data
       assert_match %r("paymentProductId":"123ABC"), data
     end.respond_with(successful_authorize_response)
 
@@ -455,7 +456,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_truncates_address_fields
+  def test_truncates_split_address_fields
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@accepted_amount, @credit_card, {
         billing_address: {
@@ -468,7 +469,8 @@ class GlobalCollectTest < Test::Unit::TestCase
         }
       })
     end.check_request do |_method, _endpoint, data, _headers|
-      refute_match(/Supercalifragilisticexpialidociousthiscantbemorethanfiftycharacters/, data)
+      assert_equal(JSON.parse(data)['order']['customer']['billingAddress']['houseNumber'], '1234')
+      assert_equal(JSON.parse(data)['order']['customer']['billingAddress']['street'], 'Supercalifragilisticexpialidociousthiscantbemoreth')
     end.respond_with(successful_capture_response)
     assert_success response
   end
