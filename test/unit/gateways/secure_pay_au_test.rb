@@ -63,6 +63,20 @@ class SecurePayAuTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_recurring_flag
+    stub_comms do
+      @gateway.store(@credit_card, {billing_id: 'test3', amount: 123, recurring: true})
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{<recurringFlag>yes<\/recurringFlag>}, data
+    end.respond_with(successful_store_response)
+
+    stub_comms do
+      @gateway.purchase(@amount, '123', {billing_id: 'test3', amount: 123, recurring: true})
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{<recurringFlag>yes<\/recurringFlag>}, data
+    end.respond_with(successful_store_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
