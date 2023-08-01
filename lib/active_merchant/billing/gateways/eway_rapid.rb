@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
       class_attribute :partner_id
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, :api_key, :password)
         super
       end
 
@@ -306,7 +306,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(url, params)
         headers = {
-          'Authorization' => ('Basic ' + Base64.strict_encode64(@options[:login].to_s + ':' + @options[:password].to_s).chomp),
+          'Authorization' => ('Basic ' + Base64.strict_encode64(@options[:api_key].to_s + ':' + @options[:password].to_s).chomp),
           'Content-Type' => 'application/json'
         }
         request = params.to_json
