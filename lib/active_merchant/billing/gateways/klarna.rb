@@ -60,6 +60,10 @@ module ActiveMerchant
         end
       end
 
+      def store(authorize_token, options = {})
+        Klarna.client(:payment).customer_token(authorize_token, options)
+      end
+
       def capture(amount, order_id, options={})
         response = Klarna.client.capture(order_id, {captured_amount: amount, shipping_info: options[:shipping_info]})
 

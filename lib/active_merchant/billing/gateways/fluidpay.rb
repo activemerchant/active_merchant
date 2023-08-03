@@ -62,7 +62,30 @@ module ActiveMerchant #:nodoc:
         true
       end
 
+      def store(payment_method, options = {})
+        post = {}
+        user_info(post, payment_method, options)
+        commit('customer', post)
+      end
+
       private
+
+      def user_info(post, payment_method, options)
+        post[:description] = options[:description]
+        post[:default_payment] = {}
+        post[:default_payment][:card] = {}
+        post[:default_payment][:card][:number] = payment_method.number
+        post[:default_payment][:card][:expiration_date] = exp_date(payment_method)
+        add_customer_data(post, options)
+        if post[:billing_address].present?
+          post[:default_billing_address] = post[:billing_address]
+          post.delete(:billing_address)
+        end
+        if post[:shipping_address].present?
+          post[:default_shipping_address] = post[:shipping_address]
+          post.delete(:shipping_address)
+        end
+      end
 
       def add_level3_fields(post, options)
         add_fields_to_post_if_present(post, options, %i[tax_amount shipping_amount po_number])
@@ -170,7 +193,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, params)
-        request_url = "#{url}/api/transaction"
+        request_url = action == "customer" ? "#{url}/api/vault/customer" : "#{url}/api/transaction"
         request_url = (request_url + "/" + params[:transactionid] + "/" + action) if params[:transactionid].present?
         raw_response = ssl_post(request_url, params.to_json, headers)
         response = parse(raw_response)
