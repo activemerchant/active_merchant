@@ -927,6 +927,25 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
   end
 
+  def test_failed_credit_with_merchant_account_id
+    assert response = @gateway.credit(@declined_amount, credit_card('4000111111111115'), merchant_account_id: fixtures(:braintree_blue)[:merchant_account_id])
+    assert_failure response
+    assert_equal '2000 Do Not Honor', response.message
+    assert_equal '2000 : Do Not Honor', response.params['braintree_transaction']['additional_processor_response']
+  end
+
+  def test_successful_credit_using_card_token
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert_equal 'OK', response.message
+    credit_card_token = response.params['credit_card_token']
+
+    assert response = @gateway.credit(@amount, credit_card_token, { merchant_account_id: fixtures(:braintree_blue)[:merchant_account_id], payment_method_token: true })
+    assert_success response, 'You must specify a valid :merchant_account_id key in your fixtures.yml AND get credits enabled in your Sandbox account for this to pass.'
+    assert_equal '1002 Processed', response.message
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+  end
+
   def test_successful_authorize_with_merchant_account_id
     assert response = @gateway.authorize(@amount, @credit_card, merchant_account_id: fixtures(:braintree_blue)[:merchant_account_id])
     assert_success response, 'You must specify a valid :merchant_account_id key in your fixtures.yml for this to pass.'

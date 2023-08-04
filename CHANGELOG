@@ -12,6 +12,7 @@
 * CyberSource: Add merchant_id [almalee24] #4844
 * Global Collect: Add agent numeric code and house number field [yunnydang] #4847
 * Deepstack: Add Deepstack Gateway [khoinguyendeepstack] #4830
+* Braintree: Additional tests for credit transactions [jcreiff] #4848
 
 
 == Version 1.134.0 (July 25, 2023)
