@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options)
         add_ewallet(post, options)
         add_payment_fields(post, options)
-        add_payment_urls(post, options)
+        add_payment_urls(post, options, 'store')
         add_address(post, payment, options)
         commit(:post, 'customers', post)
       end
@@ -135,7 +135,7 @@ module ActiveMerchant #:nodoc:
         elsif payment.is_a?(Check)
           add_ach(post, payment, options)
         else
-          add_token(post, payment, options)
+          add_tokens(post, payment, options)
         end
       end
 
@@ -174,10 +174,13 @@ module ActiveMerchant #:nodoc:
         post[:payment_method][:fields][:payment_purpose] = options[:payment_purpose] if options[:payment_purpose]
       end
 
-      def add_token(post, payment, options)
-        return unless token = payment.split('|')[1]
+      def add_tokens(post, payment, options)
+        return unless payment.respond_to?(:split)
 
-        post[:payment_method] = token
+        customer_id, card_id = payment.split('|')
+
+        post[:customer] = customer_id
+        post[:payment_method] = card_id
       end
 
       def add_3ds(post, payment, options)
@@ -201,20 +204,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_fields(post, options)
-        post[:payment] = {}
-
-        post[:payment][:description] = options[:description] if options[:description]
-        post[:payment][:statement_descriptor] = options[:statement_descriptor] if options[:statement_descriptor]
+        post[:description] = options[:description] if options[:description]
+        post[:statement_descriptor] = options[:statement_descriptor] if options[:statement_descriptor]
       end
 
-      def add_payment_urls(post, options)
-        post[:complete_payment_url] = options[:complete_payment_url] if options[:complete_payment_url]
-        post[:error_payment_url] = options[:error_payment_url] if options[:error_payment_url]
+      def add_payment_urls(post, options, action = '')
+        if action == 'store'
+          url_location = post[:payment_method]
+        else
+          url_location = post
+        end
+
+        url_location[:complete_payment_url] = options[:complete_payment_url] if options[:complete_payment_url]
+        url_location[:error_payment_url] = options[:error_payment_url] if options[:error_payment_url]
       end
 
       def add_customer_data(post, payment, options, action = '')
         post[:phone_number] = options.dig(:billing_address, :phone) .gsub(/\D/, '') unless options[:billing_address].nil?
         post[:email] = options[:email]
+        return if payment.is_a?(String)
         return add_customer_id(post, options) if options[:customer_id]
 
         if action == 'store'

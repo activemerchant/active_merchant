@@ -242,6 +242,45 @@ class RapydTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_payment_urls_correctly_nested_by_operation
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request_body = JSON.parse(data)
+      assert_equal @options[:complete_payment_url], request_body['payment_method']['complete_payment_url']
+      assert_equal @options[:error_payment_url], request_body['payment_method']['error_payment_url']
+    end.respond_with(successful_store_response)
+
+    assert_success response
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request_body = JSON.parse(data)
+      assert_equal @options[:complete_payment_url], request_body['complete_payment_url']
+      assert_equal @options[:error_payment_url], request_body['error_payment_url']
+    end.respond_with(successful_store_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_customer_and_card_id
+    store = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options)
+    end.respond_with(successful_store_response)
+
+    assert customer_id = store.params.dig('data', 'id')
+    assert card_id = store.params.dig('data', 'default_payment_method')
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, store.authorization, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request_body = JSON.parse(data)
+      assert_equal request_body['customer'], customer_id
+      assert_equal request_body['payment_method'], card_id
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_three_d_secure
     options = {
       three_d_secure: {

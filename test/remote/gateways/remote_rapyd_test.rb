@@ -225,8 +225,9 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert store.params.dig('data', 'default_payment_method')
 
     # 3DS authorization is required on storing a payment method for future transactions
-    # purchase = @gateway.purchase(100, store.authorization, @options.merge(customer_id: customer_id))
-    # assert_sucess purchase
+    # This test verifies that the card id and customer id are sent with the purchase
+    purchase = @gateway.purchase(100, store.authorization, @options)
+    assert_match(/The request tried to use a card ID, but the cardholder has not completed the 3DS verification process./, purchase.message)
   end
 
   def test_successful_store_and_unstore
