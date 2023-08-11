@@ -69,7 +69,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_google_pay
     @payment_token.source = :google_pay
-    response = @gateway.purchase(@amount, @payment_token, @options)
+    response = @gateway.purchase(@amount, @payment_token, @options.merge(turn_on_nt_flow: true))
 
     assert_success response
     assert response.test?
@@ -78,6 +78,16 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_apple_pay
+    @payment_token.source = :apple_pay
+    response = @gateway.purchase(@amount, @payment_token, @options.merge(turn_on_nt_flow: true))
+
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_apple_pay_without_turn_on_nt_flow_field
     @payment_token.source = :apple_pay
     response = @gateway.purchase(@amount, @payment_token, @options)
 
@@ -903,8 +913,8 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_credit_with_network_tokenization
     credit_card = network_tokenization_credit_card(
-      '4000100011112224',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      '5424000000000015',
+      payment_cryptogram: 'EjRWeJASNFZ4kBI0VniQEjRWeJA=',
       verification_value: nil
     )
 
