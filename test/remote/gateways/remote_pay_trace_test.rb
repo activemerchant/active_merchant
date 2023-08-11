@@ -39,6 +39,23 @@ class RemotePayTraceTest < Test::Unit::TestCase
     assert_not_nil response['access_token']
   end
 
+  def test_failed_access_token
+    assert_raises(ActiveMerchant::OAuthResponseError) do
+      gateway = PayTraceGateway.new(username: 'username', password: 'password', integrator_id: 'uniqueintegrator')
+      gateway.send :acquire_access_token
+    end
+  end
+
+  def test_failed_purchase_with_failed_access_token
+    gateway = PayTraceGateway.new(username: 'username', password: 'password', integrator_id: 'uniqueintegrator')
+
+    error = assert_raises(ActiveMerchant::OAuthResponseError) do
+      gateway.purchase(1000, @credit_card, @options)
+    end
+
+    assert_equal error.message, 'Failed with The provided authorization grant is invalid, expired, revoked, does not match the redirection URI used in the authorization request, or was issued to another client.'
+  end
+
   def test_successful_purchase
     response = @gateway.purchase(1000, @credit_card, @options)
     assert_success response

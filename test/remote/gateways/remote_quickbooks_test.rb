@@ -18,6 +18,23 @@ class RemoteTest < Test::Unit::TestCase
     }
   end
 
+  def test_failed_access_token
+    assert_raises(ActiveMerchant::OAuthResponseError) do
+      gateway = QuickbooksGateway.new({ client_id: 'YOUR_CLIENT_ID', client_secret: 'YOUR_CLIENT_SECRET', refresh_token: 'YOUR_REFRESH_TOKEN', access_token: 'YOUR_ACCESS_TOKEN' })
+      gateway.send :refresh_access_token
+    end
+  end
+
+  def test_failed_purchase_with_failed_access_token
+    gateway = QuickbooksGateway.new({ client_id: 'YOUR_CLIENT_ID', client_secret: 'YOUR_CLIENT_SECRET', refresh_token: 'YOUR_REFRESH_TOKEN', access_token: 'YOUR_ACCESS_TOKEN' })
+
+    error = assert_raises(ActiveMerchant::OAuthResponseError) do
+      gateway.purchase(@amount, @credit_card, @options)
+    end
+
+    assert_equal error.message, 'Failed with 401 Unauthorized'
+  end
+
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response

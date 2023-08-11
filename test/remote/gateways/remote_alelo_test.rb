@@ -26,7 +26,7 @@ class RemoteAleloTest < Test::Unit::TestCase
   end
 
   def test_failure_access_token_with_invalid_keys
-    error = assert_raises(ActiveMerchant::ResponseError) do
+    error = assert_raises(ActiveMerchant::OAuthResponseError) do
       gateway = AleloGateway.new({ client_id: 'abc123', client_secret: 'abc456' })
       gateway.send :fetch_access_token
     end
@@ -145,9 +145,11 @@ class RemoteAleloTest < Test::Unit::TestCase
   def test_invalid_login
     gateway = AleloGateway.new(client_id: 'asdfghj', client_secret: '1234rtytre')
 
-    response = gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match %r{invalid_client}, response.message
+    error = assert_raises(ActiveMerchant::OAuthResponseError) do
+      gateway.purchase(@amount, @credit_card, @options)
+    end
+
+    assert_match(/401/, error.message)
   end
 
   def test_transcript_scrubbing

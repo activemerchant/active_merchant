@@ -23,7 +23,11 @@ module ActiveMerchant #:nodoc:
     end
 
     def to_s
-      "Failed with #{response.code if response.respond_to?(:code)} #{response.message if response.respond_to?(:message)}"
+      if response&.message&.start_with?('Failed with')
+        response.message
+      else
+        "Failed with #{response.code if response.respond_to?(:code)} #{response.message if response.respond_to?(:message)}"
+      end
     end
   end
 
