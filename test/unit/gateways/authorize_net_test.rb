@@ -16,11 +16,15 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card
     @check = check
-    @apple_pay_payment_token = ActiveMerchant::Billing::ApplePayPaymentToken.new(
-      { data: 'encoded_payment_data' },
-      payment_instrument_name: 'SomeBank Visa',
-      payment_network: 'Visa',
-      transaction_identifier: 'transaction123'
+    @payment_token = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'dGVzdGNyeXB0b2dyYW1YWFhYWFhYWFhYWFg9PQ==',
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
     )
 
     @options = {
@@ -153,7 +157,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_market_type_not_included_for_apple_pay_or_echeck
-    [@check, @apple_pay_payment_token].each do |payment|
+    [@check, @payment_token].each do |payment|
       stub_comms do
         @gateway.purchase(@amount, payment)
       end.check_request do |_endpoint, data, _headers|
@@ -265,12 +269,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_apple_pay_authorization
     response = stub_comms do
-      @gateway.authorize(@amount, @apple_pay_payment_token)
+      @gateway.authorize(@amount, @payment_token)
     end.check_request do |_endpoint, data, _headers|
-      parse(data) do |doc|
-        assert_equal @gateway.class::APPLE_PAY_DATA_DESCRIPTOR, doc.at_xpath('//opaqueData/dataDescriptor').content
-        assert_equal Base64.strict_encode64(@apple_pay_payment_token.payment_data.to_json), doc.at_xpath('//opaqueData/dataValue').content
-      end
+      assert_no_match(/<isPaymentToken>true<\/isPaymentToken>/, data)
+      assert_match(/<cardCode>/, data)
     end.respond_with(successful_authorize_response)
 
     assert response
@@ -281,12 +283,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_apple_pay_purchase
     response = stub_comms do
-      @gateway.purchase(@amount, @apple_pay_payment_token)
+      @gateway.purchase(@amount, @payment_token, { turn_on_nt_flow: true })
     end.check_request do |_endpoint, data, _headers|
-      parse(data) do |doc|
-        assert_equal @gateway.class::APPLE_PAY_DATA_DESCRIPTOR, doc.at_xpath('//opaqueData/dataDescriptor').content
-        assert_equal Base64.strict_encode64(@apple_pay_payment_token.payment_data.to_json), doc.at_xpath('//opaqueData/dataValue').content
-      end
+      assert_match(/<isPaymentToken>true<\/isPaymentToken>/, data)
+      assert_no_match(/<cardCode>/, data)
     end.respond_with(successful_purchase_response)
 
     assert response

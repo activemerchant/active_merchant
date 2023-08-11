@@ -89,7 +89,6 @@ module ActiveMerchant
         2 => /\A;(?<pan>[\d]{1,19}+)=(?<expiration>[\d]{0,4}|=)(?<service_code>[\d]{0,3}|=)(?<discretionary_data>.*)\?\Z/
       }.freeze
 
-      APPLE_PAY_DATA_DESCRIPTOR = 'COMMON.APPLE.INAPP.PAYMENT'
       PAYMENT_METHOD_NOT_SUPPORTED_ERROR = '155'
       INELIGIBLE_FOR_ISSUING_CREDIT_ERROR = '54'
 
@@ -165,7 +164,7 @@ module ActiveMerchant
             xml.transactionType('refundTransaction')
             xml.amount(amount(amount))
 
-            add_payment_source(xml, payment, options, :credit)
+            add_payment_method(xml, payment, options, :credit)
             xml.refTransId(transaction_id_from(options[:transaction_id])) if options[:transaction_id]
             add_invoice(xml, 'refundTransaction', options)
             add_customer_data(xml, payment, options)
@@ -262,7 +261,7 @@ module ActiveMerchant
         xml.transactionRequest do
           xml.transactionType(transaction_type)
           xml.amount(amount(amount))
-          add_payment_source(xml, payment, options)
+          add_payment_method(xml, payment, options)
           add_invoice(xml, transaction_type, options)
           add_tax_fields(xml, options)
           add_duty_fields(xml, options)
@@ -287,7 +286,7 @@ module ActiveMerchant
             add_tax_fields(xml, options)
             add_shipping_fields(xml, options)
             add_duty_fields(xml, options)
-            add_payment_source(xml, payment, options)
+            add_payment_method(xml, payment, options)
             add_invoice(xml, transaction_type, options)
             add_tax_exempt_status(xml, options)
           end
@@ -407,18 +406,25 @@ module ActiveMerchant
         end
       end
 
-      def add_payment_source(xml, source, options, action = nil)
-        return unless source
+      def add_payment_method(xml, payment_method, options, action = nil)
+        return unless payment_method
 
-        if source.is_a?(String)
-          add_token_payment_method(xml, source, options)
-        elsif card_brand(source) == 'check'
-          add_check(xml, source)
-        elsif card_brand(source) == 'apple_pay'
-          add_apple_pay_payment_token(xml, source)
+        case payment_method
+        when String
+          add_token_payment_method(xml, payment_method, options)
+        when Check
+          add_check(xml, payment_method)
         else
-          add_credit_card(xml, source, action)
+          if network_token?(payment_method, options, action)
+            add_network_token(xml, payment_method)
+          else
+            add_credit_card(xml, payment_method, action)
+          end
         end
+      end
+
+      def network_token?(payment_method, options, action)
+        payment_method.class == NetworkTokenizationCreditCard && action != :credit && options[:turn_on_nt_flow]
       end
 
       def camel_case_lower(key)
@@ -526,17 +532,20 @@ module ActiveMerchant
         xml.customerPaymentProfileId(customer_payment_profile_id)
       end
 
-      def add_apple_pay_payment_token(xml, apple_pay_payment_token)
+      def add_network_token(xml, payment_method)
         xml.payment do
-          xml.opaqueData do
-            xml.dataDescriptor(APPLE_PAY_DATA_DESCRIPTOR)
-            xml.dataValue(Base64.strict_encode64(apple_pay_payment_token.payment_data.to_json))
+          xml.creditCard do
+            xml.cardNumber(truncate(payment_method.number, 16))
+            xml.expirationDate(format(payment_method.month, :two_digits) + '/' + format(payment_method.year, :four_digits))
+            xml.isPaymentToken(true)
+            xml.cryptogram(payment_method.payment_cryptogram)
           end
         end
       end
 
       def add_market_type_device_type(xml, payment, options)
-        return if payment.is_a?(String) || card_brand(payment) == 'check' || card_brand(payment) == 'apple_pay'
+        return unless payment.is_a?(CreditCard)
+        return if payment.is_a?(NetworkTokenizationCreditCard)
 
         if valid_track_data
           xml.retail do
@@ -754,13 +763,7 @@ module ActiveMerchant
           xml.customerProfileId options[:customer_profile_id]
           xml.paymentProfile do
             add_billing_address(xml, credit_card, options)
-            xml.payment do
-              xml.creditCard do
-                xml.cardNumber(truncate(credit_card.number, 16))
-                xml.expirationDate(format(credit_card.year, :four_digits) + '-' + format(credit_card.month, :two_digits))
-                xml.cardCode(credit_card.verification_value) if credit_card.verification_value
-              end
-            end
+            add_credit_card(xml, credit_card, :cim_store_update)
           end
         end
       end
@@ -776,13 +779,7 @@ module ActiveMerchant
               xml.customerType('individual')
               add_billing_address(xml, credit_card, options)
               add_shipping_address(xml, options, 'shipToList')
-              xml.payment do
-                xml.creditCard do
-                  xml.cardNumber(truncate(credit_card.number, 16))
-                  xml.expirationDate(format(credit_card.year, :four_digits) + '-' + format(credit_card.month, :two_digits))
-                  xml.cardCode(credit_card.verification_value) if credit_card.verification_value
-                end
-              end
+              add_credit_card(xml, credit_card, :cim_store)
             end
           end
         end
