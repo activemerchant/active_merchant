@@ -1,20 +1,10 @@
 require 'test_helper'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-    class AirwallexGateway
-      def setup_access_token
-        '12345678'
-      end
-    end
-  end
-end
-
 class AirwallexTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = AirwallexGateway.new(client_id: 'login', client_api_key: 'password')
+    @gateway = AirwallexGateway.new(client_id: 'login', client_api_key: 'password', access_token: '12345678')
     @credit_card = credit_card
     @declined_card = credit_card('2223 0000 1018 1375')
     @amount = 100
@@ -26,6 +16,15 @@ class AirwallexTest < Test::Unit::TestCase
 
     @stored_credential_cit_options = { initial_transaction: true, initiator: 'cardholder', reason_type: 'recurring', network_transaction_id: nil }
     @stored_credential_mit_options = { initial_transaction: false, initiator: 'merchant', reason_type: 'recurring' }
+  end
+
+  def test_setup_access_token_should_rise_an_exception_under_unauthorized
+    error = assert_raises(ActiveMerchant::OAuthResponseError) do
+      @gateway.expects(:ssl_post).returns({ code: 'invalid_argument', message: "Failed to convert 'YOUR_CLIENT_ID' to UUID", source: '' }.to_json)
+      @gateway.send(:setup_access_token)
+    end
+
+    assert_match(/Failed with  Failed to convert 'YOUR_CLIENT_ID' to UUID/, error.message)
   end
 
   def test_gateway_has_access_token

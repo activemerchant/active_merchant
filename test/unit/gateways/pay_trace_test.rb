@@ -1,20 +1,10 @@
 require 'test_helper'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-    class PayTraceGateway < Gateway
-      def acquire_access_token
-        @options[:access_token] = SecureRandom.hex(16)
-      end
-    end
-  end
-end
-
 class PayTraceTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = PayTraceGateway.new(username: 'username', password: 'password', integrator_id: 'uniqueintegrator')
+    @gateway = PayTraceGateway.new(username: 'username', password: 'password', integrator_id: 'uniqueintegrator', access_token: SecureRandom.hex(16))
     @credit_card = credit_card
     @echeck = check(account_number: '123456', routing_number: '325070760')
     @amount = 100
@@ -22,6 +12,19 @@ class PayTraceTest < Test::Unit::TestCase
     @options = {
       billing_address: address
     }
+  end
+
+  def test_setup_access_token_should_rise_an_exception_under_bad_request
+    error = assert_raises(ActiveMerchant::OAuthResponseError) do
+      access_token_response = {
+        error: 'invalid_grant',
+        error_description: 'The provided authorization grant is invalid, expired, revoked, does not match the redirection URI used in the authorization request, or was issued to another client.'
+      }.to_json
+      @gateway.expects(:ssl_post).returns(access_token_response)
+      @gateway.send(:acquire_access_token)
+    end
+
+    assert_match(/Failed with  The provided authorization grant is invalid/, error.message)
   end
 
   def test_successful_purchase

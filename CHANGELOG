@@ -20,6 +20,7 @@
 * Decidir: Add support for network tokens [almalee24] #4870
 * Element: Fix credit card name bug [almalee24] #4898
 * Adyen: Add payout endpoint [almalee24] #4885
+* Adding Oauth Response for access tokens [almalee24] #4851
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :username, :password, :integrator_id)
         super
-        acquire_access_token
+        acquire_access_token unless options[:access_token]
       end
 
       def purchase(money, payment_or_customer_id, options = {})
@@ -187,10 +187,15 @@ module ActiveMerchant #:nodoc:
           'Content-Type'      => 'application/x-www-form-urlencoded'
         }
         response = ssl_post(url, data, oauth_headers)
-        json_response = JSON.parse(response)
+        json_response = parse(response)
 
-        @options[:access_token] = json_response['access_token'] if json_response['access_token']
-        response
+        if json_response.include?('error')
+          oauth_response = Response.new(false, json_response['error_description'])
+          raise OAuthResponseError.new(oauth_response)
+        else
+          @options[:access_token] = json_response['access_token'] if json_response['access_token']
+          response
+        end
       end
 
       private
@@ -373,6 +378,12 @@ module ActiveMerchant #:nodoc:
         url = base_url + '/v1/' + action
         raw_response = ssl_post(url, post_data(parameters), headers)
         response = parse(raw_response)
+        handle_final_response(action, response)
+      rescue JSON::ParserError
+        unparsable_response(raw_response)
+      end
+
+      def handle_final_response(action, response)
         success = success_from(response)
 
         Response.new(
@@ -385,8 +396,6 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: success ? nil : error_code_from(response)
         )
-      rescue JSON::ParserError
-        unparsable_response(raw_response)
       end
 
       def unparsable_response(raw_response)
