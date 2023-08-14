@@ -18,8 +18,8 @@ module ActiveMerchant #:nodoc:
       ACTION_REQUEST_ITEMS = %w(vault unstore)
 
       def initialize(options = {})
-        requires!(options, :store_id, :user_id, :password, :pem, :pem_password)
-        @credentials = options
+        requires!(options, :user_id, :password, :pem, :pem_password)
+        @credentials = options.merge(store_and_user_id_from(options[:user_id]))
         @hosted_data_id = nil
         super
       end
@@ -393,6 +393,11 @@ module ActiveMerchant #:nodoc:
           reply["#{parent}#{node.name}".to_sym] ||= node.text
         end
         return reply
+      end
+
+      def store_and_user_id_from(user_id)
+        split_credentials = user_id.split('._.')
+        { store_id: split_credentials[0].sub(/^WS/, ''), user_id: split_credentials[1] }
       end
 
       def message_from(response)
