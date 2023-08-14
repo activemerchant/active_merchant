@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'timecop'
 
 class VisanetPeruTest < Test::Unit::TestCase
   include CommStub
@@ -40,26 +41,38 @@ class VisanetPeruTest < Test::Unit::TestCase
   end
 
   def test_nonconsecutive_purchase_numbers
-    pn1, pn2 = nil
+    purchase_times = []
 
-    response1 = stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      pn1 = JSON.parse(data)['purchaseNumber']
-    end.respond_with(successful_authorize_response)
+    Timecop.freeze do
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.authorize(@amount, @credit_card, @options)
+      end.check_request do |_method, _endpoint, data, _headers|
+        purchase_times << JSON.parse(data)['purchaseNumber'].to_i
+      end.respond_with(successful_authorize_response)
 
-    # unit test is unrealistically speedy relative to real-world performance
-    sleep 0.1
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.authorize(@amount, @credit_card, @options)
+      end.check_request do |_method, _endpoint, data, _headers|
+        purchase_times << JSON.parse(data)['purchaseNumber'].to_i
+      end.respond_with(successful_authorize_response)
 
-    response2 = stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      pn2 = JSON.parse(data)['purchaseNumber']
-    end.respond_with(successful_authorize_response)
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.authorize(@amount, @credit_card, @options)
+      end.check_request do |_method, _endpoint, data, _headers|
+        purchase_times << JSON.parse(data)['purchaseNumber'].to_i
+      end.respond_with(successful_authorize_response)
 
-    assert_success response1
-    assert_success response2
-    assert_not_equal(pn1, pn2)
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.authorize(@amount, @credit_card, @options)
+      end.check_request do |_method, _endpoint, data, _headers|
+        purchase_times << JSON.parse(data)['purchaseNumber'].to_i
+      end.respond_with(successful_authorize_response)
+    end
+
+    purchase_times.each do |t|
+      assert_equal(t.to_s.length, 12)
+    end
+    assert_equal(purchase_times.uniq.size, purchase_times.size)
   end
 
   def test_successful_authorize

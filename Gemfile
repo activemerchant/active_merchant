@@ -10,4 +10,5 @@ group :test, :remote_test do
   gem 'jose', '~> 1.1.3'
   gem 'jwe'
   gem 'mechanize'
+  gem 'timecop'
 end
