@@ -282,7 +282,7 @@ module ActiveMerchant #:nodoc:
         raw_signature = @options[:api_key] + client_request_id.to_s + time + request
         hmac = OpenSSL::HMAC.digest('sha256', @options[:api_secret], raw_signature)
         signature = Base64.strict_encode64(hmac.to_s).to_s
-
+        custom_headers = options.fetch(:headers_identifiers, {})
         {
           'Client-Request-Id' => client_request_id,
           'Api-Key' => @options[:api_key],
@@ -292,7 +292,7 @@ module ActiveMerchant #:nodoc:
           'Content-Type' => 'application/json',
           'Accept' => 'application/json',
           'Authorization' => signature
-        }
+        }.merge!(custom_headers)
       end
 
       def add_merchant_details(post)

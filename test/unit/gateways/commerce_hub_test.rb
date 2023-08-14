@@ -42,6 +42,30 @@ class CommerceHubTest < Test::Unit::TestCase
     @post = {}
   end
 
+  def test_successful_authorize_with_full_headers
+    @options.merge!(
+      headers_identifiers: {
+        'x-originator' => 'CommerceHub-Partners-Spreedly',
+        'user-agent' => 'CommerceHub-Partners-Spreedly-V1.00'
+      }
+    )
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, _data, headers|
+      assert_not_nil headers['Client-Request-Id']
+      assert_equal 'login', headers['Api-Key']
+      assert_not_nil headers['Timestamp']
+      assert_equal 'application/json', headers['Accept-Language']
+      assert_equal 'application/json', headers['Content-Type']
+      assert_equal 'application/json', headers['Accept']
+      assert_equal 'HMAC', headers['Auth-Token-Type']
+      assert_not_nil headers['Authorization']
+      assert_equal 'CommerceHub-Partners-Spreedly', headers['x-originator']
+      assert_equal 'CommerceHub-Partners-Spreedly-V1.00', headers['user-agent']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_successful_purchase
     @options[:order_id] = 'abc123'
 
