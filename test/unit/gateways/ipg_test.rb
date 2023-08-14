@@ -332,6 +332,38 @@ class IpgTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_store_and_user_id_from_with_complete_credentials
+    test_combined_user_id = 'WS5921102002._.1'
+    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
+
+    assert_equal '5921102002', split_credentials[:store_id]
+    assert_equal '1', split_credentials[:user_id]
+  end
+
+  def test_store_and_user_id_from_missing_store_id_prefix
+    test_combined_user_id = '5921102002._.1'
+    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
+
+    assert_equal '5921102002', split_credentials[:store_id]
+    assert_equal '1', split_credentials[:user_id]
+  end
+
+  def test_store_and_user_id_misplaced_store_id_prefix
+    test_combined_user_id = '5921102002WS._.1'
+    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
+
+    assert_equal '5921102002WS', split_credentials[:store_id]
+    assert_equal '1', split_credentials[:user_id]
+  end
+
+  def test_store_and_user_id_from_missing_delimiter
+    test_combined_user_id = 'WS59211020021'
+    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
+
+    assert_equal '59211020021', split_credentials[:store_id]
+    assert_equal nil, split_credentials[:user_id]
+  end
+
   def test_message_from_just_with_transaction_result
     am_response = { TransactionResult: 'success !' }
     assert_equal 'success !', @gateway.send(:message_from, am_response)
