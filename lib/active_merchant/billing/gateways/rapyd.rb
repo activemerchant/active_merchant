@@ -127,6 +127,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post[:amount] = money.zero? ? 0 : amount(money).to_f.to_s
         post[:currency] = (options[:currency] || currency(money))
+        post[:merchant_reference_id] = options[:merchant_reference_id] || options[:order_id]
       end
 
       def add_payment(post, payment, options)

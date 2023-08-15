@@ -18,7 +18,8 @@ class RapydTest < Test::Unit::TestCase
       description: 'Describe this transaction',
       statement_descriptor: 'Statement Descriptor',
       email: 'test@example.com',
-      billing_address: address(name: 'Jim Reynolds')
+      billing_address: address(name: 'Jim Reynolds'),
+      order_id: '987654321'
     }
 
     @metadata = {
@@ -87,6 +88,21 @@ class RapydTest < Test::Unit::TestCase
       assert_match(/"error_payment_url":"www.google.com"/, data)
       assert_match(/"description":"Describe this transaction"/, data)
       assert_match(/"statement_descriptor":"Statement Descriptor"/, data)
+      assert_match(/"merchant_reference_id":"987654321"/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_explicit_merchant_reference_id
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ merchant_reference_id: '99988877776' }))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"complete_payment_url":"www.google.com"/, data)
+      assert_match(/"error_payment_url":"www.google.com"/, data)
+      assert_match(/"description":"Describe this transaction"/, data)
+      assert_match(/"statement_descriptor":"Statement Descriptor"/, data)
+      assert_match(/"merchant_reference_id":"99988877776"/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
