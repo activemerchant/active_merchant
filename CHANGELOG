@@ -15,6 +15,7 @@
 * Braintree: Additional tests for credit transactions [jcreiff] #4848
 * Rapyd: Change nesting of description, statement_descriptor, complete_payment_url, and error_payment_url [jcreiff] #4849
 * Rapyd: Add merchant_reference_id [jcreiff] #4858
+* Braintree: Return error for ACH on credit [jcreiff] #4859
 
 
 == Version 1.134.0 (July 25, 2023)

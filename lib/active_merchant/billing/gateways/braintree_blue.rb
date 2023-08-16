@@ -106,6 +106,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, credit_card_or_vault_id, options = {})
+        return Response.new(false, DIRECT_BANK_ERROR) if credit_card_or_vault_id.is_a? Check
+
         create_transaction(:credit, money, credit_card_or_vault_id, options)
       end
 

@@ -1368,6 +1368,14 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'Direct bank account transactions are not supported. Bank accounts must be successfully stored before use.', response.message
   end
 
+  def test_returns_error_on_general_credit_when_passing_a_bank_account
+    bank_account = check({ account_number: '1000000002', routing_number: '011000015' })
+    response = @gateway.credit(100, bank_account, {})
+
+    assert_failure response
+    assert_equal 'Direct bank account transactions are not supported. Bank accounts must be successfully stored before use.', response.message
+  end
+
   def test_error_on_store_bank_account_without_a_mandate
     options = {
       billing_address: {
