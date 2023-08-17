@@ -129,6 +129,16 @@ class FirstdataE4V27Test < Test::Unit::TestCase
     assert_equal response.error_code, 'invalid_expiry_date'
   end
 
+  def test_failed_purchase_with_error_code_503
+    @gateway.expects(:raw_ssl_request).returns(Net::HTTPBadRequest.new(1.1, 503, 'Service Unavailable'))
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal response.error_code, nil
+    assert_equal response.message, 'Service Unavailable'
+  end
+
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(@credit_card)

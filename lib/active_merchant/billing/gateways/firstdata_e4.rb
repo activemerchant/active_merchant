@@ -423,11 +423,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse_error(error)
+        error_body = error.code == 503 ? error.message : error.body
         {
           transaction_approved: 'false',
           error_number: error.code,
-          error_description: error.body,
-          ecommerce_error_code: error.body.gsub(/[^\d]/, '')
+          error_description: error_body,
+          ecommerce_error_code: error_body.gsub(/[^\d]/, '')
         }
       end
 
