@@ -687,6 +687,113 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_money_transfer_payout_via_credit
+    options = {
+      instruction_purpose: 'leisure',
+      account_holder_type: 'individual',
+      billing_address: address,
+      payout: true,
+      destination: {
+        account_holder: {
+          phone: {
+            number: '9108675309',
+            country_code: '1'
+          },
+          identification: {
+            type: 'passport',
+            number: '1234567890'
+          },
+          email: 'too_many_fields@checkout.com',
+          date_of_birth: '2004-10-27',
+          country_of_birth: 'US'
+        }
+      },
+      sender: {
+        type: 'individual',
+        first_name: 'Jane',
+        middle_name: 'Middle',
+        last_name: 'Doe',
+        reference: '012345',
+        reference_type: 'other',
+        source_of_funds: 'debit',
+        identification: {
+          type: 'passport',
+          number: '0987654321',
+          issuing_country: 'US',
+          date_of_expiry: '2027-07-07'
+        },
+        address: {
+          address1: '205 Main St',
+          address2: 'Apt G',
+          city: 'Winchestertonfieldville',
+          state: 'IA',
+          country: 'US',
+          zip: '12345'
+        },
+        date_of_birth: '2004-10-27',
+        country_of_birth: 'US',
+        nationality: 'US'
+      }
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.credit(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['instruction']['purpose'], 'leisure'
+      assert_equal request['destination']['account_holder']['phone']['number'], '9108675309'
+      assert_equal request['destination']['account_holder']['phone']['country_code'], '1'
+      assert_equal request['destination']['account_holder']['identification']['number'], '1234567890'
+      assert_equal request['destination']['account_holder']['identification']['type'], 'passport'
+      assert_equal request['destination']['account_holder']['email'], 'too_many_fields@checkout.com'
+      assert_equal request['destination']['account_holder']['date_of_birth'], '2004-10-27'
+      assert_equal request['destination']['account_holder']['country_of_birth'], 'US'
+      assert_equal request['sender']['type'], 'individual'
+      assert_equal request['sender']['first_name'], 'Jane'
+      assert_equal request['sender']['middle_name'], 'Middle'
+      assert_equal request['sender']['last_name'], 'Doe'
+      assert_equal request['sender']['reference'], '012345'
+      assert_equal request['sender']['reference_type'], 'other'
+      assert_equal request['sender']['source_of_funds'], 'debit'
+      assert_equal request['sender']['identification']['type'], 'passport'
+      assert_equal request['sender']['identification']['number'], '0987654321'
+      assert_equal request['sender']['identification']['issuing_country'], 'US'
+      assert_equal request['sender']['identification']['date_of_expiry'], '2027-07-07'
+      assert_equal request['sender']['address']['address_line1'], '205 Main St'
+      assert_equal request['sender']['address']['address_line2'], 'Apt G'
+      assert_equal request['sender']['address']['city'], 'Winchestertonfieldville'
+      assert_equal request['sender']['address']['state'], 'IA'
+      assert_equal request['sender']['address']['country'], 'US'
+      assert_equal request['sender']['address']['zip'], '12345'
+      assert_equal request['sender']['date_of_birth'], '2004-10-27'
+      assert_equal request['sender']['nationality'], 'US'
+    end.respond_with(successful_credit_response)
+    assert_success response
+  end
+
+  def test_transaction_successfully_reverts_to_regular_credit_when_payout_is_nil
+    options = {
+      instruction_purpose: 'leisure',
+      account_holder_type: 'individual',
+      billing_address: address,
+      payout: nil,
+      destination: {
+        account_holder: {
+          email: 'too_many_fields@checkout.com'
+        }
+      },
+      sender: {
+        type: 'individual'
+      }
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.credit(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      refute_includes data, 'email'
+      refute_includes data, 'sender'
+    end.respond_with(successful_credit_response)
+    assert_success response
+  end
+
   def test_successful_refund
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card)
