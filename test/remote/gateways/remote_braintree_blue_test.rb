@@ -638,9 +638,12 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'Mexico', transaction['shipping_details']['country_name']
   end
 
-  def test_successful_purchase_with_three_d_secure_pass_thru
-    three_d_secure_params = { version: '2.0', cavv: 'cavv', eci: '02', ds_transaction_id: 'trans_id', cavv_algorithm: 'algorithm', directory_response_status: 'directory', authentication_response_status: 'auth' }
-    response = @gateway.purchase(@amount, @credit_card, three_d_secure: three_d_secure_params)
+  def test_successful_purchase_with_three_d_secure_pass_thru_and_sca_exemption
+    options = {
+      three_ds_exemption_type: 'low_value',
+      three_d_secure: { version: '2.0', cavv: 'cavv', eci: '02', ds_transaction_id: 'trans_id', cavv_algorithm: 'algorithm', directory_response_status: 'directory', authentication_response_status: 'auth' }
+    }
+    response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
   end
 

@@ -746,21 +746,34 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_three_d_secure_pass_thru_handling_version_2
-    Braintree::TransactionGateway.
-      any_instance.
-      expects(:sale).
-      with(has_entries(three_d_secure_pass_thru: has_entries(
-        three_d_secure_version: '2.0',
+    three_ds_expectation = {
+      three_d_secure_version: '2.0',
+      cavv: 'cavv',
+      eci_flag: 'eci',
+      ds_transaction_id: 'trans_id',
+      cavv_algorithm: 'algorithm',
+      directory_response: 'directory',
+      authentication_response: 'auth'
+    }
+
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:sca_exemption] == 'low_value')
+      (params[:three_d_secure_pass_thru] == three_ds_expectation)
+    end.returns(braintree_result)
+
+    options = {
+      three_ds_exemption_type: 'low_value',
+      three_d_secure: {
+        version: '2.0',
         cavv: 'cavv',
-        eci_flag: 'eci',
+        eci: 'eci',
         ds_transaction_id: 'trans_id',
         cavv_algorithm: 'algorithm',
-        directory_response: 'directory',
-        authentication_response: 'auth'
-      ))).
-      returns(braintree_result)
-
-    @gateway.purchase(100, credit_card('41111111111111111111'), three_d_secure: { version: '2.0', cavv: 'cavv', eci: 'eci', ds_transaction_id: 'trans_id', cavv_algorithm: 'algorithm', directory_response_status: 'directory', authentication_response_status: 'auth' })
+        directory_response_status: 'directory',
+        authentication_response_status: 'auth'
+      }
+    }
+    @gateway.purchase(100, credit_card('41111111111111111111'), options)
   end
 
   def test_three_d_secure_pass_thru_some_fields

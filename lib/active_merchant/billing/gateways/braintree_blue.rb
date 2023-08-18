@@ -678,6 +678,8 @@ module ActiveMerchant #:nodoc:
 
         add_3ds_info(parameters, options[:three_d_secure])
 
+        parameters[:sca_exemption] = options[:three_ds_exemption_type] if options[:three_ds_exemption_type]
+
         if options[:payment_method_nonce].is_a?(String)
           parameters.delete(:customer)
           parameters[:payment_method_nonce] = options[:payment_method_nonce]
