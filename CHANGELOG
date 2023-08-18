@@ -16,6 +16,7 @@
 * Rapyd: Change nesting of description, statement_descriptor, complete_payment_url, and error_payment_url [jcreiff] #4849
 * Rapyd: Add merchant_reference_id [jcreiff] #4858
 * Braintree: Return error for ACH on credit [jcreiff] #4859
+* Rapyd: Update handling of ewallet and billing address phone [jcreiff] #4863
 
 
 == Version 1.134.0 (July 25, 2023)

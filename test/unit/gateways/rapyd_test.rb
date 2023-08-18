@@ -246,6 +246,22 @@ class RapydTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_purchase_with_billing_address_phone_variations
+    stub_comms(@gateway, :ssl_request) do
+      @options[:pm_type] = 'us_debit_mastercard_card'
+      @gateway.purchase(@amount, @credit_card, { billing_address: { phone_number: '919.123.1234' } })
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      assert_match(/"phone_number":"9191231234"/, data)
+    end
+
+    stub_comms(@gateway, :ssl_request) do
+      @options[:pm_type] = 'us_debit_mastercard_card'
+      @gateway.purchase(@amount, @credit_card, { billing_address: { phone: '919.123.1234' } })
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      assert_match(/"phone_number":"9191231234"/, data)
+    end
+  end
+
   def test_successful_store_with_customer_object
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.store(@credit_card, @options)

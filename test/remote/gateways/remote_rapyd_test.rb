@@ -100,6 +100,18 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_purchase_with_no_address
+    credit_card = credit_card('4111111111111111', month: '12', year: '2035', verification_value: '345')
+
+    options = @options.dup
+    options[:billing_address] = nil
+    options[:pm_type] = 'gb_mastercard_card'
+
+    response = @gateway.purchase(@amount, credit_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
   def test_successful_purchase_using_ach
     response = @gateway.purchase(100000, @check, @ach_options)
     assert_success response
@@ -108,7 +120,7 @@ class RemoteRapydTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_options
-    options = @options.merge(metadata: @metadata, ewallet_id: 'ewallet_1a867a32b47158b30a8c17d42f12f3f1')
+    options = @options.merge(metadata: @metadata, ewallet_id: 'ewallet_897aca846f002686e14677541f78a0f4')
     response = @gateway.purchase(100000, @credit_card, options)
     assert_success response
     assert_equal 'SUCCESS', response.message

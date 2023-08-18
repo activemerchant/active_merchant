@@ -201,7 +201,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_ewallet(post, options)
-        post[:ewallet_id] = options[:ewallet_id] if options[:ewallet_id]
+        post[:ewallet] = options[:ewallet_id] if options[:ewallet_id]
       end
 
       def add_payment_fields(post, options)
@@ -221,7 +221,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, payment, options, action = '')
-        post[:phone_number] = options.dig(:billing_address, :phone) .gsub(/\D/, '') unless options[:billing_address].nil?
+        phone_number = options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
+        post[:phone_number] = phone_number.gsub(/\D/, '') unless phone_number.nil?
         post[:email] = options[:email]
         return if payment.is_a?(String)
         return add_customer_id(post, options) if options[:customer_id]
@@ -236,9 +237,10 @@ module ActiveMerchant #:nodoc:
       def customer_fields(payment, options)
         return if options[:customer_id]
 
+        customer_address = address(options)
         customer_data = {}
         customer_data[:name] = "#{payment.first_name} #{payment.last_name}" unless payment.is_a?(String)
-        customer_data[:addresses] = [address(options)]
+        customer_data[:addresses] = [customer_address] if customer_address
         customer_data
       end
 
