@@ -18,6 +18,7 @@
 * Braintree: Return error for ACH on credit [jcreiff] #4859
 * Rapyd: Update handling of ewallet and billing address phone [jcreiff] #4863
 * IPG: Change credentials inputs to use a combined store and user ID string as the user ID input [kylene-spreedly] #4854
+* Braintree Blue: Update the credit card details transaction hash [yunnydang] #4865
 
 == Version 1.134.0 (July 25, 2023)
 * Update required Ruby version [almalee24] #4823

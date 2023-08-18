@@ -601,7 +601,10 @@ module ActiveMerchant #:nodoc:
           'bin'                 => transaction.credit_card_details.bin,
           'last_4'              => transaction.credit_card_details.last_4,
           'card_type'           => transaction.credit_card_details.card_type,
-          'token'               => transaction.credit_card_details.token
+          'token'               => transaction.credit_card_details.token,
+          'debit'               => transaction.credit_card_details.debit,
+          'prepaid'             => transaction.credit_card_details.prepaid,
+          'issuing_bank'        => transaction.credit_card_details.issuing_bank
         }
 
         if transaction.risk_data
