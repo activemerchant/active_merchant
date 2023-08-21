@@ -23,6 +23,7 @@
 * Braintree Blue: Update the credit card details transaction hash [yunnydang] #4865
 * VisaNet Peru: Update generate_purchase_number_stamp [almalee24] #4855
 * Braintree: Add sca_exemption [almalee24] #4864
+* Ebanx: Update Verify [almalee24] #4866
 
 == Version 1.134.0 (July 25, 2023)
 * Update required Ruby version [almalee24] #4823

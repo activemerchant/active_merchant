@@ -20,7 +20,8 @@ module ActiveMerchant #:nodoc:
         refund: 'refund',
         void: 'cancel',
         store: 'token',
-        inquire: 'query'
+        inquire: 'query',
+        verify: 'verifycard'
       }
 
       HTTP_METHOD = {
@@ -30,16 +31,8 @@ module ActiveMerchant #:nodoc:
         refund: :post,
         void: :get,
         store: :post,
-        inquire: :get
-      }
-
-      VERIFY_AMOUNT_PER_COUNTRY = {
-        'br' => 100,
-        'ar' => 100,
-        'co' => 50000,
-        'pe' => 300,
-        'mx' => 2000,
-        'cl' => 80000
+        inquire: :get,
+        verify: :post
       }
 
       def initialize(options = {})
@@ -107,17 +100,22 @@ module ActiveMerchant #:nodoc:
       def store(credit_card, options = {})
         post = {}
         add_integration_key(post)
-        add_payment_details(post, credit_card)
-        post[:country] = customer_country(options)
+        customer_country(post, options)
+        add_payment_type(post)
+        post[:creditcard] = payment_details(credit_card)
 
         commit(:store, post)
       end
 
       def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(VERIFY_AMOUNT_PER_COUNTRY[customer_country(options)], credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        post = {}
+        add_integration_key(post)
+        add_payment_type(post)
+        customer_country(post, options)
+        post[:card] = payment_details(credit_card)
+        post[:device_id] = options[:device_id] if options[:device_id]
+
+        commit(:verify, post)
       end
 
       def inquire(authorization, options = {})
@@ -192,14 +190,13 @@ module ActiveMerchant #:nodoc:
 
       def add_card_or_token(post, payment, options)
         payment = payment.split('|')[0] if payment.is_a?(String)
-        post[:payment][:payment_type_code] = 'creditcard'
+        add_payment_type(post[:payment])
         post[:payment][:creditcard] = payment_details(payment)
         post[:payment][:creditcard][:soft_descriptor] = options[:soft_descriptor] if options[:soft_descriptor]
       end
 
-      def add_payment_details(post, payment)
+      def add_payment_type(post)
         post[:payment_type_code] = 'creditcard'
-        post[:creditcard] = payment_details(payment)
       end
 
       def payment_details(payment)
@@ -237,7 +234,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(
           success,
-          message_from(response),
+          message_from(action, response),
           response,
           authorization: authorization_from(action, parameters, response),
           test: test?,
@@ -259,25 +256,32 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(action, response)
-        payment_status = response.try(:[], 'payment').try(:[], 'status')
+        status = response.dig('payment', 'status')
 
-        if %i[purchase capture refund].include?(action)
-          payment_status == 'CO'
-        elsif action == :authorize
-          payment_status == 'PE'
-        elsif action == :void
-          payment_status == 'CA'
-        elsif %i[store inquire].include?(action)
-          response.try(:[], 'status') == 'SUCCESS'
+        case action
+        when :purchase, :capture, :refund
+          status == 'CO'
+        when :authorize
+          status == 'PE'
+        when :void
+          status == 'CA'
+        when :verify
+          response.dig('card_verification', 'transaction_status', 'code') == 'OK'
+        when :store, :inquire
+          response.dig('status') == 'SUCCESS'
         else
           false
         end
       end
 
-      def message_from(response)
+      def message_from(action, response)
         return response['status_message'] if response['status'] == 'ERROR'
 
-        response.try(:[], 'payment').try(:[], 'transaction_status').try(:[], 'description')
+        if action == :verify
+          response.dig('card_verification', 'transaction_status', 'description')
+        else
+          response.dig('payment', 'transaction_status', 'description')
+        end
       end
 
       def authorization_from(action, parameters, response)
@@ -327,9 +331,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def customer_country(options)
+      def customer_country(post, options)
         if country = options[:country] || (options[:billing_address][:country] if options[:billing_address])
-          country.downcase
+          post[:country] = country.downcase
         end
       end
 

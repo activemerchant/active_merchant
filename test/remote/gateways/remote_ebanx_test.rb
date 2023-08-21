@@ -302,9 +302,10 @@ class RemoteEbanxTest < Test::Unit::TestCase
   end
 
   def test_failed_verify
-    response = @gateway.verify(@declined_card, @options)
+    declined_card = credit_card('6011088896715918')
+    response = @gateway.verify(declined_card, @options)
     assert_failure response
-    assert_match %r{Invalid card or card type}, response.message
+    assert_match %r{Not accepted}, response.message
   end
 
   def test_successful_inquire
