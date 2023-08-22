@@ -78,22 +78,6 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     }
   end
 
-  def test_failed_access_token
-    assert_raises(ActiveMerchant::OAuthResponseError) do
-      gateway = SimetrikGateway.new({ client_id: 'YOUR_CLIENT_ID', client_secret: 'YOUR_API_KEY', audience: 'audience_url' })
-      gateway.send :fetch_access_token
-    end
-  end
-
-  def test_failed_authorize_with_failed_access_token
-    error = assert_raises(ActiveMerchant::OAuthResponseError) do
-      gateway = SimetrikGateway.new({ client_id: 'YOUR_CLIENT_ID', client_secret: 'YOUR_API_KEY', audience: 'audience_url' })
-      gateway.authorize(@amount, @credit_card, @authorize_options_success)
-    end
-
-    assert_equal error.message, 'Failed with 401 Unauthorized'
-  end
-
   def test_success_authorize
     response = @gateway.authorize(@amount, @credit_card, @authorize_options_success)
     assert_success response

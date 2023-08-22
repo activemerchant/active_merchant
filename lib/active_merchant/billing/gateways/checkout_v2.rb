@@ -18,13 +18,13 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         @options = options
-        @access_token = options[:access_token] || nil
+        @access_token = nil
 
         if options.has_key?(:secret_key)
           requires!(options, :secret_key)
         else
           requires!(options, :client_id, :client_secret)
-          @access_token ||= setup_access_token
+          @access_token = setup_access_token
         end
 
         super
@@ -341,19 +341,8 @@ module ActiveMerchant #:nodoc:
 
       def setup_access_token
         request = 'grant_type=client_credentials'
-        begin
-          raw_response = ssl_post(access_token_url, request, access_token_header)
-        rescue ResponseError => e
-          raise OAuthResponseError.new(e)
-        else
-          response = parse(raw_response)
-
-          if (access_token = response['access_token'])
-            access_token
-          else
-            raise OAuthResponseError.new(response)
-          end
-        end
+        response = parse(ssl_post(access_token_url, request, access_token_header))
+        response['access_token']
       end
 
       def commit(action, post, options, authorization = nil, method = :post)

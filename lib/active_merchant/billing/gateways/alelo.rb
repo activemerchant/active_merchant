@@ -110,18 +110,8 @@ module ActiveMerchant #:nodoc:
           'Content-Type' => 'application/x-www-form-urlencoded'
         }
 
-        begin
-          raw_response = ssl_post(url('captura-oauth-provider/oauth/token'), post_data(params), headers)
-        rescue ResponseError => e
-          raise OAuthResponseError.new(e)
-        else
-          response = parse(raw_response)
-          if (access_token = response[:access_token])
-            Response.new(true, access_token, response)
-          else
-            raise OAuthResponseError.new(response)
-          end
-        end
+        parsed = parse(ssl_post(url('captura-oauth-provider/oauth/token'), post_data(params), headers))
+        Response.new(true, parsed[:access_token], parsed)
       end
 
       def remote_encryption_key(access_token)
@@ -154,11 +144,9 @@ module ActiveMerchant #:nodoc:
           access_token: access_token,
           multiresp: multiresp.responses.present? ? multiresp : nil
         }
-      rescue ActiveMerchant::OAuthResponseError => e
-        raise e
       rescue ResponseError => e
         # retry to generate a new access_token when the provided one is expired
-        raise e unless retry?(try_again, e, :access_token)
+        raise e unless try_again && %w(401 404).include?(e.response.code) && @options[:access_token].present?
 
         @options.delete(:access_token)
         @options.delete(:encryption_key)
@@ -218,21 +206,15 @@ module ActiveMerchant #:nodoc:
         multiresp.process { resp }
 
         multiresp
-      rescue ActiveMerchant::OAuthResponseError => e
-        raise OAuthResponseError.new(e)
       rescue ActiveMerchant::ResponseError => e
         # Retry on a possible expired encryption key
-        if retry?(try_again, e, :encryption_key)
+        if try_again && %w(401 404).include?(e.response.code) && @options[:encryption_key].present?
           @options.delete(:encryption_key)
           commit(action, body, options, false)
         else
           res = parse(e.response.body)
           Response.new(false, res[:messageUser] || res[:error], res, test: test?)
         end
-      end
-
-      def retry?(try_again, error, key)
-        try_again && %w(401 404).include?(error.response.code) && @options[key].present?
       end
 
       def success_from(action, response)

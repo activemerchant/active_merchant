@@ -118,22 +118,6 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     )
   end
 
-  def test_failed_access_token
-    assert_raises(ActiveMerchant::OAuthResponseError) do
-      gateway = CheckoutV2Gateway.new({ client_id: 'YOUR_CLIENT_ID', client_secret: 'YOUR_CLIENT_SECRET' })
-      gateway.send :setup_access_token
-    end
-  end
-
-  def test_failed_purchase_with_failed_access_token
-    error = assert_raises(ActiveMerchant::OAuthResponseError) do
-      gateway = CheckoutV2Gateway.new({ client_id: 'YOUR_CLIENT_ID', client_secret: 'YOUR_CLIENT_SECRET' })
-      gateway.purchase(@amount, @credit_card, @options)
-    end
-
-    assert_equal error.message, 'Failed with 400 Bad Request'
-  end
-
   def test_transcript_scrubbing
     declined_card = credit_card('4000300011112220', verification_value: '423')
     transcript = capture_transcript(@gateway) do

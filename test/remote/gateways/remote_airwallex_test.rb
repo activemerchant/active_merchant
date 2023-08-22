@@ -14,13 +14,6 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     @stored_credential_mit_options = { initial_transaction: false, initiator: 'merchant', reason_type: 'recurring' }
   end
 
-  def test_failed_access_token
-    assert_raises(ActiveMerchant::OAuthResponseError) do
-      gateway = AirwallexGateway.new({ client_id: 'YOUR_CLIENT_ID', client_api_key: 'YOUR_API_KEY' })
-      gateway.send :setup_access_token
-    end
-  end
-
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
