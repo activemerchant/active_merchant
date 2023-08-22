@@ -17,6 +17,7 @@
 * XpayGateway: Initial setup [javierpedrozaing] #4889
 * Rapyd: Add validation to not send cvv and network_reference_id [javierpedrozaing] #4895
 * Ebanx: Add Ecuador and Bolivia as supported countries [almalee24] #4893
+* Decidir: Add support for network tokens [almalee24] #4870
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
