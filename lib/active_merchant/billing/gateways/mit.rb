@@ -87,6 +87,7 @@ module ActiveMerchant #:nodoc:
         # Payments contains the card information
         add_payment(post, payment)
         add_customer_data(post, options)
+        add_3ds(post, options) if options[:execute_threed]
         post[:key_session] = @options[:key_session]
 
         post_to_json = post.to_json
@@ -202,6 +203,17 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options)
         post[:email] = options[:email] || 'nadie@mit.test'
+      end
+
+      def add_3ds(post, options)
+        post[:redirect_type] = options[:redirect_type]
+        post[:billing_address1] = options[:billing_address1]
+        post[:billing_city] = options[:billing_city]
+        post[:billing_zip] = options[:billing_zip]
+        post[:billing_country] = options[:billing_country]
+        post[:billing_phone_number] = options[:billing_phone_number]
+        post[:redirect_url] = options[:redirect_url]
+        post[:callback_url] = options[:callback_url]
       end
 
       def add_invoice(post, money, options)

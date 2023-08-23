@@ -25,6 +25,24 @@ class RemoteMitTest < Test::Unit::TestCase
       last_name: 'Flores Valdes'
     )
 
+    @credit_card_3ds = ActiveMerchant::Billing::CreditCard.new(
+      number: '5555555555555557',
+      verification_value: '261',
+      month: '09',
+      year: '2025',
+      first_name: 'Pedro',
+      last_name: 'Flores Valdes'
+    )
+
+    @declined_card_3ds = ActiveMerchant::Billing::CreditCard.new(
+      number: '4111111111111111',
+      verification_value: '318',
+      month: '09',
+      year: '2025',
+      first_name: 'Pedro',
+      last_name: 'Flores Valdes'
+    )
+
     @options_success = {
       order_id: '721',
       transaction_id: '721', # unique id for every transaction, needs to be generated for every test
@@ -39,6 +57,31 @@ class RemoteMitTest < Test::Unit::TestCase
       description: 'Store Purchase',
       api_key: fixtures(:mit)[:apikey]
     }
+
+    @three_ds_options = @options.merge({
+      execute_threed: true,
+      redirect_type: 1,
+      billing_address1: '456 My Street',
+      billing_city: 'City',
+      billing_state: 'State',
+      billing_zip: '55800',
+      billing_country: 'MX',
+      billing_phone_number: '+15675657821',
+      redirect_url: 'www.example.com',
+      callback_url: 'www.example.com'
+    })
+  end
+
+  def test_successful_purchase_with_3ds1
+    # ###############################################################
+    # create unique id based on timestamp for testing purposes
+    # Each order / transaction passed to the gateway must be unique
+    time = Time.now.to_i.to_s
+    @options_success[:order_id] = 'TID|' + time
+    response = @gateway.purchase(@amount, @credit_card, @options_success.merge(@three_ds_options))
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.params['url'].present?
   end
 
   def test_successful_purchase
