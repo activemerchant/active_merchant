@@ -2,6 +2,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
 * Adyen: Add option to elect which error message [aenand] #4843
 * Reach: Update list of supported countries [jcreiff] #4842
