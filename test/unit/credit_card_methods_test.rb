@@ -506,6 +506,39 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'panal', CreditCard.brand?('6020490000000000')
   end
 
+  def test_detecting_full_range_of_verve_card_numbers
+    verve = '506099000000000'
+
+    assert_equal 15, verve.length
+    assert_not_equal 'verve', CreditCard.brand?(verve)
+
+    4.times do
+      verve << '0'
+      assert_equal 'verve', CreditCard.brand?(verve), "Failed for bin #{verve}"
+    end
+
+    assert_equal 19, verve.length
+
+    verve << '0'
+    assert_not_equal 'verve', CreditCard.brand?(verve)
+  end
+
+  def test_should_detect_verve
+    credit_cards = %w[5060990000000000
+                      506112100000000000
+                      5061351000000000000
+                      5061591000000000
+                      506175100000000000
+                      5078801000000000000
+                      5079381000000000
+                      637058100000000000
+                      5079400000000000000
+                      507879000000000000
+                      5061930000000000
+                      506136000000000000]
+    credit_cards.all? { |cc| CreditCard.brand?(cc) == 'verve' }
+  end
+
   def test_credit_card?
     assert credit_card.credit_card?
   end

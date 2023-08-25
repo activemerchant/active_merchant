@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(CA CL CO DO SV PE PT VI AU HK IN ID JP MY NZ PH SG KR TW TH VN AD AT BE BA BG HR CY CZ DK EE FI FR GE DE GI GR GL HU IS IE IL IT LV LI LT LU MK MT MD MC ME NL GB NO PL RO RU SM SK SI ZA ES SE CH TR VA)
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express discover]
+      self.supported_cardtypes = %i[visa master american_express discover verve]
 
       self.homepage_url = 'https://www.rapyd.net/'
       self.display_name = 'Rapyd Gateway'
