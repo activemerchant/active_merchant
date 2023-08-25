@@ -23,9 +23,6 @@ module ActiveMerchant #:nodoc:
       # The name of the gateway
       self.display_name = 'SecurePay'
 
-      class_attribute :request_timeout
-      self.request_timeout = 60
-
       self.money_format = :cents
       self.default_currency = 'AUD'
 
@@ -59,6 +56,10 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login, :password)
         super
+      end
+
+      def request_timeout
+        @options[:request_timeout] || 60
       end
 
       def purchase(money, credit_card_or_stored_id, options = {})
