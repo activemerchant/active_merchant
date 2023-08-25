@@ -323,4 +323,26 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_equal '3d_verification', response.params['data']['payment_method_data']['next_action']
     assert response.params['data']['redirect_url']
   end
+
+  def test_successful_purchase_with_3ds_v2_gateway_specific
+    options = @options.merge(three_d_secure: { required: true })
+    options[:pm_type] = 'gb_visa_card'
+
+    response = @gateway.purchase(105000, @credit_card, options)
+    assert_success response
+    assert_equal 'ACT', response.params['data']['status']
+    assert_equal '3d_verification', response.params['data']['payment_method_data']['next_action']
+    assert response.params['data']['redirect_url']
+    assert_match 'https://sandboxcheckout.rapyd.net/3ds-payment?token=payment_', response.params['data']['redirect_url']
+  end
+
+  def test_successful_purchase_without_3ds_v2_gateway_specific
+    options = @options.merge(three_d_secure: { required: false })
+    options[:pm_type] = 'gb_visa_card'
+    response = @gateway.purchase(1000, @credit_card, options)
+    assert_success response
+    assert_equal 'CLO', response.params['data']['status']
+    assert_equal 'not_applicable', response.params['data']['payment_method_data']['next_action']
+    assert_equal '', response.params['data']['redirect_url']
+  end
 end

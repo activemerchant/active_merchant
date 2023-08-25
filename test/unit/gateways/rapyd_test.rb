@@ -122,6 +122,22 @@ class RapydTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_3ds_gateway_specific
+    @options[:three_d_secure] = {
+      required: true,
+      version: '2.1.0'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['payment_method_options']['3d_required'], true
+      assert_equal request['payment_method_options']['3d_version'], '2.1.0'
+      assert request['complete_payment_url']
+      assert request['error_payment_url']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
 
