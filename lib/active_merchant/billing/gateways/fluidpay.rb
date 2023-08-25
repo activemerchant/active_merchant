@@ -3,6 +3,9 @@ module ActiveMerchant #:nodoc:
     class FluidpayGateway < Gateway
       include Empty
 
+      SUCCESS_CODE = 100
+      SOFT_DECLINE_CODES = [201, 203, 204, 205, 221, 223, 225, 226, 240]
+
       self.test_url = 'https://sandbox.fluidpay.com'
       self.live_url = 'https://app.fluidpay.com'
       self.default_currency = 'USD'
@@ -206,7 +209,8 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response, params[:payment], action),
           avs_result: AVSResult.new(code: response.dig('data', 'response_body', 'card', 'avs_response_code')),
           cvv_result: CVVResult.new(response.dig('data', 'response_body', 'card', 'avs_response_code')),
-          test: test?
+          test: test?,
+          response_type: response_type(response.dig('data', 'response_code'))
         )
       end
 
@@ -241,6 +245,16 @@ module ActiveMerchant #:nodoc:
           'Succeeded'
         else
           response["msg"]
+        end
+      end
+
+      def response_type(code)
+        if code == SUCCESS_CODE
+          0
+        elsif SOFT_DECLINE_CODES.include?(code)
+          1
+        else
+          2
         end
       end
     end

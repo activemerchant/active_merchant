@@ -73,6 +73,9 @@ module ActiveMerchant #:nodoc:
         'HKD' => 800
       }
 
+      SUCCESS_CODE = 200
+      SOFT_DECLINE_CODES = [402]
+
       def initialize(options = {})
         requires!(options, :login)
         @api_key = options[:login]
@@ -713,7 +716,9 @@ module ActiveMerchant #:nodoc:
           avs_result: { code: avs_code },
           cvv_result: cvc_code,
           emv_authorization: emv_authorization_from_response(response),
-          error_code: success ? nil : error_code_from(response))
+          error_code: success ? nil : error_code_from(response),
+          response_type: response_type(error_code_from(response))
+        )
       end
 
       def authorization_from(success, url, method, response)
@@ -844,6 +849,16 @@ module ActiveMerchant #:nodoc:
             dest = dest[key]
           end
           dest[dest_path.last] = source
+        end
+      end
+
+      def response_type(code)
+        if code == SUCCESS_CODE
+          0
+        elsif SOFT_DECLINE_CODES.include?(code)
+          1
+        else
+          2
         end
       end
     end

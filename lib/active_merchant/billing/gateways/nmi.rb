@@ -3,6 +3,9 @@ module ActiveMerchant #:nodoc:
     class NmiGateway < Gateway
       include Empty
 
+      SUCCESS_CODE = 100
+      SOFT_DECLINE_CODES = [201, 203, 204, 221, 222, 224, 225, 226, 240]
+
       DUP_WINDOW_DEPRECATION_MESSAGE = 'The class-level duplicate_window variable is deprecated. Please use the :dup_seconds transaction option instead.'
 
       self.test_url = self.live_url = 'https://secure.networkmerchants.com/api/transact.php'
@@ -315,7 +318,8 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response, params[:payment], action),
           avs_result: AVSResult.new(code: response[:avsresponse]),
           cvv_result: CVVResult.new(response[:cvvresponse]),
-          test: test?
+          test: test?,
+          response_type: response_type(response.dig('data', 'response_code'))
         )
       end
 
@@ -354,6 +358,16 @@ module ActiveMerchant #:nodoc:
           'Succeeded'
         else
           response[:responsetext]
+        end
+      end
+
+      def response_type(code)
+        if code == SUCCESS_CODE
+          0
+        elsif SOFT_DECLINE_CODES.include?(code)
+          1
+        else
+          2
         end
       end
     end

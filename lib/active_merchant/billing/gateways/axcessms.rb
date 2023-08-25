@@ -23,6 +23,13 @@ module ActiveMerchant #:nodoc:
       PAYMENT_CODE_REFUND = 'RF'
       PAYMENT_CODE_REBILL = 'RB'
 
+      SUCCESS_CODE = '000.000.100'
+      SOFT_DECLINE_CODES = [
+        '800.100.201', '800.100.203', '800.100.204', '100.150.204', '000.100.204',
+        '000.100.205', '800.100.205', '000.100.221', '000.100.223', '000.100.225',
+        '000.100.226', '300.100.100'
+      ]
+
       def initialize(options = {})
         requires!(options, :token)
         super
@@ -121,7 +128,8 @@ module ActiveMerchant #:nodoc:
           message_from(succeeded, response_data),
           response_data,
           authorization: authorization_from(response_data, params["paymentType"]),
-          test: test?
+          test: test?,
+          response_type: response_type(response.dig('result', 'code'))
         )
       end
 
@@ -145,6 +153,17 @@ module ActiveMerchant #:nodoc:
 
       def success_from(resonse_message)
         resonse_message == "OK"
+      end
+
+
+      def response_type(code)
+        if code == SUCCESS_CODE
+          0
+        elsif SOFT_DECLINE_CODES.include?(code)
+          1
+        else
+          2
+        end
       end
     end
   end

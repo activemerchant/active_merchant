@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
                       else
                         CVVResult.new(options[:cvv_result]).to_hash
                       end
+        @response_type = options[:response_type]
       end
     end
 
