@@ -1291,6 +1291,9 @@ shift4:
   client_guid: YOUR_CLIENT_ID
   auth_token: YOUR_AUTH_TOKEN
 
+shift4_v2:
+  secret_key: pr_test_xxxxxxxxx
+
 # Working credentials, no need to replace
 simetrik:
   client_id: 'wNhJBdrKDk3vTmkQMAWi5zWN7y21adO3'

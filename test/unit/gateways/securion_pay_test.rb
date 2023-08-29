@@ -36,7 +36,6 @@ class SecurionPayTest < Test::Unit::TestCase
 
     response = @gateway.store(@credit_card, @options)
     assert_success response
-    assert_match %r(^cust_\w+$), response.authorization
     assert_equal 'customer', response.params['objectType']
     assert_match %r(^card_\w+$), response.params['cards'][0]['id']
     assert_equal 'card', response.params['cards'][0]['objectType']
@@ -44,7 +43,8 @@ class SecurionPayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    @options[:customer_id] = response.authorization
+    @options[:customer_id] = response.params['cards'][0]['customerId']
+
     response = @gateway.store(@new_credit_card, @options)
     assert_success response
     assert_match %r(^card_\w+$), response.params['card']['id']
