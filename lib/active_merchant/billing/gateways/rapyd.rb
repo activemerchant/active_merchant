@@ -141,10 +141,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_stored_credential(post, options)
-        return unless stored_credential = options[:stored_credential]
+        add_network_reference_id(post, options)
+        add_initiation_type(post, options)
+      end
 
-        post[:payment_method][:fields][:network_reference_id] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
-        post[:initiation_type] = stored_credential[:reason_type] if stored_credential[:reason_type]
+      def add_network_reference_id(post, options)
+        return unless options[:stored_credential] || options[:network_transaction_id]
+
+        network_transaction_id = options[:network_transaction_id] || options[:stored_credential][:network_transaction_id]
+        post[:payment_method][:fields][:network_reference_id] = network_transaction_id if network_transaction_id
+      end
+
+      def add_initiation_type(post, options)
+        return unless options[:stored_credential] || options[:initiation_type]
+
+        initiation_type = options[:initiation_type] || options[:stored_credential][:reason_type]
+        post[:initiation_type] = initiation_type if initiation_type
       end
 
       def add_creditcard(post, payment, options)

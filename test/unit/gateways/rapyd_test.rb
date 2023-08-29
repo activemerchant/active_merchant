@@ -122,6 +122,19 @@ class RapydTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_network_transaction_id_and_initiation_type_fields
+    @options[:network_transaction_id] = '54321'
+    @options[:initiation_type] = 'customer_present'
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['payment_method']['fields']['network_reference_id'], @options[:network_transaction_id]
+      assert_equal request['initiation_type'], @options[:initiation_type]
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_purchase_with_3ds_gateway_specific
     @options[:three_d_secure] = {
       required: true,

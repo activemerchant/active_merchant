@@ -19,6 +19,17 @@ class RemoteRapydTest < Test::Unit::TestCase
       billing_address: address(name: 'Jim Reynolds'),
       order_id: '987654321'
     }
+    @stored_credential_options = {
+      pm_type: 'gb_visa_card',
+      currency: 'GBP',
+      complete_payment_url: 'https://www.rapyd.net/platform/collect/online/',
+      error_payment_url: 'https://www.rapyd.net/platform/collect/online/',
+      description: 'Describe this transaction',
+      statement_descriptor: 'Statement Descriptor',
+      email: 'test@example.com',
+      billing_address: address(name: 'Jim Reynolds'),
+      order_id: '987654321'
+    }
     @ach_options = {
       pm_type: 'us_ach_bank',
       currency: 'USD',
@@ -81,15 +92,25 @@ class RemoteRapydTest < Test::Unit::TestCase
   end
 
   def test_successful_subsequent_purchase_with_stored_credential
-    @options[:currency] = 'GBP'
-    @options[:pm_type] = 'gb_visa_card'
-    @options[:complete_payment_url] = 'https://www.rapyd.net/platform/collect/online/'
-    @options[:error_payment_url] = 'https://www.rapyd.net/platform/collect/online/'
-
     # Rapyd requires a random int between 10 and 15 digits for NTID
-    response = @gateway.purchase(15000, @credit_card, @options.merge({ stored_credential: { network_transaction_id: rand.to_s[2..11], reason_type: 'recurring' } }))
+    response = @gateway.purchase(15000, @credit_card, @stored_credential_options.merge(stored_credential: { network_transaction_id: rand.to_s[2..11], reason_type: 'recurring' }))
     assert_success response
     assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_network_transaction_id_and_initiation_type_fields
+    # Rapyd requires a random int between 10 and 15 digits for NTID
+    response = @gateway.purchase(15000, @credit_card, @stored_credential_options.merge(network_transaction_id: rand.to_s[2..11], initiation_type: 'customer_present'))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_network_transaction_id_and_initiation_type_fields_along_with_stored_credentials
+    # Rapyd requires a random int between 10 and 15 digits for NTID
+    response = @gateway.purchase(15000, @credit_card, @stored_credential_options.merge(stored_credential: { network_transaction_id: rand.to_s[2..11], reason_type: 'recurring' }, network_transaction_id: rand.to_s[2..11], initiation_type: 'customer_present'))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert_equal 'customer_present', response.params['data']['initiation_type']
   end
 
   def test_successful_purchase_with_address
