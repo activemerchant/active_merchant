@@ -10,7 +10,7 @@ module ActiveMerchant
         if options[:pay_mode]
           post = new_post
           add_invoice(post, amount, options)
-          add_reference(post, *new_authorization)
+          add_reference(post, *new_authorization(options))
           add_payment_method(post, payment_method)
           add_customer_data(post, payment_method, options)
           add_3dsecure_id(post, options)
@@ -27,7 +27,7 @@ module ActiveMerchant
       def authorize(amount, payment_method, options = {})
         post = new_post
         add_invoice(post, amount, options)
-        add_reference(post, *new_authorization)
+        add_reference(post, *new_authorization(options))
         add_payment_method(post, payment_method)
         add_customer_data(post, payment_method, options)
         add_3dsecure_id(post, options)
@@ -264,9 +264,9 @@ module ActiveMerchant
         authorization.split('|')
       end
 
-      def new_authorization
+      def new_authorization(options)
         # Must be unique within a merchant id.
-        orderid = SecureRandom.uuid
+        orderid = options[:order_id] || SecureRandom.uuid
 
         # Must be unique within an order id.
         transactionid = '1'
