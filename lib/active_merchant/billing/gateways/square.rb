@@ -210,7 +210,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def sdk_request(api_name, method, params = {})
-        raw_response = square_client.send(api_name).send(method, params)
+        raw_response = square_client.send(api_name).send(method, **params)
         log(raw_response)
 
         parse(raw_response)

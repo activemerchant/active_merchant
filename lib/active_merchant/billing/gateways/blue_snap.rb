@@ -141,6 +141,7 @@ module ActiveMerchant
               doc.send('payment-sources') do
                 payment_method_details.check? ? store_echeck(doc, payment_method) : store_credit_card(doc, payment_method)
               end
+              add_3ds(doc, options[:three_d_secure])
               add_order(doc, options)
             end
           end

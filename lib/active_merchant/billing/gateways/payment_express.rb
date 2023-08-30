@@ -18,11 +18,11 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w[ AU CA DE ES FR GB HK IE MY NL NZ SG US ZA ]
 
-      self.homepage_url = 'http://www.paymentexpress.com/'
-      self.display_name = 'PaymentExpress'
+      self.homepage_url = 'https://www.windcave.com/'
+      self.display_name = 'Windcave (formerly PaymentExpress)'
 
-      self.live_url = 'https://sec.paymentexpress.com/pxpost.aspx'
-      self.test_url = 'https://uat.paymentexpress.com/pxpost.aspx'
+      self.live_url = 'https://sec.windcave.com/pxpost.aspx'
+      self.test_url = 'https://uat.windcave.com/pxpost.aspx'
 
       APPROVED = '1'
 
