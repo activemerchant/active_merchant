@@ -1435,6 +1435,15 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_additional_extra_data
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(store: 'test store'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal JSON.parse(data)['store'], 'test store'
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_extended_avs_response
     response = stub_comms do
       @gateway.verify(@credit_card, @options)

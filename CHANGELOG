@@ -7,6 +7,7 @@
 * Cybersource: Support recurring apple pay [aenand] #4874
 * Verve BIN ranges and add card type to Rapyd gateway [jherreraa] #4875
 * Rapyd: Add network_reference_id, initiation_type, and update stored credential method [yunnydang] #4877
+* Adyen: Add the store field [yunnydang] #4878
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
