@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       include Empty
 
       SUCCESS_CODE = 100
-      SOFT_DECLINE_CODES = [201, 203, 204, 205, 221, 223, 225, 226, 240]
+      SOFT_DECLINE_CODES = [201, 203, 204, 205, 221, 223, 225, 226, 240].freeze
 
       self.test_url = 'https://sandbox.fluidpay.com'
       self.live_url = 'https://app.fluidpay.com'

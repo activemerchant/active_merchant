@@ -13,6 +13,21 @@ module ActiveMerchant #:nodoc:
       self.currencies_without_fractions = %w(BIF DJF GNF ISK KMF XAF CLF XPF JPY PYG RWF KRW VUV VND XOF)
       self.currencies_with_three_decimal_places = %w(BHD LYD JOD KWD OMR TND)
 
+      SUCCESS_CODES = %w{10000 10008 10011 10076 10077 10081}.freeze
+
+      SOFT_DECLINE_CODES = %w{
+        20001 20002 20003 20005 20006 20009 20010 20012 20013 20014 20017
+        20018 20019 20020 20021 20022 20023 20024 20025 20026 20027 20028
+        20029 20030 20031 20032 20038 20039 20040 20042 20044 20046 20051
+        20052 20053 20054 20055 20056 20057 20058 20059 20060 20061 20062
+        20063 20064 20065 20066 20067 20068 20075 20078 20082 20083 20084
+        20085 20086 20087 20088 20089 20090 20091 20092 20093 20094 20095
+        20096 20097 20098 20099 2006P 200N0 200N7 200O5 200P1 200P9 200R1
+        200R3 200S4 200T2 200T3 200T5 20100 20101 20102 20103 20104 20105
+        20106 20107 20108 20109 20110 20111 20112 20113 20114 20115 20116
+        20117 20118 20119 20120 20121 20123 20124 20150 20151 20152 20153
+        20154 20155 20156 20157 20158 20179 20182 20183 20193
+      }.freeze
       LIVE_ACCESS_TOKEN_URL = 'https://access.checkout.com/connect/token'
       TEST_ACCESS_TOKEN_URL = 'https://access.sandbox.checkout.com/connect/token'
 
@@ -204,8 +219,8 @@ module ActiveMerchant #:nodoc:
         end
         if payment_method.is_a?(String)
           if /tok/.match?(payment_method)
-            post[:type] = 'token'
-            post[:token] = payment_method
+            post[:source][:type] = 'token'
+            post[:source][:token] = payment_method
           elsif /src/.match?(payment_method)
             post[key][:type] = 'id'
             post[key][:id] = payment_method
@@ -376,12 +391,13 @@ module ActiveMerchant #:nodoc:
           error_code: error_code_from(succeeded, body),
           test: test?,
           avs_result: avs_result,
-          cvv_result: cvv_result
+          cvv_result: cvv_result,
+          response_type: response_type(response.dig('response_code'))
         )
       end
 
       def headers(action, options)
-        auth_token = @access_token ? "Bearer #{@access_token}" : @options[:secret_key]
+        auth_token = @access_token ? "Bearer #{@access_token}" : "Bearer #{@options[:secret_key]}"
         auth_token = @options[:public_key] if action == :tokens
         headers = {
           'Authorization' => auth_token,
@@ -514,6 +530,16 @@ module ActiveMerchant #:nodoc:
           response.body || response.code
         else
           raise ResponseError.new(response)
+        end
+      end
+
+      def response_type(code)
+        if SUCCESS_CODES.include?(code)
+          0
+        elsif SOFT_DECLINE_CODES.include?(code)
+          1
+        else
+          2
         end
       end
     end

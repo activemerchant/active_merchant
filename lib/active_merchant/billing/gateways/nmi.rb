@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       include Empty
 
       SUCCESS_CODE = 100
-      SOFT_DECLINE_CODES = [201, 203, 204, 221, 222, 224, 225, 226, 240]
+      SOFT_DECLINE_CODES = [201, 203, 204, 221, 222, 224, 225, 226, 240].freeze
 
       DUP_WINDOW_DEPRECATION_MESSAGE = 'The class-level duplicate_window variable is deprecated. Please use the :dup_seconds transaction option instead.'
 
