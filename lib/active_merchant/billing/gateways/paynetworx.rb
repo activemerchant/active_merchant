@@ -1,6 +1,7 @@
 module ActiveMerchant
   module Billing
     class PaynetworxGateway < Gateway
+      include Empty
 
       API_VERSION = '1.0'
       SUCCESS_CODE = %w[00 000 001 002 003 092]
@@ -80,11 +81,11 @@ module ActiveMerchant
           post["DataAction"] = "token/add"
           post["PaymentMethod"]["Card"]["CardPresent"] = true
           post["PaymentMethod"]["Card"]["CVC"] = {}
-          post["PaymentMethod"]["Card"]["CVC"]["CVC"] = payment_method[:cvv]
+          post["PaymentMethod"]["Card"]["CVC"]["CVC"] = payment_method.verification_value unless empty?(payment_method.verification_value)
           post["PaymentMethod"]["Card"]["PAN"] = {}
-          post["PaymentMethod"]["Card"]["PAN"]["PAN"] = payment_method[:number]
-          post["PaymentMethod"]["Card"]["PAN"]["ExpMonth"] = payment_method[:expiryMonth]
-          post["PaymentMethod"]["Card"]["PAN"]["ExpYear"] = payment_method[:expiryYear]
+          post["PaymentMethod"]["Card"]["PAN"]["PAN"] = payment_method.number
+          post["PaymentMethod"]["Card"]["PAN"]["ExpMonth"] = format(payment_method.month, :two_digits)
+          post["PaymentMethod"]["Card"]["PAN"]["ExpYear"] = format(payment_method.year, :two_digits)
         end
         if options[:billing_address].present?
           post["PaymentMethod"]["Card"]["BillingAddress"] = {}
