@@ -10,6 +10,7 @@ module ActiveMerchant
       self.live_url = 'https://api.prod.paynetworx.net/v0/transaction/'
       self.default_currency = 'USD'
       self.supported_countries = ['US']
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'https://www.paynetworx.com/'
       self.display_name = 'Paynetworx'
 
