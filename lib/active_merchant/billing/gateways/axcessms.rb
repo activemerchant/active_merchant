@@ -138,7 +138,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, payment_type)
-        authorization = response["id"]
         authorization = response["id"].present? ? response["id"] : "Failed"
         [authorization, payment_type].join('#')
       end
