@@ -536,7 +536,7 @@ module ActiveMerchant #:nodoc:
       def response_type(code)
         if SUCCESS_CODES.include?(code)
           0
-        elsif SOFT_DECLINE_CODES.include?(code)
+        elsif SOFT_DECLINE_CODES.include?(code) || code.nil?
           1
         else
           2
