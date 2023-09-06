@@ -47,7 +47,8 @@ module ActiveMerchant #:nodoc:
         'anda' => ->(num) { num =~ /^603199\d{10}$/ },
         'tarjeta-d' => ->(num) { num =~ /^601828\d{10}$/ },
         'hipercard' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), HIPERCARD_RANGES) },
-        'panal' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), PANAL_RANGES) }
+        'panal' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), PANAL_RANGES) },
+        'verve' => ->(num) { (16..19).cover?(num&.size) && in_bin_range?(num.slice(0, 6), VERVE_RANGES) }
       }
 
       SODEXO_NO_LUHN = ->(num) { num =~ /^(505864|505865)\d{10}$/ }
@@ -250,6 +251,43 @@ module ActiveMerchant #:nodoc:
       ]
 
       PANAL_RANGES = [[602049]]
+
+      VERVE_RANGES = [
+        [506099],
+        [506101],
+        [506103],
+        (506111..506114),
+        [506116],
+        [506118],
+        [506124],
+        [506127],
+        [506130],
+        (506132..506139),
+        [506141],
+        [506144],
+        (506146..506152),
+        (506154..506161),
+        (506163..506164),
+        [506167],
+        (506169..506198),
+        (507865..507866),
+        (507868..507872),
+        (507874..507899),
+        (507901..507909),
+        (507911..507919),
+        [507921],
+        (507923..507925),
+        (507927..507962),
+        [507964],
+        [627309],
+        [627903],
+        [628051],
+        [636625],
+        [637058],
+        [637634],
+        [639245],
+        [639383]
+      ]
 
       def self.included(base)
         base.extend(ClassMethods)

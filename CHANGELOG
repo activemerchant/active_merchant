@@ -5,6 +5,7 @@
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860
 * TNS: Use the specified order_id in request if available [yunnydang] #4880
 * Cybersource: Support recurring apple pay [aenand] #4874
+* Verve BIN ranges and add card type to Rapyd gateway [jherreraa] #4875
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
