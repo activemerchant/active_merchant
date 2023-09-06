@@ -1190,6 +1190,72 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
+  def test_successful_authorize_with_3ds_exemption
+    @options[:three_d_secure] = {
+      version: '2.0',
+      eci: '05',
+      cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+      xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+      ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+    }
+
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(three_ds_exemption_type: 'moto'))
+    assert_successful_response(response)
+  end
+
+  def test_successful_purchase_with_3ds_exemption
+    @options[:three_d_secure] = {
+      version: '2.0',
+      eci: '05',
+      cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+      xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+      ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+    }
+
+    assert response = @gateway.purchase(@amount, @three_ds_enrolled_card, @options.merge(three_ds_exemption_type: 'moto'))
+    assert_successful_response(response)
+  end
+
+  def test_successful_recurring_cof_authorize_with_3ds_exemption
+    @options[:stored_credential] = {
+      initiator: 'merchant',
+      reason_type: 'recurring',
+      initial_transaction: false,
+      network_transaction_id: ''
+    }
+
+    @options[:three_d_secure] = {
+      version: '2.0',
+      eci: '05',
+      cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+      xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+      ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+    }
+
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(three_ds_exemption_type: CyberSourceGateway::THREEDS_EXEMPTIONS[:stored_credential]))
+    assert_successful_response(response)
+  end
+
+  def test_successful_recurring_cof_purchase_with_3ds_exemption
+    @options[:stored_credential] = {
+      initiator: 'merchant',
+      reason_type: 'recurring',
+      initial_transaction: false,
+      network_transaction_id: ''
+    }
+
+    @options[:three_d_secure] = {
+      version: '2.0',
+      eci: '05',
+      cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+      xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+      ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+    }
+
+    assert response = @gateway.purchase(@amount, @three_ds_enrolled_card, @options.merge(three_ds_exemption_type: CyberSourceGateway::THREEDS_EXEMPTIONS[:stored_credential]))
+    assert_successful_response(response)
+  end
+
   def test_invalid_field
     @options = @options.merge({
       address: {

@@ -9,6 +9,7 @@
 * Rapyd: Add network_reference_id, initiation_type, and update stored credential method [yunnydang] #4877
 * Adyen: Add the store field [yunnydang] #4878
 * Stripe Payment Intents: Expand balance txns for regular transactions [yunnydang] #4882
+* CyberSource (SOAP): Added support for 3DS exemption request fields [BritneyS] #4881
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

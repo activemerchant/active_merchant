@@ -1420,6 +1420,82 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_add_3ds_exemption_fields_except_stored_credential
+    CyberSourceGateway::THREEDS_EXEMPTIONS.keys.reject { |k| k == :stored_credential }.each do |exemption|
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card, @options.merge(options_with_normalized_3ds, three_ds_exemption_type: exemption.to_s, merchant_id: 'test', billing_address: {
+          'address1' => '221B Baker Street',
+          'city' => 'London',
+          'zip' => 'NW16XE',
+          'country' => 'GB'
+        }))
+      end.check_request do |_endpoint, data, _headers|
+        # billing details
+        assert_match(%r(<billTo>\n), data)
+        assert_match(%r(<firstName>Longbob</firstName>), data)
+        assert_match(%r(<lastName>Longsen</lastName>), data)
+        assert_match(%r(<street1>221B Baker Street</street1>), data)
+        assert_match(%r(<city>London</city>), data)
+        assert_match(%r(<postalCode>NW16XE</postalCode>), data)
+        assert_match(%r(<country>GB</country>), data)
+        # card details
+        assert_match(%r(<card>\n), data)
+        assert_match(%r(<accountNumber>4111111111111111</accountNumber>), data)
+        assert_match(%r(<expirationMonth>#{@gateway.format(@credit_card.month, :two_digits)}</expirationMonth>), data)
+        assert_match(%r(<expirationYear>#{@gateway.format(@credit_card.year, :four_digits)}</expirationYear>), data)
+        # merchant data
+        assert_match(%r(<merchantID>test</merchantID>), data)
+        assert_match(%r(<merchantReferenceCode>#{@options[:order_id]}</merchantReferenceCode>), data)
+        # amount data
+        assert_match(%r(<purchaseTotals>\n), data)
+        assert_match(%r(<grandTotalAmount>#{@gateway.send(:localized_amount, @amount.to_i, @options[:currency])}</grandTotalAmount>), data)
+        # 3ds exemption tag
+        assert_match %r(<ccAuthService run=\"true\">\n), data
+        assert_match(%r(<#{CyberSourceGateway::THREEDS_EXEMPTIONS[exemption]}>1</#{CyberSourceGateway::THREEDS_EXEMPTIONS[exemption]}>), data)
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
+  def test_add_stored_credential_3ds_exemption
+    @options[:stored_credential] = {
+      initiator: 'merchant',
+      reason_type: 'recurring',
+      initial_transaction: false,
+      network_transaction_id: '016150703802094'
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(options_with_normalized_3ds, three_ds_exemption_type: CyberSourceGateway::THREEDS_EXEMPTIONS[:stored_credential], merchant_id: 'test', billing_address: {
+        'address1' => '221B Baker Street',
+        'city' => 'London',
+        'zip' => 'NW16XE',
+        'country' => 'GB'
+      }))
+    end.check_request do |_endpoint, data, _headers|
+      # billing details
+      assert_match(%r(<billTo>\n), data)
+      assert_match(%r(<firstName>Longbob</firstName>), data)
+      assert_match(%r(<lastName>Longsen</lastName>), data)
+      assert_match(%r(<street1>221B Baker Street</street1>), data)
+      assert_match(%r(<city>London</city>), data)
+      assert_match(%r(<postalCode>NW16XE</postalCode>), data)
+      assert_match(%r(<country>GB</country>), data)
+      # card details
+      assert_match(%r(<card>\n), data)
+      assert_match(%r(<accountNumber>4111111111111111</accountNumber>), data)
+      assert_match(%r(<expirationMonth>#{@gateway.format(@credit_card.month, :two_digits)}</expirationMonth>), data)
+      assert_match(%r(<expirationYear>#{@gateway.format(@credit_card.year, :four_digits)}</expirationYear>), data)
+      # merchant data
+      assert_match(%r(<merchantID>test</merchantID>), data)
+      assert_match(%r(<merchantReferenceCode>#{@options[:order_id]}</merchantReferenceCode>), data)
+      # amount data
+      assert_match(%r(<purchaseTotals>\n), data)
+      assert_match(%r(<grandTotalAmount>#{@gateway.send(:localized_amount, @amount.to_i, @options[:currency])}</grandTotalAmount>), data)
+      # 3ds exemption tag
+      assert_match(%r(<subsequentAuthStoredCredential>true</subsequentAuthStoredCredential>), data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_scrub
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
