@@ -43,6 +43,7 @@ module ActiveMerchant #:nodoc:
             add_fulfillment_date(post, options)
             request_three_d_secure(post, options)
             add_level_three(post, options)
+            post[:expand] = ['charges.data.balance_transaction']
 
             CREATE_INTENT_ATTRIBUTES.each do |attribute|
               add_whitelisted_attribute(post, options, attribute)

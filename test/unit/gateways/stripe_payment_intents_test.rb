@@ -464,6 +464,14 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response)
   end
 
+  def test_sends_expand_balance_transaction
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('expand[0]=charges.data.balance_transaction', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_purchase_with_google_pay
     options = {
       currency: 'GBP'

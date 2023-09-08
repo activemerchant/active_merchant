@@ -95,9 +95,10 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       customer: @customer
     }
     assert purchase = @gateway.purchase(@amount, @visa_payment_method, options)
-
     assert_equal 'succeeded', purchase.params['status']
+
     assert purchase.params.dig('charges', 'data')[0]['captured']
+    assert purchase.params.dig('charges', 'data')[0]['balance_transaction']
   end
 
   def test_successful_purchase_with_shipping_address
