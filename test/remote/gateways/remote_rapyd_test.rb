@@ -366,4 +366,21 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_equal 'not_applicable', response.params['data']['payment_method_data']['next_action']
     assert_equal '', response.params['data']['redirect_url']
   end
+
+  def test_successful_authorize_with_execute_threed
+    options = @options.merge(pm_type: 'gb_visa_card', execute_threed: true)
+    response = @gateway.authorize(105000, @credit_card, options)
+    assert_success response
+    assert_equal 'ACT', response.params['data']['status']
+    assert_equal '3d_verification', response.params['data']['payment_method_data']['next_action']
+    assert response.params['data']['redirect_url']
+  end
+
+  def test_successful_purchase_without_cvv
+    options = @options.merge({ pm_type: 'gb_visa_card', stored_credential: { network_transaction_id: rand.to_s[2..11] } })
+    @credit_card.verification_value = nil
+    response = @gateway.purchase(100, @credit_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
 end
