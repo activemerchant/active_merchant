@@ -316,8 +316,8 @@ module ActiveMerchant #:nodoc:
         if options[:three_d_secure] || options[:execute_threed]
           post[:'3ds'] = {}
           post[:'3ds'][:enabled] = true
-          post[:success_url] = options[:callback_url] if options[:callback_url]
-          post[:failure_url] = options[:callback_url] if options[:callback_url]
+          post[:success_url] = options[:redirect_links][:success_url] if options[:redirect_links]
+          post[:failure_url] = options[:redirect_links][:failure_url] if options[:redirect_links]
           post[:'3ds'][:attempt_n3d] = options[:attempt_n3d] if options[:attempt_n3d]
           post[:'3ds'][:challenge_indicator] = options[:challenge_indicator] if options[:challenge_indicator]
           post[:'3ds'][:exemption] = options[:exemption] if options[:exemption]
