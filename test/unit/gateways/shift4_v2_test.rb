@@ -19,7 +19,13 @@ class Shift4V2Test < SecurionPayTest
     assert_match(/^Invalid response received from the Shift4 V2 API/, response.message)
   end
 
-  def test_ensure_does_not_respond_to_credit; end
+  def test_amount_gets_upcased_if_needed
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'USD', CGI.parse(data)['currency'].first
+    end.respond_with(successful_purchase_response)
+  end
 
   private
 
