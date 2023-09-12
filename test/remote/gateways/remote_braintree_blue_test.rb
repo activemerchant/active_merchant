@@ -1238,6 +1238,13 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['issuing_bank']
   end
 
+  def test_successful_purchase_with_global_id
+    assert response = @gateway.purchase(@amount, @credit_card)
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_not_nil response.params['braintree_transaction']['payment_receipt']['global_id']
+  end
+
   def test_unsucessful_purchase_using_a_bank_account_token_not_verified
     bank_account = check({ account_number: '1000000002', routing_number: '011000015' })
     response = @gateway.store(bank_account, @options.merge(@check_required_options))

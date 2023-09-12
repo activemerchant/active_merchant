@@ -618,6 +618,14 @@ module ActiveMerchant #:nodoc:
           risk_data = nil
         end
 
+        if transaction.payment_receipt
+          payment_receipt = {
+            'global_id' => transaction.payment_receipt.global_id
+          }
+        else
+          payment_receipt = nil
+        end
+
         {
           'order_id'                     => transaction.order_id,
           'amount'                       => transaction.amount.to_s,
@@ -632,7 +640,8 @@ module ActiveMerchant #:nodoc:
           'network_transaction_id'       => transaction.network_transaction_id || nil,
           'processor_response_code'      => response_code_from_result(result),
           'processor_authorization_code' => transaction.processor_authorization_code,
-          'recurring'                    => transaction.recurring
+          'recurring'                    => transaction.recurring,
+          'payment_receipt'              => payment_receipt
         }
       end
 
