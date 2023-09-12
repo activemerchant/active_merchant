@@ -264,7 +264,7 @@ class Shift4Test < Test::Unit::TestCase
   def test_failed_authorize_with_host_response
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
-    end.respond_with(failed_authorize_with_hostResponse_response)
+    end.respond_with(failed_authorize_with_host_response)
 
     assert_failure response
     assert_equal 'CVV value N not accepted.', response.message
