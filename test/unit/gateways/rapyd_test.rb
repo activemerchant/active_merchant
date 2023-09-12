@@ -55,6 +55,17 @@ class RapydTest < Test::Unit::TestCase
     assert_equal 'payment_716ce0efc63aa8d91579e873d29d9d5e', response.authorization.split('|')[0]
   end
 
+  def test_successful_purchase_without_cvv
+    @credit_card.verification_value = nil
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"number":"4242424242424242","expiration_month":"9","expiration_year":"2024","name":"Longbob Longsen/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+    assert_equal 'payment_716ce0efc63aa8d91579e873d29d9d5e', response.authorization.split('|')[0]
+  end
+
   def test_successful_purchase_with_ach
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @check, @options.merge(billing_address: address(name: 'Joe John-ston')))

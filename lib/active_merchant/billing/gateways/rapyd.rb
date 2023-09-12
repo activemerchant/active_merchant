@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
         pm_fields[:expiration_month] = payment.month.to_s
         pm_fields[:expiration_year] = payment.year.to_s
         pm_fields[:name] = "#{payment.first_name} #{payment.last_name}"
-        pm_fields[:cvv] = payment.verification_value.to_s
+        pm_fields[:cvv] = payment.verification_value.to_s if payment.verification_value.present?
 
         add_stored_credential(post, options)
       end
@@ -197,15 +197,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_3ds(post, payment, options)
-        return unless three_d_secure = options[:three_d_secure]
-
-        post[:payment_method_options] = {}
-        post[:payment_method_options]['3d_required'] = three_d_secure[:required]
-        post[:payment_method_options]['3d_version'] = three_d_secure[:version]
-        post[:payment_method_options][:cavv] = three_d_secure[:cavv]
-        post[:payment_method_options][:eci] = three_d_secure[:eci]
-        post[:payment_method_options][:xid] = three_d_secure[:xid]
-        post[:payment_method_options][:ds_trans_id] = three_d_secure[:ds_transaction_id]
+        if options[:execute_threed] == true
+          post[:payment_method_options] = { '3d_required' => true }
+        elsif three_d_secure = options[:three_d_secure]
+          post[:payment_method_options] = {}
+          post[:payment_method_options]['3d_required'] = three_d_secure[:required]
+          post[:payment_method_options]['3d_version'] = three_d_secure[:version]
+          post[:payment_method_options][:cavv] = three_d_secure[:cavv]
+          post[:payment_method_options][:eci] = three_d_secure[:eci]
+          post[:payment_method_options][:xid] = three_d_secure[:xid]
+          post[:payment_method_options][:ds_trans_id] = three_d_secure[:ds_transaction_id]
+        end
       end
 
       def add_metadata(post, options)
