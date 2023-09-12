@@ -796,6 +796,29 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_payout_with_credit_card
+    payout_options = {
+      reference: 'P9999999999999999',
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: @us_address,
+      nationality: 'NL',
+      order_id: 'P9999999999999999',
+      date_of_birth: '1990-01-01',
+      payout: true
+    }
+
+    stub_comms do
+      @gateway.credit(2500, @credit_card, payout_options)
+    end.check_request do |endpoint, data, _headers|
+      assert_match(/payout/, endpoint)
+      assert_match(/"dateOfBirth\":\"1990-01-01\"/, data)
+      assert_match(/"nationality\":\"NL\"/, data)
+      assert_match(/"shopperName\":{\"firstName\":\"Test\",\"lastName\":\"Card\"}/, data)
+    end.respond_with(successful_payout_response)
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
     response = @gateway.void('7914775043909934')
@@ -1000,14 +1023,16 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_shopper_data
     post = { card: { billingAddress: {} } }
-    @gateway.send(:add_shopper_data, post, @options)
+    @gateway.send(:add_shopper_data, post, @credit_card, @options)
+    @gateway.send(:add_extra_data, post, @credit_card, @options)
     assert_equal 'john.smith@test.com', post[:shopperEmail]
     assert_equal '77.110.174.153', post[:shopperIP]
   end
 
   def test_shopper_data_backwards_compatibility
     post = { card: { billingAddress: {} } }
-    @gateway.send(:add_shopper_data, post, @options_shopper_data)
+    @gateway.send(:add_shopper_data, post, @credit_card, @options_shopper_data)
+    @gateway.send(:add_extra_data, post, @credit_card, @options_shopper_data)
     assert_equal 'john2.smith@test.com', post[:shopperEmail]
     assert_equal '192.168.100.100', post[:shopperIP]
   end
@@ -1859,6 +1884,31 @@ class AdyenTest < Test::Unit::TestCase
     {
       "pspReference": "883614109029400G",
       "resultCode": "Received"
+    }
+    RESPONSE
+  end
+
+  def successful_payout_response
+    <<-RESPONSE
+    {
+      "additionalData":
+      {
+        "liabilityShift": "false",
+        "authCode": "081439",
+        "avsResult": "0 Unknown",
+        "retry.attempt1.acquirerAccount": "TestPmmAcquirerAccount",
+        "threeDOffered": "false",
+        "retry.attempt1.acquirer": "TestPmmAcquirer",
+        "authorisationMid": "50",
+        "acquirerAccountCode": "TestPmmAcquirerAccount",
+        "cvcResult": "0 Unknown",
+        "retry.attempt1.responseCode": "Approved",
+        "threeDAuthenticated": "false",
+        "retry.attempt1.rawResponse": "AUTHORISED"
+      },
+      "pspReference": "GMTN2VTQGJHKGK82",
+      "resultCode": "Authorised",
+      "authCode": "081439"
     }
     RESPONSE
   end
