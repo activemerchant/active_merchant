@@ -277,6 +277,32 @@ class BlueSnapTest < Test::Unit::TestCase
     assert_equal '019082915501456', response.params['network-transaction-id']
   end
 
+  def test_successful_purchase_with_cit_stored_credential_fields
+    cit_stored_credentials = {
+      initiator: 'cardholder',
+      network_transaction_id: 'ABC123'
+    }
+    stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options_3ds2.merge({ stored_credential: cit_stored_credentials }))
+    end.check_request do |_method, _url, data|
+      assert_match '<transaction-initiator>SHOPPER</transaction-initiator>', data
+      assert_match '<original-network-transaction-id>ABC123</original-network-transaction-id>', data
+    end.respond_with(successful_purchase_with_3ds_auth_response)
+  end
+
+  def test_successful_purchase_with_mit_stored_credential_fields
+    cit_stored_credentials = {
+      initiator: 'merchant',
+      network_transaction_id: 'QER100'
+    }
+    stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options_3ds2.merge({ stored_credential: cit_stored_credentials }))
+    end.check_request do |_method, _url, data|
+      assert_match '<transaction-initiator>MERCHANT</transaction-initiator>', data
+      assert_match '<original-network-transaction-id>QER100</original-network-transaction-id>', data
+    end.respond_with(successful_purchase_with_3ds_auth_response)
+  end
+
   def test_does_not_send_3ds_auth_when_empty
     stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -315,6 +341,19 @@ class BlueSnapTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
     assert_success response
     assert_equal '1012082893', response.authorization
+  end
+
+  def test_successful_authorize_with_descriptor_phone_number
+    options_with_phone_number = {
+      descriptor_phone_number: '321-321-4321'
+    }
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.authorize(@amount, @credit_card, options_with_phone_number)
+    end.check_request do |_method, _url, data|
+      assert_match('<descriptor-phone-number>321-321-4321</descriptor-phone-number>', data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
   end
 
   def test_successful_authorize_with_3ds_auth
@@ -376,9 +415,58 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    @gateway.expects(:raw_ssl_request).returns(successful_refund_response)
+    options = {
+      reason: 'Refund for order #1992',
+      cancel_subscription: 'false',
+      tax_amount: 0.05,
+      transaction_meta_data: [
+        {
+          meta_key: 'refundedItems',
+          meta_value: '1552,8832',
+          meta_description: 'Refunded Items',
+          meta_is_visible: 'false'
+        },
+        {
+          meta_key: 'Number2',
+          meta_value: 'KTD',
+          meta_description: 'Metadata 2',
+          meta_is_visible: 'true'
+        }
+      ]
+    }
+    transaction_id = '1286'
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.refund(@amount, transaction_id, options)
+    end.check_request do |_action, endpoint, data, _headers|
+      doc = REXML::Document.new(data)
 
-    response = @gateway.refund(@amount, 'Authorization')
+      assert_includes endpoint, "/refund/#{transaction_id}"
+      assert_match(/<amount>1.00<\/amount>/, data)
+      assert_match(/<tax-amount>0.05<\/tax-amount>/, data)
+      assert_match(/<cancel-subscription>false<\/cancel-subscription>/, data)
+      assert_match(/<reason>Refund for order #1992<\/reason>/, data)
+      assert_match(/<meta-key>refundedItems<\/meta-key>/, data)
+      assert_match(/<meta-value>KTD<\/meta-value>/, data)
+      assert_match(/<meta-description>Metadata 2<\/meta-description>/, data)
+      transaction_meta_data = doc.root.elements['transaction-meta-data'].elements.to_a
+      transaction_meta_data.each_with_index do |item, index|
+        assert_match item.elements['meta-key'].text, options[:transaction_meta_data][index][:meta_key]
+        assert_match item.elements['meta-value'].text, options[:transaction_meta_data][index][:meta_value]
+        assert_match item.elements['meta-description'].text, options[:transaction_meta_data][index][:meta_description]
+        assert_match item.elements['is-visible'].text, options[:transaction_meta_data][index][:meta_is_visible]
+      end
+    end.respond_with(successful_refund_without_merchant_transaction_id_response)
+    assert_success response
+    assert_equal '1061398943', response.authorization
+  end
+
+  def test_successful_refund_with_merchant_id
+    merchant_transaction_id = '12678'
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.refund(@amount, '', @options.merge({ merchant_transaction_id: merchant_transaction_id }))
+    end.check_request do |_action, endpoint, _data, _headers|
+      assert_includes endpoint, "/refund/merchant/#{merchant_transaction_id}"
+    end.respond_with(successful_refund_response)
     assert_success response
     assert_equal '1012082907', response.authorization
   end
@@ -541,6 +629,14 @@ class BlueSnapTest < Test::Unit::TestCase
     ActiveMerchant::Billing::BlueSnapGateway.currencies_with_three_decimal_places.each do |currency|
       assert_equal '1.234', check_amount_registered(amount, currency)
     end
+  end
+
+  def test_optional_idempotency_key_header
+    stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ idempotency_key: 'test123' }))
+    end.check_request do |_method, _url, _data, headers|
+      assert_equal 'test123', headers['Idempotency-Key']
+    end.respond_with(successful_authorize_response)
   end
 
   private
@@ -1035,6 +1131,32 @@ class BlueSnapTest < Test::Unit::TestCase
       </messages>
     XML
     MockResponse.failed(body, 400)
+  end
+
+  def successful_refund_without_merchant_transaction_id_response
+    MockResponse.succeeded <<-XML
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <refund xmlns="http://ws.plimus.com">
+        <refund-transaction-id>1061398943</refund-transaction-id>
+        <amount>1.00</amount>
+        <tax-amount>0.05</tax-amount>
+        <transaction-meta-data>
+          <meta-data>
+            <meta-key>refundedItems</meta-key>
+            <meta-value>1552,8832</meta-value>
+            <meta-description>Refunded Items</meta-description>
+            <is-visible>false</is-visible>
+          </meta-data>
+          <meta-data>
+            <meta-key>Number2</meta-key>
+            <meta-value>KTD</meta-value>
+            <meta-description>Metadata 2</meta-description>
+            <is-visible>true</is-visible>
+          </meta-data>
+        </transaction-meta-data>
+        <reason>Refund for order #1992</reason>
+      </refund>
+    XML
   end
 
   def successful_void_response

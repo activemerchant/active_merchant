@@ -9,7 +9,7 @@ class GarantiTest < Test::Unit::TestCase
     Base.mode = :test
     @gateway = GarantiGateway.new(login: 'a', password: 'b', terminal_id: 'c', merchant_id: 'd')
 
-    @credit_card = credit_card(4242424242424242)
+    @credit_card = credit_card('4242424242424242')
     @amount = 1000 # 1000 cents, 10$
 
     @options = {

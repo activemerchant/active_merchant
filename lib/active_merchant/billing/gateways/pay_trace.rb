@@ -33,7 +33,14 @@ module ActiveMerchant #:nodoc:
         store: 'customer/create',
         redact: 'customer/delete',
         level_3_visa: 'level_three/visa',
-        level_3_mastercard: 'level_three/mastercard'
+        level_3_mastercard: 'level_three/mastercard',
+        ach_sale: 'checks/sale/by_account',
+        ach_customer_sale: 'checks/sale/by_customer',
+        ach_authorize: 'checks/hold/by_account',
+        ach_customer_authorize: 'checks/hold/by_customer',
+        ach_refund: 'checks/refund/by_transaction',
+        ach_capture: 'checks/manage/fund',
+        ach_void: 'checks/manage/void'
       }
 
       def initialize(options = {})
@@ -52,7 +59,15 @@ module ActiveMerchant #:nodoc:
           end
         else
           post = build_purchase_request(money, payment_or_customer_id, options)
-          post[:customer_id] ? endpoint = ENDPOINTS[:customer_id_sale] : endpoint = ENDPOINTS[:keyed_sale]
+          endpoint = if payment_or_customer_id.kind_of?(Check)
+                       ENDPOINTS[:ach_sale]
+                     elsif options[:check_transaction]
+                       ENDPOINTS[:ach_customer_sale]
+                     elsif post[:customer_id]
+                       ENDPOINTS[:customer_id_sale]
+                     else
+                       ENDPOINTS[:keyed_sale]
+                     end
           response = commit(endpoint, post)
           check_token_response(response, endpoint, post, options)
         end
@@ -63,12 +78,16 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         if customer_id?(payment_or_customer_id)
           post[:customer_id] = payment_or_customer_id
-          endpoint = ENDPOINTS[:customer_id_auth]
+          endpoint = if options[:check_transaction]
+                       ENDPOINTS[:ach_customer_authorize]
+                     else
+                       ENDPOINTS[:customer_id_auth]
+                     end
         else
           add_payment(post, payment_or_customer_id)
           add_address(post, payment_or_customer_id, options)
           add_customer_data(post, options)
-          endpoint = ENDPOINTS[:keyed_auth]
+          endpoint = payment_or_customer_id.kind_of?(Check) ? ENDPOINTS[:ach_authorize] : ENDPOINTS[:keyed_auth]
         end
         response = commit(endpoint, post)
         check_token_response(response, endpoint, post, options)
@@ -82,8 +101,13 @@ module ActiveMerchant #:nodoc:
           end
         else
           post = build_capture_request(money, authorization, options)
-          response = commit(ENDPOINTS[:capture], post)
-          check_token_response(response, ENDPOINTS[:capture], post, options)
+          endpoint = if options[:check_transaction]
+                       ENDPOINTS[:ach_capture]
+                     else
+                       ENDPOINTS[:capture]
+                     end
+          response = commit(endpoint, post)
+          check_token_response(response, endpoint, post, options)
         end
       end
 
@@ -91,17 +115,29 @@ module ActiveMerchant #:nodoc:
         # currently only support full and partial refunds of settled transactions via a transaction ID
         post = {}
         add_amount(post, money, options)
-        post[:transaction_id] = authorization
-        response = commit(ENDPOINTS[:transaction_refund], post)
-        check_token_response(response, ENDPOINTS[:transaction_refund], post, options)
+        if options[:check_transaction]
+          post[:check_transaction_id] = authorization
+          endpoint = ENDPOINTS[:ach_refund]
+        else
+          post[:transaction_id] = authorization
+          endpoint = ENDPOINTS[:transaction_refund]
+        end
+        response = commit(endpoint, post)
+        check_token_response(response, endpoint, post, options)
       end
 
       def void(authorization, options = {})
         post = {}
-        post[:transaction_id] = authorization
+        if options[:check_transaction]
+          post[:check_transaction_id] = authorization
+          endpoint = ENDPOINTS[:ach_void]
+        else
+          post[:transaction_id] = authorization
+          endpoint = ENDPOINTS[:transaction_void]
+        end
 
-        response = commit(ENDPOINTS[:transaction_void], post)
-        check_token_response(response, ENDPOINTS[:transaction_void], post, options)
+        response = commit(endpoint, post)
+        check_token_response(response, endpoint, post, options)
       end
 
       def verify(credit_card, options = {})
@@ -118,7 +154,7 @@ module ActiveMerchant #:nodoc:
         check_token_response(response, ENDPOINTS[:store], post, options)
       end
 
-      def redact(customer_id)
+      def unstore(customer_id)
         post = {}
         post[:customer_id] = customer_id
         response = commit(ENDPOINTS[:redact], post)
@@ -175,7 +211,11 @@ module ActiveMerchant #:nodoc:
 
       def build_capture_request(money, authorization, options)
         post = {}
-        post[:transaction_id] = authorization
+        if options[:check_transaction]
+          post[:check_transaction_id] = authorization
+        else
+          post[:transaction_id] = authorization
+        end
         add_amount(post, money, options)
 
         post
@@ -234,10 +274,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment)
-        post[:credit_card] = {}
-        post[:credit_card][:number] = payment.number
-        post[:credit_card][:expiration_month] = payment.month
-        post[:credit_card][:expiration_year] = payment.year
+        if payment.kind_of?(Check)
+          post[:check] = {}
+          post[:check][:account_number] = payment.account_number
+          post[:check][:routing_number] = payment.routing_number
+        else
+          post[:credit_card] = {}
+          post[:credit_card][:number] = payment.number
+          post[:credit_card][:expiration_month] = payment.month
+          post[:credit_card][:expiration_year] = payment.year
+        end
       end
 
       def add_level_3_data(post, options)
@@ -380,7 +426,7 @@ module ActiveMerchant #:nodoc:
         if action == ENDPOINTS[:store]
           response['customer_id']
         else
-          response['transaction_id']
+          response['transaction_id'] || response['check_transaction_id']
         end
       end
 

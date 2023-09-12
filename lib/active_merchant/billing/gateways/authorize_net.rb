@@ -90,7 +90,6 @@ module ActiveMerchant
       }.freeze
 
       APPLE_PAY_DATA_DESCRIPTOR = 'COMMON.APPLE.INAPP.PAYMENT'
-
       PAYMENT_METHOD_NOT_SUPPORTED_ERROR = '155'
       INELIGIBLE_FOR_ISSUING_CREDIT_ERROR = '54'
 
@@ -176,11 +175,29 @@ module ActiveMerchant
         end
       end
 
-      def verify(credit_card, options = {})
+      def verify(payment_method, options = {})
+        amount = amount_for_verify(options)
+
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { authorize(amount, payment_method, options) }
+          r.process(:ignore_result) { void(r.authorization, options) } unless amount == 0
         end
+      rescue ArgumentError => e
+        Response.new(false, e.message)
+      end
+
+      def amount_for_verify(options)
+        return 100 unless options[:verify_amount].present?
+
+        amount = options[:verify_amount]
+        raise ArgumentError.new 'verify_amount value must be an integer' unless amount.is_a?(Integer) && !amount.negative? || amount.is_a?(String) && amount.match?(/^\d+$/) && !amount.to_i.negative?
+        raise ArgumentError.new 'Billing address including zip code is required for a 0 amount verify' if amount.to_i.zero? && !validate_billing_address_values?(options)
+
+        amount.to_i
+      end
+
+      def validate_billing_address_values?(options)
+        options.dig(:billing_address, :zip).present? && options.dig(:billing_address, :address1).present?
       end
 
       def store(credit_card, options = {})
@@ -345,7 +362,7 @@ module ActiveMerchant
                   xml.accountType(options[:account_type])
                   xml.routingNumber(options[:routing_number])
                   xml.accountNumber(options[:account_number])
-                  xml.nameOnAccount("#{options[:first_name]} #{options[:last_name]}")
+                  xml.nameOnAccount(truncate("#{options[:first_name]} #{options[:last_name]}", 22))
                 end
               else
                 xml.creditCard do
@@ -587,6 +604,7 @@ module ActiveMerchant
           first_name, last_name = names_from(payment_source, address, options)
           state = state_from(address, options)
           full_address = "#{address[:address1]} #{address[:address2]}".strip
+          phone = address[:phone] || address[:phone_number] || ''
 
           xml.firstName(truncate(first_name, 50)) unless empty?(first_name)
           xml.lastName(truncate(last_name, 50)) unless empty?(last_name)
@@ -596,7 +614,7 @@ module ActiveMerchant
           xml.state(truncate(state, 40))
           xml.zip(truncate((address[:zip] || options[:zip]), 20))
           xml.country(truncate(address[:country], 60))
-          xml.phoneNumber(truncate(address[:phone], 25)) unless empty?(address[:phone])
+          xml.phoneNumber(truncate(phone, 25)) unless empty?(phone)
           xml.faxNumber(truncate(address[:fax], 25)) unless empty?(address[:fax])
         end
       end

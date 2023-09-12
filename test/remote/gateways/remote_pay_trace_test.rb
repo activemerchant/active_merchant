@@ -22,6 +22,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
     @invalid_card = credit_card('54545454545454', month: '14', year: '1999')
     @discover = credit_card('6011000993026909')
     @amex = credit_card('371449635392376')
+    @echeck = check(account_number: '123456', routing_number: '325070760')
     @options = {
       billing_address: {
         address1: '8320 This Way Lane',
@@ -50,6 +51,22 @@ class RemotePayTraceTest < Test::Unit::TestCase
     response = @gateway.purchase(500, customer_id, @options)
     assert_success response
     assert_equal 'Your transaction was successfully approved.', response.message
+  end
+
+  def test_successful_purchase_with_ach
+    @echeck.account_number = rand.to_s[2..7]
+    response = @gateway.purchase(1000, @echeck, @options)
+    assert_success response
+    assert_equal response.message, 'Your check was successfully processed.'
+  end
+
+  def test_successful_purchase_by_customer_with_ach
+    @echeck.account_number = rand.to_s[2..7]
+    create = @gateway.store(@echeck, @options)
+    assert_success create
+    customer_id = create.params['customer_id']
+    response = @gateway.purchase(500, customer_id, @options.merge({ check_transaction: 'true' }))
+    assert_success response
   end
 
   def test_successful_purchase_with_more_options
@@ -192,6 +209,23 @@ class RemotePayTraceTest < Test::Unit::TestCase
     assert_equal 'Your transaction was successfully approved.', response.message
   end
 
+  def test_successful_authorize_with_ach
+    @echeck.account_number = rand.to_s[2..7]
+    response = @gateway.authorize(1000, @echeck, @options)
+    assert_success response
+    assert_equal response.message, 'Your check was successfully processed.'
+  end
+
+  def test_successful_authorize_by_customer_with_ach
+    @echeck.account_number = rand.to_s[2..7]
+    store = @gateway.store(@echeck, @options)
+    assert_success store
+    customer_id = store.params['customer_id']
+
+    response = @gateway.authorize(200, customer_id, @options.merge({ check_transaction: 'true' }))
+    assert_success response
+  end
+
   def test_successful_authorize_and_capture_with_level_3_data
     options = {
       visa_or_mastercard: 'mastercard',
@@ -234,6 +268,15 @@ class RemotePayTraceTest < Test::Unit::TestCase
     assert_success auth
 
     assert capture = @gateway.capture(200, auth.authorization, @options)
+    assert_success capture
+  end
+
+  def test_authorize_and_capture_with_ach
+    @echeck.account_number = rand.to_s[2..7]
+    auth = @gateway.authorize(500, @echeck, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(500, auth.authorization, @options.merge({ check_transaction: 'true' }))
     assert_success capture
   end
 
@@ -301,6 +344,15 @@ class RemotePayTraceTest < Test::Unit::TestCase
     assert_equal 'Your transaction was successfully voided.', void.message
   end
 
+  def test_successful_void_with_ach
+    @echeck.account_number = rand.to_s[2..7]
+    auth = @gateway.authorize(@amount, @echeck, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization, { check_transaction: 'true' })
+    assert_success void
+  end
+
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
@@ -322,7 +374,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
     response = @gateway.store(@mastercard, @options)
     assert_success response
     customer_id = response.params['customer_id']
-    redact = @gateway.redact(customer_id)
+    redact = @gateway.unstore(customer_id)
     assert_success redact
     assert_equal true, redact.success?
   end

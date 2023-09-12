@@ -482,7 +482,7 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML::Document.parse(request)
         merc_nodeset = doc.xpath('//v1:merc', 'v1' => V1_NAMESPACE)
-        merc_nodeset.after "<tranCode>#{TRANSACTION_CODES[action]}</tranCode>"
+        merc_nodeset.after "<v1:tranCode>#{TRANSACTION_CODES[action]}</v1:tranCode>"
         doc.root.to_xml
       end
 

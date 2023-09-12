@@ -111,7 +111,7 @@ class RemoteRedsysTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'SIS0093 ERROR', response.message
+    assert_equal 'Refusal with no specific reason', response.message
   end
 
   def test_purchase_and_refund
@@ -158,7 +158,7 @@ class RemoteRedsysTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'SIS0093 ERROR', response.message
+    assert_equal 'Refusal with no specific reason', response.message
   end
 
   def test_successful_void
@@ -195,7 +195,7 @@ class RemoteRedsysTest < Test::Unit::TestCase
   def test_unsuccessful_verify
     assert response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'SIS0093 ERROR', response.message
+    assert_equal 'Refusal with no specific reason', response.message
   end
 
   def test_transcript_scrubbing
@@ -248,6 +248,17 @@ class RemoteRedsysTest < Test::Unit::TestCase
     clean_transcript = @gateway.scrub(transcript)
 
     assert_equal clean_transcript.include?('[BLANK]'), true
+  end
+
+  def test_encrypt_handles_url_safe_character_in_secret_key_without_error
+    gateway = RedsysGateway.new({
+      login: '091952713',
+      secret_key: 'yG78qf-PkHyRzRiZGSTCJdO2TvjWgFa8',
+      terminal: '1',
+      signature_algorithm: 'sha256'
+    })
+    response = gateway.purchase(@amount, @credit_card, @options)
+    assert response
   end
 
   private

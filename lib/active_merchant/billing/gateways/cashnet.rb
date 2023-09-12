@@ -117,11 +117,11 @@ module ActiveMerchant #:nodoc:
           codes_and_amounts = options[:item_codes].transform_keys { |key| key.to_s.delete('_') }
           codes_and_amounts.each do |key, value|
             post[key] = value if key.start_with?('itemcode')
-            post[key] = amount(value) if key.start_with?('amount')
+            post[key] = amount(value.to_i) if key.start_with?('amount')
           end
         else
           post[:itemcode] = (options[:item_code] || @options[:default_item_code])
-          post[:amount] = amount(money)
+          post[:amount] = amount(money.to_i)
         end
       end
 

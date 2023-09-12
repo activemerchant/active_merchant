@@ -393,9 +393,13 @@ module ActiveMerchant #:nodoc:
         test_mode = test? || message =~ /Test Mode/
         success = response[:result_code] == 'Ok'
 
-        Response.new(success, message, response,
+        Response.new(
+          success,
+          message,
+          response,
           test: test_mode,
-          authorization: response[:subscription_id])
+          authorization: response[:subscription_id]
+        )
       end
 
       def recurring_parse(action, xml)

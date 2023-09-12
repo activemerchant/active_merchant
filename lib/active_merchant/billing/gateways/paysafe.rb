@@ -17,14 +17,8 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options = {})
         post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_billing_address(post, options)
-        add_merchant_details(post, options)
+        add_auth_purchase_params(post, money, payment, options)
         add_airline_travel_details(post, options)
-        add_customer_data(post, payment, options) unless payment.is_a?(String)
-        add_three_d_secure(post, payment, options) if options[:three_d_secure]
-        add_stored_credential(post, options) if options[:stored_credential]
         add_split_pay_details(post, options)
         post[:settleWithAuth] = true
 
@@ -33,13 +27,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment, options = {})
         post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_billing_address(post, options)
-        add_merchant_details(post, options)
-        add_customer_data(post, payment, options) unless payment.is_a?(String)
-        add_three_d_secure(post, payment, options) if options[:three_d_secure]
-        add_stored_credential(post, options) if options[:stored_credential]
+        add_auth_purchase_params(post, money, payment, options)
 
         commit(:post, 'auths', post, options)
       end
@@ -94,8 +82,8 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'profiles', post, options)
       end
 
-      def redact(pm_profile_id)
-        commit_for_redact(:delete, "profiles/#{pm_profile_id}", nil, nil)
+      def unstore(pm_profile_id)
+        commit(:delete, "profiles/#{get_id_from_store_auth(pm_profile_id)}", nil, nil)
       end
 
       def supports_scrubbing?
@@ -111,6 +99,17 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def add_auth_purchase_params(post, money, payment, options)
+        add_invoice(post, money, options)
+        add_payment(post, payment)
+        add_billing_address(post, options)
+        add_merchant_details(post, options)
+        add_customer_data(post, payment, options) unless payment.is_a?(String)
+        add_three_d_secure(post, payment, options) if options[:three_d_secure]
+        add_stored_credential(post, options) if options[:stored_credential]
+        add_funding_transaction(post, options)
+      end
+
       # Customer data can be included in transactions where the payment method is a credit card
       # but should not be sent when the payment method is a token
       def add_customer_data(post, creditcard, options)
@@ -125,12 +124,13 @@ module ActiveMerchant #:nodoc:
         return unless address = options[:billing_address] || options[:address]
 
         post[:billingDetails] = {}
-        post[:billingDetails][:street] = address[:address1]
-        post[:billingDetails][:city] = address[:city]
-        post[:billingDetails][:state] = address[:state]
+        post[:billingDetails][:street] = truncate(address[:address1], 50)
+        post[:billingDetails][:street2] = truncate(address[:address2], 50)
+        post[:billingDetails][:city] = truncate(address[:city], 40)
+        post[:billingDetails][:state] = truncate(address[:state], 40)
         post[:billingDetails][:country] = address[:country]
-        post[:billingDetails][:zip] = address[:zip]
-        post[:billingDetails][:phone] = address[:phone]
+        post[:billingDetails][:zip] = truncate(address[:zip], 10)
+        post[:billingDetails][:phone] = truncate(address[:phone], 40)
       end
 
       # The add_address_for_vaulting method is applicable to the store method, as the APIs address
@@ -139,12 +139,12 @@ module ActiveMerchant #:nodoc:
         return unless address = options[:billing_address] || options[:address]
 
         post[:card][:billingAddress] = {}
-        post[:card][:billingAddress][:street] = address[:address1]
-        post[:card][:billingAddress][:street2] = address[:address2]
-        post[:card][:billingAddress][:city] = address[:city]
-        post[:card][:billingAddress][:zip] = address[:zip]
+        post[:card][:billingAddress][:street] = truncate(address[:address1], 50)
+        post[:card][:billingAddress][:street2] = truncate(address[:address2], 50)
+        post[:card][:billingAddress][:city] = truncate(address[:city], 40)
+        post[:card][:billingAddress][:zip] = truncate(address[:zip], 10)
         post[:card][:billingAddress][:country] = address[:country]
-        post[:card][:billingAddress][:state] = address[:state] if address[:state]
+        post[:card][:billingAddress][:state] = truncate(address[:state], 40) if address[:state]
       end
 
       # This data is specific to creating a profile at the gateway's vault level
@@ -179,7 +179,7 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment)
         if payment.is_a?(String)
           post[:card] = {}
-          post[:card][:paymentToken] = payment
+          post[:card][:paymentToken] = get_pm_from_store_auth(payment)
         else
           post[:card] = { cardExpiry: {} }
           post[:card][:cardNum] = payment.number
@@ -286,6 +286,15 @@ module ActiveMerchant #:nodoc:
         post[:splitpay] = split_pay
       end
 
+      def add_funding_transaction(post, options)
+        return unless options[:funding_transaction]
+
+        post[:fundingTransaction] = {}
+        post[:fundingTransaction][:type] = options[:funding_transaction]
+        post[:profile] ||= {}
+        post[:profile][:merchantCustomerId] = options[:customer_id] || SecureRandom.hex(12)
+      end
+
       def add_stored_credential(post, options)
         return unless options[:stored_credential]
 
@@ -299,7 +308,7 @@ module ActiveMerchant #:nodoc:
         end
 
         case options[:stored_credential][:reason_type]
-        when 'recurring' || 'installment'
+        when 'recurring', 'installment'
           post[:storedCredential][:type] = 'RECURRING'
         when 'unscheduled'
           if options[:stored_credential][:initiator] == 'merchant'
@@ -321,6 +330,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
+        return {} if body.empty?
+
         JSON.parse(body)
       end
 
@@ -339,17 +350,6 @@ module ActiveMerchant #:nodoc:
           cvv_result: CVVResult.new(response['cvvVerification']),
           test: test?,
           error_code: success ? nil : error_code_from(response)
-        )
-      end
-
-      def commit_for_redact(method, action, parameters, options)
-        url = url(action)
-        response = raw_ssl_request(method, url, post_data(parameters, options), headers)
-        success = true if response.code == '200'
-
-        Response.new(
-          success,
-          message: response.message
         )
       end
 
@@ -384,16 +384,25 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(action, response)
         if action == 'profiles'
-          response['cards'].first['paymentToken']
+          pm = response['cards'].first['paymentToken']
+          "#{pm}|#{response['id']}"
         else
           response['id']
         end
       end
 
+      def get_pm_from_store_auth(authorization)
+        authorization.split('|')[0]
+      end
+
+      def get_id_from_store_auth(authorization)
+        authorization.split('|')[1]
+      end
+
       def post_data(parameters = {}, options = {})
         return unless parameters.present?
 
-        parameters[:merchantRefNum] = options[:merchant_ref_num] || SecureRandom.hex(16).to_s
+        parameters[:merchantRefNum] = options[:merchant_ref_num] || options[:order_id] || SecureRandom.hex(16).to_s
 
         parameters.to_json
       end

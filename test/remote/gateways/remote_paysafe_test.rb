@@ -148,6 +148,20 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert_equal 'F', response.params['airlineTravelDetails']['tripLegs']['leg2']['serviceClass']
   end
 
+  def test_successful_purchase_with_truncated_address
+    options = {
+      billing_address: {
+        address1: "This is an extremely long address, it is unreasonably long and we can't allow it.",
+        address2: "This is an extremely long address2, it is unreasonably long and we can't allow it.",
+        city: 'Lake Chargoggagoggmanchauggagoggchaubunagungamaugg',
+        state: 'NC',
+        zip: '27701'
+      }
+    }
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+  end
+
   def test_successful_purchase_with_token
     response = @gateway.purchase(200, @pm_token, @options)
     assert_success response
@@ -214,6 +228,22 @@ class RemotePaysafeTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, stored_options)
     assert_success response
     assert_equal 'COMPLETED', response.message
+  end
+
+  # Merchant account must be setup to support funding transaction, and funding transaction type must be correct for the MCC
+  def test_successful_purchase_with_correct_funding_transaction_type
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ funding_transaction: 'SDW_WALLET_TRANSFER' }))
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+    assert_equal 0, response.params['availableToSettle']
+    assert_not_nil response.params['authCode']
+    assert_match 'SDW_WALLET_TRANSFER', response.params['fundingTransaction']['type']
+  end
+
+  def test_failed_purchase_with_incorrect_funding_transaction_type
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ funding_transaction: 'SVDW_FUNDS_TRANSFER' }))
+    assert_failure response
+    assert_equal 'Error(s)- code:3068, message:You submitted a funding transaction that is not correct for the merchant account.', response.message
   end
 
   def test_failed_purchase
@@ -364,16 +394,16 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert_match 'COMPLETED', purchase.message
   end
 
-  def test_successful_store_and_redact
+  def test_successful_store_and_unstore
     response = @gateway.store(credit_card('4111111111111111'), @profile_options)
     assert_success response
-    id = response.params['id']
-    redact = @gateway.redact(id)
-    assert_success redact
+    id = response.authorization
+    unstore = @gateway.unstore(id)
+    assert_success unstore
   end
 
   def test_invalid_login
-    gateway = PaysafeGateway.new(username: '', password: '', account_id: '')
+    gateway = PaysafeGateway.new(username: 'badbunny', password: 'carrotsrock', account_id: 'rejectstew')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

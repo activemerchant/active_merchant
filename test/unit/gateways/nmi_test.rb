@@ -5,6 +5,7 @@ class NmiTest < Test::Unit::TestCase
 
   def setup
     @gateway = NmiGateway.new(fixtures(:nmi))
+    @gateway_secure = NmiGateway.new(fixtures(:nmi_secure))
 
     @amount = 100
     @credit_card = credit_card
@@ -28,6 +29,66 @@ class NmiTest < Test::Unit::TestCase
       descriptor_merchant_id: '120',
       descriptor_url: 'url'
     }
+  end
+
+  def test_successful_authorize_and_capture_using_security_key
+    @credit_card.number = '4111111111111111'
+    response = stub_comms do
+      @gateway_secure.authorize(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/security_key=#{@gateway_secure.options[:security_key]}/, data)
+      assert_match(/type=auth/, data)
+      assert_match(/payment=creditcard/, data)
+      assert_match(/ccnumber=#{@credit_card.number}/, data)
+      assert_match(/cvv=#{@credit_card.verification_value}/, data)
+      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
+    end.respond_with(successful_authorization_response)
+    assert_success response
+    capture = stub_comms do
+      @gateway_secure.capture(@amount, response.authorization)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/security_key=#{@gateway_secure.options[:security_key]}/, data)
+      assert_match(/type=capture/, data)
+      assert_match(/amount=1.00/, data)
+      assert_match(/transactionid=2762787830/, data)
+    end.respond_with(successful_capture_response)
+    assert_success capture
+  end
+
+  def test_failed_authorize_using_security_key
+    response = stub_comms do
+      @gateway_secure.authorize(@amount, @credit_card)
+    end.respond_with(failed_authorization_response)
+
+    assert_failure response
+    assert_equal 'DECLINE', response.message
+    assert response.test?
+  end
+
+  def test_successful_purchase_using_security_key
+    @credit_card.number = '4111111111111111'
+    response = stub_comms do
+      @gateway_secure.purchase(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/security_key=#{@gateway_secure.options[:security_key]}/, data)
+      assert_match(/type=sale/, data)
+      assert_match(/amount=1.00/, data)
+      assert_match(/payment=creditcard/, data)
+      assert_match(/ccnumber=#{@credit_card.number}/, data)
+      assert_match(/cvv=#{@credit_card.verification_value}/, data)
+      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+    assert response.test?
+  end
+
+  def test_failed_purchase_using_security_key
+    response = stub_comms do
+      @gateway_secure.purchase(@amount, @credit_card)
+    end.respond_with(failed_purchase_response)
+    assert_failure response
+    assert response.test?
+    assert_equal 'DECLINE', response.message
   end
 
   def test_successful_purchase
@@ -59,6 +120,70 @@ class NmiTest < Test::Unit::TestCase
       test_transaction_options(data)
 
       assert_match(/merchant_defined_field_8=value8/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_surcharge
+    options = @transaction_options.merge({ surcharge: '1.00' })
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      test_transaction_options(data)
+
+      assert_match(/surcharge=1.00/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_shipping_fields
+    options = @transaction_options.merge({ shipping_address: shipping_address })
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      test_transaction_options(data)
+
+      assert_match(/shipping_firstname=Jon/, data)
+      assert_match(/shipping_lastname=Smith/, data)
+      assert_match(/shipping_address1=123\+Your\+Street/, data)
+      assert_match(/shipping_address2=Apt\+2/, data)
+      assert_match(/shipping_city=Toronto/, data)
+      assert_match(/shipping_state=ON/, data)
+      assert_match(/shipping_country=CA/, data)
+      assert_match(/shipping_zip=K2C3N7/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_shipping_fields_omits_blank_name
+    options = @transaction_options.merge({ shipping_address: shipping_address(name: nil) })
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      test_transaction_options(data)
+
+      refute_match(/shipping_firstname/, data)
+      refute_match(/shipping_lastname/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_shipping_email
+    options = @transaction_options.merge({ shipping_address: shipping_address, shipping_email: 'test@example.com' })
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      test_transaction_options(data)
+
+      assert_match(/shipping_email=test%40example\.com/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -463,8 +588,7 @@ class NmiTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal 1,
-      (['US'] | NmiGateway.supported_countries).size
+    assert_equal 1, (['US'] | NmiGateway.supported_countries).size
   end
 
   def test_supported_card_types
@@ -699,8 +823,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/payment=creditcard/, data)
       assert_match(/ccnumber=#{@credit_card.number}/, data)
       assert_match(/cvv=#{@credit_card.verification_value}/, data)
-      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/,
-        data)
+      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
 
       test_level3_options(data) if options.any?
     end.respond_with(successful_validate_response)

@@ -5,7 +5,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     @gateway = MundipaggGateway.new(fixtures(:mundipagg))
 
     @amount = 100
-    @credit_card = credit_card('4000100011112224')
+    @credit_card = credit_card('4000000000000010')
     @declined_card = credit_card('4000300011112220')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
 
@@ -66,7 +66,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     @options.delete(:billing_address)
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert_equal 'Transação capturada com sucesso', response.message
   end
 
   def test_successful_purchase_with_more_options
@@ -85,21 +85,21 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     @options.update(holder_document: '93095135270')
     response = @gateway.purchase(@amount, @sodexo_voucher, @options)
     assert_success response
-    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert_equal 'Transação capturada com sucesso', response.message
   end
 
   def test_successful_purchase_with_vr_voucher
     @options.update(holder_document: '93095135270')
     response = @gateway.purchase(@amount, @vr_voucher, @options)
     assert_success response
-    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert_equal 'Transação capturada com sucesso', response.message
   end
 
   def test_successful_purchase_with_submerchant
     options = @options.update(@submerchant_options)
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
-    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert_equal 'Transação capturada com sucesso', response.message
   end
 
   def test_failed_purchase
@@ -131,7 +131,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     options = @options.update(@submerchant_options)
     response = @gateway.authorize(@amount, @credit_card, options)
     assert_success response
-    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert_equal 'Transação authorizada com sucesso', response.message
   end
 
   def test_failed_authorize
@@ -262,7 +262,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
   def test_successful_purchase_with_api_key_overwrite
     response = @gateway.purchase(@amount, @credit_card, @options.merge(@authorization_secret_options))
     assert_success response
-    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert_equal 'Transação capturada com sucesso', response.message
   end
 
   def test_failed_store_with_top_level_errors
@@ -308,13 +308,13 @@ class RemoteMundipaggTest < Test::Unit::TestCase
   def test_successful_purchase_with(card)
     response = @gateway.purchase(@amount, card, @options)
     assert_success response
-    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert_equal 'Transação capturada com sucesso', response.message
   end
 
   def test_failed_purchase_with(card)
     response = @gateway.purchase(105200, card, @options)
     assert_failure response
-    assert_equal 'Simulator|Transação de simulada negada por falta de crédito, utilizado para realizar simulação de autorização parcial.', response.message
+    assert_equal 'Transação não autorizada', response.message
   end
 
   def test_successful_authorize_and_capture_with(card)
@@ -323,13 +323,13 @@ class RemoteMundipaggTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'Simulator|Transação de simulação capturada com sucesso', capture.message
+    assert_equal 'Transação capturada com sucesso', capture.message
   end
 
   def test_failed_authorize_with(card)
     response = @gateway.authorize(105200, card, @options)
     assert_failure response
-    assert_equal 'Simulator|Transação de simulada negada por falta de crédito, utilizado para realizar simulação de autorização parcial.', response.message
+    assert_equal 'Transação não autorizada', response.message
   end
 
   def test_partial_capture_with(card)
@@ -367,7 +367,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
   def test_successful_verify_with(card)
     response = @gateway.verify(card, @options)
     assert_success response
-    assert_match %r{Simulator|Transação de simulação autorizada com sucesso}, response.message
+    assert_match %r{Transação authorizada com sucesso}, response.message
   end
 
   def test_successful_store_and_purchase_with(card)
@@ -376,6 +376,6 @@ class RemoteMundipaggTest < Test::Unit::TestCase
 
     assert purchase = @gateway.purchase(@amount, store.authorization, @options)
     assert_success purchase
-    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', purchase.message
+    assert_equal 'Transação capturada com sucesso', purchase.message
   end
 end

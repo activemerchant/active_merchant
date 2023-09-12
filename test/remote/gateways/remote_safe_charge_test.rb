@@ -52,9 +52,7 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
   def test_successful_regular_purchase_through_3ds_flow_with_invalid_pa_res
     response = @three_ds_gateway.purchase(@amount, @three_ds_invalid_pa_res_card, @three_ds_options)
     assert_success response
-    assert !response.params['acsurl'].blank?
-    assert !response.params['pareq'].blank?
-    assert !response.params['xid'].blank?
+    assert_equal 'Attempted But Card Not Enrolled', response.params['threedreason']
     assert response.params['threedflow'] = 1
     assert_equal 'Success', response.message
   end
@@ -258,6 +256,18 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     assert_equal 'Transaction must contain a Card/Token/Account', response.message
   end
 
+  def test_successful_unreferenced_refund
+    option = {
+      unreferenced_refund: true
+    }
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, option)
+    assert_success refund
+    assert_equal 'Success', refund.message
+  end
+
   def test_successful_credit
     response = @gateway.credit(@amount, credit_card('4444436501403986'), @options)
     assert_success response
@@ -280,6 +290,12 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     }
 
     response = @gateway.credit(@amount, credit_card('4444436501403986'), extra)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_credit_with_customer_details
+    response = @gateway.credit(@amount, credit_card('4444436501403986'), @options.merge(email: 'test@example.com'))
     assert_success response
     assert_equal 'Success', response.message
   end

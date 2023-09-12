@@ -376,22 +376,32 @@ module ActiveMerchant #:nodoc:
 
       def commit(request, options)
         requires!(options, :action)
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, request,
-          { 'SOAPAction' => 'https://www.thepaymentgateway.net/' + options[:action],
-           'Content-Type' => 'text/xml; charset=utf-8' }))
+        response = parse(
+          ssl_post(
+            test? ? self.test_url : self.live_url, request,
+            {
+              'SOAPAction' => 'https://www.thepaymentgateway.net/' + options[:action],
+              'Content-Type' => 'text/xml; charset=utf-8'
+            }
+          )
+        )
 
         success = response[:transaction_result][:status_code] == '0'
         message = response[:transaction_result][:message]
         authorization = success ? [options[:order_id], response[:transaction_output_data][:cross_reference], response[:transaction_output_data][:auth_code]].compact.join(';') : nil
 
-        Response.new(success, message, response,
+        Response.new(
+          success,
+          message,
+          response,
           test: test?,
           authorization: authorization,
           avs_result: {
             street_match: AVS_CODE[ response[:transaction_output_data][:address_numeric_check_result] ],
             postal_match: AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ]
           },
-          cvv_result: CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ])
+          cvv_result: CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ]
+        )
       end
 
       def parse(xml)

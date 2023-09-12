@@ -95,7 +95,8 @@ module ActiveMerchant #:nodoc:
         pickup_card: 'pick_up_card',
         config_error: 'config_error',
         test_mode_live_card: 'test_mode_live_card',
-        unsupported_feature: 'unsupported_feature'
+        unsupported_feature: 'unsupported_feature',
+        invalid_amount: 'invalid_amount'
       }
 
       cattr_reader :implementations
@@ -312,6 +313,15 @@ module ActiveMerchant #:nodoc:
         last_name  = names.pop
         first_name = names.join(' ')
         [first_name, last_name]
+      end
+
+      def split_address(full_address)
+        address_parts = (full_address || '').split
+        return [nil, nil] if address_parts.size == 0
+
+        number = address_parts.shift
+        street = address_parts.join(' ')
+        [number, street]
       end
 
       def requires!(hash, *params)

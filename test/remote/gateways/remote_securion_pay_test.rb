@@ -20,15 +20,28 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_store
+  def test_successful_store_and_purchase
     response = @gateway.store(@credit_card, @options)
     assert_success response
-    assert_match %r(^cust_\w+$), response.authorization
     assert_equal 'customer', response.params['objectType']
     assert_match %r(^card_\w+$), response.params['cards'][0]['id']
     assert_equal 'card', response.params['cards'][0]['objectType']
 
-    @options[:customer_id] = response.authorization
+    @options[:customer_id] = response.params['cards'][0]['customerId']
+
+    response = @gateway.purchase(@amount, response.authorization, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+  end
+
+  def test_successful_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal 'customer', response.params['objectType']
+    assert_match %r(^card_\w+$), response.params['cards'][0]['id']
+    assert_equal 'card', response.params['cards'][0]['objectType']
+
+    @options[:customer_id] = response.params['cards'][0]['customerId']
     response = @gateway.store(@new_credit_card, @options)
     assert_success response
     assert_match %r(^card_\w+$), response.params['card']['id']
@@ -42,11 +55,6 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     assert_equal '424242', response.params['cards'][1]['first6']
     assert_equal '4242', response.params['cards'][1]['last4']
   end
-
-  # def test_dump_transcript
-  #   skip("Transcript scrubbing for this gateway has been tested.")
-  #   dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
-  # end
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
@@ -66,10 +74,22 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     assert_match CHARGE_ID_REGEX, response.authorization
   end
 
+  def test_successful_purchase_with_three_ds_data
+    @options[:three_d_secure] = {
+      version: '1.0.2',
+      eci: '05',
+      cavv: '3q2+78r+ur7erb7vyv66vv////8=',
+      acs_transaction_id: '6546464645623455665165+qe-jmhabcdefg',
+      authentication_response_status: 'Y'
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_unsuccessful_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_match %r{The card was declined for other reason.}, response.message
+    assert_match %r{The card was declined}, response.message
     assert_match Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
@@ -92,7 +112,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, 'invalid_authorization_token')
     assert_failure response
-    assert_match %r{Requested Charge does not exist}, response.message
+    assert_match %r{Charge 'invalid_authorization_token' does not exist}, response.message
   end
 
   def test_successful_full_refund
@@ -104,7 +124,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     assert_success refund
 
     assert refund.params['refunded']
-    assert_equal 0, refund.params['amount']
+    assert_equal 2000, refund.params['refunds'].first['amount']
     assert_equal 1, refund.params['refunds'].size
     assert_equal @amount, refund.params['refunds'].map { |r| r['amount'] }.sum
 
@@ -118,6 +138,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
 
     first_refund = @gateway.refund(@refund_amount, purchase.authorization)
     assert_success first_refund
+    assert_equal @refund_amount, first_refund.params['refunds'].first['amount']
 
     second_refund = @gateway.refund(@refund_amount, purchase.authorization)
     assert_success second_refund
@@ -131,7 +152,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def test_unsuccessful_authorize_refund
     response = @gateway.refund(@amount, 'invalid_authorization_token')
     assert_failure response
-    assert_match %r{Requested Charge does not exist}, response.message
+    assert_match %r{Charge 'invalid_authorization_token' does not exist}, response.message
   end
 
   def test_unsuccessful_refund
@@ -161,7 +182,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('invalid_authorization_token', @options)
     assert_failure response
-    assert_match %r{Requested Charge does not exist}, response.message
+    assert_match %r{Charge 'invalid_authorization_token' does not exist}, response.message
   end
 
   def test_successful_verify
@@ -173,7 +194,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{The card was declined for other reason.}, response.message
+    assert_match %r{The card was declined}, response.message
     assert_match Gateway::STANDARD_ERROR_CODE[:card_declined], response.primary_response.error_code
   end
 

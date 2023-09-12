@@ -3,16 +3,20 @@ require 'test_helper'
 class RemotePaymentezTest < Test::Unit::TestCase
   def setup
     @gateway = PaymentezGateway.new(fixtures(:paymentez))
+    @ecuador_gateway = PaymentezGateway.new(fixtures(:paymentez_ecuador))
 
     @amount = 100
     @credit_card = credit_card('4111111111111111', verification_value: '666')
-    @elo_credit_card = credit_card('6362970000457013',
+    @otp_card = credit_card('36417002140808', verification_value: '666')
+    @elo_credit_card = credit_card(
+      '6362970000457013',
       month: 10,
       year: 2022,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo')
+      brand: 'elo'
+    )
     @declined_card = credit_card('4242424242424242', verification_value: '666')
     @options = {
       billing_address: address,
@@ -195,6 +199,14 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_equal 'Response by mock', capture.message
   end
 
+  def test_successful_authorize_and_capture_with_nil_amount
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert capture = @gateway.capture(nil, auth.authorization)
+    assert_success capture
+    assert_equal 'Response by mock', capture.message
+  end
+
   def test_successful_authorize_and_capture_with_elo
     auth = @gateway.authorize(@amount, @elo_credit_card, @options)
     assert_success auth
@@ -255,6 +267,18 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_equal 'The modification of the amount is not supported by carrier', response.message
   end
 
+  def test_successful_capture_with_otp
+    @options[:vat] = 0.1
+    response = @ecuador_gateway.authorize(@amount, @otp_card, @options.merge({ otp_flow: true }))
+    assert_success response
+    assert_equal 'pending', response.params['transaction']['status']
+
+    transaction_id = response.params['transaction']['id']
+    options = @options.merge({ type: 'BY_OTP', value: '012345' })
+    response = @ecuador_gateway.capture(nil, transaction_id, options)
+    assert_success response
+  end
+
   def test_store
     response = @gateway.store(@credit_card, @options)
     assert_success response
@@ -278,6 +302,15 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_success response
     auth = response.authorization
     response = @gateway.unstore(auth, @options)
+    assert_success response
+  end
+
+  def test_successful_inquire_with_transaction_id
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    gateway_transaction_id = response.authorization
+    response = @gateway.inquire(gateway_transaction_id, @options)
     assert_success response
   end
 

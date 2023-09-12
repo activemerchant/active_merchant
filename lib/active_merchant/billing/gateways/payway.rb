@@ -192,9 +192,13 @@ module ActiveMerchant
 
         success = (params[:summary_code] ? (params[:summary_code] == '0') : (params[:response_code] == '00'))
 
-        Response.new(success, message, params,
+        Response.new(
+          success,
+          message,
+          params,
           test: (@options[:merchant].to_s == 'TEST'),
-          authorization: post[:order_number])
+          authorization: post[:order_number]
+        )
       rescue ActiveMerchant::ResponseError => e
         raise unless e.response.code == '403'
 

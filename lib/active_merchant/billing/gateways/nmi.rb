@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
 
       DUP_WINDOW_DEPRECATION_MESSAGE = 'The class-level duplicate_window variable is deprecated. Please use the :dup_seconds transaction option instead.'
 
-      self.test_url = self.live_url = 'https://secure.nmi.com/api/transact.php'
+      self.test_url = self.live_url = 'https://secure.networkmerchants.com/api/transact.php'
       self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_countries = ['US']
@@ -23,7 +23,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        if options.has_key?(:security_key)
+          requires!(options, :security_key)
+        else
+          requires!(options, :login, :password)
+        end
         super
       end
 
@@ -51,7 +55,6 @@ module ActiveMerchant #:nodoc:
         add_merchant_defined_fields(post, options)
         add_level3_fields(post, options)
         add_three_d_secure(post, options)
-
         commit('auth', post)
       end
 
@@ -126,6 +129,7 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((password=)[^&\n]*), '\1[FILTERED]').
+          gsub(%r((security_key=)[^&\n]*), '\1[FILTERED]').
           gsub(%r((ccnumber=)\d+), '\1[FILTERED]').
           gsub(%r((cvv=)\d+), '\1[FILTERED]').
           gsub(%r((checkaba=)\d+), '\1[FILTERED]').
@@ -145,6 +149,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, money, options)
         post[:amount] = amount(money)
+        post[:surcharge] = options[:surcharge] if options[:surcharge]
         post[:orderid] = options[:order_id]
         post[:orderdescription] = options[:description]
         post[:currency] = options[:currency] || currency(money)
@@ -228,6 +233,9 @@ module ActiveMerchant #:nodoc:
         end
 
         if (shipping_address = options[:shipping_address])
+          first_name, last_name = split_names(shipping_address[:name])
+          post[:shipping_firstname] = first_name if first_name
+          post[:shipping_lastname] = last_name if last_name
           post[:shipping_company] = shipping_address[:company]
           post[:shipping_address1] = shipping_address[:address1]
           post[:shipping_address2] = shipping_address[:address2]
@@ -236,6 +244,7 @@ module ActiveMerchant #:nodoc:
           post[:shipping_country] = shipping_address[:country]
           post[:shipping_zip] = shipping_address[:zip]
           post[:shipping_phone] = shipping_address[:phone]
+          post[:shipping_email] = options[:shipping_email] if options[:shipping_email]
         end
 
         if (descriptor = options[:descriptors])
@@ -297,9 +306,9 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, params)
         params[action == 'add_customer' ? :customer_vault : :type] = action
-        params[:username] = @options[:login]
-        params[:password] = @options[:password]
-
+        params[:username] = @options[:login] unless @options[:login].nil?
+        params[:password] = @options[:password] unless @options[:password].nil?
+        params[:security_key] = @options[:security_key] unless @options[:security_key].nil?
         raw_response = ssl_post(url, post_data(action, params), headers)
         response = parse(raw_response)
         succeeded = success_from(response)
@@ -325,7 +334,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
+        headers = { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
+        headers
       end
 
       def post_data(action, params)

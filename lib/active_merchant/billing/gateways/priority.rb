@@ -27,12 +27,12 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Priority'
 
       def initialize(options = {})
-        requires!(options, :merchant_id, :key, :secret)
+        requires!(options, :merchant_id, :api_key, :secret)
         super
       end
 
       def basic_auth
-        Base64.strict_encode64("#{@options[:key]}:#{@options[:secret]}")
+        Base64.strict_encode64("#{@options[:api_key]}:#{@options[:secret]}")
       end
 
       def request_headers
@@ -50,69 +50,87 @@ module ActiveMerchant #:nodoc:
 
       def purchase(amount, credit_card, options = {})
         params = {}
-        params['amount'] = localized_amount(amount.to_f, options[:currency])
         params['authOnly'] = false
+        params['isSettleFunds'] = true
 
-        add_credit_card(params, credit_card, 'purchase', options)
-        add_type_merchant_purchase(params, @options[:merchant_id], true, options)
-        commit('purchase', params: params, jwt: options)
+        add_merchant_id(params)
+        add_amount(params, amount, options)
+        add_auth_purchase_params(params, credit_card, options)
+
+        commit('purchase', params: params)
       end
 
       def authorize(amount, credit_card, options = {})
         params = {}
-        params['amount'] = localized_amount(amount.to_f, options[:currency])
         params['authOnly'] = true
+        params['isSettleFunds'] = false
 
-        add_credit_card(params, credit_card, 'purchase', options)
-        add_type_merchant_purchase(params, @options[:merchant_id], false, options)
-        commit('purchase', params: params, jwt: options)
+        add_merchant_id(params)
+        add_amount(params, amount, options)
+        add_auth_purchase_params(params, credit_card, options)
+
+        commit('purchase', params: params)
+      end
+
+      def credit(amount, credit_card, options = {})
+        params = {}
+        params['authOnly'] = false
+        params['isSettleFunds'] = true
+        amount = -amount
+
+        add_merchant_id(params)
+        add_amount(params, amount, options)
+        add_credit_params(params, credit_card, options)
+        commit('credit', params: params)
       end
 
       def refund(amount, authorization, options = {})
         params = {}
-        params['merchantId'] = @options[:merchant_id]
-        params['paymentToken'] = get_hash(authorization)['payment_token'] || options[:payment_token]
+        add_merchant_id(params)
+        params['paymentToken'] = payment_token(authorization) || options[:payment_token]
+
         # refund amounts must be negative
         params['amount'] = ('-' + localized_amount(amount.to_f, options[:currency])).to_f
-        commit('refund', params: params, jwt: options)
+
+        commit('refund', params: params)
       end
 
       def capture(amount, authorization, options = {})
         params = {}
-        params['amount'] = localized_amount(amount.to_f, options[:currency])
-        params['authCode'] = options[:authCode]
-        params['merchantId'] = @options[:merchant_id]
-        params['paymentToken'] = get_hash(authorization)['payment_token']
-        params['shouldGetCreditCardLevel'] = true
-        params['source'] = options[:source]
-        params['tenderType'] = 'Card'
+        add_merchant_id(params)
+        add_amount(params, amount, options)
+        params['paymentToken'] = payment_token(authorization) || options[:payment_token]
+        params['tenderType'] = options[:tender_type].present? ? options[:tender_type] : 'Card'
 
-        commit('capture', params: params, jwt: options)
+        commit('capture', params: params)
       end
 
       def void(authorization, options = {})
-        commit('void', iid: get_hash(authorization)['id'], jwt: options)
+        params = {}
+
+        commit('void', params: params, iid: payment_id(authorization))
       end
 
-      def verify(credit_card, options)
-        jwt = options[:jwt_token]
+      def verify(credit_card, _options = {})
+        jwt = create_jwt.params['jwtToken']
+
         commit('verify', card_number: credit_card.number, jwt: jwt)
+      end
+
+      def get_payment_status(batch_id)
+        commit('get_payment_status', params: batch_id)
+      end
+
+      def close_batch(batch_id)
+        commit('close_batch', params: batch_id)
+      end
+
+      def create_jwt
+        commit('create_jwt', params: @options[:merchant_id])
       end
 
       def supports_scrubbing?
         true
-      end
-
-      def get_payment_status(batch_id, options)
-        commit('get_payment_status', params: batch_id, jwt: options)
-      end
-
-      def close_batch(batch_id, options)
-        commit('close_batch', params: batch_id, jwt: options)
-      end
-
-      def create_jwt(options)
-        commit('create_jwt', params: @options[:merchant_id], jwt: options)
       end
 
       def scrub(transcript)
@@ -122,35 +140,47 @@ module ActiveMerchant #:nodoc:
           gsub(%r((cvv\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
       end
 
+      private
+
+      def add_amount(params, amount, options)
+        params['amount'] = localized_amount(amount.to_f, options[:currency])
+      end
+
+      def add_merchant_id(params)
+        params['merchantId'] = @options[:merchant_id]
+      end
+
+      def add_auth_purchase_params(params, credit_card, options)
+        add_replay_id(params, options)
+        add_credit_card(params, credit_card, 'purchase', options)
+        add_purchases_data(params, options)
+        add_shipping_data(params, options)
+        add_pos_data(params, options)
+        add_additional_data(params, options)
+      end
+
+      def add_credit_params(params, credit_card, options)
+        add_replay_id(params, options)
+        add_credit_card(params, credit_card, 'purchase', options)
+        add_additional_data(params, options)
+      end
+
+      def add_replay_id(params, options)
+        params['replayId'] = options[:replay_id] if options[:replay_id]
+      end
+
       def add_credit_card(params, credit_card, action, options)
         return unless credit_card&.is_a?(CreditCard)
 
         card_details = {}
-
         card_details['expiryMonth'] = format(credit_card.month, :two_digits).to_s
         card_details['expiryYear'] = format(credit_card.year, :two_digits).to_s
-        card_details['expiryDate'] = exp_date(credit_card)
         card_details['cardType'] = credit_card.brand
         card_details['last4'] = credit_card.last_digits
-        card_details['cvv'] = credit_card.verification_value
+        card_details['cvv'] = credit_card.verification_value unless credit_card.verification_value.nil?
         card_details['number'] = credit_card.number
-
-        card_details['entryMode'] = options['entryMode'].blank? ? 'Keyed' : options['entryMode']
-
-        case action
-        when 'purchase'
-          card_details['avsStreet'] = options[:billing_address][:address1] if options[:billing_address]
-          card_details['avsZip'] =  options[:billing_address][:zip] if options[:billing_address]
-        when 'refund'
-          card_details['cardId'] = options[:card_id]
-          card_details['cardPresent'] = options[:card_present]
-          card_details['hasContract'] = options[:has_contract]
-          card_details['isCorp'] = options[:is_corp]
-          card_details['isDebit'] = options[:is_debit]
-          card_details['token'] = options[:token]
-        else
-          card_details
-        end
+        card_details['avsStreet'] = options[:billing_address][:address1] if options[:billing_address]
+        card_details['avsZip'] =  options[:billing_address][:zip] if !options[:billing_address].nil? && !options[:billing_address][:zip].nil?
 
         params['cardAccount'] = card_details
       end
@@ -159,29 +189,92 @@ module ActiveMerchant #:nodoc:
         "#{format(credit_card.month, :two_digits)}/#{format(credit_card.year, :two_digits)}"
       end
 
-      def purchases
-        [{ taxRate: '0.0000', additionalTaxRate: nil, discountRate: nil }]
+      def add_additional_data(params, options)
+        params['isAuth'] = options[:is_auth].present? ? options[:is_auth] : 'true'
+        params['paymentType'] = options[:payment_type].present? ? options[:payment_type] : 'Sale'
+        params['tenderType'] = options[:tender_type].present? ? options[:tender_type] : 'Card'
+        params['taxExempt'] = options[:tax_exempt].present? ? options[:tax_exempt] : 'false'
+        params['taxAmount'] = options[:tax_amount] if options[:tax_amount]
+        params['shouldGetCreditCardLevel'] = options[:should_get_credit_card_level] if options[:should_get_credit_card_level]
+        params['source'] = options[:source] if options[:source]
+        params['invoice'] = options[:invoice] if options[:invoice]
+        params['isTicket'] = options[:is_ticket] if options[:is_ticket]
+        params['shouldVaultCard'] = options[:should_vault_card] if options[:should_vault_card]
+        params['sourceZip'] = options[:source_zip] if options[:source_zip]
+        params['authCode'] = options[:auth_code] if options[:auth_code]
+        params['achIndicator'] = options[:ach_indicator] if options[:ach_indicator]
+        params['bankAccount'] = options[:bank_account] if options[:bank_account]
+        params['meta'] = options[:meta] if options[:meta]
       end
 
-      def add_type_merchant_purchase(params, merchant, is_settle_funds, options)
-        params['cardPresent'] = false
-        params['cardPresentType'] = 'CardNotPresent'
-        params['isAuth'] = true
-        params['isSettleFunds'] = is_settle_funds
-        params['isTicket'] = false
+      def add_pos_data(params, options)
+        pos_data = {}
+        pos_data['cardholderPresence'] = options.dig(:pos_data, :cardholder_presence) || 'Ecom'
+        pos_data['deviceAttendance'] = options.dig(:pos_data, :device_attendance) || 'HomePc'
+        pos_data['deviceInputCapability'] = options.dig(:pos_data, :device_input_capability) || 'Unknown'
+        pos_data['deviceLocation'] = options.dig(:pos_data, :device_location) || 'HomePc'
+        pos_data['panCaptureMethod'] = options.dig(:pos_data, :pan_capture_method) || 'Manual'
+        pos_data['partialApprovalSupport'] = options.dig(:pos_data, :partial_approval_support) || 'NotSupported'
+        pos_data['pinCaptureCapability'] = options.dig(:pos_data, :pin_capture_capability) || 'Incapable'
 
-        params['merchantId'] = merchant
-        params['mxAdvantageEnabled'] = false
-        params['paymentType'] = 'Sale'
+        params['posData'] = pos_data
+      end
 
-        params['purchases'] = purchases
+      def add_purchases_data(params, options)
+        return unless options[:purchases]
 
-        params['shouldGetCreditCardLevel'] = true
-        params['shouldVaultCard'] = true
-        params['source'] = options[:source]
-        params['sourceZip'] = options[:billing_address][:zip] if options[:billing_address]
-        params['taxExempt'] = false
-        params['tenderType'] = 'Card'
+        params['purchases'] = []
+
+        options[:purchases].each do |purchase|
+          purchase_object = {}
+
+          purchase_object['name'] = purchase[:name] if purchase[:name]
+          purchase_object['description'] = purchase[:description] if purchase[:description]
+          purchase_object['code'] = purchase[:code] if purchase[:code]
+          purchase_object['unitOfMeasure'] = purchase[:unit_of_measure] if purchase[:unit_of_measure]
+          purchase_object['unitPrice'] = purchase[:unit_price] if purchase[:unit_price]
+          purchase_object['quantity'] = purchase[:quantity] if purchase[:quantity]
+          purchase_object['taxRate'] = purchase[:tax_rate] if purchase[:tax_rate]
+          purchase_object['taxAmount'] = purchase[:tax_amount] if purchase[:tax_amount]
+          purchase_object['discountRate'] = purchase[:discount_rate] if purchase[:discount_rate]
+          purchase_object['discountAmount'] = purchase[:discount_amount] if purchase[:discount_amount]
+          purchase_object['extendedAmount'] = purchase[:extended_amount] if purchase[:extended_amount]
+          purchase_object['lineItemId'] = purchase[:line_item_id] if purchase[:line_item_id]
+
+          params['purchases'].append(purchase_object)
+        end
+      end
+
+      def add_shipping_data(params, options)
+        params['shipAmount'] = options[:ship_amount] if options[:ship_amount]
+
+        shipping_country = shipping_country_from(options)
+        params['shipToCountry'] = shipping_country if shipping_country
+
+        shipping_zip = shipping_zip_from(options)
+        params['shipToZip'] = shipping_zip if shipping_zip
+      end
+
+      def shipping_country_from(options)
+        options[:ship_to_country] || options.dig(:shipping_address, :country) || options.dig(:billing_address, :country)
+      end
+
+      def shipping_zip_from(options)
+        options[:ship_to_zip] || options.dig(:shipping_addres, :zip) || options.dig(:billing_address, :zip)
+      end
+
+      def payment_token(authorization)
+        return unless authorization
+        return authorization unless authorization.include?('|')
+
+        authorization.split('|').last
+      end
+
+      def payment_id(authorization)
+        return unless authorization
+        return authorization unless authorization.include?('|')
+
+        authorization.split('|').first
       end
 
       def commit(action, params: '', iid: '', card_number: nil, jwt: '')
@@ -200,10 +293,12 @@ module ActiveMerchant #:nodoc:
               parse(ssl_post(url(action, params), post_data(params), request_headers))
             end
           rescue ResponseError => e
-            parse(e.response.body)
+            # currently Priority returns a 404 with no body on certain calls. In those cases we will substitute the response status from response.message
+            gateway_response = e.response.body.presence || e.response.message
+            parse(gateway_response)
           end
+
         success = success_from(response, action)
-        response = { 'code' => '204' } if response == ''
         Response.new(
           success,
           message_from(response),
@@ -212,16 +307,6 @@ module ActiveMerchant #:nodoc:
           error_code: success || response == '' ? nil : error_from(response),
           test: test?
         )
-      end
-
-      def handle_response(response)
-        if response.code != '204' && (200...300).cover?(response.code.to_i)
-          response.body
-        elsif response.code == '204' || response == ''
-          response.body = { 'code' => '204' }
-        else
-          raise ResponseError.new(response)
-        end
       end
 
       def url(action, params, ref_number: '', credit_card_number: nil)
@@ -255,10 +340,22 @@ module ActiveMerchant #:nodoc:
         test? ? self.test_url_batch : self.live_url_batch
       end
 
-      def parse(body)
-        return body if body['code'] == '204'
+      def handle_response(response)
+        case response.code.to_i
+        when 204
+          { status: 'Success' }.to_json
+        when 200...300
+          response.body
+        else
+          raise ResponseError.new(response)
+        end
+      end
 
-        JSON.parse(body)
+      def parse(body)
+        return {} if body.blank?
+
+        parsed_response = JSON.parse(body)
+        parsed_response.is_a?(String) ? { 'message' => parsed_response } : parsed_response
       rescue JSON::ParserError
         message = 'Invalid JSON response received from Priority Gateway. Please contact Priority Gateway if you continue to receive this message.'
         message += " (The raw response returned by the API was #{body.inspect})"
@@ -268,10 +365,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response, action)
-        success = response['status'] == 'Approved' || response['status'] == 'Open' if response['status']
-        success = response['code'] == '204' if action == 'void'
-        success = !response['bank'].empty? if action == 'verify' && response['bank']
-        success
+        return !response['bank'].empty? if action == 'verify' && response['bank']
+
+        %w[Approved Open Success Settled Voided].include?(response['status'])
       end
 
       def message_from(response)
@@ -281,10 +377,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        {
-          'payment_token' => response['paymentToken'],
-          'id' => response['id']
-        }
+        [response['id'], response['paymentToken']].join('|')
       end
 
       def error_from(response)
@@ -293,54 +386,6 @@ module ActiveMerchant #:nodoc:
 
       def post_data(params)
         params.to_json
-      end
-
-      def add_pos_data(options)
-        pos_options = {}
-        pos_options['panCaptureMethod'] = options[:pan_capture_method]
-
-        pos_options
-      end
-
-      def add_purchases_data(options)
-        purchases = {}
-
-        purchases['dateCreated'] = options[:date_created]
-        purchases['iId'] = options[:i_id]
-        purchases['transactionIId'] = options[:transaction_i_id]
-        purchases['transactionId'] = options[:transaction_id]
-        purchases['name'] = options[:name]
-        purchases['description'] = options[:description]
-        purchases['code'] = options[:code]
-        purchases['unitOfMeasure'] = options[:unit_of_measure]
-        purchases['unitPrice'] = options[:unit_price]
-        purchases['quantity'] = options[:quantity]
-        purchases['taxRate'] = options[:tax_rate]
-        purchases['taxAmount'] = options[:tax_amount]
-        purchases['discountRate'] = options[:discount_rate]
-        purchases['discountAmount'] = options[:discount_amt]
-        purchases['extendedAmount'] = options[:extended_amt]
-        purchases['lineItemId'] = options[:line_item_id]
-
-        purchase_arr = []
-        purchase_arr[0] = purchases
-        purchase_arr
-      end
-
-      def add_risk_data(options)
-        risk = {}
-        risk['cvvResponseCode'] = options[:cvv_response_code]
-        risk['cvvResponse'] = options[:cvv_response]
-        risk['cvvMatch'] = options[:cvv_match]
-        risk['avsResponse'] = options[:avs_response]
-        risk['avsAddressMatch'] = options[:avs_address_match]
-        risk['avsZipMatch'] = options[:avs_zip_match]
-
-        risk
-      end
-
-      def get_hash(string)
-        JSON.parse(string.gsub('=>', ':'))
       end
     end
   end

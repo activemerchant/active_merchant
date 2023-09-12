@@ -5,9 +5,9 @@ class RemoteIpgTest < Test::Unit::TestCase
     @gateway = IpgGateway.new(fixtures(:ipg))
 
     @amount = 100
-    @credit_card = credit_card('5165850000000008', brand: 'mastercard', verification_value: '530', month: '12', year: '2022')
+    @credit_card = credit_card('5165850000000008', brand: 'mastercard', verification_value: '987', month: '12', year: '2029')
     @declined_card = credit_card('4000300011112220', brand: 'mastercard', verification_value: '652', month: '12', year: '2022')
-    @visa_card = credit_card('4704550000000005', brand: 'visa', verification_value: '123', month: '12', year: '2022')
+    @visa_card = credit_card('4704550000000005', brand: 'visa', verification_value: '123', month: '12', year: '2029')
     @options = {
       currency: 'ARS'
     }
@@ -40,6 +40,18 @@ class RemoteIpgTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, payment_token, @options)
     assert_success response
     assert_equal 'APPROVED', response.message
+  end
+
+  def test_successful_unstore
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal 'true', response.params['successfully']
+    payment_token = response.authorization
+    assert payment_token
+
+    response = @gateway.unstore(payment_token)
+    assert_success response
+    assert_equal 'true', response.params['successfully']
   end
 
   def test_successful_purchase_with_stored_credential
@@ -84,8 +96,15 @@ class RemoteIpgTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'DECLINED', response.message
+    assert_match 'DECLINED', response.message
     assert_equal 'SGS-050005', response.error_code
+  end
+
+  def test_failed_purchase_with_passed_in_store_id
+    # passing in a bad store id results in a 401 unauthorized error
+    assert_raises(ActiveMerchant::ResponseError) do
+      @gateway.purchase(@amount, @declined_card, @options.merge({ store_id: '1234' }))
+    end
   end
 
   def test_successful_authorize_and_capture
@@ -102,14 +121,14 @@ class RemoteIpgTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'DECLINED', response.message
+    assert_equal 'DECLINED, Do not honour', response.message
     assert_equal 'SGS-050005', response.error_code
   end
 
   def test_failed_capture
     response = @gateway.capture(@amount, '', @options)
     assert_failure response
-    assert_equal 'FAILED', response.message
+    assert_match 'FAILED', response.message
     assert_equal 'SGS-005001', response.error_code
   end
 
@@ -140,7 +159,7 @@ class RemoteIpgTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '', @options)
     assert_failure response
-    assert_equal 'FAILED', response.message
+    assert_match 'FAILED', response.message
     assert_equal 'SGS-005001', response.error_code
   end
 
@@ -153,7 +172,7 @@ class RemoteIpgTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'DECLINED', response.message
+    assert_match 'DECLINED', response.message
     assert_equal 'SGS-050005', response.error_code
   end
 

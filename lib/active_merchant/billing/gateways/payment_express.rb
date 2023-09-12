@@ -20,8 +20,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.windcave.com/'
       self.display_name = 'Windcave (formerly PaymentExpress)'
 
-      self.live_url = 'https://sec.paymentexpress.com/pxpost.aspx'
-      self.test_url = 'https://uat.paymentexpress.com/pxpost.aspx'
+      self.live_url = 'https://sec.windcave.com/pxpost.aspx'
+      self.test_url = 'https://uat.windcave.com/pxpost.aspx'
 
       APPROVED = '1'
 
@@ -306,9 +306,13 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, request.to_s))
 
         # Return a response
-        PaymentExpressResponse.new(response[:success] == APPROVED, message_from(response), response,
+        PaymentExpressResponse.new(
+          response[:success] == APPROVED,
+          message_from(response),
+          response,
           test: response[:test_mode] == '1',
-          authorization: authorization_from(action, response))
+          authorization: authorization_from(action, response)
+        )
       end
 
       # Response XML documentation: http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#XMLTxnOutput

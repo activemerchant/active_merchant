@@ -6,13 +6,15 @@ class PaymentezTest < Test::Unit::TestCase
   def setup
     @gateway = PaymentezGateway.new(application_code: 'foo', app_key: 'bar')
     @credit_card = credit_card
-    @elo_credit_card = credit_card('6362970000457013',
+    @elo_credit_card = credit_card(
+      '6362970000457013',
       month: 10,
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo')
+      brand: 'elo'
+    )
     @amount = 100
 
     @options = {
@@ -65,6 +67,21 @@ class PaymentezTest < Test::Unit::TestCase
 
     assert_equal 'CI-14952', response.authorization
     assert response.test?
+  end
+
+  def test_successful_capture_with_otp
+    authorization = 'CI-14952'
+    options = @options.merge({ type: 'BY_OTP', value: '012345' })
+    response = stub_comms do
+      @gateway.capture(nil, authorization, options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'BY_OTP', request['type']
+      assert_equal '012345', request['value']
+      assert_equal authorization, request['transaction']['id']
+      assert_equal '123', request['user']['id']
+    end.respond_with(successful_otp_capture_response)
+    assert_success response
   end
 
   def test_successful_purchase_with_token
@@ -324,6 +341,18 @@ class PaymentezTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_successful_inquire_with_transaction_id
+    response = stub_comms(@gateway, :ssl_get) do
+      @gateway.inquire('CI-635')
+    end.check_request do |method, _endpoint, _data, _headers|
+      assert_match('https://ccapi-stg.paymentez.com/v2/transaction/CI-635', method)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'CI-635', response.authorization
+    assert response.test?
   end
 
   private
@@ -604,6 +633,17 @@ Conn close
         }
       }
     '
+  end
+
+  def successful_otp_capture_response
+    '{
+      "status": 1,
+      "payment_date": "2017-09-26T21:16:00",
+      "amount": 99.0,
+      "transaction_id": "CI-14952",
+      "status_detail": 3,
+      "message": ""
+    }'
   end
 
   def failed_capture_response

@@ -296,6 +296,16 @@ class ElementTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_billing_email
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(email: 'test@example.com'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<BillingEmail>test@example.com</BillingEmail>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_credit_with_extra_fields
     credit_options = @options.merge({ ticket_number: '1', market_code: 'FoodRestaurant', merchant_supplied_transaction_id: '123' })
     stub_comms do

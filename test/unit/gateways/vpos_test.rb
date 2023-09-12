@@ -12,7 +12,7 @@ end
 
 class VposTest < Test::Unit::TestCase
   def setup
-    @gateway = VposGateway.new(public_key: 'some_key', private_key: 'some_other_key')
+    @gateway = VposGateway.new(public_key: 'some_key', private_key: 'some_other_key', encryption_key: OpenSSL::PKey::RSA.new(512))
     @credit_card = credit_card
     @amount = 10000
 

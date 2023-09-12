@@ -172,11 +172,14 @@ module ActiveMerchant #:nodoc:
 
         response = parse(ssl_post(self.live_url, post_data(action, parameters)))
 
-        Response.new(response['response'] == '1', message_from(response), response,
+        Response.new(
+          response['response'] == '1',
+          message_from(response), response,
           authorization: response['transactionid'],
           test: test?,
           cvv_result: response['cvvresponse'],
-          avs_result: { code: response['avsresponse'] })
+          avs_result: { code: response['avsresponse'] }
+        )
       end
 
       def message_from(response)

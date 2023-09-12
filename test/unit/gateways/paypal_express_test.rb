@@ -88,6 +88,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'FWRVKNRRZ3WUC', response.payer_id
     assert_equal 'buyer@jadedpallet.com', response.email
     assert_equal 'This is a test note', response.note
+    assert_equal 'PaymentActionNotInitiated', response.checkout_status
 
     assert address = response.address
     assert_equal 'Fred Brooks', address['name']
@@ -242,22 +243,28 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_flatrate_shipping_options_are_included_if_specified_in_build_setup_request
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0,
-      {
-        currency: 'AUD',
-        shipping_options: [
-          {
-            default: true,
-            name: 'first one',
-            amount: 1000
-          },
-          {
-            default: false,
-            name: 'second one',
-            amount: 2000
-          }
-        ]
-      }))
+    xml = REXML::Document.new(
+      @gateway.send(
+        :build_setup_request,
+        'SetExpressCheckout',
+        0,
+        {
+          currency: 'AUD',
+          shipping_options: [
+            {
+              default: true,
+              name: 'first one',
+              amount: 1000
+            },
+            {
+              default: false,
+              name: 'second one',
+              amount: 2000
+            }
+          ]
+        }
+      )
+    )
 
     assert_equal 'true', REXML::XPath.first(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionIsDefault').text
     assert_equal 'first one', REXML::XPath.first(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionName').text
@@ -271,18 +278,24 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_address_is_included_if_specified
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'Sale', 0,
-      {
-        currency: 'GBP',
-        address: {
-          name: 'John Doe',
-          address1: '123 somewhere',
-          city: 'Townville',
-          country: 'Canada',
-          zip: 'k1l4p2',
-          phone: '1231231231'
+    xml = REXML::Document.new(
+      @gateway.send(
+        :build_setup_request,
+        'Sale',
+        0,
+        {
+          currency: 'GBP',
+          address: {
+            name: 'John Doe',
+            address1: '123 somewhere',
+            city: 'Townville',
+            country: 'Canada',
+            zip: 'k1l4p2',
+            phone: '1231231231'
+          }
         }
-      }))
+      )
+    )
 
     assert_equal 'John Doe', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:Name').text
     assert_equal '123 somewhere', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:Street1').text
@@ -311,30 +324,36 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_fractional_discounts_are_correctly_calculated_with_jpy_currency
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 14250,
-      {
-        items: [
-          {
-            name: 'item one',
-            description: 'description',
-            amount: 15000,
-            number: 1,
-            quantity: 1
-          },
-          {
-            name: 'Discount',
-            description: 'Discount',
-            amount: -750,
-            number: 2,
-            quantity: 1
-          }
-        ],
-        subtotal: 14250,
-        currency: 'JPY',
-        shipping: 0,
-        handling: 0,
-        tax: 0
-      }))
+    xml = REXML::Document.new(
+      @gateway.send(
+        :build_setup_request,
+        'SetExpressCheckout',
+        14250,
+        {
+          items: [
+            {
+              name: 'item one',
+              description: 'description',
+              amount: 15000,
+              number: 1,
+              quantity: 1
+            },
+            {
+              name: 'Discount',
+              description: 'Discount',
+              amount: -750,
+              number: 2,
+              quantity: 1
+            }
+          ],
+          subtotal: 14250,
+          currency: 'JPY',
+          shipping: 0,
+          handling: 0,
+          tax: 0
+        }
+      )
+    )
 
     assert_equal '142', REXML::XPath.first(xml, '//n2:OrderTotal').text
     assert_equal '142', REXML::XPath.first(xml, '//n2:ItemTotal').text
@@ -344,30 +363,36 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_non_fractional_discounts_are_correctly_calculated_with_jpy_currency
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 14300,
-      {
-        items: [
-          {
-            name: 'item one',
-            description: 'description',
-            amount: 15000,
-            number: 1,
-            quantity: 1
-          },
-          {
-            name: 'Discount',
-            description: 'Discount',
-            amount: -700,
-            number: 2,
-            quantity: 1
-          }
-        ],
-        subtotal: 14300,
-        currency: 'JPY',
-        shipping: 0,
-        handling: 0,
-        tax: 0
-      }))
+    xml = REXML::Document.new(
+      @gateway.send(
+        :build_setup_request,
+        'SetExpressCheckout',
+        14300,
+        {
+          items: [
+            {
+              name: 'item one',
+              description: 'description',
+              amount: 15000,
+              number: 1,
+              quantity: 1
+            },
+            {
+              name: 'Discount',
+              description: 'Discount',
+              amount: -700,
+              number: 2,
+              quantity: 1
+            }
+          ],
+          subtotal: 14300,
+          currency: 'JPY',
+          shipping: 0,
+          handling: 0,
+          tax: 0
+        }
+      )
+    )
 
     assert_equal '143', REXML::XPath.first(xml, '//n2:OrderTotal').text
     assert_equal '143', REXML::XPath.first(xml, '//n2:ItemTotal').text
@@ -377,30 +402,36 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_fractional_discounts_are_correctly_calculated_with_usd_currency
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 14250,
-      {
-        items: [
-          {
-            name: 'item one',
-            description: 'description',
-            amount: 15000,
-            number: 1,
-            quantity: 1
-          },
-          {
-            name: 'Discount',
-            description: 'Discount',
-            amount: -750,
-            number: 2,
-            quantity: 1
-          }
-        ],
-      subtotal: 14250,
-      currency: 'USD',
-      shipping: 0,
-      handling: 0,
-      tax: 0
-      }))
+    xml = REXML::Document.new(
+      @gateway.send(
+        :build_setup_request,
+        'SetExpressCheckout',
+        14250,
+        {
+          items: [
+            {
+              name: 'item one',
+              description: 'description',
+              amount: 15000,
+              number: 1,
+              quantity: 1
+            },
+            {
+              name: 'Discount',
+              description: 'Discount',
+              amount: -750,
+              number: 2,
+              quantity: 1
+            }
+          ],
+        subtotal: 14250,
+        currency: 'USD',
+        shipping: 0,
+        handling: 0,
+        tax: 0
+        }
+      )
+    )
 
     assert_equal '142.50', REXML::XPath.first(xml, '//n2:OrderTotal').text
     assert_equal '142.50', REXML::XPath.first(xml, '//n2:ItemTotal').text
@@ -453,25 +484,31 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_items_are_included_if_specified_in_build_sale_or_authorization_request
-    xml = REXML::Document.new(@gateway.send(:build_sale_or_authorization_request, 'Sale', 100,
-      {
-        items: [
-          {
-            name: 'item one',
-            description: 'item one description',
-            amount: 10000,
-            number: 1,
-            quantity: 3
-          },
-          {
-            name: 'item two',
-            description: 'item two description',
-            amount: 20000,
-            number: 2,
-            quantity: 4
-          }
-        ]
-      }))
+    xml = REXML::Document.new(
+      @gateway.send(
+        :build_sale_or_authorization_request,
+        'Sale',
+        100,
+        {
+          items: [
+            {
+              name: 'item one',
+              description: 'item one description',
+              amount: 10000,
+              number: 1,
+              quantity: 3
+            },
+            {
+              name: 'item two',
+              description: 'item two description',
+              amount: 20000,
+              number: 2,
+              quantity: 4
+            }
+          ]
+        }
+      )
+    )
 
     assert_equal 'item one', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Name').text
     assert_equal 'item one description', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Description').text
@@ -547,15 +584,21 @@ class PaypalExpressTest < Test::Unit::TestCase
 
   def test_build_reference_transaction_test
     PaypalExpressGateway.application_id = 'ActiveMerchant_FOO'
-    xml = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 'Sale', 2000,
-      {
-        reference_id: 'ref_id',
-        payment_type: 'Any',
-        invoice_id: 'invoice_id',
-        description: 'Description',
-        ip: '127.0.0.1',
-        merchant_session_id: 'example_merchant_session_id'
-      }))
+    xml = REXML::Document.new(
+      @gateway.send(
+        :build_reference_transaction_request,
+        'Sale',
+        2000,
+        {
+          reference_id: 'ref_id',
+          payment_type: 'Any',
+          invoice_id: 'invoice_id',
+          description: 'Description',
+          ip: '127.0.0.1',
+          merchant_session_id: 'example_merchant_session_id'
+        }
+      )
+    )
 
     assert_equal '124', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:Version').text
     assert_equal 'ref_id', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:ReferenceID').text
@@ -571,14 +614,20 @@ class PaypalExpressTest < Test::Unit::TestCase
 
   def test_build_reference_transaction_without_merchant_session_test
     PaypalExpressGateway.application_id = 'ActiveMerchant_FOO'
-    xml = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 'Sale', 2000,
-      {
-        reference_id: 'ref_id',
-        payment_type: 'Any',
-        invoice_id: 'invoice_id',
-        description: 'Description',
-        ip: '127.0.0.1'
-      }))
+    xml = REXML::Document.new(
+      @gateway.send(
+        :build_reference_transaction_request,
+        'Sale',
+        2000,
+        {
+          reference_id: 'ref_id',
+          payment_type: 'Any',
+          invoice_id: 'invoice_id',
+          description: 'Description',
+          ip: '127.0.0.1'
+        }
+      )
+    )
 
     assert_equal '124', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:Version').text
     assert_equal 'ref_id', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:ReferenceID').text
@@ -632,26 +681,20 @@ class PaypalExpressTest < Test::Unit::TestCase
 
   def test_error_code_for_single_error
     @gateway.expects(:ssl_post).returns(response_with_error)
-    response = @gateway.setup_authorization(100,
-      return_url: 'http://example.com',
-      cancel_return_url: 'http://example.com')
+    response = @gateway.setup_authorization(100, return_url: 'http://example.com', cancel_return_url: 'http://example.com')
     assert_equal '10736', response.params['error_codes']
   end
 
   def test_ensure_only_unique_error_codes
     @gateway.expects(:ssl_post).returns(response_with_duplicate_errors)
-    response = @gateway.setup_authorization(100,
-      return_url: 'http://example.com',
-      cancel_return_url: 'http://example.com')
+    response = @gateway.setup_authorization(100, return_url: 'http://example.com', cancel_return_url: 'http://example.com')
 
     assert_equal '10736', response.params['error_codes']
   end
 
   def test_error_codes_for_multiple_errors
     @gateway.expects(:ssl_post).returns(response_with_errors)
-    response = @gateway.setup_authorization(100,
-      return_url: 'http://example.com',
-      cancel_return_url: 'http://example.com')
+    response = @gateway.setup_authorization(100, return_url: 'http://example.com', cancel_return_url: 'http://example.com')
 
     assert_equal %w[10736 10002], response.params['error_codes'].split(',')
   end
@@ -770,6 +813,16 @@ class PaypalExpressTest < Test::Unit::TestCase
 
     schema = Nokogiri::XML::Schema(File.read(File.join(File.dirname(__FILE__), '..', '..', 'schema', 'paypal', 'eBLBaseComponents.xsd')))
     assert_equal [], schema.validate(sub_doc)
+  end
+
+  def test_build_reference_transaction_sets_idempotency_key
+    request = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 'Authorization', 100, idempotency_key: 'idempotency_key'))
+    assert_equal 'idempotency_key', REXML::XPath.first(request, '//n2:DoReferenceTransactionRequestDetails/n2:MsgSubID').text
+  end
+
+  def test_build_sale_or_authorization_request_sets_idempotency_key
+    request = REXML::Document.new(@gateway.send(:build_sale_or_authorization_request, 'Authorization', 100, idempotency_key: 'idempotency_key'))
+    assert_equal 'idempotency_key', REXML::XPath.first(request, '//n2:DoExpressCheckoutPaymentRequestDetails/n2:MsgSubID').text
   end
 
   private

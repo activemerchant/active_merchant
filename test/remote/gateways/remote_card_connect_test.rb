@@ -134,11 +134,13 @@ class RemoteCardConnectTest < Test::Unit::TestCase
     assert_equal 'Approval Queued for Capture', response.message
   end
 
-  def test_successful_purchase_3DS
+  def test_successful_purchase_three_ds
     three_ds_options = @options.merge(
-      secure_flag: 'se3453',
-      secure_value: '233frdf',
-      secure_xid: '334ef34'
+      three_d_secure: {
+        eci: 'se3453',
+        cavv: 'AJkBByEyYgAAAASwgmEodQAAAAA=',
+        ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw=='
+      }
     )
     response = @gateway.purchase(@amount, @credit_card, three_ds_options)
     assert_success response
@@ -150,6 +152,31 @@ class RemoteCardConnectTest < Test::Unit::TestCase
     assert_success store_response
     purchase_response = @gateway.purchase(@amount, store_response.authorization, @options)
     assert_success purchase_response
+  end
+
+  def test_successful_purchase_using_stored_credential_framework
+    stored_credential_options = {
+      initial_transaction: true,
+      reason_type: 'recurring',
+      initiator: 'merchant'
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_options }))
+    assert_success response
+    assert_equal response.params['cof'], 'M'
+
+    stored_credential_options = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'merchant'
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_options }))
+    assert_success response
+    assert_equal response.params['cof'], 'M'
+  end
+
+  def test_successful_purchase_with_telephonic_ecomind
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ ecomind: 'T' }))
+    assert_success response
   end
 
   def test_failed_purchase
@@ -199,22 +226,27 @@ class RemoteCardConnectTest < Test::Unit::TestCase
     assert_equal 'Invalid card', response.message
   end
 
-  def test_successful_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-
-    assert refund = @gateway.refund(@amount, purchase.authorization)
-    assert_success refund
-    assert_equal 'Approval', refund.message
-  end
-
-  def test_partial_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-
-    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
-    assert_success refund
-  end
+  #   A transaction cannot be refunded before settlement so these tests will
+  #   fail with the following response, to properly test refunds create a purchase
+  #   save the reference and test the next day, check:
+  #   https://cardconnect.com/launchpointe/running-a-business/payment-processing-101#how_long_it_takes
+  #
+  #   def test_successful_refund
+  #     purchase = @gateway.purchase(@amount, @credit_card, @options)
+  #     assert_success purchase
+  #
+  #     assert refund = @gateway.refund(@amount, purchase.authorization)
+  #     assert_success refund
+  #     assert_equal 'Approval', refund.message
+  #   end
+  #
+  #   def test_partial_refund
+  #     purchase = @gateway.purchase(@amount, @credit_card, @options)
+  #     assert_success purchase
+  #
+  #     assert refund = @gateway.refund(@amount - 1, purchase.authorization)
+  #     assert_success refund
+  #   end
 
   def test_failed_refund
     response = @gateway.refund(@amount, @invalid_txn)

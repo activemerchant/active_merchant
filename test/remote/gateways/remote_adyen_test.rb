@@ -12,67 +12,83 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @general_bank_account = check(name: 'A. Klaassen', account_number: '123456789', routing_number: 'NL13TEST0123456789')
 
-    @credit_card = credit_card('4111111111111111',
+    @credit_card = credit_card(
+      '4111111111111111',
       month: 3,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'visa')
+      brand: 'visa'
+    )
 
-    @avs_credit_card = credit_card('4400000000000008',
+    @avs_credit_card = credit_card(
+      '4400000000000008',
       month: 3,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'visa')
+      brand: 'visa'
+    )
 
-    @elo_credit_card = credit_card('5066 9911 1111 1118',
+    @elo_credit_card = credit_card(
+      '5066 9911 1111 1118',
       month: 3,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo')
+      brand: 'elo'
+    )
 
-    @three_ds_enrolled_card = credit_card('4917610000000000',
+    @three_ds_enrolled_card = credit_card(
+      '4917610000000000',
       month: 3,
       year: 2030,
       verification_value: '737',
-      brand: :visa)
+      brand: :visa
+    )
 
-    @cabal_credit_card = credit_card('6035 2277 1642 7021',
-      month: 3,
-      year: 2030,
-      first_name: 'John',
-      last_name: 'Smith',
-      verification_value: '737',
-      brand: 'cabal')
-
-    @invalid_cabal_credit_card = credit_card('6035 2200 0000 0006',
+    @cabal_credit_card = credit_card(
+      '6035 2277 1642 7021',
       month: 3,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'cabal')
+      brand: 'cabal'
+    )
 
-    @unionpay_credit_card = credit_card('8171 9999 0000 0000 021',
+    @invalid_cabal_credit_card = credit_card(
+      '6035 2200 0000 0006',
+      month: 3,
+      year: 2030,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      brand: 'cabal'
+    )
+
+    @unionpay_credit_card = credit_card(
+      '8171 9999 0000 0000 021',
       month: 10,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'unionpay')
+      brand: 'unionpay'
+    )
 
-    @invalid_unionpay_credit_card = credit_card('8171 9999 1234 0000 921',
+    @invalid_unionpay_credit_card = credit_card(
+      '8171 9999 1234 0000 921',
       month: 10,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'unionpay')
+      brand: 'unionpay'
+    )
 
     @declined_card = credit_card('4000300011112220')
 
@@ -148,44 +164,6 @@ class RemoteAdyenTest < Test::Unit::TestCase
     }
 
     @long_order_id = 'asdfjkl;asdfjkl;asdfj;aiwyutinvpoaieryutnmv;203987528752098375j3q-p489756ijmfpvbijpq348nmdf;vbjp3845'
-
-    @sub_seller_options = {
-      "subMerchant.numberOfSubSellers": '2',
-      "subMerchant.subSeller1.id": '111111111',
-      "subMerchant.subSeller1.name": 'testSub1',
-      "subMerchant.subSeller1.street": 'Street1',
-      "subMerchant.subSeller1.postalCode": '12242840',
-      "subMerchant.subSeller1.city": 'Sao jose dos campos',
-      "subMerchant.subSeller1.state": 'SP',
-      "subMerchant.subSeller1.country": 'BRA',
-      "subMerchant.subSeller1.taxId": '12312312340',
-      "subMerchant.subSeller1.mcc": '5691',
-      "subMerchant.subSeller1.debitSettlementBank": '1',
-      "subMerchant.subSeller1.debitSettlementAgency": '1',
-      "subMerchant.subSeller1.debitSettlementAccountType": '1',
-      "subMerchant.subSeller1.debitSettlementAccount": '1',
-      "subMerchant.subSeller1.creditSettlementBank": '1',
-      "subMerchant.subSeller1.creditSettlementAgency": '1',
-      "subMerchant.subSeller1.creditSettlementAccountType": '1',
-      "subMerchant.subSeller1.creditSettlementAccount": '1',
-      "subMerchant.subSeller2.id": '22222222',
-      "subMerchant.subSeller2.name": 'testSub2',
-      "subMerchant.subSeller2.street": 'Street2',
-      "subMerchant.subSeller2.postalCode": '12300000',
-      "subMerchant.subSeller2.city": 'Jacarei',
-      "subMerchant.subSeller2.state": 'SP',
-      "subMerchant.subSeller2.country": 'BRA',
-      "subMerchant.subSeller2.taxId": '12312312340',
-      "subMerchant.subSeller2.mcc": '5691',
-      "subMerchant.subSeller2.debitSettlementBank": '1',
-      "subMerchant.subSeller2.debitSettlementAgency": '1',
-      "subMerchant.subSeller2.debitSettlementAccountType": '1',
-      "subMerchant.subSeller2.debitSettlementAccount": '1',
-      "subMerchant.subSeller2.creditSettlementBank": '1',
-      "subMerchant.subSeller2.creditSettlementAgency": '1',
-      "subMerchant.subSeller2.creditSettlementAccountType": '1',
-      "subMerchant.subSeller2.creditSettlementAccount": '1'
-    }
   end
 
   def test_successful_authorize
@@ -343,13 +321,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   # with rule set in merchant account to skip 3DS for cards of this brand
   def test_successful_authorize_with_3ds_dynamic_rule_broken
-    mastercard_threed = credit_card('5212345678901234',
+    mastercard_threed = credit_card(
+      '5212345678901234',
       month: 3,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'mastercard')
+      brand: 'mastercard'
+    )
     assert response = @gateway.authorize(@amount, mastercard_threed, @options.merge(threed_dynamic: true))
     assert response.test?
     refute response.authorization.blank?
@@ -363,7 +343,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_purchase_fails_on_unexpected_3ds_initiation
     response = @gateway.purchase(8484, @three_ds_enrolled_card, @options)
     assert_failure response
-    assert_match 'Received unexpected 3DS authentication response', response.message
+    assert_match 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.', response.message
   end
 
   def test_successful_purchase_with_auth_data_via_threeds1_standalone
@@ -462,6 +442,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @declined_bank_account, @options)
     assert_failure response
     assert_equal 'Bank Account or Bank Location Id not valid or missing', response.message
+  end
+
+  def test_failed_authorize_with_bank_account_missing_country_code
+    response = @gateway.authorize(@amount, @bank_account, @options.except(:billing_address))
+    assert_failure response
+    assert_equal 'BankDetails missing', response.message
   end
 
   def test_successful_purchase
@@ -636,6 +622,24 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
     assert_equal '[capture-received]', capture.message
+  end
+
+  def test_error_code_render_from_response
+    options = {
+      order_id: '123',
+      email: 'shopper@sky.uk',
+      billing_address: {
+        address2: 'address2',
+        zip: '31331',
+        city: 'Wanaque',
+        state: 'NJ',
+        country: 'IE'
+      },
+      delivery_date: 'invalid'
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_failure response
+    assert_equal '702', response.error_code
   end
 
   def test_partial_capture
@@ -975,6 +979,14 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_tokenize_only_store_with_ntid
+    assert response = @gateway.store(@credit_card, @options.merge({ tokenize_only: true, network_transaction_id: '858435661128555' }))
+
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_store_with_elo_card
     assert response = @gateway.store(@elo_credit_card, @options)
 
@@ -983,11 +995,9 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Authorised', response.message
   end
 
-  # Adyen does not currently support recurring transactions with Cabal cards
-  def test_failed_store_with_cabal_card
+  def test_successful_store_with_cabal_card
     assert response = @gateway.store(@cabal_credit_card, @options)
-    assert_failure response
-    assert_equal 'Recurring transactions are not supported for this card type.', response.message
+    assert_success response
   end
 
   def test_successful_store_with_unionpay_card
@@ -1034,6 +1044,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match 'Authorised', response.message
+  end
+
+  def test_successful_verify_with_custom_amount
+    response = @gateway.verify(@credit_card, @options.merge({ verify_amount: '500' }))
     assert_success response
     assert_match 'Authorised', response.message
   end
@@ -1123,7 +1139,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     card = credit_card('4242424242424242', month: 16)
     assert response = @gateway.purchase(@amount, card, @options)
     assert_failure response
-    assert_equal 'The provided Expiry Date is not valid.: Expiry month should be between 1 and 12 inclusive', response.message
+    assert_equal 'The provided Expiry Date is not valid.: Expiry month should be between 1 and 12 inclusive: 16', response.message
   end
 
   def test_invalid_expiry_year_for_purchase
@@ -1305,6 +1321,47 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_successful_capture_with_shopper_statement
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge(shopper_statement: 'test1234'))
+    assert_success capture
+  end
+
+  def test_purchase_with_skip_mpi_data
+    options = {
+      reference: '345123',
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
+      shopper_reference: 'shopper 123',
+      billing_address: address(country: 'US', state: 'CA')
+    }
+    first_options = options.merge(
+      order_id: generate_unique_id,
+      shopper_interaction: 'Ecommerce',
+      recurring_processing_model: 'Subscription'
+    )
+    assert auth = @gateway.authorize(@amount, @apple_pay_card, first_options)
+    assert_success auth
+
+    assert_equal 'Subscription', auth.params['additionalData']['recurringProcessingModel']
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal '[capture-received]', capture.message
+
+    used_options = options.merge(
+      order_id: generate_unique_id,
+      skip_mpi_data: 'Y',
+      shopper_interaction: 'ContAuth',
+      recurring_processing_model: 'Subscription',
+      network_transaction_id: auth.network_transaction_id
+    )
+
+    assert purchase = @gateway.purchase(@amount, @apple_pay_card, used_options)
+    assert_success purchase
+  end
+
   def test_successful_authorize_with_sub_merchant_data
     sub_merchant_data = {
       sub_merchant_id: '123451234512345',
@@ -1335,10 +1392,183 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_sub_merchant_sub_seller_data
+    @sub_seller_options = {
+      "subMerchant.numberOfSubSellers": '2',
+      "subMerchant.subSeller1.id": '111111111',
+      "subMerchant.subSeller1.name": 'testSub1',
+      "subMerchant.subSeller1.street": 'Street1',
+      "subMerchant.subSeller1.postalCode": '12242840',
+      "subMerchant.subSeller1.city": 'Sao jose dos campos',
+      "subMerchant.subSeller1.state": 'SP',
+      "subMerchant.subSeller1.country": 'BRA',
+      "subMerchant.subSeller1.taxId": '12312312340',
+      "subMerchant.subSeller1.mcc": '5691',
+      "subMerchant.subSeller1.debitSettlementBank": '1',
+      "subMerchant.subSeller1.debitSettlementAgency": '1',
+      "subMerchant.subSeller1.debitSettlementAccountType": '1',
+      "subMerchant.subSeller1.debitSettlementAccount": '1',
+      "subMerchant.subSeller1.creditSettlementBank": '1',
+      "subMerchant.subSeller1.creditSettlementAgency": '1',
+      "subMerchant.subSeller1.creditSettlementAccountType": '1',
+      "subMerchant.subSeller1.creditSettlementAccount": '1',
+      "subMerchant.subSeller2.id": '22222222',
+      "subMerchant.subSeller2.name": 'testSub2',
+      "subMerchant.subSeller2.street": 'Street2',
+      "subMerchant.subSeller2.postalCode": '12300000',
+      "subMerchant.subSeller2.city": 'Jacarei',
+      "subMerchant.subSeller2.state": 'SP',
+      "subMerchant.subSeller2.country": 'BRA',
+      "subMerchant.subSeller2.taxId": '12312312340',
+      "subMerchant.subSeller2.mcc": '5691',
+      "subMerchant.subSeller2.debitSettlementBank": '1',
+      "subMerchant.subSeller2.debitSettlementAgency": '1',
+      "subMerchant.subSeller2.debitSettlementAccountType": '1',
+      "subMerchant.subSeller2.debitSettlementAccount": '1',
+      "subMerchant.subSeller2.creditSettlementBank": '1',
+      "subMerchant.subSeller2.creditSettlementAgency": '1',
+      "subMerchant.subSeller2.creditSettlementAccountType": '1',
+      "subMerchant.subSeller2.creditSettlementAccount": '1'
+    }
     assert response = @gateway.authorize(@amount, @avs_credit_card, @options.merge(sub_merchant_data: @sub_seller_options))
     assert response.test?
     refute response.authorization.blank?
     assert_success response
+  end
+
+  def test_successful_authorize_with_level_2_data
+    level_2_data = {
+      total_tax_amount: '160',
+      customer_reference: '101'
+    }
+    assert response = @gateway.authorize(@amount, @avs_credit_card, @options.merge(level_2_data: level_2_data))
+    assert response.test?
+    refute response.authorization.blank?
+    assert_success response
+  end
+
+  def test_successful_purchase_with_level_2_data
+    level_2_data = {
+      total_tax_amount: '160',
+      customer_reference: '101'
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: level_2_data))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_authorize_with_level_3_data
+    level_3_data = {
+      total_tax_amount: '12800',
+      customer_reference: '101',
+      freight_amount: '300',
+      destination_state_province_code: 'NYC',
+      ship_from_postal_code: '1082GM',
+      order_date: '101216',
+      destination_postal_code: '1082GM',
+      destination_country_code: 'NLD',
+      duty_amount: '500',
+      items: [
+        {
+          description: 'T16 Test products 1',
+          product_code: 'TEST120',
+          commodity_code: 'COMMCODE1',
+          quantity: '5',
+          unit_of_measure: 'm',
+          unit_price: '1000',
+          discount_amount: '60',
+          total_amount: '4940'
+        }
+      ]
+    }
+    assert response = @gateway.authorize(@amount, @avs_credit_card, @options.merge(level_3_data: level_3_data))
+    assert response.test?
+    assert_success response
+  end
+
+  def test_successful_purchase_with_level_3_data
+    level_3_data = {
+      total_tax_amount: '12800',
+      customer_reference: '101',
+      freight_amount: '300',
+      destination_state_province_code: 'NYC',
+      ship_from_postal_code: '1082GM',
+      order_date: '101216',
+      destination_postal_code: '1082GM',
+      destination_country_code: 'NLD',
+      duty_amount: '500',
+      items: [
+        {
+          description: 'T16 Test products 1',
+          product_code: 'TEST120',
+          commodity_code: 'COMMCODE1',
+          quantity: '5',
+          unit_of_measure: 'm',
+          unit_price: '1000',
+          discount_amount: '60',
+          total_amount: '4940'
+        }
+      ]
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_3_data: level_3_data))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_succesful_purchase_with_airline_data
+    airline_data = {
+      agency_invoice_number: 'BAC123',
+      agency_plan_name: 'plan name',
+      airline_code: '434234',
+      airline_designator_code: '1234',
+      boarding_fee: '100',
+      computerized_reservation_system: 'abcd',
+      customer_reference_number: 'asdf1234',
+      document_type: 'cc',
+      flight_date: '2023-09-08',
+      ticket_issue_address: 'abcqwer',
+      ticket_number: 'ABCASDF',
+      travel_agency_code: 'ASDF',
+      travel_agency_name: 'hopper',
+      passenger_name: 'Joe Doe',
+      leg: {
+        carrier_code: 'KL',
+        class_of_travel: 'F'
+      },
+      passenger: {
+        first_name: 'Joe',
+        last_name: 'Doe',
+        telephone_number: '432211111'
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(additional_data_airline: airline_data))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_succesful_purchase_with_lodging_data
+    lodging_data = {
+      check_in_date: '20230822',
+      check_out_date: '20230830',
+      customer_service_toll_free_number: '234234',
+      fire_safety_act_indicator: 'abc123',
+      folio_cash_advances: '1234667',
+      folio_number: '32343',
+      food_beverage_charges: '1234',
+      no_show_indicator: 'Y',
+      prepaid_expenses: '100',
+      property_phone_number: '54545454',
+      number_of_nights: '5',
+      rate: '100',
+      total_room_tax: '1000',
+      total_tax: '100',
+      duration: '2',
+      market: 'H'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(additional_data_lodging: lodging_data))
+    assert_success response
+    assert_equal '[capture-received]', response.message
   end
 
   def test_successful_cancel_or_refund
@@ -1382,6 +1612,17 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success void
     assert_equal '[cancelOrRefund-received]', void.message
     assert_void_references_original_authorization(void, auth)
+  end
+
+  def test_successful_authorize_with_alternate_kosovo_code
+    @options[:billing_address][:country] = 'XK'
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Billing address problem (Country XK invalid)', response.message
+
+    @options[:billing_address][:country] = 'QZ'
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
   end
 
   private

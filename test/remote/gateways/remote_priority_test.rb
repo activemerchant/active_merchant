@@ -2,253 +2,351 @@ require 'test_helper'
 
 class RemotePriorityTest < Test::Unit::TestCase
   def setup
-    # Consumer API Key: Generated in MX Merchant for specific test merchant
-    # Consumer API Secret:= Generated in MX Merchant for specific test merchant
-
-    # run command below to run tests in debug (byebug)
-    # byebug -Itest test/unit/gateways/card_stream_test.rb
-    #
-    # bundle exec rake test:remote TEST=test/remote/gateways/remote_priority_test.rb
-    # ruby -Itest test/unit/gateways/priority_test.rb -n test_successful_void
-
-    # Run specific remote test
-    # ruby -Itest test/remote/gateways/remote_priority_test.rb -n test_fail_refund_already_refunded_purchase_response
     @gateway = PriorityGateway.new(fixtures(:priority))
 
-    # purchase params success
-    @amount_purchase = 2
-    @credit_card = credit_card('4111111111111111', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '999')
-    @invalid_credit_card = credit_card('123456', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '999')
-    @faulty_credit_card = credit_card('12345', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '999')
+    @amount = 2
+    @credit_amount = 2000
+    @credit_card = credit_card
+    @invalid_credit_card = credit_card('123456')
+    @replay_id = rand(100...99999999)
+    @options = { billing_address: address }
 
-    @option_spr = {
-      billing_address: address()
+    @additional_options = {
+      is_auth: false,
+      should_get_credit_card_level: true,
+      should_vault_card: false,
+      invoice: '123',
+      tax_exempt: true
     }
 
-    # purchase params fail inavalid card number
-    @credit_card_purchase_fail_invalid_number = credit_card('4111', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '999')
+    @additional_creditoptions = {
+      is_auth: true,
+      should_get_credit_card_level: false,
+      should_vault_card: false,
+      invoice: '123',
+      tax_exempt: true,
+      is_ticket: false,
+      source_zip: '30022',
+      auth_code: '',
+      ach_indicator: '',
+      bank_account: '',
+      meta: 'Harry Maguire is the best defender in premier league'
+    }
 
-    # purchase params fail missing card number month
-    @credit_card_purchase_fail_missing_month = credit_card('4111111111111111', month: '', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '999')
+    @custom_pos_data = {
+      pos_data: {
+        cardholder_presence: 'NotPresent',
+        device_attendance: 'Unknown',
+        device_input_capability: 'KeyedOnly',
+        device_location: 'Unknown',
+        pan_capture_method: 'Manual',
+        partial_approval_support: 'Supported',
+        pin_capture_capability: 'Twelve'
+      }
+    }
 
-    # purchase params fail missing card verification number
-    @credit_card_purchase_fail_missing_verification = credit_card('4111111111111111', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '')
+    @purchases_data = {
+      purchases: [
+        {
+          line_item_id: 79402,
+          name: 'Book',
+          description: 'The Elements of Style',
+          quantity: 1,
+          unit_price: 1.23,
+          discount_amount: 0,
+          extended_amount: '1.23',
+          discount_rate: 0,
+          tax_amount: 1
+        },
+        {
+          line_item_id: 79403,
+          name: 'Cat Poster',
+          description: 'A sleeping cat',
+          quantity: 1,
+          unit_price: '2.34',
+          discount_amount: 0,
+          extended_amount: '2.34',
+          discount_rate: 0
+        }
+      ]
+    }
+  end
 
-    # authorize params success
-    @amount_authorize = 799
-    # authorize params success end
+  def test_successful_authorize
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved or completed successfully', response.message
+  end
+
+  def test_failed_authorize
+    response = @gateway.authorize(@amount, @invalid_credit_card, @options)
+    assert_failure response
+    assert_equal 'Invalid card number', response.message
   end
 
   def test_successful_purchase
-    response = @gateway.purchase(@amount_purchase, @credit_card, @option_spr)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'Approved', response.params['status']
+    assert_equal 'Approved or completed successfully', response.message
   end
 
-  # Invalid card number
   def test_failed_purchase
-    response = @gateway.purchase(@amount_purchase, @credit_card_purchase_fail_invalid_number, @option_spr)
+    response = @gateway.purchase(@amount, @invalid_credit_card, @options)
     assert_failure response
-
     assert_equal 'Invalid card number', response.message
-    assert_equal 'Declined', response.params['status']
   end
 
-  # Missing card number month
   def test_failed_purchase_missing_card_month
-    response = @gateway.purchase(@amount_purchase, @credit_card_purchase_fail_missing_month, @option_spr)
-    assert_failure response
+    card_without_month = credit_card('4242424242424242', month: '')
+    response = @gateway.purchase(@amount, card_without_month, @options)
 
+    assert_failure response
     assert_equal 'ValidationError', response.error_code
-    assert_equal 'Validation error happened', response.params['message']
     assert_equal 'Missing expiration month and / or year', response.message
   end
 
-  # Missing card verification number
   def test_failed_purchase_missing_card_verification_number
-    response = @gateway.purchase(@amount_purchase, @credit_card_purchase_fail_missing_verification, @option_spr)
-    assert_failure response
+    card_without_cvv = credit_card('4242424242424242', verification_value: '')
+    response = @gateway.purchase(@amount, card_without_cvv, @options)
 
+    assert_failure response
     assert_equal 'CVV is required based on merchant fraud settings', response.message
-    assert_equal 'Declined', response.params['status']
   end
 
-  # Authorize tests
-  def test_successful_authorize
-    response = @gateway.authorize(@amount_purchase, @credit_card, @option_spr)
-    assert_success response
-    assert_equal 'Approved', response.params['status']
-  end
+  def test_successful_authorize_and_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
 
-  # Invalid card number
-  def test_failed_authorize
-    response = @gateway.authorize(@amount_purchase, @credit_card_purchase_fail_invalid_number, @option_spr)
-    assert_failure response
-
-    assert_equal 'Invalid card number', response.message
-    assert_equal 'Declined', response.params['status']
-  end
-
-  # Missing card number month
-  def test_failed_authorize_missing_card_month
-    response = @gateway.authorize(@amount_purchase, @credit_card_purchase_fail_missing_month, @option_spr)
-    assert_failure response
-
-    assert_equal 'ValidationError', response.error_code
-    assert_equal 'Validation error happened', response.params['message']
-    assert_equal 'Missing expiration month and / or year', response.message
-  end
-
-  # Missing card verification number
-  def test_failed_authorize_missing_card_verification_number
-    response = @gateway.authorize(@amount_purchase, @credit_card_purchase_fail_missing_verification, @option_spr)
-    assert_failure response
-
-    assert_equal 'CVV is required based on merchant fraud settings', response.message
-    assert_equal 'Declined', response.params['status']
-  end
-
-  # Capture tests
-  def test_successful_capture
-    auth_obj = @gateway.authorize(@amount_authorize, @credit_card, @option_spr)
-    assert_success auth_obj
-    # add auth code to options
-    @option_spr.update(auth_code: auth_obj.params['authCode'])
-
-    capture = @gateway.capture(@amount_authorize, auth_obj.authorization.to_s, @option_spr)
+    capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
     assert_equal 'Approved', capture.message
-    assert_equal 'Approved', capture.params['status']
   end
 
-  # Invalid authorization and null auth code
   def test_failed_capture
-    # add auth code to options
-    @option_spr.update(auth_code: '12345')
-    capture = @gateway.capture(@amount_authorize, { 'payment_token' => 'bogus' }.to_s, @option_spr)
+    capture = @gateway.capture(@amount, 'bogus_authorization', @options)
     assert_failure capture
-
     assert_equal 'Original Transaction Not Found', capture.message
-    assert_equal 'Declined', capture.params['status']
   end
 
-  # Void tests
-  # Batch status is by default is set to Open when Sale transaction is created
-  def test_successful_void_batch_open
-    response = @gateway.purchase(@amount_purchase, @credit_card, @option_spr)
+  def test_successful_purchase_with_shipping_data
+    options_with_shipping = @options.merge({ ship_to_country: 'USA', ship_to_zip: 27703, ship_amount: 0.01 })
+    response = @gateway.purchase(@amount, @credit_card, options_with_shipping)
+
     assert_success response
+    assert_equal 'Approved or completed successfully', response.message
+  end
 
-    batch_check = @gateway.get_payment_status(response.params['batchId'], @option_spr)
-    assert_equal batch_check.params['status'], 'Open'
+  def test_successful_purchase_with_purchases_data
+    options_with_purchases = @options.merge(@purchases_data)
+    response = @gateway.purchase(@amount, @credit_card, options_with_purchases)
 
-    void = @gateway.void({ 'id' => response.params['id'] }.to_s, @option_spr)
+    assert_success response
+    assert_equal response.params['purchases'].first['name'], @purchases_data[:purchases].first[:name]
+    assert_equal response.params['purchases'].last['name'], @purchases_data[:purchases].last[:name]
+    assert_equal 'Approved or completed successfully', response.message
+  end
+
+  def test_successful_purchase_with_custom_pos_data
+    options_with_custom_pos_data = @options.merge(@custom_pos_data)
+    response = @gateway.purchase(@amount, @credit_card, options_with_custom_pos_data)
+
+    assert_success response
+    assert_equal 'Approved or completed successfully', response.message
+  end
+
+  def test_successful_purchase_with_additional_options
+    options = @options.merge(@additional_options)
+    response = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success response
+    assert_equal 'Approved or completed successfully', response.message
+  end
+
+  def test_successful_credit
+    options = @options.merge(@additional_creditoptions)
+    response = @gateway.credit(@credit_amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Approved or completed successfully', response.message
+  end
+
+  def test_failed_credit
+    options = @options.merge(@additional_creditoptions)
+    response = @gateway.credit(@credit_amount, @invalid_credit_card, options)
+    assert_failure response
+    assert_equal 'Invalid card number', response.message
+  end
+
+  def test_failed_credit_missing_card_month
+    card_without_month = credit_card('4242424242424242', month: '')
+    options = @options.merge(@additional_creditoptions)
+    response = @gateway.credit(@credit_amount, card_without_month, options)
+    assert_failure response
+    assert_equal 'ValidationError', response.error_code
+    assert_equal 'Missing expiration month and / or year', response.message
+  end
+
+  def test_successful_void_with_batch_open
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    # Batch status is by default is set to Open when Sale transaction is created
+    batch_check = @gateway.get_payment_status(purchase.params['batchId'])
+    assert_equal 'Open', batch_check.message
+
+    void = @gateway.void(purchase.authorization, @options)
     assert_success void
+    assert_equal 'Success', void.message
+  end
+
+  def test_successful_void_after_closing_batch
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    # Manually close open batch; resulting status should be 'Pending'
+    @gateway.close_batch(purchase.params['batchId'])
+    payment_status = @gateway.get_payment_status(purchase.params['batchId'])
+    assert_equal 'Pending', payment_status.message
+
+    void = @gateway.void(purchase.authorization, @options)
+    assert_success void
+    assert_equal 'Success', void.message
   end
 
   def test_failed_void
-    assert void = @gateway.void({ 'id' => 123456 }.to_s, @option_spr)
+    bogus_transaction_id = '123456'
+    assert void = @gateway.void(bogus_transaction_id, @options)
+
     assert_failure void
     assert_equal 'Unauthorized', void.error_code
     assert_equal 'Original Payment Not Found Or You Do Not Have Access.', void.message
   end
 
-  def test_success_get_payment_status
-    response = @gateway.purchase(@amount_purchase, @credit_card, @option_spr)
+  def test_successful_refund_with_open_batch
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    batch_check = @gateway.get_payment_status(purchase.params['batchId'])
+    assert_equal 'Open', batch_check.message
+
+    refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal 'Approved or completed successfully', refund.message
+  end
+
+  def test_successful_refund_after_closing_batch
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    # Manually close open batch; resulting status should be 'Pending'
+    @gateway.close_batch(purchase.params['batchId'])
+    payment_status = @gateway.get_payment_status(purchase.params['batchId'])
+    assert_equal 'Pending', payment_status.message
+
+    refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal 'Approved or completed successfully', refund.message
+  end
+
+  def test_successful_get_payment_status
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    # check is this transaction associated batch is "Closed".
-    batch_check = @gateway.get_payment_status(response.params['batchId'], @option_spr)
+    batch_check = @gateway.get_payment_status(response.params['batchId'])
 
     assert_success batch_check
-    assert_equal 'Open', batch_check.params['status']
+    assert_equal 'Open', batch_check.message
   end
 
   def test_failed_get_payment_status
-    # check is this transaction associated batch is "Closed".
-    batch_check = @gateway.get_payment_status(123456, @option_spr)
+    batch_check = @gateway.get_payment_status(123456)
 
     assert_failure batch_check
     assert_equal 'Invalid JSON response', batch_check.params['message'][0..20]
   end
 
-  # Must enter 6 to 10 numbers from start of card to test
   def test_successful_verify
-    # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requires a jwt for header authorization.
-    jwt_response = @gateway.create_jwt(@option_spr)
-    response = @gateway.verify(@credit_card, { jwt_token: jwt_response.params['jwtToken'] })
+    response = @gateway.verify(credit_card('411111111111111'))
     assert_success response
     assert_match 'JPMORGAN CHASE BANK, N.A.', response.params['bank']['name']
   end
 
-  # Must enter 6 to 10 numbers from start of card to test
   def test_failed_verify
-    # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requires a jwt for header authorization.
-    jwt_response = @gateway.create_jwt(@option_spr)
-    @gateway.verify(@invalid_credit_card, { jwt_token: jwt_response.params['jwtToken'] })
-  rescue StandardError => e
-    if e.to_s.include? 'No bank information found for bin number'
-      response = { 'error' => 'No bank information found for bin number' }
-      assert_match 'No bank information found for bin number', response['error']
-    else
-      assert_match 'No bank information found for bin number', 'error'
-    end
-  end
-
-  def test_failed_verify_must_be_6_to_10_digits
-    # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requires a jwt for header authorization.
-    jwt_response = @gateway.create_jwt(@option_spr)
-    @gateway.verify(@faulty_credit_card, { jwt_token: jwt_response.params['jwtToken'] })
-  rescue StandardError => e
-    if e.to_s.include? 'Invalid bank bin number, must be 6-10 digits'
-      response = { 'error' => 'Invalid bank bin number, must be 6-10 digits' }
-      assert_match 'Invalid bank bin number, must be 6-10 digits', response['error']
-    else
-      assert_match 'Invalid bank bin number, must be 6-10 digits', 'error'
-    end
+    response = @gateway.verify(@invalid_credit_card)
+    assert_failure response
+    assert_match 'No bank information found for bin number', response.message
   end
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount_purchase, @credit_card, @option_spr)
+      @gateway.purchase(@amount, @credit_card, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end
 
-  # Refund tests
-  # Test if we can perform a refund by following steps. This is the happy path.
-  #   1. Create Sale/Purchase
-  #   2. Test if linked batch is Open
-  #   3. Close linked batch with Sale/Purchase transaction
-  #   4. Perform Refund
-  def test_successful_refund_and_batch_closed
-    response = @gateway.purchase(@amount_purchase, @credit_card, @option_spr)
+  def test_successful_purchase_with_duplicate_replay_id
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(replay_id: @replay_id))
+
     assert_success response
+    assert_equal @replay_id, response.params['replayId']
 
-    batch_check = @gateway.get_payment_status(response.params['batchId'], @option_spr)
-    assert_equal batch_check.params['status'], 'Open'
+    duplicate_response = @gateway.purchase(@amount, @credit_card, @options.merge(replay_id: response.params['replayId']))
 
-    @gateway.close_batch(response.params['batchId'], @option_spr)
-    refund_params = @option_spr.merge(response.params).deep_transform_keys { |key| key.to_s.underscore }.transform_keys(&:to_sym)
-
-    refund = @gateway.refund(response.params['amount'].to_f * 100, response.authorization.to_s, refund_params)
-    assert_success refund
-    assert refund.params['status'] == 'Approved'
-    assert_equal 'Approved or completed successfully', refund.message
+    assert_success duplicate_response
+    assert_equal response.params['id'], duplicate_response.params['id']
   end
 
-  def test_successful_batch_closed_and_void
-    response = @gateway.purchase(@amount_purchase, @credit_card, @option_spr)
-    assert_success response
-    batch_check = @gateway.get_payment_status(response.params['batchId'], @option_spr)
+  def test_failed_purchase_with_duplicate_replay_id
+    response = @gateway.purchase(@amount, @invalid_credit_card, @options.merge(replay_id: @replay_id))
+    assert_failure response
 
-    @gateway.close_batch(response.params['batchId'], @option_spr) if batch_check.params['status'] == 'Open'
+    duplicate_response = @gateway.purchase(@amount, @invalid_credit_card, @options.merge(replay_id: response.params['replayId']))
+    assert_failure duplicate_response
 
-    void = @gateway.void({ 'id' => response.params['id'] }.to_s, @option_spr)
-    assert void.params['code'] == '204'
+    assert_equal response.message, duplicate_response.message
+    assert_equal response.params['status'], duplicate_response.params['status']
 
-    payment_status = @gateway.get_payment_status(response.params['batchId'], @option_spr)
-    assert payment_status.params['status'] == 'Pending'
+    assert_equal response.params['id'], duplicate_response.params['id']
+  end
+
+  def test_successful_purchase_with_unique_replay_id
+    first_purchase_response = @gateway.purchase(@amount, @credit_card, @options.merge(replay_id: @replay_id))
+
+    assert_success first_purchase_response
+    assert_equal @replay_id, first_purchase_response.params['replayId']
+
+    second_purchase_response = @gateway.purchase(@amount + 1, @credit_card, @options.merge(replay_id: @replay_id + 1))
+
+    assert_success second_purchase_response
+    assert_not_equal first_purchase_response.params['id'], second_purchase_response.params['id']
+  end
+
+  def test_failed_duplicate_refund
+    purchase_response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase_response
+
+    refund_response = @gateway.refund(@amount, purchase_response.authorization)
+
+    assert_success refund_response
+    assert_equal 'Approved or completed successfully', refund_response.message
+
+    duplicate_refund_response = @gateway.refund(@amount, purchase_response.authorization)
+
+    assert_failure duplicate_refund_response
+    assert_equal 'Payment already refunded', duplicate_refund_response.message
+  end
+
+  def test_failed_duplicate_void
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    void = @gateway.void(purchase.authorization)
+    assert_success void
+
+    duplicate_void = @gateway.void(purchase.authorization)
+
+    assert_failure duplicate_void
+    assert_equal 'Payment already voided.', duplicate_void.message
   end
 end

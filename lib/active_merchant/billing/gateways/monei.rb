@@ -201,6 +201,7 @@ module ActiveMerchant #:nodoc:
           request[:paymentMethod][:card][:expMonth] = format(payment_method.month, :two_digits)
           request[:paymentMethod][:card][:expYear] = format(payment_method.year, :two_digits)
           request[:paymentMethod][:card][:cvc] = payment_method.verification_value.to_s
+          request[:paymentMethod][:card][:cardholderName] = payment_method.name
         end
       end
 
@@ -293,6 +294,7 @@ module ActiveMerchant #:nodoc:
       def add_browser_info(request, options)
         request[:sessionDetails][:ip] = options[:ip] if options[:ip]
         request[:sessionDetails][:userAgent] = options[:user_agent] if options[:user_agent]
+        request[:sessionDetails][:lang] = options[:lang] if options[:lang]
       end
 
       # Private: Parse JSON response from Monei servers

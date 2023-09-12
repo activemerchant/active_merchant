@@ -59,7 +59,7 @@ class RedsysTest < Test::Unit::TestCase
     assert_success initial_res
     assert_equal 'Transaction Approved', initial_res.message
     assert_equal '2012102122020', initial_res.params['ds_merchant_cof_txnid']
-    network_transaction_id = initial_res.params['Ds_Merchant_Cof_Txnid']
+    network_transaction_id = initial_res.params['ds_merchant_cof_txnid']
 
     @gateway.expects(:ssl_post).returns(successful_purchase_used_stored_credential_response)
     used_options = {
@@ -71,6 +71,128 @@ class RedsysTest < Test::Unit::TestCase
       }
     }
     res = @gateway.purchase(123, credit_card, used_options)
+    assert_success res
+    assert_equal 'Transaction Approved', res.message
+    assert_equal '561350', res.params['ds_authorisationcode']
+  end
+
+  def test_successful_purchase_with_stored_credentials_for_merchant_initiated_transactions
+    @gateway.expects(:ssl_post).with(
+      anything,
+      all_of(
+        includes(CGI.escape('<DS_MERCHANT_TRANSACTIONTYPE>0</DS_MERCHANT_TRANSACTIONTYPE>')),
+        includes(CGI.escape('<DS_MERCHANT_ORDER>1001</DS_MERCHANT_ORDER>')),
+        includes(CGI.escape('<DS_MERCHANT_AMOUNT>123</DS_MERCHANT_AMOUNT>')),
+        includes(CGI.escape('<DS_MERCHANT_COF_INI>S</DS_MERCHANT_COF_INI>')),
+        includes(CGI.escape('<DS_MERCHANT_COF_TYPE>R</DS_MERCHANT_COF_TYPE>')),
+        includes(CGI.escape('<DS_MERCHANT_PAN>4242424242424242</DS_MERCHANT_PAN>')),
+        includes(CGI.escape('<DS_MERCHANT_EXPIRYDATE>2409</DS_MERCHANT_EXPIRYDATE>')),
+        includes(CGI.escape('<DS_MERCHANT_CVV2>123</DS_MERCHANT_CVV2>')),
+        includes(CGI.escape('<DS_MERCHANT_DIRECTPAYMENT>false</DS_MERCHANT_DIRECTPAYMENT>')),
+        Not(includes(CGI.escape('<DS_MERCHANT_EXCEP_SCA>'))),
+        Not(includes(CGI.escape('<DS_MERCHANT_COF_TXNID>')))
+      ),
+      anything
+    ).returns(successful_purchase_initial_stored_credential_response)
+
+    initial_options = @options.merge(
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring'
+      }
+    )
+    initial_res = @gateway.purchase(123, credit_card, initial_options)
+    assert_success initial_res
+    assert_equal 'Transaction Approved', initial_res.message
+    assert_equal '2012102122020', initial_res.params['ds_merchant_cof_txnid']
+    network_transaction_id = initial_res.params['ds_merchant_cof_txnid']
+
+    @gateway.expects(:ssl_post).with(
+      anything,
+      all_of(
+        includes('<DS_MERCHANT_TRANSACTIONTYPE>0</DS_MERCHANT_TRANSACTIONTYPE>'),
+        includes('<DS_MERCHANT_ORDER>1002</DS_MERCHANT_ORDER>'),
+        includes('<DS_MERCHANT_AMOUNT>123</DS_MERCHANT_AMOUNT>'),
+        includes('<DS_MERCHANT_COF_INI>N</DS_MERCHANT_COF_INI>'),
+        includes('<DS_MERCHANT_COF_TYPE>R</DS_MERCHANT_COF_TYPE>'),
+        includes('<DS_MERCHANT_PAN>4242424242424242</DS_MERCHANT_PAN>'),
+        includes('<DS_MERCHANT_EXPIRYDATE>2409</DS_MERCHANT_EXPIRYDATE>'),
+        includes('<DS_MERCHANT_CVV2>123</DS_MERCHANT_CVV2>'),
+        includes('<DS_MERCHANT_DIRECTPAYMENT>true</DS_MERCHANT_DIRECTPAYMENT>'),
+        includes('<DS_MERCHANT_EXCEP_SCA>MIT</DS_MERCHANT_EXCEP_SCA>'),
+        includes("<DS_MERCHANT_COF_TXNID>#{network_transaction_id}</DS_MERCHANT_COF_TXNID>")
+      ),
+      anything
+    ).returns(successful_purchase_used_stored_credential_response)
+    used_options = {
+      order_id: '1002',
+      sca_exemption: 'MIT',
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'recurring',
+        network_transaction_id: network_transaction_id
+      }
+    }
+    res = @gateway.purchase(123, credit_card, used_options)
+    assert_success res
+    assert_equal 'Transaction Approved', res.message
+    assert_equal '561350', res.params['ds_authorisationcode']
+  end
+
+  def test_successful_purchase_with_stored_credentials_for_merchant_initiated_transactions_with_card_tokens
+    @gateway.expects(:ssl_post).with(
+      anything,
+      all_of(
+        includes(CGI.escape('<DS_MERCHANT_TRANSACTIONTYPE>0</DS_MERCHANT_TRANSACTIONTYPE>')),
+        includes(CGI.escape('<DS_MERCHANT_ORDER>1001</DS_MERCHANT_ORDER>')),
+        includes(CGI.escape('<DS_MERCHANT_AMOUNT>123</DS_MERCHANT_AMOUNT>')),
+        includes(CGI.escape('<DS_MERCHANT_COF_INI>S</DS_MERCHANT_COF_INI>')),
+        includes(CGI.escape('<DS_MERCHANT_COF_TYPE>R</DS_MERCHANT_COF_TYPE>')),
+        includes(CGI.escape('<DS_MERCHANT_IDENTIFIER>77bff3a969d6f97b2ec815448cdcff453971f573</DS_MERCHANT_IDENTIFIER>')),
+        includes(CGI.escape('<DS_MERCHANT_DIRECTPAYMENT>false</DS_MERCHANT_DIRECTPAYMENT>')),
+        Not(includes(CGI.escape('<DS_MERCHANT_EXCEP_SCA>'))),
+        Not(includes(CGI.escape('<DS_MERCHANT_COF_TXNID>')))
+      ),
+      anything
+    ).returns(successful_purchase_initial_stored_credential_response)
+
+    initial_options = @options.merge(
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring'
+      }
+    )
+    initial_res = @gateway.purchase(123, '77bff3a969d6f97b2ec815448cdcff453971f573', initial_options)
+    assert_success initial_res
+    assert_equal 'Transaction Approved', initial_res.message
+    assert_equal '2012102122020', initial_res.params['ds_merchant_cof_txnid']
+    network_transaction_id = initial_res.params['ds_merchant_cof_txnid']
+
+    @gateway.expects(:ssl_post).with(
+      anything,
+      all_of(
+        includes('<DS_MERCHANT_TRANSACTIONTYPE>0</DS_MERCHANT_TRANSACTIONTYPE>'),
+        includes('<DS_MERCHANT_ORDER>1002</DS_MERCHANT_ORDER>'),
+        includes('<DS_MERCHANT_AMOUNT>123</DS_MERCHANT_AMOUNT>'),
+        includes('<DS_MERCHANT_COF_INI>N</DS_MERCHANT_COF_INI>'),
+        includes('<DS_MERCHANT_COF_TYPE>R</DS_MERCHANT_COF_TYPE>'),
+        includes('<DS_MERCHANT_IDENTIFIER>77bff3a969d6f97b2ec815448cdcff453971f573</DS_MERCHANT_IDENTIFIER>'),
+        includes('<DS_MERCHANT_DIRECTPAYMENT>true</DS_MERCHANT_DIRECTPAYMENT>'),
+        includes('<DS_MERCHANT_EXCEP_SCA>MIT</DS_MERCHANT_EXCEP_SCA>'),
+        includes("<DS_MERCHANT_COF_TXNID>#{network_transaction_id}</DS_MERCHANT_COF_TXNID>")
+      ),
+      anything
+    ).returns(successful_purchase_used_stored_credential_response)
+    used_options = {
+      order_id: '1002',
+      sca_exemption: 'MIT',
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'recurring',
+        network_transaction_id: network_transaction_id
+      }
+    }
+    res = @gateway.purchase(123, '77bff3a969d6f97b2ec815448cdcff453971f573', used_options)
     assert_success res
     assert_equal 'Transaction Approved', res.message
     assert_equal '561350', res.params['ds_authorisationcode']
@@ -224,7 +346,7 @@ class RedsysTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['ES'], RedsysGateway.supported_countries
+    assert_equal %w[ES FR GB IT PL PT], RedsysGateway.supported_countries
   end
 
   def test_supported_cardtypes
@@ -285,11 +407,11 @@ class RedsysTest < Test::Unit::TestCase
   # one with card and another without.
 
   def purchase_request
-    "entrada=%3CDATOSENTRADA%3E%0A++%3CDS_Version%3E0.1%3C%2FDS_Version%3E%0A++%3CDS_MERCHANT_CURRENCY%3E978%3C%2FDS_MERCHANT_CURRENCY%3E%0A++%3CDS_MERCHANT_AMOUNT%3E123%3C%2FDS_MERCHANT_AMOUNT%3E%0A++%3CDS_MERCHANT_ORDER%3E1001%3C%2FDS_MERCHANT_ORDER%3E%0A++%3CDS_MERCHANT_TRANSACTIONTYPE%3EA%3C%2FDS_MERCHANT_TRANSACTIONTYPE%3E%0A++%3CDS_MERCHANT_PRODUCTDESCRIPTION%2F%3E%0A++%3CDS_MERCHANT_TERMINAL%3E1%3C%2FDS_MERCHANT_TERMINAL%3E%0A++%3CDS_MERCHANT_MERCHANTCODE%3E091952713%3C%2FDS_MERCHANT_MERCHANTCODE%3E%0A++%3CDS_MERCHANT_MERCHANTSIGNATURE%3Eb98b606a6a588d8c45c239f244160efbbe30b4a8%3C%2FDS_MERCHANT_MERCHANTSIGNATURE%3E%0A++%3CDS_MERCHANT_TITULAR%3ELongbob+Longsen%3C%2FDS_MERCHANT_TITULAR%3E%0A++%3CDS_MERCHANT_PAN%3E4242424242424242%3C%2FDS_MERCHANT_PAN%3E%0A++%3CDS_MERCHANT_EXPIRYDATE%3E#{(Time.now.year + 1).to_s.slice(2, 2)}09%3C%2FDS_MERCHANT_EXPIRYDATE%3E%0A++%3CDS_MERCHANT_CVV2%3E123%3C%2FDS_MERCHANT_CVV2%3E%0A%3C%2FDATOSENTRADA%3E%0A"
+    "entrada=%3CDATOSENTRADA%3E%0A++%3CDS_Version%3E0.1%3C%2FDS_Version%3E%0A++%3CDS_MERCHANT_CURRENCY%3E978%3C%2FDS_MERCHANT_CURRENCY%3E%0A++%3CDS_MERCHANT_AMOUNT%3E123%3C%2FDS_MERCHANT_AMOUNT%3E%0A++%3CDS_MERCHANT_ORDER%3E1001%3C%2FDS_MERCHANT_ORDER%3E%0A++%3CDS_MERCHANT_TRANSACTIONTYPE%3E0%3C%2FDS_MERCHANT_TRANSACTIONTYPE%3E%0A++%3CDS_MERCHANT_PRODUCTDESCRIPTION%2F%3E%0A++%3CDS_MERCHANT_TERMINAL%3E1%3C%2FDS_MERCHANT_TERMINAL%3E%0A++%3CDS_MERCHANT_MERCHANTCODE%3E091952713%3C%2FDS_MERCHANT_MERCHANTCODE%3E%0A++%3CDS_MERCHANT_MERCHANTSIGNATURE%3E0b930082f7905d7dba3d83be4d4331b8acd57624%3C%2FDS_MERCHANT_MERCHANTSIGNATURE%3E%0A++%3CDS_MERCHANT_TITULAR%3ELongbob+Longsen%3C%2FDS_MERCHANT_TITULAR%3E%0A++%3CDS_MERCHANT_PAN%3E4242424242424242%3C%2FDS_MERCHANT_PAN%3E%0A++%3CDS_MERCHANT_EXPIRYDATE%3E#{(Time.now.year + 1).to_s.slice(2, 2)}09%3C%2FDS_MERCHANT_EXPIRYDATE%3E%0A++%3CDS_MERCHANT_CVV2%3E123%3C%2FDS_MERCHANT_CVV2%3E%0A%3C%2FDATOSENTRADA%3E%0A"
   end
 
   def purchase_request_with_credit_card_token
-    'entrada=%3CDATOSENTRADA%3E%0A++%3CDS_Version%3E0.1%3C%2FDS_Version%3E%0A++%3CDS_MERCHANT_CURRENCY%3E978%3C%2FDS_MERCHANT_CURRENCY%3E%0A++%3CDS_MERCHANT_AMOUNT%3E123%3C%2FDS_MERCHANT_AMOUNT%3E%0A++%3CDS_MERCHANT_ORDER%3E1001%3C%2FDS_MERCHANT_ORDER%3E%0A++%3CDS_MERCHANT_TRANSACTIONTYPE%3EA%3C%2FDS_MERCHANT_TRANSACTIONTYPE%3E%0A++%3CDS_MERCHANT_PRODUCTDESCRIPTION%2F%3E%0A++%3CDS_MERCHANT_TERMINAL%3E1%3C%2FDS_MERCHANT_TERMINAL%3E%0A++%3CDS_MERCHANT_MERCHANTCODE%3E091952713%3C%2FDS_MERCHANT_MERCHANTCODE%3E%0A++%3CDS_MERCHANT_MERCHANTSIGNATURE%3Ecbcc0dee5724cd3fff08bbd4371946a0599c7fb9%3C%2FDS_MERCHANT_MERCHANTSIGNATURE%3E%0A++%3CDS_MERCHANT_IDENTIFIER%3E77bff3a969d6f97b2ec815448cdcff453971f573%3C%2FDS_MERCHANT_IDENTIFIER%3E%0A++%3CDS_MERCHANT_DIRECTPAYMENT%3Etrue%3C%2FDS_MERCHANT_DIRECTPAYMENT%3E%0A%3C%2FDATOSENTRADA%3E%0A'
+    'entrada=%3CDATOSENTRADA%3E%0A++%3CDS_Version%3E0.1%3C%2FDS_Version%3E%0A++%3CDS_MERCHANT_CURRENCY%3E978%3C%2FDS_MERCHANT_CURRENCY%3E%0A++%3CDS_MERCHANT_AMOUNT%3E123%3C%2FDS_MERCHANT_AMOUNT%3E%0A++%3CDS_MERCHANT_ORDER%3E1001%3C%2FDS_MERCHANT_ORDER%3E%0A++%3CDS_MERCHANT_TRANSACTIONTYPE%3E0%3C%2FDS_MERCHANT_TRANSACTIONTYPE%3E%0A++%3CDS_MERCHANT_PRODUCTDESCRIPTION%2F%3E%0A++%3CDS_MERCHANT_TERMINAL%3E1%3C%2FDS_MERCHANT_TERMINAL%3E%0A++%3CDS_MERCHANT_MERCHANTCODE%3E091952713%3C%2FDS_MERCHANT_MERCHANTCODE%3E%0A++%3CDS_MERCHANT_MERCHANTSIGNATURE%3E0c56bb3edd0cae65ef16c96c61c5ecd306973d2f%3C%2FDS_MERCHANT_MERCHANTSIGNATURE%3E%0A++%3CDS_MERCHANT_IDENTIFIER%3E77bff3a969d6f97b2ec815448cdcff453971f573%3C%2FDS_MERCHANT_IDENTIFIER%3E%0A++%3CDS_MERCHANT_DIRECTPAYMENT%3Etrue%3C%2FDS_MERCHANT_DIRECTPAYMENT%3E%0A%3C%2FDATOSENTRADA%3E%0A'
   end
 
   def successful_purchase_response
@@ -301,7 +423,7 @@ class RedsysTest < Test::Unit::TestCase
   end
 
   def successful_purchase_initial_stored_credential_response
-    "<?xml version='1.0' encoding=\"ISO-8859-1\" ?><RETORNOXML><CODIGO>0</CODIGO><Ds_Version>0.1</Ds_Version><OPERACION><Ds_Amount>123</Ds_Amount><Ds_Currency>978</Ds_Currency><Ds_Order>1001</Ds_Order><Ds_Signature>989D357BCC9EF0962A456C51422C4FAF4BF4399F</Ds_Signature><Ds_MerchantCode>91952713</Ds_MerchantCode><Ds_Terminal>1</Ds_Terminal><Ds_Response>0000</Ds_Response><Ds_AuthorisationCode>561350</Ds_AuthorisationCode><Ds_TransactionType>A</Ds_TransactionType><Ds_SecurePayment>0</Ds_SecurePayment><Ds_Language>1</Ds_Language><Ds_MerchantData></Ds_MerchantData><Ds_Card_Country>724</Ds_Card_Country><Ds_Merchant_Cof_Txnid>2012102122020</Ds_Merchant_Cof_Txnid><Ds_Card_Brand>1</Ds_Card_Brand><Ds_ProcessedPayMethod>3</Ds_ProcessedPayMethod></OPERACION></RETORNOXML>"
+    "<?xml version='1.0' encoding=\"ISO-8859-1\" ?><RETORNOXML><CODIGO>0</CODIGO><Ds_Version>0.1</Ds_Version><OPERACION><Ds_Amount>123</Ds_Amount><Ds_Currency>978</Ds_Currency><Ds_Order>1001</Ds_Order><Ds_Signature>989D357BCC9EF0962A456C51422C4FAF4BF4399F</Ds_Signature><Ds_MerchantCode>91952713</Ds_MerchantCode><Ds_Terminal>1</Ds_Terminal><Ds_Response>0000</Ds_Response><Ds_AuthorisationCode>561350</Ds_AuthorisationCode><Ds_TransactionType>A</Ds_TransactionType><Ds_SecurePayment>0</Ds_SecurePayment><Ds_Language>1</Ds_Language><Ds_Merchant_Identifier>77bff3a969d6f97b2ec815448cdcff453971f573</Ds_Merchant_Identifier><Ds_MerchantData></Ds_MerchantData><Ds_Card_Country>724</Ds_Card_Country><Ds_Merchant_Cof_Txnid>2012102122020</Ds_Merchant_Cof_Txnid><Ds_Card_Brand>1</Ds_Card_Brand><Ds_ProcessedPayMethod>3</Ds_ProcessedPayMethod></OPERACION></RETORNOXML>"
   end
 
   def successful_purchase_used_stored_credential_response

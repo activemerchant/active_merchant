@@ -118,6 +118,17 @@ class IpgTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_store_id
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ store_id: '1234' }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      assert_match('1234', REXML::XPath.first(doc, '//v1:StoreId').text)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_payment_token
     payment_token = 'ABC123'
 
@@ -162,7 +173,7 @@ class IpgTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'DECLINED', response.message
+    assert_match 'DECLINED', response.message
   end
 
   def test_successful_authorize
@@ -183,7 +194,7 @@ class IpgTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options.merge!({ order_id: 'ORD03' }))
     assert_failure response
-    assert_equal 'FAILED', response.message
+    assert_match 'FAILED', response.message
   end
 
   def test_successful_capture
@@ -204,7 +215,7 @@ class IpgTest < Test::Unit::TestCase
 
     response = @gateway.capture(@amount, '123', @options)
     assert_failure response
-    assert_equal 'FAILED', response.message
+    assert_match 'FAILED', response.message
   end
 
   def test_successful_refund
@@ -225,7 +236,7 @@ class IpgTest < Test::Unit::TestCase
 
     response = @gateway.refund(@amount, '123', @options)
     assert_failure response
-    assert_equal 'FAILED', response.message
+    assert_match 'FAILED', response.message
   end
 
   def test_successful_void
@@ -246,7 +257,7 @@ class IpgTest < Test::Unit::TestCase
 
     response = @gateway.void('', @options)
     assert_failure response
-    assert_equal 'FAILED', response.message
+    assert_match 'FAILED', response.message
   end
 
   def test_successful_verify
@@ -261,10 +272,10 @@ class IpgTest < Test::Unit::TestCase
 
   def test_successful_verify_with_currency_code
     response = stub_comms do
-      @gateway.verify(@credit_card, { currency: 'UYU' })
+      @gateway.verify(@credit_card, { currency: 'ARS' })
     end.check_request do |_endpoint, data, _headers|
       doc = REXML::Document.new(data)
-      assert_match('858', REXML::XPath.first(doc, '//v1:Payment//v1:Currency').text) if REXML::XPath.first(doc, '//v1:CreditCardTxType//v1:Type')&.text == 'preAuth'
+      assert_match('032', REXML::XPath.first(doc, '//v1:Payment//v1:Currency').text) if REXML::XPath.first(doc, '//v1:CreditCardTxType//v1:Type')&.text == 'preAuth'
     end.respond_with(successful_authorize_response, successful_void_response)
     assert_success response
   end
@@ -295,6 +306,18 @@ class IpgTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_unstore
+    payment_token = generate_unique_id
+    response = stub_comms do
+      @gateway.unstore(payment_token)
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      assert_match(payment_token, REXML::XPath.first(doc, '//ns2:HostedDataID').text)
+    end.respond_with(successful_store_response)
+
+    assert_success response
+  end
+
   def test_failed_store
     @gateway.expects(:ssl_post).returns(failed_store_response)
 
@@ -307,6 +330,48 @@ class IpgTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_store_and_user_id_from_with_complete_credentials
+    test_combined_user_id = 'WS5921102002._.1'
+    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
+
+    assert_equal '5921102002', split_credentials[:store_id]
+    assert_equal '1', split_credentials[:user_id]
+  end
+
+  def test_store_and_user_id_from_missing_store_id_prefix
+    test_combined_user_id = '5921102002._.1'
+    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
+
+    assert_equal '5921102002', split_credentials[:store_id]
+    assert_equal '1', split_credentials[:user_id]
+  end
+
+  def test_store_and_user_id_misplaced_store_id_prefix
+    test_combined_user_id = '5921102002WS._.1'
+    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
+
+    assert_equal '5921102002WS', split_credentials[:store_id]
+    assert_equal '1', split_credentials[:user_id]
+  end
+
+  def test_store_and_user_id_from_missing_delimiter
+    test_combined_user_id = 'WS59211020021'
+    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
+
+    assert_equal '59211020021', split_credentials[:store_id]
+    assert_equal nil, split_credentials[:user_id]
+  end
+
+  def test_message_from_just_with_transaction_result
+    am_response = { TransactionResult: 'success !' }
+    assert_equal 'success !', @gateway.send(:message_from, am_response)
+  end
+
+  def test_message_from_with_an_error
+    am_response = { TransactionResult: 'DECLINED', ErrorMessage: 'CODE: this is an error message' }
+    assert_equal 'DECLINED, this is an error message', @gateway.send(:message_from, am_response)
   end
 
   private

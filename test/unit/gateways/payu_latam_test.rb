@@ -84,6 +84,7 @@ class PayuLatamTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'CONTACT_THE_ENTITY | Contactar con entidad emisora', response.message
+    assert_equal '290', response.error_code
     assert_equal 'Contactar con entidad emisora', response.params['transactionResponse']['paymentNetworkResponseErrorMessage']
 
     @gateway.expects(:ssl_post).returns(failed_purchase_response_when_payment_network_response_error_not_expected)
@@ -91,6 +92,7 @@ class PayuLatamTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'CONTACT_THE_ENTITY', response.message
+    assert_equal '51', response.error_code
     assert_nil response.params['transactionResponse']['paymentNetworkResponseErrorMessage']
   end
 
@@ -469,6 +471,16 @@ class PayuLatamTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_extra_parameters_fields
+    stub_comms(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ extra_1: '123456', extra_2: 'abcdef', extra_3: 'testing' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/\"EXTRA1\":\"123456\"/, data)
+      assert_match(/\"EXTRA2\":\"abcdef\"/, data)
+      assert_match(/\"EXTRA3\":\"testing\"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -656,7 +668,7 @@ class PayuLatamTest < Test::Unit::TestCase
         "orderId": 7354347,
         "transactionId": "15b6cec0-9eec-4564-b6b9-c846b868203e",
         "state": "DECLINED",
-        "paymentNetworkResponseCode": null,
+        "paymentNetworkResponseCode": "51",
         "paymentNetworkResponseErrorMessage": null,
         "trazabilityCode": null,
         "authorizationCode": null,

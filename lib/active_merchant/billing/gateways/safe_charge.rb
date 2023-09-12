@@ -73,10 +73,10 @@ module ActiveMerchant #:nodoc:
         add_transaction_data('Credit', post, money, options.merge!({ currency: original_currency }))
         post[:sg_CreditType] = 2
         post[:sg_AuthCode] = auth
-        post[:sg_TransactionID] = transaction_id
         post[:sg_CCToken] = token
         post[:sg_ExpMonth] = exp_month
         post[:sg_ExpYear] = exp_year
+        post[:sg_TransactionID] = transaction_id unless options[:unreferenced_refund]
 
         commit(post)
       end
@@ -86,6 +86,7 @@ module ActiveMerchant #:nodoc:
 
         add_payment(post, payment, options)
         add_transaction_data('Credit', post, money, options)
+        add_customer_details(post, payment, options)
 
         post[:sg_CreditType] = 1
 
@@ -107,10 +108,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        authorize(0, credit_card, options)
       end
 
       def supports_scrubbing?

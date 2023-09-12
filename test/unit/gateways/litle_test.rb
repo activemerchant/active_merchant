@@ -32,6 +32,16 @@ class LitleTest < Test::Unit::TestCase
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
       }
     )
+    @decrypted_google_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      {
+        source: :google_pay,
+        month: '01',
+        year: '2021',
+        brand: 'visa',
+        number:  '4457000300000007',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+      }
+    )
     @amount = 100
     @options = {}
     @check = check(
@@ -66,7 +76,35 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
+    assert_equal 'Approved', response.message
+    assert_equal '100000000000000006;sale;100', response.authorization
+    assert response.test?
+  end
 
+  def test_successful_purchase_with_010_response
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, _data, _headers|
+      # Counterpoint to test_successful_postlive_url:
+      assert_match(/www\.testvantivcnp\.com/, endpoint)
+    end.respond_with(successful_purchase_response('010', 'Partially Approved'))
+
+    assert_success response
+    assert_equal 'Partially Approved: The authorized amount is less than the requested amount.', response.message
+    assert_equal '100000000000000006;sale;100', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_001_response
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, _data, _headers|
+      # Counterpoint to test_successful_postlive_url:
+      assert_match(/www\.testvantivcnp\.com/, endpoint)
+    end.respond_with(successful_purchase_response('001', 'Transaction Received'))
+
+    assert_success response
+    assert_equal 'Transaction Received: This is sent to acknowledge that the submitted transaction has been received.', response.message
     assert_equal '100000000000000006;sale;100', response.authorization
     assert response.test?
   end
@@ -100,6 +138,22 @@ class LitleTest < Test::Unit::TestCase
 
     assert_equal '621100411297330000;echeckSales;2004', response.authorization
     assert response.test?
+  end
+
+  def test_sale_response_duplicate_attribute
+    dup_response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(duplicate_purchase_response)
+
+    assert_success dup_response
+    assert_true dup_response.params['duplicate']
+
+    non_dup_response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    assert_success non_dup_response
+    assert_false non_dup_response.params['duplicate']
   end
 
   def test_failed_purchase
@@ -211,6 +265,14 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_fraud_filter_override
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, { fraud_filter_override: true })
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<fraudFilterOverride>true</fraudFilterOverride>), data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_passing_payment_cryptogram
     stub_comms do
       @gateway.purchase(@amount, @decrypted_apple_pay)
@@ -253,6 +315,14 @@ class LitleTest < Test::Unit::TestCase
   def test_add_android_pay_order_source
     stub_comms do
       @gateway.purchase(@amount, @decrypted_android_pay)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<orderSource>androidpay</orderSource>', data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_add_google_pay_order_source
+    stub_comms do
+      @gateway.purchase(@amount, @decrypted_google_pay)
     end.check_request do |_endpoint, data, _headers|
       assert_match '<orderSource>androidpay</orderSource>', data
     end.respond_with(successful_purchase_response)
@@ -690,10 +760,29 @@ class LitleTest < Test::Unit::TestCase
     '63225578415568556365452427825'
   end
 
-  def successful_purchase_response
+  def successful_purchase_response(code = '000', message = 'Approved')
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <saleResponse id='1' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>100000000000000006</litleTxnId>
+          <orderId>1</orderId>
+          <response>#{code}</response>
+          <responseTime>2014-03-31T11:34:39</responseTime>
+          <message>#{message}</message>
+          <authCode>11111 </authCode>
+          <fraudResult>
+            <avsResult>01</avsResult>
+            <cardValidationResult>M</cardValidationResult>
+          </fraudResult>
+        </saleResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def duplicate_purchase_response
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <saleResponse id='1' duplicate='true' reportGroup='Default Report Group' customerId=''>
           <litleTxnId>100000000000000006</litleTxnId>
           <orderId>1</orderId>
           <response>000</response>

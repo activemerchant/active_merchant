@@ -12,6 +12,32 @@ class RemoteElementTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @google_pay_network_token = network_tokenization_credit_card(
+      '4444333322221111',
+      month: '01',
+      year: Time.new.year + 2,
+      first_name: 'Jane',
+      last_name: 'Doe',
+      verification_value: '888',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      eci: '05',
+      transaction_id: '123456789',
+      source: :google_pay
+    )
+
+    @apple_pay_network_token = network_tokenization_credit_card(
+      '4895370015293175',
+      month: '10',
+      year: Time.new.year + 2,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      payment_cryptogram: 'CeABBJQ1AgAAAAAgJDUCAAAAAAA=',
+      eci: '07',
+      transaction_id: 'abc123',
+      source: :apple_pay
+    )
   end
 
   def test_successful_purchase
@@ -46,6 +72,12 @@ class RemoteElementTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_shipping_address
     response = @gateway.purchase(@amount, @credit_card, @options.merge(shipping_address: address(address1: 'Shipping')))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_billing_email
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(email: 'test@example.com'))
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -112,6 +144,18 @@ class RemoteElementTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_merchant_descriptor
     response = @gateway.purchase(@amount, @credit_card, @options.merge(merchant_descriptor: 'Flowerpot Florists'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_google_pay
+    response = @gateway.purchase(@amount, @google_pay_network_token, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_apple_pay
+    response = @gateway.purchase(@amount, @apple_pay_network_token, @options)
     assert_success response
     assert_equal 'Approved', response.message
   end
