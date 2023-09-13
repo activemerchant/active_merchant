@@ -36,8 +36,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(amount, payment_method, options = {})
+        requires!(options, :order_id)
         post = {}
-        add_auth_purchase(post, money, payment, options)
+        add_auth_purchase_params(post, amount, payment_method, options)
         commit('authorize', post, options)
       end
 
@@ -69,28 +70,76 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_invoice(post, money, options) end
+      def add_invoice(post, amount, options)
+        post[:order] = {}
+        post[:order][:orderId] = options[:order_id]
+        post[:order][:amount] = amount(amount)
+        post[:order][:currency] = (options[:currency] || currency(amount))
+      end
 
-      def add_payment_method(post, payment_method) end
+      def add_customer_data(post, payment_method, options)
+        post[:customerInfo] = {}
+        card_holder_name = "#{payment_method.try(:first_name)} #{payment_method.try(:last_name)}"
+        post[:customerInfo][:cardHolderName] = card_holder_name
+        post[:customerInfo][:cardHolderEmail] = options[:email]
+      end
+
+      def add_address(post, options)
+        if address = options[:billing_address] || options[:address]
+          post[:billingAddress] = {}
+          post[:billingAddress][:name] = address[:name] if address[:name]
+          post[:billingAddress][:street] = address[:address1] if address[:address1]
+          post[:billingAddress][:additionalInfo] = address[:address2] if address[:address2]
+          post[:billingAddress][:city] = address[:city] if address[:city]
+          post[:billingAddress][:postCode] = address[:zip] if address[:zip]
+          post[:billingAddress][:country] = address[:country] if address[:country]
+        end
+
+        if address = options[:shipping_address]
+          post[:shippingAddress] = {}          
+          post[:shippingAddress][:name] = address[:name] if address[:name]
+          post[:shippingAddress][:street] = address[:address1] if address[:address1]
+          post[:shippingAddress][:additionalInfo] = address[:address2] if address[:address2]
+          post[:shippingAddress][:city] = address[:city] if address[:city]
+          post[:shippingAddress][:postCode] = address[:zip] if address[:zip]
+          post[:shippingAddress][:country] = address[:country] if address[:country]
+        end
+      end
+
+      def add_credit_card(post, payment_method)        
+        post[:card] = {}
+        post[:card][:pan] = payment_method.number
+        post[:card][:expiryDate] = "#{format(payment_method.month, :two_digits)}#{format(payment_method.year, :two_digits)}"
+        post[:card][:cvv] = payment_method.verification_value
+      end
+
+      def add_payment_method(post, payment_method)
+        add_credit_card(post, payment_method) if payment_method.is_a?(CreditCard)
+      end
 
       def add_reference(post, authorization) end
 
-      def add_auth_purchase(post, money, payment, options) end
+      def add_auth_purchase_params(post, amount, payment_method, options)
+        add_invoice(post, amount, options)        
+        add_address(post, options)
+        add_payment_method(post, payment_method)
+        add_customer_data(post, payment_method, options)
+      end
 
-      def commit(action, params, options)
+      def commit(action, params, options)        
         begin
           url = build_request_url(action)
           response = ssl_post(url, params.to_json, request_headers(params))
         rescue ResponseError => e
           response = e.response.body
           response = JSON.parse(response)
-        end
+        end        
 
         Response.new(
           success_from(response),
           message_from(response),
           response,
-          authorization: authorization_from,
+          authorization: authorization_from(response),
           avs_result: AVSResult.new(code: response['some_avs_result_key']),
           cvv_result: CVVResult.new(response['some_cvv_result_key']),
           test: test?,
@@ -116,14 +165,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response == 'SUCCESS'
+        response.include? 'errors' ? false : true
       end
 
-      def message_from(succeeded, response)
-        if succeeded
-          'Succeeded'
+      def message_from(response)
+        if response.include? 'errors'
+          response['errors']
         else
-          response[:some_key]
+          'Succeeded'
         end
       end
 
