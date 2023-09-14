@@ -11,6 +11,7 @@
 * Stripe Payment Intents: Expand balance txns for regular transactions [yunnydang] #4882
 * CyberSource (SOAP): Added support for 3DS exemption request fields [BritneyS] #4881
 * StripePI: Adding network tokenization fields to Stripe PaymentIntents [BritneyS] #4867
+* SumUp: Setup, Scrub and Purchase build [sinourain] #4890
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
