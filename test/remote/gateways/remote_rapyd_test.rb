@@ -368,12 +368,16 @@ class RemoteRapydTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_execute_threed
+    ActiveSupport::JSON::Encoding.escape_html_entities_in_json = true
+    @options[:complete_payment_url] = 'http://www.google.com?param1=1&param2=2'
     options = @options.merge(pm_type: 'gb_visa_card', execute_threed: true)
     response = @gateway.authorize(105000, @credit_card, options)
     assert_success response
     assert_equal 'ACT', response.params['data']['status']
     assert_equal '3d_verification', response.params['data']['payment_method_data']['next_action']
     assert response.params['data']['redirect_url']
+  ensure
+    ActiveSupport::JSON::Encoding.escape_html_entities_in_json = false
   end
 
   def test_successful_purchase_without_cvv

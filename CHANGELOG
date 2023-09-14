@@ -12,6 +12,7 @@
 * CyberSource (SOAP): Added support for 3DS exemption request fields [BritneyS] #4881
 * StripePI: Adding network tokenization fields to Stripe PaymentIntents [BritneyS] #4867
 * Shift4: Fixing currency bug [Heavyblade] #4887
+* Rapyd: fixing issue with json encoding and signatures [Heavyblade] #4892
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
