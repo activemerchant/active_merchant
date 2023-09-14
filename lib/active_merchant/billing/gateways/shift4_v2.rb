@@ -48,6 +48,11 @@ module ActiveMerchant #:nodoc:
       def json_error(raw_response)
         super(raw_response, 'Shift4 V2')
       end
+
+      def add_amount(post, money, options, include_currency = false)
+        super
+        post[:currency]&.upcase!
+      end
     end
   end
 end
