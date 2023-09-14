@@ -98,6 +98,50 @@ class RemoteSumUpTest < Test::Unit::TestCase
     assert_equal 'Given currency differs from merchant\'s country currency', response.message
   end
 
+  def test_successful_void
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert_equal 'PENDING', purchase.message
+    assert_equal @options[:order_id], purchase.params['checkout_reference']
+    refute_empty purchase.params['id']
+    refute_empty purchase.params['transactions']
+    refute_empty purchase.params['transactions'].first['id']
+    assert_equal 'PENDING', purchase.params['transactions'].first['status']
+
+    response = @gateway.void(purchase.params['id'])
+    assert_success response
+    refute_empty response.params['id']
+    assert_equal purchase.params['id'], response.params['id']
+    refute_empty response.params['transactions']
+    refute_empty response.params['transactions'].first['id']
+    assert_equal 'CANCELLED', response.params['transactions'].first['status']
+  end
+
+  def test_failed_void_invalid_checkout_id
+    response = @gateway.void('90858be3-23bb-4af5-9fba-ce3bc190fe5b22')
+    assert_failure response
+    assert_equal 'Resource not found', response.message
+  end
+
+  def test_failed_refund_for_pending_checkout
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert_equal 'PENDING', purchase.message
+    assert_equal @options[:order_id], purchase.params['checkout_reference']
+    refute_empty purchase.params['id']
+    refute_empty purchase.params['transactions']
+
+    transaction_id = purchase.params['transactions'].first['id']
+
+    refute_empty transaction_id
+    assert_equal 'PENDING', purchase.params['transactions'].first['status']
+
+    response = @gateway.refund(nil, transaction_id)
+    assert_failure response
+    assert_equal 'CONFLICT', response.error_code
+    assert_equal 'The transaction is not refundable in its current state', response.message
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)

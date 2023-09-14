@@ -31,6 +31,7 @@
 * Ogone: Add gateway specific 3ds option with default options mapping [jherreraa] #4894
 * Rapyd: Add recurrence_type field [yunnydang] #4912
 * Revert "Adyen: Update MIT flagging for NT" [almalee24] #4914
+* SumUp: Void and partial refund calls [sinourain] #4891
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
