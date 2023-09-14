@@ -302,8 +302,19 @@ module ActiveMerchant #:nodoc:
         )
       end
 
+      # We need to revert the work of ActiveSupport JSON encoder to prevent discrepancies
+      # Between the signature and the actual request body
+      def revert_json_html_encoding!(string)
+        {
+          '\\u003e' => '>',
+          '\\u003c' => '<',
+          '\\u0026' => '&'
+        }.each { |k, v| string.gsub! k, v }
+      end
+
       def api_request(method, url, rel_path, params)
         params == {} ? body = '' : body = params.to_json
+        revert_json_html_encoding!(body) if defined?(ActiveSupport::JSON::Encoding) && ActiveSupport::JSON::Encoding.escape_html_entities_in_json
         parse(ssl_request(method, url, body, headers(rel_path, body)))
       end
 
