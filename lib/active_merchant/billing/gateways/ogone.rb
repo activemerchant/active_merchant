@@ -263,7 +263,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_source(post, payment_source, options)
-        add_d3d(post, options) if options[:d3d]
+        add_d3d(post, options) if options[:d3d] || three_d_secure(options)
         if payment_source.is_a?(String)
           add_alias(post, payment_source, options[:alias_operation])
           add_eci(post, options[:eci] || '9')
@@ -493,6 +493,10 @@ module ActiveMerchant #:nodoc:
           response_hash[key] = value
         end
         response_hash
+      end
+
+      def three_d_secure(options)
+        options[:three_d_secure] ? options[:three_d_secure][:required] : false
       end
     end
 
