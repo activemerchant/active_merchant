@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class OgoneTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @credentials = { login: 'pspid',
                      user: 'username',
@@ -144,6 +146,22 @@ class OgoneTest < Test::Unit::TestCase
     assert response.params['HTML_ANSWER']
     assert_equal nil, response.params['HTML_ANSWER'] =~ /<HTML_ANSWER>/
     assert response.test?
+  end
+
+  def test_successful_authorize_with_3dsecure_d3d
+    stub_comms(@gateway, :ssl_post) do
+      @gateway.authorize(@amount, @credit_card, @options.merge(d3d: true))
+    end.check_request do |_endpoint, data|
+      assert_match(/FLAG3D=Y/, data)
+    end.respond_with(successful_3dsecure_purchase_response)
+  end
+
+  def test_successful_authorize_with_3dsecure_execute_threed
+    stub_comms(@gateway, :ssl_post) do
+      @gateway.authorize(@amount, @credit_card, @options.merge(execute_threed: true))
+    end.check_request do |_endpoint, data|
+      assert_match(/FLAG3D=Y/, data)
+    end.respond_with(successful_3dsecure_purchase_response)
   end
 
   def test_successful_capture
