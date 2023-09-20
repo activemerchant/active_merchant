@@ -394,6 +394,15 @@ class SecurionPayTest < Test::Unit::TestCase
     assert_equal 'char_mApucpvVbCJgo7x09Je4n9gC', response.params['error']['chargeId']
   end
 
+  def test_amount_currency_gets_downcased
+    @options[:currency] = 'USD'
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'usd', CGI.parse(data)['currency'].first
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def pre_scrubbed
