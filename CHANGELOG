@@ -14,6 +14,7 @@
 * Shift4: Fixing currency bug [Heavyblade] #4887
 * Rapyd: fixing issue with json encoding and signatures [Heavyblade] #4892
 * SumUp: Setup, Scrub and Purchase build [sinourain] #4890
+* XpayGateway: Initial setup [javierpedrozaing] #4889
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
