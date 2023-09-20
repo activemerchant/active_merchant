@@ -1327,6 +1327,10 @@ stripe_verified_bank_account:
   customer_id: "cus_7s22nNueP2Hjj6"
   bank_account_id: "ba_17cHxeAWOtgoysogv3NM8CJ1"
 
+sum_up:
+  access_token: SOMECREDENTIAL
+  pay_to_email: SOMECREDENTIAL
+
 # Working credentials, no need to replace
 swipe_checkout:
   login: 2077103073D8B5
