@@ -146,10 +146,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_reference_id(post, options)
-        return unless options[:stored_credential] || options[:network_transaction_id]
+        return unless (options[:stored_credential] && options[:stored_credential][:reason_type] == 'recurring') || options[:network_transaction_id]
 
         network_transaction_id = options[:network_transaction_id] || options[:stored_credential][:network_transaction_id]
-        post[:payment_method][:fields][:network_reference_id] = network_transaction_id if network_transaction_id
+        post[:payment_method][:fields][:network_reference_id] = network_transaction_id unless network_transaction_id&.empty?
       end
 
       def add_initiation_type(post, options)
@@ -169,9 +169,16 @@ module ActiveMerchant #:nodoc:
         pm_fields[:expiration_month] = payment.month.to_s
         pm_fields[:expiration_year] = payment.year.to_s
         pm_fields[:name] = "#{payment.first_name} #{payment.last_name}"
-        pm_fields[:cvv] = payment.verification_value.to_s if payment.verification_value.present?
-
+        pm_fields[:cvv] = payment.verification_value.to_s unless send_cvv_value?(payment, options)
         add_stored_credential(post, options)
+      end
+
+      def send_cvv_value?(payment, options)
+        payment.verification_value.nil? || payment.verification_value&.empty? || (options[:stored_credential] && options[:stored_credential][:reason_type] == 'recurring')
+      end
+
+      def send_customer_object?(options)
+        options[:stored_credential] && options[:stored_credential][:reason_type] == 'recurring'
       end
 
       def add_ach(post, payment, options)
@@ -192,7 +199,7 @@ module ActiveMerchant #:nodoc:
 
         customer_id, card_id = payment.split('|')
 
-        post[:customer] = customer_id
+        post[:customer] = customer_id unless send_customer_object?(options)
         post[:payment_method] = card_id
       end
 
@@ -237,14 +244,14 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, payment, options, action = '')
         phone_number = options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
         post[:phone_number] = phone_number.gsub(/\D/, '') unless phone_number.nil?
-        post[:email] = options[:email]
+        post[:email] = options[:email] unless send_customer_object?(options)
         return if payment.is_a?(String)
         return add_customer_id(post, options) if options[:customer_id]
 
         if action == 'store'
           post.merge!(customer_fields(payment, options))
         else
-          post[:customer] = customer_fields(payment, options)
+          post[:customer] = customer_fields(payment, options) unless send_customer_object?(options)
         end
       end
 
