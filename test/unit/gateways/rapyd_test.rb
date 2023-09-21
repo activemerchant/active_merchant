@@ -378,6 +378,65 @@ class RapydTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_not_send_cvv_with_empty_value
+    @credit_card.verification_value = ''
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_nil request['payment_method']['fields']['cvv']
+    end
+  end
+
+  def test_not_send_cvv_with_nil_value
+    @credit_card.verification_value = nil
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_nil request['payment_method']['fields']['cvv']
+    end
+  end
+
+  def test_not_send_cvv_for_recurring_transactions
+    @options[:stored_credential] = {
+      reason_type: 'recurring',
+      network_transaction_id: '12345'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_nil request['payment_method']['fields']['cvv']
+    end
+  end
+
+  def test_not_send_network_reference_id_for_recurring_transactions
+    @options[:stored_credential] = {
+      reason_type: 'recurring',
+      network_transaction_id: nil
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_nil request['payment_method']['fields']['network_reference_id']
+    end
+  end
+
+  def test_not_send_customer_object_for_recurring_transactions
+    @options[:stored_credential] = {
+      reason_type: 'recurring',
+      network_transaction_id: '12345'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_nil request['customer']
+    end
+  end
+
   private
 
   def pre_scrubbed

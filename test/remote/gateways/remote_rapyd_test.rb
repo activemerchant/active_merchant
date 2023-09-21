@@ -381,9 +381,22 @@ class RemoteRapydTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_without_cvv
-    options = @options.merge({ pm_type: 'gb_visa_card', stored_credential: { network_transaction_id: rand.to_s[2..11] } })
+    options = @options.merge({ pm_type: 'gb_visa_card', network_transaction_id: rand.to_s[2..11] })
     @credit_card.verification_value = nil
     response = @gateway.purchase(100, @credit_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_recurring_transaction_without_cvv
+    @credit_card.verification_value = nil
+    response = @gateway.purchase(15000, @credit_card, @stored_credential_options.merge(stored_credential: { network_transaction_id: rand.to_s[2..11], reason_type: 'recurring' }))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_empty_network_transaction_id
+    response = @gateway.purchase(15000, @credit_card, @stored_credential_options.merge(network_transaction_id: '', initiation_type: 'customer_present'))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
