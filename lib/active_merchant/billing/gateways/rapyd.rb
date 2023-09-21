@@ -174,7 +174,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def send_cvv_value?(payment, options)
-        payment.verification_value.nil? || payment.verification_value&.empty? || (options[:stored_credential] && options[:stored_credential][:reason_type] == 'recurring')
+        (payment.verification_value.nil? || payment.verification_value&.empty?) && (options[:stored_credential] && options[:stored_credential][:reason_type] == 'recurring')
       end
 
       def send_customer_object?(options)
