@@ -240,7 +240,7 @@ module ActiveMerchant #:nodoc:
           xml.CardNumber payment.number
           xml.ExpirationMonth format(payment.month, :two_digits)
           xml.ExpirationYear format(payment.year, :two_digits)
-          xml.CardholderName payment.first_name + ' ' + payment.last_name
+          xml.CardholderName "#{payment.first_name} #{payment.last_name}"
           xml.CVV payment.verification_value
         end
       end

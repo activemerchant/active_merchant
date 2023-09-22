@@ -25,6 +25,18 @@ class ElementTest < Test::Unit::TestCase
     assert_equal '2005831886|100', response.authorization
   end
 
+  def test_successful_purchase_without_name
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    @credit_card.first_name = nil
+    @credit_card.last_name = nil
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    assert_equal '2005831886|100', response.authorization
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
