@@ -383,6 +383,8 @@ module ActiveMerchant #:nodoc:
         cvv_result = successful_response ? cvv_result(response) : nil
         authorization = authorization_from(response) unless action == :unstore
         body = action == :unstore ? { response_code: response.to_s } : response
+        response_code = (action == :refund && succeeded) ? '10000' : response.dig('response_code')
+
         Response.new(
           succeeded,
           message_from(succeeded, response),
@@ -392,7 +394,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           avs_result: avs_result,
           cvv_result: cvv_result,
-          response_type: response_type(response.dig('response_code'))
+          response_type: response_type(response_code)
         )
       end
 
@@ -497,7 +499,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def authorization_from(raw)
-        raw['id']
+        raw['id'] || raw['action_id']
       end
 
       def error_code_from(succeeded, response)

@@ -319,7 +319,7 @@ module ActiveMerchant #:nodoc:
           avs_result: AVSResult.new(code: response[:avsresponse]),
           cvv_result: CVVResult.new(response[:cvvresponse]),
           test: test?,
-          response_type: response_type(response.dig('data', 'response_code'))
+          response_type: response_type(response.dig('data', 'response_code')&.to_i)
         )
       end
 
