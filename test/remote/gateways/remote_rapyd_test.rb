@@ -400,4 +400,10 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
+
+  def test_successful_purchase_nil_network_transaction_id
+    response = @gateway.purchase(15000, @credit_card, @stored_credential_options.merge(network_transaction_id: nil, initiation_type: 'customer_present'))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
 end
