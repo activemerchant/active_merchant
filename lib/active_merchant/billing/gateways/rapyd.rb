@@ -169,12 +169,8 @@ module ActiveMerchant #:nodoc:
         pm_fields[:expiration_month] = payment.month.to_s
         pm_fields[:expiration_year] = payment.year.to_s
         pm_fields[:name] = "#{payment.first_name} #{payment.last_name}"
-        pm_fields[:cvv] = payment.verification_value.to_s unless send_cvv_value?(payment, options) || valid_network_transaction_id?(options)
+        pm_fields[:cvv] = payment.verification_value.to_s unless valid_network_transaction_id?(options) || payment.verification_value.blank?
         add_stored_credential(post, options)
-      end
-
-      def send_cvv_value?(payment, options)
-        return (payment.verification_value.nil? || payment.verification_value&.empty?)
       end
 
       def send_customer_object?(options)
@@ -182,8 +178,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def valid_network_transaction_id?(options)
-        network_transaction_id = options[:network_tansaction_id] || options.dig(:stored_credential_options, :network_transaction_id)
-        return false if network_transaction_id.nil? || network_transaction_id.empty?
+        network_transaction_id = options[:network_tansaction_id] || options.dig(:stored_credential_options, :network_transaction_id) || options.dig(:stored_credential, :network_transaction_id)
+        return network_transaction_id.present?
       end
 
       def add_ach(post, payment, options)
