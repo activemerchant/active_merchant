@@ -230,7 +230,7 @@ module ActiveMerchant #:nodoc:
         elsif payment_method.brand == 'visa'
           post[:threeDomainSecure][:acceptRisk] = three_d_secure[:eci] == '07'
           post[:threeDomainSecure][:cavv] = three_d_secure[:cavv]
-          post[:threeDomainSecure][:xid] = three_d_secure[:xid]
+          post[:threeDomainSecure][:xid] = three_d_secure[:xid] if three_d_secure[:xid].present?
         else
           raise ArgumentError.new 'Kushki supports 3ds2 authentication for only Visa and Mastercard brands.'
         end
