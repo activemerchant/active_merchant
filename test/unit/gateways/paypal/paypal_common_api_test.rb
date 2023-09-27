@@ -202,4 +202,15 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     assert_equal 'id', REXML::XPath.first(request, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:ReferenceID').text
     assert_equal '127.0.0.1', REXML::XPath.first(request, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:IPAddress').text
   end
+
+  def test_successful_with_paypal_already_authorized_error_code
+    response = { error_codes: "10602" }
+    assert_true @gateway.send(:successful?, response)
+  end
+
+  def test_message_from_with_paypal_already_authorized_error_code
+    response = { error_codes: "10602", message: "test message" }
+    assert_equal "test message | status overridden to success due to error code 10602 (transaction already captured)",
+      @gateway.send(:message_from, response)
+  end
 end

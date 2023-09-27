@@ -40,6 +40,7 @@ module ActiveMerchant #:nodoc:
       SUCCESS_CODES = [ 'Success', 'SuccessWithWarning' ]
 
       FRAUD_REVIEW_CODE = "11610"
+      ALREADY_AUTHORIZED_CODE = "10602"
 
       STANDARD_ERROR_CODE_MAPPING = {
         '15005' => :card_declined,
@@ -695,10 +696,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def successful?(response)
-        SUCCESS_CODES.include?(response[:ack])
+        SUCCESS_CODES.include?(response[:ack]) || response[:error_codes] == ALREADY_AUTHORIZED_CODE
       end
 
       def message_from(response)
+        if response[:error_codes] == ALREADY_AUTHORIZED_CODE
+          return "#{response[:message]} | status overridden to success due to error code #{ALREADY_AUTHORIZED_CODE} " \
+                    "(transaction already captured)"
+        end
         response[:message] || response[:ack]
       end
 
