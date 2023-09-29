@@ -362,6 +362,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     initial_response = stub_comms(@gateway, :ssl_request) do
       initial_options = {
         stored_credential: {
+          initiator: 'cardholder',
           initial_transaction: true,
           reason_type: 'installment'
         }

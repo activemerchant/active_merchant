@@ -288,7 +288,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_stored_credentials_using_normalized_fields(post, options)
-        if options[:stored_credential][:initial_transaction] == true
+        if options[:stored_credential][:initiator] == 'cardholder'
           post[:merchant_initiated] = false
         else
           post[:source][:stored] = true
