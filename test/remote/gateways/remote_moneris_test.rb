@@ -384,8 +384,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
 
     assert_equal(response.avs_result, {
-      'code' => 'M',
-      'message' => 'Street address and postal code match.',
+      'code' => 'Y',
+      'message' => 'Street address and 5-digit postal code match.',
       'street_match' => 'Y',
       'postal_match' => 'Y'
     })
