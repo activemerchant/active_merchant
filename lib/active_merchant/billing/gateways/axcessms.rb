@@ -33,6 +33,7 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :token)
         super
+        @response_http_code = nil
       end
 
       def authorize(money, credit_card, options = {})
@@ -129,7 +130,11 @@ module ActiveMerchant #:nodoc:
           response_data,
           authorization: authorization_from(response_data, params["paymentType"]),
           test: test?,
-          response_type: response_type(response.dig('result', 'code'))
+          response_type: response_type(response.dig('result', 'code')),
+          response_http_code: @response_http_code,
+          request_endpoint: path,
+          request_method: :post,
+          request_body: params
         )
       end
 
@@ -162,6 +167,16 @@ module ActiveMerchant #:nodoc:
           1
         else
           2
+        end
+      end
+
+      def handle_response(response)
+        @response_http_code = response.code.to_i
+        case @response_http_code
+        when 200...300
+          response.body
+        else
+          raise ResponseError.new(response)
         end
       end
     end

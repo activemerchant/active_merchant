@@ -34,6 +34,7 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         @options = options
         @access_token = nil
+        @response_http_code = nil
 
         if options.has_key?(:secret_key)
           requires!(options, :secret_key)
@@ -362,7 +363,10 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, options, authorization = nil, method = :post)
         begin
-          raw_response = ssl_request(method, url(action, authorization), post.nil? || post.empty? ? nil : post.to_json, headers(action, options))
+          request_endpoint = url(action, authorization)
+          request_body = post.nil? || post.empty? ? nil : post.to_json
+
+          raw_response = ssl_request(method, request_endpoint, request_body, headers(action, options))
           response = parse(raw_response)
           response['id'] = response['_links']['payment']['href'].split('/')[-1] if action == :capture && response.key?('_links')
           source_id = authorization if action == :unstore
@@ -374,10 +378,17 @@ module ActiveMerchant #:nodoc:
 
         succeeded = success_from(action, response)
 
-        response(action, succeeded, response, source_id)
+        additional_data = {
+          request_endpoint:,
+          request_method: method,
+          request_body: parse(request_body),
+          response_http_code: @response_http_code
+        }
+
+        response(action, succeeded, response, source_id, additional_data)
       end
 
-      def response(action, succeeded, response, source_id = nil)
+      def response(action, succeeded, response, source_id = nil, options = {})
         successful_response = succeeded && action == :purchase || action == :authorize
         avs_result = successful_response ? avs_result(response) : nil
         cvv_result = successful_response ? cvv_result(response) : nil
@@ -394,7 +405,11 @@ module ActiveMerchant #:nodoc:
           test: test?,
           avs_result: avs_result,
           cvv_result: cvv_result,
-          response_type: response_type(response_code)
+          response_type: response_type(response_code),
+          response_http_code: options[:response_http_code],
+          request_endpoint: options[:request_endpoint],
+          request_method: options[:request_method],
+          request_body: options[:request_body]
         )
       end
 
@@ -526,7 +541,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def handle_response(response)
-        case response.code.to_i
+        @response_http_code = response.code.to_i
+        case @response_http_code
         # to get the response code after unstore(delete instrument), because the body is nil
         when 200...300
           response.body || response.code

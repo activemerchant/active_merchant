@@ -32,6 +32,8 @@ module ActiveMerchant #:nodoc:
           requires!(options, :login, :password)
         end
         super
+
+        @response_http_code = nil
       end
 
       def purchase(amount, payment_method, options = {})
@@ -319,7 +321,11 @@ module ActiveMerchant #:nodoc:
           avs_result: AVSResult.new(code: response[:avsresponse]),
           cvv_result: CVVResult.new(response[:cvvresponse]),
           test: test?,
-          response_type: response_type(response.dig('data', 'response_code')&.to_i)
+          response_type: response_type(response.dig('data', 'response_code')&.to_i),
+          response_http_code: @response_http_code,
+          request_endpoint: url,
+          request_method: :post,
+          request_body: params
         )
       end
 
@@ -368,6 +374,16 @@ module ActiveMerchant #:nodoc:
           1
         else
           2
+        end
+      end
+
+      def handle_response(response)
+        @response_http_code = response.code.to_i
+        case @response_http_code
+        when 200...300
+          response.body
+        else
+          raise ResponseError.new(response)
         end
       end
     end
