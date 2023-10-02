@@ -27,6 +27,7 @@
 * Adyen: Fix shopperEmail bug [almalee24] #4904
 * Add Cabal card bin ranges [yunnydang] #4908
 * Kushki: Fixing issue with 3DS info on visa cc [heavyblade] #4899
+* Adyen: Add MIT flagging for Network Tokens [aenand] #4905
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

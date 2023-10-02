@@ -55,9 +55,9 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
         post = init_post(options)
         add_invoice(post, money, options)
+        add_stored_credentials(post, payment, options)
         add_payment(post, payment, options)
         add_extra_data(post, payment, options)
-        add_stored_credentials(post, payment, options)
         add_address(post, options)
         add_installments(post, options) if options[:installments]
         add_3ds(post, options)
@@ -138,9 +138,9 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
         post = init_post(options)
         add_invoice(post, 0, options)
+        add_stored_credentials(post, credit_card, options)
         add_payment(post, credit_card, options)
         add_extra_data(post, credit_card, options)
-        add_stored_credentials(post, credit_card, options)
         add_address(post, options)
         add_network_transaction_reference(post, options)
         options[:recurring_contract_type] ||= 'RECURRING'
@@ -463,15 +463,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shopper_interaction(post, payment, options = {})
-        if  (options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'cardholder') ||
-            (payment.respond_to?(:verification_value) && payment.verification_value && options.dig(:stored_credential, :initial_transaction).nil?) ||
-            payment.is_a?(NetworkTokenizationCreditCard)
-          shopper_interaction = 'Ecommerce'
-        else
-          shopper_interaction = 'ContAuth'
-        end
+        shopper_interaction = ecommerce_interaction?(payment, options) ? 'Ecommerce' : 'ContAuth'
 
         post[:shopperInteraction] = options[:shopper_interaction] || shopper_interaction
+      end
+
+      def ecommerce_interaction?(payment, options)
+        if options.dig(:stored_credential, :initial_transaction).nil? && payment.is_a?(NetworkTokenizationCreditCard)
+          true
+        elsif options.dig(:stored_credential, :initial_transaction).nil? && (payment.respond_to?(:verification_value) && payment.verification_value)
+          true
+        elsif options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'cardholder'
+          true
+        else
+          false
+        end
       end
 
       def add_recurring_processing_model(post, options)
@@ -612,7 +618,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mpi_data_for_network_tokenization_card(post, payment, options)
-        return if options[:skip_mpi_data] == 'Y'
+        return if options[:skip_mpi_data] == 'Y' || post[:shopperInteraction] == 'ContAuth'
 
         post[:mpiData] = {}
         post[:mpiData][:authenticationResponse] = 'Y'
