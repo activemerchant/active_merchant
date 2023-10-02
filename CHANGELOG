@@ -65,6 +65,7 @@
 * VisaNet Peru: Add purchaseNumber to response object [yunnydang] #4961
 * SafeCharge: Support tokens [almalee24] #4948
 * Redsys: Update to $0 verify [almalee24] #4944
+* Litle: Update stored credentials [almalee24] #4903
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
