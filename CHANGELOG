@@ -41,6 +41,7 @@
 * Rapyd: add force_3ds_secure flag [Heavyblade] #4927
 * Beanstream: add alternate option for passing phone number [jcreiff] #4923
 * AuthorizeNet: Update network token method [almalee24] #4852
+* Adding Oauth Response for access tokens [almalee24] #4907
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

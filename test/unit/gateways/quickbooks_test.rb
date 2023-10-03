@@ -32,6 +32,15 @@ class QuickBooksTest < Test::Unit::TestCase
     @authorization_no_request_id = 'ECZ7U0SO423E'
   end
 
+  def test_refresh_access_token_should_rise_an_exception_under_unauthorized
+    error = assert_raises(ActiveMerchant::OAuthResponseError) do
+      @oauth_2_gateway .expects(:raw_ssl_request).returns(Net::HTTPBadRequest.new(1.0, 401, 'Unauthorized'))
+      @oauth_2_gateway .send(:refresh_access_token)
+    end
+
+    assert_match(/Failed with 401 Unauthorized/, error.message)
+  end
+
   def test_successful_purchase
     [@oauth_1_gateway, @oauth_2_gateway].each do |gateway|
       gateway.expects(:ssl_post).returns(successful_purchase_response)
