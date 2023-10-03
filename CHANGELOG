@@ -22,6 +22,7 @@
 * Adyen: Add payout endpoint [almalee24] #4885
 * Adding Oauth Response for access tokens [almalee24] #4851
 * CheckoutV2: Update stored credentials [almalee24] #4901
+* Revert "Adding Oauth Response for access tokens" [almalee24] #4906
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

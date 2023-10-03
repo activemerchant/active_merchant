@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         @client_id = options[:client_id]
         @client_api_key = options[:client_api_key]
         super
-        @access_token = options[:access_token] || setup_access_token
+        @access_token = setup_access_token
       end
 
       def purchase(money, card, options = {})
@@ -133,14 +133,8 @@ module ActiveMerchant #:nodoc:
           'x-client-id' => @client_id,
           'x-api-key' => @client_api_key
         }
-        raw_response = ssl_post(build_request_url(:login), nil, token_headers)
-        response = JSON.parse(raw_response)
-        if (token = response['token'])
-          token
-        else
-          oauth_response = Response.new(false, response['message'])
-          raise OAuthResponseError.new(oauth_response)
-        end
+        response = ssl_post(build_request_url(:login), nil, token_headers)
+        JSON.parse(response)['token']
       end
 
       def build_request_url(action, id = nil)

@@ -23,18 +23,6 @@ module ActiveMerchant #:nodoc:
     end
 
     def to_s
-      if response.kind_of?(String)
-        if response.start_with?('Failed with')
-          return response
-        else
-          return "Failed with #{response}"
-        end
-      end
-
-      if response.respond_to?(:message)
-        return response.message if response.message.start_with?('Failed with')
-      end
-
       "Failed with #{response.code if response.respond_to?(:code)} #{response.message if response.respond_to?(:message)}"
     end
   end

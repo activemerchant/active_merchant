@@ -1,5 +1,15 @@
 require 'test_helper'
 
+module ActiveMerchant #:nodoc:
+  module Billing #:nodoc:
+    class SimetrikGateway < Gateway
+      def fetch_access_token
+        @access_token[:access_token] = SecureRandom.hex(16)
+      end
+    end
+  end
+end
+
 class SimetrikTest < Test::Unit::TestCase
   def setup
     @token_acquirer = 'ea890fd1-49f3-4a34-a150-192bf9a59205'
@@ -7,8 +17,7 @@ class SimetrikTest < Test::Unit::TestCase
     @gateway = SimetrikGateway.new(
       client_id: 'client_id',
       client_secret: 'client_secret_key',
-      audience: 'audience_url',
-      access_token: { expires_at: Time.new.to_i }
+      audience: 'audience_url'
     )
     @credit_card = CreditCard.new(
       first_name: 'sergiod',
@@ -159,15 +168,6 @@ class SimetrikTest < Test::Unit::TestCase
     assert_equal response.avs_result['code'], 'G'
     assert_equal response.cvv_result['code'], 'P'
     assert response.test?
-  end
-
-  def test_fetch_access_token_should_rise_an_exception_under_bad_request
-    error = assert_raises(ActiveMerchant::OAuthResponseError) do
-      @gateway.expects(:raw_ssl_request).returns(Net::HTTPBadRequest.new(1.0, 401, 'Unauthorized'))
-      @gateway.send(:fetch_access_token)
-    end
-
-    assert_match(/Failed with 401 Unauthorized/, error.message)
   end
 
   def test_success_purchase_with_shipping_address
