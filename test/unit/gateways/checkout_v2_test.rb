@@ -1,15 +1,5 @@
 require 'test_helper'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-    class CheckoutV2Gateway
-      def setup_access_token
-        '12345678'
-      end
-    end
-  end
-end
-
 class CheckoutV2Test < Test::Unit::TestCase
   include CommStub
 
@@ -17,7 +7,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     @gateway = CheckoutV2Gateway.new(
       secret_key: '1111111111111'
     )
-    @gateway_oauth = CheckoutV2Gateway.new({ client_id: 'abcd', client_secret: '1234' })
+    @gateway_oauth = CheckoutV2Gateway.new({ client_id: 'abcd', client_secret: '1234', access_token: '12345678' })
     @gateway_api = CheckoutV2Gateway.new({
       secret_key: '1111111111111',
       public_key: '2222222222222'
@@ -25,6 +15,15 @@ class CheckoutV2Test < Test::Unit::TestCase
     @credit_card = credit_card
     @amount = 100
     @token = '2MPedsuenG2o8yFfrsdOBWmOuEf'
+  end
+
+  def test_setup_access_token_should_rise_an_exception_under_bad_request
+    error = assert_raises(ActiveMerchant::OAuthResponseError) do
+      @gateway.expects(:raw_ssl_request).returns(Net::HTTPBadRequest.new(1.0, 400, 'Bad Request'))
+      @gateway.send(:setup_access_token)
+    end
+
+    assert_match(/Failed with 400 Bad Request/, error.message)
   end
 
   def test_successful_purchase
