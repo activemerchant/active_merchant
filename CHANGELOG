@@ -23,6 +23,7 @@
 * Adding Oauth Response for access tokens [almalee24] #4851
 * CheckoutV2: Update stored credentials [almalee24] #4901
 * Revert "Adding Oauth Response for access tokens" [almalee24] #4906
+* Braintree: Create credit card nonce [gasb150] #4897
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
