@@ -24,6 +24,7 @@
 * CheckoutV2: Update stored credentials [almalee24] #4901
 * Revert "Adding Oauth Response for access tokens" [almalee24] #4906
 * Braintree: Create credit card nonce [gasb150] #4897
+* Adyen: Fix shopperEmail bug [almalee24] #4904
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

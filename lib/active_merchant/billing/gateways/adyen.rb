@@ -105,6 +105,7 @@ module ActiveMerchant #:nodoc:
           add_fraud_offset(post, options)
           add_fund_source(post, options)
           add_recurring_contract(post, options)
+          add_shopper_data(post, payment, options)
 
           if (address = options[:billing_address] || options[:address]) && address[:country]
             add_billing_address(post, address)
@@ -255,6 +256,7 @@ module ActiveMerchant #:nodoc:
         post[:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
         post[:store] = options[:store] if options[:store]
 
+        add_shopper_data(post, payment, options)
         add_additional_data(post, payment, options)
         add_risk_data(post, options)
         add_shopper_reference(post, options)
@@ -553,7 +555,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_bank_account(post, bank_account, options, action)
-        add_shopper_data(post, bank_account, options)
         bank = {
           bankAccountNumber: bank_account.account_number,
           ownerName: bank_account.name,
@@ -567,7 +568,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_card(post, credit_card)
-        add_shopper_data(post, credit_card, options)
         card = {
           expiryMonth: credit_card.month,
           expiryYear: credit_card.year,
@@ -583,9 +583,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shopper_data(post, payment, options)
-        post[:shopperName] = {}
-        post[:shopperName][:firstName] = payment.first_name
-        post[:shopperName][:lastName] = payment.last_name
+        if payment && !payment.is_a?(String)
+          post[:shopperName] = {}
+          post[:shopperName][:firstName] = payment.first_name
+          post[:shopperName][:lastName] = payment.last_name
+        end
+
         post[:shopperEmail] = options[:email] if options[:email]
         post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
       end

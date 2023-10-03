@@ -184,6 +184,7 @@ class AdyenTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(100, @credit_card, @options.merge({ recurring_contract_type: 'ONECLICK' }))
     end.check_request do |_endpoint, data, _headers|
+      assert_equal 'john.smith@test.com', JSON.parse(data)['shopperEmail']
       assert_equal 'ONECLICK', JSON.parse(data)['recurring']['contract']
     end.respond_with(successful_authorize_response)
   end
