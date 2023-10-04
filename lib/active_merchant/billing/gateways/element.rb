@@ -4,8 +4,8 @@ require 'securerandom'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class ElementGateway < Gateway
-      self.test_url = 'https://certtransaction.elementexpress.com/express.asmx'
-      self.live_url = 'https://transaction.elementexpress.com/express.asmx'
+      self.test_url = 'https://certtransaction.elementexpress.com'
+      self.live_url = 'https://transaction.elementexpress.com'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -14,8 +14,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.elementps.com'
       self.display_name = 'Element'
 
-      SERVICE_TEST_URL = 'https://certservices.elementexpress.com/express.asmx'
-      SERVICE_LIVE_URL = 'https://services.elementexpress.com/express.asmx'
+      SERVICE_TEST_URL = 'https://certservices.elementexpress.com'
+      SERVICE_LIVE_URL = 'https://services.elementexpress.com'
 
       NETWORK_TOKEN_TYPE = {
         apple_pay: '2',
@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         trans_id, trans_amount = split_authorization(authorization)
-        options.merge!({ trans_id: trans_id, trans_amount: trans_amount, reversal_type: 'Full' })
+        options.merge!({ trans_id: trans_id, trans_amount: trans_amount, reversal_type: '1' }) #Integer Enum replaced String Enum for ReversalType in XML API
 
         request = build_soap_request do |xml|
           xml.CreditCardReversal(xmlns: 'https://transaction.elementexpress.com') do
@@ -159,12 +159,12 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_credentials(xml)
-        xml.credentials do
+        xml.Credentials do
           xml.AccountID @options[:account_id]
           xml.AccountToken @options[:account_token]
           xml.AcceptorID @options[:acceptor_id]
         end
-        xml.application do
+        xml.Application do
           xml.ApplicationID @options[:application_id]
           xml.ApplicationName @options[:application_name]
           xml.ApplicationVersion @options[:application_version]
@@ -184,32 +184,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_account(xml, payment, payment_account_reference_number)
-        xml.paymentAccount do
+        xml.PaymentAccount do
           xml.PaymentAccountType payment_account_type(payment)
           xml.PaymentAccountReferenceNumber payment_account_reference_number
         end
       end
 
       def add_payment_account_id(xml, payment)
-        xml.extendedParameters do
-          xml.ExtendedParameters do
-            xml.Key 'PaymentAccount'
-            xml.Value('xsi:type' => 'PaymentAccount') do
-              xml.PaymentAccountID payment
-            end
+        xml.ExtendedParameters do
+          xml.Key 'PaymentAccount'
+          xml.Value('xsi:type' => 'PaymentAccount') do
+            xml.PaymentAccountID payment
           end
         end
       end
 
       def add_transaction(xml, money, options = {})
-        xml.transaction do
+        xml.Transaction do
           xml.ReversalType options[:reversal_type] if options[:reversal_type]
           xml.TransactionID options[:trans_id] if options[:trans_id]
           xml.TransactionAmount amount(money.to_i) if money
           xml.MarketCode market_code(money, options) if options[:market_code] || money
           xml.ReferenceNumber options[:order_id].present? ? options[:order_id][0, 50] : SecureRandom.hex(20)
           xml.TicketNumber options[:ticket_number] if options[:ticket_number]
-          xml.MerchantSuppliedTransactionId options[:merchant_supplied_transaction_id] if options[:merchant_supplied_transaction_id]
+          xml.MerchantSuppliedTransactionID options[:merchant_supplied_transaction_id] if options[:merchant_supplied_transaction_id]
           xml.PaymentType options[:payment_type] if options[:payment_type]
           xml.SubmissionType options[:submission_type] if options[:submission_type]
           xml.DuplicateCheckDisableFlag options[:duplicate_check_disable_flag].to_s == 'true' ? 'True' : 'False' unless options[:duplicate_check_disable_flag].nil?
@@ -219,24 +217,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def market_code(money, options)
-        options[:market_code] || 'Default'
+        options[:market_code] || '0'
       end
 
       def add_terminal(xml, options)
-        xml.terminal do
+        xml.Terminal do
           xml.TerminalID options[:terminal_id] || '01'
-          xml.CardPresentCode options[:card_present_code] || 'UseDefault'
-          xml.CardholderPresentCode 'UseDefault'
-          xml.CardInputCode 'UseDefault'
-          xml.CVVPresenceCode 'UseDefault'
-          xml.TerminalCapabilityCode 'UseDefault'
-          xml.TerminalEnvironmentCode 'UseDefault'
-          xml.MotoECICode 'NonAuthenticatedSecureECommerceTransaction'
+          xml.CardPresentCode options[:card_present_code] || '0'
+          xml.CardholderPresentCode '0'
+          xml.CardInputCode '0'
+          xml.CVVPresenceCode '0'
+          xml.TerminalCapabilityCode '0'
+          xml.TerminalEnvironmentCode '0'
+          xml.MotoECICode '0'
         end
       end
 
       def add_credit_card(xml, payment)
-        xml.card do
+        xml.Card do
           xml.CardNumber payment.number
           xml.ExpirationMonth format(payment.month, :two_digits)
           xml.ExpirationYear format(payment.year, :two_digits)
@@ -246,7 +244,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_echeck(xml, payment)
-        xml.demandDepositAccount do
+        xml.DemandDepositAccount do
           xml.AccountNumber payment.account_number
           xml.RoutingNumber payment.routing_number
           xml.DDAAccountType payment.account_type.capitalize
@@ -254,13 +252,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_tokenization_card(xml, payment)
-        xml.card do
+        xml.Card do
           xml.CardNumber payment.number
           xml.ExpirationMonth format(payment.month, :two_digits)
           xml.ExpirationYear format(payment.year, :two_digits)
           xml.CardholderName "#{payment.first_name} #{payment.last_name}"
           xml.Cryptogram payment.payment_cryptogram
-          xml.ElectronicCommerceIndicator payment.eci if payment.eci.present?
+          #xml.ElectronicCommerceIndicator payment.eci if payment.eci.present? #MotoECICode in Terminal tag replaces this field's purpose for the XML API
           xml.WalletType NETWORK_TOKEN_TYPE.fetch(payment.source, '0')
         end
       end
@@ -268,7 +266,7 @@ module ActiveMerchant #:nodoc:
       def add_address(xml, options)
         if address = options[:billing_address] || options[:address]
           address[:email] ||= options[:email]
-          xml.address do
+          xml.Address do
             xml.BillingAddress1 address[:address1] if address[:address1]
             xml.BillingAddress2 address[:address2] if address[:address2]
             xml.BillingCity address[:city] if address[:city]
@@ -279,7 +277,7 @@ module ActiveMerchant #:nodoc:
           end
         end
         if shipping_address = options[:shipping_address]
-          xml.address do
+          xml.Address do
             xml.ShippingAddress1 shipping_address[:address1] if shipping_address[:address1]
             xml.ShippingAddress2 shipping_address[:address2] if shipping_address[:address2]
             xml.ShippingCity shipping_address[:city] if shipping_address[:city]
@@ -360,13 +358,7 @@ module ActiveMerchant #:nodoc:
 
       def build_soap_request
         builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
-          xml['soap'].Envelope('xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
-                               'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
-                               'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/') do
-            xml['soap'].Body do
-              yield(xml)
-            end
-          end
+          yield(xml)
         end
 
         builder.to_xml
@@ -374,9 +366,9 @@ module ActiveMerchant #:nodoc:
 
       def payment_account_type(payment)
         if payment.is_a?(Check)
-          payment_account_type = payment.account_type
+          payment_account_type = '1'
         else
-          payment_account_type = 'CreditCard'
+          payment_account_type = '0'
         end
         payment_account_type
       end
@@ -396,8 +388,7 @@ module ActiveMerchant #:nodoc:
 
       def headers(action)
         {
-          'Content-Type' => 'text/xml; charset=utf-8',
-          'SOAPAction' => "https://#{interface(action)}.elementexpress.com/#{action}"
+          'Content-Type' => 'text/xml'
         }
       end
     end

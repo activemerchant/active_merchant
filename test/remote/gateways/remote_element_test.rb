@@ -214,7 +214,7 @@ class RemoteElementTest < Test::Unit::TestCase
   end
 
   def test_successful_credit
-    credit_options = @options.merge({ ticket_number: '1', market_code: 'FoodRestaurant', merchant_supplied_transaction_id: '123' })
+    credit_options = @options.merge({ ticket_number: '1', market_code: '4', merchant_supplied_transaction_id: '123' }) #Integer Enum replaced String Enum for MarketCode in XML API
     credit = @gateway.credit(@amount, @credit_card, credit_options)
 
     assert_success credit

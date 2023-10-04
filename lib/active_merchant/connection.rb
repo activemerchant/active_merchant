@@ -187,7 +187,9 @@ module ActiveMerchant
     end
 
     def log(level, message, tag)
-      message = "[#{tag}] #{message}" if tag
+      #Useful for capturing logging output for the actual errors at the gateway.
+      #Obviously, don't do this in prod and use debug mode the right way :D
+      p "[#{tag}] #{message}"
       logger&.send(level, message)
     end
   end
