@@ -363,6 +363,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'cabal', CreditCard.brand?('6035224400000000')
     assert_equal 'cabal', CreditCard.brand?('6502723300000000')
     assert_equal 'cabal', CreditCard.brand?('6500870000000000')
+    assert_equal 'cabal', CreditCard.brand?('6509000000000000')
   end
 
   def test_should_detect_unionpay_card
