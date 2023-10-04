@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
           add_shopper_data(post, payment, options)
 
           if (address = options[:billing_address] || options[:address]) && address[:country]
-            add_billing_address(post, address)
+            add_billing_address(post, options, address)
           end
 
           post[:dateOfBirth] = options[:date_of_birth] if options[:date_of_birth]
@@ -493,8 +493,8 @@ module ActiveMerchant #:nodoc:
       def add_address(post, options)
         if address = options[:shipping_address]
           post[:deliveryAddress] = {}
-          post[:deliveryAddress][:street] = address[:address1] || 'NA'
-          post[:deliveryAddress][:houseNumberOrName] = address[:address2] || 'NA'
+          post[:deliveryAddress][:street] = options[:address_override] == true ? address[:address2] : address[:address1] || 'NA'
+          post[:deliveryAddress][:houseNumberOrName] = options[:address_override] == true ? address[:address1] : address[:address2] || 'NA'
           post[:deliveryAddress][:postalCode] = address[:zip] if address[:zip]
           post[:deliveryAddress][:city] = address[:city] || 'NA'
           post[:deliveryAddress][:stateOrProvince] = get_state(address)
@@ -503,14 +503,14 @@ module ActiveMerchant #:nodoc:
         return unless post[:bankAccount]&.kind_of?(Hash) || post[:card]&.kind_of?(Hash)
 
         if (address = options[:billing_address] || options[:address]) && address[:country]
-          add_billing_address(post, address)
+          add_billing_address(post, options, address)
         end
       end
 
-      def add_billing_address(post, address)
+      def add_billing_address(post, options, address)
         post[:billingAddress] = {}
-        post[:billingAddress][:street] = address[:address1] || 'NA'
-        post[:billingAddress][:houseNumberOrName] = address[:address2] || 'NA'
+        post[:billingAddress][:street] = options[:address_override] == true ? address[:address2] : address[:address1] || 'NA'
+        post[:billingAddress][:houseNumberOrName] = options[:address_override] == true ? address[:address1] : address[:address2] || 'NA'
         post[:billingAddress][:postalCode] = address[:zip] if address[:zip]
         post[:billingAddress][:city] = address[:city] || 'NA'
         post[:billingAddress][:stateOrProvince] = get_state(address)
@@ -738,7 +738,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if (address = fund_source[:billing_address])
-          add_billing_address(post[:fundSource], address)
+          add_billing_address(post[:fundSource], options, address)
         end
       end
 

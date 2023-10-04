@@ -1061,6 +1061,16 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal @options[:shipping_address][:country], post[:deliveryAddress][:country]
   end
 
+  def test_address_override_that_will_swap_housenumberorname_and_street
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(address_override: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"houseNumberOrName":"456 My Street"/, data)
+      assert_match(/"street":"Apt 1"/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_successful_auth_phone
     options = @options.merge(billing_address: { phone: 1234567890 })
     response = stub_comms do

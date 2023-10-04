@@ -1675,6 +1675,20 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_authorize_with_address_override
+    address = {
+      address1: 'Bag End',
+      address2: '123 Hobbiton Way',
+      city: 'Hobbiton',
+      state: 'Derbyshire',
+      country: 'GB',
+      zip: 'DE45 1PP'
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: address, address_override: true))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   private
 
   def stored_credential_options(*args, ntid: nil)
