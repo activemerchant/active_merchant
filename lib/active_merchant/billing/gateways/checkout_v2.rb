@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
         add_processing_channel(post, options)
         add_invoice(post, amount, options)
         add_payment_method(post, payment, options, :destination)
-        add_source(post, options)
+        add_source(post, payment, options)
 
         commit(:credit, post, options)
       end
@@ -226,7 +226,7 @@ module ActiveMerchant #:nodoc:
             post[key][:type] = 'id'
             post[key][:id] = payment_method
           else
-            add_source(post, options)
+            add_source(post, payment_method, options)
           end
         elsif payment_method.try(:year)
           post[key][:expiry_year] = format(payment_method.year, :four_digits)
@@ -234,10 +234,32 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_source(post, options)
+      def add_source(post, payment_method, options)
         post[:source] = {}
-        post[:source][:type] = options[:source_type] if options[:source_type]
-        post[:source][:id] = options[:source_id] if options[:source_id]
+
+        case payment_method
+        when 'paypal'
+          post[:source][:type] = payment_method
+        when 'sofort'
+          post[:source][:type] = payment_method
+        when 'klarna'
+          post[:source][:type] = payment_method
+          post[:source][:account_holder] = {}
+          post[:source][:account_holder][:first_name] = options[:first_name] if options[:first_name]
+          post[:source][:account_holder][:last_name] = options[:last_name] if options[:last_name]
+          post[:source][:account_holder][:email] = options[:email] || nil
+          post[:source][:account_holder][:phone] = {}
+          post[:source][:account_holder][:phone][:country_code] = options[:phone_country_code] if options[:phone_country_code]
+          post[:source][:account_holder][:phone][:number] = options[:phone] || options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
+        when 'giropay'
+          post[:source][:type] = payment_method
+          post[:source][:account_holder] = {}
+          post[:source][:account_holder][:first_name] = options[:first_name] if options[:first_name]
+          post[:source][:account_holder][:last_name] = options[:last_name] if options[:last_name]
+        else
+          post[:source][:type] = options[:source_type] if options[:source_type]
+          post[:source][:id] = options[:source_id] if options[:source_id]
+        end
       end
 
       def add_customer_data(post, options)
