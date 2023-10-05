@@ -195,6 +195,21 @@ class RemoteKushkiTest < Test::Unit::TestCase
     assert_match %r(^\d+$), response.authorization
   end
 
+  def test_successful_3ds2_authorize_with_visa_card_with_optional_xid
+    options = {
+      currency: 'PEN',
+      three_d_secure: {
+        version: '2.2.0',
+        cavv: 'AAABBoVBaZKAR3BkdkFpELpWIiE=',
+        eci: '07'
+      }
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
   def test_successful_3ds2_authorize_with_master_card
     options = {
       currency: 'PEN',
