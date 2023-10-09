@@ -413,7 +413,10 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
       customer_profile_id: @customer_profile_id,
       payment_profile: {
         customer_payment_profile_id: @customer_payment_profile_id,
-        customer_type: 'business'
+        customer_type: 'business',
+        # Specially designate update excludeFromAccountUpdater
+        # https://support.authorize.net/knowledgebase/Knowledgearticle/?code=000001022#SelectProfiles
+        exclude_from_account_updater: [true, false].sample
       }
     )
     assert_instance_of Response, response

@@ -742,6 +742,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # :customer_type => 'individual or business', # Optional
+      # :exclude_from_account_updater => 'true or false', # Optional
       # :bill_to => @address,
       # :payment => @payment
       def add_payment_profile(xml, payment_profile)
@@ -764,6 +765,9 @@ module ActiveMerchant #:nodoc:
             xml.tag!('taxId', payment_profile[:payment]) if payment_profile[:payment].has_key?(:tax_id)
           end
         end
+
+        # https://support.authorize.net/knowledgebase/Knowledgearticle/?code=000001022#SelectProfiles
+        xml.tag!('excludeFromAccountUpdater', payment_profile[:exclude_from_account_updater].to_s) if payment_profile.key?(:exclude_from_account_updater)
 
         xml.tag!('customerPaymentProfileId', payment_profile[:customer_payment_profile_id]) if payment_profile[:customer_payment_profile_id]
       end

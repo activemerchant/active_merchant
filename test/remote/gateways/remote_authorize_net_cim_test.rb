@@ -464,6 +464,23 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     # Show that the billing address on the payment profile was updated
     assert_equal 'Frank', response.params['payment_profile']['bill_to']['first_name'], 'The billing address should contain the first name we passed in: Frank'
+
+    # Specially designate update excludeFromAccountUpdater
+    # https://support.authorize.net/knowledgebase/Knowledgearticle/?code=000001022#SelectProfiles
+    # Because the response does not return information about exclude_from_account_updater,
+    # we can only test the response success.
+    assert response = @gateway.update_customer_payment_profile(
+      customer_profile_id: @customer_profile_id,
+      payment_profile: {
+        exclude_from_account_updater: [true, false].sample,
+        customer_payment_profile_id: customer_payment_profile_id,
+        payment: {
+          credit_card: masked_credit_card
+        }
+      }
+    )
+    assert response.test?
+    assert_success response
   end
 
   def test_successful_update_customer_payment_profile_request_with_credit_card_last_four
