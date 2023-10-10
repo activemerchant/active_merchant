@@ -211,7 +211,7 @@ module ActiveMerchant #:nodoc:
           avs_result: AVSResult.new(code: response.dig('data', 'response_body', 'card', 'avs_response_code')),
           cvv_result: CVVResult.new(response.dig('data', 'response_body', 'card', 'avs_response_code')),
           test: test?,
-          response_type: response_type(response.dig('data', 'response_code')),
+          response_type: response_type(response.dig('data', 'response_code')&.to_i),
           response_http_code: @response_http_code,
           request_endpoint: request_url,
           request_method: :post,
