@@ -146,6 +146,17 @@ class RapydTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_success_purchase_with_recurrence_type
+    @options[:recurrence_type] = 'recurring'
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['recurrence_type'], @options[:recurrence_type]
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_purchase_with_3ds_gateway_specific
     @options[:three_d_secure] = {
       required: true,
