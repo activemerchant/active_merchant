@@ -29,34 +29,37 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options = {})
+        requires!(options, :operation_id)
         post = {}
-        commit('purchase', post, options)
+        post[:operationId] = options[:operation_id]
+        add_auth_purchase_params(post, amount, payment_method, options)
+        add_3ds(post, payment_method, options)
+        commit('purchase', post)
       end
 
       def authorize(amount, payment_method, options = {})
         post = {}
-        add_auth_purchase(post, amount, payment_method, options)
-        commit('authorize', post, options)
+        add_auth_purchase_params(post, amount, payment_method, options)
+        commit('authorize', post)
       end
 
       def capture(amount, authorization, options = {})
-        post = {}
-        commit('capture', post, options)
+        commit('capture', options)
       end
 
       def void(authorization, options = {})
         post = {}
-        commit('void', post, options)
+        commit('void', post)
       end
 
       def refund(amount, authorization, options = {})
         post = {}
-        commit('refund', post, options)
+        commit('refund', post)
       end
 
       def verify(credit_card, options = {})
         post = {}
-        commit('verify', post, options)
+        commit('verify', post)
       end
 
       def supports_scrubbing?
@@ -67,40 +70,104 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_invoice(post, money, options) end
-
-      def add_payment_method(post, payment_method) end
-
-      def add_reference(post, authorization) end
-
-      def add_auth_purchase(post, money, payment, options) end
-
-      def commit(action, params, options)
-        url = build_request_url(action)
-        response = ssl_post(url, params.to_json, request_headers(options))
-
-        unless response
-          Response.new(
-            success_from(response),
-            message_from(success_from(response), response),
-            response,
-            authorization: authorization_from(response),
-            avs_result: AVSResult.new(code: response['some_avs_result_key']),
-            cvv_result: CVVResult.new(response['some_cvv_result_key']),
-            test: test?,
-            error_code: error_code_from(response)
-          )
-        end
-      rescue ResponseError => e
-        response = e.response.body
-        JSON.parse(response)
+      def add_invoice(post, amount, options)
+        currency = options[:currency] || currency(amount)
+        post[:order] = {}
+        post[:order][:orderId] = options.dig(:order, :order_id)
+        post[:order][:amount] = localized_amount(amount, currency)
+        post[:order][:currency] = currency
       end
 
-      def request_headers(options)
+      def add_credit_card(post, payment_method)
+        post[:card] = {}
+        post[:card][:pan] = payment_method.number
+        post[:card][:expiryDate] = "#{format(payment_method.month, :two_digits)}#{format(payment_method.year, :two_digits)}"
+        post[:card][:cvv] = payment_method.verification_value
+      end
+
+      def add_payment_method(post, payment_method)
+        add_credit_card(post, payment_method) if payment_method.is_a?(CreditCard)
+      end
+
+      def add_customer_data(post, payment_method, options)
+        post[:order][:customerInfo] = {}
+        card_holder_name = "#{payment_method.try(:first_name)} #{payment_method.try(:last_name)}"
+        post[:order][:customerInfo][:cardHolderName] =  options[:order][:customer_info][:card_holder_name] || card_holder_name
+        post[:order][:customerInfo][:cardHolderEmail] = options[:order][:customer_info][:card_holder_email]
+      end
+
+      def add_address(post, options)
+        if address = options[:billing_address] || options[:address]
+          post[:order][:customerInfo][:billingAddress] = {}
+          post[:order][:customerInfo][:billingAddress][:name] = address[:name] if address[:name]
+          post[:order][:customerInfo][:billingAddress][:street] = address[:address1] if address[:address1]
+          post[:order][:customerInfo][:billingAddress][:additionalInfo] = address[:address2] if address[:address2]
+          post[:order][:customerInfo][:billingAddress][:city] = address[:city] if address[:city]
+          post[:order][:customerInfo][:billingAddress][:postCode] = address[:zip] if address[:zip]
+          post[:order][:customerInfo][:billingAddress][:country] = address[:country] if address[:country]
+        end
+
+        if address = options[:shipping_address]
+          post[:order][:customerInfo][:shippingAddress] = {}
+          post[:order][:customerInfo][:shippingAddress][:name] = address[:name] if address[:name]
+          post[:order][:customerInfo][:shippingAddress][:street] = address[:address1] if address[:address1]
+          post[:order][:customerInfo][:shippingAddress][:additionalInfo] = address[:address2] if address[:address2]
+          post[:order][:customerInfo][:shippingAddress][:city] = address[:city] if address[:city]
+          post[:order][:customerInfo][:shippingAddress][:postCode] = address[:zip] if address[:zip]
+          post[:order][:customerInfo][:shippingAddress][:country] = address[:country] if address[:country]
+        end
+        post
+      end
+
+      def add_recurrence(post, options)
+        post[:recurrence] = { action: options[:recurrence] || 'NO_RECURRING' }
+      end
+
+      def add_excemptions(post, options)
+        post[:exemptions] = options[:exemptions] || 'NO_PREFERENCE'
+      end
+
+      def add_3ds(post, payment, options)
+        post[:threeDSAuthResponse] = ''
+        post[:authenticationValue] = ''
+        post[:eci] = ''
+        post[:xid] = ''
+      end
+
+      def add_auth_purchase_params(post, amount, payment_method, options)
+        add_invoice(post, amount, options)
+        add_payment_method(post, payment_method)
+        add_customer_data(post, payment_method, options)
+        add_address(post, options)
+        add_recurrence(post, options)
+        add_excemptions(post, options)
+      end
+
+      def commit(action, params)
+        transaction_id = params.dig(:operation_id) unless action != 'capture'
+        begin
+          url = build_request_url(action, transaction_id)
+          response = JSON.parse(ssl_post(url, params.to_json, request_headers(params)))
+        rescue ResponseError => e
+          response = e.response.body
+          response = JSON.parse(response)
+        end
+
+        Response.new(
+          success_from(response),
+          message_from(response),
+          response,
+          authorization: authorization_from(response),
+          test: test?,
+          error_code: error_code_from(response)
+        )
+      end
+
+      def request_headers(params)
         headers = {
           'Content-Type' => 'application/json',
           'X-Api-Key' => @api_key,
-          'Correlation-Id' => options.dig(:order, :order_id) || SecureRandom.uuid
+          'Correlation-Id' => params.dig(:order, :orderId) || SecureRandom.uuid
         }
         headers
       end
@@ -112,23 +179,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response == 'SUCCESS'
+        response.dig('operation', 'operationResult') == 'PENDING'
       end
 
-      def message_from(succeeded, response)
-        if succeeded
-          'Succeeded'
+      def message_from(response)
+        if response.include? 'errors'
+          response['errors']
         else
-          response.dig('errors') unless response
+          response.dig('operation', 'operationResult')
         end
       end
 
       def authorization_from(response)
-        response.dig('latest_payment_attempt', 'payment_intent_id') unless response
+        response.dig('operation', 'operationId') unless response
       end
 
       def error_code_from(response)
-        response['provider_original_response_code'] || response['code'] unless success_from(response)
+        response['errors'].first.dig('code') unless success_from(response)
       end
     end
   end
