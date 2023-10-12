@@ -104,6 +104,7 @@ module ActiveMerchant #:nodoc:
         add_3ds(post, payment, options)
         add_address(post, payment, options)
         add_metadata(post, options)
+        add_recurrence_type(post, options)
         add_ewallet(post, options)
         add_payment_fields(post, options)
         add_payment_urls(post, options)
@@ -157,6 +158,10 @@ module ActiveMerchant #:nodoc:
 
         initiation_type = options[:initiation_type] || options[:stored_credential][:reason_type]
         post[:initiation_type] = initiation_type if initiation_type
+      end
+
+      def add_recurrence_type(post, options)
+        post[:recurrence_type] = options[:recurrence_type] if options[:recurrence_type]
       end
 
       def add_creditcard(post, payment, options)

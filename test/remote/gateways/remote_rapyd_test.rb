@@ -113,6 +113,12 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_equal 'customer_present', response.params['data']['initiation_type']
   end
 
+  def test_successful_purchase_with_reccurence_type
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(recurrence_type: 'recurring'))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
   def test_successful_purchase_with_address
     billing_address = address(name: 'Henry Winkler', address1: '123 Happy Days Lane')
 
