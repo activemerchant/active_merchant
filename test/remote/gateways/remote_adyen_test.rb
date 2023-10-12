@@ -951,107 +951,99 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Refused', adjust.message
   end
 
-  # Failing with "Recurring transactions are not supported for this card type"
-  # def test_successful_store
-  #   assert response = @gateway.store(@credit_card, @options)
+  def test_successful_store
+    assert response = @gateway.store(@credit_card, @options)
 
-  #   assert_success response
-  #   assert !response.authorization.split('#')[2].nil?
-  #   assert_equal 'Authorised', response.message
-  # end
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
+  end
 
-  # Failing with "Recurring transactions are not supported for this card type"
-  # def test_successful_store_with_bank_account
-  #   assert response = @gateway.store(@bank_account, @options)
+  def test_successful_store_with_bank_account
+    assert response = @gateway.store(@bank_account, @options)
 
-  #   assert_success response
-  #   assert !response.authorization.split('#')[2].nil?
-  #   assert_equal 'Authorised', response.message
-  # end
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
+  end
 
-  # Failing due to store not working
-  # def test_successful_unstore
-  #   assert response = @gateway.store(@credit_card, @options)
+  def test_successful_unstore
+    assert response = @gateway.store(@credit_card, @options)
 
-  #   assert !response.authorization.split('#')[2].nil?
-  #   assert_equal 'Authorised', response.message
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
 
-  #   shopper_reference = response.params['additionalData']['recurring.shopperReference']
-  #   recurring_detail_reference = response.params['additionalData']['recurring.recurringDetailReference']
+    shopper_reference = response.params['additionalData']['recurring.shopperReference']
+    recurring_detail_reference = response.params['additionalData']['recurring.recurringDetailReference']
 
-  #   assert response = @gateway.unstore(shopper_reference: shopper_reference,
-  #                                      recurring_detail_reference: recurring_detail_reference)
+    assert response = @gateway.unstore(shopper_reference: shopper_reference,
+                                       recurring_detail_reference: recurring_detail_reference)
 
-  #   assert_success response
-  #   assert_equal '[detail-successfully-disabled]', response.message
-  # end
+    assert_success response
+    assert_equal '[detail-successfully-disabled]', response.message
+  end
 
-  # Failing due to store not working
-  # def test_successful_unstore_with_bank_account
-  #   assert response = @gateway.store(@bank_account, @options)
+  def test_successful_unstore_with_bank_account
+    assert response = @gateway.store(@bank_account, @options)
 
-  #   assert !response.authorization.split('#')[2].nil?
-  #   assert_equal 'Authorised', response.message
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
 
-  #   shopper_reference = response.params['additionalData']['recurring.shopperReference']
-  #   recurring_detail_reference = response.params['additionalData']['recurring.recurringDetailReference']
+    shopper_reference = response.params['additionalData']['recurring.shopperReference']
+    recurring_detail_reference = response.params['additionalData']['recurring.recurringDetailReference']
 
-  #   assert response = @gateway.unstore(shopper_reference: shopper_reference,
-  #                                      recurring_detail_reference: recurring_detail_reference)
+    assert response = @gateway.unstore(shopper_reference: shopper_reference,
+                                       recurring_detail_reference: recurring_detail_reference)
 
-  #   assert_success response
-  #   assert_equal '[detail-successfully-disabled]', response.message
-  # end
+    assert_success response
+    assert_equal '[detail-successfully-disabled]', response.message
+  end
 
-  # Failing due to store not working
-  # def test_failed_unstore
-  #   assert response = @gateway.store(@credit_card, @options)
+  def test_failed_unstore
+    assert response = @gateway.store(@credit_card, @options)
 
-  #   assert !response.authorization.split('#')[2].nil?
-  #   assert_equal 'Authorised', response.message
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
 
-  #   shopper_reference = response.params['additionalData']['recurring.shopperReference']
-  #   recurring_detail_reference = response.params['additionalData']['recurring.recurringDetailReference']
+    shopper_reference = response.params['additionalData']['recurring.shopperReference']
+    recurring_detail_reference = response.params['additionalData']['recurring.recurringDetailReference']
 
-  #   assert response = @gateway.unstore(shopper_reference: 'random_reference',
-  #                                      recurring_detail_reference: recurring_detail_reference)
+    assert response = @gateway.unstore(shopper_reference: 'random_reference',
+                                       recurring_detail_reference: recurring_detail_reference)
 
-  #   assert_failure response
-  #   assert_equal 'Contract not found', response.message
+    assert_failure response
+    assert_equal 'Contract not found', response.message
 
-  #   assert response = @gateway.unstore(shopper_reference: shopper_reference,
-  #                                      recurring_detail_reference: 'random_reference')
+    assert response = @gateway.unstore(shopper_reference: shopper_reference,
+                                       recurring_detail_reference: 'random_reference')
 
-  #   assert_failure response
-  #   assert_equal 'PaymentDetail not found', response.message
-  # end
+    assert_failure response
+    assert_equal 'PaymentDetail not found', response.message
+  end
 
-  # Failing due to "Too many PaymentDetails defined"
-  # def test_successful_tokenize_only_store
-  #   assert response = @gateway.store(@credit_card, @options.merge({ tokenize_only: true }))
+  def test_successful_tokenize_only_store
+    assert response = @gateway.store(@credit_card, @options.merge({ tokenize_only: true }))
 
-  #   assert_success response
-  #   assert !response.authorization.split('#')[2].nil?
-  #   assert_equal 'Success', response.message
-  # end
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Success', response.message
+  end
 
-  # Failing due to "Too many PaymentDetails defined"
-  # def test_successful_tokenize_only_store_with_ntid
-  #   assert response = @gateway.store(@credit_card, @options.merge({ tokenize_only: true, network_transaction_id: '858435661128555' }))
+  def test_successful_tokenize_only_store_with_ntid
+    assert response = @gateway.store(@credit_card, @options.merge({ tokenize_only: true, network_transaction_id: '858435661128555' }))
 
-  #   assert_success response
-  #   assert !response.authorization.split('#')[2].nil?
-  #   assert_equal 'Success', response.message
-  # end
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Success', response.message
+  end
 
-  # Failing with "Recurring transactions are not supported for this card type"
-  # def test_successful_store_with_elo_card
-  #   assert response = @gateway.store(@elo_credit_card, @options)
+  def test_successful_store_with_elo_card
+    assert response = @gateway.store(@elo_credit_card, @options)
 
-  #   assert_success response
-  #   assert !response.authorization.split('#')[2].nil?
-  #   assert_equal 'Authorised', response.message
-  # end
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
+  end
 
   def test_successful_store_with_cabal_card
     assert response = @gateway.store(@cabal_credit_card, @options)
@@ -1073,35 +1065,32 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Refused', response.message
   end
 
-  # Failing with "Recurring transactions are not supported for this card type"
-  # def test_successful_purchase_using_stored_card
-  #   assert store_response = @gateway.store(@credit_card, @options)
-  #   assert_success store_response
+  def test_successful_purchase_using_stored_card
+    assert store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
 
-  #   response = @gateway.purchase(@amount, store_response.authorization, @options)
-  #   assert_success response
-  #   assert_equal '[capture-received]', response.message
-  # end
+    response = @gateway.purchase(@amount, store_response.authorization, @options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
 
-  # Failing with "Recurring transactions are not supported for this card type"
-  # def test_successful_purchase_using_stored_elo_card
-  #   assert store_response = @gateway.store(@elo_credit_card, @options)
-  #   assert_success store_response
+  def test_successful_purchase_using_stored_elo_card
+    assert store_response = @gateway.store(@elo_credit_card, @options)
+    assert_success store_response
 
-  #   response = @gateway.purchase(@amount, store_response.authorization, @options)
-  #   assert_success response
-  #   assert_equal '[capture-received]', response.message
-  # end
+    response = @gateway.purchase(@amount, store_response.authorization, @options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
 
-  # Failing with "Recurring transactions are not supported for this card type"
-  # def test_successful_authorize_using_stored_card
-  #   assert store_response = @gateway.store(@credit_card, @options)
-  #   assert_success store_response
+  def test_successful_authorize_using_stored_card
+    assert store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
 
-  #   response = @gateway.authorize(@amount, store_response.authorization, @options)
-  #   assert_success response
-  #   assert_equal 'Authorised', response.message
-  # end
+    response = @gateway.authorize(@amount, store_response.authorization, @options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+  end
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
@@ -1308,36 +1297,6 @@ class RemoteAdyenTest < Test::Unit::TestCase
     used_options = stored_credential_options(:recurring, :cardholder, ntid: auth.network_transaction_id)
     assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
     assert_success purchase
-  end
-
-  def test_purchase_using_stored_credential_recurring_cit_network_token
-    initial_options = stored_credential_options(:cardholder, :recurring, :initial)
-    auth = nil
-    transcript = capture_transcript(@gateway) do
-      assert auth = @gateway.authorize(@amount, @nt_credit_card, initial_options)
-    end
-    assert_match 'mpiData', transcript
-    assert_match 'Ecommerce', transcript
-    assert_success auth
-    assert_equal 'Subscription', auth.params['additionalData']['recurringProcessingModel']
-    assert capture = @gateway.capture(@amount, auth.authorization)
-    assert_success capture
-    assert_equal '[capture-received]', capture.message
-  end
-
-  def test_purchase_using_stored_credential_recurring_mit_network_token
-    initial_options = stored_credential_options(:merchant, :recurring, :initial)
-    auth = nil
-    transcript = capture_transcript(@gateway) do
-      assert auth = @gateway.authorize(@amount, @nt_credit_card, initial_options)
-    end
-    refute_match 'mpiData', transcript
-    assert_match 'ContAuth', transcript
-    assert_success auth
-    assert_equal 'Subscription', auth.params['additionalData']['recurringProcessingModel']
-    assert capture = @gateway.capture(@amount, auth.authorization)
-    assert_success capture
-    assert_equal '[capture-received]', capture.message
   end
 
   def test_purchase_using_stored_credential_recurring_mit
