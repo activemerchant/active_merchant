@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
             else
               post[:capture] = "false"
             end
-            commit(:post, 'charges', post, options)
+            level_three_data_commit(:post, 'charges', post, options)
           end
         end.responses.last
       end
@@ -114,7 +114,7 @@ module ActiveMerchant #:nodoc:
             if options[:payment_type] == "bank_account" && payment_method_types
               post[:payment_method_types] = payment_method_types
             end
-            commit(:post, use_payment_intents?(post, options) ? 'payment_intents' : 'charges', post, options)
+            level_three_data_commit(:post, use_payment_intents?(post, options) ? 'payment_intents' : 'charges', post, options)
           end
         end.responses.last
 
@@ -122,7 +122,7 @@ module ActiveMerchant #:nodoc:
         if options[:three_d_secure] && !r.success? && decline_code == "authentication_required"
           options[:three_d_secure] = "setup_future_usage"
           post = create_post_for_auth_or_purchase(money, payment, options)
-          r = commit(:post, 'payment_intents', post, options)
+          r = level_three_data_commit(:post, 'payment_intents', post, options)
         end
 
         r
@@ -960,6 +960,29 @@ module ActiveMerchant #:nodoc:
 
       def physical_retail?(options)
         !!options.dig(:metadata, :is_physical)
+      end
+
+      def level_three_data_commit(method, url, parameters = nil, options = {})
+        level3 = parameters[:level3].present?
+        response = commit(method, url, parameters, options)
+
+        return response unless level3
+        return response if response.success?
+        return response unless response&.params&.dig("error", "param") == "level3"
+
+        notify_hb(response.params["error"], parameters)
+        parameters.delete(:level3)
+
+        commit(method, url, parameters, options)
+      end
+
+      def notify_hb(error, parameters)
+        Honeybadger.notify(
+          "Failed to submit level 3 data",
+          error_message: error["message"],
+          parameters: parameters,
+          tags: "level3,stripe"
+        )
       end
     end
   end
