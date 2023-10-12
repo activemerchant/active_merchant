@@ -262,7 +262,7 @@ class SecurionPayTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
-    assert_nil response.authorization
+    assert_equal 'char_mApucpvVbCJgo7x09Je4n9gC', response.authorization
     assert response.test?
   end
 

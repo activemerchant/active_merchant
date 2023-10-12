@@ -77,4 +77,12 @@ class RemoteShift4V2Test < RemoteSecurionPayTest
     assert_equal 'merchant_initiated', response.params['type']
     assert_match CHARGE_ID_REGEX, response.authorization
   end
+
+  def test_failed_authorize
+    response = @gateway.authorize(@amount, @declined_card, @options)
+    assert_failure response
+    assert_match CHARGE_ID_REGEX, response.authorization
+    assert_equal response.authorization, response.params['error']['chargeId']
+    assert_equal response.message, 'The card was declined.'
+  end
 end

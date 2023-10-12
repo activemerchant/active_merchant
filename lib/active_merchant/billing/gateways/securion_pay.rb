@@ -239,7 +239,7 @@ module ActiveMerchant #:nodoc:
         if action == 'customers' && success?(response) && response['cards'].present?
           response['cards'].first['id']
         else
-          success?(response) ? response['id'] : response['error']['charge']
+          success?(response) ? response['id'] : (response.dig('error', 'charge') || response.dig('error', 'chargeId'))
         end
       end
 
