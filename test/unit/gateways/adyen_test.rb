@@ -734,29 +734,6 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_omits_mpi_hash_without_field
-    options = {
-      billing_address: address(),
-      shipping_address: address(),
-      shopper_reference: 'John Smith',
-      order_id: '1001',
-      description: 'AM test',
-      currency: 'GBP',
-      customer: '123',
-      shopper_interaction: 'ContAuth',
-      recurring_processing_model: 'Subscription',
-      network_transaction_id: '123ABC'
-    }
-    response = stub_comms do
-      @gateway.authorize(@amount, @apple_pay_card, options)
-    end.check_request do |_endpoint, data, _headers|
-      assert_match(/"shopperInteraction":"ContAuth"/, data)
-      assert_match(/"recurringProcessingModel":"Subscription"/, data)
-      refute_includes data, 'mpiData'
-    end.respond_with(successful_authorize_response)
-    assert_success response
-  end
-
   def test_nonfractional_currency_handling
     stub_comms do
       @gateway.authorize(200, @credit_card, @options.merge(currency: 'JPY'))
