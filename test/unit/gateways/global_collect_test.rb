@@ -433,6 +433,16 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_authorize_with_3ds_exemption
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@accepted_amount, @credit_card, { three_ds_exemption_type: 'moto' })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"transactionChannel\":\"MOTO\"/, data)
+    end.respond_with(successful_authorize_with_3ds2_data_response)
+
+    assert_success response
+  end
+
   def test_truncates_first_name_to_15_chars
     credit_card = credit_card('4567350000427977', { first_name: 'thisisaverylongfirstname' })
 
