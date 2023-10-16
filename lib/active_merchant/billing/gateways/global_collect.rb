@@ -40,6 +40,7 @@ module ActiveMerchant #:nodoc:
         add_creator_info(post, options)
         add_fraud_fields(post, options)
         add_external_cardholder_authentication_data(post, options)
+        add_threeds_exemption_data(post, options)
         commit(:post, :authorize, post, options: options)
       end
 
@@ -404,6 +405,12 @@ module ActiveMerchant #:nodoc:
         post['cardPaymentMethodSpecificInput']['threeDSecure']['exemptionRequest'] = threeds_2_options[:exemption_request]
         post['cardPaymentMethodSpecificInput']['threeDSecure']['secureCorporatePayment'] = threeds_2_options[:secure_corporate_payment]
         post['cardPaymentMethodSpecificInput']['threeDSecure']['externalCardholderAuthenticationData'] = authentication_data unless authentication_data.empty?
+      end
+
+      def add_threeds_exemption_data(post, options)
+        return unless options[:three_ds_exemption_type]
+
+        post['cardPaymentMethodSpecificInput']['transactionChannel'] = 'MOTO' if options[:three_ds_exemption_type] == 'moto'
       end
 
       def add_number_of_installments(post, options)

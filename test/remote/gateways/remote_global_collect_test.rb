@@ -196,6 +196,13 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
   end
 
+  def test_successful_authorize_with_moto_exemption
+    options = @options.merge(three_ds_exemption_type: 'moto')
+
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+  end
+
   def test_successful_authorize_via_normalized_3ds2_fields
     options = @options.merge(
       three_d_secure: {
