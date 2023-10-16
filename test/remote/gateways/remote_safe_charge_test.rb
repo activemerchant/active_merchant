@@ -268,6 +268,16 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     assert_equal 'Success', refund.message
   end
 
+  def test_successful_unreferenced_refund_with_credit
+    option = {
+      unreferenced_refund: true
+    }
+
+    assert general_credit = @gateway.credit(@amount, @credit_card, option)
+    assert_success general_credit
+    assert_equal 'Success', general_credit.message
+  end
+
   def test_successful_credit
     response = @gateway.credit(@amount, credit_card('4444436501403986'), @options)
     assert_success response

@@ -37,6 +37,7 @@
 * SecurionPay/Shift4_v2: authorization from [gasb150] #4913
 * Rapyd: Update recurrence_type field [yunnydang] #4922
 * Element: Add lodging fields [yunnydang] #4813
+* SafeCharge: Update sg_CreditType field on the credit method [yunnydang] #4918
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

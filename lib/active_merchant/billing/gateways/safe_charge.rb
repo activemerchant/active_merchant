@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
         add_transaction_data('Credit', post, money, options)
         add_customer_details(post, payment, options)
 
-        post[:sg_CreditType] = 1
+        options[:unreferenced_refund].to_s == 'true' ? post[:sg_CreditType] = 2 : post[:sg_CreditType] = 1
 
         commit(post)
       end
