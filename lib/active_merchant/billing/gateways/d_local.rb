@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sandbox.dlocal.com'
       self.live_url = 'https://api.dlocal.com'
 
-      self.supported_countries = %w[AR BD BO BR CL CM CN CO CR DO EC EG GH IN ID KE MY MX MA NG PA PY PE PH SN ZA TR UY VN]
+      self.supported_countries = %w[AR BD BO BR CL CM CN CO CR DO EC EG GH GT IN ID JP KE MY MX MA NG PA PY PE PH SN SV TH TR TZ UG UY VN ZA]
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro naranja cabal elo alia carnet]
 
@@ -58,7 +58,18 @@ module ActiveMerchant #:nodoc:
         authorize(0, credit_card, options.merge(verify: 'true'))
       end
 
+      def inquire(authorization, options = {})
+        post = {}
+        post[:payment_id] = authorization
+        action = authorization ? 'status' : 'orders'
+        commit(action, post, options)
+      end
+
       def supports_scrubbing?
+        true
+      end
+
+      def supports_network_tokenization?
         true
       end
 
@@ -80,6 +91,7 @@ module ActiveMerchant #:nodoc:
         add_card(post, card, action, options)
         add_additional_data(post, options)
         post[:order_id] = options[:order_id] || generate_unique_id
+        post[:original_order_id] = options[:original_order_id] if options[:original_order_id]
         post[:description] = options[:description] if options[:description]
       end
 
@@ -147,16 +159,36 @@ module ActiveMerchant #:nodoc:
 
       def add_card(post, card, action, options = {})
         post[:card] = {}
+        if card.is_a?(NetworkTokenizationCreditCard)
+          post[:card][:network_token] = card.number
+          post[:card][:cryptogram] = card.payment_cryptogram
+          post[:card][:eci] = card.eci
+          # used case of Network Token: 'CARD_ON_FILE', 'SUBSCRIPTION', 'UNSCHEDULED_CARD_ON_FILE'
+          if options.dig(:stored_credential, :reason_type) == 'unscheduled'
+            if options.dig(:stored_credential, :initiator) == 'merchant'
+              post[:card][:stored_credential_type] = 'UNSCHEDULED_CARD_ON_FILE'
+            else
+              post[:card][:stored_credential_type] = 'CARD_ON_FILE'
+            end
+          else
+            post[:card][:stored_credential_type] = 'SUBSCRIPTION'
+          end
+          # required for MC debit recurrent in BR 'USED'(subsecuence Payments) . 'FIRST' an inital payment
+          post[:card][:stored_credential_usage] = (options[:stored_credential][:initial_transaction] ? 'FIRST' : 'USED') if options[:stored_credential]
+        else
+          post[:card][:number] = card.number
+          post[:card][:cvv] = card.verification_value
+        end
+
         post[:card][:holder_name] = card.name
         post[:card][:expiration_month] = card.month
         post[:card][:expiration_year] = card.year
-        post[:card][:number] = card.number
-        post[:card][:cvv] = card.verification_value
         post[:card][:descriptor] = options[:dynamic_descriptor] if options[:dynamic_descriptor]
         post[:card][:capture] = (action == 'purchase')
         post[:card][:installments] = options[:installments] if options[:installments]
         post[:card][:installments_id] = options[:installments_id] if options[:installments_id]
         post[:card][:force_type] = options[:force_type].to_s.upcase if options[:force_type]
+        post[:card][:save] = options[:save] if options[:save]
       end
 
       def parse(body)
@@ -170,7 +202,11 @@ module ActiveMerchant #:nodoc:
         url = url(action, parameters, options)
         post = post_data(action, parameters)
         begin
-          raw = ssl_post(url, post, headers(post, options))
+          raw = if %w(status orders).include?(action)
+                  ssl_get(url, headers(nil, options))
+                else
+                  ssl_post(url, post, headers(post, options))
+                end
           response = parse(raw)
         rescue ResponseError => e
           raw = e.response.body
@@ -229,6 +265,10 @@ module ActiveMerchant #:nodoc:
           'payments'
         when 'void'
           "payments/#{parameters[:authorization_id]}/cancel"
+        when 'status'
+          "payments/#{parameters[:payment_id]}/status"
+        when 'orders'
+          "orders/#{options[:order_id]}"
         end
       end
 
@@ -242,7 +282,7 @@ module ActiveMerchant #:nodoc:
           'X-Version' => '2.1',
           'Authorization' => signature(post, timestamp)
         }
-        headers.merge('X-Idempotency-Key' => options[:idempotency_key]) if options[:idempotency_key]
+        headers['X-Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
         headers
       end
 

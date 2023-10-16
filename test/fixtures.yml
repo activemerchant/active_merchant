@@ -20,6 +20,10 @@ airwallex:
   client_id: SOMECREDENTIAL
   client_api_key: ANOTHERCREDENTIAL
 
+alelo:
+  client_id: xxxxxxx
+  client_secret: xxxxxxx
+
 allied_wallet:
   site_id: site_id
   merchant_id: merchant_id
@@ -117,6 +121,7 @@ braintree_blue_with_ach_enabled:
   public_key: Y
   private_key: Z
   merchant_account_id: A
+  venmo_profile_id: B
 
 braintree_blue_with_processing_rules:
   merchant_id: X
@@ -189,7 +194,13 @@ checkout:
   password: Password1!
 
 checkout_v2:
-  secret_key: secret_key
+  secret_key: SECRET_KEY_FOR_BASIC_TRANSACTIONS
+  client_id: CLIENT_ID_FOR_OAUTH_TRANSACTIONS
+  client_secret: CLIENT_SECRET_FOR_OAUTH_TRANSACTIONS
+
+checkout_v2_token:
+  secret_key: sk_sbox_xxxxxxxxxxxxxxxxx
+  public_key: pk_sbox_xxxxxxxxxxxxxxxxx
 
 citrus_pay:
   userid: CPF00001
@@ -213,6 +224,11 @@ clearhaus_secure:
     InviQqJd1KTGRDmWIGrE5YACVmW2JSszD9t5VKxkAA==
     -----END RSA PRIVATE KEY-----
 
+commerce_hub:
+  api_key: API KEY
+  api_secret: API SECRET
+  merchant_id: MERCHANT ID
+  terminal_id: TERMINAL ID
 
 # Contact Support at it_support@commercegate.com for credentials and offer/site
 commercegate:
@@ -261,6 +277,12 @@ cyber_source_latam_pe:
   password: soap_key
 
 # Working credentials, no need to replace
+cybersource_rest:
+  merchant_id: "testrest"
+  public_key: "08c94330-f618-42a3-b09d-e1e43be5efda"
+  private_key: "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE="
+
+# Working credentials, no need to replace
 d_local:
   login: aeaf9bbfa1
   trans_key: 9de3769b7e
@@ -285,6 +307,11 @@ decidir_plus_preauth:
 
 decidir_purchase:
   api_key: 5df6b5764c3f4822aecdc82d56f26b9d
+
+deepstack:
+  publishable_api_key: pk_test_7H5GkZJ4ktV38eZxKDItVMZZvluUhORE
+  app_id: sk_test_8fe27907-c359-4fe4-ad9b-eaaa
+  shared_secret: JC6zgUX3oZ9vRshFsM98lXzH4tu6j4ZfB4cSOqOX/xQ=
 
 # No working test credentials
 dibs:
@@ -417,8 +444,13 @@ garanti:
 
 global_collect:
   merchant_id: 2196
-  api_key_id: c91d6752cbbf9cf1
-  secret_api_key: xHjQr5gL9Wcihkqoj4w/UQugdSCNXM2oUQHG5C82jy4=
+  api_key_id: b2311c2c832dd238
+  secret_api_key: Av5wKihoVlLN8SnGm6669hBHyG4Y4aS4KwaZUCvEIbY=
+
+global_collect_direct:
+  merchant_id: "NamastayTest"
+  api_key_id: "CF4CDF3F45F13C5CCBD0"
+  secret_api_key: "mvcEXR7Rem+KJE/atKsQ3Luqv37VEvTe2VOH5/Ibqd90VDzQ71Ht41RBVVyJuebzGnFu30dYpptgdrCcNvAu5A=="
 
 global_transport:
   global_user_name: "USERNAME"
@@ -875,12 +907,17 @@ payway_dot_com:
 pin:
   api_key: "I_mo9BUUUXIwXF-avcs3LA"
 
+plexo:
+  client_id: YOUR_CLIENT_ID
+  api_key: YOUR_API_KEY
+  merchant_id: YOUR_MERCHANT_ID
+
 plugnpay:
   login: LOGIN
   password: PASSWORD
 
 priority:
-  key: SANDBOX_KEY
+  api_key: SANDBOX_KEY
   secret: SECRET
   merchant_id: MERCHANT_ID
 
@@ -1108,6 +1145,10 @@ raven_pac_net:
   secret: "all good men die young"
   prn: 987743
 
+reach:
+  merchant_id: 'xxxxxxx'
+  secret: 'xxxxxxx' 
+
 realex:
   login: X
   password: Y
@@ -1246,11 +1287,17 @@ secure_pay_tech:
 securion_pay:
   secret_key: pr_test_qZN4VVIKCySfCeXCBoHO9DBe
 
+shift4:
+  client_guid: YOUR_CLIENT_ID
+  auth_token: YOUR_AUTH_TOKEN
+
+shift4_v2:
+  secret_key: pr_test_xxxxxxxxx
+
 # Working credentials, no need to replace
 simetrik:
   client_id: 'wNhJBdrKDk3vTmkQMAWi5zWN7y21adO3'
   client_secret: 'fq2riPpiDJaAwS4_UMAXZy1_nU1jNGz0F6gAFWOJFNmm_TfC8EFiHwMmGKAEDkwY' 
-  audience: 'https://tenant-payments-dev.us.auth0.com/api/v2/'
 
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:
@@ -1268,10 +1315,6 @@ spreedly_core:
   gateway_token: "3gLeg4726V5P0HK7cq7QzHsL0a6"
 
 # Working credentials, no need to replace
-square:
-  access_token: EAAAEBfybUCoyfELbbSshWYKna9FYluyA56pcgXDNtSDULMWEah5Ci4S8XcPKBYz
-
-# Working credentials, no need to replace
 stripe:
   login: sk_test_3OD4TdKSIOhDOL2146JJcC79
 
@@ -1283,6 +1326,10 @@ stripe_destination:
 stripe_verified_bank_account:
   customer_id: "cus_7s22nNueP2Hjj6"
   bank_account_id: "ba_17cHxeAWOtgoysogv3NM8CJ1"
+
+sum_up:
+  access_token: SOMECREDENTIAL
+  pay_to_email: SOMECREDENTIAL
 
 # Working credentials, no need to replace
 swipe_checkout:
@@ -1381,6 +1428,7 @@ visanet_peru:
 vpos:
   public_key: SOMECREDENTIAL
   private_key: ANOTHERCREDENTIAL
+  encryption_key: "-----BEGIN PUBLIC KEY-----\n ..."
   commerce: 123
   commerce_branch: 45
 
@@ -1430,3 +1478,6 @@ worldpay_us:
   acctid: MPNAB
   subid: SPREE
   merchantpin: "1234567890"
+
+x_pay:
+  api_key: 2d708950-50a1-434e-9a93-5d3ae2f1dd9f

@@ -27,12 +27,12 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Priority'
 
       def initialize(options = {})
-        requires!(options, :merchant_id, :key, :secret)
+        requires!(options, :merchant_id, :api_key, :secret)
         super
       end
 
       def basic_auth
-        Base64.strict_encode64("#{@options[:key]}:#{@options[:secret]}")
+        Base64.strict_encode64("#{@options[:api_key]}:#{@options[:secret]}")
       end
 
       def request_headers
@@ -70,6 +70,18 @@ module ActiveMerchant #:nodoc:
         add_auth_purchase_params(params, credit_card, options)
 
         commit('purchase', params: params)
+      end
+
+      def credit(amount, credit_card, options = {})
+        params = {}
+        params['authOnly'] = false
+        params['isSettleFunds'] = true
+        amount = -amount
+
+        add_merchant_id(params)
+        add_amount(params, amount, options)
+        add_credit_params(params, credit_card, options)
+        commit('credit', params: params)
       end
 
       def refund(amount, authorization, options = {})
@@ -147,6 +159,12 @@ module ActiveMerchant #:nodoc:
         add_additional_data(params, options)
       end
 
+      def add_credit_params(params, credit_card, options)
+        add_replay_id(params, options)
+        add_credit_card(params, credit_card, 'purchase', options)
+        add_additional_data(params, options)
+      end
+
       def add_replay_id(params, options)
         params['replayId'] = options[:replay_id] if options[:replay_id]
       end
@@ -157,13 +175,12 @@ module ActiveMerchant #:nodoc:
         card_details = {}
         card_details['expiryMonth'] = format(credit_card.month, :two_digits).to_s
         card_details['expiryYear'] = format(credit_card.year, :two_digits).to_s
-        card_details['expiryDate'] = exp_date(credit_card)
         card_details['cardType'] = credit_card.brand
         card_details['last4'] = credit_card.last_digits
-        card_details['cvv'] = credit_card.verification_value
+        card_details['cvv'] = credit_card.verification_value unless credit_card.verification_value.nil?
         card_details['number'] = credit_card.number
         card_details['avsStreet'] = options[:billing_address][:address1] if options[:billing_address]
-        card_details['avsZip'] =  options[:billing_address][:zip] if options[:billing_address]
+        card_details['avsZip'] =  options[:billing_address][:zip] if !options[:billing_address].nil? && !options[:billing_address][:zip].nil?
 
         params['cardAccount'] = card_details
       end
@@ -181,11 +198,17 @@ module ActiveMerchant #:nodoc:
         params['shouldGetCreditCardLevel'] = options[:should_get_credit_card_level] if options[:should_get_credit_card_level]
         params['source'] = options[:source] if options[:source]
         params['invoice'] = options[:invoice] if options[:invoice]
+        params['isTicket'] = options[:is_ticket] if options[:is_ticket]
+        params['shouldVaultCard'] = options[:should_vault_card] if options[:should_vault_card]
+        params['sourceZip'] = options[:source_zip] if options[:source_zip]
+        params['authCode'] = options[:auth_code] if options[:auth_code]
+        params['achIndicator'] = options[:ach_indicator] if options[:ach_indicator]
+        params['bankAccount'] = options[:bank_account] if options[:bank_account]
+        params['meta'] = options[:meta] if options[:meta]
       end
 
       def add_pos_data(params, options)
         pos_data = {}
-
         pos_data['cardholderPresence'] = options.dig(:pos_data, :cardholder_presence) || 'Ecom'
         pos_data['deviceAttendance'] = options.dig(:pos_data, :device_attendance) || 'HomePc'
         pos_data['deviceInputCapability'] = options.dig(:pos_data, :device_input_capability) || 'Unknown'

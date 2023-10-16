@@ -25,6 +25,17 @@ class IveriTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_iveri_url
+    @gateway = IveriGateway.new(app_id: '123', cert_id: '321', url_override: 'iveri')
+
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal '{F0568958-D10B-4093-A3BF-663168B06140}|{5CEF96FD-960E-4EA5-811F-D02CE6E36A96}|48b63446223ce91451fc3c1641a9ec03', response.authorization
+    assert response.test?
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 

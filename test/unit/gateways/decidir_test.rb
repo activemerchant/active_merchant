@@ -38,6 +38,13 @@ class DecidirTest < Test::Unit::TestCase
         amount: 1500
       }
     ]
+
+    @network_token = network_tokenization_credit_card(
+      '4012001037141112',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: '000203016912340000000FA08400317500000000'
+    )
   end
 
   def test_successful_purchase
@@ -368,6 +375,32 @@ class DecidirTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_inquire_with_authorization
+    @gateway_for_purchase.expects(:ssl_request).returns(successful_inquire_response)
+    response = @gateway_for_purchase.inquire('818423490')
+    assert_success response
+
+    assert_equal 544453, response.authorization
+    assert_equal 'rejected', response.message
+    assert response.test?
+  end
+
+  def test_network_token_payment_method
+    options = {
+      card_holder_name: 'Tesest payway',
+      card_holder_door_number: 1234,
+      card_holder_birthday: '200988',
+      card_holder_identification_type: 'DNI',
+      card_holder_identification_number: '44444444',
+      last_4: @credit_card.last_digits
+    }
+    @gateway_for_auth.expects(:ssl_request).returns(successful_network_token_response)
+    response = @gateway_for_auth.authorize(100, @network_token, options)
+
+    assert_success response
+    assert_equal 49120515, response.authorization
+  end
+
   def test_scrub
     assert @gateway_for_purchase.supports_scrubbing?
     assert_equal @gateway_for_purchase.scrub(pre_scrubbed), post_scrubbed
@@ -539,6 +572,59 @@ class DecidirTest < Test::Unit::TestCase
     )
   end
 
+  def successful_network_token_response
+    %(
+      {"id": 49120515,
+      "site_transaction_id": "Tx1673372774",
+      "payment_method_id": 1,
+      "card_brand": "Visa",
+      "amount": 1200,
+      "currency": "ars",
+      "status": "approved",
+      "status_details": {
+          "ticket": "88",
+          "card_authorization_code": "B45857",
+          "address_validation_code": "VTE2222",
+          "error": null
+      },
+      "date": "2023-01-10T14:46Z",
+      "customer": null,
+      "bin": "450799",
+      "installments": 1,
+      "first_installment_expiration_date": null,
+      "payment_type": "single",
+      "sub_payments": [],
+      "site_id": "09001000",
+      "fraud_detection": null,
+      "aggregate_data": {
+          "indicator": "1",
+          "identification_number": "30598910045",
+          "bill_to_pay": "Payway_Test",
+          "bill_to_refund": "Payway_Test",
+          "merchant_name": "PAYWAY",
+          "street": "Lavarden",
+          "number": "247",
+          "postal_code": "C1437FBE",
+          "category": "05044",
+          "channel": "005",
+          "geographic_code": "C1437",
+          "city": "Buenos Aires",
+          "merchant_id": "id_Aggregator",
+          "province": "Buenos Aires",
+          "country": "Argentina",
+          "merchant_email": "qa@test.com",
+          "merchant_phone": "+541135211111"
+      },
+      "establishment_name": null,
+      "spv":null,
+      "confirmed":null,
+      "bread":null,
+      "customer_token":null,
+      "card_data":"/tokens/49120515",
+      "token":"b7b6ca89-ed81-44e0-9d1f-3b3cf443cd74"}
+    )
+  end
+
   def successful_capture_response
     %(
       {"id":7720214,"site_transaction_id":"0fcedc95-4fbc-4299-80dc-f77e9dd7f525","payment_method_id":1,"card_brand":"Visa","amount":100,"currency":"ars","status":"approved","status_details":{"ticket":"8187","card_authorization_code":"180548","address_validation_code":"VTE0011","error":null},"date":"2019-06-21T18:05Z","customer":null,"bin":"450799","installments":1,"first_installment_expiration_date":null,"payment_type":"single","sub_payments":[],"site_id":"99999997","fraud_detection":null,"aggregate_data":null,"establishment_name":null,"spv":null,"confirmed":{"id":78436,"origin_amount":100,"date":"2019-06-21T03:00Z"},"pan":"345425f15b2c7c4584e0044357b6394d7e","customer_token":null,"card_data":"/tokens/7720214"}
@@ -584,6 +670,12 @@ class DecidirTest < Test::Unit::TestCase
   def failed_void_response
     %(
       {"error_type":"not_found_error","entity_name":"","id":""}
+    )
+  end
+
+  def successful_inquire_response
+    %(
+      { "id": 544453,"site_transaction_id": "52139443","token": "ef4504fc-21f1-4608-bb75-3f73aa9b9ede","user_id": null,"card_brand": "visa","bin": "483621","amount": 10,"currency": "ars","installments": 1,"description": "","payment_type": "single","sub_payments": [],"status": "rejected","status_details": null,"date": "2016-12-15T15:12Z","merchant_id": null,"fraud_detection": {}}
     )
   end
 

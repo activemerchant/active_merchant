@@ -157,6 +157,27 @@ class MoneiTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_sending_browser_info
+    ip = '77.110.174.153'
+    user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36'
+    lang = 'en'
+
+    @options.merge!({
+      ip: ip,
+      user_agent: user_agent,
+      lang: lang
+    })
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)['sessionDetails']
+      assert_equal ip, parsed['ip']
+      assert_equal user_agent, parsed['userAgent']
+      assert_equal lang, parsed['lang']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_scrub
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end

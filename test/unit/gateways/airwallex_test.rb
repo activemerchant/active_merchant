@@ -21,8 +21,7 @@ class AirwallexTest < Test::Unit::TestCase
     @declined_amount = 8014
 
     @options = {
-      billing_address: address,
-      return_url: 'https://example.com'
+      billing_address: address
     }
 
     @stored_credential_cit_options = { initial_transaction: true, initiator: 'cardholder', reason_type: 'recurring', network_transaction_id: nil }
@@ -52,12 +51,6 @@ class AirwallexTest < Test::Unit::TestCase
     assert_equal 'The card issuer declined this transaction. Please refer to the original response code.', response.message
   end
 
-  def test_purchase_without_return_url_raises_error
-    assert_raise ArgumentError do
-      @gateway.purchase(@amount, @credit_card, {})
-    end
-  end
-
   def test_successful_authorize
     @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response)
 
@@ -77,10 +70,18 @@ class AirwallexTest < Test::Unit::TestCase
     assert_equal 'The card issuer declined this transaction. Please refer to the original response code.', response.message
   end
 
-  def test_authorize_without_return_url_raises_error
-    assert_raise ArgumentError do
-      @gateway.authorize(@amount, @credit_card, { auto_capture: false })
-    end
+  def test_successful_authorize_with_return_url
+    return_url = 'https://example.com'
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(return_url: return_url))
+    end.check_request do |endpoint, data, _headers|
+      assert_match(/\"return_url\":\"https:\/\/example.com\"/, data) unless endpoint == setup_endpoint
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
   end
 
   def test_successful_authorize_with_3ds_v1_options
@@ -154,6 +155,22 @@ class AirwallexTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
     assert_equal 'AUTHORIZED', response.message
+  end
+
+  def test_successful_skip_3ds_in_payment_intent
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ skip_3ds: true }))
+    end.check_request do |endpoint, data, _headers|
+      data = JSON.parse(data)
+      assert_match(data['payment_method_options']['card']['risk_control']['three_ds_action'], 'SKIP_3DS') if endpoint == setup_endpoint
+    end.respond_with(successful_purchase_response)
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ skip_3ds: 'true' }))
+    end.check_request do |endpoint, data, _headers|
+      data = JSON.parse(data)
+      assert_match(data['payment_method_options']['card']['risk_control']['three_ds_action'], 'SKIP_3DS') if endpoint == setup_endpoint
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_capture
@@ -251,7 +268,7 @@ class AirwallexTest < Test::Unit::TestCase
   end
 
   def test_purchase_passes_appropriate_request_id_per_call
-    request_id = "request_#{(Time.now.to_f.round(2) * 100).to_i}"
+    request_id = SecureRandom.uuid
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(request_id: request_id))
     end.check_request do |_endpoint, data, _headers|
@@ -265,18 +282,12 @@ class AirwallexTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_purchase_passes_appropriate_merchant_order_id_per_call
-    merchant_order_id = "order_#{(Time.now.to_f.round(2) * 100).to_i}"
+  def test_purchase_passes_appropriate_merchant_order_id
+    merchant_order_id = SecureRandom.uuid
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(merchant_order_id: merchant_order_id))
     end.check_request do |_endpoint, data, _headers|
-      if data.include?('payment_method')
-        # check for this on the purchase call
-        assert_match(/\"merchant_order_id\":\"#{merchant_order_id}\"/, data)
-      else
-        # check for this on the create_payment_intent calls
-        assert_match(/\"merchant_order_id\":\"#{merchant_order_id}_setup\"/, data)
-      end
+      assert_match(/\"merchant_order_id\":\"#{merchant_order_id}\"/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -286,6 +297,15 @@ class AirwallexTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       # only look for currency code on the create_payment_intent request
       assert_match(/USD/, data) if data.include?('_setup')
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_passes_referrer_data
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      # only look for referrer data on the create_payment_intent request
+      assert_match(/\"referrer_data\":{\"type\":\"spreedly\"}/, data) if data.include?('_setup')
     end.respond_with(successful_purchase_response)
   end
 

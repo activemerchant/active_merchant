@@ -15,6 +15,15 @@ class MonerisRemoteTest < Test::Unit::TestCase
     @no_liability_shift_eci = 7
 
     @credit_card = credit_card('4242424242424242', verification_value: '012')
+    @network_tokenization_credit_card = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      verification_value: nil
+    )
+    @apple_pay_credit_card = @network_tokenization_credit_card
+    @apple_pay_credit_card.source = :apple_pay
+    @google_pay_credit_card = @network_tokenization_credit_card
+    @google_pay_credit_card.source = :google_pay
     @visa_credit_card_3ds = credit_card('4606633870436092', verification_value: '012')
     @options = {
       order_id: generate_unique_id,
@@ -32,7 +41,9 @@ class MonerisRemoteTest < Test::Unit::TestCase
 
   def test_successful_cavv_purchase
     # See https://developer.moneris.com/livedemo/3ds2/cavv_purchase/tool/php
-    assert response = @gateway.purchase(@amount, @visa_credit_card_3ds,
+    assert response = @gateway.purchase(
+      @amount,
+      @visa_credit_card_3ds,
       @options.merge(
         three_d_secure: {
           version: '2',
@@ -41,7 +52,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
           three_ds_server_trans_id: 'd0f461f8-960f-40c9-a323-4e43a4e16aaa',
           ds_transaction_id: '12345'
         }
-      ))
+      )
+    )
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
@@ -104,25 +116,74 @@ class MonerisRemoteTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_network_tokenization
-    @credit_card = network_tokenization_credit_card(
-      '4242424242424242',
-      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: nil
-    )
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.purchase(@amount, @network_tokenization_credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
   end
 
   def test_successful_purchase_with_network_tokenization_apple_pay_source
-    @credit_card = network_tokenization_credit_card(
-      '4242424242424242',
-      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: nil,
-      source: :apple_pay
-    )
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.purchase(@amount, @apple_pay_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_network_tokenization_apple_pay_source_with_nil_order_id
+    @options[:order_id] = nil
+    assert response = @gateway.purchase(@amount, @apple_pay_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_network_tokenization_google_pay_source
+    assert response = @gateway.purchase(@amount, @google_pay_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_network_tokenization_google_pay_source_with_nil_order_id
+    @options[:order_id] = nil
+    assert response = @gateway.purchase(@amount, @google_pay_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_authorize_with_network_tokenization
+    assert response = @gateway.authorize(@amount, @network_tokenization_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_authorize_with_network_tokenization_apple_pay_source
+    assert response = @gateway.authorize(@amount, @apple_pay_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_authorize_with_network_tokenization_apple_pay_source_with_nil_order_id
+    @options[:order_id] = nil
+    assert response = @gateway.authorize(@amount, @apple_pay_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_authorize_with_network_tokenization_google_pay_source
+    assert response = @gateway.authorize(@amount, @google_pay_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_authorize_with_network_tokenization_google_pay_source_with_nil_order_id
+    @options[:order_id] = nil
+    assert response = @gateway.authorize(@amount, @google_pay_credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
@@ -172,7 +233,9 @@ class MonerisRemoteTest < Test::Unit::TestCase
   def test_successful_cavv_authorization
     # see https://developer.moneris.com/livedemo/3ds2/cavv_preauth/tool/php
     # also see https://github.com/Moneris/eCommerce-Unified-API-PHP/blob/3cd3f0bd5a92432c1b4f9727d1ca6334786d9066/Examples/CA/TestCavvPreAuth.php
-    response = @gateway.authorize(@amount, @visa_credit_card_3ds,
+    response = @gateway.authorize(
+      @amount,
+      @visa_credit_card_3ds,
       @options.merge(
         three_d_secure: {
           version: '2',
@@ -181,7 +244,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
           three_ds_server_trans_id: 'e11d4985-8d25-40ed-99d6-c3803fe5e68f',
           ds_transaction_id: '12345'
         }
-      ))
+      )
+    )
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
@@ -190,7 +254,9 @@ class MonerisRemoteTest < Test::Unit::TestCase
   def test_successful_cavv_authorization_and_capture
     # see https://developer.moneris.com/livedemo/3ds2/cavv_preauth/tool/php
     # also see https://github.com/Moneris/eCommerce-Unified-API-PHP/blob/3cd3f0bd5a92432c1b4f9727d1ca6334786d9066/Examples/CA/TestCavvPreAuth.php
-    response = @gateway.authorize(@amount, @visa_credit_card_3ds,
+    response = @gateway.authorize(
+      @amount,
+      @visa_credit_card_3ds,
       @options.merge(
         three_d_secure: {
           version: '2',
@@ -199,7 +265,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
           three_ds_server_trans_id: 'e11d4985-8d25-40ed-99d6-c3803fe5e68f',
           ds_transaction_id: '12345'
         }
-      ))
+      )
+    )
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
@@ -212,7 +279,9 @@ class MonerisRemoteTest < Test::Unit::TestCase
     omit('There is no way to currently create a failed cavv authorization scenario')
     # see https://developer.moneris.com/livedemo/3ds2/cavv_preauth/tool/php
     # also see https://github.com/Moneris/eCommerce-Unified-API-PHP/blob/3cd3f0bd5a92432c1b4f9727d1ca6334786d9066/Examples/CA/TestCavvPreAuth.php
-    response = @gateway.authorize(@fail_amount, @visa_credit_card_3ds,
+    response = @gateway.authorize(
+      @fail_amount,
+      @visa_credit_card_3ds,
       @options.merge(
         three_d_secure: {
           version: '2',
@@ -221,7 +290,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
           three_ds_server_trans_id: 'e11d4985-8d25-40ed-99d6-c3803fe5e68f',
           ds_transaction_id: '12345'
         }
-      ))
+      )
+    )
 
     assert_failure response
   end
@@ -314,8 +384,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
 
     assert_equal(response.avs_result, {
-      'code' => 'M',
-      'message' => 'Street address and postal code match.',
+      'code' => 'Y',
+      'message' => 'Street address and 5-digit postal code match.',
       'street_match' => 'Y',
       'postal_match' => 'Y'
     })

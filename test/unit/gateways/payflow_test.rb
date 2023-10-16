@@ -465,9 +465,12 @@ class PayflowTest < Test::Unit::TestCase
   def test_initial_recurring_transaction_missing_parameters
     assert_raises ArgumentError do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-        @gateway.recurring(@amount, @credit_card,
+        @gateway.recurring(
+          @amount,
+          @credit_card,
           periodicity: :monthly,
-          initial_transaction: {})
+          initial_transaction: {}
+        )
       end
     end
   end
@@ -475,9 +478,12 @@ class PayflowTest < Test::Unit::TestCase
   def test_initial_purchase_missing_amount
     assert_raises ArgumentError do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-        @gateway.recurring(@amount, @credit_card,
+        @gateway.recurring(
+          @amount,
+          @credit_card,
           periodicity: :monthly,
-          initial_transaction: { amount: :purchase })
+          initial_transaction: { amount: :purchase }
+        )
       end
     end
   end
@@ -1144,7 +1150,7 @@ class PayflowTest < Test::Unit::TestCase
 
   def threeds_xpath_for_extdata(attr_name, tx_type: 'Authorization')
     xpath_prefix = xpath_prefix_for_transaction_type(tx_type)
-    %(string(#{xpath_prefix}/PayData/ExtData[@Name='#{attr_name}']/@Value)")
+    %(string(#{xpath_prefix}/PayData/ExtData[@Name='#{attr_name}']/@Value))
   end
 
   def authorize_buyer_auth_result_path

@@ -36,35 +36,47 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def test_successful_mpi_cavv_purchase
-    @gateway.expects(:ssl_post).returns(successful_cavv_purchase_response)
+    options = @options.merge(
+      three_d_secure: {
+        version: '2',
+        cavv: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+        eci: @fully_authenticated_eci,
+        three_ds_server_trans_id: 'd0f461f8-960f-40c9-a323-4e43a4e16aaa',
+        ds_transaction_id: '12345'
+      }
+    )
 
-    assert response = @gateway.purchase(100, @credit_card,
-      @options.merge(
-        three_d_secure: {
-          version: '2',
-          cavv: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-          eci: @fully_authenticated_eci,
-          three_ds_server_trans_id: 'd0f461f8-960f-40c9-a323-4e43a4e16aaa',
-          ds_transaction_id: '12345'
-        }
-      ))
+    response = stub_comms do
+      @gateway.purchase(100, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ds_trans_id>12345<\/ds_trans_id>/, data)
+      assert_match(/<threeds_server_trans_id>d0f461f8-960f-40c9-a323-4e43a4e16aaa<\/threeds_server_trans_id>/, data)
+      assert_match(/<threeds_version>2<\/threeds_version>/, data)
+    end.respond_with(successful_cavv_purchase_response)
+
     assert_success response
     assert_equal '69785-0_98;a131684dbecc1d89d9927c539ed3791b', response.authorization
   end
 
   def test_failed_mpi_cavv_purchase
-    @gateway.expects(:ssl_post).returns(failed_cavv_purchase_response)
+    options = @options.merge(
+      three_d_secure: {
+        version: '2',
+        cavv: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+        eci: @fully_authenticated_eci,
+        three_ds_server_trans_id: 'd0f461f8-960f-40c9-a323-4e43a4e16aaa',
+        ds_transaction_id: '12345'
+      }
+    )
 
-    assert response = @gateway.purchase(100, @credit_card,
-      @options.merge(
-        three_d_secure: {
-          version: '2',
-          cavv: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-          eci: @fully_authenticated_eci,
-          three_ds_server_trans_id: 'd0f461f8-960f-40c9-a323-4e43a4e16aaa',
-          ds_transaction_id: '12345'
-        }
-      ))
+    response = stub_comms do
+      @gateway.purchase(100, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ds_trans_id>12345<\/ds_trans_id>/, data)
+      assert_match(/<threeds_server_trans_id>d0f461f8-960f-40c9-a323-4e43a4e16aaa<\/threeds_server_trans_id>/, data)
+      assert_match(/<threeds_version>2<\/threeds_version>/, data)
+    end.respond_with(failed_cavv_purchase_response)
+
     assert_failure response
     assert_equal '69785-0_98;a131684dbecc1d89d9927c539ed3791b', response.authorization
   end
@@ -128,9 +140,11 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_network_tokenization
     @gateway.expects(:ssl_post).returns(successful_purchase_network_tokenization)
-    @credit_card = network_tokenization_credit_card('4242424242424242',
+    @credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: nil)
+      verification_value: nil
+    )
     assert response = @gateway.purchase(100, @credit_card, @options)
     assert_success response
     assert_equal '101965-0_10;0bbb277b543a17b6781243889a689573', response.authorization
@@ -277,9 +291,11 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_network_tokenization
     @gateway.expects(:ssl_post).returns(successful_authorization_network_tokenization)
-    @credit_card = network_tokenization_credit_card('4242424242424242',
+    @credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: nil)
+      verification_value: nil
+    )
     assert response = @gateway.authorize(100, @credit_card, @options)
     assert_success response
     assert_equal '109232-0_10;d88d9f5f3472898832c54d6b5572757e', response.authorization

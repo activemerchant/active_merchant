@@ -9,8 +9,7 @@ class PayboxDirectTest < Test::Unit::TestCase
       password: 'p'
     )
 
-    @credit_card = credit_card('1111222233334444',
-      brand: 'visa')
+    @credit_card = credit_card('1111222233334444', brand: 'visa')
     @amount = 100
 
     @options = {

@@ -36,17 +36,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, card, options = {})
-        requires!(options, :return_url)
-
         payment_intent_id = create_payment_intent(money, options)
         post = {
           'request_id' => request_id(options),
-          'merchant_order_id' => merchant_order_id(options),
-          'return_url' => options[:return_url]
+          'merchant_order_id' => merchant_order_id(options)
         }
         add_card(post, card, options)
         add_descriptor(post, options)
         add_stored_credential(post, options)
+        add_return_url(post, options)
         post['payment_method_options'] = { 'card' => { 'auto_capture' => false } } if authorization_only?(options)
 
         add_three_ds(post, options)
@@ -114,15 +112,19 @@ module ActiveMerchant #:nodoc:
       private
 
       def request_id(options)
-        options[:request_id] || generate_timestamp
+        options[:request_id] || generate_uuid
       end
 
       def merchant_order_id(options)
-        options[:merchant_order_id] || options[:order_id] || generate_timestamp
+        options[:merchant_order_id] || options[:order_id] || generate_uuid
       end
 
-      def generate_timestamp
-        (Time.now.to_f.round(2) * 100).to_i.to_s
+      def add_return_url(post, options)
+        post[:return_url] = options[:return_url] if options[:return_url]
+      end
+
+      def generate_uuid
+        SecureRandom.uuid
       end
 
       def setup_access_token
@@ -137,7 +139,13 @@ module ActiveMerchant #:nodoc:
 
       def build_request_url(action, id = nil)
         base_url = (test? ? test_url : live_url)
-        base_url + ENDPOINTS[action].to_s % { id: id }
+        endpoint = ENDPOINTS[action].to_s
+        endpoint = id.present? ? endpoint % { id: id } : endpoint
+        base_url + endpoint
+      end
+
+      def add_referrer_data(post)
+        post[:referrer_data] = { type: 'spreedly' }
       end
 
       def create_payment_intent(money, options = {})
@@ -145,8 +153,10 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_order(post, options)
         post[:request_id] = "#{request_id(options)}_setup"
-        post[:merchant_order_id] = "#{merchant_order_id(options)}_setup"
+        post[:merchant_order_id] = merchant_order_id(options)
+        add_referrer_data(post)
         add_descriptor(post, options)
+        post['payment_method_options'] = { 'card' => { 'risk_control' => { 'three_ds_action' => 'SKIP_3DS' } } } if options[:skip_3ds]
 
         response = commit(:setup, post)
         raise ArgumentError.new(response.message) unless response.success?
@@ -313,10 +323,6 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, id = nil)
         url = build_request_url(action, id)
-        # MIT txn w/ no NTID should fail and the gateway should say so
-        # Logic to prevent sending anything on test transactions
-        # if Airwallex changes the value it won't matter
-        # Passing nothing still doesn't test the happy path
 
         post_headers = { 'Authorization' => "Bearer #{@access_token}", 'Content-Type' => 'application/json' }
         response = parse(ssl_post(url, post_data(post), post_headers))

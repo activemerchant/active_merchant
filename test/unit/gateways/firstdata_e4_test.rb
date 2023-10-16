@@ -63,8 +63,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   def test_successful_purchase_with_specified_currency_and_token
     options_with_specified_currency = @options.merge({ currency: 'GBP' })
     @gateway.expects(:ssl_post).returns(successful_purchase_with_specified_currency_response)
-    assert response = @gateway.purchase(@amount, '8938737759041111;visa;Longbob;Longsen;9;2014',
-      options_with_specified_currency)
+    assert response = @gateway.purchase(@amount, '8938737759041111;visa;Longbob;Longsen;9;2014', options_with_specified_currency)
     assert_success response
     assert_equal 'GBP', response.params['currency']
   end
@@ -1049,7 +1048,7 @@ class FirstdataE4Test < Test::Unit::TestCase
         read: true
         socket:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
+    YAML.safe_load(yamlexcep, permitted_classes: ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def bad_credentials_response
@@ -1086,7 +1085,7 @@ class FirstdataE4Test < Test::Unit::TestCase
         http_version: '1.1'
         socket:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
+    YAML.safe_load(yamlexcep, permitted_classes: ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
   end
 
   def successful_void_response

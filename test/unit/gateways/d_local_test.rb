@@ -22,6 +22,10 @@ class DLocalTest < Test::Unit::TestCase
     }
   end
 
+  def test_supported_countries
+    assert_equal %w[AR BD BO BR CL CM CN CO CR DO EC EG GH GT IN ID JP KE MY MX MA NG PA PY PE PH SN SV TH TR TZ UG UY VN ZA], DLocalGateway.supported_countries
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -30,6 +34,14 @@ class DLocalTest < Test::Unit::TestCase
 
     assert_equal 'D-15104-05b0ec0c-5a1e-470a-b342-eb5f20758ef7', response.authorization
     assert response.test?
+  end
+
+  def test_purchase_with_save
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(save: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal true, JSON.parse(data)['card']['save']
+    end.respond_with(successful_purchase_response)
   end
 
   def test_failed_purchase
@@ -52,6 +64,77 @@ class DLocalTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_purchase_with_network_tokens
+    credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    stub_comms do
+      @gateway.purchase(@amount, credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'BwABB4JRdgAAAAAAiFF2AAAAAAA=', JSON.parse(data)['card']['cryptogram']
+      assert_equal '4242424242424242', JSON.parse(data)['card']['network_token']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_network_tokens_and_store_credential_type_subscription
+    options = @options.merge!(stored_credential: stored_credential(:merchant, :recurring, ntid: 'abc123'))
+    credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'BwABB4JRdgAAAAAAiFF2AAAAAAA=', JSON.parse(data)['card']['cryptogram']
+      assert_equal '4242424242424242', JSON.parse(data)['card']['network_token']
+      assert_equal 'SUBSCRIPTION', JSON.parse(data)['card']['stored_credential_type']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_network_tokens_and_store_credential_type_uneschedule
+    options = @options.merge!(stored_credential: stored_credential(:merchant, :unscheduled, ntid: 'abc123'))
+    credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'BwABB4JRdgAAAAAAiFF2AAAAAAA=', JSON.parse(data)['card']['cryptogram']
+      assert_equal '4242424242424242', JSON.parse(data)['card']['network_token']
+      assert_equal 'UNSCHEDULED_CARD_ON_FILE', JSON.parse(data)['card']['stored_credential_type']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_network_tokens_and_store_credential_usage_first
+    options = @options.merge!(stored_credential: stored_credential(:cardholder, :initial))
+    credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'BwABB4JRdgAAAAAAiFF2AAAAAAA=', JSON.parse(data)['card']['cryptogram']
+      assert_equal '4242424242424242', JSON.parse(data)['card']['network_token']
+      assert_equal 'FIRST', JSON.parse(data)['card']['stored_credential_usage']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_network_tokens_and_store_credential_type_card_on_file_and_credential_usage_used
+    options = @options.merge!(stored_credential: stored_credential(:cardholder, :unscheduled, ntid: 'abc123'))
+    credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'BwABB4JRdgAAAAAAiFF2AAAAAAA=', JSON.parse(data)['card']['cryptogram']
+      assert_equal '4242424242424242', JSON.parse(data)['card']['network_token']
+      assert_equal 'CARD_ON_FILE', JSON.parse(data)['card']['stored_credential_type']
+      assert_equal 'USED', JSON.parse(data)['card']['stored_credential_usage']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_network_tokens_and_store_credential_usage
+    options = @options.merge!(stored_credential: stored_credential(:cardholder, :recurring, ntid: 'abc123'))
+    credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'BwABB4JRdgAAAAAAiFF2AAAAAAA=', JSON.parse(data)['card']['cryptogram']
+      assert_equal '4242424242424242', JSON.parse(data)['card']['network_token']
+      assert_equal 'USED', JSON.parse(data)['card']['stored_credential_usage']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_purchase_with_additional_data
     additional_data = { 'submerchant' => { 'name' => 'socks' } }
 
@@ -67,6 +150,14 @@ class DLocalTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(force_type: 'debit'))
     end.check_request do |_endpoint, data, _headers|
       assert_equal 'DEBIT', JSON.parse(data)['card']['force_type']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_original_order_id
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(original_order_id: '123ABC'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal '123ABC', JSON.parse(data)['original_order_id']
     end.respond_with(successful_purchase_response)
   end
 
@@ -117,6 +208,24 @@ class DLocalTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       refute_match(/"street\"/, data)
     end.respond_with(successful_authorize_response)
+  end
+
+  def test_successful_inquire_with_payment_id
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.inquire('D-15104-f9e16b85-5fc8-40f0-a4d8-4e73a892594f', {})
+    end.check_request do |_method, endpoint, data, _headers|
+      refute_match(/"https:\/\/sandbox.dlocal.com\/payments\/D-15104-f9e16b85-5fc8-40f0-a4d8-4e73a892594f\/status\/"/, endpoint)
+      refute_match(nil, data)
+    end.respond_with(successful_payment_status_response)
+  end
+
+  def test_successful_inquire_with_order_id
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.inquire(nil, { order_id: '62595c5db10fdf7b5d5bb3a16d130992' })
+    end.check_request do |_method, endpoint, data, _headers|
+      refute_match(/"https:\/\/sandbox.dlocal.com\/orders\/62595c5db10fdf7b5d5bb3a16d130992\/"/, endpoint)
+      refute_match(nil, data)
+    end.respond_with(successful_orders_response)
   end
 
   def test_passing_country_as_string
@@ -231,6 +340,15 @@ class DLocalTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, _data, headers|
       assert_equal '2.1', headers['X-Version']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_idempotency_header
+    options = @options.merge(idempotency_key: '12345')
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, _data, headers|
+      assert_equal '12345', headers['X-Idempotency-Key']
     end.respond_with(successful_purchase_response)
   end
 
@@ -424,6 +542,14 @@ class DLocalTest < Test::Unit::TestCase
 
   def successful_refund_response
     '{"id":"REF-15104-a9cc29e5-1895-4cec-94bd-aa16c3b92570","payment_id":"D-15104-f9e16b85-5fc8-40f0-a4d8-4e73a892594f","status":"SUCCESS","currency":"BRL","created_date":"2018-12-06T20:28:37.000+0000","amount":1.00,"status_code":200,"status_detail":"The refund was paid","notification_url":"http://example.com","amount_refunded":1.00,"id_payment":"D-15104-f9e16b85-5fc8-40f0-a4d8-4e73a892594f"}'
+  end
+
+  def successful_payment_status_response
+    '{"code":100,"message":"The payment is pending."}'
+  end
+
+  def successful_orders_response
+    '{"order_id":"b809a1aa481b88aaa858144798da656d","payment_id":"T-15104-15f4044d-c4b1-4a38-9b47-bb8be126491d","currency":"BRL","amount":2.0,"created_date":"2022-09-19T13:16:22.000+0000","approved_date":"2022-09-19T13:16:22.000+0000","status":"PAID","status_detail":"The payment was paid.","status_code":"200"}'
   end
 
   # I can't invoke a pending response and there is no example in docs, so this response is speculative

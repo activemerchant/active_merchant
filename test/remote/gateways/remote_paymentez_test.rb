@@ -8,13 +8,15 @@ class RemotePaymentezTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4111111111111111', verification_value: '666')
     @otp_card = credit_card('36417002140808', verification_value: '666')
-    @elo_credit_card = credit_card('6362970000457013',
+    @elo_credit_card = credit_card(
+      '6362970000457013',
       month: 10,
       year: 2022,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo')
+      brand: 'elo'
+    )
     @declined_card = credit_card('4242424242424242', verification_value: '666')
     @options = {
       billing_address: address,
@@ -300,6 +302,15 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_success response
     auth = response.authorization
     response = @gateway.unstore(auth, @options)
+    assert_success response
+  end
+
+  def test_successful_inquire_with_transaction_id
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    gateway_transaction_id = response.authorization
+    response = @gateway.inquire(gateway_transaction_id, @options)
     assert_success response
   end
 

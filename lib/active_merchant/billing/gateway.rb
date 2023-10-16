@@ -315,6 +315,15 @@ module ActiveMerchant #:nodoc:
         [first_name, last_name]
       end
 
+      def split_address(full_address)
+        address_parts = (full_address || '').split
+        return [nil, nil] if address_parts.size == 0
+
+        number = address_parts.shift
+        street = address_parts.join(' ')
+        [number, street]
+      end
+
       def requires!(hash, *params)
         params.each do |param|
           if param.is_a?(Array)

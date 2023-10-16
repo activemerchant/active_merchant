@@ -100,10 +100,12 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
       }
     }
 
-    @avs_credit_card = credit_card('4400000000000008',
+    @avs_credit_card = credit_card(
+      '4400000000000008',
       month: 8,
       year: 2018,
-      verification_value: 737)
+      verification_value: 737
+    )
 
     @avs_address = @options.clone
     @avs_address.update(billing_address: {
@@ -158,25 +160,31 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_unusual_address
-    response = @gateway.purchase(@amount,
+    response = @gateway.purchase(
+      @amount,
       @credit_card,
-      @options_with_alternate_address)
+      @options_with_alternate_address
+    )
     assert_success response
     assert_equal '[capture-received]', response.message
   end
 
   def test_successful_purchase_with_house_number_and_street
-    response = @gateway.purchase(@amount,
+    response = @gateway.purchase(
+      @amount,
       @credit_card,
-      @options.merge(street: 'Top Level Drive', house_number: '100'))
+      @options.merge(street: 'Top Level Drive', house_number: '100')
+    )
     assert_success response
     assert_equal '[capture-received]', response.message
   end
 
   def test_successful_purchase_with_no_address
-    response = @gateway.purchase(@amount,
+    response = @gateway.purchase(
+      @amount,
       @credit_card,
-      @options_with_no_address)
+      @options_with_no_address
+    )
     assert_success response
     assert_equal '[capture-received]', response.message
   end

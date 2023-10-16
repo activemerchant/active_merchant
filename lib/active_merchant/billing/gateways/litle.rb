@@ -5,9 +5,10 @@ module ActiveMerchant #:nodoc:
     class LitleGateway < Gateway
       SCHEMA_VERSION = '9.14'
 
-      class_attribute :postlive_url
+      class_attribute :postlive_url, :prelive_url
 
       self.test_url = 'https://www.testvantivcnp.com/sandbox/communicator/online'
+      self.prelive_url = 'https://payments.vantivprelive.com/vap/communicator/online'
       self.postlive_url = 'https://payments.vantivpostlive.com/vap/communicator/online'
       self.live_url = 'https://payments.vantivcnp.com/vap/communicator/online'
 
@@ -15,7 +16,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
-      self.homepage_url = 'http://www.vantiv.com/'
+      self.homepage_url = 'https://www.fisglobal.com/'
       self.display_name = 'Vantiv eCommerce'
 
       def initialize(options = {})
@@ -320,6 +321,7 @@ module ActiveMerchant #:nodoc:
         add_merchant_data(doc, options)
         add_debt_repayment(doc, options)
         add_stored_credential_params(doc, options)
+        add_fraud_filter_override(doc, options)
       end
 
       def add_credit_params(doc, money, payment_method, options)
@@ -363,6 +365,10 @@ module ActiveMerchant #:nodoc:
 
       def add_debt_repayment(doc, options)
         doc.debtRepayment(true) if options[:debt_repayment] == true
+      end
+
+      def add_fraud_filter_override(doc, options)
+        doc.fraudFilterOverride(options[:fraud_filter_override]) if options[:fraud_filter_override]
       end
 
       def add_payment_method(doc, payment_method, options)
@@ -532,8 +538,10 @@ module ActiveMerchant #:nodoc:
 
       def parse(kind, xml)
         parsed = {}
-
         doc = Nokogiri::XML(xml).remove_namespaces!
+
+        parsed['duplicate'] = doc.at_xpath('//saleResponse').try(:[], 'duplicate') == 'true' if kind == :sale
+
         doc.xpath("//litleOnlineResponse/#{kind}Response/*").each do |node|
           if node.elements.empty?
             parsed[node.name.to_sym] = node.text
@@ -564,13 +572,24 @@ module ActiveMerchant #:nodoc:
           cvv_result: parsed[:fraudResult_cardValidationResult]
         }
 
-        Response.new(success_from(kind, parsed), parsed[:message], parsed, options)
+        Response.new(success_from(kind, parsed), message_from(parsed), parsed, options)
       end
 
       def success_from(kind, parsed)
-        return (parsed[:response] == '000') unless kind == :registerToken
+        return %w(000 001 010).any?(parsed[:response]) unless kind == :registerToken
 
         %w(000 801 802).include?(parsed[:response])
+      end
+
+      def message_from(parsed)
+        case parsed[:response]
+        when '010'
+          return "#{parsed[:message]}: The authorized amount is less than the requested amount."
+        when '001'
+          return "#{parsed[:message]}: This is sent to acknowledge that the submitted transaction has been received."
+        else
+          parsed[:message]
+        end
       end
 
       def authorization_from(kind, parsed, money)
@@ -609,6 +628,7 @@ module ActiveMerchant #:nodoc:
 
       def url
         return postlive_url if @options[:url_override].to_s == 'postlive'
+        return prelive_url if @options[:url_override].to_s == 'prelive'
 
         test? ? test_url : live_url
       end

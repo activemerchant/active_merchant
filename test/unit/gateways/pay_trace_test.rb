@@ -16,6 +16,7 @@ class PayTraceTest < Test::Unit::TestCase
   def setup
     @gateway = PayTraceGateway.new(username: 'username', password: 'password', integrator_id: 'uniqueintegrator')
     @credit_card = credit_card
+    @echeck = check(account_number: '123456', routing_number: '325070760')
     @amount = 100
 
     @options = {
@@ -29,6 +30,43 @@ class PayTraceTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 392483066, response.authorization
+  end
+
+  def test_successful_purchase_with_ach
+    response = stub_comms(@gateway) do
+      @gateway.purchase(@amount, @echeck, @options)
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_include endpoint, 'checks/sale/by_account'
+      assert_equal request['amount'], '1.00'
+      assert_equal request['check']['account_number'], @echeck.account_number
+      assert_equal request['check']['routing_number'], @echeck.routing_number
+      assert_equal request['integrator_id'], @gateway.options[:integrator_id]
+      assert_equal request['billing_address']['name'], @options[:billing_address][:name]
+      assert_equal request['billing_address']['street_address'], @options[:billing_address][:address1]
+      assert_equal request['billing_address']['city'], @options[:billing_address][:city]
+      assert_equal request['billing_address']['state'], @options[:billing_address][:state]
+      assert_equal request['billing_address']['zip'], @options[:billing_address][:zip]
+    end.respond_with(successful_ach_processing_response)
+
+    assert_success response
+    assert_equal response.message, 'Your check was successfully processed.'
+  end
+
+  def test_successful_purchase_by_customer_with_ach
+    customer_id = 'customerId121'
+    response = stub_comms(@gateway) do
+      @gateway.purchase(@amount, customer_id, { check_transaction: 'true' })
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_include endpoint, 'checks/sale/by_customer'
+      assert_equal request['amount'], '1.00'
+      assert_equal request['customer_id'], customer_id
+      assert_equal request['integrator_id'], @gateway.options[:integrator_id]
+    end.respond_with(successful_ach_processing_response)
+
+    assert_success response
+    assert_equal response.message, 'Your check was successfully processed.'
   end
 
   def test_successful_purchase_with_level_3_data
@@ -105,12 +143,65 @@ class PayTraceTest < Test::Unit::TestCase
     assert_equal PayTraceGateway::STANDARD_ERROR_CODE[:declined], response.error_code
   end
 
+  def test_failed_ach_processing
+    @gateway.expects(:ssl_post).returns(failed_ach_processing_response)
+
+    response = @gateway.purchase(@amount, @echeck, @options)
+    assert_failure response
+    assert_equal response.message, 'Your check was NOT successfully processed. '
+  end
+
+  def test_failed_bad_request_ach_processing
+    @gateway.expects(:ssl_post).returns(failed_bad_request_ach_processing_response)
+
+    response = @gateway.authorize(@amount, @echeck, @options)
+    assert_failure response
+    assert_include response.message, 'Please provide a valid Checking Account Number.'
+  end
+
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal true, response.success?
+  end
+
+  def test_successful_authorize_with_ach
+    response = stub_comms(@gateway) do
+      @gateway.authorize(@amount, @echeck, @options)
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_include endpoint, 'checks/hold/by_account'
+      assert_equal request['amount'], '1.00'
+      assert_equal request['check']['account_number'], @echeck.account_number
+      assert_equal request['check']['routing_number'], @echeck.routing_number
+      assert_equal request['integrator_id'], @gateway.options[:integrator_id]
+      assert_equal request['billing_address']['name'], @options[:billing_address][:name]
+      assert_equal request['billing_address']['street_address'], @options[:billing_address][:address1]
+      assert_equal request['billing_address']['city'], @options[:billing_address][:city]
+      assert_equal request['billing_address']['state'], @options[:billing_address][:state]
+      assert_equal request['billing_address']['zip'], @options[:billing_address][:zip]
+    end.respond_with(successful_ach_processing_response)
+
+    assert_success response
+    assert_equal response.message, 'Your check was successfully processed.'
+  end
+
+  def test_successful_authorize_by_customer_with_ach
+    customer_id = 'customerId121'
+    response = stub_comms(@gateway) do
+      @gateway.authorize(@amount, customer_id, { check_transaction: 'true' })
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_include endpoint, 'checks/hold/by_customer'
+      assert_equal request['amount'], '1.00'
+      assert_equal request['customer_id'], customer_id
+      assert_equal request['integrator_id'], @gateway.options[:integrator_id]
+    end.respond_with(successful_ach_processing_response)
+
+    assert_success response
+    assert_equal response.message, 'Your check was successfully processed.'
   end
 
   def test_failed_authorize
@@ -128,6 +219,22 @@ class PayTraceTest < Test::Unit::TestCase
     response = @gateway.capture(@amount, transaction_id, @options)
     assert_success response
     assert_equal 'Your transaction was successfully captured.', response.message
+  end
+
+  def test_successful_capture_with_ach
+    check_transaction_id = 9981615
+    response = stub_comms(@gateway) do
+      @gateway.capture(@amount, check_transaction_id, { check_transaction: 'true' })
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_include endpoint, 'checks/manage/fund'
+      assert_equal request['amount'], '1.00'
+      assert_equal request['check_transaction_id'], check_transaction_id
+      assert_equal request['integrator_id'], @gateway.options[:integrator_id]
+    end.respond_with(successful_ach_capture_void_response)
+
+    assert_success response
+    assert_equal response.message, 'Your check was successfully managed.'
   end
 
   def test_successful_level_3_data_field_mapping
@@ -155,6 +262,14 @@ class PayTraceTest < Test::Unit::TestCase
     assert_equal 'Errors- code:58, message:["Please provide a valid Transaction ID."]', response.message
   end
 
+  def test_failed_capture_void_response
+    @gateway.expects(:ssl_post).returns(failed_ach_capture_void_response)
+
+    response = @gateway.capture(@amount, @echeck, @options)
+    assert_failure response
+    assert_include response.message, 'The Check ID that you have provided was not found in the PayTrace records. It may already be voided or settled.'
+  end
+
   def test_successful_refund
     transaction_id = 105968532
     @gateway.expects(:ssl_post).returns(successful_refund_response)
@@ -162,6 +277,22 @@ class PayTraceTest < Test::Unit::TestCase
     response = @gateway.refund(100, transaction_id)
     assert_success response
     assert_equal 'Your transaction successfully refunded.', response.message
+  end
+
+  def test_successful_refund_with_ach
+    check_transaction_id = 9981615
+    response = stub_comms(@gateway) do
+      @gateway.refund(@amount, check_transaction_id, { check_transaction: 'true' })
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_include endpoint, 'checks/refund/by_transaction'
+      assert_equal request['amount'], '1.00'
+      assert_equal request['check_transaction_id'], check_transaction_id
+      assert_equal request['integrator_id'], @gateway.options[:integrator_id]
+    end.respond_with(successful_ach_refund_response)
+
+    assert_success response
+    assert_equal response.message, 'Your check was successfully refunded.'
   end
 
   def test_failed_refund
@@ -172,6 +303,14 @@ class PayTraceTest < Test::Unit::TestCase
     assert_equal 'Errors- code:981, message:["Log in failed for insufficient permissions."]', response.message
   end
 
+  def test_failed_refund_response
+    @gateway.expects(:ssl_post).returns(failed_ach_refund_response)
+
+    response = @gateway.refund(@amount, @echeck, @options)
+    assert_failure response
+    assert_include response.message, 'The Check ID that you provided was not found in the PayTrace record.'
+  end
+
   def test_successful_void
     transaction_id = 105968551
     @gateway.expects(:ssl_post).returns(successful_void_response)
@@ -179,6 +318,21 @@ class PayTraceTest < Test::Unit::TestCase
     assert void = @gateway.void(transaction_id, @options)
     assert_success void
     assert_equal 'Your transaction was successfully voided.', void.message
+  end
+
+  def test_successful_void_with_ach
+    check_transaction_id = 9981615
+    response = stub_comms(@gateway) do
+      @gateway.void(check_transaction_id, { check_transaction: 'true' })
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_include endpoint, 'checks/manage/void'
+      assert_equal request['check_transaction_id'], check_transaction_id
+      assert_equal request['integrator_id'], @gateway.options[:integrator_id]
+    end.respond_with(successful_ach_capture_void_response)
+
+    assert_success response
+    assert_equal response.message, 'Your check was successfully managed.'
   end
 
   def test_failed_void
@@ -376,5 +530,33 @@ class PayTraceTest < Test::Unit::TestCase
 
   def failed_customer_creation_response
     '{"success":false,"response_code":1,"status_message":"One or more errors has occurred.","errors":{"171":["Please provide a unique customer ID."]},"masked_card_number":"xxxxxxxxxxxx5439"}'
+  end
+
+  def successful_ach_processing_response
+    '{ "success":true, "response_code":120, "status_message":"Your check was successfully processed.", "check_transaction_id":981619 }'
+  end
+
+  def successful_ach_capture_void_response
+    '{ "success":true, "response_code":124, "status_message":"Your check was successfully managed.", "check_transaction_id":9981614 }'
+  end
+
+  def successful_ach_refund_response
+    '{ "success":true, "response_code":122, "status_message":"Your check was successfully refunded.", "check_transaction_id":9981632 }'
+  end
+
+  def failed_ach_processing_response
+    '{ "success":false, "response_code":125, "status_message":"Your check was NOT successfully processed.", "check_transaction_id":981610, "ach_code":0, "ach_message":"" }'
+  end
+
+  def failed_bad_request_ach_processing_response
+    '{ "success":false, "response_code":1, "status_message":"One or more errors has occurred.", "errors":{ "30":[ "Customer ID, customerid123, was not found or is incomplete." ], "45":[ "Please provide a valid Checking Account Number." ], "46":[ "Please provide a valid Transit Routing Number." ] } }'
+  end
+
+  def failed_ach_refund_response
+    '{ "success":false, "response_code":1, "status_message":"One or more errors has occurred.", "errors":{ "80":[ "The Check ID that you provided was not found in the PayTrace record." ] } }'
+  end
+
+  def failed_ach_capture_void_response
+    '{ "success":false, "response_code":1, "status_message":"One or more errors has occurred.", "errors":{ "80":[ "The Check ID that you have provided was not found in the PayTrace records. It may already be voided or settled." ] } }'
   end
 end

@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaywayDotComGateway < Gateway
       self.test_url = 'https://paywaywsdev.com/PaywayWS/Payment/CreditCard'
-      self.live_url = 'https://paywayws.com/PaywayWS/Payment/CreditCard'
+      self.live_url = 'https://paywayws.net/PaywayWS/Payment/CreditCard'
 
       self.supported_countries = %w[US CA]
       self.default_currency = 'USD'
@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
         'I5'  => 'M', #  +4 and Address Match
         'I6'  => 'W', #  +4 Match
         'I7'  => 'A', #  Address Match
-        'I8'  => 'C', #  No Match
+        'I8'  => 'C' #  No Match
       }
 
       PAYWAY_WS_SUCCESS = '5000'

@@ -5,7 +5,7 @@ class RemoteVposTest < Test::Unit::TestCase
     @gateway = VposGateway.new(fixtures(:vpos))
 
     @amount = 100000
-    @credit_card = credit_card('5418630110000014', month: 8, year: 2021, verification_value: '258')
+    @credit_card = credit_card('5418630110000014', month: 8, year: 2026, verification_value: '277')
     @declined_card = credit_card('4000300011112220')
     @options = {
       billing_address: address,
@@ -95,7 +95,7 @@ class RemoteVposTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = VposGateway.new(private_key: '', public_key: '', commerce: 123, commerce_branch: 45)
+    gateway = VposGateway.new(private_key: '', public_key: '', encryption_key: OpenSSL::PKey::RSA.new(512), commerce: 123, commerce_branch: 45)
 
     response = gateway.void('')
     assert_failure response

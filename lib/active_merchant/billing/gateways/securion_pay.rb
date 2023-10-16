@@ -223,14 +223,28 @@ module ActiveMerchant #:nodoc:
         end
 
         response = api_request(url, parameters, options, method)
-        success = !response.key?('error')
+        success = success?(response)
 
-        Response.new(success,
+        Response.new(
+          success,
           (success ? 'Transaction approved' : response['error']['message']),
           response,
           test: test?,
-          authorization: (success ? response['id'] : response['error']['charge']),
-          error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['error']['code']]))
+          authorization: authorization_from(url, response),
+          error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['error']['code']])
+        )
+      end
+
+      def authorization_from(action, response)
+        if action == 'customers' && success?(response) && response['cards'].present?
+          response['cards'].first['id']
+        else
+          success?(response) ? response['id'] : response['error']['charge']
+        end
+      end
+
+      def success?(response)
+        !response.key?('error')
       end
 
       def headers(options = {})
@@ -287,8 +301,8 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def json_error(raw_response)
-        msg = 'Invalid response received from the SecurionPay API.'
+      def json_error(raw_response, gateway_name = 'SecurionPay')
+        msg = "Invalid response received from the #{gateway_name} API."
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
         {
           'error' => {

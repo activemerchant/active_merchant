@@ -61,12 +61,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        post = { amount_in_cents: amount(money).to_i, transaction_id: authorization.to_s }
-        commit('refund', post, '/refunds_sync')
+        # post = { amount_in_cents: amount(money).to_i, transaction_id: authorization.to_s }
+        # commit('refund', post, '/refunds_sync')
+
+        # All refunds will instead be voided. This is temporary.
+        void(authorization, options, money)
       end
 
-      def void(authorization, options = {})
-        commit('void', {}, "/transactions/#{authorization}/void_sync")
+      def void(authorization, options = {}, money = nil)
+        post = money ? { amount_in_cents: amount(money).to_i } : {}
+        commit('void', post, "/transactions/#{authorization}/void_sync")
       end
 
       def supports_scrubbing?

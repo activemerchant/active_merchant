@@ -11,7 +11,7 @@ class PaywayTest < Test::Unit::TestCase
     @amount = 1000
 
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
-      number: 4564710000000004,
+      number: '4564710000000004',
       month: 2,
       year: 2019,
       first_name: 'Bob',

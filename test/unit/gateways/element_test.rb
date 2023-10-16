@@ -25,6 +25,18 @@ class ElementTest < Test::Unit::TestCase
     assert_equal '2005831886|100', response.authorization
   end
 
+  def test_successful_purchase_without_name
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    @credit_card.first_name = nil
+    @credit_card.last_name = nil
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    assert_equal '2005831886|100', response.authorization
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
@@ -291,6 +303,16 @@ class ElementTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(merchant_descriptor: 'Flowerpot Florists'))
     end.check_request do |_endpoint, data, _headers|
       assert_match '<MerchantDescriptor>Flowerpot Florists</MerchantDescriptor>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_billing_email
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(email: 'test@example.com'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<BillingEmail>test@example.com</BillingEmail>', data
     end.respond_with(successful_purchase_response)
 
     assert_success response

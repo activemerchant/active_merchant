@@ -17,8 +17,6 @@ jobs:
     strategy:
       matrix:
         version:
-          - 2.5
-          - 2.6
           - 2.7
         gemfile:
           - gemfiles/Gemfile.rails50
@@ -42,3 +40,5 @@ jobs:
 
       - name: Test
         run: bundle exec rake test
+      - name: Linter
+        run: bundle exec rubocop

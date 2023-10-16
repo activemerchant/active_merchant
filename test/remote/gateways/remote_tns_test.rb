@@ -6,8 +6,8 @@ class RemoteTnsTest < Test::Unit::TestCase
     @gateway = TnsGateway.new(fixtures(:tns))
 
     @amount = 100
-    @credit_card = credit_card('5123456789012346', month: 05, year: 2021)
-    @ap_credit_card = credit_card('5424180279791732', month: 05, year: 2021)
+    @credit_card = credit_card('5123456789012346', month: 05, year: 2024)
+    @ap_credit_card = credit_card('5424180279791732', month: 05, year: 2024)
     @declined_card = credit_card('5123456789012346', month: 01, year: 2028)
 
     @options = {
@@ -67,7 +67,7 @@ class RemoteTnsTest < Test::Unit::TestCase
   def test_failed_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'FAILURE - DECLINED', response.message
+    assert_equal 'FAILURE - UNSPECIFIED_FAILURE', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -84,7 +84,7 @@ class RemoteTnsTest < Test::Unit::TestCase
   def test_failed_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'FAILURE - DECLINED', response.message
+    assert_equal 'FAILURE - UNSPECIFIED_FAILURE', response.message
   end
 
   def test_successful_refund
@@ -133,12 +133,5 @@ class RemoteTnsTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
-  end
-
-  def test_verify_credentials
-    assert @gateway.verify_credentials
-
-    gateway = TnsGateway.new(userid: 'unknown', password: 'unknown')
-    assert !gateway.verify_credentials
   end
 end

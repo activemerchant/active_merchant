@@ -153,9 +153,13 @@ module ActiveMerchant
           response = json_error(response)
         end
 
-        Response.new(success, message_from(success, response), response,
+        Response.new(
+          success,
+          message_from(success, response),
+          response,
           test: test?,
-          authorization: authorization_from(response))
+          authorization: authorization_from(response)
+        )
       end
 
       def authorization_from(response)

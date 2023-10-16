@@ -27,9 +27,11 @@ class RemoteFirstdataE4V27Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_network_tokenization
-    @credit_card = network_tokenization_credit_card('4242424242424242',
+    @credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: nil)
+      verification_value: nil
+    )
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Transaction Normal - Approved', response.message

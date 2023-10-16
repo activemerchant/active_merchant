@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
     class OrbitalGateway < Gateway
       include Empty
 
-      API_VERSION = '8.1'
+      API_VERSION = '9.0'
 
       POST_HEADERS = {
         'MIME-Version' => '1.1',
@@ -98,6 +98,7 @@ module ActiveMerchant #:nodoc:
         'NZD' => '554',
         'NOK' => '578',
         'SGD' => '702',
+        'ZAR' => '710',
         'SEK' => '752',
         'CHF' => '756',
         'GBP' => '826',
@@ -119,6 +120,7 @@ module ActiveMerchant #:nodoc:
         'NZD' => '2',
         'NOK' => '2',
         'SGD' => '2',
+        'ZAR' => '2',
         'SEK' => '2',
         'CHF' => '2',
         'GBP' => '2',
@@ -196,6 +198,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login, :password) unless options[:ip_authentication]
         super
         @options[:merchant_id] = @options[:merchant_id].to_s
+        @use_secondary_url = false
       end
 
       # A – Authorization request
@@ -235,11 +238,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         payment_method = options[:payment_method]
         order = build_new_order_xml(REFUND, money, payment_method, options.merge(authorization: authorization)) do |xml|
-          if payment_method.is_a?(Check)
-            add_echeck(xml, payment_method, options)
-          else
-            add_refund_payment_source(xml, options[:currency])
-          end
+          add_payment_source(xml, payment_method, options)
           xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
 
@@ -396,6 +395,12 @@ module ActiveMerchant #:nodoc:
 
         add_soft_descriptors_from_specialized_class(xml, descriptors) if descriptors.is_a?(OrbitalSoftDescriptors)
         add_soft_descriptors_from_hash(xml, descriptors) if descriptors.is_a?(Hash)
+      end
+
+      def add_payment_action_ind(xml, payment_action_ind)
+        return unless payment_action_ind
+
+        xml.tag! :PaymentActionInd, payment_action_ind
       end
 
       def add_soft_descriptors_from_specialized_class(xml, soft_desc)
@@ -564,7 +569,7 @@ module ActiveMerchant #:nodoc:
         add_currency_fields(xml, options[:currency])
         xml.tag! :BCRtNum, check.routing_number
         xml.tag! :CheckDDA, check.account_number if check.account_number
-        xml.tag! :BankAccountType, ACCOUNT_TYPE[check.account_type] if ACCOUNT_TYPE[check.account_type]
+        add_bank_account_type(xml, check)
         xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method]
         xml.tag! :BankPmtDelv, options[:payment_delivery] || 'B'
         xml.tag! :AVSname, (check&.name ? check.name[0..29] : nil) if get_address(options).blank?
@@ -575,12 +580,6 @@ module ActiveMerchant #:nodoc:
         xml.tag! :Exp, expiry_date(credit_card) if credit_card
         add_currency_fields(xml, options[:currency])
         add_verification_value(xml, credit_card) if credit_card
-      end
-
-      def add_refund_payment_source(xml, currency = nil)
-        xml.tag! :AccountNum, nil
-
-        add_currency_fields(xml, currency)
       end
 
       def add_verification_value(xml, credit_card)
@@ -595,13 +594,24 @@ module ActiveMerchant #:nodoc:
         #   Null-fill this attribute OR
         #   Do not submit the attribute at all.
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
-        xml.tag! :CardSecValInd, '1' if %w(visa master discover).include?(credit_card.brand)
+        xml.tag! :CardSecValInd, '1' if %w(visa discover diners_club).include?(credit_card.brand)
         xml.tag! :CardSecVal, credit_card.verification_value
       end
 
       def add_currency_fields(xml, currency)
         xml.tag! :CurrencyCode, currency_code(currency)
         xml.tag! :CurrencyExponent, currency_exponents(currency)
+      end
+
+      def add_bank_account_type(xml, check)
+        bank_account_type =
+          if check.account_holder_type == 'business'
+            'X'
+          else
+            ACCOUNT_TYPE[check.account_type]
+          end
+
+        xml.tag! :BankAccountType, bank_account_type if bank_account_type
       end
 
       def add_card_indicators(xml, options)
@@ -752,16 +762,23 @@ module ActiveMerchant #:nodoc:
         xml.tag!(:AuthenticationECIInd, eci) if eci
       end
 
-      def add_dpanind(xml, credit_card)
+      def add_dpanind(xml, credit_card, industry_type = nil)
         return unless credit_card.is_a?(NetworkTokenizationCreditCard)
 
-        xml.tag! :DPANInd, 'Y'
+        xml.tag! :DPANInd, 'Y' unless industry_type == 'RC'
       end
 
-      def add_digital_token_cryptogram(xml, credit_card)
-        return unless credit_card.is_a?(NetworkTokenizationCreditCard)
+      def add_digital_token_cryptogram(xml, credit_card, three_d_secure)
+        return unless credit_card.is_a?(NetworkTokenizationCreditCard) || three_d_secure && credit_card.brand == 'discover'
 
-        xml.tag! :DigitalTokenCryptogram, credit_card.payment_cryptogram
+        cryptogram =
+          if three_d_secure && credit_card.brand == 'discover'
+            three_d_secure[:cavv]
+          else
+            credit_card.payment_cryptogram
+          end
+
+        xml.tag!(:DigitalTokenCryptogram, cryptogram)
       end
 
       #=====OTHER FIELDS=====
@@ -862,18 +879,24 @@ module ActiveMerchant #:nodoc:
         # Failover URL will be attempted in the event of a connection error
         response =
           begin
+            raise ConnectionError.new 'Should use secondary url', 500 if @use_secondary_url
+
             request.call(remote_url)
           rescue ConnectionError
             request.call(remote_url(:secondary))
           end
 
-        Response.new(success?(response, message_type), message_from(response), response,
+        Response.new(
+          success?(response, message_type),
+          message_from(response),
+          response,
           {
             authorization: authorization_string(response[:tx_ref_num], response[:order_id]),
             test: self.test?,
             avs_result: OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
             cvv_result: OrbitalGateway::CVVResult.new(response[:cvv2_resp_code])
-          })
+          }
+        )
       end
 
       def remote_url(url = :primary)
@@ -942,6 +965,7 @@ module ActiveMerchant #:nodoc:
 
       def build_new_order_xml(action, money, payment_source, parameters = {})
         requires!(parameters, :order_id)
+        @use_secondary_url = parameters[:use_secondary_url] if parameters[:use_secondary_url]
         xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :NewOrder do
@@ -969,16 +993,17 @@ module ActiveMerchant #:nodoc:
             # CustomerAni, AVSPhoneType and AVSDestPhoneType could be added here.
 
             add_soft_descriptors(xml, parameters[:soft_descriptors])
-            add_dpanind(xml, payment_source)
+            add_payment_action_ind(xml, parameters[:payment_action_ind])
+            add_dpanind(xml, payment_source, parameters[:industry_type])
             add_aevv(xml, payment_source, three_d_secure)
-            add_digital_token_cryptogram(xml, payment_source)
+            add_digital_token_cryptogram(xml, payment_source, three_d_secure)
 
             xml.tag! :ECPSameDayInd, parameters[:same_day] if parameters[:same_day] && payment_source.is_a?(Check)
 
             set_recurring_ind(xml, parameters)
 
             # Append Transaction Reference Number at the end for Refund transactions
-            add_tx_ref_num(xml, parameters[:authorization]) if action == REFUND
+            add_tx_ref_num(xml, parameters[:authorization]) if action == REFUND && payment_source.nil?
 
             add_level2_purchase(xml, parameters)
             add_level3_purchase(xml, parameters)

@@ -28,9 +28,19 @@ class EbanxTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_optional_processing_type_header
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@accepted_amount, @credit_card, @options.merge(processing_type: 'local'))
+      @gateway.purchase(@amount, @credit_card, @options.merge(processing_type: 'local'))
     end.check_request do |_method, _endpoint, _data, headers|
       assert_equal 'local', headers['x-ebanx-api-processing-type']
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_soft_descriptor
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(soft_descriptor: 'ActiveMerchant'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"soft_descriptor\":\"ActiveMerchant\"}, data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -126,15 +136,7 @@ class EbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    @gateway.expects(:ssl_request).times(2).returns(successful_authorize_response, successful_void_response)
-
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
-    assert_equal nil, response.error_code
-  end
-
-  def test_successful_verify_with_failed_void
-    @gateway.expects(:ssl_request).times(2).returns(successful_authorize_response, failed_void_response)
+    @gateway.expects(:ssl_request).returns(successful_verify_response)
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
@@ -142,11 +144,11 @@ class EbanxTest < Test::Unit::TestCase
   end
 
   def test_failed_verify
-    @gateway.expects(:ssl_request).returns(failed_authorize_response)
+    @gateway.expects(:ssl_request).returns(failed_verify_response)
 
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
-    assert_equal 'NOK', response.error_code
+    assert_equal 'Not accepted', response.message
   end
 
   def test_successful_store_and_purchase
@@ -159,6 +161,18 @@ class EbanxTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).returns(successful_purchase_with_stored_card_response)
 
     response = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_and_inquire
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+    response = @gateway.inquire(purchase.authorization)
+
     assert_success response
   end
 
@@ -210,6 +224,18 @@ class EbanxTest < Test::Unit::TestCase
   def failed_authorize_response
     %(
       {"payment":{"hash":"592dd2146d5b8a27924daaa0f0248d8c582cb2ce6b67495e","pin":"467618452","merchant_payment_code":"7883bdbbdfa961ce753247fbeb4ff99d","order_number":null,"status":"CA","status_date":"2017-05-30 17:12:03","open_date":"2017-05-30 17:12:03","confirm_date":null,"transfer_date":null,"amount_br":"3.31","amount_ext":"1.00","amount_iof":"0.01","currency_rate":"3.3000","currency_ext":"USD","due_date":"2017-06-02","instalments":"1","payment_type_code":"visa","transaction_status":{"acquirer":"EBANX","code":"NOK","description":"Sandbox - Test credit card, transaction declined reason insufficientFunds"},"pre_approved":false,"capture_available":false,"customer":{"document":"85351346893","email":"unspecified@example.com","name":"LONGBOB LONGSEN","birth_date":null}},"status":"SUCCESS"}
+    )
+  end
+
+  def successful_verify_response
+    %(
+      {"status":"SUCCESS","payment_type_code":"creditcard","card_verification":{"transaction_status":{"code":"OK","description":"Accepted"},"transaction_type":"ZERO DOLLAR"}}
+    )
+  end
+
+  def failed_verify_response
+    %(
+      {"status":"SUCCESS","payment_type_code":"discover","card_verification":{"transaction_status":{"code":"NOK", "description":"Not accepted"}, "transaction_type":"GHOST AUTHORIZATION"}}
     )
   end
 

@@ -15,6 +15,13 @@ class RemoteKushkiTest < Test::Unit::TestCase
     assert_match %r(^\d+$), response.authorization
   end
 
+  def test_successful_purchase_brazil
+    response = @gateway.purchase(@amount, @credit_card, { currency: 'BRL' })
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
   def test_successful_purchase_with_options
     options = {
       currency: 'USD',
@@ -36,7 +43,11 @@ class RemoteKushkiTest < Test::Unit::TestCase
       metadata: {
         productos: 'bananas',
         nombre_apellido: 'Kirk'
-      }
+      },
+      months: 2,
+      deferred_grace_months: '05',
+      deferred_credit_type: '01',
+      deferred_months: 3
     }
 
     amount = 100 * (
@@ -44,6 +55,74 @@ class RemoteKushkiTest < Test::Unit::TestCase
       options[:amount][:subtotal_iva].to_f +
       options[:amount][:iva].to_f +
       options[:amount][:ice].to_f
+    )
+
+    response = @gateway.purchase(amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_successful_purchase_with_extra_taxes_cop
+    options = {
+      currency: 'COP',
+      amount: {
+        subtotal_iva_0: '4.95',
+        subtotal_iva: '10',
+        iva: '1.54',
+        ice: '3.50',
+        extra_taxes: {
+          propina: 0.1,
+          tasa_aeroportuaria: 0.2,
+          agencia_de_viaje: 0.3,
+          iac: 0.4
+        }
+      }
+    }
+
+    amount = 100 * (
+      options[:amount][:subtotal_iva_0].to_f +
+      options[:amount][:subtotal_iva].to_f +
+      options[:amount][:iva].to_f +
+      options[:amount][:ice].to_f +
+      options[:amount][:extra_taxes][:propina].to_f +
+      options[:amount][:extra_taxes][:tasa_aeroportuaria].to_f +
+      options[:amount][:extra_taxes][:agencia_de_viaje].to_f +
+      options[:amount][:extra_taxes][:iac].to_f
+    )
+
+    response = @gateway.purchase(amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_successful_purchase_with_extra_taxes_usd
+    options = {
+      currency: 'USD',
+      amount: {
+        subtotal_iva_0: '4.95',
+        subtotal_iva: '10',
+        iva: '1.54',
+        ice: '3.50',
+        extra_taxes: {
+          propina: 0.1,
+          tasa_aeroportuaria: 0.2,
+          agencia_de_viaje: 0.3,
+          iac: 0.4
+        }
+      }
+    }
+
+    amount = 100 * (
+      options[:amount][:subtotal_iva_0].to_f +
+      options[:amount][:subtotal_iva].to_f +
+      options[:amount][:iva].to_f +
+      options[:amount][:ice].to_f +
+      options[:amount][:extra_taxes][:propina].to_f +
+      options[:amount][:extra_taxes][:tasa_aeroportuaria].to_f +
+      options[:amount][:extra_taxes][:agencia_de_viaje].to_f +
+      options[:amount][:extra_taxes][:iac].to_f
     )
 
     response = @gateway.purchase(amount, @credit_card, options)
@@ -65,8 +144,14 @@ class RemoteKushkiTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    # Kushki only allows preauthorization for PEN, CLP, and UF.
     response = @gateway.authorize(@amount, @credit_card, { currency: 'PEN' })
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_successful_authorize_brazil
+    response = @gateway.authorize(@amount, @credit_card, { currency: 'BRL' })
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_match %r(^\d+$), response.authorization
@@ -92,6 +177,101 @@ class RemoteKushkiTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'K220', response.responses.last.error_code
     assert_equal 'Monto de la transacción es diferente al monto de la venta inicial', response.message
+  end
+
+  def test_successful_3ds2_authorize_with_visa_card
+    options = {
+      currency: 'PEN',
+      three_d_secure: {
+        version: '2.2.0',
+        cavv: 'AAABBoVBaZKAR3BkdkFpELpWIiE=',
+        xid: 'NEpab1F1MEdtaWJ2bEY3ckYxQzE=',
+        eci: '07'
+      }
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_successful_3ds2_authorize_with_visa_card_with_optional_xid
+    options = {
+      currency: 'PEN',
+      three_d_secure: {
+        version: '2.2.0',
+        cavv: 'AAABBoVBaZKAR3BkdkFpELpWIiE=',
+        eci: '07'
+      }
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_successful_3ds2_authorize_with_master_card
+    options = {
+      currency: 'PEN',
+      three_d_secure: {
+        version: '2.2.0',
+        cavv: 'AAABBoVBaZKAR3BkdkFpELpWIiE=',
+        eci: '00',
+        ds_transaction_id: 'b23e0264-1209-41L6-Jca4-b82143c1a782'
+      }
+    }
+
+    credit_card = credit_card('5223450000000007', brand: 'master', verification_value: '777')
+    response = @gateway.authorize(@amount, credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_3ds2_purchase
+    options = {
+      three_d_secure: {
+        version: '2.2.0',
+        cavv: 'AAABBoVBaZKAR3BkdkFpELpWIiE=',
+        xid: 'NEpab1F1MEdtaWJ2bEY3ckYxQzE=',
+        eci: '07'
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_failed_3ds2_authorize
+    options = {
+      currency: 'PEN',
+      three_d_secure: {
+        version: '2.2.0',
+        authentication_response_status: 'Y',
+        cavv: 'AAABBoVBaZKAR3BkdkFpELpWIiE=',
+        xid: 'NEpab1F1MEdtaWJ2bEY3ckYxQzE='
+      }
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_failure response
+    assert_equal 'K001', response.responses.last.error_code
+  end
+
+  def test_failed_3ds2_authorize_with_different_card
+    options = {
+      currency: 'PEN',
+      three_d_secure: {
+        version: '2.2.0',
+        cavv: 'AAABBoVBaZKAR3BkdkFpELpWIiE=',
+        xid: 'NEpab1F1MEdtaWJ2bEY3ckYxQzE='
+      }
+    }
+    credit_card = credit_card('6011111111111117', brand: 'discover', verification_value: '777')
+    assert_raise ArgumentError do
+      @gateway.authorize(@amount, credit_card, options)
+    end
   end
 
   def test_successful_capture

@@ -4,9 +4,12 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://payments.sta.simetrik.com/v1'
       self.live_url = 'https://payments.simetrik.com/v1'
 
-      class_attribute :test_auth_url, :live_auth_url
+      class_attribute :test_auth_url, :live_auth_url, :test_audience, :live_audience
       self.test_auth_url = 'https://tenant-payments-dev.us.auth0.com/oauth/token'
       self.live_auth_url = 'https://tenant-payments-prod.us.auth0.com/oauth/token'
+
+      self.test_audience = 'https://tenant-payments-dev.us.auth0.com/api/v2/'
+      self.live_audience = 'https://tenant-payments-prod.us.auth0.com/api/v2/'
 
       self.supported_countries = %w(PE AR)
       self.default_currency = 'USD'
@@ -39,7 +42,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        requires!(options, :client_id, :client_secret, :audience)
+        requires!(options, :client_id, :client_secret)
         super
         @access_token = {}
         sign_access_token()
@@ -69,7 +72,7 @@ module ActiveMerchant #:nodoc:
             acquire_extra_options: options[:acquire_extra_options] || {}
           }
         }
-        post[:forward_payload][:amount][:vat] = options[:vat].to_f if options[:vat]
+        post[:forward_payload][:amount][:vat] = options[:vat].to_f / 100 if options[:vat]
 
         add_forward_route(post, options)
         commit('capture', post, { token_acquirer: options[:token_acquirer] })
@@ -232,8 +235,8 @@ module ActiveMerchant #:nodoc:
 
         order = {}
         order_options = options[:order] || {}
-        order[:id] = order_options[:id] if order_options[:id]
-        order[:description] = order_options[:description] if order_options[:description]
+        order[:id] = options[:order_id] if options[:order_id]
+        order[:description] = options[:description] if options[:description]
         order[:installments] = order_options[:installments].to_i if order_options[:installments]
         order[:datetime_local_transaction] = order_options[:datetime_local_transaction] if order_options[:datetime_local_transaction]
 
@@ -247,7 +250,7 @@ module ActiveMerchant #:nodoc:
         amount_obj = {}
         amount_obj[:total_amount] = amount(money).to_f
         amount_obj[:currency] = (options[:currency] || currency(money))
-        amount_obj[:vat] = options[:vat].to_f if options[:vat]
+        amount_obj[:vat] = options[:vat].to_f / 100 if options[:vat]
 
         post[:amount] = amount_obj
       end
@@ -277,12 +280,12 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters, url_params = {})
         begin
           response = JSON.parse ssl_post(url(action, url_params), post_data(parameters), authorized_headers())
-        rescue ResponseError => exception
-          case exception.response.code.to_i
+        rescue ResponseError => e
+          case e.response.code.to_i
           when 400...499
-            response = JSON.parse exception.response.body
+            response = JSON.parse e.response.body
           else
-            raise exception
+            raise e
           end
         end
 
@@ -351,7 +354,7 @@ module ActiveMerchant #:nodoc:
         login_info = {}
         login_info[:client_id] = @options[:client_id]
         login_info[:client_secret] = @options[:client_secret]
-        login_info[:audience] = @options[:audience]
+        login_info[:audience] = test? ? test_audience : live_audience
         login_info[:grant_type] = 'client_credentials'
         response = parse(ssl_post(auth_url(), login_info.to_json, {
           'content-Type' => 'application/json'

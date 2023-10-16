@@ -33,12 +33,18 @@ class RemoteAirwallexTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_specified_ids
-    request_id = "request_#{(Time.now.to_f.round(2) * 100).to_i}"
-    merchant_order_id = "order_#{(Time.now.to_f.round(2) * 100).to_i}"
+    request_id = SecureRandom.uuid
+    merchant_order_id = SecureRandom.uuid
     response = @gateway.purchase(@amount, @credit_card, @options.merge(request_id: request_id, merchant_order_id: merchant_order_id))
     assert_success response
     assert_match(request_id, response.params.dig('request_id'))
     assert_match(merchant_order_id, response.params.dig('merchant_order_id'))
+  end
+
+  def test_successful_purchase_with_skip_3ds
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ skip_3ds: 'true' }))
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
   end
 
   def test_failed_purchase
@@ -84,10 +90,10 @@ class RemoteAirwallexTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options.merge(generated_ids))
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount, purchase.authorization, @options.merge(generated_ids))
+    assert refund = @gateway.refund(@amount, purchase.authorization, @options)
     assert_success refund
     assert_equal 'RECEIVED', refund.message
   end
@@ -107,7 +113,7 @@ class RemoteAirwallexTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    auth = @gateway.authorize(@amount, @credit_card, @options.merge(generated_ids))
+    auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
     assert void = @gateway.void(auth.authorization, @options)
@@ -240,11 +246,6 @@ class RemoteAirwallexTest < Test::Unit::TestCase
   end
 
   private
-
-  def generated_ids
-    timestamp = (Time.now.to_f.round(2) * 100).to_i.to_s
-    { request_id: timestamp.to_s, merchant_order_id: "mid_#{timestamp}" }
-  end
 
   def add_cit_network_transaction_id_to_stored_credential(auth)
     @stored_credential_mit_options[:network_transaction_id] = auth.params['latest_payment_attempt']['provider_transaction_id']

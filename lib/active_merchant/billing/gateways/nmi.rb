@@ -149,6 +149,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, money, options)
         post[:amount] = amount(money)
+        post[:surcharge] = options[:surcharge] if options[:surcharge]
         post[:orderid] = options[:order_id]
         post[:orderdescription] = options[:description]
         post[:currency] = options[:currency] || currency(money)
@@ -232,6 +233,9 @@ module ActiveMerchant #:nodoc:
         end
 
         if (shipping_address = options[:shipping_address])
+          first_name, last_name = split_names(shipping_address[:name])
+          post[:shipping_firstname] = first_name if first_name
+          post[:shipping_lastname] = last_name if last_name
           post[:shipping_company] = shipping_address[:company]
           post[:shipping_address1] = shipping_address[:address1]
           post[:shipping_address2] = shipping_address[:address2]
@@ -240,6 +244,7 @@ module ActiveMerchant #:nodoc:
           post[:shipping_country] = shipping_address[:country]
           post[:shipping_zip] = shipping_address[:zip]
           post[:shipping_phone] = shipping_address[:phone]
+          post[:shipping_email] = options[:shipping_email] if options[:shipping_email]
         end
 
         if (descriptor = options[:descriptors])

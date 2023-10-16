@@ -158,11 +158,15 @@ module ActiveMerchant #:nodoc:
       def commit(action, request)
         response = parse(ssl_post(self.live_url, build_request(action, request), POST_HEADERS))
 
-        Response.new(successful?(response), message_from(response), response,
+        Response.new(
+          successful?(response),
+          message_from(response),
+          response,
           test: test?,
           authorization: authorization_from(response),
           avs_result: { code: response[:avs] },
-          cvv_result: response[:cvv2])
+          cvv_result: response[:cvv2]
+        )
       rescue ResponseError => e
         case e.response.code
         when '401'

@@ -112,7 +112,9 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
   end
 
   def test_fully_loaded_purchase
-    response = @gateway.purchase(@amount, @credit_card,
+    response = @gateway.purchase(
+      @amount,
+      @credit_card,
       redirect_url: 'http://awesomesauce.com',
       ip: '0.0.0.0',
       application_id: 'Woohoo',
@@ -148,7 +150,8 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
         country:  'US',
         phone:    '1115555555',
         fax:      '1115556666'
-      })
+      }
+    )
     assert_success response
   end
 

@@ -151,6 +151,7 @@ module ActiveMerchant
     end
 
     def credit_card(number = '4242424242424242', options = {})
+      number = number.is_a?(Integer) ? number.to_s : number
       defaults = {
         number: number,
         month: default_expiration_date.month,
@@ -213,10 +214,12 @@ module ActiveMerchant
         transaction_identifier: 'uniqueidentifier123'
       }.update(options)
 
-      ActiveMerchant::Billing::ApplePayPaymentToken.new(defaults[:payment_data],
+      ActiveMerchant::Billing::ApplePayPaymentToken.new(
+        defaults[:payment_data],
         payment_instrument_name: defaults[:payment_instrument_name],
         payment_network: defaults[:payment_network],
-        transaction_identifier: defaults[:transaction_identifier])
+        transaction_identifier: defaults[:transaction_identifier]
+      )
     end
 
     def address(options = {})
@@ -231,6 +234,19 @@ module ActiveMerchant
         country:  'CA',
         phone:    '(555)555-5555',
         fax:      '(555)555-6666'
+      }.update(options)
+    end
+
+    def shipping_address(options = {})
+      {
+        name:     'Jon Smith',
+        address1: '123 Your Street',
+        address2: 'Apt 2',
+        city:     'Toronto',
+        state:    'ON',
+        zip:      'K2C3N7',
+        country:  'CA',
+        phone_number: '(123)456-7890'
       }.update(options)
     end
 
@@ -257,6 +273,7 @@ module ActiveMerchant
       stored_credential[:reason_type] = 'recurring' if args.include?(:recurring)
       stored_credential[:reason_type] = 'unscheduled' if args.include?(:unscheduled)
       stored_credential[:reason_type] = 'installment' if args.include?(:installment)
+      stored_credential[:reason_type] = 'internet' if args.include?(:internet)
 
       stored_credential[:initiator] = 'cardholder' if args.include?(:cardholder)
       stored_credential[:initiator] = 'merchant' if args.include?(:merchant)
@@ -281,7 +298,7 @@ module ActiveMerchant
     def load_fixtures
       [DEFAULT_CREDENTIALS, LOCAL_CREDENTIALS].inject({}) do |credentials, file_name|
         if File.exist?(file_name)
-          yaml_data = YAML.safe_load(File.read(file_name), [], [], true)
+          yaml_data = YAML.safe_load(File.read(file_name), aliases: true)
           credentials.merge!(symbolize_keys(yaml_data))
         end
         credentials

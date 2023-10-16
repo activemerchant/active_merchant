@@ -313,6 +313,9 @@ module ActiveMerchant #:nodoc:
       def add_extra_parameters(post, options)
         extra_parameters = {}
         extra_parameters[:INSTALLMENTS_NUMBER] = options[:installments_number] || 1
+        extra_parameters[:EXTRA1] = options[:extra_1] if options[:extra_1]
+        extra_parameters[:EXTRA2] = options[:extra_2] if options[:extra_2]
+        extra_parameters[:EXTRA3] = options[:extra_3] if options[:extra_3]
         post[:transaction][:extraParameters] = extra_parameters
       end
 
@@ -452,7 +455,7 @@ module ActiveMerchant #:nodoc:
         when 'verify_credentials'
           response['error'] || 'FAILED'
         else
-          response['transactionResponse']['errorCode'] || response['transactionResponse']['responseCode'] if response['transactionResponse']
+          response['transactionResponse']['paymentNetworkResponseCode'] || response['transactionResponse']['errorCode'] if response['transactionResponse']
         end
       end
 

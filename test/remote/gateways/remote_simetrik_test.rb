@@ -49,10 +49,10 @@ class RemoteSimetrikTest < Test::Unit::TestCase
         id: '123',
         email: 's@example.com'
       },
+      order_id: rand(100000000000..999999999999).to_s,
+      description: 'apopsicle',
       order: {
-        id: rand(100000000000..999999999999).to_s,
         datetime_local_transaction: Time.new.strftime('%Y-%m-%dT%H:%M:%S.%L%:z'),
-        description: 'apopsicle',
         installments: 1
       },
       vat: 19,

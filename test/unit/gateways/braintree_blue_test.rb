@@ -94,6 +94,16 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal true, response.test
   end
 
+  def test_partial_capture_transaction
+    Braintree::TransactionGateway.any_instance.expects(:submit_for_partial_settlement).
+      returns(braintree_result(id: 'capture_transaction_id'))
+
+    response = @gateway.capture(100, 'transaction_id', { partial_capture: true })
+
+    assert_equal 'capture_transaction_id', response.authorization
+    assert_equal true, response.test
+  end
+
   def test_refund_transaction
     Braintree::TransactionGateway.any_instance.expects(:refund).
       returns(braintree_result(id: 'refund_transaction_id'))
@@ -210,6 +220,31 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.authorize(100, credit_card('41111111111111111111'), service_fee_amount: '2.31')
   end
 
+  def test_venmo_profile_id_can_be_specified
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:options][:venmo][:profile_id] == 'profile_id')
+    end.returns(braintree_result)
+
+    @gateway.authorize(100, credit_card('41111111111111111111'), venmo_profile_id: 'profile_id')
+  end
+
+  def test_customer_has_default_payment_method
+    options = {
+      payment_method_nonce: 'fake-paypal-future-nonce',
+      store: true,
+      device_data: 'device_data',
+      paypal: {
+        paypal_flow_type: 'checkout_with_vault'
+      }
+    }
+
+    Braintree::TransactionGateway.any_instance.expects(:sale).returns(braintree_result(paypal: { implicitly_vaulted_payment_method_token: 'abc123' }))
+
+    Braintree::CustomerGateway.any_instance.expects(:update).with(nil, { default_payment_method_token: 'abc123' }).returns(nil)
+
+    @gateway.authorize(100, 'fake-paypal-future-nonce', options)
+  end
+
   def test_risk_data_can_be_specified
     risk_data = {
       customer_browser: 'User-Agent Header',
@@ -227,6 +262,15 @@ class BraintreeBlueTest < Test::Unit::TestCase
     end.returns(braintree_result)
 
     @gateway.authorize(100, credit_card('41111111111111111111'), hold_in_escrow: true)
+  end
+
+  def test_paypal_options_can_be_specified
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:options][:paypal][:custom_field] == 'abc')
+      (params[:options][:paypal][:description] == 'shoes')
+    end.returns(braintree_result)
+
+    @gateway.authorize(100, credit_card('4111111111111111'), paypal_custom_field: 'abc', paypal_description: 'shoes')
   end
 
   def test_merchant_account_id_absent_if_not_provided
@@ -702,21 +746,34 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_three_d_secure_pass_thru_handling_version_2
-    Braintree::TransactionGateway.
-      any_instance.
-      expects(:sale).
-      with(has_entries(three_d_secure_pass_thru: has_entries(
-        three_d_secure_version: '2.0',
+    three_ds_expectation = {
+      three_d_secure_version: '2.0',
+      cavv: 'cavv',
+      eci_flag: 'eci',
+      ds_transaction_id: 'trans_id',
+      cavv_algorithm: 'algorithm',
+      directory_response: 'directory',
+      authentication_response: 'auth'
+    }
+
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:sca_exemption] == 'low_value')
+      (params[:three_d_secure_pass_thru] == three_ds_expectation)
+    end.returns(braintree_result)
+
+    options = {
+      three_ds_exemption_type: 'low_value',
+      three_d_secure: {
+        version: '2.0',
         cavv: 'cavv',
-        eci_flag: 'eci',
+        eci: 'eci',
         ds_transaction_id: 'trans_id',
         cavv_algorithm: 'algorithm',
-        directory_response: 'directory',
-        authentication_response: 'auth'
-      ))).
-      returns(braintree_result)
-
-    @gateway.purchase(100, credit_card('41111111111111111111'), three_d_secure: { version: '2.0', cavv: 'cavv', eci: 'eci', ds_transaction_id: 'trans_id', cavv_algorithm: 'algorithm', directory_response_status: 'directory', authentication_response_status: 'auth' })
+        directory_response_status: 'directory',
+        authentication_response_status: 'auth'
+      }
+    }
+    @gateway.purchase(100, credit_card('41111111111111111111'), options)
   end
 
   def test_three_d_secure_pass_thru_some_fields
@@ -901,14 +958,17 @@ class BraintreeBlueTest < Test::Unit::TestCase
         (params[:industry][:data][:lodging_name] == 'Best Hotel Ever')
     end.returns(braintree_result)
 
-    @gateway.purchase(100, credit_card('41111111111111111111'),
+    @gateway.purchase(
+      100,
+      credit_card('41111111111111111111'),
       travel_data: {
         travel_package: 'flight',
         departure_date: '2050-07-22',
         lodging_check_in_date: '2050-07-22',
         lodging_check_out_date: '2050-07-25',
         lodging_name: 'Best Hotel Ever'
-      })
+      }
+    )
   end
 
   def test_successful_purchase_with_lodging_data
@@ -920,13 +980,16 @@ class BraintreeBlueTest < Test::Unit::TestCase
         (params[:industry][:data][:room_rate] == '80.00')
     end.returns(braintree_result)
 
-    @gateway.purchase(100, credit_card('41111111111111111111'),
+    @gateway.purchase(
+      100,
+      credit_card('41111111111111111111'),
       lodging_data: {
         folio_number: 'ABC123',
         check_in_date: '2050-12-22',
         check_out_date: '2050-12-25',
         room_rate: '80.00'
-      })
+      }
+    )
   end
 
   def test_apple_pay_card
@@ -949,44 +1012,13 @@ class BraintreeBlueTest < Test::Unit::TestCase
       ).
       returns(braintree_result(id: 'transaction_id'))
 
-    credit_card = network_tokenization_credit_card('4111111111111111',
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
       brand: 'visa',
       transaction_id: '123',
       eci: '05',
-      payment_cryptogram: '111111111100cryptogram')
-
-    response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
-    assert_equal 'transaction_id', response.authorization
-  end
-
-  def test_android_pay_card
-    Braintree::TransactionGateway.any_instance.expects(:sale).
-      with(
-        amount: '1.00',
-        order_id: '1',
-        customer: { id: nil, email: nil, phone: nil,
-                   first_name: 'Longbob', last_name: 'Longsen' },
-        options: { store_in_vault: false, submit_for_settlement: nil, hold_in_escrow: nil },
-        custom_fields: nil,
-        google_pay_card: {
-          number: '4111111111111111',
-          expiration_month: '09',
-          expiration_year: (Time.now.year + 1).to_s,
-          cryptogram: '111111111100cryptogram',
-          google_transaction_id: '1234567890',
-          source_card_type: 'visa',
-          source_card_last_four: '1111',
-          eci_indicator: '05'
-        }
-      ).
-      returns(braintree_result(id: 'transaction_id'))
-
-    credit_card = network_tokenization_credit_card('4111111111111111',
-      brand: 'visa',
-      eci: '05',
-      payment_cryptogram: '111111111100cryptogram',
-      source: :android_pay,
-      transaction_id: '1234567890')
+      payment_cryptogram: '111111111100cryptogram'
+    )
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization
@@ -1014,12 +1046,46 @@ class BraintreeBlueTest < Test::Unit::TestCase
       ).
       returns(braintree_result(id: 'transaction_id'))
 
-    credit_card = network_tokenization_credit_card('4111111111111111',
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
       brand: 'visa',
       eci: '05',
       payment_cryptogram: '111111111100cryptogram',
       source: :google_pay,
-      transaction_id: '1234567890')
+      transaction_id: '1234567890'
+    )
+
+    response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
+    assert_equal 'transaction_id', response.authorization
+  end
+
+  def test_network_token_card
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      with(
+        amount: '1.00',
+        order_id: '1',
+        customer: { id: nil, email: nil, phone: nil,
+                   first_name: 'Longbob', last_name: 'Longsen' },
+        options: { store_in_vault: false, submit_for_settlement: nil, hold_in_escrow: nil },
+        custom_fields: nil,
+        credit_card: {
+          number: '4111111111111111',
+          expiration_month: '09',
+          expiration_year: (Time.now.year + 1).to_s,
+          cardholder_name: 'Longbob Longsen',
+          network_tokenization_attributes: {
+            cryptogram: '111111111100cryptogram',
+            ecommerce_indicator: '05'
+          }
+        }
+      ).
+      returns(braintree_result(id: 'transaction_id'))
+
+    credit_card = network_tokenization_credit_card('4111111111111111',
+                                                   brand: 'visa',
+                                                   eci: '05',
+                                                   source: :network_token,
+                                                   payment_cryptogram: '111111111100cryptogram')
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization
@@ -1310,6 +1376,14 @@ class BraintreeBlueTest < Test::Unit::TestCase
   def test_returns_error_on_authorize_when_passing_a_bank_account
     bank_account = check({ account_number: '1000000002', routing_number: '011000015' })
     response = @gateway.authorize(100, bank_account, {})
+
+    assert_failure response
+    assert_equal 'Direct bank account transactions are not supported. Bank accounts must be successfully stored before use.', response.message
+  end
+
+  def test_returns_error_on_general_credit_when_passing_a_bank_account
+    bank_account = check({ account_number: '1000000002', routing_number: '011000015' })
+    response = @gateway.credit(100, bank_account, {})
 
     assert_failure response
     assert_equal 'Direct bank account transactions are not supported. Bank accounts must be successfully stored before use.', response.message

@@ -203,6 +203,26 @@ class SafeChargeTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_unreferenced_refund
+    refund = stub_comms do
+      @gateway.refund(@amount, 'auth|transaction_id|token|month|year|amount|currency', @options.merge(unreferenced_refund: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal(data.split('&').include?('sg_TransactionID=transaction_id'), false)
+    end.respond_with(successful_refund_response)
+
+    assert_success refund
+  end
+
+  def test_successful_refund_without_unreferenced_refund
+    refund = stub_comms do
+      @gateway.refund(@amount, 'auth|transaction_id|token|month|year|amount|currency', @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal(data.split('&').include?('sg_TransactionID=transaction_id'), true)
+    end.respond_with(successful_refund_response)
+
+    assert_success refund
+  end
+
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
@@ -217,6 +237,16 @@ class SafeChargeTest < Test::Unit::TestCase
     response = @gateway.credit(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
+  end
+
+  def test_credit_sends_addtional_info
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, @options.merge(email: 'test@example.com'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_FirstName=Longbob/, data)
+      assert_match(/sg_LastName=Longsen/, data)
+      assert_match(/sg_Email/, data)
+    end.respond_with(successful_credit_response)
   end
 
   def test_failed_credit

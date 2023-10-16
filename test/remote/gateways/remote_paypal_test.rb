@@ -232,9 +232,11 @@ class PaypalTest < Test::Unit::TestCase
     response = @gateway.purchase(900, @credit_card, @params)
     assert_success response
 
-    response = @gateway.transfer([@amount, 'joe@example.com'],
+    response = @gateway.transfer(
+      [@amount, 'joe@example.com'],
       [600, 'jane@example.com', { note: 'Thanks for taking care of that' }],
-      subject: 'Your money')
+      subject: 'Your money'
+    )
     assert_success response
   end
 

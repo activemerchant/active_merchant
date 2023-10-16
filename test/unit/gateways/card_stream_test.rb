@@ -9,11 +9,13 @@ class CardStreamTest < Test::Unit::TestCase
       shared_secret: 'secret'
     )
 
-    @visacreditcard = credit_card('4929421234600821',
+    @visacreditcard = credit_card(
+      '4929421234600821',
       month: '12',
       year: '2014',
       verification_value: '356',
-      brand: :visa)
+      brand: :visa
+    )
 
     @visacredit_options = {
       billing_address: {
@@ -25,6 +27,18 @@ class CardStreamTest < Test::Unit::TestCase
       },
       order_id: generate_unique_id,
       description: 'AM test purchase'
+    }
+
+    @visacredit_three_ds_options = {
+      threeds_required: true,
+      three_ds_version: '2.1.0',
+      three_d_secure: {
+        enrolled: 'true',
+        authentication_response_status: 'Y',
+        eci: '05',
+        cavv: 'Y2FyZGluYWxjb21tZXJjZWF1dGg',
+        xid: '362DF058-6061-47F1-A504-CACCBDF422B7'
+      }
     }
 
     @visacredit_descriptor_options = {
@@ -39,15 +53,15 @@ class CardStreamTest < Test::Unit::TestCase
       dynamic_descriptor: 'product'
     }
 
-    @amex = credit_card('374245455400001',
+    @amex = credit_card(
+      '374245455400001',
       month: '12',
       year: 2014,
       verification_value: '4887',
-      brand: :american_express)
+      brand: :american_express
+    )
 
-    @declined_card = credit_card('4000300011112220',
-      month: '9',
-      year: '2014')
+    @declined_card = credit_card('4000300011112220', month: '9', year: '2014')
   end
 
   def test_successful_visacreditcard_authorization
@@ -309,6 +323,40 @@ class CardStreamTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/threeDSRequired=N/, data)
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_3ds2_data
+    stub_comms do
+      @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match(/threeDSRequired=Y/, data)
+      assert_match(/threeDSEnrolled=Y/, data)
+      assert_match(/threeDSAuthenticated=Y/, data)
+      assert_match(/threeDSECI=05/, data)
+      assert_match(/threeDSCAVV=Y2FyZGluYWxjb21tZXJjZWF1dGg/, data)
+      assert_match(/threeDSXID=362DF058-6061-47F1-A504-CACCBDF422B7/, data)
+    end
+  end
+
+  def test_3ds2_not_enrolled
+    stub_comms do
+      @visacredit_three_ds_options[:three_d_secure][:enrolled] = 'false'
+      @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match(/threeDSRequired=Y/, data)
+      assert_match(/threeDSEnrolled=N/, data)
+    end
+  end
+
+  def test_3ds2_not_authenticated
+    stub_comms do
+      @visacredit_three_ds_options[:three_d_secure][:authentication_response_status] = 'N'
+      @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match(/threeDSRequired=Y/, data)
+      assert_match(/threeDSEnrolled=Y/, data)
+      assert_match(/threeDSAuthenticated=N/, data)
+    end
   end
 
   def test_transcript_scrubbing

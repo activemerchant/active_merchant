@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['PY']
       self.default_currency = 'PYG'
-      self.supported_cardtypes = %i[visa master]
+      self.supported_cardtypes = %i[visa master panal]
 
       self.homepage_url = 'https://comercios.bancard.com.py'
       self.display_name = 'vPOS'
@@ -27,6 +27,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :private_key, :public_key)
         @private_key = options[:private_key]
         @public_key = options[:public_key]
+        @encryption_key = OpenSSL::PKey::RSA.new(options[:encryption_key]) if options[:encryption_key]
         @shop_process_id = options[:shop_process_id] || SecureRandom.random_number(10**15)
         super
       end
@@ -114,14 +115,14 @@ module ActiveMerchant #:nodoc:
         transcript.encode('UTF-8', 'binary', undef: :replace, replace: '')
       end
 
-      private
-
       # Required to encrypt PAN data.
       def one_time_public_key
         token = generate_token('get_encription_public_key', @public_key)
         response = commit(:pci_encryption_key, token: token)
-        OpenSSL::PKey::RSA.new(response.params['encryption_key'])
+        response.params['encryption_key']
       end
+
+      private
 
       def generate_token(*elements)
         Digest::MD5.hexdigest(@private_key + elements.join)
@@ -138,7 +139,9 @@ module ActiveMerchant #:nodoc:
 
         payload = { card_number: card_number, 'cvv': cvv }.to_json
 
-        post[:card_encrypted_data] = JWE.encrypt(payload, one_time_public_key)
+        encryption_key = @encryption_key || OpenSSL::PKey::RSA.new(one_time_public_key)
+
+        post[:card_encrypted_data] = JWE.encrypt(payload, encryption_key)
         post[:card_month_expiration] = format(payment.month, :two_digits)
         post[:card_year_expiration] = format(payment.year, :two_digits)
       end
@@ -155,10 +158,10 @@ module ActiveMerchant #:nodoc:
         url = build_request_url(action)
         begin
           response = parse(ssl_post(url, post_data(parameters)))
-        rescue ResponseError => response
+        rescue ResponseError => e
           # Errors are returned with helpful data,
           # but get filtered out by `ssl_post` because of their HTTP status.
-          response = parse(response.response.body)
+          response = parse(e.response.body)
         end
 
         Response.new(

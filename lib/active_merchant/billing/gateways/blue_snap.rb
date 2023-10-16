@@ -68,6 +68,8 @@ module ActiveMerchant
         'business_savings' => 'CORPORATE_SAVINGS'
       }
 
+      SHOPPER_INITIATOR = %w(CUSTOMER CARDHOLDER)
+
       STATE_CODE_COUNTRIES = %w(US CA)
 
       def initialize(options = {})
@@ -179,6 +181,7 @@ module ActiveMerchant
         doc.send('store-card', options[:store_card] || false)
         add_amount(doc, money, options)
         add_fraud_info(doc, payment_method, options)
+        add_stored_credentials(doc, options)
 
         if payment_method.is_a?(String)
           doc.send('vaulted-shopper-id', payment_method)
@@ -187,6 +190,19 @@ module ActiveMerchant
             add_personal_info(doc, payment_method, options)
           end
           add_credit_card(doc, payment_method)
+        end
+      end
+
+      def add_stored_credentials(doc, options)
+        return unless stored_credential = options[:stored_credential]
+
+        initiator = stored_credential[:initiator]&.upcase
+        initiator = 'SHOPPER' if SHOPPER_INITIATOR.include?(initiator)
+        doc.send('transaction-initiator', initiator) if stored_credential[:initiator]
+        if stored_credential[:network_transaction_id]
+          doc.send('network-transaction-info') do
+            doc.send('original-network-transaction-id', stored_credential[:network_transaction_id])
+          end
         end
       end
 
@@ -244,6 +260,7 @@ module ActiveMerchant
       def add_order(doc, options)
         doc.send('merchant-transaction-id', truncate(options[:order_id], 50)) if options[:order_id]
         doc.send('soft-descriptor', options[:soft_descriptor]) if options[:soft_descriptor]
+        doc.send('descriptor-phone-number', options[:descriptor_phone_number]) if options[:descriptor_phone_number]
         add_metadata(doc, options)
         add_3ds(doc, options[:three_d_secure]) if options[:three_d_secure]
         add_level_3_data(doc, options)
@@ -350,6 +367,7 @@ module ActiveMerchant
       def add_alt_transaction_purchase(doc, money, payment_method_details, options)
         doc.send('merchant-transaction-id', truncate(options[:order_id], 50)) if options[:order_id]
         doc.send('soft-descriptor', options[:soft_descriptor]) if options[:soft_descriptor]
+        doc.send('descriptor-phone-number', options[:descriptor_phone_number]) if options[:descriptor_phone_number]
         add_amount(doc, money, options)
 
         vaulted_shopper_id = payment_method_details.vaulted_shopper_id
@@ -358,6 +376,7 @@ module ActiveMerchant
         add_echeck_transaction(doc, payment_method_details.payment_method, options, vaulted_shopper_id.present?) if payment_method_details.check?
 
         add_fraud_info(doc, payment_method_details.payment_method, options)
+        add_stored_credentials(doc, options)
         add_metadata(doc, options)
       end
 
@@ -512,7 +531,9 @@ module ActiveMerchant
       end
 
       def authorization_from(action, parsed_response, payment_method_details)
-        action == :store ? vaulted_shopper_id(parsed_response, payment_method_details) : parsed_response['transaction-id']
+        return vaulted_shopper_id(parsed_response, payment_method_details) if action == :store
+
+        parsed_response['refund-transaction-id'] || parsed_response['transaction-id']
       end
 
       def vaulted_shopper_id(parsed_response, payment_method_details)

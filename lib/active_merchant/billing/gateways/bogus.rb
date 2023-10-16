@@ -90,6 +90,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def verify(credit_card, options = {})
+        authorize(0, credit_card, options)
+      end
+
       def store(paysource, options = {})
         case normalize(paysource)
         when /1$/
