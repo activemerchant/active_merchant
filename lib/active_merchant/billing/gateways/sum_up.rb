@@ -29,6 +29,20 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def void(authorization, options = {})
+        checkout_id = authorization.split('#')[0]
+        commit('checkouts/' + checkout_id, {}, :delete)
+      end
+
+      def refund(money, authorization, options = {})
+        transaction_id = authorization.split('#')[-1]
+        payment_currency = options[:currency] || currency(money)
+        post = money ? { amount: localized_amount(money, payment_currency) } : {}
+        add_merchant_data(post, options)
+
+        commit('me/refund/' + transaction_id, post)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -143,7 +157,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response[:status] == 'PENDING'
+        return false unless %w(PENDING EXPIRED PAID).include?(response[:status])
+
+        response[:transactions].each do |transaction|
+          return false unless %w(PENDING CANCELLED SUCCESSFUL).include?(transaction.symbolize_keys[:status])
+        end
+
+        true
       end
 
       def message_from(response)
@@ -153,7 +173,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response[:id]
+        return response[:id] unless response[:transaction_id]
+
+        [response[:id], response[:transaction_id]].join('#')
       end
 
       def auth_headers

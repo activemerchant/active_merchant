@@ -37,6 +37,29 @@ class SumUpTest < Test::Unit::TestCase
     assert_equal SumUpGateway::STANDARD_ERROR_CODE_MAPPING[:multiple_invalid_parameters], response.error_code
   end
 
+  def test_successful_void
+    @gateway.expects(:ssl_request).returns(successful_void_response)
+    response = @gateway.void('c0887be5-9fd2-4018-a531-e573e0298fdd')
+    assert_success response
+    assert_equal 'EXPIRED', response.message
+  end
+
+  def test_failed_void
+    @gateway.expects(:ssl_request).returns(failed_void_response)
+    response = @gateway.void('c0887be5-9fd2-4018-a531-e573e0298fdd22')
+    assert_failure response
+    assert_equal 'Resource not found', response.message
+    assert_equal 'NOT_FOUND', response.error_code
+  end
+
+  def test_failed_refund
+    @gateway.expects(:ssl_request).returns(failed_refund_response)
+    response = @gateway.refund(nil, 'c0887be5-9fd2-4018-a531-e573e0298fdd22')
+    assert_failure response
+    assert_equal 'The transaction is not refundable in its current state', response.message
+    assert_equal 'CONFLICT', response.error_code
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -401,6 +424,63 @@ class SumUpTest < Test::Unit::TestCase
         "error_code": "The card is expired"
       }
     ]
+    RESPONSE
+  end
+
+  def successful_void_response
+    <<-RESPONSE
+    {
+      "checkout_reference": "b5a47552-50e0-4c6e-af23-2495124b5091",
+      "id": "c0887be5-9fd2-4018-a531-e573e0298fdd",
+      "amount": 100.00,
+      "currency": "USD",
+      "pay_to_email": "integrations@spreedly.com",
+      "merchant_code": "MTVU2XGK",
+      "description": "Sample one-time payment",
+      "purpose": "CHECKOUT",
+      "status": "EXPIRED",
+      "date": "2023-09-14T16:32:39.200+00:00",
+      "valid_until": "2023-09-14T18:08:49.977+00:00",
+      "merchant_name": "Spreedly",
+      "transactions": [{
+        "id": "fc805fc9-4864-4c6d-8e29-630c171fce54",
+        "transaction_code": "TDYEQ2RQ23",
+        "merchant_code": "MTVU2XGK",
+        "amount": 100.0,
+        "vat_amount": 0.0,
+        "tip_amount": 0.0,
+        "currency": "USD",
+        "timestamp": "2023-09-14T16:32:50.111+00:00",
+        "status": "CANCELLED",
+        "payment_type": "ECOM",
+        "entry_mode": "CUSTOMER_ENTRY",
+        "installments_count": 1,
+        "internal_id": 5165839144
+      }]
+    }
+    RESPONSE
+  end
+
+  def failed_void_response
+    <<-RESPONSE
+    {
+      "type": "https://developer.sumup.com/docs/problem/checkout-not-found/",
+      "title": "Not Found",
+      "status": 404,
+      "detail": "A checkout session with the id c0887be5-9fd2-4018-a531-e573e0298fdd22 does not exist",
+      "instance": "5e07254b2f25, 5e07254b2f25 a30463b627e3",
+      "error_code": "NOT_FOUND",
+      "message": "Resource not found"
+    }
+    RESPONSE
+  end
+
+  def failed_refund_response
+    <<-RESPONSE
+    {
+      "message": "The transaction is not refundable in its current state",
+      "error_code": "CONFLICT"
+    }
     RESPONSE
   end
 
