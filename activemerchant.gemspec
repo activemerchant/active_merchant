@@ -27,7 +27,6 @@ Gem::Specification.new do |s|
   s.add_dependency('i18n', '>= 0.6.9')
   s.add_dependency('nokogiri', '~> 1.4')
   s.add_dependency('rexml', '~> 3.2.5')
-  s.add_dependency 'klarna_proxy'
 
   s.add_development_dependency('mocha', '~> 1')
   s.add_development_dependency('pry')
