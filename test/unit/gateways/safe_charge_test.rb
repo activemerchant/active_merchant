@@ -223,6 +223,26 @@ class SafeChargeTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_successful_credit_with_unreferenced_refund
+    credit = stub_comms do
+      @gateway.credit(@amount, @credit_card, @options.merge(unreferenced_refund: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal(data.split('&').include?('sg_CreditType=2'), true)
+    end.respond_with(successful_credit_response)
+
+    assert_success credit
+  end
+
+  def test_successful_credit_without_unreferenced_refund
+    credit = stub_comms do
+      @gateway.credit(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal(data.split('&').include?('sg_CreditType=1'), true)
+    end.respond_with(successful_credit_response)
+
+    assert_success credit
+  end
+
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
