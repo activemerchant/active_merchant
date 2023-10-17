@@ -23,6 +23,7 @@
 * Adding Oauth Response for access tokens [almalee24] #4851
 * CheckoutV2: Update stored credentials [almalee24] #4901
 * Revert "Adding Oauth Response for access tokens" [almalee24] #4906
+* Braintree: Create credit card nonce [gasb150] #4897
 * Adyen: Fix shopperEmail bug [almalee24] #4904
 * Add Cabal card bin ranges [yunnydang] #4908
 * Kushki: Fixing issue with 3DS info on visa cc [heavyblade] #4899
