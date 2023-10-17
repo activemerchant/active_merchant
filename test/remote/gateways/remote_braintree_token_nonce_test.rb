@@ -47,7 +47,7 @@ class RemoteBraintreeTokenNonceTest < Test::Unit::TestCase
     tokenized_bank_account, err_messages = generator.create_token_nonce_for_payment_method(bank_account)
 
     assert_nil tokenized_bank_account
-    assert_equal "Field 'state' of variable 'input' has coerced Null value for NonNull type 'UsStateCode!'", err_messages
+    assert_equal "Variable 'input' has an invalid value: Field 'state' has coerced Null value for NonNull type 'UsStateCode!'", err_messages
   end
 
   def test_unsucesfull_create_token_with_invalid_zip_code
@@ -57,7 +57,7 @@ class RemoteBraintreeTokenNonceTest < Test::Unit::TestCase
     tokenized_bank_account, err_messages = generator.create_token_nonce_for_payment_method(bank_account)
 
     assert_nil tokenized_bank_account
-    assert_equal "Field 'zipCode' of variable 'input' has coerced Null value for NonNull type 'UsZipCode!'", err_messages
+    assert_equal "Variable 'input' has an invalid value: Field 'zipCode' has coerced Null value for NonNull type 'UsZipCode!'", err_messages
   end
 
   def test_url_generation
@@ -79,5 +79,14 @@ class RemoteBraintreeTokenNonceTest < Test::Unit::TestCase
     generator = TokenNonce.new(braintree_backend)
 
     assert_equal 'https://payments.braintree-api.com/graphql', generator.url
+  end
+
+  def test_successfully_create_token_nonce_for_credit_card
+    generator = TokenNonce.new(@braintree_backend, @options)
+    credit_card = credit_card('4111111111111111')
+    tokenized_credit_card, err_messages = generator.create_token_nonce_for_payment_method(credit_card)
+    assert_not_nil tokenized_credit_card
+    assert_match %r(^tokencc_), tokenized_credit_card
+    assert_nil err_messages
   end
 end
