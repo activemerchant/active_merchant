@@ -104,7 +104,6 @@ module ActiveMerchant #:nodoc:
         add_3ds(post, payment, options)
         add_address(post, payment, options)
         add_metadata(post, options)
-        add_recurrence_type(post, options)
         add_ewallet(post, options)
         add_payment_fields(post, options)
         add_payment_urls(post, options)
@@ -160,10 +159,6 @@ module ActiveMerchant #:nodoc:
         post[:initiation_type] = initiation_type if initiation_type
       end
 
-      def add_recurrence_type(post, options)
-        post[:recurrence_type] = options[:recurrence_type] if options[:recurrence_type]
-      end
-
       def add_creditcard(post, payment, options)
         post[:payment_method] = {}
         post[:payment_method][:fields] = {}
@@ -175,6 +170,7 @@ module ActiveMerchant #:nodoc:
         pm_fields[:expiration_year] = payment.year.to_s
         pm_fields[:name] = "#{payment.first_name} #{payment.last_name}"
         pm_fields[:cvv] = payment.verification_value.to_s unless valid_network_transaction_id?(options) || payment.verification_value.blank?
+        pm_fields[:recurrence_type] = options[:recurrence_type] if options[:recurrence_type]
         add_stored_credential(post, options)
       end
 

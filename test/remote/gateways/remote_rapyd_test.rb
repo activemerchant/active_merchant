@@ -114,6 +114,7 @@ class RemoteRapydTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_reccurence_type
+    @options[:pm_type] = 'gb_visa_mo_card'
     response = @gateway.purchase(@amount, @credit_card, @options.merge(recurrence_type: 'recurring'))
     assert_success response
     assert_equal 'SUCCESS', response.message
