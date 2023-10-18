@@ -4,17 +4,17 @@ class RemoteElementTest < Test::Unit::TestCase
   def setup
     @gateway = ElementGateway.new(fixtures(:element))
 
-    @amount = 100
+    @amount = rand(1..1000)
     @credit_card = credit_card('4000100011112224')
+    @declined_card = credit_card('6060704495764400')
     @check = check
     @options = {
-      order_id: '1',
       billing_address: address,
       description: 'Store Purchase'
     }
 
     @google_pay_network_token = network_tokenization_credit_card(
-      '4444333322221111',
+      '6011000400000000',
       month: '01',
       year: Time.new.year + 2,
       first_name: 'Jane',
@@ -34,25 +34,27 @@ class RemoteElementTest < Test::Unit::TestCase
       last_name: 'Smith',
       verification_value: '737',
       payment_cryptogram: 'CeABBJQ1AgAAAAAgJDUCAAAAAAA=',
-      eci: '07',
+      eci: '05',
       transaction_id: 'abc123',
       source: :apple_pay
     )
   end
 
-  def test_successful_purchase
+  def test_successful_purchase_and_refund
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
-    assert_match %r{Street address and postal code do not match}, response.avs_result['message']
-    assert_match %r{CVV matches}, response.cvv_result['message']
+
+    assert refund = @gateway.refund(@amount, response.authorization)
+    assert_success refund
+    assert_equal 'Approved', refund.message
   end
 
   def test_failed_purchase
     @amount = 20
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Declined', response.message
+    assert_equal 'INVALID CARD INFO', response.message
   end
 
   def test_successful_purchase_with_echeck
@@ -101,39 +103,43 @@ class RemoteElementTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_duplicate_check_disable_flag
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: true))
+    amount = @amount
+
+    response = @gateway.purchase(amount, @credit_card, @options.merge(duplicate_check_disable_flag: true))
     assert_success response
     assert_equal 'Approved', response.message
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: false))
+    response = @gateway.purchase(amount, @credit_card, @options.merge(duplicate_check_disable_flag: false))
+    assert_failure response
+    assert_equal 'Duplicate', response.message
+
+    response = @gateway.purchase(amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'true'))
     assert_success response
     assert_equal 'Approved', response.message
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'true'))
-    assert_success response
-    assert_equal 'Approved', response.message
-
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'xxx'))
-    assert_success response
-    assert_equal 'Approved', response.message
+    response = @gateway.purchase(amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'xxx'))
+    assert_failure response
+    assert_equal 'Duplicate', response.message
   end
 
   def test_successful_purchase_with_duplicate_override_flag
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: true))
+    amount = @amount
+
+    response = @gateway.purchase(amount, @credit_card, @options.merge(duplicate_override_flag: true))
     assert_success response
     assert_equal 'Approved', response.message
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: false))
+    response = @gateway.purchase(amount, @credit_card, @options.merge(duplicate_override_flag: false))
+    assert_failure response
+    assert_equal 'Duplicate', response.message
+
+    response = @gateway.purchase(amount, @credit_card, @options.merge(duplicate_override_flag: 'true'))
     assert_success response
     assert_equal 'Approved', response.message
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_overrride_flag: 'true'))
-    assert_success response
-    assert_equal 'Approved', response.message
-
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'xxx'))
-    assert_success response
-    assert_equal 'Approved', response.message
+    response = @gateway.purchase(amount, @credit_card, @options.merge(duplicate_override_flag: 'xxx'))
+    assert_failure response
+    assert_equal 'Duplicate', response.message
   end
 
   def test_successful_purchase_with_terminal_id
@@ -160,43 +166,45 @@ class RemoteElementTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_authorize_capture_and_void_with_apple_pay
+    auth = @gateway.authorize(3100, @apple_pay_network_token, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(3200, auth.authorization)
+    assert_success capture
+    assert_equal 'Approved', capture.message
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal 'Success', void.message
+  end
+
+  def test_successful_verify_with_apple_pay
+    response = @gateway.verify(@apple_pay_network_token, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'Success', capture.message
+    assert_equal 'Approved', capture.message
   end
 
   def test_failed_authorize
     @amount = 20
-    response = @gateway.authorize(@amount, @credit_card, @options)
+    response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Declined', response.message
-  end
-
-  def test_partial_capture
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-
-    assert capture = @gateway.capture(@amount - 1, auth.authorization)
-    assert_success capture
+    assert_equal 'INVALID CARD INFO', response.message
   end
 
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
     assert_equal 'TransactionID required', response.message
-  end
-
-  def test_successful_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-
-    assert refund = @gateway.refund(@amount, purchase.authorization)
-    assert_success refund
-    assert_equal 'Approved', refund.message
   end
 
   def test_partial_refund
@@ -227,9 +235,12 @@ class RemoteElementTest < Test::Unit::TestCase
     assert_equal 'TransactionAmount required', credit.message
   end
 
-  def test_successful_void
+  def test_successful_partial_capture_and_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
+
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
+    assert_success capture
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
@@ -255,11 +266,11 @@ class RemoteElementTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = ElementGateway.new(account_id: '', account_token: '', application_id: '', acceptor_id: '', application_name: '', application_version: '')
+    gateway = ElementGateway.new(account_id: '3', account_token: '3', application_id: '3', acceptor_id: '3', application_name: '3', application_version: '3')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match %r{Invalid Request}, response.message
+    assert_match %r{Invalid AccountToken}, response.message
   end
 
   def test_transcript_scrubbing

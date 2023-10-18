@@ -10,10 +10,35 @@ class ElementTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      order_id: '1',
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @apple_pay_network_token = network_tokenization_credit_card(
+      '4895370015293175',
+      month: '10',
+      year: Time.new.year + 2,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      payment_cryptogram: 'CeABBJQ1AgAAAAAgJDUCAAAAAAA=',
+      eci: '07',
+      transaction_id: 'abc123',
+      source: :apple_pay
+    )
+
+    @google_pay_network_token = network_tokenization_credit_card(
+      '6011000400000000',
+      month: '01',
+      year: Time.new.year + 2,
+      first_name: 'Jane',
+      last_name: 'Doe',
+      verification_value: '888',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      eci: '05',
+      transaction_id: '123456789',
+      source: :google_pay
+    )
   end
 
   def test_successful_purchase
@@ -58,6 +83,28 @@ class ElementTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @check, @options)
     assert_failure response
+  end
+
+  def test_successful_purchase_with_apple_pay
+    response = stub_comms do
+      @gateway.purchase(@amount, @apple_pay_network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<WalletType>2</WalletType>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_google_pay
+    response = stub_comms do
+      @gateway.purchase(@amount, @google_pay_network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<WalletType>1</WalletType>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'Approved', response.message
   end
 
   def test_successful_purchase_with_payment_account_token
@@ -160,7 +207,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(card_present_code: 'Present'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match '<CardPresentCode>Present</CardPresentCode>', data
+      assert_match '<CardPresentCode>2</CardPresentCode>', data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -170,7 +217,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(payment_type: 'NotUsed'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match '<PaymentType>NotUsed</PaymentType>', data
+      assert_match '<PaymentType>0</PaymentType>', data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -180,7 +227,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(submission_type: 'NotUsed'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match '<SubmissionType>NotUsed</SubmissionType>', data
+      assert_match '<SubmissionType>0</SubmissionType>', data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -190,7 +237,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: true))
     end.check_request do |_endpoint, data, _headers|
-      assert_match '<DuplicateCheckDisableFlag>True</DuplicateCheckDisableFlag>', data
+      assert_match '<DuplicateCheckDisableFlag>1</DuplicateCheckDisableFlag>', data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -198,7 +245,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'true'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match '<DuplicateCheckDisableFlag>True</DuplicateCheckDisableFlag>', data
+      assert_match '<DuplicateCheckDisableFlag>1</DuplicateCheckDisableFlag>', data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -206,7 +253,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: false))
     end.check_request do |_endpoint, data, _headers|
-      assert_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
+      assert_not_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -214,7 +261,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'xxx'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
+      assert_not_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -222,7 +269,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'False'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
+      assert_not_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -231,7 +278,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |_endpoint, data, _headers|
-      assert_no_match %r(<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>), data
+      assert_not_match %r(<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>), data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -241,7 +288,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: true))
     end.check_request do |_endpoint, data, _headers|
-      assert_match '<DuplicateOverrideFlag>True</DuplicateOverrideFlag>', data
+      assert_match '<DuplicateCheckDisableFlag>1</DuplicateCheckDisableFlag>', data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -249,7 +296,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'true'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match '<DuplicateOverrideFlag>True</DuplicateOverrideFlag>', data
+      assert_match '<DuplicateCheckDisableFlag>1</DuplicateCheckDisableFlag>', data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -257,7 +304,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: false))
     end.check_request do |_endpoint, data, _headers|
-      assert_match '<DuplicateOverrideFlag>False</DuplicateOverrideFlag>', data
+      assert_not_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -265,7 +312,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'xxx'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match '<DuplicateOverrideFlag>False</DuplicateOverrideFlag>', data
+      assert_not_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -273,7 +320,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'False'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match '<DuplicateOverrideFlag>False</DuplicateOverrideFlag>', data
+      assert_not_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -282,7 +329,7 @@ class ElementTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |_endpoint, data, _headers|
-      assert_no_match %r(<DuplicateOverrideFlag>False</DuplicateOverrideFlag>), data
+      assert_not_match %r(<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>), data
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -325,8 +372,8 @@ class ElementTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match '<CreditCardCredit', data
       assert_match '<TicketNumber>1</TicketNumber', data
-      assert_match '<MarketCode>FoodRestaurant</MarketCode>', data
-      assert_match '<MerchantSuppliedTransactionId>123</MerchantSuppliedTransactionId>', data
+      assert_match '<MarketCode>4</MarketCode>', data
+      assert_match '<MerchantSuppliedTransactionID>123</MerchantSuppliedTransactionID>', data
     end.respond_with(successful_credit_response)
   end
 
