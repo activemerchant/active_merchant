@@ -8,7 +8,8 @@ module ActiveMerchant
       ENDPOINTS = {
         generate_token: '/v1/oauth2/token',
         create_order: '/v2/checkout/orders',
-        capture_order: '/v2/checkout/orders/%{id}/capture'
+        capture_order: '/v2/checkout/orders/%{id}/capture',
+        refund: '/v2/payments/captures/%{id}/refund'
       }
 
       SUCCESS_CODE = 100
@@ -43,7 +44,10 @@ module ActiveMerchant
 
       def refund(amount, authorization, options = {})
         post = {}
-        commit('refund', post)
+
+        add_refund_amount(post, amount, options) unless options[:full_refund].present?
+        add_refund_reason(post, options)
+        commit('refund', post, options[:capture_id])
       end
 
       private
@@ -149,6 +153,16 @@ module ActiveMerchant
 
       def add_payment_intent(post, intent_type = "CAPTURE")
         post[:intent] = intent_type
+      end
+
+      def add_refund_amount(post, amount, options)
+        post[:amount] = {}
+        post[:ammount][:value] = amount
+        post[:ammount][:currency_code] = options[:currency_code]
+      end
+
+       def add_refund_reason(post, options)
+        post[:note_to_payer] = options[:refund_reason]
       end
     end
   end
