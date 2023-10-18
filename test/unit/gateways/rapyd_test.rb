@@ -153,7 +153,7 @@ class RapydTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_method, _endpoint, data, _headers|
       request = JSON.parse(data)
-      assert_equal request['recurrence_type'], @options[:recurrence_type]
+      assert_equal request['payment_method']['fields']['recurrence_type'], @options[:recurrence_type]
     end.respond_with(successful_purchase_response)
   end
 
