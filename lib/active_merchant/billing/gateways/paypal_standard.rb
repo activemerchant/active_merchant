@@ -41,9 +41,6 @@ module ActiveMerchant
         commit(:capture_order, post, options[:order_id])
       end
 
-      def void(authorization, options = {})
-      end
-
       def refund(amount, authorization, options = {})
         post = {}
         commit('refund', post)
