@@ -440,12 +440,58 @@ class RapydTest < Test::Unit::TestCase
       reason_type: 'recurring',
       network_transaction_id: '12345'
     }
+    @options[:pm_type] = 'us_debit_mastercard_card'
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_nil request['customer']
+      assert_nil request['email']
+    end
+  end
+
+  def test_request_should_not_include_customer_object_on_non_use_paymen_types
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
       request = JSON.parse(data)
       assert_nil request['customer']
     end
+  end
+
+  def test_request_should_include_customer_object_and_email_for_us_payment_types
+    @options[:pm_type] = 'us_debit_mastercard_card'
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+
+      refute_nil request['customer']
+      refute_nil request['email']
+      assert_match(/Longbob/, request['customer']['name'])
+      assert_equal 1, request['customer']['addresses'].size
+    end
+  end
+
+  def test_getting_phone_number_from_address_object
+    assert_empty @gateway.send(:phone_number, {})
+    assert_equal '123', @gateway.send(:phone_number, { billing_address: { phone: '123' } })
+    assert_equal '123', @gateway.send(:phone_number, { billing_address: { phone_number: '123' } })
+    assert_equal '123', @gateway.send(:phone_number, { billing_address: { phone_number: '1-2.3' } })
+  end
+
+  def test_detect_non_us_payment_type
+    refute @gateway.send(:non_us_payment_type?)
+    refute @gateway.send(:non_us_payment_type?, { pm_type: 'us_debit_visa_card' })
+    assert @gateway.send(:non_us_payment_type?, { pm_type: 'in_amex_card' })
+  end
+
+  def test_indicates_if_transaction_is_recurring
+    refute @gateway.send(:recurring?)
+    refute @gateway.send(:recurring?, { stored_credential: { reason_type: 'unschedule' } })
+    assert @gateway.send(:recurring?, { stored_credential: { reason_type: 'recurring' } })
   end
 
   private
