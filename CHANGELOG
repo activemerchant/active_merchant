@@ -39,6 +39,7 @@
 * Element: Add lodging fields [yunnydang] #4813
 * SafeCharge: Update sg_CreditType field on the credit method [yunnydang] #4918
 * Rapyd: add force_3ds_secure flag [Heavyblade] #4927
+* Beanstream: add alternate option for passing phone number [jcreiff] #4923
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
