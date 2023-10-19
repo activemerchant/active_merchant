@@ -26,7 +26,6 @@ module ActiveMerchant
       def create_session(options)
         post = {}
         prepare_billing_address(post, options)
-        prepare_shipping_address(post, options)
         prepare_line_items(post, options)
         prepare_order_data(post, options)
 
@@ -43,7 +42,6 @@ module ActiveMerchant
       def update_session(session_id, options)
         post = {}
         prepare_billing_address(post, options)
-        prepare_shipping_address(post, options)
         prepare_line_items(post, options)
         prepare_order_data(post, options)
 
@@ -63,6 +61,7 @@ module ActiveMerchant
         prepare_shipping_address(post, options)
         prepare_line_items(post, options)
         prepare_order_data(post, options)
+        post["order_amount"] = amount.to_f
 
         authorize(amount, authorize_token, post)
       end
@@ -94,7 +93,7 @@ module ActiveMerchant
         post = {}
         prepare_line_items(post, options)
 
-        response = Klarna.client(:refund).create(order_id, {refunded_amount: amount, order_lines: post[:order_lines]})
+        response = Klarna.client(:refund).create(order_id, {refunded_amount: amount})
 
         if response.success?
           message = "Refunded order with Klarna id: #{order_id}"
@@ -109,7 +108,7 @@ module ActiveMerchant
         prepare_billing_address(post, options)
         prepare_customer_data(post, options)
 
-        response = Klarna.client(:payment).customer_token(authorize_token, options)
+        response = Klarna.client(:payment).customer_token(authorize_token, post)
 
         if response.success?
           message = "Client token Created"
@@ -233,7 +232,7 @@ module ActiveMerchant
 
       def get_response_type(response)
         code = response.code&.to_i
-        if code == 200
+        if code == (200 || 201)
           0
         elsif (500..599).include? code
           1
@@ -257,8 +256,12 @@ module ActiveMerchant
 
       def prepare_billing_address(post, options)
         return unless options[:billing_address].present?
+        firstname, lastname = split_names(options[:billing_address][:name])
 
         post["billing_address"] = {}
+        post["billing_address"]["given_name"] = firstname
+        post["billing_address"]["family_name"] = lastname
+        post["billing_address"]["email"] = options[:email]
         post["billing_address"]["street_address"] = options[:billing_address][:address1]
         post["billing_address"]["street_address2"] = options[:billing_address][:address2]
         post["billing_address"]["organization_name"] = options[:billing_address][:company]
@@ -268,29 +271,17 @@ module ActiveMerchant
         post["billing_address"]["country"] = options[:billing_address][:country]
       end
 
-      def prepare_shipping_address(post, options)
-        return unless options[:shipping_address].present?
-
-        post["shipping_address"] = {}
-        post["shipping_address"]["street_address"] = options[:shipping_address][:address1]
-        post["shipping_address"]["street_address2"] = options[:shipping_address][:address2]
-        post["shipping_address"]["organization_name"] = options[:shipping_address][:company]
-        post["shipping_address"]["city"] = options[:shipping_address][:city]
-        post["shipping_address"]["region"] = options[:shipping_address][:state]
-        post["shipping_address"]["postal_code"] = options[:shipping_address][:zip]
-        post["shipping_address"]["country"] = options[:shipping_address][:country]
-      end
 
       def prepare_order_data(post, options)
         post["auto_capture"] = true
         post["intent"] = "buy_and_tokenize"
-        post["purchase_country"] = options.dig(:billing_address, :country) || options.dig(:shipping_country, :country)
+        post["purchase_country"] = options.dig(:billing_address, :country)
         post["purchase_currency"] = options[:currency]
         post["order_amount"] = options[:total]&.to_f
       end
 
       def prepare_customer_data(post, options)
-        post["purchase_country"] = options.dig(:billing_address, :country) || options.dig(:shipping_country, :country)
+        post["purchase_country"] = options.dig(:billing_address, :country)
         post["purchase_currency"] = options[:currency]
         post["intended_use"] = "SUBSCRIPTION"
         post["description"] = "For Recurring Payments"
