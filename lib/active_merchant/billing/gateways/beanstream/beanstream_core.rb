@@ -228,7 +228,7 @@ module ActiveMerchant #:nodoc:
 
         if billing_address = options[:billing_address] || options[:address]
           post[:ordName]          = billing_address[:name]
-          post[:ordPhoneNumber]   = billing_address[:phone]
+          post[:ordPhoneNumber]   = billing_address[:phone] || billing_address[:phone_number]
           post[:ordAddress1]      = billing_address[:address1]
           post[:ordAddress2]      = billing_address[:address2]
           post[:ordCity]          = billing_address[:city]
