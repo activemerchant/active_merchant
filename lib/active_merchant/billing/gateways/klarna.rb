@@ -58,7 +58,6 @@ module ActiveMerchant
       def purchase(amount, authorize_token, options={})
         post = {}
         prepare_billing_address(post, options)
-        prepare_shipping_address(post, options)
         prepare_line_items(post, options)
         prepare_order_data(post, options)
         post["order_amount"] = amount.to_f
