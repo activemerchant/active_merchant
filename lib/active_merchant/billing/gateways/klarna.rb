@@ -62,11 +62,22 @@ module ActiveMerchant
         prepare_order_data(post, options)
         post["order_amount"] = amount.to_f
 
-        authorize(amount, authorize_token, post)
+        customer_order(amount, authorize_token, post)
       end
 
       def authorize(amount, authorize_token, options={})
         response = Klarna.client(:payment).place_order(authorize_token, options)
+
+        if response.success?
+          message = "Placed order #{response.order_id}"
+          generate_success_response(response, message, response.order_id, response.fraud_status)
+        else
+          generate_failure_response(response)
+        end
+      end
+
+      def customer_order(amount, customer_token, options={})
+        response = Klarna.client(:customer_token).place_order(customer_token, options)
 
         if response.success?
           message = "Placed order #{response.order_id}"
@@ -277,6 +288,7 @@ module ActiveMerchant
         post["purchase_country"] = options.dig(:billing_address, :country)
         post["purchase_currency"] = options[:currency]
         post["order_amount"] = options[:total]&.to_f
+        post["order_tax_amount"] = options[:tax]&.to_f
       end
 
       def prepare_customer_data(post, options)
