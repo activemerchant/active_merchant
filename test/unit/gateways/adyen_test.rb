@@ -1473,9 +1473,10 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_additional_extra_data
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(store: 'test store'))
+      @gateway.authorize(@amount, @credit_card, @options.merge(store: 'test store', mcc: '1234'))
     end.check_request do |_endpoint, data, _headers|
       assert_equal JSON.parse(data)['store'], 'test store'
+      assert_equal JSON.parse(data)['mcc'], '1234'
     end.respond_with(successful_authorize_response)
     assert_success response
   end
