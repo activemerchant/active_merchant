@@ -1485,6 +1485,20 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_sending_mcc_on_authorize
+    options = {
+      reference: '345123',
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      order_id: '123',
+      mcc: '5411'
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_failure response
+    assert_equal 'Could not find an acquirer account for the provided currency (USD).', response.message
+  end
+
   def test_successful_authorize_with_level_2_data
     level_2_data = {
       total_tax_amount: '160',

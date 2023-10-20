@@ -255,6 +255,7 @@ module ActiveMerchant #:nodoc:
         post[:shopperIP] = options[:shopper_ip] || options[:ip] if options[:shopper_ip] || options[:ip]
         post[:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
         post[:store] = options[:store] if options[:store]
+        post[:mcc] = options[:mcc] if options[:mcc]
 
         add_shopper_data(post, payment, options)
         add_additional_data(post, payment, options)
