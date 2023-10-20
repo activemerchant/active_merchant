@@ -73,7 +73,7 @@ class SumUpTest < Test::Unit::TestCase
 
   def test_message_from
     response = @gateway.send(:parse, successful_complete_checkout_response)
-    message_from = @gateway.send(:message_from, response.symbolize_keys)
+    message_from = @gateway.send(:message_from, true, response.symbolize_keys)
     assert_equal 'PENDING', message_from
   end
 
@@ -83,15 +83,15 @@ class SumUpTest < Test::Unit::TestCase
     assert_equal '8d8336a1-32e2-4f96-820a-5c9ee47e76fc', authorization_from
   end
 
-  def test_format_multiple_errors
+  def test_format_errors
     responses = @gateway.send(:parse, failed_complete_checkout_array_response)
-    error_code = @gateway.send(:format_multiple_errors, responses)
-    assert_equal format_multiple_errors_response, error_code
+    error_code = @gateway.send(:format_errors, responses)
+    assert_equal format_errors_response, error_code
   end
 
   def test_error_code_from
     response = @gateway.send(:parse, failed_complete_checkout_response)
-    error_code_from = @gateway.send(:error_code_from, response.symbolize_keys)
+    error_code_from = @gateway.send(:error_code_from, false, response.symbolize_keys)
     assert_equal 'CHECKOUT_SESSION_IS_EXPIRED', error_code_from
   end
 
@@ -422,6 +422,11 @@ class SumUpTest < Test::Unit::TestCase
         "message": "Validation error",
         "param": "card",
         "error_code": "The card is expired"
+      },
+      {
+        "message": "Validation error",
+        "param": "card",
+        "error_code": "The value located under the \'$.card.number\' path is not a valid card number"
       }
     ]
     RESPONSE
@@ -484,11 +489,11 @@ class SumUpTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def format_multiple_errors_response
+  def format_errors_response
     {
       error_code: 'MULTIPLE_INVALID_PARAMETERS',
       message: 'Validation error',
-      errors: [{ error_code: 'The card is expired', param: 'card' }]
+      errors: [{ error_code: 'The card is expired', param: 'card' }, { error_code: "The value located under the '$.card.number' path is not a valid card number", param: 'card' }]
     }
   end
 end
