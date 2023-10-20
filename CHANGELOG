@@ -33,6 +33,7 @@
 * Rapyd: Add recurrence_type field [yunnydang] #4912
 * Revert "Adyen: Update MIT flagging for NT" [almalee24] #4914
 * SumUp: Void and partial refund calls [sinourain] #4891
+* Rapyd: send customer object on us payment types [Heavyblade] #4919
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
