@@ -1,10 +1,10 @@
 module ActiveMerchant
   module Billing
     class PaypalStandardGateway < Gateway
-      include Empty
       self.test_url = 'https://api-m.sandbox.paypal.com'
       self.live_url = 'https://api-m.paypal.com'
-      self.supported_countries = %w[AL DZ AD AO AI AG AR AM AW AU AT AZ BS BH BB BY BE BZ BJ BM BT BO BA BW BR VG BN BG BF BI KH CM CA CV KY TD CL C2 CO KM CG CD CK CR CI HR CY CZ DK DJ DM DO EC EG SV ER EE ET FK FO FJ FI FR GF PF GA GM GE DE GI GR GL GD GP GT GN GW GY HN HK HU IS IN ID IE IL IT JM JP JO KZ KE KI KW KG LA LV LS LI LT LU MK MG MW MY MV ML MT MH MQ MR MU YT MX FM MD MC MN ME MS MA MZ NA NR NP NL NC NZ NI NE NG NU NF NO OM PW PA PG PY PE PH PN PL PT QA RE RO RU RW WS SM ST SA SN RS SC SL SG SK SI SB SO ZA KR ES LK SH KN LC PM VC SR SJ SZ SE CH TW TJ TZ TH TG TO TT TN TM TC TV UG UA AE GB US UY VU VA VE VN WF YE ZM ZW].freeze      self.default_currency = 'USD'
+      self.supported_countries = %w[AL DZ AD AO AI AG AR AM AW AU AT AZ BS BH BB BY BE BZ BJ BM BT BO BA BW BR VG BN BG BF BI KH CM CA CV KY TD CL CO KM CG CD CK CR CI HR CY CZ DK DJ DM DO EC EG SV ER EE ET FK FO FJ FI FR GF PF GA GM GE DE GI GR GL GD GP GT GN GW GY HN HK HU IS IN ID IE IL IT JM JP JO KZ KE KI KW KG LA LV LS LI LT LU MK MG MW MY MV ML MT MH MQ MR MU YT MX FM MD MC MN ME MS MA MZ NA NR NP NL NC NZ NI NE NG NU NF NO OM PW PA PG PY PE PH PN PL PT QA RE RO RU RW WS SM ST SA SN RS SC SL SG SK SI SB SO ZA KR ES LK SH KN LC PM VC SR SJ SZ SE CH TW TJ TZ TH TG TO TT TN TM TC TV UG UA AE GB US UY VU VA VE VN WF YE ZM ZW].freeze
+      self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = %i[visa master american_express diners_club maestro discover jcb mada bp_plus]
       self.display_name = 'PayPal'
@@ -16,8 +16,8 @@ module ActiveMerchant
         refund: '/v2/payments/captures/%{id}/refund'
       }
 
-      SOFT_DECLINE_CODES = [].freeze
-      HARD_DECLINE_CODES = %w[CARD_EXPIRED TRANSACTION_BLOCKED_BY_PAYEE PAYER_ACCOUNT_LOCKED_OR_CLOSED]
+      SOFT_DECLINE_CODES = %w[INVALID_REQUEST AUTHENTICATION_FAILURE UNPROCESSABLE_ENTITY RATE_LIMIT_REACHED].freeze
+      SUCCESS_CODES = %w[CREATED COMPLETED PAYER_ACTION_REQUIRED APPROVED SAVED COMPLETED].freeze
 
       def initialize(options = {})
         requires!(options, :client_id, :client_secret)
@@ -29,48 +29,57 @@ module ActiveMerchant
         @access_token = setup_access_token
       end
 
-      def purchase(amount, payment_method, options = {})
+      def purchase(amount, options = {})
         post ||= {}
 
-        add_payment_intent(post, intent_type = "CAPTURE")
+        add_payment_intent(post)
         add_purchase_units(post, amount, options)
         add_payment_source(post, options)
 
         commit(:create_order, post)
       end
 
-      def capture(amount, authorization, options = {})
+      def capture(authorization, options = {})
         post = {}
 
-        commit(:capture_order, post, options[:order_id])
+        commit(:capture_order, post, authorization)
       end
 
       def refund(amount, authorization, options = {})
         post = {}
 
-        add_refund_amount(post, amount, options) unless options[:full_refund].present?
+        add_refund_amount(post, amount, options)
         add_refund_reason(post, options)
 
-        commit(:refund, post, options[:capture_id])
+        commit(:refund, post, authorization)
       end
 
       private
 
       def commit(action, post, id = nil)
-        url = build_request_url(action, id)
-
-        response = parse(ssl_post(url, post_data(post), headers))
-        success = success_from(response)
+        begin
+          url = build_request_url(action, id)
+          request_body = post_data(post)
+          response = parse(ssl_post(url, request_body, headers))
+          succeeded = success_from(response)
+        rescue ResponseError => e
+          response = parse(e.response.body, error: e.response)
+        end
 
         Response.new(
-          success_from(response),
-          message_from(response),
-          response,
+          succeeded,
+          message_from(succeeded, response),
+          normalize_response(action, response),
           test: test?,
-          authorization: authorization_from(response),
+          authorization: authorization_from(action, response),
+          error_code: succeeded ? nil : error_code_from(response),
           avs_result: { code: response['avs'] },
           cvv_result: response['cvv2'],
-          error_code: success ? nil : error_code_from(response)
+          response_type: response_type(response),
+          response_http_code: @response_http_code,
+          request_endpoint: url,
+          request_method: request_method(action),
+          request_body: request_body
         )
       end
 
@@ -79,6 +88,22 @@ module ActiveMerchant
           test_url
         else
           live_url
+        end
+      end
+
+      def normalize_response(action, response)
+        if action == :create_order && response.present?
+          redirect_link = response['links'].find { |link| link['rel'] == "payer-action" }
+          response['_links'] = { 'redirect' => { 'href' => redirect_link['href'] } } if redirect_link
+          response['order_id'] = response['id']
+        end
+        response
+      end
+
+      def request_method(action)
+        case action
+        when :generate_token, :create_order, :capture_order, :refund
+          'post'
         end
       end
 
@@ -109,38 +134,60 @@ module ActiveMerchant
         post.to_json
       end
 
+      def parse(body, error: nil)
+        JSON.parse(body)
+      rescue JSON::ParserError
+        response = {
+          'error_type' => error&.code,
+          'message' => 'Invalid JSON response received from Paypal.com Unified Payments Gateway. Please contact Paypal.com if you continue to receive this message.'
+        }
+
+        response['error_codes'] = [error&.message] if error&.message
+        response
+      end
+
       def grant_type
         "grant_type=client_credentials"
       end
 
-      def parse(body)
-        JSON.parse(body)
-      end
-
       def success_from(response)
-        response["status"] == "CREATED"
+        SUCCESS_CODES.include?(response['status'])
       end
 
-      def message_from(response)
-        response.dig('latest_payment_attempt', 'status') || response['status'] || response['message']
+      def message_from(succeeded, response)
+        if succeeded
+          response['status']
+        elsif response['message']
+          response['name'] + ': ' + response['message']
+        else
+          response['error'] || response['error_description'] || response['status'] || response['message'] || 'Unable to read error message'
+        end
       end
 
-      def authorization_from(response)
-        response.dig('latest_payment_attempt', 'payment_intent_id')
+      def authorization_from(action, response)
+        case action
+        when :create_order, :refund_order
+          response.dig('id')
+        when :capture_order
+          purchase_unit = response.dig('purchase_units', 0)
+          captures = purchase_unit&.dig('payments', 'captures', 0)
+          captures&.dig('id')
+        end
       end
 
       def error_code_from(response)
-        response['provider_original_response_code'] || response['code'] unless success_from(response)
+        response[:name] unless success_from(response)
       end
 
       def add_purchase_units(post, amount, options)
         purchase_unit = {}
+        purchase_unit[:reference_id] = options[:order_id]
         purchase_unit[:amount] = {}
         purchase_unit[:amount][:value] = amount
-        purchase_unit[:amount][:currency_code] = options[:currency_code]
+        purchase_unit[:amount][:currency_code] = options[:currency]
+        add_shipping_address(purchase_unit, options)
 
         post[:purchase_units] ||= []
-
         post[:purchase_units] << purchase_unit
       end
 
@@ -151,19 +198,29 @@ module ActiveMerchant
         payment_source = {}
         payment_source[:landing_page] = "LOGIN"
         payment_source[:user_action] = "PAY_NOW"
-        payment_source[:return_url] = options[:return_url]
-        payment_source[:cancel_url] = options[:cancel_url]
+        payment_source[:return_url] = options[:redirect_links][:success_url]
+        payment_source[:cancel_url] = options[:redirect_links][:failure_url]
         post[:payment_source][:paypal][:experience_context] = payment_source
       end
 
-      def add_payment_intent(post, intent_type = "CAPTURE")
-        post[:intent] = intent_type
+      def add_shipping_address(purchase_unit, options)
+        purchase_unit[:shipping] = {}
+        purchase_unit[:shipping][:address] = {}
+        purchase_unit[:shipping][:address][:address_line_1] = options[:billing_address][:address1]
+        purchase_unit[:shipping][:address][:admin_area_2] = options[:billing_address][:city]
+        purchase_unit[:shipping][:address][:admin_area_1] = options[:billing_address][:state]
+        purchase_unit[:shipping][:address][:postal_code] = options[:billing_address][:zip]
+        purchase_unit[:shipping][:address][:country_code] = options[:billing_address][:country]
+      end
+
+      def add_payment_intent(post)
+        post[:intent] = "CAPTURE"
       end
 
       def add_refund_amount(post, amount, options)
         post[:amount] = {
           "value": amount,
-          "currency_code": options[:currency_code]
+          "currency_code": options[:currency]
         }
       end
 
@@ -174,6 +231,16 @@ module ActiveMerchant
       def handle_response(response)
         @response_http_code = response.code.to_i
         super
+      end
+
+      def response_type(response)
+        if SUCCESS_CODES.include?(response['status'])
+          0
+        elsif SOFT_DECLINE_CODES.include?(response['name'])
+          1
+        else
+          2
+        end
       end
     end
   end
