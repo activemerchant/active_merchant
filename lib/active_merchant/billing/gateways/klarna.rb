@@ -258,8 +258,8 @@ module ActiveMerchant
           {
             "name" => item["name"],
             "quantity" => item["quantity"],
-            "total_amount" => item["final_amount"].to_f,
-            "unit_price" => item["price"].to_f
+            "total_amount" => item["final_amount"].to_f * 100, if item["final_amount"]
+            "unit_price" => item["price"].to_f * 100 if item["price"]
           }
         end
       end
