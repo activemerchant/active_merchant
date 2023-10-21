@@ -255,11 +255,14 @@ module ActiveMerchant
         return unless options[:order_line_items].present?
 
         post["order_lines"] = options[:order_line_items].map do |item|
+          final_amount = item["final_amount"] ? item["final_amount"].to_f * 100 : nil
+          unit_price = item["price"] ? item["price"].to_f * 100 : nil
+
           {
             "name" => item["name"],
             "quantity" => item["quantity"],
-            "total_amount" => item["final_amount"].to_f * 100, if item["final_amount"]
-            "unit_price" => item["price"].to_f * 100 if item["price"]
+            "total_amount" => final_amount,
+            "unit_price" => unit_price
           }
         end
       end
