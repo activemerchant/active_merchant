@@ -17,7 +17,7 @@ module ActiveMerchant
       }
 
       SOFT_DECLINE_CODES = %w[INVALID_REQUEST AUTHENTICATION_FAILURE UNPROCESSABLE_ENTITY RATE_LIMIT_REACHED].freeze
-      SUCCESS_CODES = %w[CREATED COMPLETED PAYER_ACTION_REQUIRED APPROVED SAVED COMPLETED].freeze
+      SUCCESS_CODES = %w[COMPLETED].freeze
 
       def initialize(options = {})
         requires!(options, :client_id, :client_secret)
