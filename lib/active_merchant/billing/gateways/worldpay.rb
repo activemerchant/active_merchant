@@ -443,7 +443,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_additional_3ds_data(xml, options)
-        additional_data = { 'dfReferenceId' => options[:session_id] }
+        additional_data = { 'dfReferenceId' => options[:df_reference_id] }
         additional_data['challengeWindowSize'] = options[:browser_size] if options[:browser_size]
 
         xml.additional3DSData additional_data
