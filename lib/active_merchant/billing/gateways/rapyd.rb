@@ -207,7 +207,7 @@ module ActiveMerchant #:nodoc:
 
       def add_3ds(post, payment, options)
         if options[:execute_threed] == true
-          post[:payment_method_options] = { '3d_required' => true }
+          post[:payment_method_options] = { '3d_required' => true } if options[:force_3d_secure].present?
         elsif three_d_secure = options[:three_d_secure]
           post[:payment_method_options] = {}
           post[:payment_method_options]['3d_required'] = three_d_secure[:required]
