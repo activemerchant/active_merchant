@@ -6,10 +6,11 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_gateway))
     @echeck_gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_asv_aoa_gateway))
     @three_ds_gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_3ds_gateway))
-
+    @tpv_orbital_gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_tpv_gateway))
     @amount = 100
     @google_pay_amount = 10000
     @credit_card = credit_card('4556761029983886')
+    @mastercard_card_tpv = credit_card('2521000000000006')
     @declined_card = credit_card('4000300011112220')
     # Electronic Check object with test credentials of saving account
     @echeck = check(account_number: '072403004', account_type: 'savings', routing_number: '072403004')
@@ -827,6 +828,98 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal 'No reason to decline', response.message
+  end
+
+  def test_successful_store
+    response = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
+    assert_success response
+    assert_false response.params['safetech_token'].blank?
+  end
+
+  def test_successful_purchase_stored_token
+    store = @tpv_orbital_gateway.store(@credit_card, @options)
+    assert_success store
+    # The 'UT' value means use token, To tell Orbital we want to use the stored payment method
+    # The 'VI' value means an abbreviation for the card brand 'VISA'.
+    response = @tpv_orbital_gateway.purchase(@amount, store.authorization, @options.merge(card_brand: 'VI', token_txn_type: 'UT'))
+    assert_success response
+    assert_equal response.params['card_brand'], 'VI'
+  end
+
+  def test_successful_authorize_stored_token
+    store = @tpv_orbital_gateway.store(@credit_card, @options)
+    assert_success store
+    auth = @tpv_orbital_gateway.authorize(29, store.authorization, @options.merge(card_brand: 'VI', token_txn_type: 'UT'))
+    assert_success auth
+  end
+
+  def test_successful_authorize_stored_token_mastercard
+    store = @tpv_orbital_gateway.store(@credit_card, @options)
+    assert_success store
+    response = @tpv_orbital_gateway.authorize(29, store.authorization, @options.merge(card_brand: 'VI', token_txn_type: 'UT'))
+    assert_success response
+    assert_equal response.params['card_brand'], 'VI'
+  end
+
+  def test_failed_authorize_and_capture
+    store = @tpv_orbital_gateway.store(@credit_card, @options)
+    assert_success store
+    response = @tpv_orbital_gateway.capture(39, store.authorization, @options.merge(card_brand: 'VI', token_txn_type: 'UT'))
+    assert_failure response
+    assert_equal response.params['status_msg'], "The LIDM you supplied (#{store.authorization}) does not match with any existing transaction"
+  end
+
+  def test_successful_authorize_and_capture_with_stored_token
+    store = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
+    assert_success store
+    auth = @tpv_orbital_gateway.authorize(28, store.authorization, @options.merge(card_brand: 'MC', token_txn_type: 'UT'))
+    assert_success auth
+    assert_equal auth.params['card_brand'], 'MC'
+    response = @tpv_orbital_gateway.capture(28, auth.authorization, @options)
+    assert_success response
+  end
+
+  def test_successful_authorize_with_stored_token_and_refund
+    store = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
+    assert_success store
+    auth = @tpv_orbital_gateway.authorize(38, store.authorization, @options.merge(card_brand: 'MC', token_txn_type: 'UT'))
+    assert_success auth
+    response = @tpv_orbital_gateway.refund(38, auth.authorization, @options)
+    assert_success response
+  end
+
+  def test_failed_refund_wrong_token
+    store = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
+    assert_success store
+    auth = @tpv_orbital_gateway.authorize(38, store.authorization, @options.merge(card_brand: 'MC', token_txn_type: 'UT'))
+    assert_success auth
+    response = @tpv_orbital_gateway.refund(38, store.authorization, @options)
+    assert_failure response
+    assert_equal response.params['status_msg'], "The LIDM you supplied (#{store.authorization}) does not match with any existing transaction"
+  end
+
+  def test_successful_purchase_with_stored_token_and_refund
+    store = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
+    assert_success store
+    purchase = @tpv_orbital_gateway.purchase(38, store.authorization, @options.merge(card_brand: 'MC', token_txn_type: 'UT'))
+    assert_success purchase
+    response = @tpv_orbital_gateway.refund(38, purchase.authorization, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_without_store
+    response = @tpv_orbital_gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal response.params['safetech_token'], nil
+  end
+
+  def test_failed_purchase_with_stored_token
+    auth = @tpv_orbital_gateway.authorize(@amount, @credit_card, @options.merge(store: true))
+    assert_success auth
+    options = @options.merge!(card_brand: 'VI')
+    response = @tpv_orbital_gateway.purchase(@amount, nil, options)
+    assert_failure response
+    assert_equal response.params['status_msg'], 'Error. The Orbital Gateway has received a badly formatted message. The account number is required for this transaction'
   end
 
   def test_successful_different_cards

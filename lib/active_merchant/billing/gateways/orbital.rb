@@ -193,6 +193,10 @@ module ActiveMerchant #:nodoc:
         'checking' => 'C'
       }
 
+      # safetech token flags
+      GET_TOKEN = 'GT'
+      USE_TOKEN = 'UT'
+
       def initialize(options = {})
         requires!(options, :merchant_id)
         requires!(options, :login, :password) unless options[:ip_authentication]
@@ -251,6 +255,11 @@ module ActiveMerchant #:nodoc:
         end
 
         commit(order, :refund, options[:retry_logic], options[:trace_number])
+      end
+
+      # Orbital save a payment method if the TokenTxnType is 'GT', that's why we use this as the default value for store
+      def store(creditcard, options = {})
+        authorize(0, creditcard, options.merge({ token_txn_type: GET_TOKEN }))
       end
 
       def void(authorization, options = {}, deprecated = {})
@@ -536,9 +545,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def billing_name(payment_source, options)
-        if payment_source&.name.present?
+        if !payment_source.is_a?(String) && payment_source&.name.present?
           payment_source.name[0..29]
-        elsif options[:billing_address][:name].present?
+        elsif options[:billing_address] && options[:billing_address][:name].present?
           options[:billing_address][:name][0..29]
         end
       end
@@ -555,10 +564,16 @@ module ActiveMerchant #:nodoc:
         options[:billing_address] || options[:address]
       end
 
+      def add_safetech_token_data(xml, payment_source, options)
+        xml.tag! :CardBrand, options[:card_brand]
+        xml.tag! :AccountNum, payment_source
+      end
+
       #=====PAYMENT SOURCE FIELDS=====
 
       # Payment can be done through either Credit Card or Electronic Check
       def add_payment_source(xml, payment_source, options = {})
+        add_safetech_token_data(xml, payment_source, options) if options[:token_txn_type] == USE_TOKEN
         payment_source.is_a?(Check) ? add_echeck(xml, payment_source, options) : add_credit_card(xml, payment_source, options)
       end
 
@@ -576,10 +591,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(xml, credit_card, options)
-        xml.tag! :AccountNum, credit_card.number if credit_card
-        xml.tag! :Exp, expiry_date(credit_card) if credit_card
+        xml.tag! :AccountNum, credit_card.number if credit_card.is_a?(CreditCard)
+        xml.tag! :Exp, expiry_date(credit_card) if credit_card.is_a?(CreditCard)
         add_currency_fields(xml, options[:currency])
-        add_verification_value(xml, credit_card) if credit_card
+        add_verification_value(xml, credit_card) if credit_card.is_a?(CreditCard)
       end
 
       def add_verification_value(xml, credit_card)
@@ -886,12 +901,14 @@ module ActiveMerchant #:nodoc:
             request.call(remote_url(:secondary))
           end
 
+        authorization = order.include?('<TokenTxnType>GT</TokenTxnType>') ? response[:safetech_token] : authorization_string(response[:tx_ref_num], response[:order_id])
+
         Response.new(
           success?(response, message_type),
           message_from(response),
           response,
           {
-            authorization: authorization_string(response[:tx_ref_num], response[:order_id]),
+            authorization: authorization,
             test: self.test?,
             avs_result: OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
             cvv_result: OrbitalGateway::CVVResult.new(response[:cvv2_resp_code])
@@ -1014,6 +1031,7 @@ module ActiveMerchant #:nodoc:
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, payment_source, three_d_secure)
             add_mastercard_fields(xml, payment_source, parameters, three_d_secure) if mastercard?(payment_source)
+            xml.tag! :TokenTxnType, parameters[:token_txn_type] if parameters[:token_txn_type]
           end
         end
         xml.target!

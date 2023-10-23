@@ -727,6 +727,11 @@ orbital_tandem_gateway:
   password: PASSWORD
   merchant_id: MERCHANTID
 
+orbital_tpv_gateway:
+  login: LOGIN
+  password: PASSWORD
+  merchant_id: MERCHANTID
+
 # Working credentials, no need to replace
 pagarme:
     api_key: 'ak_test_e1QGU2gL98MDCHZxHLJ9sofPUFJ7tH'
