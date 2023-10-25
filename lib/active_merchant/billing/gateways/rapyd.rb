@@ -174,8 +174,8 @@ module ActiveMerchant #:nodoc:
         add_stored_credential(post, options)
       end
 
-      def recurring?(options = {})
-        options.dig(:stored_credential, :reason_type) == 'recurring'
+      def send_customer_object?(options)
+        options[:stored_credential] && options[:stored_credential][:reason_type] == 'recurring'
       end
 
       def valid_network_transaction_id?(options)
@@ -201,7 +201,7 @@ module ActiveMerchant #:nodoc:
 
         customer_id, card_id = payment.split('|')
 
-        post[:customer] = customer_id unless recurring?(options)
+        post[:customer] = customer_id unless send_customer_object?(options)
         post[:payment_method] = card_id
       end
 
@@ -244,29 +244,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, payment, options, action = '')
-        post[:phone_number] = phone_number(options) unless phone_number(options).blank?
-        post[:email] = options[:email] unless options[:email].blank? || recurring?(options)
-
+        phone_number = options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
+        post[:phone_number] = phone_number.gsub(/\D/, '') unless phone_number.nil?
+        post[:email] = options[:email] unless send_customer_object?(options)
         return if payment.is_a?(String)
-        return add_customer_id(post, options) if options[:customer_id].present?
+        return add_customer_id(post, options) if options[:customer_id]
 
         if action == 'store'
           post.merge!(customer_fields(payment, options))
         else
-          post[:customer] = customer_fields(payment, options) unless recurring?(options) || non_us_payment_type?(options)
+          post[:customer] = customer_fields(payment, options) unless send_customer_object?(options)
         end
-      end
-
-      def phone_number(options)
-        return '' unless address = options[:billing_address]
-
-        (address[:phone] || address[:phone_number] || '').gsub(/\D/, '')
-      end
-
-      def non_us_payment_type?(options = {})
-        return false unless options[:pm_type].present?
-
-        !options.fetch(:pm_type, '').start_with?('us_')
       end
 
       def customer_fields(payment, options)
