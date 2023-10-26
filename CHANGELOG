@@ -42,6 +42,7 @@
 * AuthorizeNet: Update network token method [almalee24] #4852
 * Adding Oauth Response for access tokens [almalee24] #4907
 * GlobalCollect: Added support for 3DS exemption request field [almalee24] #4917
+* NMI: Update supported countries list [jcreiff] #4931
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

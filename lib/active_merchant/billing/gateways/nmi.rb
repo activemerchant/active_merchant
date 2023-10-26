@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = self.live_url = 'https://secure.networkmerchants.com/api/transact.php'
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_countries = ['US']
+      self.supported_countries = %w[US CA]
       self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://nmi.com/'
       self.display_name = 'NMI'
