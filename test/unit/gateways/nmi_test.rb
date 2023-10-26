@@ -588,7 +588,7 @@ class NmiTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal 1, (['US'] | NmiGateway.supported_countries).size
+    assert_equal 2, (%w[US CA] | NmiGateway.supported_countries).size
   end
 
   def test_supported_card_types
