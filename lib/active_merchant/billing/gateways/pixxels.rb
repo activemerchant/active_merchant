@@ -34,14 +34,14 @@ module ActiveMerchant #:nodoc:
 
       def pre_authorize(options)
         post = {}
-        add_three_ds_fields(options)
+        add_three_ds_fields(post, options)
 
         commit('SALE', post)
       end
 
       def confirm(options)
         post = {}
-        add_three_ds_fields(options)
+        add_three_ds_level_2_fields(post, options)
 
         commit('SALE', post)
       end
@@ -73,8 +73,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method, options)
         post[:cardNumber] = payment_method.card_number
-        # post[:cardCVV] = payment_method.verification_value unless empty?(payment_method.verification_value)
-        post[:cardCVV] = '356'
+        post[:cardCVV] = payment_method.verification_value unless empty?(payment_method.verification_value)
         post[:cardExpiryMonth] = format(payment_method.month, :two_digits)
         post[:cardExpiryYear] = format(payment_method.year, :two_digits)
       end
@@ -100,10 +99,16 @@ module ActiveMerchant #:nodoc:
         post[:threeDSRedirectURL] = redirect_links[:callback_url]
       end
 
-      def add_three_ds_fields(options)
+      def add_three_ds_fields(post, options)
         if (three_d_secure = options[:pixel_three_d_secure])
-          post[:threeDSRef] = three_d_secure[:threeDSRefNew] if three_d_secure[:threeDSRefNew]
-          post["threeDSResponse[threeDSMethodData]"] = three_d_secure[:threeDSMethodDataNew] if three_d_secure[:threeDSMethodDataNew]
+          post[:threeDSRef] = three_d_secure[:threeDSRef] if three_d_secure[:threeDSRef]
+          post["threeDSResponse[threeDSMethodData]"] = three_d_secure[:threeDSMethodData] if three_d_secure[:threeDSMethodData]
+        end
+      end
+
+      def add_three_ds_level_2_fields(post, options)
+        if (three_d_secure = options[:pixel_three_d_secure])
+          post[:threeDSRef] = three_d_secure[:threeDSRef] if three_d_secure[:threeDSRef]
           post["threeDSResponse[cres]"] = three_d_secure[:threeDSCres] if three_d_secure[:threeDSCres]
         end
       end
@@ -135,7 +140,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, params)
         params[:action] = action
         params[:merchantID] = @options[:merchant_id]
-        sorted_params = params.sort.to_h
+        sorted_params = params.transform_keys(&:to_sym).sort.to_h
 
         sorted_params["signature"] = get_signature(sorted_params)
         raw_response = ssl_post(url, post_data(action, sorted_params), headers)
