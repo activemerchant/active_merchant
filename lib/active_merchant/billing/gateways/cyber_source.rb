@@ -1161,6 +1161,7 @@ module ActiveMerchant #:nodoc:
             parent += '_' + node.parent.attributes['id'] if node.parent.attributes['id']
             parent += '_'
           end
+          reply[:reconciliationID2] = node.text if node.name == 'reconciliationID' && reply[:reconciliationID]
           reply["#{parent}#{node.name}".to_sym] ||= node.text
         end
         return reply

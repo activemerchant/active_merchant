@@ -493,6 +493,12 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
+  def test_successful_purchase_with_reconciliation_id_2
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(response)
+    assert response.params['reconciliationID2']
+  end
+
   def test_successful_authorize_with_customer_id
     options = @options.merge(customer_id: '7500BB199B4270EFE05348D0AFCAD')
     assert response = @gateway.authorize(@amount, @credit_card, options)
