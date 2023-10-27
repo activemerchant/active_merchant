@@ -316,9 +316,7 @@ class SagePayTest < Test::Unit::TestCase
     assert_success capture
 
     refund = stub_comms do
-      @gateway.refund(@amount, capture.authorization,
-        order_id: generate_unique_id,
-        description: 'Refund txn')
+      @gateway.refund(@amount, capture.authorization, order_id: generate_unique_id, description: 'Refund txn')
     end.respond_with(successful_refund_response)
     assert_success refund
   end
@@ -328,6 +326,15 @@ class SagePayTest < Test::Unit::TestCase
       @gateway.purchase(@amount, '1455548a8d178beecd88fe6a285f50ff;{0D2ACAF0-FA64-6DFF-3869-7ADDDC1E0474};15353766;BS231FNE14;purchase', @options)
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/RelatedVPSTxId=%7B0D2ACAF0-FA64-6DFF-3869-7ADDDC1E0474%/, data)
+      assert_match(/TxType=REPEAT/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_repeat_purchase_from_reference_purchase
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, '9a3c5a71ef733ce56a9b03754763da2c;{4B98024C-5D40-4F5C-4E19-A8D07EBFC5AD};14575233;7NJB98CZSG;repeat', @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/RelatedVPSTxId=%7B4B98024C-5D40-4F5C-4E19-A8D07EBFC5AD%/, data)
       assert_match(/TxType=REPEAT/, data)
     end.respond_with(successful_purchase_response)
   end

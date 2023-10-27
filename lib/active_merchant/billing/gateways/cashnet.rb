@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
-      self.homepage_url        = 'http://www.higherone.com/'
+      self.homepage_url        = 'https://transactcampus.com'
       self.display_name        = 'Cashnet'
       self.money_format        = :dollars
       self.max_retries         = 0
@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_object, options = {})
         post = {}
         add_creditcard(post, payment_object)
-        add_invoice(post, options)
+        add_invoice(post, money, options)
         add_address(post, options)
         add_customer_data(post, options)
         commit('SALE', money, post)
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, identification, options = {})
         post = {}
         post[:origtx] = identification
-        add_invoice(post, options)
+        add_invoice(post, money, options)
         add_customer_data(post, options)
         commit('REFUND', money, post)
       end
@@ -69,14 +69,13 @@ module ActiveMerchant #:nodoc:
       private
 
       def commit(action, money, fields)
-        fields[:amount] = amount(money)
         url = (test? ? test_url : live_url) + CGI.escape(@options[:merchant_gateway_name])
         raw_response = ssl_post(url, post_data(action, fields))
         parsed_response = parse(raw_response)
 
         return unparsable_response(raw_response) unless parsed_response
 
-        success = (parsed_response[:result] == '0')
+        success = success?(parsed_response)
         Response.new(
           success,
           CASHNET_CODES[parsed_response[:result]],
@@ -86,8 +85,13 @@ module ActiveMerchant #:nodoc:
         )
       end
 
+      def success?(response)
+        response[:result] == '0'
+      end
+
       def post_data(action, parameters = {})
         post = {}
+
         post[:command]        = action
         post[:merchant]       = @options[:merchant]
         post[:operator]       = @options[:operator]
@@ -106,9 +110,19 @@ module ActiveMerchant #:nodoc:
         post[:lname]           = creditcard.last_name
       end
 
-      def add_invoice(post, options)
+      def add_invoice(post, money, options)
         post[:order_number] = options[:order_id] if options[:order_id].present?
-        post[:itemcode] = (options[:item_code] || @options[:default_item_code])
+
+        if options[:item_codes].present?
+          codes_and_amounts = options[:item_codes].transform_keys { |key| key.to_s.delete('_') }
+          codes_and_amounts.each do |key, value|
+            post[key] = value if key.start_with?('itemcode')
+            post[key] = amount(value.to_i) if key.start_with?('amount')
+          end
+        else
+          post[:itemcode] = (options[:item_code] || @options[:default_item_code])
+          post[:amount] = amount(money.to_i)
+        end
       end
 
       def add_address(post, options)
@@ -191,6 +205,7 @@ module ActiveMerchant #:nodoc:
         '215' => 'Old PIN does not validate ',
         '221' => 'Invalid credit card processor type specified in location or payment code',
         '222' => 'Credit card processor error',
+        '230' => 'Host Error (USE VOID OR REVERSAL TO REFUND UNSETTLED TRANSACTIONS)',
         '280' => 'SmartPay transaction not posted',
         '301' => 'Original transaction not found for this customer',
         '302' => 'Amount to refund exceeds original payment amount or is missing',

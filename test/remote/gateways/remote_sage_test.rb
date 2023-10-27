@@ -164,8 +164,7 @@ class RemoteSageTest < Test::Unit::TestCase
   def test_store_visa
     assert response = @gateway.store(@visa, @options)
     assert_success response
-    assert response.authorization,
-      'Store card authorization should not be nil'
+    assert response.authorization, 'Store card authorization should not be nil'
     assert_not_nil response.message
   end
 
@@ -176,15 +175,13 @@ class RemoteSageTest < Test::Unit::TestCase
   end
 
   def test_unstore_visa
-    assert auth = @gateway.store(@visa, @options).authorization,
-      'Unstore card authorization should not be nil'
+    assert auth = @gateway.store(@visa, @options).authorization, 'Unstore card authorization should not be nil'
     assert response = @gateway.unstore(auth, @options)
     assert_success response
   end
 
   def test_failed_unstore_visa
-    assert auth = @gateway.store(@visa, @options).authorization,
-      'Unstore card authorization should not be nil'
+    assert auth = @gateway.store(@visa, @options).authorization, 'Unstore card authorization should not be nil'
     assert response = @gateway.unstore(auth, @options)
     assert_success response
   end

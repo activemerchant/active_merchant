@@ -60,6 +60,45 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
     assert_equal customer['Email'], email
   end
 
+  def test_successful_purchase_with_3ds1
+    eci = '05'
+    cavv = 'AgAAAAAA4n1uzQPRaATeQAAAAAA='
+    xid = 'AAAAAAAA4n1uzQPRaATeQAAAAAA='
+    authentication_response_status = 'Y'
+    @options[:three_d_secure] = {
+      eci: eci,
+      cavv: cavv,
+      xid: xid,
+      authentication_response_status: authentication_response_status
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+  end
+
+  def test_successful_purchase_with_3ds2
+    eci = '05'
+    cavv = 'AgAAAAAA4n1uzQPRaATeQAAAAAA='
+    authentication_response_status = 'Y'
+    version = '2.1.0'
+    ds_transaction_id = '8fe2e850-a028-407e-9a18-c8cf7598ca10'
+
+    @options[:three_d_secure] = {
+      version: version,
+      eci: eci,
+      cavv: cavv,
+      ds_transaction_id: ds_transaction_id,
+      authentication_response_status: authentication_response_status
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+  end
+
   def test_successful_purchase_with_shipping_address
     @options[:shipping_address] = address
 
@@ -73,7 +112,9 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
   end
 
   def test_fully_loaded_purchase
-    response = @gateway.purchase(@amount, @credit_card,
+    response = @gateway.purchase(
+      @amount,
+      @credit_card,
       redirect_url: 'http://awesomesauce.com',
       ip: '0.0.0.0',
       application_id: 'Woohoo',
@@ -109,7 +150,8 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
         country:  'US',
         phone:    '1115555555',
         fax:      '1115556666'
-      })
+      }
+    )
     assert_success response
   end
 

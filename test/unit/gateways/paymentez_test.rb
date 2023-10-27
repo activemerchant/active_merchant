@@ -6,13 +6,15 @@ class PaymentezTest < Test::Unit::TestCase
   def setup
     @gateway = PaymentezGateway.new(application_code: 'foo', app_key: 'bar')
     @credit_card = credit_card
-    @elo_credit_card = credit_card('6362970000457013',
+    @elo_credit_card = credit_card(
+      '6362970000457013',
       month: 10,
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo')
+      brand: 'elo'
+    )
     @amount = 100
 
     @options = {
@@ -21,6 +23,29 @@ class PaymentezTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase',
       email: 'a@b.com'
+    }
+
+    @cavv = 'example-cavv-value'
+    @xid = 'three-ds-v1-trans-id'
+    @eci = '01'
+    @three_ds_v1_version = '1.0.2'
+    @three_ds_v2_version = '2.1.0'
+    @three_ds_server_trans_id = 'three-ds-v2-trans-id'
+    @authentication_response_status = 'Y'
+
+    @three_ds_v1_mpi = {
+      cavv: @cavv,
+      eci: @eci,
+      version: @three_ds_v1_version,
+      xid: @xid
+    }
+
+    @three_ds_v2_mpi = {
+      cavv: @cavv,
+      eci: @eci,
+      version: @three_ds_v2_version,
+      three_ds_server_trans_id: @three_ds_server_trans_id,
+      authentication_response_status: @authentication_response_status
     }
   end
 
@@ -44,6 +69,21 @@ class PaymentezTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_capture_with_otp
+    authorization = 'CI-14952'
+    options = @options.merge({ type: 'BY_OTP', value: '012345' })
+    response = stub_comms do
+      @gateway.capture(nil, authorization, options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'BY_OTP', request['type']
+      assert_equal '012345', request['value']
+      assert_equal authorization, request['transaction']['id']
+      assert_equal '123', request['user']['id']
+    end.respond_with(successful_otp_capture_response)
+    assert_success response
+  end
+
   def test_successful_purchase_with_token
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -52,6 +92,41 @@ class PaymentezTest < Test::Unit::TestCase
 
     assert_equal 'PR-926', response.authorization
     assert response.test?
+  end
+
+  def test_purchase_3ds1_mpi_fields
+    @options[:three_d_secure] = @three_ds_v1_mpi
+
+    expected_auth_data = {
+      cavv: @cavv,
+      xid: @xid,
+      eci: @eci,
+      version: @three_ds_v1_version
+    }
+
+    @gateway.expects(:commit_transaction).with do |_, post_data|
+      post_data['extra_params'][:auth_data] == expected_auth_data
+    end
+
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_purchase_3ds2_mpi_fields
+    @options[:three_d_secure] = @three_ds_v2_mpi
+
+    expected_auth_data = {
+      cavv: @cavv,
+      eci: @eci,
+      version: @three_ds_v2_version,
+      reference_id: @three_ds_server_trans_id,
+      status: @authentication_response_status
+    }
+
+    @gateway.expects(:commit_transaction).with() do |_, post_data|
+      post_data['extra_params'][:auth_data] == expected_auth_data
+    end
+
+    @gateway.purchase(@amount, @credit_card, @options)
   end
 
   def test_failed_purchase
@@ -96,6 +171,41 @@ class PaymentezTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'CI-635', response.authorization
     assert response.test?
+  end
+
+  def test_authorize_3ds1_mpi_fields
+    @options[:three_d_secure] = @three_ds_v1_mpi
+
+    expected_auth_data = {
+      cavv: @cavv,
+      xid: @xid,
+      eci: @eci,
+      version: @three_ds_v1_version
+    }
+
+    @gateway.expects(:commit_transaction).with() do |_, post_data|
+      post_data['extra_params'][:auth_data] == expected_auth_data
+    end
+
+    @gateway.authorize(@amount, @credit_card, @options)
+  end
+
+  def test_authorize_3ds2_mpi_fields
+    @options[:three_d_secure] = @three_ds_v2_mpi
+
+    expected_auth_data = {
+      cavv: @cavv,
+      eci: @eci,
+      version: @three_ds_v2_version,
+      reference_id: @three_ds_server_trans_id,
+      status: @authentication_response_status
+    }
+
+    @gateway.expects(:commit_transaction).with() do |_, post_data|
+      post_data['extra_params'][:auth_data] == expected_auth_data
+    end
+
+    @gateway.authorize(@amount, @credit_card, @options)
   end
 
   def test_failed_authorize
@@ -186,6 +296,17 @@ class PaymentezTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_void_with_more_info
+    @gateway.expects(:ssl_post).returns(successful_void_response_with_more_info)
+
+    response = @gateway.void('1234', @options.merge(more_info: true))
+    assert_success response
+    assert_equal 'Completed', response.message
+    assert_equal '00', response.params['transaction']['carrier_code']
+    assert_equal 'Reverse by mock', response.params['transaction']['message']
+    assert response.test?
+  end
+
   def test_simple_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
@@ -220,6 +341,18 @@ class PaymentezTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_successful_inquire_with_transaction_id
+    response = stub_comms(@gateway, :ssl_get) do
+      @gateway.inquire('CI-635')
+    end.check_request do |method, _endpoint, _data, _headers|
+      assert_match('https://ccapi-stg.paymentez.com/v2/transaction/CI-635', method)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'CI-635', response.authorization
+    assert response.test?
   end
 
   private
@@ -502,6 +635,17 @@ Conn close
     '
   end
 
+  def successful_otp_capture_response
+    '{
+      "status": 1,
+      "payment_date": "2017-09-26T21:16:00",
+      "amount": 99.0,
+      "transaction_id": "CI-14952",
+      "status_detail": 3,
+      "message": ""
+    }'
+  end
+
   def failed_capture_response
     '{"error": {"type": "Carrier not supported", "help": "", "description": "{}"}}'
   end
@@ -514,8 +658,13 @@ Conn close
     '{"status": "failure", "detail": "Invalid Status"}'
   end
 
+  def successful_void_response_with_more_info
+    '{"status": "success", "detail": "Completed", "transaction": {"carrier_code": "00", "message": "Reverse by mock"}}'
+  end
+
   alias successful_refund_response successful_void_response
   alias failed_refund_response failed_void_response
+  alias successful_refund_response_with_more_info successful_void_response_with_more_info
 
   def already_stored_response
     '{"error": {"type": "Card already added: 14436664108567261211", "help": "If you want to update the card, first delete it", "description": "{}"}}'

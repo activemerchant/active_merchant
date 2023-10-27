@@ -104,6 +104,47 @@ class EwayRapidTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_purchase_3ds1_data
+    eci = '05'
+    cavv = 'AgAAAAAA4n1uzQPRaATeQAAAAAA='
+    xid = 'AAAAAAAA4n1uzQPRaATeQAAAAAA='
+    authentication_response_status = 'Y'
+    options_with_3ds1 = {
+      eci: eci,
+      cavv: cavv,
+      xid: xid,
+      authentication_response_status: authentication_response_status
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { three_d_secure: options_with_3ds1 })
+    end.check_request do |_endpoint, data, _headers|
+      assert_3ds_data_passed(data, options_with_3ds1)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_3ds2_data
+    eci = '05'
+    cavv = 'AgAAAAAA4n1uzQPRaATeQAAAAAA='
+    authentication_response_status = 'Y'
+    version = '2.1.0'
+    ds_transaction_id = '8fe2e850-a028-407e-9a18-c8cf7598ca10'
+
+    options_with_3ds2 = {
+      version: version,
+      eci: eci,
+      cavv: cavv,
+      ds_transaction_id: ds_transaction_id,
+      authentication_response_status: authentication_response_status
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { three_d_secure: options_with_3ds2 })
+    end.check_request do |_endpoint, data, _headers|
+      assert_3ds_data_passed(data, options_with_3ds2)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_localized_currency
     stub_comms do
       @gateway.purchase(100, @credit_card, currency: 'CAD')
@@ -153,7 +194,9 @@ class EwayRapidTest < Test::Unit::TestCase
 
   def test_purchase_with_all_options
     response = stub_comms do
-      @gateway.purchase(200, @credit_card,
+      @gateway.purchase(
+        200,
+        @credit_card,
         transaction_type: 'CustomTransactionType',
         redirect_url: 'http://awesomesauce.com',
         ip: '0.0.0.0',
@@ -189,7 +232,8 @@ class EwayRapidTest < Test::Unit::TestCase
           country: 'US',
           phone: '1115555555',
           fax: '1115556666'
-        })
+        }
+      )
     end.check_request do |_endpoint, data, _headers|
       assert_match(%r{"TransactionType":"CustomTransactionType"}, data)
       assert_match(%r{"RedirectUrl":"http://awesomesauce.com"}, data)
@@ -596,6 +640,18 @@ class EwayRapidTest < Test::Unit::TestCase
       assert_equal customer['Phone'],       address[:phone]
       assert_equal customer['Fax'],         address[:fax]
     end
+  end
+
+  def assert_3ds_data_passed(data, threedsoption)
+    parsed_data = JSON.parse(data)
+    threeds = parsed_data['PaymentInstrument']['ThreeDSecureAuth']
+
+    assert_equal threeds['Cryptogram'], threedsoption[:cavv]
+    assert_equal threeds['ECI'], threedsoption[:eci]
+    assert_equal threeds['XID'], threedsoption[:xid]
+    assert_equal threeds['AuthStatus'], threedsoption[:authentication_response_status]
+    assert_equal threeds['dsTransactionId'], threedsoption[:ds_transaction_id]
+    assert_equal threeds['Version'], threedsoption[:version]
   end
 
   def assert_shipping_data_passed(data, address, email)

@@ -259,11 +259,15 @@ module ActiveMerchant
       def commit(request)
         response = parse(ssl_post(self.live_url, post_data(request)))
 
-        Response.new(response[:ResponseCode] == APPROVED, response[:Message], response,
+        Response.new(
+          response[:ResponseCode] == APPROVED,
+          response[:Message],
+          response,
           test: test?,
           authorization: response[:CrossReference],
           cvv_result: CVV_CODE[response[:AVSCV2Check]],
-          avs_result: { code: AVS_CODE[response[:AVSCV2Check]] })
+          avs_result: { code: AVS_CODE[response[:AVSCV2Check]] }
+        )
       end
 
       # Put the passed data into a format that can be submitted to PSL

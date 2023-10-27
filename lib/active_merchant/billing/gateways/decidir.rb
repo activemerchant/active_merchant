@@ -83,6 +83,11 @@ module ActiveMerchant #:nodoc:
         commit(:post, "payments/#{authorization}/refunds", post)
       end
 
+      def inquire(authorization, options = {})
+        options[:action] = 'inquire'
+        commit(:get, "payments/#{authorization}", nil, options)
+      end
+
       def verify(credit_card, options = {})
         raise ArgumentError, 'Verify is not supported on Decidir gateways unless the preauth_mode option is enabled' unless @options[:preauth_mode]
 
@@ -117,11 +122,11 @@ module ActiveMerchant #:nodoc:
         post[:establishment_name] = options[:establishment_name] if options[:establishment_name]
         post[:fraud_detection] = add_fraud_detection(options[:fraud_detection]) if options[:fraud_detection].present?
         post[:site_id] = options[:site_id] if options[:site_id]
-        post[:sub_payments] = []
 
         add_invoice(post, money, options)
         add_payment(post, credit_card, options)
         add_aggregate_data(post, options) if options[:aggregate_data]
+        add_sub_payments(post, options)
       end
 
       def add_payment_method_id(credit_card, options)
@@ -162,23 +167,55 @@ module ActiveMerchant #:nodoc:
         post[:amount] = localized_amount(money, currency).to_i
       end
 
-      def add_payment(post, credit_card, options)
-        card_data = {}
+      def add_payment(post, payment_method, options)
+        add_common_payment_data(post, payment_method, options)
+
+        case payment_method
+        when NetworkTokenizationCreditCard
+          add_network_token(post, payment_method, options)
+        else
+          add_credit_card(post, payment_method, options)
+        end
+      end
+
+      def add_common_payment_data(post, payment_method, options)
+        post[:card_data] = {}
+
+        data = post[:card_data]
+        data[:card_holder_identification] = {}
+        data[:card_holder_identification][:type] = options[:card_holder_identification_type] if options[:card_holder_identification_type]
+        data[:card_holder_identification][:number] = options[:card_holder_identification_number] if options[:card_holder_identification_number]
+        data[:card_holder_name] = payment_method.name if payment_method.name
+
+        # additional data used for Visa transactions
+        data[:card_holder_door_number] = options[:card_holder_door_number].to_i if options[:card_holder_door_number]
+        data[:card_holder_birthday] = options[:card_holder_birthday] if options[:card_holder_birthday]
+      end
+
+      def add_network_token(post, payment_method, options)
+        post[:is_tokenized_payment] = true
+        post[:fraud_detection] ||= {}
+        post[:fraud_detection][:sent_to_cs] = false
+        post[:card_data][:last_four_digits] = options[:last_4]
+
+        post[:token_card_data] = {
+          token: payment_method.number,
+          eci: payment_method.eci,
+          cryptogram: payment_method.payment_cryptogram
+        }
+      end
+
+      def add_credit_card(post, credit_card, options)
+        card_data = post[:card_data]
         card_data[:card_number] = credit_card.number
         card_data[:card_expiration_month] = format(credit_card.month, :two_digits)
         card_data[:card_expiration_year] = format(credit_card.year, :two_digits)
         card_data[:security_code] = credit_card.verification_value if credit_card.verification_value?
-        card_data[:card_holder_name] = credit_card.name if credit_card.name
 
-        # additional data used for Visa transactions
-        card_data[:card_holder_door_number] = options[:card_holder_door_number].to_i if options[:card_holder_door_number]
-        card_data[:card_holder_birthday] = options[:card_holder_birthday] if options[:card_holder_birthday]
-
-        card_data[:card_holder_identification] = {}
-        card_data[:card_holder_identification][:type] = options[:card_holder_identification_type] if options[:card_holder_identification_type]
-        card_data[:card_holder_identification][:number] = options[:card_holder_identification_number] if options[:card_holder_identification_number]
-
-        post[:card_data] = card_data
+        # the device_unique_id has to be sent in via the card data (as device_unique_identifier) no other fraud detection fields require this
+        if (device_id = options.dig(:fraud_detection, :device_unique_id))
+          card_data[:fraud_detection] = { device_unique_identifier: device_id }
+        end
       end
 
       def add_aggregate_data(post, options)
@@ -204,13 +241,29 @@ module ActiveMerchant #:nodoc:
         post[:aggregate_data] = aggregate_data
       end
 
+      def add_sub_payments(post, options)
+        # sub_payments field is required for purchase transactions, even if empty
+        post[:sub_payments] = []
+
+        return unless sub_payments = options[:sub_payments]
+
+        sub_payments.each do |sub_payment|
+          sub_payment_hash = {
+            site_id: sub_payment[:site_id],
+            installments: sub_payment[:installments].to_i,
+            amount: sub_payment[:amount].to_i
+          }
+          post[:sub_payments] << sub_payment_hash
+        end
+      end
+
       def add_fraud_detection(options = {})
         {}.tap do |hsh|
           hsh[:send_to_cs] = options[:send_to_cs] if valid_fraud_detection_option?(options[:send_to_cs]) # true/false
           hsh[:channel] = options[:channel] if valid_fraud_detection_option?(options[:channel])
           hsh[:dispatch_method] = options[:dispatch_method] if valid_fraud_detection_option?(options[:dispatch_method])
           hsh[:csmdds] = options[:csmdds] if valid_fraud_detection_option?(options[:csmdds])
-          hsh[:device_unique_identifier] = options[:device_unique_identifier] if valid_fraud_detection_option?(options[:device_unique_identifier])
+          hsh[:device_unique_id] = options[:device_unique_id] if valid_fraud_detection_option?(options[:device_unique_id])
           hsh[:bill_to] = options[:bill_to] if valid_fraud_detection_option?(options[:bill_to])
           hsh[:purchase_totals] = options[:purchase_totals] if valid_fraud_detection_option?(options[:purchase_totals])
           hsh[:customer_in_site] = options[:customer_in_site] if valid_fraud_detection_option?(options[:customer_in_site])
@@ -245,7 +298,7 @@ module ActiveMerchant #:nodoc:
           response = parse(raw_response)
         end
 
-        success = success_from(response)
+        success = success_from(response, options)
         Response.new(
           success,
           message_from(success, response),
@@ -257,7 +310,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(parameters = {})
-        parameters.to_json
+        parameters&.to_json
       end
 
       def parse(body)
@@ -276,15 +329,27 @@ module ActiveMerchant #:nodoc:
         if error = response.dig('status_details', 'error')
           message = "#{error.dig('reason', 'description')} | #{error['type']}"
         elsif response['error_type']
-          message = response['validation_errors'].map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ') if response['validation_errors']
+          if response['validation_errors'].is_a?(Array)
+            message = response['validation_errors'].map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ')
+          elsif response['validation_errors'].is_a?(Hash)
+            errors = response['validation_errors'].map { |k, v| "#{k}: #{v}" }.join(', ')
+            message = "#{response['error_type']} - #{errors}"
+          end
+
           message ||= response['error_type']
         end
 
         message
       end
 
-      def success_from(response)
-        response['status'] == 'approved' || response['status'] == 'pre_approved'
+      def success_from(response, options)
+        status = %w(approved pre_approved)
+
+        if options[:action] == 'inquire'
+          status.include?(response['status']) || response['status'] == 'rejected'
+        else
+          status.include?(response['status'])
+        end
       end
 
       def authorization_from(response)
@@ -295,15 +360,21 @@ module ActiveMerchant #:nodoc:
         error_code = nil
         if error = response.dig('status_details', 'error')
           code = error.dig('reason', 'id')
-          error_code = STANDARD_ERROR_CODE_MAPPING[code]
+          standard_error_code = STANDARD_ERROR_CODE_MAPPING[code]
+          error_code = "#{code}, #{standard_error_code}"
           error_code ||= error['type']
         elsif response['error_type']
           error_code = response['error_type'] if response['validation_errors']
-        elsif error = response.dig('error')
+        elsif response.dig('error', 'validation_errors')
+          error = response.dig('error')
           validation_errors = error.dig('validation_errors', 0)
           code = validation_errors['code'] if validation_errors && validation_errors['code']
           param = validation_errors['param'] if validation_errors && validation_errors['param']
           error_code = "#{error['error_type']} | #{code} | #{param}" if error['error_type']
+        elsif error = response.dig('error')
+          code = error.dig('reason', 'id')
+          standard_error_code = STANDARD_ERROR_CODE_MAPPING[code]
+          error_code = "#{code}, #{standard_error_code}"
         end
 
         error_code || STANDARD_ERROR_CODE[:processing_error]

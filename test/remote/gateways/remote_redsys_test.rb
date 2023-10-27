@@ -19,9 +19,10 @@ class RemoteRedsysTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_threeds2
-    xid = '97267598-FAE6-48F2-8083-C23433990FBC'
+    three_ds_server_trans_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     version = '2.1.0'
+    eci = '02'
 
     response = @gateway.purchase(
       100,
@@ -30,7 +31,8 @@ class RemoteRedsysTest < Test::Unit::TestCase
         three_d_secure: {
           version: version,
           ds_transaction_id: ds_transaction_id,
-          xid: xid
+          three_ds_server_trans_id: three_ds_server_trans_id,
+          eci: eci
         }
       )
     )
@@ -60,6 +62,32 @@ class RemoteRedsysTest < Test::Unit::TestCase
     assert_equal 'Transaction Approved', response.message
   end
 
+  def test_successful_purchase_with_stored_credentials
+    initial_options = @options.merge(
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring'
+      }
+    )
+    initial_response = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_response
+    assert_equal 'Transaction Approved', initial_response.message
+    assert_not_nil initial_response.params['ds_merchant_cof_txnid']
+    network_transaction_id = initial_response.params['ds_merchant_cof_txnid']
+
+    used_options = @options.merge(
+      order_id: generate_order_id,
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled',
+        network_transaction_id: network_transaction_id
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success response
+    assert_equal 'Transaction Approved', response.message
+  end
+
   def test_purchase_with_invalid_order_id
     response = @gateway.purchase(@amount, @credit_card, order_id: "a%4#{generate_order_id}")
     assert_success response
@@ -83,7 +111,7 @@ class RemoteRedsysTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'SIS0093 ERROR', response.message
+    assert_equal 'Refusal with no specific reason', response.message
   end
 
   def test_purchase_and_refund
@@ -130,7 +158,7 @@ class RemoteRedsysTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'SIS0093 ERROR', response.message
+    assert_equal 'Refusal with no specific reason', response.message
   end
 
   def test_successful_void
@@ -167,7 +195,7 @@ class RemoteRedsysTest < Test::Unit::TestCase
   def test_unsuccessful_verify
     assert response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'SIS0093 ERROR', response.message
+    assert_equal 'Refusal with no specific reason', response.message
   end
 
   def test_transcript_scrubbing
@@ -220,6 +248,17 @@ class RemoteRedsysTest < Test::Unit::TestCase
     clean_transcript = @gateway.scrub(transcript)
 
     assert_equal clean_transcript.include?('[BLANK]'), true
+  end
+
+  def test_encrypt_handles_url_safe_character_in_secret_key_without_error
+    gateway = RedsysGateway.new({
+      login: '091952713',
+      secret_key: 'yG78qf-PkHyRzRiZGSTCJdO2TvjWgFa8',
+      terminal: '1',
+      signature_algorithm: 'sha256'
+    })
+    response = gateway.purchase(@amount, @credit_card, @options)
+    assert response
   end
 
   private

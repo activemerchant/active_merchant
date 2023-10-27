@@ -53,6 +53,13 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_hyphenated_zip
+    @options[:billing_address][:zip] = '12345-1234'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_purchase_no_address
     options = {
       order_id: '1',
@@ -167,6 +174,17 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_credit
+    credit = @gateway.credit(@amount, @credit_card, @options)
+    assert_success credit
+    assert_equal 'Success', credit.params['GatewayRspMsg']
+  end
+
+  def test_failed_credit
+    credit = @gateway.credit(nil, @credit_card)
+    assert_failure credit
+  end
+
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -253,6 +271,31 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_stored_credentials
+    initial_options = @options.merge(
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring'
+      }
+    )
+    initial_response = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_response
+    assert_equal 'Success', initial_response.message
+    assert_not_nil initial_response.params['CardBrandTxnId']
+    network_transaction_id = initial_response.params['CardBrandTxnId']
+
+    used_options = @options.merge(
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled',
+        network_transaction_id: network_transaction_id
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_failed_purchase_with_swipe_bad_track_data
     @credit_card.track_data = '%B547888879888877776?;?'
     response = @gateway.purchase(@amount, @credit_card, @options)
@@ -316,11 +359,13 @@ class RemoteHpsTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing_with_cryptogram
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay)
+      source: :apple_pay
+    )
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, credit_card, @options)
     end
@@ -331,127 +376,160 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_scrubbed(credit_card.payment_cryptogram, transcript)
   end
 
+  def test_account_number_scrubbing
+    options = @options.merge(company_name: 'Hot Buttered Toast Incorporated')
+    transcript = capture_transcript(@check_gateway) do
+      @check_gateway.purchase(@check_amount, @check, options)
+    end
+    clean_transcript = @check_gateway.scrub(transcript)
+    assert_scrubbed(@check.account_number, clean_transcript)
+  end
+
   def test_successful_purchase_with_apple_pay_raw_cryptogram_with_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay)
+      source: :apple_pay
+    )
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
   end
 
   def test_successful_purchase_with_apple_pay_raw_cryptogram_without_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay)
+      source: :apple_pay
+    )
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
   end
 
   def test_successful_auth_with_apple_pay_raw_cryptogram_with_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay)
+      source: :apple_pay
+    )
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
   end
 
   def test_successful_auth_with_apple_pay_raw_cryptogram_without_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay)
+      source: :apple_pay
+    )
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
   end
 
   def test_successful_purchase_with_android_pay_raw_cryptogram_with_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :android_pay)
+      source: :android_pay
+    )
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
   end
 
   def test_successful_purchase_with_android_pay_raw_cryptogram_without_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :android_pay)
+      source: :android_pay
+    )
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
   end
 
   def test_successful_auth_with_android_pay_raw_cryptogram_with_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :android_pay)
+      source: :android_pay
+    )
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
   end
 
   def test_successful_auth_with_android_pay_raw_cryptogram_without_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :android_pay)
+      source: :android_pay
+    )
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
   end
 
   def test_successful_purchase_with_google_pay_raw_cryptogram_with_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :google_pay)
+      source: :google_pay
+    )
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
   end
 
   def test_successful_purchase_with_google_pay_raw_cryptogram_without_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :google_pay)
+      source: :google_pay
+    )
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
   end
 
   def test_successful_auth_with_google_pay_raw_cryptogram_with_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :google_pay)
+      source: :google_pay
+    )
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
   end
 
   def test_successful_auth_with_google_pay_raw_cryptogram_without_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :google_pay)
+      source: :google_pay
+    )
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message

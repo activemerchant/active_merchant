@@ -1,6 +1,760 @@
+
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860
+* TNS: Use the specified order_id in request if available [yunnydang] #4880
+* Cybersource: Support recurring apple pay [aenand] #4874
+* Verve BIN ranges and add card type to Rapyd gateway [jherreraa] #4875
+* Rapyd: Add network_reference_id, initiation_type, and update stored credential method [yunnydang] #4877
+* Adyen: Add the store field [yunnydang] #4878
+* Stripe Payment Intents: Expand balance txns for regular transactions [yunnydang] #4882
+* CyberSource (SOAP): Added support for 3DS exemption request fields [BritneyS] #4881
+* StripePI: Adding network tokenization fields to Stripe PaymentIntents [BritneyS] #4867
+* Shift4: Fixing currency bug [Heavyblade] #4887
+* Rapyd: fixing issue with json encoding and signatures [Heavyblade] #4892
+* SumUp: Setup, Scrub and Purchase build [sinourain] #4890
+* XpayGateway: Initial setup [javierpedrozaing] #4889
+* Rapyd: Add validation to not send cvv and network_reference_id [javierpedrozaing] #4895
+* Ebanx: Add Ecuador and Bolivia as supported countries [almalee24] #4893
+* Decidir: Add support for network tokens [almalee24] #4870
+* Element: Fix credit card name bug [almalee24] #4898
+* Adyen: Add payout endpoint [almalee24] #4885
+* Adding Oauth Response for access tokens [almalee24] #4851
+* CheckoutV2: Update stored credentials [almalee24] #4901
+* Revert "Adding Oauth Response for access tokens" [almalee24] #4906
+* Braintree: Create credit card nonce [gasb150] #4897
+* Adyen: Fix shopperEmail bug [almalee24] #4904
+* Add Cabal card bin ranges [yunnydang] #4908
+* Kushki: Fixing issue with 3DS info on visa cc [heavyblade] #4899
+* Adyen: Add MIT flagging for Network Tokens [aenand] #4905
+* Moneris: Update sca actions [almalee24] #4902
+* Ogone: Add gateway specific 3ds option with default options mapping [jherreraa] #4894
+* Rapyd: Add recurrence_type field [yunnydang] #4912
+* Revert "Adyen: Update MIT flagging for NT" [almalee24] #4914
+* SumUp: Void and partial refund calls [sinourain] #4891
+* SecurionPay/Shift4_v2: authorization from [gasb150] #4913
+* Rapyd: Update recurrence_type field [yunnydang] #4922
+* Element: Add lodging fields [yunnydang] #4813
+* SafeCharge: Update sg_CreditType field on the credit method [yunnydang] #4918
+* Rapyd: add force_3ds_secure flag [Heavyblade] #4927
+* Beanstream: add alternate option for passing phone number [jcreiff] #4923
+* AuthorizeNet: Update network token method [almalee24] #4852
+* Adding Oauth Response for access tokens [almalee24] #4907
+* GlobalCollect: Added support for 3DS exemption request field [almalee24] #4917
+* NMI: Update supported countries list [jcreiff] #4931
+* Adyen: Add mcc field [jcreiff] #4926
+
+== Version 1.135.0 (August 24, 2023)
+* PaymentExpress: Correct endpoints [steveh] #4827
+* Adyen: Add option to elect which error message [aenand] #4843
+* Reach: Update list of supported countries [jcreiff] #4842
+* Paysafe: Truncate address fields [jcreiff] #4841
+* Braintree: Support third party Network Tokens [aenand] #4775
+* Kushki: Fix add amount default method for subtotalIva and subtotalIva0 [yunnydang] #4845
+* Rapyd: Add customer object to requests [aenand] #4838
+* CyberSource: Add merchant_id [almalee24] #4844
+* Global Collect: Add agent numeric code and house number field [yunnydang] #4847
+* Deepstack: Add Deepstack Gateway [khoinguyendeepstack] #4830
+* Braintree: Additional tests for credit transactions [jcreiff] #4848
+* Rapyd: Change nesting of description, statement_descriptor, complete_payment_url, and error_payment_url [jcreiff] #4849
+* Rapyd: Add merchant_reference_id [jcreiff] #4858
+* Braintree: Return error for ACH on credit [jcreiff] #4859
+* Rapyd: Update handling of ewallet and billing address phone [jcreiff] #4863
+* IPG: Change credentials inputs to use a combined store and user ID string as the user ID input [kylene-spreedly] #4854
+* Braintree Blue: Update the credit card details transaction hash [yunnydang] #4865
+* VisaNet Peru: Update generate_purchase_number_stamp [almalee24] #4855
+* Braintree: Add sca_exemption [almalee24] #4864
+* Ebanx: Update Verify [almalee24] #4866
+
+== Version 1.134.0 (July 25, 2023)
+* Update required Ruby version [almalee24] #4823
+* Kushki: Enable 3ds2 [jherreraa] #4832
+
+== Version 1.133.0 (July 20, 2023)
+* CyberSource: remove credentials from tests [bbraschi] #4836
+* Paysafe: Map order_id to merchantRefNum [jcreiff] #4839
+* Stripe PI: Gate sending NTID [almalee24] #4828
+
+== Version 1.132.0 (July 20, 2023)
+* Stripe Payment Intents: Add support for new card on file field [aenand] #4807
+* Commerce Hub: Add `physicalGoodsIndicator` and `schemeReferenceTransactionId` GSFs [sinourain] #4786
+* Nuvei (formerly SafeCharge): Add customer details to credit action [yunnydang] #4820
+* IPG: Update live url to correct endpoint [curiousepic] #4121
+* VPos: Adding Panal Credit Card type [jherreraa] #4814
+* Stripe PI: Update parameters for creation of customer [almalee24] #4782
+* WorldPay: Update xml tag for Credit Cards [almalee24] #4797
+* PaywayDotCom: update `live_url` [jcreiff] #4824
+* Stripe & Stripe PI: Update login key validation [almalee24] #4816
+* CheckoutV2: Parse the AVS and CVV checks more often [aenand] #4822
+* NMI: Add shipping_firstname, shipping_lastname, shipping_email, and surcharge fields [jcreiff] #4825
+* Borgun: Update authorization_from & message_from [almalee24] #4826
+* Kushki: Add Brazil as supported country [almalee24] #4829
+* Adyen: Add additional data for airline and lodging [javierpedrozaing] #4815
+* MIT: Changed how the payload was sent to the gateway [alejandrofloresm] #4655
+* SafeCharge: Add unreferenced_refund field [yunnydang] #4831
+* CyberSource: include `paymentSolution` for ApplePay and GooglePay [bbraschi] #4835
+
+== Version 1.131.0 (June 21, 2023)
+* Redsys: Add supported countries [jcreiff] #4811
+* Authorize.net: Truncate nameOnAccount for bank refunds [jcreiff] #4808
+* CheckoutV2: Add support for several customer data fields [rachelkirk] #4800
+* Worldpay: check payment_method responds to payment_cryptogram and eci [bbraschi] #4812
+
+== Version 1.130.0 (June 13th, 2023)
+* Payu Latam - Update error code method to surface network code [yunnydang] #4773
+* CyberSource: Handling Canadian bank accounts [heavyblade] #4764
+* CyberSource Rest: Fixing currency detection [heavyblade] #4777
+* CyberSource: Allow business rules for requests with network tokens [aenand] #4764
+* Adyen: Update Mastercard error messaging [kylene-spreedly] #4770
+* Authorize.net: Update mapping for billing address phone number [jcreiff] #4778
+* Braintree: Update mapping for billing address phone number [jcreiff] #4779
+* CommerceHub: Enabling multi-use public key encryption [jherreraa] #4771
+* Ogone: Enable 3ds Global for Ogone Gateway [javierpedrozaing] #4776
+* Worldpay: Fix Google Pay [almalee24] #4774
+* Borgun change default TrCurrencyExponent and MerchantReturnUrl [naashton] #4788
+* Borgun: support for GBP currency [naashton] #4789
+* CyberSource: Enable auto void on r230 [aenand] #4794
+* Redsys: Set appropriate request fields for stored credentials with CITs and MITs [BritneyS] #4784
+* Stripe & Stripe PI: Validate API Key [almalee24] #4801
+* Add BIN for Maestro [jcreiff] #4799
+* D_Local: Add save field on card object [yunnydang] #4805
+* PayPal Express: Adds support for MsgSubID property on DoReferenceTransaction and DoExpressCheckoutPayment [wikiti] #4798
+* Checkout_v2: use credit_card?, not case equality with CreditCard [bbraschi] #4803
+* Shift4: Enable general credit feature [jherreraa] #4790
+
+== Version 1.129.0 (May 3rd, 2023)
+* Adyen: Update selectedBrand mapping for Google Pay [jcreiff] #4763
+* Shift4: Add vendorReference field [jcreiff] #4762
+* Shift4: Add OAuth error [aenand] #4760
+* Stripe PI: Add billing address details to Apple Pay and Google Pay tokenization request [BritneyS] #4761
+* Make gem compatible with Ruby 3+ [pi3r] #4768
+
+== Version 1.128.0 (April 24th, 2023)
+* CheckoutV2: Add support for Shipping Address [nicolas-maalouf-cko] #4755
+* Element: Include Apple Pay - Google pay methods [jherrera] #4647
+* dLocal: Add transaction query API(s) request [almalee24] #4584
+* MercadoPago: Add transaction inquire request [molbrown] #4588
+* Worldpay: Add transaction inquire request [molbrown] #4592
+* Alelo: Adding homologation changes [heavyblade] #4590
+* Adyen: Map standard error codes for `processing_error`, `config_error`, `invalid_amount`, and `incorrect_address` [ajawadmirza] #4593
+* MerchantE: Add support for recurring transactions [naashton] #4594
+* CyberSource: Add support for `discount_management_indicator`, `purchase_tax_amount`, `installment_total_amount`, and `installment_annual_interest_rate` fields. [rachelkirk] #4595
+* Shift4: Remove `customer` from refund and `clerk` from store requests [ajawadmirza] #4596
+* TransFirst Transaction Express: Update xml prefixing to be compatible with Nokogiri 1.13.4 [dsmcclain] #4582
+* Iveri: Adding support for external MPI 3DS2 [heavyblade] #4598
+* Credorax: Pass Network Transaction ID on MIT [jherreraa] #4600
+* iVeri: Remove schema validation on Live requests [curiousepic] #4606
+* Beanstream: Adding Third Party 3DS fields [heavyblade] #4602
+* Borgun: Add support for 3DS preauth [ajawadmirza] #4603
+* Cardstream: Add third party 3ds2 support [sainterman] #4570
+* Accept both formats of Canadian routing numbers [molbrown] #4568
+* DLocal: Add support for `original_order_id` [rachelkirk] #4605
+* CheckoutV2: Add support for `merchant_initiated_transaction_id` [rachelkirk] #4611
+* CardConnect: Add stored credential & pass any valid `ecomind` field [ajawadmirza] #4609
+* Alelo: Trigger access token refresh on 404 [curiousepic] #4614
+* DLocal: Add Network Tokens [gasb150] #4608
+* Redsys: enable NTID generation with zero-value verify [jcreiff] #4615
+* IPG: Add support for passing in `store_id` on transactions [aenand] #4619
+* Adyen: Field support for Level 2 and level 3 information [sainterman] #4617
+* Add alternate alpha2 country code for Kosovo [jcreiff] #4622
+* CyberSource: Add support for several fields [rachelkirk] #4623
+* Reach: adding gateway [cristian] #4618
+* Orbital: integration improvements [molbrown] #4626
+* iVeri: add new url [almalee24] #4630
+* Payeezy: Enable Apple Pay support [naashton] #4631
+* Payeezy: Scrub Cryptogram [naashton] #4633
+* Checkout: Fix for `[:source][:stored]` in stored credentials [marioarranzr] #4629
+* Mundipagg: send authorization_secret_key on all transaction types [edgarv09] #4635
+* CommerceHub: Add new gateway [naashton] #4640
+* CyberSource: Update installment data method [rachelkirk] #4642
+* Element: fix bug with billing address email [jcreiff] #4644
+* Openpay: set URL by merchant country [edgarv09] #4637
+* Alelo: Improving credentials refresh process [heavyblade] #4616
+* Decidir: Add transaction inquire request [almalee24] #4649
+* EBANX: add soft_descriptor field [jcreiff] #4658
+* CommerceHub: Add Apple Pay and Google Pay [gasb150] #4648
+* Global Collect & Alelo: Fixing year dependent failing tests [heavyblade] #4665
+* Moneris: Add Google Pay [sinourain] #4666
+* Global Collect: Add transaction inquire request [almalee24] #4669
+* Stripe PI: Add Level 3 support [almalee24] #4673
+* Braintree: return additional processor response [jcreiff] #4653
+* Payeezy: name from `billing_address` on `purchase` [naashton] #4674
+* Stripe: add reverse_transfer to void transactions [jcreiff] #4668
+* Global Collect: fix bug on transaction inquire request [almalee24] #4676
+* Credorax: Support google pay and apple pay [edgarv09] #4661
+* Plexo: Add support for 5 new credit card brands (passcard, edenred, anda, tarjeta-d, sodexo) [edgarv09] #4652
+* Authorize.net: Google pay token support [sainterman] #4659
+* Credorax: Add support for Network Tokens [jherreraa] #4679
+* Stripe PI: use MultiResponse in create_setup_intent [jcreiff] #4683
+* Credorax: Correct NTID logic for MIT transactions [aenand] #4686
+* Adyen: Add support for `skip_mpi_data` flag [rachelkirk] #4654
+* Add Canadian Institution Numbers [jcreiff] #4687
+* Tns: update test URL [almalee24] #4698
+* TrustCommerce: Update `authorization_from` to handle `store` response [jherreraa] #4691
+* TrustCommerce: Verify feature added [jherreraa] #4692
+* Rapyd: Add customer object to transactions [javierpedrozaing] #4664
+* CybersourceRest: Add new gateway with authorize and purchase [heavyblade] #4690
+* Litle: Add prelive_url option [aenand] #4710
+* CommerceHub: Fixing verify status and prevent tokenization [heavyblade] #4716
+* Payeezy: Update Stored Credentials [almalee24] #4711
+* CheckoutV2: Add store/unstore [gasb150] #4712
+* CybersourceREST - Refund | Credit [sinourain] #4700
+* Braintree - Add Paypal custom fields [yunnydang] #4713
+* BlueSnap - Add descriptor phone number field [yunnydang] #4717
+* Braintree - Update transaction hash to include processor_authorization_code [yunnydang] #4718
+* CyberSourceRest: Add apple pay, google pay [gasb150] #4708
+* CybersourceREST - Void | Verify [sinourain] #4695
+* Credorax: Set default ECI values for token transactions [sainterman] #4693
+* CyberSourceRest: Add ACH Support [edgarv09] #4722
+* CybersourceREST: Add capture request [heavyblade] #4726
+* Paymentez: Add transaction inquire request [aenand] #4729
+* Ebanx: Add transaction inquire request [almalee24] #4725
+* Ebanx: Add support for Elo & Hipercard [almalee24] #4702
+* CheckoutV2: Add Idempotency key support [yunnydang] #4728
+* Adyen: Add support for shopper_statement field for capture [yunnydang] #4736
+* CheckoutV2: Update idempotency_key name [yunnydang] #4737
+* Payeezy: Enable external 3DS [jherreraa] #4715
+* Ebanx: Remove default email [aenand] #4747
+* CyberSourceRest: Add stored credentials support [jherreraa] #4707
+* Payeezy: Add `last_name` for `add_network_tokenization` [naashton] #4743
+* Stripe PI: Tokenize payment method at Stripe for `verify` [aenand] #4748
+* Kushki: Add support for the months and deferred fields [yunnydang] #4752
+* Borgun: Update TrCurrencyExponent for 3DS transactions with `ISK` [aenand] #4751
+* CyberSourceRest: Add gateway specific fields handling [jherreraa] #4746
+* IPG: Improve error handling [heavyblade] #4753
+* Shift4: Handle access token failed calls [heavyblade] #4745
+* Bogus: Add verify functionality [willemk] #4749
+* Litle: Update successful_from method [almalee24] #4765
+
+== Version 1.127.0 (September 20th, 2022)
+* BraintreeBlue: Add venmo profile_id [molbrown] #4512
+* Maestro: Adding missing BIN ranges [bradbroge] #4423
+* Simetrik: Fix integer and float types, update scrub method [rachelkirk] #4405
+* Credorax: Convert country codes for  `recipient_country_code` field [ajawadmirza] #4408
+* BlueSnap: Correctly parse `refund-transaction-id` [dsmcclain] #4411
+* Worldpay: Add level II and level III data [javierpedrozaing] #4393
+* Worldpay: extract `issuer_response_code` and `issuer_response_description` from gateway response [dsmcclain] #4412
+* Vantiv: Support `duplicate` field read from saleResponse.duplicate attr [mashton] #4413
+* Ogone: Add support for 3dsv2 [gasb150] #4410
+* BlueSnap: Add support for stored credentials [ajawadmirza] #4414
+* Monei: Add support for `lang` field [drkjc] #4421
+* Wompi: Redirect `refund` to `void` [drkjc] #4424
+* Rapyd: 3DS Support [naashton] #4422
+* Adyen: Update API version [jherreraa] #4418
+* Ogone: Updated home gateway URL [gasb150] #4419
+* Credorax: Update url gateway and credit cards [javierpedrozaing] #4417
+* Kushki: Pass extra_taxes with USD [therufs] #4426
+* DLocal: fix bug with `X-Idempotency-Key` header [dsmcclain] #4431
+* DLocal: Mark support for additional countries [gasb150] #4427
+* Rapyd: Additional Fields [naashton] #4434
+* Braintree: Return generated client token [BritneyS] #4416
+* Simetrik: Update `audience` field [simetrik-frank] #4433
+* CyberSource: Add bank account payment method support [heavyblade] #4428
+* Rapyd: Zero Dollar Auth [naashton] #4435
+* Rapyd: Scrub ACH [naashton] #4436
+* VisaNet Peru: Update `purchase_number` [rachelkirk] #4437
+* CardConnect:  Add support for 3ds V2 [javierpedrozaing] #4429
+* Rapyd: Support `store` and `unstore` [naashton] #4439
+* Orbital: Update API version to 9.0 [gasb150] #4440
+* Plexo:  Add `meta_data` fields and reorder amount object in response [ajawadmirza] #4441
+* Plexo:  Change field name from `meta_data` to `metadata` [ajawadmirza] #4443
+* Simetrik: Update `vat` to be in cents [simetrik-frank] #4425
+* Cybersource: Handle Amex cryptograms [heavyblade] #4445
+* Rapyd: Pass fields to `refund` and `store` [naashton] #4449
+* VPOS: Allow reuse of encryption key [therufs] #4450
+* Orbital: Add `payment_action_ind` field and refund through credit card to support tandem implementation [ajawadmirza] #4420
+* Airwallex: Send `referrer_data` on setup transactions [drkjc] #4453
+* Adyen and StripPI: Updated error messaging [mbreenlyles] #4454
+* Airwallex: Update `referrer_data` field [drkjc] #4455
+* Simetrik: Update `order_id` and `description` to be top level fields [simetrik-frank] #4451
+* Plexo: Update `ip`, `description`, and `email` fields request format and scrub method to not filter cardholder name and reference id [ajawadmirza] #4457
+* Plexo: Update `verify` implementation and add `verify_amount` field [ajawadmirza] #4462
+* Vanco: Update `purchase` to complete a purchase transaction with an existing session id [BritneyS] #4461
+* Authorize.net: Allow custom verify_amount and validate it [jherreraa] #4464
+* Shift4: Add gateway adapter [ali-hassan] #4415
+* Rapyd: Correctly add `billing_address` [naashton] #4465
+* Credorax: Update processor response messages [jcreiff] #4466
+* Shift4: add `customer_reference`, `destination_postal_code`, `product_descriptors` fields and core refactoring [ajawadmirza] #4469
+* Paypal Express: Add checkout status to response object [mbreenlyles] #4467
+* Shift4: Scrub security code [naashton] #4470
+* Shift4: Update `cardOnFile` transaction requests [ajawadmirza] #4471
+* Plexo: Update `success_from` definition [ajawadmirza] #4468
+* Rapyd: Un-nest the payment urls [naashton] #4472
+* Paypal Express: Correct naming mistake for accessor [mbreenlyles] #4473
+* GlobalCollect: Enable Google Pay and Apple Pay [gasb150] #4388
+* Shift4: $0 auth [naashton] #4474
+* CyberSource: Updatie API version to 1.198 and fix 3DS test [cristian] #4456
+* Shift4: add `store` method, `present` field in card, and to pass amount in cents [ajawadmirza] #4475
+* Shift4: add `3ds2` implementation [ajawadmirza] #4476
+* Shift4: update `success_from` definition to consider response code [ajawadmirza] #4477
+* Rapyd: Customer Object [naashton] #4478
+* Shift4: Verify Endopint Fix [naashton] #4479
+* CheckoutV2: Scrub cryptogram and credit card number [ajawadmirza] #4488
+* CheckoutV2: Add `3ds.status` field to send status of 3DS flow of all 3DS transactions [BritneyS] #4492
+* CheckoutV2: Add `challenge_indicator`, `exemption`, `authorization_type`, `processing_channel_id`, and `capture_type` fields [ajawadmirza] #4482
+* Add `mada` card type and associated BINs; add support for `mada` in CheckoutV2 gateway [dsmcclain] #4486
+* Authorize.net: Refactor custom verify amount handling [jherreraa] #4485
+* EBANX:  Change amount for Colombia [flaaviaa] #4481
+* Worldpay: Update `required_status_message` and `message_from` methods for response. [rachelkirk] #4493
+* CheckoutV2: Add support for transactions through OAuth [ajawadmirza] #4483
+* Vanco: Update unit test to remove remote call to gateway [ajawadmirza] #4497
+* Shift4: remove support for 3ds2 [ajawadmirza] #4503
+* Rapyd: Add support for stored credential [ajawadmirza] #4487
+* MerchantE: Update `store` and add `verify` method [ajawadmirza] #4507
+* Shift4: Add default `numericId`, add `InterfaceVersion`, `InterfaceName`, and `CompanyName` header fields, change date time format and allow merchant time zone [ajawadmirza] #4509
+* BraintreeBlue: Add support for partial capture [aenand] #4515
+* Rapyd: Change key name to `network_transaction_id` [ajawadmirza] #4514
+* CyberSource: Handle unsupported Network Token brands [heavyblade] #4500
+* Ingenico(Global Collect): Add support for `payment_product_id` [rachelkirk] #4521
+* Adyen: Add network transaction id to store call [jcreiff] #4522
+* Worldpay: Add machine cookie to subsequent calls during 3DS challenge [mbreenlyles] #4513*
+* Shift4: Scrub `securityCode` fix [naashton] #4524
+* Credorax: Update `OpCode` for credit transactions [dsmcclain] #4279
+* CheckoutV2: Add `credit` method [ajawadmirza] #4490
+* Stripe Payment Intents: Add `options` for retrieve_setup_intent [aenand] #4529
+* CheckoutV2: Send payment id via `incremental_authorization` field [ajawadmirza] #4518
+* Shift4: Add card `present` field, use previous transaction authorization for capture, and hardcode header values [ajawadmirza] #4528
+* Orbital: Remove `DPANInd` field for RC transactions [ajawadmirza] #4502
+* EBANX: Add Spreedly tag to payment body [flaaviaa] #4527
+* Shift4: Add `expiration_date` field for refund transactions [ajawadmirza] #4532
+* Improve handling of AVS and CVV Results in Multiresponses [gasb150] #4516
+* Airwallex: Add `skip_3ds` field for create payment transactions [ajawadmirza] #4534
+* Shift4: Typo correction for `initial_transaction` [ajawadmirza] #4537
+* Rapyd: Pass Customer ID and fix `add_token` method [naashton] #4538
+* Shift4: If no timezone is sent on transactions, the code uses the hours and minutes as a timezone offset [ali-hassan] #4536
+* Priority: Add support for general credit and updating cvv and zip [priorityspreedly] #4517
+* Worldpay: Update actions for generated message in `required_status_message` method [rachelkirk] #4530
+* Adyen: Modify handling of countryCode for ACH [jcreiff] #4543
+* CardConnect: update api end-point urls [heavyblade] #4541
+* Vantiv(Litle): Add support for `fraudFilterOverride` field [rachelkirk] #4544
+* Stripe: Add shipping address [jcreiff] #4539
+* PayuLatam: Add extra1, extra2, extra3 fields [jcreiff] #4550
+* Paysafe: Add fundingTransaction object [jcreiff] #4552
+* MerchantE: Add tests for `moto_ecommerce_ind` field [ajawadmirza] #4554
+* Plexo: Update `purchase` method, add flags for header fields, add new fields `billing_address`, `identification_type`, `identification_value`, and `cardholder_birthdate` [ajawadmirza] #4540
+* Rapyd: Remove `BR`, `MX`, and `US` from supported countries [ajawadmirza] #4558
+* Stripe Payment Intents: fix bug with billing address email [jcreiff] #4556
+* Shift4: Add customer to `purchase` & `store` and remove transaction from `store` [ajawadmirza] #4557
+* MerchantE: only add `moto_commerce_ind` to request if it is present [ajawadmirza] #4560
+* Add BpPlus card type along with custom validation logic [dsmcclain] #4559
+* PayTrace: Support ACH implementation for new endpoints and request body [ajawadmirza] #4545
+* Rapyd: No force capture for ACH [naashton] #4562
+* Shift4: Applied checks on Shift4 Time/Timezone offset [ali-hassan] #4561
+* Alelo: Add gateway [heavyblade] #4555
+* Wompi: Allow partial refund amount on void_sync [jcreiff] #4535
+* Shift4: Timezone Offset [naashton] #4566
+* MerchantE: `recurring_pmt_num` and `recurring_pmt_count` fields [ali-hassan] #4553
+* Orbital: Add South African Rand to supported currencies [molbrown] #4569
+* Orbital: Fix CardSecValInd [molbrown] #4563
+* Shift4: Add `usage_indicator`, `indicator`, `scheduled_indicator`, and `transaction_id` fields [ajawadmirza] #4564
+* Shift4: Retrieve `access_token` once [naashton] #4572
+* Redsys: Update Base64 encryption handling for secret key [jcreiff] #4565
+* Shift4: refuse `postalCode` when its null [ajawadmirza] #4574
+* Plexo: Update param key to `refund_type` [ajawadmirza] #4575
+* Shift4: Update request params for `verify`, `capture`, and `refund` [ajawadmirza] #4577
+* CyberSource: Add support for `sec_code` [rachelkirk] #4581
+* BraintreeBlue: Correctly vault payment method token for PayPal Checkout with Vault [almalee24] #4579
+* BpPlus: Allow spaces in card number [ajawadmirza] #4585
+* Shift4: Decline referral transactions and parse message for internal server errors [ajawadmirza] #4583
+* Litle: Update homepage_url [gasb150] #4491
+* Priority: Update credential handling [therufs] #4571
+* Shift4: Fix authorization and remove `entryMode` from verify and store transactions [ajawadmirza] #4589
+
+== Version 1.126.0 (April 15th, 2022)
+* Moneris: Add 3DS MPI field support [esmitperez] #4373
+* StripePI: Add ability to change payment_method_type to confirm_intent [aenand] #4300
+* GlobalCollect: Improve support for Naranja and Cabal card types [dsmcclain] #4286
+* Payflow: Add support for stored credentials [ajawadmirza] #4277
+* Orbital: Don't void $0 auths for Verify [javierpedrozaing] #2487
+* StripePI: Enable Apple Pay and Google Pay payment methods [gasb150] #4252
+* PaySafe: Update `unstore` method and authorization for redact [ajawadmirza] #4294
+* CyberSource: Add `national_tax_indicator` fields in authorize and purchase [ajawadmirza] #4299
+* NMI: Update gateway credentials to accept security_key [javierpedrozaing] #4302
+* PaySafe: Fix commit for `unstore` method [ajawadmirza] #4303
+* Ebanx: Add support for `order_number` field [ali-hassan] #4304
+* BlueSnap: Add support for  `idempotency_key` field [drkjc] #4305
+* Paymentez: Update `capture` method to verify by otp for pending transactions [ajawadmirza] #4267
+* BlueSnap: Update refund request and endpoint along with merchant transaction support [ajawadmirza] #4307
+* DecidirPlus: Added `authorize`, `capture`, `void`, and `verify` methods [ajawadmirza] #4284
+* Paymentez: Fix `authorize` to call `purchase` for otp flow [ajawadmirza] #4310
+* Orbital: Indicate support for network tokenization [dsmcclain] #4309
+* IPG: remove `uruguay` from supported countries [ajawadmirza] #4311
+* Decidir: Add sub_payments sub-fields to gateway [meagabeth] #4315
+* Priority: Add additional fields to purchase and capture requests [dsmcclain] #4301
+* DecidirPlus: Added `unstore` method [ajawadmirza] #4317
+* Decidir & Decidir Plus: Revise handling of `sub_payment` sub-fields [meagabeth] #4318
+* DecidirPlus: Update `unstore` implementation to get token from params [ajawadmirza] #4320
+* CyberSource: Add option for zero amount verify [gasb150] #4313
+* PayU Latam: Refactor `message_from` method, fix failing remote tests [rachelkirk] #4326
+* Adyen: Add currencies with three decimals places [gasb150] #4322
+* GlobalCollect: Stregthen success criteria for void action [peteroas] #4324
+* Priority Payment Systems - Clean up/refactor gateway file and tests [ali-hassan] #4327
+* SafeCharge: change `verify` to send 0 amount [dsmcclain] #4332
+* DLocal: add support for `force_type` field [dsmcclain] #4336
+* Barclaycard SmartPay: Support more nonstandard currencies [jherreraa] #4335
+* DecidirPlus: `name_override` option on `store` [naashton] #4338
+* Priority: Update `add_purchases_data` to return if `options[:purchases]` is empty [drkjc] #4349
+* Stripe PI: update `shipping` field to `shipping_address` [ajawadmirza] #4347
+* DecidirPlus: Handle `payment_method_id` by `card_brand` [naashton] #4350
+* DecidirPlus: `debit` and `payment_method_id` fields [naashton] #4351
+* Adyen: Include Application ID in adyen authorize and purchase transactions [peteroas] #4343
+* Priority: Add support for `replay_id` field [drkjc] #4352
+* Stripe PI: standardize `shipping_address` fields [dsmcclain] #4355
+* Airwallex: support gateway [therufs] #4342
+* Litle: Translate google_pay as android_pay [javierpedrozaing] #4331
+* Braintree: Add ACH support for store [cristian] #4285
+* Simetrik: Add support for Simetrik gateway [simetrik-frank] #4339
+* EBANX:  Change amount for Mexico and Chile [flaaviaa] #4337
+* DecidirPlus: Add `establishment_name`, `aggregate_data`, `sub_payments`, `card_holder_identification_type`, `card_holder_identification_number`, `card_door_number`, and `card_holder_birthday` fields [ajawadmirza] #4361
+* DecidirPlus: Update `error_code_from` to get error reason id [ajawadmirza] #4364
+* Dlocal: Add three_ds mpi support [cristian] #4345
+* Stripe PI: Add `request_three_d_secure` field for `create_setup_intent` [aenand] #4365
+* Adyen: Add `verify_amount` field for verify [ajawadmirza] #4369
+* Stripe PI: Pass options for tokenizing Apple/Google Pay [gasb150] #4368
+* Dlocal: Format 3DS mpi enrollment data correctly [cristian] #4371
+* Airwallex: QA fixes for option handling [therufs] #4367
+* CardConnect: Fixed duplicate(concat) Address sent - card_connect is concat. address1 and 2 causing a AVS error [ahmirza] #4362
+* CyberSource: Remove Pinless Debit Transaction Functionality [peteroas] #4370
+* Litle: Add support for Level 2 and 3 enhanced data [curiousepic] #4360
+* Rapyd: Add gateway support [meagabeth] #4372
+* CyberSource: Update and fix test coverage [peteroas] #4374
+* Airwallex: QA fixes for address and create_setup_intent handling [therufs] #4377
+* Airwallex: add `descriptor` field and update logic for sending `request_id` and `merchant_order_id` [dsmcclain] #4379
+* Visanet Peru: use timestamp instead of random for purchaseNumber [therufs] #4093
+* Orbital: add `verify_amount` field [ajawadmirza] #4376
+* Credorax: add `recipient_street_address`, `recipient_city`, `recipient_province_code`, and `recipient_country_code` fields [ajawadmirza] #4384
+* Airwallex: add support for stored credentials [drkjc] #4382
+* Rapyd: Add metadata and ewallet_id options [naashton] #4387
+* Priority: Add additional fields to request and refactor gateway integration [dsmcclain] #4383
+* Rapyd: Update `type` option to `pm_type` [naashton] #4391
+* Conekta: Fix remote test [javierpedrozaing] #4386
+* NMI: Update post URL [jherreraa] #4380
+* Multiple Gateways: Resolve when/case bug [naashton] #4399
+* Airwallex: Add 3DS MPI support [drkjc] #4395
+* Add Cartes Bancaires card bin ranges [leahriffell] #4398
+* Airwallex: Add support for `original_transaction_id` field [drkjc] #4401
+* Securion Pay: Pass external 3DS data [jherreraa] #4404
+* Airwallex: Update Stored Credentials testing, remove support for `original_transaction_id` field [drkjc] 4407
+
+== Version 1.125.0 (January 20, 2022)
+* Wompi: support gateway [therufs] #4173
+* Stripe Payment Intents: Add setup_purchase [aenand] #4178
+* Ipg: Add new gateway [ajawadmirza] #4171
+* Worldpay: Adding support for google pay and apple pay [cristian] #4180
+* Worldpay: Adding scrubbing for network token transactions [cristian] #4181
+* SafeCharge: Add sg_NotUseCVV field [ajawadmirza] #4177
+* PayULatam: Correctly map maestro and condensa card types [dsmcclain] #4182
+* StripePaymentIntents: Refactor response for setup_purchase [aenand] #4183
+* Wompi: cast error messages to JSON [therufs] #4186
+* NMI: Omit initial_transaction_id for CIT [aenand] #4189
+* Priority: Support Priority Payment Systems gateway [jessiagee] #4166
+* GlobalCollect: Support for Lodging Data [naashton] #4190
+* IPG: Add support for sub-merchant and recurring type fields [ajawadmirza] # 4188
+* Wompi: Support `installments` option [therufs] #4192
+* Stripe PI: add support for `fulfillment_date` and `event_type` [dsmcclain] #4193
+* Paysafe: Adjust logic for sending 3DS field [meagabeth] #4194
+* Priority: Fix unit test cases [ajawadmirza] #4195
+* EBANX: New Gateway Specific Receiver [spreedly-kledoux] #4198
+* Wompi: Don't send CVV field if no CVV provided [therufs] #4199
+* Worldpay: cleaning order_id according to worldpay rules [cristian] #4197
+* Paysafe: Concatenate credentials for headers [meagabeth] #4201
+* Stripe Payment Intents: Add metadata to setup_purchase [aenand] #4202
+* Priority: Add gateway standard changes [ajawadmirza] #4200
+* IPG: Add support for payment by token [ajawadmirza] #4191
+* Element (Vantiv Express): Add support for general credit [dsmcclain] #4203
+* Worldpay: Update supported countries list, currencies [jherreraa] #4207
+* StripePI: Adding countries available. [gasb150] #4208
+* Orbital: Adding google pay payment tests for Orbital. [ajawadmirza] #4205
+* Bug: Fixing supported countries method when there is inheritance involved [cristian] #4211
+* Mundipagg: Update success method [ajawadmirza] #4210
+* Worldpay: Add support for Visa Direct Fast Funds Credit [dsmcclain] #4212
+* Paysafe: Add support for stored credentials [meagabeth] #4214
+* Worldpay: Adding missing countries to supported countries [cristian] #4213
+* Update institution numbers for Canadian banks [therufs] #4216
+* Worldpay: Set default eCommerce indicator for EMVCO network tokens [shasum] #4215
+* Update handling routing numbers for Canadian banks [therufs] #4217
+* Stripe: API version updated [jherreraa] #4209
+* Mercado Pago: Update verify method [ajawadmirza] #4219
+* DLocal: Set API Version [gasb150] #4222
+* Wompi: Add support for Authorize and Capture [rachelkirk] #4218
+* Priority: Update source and billing address checks [jessiagee] #4220
+* Pin Payments: Add support for `diners_club`, `discover`, and `jcb` cardtypes [montdidier] #4142
+* USA ePay: Add store method [ajawadmirza] #4224
+* IPG: Quick fix to remove warning [ajawadmirza] #4225
+* Remove YAML warning on load_fixtures_method [jherreraa] #4226
+* Worldpay: Add support for tokenizing payment methods with transaction identifiers [dsmcclain] #4227
+* USA ePay: Update implementation to send valid authorization [ajawadmirza] #4231
+* USA ePay: Add store test, update authorize param [jessiagee] #4232
+* Stripe: Update destination test account [jherreraa] #4234
+* Add skip_response option on request check for commit stubs [cristian] #4223
+* Pin Payments: Add support for `void` and New Zealand to supported countries. [montdidier] #4144
+* Wompi: Update authorization in `capture` method. [rachelkirk] #4238
+* IPG: Update authorization to support `store` method token. [ajawadmirza] #4233
+* Paymentez: Update card mappings [ajawadmirza] #4237
+* Priority: Update parsing for error messages [jessiagee] #4245
+* GlobalCollect: Support for Airline Data [naashton] #4187
+* IPG: Add `tpv_error_code` and `tpv_error_msg` fields [ajawadmirza] #4241
+* StripePI: Set restriction for Apple/Google Pay [jherreraa] #4247
+* Cashnet: support multiple itemcodes and amounts [peteroas] #4243
+* IPG: Send default currency in `verify` and two digit `ExpMonth` [ajawadmirza] #4244
+* Stripe: Add remote tests set up to avoid exceed the max external accounts limit [jherreraa] #4239
+* Stripe: Add support for `radar_options: skip_rules` [dsmcclain] #4250
+* CyberSource: Add `user_po`, `taxable`, `national_tax_indicator`, `tax_amount`, and `national_tax` fields [ajawadmirza] #4251
+* Kushki: Add support for `metadata` [rachelkirk] #4253
+* IPG: Add `redact` operation [ajawadmirza] #4254
+* Wompi: Update sandbox and production endpoints [rachelkirk] #4255
+* Orbital: Add `sca_merchant_initiated` operation [ajawadmirza] #4256
+* Cashnet: convert amounts to integers for proper gateway handling [peteroas] #2207
+* PayTrace: Add `unstore` operation [ajawadmirza] #4262
+* Decidir Plus: Add gateway adapter [naashton] #4264
+* CheckoutV2: Add support for Apple Pay and Google Pay tokens [AMHOL] #4235
+* Decidir Plus: Update payment reference [naashton] #4271
+* Paysafe: Update redact method [meagabeth] #4269
+* CyberSource: Add `line_items` field in authorize method [ajawadmirza] #4268
+* CheckoutV2: Support processing channel and marketplace sub entity ID [AMHOL] #4236
+* Elavon: `third_party_token` bug fix [rachelkirk] #4273
+* Decidir Plus: Add `sub_payments` field [naashton] #4274
+* Pin Payments: Add `unstore` support [montdidier] #4276
+* Orbital: Add support for $0 verify [javierpedrozaing] #4275
+* Update inline documentation with all supported cardtypes [ali-hassan] #4283
+* PayWay: Update endpoints, response code [jessiagee] #4281
+* CyberSource: Add `line_items` for purchase [ajawadmirza] #4282
+* Payflow Pro: Add `stored_credential` fields [ajawadmirza] #4277
+* Decidir Plus: Add `fraud_detection` fields [naashton] #4289
+
+== Version 1.124.0 (October 28th, 2021)
+* Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
+* dlocal: Add device_id and ip to payer object and add additional_data [aenand] #4116
+* Adyen: Add network tokenization support to Adyen gateway [mymir] #4101
+* Adyen: Add ACH Support [almalee24] #4105
+* Moka: Support 3DS endpoint and update test url [dsmcclain] #4110
+* Paysafe: Adjust profile data [meagabeth] #4112
+* Stripe Payment Intents: Add support for claim_without_transaction_id field [BritneyS] #4111
+* Mit: Add New Gateway [EsporaInfra] #3820
+* Routex: add card type [rachelkirk] #4115
+* Orbital: Scrub Payment Cryptogram [naashton] #4121
+* Paysafe: Add support for airline fields [meagabeth] #4120
+* Stripe and Stripe PI: Add Radar Session Option [tatsianaclifton] #4119
+* PayArc: Fix billing address nil and phone_number issues [dsmcclain] #4114
+* Routex: Update BIN numbers [rachelkirk] #4123
+* UnionPay: Add Stripe's UnionPay test card to UnionPay BIN range #4122
+* GlobalCollect: Support URL override [naashton] #4127
+* PayConex: scrub bank account info from transcripts [mbreenlyles] #4128
+* Moka: Remove additional transaction data from subsequent calls [naashton] #4129
+* Moka: Ensure CvcNumber can be an empty string [jessiagee] #4130
+* Maestro: Allow more card lengths for Luhnless bins [therufs] #4131
+* Paysafe: Update supported countries [meagabeth] #4135
+* Paysafe: Update field mapping for split_pay [meagabeth] #4136
+* SafeCharge: Add handling for non-fractional currencies [dsmcclain] #4137
+* CardStream: Support passing country_code in request [dsmcclain] #4139
+* Adyen: Adjust phone number mapping [aenand] #4138
+* Mit: Change how parameters are converted to JSON [tatsianaclifton] #4140
+* Stripe: Add account_number to scrubbing [aenand] #4145
+* Stripe PI: add name on card to billing_details [dsmcclain] #4146
+* TrustCommerce: Scrub bank account info [mbreenlyles] #4149
+* TransFirst: Scrub account number [aenand] #4152
+* Paysafe: Update supported countries list [meagabeth] #4154
+* dLocal: Update supported countries list [mbreenlyles] #4155
+* SafeCharge: Add support for email field in capture [rachelkirk] #4153
+* Paysafe: Remove invalid code [meagabeth] #4156
+* NMI: Add descriptor fields [ajawadmirza] #4157
+* Authorize.net: Add tests for scrubbing banking account info (in addition to BluePay, BridgePay, Forte, HPS, and Vanco Gateways)[aenand] #4159
+* Moka: Send refund amount with decimal [dsmcclain] #4160
+* GlobalCollect: Append URI to the URL [naashton] #4162
+* Adyen: Add application info fields [aenand] #4163
+* Adyen: Send NTID from stored cred hash [curiousepic] #4164
+* Payflow: use proper case for 3DS 2.x element names [bbraschi] #4113
+* Realex: Add support for stored credentials [dsmcclain] #4170
+* Moka: Add support for InstallmentNumber field [dsmcclain] #4172
+* Payflow: include AuthenticationStatus for 3DS 2.x [bbraschi] #4168
+
+== Version 1.123.0 (September 10th, 2021)
+* Paysafe: Add gateway integration [meagabeth] #4085
+* Elavon: Support recurring transactions with stored credentials [cdmackeyfree] #4086
+* Orbital: Truncate three_d_secure[:version] [carrigan] #4087
+* Credorax: Determine ISK decimal by datetime [curiousepic] #4088
+* Moka: support new gateway type [dsmcclain] #4089
+* Paymentez: Add more_info field [reblevins] #4091
+* Worldpay: Support $0 auth [therufs] #4092
+* Elavon: Support recurring transactions with token, revert stored credentials recurring [cdmackeyfree] #4089
+* SafeCharge(Nuvei): Add support for product_id [rachelkirk] #4095
+* NMI: Change cardholder_auth 3DS field population [carrigan] #4094
+* Synchrony: add card type [therufs] #4096
+* Maestro: support BINs without Luhn check [therufs] #4097
+* Maestro: support BINs [therufs] #4098
+* Redsys: Route MIT Exemptions to webservice endpoint [curiousepic] #4081
+* Adyen: Update Classic Integration API to v64 and Recurring API to v49 [almalee24] #4090
+* Payeezy: support soft_descriptor and merchant_ref [cdmackeyfree] #4099
+* Elavon: add ssl_token field [cdmackeyfree] #4100
+* Credorax: Remove special logic for ISK [curiousepic] #4102
+* UnionPay: Pull UnionPay's 62* BIN ranges out of Discover's #4103
+* Monei: Update Creation of Billing Details [tatsianaclifton] #4107
+* Monei: Typo Correction on Billing Details [tatsianaclifton] #4108
+* Paysafe: Add support for 3DS [meagabeth] #4109
+
+== Version 1.122.0 (August 3rd, 2021)
+* Orbital: Correct success logic for refund [tatsianaclifton] #4014
+* usaepay: Added pin gateway setting [DustinHaefele] #4026
+* MercadoPago: Added external_reference, more payer object options, and metadata field [DustinHaefele] #4020
+* Element: Add duplicate_override_flag [almalee24] #4012
+* PayTrace: Support gateway [meagabeth] #3985
+* vPOS: Support credit + refund [therufs] #3998
+* PayArc: Support gateway [senthil-code] #3974
+* NMI: Support cardholder_auth field for 3DS2 [cdmackeyfree] #4002
+* Confiable: Support cardtype [therufs] #4004
+* Maestro: Add BIN [therufs] #4003
+* PayULatam: Ensure phone number is pulled from shipping_address correctly [dsmcclain] #4005
+* SafeCharge: Add challenge_preference for 3DS [klaiv] #3999
+* Adyen: Pass networkTxReference in all transactions [naashton] #4006
+* Adyen: Ensure correct transaction reference is selected [dsmcclain] #4007
+* PayTrace: Support level_3_data fields [meagabeth] #4008
+* BluePay: Add support for Stored Credentials [dsmcclain] #4009
+* Orbital: Add support for SCARecurringPayment [jessiagee] #4010
+* Braintree: Support recurring_first and moto reasons [curiousepic] #4013
+* PayTrace: Adjust capture method [meagabeth] #4015
+* BarclaysEpdqExtraPlus: updated custom_eci test + remote tests [yyapuncich] #4022
+* CyberSource: Add customerID field [deemeyers] #4025
+* CyberSource: Adjust Auth [naashton] #3956
+* Valid Canadian Institution Numbers [naashton] #4024
+* PayTrace: Adjust purchase and capture methods to handle MultiResponse scenarios [meagabeth] #4027
+* Payflow: Add support for MERCHDESCR field [rachelkirk] #4028
+* PayTrace: Support $0 authorize in verify method [meagabeth] #4030
+* PayArc: Add error_code in response [cdm-83] #4021
+* Update bank routing account validation check [jessiagee] #4029
+* Kushki: Add 'contactDetails' fields [mbreenlyles] #4033
+* Adyen: Truncating order_id and remote test [yyapuncich] #4036
+* CyberSource: Allow string content for Ignore AVS/CVV flags [curiousepic] #4043
+* Decidir: Update validation error message handling [arbianchi] #4042
+* Authorize.net: Remove cardholderAuthentication for non-3DS transactions [BritneyS] #4045
+* BlueSnap: Handle 429 errors [britth] #4044
+* Orbital: Update unit test files [meagabeth] #4046
+* Orbital: Strip null characters from responses [britth] #4041
+* Merchant Warrior: Handle invalid XML responses [arbianchi] #4047
+* Braintree: Fix NoMethodError for failed card verification [molbrown] #4048
+* Worldpay: Accepting 3DS1 and 3DS2 authentication data from external MPI [chandan-PS] #4017
+* PayArc: Currency and parameters updates [jessiagee] #4051
+* Elavon: Add support for special characters [mbreenlyles] #4049
+* PayArc: Formatting CC month, adding tax_rate, removing default void reason [jessiagee] #4053
+* Kushki: Add support for fullResponse field [rachelkirk] #4057
+* Element: Add support for `MerchantDescriptor` field [BritneyS] #4058
+* PayArc: Added email and phone to credit and charge [jessiagee] #4056
+* Mundipagg: Added support for 'authentication_secret_key' for 'api_key' overwrite [DustinHaefele] #4059
+* Payflow: Raise an error if store method is called [dsmcclain] #4066
+* Monei: JSON API implementation [jimmyn] #3613
+* Maestro: Update BINs [therufs] #4067
+* Monei: Change domain to monei.com [jimmyn] #4068
+* Spreedly: Support gateway_specific_response_fields in response params [abarrak] #4064
+* Payeezy: Add support for `add_soft_descriptors` [rachelkirk] #4069
+* Stripe Payment Intents: Add support for network_transaction_id field [cdmackeyfree] #4060
+* Worldpay: Support 'CAPTURED' response for authorize transactions [naashton] #4070
+* Ingenico (Global Collect): New idempotence key header [BritneyS] #4073
+* PayTrace: Adjust handling of line_items subfields [meagabeth] #4074
+* Worldpay: Correct Expiration Year Format [tatsianaclifton] #4076
+* Monei: Improve Scrub Regex [tatsianaclifton] #4072
+* Payflow: add THREEDSVERSION and DSTRANSACTIONID when present [bbraschi] #4075
+* CT Payments: update remote tests [cdmackeyfree] #3947
+* Orbital: Ensure full e-check scrubbing [mbreenlyles] #4079
+
+== Version 1.121 (June 8th, 2021)
+* Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
+* Payment Express/Windcave: Send amount on verify calls [cdmackeyfree] #3995
+* Orbital: Use billing_address name as fallback [curiousepic] #3966
+* vPOS: handle shop_process_id correctly [therufs] #3996
+* Checkout v2: Support metadata field [saschakala] #3992
+* Adyen: Support networkTxReference field [naashton] #3997
+* Paypal Express: Enable PayPal express reference transaction request to send merchant session id [janees-e] #3994
+
+== Version 1.120.0 (May 28th, 2021)
+* Braintree: Bump required braintree gem version to 3.0.1
+* Stripe PI: ensure `setup_future_sage` and `off_session` work when using SetupIntents.
+* Orbital: Update commit to accept retry_logic in params [jessiagee] #3890
+* Orbital: Update remote 3DS tests [jessiagee] #3892
+* Mercado Pago: support Creditel card type [therufs] #3893
+* Payeezy: Update error mapping [meagabeth] #3896
+* HPS: Add support for stored_credential [cdmackeyfree] #3894
+* Orbital: Ensure payment_detail sends for ECP [jessiagee] #3899
+* Payeezy: Update `error_code_from` method [meagabeth] #3900
+* Worldpay: Add support for `statementNarrative` field [meagabeth] #3901
+* Mercado Pago: Give ability to pass capture option in authorize txn field [naashton] #3897
+* Orbital: Ensure correct fields sent in refund [jessiagee] #3903
+* WorldPay: remove some defaults in billing address [carrigan] #3902
+* Adyen: Support for General Credit [naashton] #3904
+* Worldpay: reintroduce address1 and city defaults [carrigan] #3905
+* Stripe: ensure potentially nested data is scrubbed #3907
+* Stripe PI: Send Validate on Payment Method Attach [tatsianaclifton] #3909
+* Adyen: Update handling of authorization returned from gateway [meagabeth] #3910
+* Update gateway templates for Rubocop compliance [therufs] #3912 #3895
+* Orbital: Send AVSname for all eCheck transactions [jessiagee] #3911
+* Litle: update support of customerId field [cdmackeyfree] #3913
+* Payment Express: fix signature for `verify` [therufs] #3914
+* Forte: Send xdata fields [dsmcclain] #3915
+* PaywayDotCom: Add New Gateway [DanAtPayway] #3898
+* Orbital: Remove unnecessary requirements [jessiagee] #3917
+* SafeCharge (Nuvei): Add network tokenization support [DStoyanoff] #3847
+* Stripe PI: Enhance testing of SetupIntents API #3908
+* SafeCharge (Nuvei): Fix NT related bug [jimilpatel24] #3921
+* Worldpay: Only override cardholdername for 3ds tests [curiousepic] #3918
+* Orbital: Add support for general credit [meagabeth] #3922
+* Banco Sabadell: Ensure sca_exemption field is used #3923
+* Redsys: Refactor XML character escape logic #3925
+* HPS: Strip zip codes of non-alphanumeric characters [dsmcclain] #3926
+* Orbital: $0 PreNote using authorize for eCheck force_capture [jessiagee] #3927
+* Worldpay: synchronous response changes [naashton] #3928
+* PaywayDotCom: Add more thorough scrubbing [tatsianaclifton] #3929
+* Remove CONTRIBUTING.md and update README.md to reflect new repository wiki [dsmcclain] #3930
+* Qvalent: Add customer_reference_number [fredo-] #3931
+* Orbital: Add 'ND' ECPActionCode to $0 Prenote Check [jessiagee] #3935
+* Checkout: Add support for stored_credential [meagabeth] #3934
+* Credorax: Add support for 3ds_reqchallengeind [dsmcclain] #3936
+* Adyen: cancelOrRefund endpoint when passed as option [naashton] #3937
+* Qvalent: Add customer reference number FIX [fredo-] #3939
+* Orbital: Pass line_items in capture [jessiagee] #3941
+* BraintreeBlue: Add support for $0 auth verification [meagabeth] #3944
+* JCB: Add additional BIN ranges [dsmcclain] #3946
+* vPOS: Support new gateway type [therufs] #3906
+* Braintree: Add support for AVS and CVV results in $0 credit card verification transactions [meagabeth] #3951
+* Braintree: Return cvv_code and avs_code in response [meagabeth] #3952
+* vPOS: Stringify values [therufs] #3954
+* Payeezy: Send level2 fields [dsmcclain] #3953
+* Credorax: adjust logic for sending 3ds shipping address fields [dsmcclain] #3959
+* Orbital: Ensure ECP always sends AVSName [jessiagee] #3963
+* Orbital: Add middle name to EWSMiddleName for ECP [jessiagee] #3962
+* Support Canadian Bank Accounts [naashton] #3964
+* Windcave/Payment Express: Add support for AvsAction and EnableAVSData fields [meagabeth] #3967
+* CyberSource: Update XML tag for merchantDefinedData [meagabeth] #3969
+* Elavon: Send ssl_vendor_id field [dsmcclain] #3972
+* Credorax: Add support for `echo` field [meagabeth] #3973
+* Worldpay: support cancelOrRefund via options [therufs] #3975
+* Payeezy: support general credit [cdmackeyfree] #3977
+* Ripley and Hipercard: Add BIN ranges [naashton] #3978
+* Adyen: Default card holder name for credit cards [shasum] #3980
+* PaywayDotCom: make `source_id` a required field [dsmcclain] # 3981
+* Qvalent: remove `pem_password` from required credentials [dsmcclain] #3982
+* Authorize.net: Fix stored credentials [tatsianaclifton] #3971
+* CyberSource: Add support for multiple new fields [dsmcclain] #3984
+* CASHNet: Update gateway adapter [dsmcclain] #3986
+* Elavon: Send `ssl_vendor_id` field via options on gateway initialization [dsmcclain] #3989
+
+== Version 1.119.0 (February 9th, 2021)
+* Payment Express: support verify/validate [therufs] #3874
+* GlobalCollect: Truncate address fields [meagabeth] #3878
+* Litle: Truncate address fields [meagabeth] #3877
+* Netbanx: Add-customer-information(name,email,IP)-to-a-transaction [rockyhakjoong] #3754
+* Netbanx: Adjust the avs and cvv return code in shopify [rockyhakjoong] #3833
+* Decidir: Improve error mapping [meagabeth] #3875
+* Worldpay: support `skip_capture` [therufs] #3879
+* Redsys: Add new response code text [britth] #3880
+* Orbital: Update ECP details to use payment source [jessiagee] #3881
+* Alelo: Add additional BIN ranges [meagabeth] #3882
+* HPS: Update Add support for general credit [naashton] #3885
+* Elavon: Fix issue with encoding data sent in the request [naashton] #3865
+* Orbital: Update ECP to use EWS verification [jessiagee] #3886
+* Eway: Add 3ds field when do direct payment [GavinSun9527] #3860
+* Support Creditel cardtype [therufs] #3883
+* Elavon: Remove ampersand char from fields [naashton] #3891
+
+== Version 1.118.0 (January 22nd, 2021)
 * Worldpay: Add support for challengeWindowSize [carrigan] #3823
 * Adyen: Update capitalization on subMerchantId field [cdmackeyfree] #3824
 * Maestro and Elo: Update BIN ranges [meagabeth] #3822
@@ -12,6 +766,23 @@
 * SafeCharge: 3DS external MPI data refinements [curiousepic] #3821
 * Credorax: Add support for 3DS Adviser [meagabeth] #3834
 * Adyen: Support subMerchant data [mymir][therufs] #3835
+* Decidir: add device_unique_identifier to card data [cdmackeyfree] #3839
+* BraintreeBlue: add support for account_type field [jimilpatel24] #3840
+* Redsys: Add support for stored_credential [meagabeth] #3844
+* Redsys: add_payment method solution [meagabeth] #3845
+* Stripe Payment Intents: Add support for error_on_requires_action option [tatsianaclifton] #3846
+* Add 3DS 2.0 values to paypal [nebdil] #3285
+* Redsys: Update Mpi Fields [tatsianaclifton] #3855
+* Paypal: Update AuthStatus3ds MPI field [curiousepic] #3857
+* Orbital: Update 3DS support for Mastercard [meagabeth] #3850
+* Payeezy: Support standardized stored credentials [therufs] #3861
+* CyberSource: Update `billing_address` override [meagabeth] #3862
+* Paymentez: Add 3DS MPI field support [carrigan] #3856
+* BlueSnap: Add support `fraud-session-id` field [meagabeth] #3863
+* BlueSnap: Update handling of `transaction-fraud-info` fields [meagabeth] #3866
+* Payeezy: Allow no stored credential transaction id [therufs] #3868
+* Orbital: eCheck processing added [ajawadmirza] #3870
+* FirsdataE4V27: Fixes some apple pay transaction issues [pi3r] #3872
 
 == Version 1.117.0 (November 13th)
 * Checkout V2: Pass attempt_n3d along with 3ds enabled [naashton] #3805

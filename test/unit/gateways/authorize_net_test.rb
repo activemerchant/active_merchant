@@ -16,11 +16,15 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card
     @check = check
-    @apple_pay_payment_token = ActiveMerchant::Billing::ApplePayPaymentToken.new(
-      { data: 'encoded_payment_data' },
-      payment_instrument_name: 'SomeBank Visa',
-      payment_network: 'Visa',
-      transaction_identifier: 'transaction123'
+    @payment_token = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'dGVzdGNyeXB0b2dyYW1YWFhYWFhYWFhYWFg9PQ==',
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
     )
 
     @options = {
@@ -153,7 +157,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_market_type_not_included_for_apple_pay_or_echeck
-    [@check, @apple_pay_payment_token].each do |payment|
+    [@check, @payment_token].each do |payment|
       stub_comms do
         @gateway.purchase(@amount, payment)
       end.check_request do |_endpoint, data, _headers|
@@ -265,12 +269,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_apple_pay_authorization
     response = stub_comms do
-      @gateway.authorize(@amount, @apple_pay_payment_token)
+      @gateway.authorize(@amount, @payment_token)
     end.check_request do |_endpoint, data, _headers|
-      parse(data) do |doc|
-        assert_equal @gateway.class::APPLE_PAY_DATA_DESCRIPTOR, doc.at_xpath('//opaqueData/dataDescriptor').content
-        assert_equal Base64.strict_encode64(@apple_pay_payment_token.payment_data.to_json), doc.at_xpath('//opaqueData/dataValue').content
-      end
+      assert_no_match(/<isPaymentToken>true<\/isPaymentToken>/, data)
+      assert_match(/<cardCode>/, data)
     end.respond_with(successful_authorize_response)
 
     assert response
@@ -281,12 +283,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_apple_pay_purchase
     response = stub_comms do
-      @gateway.purchase(@amount, @apple_pay_payment_token)
+      @gateway.purchase(@amount, @payment_token, { turn_on_nt_flow: true })
     end.check_request do |_endpoint, data, _headers|
-      parse(data) do |doc|
-        assert_equal @gateway.class::APPLE_PAY_DATA_DESCRIPTOR, doc.at_xpath('//opaqueData/dataDescriptor').content
-        assert_equal Base64.strict_encode64(@apple_pay_payment_token.payment_data.to_json), doc.at_xpath('//opaqueData/dataValue').content
-      end
+      assert_match(/<isPaymentToken>true<\/isPaymentToken>/, data)
+      assert_no_match(/<cardCode>/, data)
     end.respond_with(successful_purchase_response)
 
     assert response
@@ -539,11 +539,29 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved.', capture.message
   end
 
-  def test_successful_auth_with_initial_stored_credential
+  def test_successful_auth_with_initial_reccuring_stored_credential
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'recurring',
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isFirstRecurringPayment').content
+      assert_not_match(/isFirstSubsequentAuth/, doc)
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_initial_unscheduled_stored_credential
     stored_credential_params = {
       initial_transaction: true,
       reason_type: 'unscheduled',
-      initiator: 'merchant',
+      initiator: 'cardholder',
       network_transaction_id: nil
     }
     auth = stub_comms do
@@ -551,12 +569,31 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       doc = parse(data)
       assert_equal 'true', doc.at_xpath('//processingOptions/isFirstSubsequentAuth').content
+      assert_not_match(/isFirstRecurringPayment/, doc)
     end.respond_with(successful_authorize_response)
     assert_success auth
     assert auth.authorization
   end
 
-  def test_successful_auth_with_installment_stored_credential
+  def test_successful_auth_with_initial_installment_stored_credential
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'installment',
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isFirstSubsequentAuth').content
+      assert_not_match(/isFirstRecurringPayment/, doc)
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_installment_stored_credential
     stored_credential_params = {
       initial_transaction: false,
       reason_type: 'installment',
@@ -568,12 +605,31 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       doc = parse(data)
       assert_equal 'true', doc.at_xpath('//processingOptions/isSubsequentAuth').content
+      assert_equal '0123', doc.at_xpath('//subsequentAuthInformation/originalNetworkTransId').content
     end.respond_with(successful_authorize_response)
     assert_success auth
     assert auth.authorization
   end
 
-  def test_successful_auth_with_recurring_stored_credential
+  def test_successful_auth_with_subsequent_unscheduled_stored_credential
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'unscheduled',
+      initiator: 'merchant',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isSubsequentAuth').content
+      assert_equal '0123', doc.at_xpath('//subsequentAuthInformation/originalNetworkTransId').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_recurring_stored_credential
     stored_credential_params = {
       initial_transaction: false,
       reason_type: 'recurring',
@@ -585,8 +641,60 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       doc = parse(data)
       assert_equal 'true', doc.at_xpath('//processingOptions/isSubsequentAuth').content
+      assert_equal '0123', doc.at_xpath('//subsequentAuthInformation/originalNetworkTransId').content
       assert_equal 'recurringBilling', doc.at_xpath('//transactionSettings/setting/settingName').content
       assert_equal 'true', doc.at_xpath('//transactionSettings/setting/settingValue').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_installment_stored_credential_and_cardholder_initiator
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'installment',
+      initiator: 'cardholder',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isStoredCredentials').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_unscheduled_stored_credential_and_cardholder_initiator
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'unscheduled',
+      initiator: 'cardholder',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isStoredCredentials').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_recurring_stored_credential_and_cardholder_initiator
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'cardholder',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isStoredCredentials').content
     end.respond_with(successful_authorize_response)
     assert_success auth
     assert auth.authorization
@@ -681,7 +789,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_verify
     response = stub_comms do
-      @gateway.verify(@credit_card)
+      @gateway.verify(@credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal '1.00', doc.at_xpath('//transactionRequest/amount').content if doc.at_xpath('//transactionRequest/transactionType').content == 'authOnlyTransaction'
     end.respond_with(successful_authorize_response, successful_void_response)
     assert_success response
   end
@@ -692,6 +803,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
     assert_match %r{This transaction has been approved}, response.message
+  end
+
+  def test_successful_verify_with_0_auth_card
+    options = {
+      verify_amount: 0,
+      billing_address: {
+        address1: '123 St',
+        zip: '88888'
+      }
+    }
+    response = stub_comms do
+      @gateway.verify(@credit_card, options)
+    end.respond_with(successful_authorize_response)
+    assert_success response
   end
 
   def test_unsuccessful_verify
@@ -804,6 +929,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_address
     stub_comms do
       @gateway.authorize(@amount, @credit_card, billing_address: { address1: '164 Waverley Street', country: 'US', state: 'CO', phone: '(555)555-5555', fax: '(555)555-4444' })
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert_equal 'CO', doc.at_xpath('//billTo/state').content, data
+        assert_equal '164 Waverley Street', doc.at_xpath('//billTo/address').content, data
+        assert_equal 'US', doc.at_xpath('//billTo/country').content, data
+        assert_equal '(555)555-5555', doc.at_xpath('//billTo/phoneNumber').content
+        assert_equal '(555)555-4444', doc.at_xpath('//billTo/faxNumber').content
+      end
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_address_with_alternate_phone_number_field
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, billing_address: { address1: '164 Waverley Street', country: 'US', state: 'CO', phone_number: '(555)555-5555', fax: '(555)555-4444' })
     end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_equal 'CO', doc.at_xpath('//billTo/state').content, data
@@ -942,6 +1081,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_does_not_add_cardholder_authentication_element_without_relevant_values
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert !doc.at_xpath('//cardholderAuthentication'), data
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_capture_passing_extra_info
     response = stub_comms do
       @gateway.capture(50, '123456789', description: 'Yo', order_id: 'Sweetness')
@@ -974,6 +1123,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal '123450987', doc.at_xpath('//transactionRequest/payment/bankAccount/routingNumber').content
         assert_equal '12345667', doc.at_xpath('//transactionRequest/payment/bankAccount/accountNumber').content
         assert_equal 'Louise Belcher', doc.at_xpath('//transactionRequest/payment/bankAccount/nameOnAccount').content
+      end
+    end.respond_with(successful_refund_response)
+    assert_success response
+  end
+
+  def test_successful_bank_refund_truncates_long_name
+    response = stub_comms do
+      @gateway.refund(50, '12345667', account_type: 'checking', routing_number: '123450987', account_number: '12345667', first_name: 'Louise', last_name: 'Belcher-Williamson')
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert_equal 'checking', doc.at_xpath('//transactionRequest/payment/bankAccount/accountType').content
+        assert_equal '123450987', doc.at_xpath('//transactionRequest/payment/bankAccount/routingNumber').content
+        assert_equal '12345667', doc.at_xpath('//transactionRequest/payment/bankAccount/accountNumber').content
+        assert_equal 'Louise Belcher-William', doc.at_xpath('//transactionRequest/payment/bankAccount/nameOnAccount').content
       end
     end.respond_with(successful_refund_response)
     assert_success response
@@ -1155,9 +1318,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_includes_shipping_name_when_different_from_billing_name
-    card = credit_card('4242424242424242',
-      first_name: 'billing',
-      last_name: 'name')
+    card = credit_card('4242424242424242', first_name: 'billing', last_name: 'name')
 
     options = {
       order_id: 'a' * 21,
@@ -1178,9 +1339,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_includes_shipping_name_when_passed_as_options
-    card = credit_card('4242424242424242',
-      first_name: 'billing',
-      last_name: 'name')
+    card = credit_card('4242424242424242', first_name: 'billing', last_name: 'name')
 
     shipping_address = address(first_name: 'shipping', last_name: 'lastname')
     shipping_address.delete(:name)
@@ -1203,9 +1362,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_truncation
-    card = credit_card('4242424242424242',
-      first_name: 'a' * 51,
-      last_name: 'a' * 51)
+    card = credit_card('4242424242424242', first_name: 'a' * 51, last_name: 'a' * 51)
 
     options = {
       order_id: 'a' * 21,
@@ -1277,8 +1434,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_successful_apple_pay_authorization_with_network_tokenization
-    credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: '111111111100cryptogram')
+    credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: '111111111100cryptogram')
 
     response = stub_comms do
       @gateway.authorize(@amount, credit_card)
@@ -1296,8 +1452,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_failed_apple_pay_authorization_with_network_tokenization_not_supported
-    credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: '111111111100cryptogram')
+    credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: '111111111100cryptogram')
 
     response = stub_comms do
       @gateway.authorize(@amount, credit_card)
@@ -1351,7 +1506,85 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert !@gateway.verify_credentials
   end
 
-  private
+  def test_0_amount_verify_with_no_zip
+    @options[:verify_amount] = 0
+    @options[:billing_address] = { zip: nil, address1: 'XYZ' }
+
+    response = @gateway.verify(@credit_card, @options)
+
+    assert_failure response
+    assert_equal 'Billing address including zip code is required for a 0 amount verify', response.message
+  end
+
+  def test_verify_transcript_with_0_auth
+    stub_comms do
+      @options[:verify_amount] = 0
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal '0.00', doc.at_xpath('//transactionRequest/amount').content if doc.at_xpath('//transactionRequest/transactionType').content == 'authOnlyTransaction'
+    end
+  end
+
+  def test_verify_amount_with_bad_string
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 'dog'
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_boolean
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: true
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_decimal
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 0.125
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_negative
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: -100
+    end
+
+    assert_equal 'verify_amount value must be an integer', error.message
+  end
+
+  def test_verify_amount_with_string_as_number
+    assert_equal 200, @gateway.send(:amount_for_verify, verify_amount: '200')
+  end
+
+  def test_verify_amount_with_zero_without_zip
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 0, billing_address: { address1: 'street' }
+    end
+
+    assert_equal 'Billing address including zip code is required for a 0 amount verify', error.message
+  end
+
+  def test_verify_amount_with_zero_without_address
+    error = assert_raises(ArgumentError) do
+      @gateway.send :amount_for_verify, verify_amount: 0, billing_address: { zip: '051052' }
+    end
+
+    assert_equal 'Billing address including zip code is required for a 0 amount verify', error.message
+  end
+
+  def test_verify_amount_without_gsf
+    assert_equal 100, @gateway.send(:amount_for_verify, {})
+  end
+
+  def test_verify_amount_with_nil_value
+    assert_equal 100, @gateway.send(:amount_for_verify, { verify_amount: nil })
+  end
 
   def pre_scrubbed
     <<-PRE_SCRUBBED
@@ -2546,6 +2779,48 @@ class AuthorizeNetTest < Test::Unit::TestCase
           <transHashSha2/>
         </transactionResponse>
       </createTransactionResponse>
+    XML
+  end
+
+  def unsuccessful_authorize_response_for_jcb_card
+    <<-XML
+    <?xml version="1.0" encoding="utf-8"?>
+      <createTransactionResponse xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"AnetApi/xml/v1/schema/AnetApiSchema.xsd\">
+      <refId>1</refId>
+      <messages>
+        <resultCode>Error</resultCode>
+        <message>
+          <code>E00027</code>
+          <text>The transaction was unsuccessful.</text>
+        </message>
+      </messages>
+      <transactionResponse>
+        <responseCode>3</responseCode>
+        <authCode />
+        <avsResultCode>P</avsResultCode>
+        <cvvResultCode />
+        <cavvResultCode />
+        <transId>0</transId>
+        <refTransID />
+        <transHash />
+        <testRequest>0</testRequest>
+        <accountNumber>XXXX0017</accountNumber>
+        <accountType>JCB</accountType>
+        <errors>
+          <error>
+            <errorCode>289</errorCode>
+            <errorText>This processor does not accept zero dollar authorization for this card type.</errorText>
+          </error>
+        </errors>
+        <userFields>
+          <userField>
+            <name>x_currency_code</name>
+            <value>USD</value>
+          </userField>
+        </userFields>
+        <transHashSha2 />
+      </transactionResponse>
+    </createTransactionResponse>
     XML
   end
 end

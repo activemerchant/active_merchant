@@ -163,6 +163,26 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_transcript_scrubbing_echeck
+    assert_equal scrubbed_echeck_transcript, @gateway.scrub(echeck_transcript)
+  end
+
+  def test_successful_verify
+    stub_comms do
+      @gateway.verify(@credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r{action=verify}, data)
+    end.respond_with(successful_verify_response)
+  end
+
+  def test_unsuccessful_verify
+    bad_credit_card = credit_card('42909090990')
+    @gateway.expects(:ssl_post).returns(unsuccessful_verify_response)
+    assert response = @gateway.verify(bad_credit_card)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
   private
 
   def successful_authorize_response
@@ -231,6 +251,23 @@ class TrustCommerceTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_verify_response
+    <<~RESPONSE
+      transid=039-0170402443
+      status=approved
+      avs=0
+      cvv=M
+    RESPONSE
+  end
+
+  def unsuccessful_verify_response
+    <<~RESPONSE
+      offenders=cc
+      error=badformat
+      status=baddata
+    RESPONSE
+  end
+
   def transcript
     <<~TRANSCRIPT
       action=sale&demo=y&password=password&custid=TestMerchant&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&cvv=1234&exp=0916&cc=4111111111111111&name=Longbob+Longsen&media=cc&ip=10.10.10.10&email=cody%40example.com&ticket=%231000.1&amount=100
@@ -240,6 +277,18 @@ class TrustCommerceTest < Test::Unit::TestCase
   def scrubbed_transcript
     <<~TRANSCRIPT
       action=sale&demo=y&password=[FILTERED]&custid=TestMerchant&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&cvv=[FILTERED]&exp=0916&cc=[FILTERED]&name=Longbob+Longsen&media=cc&ip=10.10.10.10&email=cody%40example.com&ticket=%231000.1&amount=100
+    TRANSCRIPT
+  end
+
+  def echeck_transcript
+    <<~TRANSCRIPT
+      action=sale&demo=y&password=A3pN3F3Am8du&custid=1249400&customfield1=test1&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&name=Jim+Smith&account=55544433221&routing=789456124&media=ach&ip=10.10.10.10&email=cody%40example.com&aggregator1=2FCTLKF&aggregators=1&ticket=%231000.1&amount=100
+    TRANSCRIPT
+  end
+
+  def scrubbed_echeck_transcript
+    <<~TRANSCRIPT
+      action=sale&demo=y&password=[FILTERED]&custid=1249400&customfield1=test1&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&name=Jim+Smith&account=[FILTERED]&routing=789456124&media=ach&ip=10.10.10.10&email=cody%40example.com&aggregator1=2FCTLKF&aggregators=1&ticket=%231000.1&amount=100
     TRANSCRIPT
   end
 end

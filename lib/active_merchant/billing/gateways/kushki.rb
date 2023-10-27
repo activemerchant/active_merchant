@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://api-uat.kushkipagos.com/'
       self.live_url = 'https://api.kushkipagos.com/'
 
-      self.supported_countries = %w[CL CO EC MX PE]
+      self.supported_countries = %w[BR CL CO EC MX PE]
       self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_cardtypes = %i[visa master american_express discover diners_club alia]
@@ -20,14 +20,14 @@ module ActiveMerchant #:nodoc:
       def purchase(amount, payment_method, options = {})
         MultiResponse.run() do |r|
           r.process { tokenize(amount, payment_method, options) }
-          r.process { charge(amount, r.authorization, options) }
+          r.process { charge(amount, r.authorization, options, payment_method) }
         end
       end
 
       def authorize(amount, payment_method, options = {})
         MultiResponse.run() do |r|
           r.process { tokenize(amount, payment_method, options) }
-          r.process { preauthorize(amount, r.authorization, options) }
+          r.process { preauthorize(amount, r.authorization, options, payment_method) }
         end
       end
 
@@ -37,6 +37,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:ticketNumber] = authorization
         add_invoice(action, post, amount, options)
+        add_full_response(post, options)
 
         commit(action, post)
       end
@@ -46,6 +47,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:ticketNumber] = authorization
+        add_full_response(post, options)
 
         commit(action, post)
       end
@@ -55,6 +57,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:ticketNumber] = authorization
+        add_full_response(post, options)
 
         commit(action, post)
       end
@@ -78,26 +81,41 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(action, post, amount, options)
         add_payment_method(post, payment_method, options)
+        add_full_response(post, options)
+        add_metadata(post, options)
+        add_months(post, options)
+        add_deferred(post, options)
 
         commit(action, post)
       end
 
-      def charge(amount, authorization, options)
+      def charge(amount, authorization, options, payment_method = {})
         action = 'charge'
 
         post = {}
         add_reference(post, authorization, options)
         add_invoice(action, post, amount, options)
+        add_contact_details(post, options[:contact_details]) if options[:contact_details]
+        add_full_response(post, options)
+        add_metadata(post, options)
+        add_months(post, options)
+        add_deferred(post, options)
+        add_three_d_secure(post, payment_method, options)
 
         commit(action, post)
       end
 
-      def preauthorize(amount, authorization, options)
+      def preauthorize(amount, authorization, options, payment_method = {})
         action = 'preAuthorization'
 
         post = {}
         add_reference(post, authorization, options)
         add_invoice(action, post, amount, options)
+        add_full_response(post, options)
+        add_metadata(post, options)
+        add_months(post, options)
+        add_deferred(post, options)
+        add_three_d_secure(post, payment_method, options)
 
         commit(action, post)
       end
@@ -117,9 +135,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount_defaults(sum, money, options)
-        sum[:subtotalIva] = amount(money).to_f
+        sum[:subtotalIva] = 0
         sum[:iva] = 0
-        sum[:subtotalIva0] = 0
+        sum[:subtotalIva0] = amount(money).to_f
 
         sum[:ice] = 0 if sum[:currency] != 'COP'
       end
@@ -130,7 +148,7 @@ module ActiveMerchant #:nodoc:
           sum[:iva] = amount[:iva].to_f if amount[:iva]
           sum[:subtotalIva0] = amount[:subtotal_iva_0].to_f if amount[:subtotal_iva_0]
           sum[:ice] = amount[:ice].to_f if amount[:ice]
-          if (extra_taxes = amount[:extra_taxes]) && sum[:currency] == 'COP'
+          if (extra_taxes = amount[:extra_taxes])
             sum[:extraTaxes] ||= Hash.new
             sum[:extraTaxes][:propina] = extra_taxes[:propina].to_f if extra_taxes[:propina]
             sum[:extraTaxes][:tasaAeroportuaria] = extra_taxes[:tasa_aeroportuaria].to_f if extra_taxes[:tasa_aeroportuaria]
@@ -152,6 +170,70 @@ module ActiveMerchant #:nodoc:
 
       def add_reference(post, authorization, options)
         post[:token] = authorization
+      end
+
+      def add_contact_details(post, contact_details_options)
+        contact_details = {}
+        contact_details[:documentType] = contact_details_options[:document_type] if contact_details_options[:document_type]
+        contact_details[:documentNumber] = contact_details_options[:document_number] if contact_details_options[:document_number]
+        contact_details[:email] = contact_details_options[:email] if contact_details_options[:email]
+        contact_details[:firstName] = contact_details_options[:first_name] if contact_details_options[:first_name]
+        contact_details[:lastName] = contact_details_options[:last_name] if contact_details_options[:last_name]
+        contact_details[:secondLastName] = contact_details_options[:second_last_name] if contact_details_options[:second_last_name]
+        contact_details[:phoneNumber] = contact_details_options[:phone_number] if contact_details_options[:phone_number]
+        post[:contactDetails] = contact_details
+      end
+
+      def add_full_response(post, options)
+        post[:fullResponse] = options[:full_response].to_s.casecmp('true').zero? if options[:full_response]
+      end
+
+      def add_metadata(post, options)
+        post[:metadata] = options[:metadata] if options[:metadata]
+      end
+
+      def add_months(post, options)
+        post[:months] = options[:months] if options[:months]
+      end
+
+      def add_deferred(post, options)
+        return unless options[:deferred_grace_months] && options[:deferred_credit_type] && options[:deferred_months]
+
+        post[:deferred] = {
+          graceMonths: options[:deferred_grace_months],
+          creditType: options[:deferred_credit_type],
+          months: options[:deferred_months]
+        }
+      end
+
+      def add_three_d_secure(post, payment_method, options)
+        three_d_secure = options[:three_d_secure]
+        return unless three_d_secure.present?
+
+        post[:threeDomainSecure] = {
+          eci: three_d_secure[:eci],
+          specificationVersion: three_d_secure[:version]
+        }
+
+        if payment_method.brand == 'master'
+          post[:threeDomainSecure][:acceptRisk] = three_d_secure[:eci] == '00'
+          post[:threeDomainSecure][:ucaf] = three_d_secure[:cavv]
+          post[:threeDomainSecure][:directoryServerTransactionID] = three_d_secure[:ds_transaction_id]
+          case three_d_secure[:eci]
+          when '07'
+            post[:threeDomainSecure][:collectionIndicator] = '0'
+          when '06'
+            post[:threeDomainSecure][:collectionIndicator] = '1'
+          else
+            post[:threeDomainSecure][:collectionIndicator] = '2'
+          end
+        elsif payment_method.brand == 'visa'
+          post[:threeDomainSecure][:acceptRisk] = three_d_secure[:eci] == '07'
+          post[:threeDomainSecure][:cavv] = three_d_secure[:cavv]
+          post[:threeDomainSecure][:xid] = three_d_secure[:xid] if three_d_secure[:xid].present?
+        else
+          raise ArgumentError.new 'Kushki supports 3ds2 authentication for only Visa and Mastercard brands.'
+        end
       end
 
       ENDPOINT = {

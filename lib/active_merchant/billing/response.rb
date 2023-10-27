@@ -10,6 +10,10 @@ module ActiveMerchant #:nodoc:
         @success
       end
 
+      def failure?
+        !success?
+      end
+
       def test?
         @test
       end
@@ -81,7 +85,21 @@ module ActiveMerchant #:nodoc:
         (primary_response ? primary_response.success? : true)
       end
 
-      %w(params message test authorization avs_result cvv_result error_code emv_authorization test? fraud_review?).each do |m|
+      def avs_result
+        return @primary_response.try(:avs_result) if @use_first_response
+
+        result = responses.reverse.find { |r| r.avs_result['code'].present? }
+        result.try(:avs_result) || responses.last.try(:avs_result)
+      end
+
+      def cvv_result
+        return @primary_response.try(:cvv_result) if @use_first_response
+
+        result = responses.reverse.find { |r| r.cvv_result['code'].present? }
+        result.try(:cvv_result) || responses.last.try(:cvv_result)
+      end
+
+      %w(params message test authorization error_code emv_authorization test? fraud_review?).each do |m|
         class_eval %(
           def #{m}
             (@responses.empty? ? nil : primary_response.#{m})

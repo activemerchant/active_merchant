@@ -111,11 +111,13 @@ module ActiveMerchant #:nodoc:
         raw_response = ssl_post(url, post_data(parameters))
         response = parse(raw_response)
 
-        Response.new(success?(response),
+        Response.new(
+          success?(response),
           message_from(response[:ewaytrxnerror]),
           response,
           authorization: response[:ewaytrxnnumber],
-          test: test?)
+          test: test?
+        )
       end
 
       def success?(response)

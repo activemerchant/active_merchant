@@ -4,7 +4,7 @@ class WebpayTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = WebpayGateway.new(login: 'login')
+    @gateway = WebpayGateway.new(login: 'sk_test_login')
 
     @credit_card = credit_card()
     @amount = 40000

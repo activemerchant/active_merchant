@@ -260,11 +260,15 @@ module ActiveMerchant #:nodoc:
         url = url(params, source)
         response = parse(ssl_post(url, post_data(action, params)), source)
 
-        Response.new(success?(response), response[:message], response,
+        Response.new(
+          success?(response),
+          response[:message],
+          response,
           test: test?,
           authorization: authorization_from(response, source),
           avs_result: { code: response[:avs_result] },
-          cvv_result: response[:cvv_result])
+          cvv_result: response[:cvv_result]
+        )
       end
 
       def url(params, source)
@@ -380,8 +384,12 @@ module ActiveMerchant #:nodoc:
             message = success ? 'Succeeded' : 'Failed'
           end
 
-          Response.new(success, message, response,
-            authorization: response[:guid])
+          Response.new(
+            success,
+            message,
+            response,
+            authorization: response[:guid]
+          )
         end
 
         ENVELOPE_NAMESPACES = {

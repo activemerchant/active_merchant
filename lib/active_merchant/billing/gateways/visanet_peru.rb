@@ -90,8 +90,8 @@ module ActiveMerchant #:nodoc:
       CURRENCY_CODES['PEN'] = 604
 
       def add_invoice(params, money, options)
-        # Visanet Peru expects a 9-digit numeric purchaseNumber
-        params[:purchaseNumber] = (SecureRandom.random_number(900_000_000) + 100_000_000).to_s
+        # Visanet Peru expects a 12-digit alphanumeric purchaseNumber
+        params[:purchaseNumber] = generate_purchase_number_stamp
         params[:externalTransactionId] = options[:order_id]
         params[:amount] = amount(money)
         params[:currencyId] = CURRENCY_CODES[options[:currency] || currency(money)]
@@ -140,6 +140,10 @@ module ActiveMerchant #:nodoc:
 
       def split_authorization(authorization)
         authorization.split('|')
+      end
+
+      def generate_purchase_number_stamp
+        rand(('9' * 12).to_i).to_s.center(12, rand(9).to_s)
       end
 
       def commit(action, params, options = {})

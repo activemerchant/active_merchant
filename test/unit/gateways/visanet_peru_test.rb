@@ -1,6 +1,9 @@
 require 'test_helper'
+require 'timecop'
 
 class VisanetPeruTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = VisanetPeruGateway.new(fixtures(:visanet_peru))
 
@@ -35,6 +38,41 @@ class VisanetPeruTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 400, response.error_code
     assert_equal 'Operacion Denegada.', response.message
+  end
+
+  def test_nonconsecutive_purchase_numbers
+    purchase_times = []
+
+    Timecop.freeze do
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.authorize(@amount, @credit_card, @options)
+      end.check_request do |_method, _endpoint, data, _headers|
+        purchase_times << JSON.parse(data)['purchaseNumber'].to_i
+      end.respond_with(successful_authorize_response)
+
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.authorize(@amount, @credit_card, @options)
+      end.check_request do |_method, _endpoint, data, _headers|
+        purchase_times << JSON.parse(data)['purchaseNumber'].to_i
+      end.respond_with(successful_authorize_response)
+
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.authorize(@amount, @credit_card, @options)
+      end.check_request do |_method, _endpoint, data, _headers|
+        purchase_times << JSON.parse(data)['purchaseNumber'].to_i
+      end.respond_with(successful_authorize_response)
+
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.authorize(@amount, @credit_card, @options)
+      end.check_request do |_method, _endpoint, data, _headers|
+        purchase_times << JSON.parse(data)['purchaseNumber'].to_i
+      end.respond_with(successful_authorize_response)
+    end
+
+    purchase_times.each do |t|
+      assert_equal(t.to_s.length, 12)
+    end
+    assert_equal(purchase_times.uniq.size, purchase_times.size)
   end
 
   def test_successful_authorize

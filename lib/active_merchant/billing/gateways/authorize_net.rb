@@ -89,8 +89,6 @@ module ActiveMerchant
         2 => /\A;(?<pan>[\d]{1,19}+)=(?<expiration>[\d]{0,4}|=)(?<service_code>[\d]{0,3}|=)(?<discretionary_data>.*)\?\Z/
       }.freeze
 
-      APPLE_PAY_DATA_DESCRIPTOR = 'COMMON.APPLE.INAPP.PAYMENT'
-
       PAYMENT_METHOD_NOT_SUPPORTED_ERROR = '155'
       INELIGIBLE_FOR_ISSUING_CREDIT_ERROR = '54'
 
@@ -166,7 +164,7 @@ module ActiveMerchant
             xml.transactionType('refundTransaction')
             xml.amount(amount(amount))
 
-            add_payment_source(xml, payment, options, :credit)
+            add_payment_method(xml, payment, options, :credit)
             xml.refTransId(transaction_id_from(options[:transaction_id])) if options[:transaction_id]
             add_invoice(xml, 'refundTransaction', options)
             add_customer_data(xml, payment, options)
@@ -176,11 +174,29 @@ module ActiveMerchant
         end
       end
 
-      def verify(credit_card, options = {})
+      def verify(payment_method, options = {})
+        amount = amount_for_verify(options)
+
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { authorize(amount, payment_method, options) }
+          r.process(:ignore_result) { void(r.authorization, options) } unless amount == 0
         end
+      rescue ArgumentError => e
+        Response.new(false, e.message)
+      end
+
+      def amount_for_verify(options)
+        return 100 unless options[:verify_amount].present?
+
+        amount = options[:verify_amount]
+        raise ArgumentError.new 'verify_amount value must be an integer' unless amount.is_a?(Integer) && !amount.negative? || amount.is_a?(String) && amount.match?(/^\d+$/) && !amount.to_i.negative?
+        raise ArgumentError.new 'Billing address including zip code is required for a 0 amount verify' if amount.to_i.zero? && !validate_billing_address_values?(options)
+
+        amount.to_i
+      end
+
+      def validate_billing_address_values?(options)
+        options.dig(:billing_address, :zip).present? && options.dig(:billing_address, :address1).present?
       end
 
       def store(credit_card, options = {})
@@ -245,7 +261,7 @@ module ActiveMerchant
         xml.transactionRequest do
           xml.transactionType(transaction_type)
           xml.amount(amount(amount))
-          add_payment_source(xml, payment, options)
+          add_payment_method(xml, payment, options)
           add_invoice(xml, transaction_type, options)
           add_tax_fields(xml, options)
           add_duty_fields(xml, options)
@@ -270,7 +286,7 @@ module ActiveMerchant
             add_tax_fields(xml, options)
             add_shipping_fields(xml, options)
             add_duty_fields(xml, options)
-            add_payment_source(xml, payment, options)
+            add_payment_method(xml, payment, options)
             add_invoice(xml, transaction_type, options)
             add_tax_exempt_status(xml, options)
           end
@@ -345,7 +361,7 @@ module ActiveMerchant
                   xml.accountType(options[:account_type])
                   xml.routingNumber(options[:routing_number])
                   xml.accountNumber(options[:account_number])
-                  xml.nameOnAccount("#{options[:first_name]} #{options[:last_name]}")
+                  xml.nameOnAccount(truncate("#{options[:first_name]} #{options[:last_name]}", 22))
                 end
               else
                 xml.creditCard do
@@ -390,18 +406,25 @@ module ActiveMerchant
         end
       end
 
-      def add_payment_source(xml, source, options, action = nil)
-        return unless source
+      def add_payment_method(xml, payment_method, options, action = nil)
+        return unless payment_method
 
-        if source.is_a?(String)
-          add_token_payment_method(xml, source, options)
-        elsif card_brand(source) == 'check'
-          add_check(xml, source)
-        elsif card_brand(source) == 'apple_pay'
-          add_apple_pay_payment_token(xml, source)
+        case payment_method
+        when String
+          add_token_payment_method(xml, payment_method, options)
+        when Check
+          add_check(xml, payment_method)
         else
-          add_credit_card(xml, source, action)
+          if network_token?(payment_method, options, action)
+            add_network_token(xml, payment_method)
+          else
+            add_credit_card(xml, payment_method, action)
+          end
         end
+      end
+
+      def network_token?(payment_method, options, action)
+        payment_method.class == NetworkTokenizationCreditCard && action != :credit && options[:turn_on_nt_flow]
       end
 
       def camel_case_lower(key)
@@ -509,17 +532,20 @@ module ActiveMerchant
         xml.customerPaymentProfileId(customer_payment_profile_id)
       end
 
-      def add_apple_pay_payment_token(xml, apple_pay_payment_token)
+      def add_network_token(xml, payment_method)
         xml.payment do
-          xml.opaqueData do
-            xml.dataDescriptor(APPLE_PAY_DATA_DESCRIPTOR)
-            xml.dataValue(Base64.strict_encode64(apple_pay_payment_token.payment_data.to_json))
+          xml.creditCard do
+            xml.cardNumber(truncate(payment_method.number, 16))
+            xml.expirationDate(format(payment_method.month, :two_digits) + '/' + format(payment_method.year, :four_digits))
+            xml.isPaymentToken(true)
+            xml.cryptogram(payment_method.payment_cryptogram)
           end
         end
       end
 
       def add_market_type_device_type(xml, payment, options)
-        return if payment.is_a?(String) || card_brand(payment) == 'check' || card_brand(payment) == 'apple_pay'
+        return unless payment.is_a?(CreditCard)
+        return if payment.is_a?(NetworkTokenizationCreditCard)
 
         if valid_track_data
           xml.retail do
@@ -567,14 +593,16 @@ module ActiveMerchant
 
         xml.customerIP(options[:ip]) unless empty?(options[:ip])
 
-        xml.cardholderAuthentication do
-          three_d_secure = options.fetch(:three_d_secure, {})
-          xml.authenticationIndicator(
-            options[:authentication_indicator] || three_d_secure[:eci]
-          )
-          xml.cardholderAuthenticationValue(
-            options[:cardholder_authentication_value] || three_d_secure[:cavv]
-          )
+        if !empty?(options.fetch(:three_d_secure, {})) || options[:authentication_indicator] || options[:cardholder_authentication_value]
+          xml.cardholderAuthentication do
+            three_d_secure = options.fetch(:three_d_secure, {})
+            xml.authenticationIndicator(
+              options[:authentication_indicator] || three_d_secure[:eci]
+            )
+            xml.cardholderAuthenticationValue(
+              options[:cardholder_authentication_value] || three_d_secure[:cavv]
+            )
+          end
         end
       end
 
@@ -585,6 +613,7 @@ module ActiveMerchant
           first_name, last_name = names_from(payment_source, address, options)
           state = state_from(address, options)
           full_address = "#{address[:address1]} #{address[:address2]}".strip
+          phone = address[:phone] || address[:phone_number] || ''
 
           xml.firstName(truncate(first_name, 50)) unless empty?(first_name)
           xml.lastName(truncate(last_name, 50)) unless empty?(last_name)
@@ -594,7 +623,7 @@ module ActiveMerchant
           xml.state(truncate(state, 40))
           xml.zip(truncate((address[:zip] || options[:zip]), 20))
           xml.country(truncate(address[:country], 60))
-          xml.phoneNumber(truncate(address[:phone], 25)) unless empty?(address[:phone])
+          xml.phoneNumber(truncate(phone, 25)) unless empty?(phone)
           xml.faxNumber(truncate(address[:fax], 25)) unless empty?(address[:fax])
         end
       end
@@ -708,9 +737,10 @@ module ActiveMerchant
         return unless options[:stored_credential]
 
         xml.processingOptions do
-          if options[:stored_credential][:initial_transaction]
+          if options[:stored_credential][:initial_transaction] && options[:stored_credential][:reason_type] == 'recurring'
+            xml.isFirstRecurringPayment 'true'
+          elsif options[:stored_credential][:initial_transaction]
             xml.isFirstSubsequentAuth 'true'
-            # xml.isFirstRecurringPayment 'true' if options[:stored_credential][:reason_type] == 'recurring'
           elsif options[:stored_credential][:initiator] == 'cardholder'
             xml.isStoredCredentials 'true'
           else
@@ -720,7 +750,7 @@ module ActiveMerchant
       end
 
       def add_subsequent_auth_information(xml, options)
-        return unless options.dig(:stored_credential, :reason_type) == 'unscheduled'
+        return unless options.dig(:stored_credential, :initiator) == 'merchant'
 
         xml.subsequentAuthInformation do
           xml.reason options[:stored_credential_reason_type_override] if options[:stored_credential_reason_type_override]
@@ -733,13 +763,7 @@ module ActiveMerchant
           xml.customerProfileId options[:customer_profile_id]
           xml.paymentProfile do
             add_billing_address(xml, credit_card, options)
-            xml.payment do
-              xml.creditCard do
-                xml.cardNumber(truncate(credit_card.number, 16))
-                xml.expirationDate(format(credit_card.year, :four_digits) + '-' + format(credit_card.month, :two_digits))
-                xml.cardCode(credit_card.verification_value) if credit_card.verification_value
-              end
-            end
+            add_credit_card(xml, credit_card, :cim_store_update)
           end
         end
       end
@@ -755,13 +779,7 @@ module ActiveMerchant
               xml.customerType('individual')
               add_billing_address(xml, credit_card, options)
               add_shipping_address(xml, options, 'shipToList')
-              xml.payment do
-                xml.creditCard do
-                  xml.cardNumber(truncate(credit_card.number, 16))
-                  xml.expirationDate(format(credit_card.year, :four_digits) + '-' + format(credit_card.month, :two_digits))
-                  xml.cardCode(credit_card.verification_value) if credit_card.verification_value
-                end
-              end
+              add_credit_card(xml, credit_card, :cim_store)
             end
           end
         end
@@ -931,6 +949,11 @@ module ActiveMerchant
 
         response[:full_response_code] =
           if element = doc.at_xpath('//messages/message/code')
+            empty?(element.content) ? nil : element.content
+          end
+
+        response[:network_trans_id] =
+          if element = doc.at_xpath('//networkTransId')
             empty?(element.content) ? nil : element.content
           end
 

@@ -212,8 +212,8 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'Expiry_Date', expdate(credit_card)
           xml.tag! 'CardHoldersName', credit_card.name
           xml.tag! 'CardType', card_type(credit_card.brand)
-          xml.tag! 'WalletProviderID', options[:wallet_provider_id] if options[:wallet_provider_id]
 
+          add_wallet_provider_id(xml, credit_card, options)
           add_credit_card_eci(xml, credit_card, options)
           add_credit_card_verification_strings(xml, credit_card, options)
         end
@@ -221,10 +221,9 @@ module ActiveMerchant #:nodoc:
 
       def add_credit_card_eci(xml, credit_card, options)
         eci = if credit_card.is_a?(NetworkTokenizationCreditCard) && credit_card.source == :apple_pay && card_brand(credit_card) == 'discover'
-                # Discover requires any Apple Pay transaction, regardless of in-app
-                # or web, and regardless of the ECI contained in the PKPaymentToken,
-                # to have an ECI value explicitly of 04.
-                '04'
+                # Payeezy requires an ECI of 5 for apple pay transactions
+                # See: https://support.payeezy.com/hc/en-us/articles/203730589-Ecommerce-Flag-Values
+                '05'
               else
                 (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
               end
@@ -276,8 +275,20 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'Expiry_Date', expdate(credit_card)
         xml.tag! 'CardHoldersName', credit_card.name
         xml.tag! 'CardType', card_type(credit_card.brand)
-        xml.tag! 'WalletProviderID', options[:wallet_provider_id] if options[:wallet_provider_id]
+
+        add_wallet_provider_id(xml, credit_card, options)
         add_card_authentication_data(xml, options)
+      end
+
+      def add_wallet_provider_id(xml, credit_card, options)
+        provider_id = if options[:wallet_provider_id]
+                        options[:wallet_provider_id]
+                      elsif credit_card.is_a?(NetworkTokenizationCreditCard) && credit_card.source == :apple_pay
+                        # See: https://support.payeezy.com/hc/en-us/articles/206601408-First-Data-Payeezy-Gateway-Web-Service-API-Reference-Guide#3.9
+                        4
+                      end
+
+        xml.tag! 'WalletProviderID', provider_id if provider_id
       end
 
       def add_customer_data(xml, options)
@@ -369,12 +380,16 @@ module ActiveMerchant #:nodoc:
           response = parse_error(e.response)
         end
 
-        Response.new(successful?(response), message_from(response), response,
+        Response.new(
+          successful?(response),
+          message_from(response),
+          response,
           test: test?,
           authorization: successful?(response) ? response_authorization(action, response, credit_card) : '',
           avs_result: { code: response[:avs] },
           cvv_result: response[:cvv2],
-          error_code: standard_error_code(response))
+          error_code: standard_error_code(response)
+        )
       end
 
       def headers(method, url, request)

@@ -5,6 +5,7 @@ module ActiveMerchant #:nodoc:
       include Empty
 
       API_VERSION = '124'
+      API_VERSION_3DS2 = '214.0'
 
       URLS = {
         :test => { :certificate => 'https://api.sandbox.paypal.com/2.0/',

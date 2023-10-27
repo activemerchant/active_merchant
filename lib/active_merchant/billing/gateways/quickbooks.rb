@@ -42,10 +42,10 @@ module ActiveMerchant #:nodoc:
         'PMT-5001' => STANDARD_ERROR_CODE[:card_declined],      # Merchant does not support given payment method
 
         # System Error
-        'PMT-6000' => STANDARD_ERROR_CODE[:processing_error], # A temporary Issue prevented this request from being processed.
+        'PMT-6000' => STANDARD_ERROR_CODE[:processing_error] # A temporary Issue prevented this request from being processed.
       }
 
-      FRAUD_WARNING_CODES = ['PMT-1000', 'PMT-1001', 'PMT-1002', 'PMT-1003']
+      FRAUD_WARNING_CODES = %w(PMT-1000 PMT-1001 PMT-1002 PMT-1003)
 
       def initialize(options = {})
         # Quickbooks is deprecating OAuth 1.0 on December 17, 2019.
@@ -305,12 +305,17 @@ module ActiveMerchant #:nodoc:
           'Authorization'     => "Basic #{basic_auth}"
         }
 
-        response = ssl_post(REFRESH_URI, data, headers)
-        json_response = JSON.parse(response)
+        begin
+          response = ssl_post(REFRESH_URI, data, headers)
+        rescue ResponseError => e
+          raise OAuthResponseError.new(e)
+        else
+          json_response = JSON.parse(response)
 
-        @options[:access_token] = json_response['access_token'] if json_response['access_token']
-        @options[:refresh_token] = json_response['refresh_token'] if json_response['refresh_token']
-        response
+          @options[:access_token] = json_response['access_token'] if json_response['access_token']
+          @options[:refresh_token] = json_response['refresh_token'] if json_response['refresh_token']
+          response
+        end
       end
 
       def cvv_code_from(response)
@@ -358,6 +363,10 @@ module ActiveMerchant #:nodoc:
         rescue JSON::ParserError
           raise response_error
         end
+
+        error_code = JSON.parse(response_error.response.body)['code']
+        raise OAuthResponseError.new(response_error, error_code) if error_code == 'AuthenticationFailed'
+
         response_error.response.body
       end
 

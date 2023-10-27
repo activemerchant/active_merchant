@@ -1,4 +1,5 @@
 require 'active_merchant/billing/gateways/braintree/braintree_common'
+require 'active_merchant/billing/gateways/braintree/token_nonce'
 require 'active_support/core_ext/array/extract_options'
 
 begin
@@ -7,7 +8,7 @@ rescue LoadError
   raise 'Could not load the braintree gem.  Use `gem install braintree` to install it.'
 end
 
-raise "Need braintree gem >= 2.78.0. Run `gem install braintree --version '~>2.78'` to get the correct version." unless Braintree::Version::Major == 2 && Braintree::Version::Minor >= 78
+raise 'Need braintree gem >= 2.0.0.' unless Braintree::Version::Major >= 2 && Braintree::Version::Minor >= 0
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -46,6 +47,8 @@ module ActiveMerchant #:nodoc:
         cannot_refund_if_unsettled: 91506
       }
 
+      DIRECT_BANK_ERROR = 'Direct bank account transactions are not supported. Bank accounts must be successfully stored before use.'.freeze
+
       def initialize(options = {})
         requires!(options, :merchant_id, :public_key, :private_key)
         @merchant_account_id = options[:merchant_account_id]
@@ -72,14 +75,29 @@ module ActiveMerchant #:nodoc:
         @braintree_gateway = Braintree::Gateway.new(@configuration)
       end
 
+      def setup_purchase
+        commit do
+          Response.new(true, 'Client token created', { client_token: @braintree_gateway.client_token.generate })
+        end
+      end
+
       def authorize(money, credit_card_or_vault_id, options = {})
+        return Response.new(false, DIRECT_BANK_ERROR) if credit_card_or_vault_id.is_a? Check
+
         create_transaction(:sale, money, credit_card_or_vault_id, options)
       end
 
       def capture(money, authorization, options = {})
-        commit do
-          result = @braintree_gateway.transaction.submit_for_settlement(authorization, localized_amount(money, options[:currency] || default_currency).to_s)
-          response_from_result(result)
+        if options[:partial_capture] == true
+          commit do
+            result = @braintree_gateway.transaction.submit_for_partial_settlement(authorization, localized_amount(money, options[:currency] || default_currency).to_s)
+            response_from_result(result)
+          end
+        else
+          commit do
+            result = @braintree_gateway.transaction.submit_for_settlement(authorization, localized_amount(money, options[:currency] || default_currency).to_s)
+            response_from_result(result)
+          end
         end
       end
 
@@ -88,6 +106,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, credit_card_or_vault_id, options = {})
+        return Response.new(false, DIRECT_BANK_ERROR) if credit_card_or_vault_id.is_a? Check
+
         create_transaction(:credit, money, credit_card_or_vault_id, options)
       end
 
@@ -115,28 +135,46 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+      def verify(creditcard, options = {})
+        if options[:allow_card_verification] == true
+          options.delete(:allow_card_verification)
+          exp_month = creditcard.month.to_s
+          exp_year = creditcard.year.to_s
+          expiration = "#{exp_month}/#{exp_year}"
+          payload = {
+            credit_card: {
+              number: creditcard.number,
+              expiration_date: expiration,
+              cvv: creditcard.verification_value,
+              billing_address: {
+                postal_code: options[:billing_address][:zip]
+              }
+            }
+          }
+          commit do
+            result = @braintree_gateway.verification.create(payload)
+            response = Response.new(result.success?, message_from_transaction_result(result), response_options(result))
+            response.cvv_result['message'] = ''
+            response.cvv_result['code'] = response.params['cvv_result'] if response.params['cvv_result']
+            response.avs_result['code'] = response.params['avs_result'][:code] if response.params.dig('avs_result', :code)
+            response
+          end
+
+        else
+          MultiResponse.run(:use_first_response) do |r|
+            r.process { authorize(100, creditcard, options) }
+            r.process(:ignore_result) { void(r.authorization, options) }
+          end
         end
       end
 
-      def store(creditcard, options = {})
-        if options[:customer].present?
-          MultiResponse.new.tap do |r|
-            customer_exists_response = nil
-            r.process { customer_exists_response = check_customer_exists(options[:customer]) }
-            r.process do
-              if customer_exists_response.params['exists']
-                add_credit_card_to_customer(creditcard, options)
-              else
-                add_customer_with_credit_card(creditcard, options)
-              end
-            end
-          end
-        else
-          add_customer_with_credit_card(creditcard, options)
+      def store(payment_method, options = {})
+        return Response.new(false, bank_account_errors(payment_method, options)) if payment_method.is_a?(Check) && bank_account_errors(payment_method, options).present?
+
+        MultiResponse.run do |r|
+          r.process { check_customer_exists(options[:customer]) }
+          process_by = payment_method.is_a?(Check) ? :store_bank_account : :store_credit_card
+          send process_by, payment_method, options, r
         end
       end
 
@@ -157,16 +195,20 @@ module ActiveMerchant #:nodoc:
             }
           }, options)[:credit_card]
 
-          result = @braintree_gateway.customer.update(vault_id,
+          result = @braintree_gateway.customer.update(
+            vault_id,
             first_name: creditcard.first_name,
             last_name: creditcard.last_name,
             email: scrub_email(options[:email]),
-            phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
-              options[:billing_address][:phone]),
-            credit_card: credit_card_params)
-          Response.new(result.success?, message_from_result(result),
+            phone: phone_from(options),
+            credit_card: credit_card_params
+          )
+          Response.new(
+            result.success?,
+            message_from_result(result),
             braintree_customer: (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
-            customer_vault_id: (result.customer.id if result.success?))
+            customer_vault_id: (result.customer.id if result.success?)
+          )
         end
       end
 
@@ -201,6 +243,8 @@ module ActiveMerchant #:nodoc:
       private
 
       def check_customer_exists(customer_vault_id)
+        return Response.new true, 'Customer not found', { exists: false } if customer_vault_id.blank?
+
         commit do
           @braintree_gateway.customer.find(customer_vault_id)
           ActiveMerchant::Billing::Response.new(true, 'Customer found', { exists: true }, authorization: customer_vault_id)
@@ -229,19 +273,21 @@ module ActiveMerchant #:nodoc:
             first_name: creditcard.first_name,
             last_name: creditcard.last_name,
             email: scrub_email(options[:email]),
-            phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
-              options[:billing_address][:phone]),
+            phone: phone_from(options),
             id: options[:customer],
             device_data: options[:device_data]
           }.merge credit_card_params
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
-          Response.new(result.success?, message_from_result(result),
+          Response.new(
+            result.success?,
+            message_from_result(result),
             {
               braintree_customer: (customer_hash(result.customer, :include_credit_cards) if result.success?),
               customer_vault_id: (result.customer.id if result.success?),
               credit_card_token: (result.customer.credit_cards[0].token if result.success?)
             },
-            authorization: (result.customer.id if result.success?))
+            authorization: (result.customer.id if result.success?)
+          )
         end
       end
 
@@ -310,6 +356,10 @@ module ActiveMerchant #:nodoc:
         parameters
       end
 
+      def phone_from(options)
+        options[:phone] || options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
+      end
+
       def map_address(address)
         mapped = {
           street_address: address[:address1],
@@ -331,8 +381,8 @@ module ActiveMerchant #:nodoc:
 
       def commit(&block)
         yield
-      rescue Braintree::BraintreeError => ex
-        Response.new(false, ex.class.to_s)
+      rescue Braintree::BraintreeError => e
+        Response.new(false, e.class.to_s)
       end
 
       def message_from_result(result)
@@ -368,7 +418,11 @@ module ActiveMerchant #:nodoc:
 
       def response_options(result)
         options = {}
-        if result.transaction
+        if result.credit_card_verification
+          options[:authorization] = result.credit_card_verification.id
+          options[:avs_result] = { code: avs_code_from(result.credit_card_verification) }
+          options[:cvv_result] = result.credit_card_verification.cvv_response_code
+        elsif result.transaction
           options[:authorization] = result.transaction.id
           options[:avs_result] = { code: avs_code_from(result.transaction) }
           options[:cvv_result] = result.transaction.cvv_response_code
@@ -438,14 +492,26 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def additional_processor_response_from_result(result)
+        result.transaction&.additional_processor_response
+      end
+
       def create_transaction(transaction_type, money, credit_card_or_vault_id, options)
         transaction_params = create_transaction_parameters(money, credit_card_or_vault_id, options)
         commit do
           result = @braintree_gateway.transaction.send(transaction_type, transaction_params)
+          make_default_payment_method_token(result) if options.dig(:paypal, :paypal_flow_type) == 'checkout_with_vault' && result.success?
           response = Response.new(result.success?, message_from_transaction_result(result), response_params(result), response_options(result))
           response.cvv_result['message'] = ''
           response
         end
+      end
+
+      def make_default_payment_method_token(result)
+        @braintree_gateway.customer.update(
+          result.transaction.customer_details.id,
+          default_payment_method_token: result.transaction.paypal_details.implicitly_vaulted_payment_method_token
+        )
       end
 
       def extract_refund_args(args)
@@ -487,7 +553,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def transaction_hash(result)
-        return { 'processor_response_code' => response_code_from_result(result) } unless result.success?
+        unless result.success?
+          return { 'processor_response_code' => response_code_from_result(result),
+                   'additional_processor_response' => additional_processor_response_from_result(result) }
+        end
 
         transaction = result.transaction
         if transaction.vault_customer
@@ -532,7 +601,10 @@ module ActiveMerchant #:nodoc:
           'bin'                 => transaction.credit_card_details.bin,
           'last_4'              => transaction.credit_card_details.last_4,
           'card_type'           => transaction.credit_card_details.card_type,
-          'token'               => transaction.credit_card_details.token
+          'token'               => transaction.credit_card_details.token,
+          'debit'               => transaction.credit_card_details.debit,
+          'prepaid'             => transaction.credit_card_details.prepaid,
+          'issuing_bank'        => transaction.credit_card_details.issuing_bank
         }
 
         if transaction.risk_data
@@ -546,19 +618,30 @@ module ActiveMerchant #:nodoc:
           risk_data = nil
         end
 
+        if transaction.payment_receipt
+          payment_receipt = {
+            'global_id' => transaction.payment_receipt.global_id
+          }
+        else
+          payment_receipt = nil
+        end
+
         {
-          'order_id'                => transaction.order_id,
-          'amount'                  => transaction.amount.to_s,
-          'status'                  => transaction.status,
-          'credit_card_details'     => credit_card_details,
-          'customer_details'        => customer_details,
-          'billing_details'         => billing_details,
-          'shipping_details'        => shipping_details,
-          'vault_customer'          => vault_customer,
-          'merchant_account_id'     => transaction.merchant_account_id,
-          'risk_data'               => risk_data,
-          'network_transaction_id'  => transaction.network_transaction_id || nil,
-          'processor_response_code' => response_code_from_result(result)
+          'order_id'                     => transaction.order_id,
+          'amount'                       => transaction.amount.to_s,
+          'status'                       => transaction.status,
+          'credit_card_details'          => credit_card_details,
+          'customer_details'             => customer_details,
+          'billing_details'              => billing_details,
+          'shipping_details'             => shipping_details,
+          'vault_customer'               => vault_customer,
+          'merchant_account_id'          => transaction.merchant_account_id,
+          'risk_data'                    => risk_data,
+          'network_transaction_id'       => transaction.network_transaction_id || nil,
+          'processor_response_code'      => response_code_from_result(result),
+          'processor_authorization_code' => transaction.processor_authorization_code,
+          'recurring'                    => transaction.recurring,
+          'payment_receipt'              => payment_receipt
         }
       end
 
@@ -569,8 +652,7 @@ module ActiveMerchant #:nodoc:
           customer: {
             id: options[:store] == true ? '' : options[:store],
             email: scrub_email(options[:email]),
-            phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
-              options[:billing_address][:phone])
+            phone: phone_from(options)
           },
           options: {
             store_in_vault: options[:store] ? true : false,
@@ -583,14 +665,18 @@ module ActiveMerchant #:nodoc:
         parameters[:device_data] = options[:device_data] if options[:device_data]
         parameters[:service_fee_amount] = options[:service_fee_amount] if options[:service_fee_amount]
 
+        add_account_type(parameters, options) if options[:account_type]
         add_skip_options(parameters, options)
         add_merchant_account_id(parameters, options)
+        add_profile_id(parameters, options)
 
         add_payment_method(parameters, credit_card_or_vault_id, options)
         add_stored_credential_data(parameters, credit_card_or_vault_id, options)
         add_addresses(parameters, options)
 
         add_descriptor(parameters, options)
+        add_risk_data(parameters, options)
+        add_paypal_options(parameters, options)
         add_travel_data(parameters, options) if options[:travel_data]
         add_lodging_data(parameters, options) if options[:lodging_data]
         add_channel(parameters, options)
@@ -601,12 +687,19 @@ module ActiveMerchant #:nodoc:
 
         add_3ds_info(parameters, options[:three_d_secure])
 
+        parameters[:sca_exemption] = options[:three_ds_exemption_type] if options[:three_ds_exemption_type]
+
         if options[:payment_method_nonce].is_a?(String)
           parameters.delete(:customer)
           parameters[:payment_method_nonce] = options[:payment_method_nonce]
         end
 
         parameters
+      end
+
+      def add_account_type(parameters, options)
+        parameters[:options][:credit_card] = {}
+        parameters[:options][:credit_card][:account_type] = options[:account_type]
       end
 
       def add_skip_options(parameters, options)
@@ -619,6 +712,13 @@ module ActiveMerchant #:nodoc:
         return unless merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
 
         parameters[:merchant_account_id] = merchant_account_id
+      end
+
+      def add_profile_id(parameters, options)
+        return unless profile_id = options[:venmo_profile_id]
+
+        parameters[:options][:venmo] = {}
+        parameters[:options][:venmo][:profile_id] = profile_id
       end
 
       def add_transaction_source(parameters, options)
@@ -643,6 +743,24 @@ module ActiveMerchant #:nodoc:
           name: options[:descriptor_name],
           phone: options[:descriptor_phone],
           url: options[:descriptor_url]
+        }
+      end
+
+      def add_risk_data(parameters, options)
+        return unless options[:risk_data]
+
+        parameters[:risk_data] = {
+          customer_browser: options[:risk_data][:customer_browser],
+          customer_ip: options[:risk_data][:customer_ip]
+        }
+      end
+
+      def add_paypal_options(parameters, options)
+        return unless options[:paypal_custom_field] || options[:paypal_description]
+
+        parameters[:options][:paypal] = {
+          custom_field: options[:paypal_custom_field],
+          description: options[:paypal_description]
         }
       end
 
@@ -724,6 +842,8 @@ module ActiveMerchant #:nodoc:
           else
             parameters[:transaction_source] = stored_credential[:reason_type]
           end
+        elsif %w(recurring_first moto).include?(stored_credential[:reason_type])
+          parameters[:transaction_source] = stored_credential[:reason_type]
         else
           parameters[:transaction_source] = ''
         end
@@ -731,51 +851,160 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(parameters, credit_card_or_vault_id, options)
         if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
-          if options[:payment_method_token]
-            parameters[:payment_method_token] = credit_card_or_vault_id
-            options.delete(:billing_address)
-          elsif options[:payment_method_nonce]
-            parameters[:payment_method_nonce] = credit_card_or_vault_id
-          else
-            parameters[:customer_id] = credit_card_or_vault_id
-          end
+          add_third_party_token(parameters, credit_card_or_vault_id, options)
         else
           parameters[:customer].merge!(
             first_name: credit_card_or_vault_id.first_name,
             last_name: credit_card_or_vault_id.last_name
           )
           if credit_card_or_vault_id.is_a?(NetworkTokenizationCreditCard)
-            if credit_card_or_vault_id.source == :apple_pay
-              parameters[:apple_pay_card] = {
-                number: credit_card_or_vault_id.number,
-                expiration_month: credit_card_or_vault_id.month.to_s.rjust(2, '0'),
-                expiration_year: credit_card_or_vault_id.year.to_s,
-                cardholder_name: credit_card_or_vault_id.name,
-                cryptogram: credit_card_or_vault_id.payment_cryptogram,
-                eci_indicator: credit_card_or_vault_id.eci
-              }
-            elsif credit_card_or_vault_id.source == :android_pay || credit_card_or_vault_id.source == :google_pay
-              parameters[:android_pay_card] = {
-                number: credit_card_or_vault_id.number,
-                cryptogram: credit_card_or_vault_id.payment_cryptogram,
-                expiration_month: credit_card_or_vault_id.month.to_s.rjust(2, '0'),
-                expiration_year: credit_card_or_vault_id.year.to_s,
-                google_transaction_id: credit_card_or_vault_id.transaction_id,
-                source_card_type: credit_card_or_vault_id.brand,
-                source_card_last_four: credit_card_or_vault_id.last_digits,
-                eci_indicator: credit_card_or_vault_id.eci
-              }
+            case credit_card_or_vault_id.source
+            when :apple_pay
+              add_apple_pay(parameters, credit_card_or_vault_id)
+            when :google_pay
+              add_google_pay(parameters, credit_card_or_vault_id)
+            else
+              add_network_tokenization_card(parameters, credit_card_or_vault_id)
             end
           else
-            parameters[:credit_card] = {
-              number: credit_card_or_vault_id.number,
-              cvv: credit_card_or_vault_id.verification_value,
-              expiration_month: credit_card_or_vault_id.month.to_s.rjust(2, '0'),
-              expiration_year: credit_card_or_vault_id.year.to_s,
-              cardholder_name: credit_card_or_vault_id.name
-            }
+            add_credit_card(parameters, credit_card_or_vault_id)
           end
         end
+      end
+
+      def add_third_party_token(parameters, payment_method, options)
+        if options[:payment_method_token]
+          parameters[:payment_method_token] = payment_method
+          options.delete(:billing_address)
+        elsif options[:payment_method_nonce]
+          parameters[:payment_method_nonce] = payment_method
+        else
+          parameters[:customer_id] = payment_method
+        end
+      end
+
+      def add_credit_card(parameters, payment_method)
+        parameters[:credit_card] = {
+          number: payment_method.number,
+          cvv: payment_method.verification_value,
+          expiration_month: payment_method.month.to_s.rjust(2, '0'),
+          expiration_year: payment_method.year.to_s,
+          cardholder_name: payment_method.name
+        }
+      end
+
+      def add_apple_pay(parameters, payment_method)
+        parameters[:apple_pay_card] = {
+          number: payment_method.number,
+          expiration_month: payment_method.month.to_s.rjust(2, '0'),
+          expiration_year: payment_method.year.to_s,
+          cardholder_name: payment_method.name,
+          cryptogram: payment_method.payment_cryptogram,
+          eci_indicator: payment_method.eci
+        }
+      end
+
+      def add_google_pay(parameters, payment_method)
+        Braintree::Version::Major < 3 ? pay_card = :android_pay_card : pay_card = :google_pay_card
+        parameters[pay_card] = {
+          number: payment_method.number,
+          cryptogram: payment_method.payment_cryptogram,
+          expiration_month: payment_method.month.to_s.rjust(2, '0'),
+          expiration_year: payment_method.year.to_s,
+          google_transaction_id: payment_method.transaction_id,
+          source_card_type: payment_method.brand,
+          source_card_last_four: payment_method.last_digits,
+          eci_indicator: payment_method.eci
+        }
+      end
+
+      def add_network_tokenization_card(parameters, payment_method)
+        parameters[:credit_card] = {
+          number: payment_method.number,
+          expiration_month: payment_method.month.to_s.rjust(2, '0'),
+          expiration_year: payment_method.year.to_s,
+          cardholder_name: payment_method.name,
+          network_tokenization_attributes: {
+            cryptogram: payment_method.payment_cryptogram,
+            ecommerce_indicator: payment_method.eci
+          }
+        }
+      end
+
+      def bank_account_errors(payment_method, options)
+        if payment_method.validate.present?
+          payment_method.validate
+        elsif options[:billing_address].blank?
+          'billing_address is required parameter to store and verify Bank accounts.'
+        elsif options[:ach_mandate].blank?
+          'ach_mandate is a required parameter to process bank acccount transactions see (https://developer.paypal.com/braintree/docs/guides/ach/client-side#show-required-authorization-language)'
+        end
+      end
+
+      def add_bank_account_to_customer(payment_method, options)
+        bank_account_nonce, error_message = TokenNonce.new(@braintree_gateway, options).create_token_nonce_for_payment_method payment_method
+        return Response.new(false, error_message) unless bank_account_nonce.present?
+
+        result = @braintree_gateway.payment_method.create(
+          customer_id: options[:customer],
+          payment_method_nonce: bank_account_nonce,
+          options: {
+            us_bank_account_verification_method: 'network_check'
+          }
+        )
+
+        verified = result.success? && result.payment_method&.verified
+        message = message_from_result(result)
+        message = not_verified_reason(result.payment_method) unless verified
+
+        Response.new(
+          verified,
+          message,
+          {
+            customer_vault_id: options[:customer],
+            bank_account_token: result.payment_method&.token,
+            verified: verified
+          },
+          authorization: result.payment_method&.token
+        )
+      end
+
+      def not_verified_reason(bank_account)
+        return unless bank_account.verifications.present?
+
+        verification = bank_account.verifications.first
+        "verification_status: [#{verification.status}], processor_response: [#{verification.processor_response_code}-#{verification.processor_response_text}]"
+      end
+
+      def store_bank_account(payment_method, options, multi_response)
+        multi_response.process { create_customer_from_bank_account payment_method, options } unless multi_response.params['exists']
+        multi_response.process { add_bank_account_to_customer payment_method, options }
+      end
+
+      def store_credit_card(payment_method, options, multi_response)
+        process_by = multi_response.params['exists'] ? :add_credit_card_to_customer : :add_customer_with_credit_card
+        multi_response.process { send process_by, payment_method, options }
+      end
+
+      def create_customer_from_bank_account(payment_method, options)
+        parameters = {
+          id: options[:customer],
+          first_name: payment_method.first_name,
+          last_name: payment_method.last_name,
+          email: scrub_email(options[:email]),
+          phone: phone_from(options),
+          device_data: options[:device_data]
+        }.compact
+
+        result = @braintree_gateway.customer.create(parameters)
+        customer_id = result.customer.id if result.success?
+        options[:customer] = customer_id
+
+        Response.new(
+          result.success?,
+          message_from_result(result),
+          { customer_vault_id: customer_id, 'exists': true }
+        )
       end
     end
   end

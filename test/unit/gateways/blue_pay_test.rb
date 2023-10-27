@@ -220,8 +220,37 @@ class BluePayTest < Test::Unit::TestCase
 
   def test_message_from
     assert_equal 'CVV does not match', @gateway.send(:parse, 'STATUS=2&CVV2=N&AVS=A&MESSAGE=FAILURE').message
-    assert_equal 'Street address matches, but postal code does not match.',
-      @gateway.send(:parse, 'STATUS=2&CVV2=M&AVS=A&MESSAGE=FAILURE').message
+    assert_equal 'Street address matches, but postal code does not match.', @gateway.send(:parse, 'STATUS=2&CVV2=M&AVS=A&MESSAGE=FAILURE').message
+  end
+
+  def test_passing_stored_credentials_data_for_mit_transaction
+    options = @options.merge({ stored_credential: { initiator: 'merchant', reason_type: 'installment' } })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/cof=M/, data)
+      assert_match(/cofscheduled=Y/, data)
+    end.respond_with(RSP[:approved_auth])
+  end
+
+  def test_passing_stored_credentials_for_cit_transaction
+    options = @options.merge({ stored_credential: { initiator: 'cardholder', reason_type: 'unscheduled' } })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/cof=C/, data)
+      assert_match(/cofscheduled=N/, data)
+    end.respond_with(RSP[:approved_auth])
+  end
+
+  def test_passes_nothing_for_unrecognized_stored_credentials_values
+    options = @options.merge({ stored_credential: { initiator: 'unknown', reason_type: 'something weird' } })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/cof=&/, data)
+      assert_match(/cofscheduled=&/, data)
+    end.respond_with(RSP[:approved_auth])
   end
 
   # Recurring Billing Unit Tests
@@ -229,12 +258,15 @@ class BluePayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(@amount, @credit_card,
+      @gateway.recurring(
+        @amount,
+        @credit_card,
         billing_address: address.merge(first_name: 'Jim', last_name: 'Smith'),
         rebill_start_date: '1 MONTH',
         rebill_expression: '14 DAYS',
         rebill_cycles: '24',
-        rebill_amount: @amount * 4)
+        rebill_amount: @amount * 4
+      )
     end
 
     assert_instance_of Response, response

@@ -28,8 +28,7 @@ class GatewayTest < Test::Unit::TestCase
 
     assert_nothing_raised do
       Gateway.supported_countries = all_country_codes
-      assert Gateway.supported_countries == all_country_codes,
-        'List of supported countries not properly set'
+      assert Gateway.supported_countries == all_country_codes, 'List of supported countries not properly set'
     end
   end
 
