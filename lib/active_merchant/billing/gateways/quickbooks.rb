@@ -364,9 +364,6 @@ module ActiveMerchant #:nodoc:
           raise response_error
         end
 
-        error_code = JSON.parse(response_error.response.body)['code']
-        raise OAuthResponseError.new(response_error, error_code) if error_code == 'AuthenticationFailed'
-
         response_error.response.body
       end
 
