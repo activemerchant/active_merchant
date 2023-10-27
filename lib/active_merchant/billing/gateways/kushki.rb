@@ -48,8 +48,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:ticketNumber] = authorization
         add_full_response(post, options)
+        add_invoice(action, post, amount, options)
 
-        commit(action, post)
+        commit(action, post, options)
       end
 
       def void(authorization, options = {})
@@ -185,7 +186,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_full_response(post, options)
-        post[:fullResponse] = options[:full_response].to_s.casecmp('true').zero? if options[:full_response]
+        # this is the only currently accepted value for this field, previously it was 'true'
+        post[:fullResponse] = 'v2' unless options[:full_response] == 'false' || options[:full_response].blank?
       end
 
       def add_metadata(post, options)
@@ -245,10 +247,10 @@ module ActiveMerchant #:nodoc:
         'capture' => 'capture'
       }
 
-      def commit(action, params)
+      def commit(action, params, options = {})
         response =
           begin
-            parse(ssl_invoke(action, params))
+            parse(ssl_invoke(action, params, options))
           rescue ResponseError => e
             parse(e.response.body)
           end
@@ -265,9 +267,11 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def ssl_invoke(action, params)
+      def ssl_invoke(action, params, options)
         if %w[void refund].include?(action)
-          ssl_request(:delete, url(action, params), nil, headers(action))
+          # removes ticketNumber from request for partial refunds because gateway will reject if included in request body
+          data = options[:partial_refund] == true ? post_data(params.except(:ticketNumber)) : nil
+          ssl_request(:delete, url(action, params), data, headers(action))
         else
           ssl_post(url(action, params), post_data(params), headers(action))
         end
