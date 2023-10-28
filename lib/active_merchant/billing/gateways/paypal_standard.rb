@@ -27,14 +27,15 @@ module ActiveMerchant
 
         super
         @access_token = setup_access_token
+        @request_id = SecureRandom.uuid
       end
 
-      def purchase(amount, options = {})
+      def purchase(amount, payment_method, options = {})
         post ||= {}
 
         add_payment_intent(post)
         add_purchase_units(post, amount, options)
-        add_payment_source(post, options)
+        add_payment_source(post, payment_method, options)
 
         commit(:create_order, post)
       end
@@ -59,8 +60,7 @@ module ActiveMerchant
       def commit(action, post, id = nil)
         begin
           url = build_request_url(action, id)
-          request_body = post_data(post)
-          response = parse(ssl_post(url, request_body, headers))
+          response = parse(ssl_post(url, post_data(post), headers))
           succeeded = success_from(response)
         rescue ResponseError => e
           response = parse(e.response.body, error: e.response)
@@ -79,7 +79,8 @@ module ActiveMerchant
           response_http_code: @response_http_code,
           request_endpoint: url,
           request_method: request_method(action),
-          request_body: request_body
+          request_body: post,
+          request_id: @request_id
         )
       end
 
@@ -127,7 +128,7 @@ module ActiveMerchant
       end
 
       def headers
-       { 'Authorization' => "Bearer #{@access_token}", 'Content-Type' => 'application/json' }
+       { 'Authorization' => "Bearer #{@access_token}", 'Content-Type' => 'application/json', 'PayPal-Request-Id' => @request_id}
       end
 
       def post_data(post)
@@ -191,16 +192,28 @@ module ActiveMerchant
         post[:purchase_units] << purchase_unit
       end
 
-      def add_payment_source(post, options)
-        post[:payment_source] ||= {}
-        post[:payment_source][:paypal] ||= {}
+      def add_payment_source(post, payment_method, options)
+        post[:payment_source] = {}
+        redirect_links = options[:redirect_links]
 
-        payment_source = {}
-        payment_source[:landing_page] = "LOGIN"
-        payment_source[:user_action] = "PAY_NOW"
-        payment_source[:return_url] = options[:redirect_links][:success_url]
-        payment_source[:cancel_url] = options[:redirect_links][:failure_url]
-        post[:payment_source][:paypal][:experience_context] = payment_source
+        case payment_method.checkout_v2_method_type
+        when 'paypal'
+          payment_source = post[:payment_source][:paypal] = {}
+          experience_context = payment_source[:experience_context] = {}
+
+          experience_context[:landing_page] = "LOGIN"
+          experience_context[:user_action] = "PAY_NOW"
+          experience_context[:return_url] = redirect_links[:success_url] if redirect_links
+          experience_context[:cancel_url] = redirect_links[:failure_url] if redirect_links
+        when 'giropay'
+          payment_source = post[:payment_source][:giropay] = {}
+
+          add_payment_source_details(payment_source, redirect_links, options)
+        when 'sofort'
+          payment_source = post[:payment_source][:sofort] = {}
+
+          add_payment_source_details(payment_source, redirect_links, options)
+        end
       end
 
       def add_shipping_address(purchase_unit, options)
@@ -211,6 +224,16 @@ module ActiveMerchant
         purchase_unit[:shipping][:address][:admin_area_1] = options[:billing_address][:state]
         purchase_unit[:shipping][:address][:postal_code] = options[:billing_address][:zip]
         purchase_unit[:shipping][:address][:country_code] = options[:billing_address][:country]
+      end
+
+      def add_payment_source_details(payment_source, redirect_links, options)
+        payment_source[:name] = options[:billing_address] ? options[:billing_address][:name] : ''
+        payment_source[:country_code] = options[:billing_address] ? options[:billing_address][:country] : ''
+
+        payment_source[:experience_context] = {}
+        payment_source[:experience_context][:brand_name] = options[:campaign_name]
+        payment_source[:experience_context][:return_url] = redirect_links[:success_url] if redirect_links
+        payment_source[:experience_context][:cancel_url] = redirect_links[:failure_url] if redirect_links
       end
 
       def add_payment_intent(post)

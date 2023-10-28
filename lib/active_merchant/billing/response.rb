@@ -6,7 +6,8 @@ module ActiveMerchant #:nodoc:
     class Response
       attr_reader :params, :message, :test, :authorization, :avs_result, :cvv_result,
                   :error_code, :emv_authorization, :network_transaction_id, :response_type,
-                  :request_body, :response_http_code, :request_endpoint, :request_method
+                  :request_body, :response_http_code, :request_endpoint, :request_method,
+                  :request_id
 
       def success?
         @success
@@ -49,6 +50,7 @@ module ActiveMerchant #:nodoc:
         @request_endpoint = options[:request_endpoint]
         @request_method = options[:request_method]
         @request_body = options[:request_body]
+        @reques_id = options[:request_id]
       end
     end
 
