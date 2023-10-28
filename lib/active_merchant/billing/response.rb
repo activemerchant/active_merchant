@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
         @request_endpoint = options[:request_endpoint]
         @request_method = options[:request_method]
         @request_body = options[:request_body]
-        @reques_id = options[:request_id]
+        @request_id = options[:request_id]
       end
     end
 
