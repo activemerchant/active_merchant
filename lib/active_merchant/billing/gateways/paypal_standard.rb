@@ -196,7 +196,7 @@ module ActiveMerchant
         post[:payment_source] = {}
         redirect_links = options[:redirect_links]
 
-        case payment_method.checkout_v2_method_type
+        case payment_method.paypal_method_type
         when 'paypal'
           payment_source = post[:payment_source][:paypal] = {}
           experience_context = payment_source[:experience_context] = {}
