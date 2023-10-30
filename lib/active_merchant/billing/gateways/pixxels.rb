@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
         redirect_links = options[:redirect_links]
         return unless redirect_links
 
-        post[:threeDSRedirectURL] = redirect_links[:callback_url]
+        post[:threeDSRedirectURL] = redirect_links[:success_url]
       end
 
       def add_three_ds_fields(post, options)
