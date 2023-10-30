@@ -17,4 +17,3 @@ jobs:
           stale-pr-message: 'To provide a cleaner slate for the maintenance of the library, this PR/Issue is being labeled stale after 60 days without activity. It will be closed in 14 days unless you comment with an update regarding its applicability to the current build. Thank you!'
           days-before-close: 14
           exempt-draft-pr: true
-          debug-only: true
