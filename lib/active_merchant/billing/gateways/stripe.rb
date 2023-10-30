@@ -7,6 +7,7 @@ module ActiveMerchant #:nodoc:
     class StripeGateway < Gateway
       self.live_url = 'https://api.stripe.com/v1/'
 
+      # TODO: Lookup the codes, figure out if I need to add `null` values, and what they map to. May be in StripePaymentIntents Docs
       AVS_CODE_TRANSLATOR = {
         'line1: pass, zip: pass' => 'Y',
         'line1: pass, zip: fail' => 'A',
@@ -17,6 +18,7 @@ module ActiveMerchant #:nodoc:
         'line1: unchecked, zip: unchecked' => 'I'
       }
 
+      # TODO: Lookup codes, figure out if I need ot add `null` values, and what they map to. May be in StripePaymentIntents Docs
       CVC_CODE_TRANSLATOR = {
         'pass' => 'M',
         'fail' => 'N',
@@ -703,7 +705,7 @@ module ActiveMerchant #:nodoc:
         success = success_from(response, options)
 
         card = card_from_response(response)
-        avs_code = AVS_CODE_TRANSLATOR["line1: #{card['address_line1_check']}, zip: #{card['address_zip_check']}"]
+        avs_code = AVS_CODE_TRANSLATOR["line1: #{card['address_line1_check']}, zip: #{card['address_zip_check'] || card['address_postal_code_check']}"]
         cvc_code = CVC_CODE_TRANSLATOR[card['cvc_check']]
         Response.new(
           success,
@@ -785,7 +787,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_from_response(response)
-        response['card'] || response['active_card'] || response['source'] || {}
+        response['card'] || response['active_card'] || response['source'] || response['checks'] || {}
       end
 
       def emv_authorization_from_response(response)
