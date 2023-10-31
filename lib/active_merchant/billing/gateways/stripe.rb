@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
         'line1: unchecked, zip: unchecked' => 'I'
       }
 
-      # TODO: Lookup codes, figure out if I need ot add `null` values, and what they map to. May be in StripePaymentIntents Docs
+      #  TODO: Lookup codes, figure out if I need ot add `null` values, and what they map to. May be in StripePaymentIntents Docs
       CVC_CODE_TRANSLATOR = {
         'pass' => 'M',
         'fail' => 'N',
