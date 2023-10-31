@@ -105,6 +105,32 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
   end
 
+  def test_successful_authorize_with_apple_pay
+    options = @preprod_options.merge(requires_approval: false, currency: 'USD')
+    response = @gateway_preprod.authorize(4500, @apple_pay, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
+  end
+
+  def test_successful_purchase_with_apple_pay_ogone_direct
+    options = @preprod_options.merge(requires_approval: false, currency: 'USD')
+    response = @gateway_direct.purchase(100, @apple_pay, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'PENDING_CAPTURE', response.params['payment']['status']
+  end
+
+  def test_successful_authorize_and_capture_with_apple_pay_ogone_direct
+    options = @preprod_options.merge(requires_approval: false, currency: 'USD')
+    auth = @gateway_direct.authorize(100, @apple_pay, options)
+    assert_success auth
+
+    assert capture = @gateway_direct.capture(@amount, auth.authorization, @options)
+    assert_success capture
+    assert_equal 'Succeeded', capture.message
+  end
+
   def test_successful_purchase_with_google_pay
     options = @preprod_options.merge(requires_approval: false)
     response = @gateway_preprod.purchase(4500, @google_pay, options)

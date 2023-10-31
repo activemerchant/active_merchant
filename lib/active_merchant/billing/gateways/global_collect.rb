@@ -522,8 +522,6 @@ module ActiveMerchant #:nodoc:
       def success_from(action, response)
         return false if response['errorId'] || response['error_message']
 
-        return %w(CAPTURED CAPTURE_REQUESTED).include?(response.dig('payment', 'status')) if response.dig('payment', 'paymentOutput', 'paymentMethod') == 'mobile'
-
         case action
         when :authorize
           response.dig('payment', 'statusOutput', 'isAuthorized')
