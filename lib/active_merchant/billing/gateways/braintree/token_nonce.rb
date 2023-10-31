@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
       def build_nonce_credit_card_request(payment_method)
         billing_address = billing_address_from_options
         key_replacements = { city: :locality, state: :region, zipCode: :postalCode }
-        billing_address.transform_keys! { |key| key_replacements[key] || key }
+        billing_address&.transform_keys! { |key| key_replacements[key] || key }
         {
           creditCard: {
             number: payment_method.number,
