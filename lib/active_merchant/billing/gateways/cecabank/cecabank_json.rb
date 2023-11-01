@@ -24,6 +24,12 @@ module ActiveMerchant
         cardholder: :S
       }.freeze
 
+      CECA_SCA_TYPES = {
+        low_value_exemption: :LOW,
+        transaction_risk_analysis_exemption: :TRA,
+        nil: :NONE
+      }.freeze
+
       self.test_url = 'https://tpv.ceca.es/tpvweb/rest/procesos/'
       self.live_url = 'https://pgw.ceca.es/tpvweb/rest/procesos/'
 
@@ -120,28 +126,45 @@ module ActiveMerchant
       def add_stored_credentials(post, creditcard, options)
         return unless stored_credential = options[:stored_credential]
 
-        return if options[:exemption_sca] == 'NONE' || options[:exemption_sca].blank?
+        return if options[:exemption_type].blank? && !(stored_credential[:reason_type] && stored_credential[:initiator])
 
         params = post[:parametros] ||= {}
-        params[:exencionSCA] = options[:exemption_sca]
+        params[:exencionSCA] = 'MIT'
 
-        if options[:exemption_sca] == 'MIT'
-          requires!(stored_credential, :reason_type, :initiator)
+        requires!(stored_credential, :reason_type, :initiator)
+        reason_type = CECA_REASON_TYPES[stored_credential[:reason_type].to_sym]
+        initiator = CECA_INITIATOR[stored_credential[:initiator].to_sym]
+        params[:tipoCOF] = reason_type
+        params[:inicioRec] = initiator
+        if initiator == :S
           requires!(options, :recurring_frequency)
+          params[:finRec] = options[:recurring_end_date] || strftime_yyyymm(creditcard)
+          params[:frecRec] = options[:recurring_frequency]
         end
-
-        params[:tipoCOF] = CECA_REASON_TYPES[stored_credential[:reason_type].to_sym]
-        params[:inicioRec] = CECA_INITIATOR[stored_credential[:initiator].to_sym]
-        params[:finRec] = options[:recurring_end_date] || strftime_yyyymm(creditcard)
-        params[:frecRec] = options[:recurring_frequency]
 
         params[:mmppTxId] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
       end
 
       def add_three_d_secure(post, options)
         params = post[:parametros] ||= {}
+        return unless three_d_secure = options[:three_d_secure]
 
-        params[:ThreeDsResponse] = options[:three_d_secure] if options[:three_d_secure]
+        params[:exencionSCA] ||= CECA_SCA_TYPES[options[:exemption_type]&.to_sym]
+        three_d_response = {
+          exemption_type: options[:exemption_type],
+          three_ds_version: three_d_secure[:version],
+          authentication_value: three_d_secure[:cavv],
+          directory_server_transaction_id: three_d_secure[:ds_transaction_id],
+          acs_transaction_id: three_d_secure[:acs_transaction_id],
+          authentication_response_status: three_d_secure[:authentication_response_status],
+          three_ds_server_trans_id: three_d_secure[:three_ds_server_trans_id],
+          ecommerce_indicator: three_d_secure[:eci],
+          enrolled: three_d_secure[:enrolled]
+        }
+
+        three_d_response.merge!({ amount: post[:parametros][:importe] })
+
+        params[:ThreeDsResponse] = three_d_response.to_json
       end
 
       def commit(action, post, method = :post)
