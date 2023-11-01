@@ -131,8 +131,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         if (billing_address = options[:billing_address] || options[:address])
           post[:billing_address] = {}
-          post[:billing_address][:first_name] = billing_address[:firstname]
-          post[:billing_address][:last_name] = billing_address[:lastname]
+          post[:billing_address][:first_name], post[:billing_address][:last_name] = split_names(billing_address[:name])
           post[:billing_address][:company] = billing_address[:company]
           post[:billing_address][:address_line_1] = billing_address[:address1]
           post[:billing_address][:city] = billing_address[:city]
@@ -140,13 +139,12 @@ module ActiveMerchant #:nodoc:
           post[:billing_address][:country] = billing_address[:country]
           post[:billing_address][:postal_code] = billing_address[:zip]
           post[:billing_address][:phone] = billing_address[:phone]
-          post[:billing_address][:email] = billing_address[:email]
+          post[:billing_address][:email] = options[:email]
         end
 
         if (shipping_address = options[:shipping_address])
           post[:shipping_address] = {}
-          post[:shipping_address][:first_name] = shipping_address[:firstname]
-          post[:shipping_address][:last_name] = shipping_address[:lastname]
+          post[:shipping_address][:first_name], post[:shipping_address][:last_name] = split_names(billing_address[:name])
           post[:shipping_address][:company] = shipping_address[:company]
           post[:shipping_address][:address_line_1] = shipping_address[:address1]
           post[:shipping_address][:city] = shipping_address[:city]
@@ -154,7 +152,7 @@ module ActiveMerchant #:nodoc:
           post[:shipping_address][:country] = shipping_address[:country]
           post[:shipping_address][:postal_code] = shipping_address[:zip]
           post[:shipping_address][:phone] = shipping_address[:phone]
-          post[:shipping_address][:email] = shipping_address[:email]
+          post[:shipping_address][:email] = options[:email]
         end
 
         if (descriptor = options[:descriptors])
@@ -265,12 +263,7 @@ module ActiveMerchant #:nodoc:
 
       def handle_response(response)
         @response_http_code = response.code.to_i
-        case @response_http_code
-        when 200...300
-          response.body
-        else
-          raise ResponseError.new(response)
-        end
+        response.body
       end
     end
   end
