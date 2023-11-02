@@ -25,6 +25,7 @@ class BraintreeTokenNonceTest < Test::Unit::TestCase
       ach_mandate: 'ach_mandate'
     }
     @generator = TokenNonce.new(@braintree_backend, @options)
+    @no_address_generator = TokenNonce.new(@braintree_backend, { ach_mandate: 'ach_mandate' })
   end
 
   def test_build_nonce_request_for_credit_card
@@ -64,6 +65,23 @@ class BraintreeTokenNonceTest < Test::Unit::TestCase
 
     assert_equal bank_account_input['individualOwner']['firstName'], bank_account.first_name
     assert_equal bank_account_input['individualOwner']['lastName'], bank_account.last_name
+  end
+
+  def test_build_nonce_request_for_credit_card_without_address
+    credit_card = credit_card('4111111111111111')
+    response = @no_address_generator.send(:build_nonce_request, credit_card)
+    parse_response = JSON.parse response
+    assert_client_sdk_metadata(parse_response)
+    assert_equal normalize_graph(parse_response['query']), normalize_graph(credit_card_query)
+    assert_includes parse_response['variables']['input'], 'creditCard'
+
+    credit_card_input = parse_response['variables']['input']['creditCard']
+
+    assert_equal credit_card_input['number'], credit_card.number
+    assert_equal credit_card_input['expirationYear'], credit_card.year.to_s
+    assert_equal credit_card_input['expirationMonth'], credit_card.month.to_s.rjust(2, '0')
+    assert_equal credit_card_input['cvv'], credit_card.verification_value
+    assert_equal credit_card_input['cardholderName'], credit_card.name
   end
 
   def test_token_from
