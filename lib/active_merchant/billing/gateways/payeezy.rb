@@ -35,6 +35,8 @@ module ActiveMerchant
 
         add_invoice(params, options)
         add_reversal_id(params, options)
+        add_customer_ref(params, options)
+        add_reference_3(params, options)
         add_payment_method(params, payment_method, options)
         add_address(params, options)
         add_amount(params, amount, options)
@@ -51,6 +53,8 @@ module ActiveMerchant
 
         add_invoice(params, options)
         add_reversal_id(params, options)
+        add_customer_ref(params, options)
+        add_reference_3(params, options)
         add_payment_method(params, payment_method, options)
         add_address(params, options)
         add_amount(params, amount, options)
@@ -168,6 +172,14 @@ module ActiveMerchant
 
       def add_reversal_id(params, options)
         params[:reversal_id] = options[:reversal_id] if options[:reversal_id]
+      end
+
+      def add_customer_ref(params, options)
+        params[:customer_ref] = options[:customer_ref] if options[:customer_ref]
+      end
+
+      def add_reference_3(params, options)
+        params[:reference_3] = options[:reference_3] if options[:reference_3]
       end
 
       def amount_from_authorization(authorization)

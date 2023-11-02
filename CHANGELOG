@@ -51,6 +51,7 @@
 * GlobalCollect: Fix bug in success_from logic [DustinHaefele] #4939
 * Worldpay: Update 3ds logic to accept df_reference_id directly [DustinHaefele] #4929
 * Orbital: Enable Third Party Vaulting [javierpedrozaing] #4928
+* Payeezy: Add the customer_ref and reference_3 fields [yunnydang] #4942
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
