@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment_method, options = {})
         requires!(options, :order_id)
-        payment_details = payment_details(payment_method)
+        payment_details = payment_details(payment_method, options)
         authorize_request(money, payment_method, payment_details.merge(options))
       end
 
@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
       #   and other transactions should be performed on a normal eCom-flagged
       #   merchant ID.
       def credit(money, payment_method, options = {})
-        payment_details = payment_details(payment_method)
+        payment_details = payment_details(payment_method, options)
         if options[:fast_fund_credit]
           fast_fund_credit_request(money, payment_method, payment_details.merge(credit: true, **options))
         else
@@ -572,7 +572,7 @@ module ActiveMerchant #:nodoc:
         when :pay_as_order
           add_amount_for_pay_as_order(xml, amount, payment_method, options)
         when :network_token
-          add_network_tokenization_card(xml, payment_method)
+          add_network_tokenization_card(xml, payment_method, options)
         else
           add_card_or_token(xml, payment_method, options)
         end
@@ -590,8 +590,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_network_tokenization_card(xml, payment_method)
-        token_type = NETWORK_TOKEN_TYPE.fetch(payment_method.source, 'NETWORKTOKEN')
+      def add_network_tokenization_card(xml, payment_method, options)
+        source = payment_method.respond_to?(:source) ? payment_method.source : options[:wallet_type]
+        token_type = NETWORK_TOKEN_TYPE.fetch(source, 'NETWORKTOKEN')
 
         xml.paymentDetails do
           xml.tag! 'EMVCO_TOKEN-SSL', 'type' => token_type do
@@ -603,9 +604,9 @@ module ActiveMerchant #:nodoc:
               )
             end
             name = card_holder_name(payment_method, options)
-            eci = format(payment_method.eci, :two_digits)
+            eci = payment_method.respond_to?(:eci) ? format(payment_method.eci, :two_digits) : ''
             xml.cardHolderName name if name.present?
-            xml.cryptogram payment_method.payment_cryptogram
+            xml.cryptogram payment_method.payment_cryptogram unless options[:wallet_type] == :google_pay
             xml.eciIndicator eci.empty? ? '07' : eci
           end
         end
@@ -975,12 +976,12 @@ module ActiveMerchant #:nodoc:
         token_details
       end
 
-      def payment_details(payment_method)
+      def payment_details(payment_method, options = {})
         case payment_method
         when String
           token_type_and_details(payment_method)
         else
-          type = network_token?(payment_method) ? :network_token : :credit
+          type = network_token?(payment_method) || options[:wallet_type] == :google_pay ? :network_token : :credit
 
           { payment_type: type }
         end
