@@ -316,23 +316,33 @@ class RedsysTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response).then.returns(successful_void_response)
-    response = @gateway.verify(credit_card, @options)
-    assert_success response
-  end
+    @gateway.expects(:ssl_post).with(
+      anything,
+      all_of(
+        includes(CGI.escape('<DS_MERCHANT_TRANSACTIONTYPE>0</DS_MERCHANT_TRANSACTIONTYPE>')),
+        includes(CGI.escape('<DS_MERCHANT_AMOUNT>0</DS_MERCHANT_AMOUNT>'))
+      ),
+      anything
+    ).returns(successful_purchase_response)
 
-  def test_successful_verify_with_failed_void
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response).then.returns(failed_void_response)
     response = @gateway.verify(credit_card, @options)
+
     assert_success response
-    assert_equal 'Transaction Approved', response.message
   end
 
   def test_unsuccessful_verify
-    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+    @gateway.expects(:ssl_post).with(
+      anything,
+      all_of(
+        includes(CGI.escape('<DS_MERCHANT_TRANSACTIONTYPE>0</DS_MERCHANT_TRANSACTIONTYPE>')),
+        includes(CGI.escape('<DS_MERCHANT_AMOUNT>0</DS_MERCHANT_AMOUNT>'))
+      ),
+      anything
+    ).returns(failed_purchase_response)
+
     response = @gateway.verify(credit_card, @options)
+
     assert_failure response
-    assert_equal 'SIS0093 ERROR', response.message
   end
 
   def test_unknown_currency

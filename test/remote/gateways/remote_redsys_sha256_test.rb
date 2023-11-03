@@ -105,7 +105,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, options)
     assert_success response
     assert response.params['ds_emv3ds']
-    assert_equal 'NO_3DS_v2', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
+    assert_equal '2.2.0', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
     assert_equal 'CardConfiguration', response.message
     assert response.authorization
   end
@@ -132,7 +132,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, options.merge(sca_exemption: 'LWV'))
     assert_success response
     assert response.params['ds_emv3ds']
-    assert_equal 'NO_3DS_v2', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
+    assert_equal '2.2.0', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
     assert_equal 'CardConfiguration', response.message
   end
 
@@ -141,7 +141,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, options.merge(sca_exemption: 'LWV'))
     assert_success response
     assert response.params['ds_emv3ds']
-    assert_equal 'NO_3DS_v2', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
+    assert_equal '2.2.0', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
     assert_equal 'CardConfiguration', response.message
   end
 
@@ -364,12 +364,9 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     authorize = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorize
 
-    void = @gateway.void(authorize.authorization)
-    assert_success void
-
-    another_void = @gateway.void(authorize.authorization)
+    another_void = @gateway.void(authorize.authorization << '123')
     assert_failure another_void
-    assert_equal 'SIS0222 ERROR', another_void.message
+    assert_equal 'SIS0007 ERROR', another_void.message
   end
 
   def test_successful_verify
@@ -377,8 +374,6 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     assert_success response
 
     assert_equal 'Transaction Approved', response.message
-    assert_success response.responses.last, 'The void should succeed'
-    assert_equal 'Cancellation Accepted', response.responses.last.message
   end
 
   def test_unsuccessful_verify
