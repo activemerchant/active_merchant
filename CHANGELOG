@@ -45,6 +45,7 @@
 * NMI: Update supported countries list [jcreiff] #4931
 * Adyen: Add mcc field [jcreiff] #4926
 * Quickbooks: Remove raise OAuth from extract_response_body_or_raise [almalee24] #4935
+* Cecabank: Add new Cecabank gateway to use the JSON REST API [sinourain] #4920
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
