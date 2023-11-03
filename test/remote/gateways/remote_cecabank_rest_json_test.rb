@@ -10,12 +10,10 @@ class RemoteCecabankTest < Test::Unit::TestCase
 
     @options = {
       order_id: generate_unique_id,
-      exemption_sca: 'NONE',
       three_d_secure: three_d_secure
     }
 
     @cit_options = @options.merge({
-      exemption_sca: 'MIT',
       recurring_end_date: '20231231',
       recurring_frequency: '1',
       stored_credential: {
@@ -125,7 +123,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @credit_card, @cit_options)
     assert_success purchase
 
-    options = @cit_options
+    options = @cit_options.except(:three_d_secure, :extra_options_for_three_d_secure)
     options[:stored_credential][:reason_type] = 'recurring'
     options[:stored_credential][:initiator] = 'merchant'
     options[:stored_credential][:network_transaction_id] = purchase.network_transaction_id
@@ -150,32 +148,13 @@ class RemoteCecabankTest < Test::Unit::TestCase
 
   def three_d_secure
     {
-      authentication_value: '4F80DF50ADB0F9502B91618E9B704790EABA35FDFC972DDDD0BF498C6A75E492',
-      email: 'example@example.com',
-      three_ds_version: '2.2.0',
-      directory_server_transaction_id: 'a2bf089f-cefc-4d2c-850f-9153827fe070',
-      exemption_type: 'null',
-      token: 'Gt3wYk5kEaxCON6byEMWYsW58iq',
-      xid: 'xx',
-      authentication_response_status: 'Y',
-      ecommerce_indicator: '02',
-      sca_provider_key: 'W2Y0DOpdImu6AjaWYPituPWkh2C',
-      gateway_transaction_key: 'A7YADMeCYYjG4d9ozKUQiQvpGZp',
-      transaction_type: 'Sca::Authentication',
-      daf: 'false',
-      challenge_form: '<form action=\"https://test-3ds.seglan.com/server/authentication/load\" method=\"POST\">\n  <input name=\"browserChallengeToken\" value=\"9bd9aa9c-3beb-4012-8e52-214cccb25ec5\" type=\"hidden\"/>\n</form>',
+      version: '2.2.0',
+      eci: '02',
+      cavv: '4F80DF50ADB0F9502B91618E9B704790EABA35FDFC972DDDD0BF498C6A75E492',
+      ds_transaction_id: 'a2bf089f-cefc-4d2c-850f-9153827fe070',
       acs_transaction_id: '18c353b0-76e3-4a4c-8033-f14fe9ce39dc',
-      updated_at: '2023-08-29T08:03:40Z',
-      three_ds_server_trans_id: '9bd9aa9c-3beb-4012-8e52-214cccb25ec5',
-      enrolled: 'true',
-      flow_performed: 'challenge',
-      succeeded: true,
-      amount: 11000,
-      ip: '119.119.35.111',
-      directory_response_status: 'C',
-      currency_code: 'ISK',
-      created_at: '2023-08-29T08:02:42Z',
-      state: 'succeeded'
-    }.to_json.to_s
+      authentication_response_status: 'Y',
+      three_ds_server_trans_id: '9bd9aa9c-3beb-4012-8e52-214cccb25ec5'
+    }
   end
 end
