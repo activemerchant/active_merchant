@@ -5,6 +5,10 @@ module ActiveMerchant #:nodoc:
         "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
       end
 
+      def strftime_yyyymm(credit_card)
+        format(credit_card.year, :four_digits) + format(credit_card.month, :two_digits)
+      end
+
       # This method is used to format numerical information pertaining to credit cards.
       #
       #   format(2005, :two_digits)  # => "05"
