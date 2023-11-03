@@ -1,10 +1,19 @@
 require 'test_helper'
 
-class RemoteRapydTest < Test::Unit::TestCase
+class RemoteXpayTest < Test::Unit::TestCase
   def setup
-    @gateway = XpayGateway.new(fixtures(:x_pay))
-    @amount = 3545
-    @credit_card = credit_card('4111111111111111')
+    @gateway = XpayGateway.new(fixtures(:xpay))
+    @amount = 5000
+    @credit_card = credit_card(
+      '5186151650005008',
+      month: 12,
+      year: 2026,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '123',
+      brand: 'master'
+    )
+
     @options = {
       order: {
         order_id: 'btid2384983',
@@ -19,24 +28,15 @@ class RemoteRapydTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_authorize
-    response = @gateway.authorize(@amount, @credit_card, @options)
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_match 'PENDING', response.message
   end
 
   def test_successful_purchase
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    options = @options.merge(operation_id: auth.params.dig('operation', 'operationId'))
-    response = @gateway.purchase(@amount, @credit_card, options)
-    assert_success response
-    assert_match 'PENDING', response.message
-  end
-
-  def test_successful_capture
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    options = @options.merge(operation_id: auth.params.dig('operation', 'operationId'))
-    response = @gateway.capture(@amount, @credit_card, options)
-    assert_success response
+    init = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success init
+    assert_match 'PENDING', init.message
   end
 end

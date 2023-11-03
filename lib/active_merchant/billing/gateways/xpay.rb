@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
 
       ENDPOINTS_MAPPING = {
         purchase: 'orders/2steps/payment',
-        authorize: 'orders/2steps/init',
+        preauth: 'orders/2steps/init',
         capture: 'operations/{%s}/captures',
         verify: 'orders/card_verification',
         void: 'operations/{%s}/cancels',
@@ -26,21 +26,6 @@ module ActiveMerchant #:nodoc:
         requires!(options, :api_key)
         @api_key = options[:api_key]
         super
-      end
-
-      def purchase(amount, payment_method, options = {})
-        requires!(options, :operation_id)
-        post = {}
-        post[:operationId] = options[:operation_id]
-        add_auth_purchase_params(post, amount, payment_method, options)
-        add_3ds(post, payment_method, options)
-        commit('purchase', post)
-      end
-
-      def authorize(amount, payment_method, options = {})
-        post = {}
-        add_auth_purchase_params(post, amount, payment_method, options)
-        commit('authorize', post)
       end
 
       def capture(amount, authorization, options = {})
@@ -57,8 +42,16 @@ module ActiveMerchant #:nodoc:
         commit('refund', post)
       end
 
+      def purchase(amount, payment_method, options = {})
+        post = {}
+        add_auth_purchase_params(post, amount, payment_method, options)
+        commit('preauth', post)
+      end
+
       def verify(credit_card, options = {})
         post = {}
+        add_invoice(post, 0, options)
+        add_credit_card(post, credit_card)
         commit('verify', post)
       end
 
@@ -73,7 +66,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, amount, options)
         currency = options[:currency] || currency(amount)
         post[:order] = {}
-        post[:order][:orderId] = options.dig(:order, :order_id)
+        post[:order][:orderId] = options[:order][:order_id]
         post[:order][:amount] = localized_amount(amount, currency)
         post[:order][:currency] = currency
       end
@@ -92,8 +85,8 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, payment_method, options)
         post[:order][:customerInfo] = {}
         card_holder_name = "#{payment_method.try(:first_name)} #{payment_method.try(:last_name)}"
-        post[:order][:customerInfo][:cardHolderName] =  options[:order][:customer_info][:card_holder_name] || card_holder_name
-        post[:order][:customerInfo][:cardHolderEmail] = options[:order][:customer_info][:card_holder_email]
+        post[:order][:customerInfo][:cardHolderName] = card_holder_name
+        post[:order][:customerInfo][:cardHolderEmail] = options[:email] if options[:email]
       end
 
       def add_address(post, options)
@@ -167,7 +160,7 @@ module ActiveMerchant #:nodoc:
         headers = {
           'Content-Type' => 'application/json',
           'X-Api-Key' => @api_key,
-          'Correlation-Id' => params.dig(:order, :orderId) || SecureRandom.uuid
+          'Correlation-Id' => SecureRandom.uuid
         }
         headers
       end
