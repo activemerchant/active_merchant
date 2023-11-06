@@ -100,16 +100,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_three_ds_fields(post, options)
-        if (three_d_secure = options[:pixel_three_d_secure])
-          post[:threeDSRef] = three_d_secure[:threeDSRef] if three_d_secure[:threeDSRef]
-          post["threeDSResponse[threeDSMethodData]"] = three_d_secure[:threeDSMethodData] if three_d_secure[:threeDSMethodData]
+        if (three_d_secure = options[:pixxel_three_d_secure])
+          post[:threeDSRef] = three_d_secure[:threeDSRef]
+          post["threeDSResponse[threeDSMethodData]"] = three_d_secure[:threeDSMethodData]
         end
       end
 
       def add_three_ds_level_2_fields(post, options)
-        if (three_d_secure = options[:pixel_three_d_secure])
-          post[:threeDSRef] = three_d_secure[:threeDSRef] if three_d_secure[:threeDSRef]
-          post["threeDSResponse[cres]"] = three_d_secure[:threeDSCres] if three_d_secure[:threeDSCres]
+        if (three_d_secure = options[:pixxel_three_d_secure])
+          post[:threeDSRef] = three_d_secure[:threeDSRef]
+          post["threeDSResponse[cres]"] = three_d_secure[:cres]
         end
       end
 
@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, params)
         params[:action] = action
         params[:merchantID] = @options[:merchant_id]
-        sorted_params = params.transform_keys(&:to_sym).sort.to_h
+        sorted_params = params.transform_keys(&:to_s).sort.to_h
 
         sorted_params["signature"] = get_signature(sorted_params)
         raw_response = ssl_post(url, post_data(action, sorted_params), headers)
