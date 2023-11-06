@@ -144,6 +144,16 @@ class RemoteCecabankTest < Test::Unit::TestCase
     assert_match '810', purchase.error_code
   end
 
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+  end
+
   private
 
   def three_d_secure

@@ -63,6 +63,21 @@ module ActiveMerchant
         handle_cancellation(:refund, money, authorization, options)
       end
 
+      def scrub(transcript)
+        before_message = transcript.gsub(%r(\\\")i, "'").scan(/{[^>]*}/).first.gsub("'", '"')
+        request_data = JSON.parse(before_message)
+        params =  decode_params(request_data['parametros']).
+                  gsub(%r(("pan\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+                  gsub(%r(("caducidad\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+                  gsub(%r(("cvv2\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+                  gsub(%r(("csc\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
+        request_data['parametros'] = encode_params(params)
+
+        before_message = before_message.gsub(%r(\")i, '\\\"')
+        after_message = request_data.to_json.gsub(%r(\")i, '\\\"')
+        transcript.sub(before_message, after_message)
+      end
+
       private
 
       def handle_purchase(action, money, creditcard, options)
@@ -176,7 +191,7 @@ module ActiveMerchant
         add_encryption(post)
         add_merchant_data(post)
 
-        params_encoded = encode_params(post)
+        params_encoded = encode_post_parameters(post)
         add_signature(post, params_encoded, options)
 
         response = parse(ssl_request(method, url(action), post.to_json, headers))
@@ -214,8 +229,12 @@ module ActiveMerchant
         parse(decode_params(string))
       end
 
-      def encode_params(post)
-        post[:parametros] = Base64.strict_encode64(post[:parametros].to_json)
+      def encode_post_parameters(post)
+        post[:parametros] = encode_params(post[:parametros].to_json)
+      end
+
+      def encode_params(params)
+        Base64.strict_encode64(params)
       end
 
       def decode_params(params)

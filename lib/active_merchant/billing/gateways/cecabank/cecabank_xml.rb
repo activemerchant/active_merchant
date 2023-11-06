@@ -71,10 +71,6 @@ module ActiveMerchant
         commit(CECA_ACTION_REFUND, post)
       end
 
-      def supports_scrubbing?
-        true
-      end
-
       def scrub(transcript)
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').

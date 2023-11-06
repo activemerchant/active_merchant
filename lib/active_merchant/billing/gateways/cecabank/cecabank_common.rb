@@ -29,4 +29,8 @@ module CecabankCommon
     requires!(options, :merchant_id, :acquirer_bin, :terminal_id, :cypher_key)
     super
   end
+
+  def supports_scrubbing?
+    true
+  end
 end
