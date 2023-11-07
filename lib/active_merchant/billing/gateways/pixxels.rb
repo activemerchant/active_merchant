@@ -133,7 +133,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_refund_details(post, amount, options)
-        post[:amount] = amount
+        post[:amount] = amount&.to_s
         post[:orderRef] = options[:order_id]
       end
 

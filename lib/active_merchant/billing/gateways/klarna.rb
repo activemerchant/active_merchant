@@ -299,7 +299,7 @@ module ActiveMerchant
         post["purchase_currency"] = options[:currency]
         post["intended_use"] = "SUBSCRIPTION"
         post["description"] = "For Recurring Payments"
-        post["locale"] = "en-GB"
+        post["locale"] = options[:locale]
       end
     end
   end
