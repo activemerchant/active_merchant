@@ -28,6 +28,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_three_d_url(post, options)
+        add_recurring_type(post)
 
         commit('SALE', post)
       end
@@ -59,6 +60,16 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
 
         commit('REFUND_SALE', post)
+      end
+
+      def recurring(amount, options)
+        post = {}
+
+        add_recurring_type(post)
+        add_recurring_details(post, amount, options)
+        add_reference(post, options[:xref])
+
+        commit('SALE', post)
       end
 
       private
@@ -130,6 +141,16 @@ module ActiveMerchant #:nodoc:
       def add_reference(post, authorization)
         transaction_id, = split_authorization(authorization)
         post[:xref] = transaction_id
+      end
+
+      def add_recurring_type(post)
+        post[:rtAgreementType] = "recurring"
+      end
+
+      def add_recurring_details(post, amount, options)
+        post[:amount] = amount.to_s
+        post[:type] = "9"
+        post[:avscv2CheckRequired] = "N"
       end
 
       def add_refund_details(post, amount, options)
