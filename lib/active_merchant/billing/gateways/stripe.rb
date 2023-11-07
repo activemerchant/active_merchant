@@ -786,9 +786,9 @@ module ActiveMerchant #:nodoc:
         payment.respond_to?(:read_method) && payment.read_method == 'contact_quickchip'
       end
 
-      def card_from_response(response) 
+      def card_from_response(response)
         # StripePI puts the AVS and CVC check significantly deeper into the response object
-        response['card'] || response['active_card'] || response['source'] || response.dig('charges','data',0,'payment_method_details','card','checks') || {}
+        response['card'] || response['active_card'] || response['source'] || response.dig('charges', 'data', 0, 'payment_method_details', 'card', 'checks') || {}
       end
 
       def emv_authorization_from_response(response)
