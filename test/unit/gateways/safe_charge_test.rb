@@ -60,8 +60,7 @@ class SafeChargeTest < Test::Unit::TestCase
 
     assert_equal '111951|101508189567|ZQBpAFAASABGAHAAVgBPAFUAMABiADMAewBtAGsAd' \
                  'AAvAFIAQQBrAGoAYwBxACoAXABHAEEAOgA3ACsAMgA4AD0AOABDAG4AbQAzAF' \
-                 'UAbQBYAFIAMwA=|%02d|%d|1.00|USD|' \
-                 'ZQBpAFAASABGAHAAVgBPAFUAMABiADMAewBtAGsAdAAvAFIAQQBrAGoAYwBxACoAXABHAEEAOgA3ACsAMgA4AD0AOABDAG4AbQAzAFUAbQBYAFIAMwA=' % [@credit_card.month, @credit_card.year.to_s[-2..-1]], response.authorization
+                 'UAbQBYAFIAMwA=|%02d|%d|1.00|USD' % [@credit_card.month, @credit_card.year.to_s[-2..-1]], response.authorization
     assert response.test?
   end
 
@@ -77,8 +76,7 @@ class SafeChargeTest < Test::Unit::TestCase
     assert_success purchase
     assert_equal '111951|101508189567|ZQBpAFAASABGAHAAVgBPAFUAMABiADMAewBtAGsAd' \
                  'AAvAFIAQQBrAGoAYwBxACoAXABHAEEAOgA3ACsAMgA4AD0AOABDAG4AbQAzAF' \
-                 'UAbQBYAFIAMwA=|%02d|%d|1.00|USD|' \
-                 'ZQBpAFAASABGAHAAVgBPAFUAMABiADMAewBtAGsAdAAvAFIAQQBrAGoAYwBxACoAXABHAEEAOgA3ACsAMgA4AD0AOABDAG4AbQAzAFUAbQBYAFIAMwA=' % [@credit_card.month, @credit_card.year.to_s[-2..-1]], purchase.authorization
+                 'UAbQBYAFIAMwA=|%02d|%d|1.00|USD' % [@credit_card.month, @credit_card.year.to_s[-2..-1]], purchase.authorization
     assert purchase.test?
   end
 
@@ -92,8 +90,7 @@ class SafeChargeTest < Test::Unit::TestCase
     assert_success purchase
     assert_equal '111951|101508189567|ZQBpAFAASABGAHAAVgBPAFUAMABiADMAewBtAGsAd' \
                  'AAvAFIAQQBrAGoAYwBxACoAXABHAEEAOgA3ACsAMgA4AD0AOABDAG4AbQAzAF' \
-                 'UAbQBYAFIAMwA=|%02d|%d|1.00|USD|'\
-                 'ZQBpAFAASABGAHAAVgBPAFUAMABiADMAewBtAGsAdAAvAFIAQQBrAGoAYwBxACoAXABHAEEAOgA3ACsAMgA4AD0AOABDAG4AbQAzAFUAbQBYAFIAMwA=' % [@credit_card.month, @credit_card.year.to_s[-2..-1]], purchase.authorization
+                 'UAbQBYAFIAMwA=|%02d|%d|1.00|USD' % [@credit_card.month, @credit_card.year.to_s[-2..-1]], purchase.authorization
     assert purchase.test?
   end
 
@@ -107,8 +104,7 @@ class SafeChargeTest < Test::Unit::TestCase
     assert_success purchase
     assert_equal '111951|101508189567|ZQBpAFAASABGAHAAVgBPAFUAMABiADMAewBtAGsAd' \
                  'AAvAFIAQQBrAGoAYwBxACoAXABHAEEAOgA3ACsAMgA4AD0AOABDAG4AbQAzAF' \
-                 'UAbQBYAFIAMwA=|%02d|%d|1.00|USD' \
-                 '|ZQBpAFAASABGAHAAVgBPAFUAMABiADMAewBtAGsAdAAvAFIAQQBrAGoAYwBxACoAXABHAEEAOgA3ACsAMgA4AD0AOABDAG4AbQAzAFUAbQBYAFIAMwA=' % [@credit_card.month, @credit_card.year.to_s[-2..-1]], purchase.authorization
+                 'UAbQBYAFIAMwA=|%02d|%d|1.00|USD' % [@credit_card.month, @credit_card.year.to_s[-2..-1]], purchase.authorization
     assert purchase.test?
   end
 
@@ -128,8 +124,7 @@ class SafeChargeTest < Test::Unit::TestCase
 
     assert_equal '111534|101508189855|MQBVAG4ASABkAEgAagB3AEsAbgAtACoAWgAzAFwAW' \
                  'wBNAF8ATQBUAD0AegBQAGwAQAAtAD0AXAB5AFkALwBtAFAALABaAHoAOgBFAE' \
-                 'wAUAA1AFUAMwA=|%02d|%d|1.00|USD|' \
-                 'MQBVAG4ASABkAEgAagB3AEsAbgAtACoAWgAzAFwAWwBNAF8ATQBUAD0AegBQAGwAQAAtAD0AXAB5AFkALwBtAFAALABaAHoAOgBFAEwAUAA1AFUAMwA=' % [@credit_card.month, @credit_card.year.to_s[-2..-1]], response.authorization
+                 'wAUAA1AFUAMwA=|%02d|%d|1.00|USD' % [@credit_card.month, @credit_card.year.to_s[-2..-1]], response.authorization
     assert response.test?
   end
 
@@ -178,8 +173,7 @@ class SafeChargeTest < Test::Unit::TestCase
 
     assert_equal '111301|101508190200|RwA1AGQAMgAwAEkAWABKADkAcABjAHYAQQA4AC8AZ' \
                  'AAlAHMAfABoADEALAA8ADQAewB8ADsAewBiADsANQBoACwAeAA/AGQAXQAjAF' \
-                 'EAYgBVAHIAMwA=|month|year|1.00|currency|' \
-                 'RwA1AGQAMgAwAEkAWABKADkAcABjAHYAQQA4AC8AZAAlAHMAfABoADEALAA8ADQAewB8ADsAewBiADsANQBoACwAeAA/AGQAXQAjAFEAYgBVAHIAMwA=', response.authorization
+                 'EAYgBVAHIAMwA=|month|year|1.00|currency', response.authorization
     assert response.test?
   end
 
@@ -291,8 +285,7 @@ class SafeChargeTest < Test::Unit::TestCase
 
     assert_equal '111171|101508208625|ZQBpAFAAZgBuAHEATgBUAHcASAAwADUAcwBHAHQAV' \
                  'QBLAHAAbgB6AGwAJAA1AEMAfAB2AGYASwBrAHEAeQBOAEwAOwBZAGIAewB4AG' \
-                 'wAYwBUAE0AMwA=|month|year|0.00|currency|' \
-                 'ZQBpAFAAZgBuAHEATgBUAHcASAAwADUAcwBHAHQAVQBLAHAAbgB6AGwAJAA1AEMAfAB2AGYASwBrAHEAeQBOAEwAOwBZAGIAewB4AGwAYwBUAE0AMwA=', response.authorization
+                 'wAYwBUAE0AMwA=|month|year|0.00|currency', response.authorization
     assert response.test?
   end
 
