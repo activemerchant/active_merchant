@@ -1498,7 +1498,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
   def test_succeeded_cvc_check
     options = {}
     assert purchase = @gateway.purchase(@amount, @visa_card, options)
-    
+
     assert_equal 'succeeded', purchase.params['status']
     assert_equal 'M', purchase.cvv_result.dig('code')
     assert_equal 'CVV matches', purchase.cvv_result.dig('message')
