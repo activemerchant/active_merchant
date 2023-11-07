@@ -48,6 +48,7 @@
 * Cecabank: Add new Cecabank gateway to use the JSON REST API [sinourain] #4920
 * Cecabank: Add 3DS Global to Cecabank REST JSON gateway [sinourain] #4940
 * Cecabank: Add scrub implementation [sinourain] #4945
+* GlobalCollect: Fix bug in success_from logic [DustinHaefele] #4939
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
