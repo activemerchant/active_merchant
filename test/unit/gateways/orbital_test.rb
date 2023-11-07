@@ -1047,6 +1047,46 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_store_request
+    stub_comms do
+      @gateway.store(credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %{<TokenTxnType>GT</TokenTxnType>}, data
+    end
+  end
+
+  def test_successful_payment_request_with_token_stored
+    options = @options.merge(card_brand: 'MC', token_txn_type: 'UT')
+    stub_comms do
+      @gateway.purchase(50, '2521002395820006', options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %{<CardBrand>MC</CardBrand>}, data
+      assert_match %{<AccountNum>2521002395820006</AccountNum>}, data
+    end
+  end
+
+  def test_successful_store
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+
+    assert response = @gateway.store(@credit_card, @options)
+    assert_instance_of Response, response
+    assert_equal 'Approved', response.message
+    assert_equal '4556761607723886', response.params['safetech_token']
+    assert_equal 'VI', response.params['card_brand']
+  end
+
+  def test_successful_purchase_with_stored_token
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    assert store = @gateway.store(@credit_card, @options)
+    assert_instance_of Response, store
+
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert auth = @gateway.purchase(100, store.authorization, @options)
+    assert_instance_of Response, auth
+
+    assert_equal 'Approved', auth.message
+  end
+
   def test_successful_purchase_with_overridden_normalized_stored_credentials
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(@normalized_mit_stored_credential).merge(@options_stored_credentials))
@@ -1755,6 +1795,10 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def successful_refund_response
     '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>R</MessageType><MerchantID>253997</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4556761029983886</AccountNum><OrderID>0c1792db5d167e0b96dd9c</OrderID><TxRefNum>60D1E12322FD50E1517A2598593A48EEA9965469</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode>tst743</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>090955</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def successful_store_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>492310</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4556761029983886</AccountNum><OrderID>f9269cbc7eb453d75adb1d</OrderID><TxRefNum>6536A0990C37C45D0000082B0001A64E4156534A</TxRefNum><TxRefIdx>1</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>7 </AVSRespCode><CVV2RespCode>M</CVV2RespCode><AuthCode>tst443</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode>IU</HostAVSRespCode><HostCVV2RespCode>M</HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>123433</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode><CTIPrepaidReloadableCard></CTIPrepaidReloadableCard><SafetechToken>4556761607723886</SafetechToken><PymtBrandAuthResponseCode>00</PymtBrandAuthResponseCode><PymtBrandResponseCodeCategory>A</PymtBrandResponseCodeCategory></NewOrderResp></Response>'
   end
 
   def failed_refund_response
