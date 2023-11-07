@@ -108,6 +108,25 @@ class SafeChargeTest < Test::Unit::TestCase
     assert purchase.test?
   end
 
+  def test_successful_purchase_with_token
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+    assert_equal 'Success', response.message
+
+    _, transaction_id = response.authorization.split('|')
+    subsequent_response = stub_comms do
+      @gateway.purchase(@amount, response.authorization, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_CCToken/, data)
+      assert_match(/sg_TransactionID=#{transaction_id}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success subsequent_response
+    assert_equal 'Success', subsequent_response.message
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
