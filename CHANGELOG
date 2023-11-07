@@ -49,6 +49,7 @@
 * Cecabank: Add 3DS Global to Cecabank REST JSON gateway [sinourain] #4940
 * Cecabank: Add scrub implementation [sinourain] #4945
 * GlobalCollect: Fix bug in success_from logic [DustinHaefele] #4939
+* Worldpay: Update 3ds logic to accept df_reference_id directly [DustinHaefele] #4929
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

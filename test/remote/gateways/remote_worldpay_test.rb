@@ -455,9 +455,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
     assert first_message.test?
+    assert first_message.success?
     refute first_message.authorization.blank?
-    refute first_message.params['issuer_url'].blank?
-    refute first_message.params['pa_request'].blank?
     refute first_message.params['cookie'].blank?
     refute first_message.params['session_id'].blank?
   end
@@ -483,8 +482,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @threeDS2_challenge_card, options)
     assert response.test?
     refute response.authorization.blank?
-    refute response.params['issuer_url'].blank?
-    refute response.params['pa_request'].blank?
+    assert response.success?
     refute response.params['cookie'].blank?
     refute response.params['session_id'].blank?
   end
@@ -570,8 +568,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
     assert first_message.test?
     refute first_message.authorization.blank?
-    refute first_message.params['issuer_url'].blank?
-    refute first_message.params['pa_request'].blank?
+    assert first_message.success?
     refute first_message.params['cookie'].blank?
     refute first_message.params['session_id'].blank?
   end
@@ -592,8 +589,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
     assert first_message.test?
     refute first_message.authorization.blank?
-    refute first_message.params['issuer_url'].blank?
-    refute first_message.params['pa_request'].blank?
+    assert first_message.success?
     refute first_message.params['cookie'].blank?
     refute first_message.params['session_id'].blank?
   end
@@ -869,7 +865,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_failed_fast_fund_credit_on_cft_gateway
     options = @options.merge({ fast_fund_credit: true })
-    refused_card = credit_card('4917300800000000', name: 'REFUSED') # 'magic' value for testing failures, provided by Worldpay
+    refused_card = credit_card('4444333322221111', name: 'REFUSED') # 'magic' value for testing failures, provided by Worldpay
 
     credit = @cftgateway.credit(@amount, refused_card, options)
     assert_failure credit
