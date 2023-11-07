@@ -10,6 +10,8 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     @declined_payment_method = 'pm_card_chargeDeclined'
     @three_ds_moto_enabled = 'pm_card_authenticationRequiredOnSetup'
     @three_ds_authentication_required = 'pm_card_authenticationRequired'
+    @cvc_check_fails_credit_card = 'pm_card_cvcCheckFail'
+    @avs_fail_card = 'pm_card_avsFail'
     @three_ds_authentication_required_setup_for_off_session = 'pm_card_authenticationRequiredSetupForOffSession'
     @three_ds_off_session_credit_card = credit_card(
       '4000002500003155',
@@ -17,30 +19,35 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       month: 10,
       year: 2028
     )
+
     @three_ds_1_credit_card = credit_card(
       '4000000000003063',
       verification_value: '737',
       month: 10,
       year: 2028
     )
+
     @three_ds_credit_card = credit_card(
       '4000000000003220',
       verification_value: '737',
       month: 10,
       year: 2028
     )
+
     @three_ds_not_required_card = credit_card(
       '4000000000003055',
       verification_value: '737',
       month: 10,
       year: 2028
     )
+
     @three_ds_external_data_card = credit_card(
       '4000002760003184',
       verification_value: '737',
       month: 10,
       year: 2031
     )
+
     @visa_card = credit_card(
       '4242424242424242',
       verification_value: '737',
@@ -1486,5 +1493,33 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_scrubbed(@three_ds_credit_card.number, transcript)
     assert_scrubbed(@three_ds_credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
+  end
+
+  def test_succeeded_cvc_check
+    options = {}
+    assert purchase = @gateway.purchase(@amount, @visa_card, options)
+    
+    assert_equal 'succeeded', purchase.params['status']
+    assert_equal 'M', purchase.cvv_result.dig('code')
+    assert_equal 'CVV matches', purchase.cvv_result.dig('message')
+  end
+
+  def test_failed_cvc_check
+    options = {}
+    assert purchase = @gateway.purchase(@amount, @cvc_check_fails_credit_card, options)
+
+    assert_equal 'succeeded', purchase.params['status']
+    assert_equal 'N', purchase.cvv_result.dig('code')
+    assert_equal 'CVV does not match', purchase.cvv_result.dig('message')
+  end
+
+  def test_failed_avs_check
+    options = {}
+    assert purchase = @gateway.purchase(@amount, @avs_fail_card, options)
+
+    assert_equal 'succeeded', purchase.params['status']
+    assert_equal 'N', purchase.avs_result['code']
+    assert_equal 'N', purchase.avs_result['postal_match']
+    assert_equal 'N', purchase.avs_result['street_match']
   end
 end
