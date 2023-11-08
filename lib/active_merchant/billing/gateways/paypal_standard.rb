@@ -79,7 +79,7 @@ module ActiveMerchant
           error_code: succeeded ? nil : error_code_from(response),
           avs_result: { code: response['avs'] },
           cvv_result: response['cvv2'],
-          response_type: response_type(response),
+          response_type: response_type(action, response),
           response_http_code: @response_http_code,
           request_endpoint: url,
           request_method: request_method(action),
@@ -260,7 +260,9 @@ module ActiveMerchant
         super
       end
 
-      def response_type(response)
+      def response_type(action, response)
+        return unless action == :capture_order
+
         if SUCCESS_CODES.include?(response['status'])
           0
         elsif SOFT_DECLINE_CODES.include?(response['name'])
