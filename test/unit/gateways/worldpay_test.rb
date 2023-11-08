@@ -330,6 +330,47 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_passes_correct_stored_credential_options_for_first_recurring
+    options = @options.merge(
+      stored_credential_usage: 'FIRST',
+      stored_credential_initiated_reason: 'RECURRING'
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"FIRST\" customerInitiatedReason\=\"RECURRING\"\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_passes_correct_stored_credential_options_for_used_recurring
+    options = @options.merge(
+      stored_credential_usage: 'USED',
+      stored_credential_initiated_reason: 'RECURRING',
+      stored_credential_transaction_id: '000000000000020005060720116005061'
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"RECURRING\"\>/, data)
+      assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005061\<\/schemeTransactionIdentifier\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_passes_correct_stored_credentials_for_first_installment
+    options = @options.merge(
+      stored_credential_usage: 'FIRST',
+      stored_credential_initiated_reason: 'INSTALMENT'
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"FIRST\" merchantInitiatedReason\=\"INSTALMENT\"\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_authorize_passes_sub_merchant_data
     options = @options.merge(@sub_merchant_options)
     response = stub_comms do

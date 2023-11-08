@@ -684,30 +684,27 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_stored_credential_using_normalized_fields(xml, options)
-        if options[:stored_credential][:initial_transaction]
-          xml.storedCredentials 'usage' => 'FIRST'
-        else
-          reason = case options[:stored_credential][:reason_type]
-                   when 'installment' then 'INSTALMENT'
-                   when 'recurring' then 'RECURRING'
-                   when 'unscheduled' then 'UNSCHEDULED'
-                   end
+        reason = case options[:stored_credential][:reason_type]
+                 when 'installment' then 'INSTALMENT'
+                 when 'recurring' then 'RECURRING'
+                 when 'unscheduled' then 'UNSCHEDULED'
+                 end
+        is_initial_transaction = options[:stored_credential][:initial_transaction]
+        stored_credential_params = generate_stored_credential_params(is_initial_transaction, reason)
 
-          xml.storedCredentials 'usage' => 'USED', 'merchantInitiatedReason' => reason do
-            xml.schemeTransactionIdentifier options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
-          end
+        xml.storedCredentials stored_credential_params do
+          xml.schemeTransactionIdentifier options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id] && !is_initial_transaction
         end
       end
 
       def add_stored_credential_using_gateway_specific_fields(xml, options)
         return unless options[:stored_credential_usage]
 
-        if options[:stored_credential_initiated_reason]
-          xml.storedCredentials 'usage' => options[:stored_credential_usage], 'merchantInitiatedReason' => options[:stored_credential_initiated_reason] do
-            xml.schemeTransactionIdentifier options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id]
-          end
-        else
-          xml.storedCredentials 'usage' => options[:stored_credential_usage]
+        is_initial_transaction = options[:stored_credential_usage] == 'FIRST'
+        stored_credential_params = generate_stored_credential_params(is_initial_transaction, options[:stored_credential_initiated_reason])
+
+        xml.storedCredentials stored_credential_params do
+          xml.schemeTransactionIdentifier options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id] && !is_initial_transaction
         end
       end
 
@@ -1026,6 +1023,15 @@ module ActiveMerchant #:nodoc:
 
       def card_holder_name(payment_method, options)
         test? && options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
+      end
+
+      def generate_stored_credential_params(is_initial_transaction, reason = nil)
+        customer_or_merchant = reason == 'RECURRING' && is_initial_transaction ? 'customerInitiatedReason' : 'merchantInitiatedReason'
+
+        stored_credential_params = {}
+        stored_credential_params['usage'] = is_initial_transaction ? 'FIRST' : 'USED'
+        stored_credential_params[customer_or_merchant] = reason if reason
+        stored_credential_params
       end
     end
   end
