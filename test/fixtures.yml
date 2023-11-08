@@ -1242,6 +1242,12 @@ redsys:
   login: MERCHANT CODE
   secret_key: SECRET KEY
 
+# https://pagosonline.redsys.es/entornosPruebas.html
+redsys_rest:
+  login: 999008881
+  secret_key: sq7HjrUOBfKmC576ILgskD5srU870gJ7
+  terminal: 001
+
 redsys_sha256:
   login: MERCHANT CODE
   secret_key: SECRET KEY
