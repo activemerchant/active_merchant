@@ -115,6 +115,7 @@ module ActiveMerchant #:nodoc:
             country: address[:country]
           }.compact
         end
+
         if address = options[:shipping_address]
           post[:order][:customerInfo][:shippingAddress] = {
             name: address[:name],
