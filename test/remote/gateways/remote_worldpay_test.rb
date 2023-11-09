@@ -488,12 +488,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_successful_auth_and_capture_with_normalized_stored_credential
-    stored_credential_params = {
-      initial_transaction: true,
-      reason_type: 'unscheduled',
-      initiator: 'merchant',
-      network_transaction_id: nil
-    }
+    stored_credential_params = stored_credential(:initial, :unscheduled, :merchant)
 
     assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
     assert_success auth
@@ -505,12 +500,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success capture
 
     @options[:order_id] = generate_unique_id
-    @options[:stored_credential] = {
-      initial_transaction: false,
-      reason_type: 'installment',
-      initiator: 'merchant',
-      network_transaction_id: auth.params['transaction_identifier']
-    }
+    @options[:stored_credential] = stored_credential(:used, :installment, :merchant, network_transaction_id: auth.params['transaction_identifier'])
 
     assert next_auth = @gateway.authorize(@amount, @credit_card, @options)
     assert next_auth.authorization
@@ -522,12 +512,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_successful_auth_and_capture_with_normalized_recurring_stored_credential
-    stored_credential_params = {
-      initial_transaction: true,
-      reason_type: 'recurring',
-      initiator: 'merchant',
-      network_transaction_id: nil
-    }
+    stored_credential_params = stored_credential(:initial, :recurring, :merchant)
 
     assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
     assert_success auth
@@ -539,12 +524,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success capture
 
     @options[:order_id] = generate_unique_id
-    @options[:stored_credential] = {
-      initial_transaction: false,
-      reason_type: 'recurring',
-      initiator: 'merchant',
-      network_transaction_id: auth.params['transaction_identifier']
-    }
+    @options[:stored_credential] = stored_credential(:used, :recurring, :merchant, network_transaction_id: auth.params['transaction_identifier'])
 
     assert next_auth = @gateway.authorize(@amount, @credit_card, @options)
     assert next_auth.authorization
@@ -607,12 +587,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_3ds_with_normalized_stored_credentials
     session_id = generate_unique_id
-    stored_credential_params = {
-      initial_transaction: true,
-      reason_type: 'unscheduled',
-      initiator: 'merchant',
-      network_transaction_id: nil
-    }
+    stored_credential_params = stored_credential(:initial, :unscheduled, :merchant)
     options = @options.merge(
       {
         execute_threed: true,
@@ -1215,12 +1190,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_options_synchronous_response
     options = @options
-    stored_credential_params = {
-      initial_transaction: true,
-      reason_type: 'unscheduled',
-      initiator: 'merchant',
-      network_transaction_id: nil
-    }
+    stored_credential_params = stored_credential(:initial, :unscheduled, :merchant)
     options.merge(stored_credential: stored_credential_params)
 
     assert purchase = @cftgateway.purchase(@amount, @credit_card, options.merge(instalments: 3, skip_capture: true, authorization_validated: true))
