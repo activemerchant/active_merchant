@@ -887,6 +887,17 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response)
   end
 
+  def test_successful_avs_and_cvc_check
+    @gateway.expects(:ssl_request).returns(successful_purchase_avs_pass)
+    options = {}
+    assert purchase = @gateway.purchase(@amount, @visa_card, options)
+
+    assert_equal 'succeeded', purchase.params['status']
+    assert_equal 'M', purchase.cvv_result.dig('code')
+    assert_equal 'CVV matches', purchase.cvv_result.dig('message')
+    assert_equal 'Y', purchase.avs_result.dig('code')
+  end
+
   private
 
   def successful_setup_purchase
@@ -2076,5 +2087,104 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
       read 5204 bytes
       Conn close
     SCRUBBED
+  end
+
+  def successful_purchase_avs_pass
+    <<-RESPONSE
+      {
+        "id": "pi_3OAbBTAWOtgoysog36MuKzzw",
+        "object": "payment_intent",
+        "amount": 2000,
+        "amount_capturable": 0,
+        "amount_received": 2000,
+        "capture_method": "automatic",
+        "charges": {
+          "object": "list",
+          "data": [
+            {
+              "id": "ch_3OAbBTAWOtgoysog3eoQxrT9",
+              "object": "charge",
+              "amount": 2000,
+              "amount_captured": 2000,
+              "outcome": {
+                "network_status": "approved_by_network",
+                "reason": null,
+                "risk_level": "normal",
+                "risk_score": 37,
+                "seller_message": "Payment complete.",
+                "type": "authorized"
+              },
+              "paid": true,
+              "payment_intent": "pi_3OAbBTAWOtgoysog36MuKzzw",
+              "payment_method": "pm_1OAbBTAWOtgoysogVf7KTk4H",
+              "payment_method_details": {
+                "card": {
+                  "amount_authorized": 2000,
+                  "brand": "visa",
+                  "checks": {
+                    "address_line1_check": "pass",
+                    "address_postal_code_check": "pass",
+                    "cvc_check": "pass"
+                  },
+                  "country": "US",
+                  "ds_transaction_id": null,
+                  "exp_month": 10,
+                  "exp_year": 2028,
+                  "extended_authorization": {
+                    "status": "disabled"
+                  },
+                  "fingerprint": "hfaVNMiXc0dYSiC5",
+                  "funding": "credit",
+                  "incremental_authorization": {
+                    "status": "unavailable"
+                  },
+                  "installments": null,
+                  "last4": "4242",
+                  "mandate": null,
+                  "moto": null,
+                  "multicapture": {
+                    "status": "unavailable"
+                  },
+                  "network": "visa",
+                  "network_token": {
+                    "used": false
+                  },
+                  "network_transaction_id": "104102978678771",
+                  "overcapture": {
+                    "maximum_amount_capturable": 2000,
+                    "status": "unavailable"
+                  },
+                  "three_d_secure": null,
+                  "wallet": null
+                },
+                "type": "card"
+              },
+              "receipt_url": "https://pay.stripe.com/receipts/payment/CAcaFwoVYWNjdF8xNjBEWDZBV090Z295c29nKJCUtKoGMgYHwo4IbXs6LBbLMStawAC9eTsIUAmLDXw4dZNPmxzC6ds3zZxb-WVIVBJi_F4M59cPA3fR",
+              "refunded": false,
+              "refunds": {
+                "object": "list",
+                "data": [],
+                "has_more": false,
+                "total_count": 0,
+                "url": "/v1/charges/ch_3OAbBTAWOtgoysog3eoQxrT9/refunds"
+              }
+            }
+          ],
+          "has_more": false,
+          "total_count": 1,
+          "url": "/v1/charges?payment_intent=pi_3OAbBTAWOtgoysog36MuKzzw"
+        },
+        "client_secret": "pi_3OAbBTAWOtgoysog36MuKzzw_secret_YjUUEVStFrCFJK0imrUjspILY",
+        "confirmation_method": "automatic",
+        "created": 1699547663,
+        "currency": "usd",
+        "latest_charge": "ch_3OAbBTAWOtgoysog3eoQxrT9",
+        "payment_method": "pm_1OAbBTAWOtgoysogVf7KTk4H",
+        "payment_method_types": [
+          "card"
+        ],
+        "status": "succeeded"
+      }
+    RESPONSE
   end
 end
