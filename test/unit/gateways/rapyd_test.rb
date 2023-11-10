@@ -185,6 +185,22 @@ class RapydTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_does_not_send_3ds_version_if_not_required
+    false_values = [false, nil, 'false', '']
+    @options[:execute_threed] = true
+
+    false_values.each do |value|
+      @options[:force_3d_secure] = value
+
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.purchase(@amount, @credit_card, @options)
+      end.check_request do |_method, _endpoint, data, _headers|
+        request = JSON.parse(data)
+        assert_nil request['payment_method_options']
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
 
