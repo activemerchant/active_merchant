@@ -1035,6 +1035,11 @@ redsys_sha256:
   signature_algorithm: 'sha256'
 
 # Working credentials, no need to replace
+rpoe:
+  some_credential: SOMECREDENTIAL
+  another_credential: ANOTHERCREDENTIAL
+
+# Working credentials, no need to replace
 s5:
   mode: CONNECTOR_TEST
   sender: ff80808142b2c03c0142b7a7339603e0
