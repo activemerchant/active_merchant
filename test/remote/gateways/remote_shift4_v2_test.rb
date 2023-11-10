@@ -85,4 +85,23 @@ class RemoteShift4V2Test < RemoteSecurionPayTest
     assert_equal response.authorization, response.params['error']['chargeId']
     assert_equal response.message, 'The card was declined.'
   end
+
+  def test_successful_store_and_unstore
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert card_id = store.params['defaultCardId']
+    assert customer_id = store.params['cards'][0]['customerId']
+    unstore = @gateway.unstore(card_id, customer_id: customer_id)
+    assert_success unstore
+    assert_equal unstore.params['id'], card_id
+  end
+
+  def test_failed_unstore
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert customer_id = store.params['cards'][0]['customerId']
+    unstore = @gateway.unstore(nil, customer_id: customer_id)
+    assert_failure unstore
+    assert_equal unstore.params['error']['type'], 'invalid_request'
+  end
 end

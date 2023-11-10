@@ -27,6 +27,28 @@ class Shift4V2Test < SecurionPayTest
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_store_and_unstore
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    @gateway.expects(:ssl_post).returns(successful_new_customer_response)
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    @gateway.expects(:ssl_request).returns(successful_unstore_response)
+    unstore = @gateway.unstore('card_YhkJQlyF6NEc9RexV5dlZqTl', customer_id: 'cust_KDDJGACwxCUYkUb3fI76ERB7')
+    assert_success unstore
+  end
+
+  def test_successful_unstore
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.unstore('card_YhkJQlyF6NEc9RexV5dlZqTl', customer_id: 'cust_KDDJGACwxCUYkUb3fI76ERB7')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/cards/, data)
+    end.respond_with(successful_unstore_response)
+    assert response.success?
+    assert_equal response.message, 'Transaction approved'
+  end
+
   private
 
   def pre_scrubbed
@@ -87,5 +109,13 @@ class Shift4V2Test < SecurionPayTest
       -> "\r\n"
       Conn close
     POST_SCRUBBED
+  end
+
+  def successful_unstore_response
+    <<-RESPONSE
+      {
+        "id" : "card_G9xcxTDcjErIijO19SEWskN6"
+      }
+    RESPONSE
   end
 end

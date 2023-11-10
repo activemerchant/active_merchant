@@ -11,6 +11,10 @@ module ActiveMerchant #:nodoc:
         commit('credits', post, options)
       end
 
+      def unstore(reference, options = {})
+        commit("customers/#{options[:customer_id]}/cards/#{reference}", nil, options, :delete)
+      end
+
       def create_post_for_auth_or_purchase(money, payment, options)
         super.tap do |post|
           add_stored_credentials(post, options)
