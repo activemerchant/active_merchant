@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars
       self.default_currency = 'USD'
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.instapayllc.com'
@@ -140,19 +140,20 @@ module ActiveMerchant #:nodoc:
         data = ssl_post self.live_url, post_data(action, parameters)
         response = parse(data)
 
-        Response.new(response[:success], response[:message], response,
-          :authorization => response[:transaction_id],
-          :avs_result => { :code => response[:avs_result] },
-          :cvv_result => response[:cvv_result]
+        Response.new(
+          response[:success],
+          response[:message],
+          response,
+          authorization: response[:transaction_id],
+          avs_result: { code: response[:avs_result] },
+          cvv_result: response[:cvv_result]
         )
       end
 
       def post_data(action, parameters = {})
         post = {}
         post[:acctid] = @options[:login]
-        if(@options[:password])
-          post[:merchantpin] = @options[:password]
-        end
+        post[:merchantpin] = @options[:password] if @options[:password]
         post[:action] = action
         request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         request

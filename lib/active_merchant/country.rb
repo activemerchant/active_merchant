@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
 
     def initialize(options = {})
       @name = options.delete(:name)
-      @codes = options.collect { |k, v| CountryCode.new(v) }
+      @codes = options.collect { |_k, v| CountryCode.new(v) }
     end
 
     def code(format)
@@ -183,6 +183,8 @@ module ActiveMerchant #:nodoc:
       { alpha2: 'KI', name: 'Kiribati', alpha3: 'KIR', numeric: '296' },
       { alpha2: 'KP', name: 'Korea, Democratic People\'s Republic of', alpha3: 'PRK', numeric: '408' },
       { alpha2: 'KR', name: 'Korea, Republic of', alpha3: 'KOR', numeric: '410' },
+      { alpha2: 'XK', name: 'Kosovo', alpha3: 'XKX', numeric: '900' },
+      { alpha2: 'QZ', name: 'Kosovo', alpha3: 'XKX', numeric: '900' },
       { alpha2: 'KW', name: 'Kuwait', alpha3: 'KWT', numeric: '414' },
       { alpha2: 'KG', name: 'Kyrgyzstan', alpha3: 'KGZ', numeric: '417' },
       { alpha2: 'LA', name: 'Lao People\'s Democratic Republic', alpha3: 'LAO', numeric: '418' },
@@ -329,6 +331,7 @@ module ActiveMerchant #:nodoc:
         country = COUNTRIES.detect { |c| c[:name].casecmp(name).zero? }
       end
       raise InvalidCountryCodeError, "No country could be found for the country #{name}" if country.nil?
+
       Country.new(country.dup)
     end
   end

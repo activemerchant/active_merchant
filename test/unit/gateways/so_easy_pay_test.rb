@@ -3,17 +3,17 @@ require 'test_helper'
 class SoEasyPayTest < Test::Unit::TestCase
   def setup
     @gateway = SoEasyPayGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      login: 'login',
+      password: 'password'
+    )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -87,7 +87,7 @@ class SoEasyPayTest < Test::Unit::TestCase
   def test_use_ducktyping_for_credit_card
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    credit_card = stub(:number => '4242424242424242', :verification_value => '123', :name => 'Hans Tester', :year => 2012, :month => 1)
+    credit_card = stub(number: '4242424242424242', verification_value: '123', name: 'Hans Tester', year: 2012, month: 1)
 
     assert_nothing_raised do
       assert_success @gateway.purchase(@amount, credit_card, @options)
@@ -220,5 +220,4 @@ class SoEasyPayTest < Test::Unit::TestCase
         </soap:Body>
       </soap:Envelope>)
   end
-
 end

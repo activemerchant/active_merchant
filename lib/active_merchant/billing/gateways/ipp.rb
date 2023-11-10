@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://demo.ippayments.com.au/interface/api/dts.asmx'
 
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       self.homepage_url = 'http://www.ippayments.com.au/'
       self.display_name = 'IPP'
@@ -18,16 +18,16 @@ module ActiveMerchant #:nodoc:
         '05' => STANDARD_ERROR_CODE[:card_declined],
         '06' => STANDARD_ERROR_CODE[:processing_error],
         '14' => STANDARD_ERROR_CODE[:invalid_number],
-        '54' => STANDARD_ERROR_CODE[:expired_card],
+        '54' => STANDARD_ERROR_CODE[:expired_card]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         ActiveMerchant.deprecated('IPP gateway is now named Bambora Asia-Pacific')
         requires!(options, :username, :password)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         commit('SubmitSinglePayment') do |xml|
           xml.Transaction do
             xml.CustRef options[:order_id]
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         commit('SubmitSinglePayment') do |xml|
           xml.Transaction do
             xml.CustRef options[:order_id]
@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         commit('SubmitSingleCapture') do |xml|
           xml.Capture do
             xml.Receipt authorization
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         commit('SubmitSingleRefund') do |xml|
           xml.Refund do
             xml.Receipt authorization
@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(xml, payment)
-        xml.CreditCard :Registered => 'False' do
+        xml.CreditCard Registered: 'False' do
           xml.CardNumber payment.number
           xml.ExpM format(payment.month, :two_digits)
           xml.ExpY format(payment.year, :four_digits)
@@ -121,7 +121,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, &block)
         headers = {
           'Content-Type' => 'text/xml; charset=utf-8',
-          'SOAPAction' => "http://www.ippayments.com.au/interface/api/dts/#{action}",
+          'SOAPAction' => "http://www.ippayments.com.au/interface/api/dts/#{action}"
         }
         response = parse(ssl_post(commit_url, new_submit_xml(action, &block), headers))
 

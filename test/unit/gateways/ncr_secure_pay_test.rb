@@ -18,7 +18,7 @@ class NcrSecurePayTest < Test::Unit::TestCase
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/\<username\>login\<\/username\>/, data)
       assert_match(/\<password\>password\<\/password\>/, data)
       assert_match(/\<action\>sale\<\/action\>/, data)
@@ -43,7 +43,7 @@ class NcrSecurePayTest < Test::Unit::TestCase
   def test_successful_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/\<username\>login\<\/username\>/, data)
       assert_match(/\<password\>password\<\/password\>/, data)
       assert_match(/\<action\>preauth\<\/action\>/, data)
@@ -67,7 +67,7 @@ class NcrSecurePayTest < Test::Unit::TestCase
   def test_successful_capture
     response = stub_comms do
       @gateway.capture(@amount, '12345', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/\<username\>login\<\/username\>/, data)
       assert_match(/\<password\>password\<\/password\>/, data)
       assert_match(/\<action\>preauthcomplete\<\/action\>/, data)
@@ -90,7 +90,7 @@ class NcrSecurePayTest < Test::Unit::TestCase
   def test_successful_refund
     response = stub_comms do
       @gateway.refund(@amount, '12345', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/\<username\>login\<\/username\>/, data)
       assert_match(/\<password\>password\<\/password\>/, data)
       assert_match(/\<action\>credit\<\/action\>/, data)
@@ -113,7 +113,7 @@ class NcrSecurePayTest < Test::Unit::TestCase
   def test_successful_void
     response = stub_comms do
       @gateway.void('12345', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/\<username\>login\<\/username\>/, data)
       assert_match(/\<password\>password\<\/password\>/, data)
       assert_match(/\<action\>void\<\/action\>/, data)

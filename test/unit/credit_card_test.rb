@@ -5,6 +5,7 @@ class CreditCardTest < Test::Unit::TestCase
     CreditCard.require_verification_value = false
     @visa = credit_card('4779139500118580', brand: 'visa')
     @maestro = credit_card('676700000000000000', brand: 'maestro', verification_value: '')
+    @bp_plus = credit_card('70501 501021600 378', brand: 'bp_plus')
   end
 
   def teardown
@@ -49,7 +50,7 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_be_able_to_liberate_a_bogus_card
-    c = credit_card('', :brand => 'bogus')
+    c = credit_card('', brand: 'bogus')
     assert_valid c
 
     c.brand = 'visa'
@@ -150,11 +151,11 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_not_be_valid_for_edge_year_cases
-    @visa.year  = Time.now.year - 1
+    @visa.year = Time.now.year - 1
     errors = assert_not_valid @visa
     assert errors[:year]
 
-    @visa.year  = Time.now.year + 21
+    @visa.year = Time.now.year + 21
     errors = assert_not_valid @visa
     assert errors[:year]
   end
@@ -173,20 +174,20 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_identify_wrong_card_brand
-    c = credit_card(:brand => 'master')
+    c = credit_card('4779139500118580', brand: 'master')
     assert_not_valid c
   end
 
   def test_should_display_number
-    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '1111222233331234').display_number
-    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '111222233331234').display_number
-    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '1112223331234').display_number
+    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(number: '1111222233331234').display_number
+    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(number: '111222233331234').display_number
+    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(number: '1112223331234').display_number
 
-    assert_equal 'XXXX-XXXX-XXXX-', CreditCard.new(:number => nil).display_number
-    assert_equal 'XXXX-XXXX-XXXX-', CreditCard.new(:number => '').display_number
-    assert_equal 'XXXX-XXXX-XXXX-123', CreditCard.new(:number => '123').display_number
-    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '1234').display_number
-    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '01234').display_number
+    assert_equal 'XXXX-XXXX-XXXX-', CreditCard.new(number: nil).display_number
+    assert_equal 'XXXX-XXXX-XXXX-', CreditCard.new(number: '').display_number
+    assert_equal 'XXXX-XXXX-XXXX-123', CreditCard.new(number: '123').display_number
+    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(number: '1234').display_number
+    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(number: '01234').display_number
   end
 
   def test_should_correctly_identify_card_brand
@@ -204,7 +205,7 @@ class CreditCardTest < Test::Unit::TestCase
 
   def test_should_not_be_valid_when_requiring_a_verification_value
     CreditCard.require_verification_value = true
-    card = credit_card('4242424242424242', :verification_value => nil)
+    card = credit_card('4242424242424242', verification_value: nil)
     assert_not_valid card
 
     card.verification_value = '1234'
@@ -214,7 +215,7 @@ class CreditCardTest < Test::Unit::TestCase
     card.verification_value = '123'
     assert_valid card
 
-    card = credit_card('341111111111111', :verification_value => '123', :brand => 'american_express')
+    card = credit_card('341111111111111', verification_value: '123', brand: 'american_express')
     errors = assert_not_valid card
     assert_equal errors[:verification_value], ['should be 4 digits']
 
@@ -224,7 +225,7 @@ class CreditCardTest < Test::Unit::TestCase
 
   def test_should_be_valid_when_not_requiring_a_verification_value
     CreditCard.require_verification_value = true
-    card = credit_card('4242424242424242', :verification_value => nil, :require_verification_value => false)
+    card = credit_card('4242424242424242', verification_value: nil, require_verification_value: false)
     assert_valid card
 
     card.verification_value = '1234'
@@ -242,12 +243,12 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_return_last_four_digits_of_card_number
-    ccn = CreditCard.new(:number => '4779139500118580')
+    ccn = CreditCard.new(number: '4779139500118580')
     assert_equal '8580', ccn.last_digits
   end
 
   def test_bogus_last_digits
-    ccn = CreditCard.new(:number => '1')
+    ccn = CreditCard.new(number: '1')
     assert_equal '1', ccn.last_digits
   end
 
@@ -262,12 +263,12 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_return_first_four_digits_of_card_number
-    ccn = CreditCard.new(:number => '4779139500118580')
+    ccn = CreditCard.new(number: '4779139500118580')
     assert_equal '477913', ccn.first_digits
   end
 
   def test_should_return_first_bogus_digit_of_card_number
-    ccn = CreditCard.new(:number => '1')
+    ccn = CreditCard.new(number: '1')
     assert_equal '1', ccn.first_digits
   end
 
@@ -275,7 +276,7 @@ class CreditCardTest < Test::Unit::TestCase
     c = CreditCard.new
     assert_false c.first_name?
 
-    c = CreditCard.new(:first_name => 'James')
+    c = CreditCard.new(first_name: 'James')
     assert c.first_name?
   end
 
@@ -283,7 +284,7 @@ class CreditCardTest < Test::Unit::TestCase
     c = CreditCard.new
     assert_false c.last_name?
 
-    c = CreditCard.new(:last_name => 'Herdman')
+    c = CreditCard.new(last_name: 'Herdman')
     assert c.last_name?
   end
 
@@ -291,48 +292,48 @@ class CreditCardTest < Test::Unit::TestCase
     c = CreditCard.new
     assert_false c.name?
 
-    c = CreditCard.new(:first_name => 'James', :last_name => 'Herdman')
+    c = CreditCard.new(first_name: 'James', last_name: 'Herdman')
     assert c.name?
   end
 
   def test_should_handle_full_name_when_first_or_last_is_missing
-    c = CreditCard.new(:first_name => 'James')
+    c = CreditCard.new(first_name: 'James')
     assert c.name?
     assert_equal 'James', c.name
 
-    c = CreditCard.new(:last_name => 'Herdman')
+    c = CreditCard.new(last_name: 'Herdman')
     assert c.name?
     assert_equal 'Herdman', c.name
   end
 
   def test_should_assign_a_full_name
-    c = CreditCard.new :name => 'James Herdman'
+    c = CreditCard.new name: 'James Herdman'
     assert_equal 'James', c.first_name
     assert_equal 'Herdman', c.last_name
 
-    c = CreditCard.new :name => 'Rocket J. Squirrel'
+    c = CreditCard.new name: 'Rocket J. Squirrel'
     assert_equal 'Rocket J.', c.first_name
     assert_equal 'Squirrel', c.last_name
 
-    c = CreditCard.new :name => 'Twiggy'
+    c = CreditCard.new name: 'Twiggy'
     assert_equal '', c.first_name
     assert_equal 'Twiggy', c.last_name
     assert_equal 'Twiggy', c.name
   end
 
   def test_should_remove_trailing_whitespace_on_name
-    c = CreditCard.new(:last_name => 'Herdman')
+    c = CreditCard.new(last_name: 'Herdman')
     assert_equal 'Herdman', c.name
 
-    c = CreditCard.new(:last_name => 'Herdman', first_name: '')
+    c = CreditCard.new(last_name: 'Herdman', first_name: '')
     assert_equal 'Herdman', c.name
   end
 
   def test_should_remove_leading_whitespace_on_name
-    c = CreditCard.new(:first_name => 'James')
+    c = CreditCard.new(first_name: 'James')
     assert_equal 'James', c.name
 
-    c = CreditCard.new(:last_name => '', first_name: 'James')
+    c = CreditCard.new(last_name: '', first_name: 'James')
     assert_equal 'James', c.name
   end
 
@@ -349,29 +350,29 @@ class CreditCardTest < Test::Unit::TestCase
   # The following is a regression for a bug where the keys of the
   # credit card card_companies hash were not duped when detecting the brand
   def test_create_and_validate_credit_card_from_brand
-    credit_card = CreditCard.new(:brand => CreditCard.brand?('4242424242424242'))
+    credit_card = CreditCard.new(brand: CreditCard.brand?('4242424242424242'))
     assert_nothing_raised do
       credit_card.validate
     end
   end
 
   def test_autodetection_of_credit_card_brand
-    credit_card = CreditCard.new(:number => '4242424242424242')
+    credit_card = CreditCard.new(number: '4242424242424242')
     assert_equal 'visa', credit_card.brand
   end
 
   def test_card_brand_should_not_be_autodetected_when_provided
-    credit_card = CreditCard.new(:number => '4242424242424242', :brand => 'master')
+    credit_card = CreditCard.new(number: '4242424242424242', brand: 'master')
     assert_equal 'master', credit_card.brand
   end
 
   def test_detecting_bogus_card
-    credit_card = CreditCard.new(:number => '1')
+    credit_card = CreditCard.new(number: '1')
     assert_equal 'bogus', credit_card.brand
   end
 
   def test_validating_bogus_card
-    credit_card = credit_card('1', :brand => nil)
+    credit_card = credit_card('1', brand: nil)
     assert_valid credit_card
   end
 
@@ -437,5 +438,12 @@ class CreditCardTest < Test::Unit::TestCase
 
   def test_should_not_report_as_emv_if_icc_data_not_present
     refute CreditCard.new.emv?
+  end
+
+  def test_bp_plus_number_validation
+    assert_valid @bp_plus
+    assert_include @bp_plus.number, ' '
+    assert_equal @bp_plus.brand, 'bp_plus'
+    assert @bp_plus.allow_spaces_in_card?
   end
 end

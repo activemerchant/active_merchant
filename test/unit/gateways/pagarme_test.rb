@@ -626,7 +626,7 @@ class PagarmeTest < Test::Unit::TestCase
       "method": "post",
       "url": "/transactions/429356/capture"
     }
-  FAILED_RESPONSE
+    FAILED_RESPONSE
   end
 
   def successful_refund_response
@@ -684,7 +684,7 @@ class PagarmeTest < Test::Unit::TestCase
       "subscription_id": null,
       "tid": "1458844196661"
     }
-  SUCCESS_RESPONSE
+    SUCCESS_RESPONSE
   end
 
   def failed_refund_response
@@ -700,7 +700,7 @@ class PagarmeTest < Test::Unit::TestCase
       "method": "post",
       "url": "/transactions/429356/refund"
     }
-  FAILED_RESPONSE
+    FAILED_RESPONSE
   end
 
   def successful_void_response
@@ -758,7 +758,7 @@ class PagarmeTest < Test::Unit::TestCase
       "subscription_id": null,
       "tid": 472218
     }
-  SUCCESS_RESPONSE
+    SUCCESS_RESPONSE
   end
 
   def failed_void_response
@@ -774,7 +774,7 @@ class PagarmeTest < Test::Unit::TestCase
       "method": "post",
       "url": "/transactions/472218/refund"
     }
-  FAILED_RESPONSE
+    FAILED_RESPONSE
   end
 
   def successful_verify_response
@@ -832,7 +832,7 @@ class PagarmeTest < Test::Unit::TestCase
       "subscription_id": null,
       "tid": 476135
     }
-  SUCCESS_RESPONSE
+    SUCCESS_RESPONSE
   end
 
   def successful_verify_void_response
@@ -890,7 +890,7 @@ class PagarmeTest < Test::Unit::TestCase
       "subscription_id": null,
       "tid": 476135
     }
-  SUCCESS_RESPONSE
+    SUCCESS_RESPONSE
   end
 
   def failed_verify_response
@@ -948,7 +948,7 @@ class PagarmeTest < Test::Unit::TestCase
       "subscription_id": null,
       "tid": 476143
     }
-  FAILED_RESPONSE
+    FAILED_RESPONSE
   end
 
   def failed_error_response
@@ -964,7 +964,7 @@ class PagarmeTest < Test::Unit::TestCase
       "method": "post",
       "url": "/transactions"
     }
-  FAILED_RESPONSE
+    FAILED_RESPONSE
   end
 
   def failed_json_response
@@ -972,7 +972,6 @@ class PagarmeTest < Test::Unit::TestCase
     {
       foo: bar
     }
-  SUCCESS_RESPONSE
+    SUCCESS_RESPONSE
   end
-
 end

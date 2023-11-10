@@ -9,7 +9,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
   def setup
     @logger = stubs(:logger)
     @requester = stubs(:requester)
-    @ok = stub(:code => 200, :message => 'OK', :body => 'success')
+    @ok = stub(code: 200, message: 'OK', body: 'success')
   end
 
   def test_eoferror_raises_correctly
@@ -78,7 +78,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
   def test_unrecoverable_exception_logged_if_logger_provided
     @logger.expects(:info).once
     assert_raises(ActiveMerchant::ConnectionError) do
-      retry_exceptions :logger => @logger do
+      retry_exceptions logger: @logger do
         raise EOFError
       end
     end
@@ -107,7 +107,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
     @requester.expects(:post).times(ActiveMerchant::NetworkConnectionRetries::DEFAULT_RETRIES).raises(Errno::ECONNREFUSED)
 
     assert_raises(ActiveMerchant::ConnectionError) do
-      retry_exceptions(:logger => @logger) do
+      retry_exceptions(logger: @logger) do
         @requester.post
       end
     end
@@ -116,7 +116,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
   def test_failure_then_success_with_retry_safe_enabled
     @requester.expects(:post).times(2).raises(EOFError).then.returns(@ok)
 
-    retry_exceptions :retry_safe => true do
+    retry_exceptions retry_safe: true do
       @requester.post
     end
   end
@@ -126,7 +126,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
     @logger.expects(:info).with(regexp_matches(/success/))
     @requester.expects(:post).times(2).raises(EOFError).then.returns(@ok)
 
-    retry_exceptions(:logger => @logger, :retry_safe => true) do
+    retry_exceptions(logger: @logger, retry_safe: true) do
       @requester.post
     end
   end
@@ -140,7 +140,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
       raises(EOFError)
 
     assert_raises(ActiveMerchant::ConnectionError) do
-      retry_exceptions :retry_safe => true do
+      retry_exceptions retry_safe: true do
         @requester.post
       end
     end
@@ -161,7 +161,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
     @requester.expects(:post).raises(OpenSSL::X509::CertificateError)
 
     assert_raises(ActiveMerchant::ClientCertificateError) do
-      retry_exceptions :logger => @logger do
+      retry_exceptions logger: @logger do
         @requester.post
       end
     end
@@ -171,7 +171,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
     @requester.expects(:post).raises(MyNewError)
 
     assert_raises(ActiveMerchant::ConnectionError) do
-      retry_exceptions :connection_exceptions => {MyNewError => 'my message'} do
+      retry_exceptions connection_exceptions: { MyNewError => 'my message' } do
         @requester.post
       end
     end

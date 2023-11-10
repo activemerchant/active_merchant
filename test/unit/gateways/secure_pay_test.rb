@@ -3,16 +3,16 @@ require 'test_helper'
 class SecurePayTest < Test::Unit::TestCase
   def setup
     @gateway = SecurePayGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
 
     @credit_card = credit_card
 
     @options = {
-      :order_id => generate_unique_id,
-      :description => 'Store purchase',
-      :billing_address => address
+      order_id: generate_unique_id,
+      description: 'Store purchase',
+      billing_address: address
     }
 
     @amount = 100

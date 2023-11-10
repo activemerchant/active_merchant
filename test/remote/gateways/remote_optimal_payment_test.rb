@@ -7,13 +7,14 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
     @amount = 100
     @declined_amount = 5
     @credit_card = credit_card('4387751111011')
+    @expired_card = credit_card('4387751111011', month: 12, year: 2019)
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Basic Subscription',
-      :email => 'email@example.com',
-      :ip => '1.2.3.4'
+      order_id: '1',
+      billing_address: address,
+      description: 'Basic Subscription',
+      email: 'email@example.com',
+      ip: '1.2.3.4'
     }
   end
 
@@ -55,6 +56,51 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal 'no_error', response.message
+  end
+
+  def test_stored_data_auth_and_capture_after_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal 'no_error', response.message
+
+    assert auth = @gateway.stored_authorize(@amount, response.authorization)
+    assert_success auth
+    assert_equal 'no_error', auth.message
+    assert auth.authorization
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+
+  def test_stored_data_purchase_after_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal 'no_error', response.message
+
+    assert stored_purchase = @gateway.stored_purchase(@amount, response.authorization)
+    assert_success stored_purchase
+  end
+
+  def test_stored_data_auth_after_failed_store
+    response = @gateway.store(@expired_card, @options)
+    assert_failure response
+    assert_not_nil response.authorization
+    assert_equal 'ERROR', response.params['decision']
+
+    assert auth = @gateway.stored_authorize(@amount, response.authorization)
+    assert_failure auth
+    assert_equal 'ERROR', auth.params['decision']
+  end
+
+  def test_stored_data_purchase_after_failed_store
+    response = @gateway.store(@expired_card, @options)
+    assert_failure response
+    assert_not_nil response.authorization
+    assert_equal 'ERROR', response.params['decision']
+
+    assert stored_purchase = @gateway.stored_purchase(@amount, response.authorization)
+    assert_failure stored_purchase
+    assert_equal 'ERROR', stored_purchase.params['decision']
   end
 
   def test_authorize_and_capture
@@ -141,10 +187,10 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = OptimalPaymentGateway.new(
-                :account_number => '1',
-                :store_id => 'bad',
-                :password => 'bad'
-              )
+      account_number: '1',
+      store_id: 'bad',
+      password: 'bad'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'invalid merchant account', response.message

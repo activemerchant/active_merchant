@@ -86,7 +86,7 @@ class RemotePagoFacilTest < Test::Unit::TestCase
       random_response = yield
       if random_response.success?
         return random_response
-      elsif(attempts > 2)
+      elsif attempts > 2
         raise 'Unable to get a successful response'
       else
         assert_equal 'Declined_(General).', random_response.params.fetch('error')

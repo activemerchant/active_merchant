@@ -8,9 +8,9 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      :currency => 'USD',
-      :description => 'ActiveMerchant Test Purchase',
-      :email => 'wow@example.com'
+      currency: 'USD',
+      description: 'ActiveMerchant Test Purchase',
+      email: 'wow@example.com'
     }
     @apple_pay_payment_token = apple_pay_payment_token
   end
@@ -54,7 +54,7 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
   end
 
   def test_successful_store_with_apple_pay_payment_token
-    assert response = @gateway.store(@apple_pay_payment_token, {:description => 'Active Merchant Test Customer', :email => 'email@example.com'})
+    assert response = @gateway.store(@apple_pay_payment_token, { description: 'Active Merchant Test Customer', email: 'email@example.com' })
     assert_success response
     assert_equal 'customer', response.params['object']
     assert_equal 'Active Merchant Test Customer', response.params['description']
@@ -66,10 +66,10 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
   end
 
   def test_successful_store_with_existing_customer_and_apple_pay_payment_token
-    assert response = @gateway.store(@credit_card, {:description => 'Active Merchant Test Customer'})
+    assert response = @gateway.store(@credit_card, { description: 'Active Merchant Test Customer' })
     assert_success response
 
-    assert response = @gateway.store(@apple_pay_payment_token, {:customer => response.params['id'], :description => 'Active Merchant Test Customer', :email => 'email@example.com'})
+    assert response = @gateway.store(@apple_pay_payment_token, { customer: response.params['id'], description: 'Active Merchant Test Customer', email: 'email@example.com' })
     assert_success response
     assert_equal 2, response.responses.size
 
@@ -86,9 +86,9 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
   end
 
   def test_successful_recurring_with_apple_pay_payment_token
-    assert response = @gateway.store(@apple_pay_payment_token, {:description => 'Active Merchant Test Customer', :email => 'email@example.com'})
+    assert response = @gateway.store(@apple_pay_payment_token, { description: 'Active Merchant Test Customer', email: 'email@example.com' })
     assert_success response
-    assert recharge_options = @options.merge(:customer => response.params['id'])
+    assert recharge_options = @options.merge(customer: response.params['id'])
     assert response = @gateway.purchase(@amount, nil, recharge_options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -101,7 +101,8 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_apple_pay_raw_cryptogram_with_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
@@ -117,7 +118,8 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_apple_pay_raw_cryptogram_without_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       source: :apple_pay
@@ -132,7 +134,8 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
   end
 
   def test_successful_auth_with_apple_pay_raw_cryptogram_with_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
@@ -148,7 +151,8 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
   end
 
   def test_successful_auth_with_apple_pay_raw_cryptogram_without_eci
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       source: :apple_pay
@@ -161,5 +165,4 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
     assert_equal 'wow@example.com', response.params['metadata']['email']
     assert_match CHARGE_ID_REGEX, response.authorization
   end
-
 end

@@ -1,5 +1,5 @@
 module ActiveMerchant #:nodoc:
-  module PostsData  #:nodoc:
+  module PostsData #:nodoc:
     def self.included(base)
       base.class_attribute :ssl_strict
       base.ssl_strict = true
@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
       base.class_attribute :proxy_port
     end
 
-    def ssl_get(endpoint, headers={})
+    def ssl_get(endpoint, headers = {})
       ssl_request(:get, endpoint, nil, headers)
     end
 

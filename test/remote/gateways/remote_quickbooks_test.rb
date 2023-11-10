@@ -13,8 +13,7 @@ class RemoteTest < Test::Unit::TestCase
       order_id: '1',
       billing_address: address({ zip: 90210,
                                  country: 'US',
-                                 state: 'CA'
-                               }),
+                                 state: 'CA' }),
       description: 'Store Purchase'
     }
   end
@@ -23,12 +22,14 @@ class RemoteTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'CAPTURED', response.message
+    assert_equal @gateway.options[:access_token], response.params['access_token']
+    assert_equal @gateway.options[:refresh_token], response.params['refresh_token']
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'cardNumber is invalid.', response.message
+    assert_equal 'card.number is invalid.', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -89,7 +90,7 @@ class RemoteTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{cardNumber is invalid.}, response.message
+    assert_match %r{card.number is invalid.}, response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
   end
 
@@ -106,7 +107,62 @@ class RemoteTest < Test::Unit::TestCase
     end
   end
 
-  def test_dump_transcript
-    # See quickbooks_test.rb for an example of a scrubbed transcript
+  def test_successful_void
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal 'ISSUED', void.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:access_token], transcript)
+    assert_scrubbed(@gateway.options[:refresh_token], transcript)
+  end
+
+  def test_failed_purchase_with_expired_token
+    @gateway.options[:access_token] = 'not_a_valid_token'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'AuthenticationFailed', response.params['code']
+  end
+
+  def test_successful_purchase_with_expired_token
+    @gateway.options[:access_token] = 'not_a_valid_token'
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(allow_refresh: true))
+    assert_success response
+  end
+
+  def test_successful_purchase_without_state_in_address
+    options = {
+      order_id: '1',
+      billing_address:
+        {
+          zip: 90210,
+          # Submitting a value of an empty string for the `state` field
+          # results in a `region is invalid` error message from Quickbooks.
+          # This test ensures that an empty string is not sent from AM.
+          state: '',
+          country: ''
+        }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'CAPTURED', response.message
+  end
+
+  def test_refresh
+    response = @gateway.refresh
+    assert_success response
+    assert response.params['access_token']
   end
 end

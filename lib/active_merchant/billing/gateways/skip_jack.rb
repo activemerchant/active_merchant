@@ -12,16 +12,16 @@ module ActiveMerchant #:nodoc:
       ADVANCED_PATH = '/evolvcc/evolvcc.aspx'
 
       ACTIONS = {
-        :authorization => 'AuthorizeAPI',
-        :change_status => 'SJAPI_TransactionChangeStatusRequest',
-        :get_status => 'SJAPI_TransactionStatusRequest'
+        authorization: 'AuthorizeAPI',
+        change_status: 'SJAPI_TransactionChangeStatusRequest',
+        get_status: 'SJAPI_TransactionStatusRequest'
       }
 
       SUCCESS_MESSAGE = 'The transaction was successful.'
 
       MONETARY_CHANGE_STATUSES = ['SETTLE', 'AUTHORIZE', 'AUTHORIZE ADDITIONAL', 'CREDIT', 'SPLITSETTLE']
 
-      CARD_CODE_ERRORS = %w( N S "" )
+      CARD_CODE_ERRORS = %w(N S "")
 
       CARD_CODE_MESSAGES = {
         'M' => 'Card verification number matched',
@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         '' => 'Transaction failed because incorrect card verification number was entered or no number was entered'
       }
 
-      AVS_ERRORS = %w( A B C E I N O P R W Z )
+      AVS_ERRORS = %w(A B C E I N O P R W Z)
 
       AVS_MESSAGES = {
         'A' => 'Street address matches billing information, zip/postal code does not',
@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
         'W' => '9-digit zip/postal code matches billing information, street address does not',
         'X' => 'Street address and 9-digit zip/postal code matches billing information',
         'Y' => 'Street address and 5-digit zip/postal code matches billing information',
-        'Z' => '5-digit zip/postal code matches billing information, street address does not',
+        'Z' => '5-digit zip/postal code matches billing information, street address does not'
       }
 
       CHANGE_STATUS_ERROR_MESSAGES = {
@@ -160,8 +160,8 @@ module ActiveMerchant #:nodoc:
         '-117' => 'POS Check Invalid Cashier Number'
       }
 
-      self.supported_countries = ['US', 'CA']
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover, :diners_club]
+      self.supported_countries = %w[US CA]
+      self.supported_cardtypes = %i[visa master american_express jcb discover diners_club]
       self.homepage_url = 'http://www.skipjack.com/'
       self.display_name = 'SkipJack'
 
@@ -213,7 +213,7 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>:force_settlement</tt> -- Force the settlement to occur as soon as possible. This option is not supported by other gateways. See the SkipJack API reference for more details
       def capture(money, authorization, options = {})
-        post = { }
+        post = {}
         add_status_action(post, 'SETTLE')
         add_forced_settlement(post, options)
         add_transaction_id(post, authorization)
@@ -242,7 +242,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def status(order_id)
-        commit(:get_status, nil, :szOrderNumber => order_id)
+        commit(:get_status, nil, szOrderNumber: order_id)
       end
 
       private
@@ -263,11 +263,14 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url_for(action), post_data(action, money, parameters)), action)
 
         # Pass along the original transaction id in the case an update transaction
-        Response.new(response[:success], message_from(response, action), response,
-          :test => test?,
-          :authorization => response[:szTransactionFileName] || parameters[:szTransactionId],
-          :avs_result => { :code => response[:szAVSResponseCode] },
-          :cvv_result => response[:szCVV2ResponseCode]
+        Response.new(
+          response[:success],
+          message_from(response, action),
+          response,
+          test: test?,
+          authorization: response[:szTransactionFileName] || parameters[:szTransactionId],
+          avs_result: { code: response[:szAVSResponseCode] },
+          cvv_result: response[:szCVV2ResponseCode]
         )
       end
 
@@ -300,9 +303,9 @@ module ActiveMerchant #:nodoc:
         when :authorization
           parse_authorization_response(body)
         when :get_status
-          parse_status_response(body, [ :SerialNumber, :TransactionAmount, :TransactionStatusCode, :TransactionStatusMessage, :OrderNumber, :TransactionDateTime, :TransactionID, :ApprovalCode, :BatchNumber ])
+          parse_status_response(body, %i[SerialNumber TransactionAmount TransactionStatusCode TransactionStatusMessage OrderNumber TransactionDateTime TransactionID ApprovalCode BatchNumber])
         else
-          parse_status_response(body, [ :SerialNumber, :TransactionAmount, :DesiredStatus, :StatusResponse, :StatusResponseMessage, :OrderNumber, :AuditID ])
+          parse_status_response(body, %i[SerialNumber TransactionAmount DesiredStatus StatusResponse StatusResponseMessage OrderNumber AuditID])
         end
       end
 
@@ -329,7 +332,7 @@ module ActiveMerchant #:nodoc:
       def parse_status_response(body, response_keys)
         lines = split_lines(body)
 
-        keys = [ :szSerialNumber, :szErrorCode, :szNumberRecords]
+        keys = %i[szSerialNumber szErrorCode szNumberRecords]
         values = split_line(lines[0])[0..2]
 
         result = Hash[*keys.zip(values).flatten]
@@ -375,7 +378,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(post, creditcard)
-        post[:AccountNumber]  = creditcard.number
+        post[:AccountNumber] = creditcard.number
         post[:Month] = creditcard.month
         post[:Year] = creditcard.year
         post[:CVV2] = creditcard.verification_value if creditcard.verification_value?
@@ -434,6 +437,7 @@ module ActiveMerchant #:nodoc:
           return CARD_CODE_MESSAGES[response[:szCVV2ResponseCode]] if CARD_CODE_ERRORS.include?(response[:szCVV2ResponseCode])
           return AVS_MESSAGES[response[:szAVSResponseMessage]] if AVS_ERRORS.include?(response[:szAVSResponseCode])
           return RETURN_CODE_MESSAGES[response[:szReturnCode]] if response[:szReturnCode] != '1'
+
           return response[:szAuthorizationDeclinedMessage]
         end
       end

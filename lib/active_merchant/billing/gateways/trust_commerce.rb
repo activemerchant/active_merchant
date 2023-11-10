@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
     class TrustCommerceGateway < Gateway
       self.live_url = self.test_url = 'https://vault.trustcommerce.com/trans/'
 
-      SUCCESS_TYPES = ['approved', 'accepted']
+      SUCCESS_TYPES = %w[approved accepted]
 
       DECLINE_CODES = {
         'decline'       => 'The credit card was declined',
@@ -104,8 +104,10 @@ module ActiveMerchant #:nodoc:
       TEST_LOGIN = 'TestMerchant'
       TEST_PASSWORD = 'password'
 
+      VOIDABLE_ACTIONS = %w(preauth sale postauth credit)
+
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :discover, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master discover american_express diners_club jcb]
       self.supported_countries = ['US']
       self.homepage_url = 'http://www.trustcommerce.com/'
       self.display_name = 'TrustCommerce'
@@ -149,7 +151,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard_or_billing_id, options = {})
         parameters = {
-          :amount => amount(money),
+          amount: amount(money)
         }
 
         add_order_id(parameters, options)
@@ -157,6 +159,8 @@ module ActiveMerchant #:nodoc:
         add_customer_data(parameters, options)
         add_payment_source(parameters, creditcard_or_billing_id)
         add_addresses(parameters, options)
+        add_custom_fields(parameters, options)
+
         commit('preauth', parameters)
       end
 
@@ -164,7 +168,7 @@ module ActiveMerchant #:nodoc:
       # to process a purchase are an amount in cents or a money object and a creditcard object or billingid string.
       def purchase(money, creditcard_or_billing_id, options = {})
         parameters = {
-          :amount => amount(money),
+          amount: amount(money)
         }
 
         add_order_id(parameters, options)
@@ -172,6 +176,8 @@ module ActiveMerchant #:nodoc:
         add_customer_data(parameters, options)
         add_payment_source(parameters, creditcard_or_billing_id)
         add_addresses(parameters, options)
+        add_custom_fields(parameters, options)
+
         commit('sale', parameters)
       end
 
@@ -179,11 +185,13 @@ module ActiveMerchant #:nodoc:
       # postauth, we preserve active_merchant's nomenclature of capture() for consistency with the rest of the library. To process
       # a postauthorization with TC, you need an amount in cents or a money object, and a TC transid.
       def capture(money, authorization, options = {})
+        transaction_id, = split_authorization(authorization)
         parameters = {
-          :amount => amount(money),
-          :transid => authorization,
+          amount: amount(money),
+          transid: transaction_id
         }
         add_aggregator(parameters, options)
+        add_custom_fields(parameters, options)
 
         commit('postauth', parameters)
       end
@@ -191,11 +199,15 @@ module ActiveMerchant #:nodoc:
       # refund() allows you to return money to a card that was previously billed. You need to supply the amount, in cents or a money object,
       # that you want to refund, and a TC transid for the transaction that you are refunding.
       def refund(money, identification, options = {})
+        transaction_id, = split_authorization(identification)
+
         parameters = {
-          :amount => amount(money),
-          :transid => identification
+          amount: amount(money),
+          transid: transaction_id
         }
+
         add_aggregator(parameters, options)
+        add_custom_fields(parameters, options)
 
         commit('credit', parameters)
       end
@@ -214,18 +226,32 @@ module ActiveMerchant #:nodoc:
       # TrustCommerce to allow for reversal transactions before you can use this
       # method.
       #
+      # void() is also used to to cancel a capture (postauth), purchase (sale),
+      # or refund (credit) or a before it is sent for settlement.
+      #
       # NOTE: AMEX preauth's cannot be reversed. If you want to clear it more
       # quickly than the automatic expiration (7-10 days), you will have to
       # capture it and then immediately issue a credit for the same amount
       # which should clear the customers credit card with 48 hours according to
       # TC.
       def void(authorization, options = {})
-        parameters = {
-          :transid => authorization,
-        }
-        add_aggregator(parameters, options)
+        transaction_id, original_action = split_authorization(authorization)
+        action = (VOIDABLE_ACTIONS - ['preauth']).include?(original_action) ? 'void' : 'reversal'
 
-        commit('reversal', parameters)
+        parameters = {
+          transid: transaction_id
+        }
+
+        add_aggregator(parameters, options)
+        add_custom_fields(parameters, options)
+
+        commit(action, parameters)
+      end
+
+      def verify(credit_card, options = {})
+        parameters = {}
+        add_creditcard(parameters, credit_card)
+        commit('verify', parameters)
       end
 
       # recurring() a TrustCommerce account that is activated for Citadel, TrustCommerce's
@@ -242,29 +268,30 @@ module ActiveMerchant #:nodoc:
       def recurring(money, creditcard, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily])
+        requires!(options, %i[periodicity bimonthly monthly biweekly weekly yearly daily])
 
-        cycle = case options[:periodicity]
-        when :monthly
-          '1m'
-        when :bimonthly
-          '2m'
-        when :weekly
-          '1w'
-        when :biweekly
-          '2w'
-        when :yearly
-          '1y'
-        when :daily
-          '1d'
-        end
+        cycle =
+          case options[:periodicity]
+          when :monthly
+            '1m'
+          when :bimonthly
+            '2m'
+          when :weekly
+            '1w'
+          when :biweekly
+            '2w'
+          when :yearly
+            '1y'
+          when :daily
+            '1d'
+          end
 
         parameters = {
-          :amount => amount(money),
-          :cycle => cycle,
-          :verify => options[:verify] || 'y',
-          :billingid => options[:billingid] || nil,
-          :payments => options[:payments] || nil,
+          amount: amount(money),
+          cycle: cycle,
+          verify: options[:verify] || 'y',
+          billingid: options[:billingid] || nil,
+          payments: options[:payments] || nil
         }
 
         add_creditcard(parameters, creditcard)
@@ -278,12 +305,14 @@ module ActiveMerchant #:nodoc:
 
       def store(creditcard, options = {})
         parameters = {
-          :verify => options[:verify] || 'y',
-          :billingid => options[:billingid] || options[:billing_id] || nil,
+          verify: options[:verify] || 'y',
+          billingid: options[:billingid] || options[:billing_id] || nil
         }
 
         add_creditcard(parameters, creditcard)
         add_addresses(parameters, options)
+        add_custom_fields(parameters, options)
+
         commit('store', parameters)
       end
 
@@ -291,8 +320,10 @@ module ActiveMerchant #:nodoc:
       # unstore() the information will be removed and a Response object will be returned indicating the success of the action.
       def unstore(identification, options = {})
         parameters = {
-          :billingid => identification,
+          billingid: identification
         }
+
+        add_custom_fields(parameters, options)
 
         commit('unstore', parameters)
       end
@@ -306,10 +337,17 @@ module ActiveMerchant #:nodoc:
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((&?cc=)\d*(&?)), '\1[FILTERED]\2').
           gsub(%r((&?password=)[^&]+(&?)), '\1[FILTERED]\2').
-          gsub(%r((&?cvv=)\d*(&?)), '\1[FILTERED]\2')
+          gsub(%r((&?cvv=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?account=)\d*(&?)), '\1[FILTERED]\2')
       end
 
       private
+
+      def add_custom_fields(params, options)
+        options[:custom_fields]&.each do |key, value|
+          params[key.to_sym] = value
+        end
+      end
 
       def add_aggregator(params, options)
         if @options[:aggregator_id] || application_id != Gateway.application_id
@@ -386,9 +424,7 @@ module ActiveMerchant #:nodoc:
         # symbol keys. Before sending our input to TCLink, we convert all our keys to strings and dump the symbol keys.
         # We also remove any pairs with nil values, as these confuse TCLink.
         parameters.keys.reverse_each do |key|
-          if parameters[key]
-            parameters[key.to_s] = parameters[key]
-          end
+          parameters[key.to_s] = parameters[key] if parameters[key]
           parameters.delete(key)
         end
       end
@@ -409,16 +445,19 @@ module ActiveMerchant #:nodoc:
                  TCLink.send(parameters)
                else
                  parse(ssl_post(self.live_url, post_data(parameters)))
-        end
+               end
 
         # to be considered successful, transaction status must be either "approved" or "accepted"
         success = SUCCESS_TYPES.include?(data['status'])
         message = message_from(data)
-        Response.new(success, message, data,
-          :test => test?,
-          :authorization => data['transid'],
-          :cvv_result => data['cvv'],
-          :avs_result => { :code => data['avs'] }
+        Response.new(
+          success,
+          message,
+          data,
+          test: test?,
+          authorization: authorization_from(action, data),
+          cvv_result: data['cvv'],
+          avs_result: { code: data['avs'] }
         )
       end
 
@@ -446,6 +485,20 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def authorization_from(action, data)
+        case action
+        when 'store'
+          data['billingid']
+        when *VOIDABLE_ACTIONS
+          "#{data['transid']}|#{action}"
+        else
+          data['transid']
+        end
+      end
+
+      def split_authorization(authorization)
+        authorization&.split('|')
+      end
     end
   end
 end

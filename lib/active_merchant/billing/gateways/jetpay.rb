@@ -8,10 +8,10 @@ module ActiveMerchant #:nodoc:
       self.live_ca_url = 'https://gateway17.jetpay.com/canada-bb'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = %w[US CA]
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.jetpay.com/'
@@ -213,9 +213,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'TerminalID', @options[:login]
           xml.tag! 'TransactionType', transaction_type
           xml.tag! 'TransactionID', transaction_id.nil? ? generate_unique_id.slice(0, 18) : transaction_id
-          if options && options[:origin]
-            xml.tag! 'Origin', options[:origin]
-          end
+          xml.tag! 'Origin', options[:origin] if options && options[:origin]
 
           if block_given?
             yield xml
@@ -286,13 +284,14 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, request))
 
         success = success?(response)
-        Response.new(success,
+        Response.new(
+          success,
           success ? 'APPROVED' : message_from(response),
           response,
-          :test => test?,
-          :authorization => authorization_from(response, money, token),
-          :avs_result => { :code => response[:avs] },
-          :cvv_result => response[:cvv2]
+          test: test?,
+          authorization: authorization_from(response, money, token),
+          avs_result: { code: response[:avs] },
+          cvv_result: response[:cvv2]
         )
       end
 
@@ -335,7 +334,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, money, previous_token)
         original_amount = amount(money) if money
-        [ response[:transaction_id], response[:approval], original_amount, (response[:token] || previous_token)].join(';')
+        [response[:transaction_id], response[:approval], original_amount, (response[:token] || previous_token)].join(';')
       end
 
       def add_credit_card(xml, credit_card)
@@ -343,13 +342,9 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'CardExpMonth', format_exp(credit_card.month)
         xml.tag! 'CardExpYear', format_exp(credit_card.year)
 
-        if credit_card.first_name || credit_card.last_name
-          xml.tag! 'CardName', [credit_card.first_name, credit_card.last_name].compact.join(' ')
-        end
+        xml.tag! 'CardName', [credit_card.first_name, credit_card.last_name].compact.join(' ') if credit_card.first_name || credit_card.last_name
 
-        unless credit_card.verification_value.nil? || (credit_card.verification_value.length == 0)
-          xml.tag! 'CVV2', credit_card.verification_value
-        end
+        xml.tag! 'CVV2', credit_card.verification_value unless credit_card.verification_value.nil? || (credit_card.verification_value.length == 0)
       end
 
       def add_addresses(xml, options)

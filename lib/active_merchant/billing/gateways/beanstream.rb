@@ -76,6 +76,7 @@ module ActiveMerchant #:nodoc:
         add_transaction_type(post, :authorization)
         add_customer_ip(post, options)
         add_recurring_payment(post, options)
+        add_three_ds(post, options)
         commit(post)
       end
 
@@ -88,20 +89,24 @@ module ActiveMerchant #:nodoc:
         add_transaction_type(post, purchase_action(source))
         add_customer_ip(post, options)
         add_recurring_payment(post, options)
+        add_three_ds(post, options)
         commit(post)
       end
 
       def void(authorization, options = {})
         reference, amount, type = split_auth(authorization)
-
-        post = {}
-        add_reference(post, reference)
-        add_original_amount(post, amount)
-        add_transaction_type(post, void_action(type))
-        commit(post)
+        if type == TRANSACTIONS[:authorization]
+          capture(0, authorization, options)
+        else
+          post = {}
+          add_reference(post, reference)
+          add_original_amount(post, amount)
+          add_transaction_type(post, void_action(type))
+          commit(post)
+        end
       end
 
-      def verify(source, options={})
+      def verify(source, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, source, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -153,6 +158,8 @@ module ActiveMerchant #:nodoc:
 
       # To match the other stored-value gateways, like TrustCommerce,
       # store and unstore need to be defined
+      #
+      # When passing a single-use token the :name option is required
       def store(payment_method, options = {})
         post = {}
         add_address(post, options)
@@ -170,10 +177,10 @@ module ActiveMerchant #:nodoc:
       # can't actually delete a secure profile with the supplicated API. This function sets the status of the profile to closed (C).
       # Closed profiles will have to removed manually.
       def delete(vault_id)
-        update(vault_id, false, {:status => 'C'})
+        update(vault_id, false, { status: 'C' })
       end
 
-      alias_method :unstore, :delete
+      alias unstore delete
 
       # Update the values (such as CC expiration) stored at
       # the gateway.  The CC number must be supplied in the
@@ -209,6 +216,22 @@ module ActiveMerchant #:nodoc:
 
       def build_response(*args)
         Response.new(*args)
+      end
+
+      def add_three_ds(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post[:SecureXID] = (three_d_secure[:ds_transaction_id] || three_d_secure[:xid]) if three_d_secure.slice(:ds_transaction_id, :xid).values.any?
+        post[:SecureECI] = formatted_three_ds_eci(three_d_secure[:eci]) if three_d_secure[:eci].present?
+        post[:SecureCAVV] = three_d_secure[:cavv] if three_d_secure[:cavv].present?
+      end
+
+      def formatted_three_ds_eci(val)
+        case val
+        when '05', '02' then 5
+        when '06', '01' then 6
+        else val.to_i
+        end
       end
     end
   end

@@ -10,11 +10,11 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_should_detect_if_a_card_is_supported
-    Gateway.supported_cardtypes = [:visa, :bogus]
-    assert([:visa, :bogus].all? { |supported_cardtype| Gateway.supports?(supported_cardtype) })
+    Gateway.supported_cardtypes = %i[visa bogus]
+    assert(%i[visa bogus].all? { |supported_cardtype| Gateway.supports?(supported_cardtype) })
 
     Gateway.supported_cardtypes = []
-    assert_false([:visa, :bogus].all? { |invalid_cardtype| Gateway.supports?(invalid_cardtype) })
+    assert_false(%i[visa bogus].all? { |invalid_cardtype| Gateway.supports?(invalid_cardtype) })
   end
 
   def test_should_validate_supported_countries
@@ -28,8 +28,7 @@ class GatewayTest < Test::Unit::TestCase
 
     assert_nothing_raised do
       Gateway.supported_countries = all_country_codes
-      assert Gateway.supported_countries == all_country_codes,
-        'List of supported countries not properly set'
+      assert Gateway.supported_countries == all_country_codes, 'List of supported countries not properly set'
     end
   end
 
@@ -54,12 +53,12 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_card_brand
-    credit_card = stub(:brand => 'visa')
+    credit_card = stub(brand: 'visa')
     assert_equal 'visa', Gateway.card_brand(credit_card)
   end
 
   def test_card_brand_using_type
-    credit_card = stub(:type => 'String')
+    credit_card = stub(type: 'String')
     assert_equal 'string', Gateway.card_brand(credit_card)
   end
 
@@ -103,7 +102,7 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_split_names
-    assert_equal ['Longbob', 'Longsen'], @gateway.send(:split_names, 'Longbob Longsen')
+    assert_equal %w[Longbob Longsen], @gateway.send(:split_names, 'Longbob Longsen')
   end
 
   def test_split_names_with_single_name
@@ -131,16 +130,42 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_strip_invalid_xml_chars
-    xml = <<EOF
+    xml = <<~XML
       <response>
         <element>Parse the First & but not this &tilde; &x002a;</element>
       </response>
-EOF
+    XML
     parsed_xml = @gateway.send(:strip_invalid_xml_chars, xml)
 
     assert REXML::Document.new(parsed_xml)
     assert_raise(REXML::ParseException) do
       REXML::Document.new(xml)
     end
+  end
+
+  def test_add_field_to_post_if_present
+    order_id = 'abc123'
+
+    post = {}
+    options = { order_id: order_id, do_not_add: 24 }
+
+    @gateway.add_field_to_post_if_present(post, options, :order_id)
+
+    assert_equal post[:order_id], order_id
+    assert_false post.key?(:do_not_add)
+  end
+
+  def test_add_fields_to_post_if_present
+    order_id = 'abc123'
+    transaction_number = 500
+
+    post = {}
+    options = { order_id: order_id, transaction_number: transaction_number, do_not_add: 24 }
+
+    @gateway.add_fields_to_post_if_present(post, options, %i[order_id transaction_number])
+
+    assert_equal post[:order_id], order_id
+    assert_equal post[:transaction_number], transaction_number
+    assert_false post.key?(:do_not_add)
   end
 end

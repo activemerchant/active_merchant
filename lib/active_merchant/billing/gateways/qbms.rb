@@ -11,16 +11,16 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://payments.intuit.com/'
       self.display_name = 'QuickBooks Merchant Services'
       self.default_currency = 'USD'
-      self.supported_cardtypes = [ :visa, :master, :discover, :american_express, :diners_club, :jcb ]
-      self.supported_countries = [ 'US' ]
+      self.supported_cardtypes = %i[visa master discover american_express diners_club jcb]
+      self.supported_countries = ['US']
 
       TYPES = {
-        :authorize => 'CustomerCreditCardAuth',
-        :capture   => 'CustomerCreditCardCapture',
-        :purchase  => 'CustomerCreditCardCharge',
-        :refund    => 'CustomerCreditCardTxnVoidOrRefund',
-        :void      => 'CustomerCreditCardTxnVoid',
-        :query     => 'MerchantAccountQuery',
+        authorize: 'CustomerCreditCardAuth',
+        capture: 'CustomerCreditCardCapture',
+        purchase: 'CustomerCreditCardCharge',
+        refund: 'CustomerCreditCardTxnVoidOrRefund',
+        void: 'CustomerCreditCardTxnVoid',
+        query: 'MerchantAccountQuery'
       }
 
       # Creates a new QbmsGateway
@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>options</tt> -- A hash of optional parameters.
       #
       def authorize(money, creditcard, options = {})
-        commit(:authorize, money, options.merge(:credit_card => creditcard))
+        commit(:authorize, money, options.merge(credit_card: creditcard))
       end
 
       # Perform a purchase, which is essentially an authorization and capture in a single operation.
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>options</tt> -- A hash of optional parameters.
       #
       def purchase(money, creditcard, options = {})
-        commit(:purchase, money, options.merge(:credit_card => creditcard))
+        commit(:purchase, money, options.merge(credit_card: creditcard))
       end
 
       # Captures the funds from an authorized transaction.
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>authorization</tt> -- The authorization returned from the previous authorize request.
       #
       def capture(money, authorization, options = {})
-        commit(:capture, money, options.merge(:transaction_id => authorization))
+        commit(:capture, money, options.merge(transaction_id: authorization))
       end
 
       # Void a previous transaction
@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>authorization</tt> - The authorization returned from the previous authorize request.
       #
       def void(authorization, options = {})
-        commit(:void, nil, options.merge(:transaction_id => authorization))
+        commit(:void, nil, options.merge(transaction_id: authorization))
       end
 
       # Credit an account.
@@ -105,7 +105,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, identification, options = {})
-        commit(:refund, money, options.merge(:transaction_id => identification))
+        commit(:refund, money, options.merge(transaction_id: identification))
       end
 
       # Query the merchant account status
@@ -142,12 +142,15 @@ module ActiveMerchant #:nodoc:
         response = parse(type, data)
         message = (response[:status_message] || '').strip
 
-        Response.new(success?(response), message, response,
-          :test          => test?,
-          :authorization => response[:credit_card_trans_id],
-          :fraud_review  => fraud_review?(response),
-          :avs_result    => { :code => avs_result(response) },
-          :cvv_result    => cvv_result(response)
+        Response.new(
+          success?(response),
+          message,
+          response,
+          test: test?,
+          authorization: response[:credit_card_trans_id],
+          fraud_review: fraud_review?(response),
+          avs_result: { code: avs_result(response) },
+          cvv_result: cvv_result(response)
         )
       end
 
@@ -167,16 +170,16 @@ module ActiveMerchant #:nodoc:
 
         if status_code != 0
           return {
-            :status_code    => status_code,
-            :status_message => signon.attributes['statusMessage'],
+            status_code: status_code,
+            status_message: signon.attributes['statusMessage']
           }
         end
 
         response = REXML::XPath.first(xml, "//QBMSXMLMsgsRs/#{type}Rs")
 
         results = {
-          :status_code    => response.attributes['statusCode'].to_i,
-          :status_message => response.attributes['statusMessage'],
+          status_code: response.attributes['statusCode'].to_i,
+          status_message: response.attributes['statusMessage']
         }
 
         response.elements.each do |e|
@@ -195,10 +198,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(type, money, parameters = {})
-        xml = Builder::XmlMarkup.new(:indent => 0)
+        xml = Builder::XmlMarkup.new(indent: 0)
 
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
-        xml.instruct!(:qbmsxml, :version => API_VERSION)
+        xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
+        xml.instruct!(:qbmsxml, version: API_VERSION)
 
         xml.tag!('QBMSXML') do
           xml.tag!('SignonMsgsRq') do

@@ -46,37 +46,38 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     }
 
     @options_with_shipping_house_number_and_shipping_street = {
-        order_id: '1',
-        street: 'Top Level Drive',
-        house_number: '1000',
-        billing_address: address,
-        shipping_house_number: '999',
-        shipping_street: 'Downtown Loop',
-        shipping_address: {
-            name:     'PU JOI SO',
-            address1: '新北市店溪路3579號139樓',
-            company:  'Widgets Inc',
-            city:     '新北市',
-            zip:      '231509',
-            country:  'TW',
-            phone:    '(555)555-5555',
-            fax:      '(555)555-6666'
-        },
-        description: 'Store Purchase'
+      order_id: '1',
+      street: 'Top Level Drive',
+      house_number: '1000',
+      billing_address: address,
+      shipping_house_number: '999',
+      shipping_street: 'Downtown Loop',
+      shipping_address: {
+        name:     'PU JOI SO',
+        address1: '新北市店溪路3579號139樓',
+        company:  'Widgets Inc',
+        city:     '新北市',
+        zip:      '231509',
+        country:  'TW',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
+      },
+      description: 'Store Purchase'
     }
 
     @options_with_credit_fields = {
       order_id: '1',
-      billing_address:       {
-              name:     'Jim Smith',
-              address1: '100 Street',
-              company:  'Widgets Inc',
-              city:     'Ottawa',
-              state:    'ON',
-              zip:      'K1C2N6',
-              country:  'CA',
-              phone:    '(555)555-5555',
-              fax:      '(555)555-6666'},
+      billing_address: {
+        name:     'Jim Smith',
+        address1: '100 Street',
+        company:  'Widgets Inc',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6',
+        country:  'CA',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
+      },
       email: 'long@bob.com',
       customer: 'Longbob Longsen',
       description: 'Store Purchase',
@@ -92,14 +93,38 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
     @avs_address = @options.clone
     @avs_address.update(billing_address: {
-        name:     'Jim Smith',
-        street:   'Test AVS result',
-        houseNumberOrName: '2',
-        city:     'Cupertino',
-        state:    'CA',
-        zip:      '95014',
-        country:  'US'
-        })
+      name:     'Jim Smith',
+      street:   'Test AVS result',
+      houseNumberOrName: '2',
+      city:     'Cupertino',
+      state:    'CA',
+      zip:      '95014',
+      country:  'US'
+    })
+
+    @normalized_3ds_2_options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: address(),
+      order_id: '123',
+      stored_credential: { reason_type: 'unscheduled' },
+      three_ds_2: {
+        channel: 'browser',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 100,
+          java: false,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown'
+        },
+        notification_url: 'https://example.com/notification'
+      }
+    }
   end
 
   def test_successful_purchase
@@ -115,7 +140,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   def test_successful_authorize_with_alternate_address
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options_with_alternate_address)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/billingAddress.houseNumberOrName=%E6%96%B0%E5%8C%97%E5%B8%82%E5%BA%97%E6%BA%AA%E8%B7%AF3579%E8%99%9F139%E6%A8%93/, data)
       assert_match(/billingAddress.street=Not\+Provided/, data)
     end.respond_with(successful_authorize_response)
@@ -127,10 +152,8 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_house_number_and_street
     response = stub_comms do
-      @gateway.authorize(@amount,
-        @credit_card,
-        @options_with_house_number_and_street)
-    end.check_request do |endpoint, data, headers|
+      @gateway.authorize(@amount, @credit_card, @options_with_house_number_and_street)
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/billingAddress.street=Top\+Level\+Drive/, data)
       assert_match(/billingAddress.houseNumberOrName=1000/, data)
     end.respond_with(successful_authorize_response)
@@ -142,10 +165,8 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_shipping_house_number_and_street
     response = stub_comms do
-      @gateway.authorize(@amount,
-        @credit_card,
-        @options_with_shipping_house_number_and_shipping_street)
-    end.check_request do |endpoint, data, headers|
+      @gateway.authorize(@amount, @credit_card, @options_with_shipping_house_number_and_shipping_street)
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/billingAddress.street=Top\+Level\+Drive/, data)
       assert_match(/billingAddress.houseNumberOrName=1000/, data)
       assert_match(/deliveryAddress.street=Downtown\+Loop/, data)
@@ -158,11 +179,24 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_extra_options
+    shopper_interaction = 'ContAuth'
+    shopper_statement   = 'One-year premium subscription'
+    device_fingerprint  = 'abcde123'
+
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(shopper_interaction: 'ContAuth', device_fingerprint: 'abcde123'))
-    end.check_request do |endpoint, data, headers|
-      assert_match(/shopperInteraction=ContAuth/, data)
-      assert_match(/deviceFingerprint=abcde123/, data)
+      @gateway.authorize(
+        @amount,
+        @credit_card,
+        @options.merge(
+          shopper_interaction: shopper_interaction,
+          device_fingerprint: device_fingerprint,
+          shopper_statement: shopper_statement
+        )
+      )
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/shopperInteraction=#{shopper_interaction}/, data)
+      assert_match(/shopperStatement=#{Regexp.quote(CGI.escape(shopper_statement))}/, data)
+      assert_match(/deviceFingerprint=#{device_fingerprint}/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -189,6 +223,18 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_authorize_with_3ds2_browser_client_data
+    @gateway.stubs(:ssl_post).returns(successful_authorize_with_3ds2_response)
+
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @normalized_3ds_2_options)
+    assert response.test?
+    assert_equal '8815609737078177', response.authorization
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
+    refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
+    refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
+    refute response.params['additionalData']['threeds2.threeDSMethodURL'].blank?
+  end
+
   def test_failed_authorize
     @gateway.stubs(:ssl_post).returns(failed_authorize_response)
 
@@ -207,7 +253,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(:code => '422', :body => failed_capture_response)))
+    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(code: '422', body: failed_capture_response)))
 
     response = @gateway.capture(@amount, '0000000000000000', @options)
     assert_failure response
@@ -218,7 +264,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   def test_legacy_capture_psp_reference_passed_for_refund
     response = stub_comms do
       @gateway.refund(@amount, '8814002632606717', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/originalReference=8814002632606717/, data)
     end.respond_with(successful_refund_response)
 
@@ -229,7 +275,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   def test_successful_refund
     response = stub_comms do
       @gateway.refund(@amount, '7914002629995504#8814002632606717', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/originalReference=7914002629995504&/, data)
       assert_no_match(/8814002632606717/, data)
     end.respond_with(successful_refund_response)
@@ -239,7 +285,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(:code => '422', :body => failed_refund_response)))
+    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(code: '422', body: failed_refund_response)))
 
     response = @gateway.refund(@amount, '0000000000000000', @options)
     assert_failure response
@@ -264,7 +310,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   def test_credit_contains_all_fields
     response = stub_comms do
       @gateway.credit(@amount, @credit_card, @options_with_credit_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       assert_match(%r{/refundWithData}, endpoint)
       assert_match(/dateOfBirth=1990-10-11&/, data)
       assert_match(/entityType=NaturalPerson&/, data)
@@ -278,9 +324,9 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
   def test_successful_third_party_payout
     response = stub_comms do
-      @gateway.credit(@amount, @credit_card, @options_with_credit_fields.merge({third_party_payout: true}))
-    end.check_request do |endpoint, data, headers|
-      if /storeDetailAndSubmitThirdParty/ =~ endpoint
+      @gateway.credit(@amount, @credit_card, @options_with_credit_fields.merge({ third_party_payout: true }))
+    end.check_request do |endpoint, data, _headers|
+      if /storeDetailAndSubmitThirdParty/.match?(endpoint)
         assert_match(%r{/storeDetailAndSubmitThirdParty}, endpoint)
         assert_match(/dateOfBirth=1990-10-11&/, data)
         assert_match(/entityType=NaturalPerson&/, data)
@@ -322,9 +368,9 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   def test_authorize_nonfractional_currency
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(currency: 'JPY'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/amount.value=1/, data)
-      assert_match(/amount.currency=JPY/,  data)
+      assert_match(/amount.currency=JPY/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -333,9 +379,9 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   def test_authorize_three_decimal_currency
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(currency: 'OMR'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/amount.value=100/, data)
-      assert_match(/amount.currency=OMR/,  data)
+      assert_match(/amount.currency=OMR/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -349,11 +395,65 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_failed_store
-    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(:code => '422', :body => failed_store_response)))
+    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(code: '422', body: failed_store_response)))
 
     response = @gateway.store(@credit_card, @options)
     assert_failure response
     assert response.test?
+  end
+
+  def test_execute_threed_false_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options.merge({ execute_threed: false }))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/additionalData.scaExemption/, data)
+      assert_match(/additionalData.executeThreeD=false/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_if_execute_threed_missing_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options.merge({ scaExemption: 'lowValue' }))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/additionalData.scaExemption/, data)
+      refute_match(/additionalData.executeThreeD=false/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_and_execute_threed_false_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options.merge({ sca_exemption: 'lowValue', execute_threed: false }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/additionalData.scaExemption=lowValue/, data)
+      assert_match(/additionalData.executeThreeD=false/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_and_execute_threed_true_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options.merge({ sca_exemption: 'lowValue', execute_threed: true }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/additionalData.scaExemption=lowValue/, data)
+      assert_match(/additionalData.executeThreeD=true/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_when_execute_threed_true_3ds1
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ sca_exemption: 'lowValue', execute_threed: true }))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/additionalData.scaExemption/, data)
+      assert_match(/additionalData.executeThreeD=true/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_when_execute_threed_false_3ds1
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ sca_exemption: 'lowValue', execute_threed: false }))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/additionalData.scaExemption/, data)
+      refute_match(/additionalData.executeThreeD/, data)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_avs_result
@@ -393,6 +493,10 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
   def successful_authorize_with_3ds_response
     'pspReference=8815161318854998&resultCode=RedirectShopper&issuerUrl=https%3A%2F%2Ftest.adyen.com%2Fhpp%2F3d%2Fvalidate.shtml&md=WIFa2sF3CuPyN53Txjt3U%2F%2BDuCsddzywiY5NLgEAdUAXPksHUzXL5E%2BsfvdpolkGWR8b1oh%2FNA3jNaUP9UCgfjhXqRslGFy9OGqcZ1ITMz54HHm%2FlsCKN9bTftKnYA4F7GqvOgcIIrinUZjbMvW9doGifwzSqYLo6ASOm6bARL5n7cIFV8IWtA2yPlO%2FztKSTRJt1glN4s8sMcpE57z4soWKMuycbdXdpp6d4ZRSa%2F1TPF0MnJF0zNaSAAkw9JpXqGMOz5sFF2Smpc38HXJzM%2FV%2B1mmoDhhWmXXOb5YQ0QSCS7DXKIcr8ZtuGuGmFp0QOfZiO41%2B2I2N7VhONVx8xSn%2BLu4m6vaDIg5qsnd9saxaWwbJpl9okKm6pB2MJap9ScuBCcvI496BPCrjQ2LHxvDWhk6M3Exemtv942NQIGlsiPaW0KXoC2dQvBsxWh0K&paRequest=eNpVUtuOgjAQ%2FRXj%2B1KKoIWMTVgxWR%2B8RNkPaMpEycrFUlb8%2B20B190%2BnXPm0pnTQnpRiMkJZauQwxabRpxxkmfLacQYDeiczihjgR%2BGbMrhEB%2FxxuEbVZNXJaeO63hAntSUK3kRpeYg5O19s%2BPUm%2FnBHMhIoUC1SXiKjT4URSxvba5QARlkKEWB%2FFSbgbLr41QIpXFVFUB6HWTVllo9OPNMwyeBVl35Reu6iQi53%2B9OM5Y7sipMVqmF1G9tA8QmAnlNeGgtakzjLs%2F4Pjl3u3TtbdNtZzDdJV%2FBPu7PEojNgExo5J5LmUvpfELDyPcjPwDS6yAKOxFffx4nxhXXrDwIUNt74oFQG%2FgrgLFdYSkfPFwws9WTAXZ1VaLJMPb%2BYiCvoVcf1mSpjW%2B%2BN9i8YKFr0MLa3Qdsl9yYREM37NtYAsSWkvElyfjiBv37CT9ySbE1'
+  end
+
+  def successful_authorize_with_3ds2_response
+    'additionalData.threeds2.threeDS2Token=BQABAQB9sBAzFS%2BrvT1fuY78N4P5BA5DO6s9Y6jCIzvMcH%2Bk5%2B0ms8dRPEZZhO8CYx%2Fa5NCl8r4vyJj0nI0HZ9CBl%2FQLxtGLYfVu6sNxZc9xZry%2Bm24pBGTtHsd4vunorPNPAGlYWHBXtf4h0Sj9Qy0bzlau7a%2Feayi1cpjbfV%2B8Eqw%2FAod1B80heU8sX2DKm5SHlR4o0qTu0WQUSJfKRxjdJ1AntgAxjYo3uFUlU%2FyhNpdRiAxgauLImbllfQTGVTcYBQXsY9FSakfAZRW1kT7bNMraCvRUpp4o1Z5ZezJxPcksfCEzFVPyJYcTvcV4odQK4tT6imRLRvG1OgUVNzNAuDBnEJtFOC%2BE5YwAwfKuloCqB9oAAOzL5ZHXOXPASY2ehJ3RaCZjqj5vmAX8L9GY35FV8q49skYZpzIvlMICWjErI2ayKMCiXHFDE54f2GJEhVRKpY9s506740UGQc0%2FMgbKyLyqtU%2BRG30BwA9bSt3NQKchm9xoOL7U%2Bzm6OIeikmw94TBq%2BmBN7SdQi%2BK2W4yfMkqFsl7hc7HHBa%2BOc6At7wxxdxCLg6wksQmDxElXeQfFkWvoBuR96fIHaXILnVHKjWcTbeulXBhVPA5Y47MLEtZL3G8k%2BzKTFUCW7O0MN2WxUoMBT8foan1%2B9QhZejEqiamreIs56PLQkJvhigyRQmiqwnVjXiFOv%2FEcWn0Z6IM2TnAfw3Kd2KwZ9JaePLtZ2Ck7%2FUEsdt1Kj2HYeE86WM4PESystER5oBT12xWXvbp8CEA7Mulmpd3bkiMl5IVRoSBL5pl4qZd1CrnG%2FeuvtXYTsN%2FdA%2BIcWwiLiXpmSwqaRB8DfChwouuNMAAkfKhQ6b3vLAToc3o%2B3Xa1QetsK8GI1pmjkoZRvLd2xfGhVe%2FmCl23wzQsAicwB9ZXXMgWbaS2OwdwsISQGOmsWrajzp7%2FvR0T4aHqJlrFvKnc9BrWEWbDi8g%2BDFZ2E2ifhFYSYhrHVA7yOIIDdTQnH3CIzaevxUAnbIyFsxrhy8USdP6R6CdJZ%2Bg0rIJ5%2FeZ5P8JjDiYJWi5FDJwy%2BNP9PQIFFim6psbELCtnAaW1m7pU1FeNwjYUGIdVD2f%2BVYJe4cWHPCaWAAsARNXTzjrfUEq%2BpEYDcs%2FLyTB8f69qSrmTSDGsCETsNNy27LY%2BtodGDKsxtW35jIqoV8l2Dra3wucman8nIZp3VTNtNvZDCqWetLXxBbFVZN6ecuoMPwhER5MBFUrkkXCSSFBK%2FNGp%2FXaEDP6A2hmUKvXikL3F9S7MIKQCUYC%2FI7K4DFYFBjTBzN4%3D&additionalData.threeds2.threeDSServerTransID=efbf9d05-5e6b-4659-a64e-f1dfa5d846c4&additionalData.threeds2.threeDSMethodURL=https%3A%2F%2Fpal-test.adyen.com%2Fthreeds2simulator%2Facs%2FstartMethod.shtml&pspReference=8815609737078177&resultCode=IdentifyShopper'
   end
 
   def failed_authorize_response
@@ -544,5 +648,4 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     Conn close
     )
   end
-
 end

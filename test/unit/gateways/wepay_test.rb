@@ -160,7 +160,7 @@ class WepayTest < Test::Unit::TestCase
   def test_no_version_by_default
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, _data, headers|
       assert_no_match(/Api-Version/, headers.to_s)
     end.respond_with(successful_authorize_response)
   end
@@ -168,7 +168,7 @@ class WepayTest < Test::Unit::TestCase
   def test_version_override
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(version: '2017-05-31'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, _data, headers|
       assert_match(/"Api-Version\"=>\"2017-05-31\"/, headers.to_s)
     end.respond_with(successful_authorize_response)
   end
@@ -425,5 +425,4 @@ class WepayTest < Test::Unit::TestCase
   def invalid_json_response
     %({"checkout_id"=1852898602,"state":"captured")
   end
-
 end

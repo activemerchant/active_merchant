@@ -14,11 +14,122 @@ class CardConnectTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @three_ds_secure = {
+      version: '2.0',
+      cavv: 'AJkBByEyYgAAAASwgmEodQAAAAA=',
+      eci: '05',
+      xid: '3875d372-d96d-412a-a806-5ac367d095b1'
+    }
   end
 
-  def test_incorrect_domain
+  def test_three_ds_2_object_construction
+    post = {}
+    @three_ds_secure[:ds_transaction_id] = '3875d372-d96d-412a-a806-5ac367d095b1'
+    @options[:three_d_secure] = @three_ds_secure
+
+    @gateway.send(:add_three_ds_mpi_data, post, @options)
+    three_ds_options = @options[:three_d_secure]
+    assert_equal three_ds_options[:cavv], post[:securevalue]
+    assert_equal three_ds_options[:eci], post[:secureflag]
+    assert_equal three_ds_options[:ds_transaction_id], post[:securedstid]
+  end
+
+  def test_purchase_with_three_ds
+    @options[:three_d_secure] = @three_ds_secure
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      three_ds_params = JSON.parse(data)['three_dsecure']
+      assert_equal 'AJkBByEyYgAAAASwgmEodQAAAAA=', three_ds_params['cavv']
+      assert_equal '05', three_ds_params['eci']
+      assert_equal '3875d372-d96d-412a-a806-5ac367d095b1', three_ds_params['xid']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_initial_purchase_with_stored_credential
+    stored_credential_options = {
+      initial_transaction: true,
+      reason_type: 'recurring',
+      initiator: 'merchant'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_options }))
+    end.check_request do |_verb, _url, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['cof'], 'M'
+      assert_equal request['cofscheduled'], 'Y'
+      assert_equal request['cofpermission'], 'Y'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_subsequent_purchase_with_stored_credential
+    stored_credential_options = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'cardholder'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_options }))
+    end.check_request do |_verb, _url, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['cof'], 'C'
+      assert_equal request['cofscheduled'], 'Y'
+      assert_equal request['cofpermission'], 'N'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_ecomind
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ ecomind: 't' }))
+    end.check_request do |_verb, _url, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['ecomind'], 'T'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_recurring
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ recurring: true }))
+    end.check_request do |_verb, _url, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['ecomind'], 'R'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_without_recurring
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ recurring: false }))
+    end.check_request do |_verb, _url, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['ecomind'], 'E'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_allow_domains_without_ports
+    assert CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'https://vendor.cardconnect.com/test')
+  end
+
+  def test_add_address
+    result = {}
+
+    @gateway.send(:add_address, result, billing_address: { address1: '123 Test St.', address2: '5F', city: 'Testville', zip: '12345', state: 'AK' })
+    assert_equal '123 Test St.', result[:address]
+    assert_equal '5F', result[:address2]
+    assert_equal 'Testville', result[:city]
+    assert_equal 'AK', result[:region]
+    assert_equal '12345', result[:postal]
+  end
+
+  def test_reject_domains_without_card_connect
     assert_raise(ArgumentError) {
-      CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'www.google.com')
+      CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'https://www.google.com')
+    }
+  end
+
+  def test_reject_domains_without_https
+    assert_raise(ArgumentError) {
+      CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'ttps://cardconnect.com')
     }
   end
 
@@ -185,7 +296,7 @@ class CardConnectTest < Test::Unit::TestCase
   def test_successful_unstore
     stub_comms(@gateway, :ssl_request) do
       @gateway.unstore('1|16700875781344019340')
-    end.check_request do |verb, url, data, headers|
+    end.check_request do |verb, url, _data, _headers|
       assert_equal :delete, verb
       assert_match %r{16700875781344019340/1}, url
     end.respond_with(successful_unstore_response)
@@ -197,6 +308,17 @@ class CardConnectTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_frontendid_is_added_to_post_data_parameters
+    @gateway.class.application_id = 'my_app'
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_, _, body|
+      assert_equal 'my_app', JSON.parse(body)['frontendid']
+    end.respond_with(successful_purchase_response)
+  ensure
+    @gateway.class.application_id = nil
   end
 
   private

@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
                                     MT MU MV MX MY NL NO NZ OM PH PL PT QA RO SA SE SG SI SK SM
                                     TR TT UM US VA VN ZA)
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'https://spreedly.com'
       self.display_name = 'Spreedly'
       self.money_format = :cents
@@ -35,19 +35,13 @@ module ActiveMerchant #:nodoc:
       # Public: Run a purchase transaction.
       #
       # money          - The monetary amount of the transaction in cents.
-      # payment_method - The CreditCard or the Spreedly payment method token.
+      # payment_method - The CreditCard or Check or the Spreedly payment method token.
       # options        - A hash of options:
       #                  :store - Retain the payment method if the purchase
       #                           succeeds.  Defaults to false.  (optional)
       def purchase(money, payment_method, options = {})
-        if payment_method.is_a?(String)
-          purchase_with_token(money, payment_method, options)
-        else
-          MultiResponse.run do |r|
-            r.process { save_card(options[:store], payment_method, options) }
-            r.process { purchase_with_token(money, r.authorization, options) }
-          end
-        end
+        request = build_transaction_request(money, payment_method, options)
+        commit("gateways/#{options[:gateway_token] || @options[:gateway_token]}/purchase.xml", request)
       end
 
       # Public: Run an authorize transaction.
@@ -58,17 +52,11 @@ module ActiveMerchant #:nodoc:
       #                  :store - Retain the payment method if the authorize
       #                           succeeds.  Defaults to false.  (optional)
       def authorize(money, payment_method, options = {})
-        if payment_method.is_a?(String)
-          authorize_with_token(money, payment_method, options)
-        else
-          MultiResponse.run do |r|
-            r.process { save_card(options[:store], payment_method, options) }
-            r.process { authorize_with_token(money, r.authorization, options) }
-          end
-        end
+        request = build_transaction_request(money, payment_method, options)
+        commit("gateways/#{@options[:gateway_token]}/authorize.xml", request)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         request = build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
         end
@@ -76,15 +64,16 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{authorization}/capture.xml", request)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         request = build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
+          add_extra_options(:gateway_specific_fields, doc, options)
         end
 
         commit("transactions/#{authorization}/credit.xml", request)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit("transactions/#{authorization}/void.xml", '')
       end
 
@@ -109,7 +98,7 @@ module ActiveMerchant #:nodoc:
       #
       # credit_card    - The CreditCard to store
       # options        - A standard ActiveMerchant options hash
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         retain = (options.has_key?(:retain) ? options[:retain] : true)
         save_card(retain, credit_card, options)
       end
@@ -119,7 +108,7 @@ module ActiveMerchant #:nodoc:
       #
       # credit_card    - The CreditCard to store
       # options        - A standard ActiveMerchant options hash
-      def unstore(authorization, options={})
+      def unstore(authorization, options = {})
         commit("payment_methods/#{authorization}/redact.xml", '', :put)
       end
 
@@ -128,7 +117,7 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{transaction_token}.xml", nil, :get)
       end
 
-      alias_method :status, :find
+      alias status find
 
       def supports_scrubbing?
         true
@@ -155,32 +144,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase_with_token(money, payment_method_token, options)
-        request = auth_purchase_request(money, payment_method_token, options)
+        request = build_transaction_request(money, payment_method_token, options)
         commit("gateways/#{options[:gateway_token] || @options[:gateway_token]}/purchase.xml", request)
       end
 
       def authorize_with_token(money, payment_method_token, options)
-        request = auth_purchase_request(money, payment_method_token, options)
+        request = build_transaction_request(money, payment_method_token, options)
         commit("gateways/#{@options[:gateway_token]}/authorize.xml", request)
       end
 
       def verify_with_token(payment_method_token, options)
-        request = build_xml_request('transaction') do |doc|
-          add_invoice(doc, nil, options)
-          doc.payment_method_token(payment_method_token)
-          doc.retain_on_success(true) if options[:store]
-          add_extra_options(:gateway_specific_fields, doc, options)
-        end
-
+        request = build_transaction_request(nil, payment_method_token, options)
         commit("gateways/#{@options[:gateway_token]}/verify.xml", request)
       end
 
-      def auth_purchase_request(money, payment_method_token, options)
+      def build_transaction_request(money, payment_method, options)
         build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
+          add_payment_method(doc, payment_method, options)
           add_extra_options(:gateway_specific_fields, doc, options)
-          doc.payment_method_token(payment_method_token)
-          doc.retain_on_success(true) if options[:store]
         end
       end
 
@@ -190,6 +172,23 @@ module ActiveMerchant #:nodoc:
         doc.order_id(options[:order_id])
         doc.ip(options[:ip]) if options[:ip]
         doc.description(options[:description]) if options[:description]
+
+        doc.merchant_name_descriptor(options[:merchant_name_descriptor]) if options[:merchant_name_descriptor]
+        doc.merchant_location_descriptor(options[:merchant_location_descriptor]) if options[:merchant_location_descriptor]
+      end
+
+      def add_payment_method(doc, payment_method, options)
+        doc.retain_on_success(true) if options[:store]
+
+        if payment_method.is_a?(String)
+          doc.payment_method_token(payment_method)
+        elsif payment_method.is_a?(CreditCard)
+          add_credit_card(doc, payment_method, options)
+        elsif payment_method.is_a?(Check)
+          add_bank_account(doc, payment_method, options)
+        else
+          raise TypeError, 'Payment method not supported'
+        end
       end
 
       def add_credit_card(doc, credit_card, options)
@@ -210,6 +209,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_bank_account(doc, bank_account, options)
+        doc.bank_account do
+          doc.first_name(bank_account.first_name)
+          doc.last_name(bank_account.last_name)
+          doc.bank_routing_number(bank_account.routing_number)
+          doc.bank_account_number(bank_account.account_number)
+          doc.bank_account_type(bank_account.account_type)
+          doc.bank_account_holder_type(bank_account.account_holder_type)
+        end
+      end
+
       def add_extra_options(type, doc, options)
         doc.send(type) do
           extra_options_to_doc(doc, options[type])
@@ -218,6 +228,7 @@ module ActiveMerchant #:nodoc:
 
       def extra_options_to_doc(doc, value)
         return doc.text value unless value.kind_of? Hash
+
         value.each do |k, v|
           doc.send(k) do
             extra_options_to_doc(doc, v)
@@ -243,11 +254,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def childnode_to_response(response, node, childnode)
-        name = "#{node.name.downcase}_#{childnode.name.downcase}"
-        if name == 'payment_method_data' && !childnode.elements.empty?
-          response[name.to_sym] = Hash.from_xml(childnode.to_s).values.first
+        node_name = node.name.downcase
+        childnode_name = childnode.name.downcase
+        composed_name = "#{node_name}_#{childnode_name}"
+
+        childnodes_present = !childnode.elements.empty?
+
+        if childnodes_present && composed_name == 'payment_method_data'
+          response[composed_name.to_sym] = Hash.from_xml(childnode.to_s).values.first
+        elsif childnodes_present && node_name == 'gateway_specific_response_fields'
+          response[node_name.to_sym] = {
+            childnode_name => Hash.from_xml(childnode.to_s).values.first
+          }
         else
-          response[name.to_sym] = childnode.text
+          response[composed_name.to_sym] = childnode.text
         end
       end
 
@@ -272,10 +292,10 @@ module ActiveMerchant #:nodoc:
       def response_from(raw_response, authorization_field)
         parsed = parse(raw_response)
         options = {
-          :authorization => parsed[authorization_field],
-          :test => (parsed[:on_test_gateway] == 'true'),
-          :avs_result => { :code => parsed[:response_avs_code] },
-          :cvv_result => parsed[:response_cvv_code]
+          authorization: parsed[authorization_field],
+          test: (parsed[:on_test_gateway] == 'true'),
+          avs_result: { code: parsed[:response_avs_code] },
+          cvv_result: parsed[:response_cvv_code]
         }
 
         Response.new(parsed[:succeeded] == 'true', parsed[:message] || parsed[:error], parsed, options)

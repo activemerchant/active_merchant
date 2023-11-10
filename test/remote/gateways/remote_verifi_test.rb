@@ -10,9 +10,9 @@ class VerifiTest < Test::Unit::TestCase
 
     #  Replace with your login and password for the Verifi test environment
     @options = {
-      :order_id => '37',
-      :email => 'test@example.com',
-      :billing_address => address
+      order_id: '37',
+      email: 'test@example.com',
+      billing_address: address
     }
 
     @amount = 100
@@ -85,8 +85,8 @@ class VerifiTest < Test::Unit::TestCase
 
   def test_bad_login
     gateway = VerifiGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
 
     assert response = gateway.purchase(@amount, @credit_card, @options)

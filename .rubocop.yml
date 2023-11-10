@@ -15,7 +15,7 @@ AllCops:
     - "lib/active_merchant/billing/gateways/paypal_express.rb"
     - "vendor/**/*"
   ExtraDetails: false
-  TargetRubyVersion: 2.3
+  TargetRubyVersion: 2.7
 
 # Active Merchant gateways are not amenable to length restrictions
 Metrics/ClassLength:
@@ -32,3 +32,11 @@ Layout/DotPosition:
 
 Layout/CaseIndentation:
   EnforcedStyle: end
+
+Layout/IndentFirstHashElement:
+  EnforcedStyle: consistent
+
+Naming/PredicateName:
+  Exclude:
+    - "lib/active_merchant/billing/gateways/payeezy.rb"
+    - 'lib/active_merchant/billing/gateways/airwallex.rb'

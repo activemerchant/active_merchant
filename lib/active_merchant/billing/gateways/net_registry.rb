@@ -24,7 +24,7 @@ module ActiveMerchant
     class NetRegistryGateway < Gateway
       self.live_url = self.test_url = 'https://paygate.ssllock.net/external2.pl'
 
-      FILTERED_PARAMS = [ 'card_no', 'card_expiry', 'receipt_array' ]
+      FILTERED_PARAMS = %w[card_no card_expiry receipt_array]
 
       self.supported_countries = ['AU']
 
@@ -32,16 +32,16 @@ module ActiveMerchant
       # steps in setting up your account, as detailed in
       # "Programming for NetRegistry's E-commerce Gateway."
       # [http://rubyurl.com/hNG]
-      self.supported_cardtypes = [:visa, :master, :diners_club, :american_express, :jcb]
+      self.supported_cardtypes = %i[visa master diners_club american_express jcb]
       self.display_name = 'NetRegistry'
       self.homepage_url = 'http://www.netregistry.com.au'
 
       TRANSACTIONS = {
-        :authorization => 'preauth',
-        :purchase => 'purchase',
-        :capture => 'completion',
-        :status => 'status',
-        :refund => 'refund'
+        authorization: 'preauth',
+        purchase: 'purchase',
+        capture: 'completion',
+        status: 'status',
+        refund: 'refund'
       }
 
       # Create a new NetRegistry gateway.
@@ -144,8 +144,11 @@ module ActiveMerchant
         # get gateway response
         response = parse(ssl_post(self.live_url, post_data(action, params)))
 
-        Response.new(response['status'] == 'approved', message_from(response), response,
-          :authorization => authorization_from(response, action)
+        Response.new(
+          response['status'] == 'approved',
+          message_from(response),
+          response,
+          authorization: authorization_from(response, action)
         )
       end
 

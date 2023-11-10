@@ -5,12 +5,12 @@ class RemoteCecabankTest < Test::Unit::TestCase
     @gateway = CecabankGateway.new(fixtures(:cecabank))
 
     @amount = 100
-    @credit_card = credit_card('5540500001000004', {:month => 12, :year => Time.now.year, :verification_value => 989})
-    @declined_card = credit_card('5540500001000004', {:month => 11, :year => Time.now.year + 1, :verification_value => 001})
+    @credit_card = credit_card('5540500001000004', { month: 12, year: Time.now.year, verification_value: 989 })
+    @declined_card = credit_card('5540500001000004', { month: 11, year: Time.now.year + 1, verification_value: 001 })
 
     @options = {
-      :order_id => generate_unique_id,
-      :description => 'Active Merchant Test Purchase'
+      order_id: generate_unique_id,
+      description: 'Active Merchant Test Purchase'
     }
   end
 
@@ -23,7 +23,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'ERROR', response.message
+    assert_match 'ERROR', response.message
   end
 
   def test_successful_refund
@@ -36,20 +36,19 @@ class RemoteCecabankTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_refund
-    assert response = @gateway.refund(@amount, 'wrongreference', @options)
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert response = @gateway.refund(@amount, purchase.authorization, @options.merge(currency: 'USD'))
     assert_failure response
-    assert_equal 'ERROR', response.message
+    assert_match 'Error', response.message
   end
 
   def test_invalid_login
-    gateway = CecabankGateway.new(
-      :merchant_id => '',
-      :acquirer_bin => '',
-      :terminal_id => '',
-      :key => ''
-    )
+    gateway = CecabankGateway.new(fixtures(:cecabank).merge(signature_key: 'invalid'))
+
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'ERROR', response.message
+    assert_match 'ERROR', response.message
   end
 end

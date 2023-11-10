@@ -10,11 +10,11 @@ class PayGateTest < Test::Unit::TestCase
 
     # May need to generate a unique order id as server responds with duplicate order detected
     @options = {
-      :order_id         => Time.now.getutc,
-      :billing_address  => address,
-      :email           => 'john.doe@example.com',
-      :ip              => '127.0.0.1',
-      :description      => 'Store Purchase',
+      order_id: Time.now.getutc,
+      billing_address: address,
+      email: 'john.doe@example.com',
+      ip: '127.0.0.1',
+      description: 'Store Purchase'
     }
   end
 
@@ -101,5 +101,4 @@ class PayGateTest < Test::Unit::TestCase
     </protocol>
     ENDOFXML
   end
-
 end

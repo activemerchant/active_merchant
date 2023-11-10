@@ -1,17 +1,16 @@
 require 'test_helper'
 
 class RemotePaymentExpressTest < Test::Unit::TestCase
-
   def setup
     @gateway = PaymentExpressGateway.new(fixtures(:payment_express))
 
     @credit_card = credit_card('4111111111111111')
 
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :email => 'cody@example.com',
-      :description => 'Store purchase'
+      order_id: generate_unique_id,
+      billing_address: address,
+      email: 'cody@example.com',
+      description: 'Store purchase'
     }
 
     @amount = 100
@@ -32,7 +31,19 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_ip
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:ip => '192.168.0.1'))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(ip: '192.168.0.1'))
+    assert_success response
+    assert_equal 'The Transaction was approved', response.message
+    assert_not_nil response.authorization
+  end
+
+  def test_successful_purchase_with_avs_fields
+    options = {
+      enable_avs_data: 0,
+      avs_action: 3
+    }
+
+    assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'The Transaction was approved', response.message
     assert_not_nil response.authorization
@@ -66,24 +77,32 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert_success purchase
     assert_equal 'The Transaction was approved', purchase.message
     assert !purchase.authorization.blank?
-    assert refund = @gateway.refund(amount, purchase.authorization, :description => 'Giving a refund')
+    assert refund = @gateway.refund(amount, purchase.authorization, description: 'Giving a refund')
     assert_success refund
   end
 
   def test_failed_capture
     assert response = @gateway.capture(@amount, '999')
     assert_failure response
-    assert_equal 'DpsTxnRef Invalid', response.message
+    assert_equal 'The transaction has not been processed.', response.message
   end
 
   def test_invalid_login
     gateway = PaymentExpressGateway.new(
-      :login => '',
-      :password => ''
+      login: '',
+      password: ''
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_match %r{Invalid Credentials}i, response.message
     assert_failure response
+  end
+
+  def test_verify
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'The Transaction was approved', response.message
+    assert_not_nil token = response.authorization
+    assert_equal token, response.token
   end
 
   def test_store_credit_card
@@ -96,7 +115,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
 
   def test_store_with_custom_token
     token = Time.now.to_i.to_s
-    assert response = @gateway.store(@credit_card, :billing_id => token)
+    assert response = @gateway.store(@credit_card, billing_id: token)
     assert_success response
     assert_equal 'The Transaction was approved', response.message
     assert_not_nil response.authorization
@@ -146,5 +165,4 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:password], clean_transcript)
   end
-
 end

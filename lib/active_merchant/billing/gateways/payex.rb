@@ -12,8 +12,8 @@ module ActiveMerchant #:nodoc:
       self.test_confined_url = 'https://test-confined.payex.com/'
 
       self.money_format = :cents
-      self.supported_countries = ['DK', 'FI', 'NO', 'SE']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_countries = %w[DK FI NO SE]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://payex.com/'
       self.display_name = 'Payex'
       self.default_currency = 'EUR'
@@ -25,18 +25,18 @@ module ActiveMerchant #:nodoc:
         authorize:  '3',
         cancel:     '4',
         failure:    '5',
-        capture:    '6',
+        capture:    '6'
       }
 
       SOAP_ACTIONS = {
         initialize: { name: 'Initialize8', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
-        purchasecc: { name: 'PurchaseCC', url: 'pxconfined/pxorder.asmx', xmlns: 'http://confined.payex.com/PxOrder/', confined: true},
+        purchasecc: { name: 'PurchaseCC', url: 'pxconfined/pxorder.asmx', xmlns: 'http://confined.payex.com/PxOrder/', confined: true },
         cancel: { name: 'Cancel2', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
         capture: { name: 'Capture5', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
         credit: { name: 'Credit5', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
         create_agreement: { name: 'CreateAgreement3', url: 'pxagreement/pxagreement.asmx', xmlns: 'http://external.payex.com/PxAgreement/' },
         delete_agreement: { name: 'DeleteAgreement', url: 'pxagreement/pxagreement.asmx', xmlns: 'http://external.payex.com/PxAgreement/' },
-        autopay: { name: 'AutoPay3', url: 'pxagreement/pxagreement.asmx', xmlns: 'http://external.payex.com/PxAgreement/' },
+        autopay: { name: 'AutoPay3', url: 'pxagreement/pxagreement.asmx', xmlns: 'http://external.payex.com/PxAgreement/' }
       }
 
       def initialize(options = {})
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
       # options        - A standard ActiveMerchant options hash
       #
       # Returns an ActiveMerchant::Billing::Response object
-      def void(authorization, options={})
+      def void(authorization, options = {})
         send_cancel(authorization)
       end
 
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
         amount = amount(1) # 1 cent for authorization
         MultiResponse.run(:first) do |r|
           r.process { send_create_agreement(options) }
-          r.process { send_initialize(amount, true, options.merge({agreement_ref: r.authorization})) }
+          r.process { send_initialize(amount, true, options.merge({ agreement_ref: r.authorization })) }
           order_ref = r.params['orderref']
           r.process { send_purchasecc(creditcard, order_ref) }
         end
@@ -193,9 +193,9 @@ module ActiveMerchant #:nodoc:
           cancelUrl: nil,
           clientLanguage: nil
         }
-        hash_fields = [:accountNumber, :purchaseOperation, :price, :priceArgList, :currency, :vat, :orderID,
-                       :productNumber, :description, :clientIPAddress, :clientIdentifier, :additionalValues,
-                       :externalID, :returnUrl, :view, :agreementRef, :cancelUrl, :clientLanguage]
+        hash_fields = %i[accountNumber purchaseOperation price priceArgList currency vat orderID
+                         productNumber description clientIPAddress clientIdentifier additionalValues
+                         externalID returnUrl view agreementRef cancelUrl clientLanguage]
         add_request_hash(properties, hash_fields)
         soap_action = SOAP_ACTIONS[:initialize]
         request = build_xml_request(soap_action, properties)
@@ -213,8 +213,8 @@ module ActiveMerchant #:nodoc:
           cardHolderName: payment_method.name,
           cardNumberCVC: payment_method.verification_value
         }
-        hash_fields = [:accountNumber, :orderRef, :transactionType, :cardNumber, :cardNumberExpireMonth,
-                       :cardNumberExpireYear, :cardNumberCVC, :cardHolderName]
+        hash_fields = %i[accountNumber orderRef transactionType cardNumber cardNumberExpireMonth
+                         cardNumberExpireYear cardNumberCVC cardHolderName]
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:purchasecc]
@@ -231,9 +231,9 @@ module ActiveMerchant #:nodoc:
           description: options[:description] || options[:order_id],
           orderId: options[:order_id],
           purchaseOperation: is_auth ? 'AUTHORIZATION' : 'SALE',
-          currency: (options[:currency] || default_currency),
+          currency: (options[:currency] || default_currency)
         }
-        hash_fields = [:accountNumber, :agreementRef, :price, :productNumber, :description, :orderId, :purchaseOperation, :currency]
+        hash_fields = %i[accountNumber agreementRef price productNumber description orderId purchaseOperation currency]
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:autopay]
@@ -250,7 +250,7 @@ module ActiveMerchant #:nodoc:
           vatAmount: options[:vat_amount] || 0,
           additionalValues: ''
         }
-        hash_fields = [:accountNumber, :transactionNumber, :amount, :orderId, :vatAmount, :additionalValues]
+        hash_fields = %i[accountNumber transactionNumber amount orderId vatAmount additionalValues]
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:capture]
@@ -267,7 +267,7 @@ module ActiveMerchant #:nodoc:
           vatAmount: options[:vat_amount] || 0,
           additionalValues: ''
         }
-        hash_fields = [:accountNumber, :transactionNumber, :amount, :orderId, :vatAmount, :additionalValues]
+        hash_fields = %i[accountNumber transactionNumber amount orderId vatAmount additionalValues]
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:credit]
@@ -278,9 +278,9 @@ module ActiveMerchant #:nodoc:
       def send_cancel(transaction_number)
         properties = {
           accountNumber: @options[:account],
-          transactionNumber: transaction_number,
+          transactionNumber: transaction_number
         }
-        hash_fields = [:accountNumber, :transactionNumber]
+        hash_fields = %i[accountNumber transactionNumber]
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:cancel]
@@ -299,7 +299,7 @@ module ActiveMerchant #:nodoc:
           startDate: options[:startDate] || '',
           stopDate: options[:stopDate] || ''
         }
-        hash_fields = [:accountNumber, :merchantRef, :description, :purchaseOperation, :maxAmount, :notifyUrl, :startDate, :stopDate]
+        hash_fields = %i[accountNumber merchantRef description purchaseOperation maxAmount notifyUrl startDate stopDate]
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:create_agreement]
@@ -310,9 +310,9 @@ module ActiveMerchant #:nodoc:
       def send_delete_agreement(authorization)
         properties = {
           accountNumber: @options[:account],
-          agreementRef: authorization,
+          agreementRef: authorization
         }
-        hash_fields = [:accountNumber, :agreementRef]
+        hash_fields = %i[accountNumber agreementRef]
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:delete_agreement]
@@ -341,9 +341,9 @@ module ActiveMerchant #:nodoc:
 
       def build_xml_request(soap_action, properties)
         builder = Nokogiri::XML::Builder.new
-        builder.__send__('soap12:Envelope', {'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
+        builder.__send__('soap12:Envelope', { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
                                              'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
-                                             'xmlns:soap12' => 'http://www.w3.org/2003/05/soap-envelope'}) do |root|
+                                             'xmlns:soap12' => 'http://www.w3.org/2003/05/soap-envelope' }) do |root|
           root.__send__('soap12:Body') do |body|
             body.__send__(soap_action[:name], xmlns: soap_action[:xmlns]) do |doc|
               properties.each do |key, val|
@@ -385,7 +385,8 @@ module ActiveMerchant #:nodoc:
           'Content-Length' => request.size.to_s
         }
         response = parse(ssl_post(url, request, headers))
-        Response.new(success?(response),
+        Response.new(
+          success?(response),
           message_from(response),
           response,
           test: test?,

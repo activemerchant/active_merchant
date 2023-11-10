@@ -8,14 +8,15 @@ class RemoteStripeAndroidPayTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      :currency => 'USD',
-      :description => 'ActiveMerchant Test Purchase',
-      :email => 'wow@example.com'
+      currency: 'USD',
+      description: 'ActiveMerchant Test Purchase',
+      email: 'wow@example.com'
     }
   end
 
   def test_successful_purchase_with_android_pay_raw_cryptogram
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
@@ -31,7 +32,8 @@ class RemoteStripeAndroidPayTest < Test::Unit::TestCase
   end
 
   def test_successful_auth_with_android_pay_raw_cryptogram
-    credit_card = network_tokenization_credit_card('4242424242424242',
+    credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',

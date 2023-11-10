@@ -11,7 +11,7 @@ class QbmsTest < Test::Unit::TestCase
     @card    = credit_card('4111111111111111')
 
     @options = {
-      :billing_address => address,
+      billing_address: address
     }
   end
 
@@ -66,7 +66,7 @@ class QbmsTest < Test::Unit::TestCase
   end
 
   def test_invalid_ticket
-    gateway = QbmsGateway.new(@gateway_options.merge(:ticket => 'test123'))
+    gateway = QbmsGateway.new(@gateway_options.merge(ticket: 'test123'))
 
     assert response = gateway.authorize(@amount, @card, @options)
     assert_instance_of Response, response
@@ -102,6 +102,6 @@ class QbmsTest < Test::Unit::TestCase
   private
 
   def error_card(config_id)
-    credit_card('4111111111111111', :first_name => "configid=#{config_id}", :last_name => '')
+    credit_card('4111111111111111', first_name: "configid=#{config_id}", last_name: '')
   end
 end

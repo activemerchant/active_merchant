@@ -4,19 +4,19 @@ class CecabankTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = CecabankGateway.new(
-      :merchant_id  => '12345678',
-      :acquirer_bin => '12345678',
-      :terminal_id  => '00000003',
-      :key => 'enc_key'
+    @gateway = CecabankXmlGateway.new(
+      merchant_id: '12345678',
+      acquirer_bin: '12345678',
+      terminal_id: '00000003',
+      cypher_key: 'enc_key'
     )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :description => 'Store Purchase'
+      order_id: '1',
+      description: 'Store Purchase'
     }
   end
 
@@ -43,7 +43,7 @@ class CecabankTest < Test::Unit::TestCase
   def test_expiration_date_sent_correctly
     stub_comms do
       @gateway.purchase(@amount, credit_card('4242424242424242', month: 1, year: 2014), @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/Caducidad=201401&/, data, 'Expected expiration date format is yyyymm')
     end.respond_with(successful_purchase_response)
   end
@@ -81,60 +81,60 @@ class CecabankTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="ISO-8859-1" ?>
-<TRANSACCION valor="OK" numeroOperacion="202215722" fecha="22/01/2014 13:15:32">
-  <OPERACION tipo="000">
-    <importe>        171.00  Euros</importe>
-    <descripcion><![CDATA[blah blah blah]]></descripcion>
-    <numeroAutorizacion>101000</numeroAutorizacion>
-    <referencia>12345678901234567890</referencia>
-    <pan>##PAN##</pan>
-  </OPERACION>
-</TRANSACCION>
+    <<~RESPONSE
+      <?xml version="1.0" encoding="ISO-8859-1" ?>
+      <TRANSACCION valor="OK" numeroOperacion="202215722" fecha="22/01/2014 13:15:32">
+        <OPERACION tipo="000">
+          <importe>        171.00  Euros</importe>
+          <descripcion><![CDATA[blah blah blah]]></descripcion>
+          <numeroAutorizacion>101000</numeroAutorizacion>
+          <referencia>12345678901234567890</referencia>
+          <pan>##PAN##</pan>
+        </OPERACION>
+      </TRANSACCION>
     RESPONSE
   end
 
   def failed_purchase_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="ISO-8859-1" ?>
-<TRANSACCION valor="ERROR" numeroOperacion="1390410672" fecha="22/01/2014 18:11:12">
-  <ERROR>
-    <codigo>27</codigo>
-    <descripcion><![CDATA[ERROR. Formato CVV2/CVC2 no valido.]]></descripcion>
-  </ERROR>
-</TRANSACCION>
+    <<~RESPONSE
+      <?xml version="1.0" encoding="ISO-8859-1" ?>
+      <TRANSACCION valor="ERROR" numeroOperacion="1390410672" fecha="22/01/2014 18:11:12">
+        <ERROR>
+          <codigo>27</codigo>
+          <descripcion><![CDATA[ERROR. Formato CVV2/CVC2 no valido.]]></descripcion>
+        </ERROR>
+      </TRANSACCION>
     RESPONSE
   end
 
   def invalid_xml_purchase_response
-    <<-RESPONSE
-<br>
-<TRANSACCION valor="OK" numeroOperacion="202215722" fecha="22/01/2014 13:15:32">
-Invalid unparsable xml in the response
+    <<~RESPONSE
+      <br>
+      <TRANSACCION valor="OK" numeroOperacion="202215722" fecha="22/01/2014 13:15:32">
+      Invalid unparsable xml in the response
     RESPONSE
   end
 
   def successful_refund_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="ISO-8859-1" ?>
-<TRANSACCION valor="OK" numeroOperacion="1390414594" fecha="##FECHA##" >
-  <OPERACION tipo="900">
-    <importe>          1.00 Euros</importe>
-  </OPERACION>
-</TRANSACCION>
+    <<~RESPONSE
+      <?xml version="1.0" encoding="ISO-8859-1" ?>
+      <TRANSACCION valor="OK" numeroOperacion="1390414594" fecha="##FECHA##" >
+        <OPERACION tipo="900">
+          <importe>          1.00 Euros</importe>
+        </OPERACION>
+      </TRANSACCION>
     RESPONSE
   end
 
   def failed_refund_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="ISO-8859-1" ?>
-<TRANSACCION valor="ERROR" numeroOperacion="1390414596" fecha="##FECHA##">
-  <ERROR>
-    <codigo>15</codigo>
-    <descripcion><![CDATA[ERROR. Operaci&oacute;n inexistente <1403>]]></descripcion>
-  </ERROR>
-</TRANSACCION>
+    <<~RESPONSE
+      <?xml version="1.0" encoding="ISO-8859-1" ?>
+      <TRANSACCION valor="ERROR" numeroOperacion="1390414596" fecha="##FECHA##">
+        <ERROR>
+          <codigo>15</codigo>
+          <descripcion><![CDATA[ERROR. Operaci&oacute;n inexistente <1403>]]></descripcion>
+        </ERROR>
+      </TRANSACCION>
     RESPONSE
   end
 

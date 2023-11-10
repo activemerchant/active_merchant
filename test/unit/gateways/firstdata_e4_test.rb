@@ -7,16 +7,16 @@ class FirstdataE4Test < Test::Unit::TestCase
 
   def setup
     @gateway = FirstdataE4Gateway.new(
-      :login    => 'A00427-01',
-      :password => 'testus'
+      login: 'A00427-01',
+      password: 'testus'
     )
 
     @credit_card = credit_card
     @amount = 100
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
     @authorization = 'ET1700;106625152;4738'
   end
@@ -42,7 +42,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     @gateway.expects(:ssl_post).returns(successful_purchase_with_specified_currency_response)
     assert response = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
     assert_success response
@@ -61,10 +61,9 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_specified_currency_and_token
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     @gateway.expects(:ssl_post).returns(successful_purchase_with_specified_currency_response)
-    assert response = @gateway.purchase(@amount, '8938737759041111;visa;Longbob;Longsen;9;2014',
-      options_with_specified_currency)
+    assert response = @gateway.purchase(@amount, '8938737759041111;visa;Longbob;Longsen;9;2014', options_with_specified_currency)
     assert_success response
     assert_equal 'GBP', response.params['currency']
   end
@@ -82,7 +81,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_successful_refund_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     @gateway.expects(:ssl_post).returns(successful_refund_with_specified_currency_response)
     assert response = @gateway.refund(@amount, @authorization, options_with_specified_currency)
     assert_success response
@@ -136,11 +135,11 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['CA', 'US'], FirstdataE4Gateway.supported_countries
+    assert_equal %w[CA US], FirstdataE4Gateway.supported_countries
   end
 
   def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express, :jcb, :discover], FirstdataE4Gateway.supported_cardtypes
+    assert_equal %i[visa master american_express jcb discover], FirstdataE4Gateway.supported_cardtypes
   end
 
   def test_avs_result
@@ -160,15 +159,24 @@ class FirstdataE4Test < Test::Unit::TestCase
   def test_requests_include_verification_string
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<VerificationStr1>456 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>', data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_requests_scrub_newline_and_return_characters_from_verification_string_components
+    stub_comms do
+      options_with_newline_and_return_characters_in_address = @options.merge({ billing_address: address({ address1: "123 My\nStreet", address2: "K1C2N6\r", city: "Ottawa\r\n" }) })
+      @gateway.purchase(@amount, @credit_card, options_with_newline_and_return_characters_in_address)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<VerificationStr1>123 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>', data
     end.respond_with(successful_purchase_response)
   end
 
   def test_tax_fields_are_sent
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(tax1_amount: 830, tax1_number: 'Br59a'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Tax1Amount>830', data
       assert_match '<Tax1Number>Br59a', data
     end.respond_with(successful_purchase_response)
@@ -177,7 +185,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   def test_customer_ref_is_sent
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(customer: '932'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Customer_Ref>932', data
     end.respond_with(successful_purchase_response)
   end
@@ -185,7 +193,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   def test_eci_default_value
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Ecommerce_Flag>07</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)
   end
@@ -196,7 +204,7 @@ class FirstdataE4Test < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Ecommerce_Flag>05</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)
 
@@ -205,7 +213,7 @@ class FirstdataE4Test < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Ecommerce_Flag>05</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)
   end
@@ -213,7 +221,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   def test_eci_option_value
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(eci: '05'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Ecommerce_Flag>05</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)
   end
@@ -287,7 +295,7 @@ class FirstdataE4Test < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_authentication_data)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Ecommerce_Flag>06</Ecommerce_Flag>', data
       assert_match '<CAVV>SAMPLECAVV</CAVV>', data
       assert_match '<XID>SAMPLEXID</XID>', data
@@ -309,7 +317,7 @@ class FirstdataE4Test < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Track1>Track Data</Track1>', data
       assert_match '<Ecommerce_Flag>R</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)
@@ -394,780 +402,780 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    <<-RESPONSE
-  <?xml version="1.0" encoding="UTF-8"?>
-  <TransactionResult>
-    <ExactID>AD1234-56</ExactID>
-    <Password></Password>
-    <Transaction_Type>00</Transaction_Type>
-    <DollarAmount>47.38</DollarAmount>
-    <SurchargeAmount></SurchargeAmount>
-    <Card_Number>############1111</Card_Number>
-    <Transaction_Tag>106625152</Transaction_Tag>
-    <Track1></Track1>
-    <Track2></Track2>
-    <PAN></PAN>
-    <Authorization_Num>ET1700</Authorization_Num>
-    <Expiry_Date>0913</Expiry_Date>
-    <CardHoldersName>Fred Burfle</CardHoldersName>
-    <VerificationStr1></VerificationStr1>
-    <VerificationStr2>773</VerificationStr2>
-    <CVD_Presence_Ind>0</CVD_Presence_Ind>
-    <ZipCode></ZipCode>
-    <Tax1Amount></Tax1Amount>
-    <Tax1Number></Tax1Number>
-    <Tax2Amount></Tax2Amount>
-    <Tax2Number></Tax2Number>
-    <Secure_AuthRequired></Secure_AuthRequired>
-    <Secure_AuthResult></Secure_AuthResult>
-    <Ecommerce_Flag></Ecommerce_Flag>
-    <XID></XID>
-    <CAVV></CAVV>
-    <CAVV_Algorithm></CAVV_Algorithm>
-    <Reference_No>77</Reference_No>
-    <Customer_Ref></Customer_Ref>
-    <Reference_3></Reference_3>
-    <Language></Language>
-    <Client_IP>1.1.1.10</Client_IP>
-    <Client_Email></Client_Email>
-    <Transaction_Error>false</Transaction_Error>
-    <Transaction_Approved>true</Transaction_Approved>
-    <EXact_Resp_Code>00</EXact_Resp_Code>
-    <EXact_Message>Transaction Normal</EXact_Message>
-    <Bank_Resp_Code>100</Bank_Resp_Code>
-    <Bank_Message>Approved</Bank_Message>
-    <Bank_Resp_Code_2></Bank_Resp_Code_2>
-    <SequenceNo>000040</SequenceNo>
-    <AVS>U</AVS>
-    <CVV2>M</CVV2>
-    <Retrieval_Ref_No>3146117</Retrieval_Ref_No>
-    <CAVV_Response></CAVV_Response>
-    <Currency>USD</Currency>
-    <AmountRequested></AmountRequested>
-    <PartialRedemption>false</PartialRedemption>
-    <MerchantName>Friendly Inc DEMO0983</MerchantName>
-    <MerchantAddress>123 King St</MerchantAddress>
-    <MerchantCity>Toronto</MerchantCity>
-    <MerchantProvince>Ontario</MerchantProvince>
-    <MerchantCountry>Canada</MerchantCountry>
-    <MerchantPostal>L7Z 3K8</MerchantPostal>
-    <MerchantURL></MerchantURL>
-    <TransarmorToken>8938737759041111</TransarmorToken>
-    <CTR>=========== TRANSACTION RECORD ==========
-Friendly Inc DEMO0983
-123 King St
-Toronto, ON L7Z 3K8
-Canada
+    <<~RESPONSE
+        <?xml version="1.0" encoding="UTF-8"?>
+        <TransactionResult>
+          <ExactID>AD1234-56</ExactID>
+          <Password></Password>
+          <Transaction_Type>00</Transaction_Type>
+          <DollarAmount>47.38</DollarAmount>
+          <SurchargeAmount></SurchargeAmount>
+          <Card_Number>############1111</Card_Number>
+          <Transaction_Tag>106625152</Transaction_Tag>
+          <Track1></Track1>
+          <Track2></Track2>
+          <PAN></PAN>
+          <Authorization_Num>ET1700</Authorization_Num>
+          <Expiry_Date>0913</Expiry_Date>
+          <CardHoldersName>Fred Burfle</CardHoldersName>
+          <VerificationStr1></VerificationStr1>
+          <VerificationStr2>773</VerificationStr2>
+          <CVD_Presence_Ind>0</CVD_Presence_Ind>
+          <ZipCode></ZipCode>
+          <Tax1Amount></Tax1Amount>
+          <Tax1Number></Tax1Number>
+          <Tax2Amount></Tax2Amount>
+          <Tax2Number></Tax2Number>
+          <Secure_AuthRequired></Secure_AuthRequired>
+          <Secure_AuthResult></Secure_AuthResult>
+          <Ecommerce_Flag></Ecommerce_Flag>
+          <XID></XID>
+          <CAVV></CAVV>
+          <CAVV_Algorithm></CAVV_Algorithm>
+          <Reference_No>77</Reference_No>
+          <Customer_Ref></Customer_Ref>
+          <Reference_3></Reference_3>
+          <Language></Language>
+          <Client_IP>1.1.1.10</Client_IP>
+          <Client_Email></Client_Email>
+          <Transaction_Error>false</Transaction_Error>
+          <Transaction_Approved>true</Transaction_Approved>
+          <EXact_Resp_Code>00</EXact_Resp_Code>
+          <EXact_Message>Transaction Normal</EXact_Message>
+          <Bank_Resp_Code>100</Bank_Resp_Code>
+          <Bank_Message>Approved</Bank_Message>
+          <Bank_Resp_Code_2></Bank_Resp_Code_2>
+          <SequenceNo>000040</SequenceNo>
+          <AVS>U</AVS>
+          <CVV2>M</CVV2>
+          <Retrieval_Ref_No>3146117</Retrieval_Ref_No>
+          <CAVV_Response></CAVV_Response>
+          <Currency>USD</Currency>
+          <AmountRequested></AmountRequested>
+          <PartialRedemption>false</PartialRedemption>
+          <MerchantName>Friendly Inc DEMO0983</MerchantName>
+          <MerchantAddress>123 King St</MerchantAddress>
+          <MerchantCity>Toronto</MerchantCity>
+          <MerchantProvince>Ontario</MerchantProvince>
+          <MerchantCountry>Canada</MerchantCountry>
+          <MerchantPostal>L7Z 3K8</MerchantPostal>
+          <MerchantURL></MerchantURL>
+          <TransarmorToken>8938737759041111</TransarmorToken>
+          <CTR>=========== TRANSACTION RECORD ==========
+      Friendly Inc DEMO0983
+      123 King St
+      Toronto, ON L7Z 3K8
+      Canada
 
 
-TYPE: Purchase
+      TYPE: Purchase
 
-ACCT: Visa  $ 47.38 USD
+      ACCT: Visa  $ 47.38 USD
 
-CARD NUMBER : ############1111
-DATE/TIME   : 28 Sep 12 07:54:48
-REFERENCE # :  000040 M
-AUTHOR. #   : ET120454
-TRANS. REF. : 77
+      CARD NUMBER : ############1111
+      DATE/TIME   : 28 Sep 12 07:54:48
+      REFERENCE # :  000040 M
+      AUTHOR. #   : ET120454
+      TRANS. REF. : 77
 
-    Approved - Thank You 100
+          Approved - Thank You 100
 
 
-Please retain this copy for your records.
+      Please retain this copy for your records.
 
-Cardholder will pay above amount to card
-issuer pursuant to cardholder agreement.
-=========================================</CTR>
-  </TransactionResult>
+      Cardholder will pay above amount to card
+      issuer pursuant to cardholder agreement.
+      =========================================</CTR>
+        </TransactionResult>
     RESPONSE
   end
 
   def successful_purchase_with_specified_currency_response
-    <<-RESPONSE
-  <?xml version="1.0" encoding="UTF-8"?>
-  <TransactionResult>
-    <ExactID>AD1234-56</ExactID>
-    <Password></Password>
-    <Transaction_Type>00</Transaction_Type>
-    <DollarAmount>47.38</DollarAmount>
-    <SurchargeAmount></SurchargeAmount>
-    <Card_Number>############1111</Card_Number>
-    <Transaction_Tag>106625152</Transaction_Tag>
-    <Track1></Track1>
-    <Track2></Track2>
-    <PAN></PAN>
-    <Authorization_Num>ET1700</Authorization_Num>
-    <Expiry_Date>0913</Expiry_Date>
-    <CardHoldersName>Fred Burfle</CardHoldersName>
-    <VerificationStr1></VerificationStr1>
-    <VerificationStr2>773</VerificationStr2>
-    <CVD_Presence_Ind>0</CVD_Presence_Ind>
-    <ZipCode></ZipCode>
-    <Tax1Amount></Tax1Amount>
-    <Tax1Number></Tax1Number>
-    <Tax2Amount></Tax2Amount>
-    <Tax2Number></Tax2Number>
-    <Secure_AuthRequired></Secure_AuthRequired>
-    <Secure_AuthResult></Secure_AuthResult>
-    <Ecommerce_Flag></Ecommerce_Flag>
-    <XID></XID>
-    <CAVV></CAVV>
-    <CAVV_Algorithm></CAVV_Algorithm>
-    <Reference_No>77</Reference_No>
-    <Customer_Ref></Customer_Ref>
-    <Reference_3></Reference_3>
-    <Language></Language>
-    <Client_IP>1.1.1.10</Client_IP>
-    <Client_Email></Client_Email>
-    <Transaction_Error>false</Transaction_Error>
-    <Transaction_Approved>true</Transaction_Approved>
-    <EXact_Resp_Code>00</EXact_Resp_Code>
-    <EXact_Message>Transaction Normal</EXact_Message>
-    <Bank_Resp_Code>100</Bank_Resp_Code>
-    <Bank_Message>Approved</Bank_Message>
-    <Bank_Resp_Code_2></Bank_Resp_Code_2>
-    <SequenceNo>000040</SequenceNo>
-    <AVS>U</AVS>
-    <CVV2>M</CVV2>
-    <Retrieval_Ref_No>3146117</Retrieval_Ref_No>
-    <CAVV_Response></CAVV_Response>
-    <Currency>GBP</Currency>
-    <AmountRequested></AmountRequested>
-    <PartialRedemption>false</PartialRedemption>
-    <MerchantName>Friendly Inc DEMO0983</MerchantName>
-    <MerchantAddress>123 King St</MerchantAddress>
-    <MerchantCity>Toronto</MerchantCity>
-    <MerchantProvince>Ontario</MerchantProvince>
-    <MerchantCountry>Canada</MerchantCountry>
-    <MerchantPostal>L7Z 3K8</MerchantPostal>
-    <MerchantURL></MerchantURL>
-    <TransarmorToken>8938737759041111</TransarmorToken>
-    <CTR>=========== TRANSACTION RECORD ==========
-Friendly Inc DEMO0983
-123 King St
-Toronto, ON L7Z 3K8
-Canada
+    <<~RESPONSE
+        <?xml version="1.0" encoding="UTF-8"?>
+        <TransactionResult>
+          <ExactID>AD1234-56</ExactID>
+          <Password></Password>
+          <Transaction_Type>00</Transaction_Type>
+          <DollarAmount>47.38</DollarAmount>
+          <SurchargeAmount></SurchargeAmount>
+          <Card_Number>############1111</Card_Number>
+          <Transaction_Tag>106625152</Transaction_Tag>
+          <Track1></Track1>
+          <Track2></Track2>
+          <PAN></PAN>
+          <Authorization_Num>ET1700</Authorization_Num>
+          <Expiry_Date>0913</Expiry_Date>
+          <CardHoldersName>Fred Burfle</CardHoldersName>
+          <VerificationStr1></VerificationStr1>
+          <VerificationStr2>773</VerificationStr2>
+          <CVD_Presence_Ind>0</CVD_Presence_Ind>
+          <ZipCode></ZipCode>
+          <Tax1Amount></Tax1Amount>
+          <Tax1Number></Tax1Number>
+          <Tax2Amount></Tax2Amount>
+          <Tax2Number></Tax2Number>
+          <Secure_AuthRequired></Secure_AuthRequired>
+          <Secure_AuthResult></Secure_AuthResult>
+          <Ecommerce_Flag></Ecommerce_Flag>
+          <XID></XID>
+          <CAVV></CAVV>
+          <CAVV_Algorithm></CAVV_Algorithm>
+          <Reference_No>77</Reference_No>
+          <Customer_Ref></Customer_Ref>
+          <Reference_3></Reference_3>
+          <Language></Language>
+          <Client_IP>1.1.1.10</Client_IP>
+          <Client_Email></Client_Email>
+          <Transaction_Error>false</Transaction_Error>
+          <Transaction_Approved>true</Transaction_Approved>
+          <EXact_Resp_Code>00</EXact_Resp_Code>
+          <EXact_Message>Transaction Normal</EXact_Message>
+          <Bank_Resp_Code>100</Bank_Resp_Code>
+          <Bank_Message>Approved</Bank_Message>
+          <Bank_Resp_Code_2></Bank_Resp_Code_2>
+          <SequenceNo>000040</SequenceNo>
+          <AVS>U</AVS>
+          <CVV2>M</CVV2>
+          <Retrieval_Ref_No>3146117</Retrieval_Ref_No>
+          <CAVV_Response></CAVV_Response>
+          <Currency>GBP</Currency>
+          <AmountRequested></AmountRequested>
+          <PartialRedemption>false</PartialRedemption>
+          <MerchantName>Friendly Inc DEMO0983</MerchantName>
+          <MerchantAddress>123 King St</MerchantAddress>
+          <MerchantCity>Toronto</MerchantCity>
+          <MerchantProvince>Ontario</MerchantProvince>
+          <MerchantCountry>Canada</MerchantCountry>
+          <MerchantPostal>L7Z 3K8</MerchantPostal>
+          <MerchantURL></MerchantURL>
+          <TransarmorToken>8938737759041111</TransarmorToken>
+          <CTR>=========== TRANSACTION RECORD ==========
+      Friendly Inc DEMO0983
+      123 King St
+      Toronto, ON L7Z 3K8
+      Canada
 
 
-TYPE: Purchase
+      TYPE: Purchase
 
-ACCT: Visa  £ 47.38 GBP
+      ACCT: Visa  £ 47.38 GBP
 
-CARD NUMBER : ############1111
-DATE/TIME   : 28 Sep 12 07:54:48
-REFERENCE # :  000040 M
-AUTHOR. #   : ET120454
-TRANS. REF. : 77
+      CARD NUMBER : ############1111
+      DATE/TIME   : 28 Sep 12 07:54:48
+      REFERENCE # :  000040 M
+      AUTHOR. #   : ET120454
+      TRANS. REF. : 77
 
-    Approved - Thank You 100
+          Approved - Thank You 100
 
 
-Please retain this copy for your records.
+      Please retain this copy for your records.
 
-Cardholder will pay above amount to card
-issuer pursuant to cardholder agreement.
-=========================================</CTR>
-  </TransactionResult>
+      Cardholder will pay above amount to card
+      issuer pursuant to cardholder agreement.
+      =========================================</CTR>
+        </TransactionResult>
     RESPONSE
   end
 
   def successful_purchase_response_without_transarmor
-    <<-RESPONSE
-  <?xml version="1.0" encoding="UTF-8"?>
-  <TransactionResult>
-    <ExactID>AD1234-56</ExactID>
-    <Password></Password>
-    <Transaction_Type>00</Transaction_Type>
-    <DollarAmount>47.38</DollarAmount>
-    <SurchargeAmount></SurchargeAmount>
-    <Card_Number>############1111</Card_Number>
-    <Transaction_Tag>106625152</Transaction_Tag>
-    <Track1></Track1>
-    <Track2></Track2>
-    <PAN></PAN>
-    <Authorization_Num>ET1700</Authorization_Num>
-    <Expiry_Date>0913</Expiry_Date>
-    <CardHoldersName>Fred Burfle</CardHoldersName>
-    <VerificationStr1></VerificationStr1>
-    <VerificationStr2>773</VerificationStr2>
-    <CVD_Presence_Ind>0</CVD_Presence_Ind>
-    <ZipCode></ZipCode>
-    <Tax1Amount></Tax1Amount>
-    <Tax1Number></Tax1Number>
-    <Tax2Amount></Tax2Amount>
-    <Tax2Number></Tax2Number>
-    <Secure_AuthRequired></Secure_AuthRequired>
-    <Secure_AuthResult></Secure_AuthResult>
-    <Ecommerce_Flag></Ecommerce_Flag>
-    <XID></XID>
-    <CAVV></CAVV>
-    <CAVV_Algorithm></CAVV_Algorithm>
-    <Reference_No>77</Reference_No>
-    <Customer_Ref></Customer_Ref>
-    <Reference_3></Reference_3>
-    <Language></Language>
-    <Client_IP>1.1.1.10</Client_IP>
-    <Client_Email></Client_Email>
-    <Transaction_Error>false</Transaction_Error>
-    <Transaction_Approved>true</Transaction_Approved>
-    <EXact_Resp_Code>00</EXact_Resp_Code>
-    <EXact_Message>Transaction Normal</EXact_Message>
-    <Bank_Resp_Code>100</Bank_Resp_Code>
-    <Bank_Message>Approved</Bank_Message>
-    <Bank_Resp_Code_2></Bank_Resp_Code_2>
-    <SequenceNo>000040</SequenceNo>
-    <AVS>U</AVS>
-    <CVV2>M</CVV2>
-    <Retrieval_Ref_No>3146117</Retrieval_Ref_No>
-    <CAVV_Response></CAVV_Response>
-    <Currency>USD</Currency>
-    <AmountRequested></AmountRequested>
-    <PartialRedemption>false</PartialRedemption>
-    <MerchantName>Friendly Inc DEMO0983</MerchantName>
-    <MerchantAddress>123 King St</MerchantAddress>
-    <MerchantCity>Toronto</MerchantCity>
-    <MerchantProvince>Ontario</MerchantProvince>
-    <MerchantCountry>Canada</MerchantCountry>
-    <MerchantPostal>L7Z 3K8</MerchantPostal>
-    <MerchantURL></MerchantURL>
-    <TransarmorToken></TransarmorToken>
-    <CTR>=========== TRANSACTION RECORD ==========
-Friendly Inc DEMO0983
-123 King St
-Toronto, ON L7Z 3K8
-Canada
+    <<~RESPONSE
+        <?xml version="1.0" encoding="UTF-8"?>
+        <TransactionResult>
+          <ExactID>AD1234-56</ExactID>
+          <Password></Password>
+          <Transaction_Type>00</Transaction_Type>
+          <DollarAmount>47.38</DollarAmount>
+          <SurchargeAmount></SurchargeAmount>
+          <Card_Number>############1111</Card_Number>
+          <Transaction_Tag>106625152</Transaction_Tag>
+          <Track1></Track1>
+          <Track2></Track2>
+          <PAN></PAN>
+          <Authorization_Num>ET1700</Authorization_Num>
+          <Expiry_Date>0913</Expiry_Date>
+          <CardHoldersName>Fred Burfle</CardHoldersName>
+          <VerificationStr1></VerificationStr1>
+          <VerificationStr2>773</VerificationStr2>
+          <CVD_Presence_Ind>0</CVD_Presence_Ind>
+          <ZipCode></ZipCode>
+          <Tax1Amount></Tax1Amount>
+          <Tax1Number></Tax1Number>
+          <Tax2Amount></Tax2Amount>
+          <Tax2Number></Tax2Number>
+          <Secure_AuthRequired></Secure_AuthRequired>
+          <Secure_AuthResult></Secure_AuthResult>
+          <Ecommerce_Flag></Ecommerce_Flag>
+          <XID></XID>
+          <CAVV></CAVV>
+          <CAVV_Algorithm></CAVV_Algorithm>
+          <Reference_No>77</Reference_No>
+          <Customer_Ref></Customer_Ref>
+          <Reference_3></Reference_3>
+          <Language></Language>
+          <Client_IP>1.1.1.10</Client_IP>
+          <Client_Email></Client_Email>
+          <Transaction_Error>false</Transaction_Error>
+          <Transaction_Approved>true</Transaction_Approved>
+          <EXact_Resp_Code>00</EXact_Resp_Code>
+          <EXact_Message>Transaction Normal</EXact_Message>
+          <Bank_Resp_Code>100</Bank_Resp_Code>
+          <Bank_Message>Approved</Bank_Message>
+          <Bank_Resp_Code_2></Bank_Resp_Code_2>
+          <SequenceNo>000040</SequenceNo>
+          <AVS>U</AVS>
+          <CVV2>M</CVV2>
+          <Retrieval_Ref_No>3146117</Retrieval_Ref_No>
+          <CAVV_Response></CAVV_Response>
+          <Currency>USD</Currency>
+          <AmountRequested></AmountRequested>
+          <PartialRedemption>false</PartialRedemption>
+          <MerchantName>Friendly Inc DEMO0983</MerchantName>
+          <MerchantAddress>123 King St</MerchantAddress>
+          <MerchantCity>Toronto</MerchantCity>
+          <MerchantProvince>Ontario</MerchantProvince>
+          <MerchantCountry>Canada</MerchantCountry>
+          <MerchantPostal>L7Z 3K8</MerchantPostal>
+          <MerchantURL></MerchantURL>
+          <TransarmorToken></TransarmorToken>
+          <CTR>=========== TRANSACTION RECORD ==========
+      Friendly Inc DEMO0983
+      123 King St
+      Toronto, ON L7Z 3K8
+      Canada
 
 
-TYPE: Purchase
+      TYPE: Purchase
 
-ACCT: Visa  $ 47.38 USD
+      ACCT: Visa  $ 47.38 USD
 
-CARD NUMBER : ############1111
-DATE/TIME   : 28 Sep 12 07:54:48
-REFERENCE # :  000040 M
-AUTHOR. #   : ET120454
-TRANS. REF. : 77
+      CARD NUMBER : ############1111
+      DATE/TIME   : 28 Sep 12 07:54:48
+      REFERENCE # :  000040 M
+      AUTHOR. #   : ET120454
+      TRANS. REF. : 77
 
-    Approved - Thank You 100
+          Approved - Thank You 100
 
 
-Please retain this copy for your records.
+      Please retain this copy for your records.
 
-Cardholder will pay above amount to card
-issuer pursuant to cardholder agreement.
-=========================================</CTR>
-  </TransactionResult>
+      Cardholder will pay above amount to card
+      issuer pursuant to cardholder agreement.
+      =========================================</CTR>
+        </TransactionResult>
     RESPONSE
   end
 
   def successful_refund_response
-    <<-RESPONSE
-  <?xml version="1.0" encoding="UTF-8"?>
-  <TransactionResult>
-    <ExactID>AD1234-56</ExactID>
-    <Password></Password>
-    <Transaction_Type>34</Transaction_Type>
-    <DollarAmount>123</DollarAmount>
-    <SurchargeAmount></SurchargeAmount>
-    <Card_Number>############1111</Card_Number>
-    <Transaction_Tag>888</Transaction_Tag>
-    <Track1></Track1>
-    <Track2></Track2>
-    <PAN></PAN>
-    <Authorization_Num>ET112216</Authorization_Num>
-    <Expiry_Date>0913</Expiry_Date>
-    <CardHoldersName>Fred Burfle</CardHoldersName>
-    <VerificationStr1></VerificationStr1>
-    <VerificationStr2></VerificationStr2>
-    <CVD_Presence_Ind>0</CVD_Presence_Ind>
-    <ZipCode></ZipCode>
-    <Tax1Amount></Tax1Amount>
-    <Tax1Number></Tax1Number>
-    <Tax2Amount></Tax2Amount>
-    <Tax2Number></Tax2Number>
-    <Secure_AuthRequired></Secure_AuthRequired>
-    <Secure_AuthResult></Secure_AuthResult>
-    <Ecommerce_Flag></Ecommerce_Flag>
-    <XID></XID>
-    <CAVV></CAVV>
-    <CAVV_Algorithm></CAVV_Algorithm>
-    <Reference_No></Reference_No>
-    <Customer_Ref></Customer_Ref>
-    <Reference_3></Reference_3>
-    <Language></Language>
-    <Client_IP>1.1.1.10</Client_IP>
-    <Client_Email></Client_Email>
-    <Transaction_Error>false</Transaction_Error>
-    <Transaction_Approved>true</Transaction_Approved>
-    <EXact_Resp_Code>00</EXact_Resp_Code>
-    <EXact_Message>Transaction Normal</EXact_Message>
-    <Bank_Resp_Code>100</Bank_Resp_Code>
-    <Bank_Message>Approved</Bank_Message>
-    <Bank_Resp_Code_2></Bank_Resp_Code_2>
-    <SequenceNo>000041</SequenceNo>
-    <AVS></AVS>
-    <CVV2>I</CVV2>
-    <Retrieval_Ref_No>9176784</Retrieval_Ref_No>
-    <CAVV_Response></CAVV_Response>
-    <Currency>USD</Currency>
-    <AmountRequested></AmountRequested>
-    <PartialRedemption>false</PartialRedemption>
-    <MerchantName>Friendly Inc DEMO0983</MerchantName>
-    <MerchantAddress>123 King St</MerchantAddress>
-    <MerchantCity>Toronto</MerchantCity>
-    <MerchantProvince>Ontario</MerchantProvince>
-    <MerchantCountry>Canada</MerchantCountry>
-    <MerchantPostal>L7Z 3K8</MerchantPostal>
-    <MerchantURL></MerchantURL>
-    <CTR>=========== TRANSACTION RECORD ==========
-Friendly Inc DEMO0983
-123 King St
-Toronto, ON L7Z 3K8
-Canada
+    <<~RESPONSE
+        <?xml version="1.0" encoding="UTF-8"?>
+        <TransactionResult>
+          <ExactID>AD1234-56</ExactID>
+          <Password></Password>
+          <Transaction_Type>34</Transaction_Type>
+          <DollarAmount>123</DollarAmount>
+          <SurchargeAmount></SurchargeAmount>
+          <Card_Number>############1111</Card_Number>
+          <Transaction_Tag>888</Transaction_Tag>
+          <Track1></Track1>
+          <Track2></Track2>
+          <PAN></PAN>
+          <Authorization_Num>ET112216</Authorization_Num>
+          <Expiry_Date>0913</Expiry_Date>
+          <CardHoldersName>Fred Burfle</CardHoldersName>
+          <VerificationStr1></VerificationStr1>
+          <VerificationStr2></VerificationStr2>
+          <CVD_Presence_Ind>0</CVD_Presence_Ind>
+          <ZipCode></ZipCode>
+          <Tax1Amount></Tax1Amount>
+          <Tax1Number></Tax1Number>
+          <Tax2Amount></Tax2Amount>
+          <Tax2Number></Tax2Number>
+          <Secure_AuthRequired></Secure_AuthRequired>
+          <Secure_AuthResult></Secure_AuthResult>
+          <Ecommerce_Flag></Ecommerce_Flag>
+          <XID></XID>
+          <CAVV></CAVV>
+          <CAVV_Algorithm></CAVV_Algorithm>
+          <Reference_No></Reference_No>
+          <Customer_Ref></Customer_Ref>
+          <Reference_3></Reference_3>
+          <Language></Language>
+          <Client_IP>1.1.1.10</Client_IP>
+          <Client_Email></Client_Email>
+          <Transaction_Error>false</Transaction_Error>
+          <Transaction_Approved>true</Transaction_Approved>
+          <EXact_Resp_Code>00</EXact_Resp_Code>
+          <EXact_Message>Transaction Normal</EXact_Message>
+          <Bank_Resp_Code>100</Bank_Resp_Code>
+          <Bank_Message>Approved</Bank_Message>
+          <Bank_Resp_Code_2></Bank_Resp_Code_2>
+          <SequenceNo>000041</SequenceNo>
+          <AVS></AVS>
+          <CVV2>I</CVV2>
+          <Retrieval_Ref_No>9176784</Retrieval_Ref_No>
+          <CAVV_Response></CAVV_Response>
+          <Currency>USD</Currency>
+          <AmountRequested></AmountRequested>
+          <PartialRedemption>false</PartialRedemption>
+          <MerchantName>Friendly Inc DEMO0983</MerchantName>
+          <MerchantAddress>123 King St</MerchantAddress>
+          <MerchantCity>Toronto</MerchantCity>
+          <MerchantProvince>Ontario</MerchantProvince>
+          <MerchantCountry>Canada</MerchantCountry>
+          <MerchantPostal>L7Z 3K8</MerchantPostal>
+          <MerchantURL></MerchantURL>
+          <CTR>=========== TRANSACTION RECORD ==========
+      Friendly Inc DEMO0983
+      123 King St
+      Toronto, ON L7Z 3K8
+      Canada
 
 
-TYPE: Refund
+      TYPE: Refund
 
-ACCT: Visa  $ 23.69 USD
+      ACCT: Visa  $ 23.69 USD
 
-CARD NUMBER : ############1111
-DATE/TIME   : 28 Sep 12 08:31:23
-REFERENCE # :  000041 M
-AUTHOR. #   : ET112216
-TRANS. REF. :
+      CARD NUMBER : ############1111
+      DATE/TIME   : 28 Sep 12 08:31:23
+      REFERENCE # :  000041 M
+      AUTHOR. #   : ET112216
+      TRANS. REF. :
 
-    Approved - Thank You 100
+          Approved - Thank You 100
 
 
-Please retain this copy for your records.
+      Please retain this copy for your records.
 
-=========================================</CTR>
-  </TransactionResult>
+      =========================================</CTR>
+        </TransactionResult>
     RESPONSE
   end
 
   def successful_refund_with_specified_currency_response
-    <<-RESPONSE
-  <?xml version="1.0" encoding="UTF-8"?>
-  <TransactionResult>
-    <ExactID>AD1234-56</ExactID>
-    <Password></Password>
-    <Transaction_Type>34</Transaction_Type>
-    <DollarAmount>123</DollarAmount>
-    <SurchargeAmount></SurchargeAmount>
-    <Card_Number>############1111</Card_Number>
-    <Transaction_Tag>888</Transaction_Tag>
-    <Track1></Track1>
-    <Track2></Track2>
-    <PAN></PAN>
-    <Authorization_Num>ET112216</Authorization_Num>
-    <Expiry_Date>0913</Expiry_Date>
-    <CardHoldersName>Fred Burfle</CardHoldersName>
-    <VerificationStr1></VerificationStr1>
-    <VerificationStr2></VerificationStr2>
-    <CVD_Presence_Ind>0</CVD_Presence_Ind>
-    <ZipCode></ZipCode>
-    <Tax1Amount></Tax1Amount>
-    <Tax1Number></Tax1Number>
-    <Tax2Amount></Tax2Amount>
-    <Tax2Number></Tax2Number>
-    <Secure_AuthRequired></Secure_AuthRequired>
-    <Secure_AuthResult></Secure_AuthResult>
-    <Ecommerce_Flag></Ecommerce_Flag>
-    <XID></XID>
-    <CAVV></CAVV>
-    <CAVV_Algorithm></CAVV_Algorithm>
-    <Reference_No></Reference_No>
-    <Customer_Ref></Customer_Ref>
-    <Reference_3></Reference_3>
-    <Language></Language>
-    <Client_IP>1.1.1.10</Client_IP>
-    <Client_Email></Client_Email>
-    <Transaction_Error>false</Transaction_Error>
-    <Transaction_Approved>true</Transaction_Approved>
-    <EXact_Resp_Code>00</EXact_Resp_Code>
-    <EXact_Message>Transaction Normal</EXact_Message>
-    <Bank_Resp_Code>100</Bank_Resp_Code>
-    <Bank_Message>Approved</Bank_Message>
-    <Bank_Resp_Code_2></Bank_Resp_Code_2>
-    <SequenceNo>000041</SequenceNo>
-    <AVS></AVS>
-    <CVV2>I</CVV2>
-    <Retrieval_Ref_No>9176784</Retrieval_Ref_No>
-    <CAVV_Response></CAVV_Response>
-    <Currency>GBP</Currency>
-    <AmountRequested></AmountRequested>
-    <PartialRedemption>false</PartialRedemption>
-    <MerchantName>Friendly Inc DEMO0983</MerchantName>
-    <MerchantAddress>123 King St</MerchantAddress>
-    <MerchantCity>Toronto</MerchantCity>
-    <MerchantProvince>Ontario</MerchantProvince>
-    <MerchantCountry>Canada</MerchantCountry>
-    <MerchantPostal>L7Z 3K8</MerchantPostal>
-    <MerchantURL></MerchantURL>
-    <CTR>=========== TRANSACTION RECORD ==========
-Friendly Inc DEMO0983
-123 King St
-Toronto, ON L7Z 3K8
-Canada
+    <<~RESPONSE
+        <?xml version="1.0" encoding="UTF-8"?>
+        <TransactionResult>
+          <ExactID>AD1234-56</ExactID>
+          <Password></Password>
+          <Transaction_Type>34</Transaction_Type>
+          <DollarAmount>123</DollarAmount>
+          <SurchargeAmount></SurchargeAmount>
+          <Card_Number>############1111</Card_Number>
+          <Transaction_Tag>888</Transaction_Tag>
+          <Track1></Track1>
+          <Track2></Track2>
+          <PAN></PAN>
+          <Authorization_Num>ET112216</Authorization_Num>
+          <Expiry_Date>0913</Expiry_Date>
+          <CardHoldersName>Fred Burfle</CardHoldersName>
+          <VerificationStr1></VerificationStr1>
+          <VerificationStr2></VerificationStr2>
+          <CVD_Presence_Ind>0</CVD_Presence_Ind>
+          <ZipCode></ZipCode>
+          <Tax1Amount></Tax1Amount>
+          <Tax1Number></Tax1Number>
+          <Tax2Amount></Tax2Amount>
+          <Tax2Number></Tax2Number>
+          <Secure_AuthRequired></Secure_AuthRequired>
+          <Secure_AuthResult></Secure_AuthResult>
+          <Ecommerce_Flag></Ecommerce_Flag>
+          <XID></XID>
+          <CAVV></CAVV>
+          <CAVV_Algorithm></CAVV_Algorithm>
+          <Reference_No></Reference_No>
+          <Customer_Ref></Customer_Ref>
+          <Reference_3></Reference_3>
+          <Language></Language>
+          <Client_IP>1.1.1.10</Client_IP>
+          <Client_Email></Client_Email>
+          <Transaction_Error>false</Transaction_Error>
+          <Transaction_Approved>true</Transaction_Approved>
+          <EXact_Resp_Code>00</EXact_Resp_Code>
+          <EXact_Message>Transaction Normal</EXact_Message>
+          <Bank_Resp_Code>100</Bank_Resp_Code>
+          <Bank_Message>Approved</Bank_Message>
+          <Bank_Resp_Code_2></Bank_Resp_Code_2>
+          <SequenceNo>000041</SequenceNo>
+          <AVS></AVS>
+          <CVV2>I</CVV2>
+          <Retrieval_Ref_No>9176784</Retrieval_Ref_No>
+          <CAVV_Response></CAVV_Response>
+          <Currency>GBP</Currency>
+          <AmountRequested></AmountRequested>
+          <PartialRedemption>false</PartialRedemption>
+          <MerchantName>Friendly Inc DEMO0983</MerchantName>
+          <MerchantAddress>123 King St</MerchantAddress>
+          <MerchantCity>Toronto</MerchantCity>
+          <MerchantProvince>Ontario</MerchantProvince>
+          <MerchantCountry>Canada</MerchantCountry>
+          <MerchantPostal>L7Z 3K8</MerchantPostal>
+          <MerchantURL></MerchantURL>
+          <CTR>=========== TRANSACTION RECORD ==========
+      Friendly Inc DEMO0983
+      123 King St
+      Toronto, ON L7Z 3K8
+      Canada
 
 
-TYPE: Refund
+      TYPE: Refund
 
-ACCT: Visa  £ 23.69 GBP
+      ACCT: Visa  £ 23.69 GBP
 
-CARD NUMBER : ############1111
-DATE/TIME   : 28 Sep 12 08:31:23
-REFERENCE # :  000041 M
-AUTHOR. #   : ET112216
-TRANS. REF. :
+      CARD NUMBER : ############1111
+      DATE/TIME   : 28 Sep 12 08:31:23
+      REFERENCE # :  000041 M
+      AUTHOR. #   : ET112216
+      TRANS. REF. :
 
-    Approved - Thank You 100
+          Approved - Thank You 100
 
 
-Please retain this copy for your records.
+      Please retain this copy for your records.
 
-=========================================</CTR>
-  </TransactionResult>
+      =========================================</CTR>
+        </TransactionResult>
     RESPONSE
   end
 
   def failed_purchase_response
-    <<-RESPONSE
-    <?xml version="1.0" encoding="UTF-8"?>
-    <TransactionResult>
-      <ExactID>AD1234-56</ExactID>
-      <Password></Password>
-      <Transaction_Type>00</Transaction_Type>
-      <DollarAmount>5013.0</DollarAmount>
-      <SurchargeAmount></SurchargeAmount>
-      <Card_Number>############1111</Card_Number>
-      <Transaction_Tag>555555</Transaction_Tag>
-      <Track1></Track1>
-      <Track2></Track2>
-      <PAN></PAN>
-      <Authorization_Num></Authorization_Num>
-      <Expiry_Date>0911</Expiry_Date>
-      <CardHoldersName>Fred Burfle</CardHoldersName>
-      <VerificationStr1></VerificationStr1>
-      <VerificationStr2>773</VerificationStr2>
-      <CVD_Presence_Ind>0</CVD_Presence_Ind>
-      <ZipCode></ZipCode>
-      <Tax1Amount></Tax1Amount>
-      <Tax1Number></Tax1Number>
-      <Tax2Amount></Tax2Amount>
-      <Tax2Number></Tax2Number>
-      <Secure_AuthRequired></Secure_AuthRequired>
-      <Secure_AuthResult></Secure_AuthResult>
-      <Ecommerce_Flag></Ecommerce_Flag>
-      <XID></XID>
-      <CAVV></CAVV>
-      <CAVV_Algorithm></CAVV_Algorithm>
-      <Reference_No>77</Reference_No>
-      <Customer_Ref></Customer_Ref>
-      <Reference_3></Reference_3>
-      <Language></Language>
-      <Client_IP>1.1.1.10</Client_IP>
-      <Client_Email></Client_Email>
-      <LogonMessage></LogonMessage>
-      <Error_Number>0</Error_Number>
-      <Error_Description> </Error_Description>
-      <Transaction_Error>false</Transaction_Error>
-      <Transaction_Approved>false</Transaction_Approved>
-      <EXact_Resp_Code>00</EXact_Resp_Code>
-      <EXact_Message>Transaction Normal</EXact_Message>
-      <Bank_Resp_Code>605</Bank_Resp_Code>
-      <Bank_Message>Invalid Expiration Date</Bank_Message>
-      <Bank_Resp_Code_2></Bank_Resp_Code_2>
-      <SequenceNo>000033</SequenceNo>
-      <AVS></AVS>
-      <CVV2></CVV2>
-      <Retrieval_Ref_No></Retrieval_Ref_No>
-      <CAVV_Response></CAVV_Response>
-      <Currency>USD</Currency>
-      <AmountRequested></AmountRequested>
-      <PartialRedemption>false</PartialRedemption>
-      <MerchantName>Friendly Inc DEMO0983</MerchantName>
-      <MerchantAddress>123 King St</MerchantAddress>
-      <MerchantCity>Toronto</MerchantCity>
-      <MerchantProvince>Ontario</MerchantProvince>
-      <MerchantCountry>Canada</MerchantCountry>
-      <MerchantPostal>L7Z 3K8</MerchantPostal>
-      <MerchantURL></MerchantURL>
-      <CTR>=========== TRANSACTION RECORD ==========
-Friendly Inc DEMO0983
-123 King St
-Toronto, ON L7Z 3K8
-Canada
+    <<~RESPONSE
+          <?xml version="1.0" encoding="UTF-8"?>
+          <TransactionResult>
+            <ExactID>AD1234-56</ExactID>
+            <Password></Password>
+            <Transaction_Type>00</Transaction_Type>
+            <DollarAmount>5013.0</DollarAmount>
+            <SurchargeAmount></SurchargeAmount>
+            <Card_Number>############1111</Card_Number>
+            <Transaction_Tag>555555</Transaction_Tag>
+            <Track1></Track1>
+            <Track2></Track2>
+            <PAN></PAN>
+            <Authorization_Num></Authorization_Num>
+            <Expiry_Date>0911</Expiry_Date>
+            <CardHoldersName>Fred Burfle</CardHoldersName>
+            <VerificationStr1></VerificationStr1>
+            <VerificationStr2>773</VerificationStr2>
+            <CVD_Presence_Ind>0</CVD_Presence_Ind>
+            <ZipCode></ZipCode>
+            <Tax1Amount></Tax1Amount>
+            <Tax1Number></Tax1Number>
+            <Tax2Amount></Tax2Amount>
+            <Tax2Number></Tax2Number>
+            <Secure_AuthRequired></Secure_AuthRequired>
+            <Secure_AuthResult></Secure_AuthResult>
+            <Ecommerce_Flag></Ecommerce_Flag>
+            <XID></XID>
+            <CAVV></CAVV>
+            <CAVV_Algorithm></CAVV_Algorithm>
+            <Reference_No>77</Reference_No>
+            <Customer_Ref></Customer_Ref>
+            <Reference_3></Reference_3>
+            <Language></Language>
+            <Client_IP>1.1.1.10</Client_IP>
+            <Client_Email></Client_Email>
+            <LogonMessage></LogonMessage>
+            <Error_Number>0</Error_Number>
+            <Error_Description> </Error_Description>
+            <Transaction_Error>false</Transaction_Error>
+            <Transaction_Approved>false</Transaction_Approved>
+            <EXact_Resp_Code>00</EXact_Resp_Code>
+            <EXact_Message>Transaction Normal</EXact_Message>
+            <Bank_Resp_Code>605</Bank_Resp_Code>
+            <Bank_Message>Invalid Expiration Date</Bank_Message>
+            <Bank_Resp_Code_2></Bank_Resp_Code_2>
+            <SequenceNo>000033</SequenceNo>
+            <AVS></AVS>
+            <CVV2></CVV2>
+            <Retrieval_Ref_No></Retrieval_Ref_No>
+            <CAVV_Response></CAVV_Response>
+            <Currency>USD</Currency>
+            <AmountRequested></AmountRequested>
+            <PartialRedemption>false</PartialRedemption>
+            <MerchantName>Friendly Inc DEMO0983</MerchantName>
+            <MerchantAddress>123 King St</MerchantAddress>
+            <MerchantCity>Toronto</MerchantCity>
+            <MerchantProvince>Ontario</MerchantProvince>
+            <MerchantCountry>Canada</MerchantCountry>
+            <MerchantPostal>L7Z 3K8</MerchantPostal>
+            <MerchantURL></MerchantURL>
+            <CTR>=========== TRANSACTION RECORD ==========
+      Friendly Inc DEMO0983
+      123 King St
+      Toronto, ON L7Z 3K8
+      Canada
 
 
-TYPE: Purchase
-ACCT: Visa  $ 5,013.00 USD
-CARD NUMBER : ############1111
-DATE/TIME   : 25 Sep 12 07:27:00
-REFERENCE # :  000033 M
-AUTHOR. #   :
-TRANS. REF. : 77
-Transaction not approved 605
-Please retain this copy for your records.
-=========================================</CTR>
-    </TransactionResult>
+      TYPE: Purchase
+      ACCT: Visa  $ 5,013.00 USD
+      CARD NUMBER : ############1111
+      DATE/TIME   : 25 Sep 12 07:27:00
+      REFERENCE # :  000033 M
+      AUTHOR. #   :
+      TRANS. REF. : 77
+      Transaction not approved 605
+      Please retain this copy for your records.
+      =========================================</CTR>
+          </TransactionResult>
     RESPONSE
   end
 
   def successful_verify_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<TransactionResult>
-  <ExactID>AD2552-05</ExactID>
-  <Password></Password>
-  <Transaction_Type>05</Transaction_Type>
-  <DollarAmount>0.0</DollarAmount>
-  <SurchargeAmount></SurchargeAmount>
-  <Card_Number>############4242</Card_Number>
-  <Transaction_Tag>25101911</Transaction_Tag>
-  <Track1></Track1>
-  <Track2></Track2>
-  <PAN></PAN>
-  <Authorization_Num>ET184931</Authorization_Num>
-  <Expiry_Date>0915</Expiry_Date>
-  <CardHoldersName>Longbob Longsen</CardHoldersName>
-  <VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>
-  <VerificationStr2>123</VerificationStr2>
-  <CVD_Presence_Ind>0</CVD_Presence_Ind>
-  <ZipCode></ZipCode>
-  <Tax1Amount></Tax1Amount>
-  <Tax1Number></Tax1Number>
-  <Tax2Amount></Tax2Amount>
-  <Tax2Number></Tax2Number>
-  <Secure_AuthRequired></Secure_AuthRequired>
-  <Secure_AuthResult></Secure_AuthResult>
-  <Ecommerce_Flag></Ecommerce_Flag>
-  <XID></XID>
-  <CAVV></CAVV>
-  <CAVV_Algorithm></CAVV_Algorithm>
-  <Reference_No>1</Reference_No>
-  <Customer_Ref></Customer_Ref>
-  <Reference_3>Store Purchase</Reference_3>
-  <Language></Language>
-  <Client_IP>75.182.123.244</Client_IP>
-  <Client_Email></Client_Email>
-  <Transaction_Error>false</Transaction_Error>
-  <Transaction_Approved>true</Transaction_Approved>
-  <EXact_Resp_Code>00</EXact_Resp_Code>
-  <EXact_Message>Transaction Normal</EXact_Message>
-  <Bank_Resp_Code>100</Bank_Resp_Code>
-  <Bank_Message>Approved</Bank_Message>
-  <Bank_Resp_Code_2></Bank_Resp_Code_2>
-  <SequenceNo>000040</SequenceNo>
-  <AVS>1</AVS>
-  <CVV2>M</CVV2>
-  <Retrieval_Ref_No>7228838</Retrieval_Ref_No>
-  <CAVV_Response></CAVV_Response>
-  <Currency>USD</Currency>
-  <AmountRequested></AmountRequested>
-  <PartialRedemption>false</PartialRedemption>
-  <MerchantName>FriendlyInc</MerchantName>
-  <MerchantAddress>123 Main Street</MerchantAddress>
-  <MerchantCity>Durham</MerchantCity>
-  <MerchantProvince>North Carolina</MerchantProvince>
-  <MerchantCountry>United States</MerchantCountry>
-  <MerchantPostal>27592</MerchantPostal>
-  <MerchantURL></MerchantURL>
-  <TransarmorToken></TransarmorToken>
-  <CardType>Visa</CardType>
-  <CurrentBalance></CurrentBalance>
-  <PreviousBalance></PreviousBalance>
-  <EAN></EAN>
-  <CardCost></CardCost>
-  <VirtualCard>false</VirtualCard>
-  <CTR>=========== TRANSACTION RECORD ==========
-FriendlyInc DEMO0
-123 Main Street
-Durham, NC 27592
-United States
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <TransactionResult>
+        <ExactID>AD2552-05</ExactID>
+        <Password></Password>
+        <Transaction_Type>05</Transaction_Type>
+        <DollarAmount>0.0</DollarAmount>
+        <SurchargeAmount></SurchargeAmount>
+        <Card_Number>############4242</Card_Number>
+        <Transaction_Tag>25101911</Transaction_Tag>
+        <Track1></Track1>
+        <Track2></Track2>
+        <PAN></PAN>
+        <Authorization_Num>ET184931</Authorization_Num>
+        <Expiry_Date>0915</Expiry_Date>
+        <CardHoldersName>Longbob Longsen</CardHoldersName>
+        <VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>
+        <VerificationStr2>123</VerificationStr2>
+        <CVD_Presence_Ind>0</CVD_Presence_Ind>
+        <ZipCode></ZipCode>
+        <Tax1Amount></Tax1Amount>
+        <Tax1Number></Tax1Number>
+        <Tax2Amount></Tax2Amount>
+        <Tax2Number></Tax2Number>
+        <Secure_AuthRequired></Secure_AuthRequired>
+        <Secure_AuthResult></Secure_AuthResult>
+        <Ecommerce_Flag></Ecommerce_Flag>
+        <XID></XID>
+        <CAVV></CAVV>
+        <CAVV_Algorithm></CAVV_Algorithm>
+        <Reference_No>1</Reference_No>
+        <Customer_Ref></Customer_Ref>
+        <Reference_3>Store Purchase</Reference_3>
+        <Language></Language>
+        <Client_IP>75.182.123.244</Client_IP>
+        <Client_Email></Client_Email>
+        <Transaction_Error>false</Transaction_Error>
+        <Transaction_Approved>true</Transaction_Approved>
+        <EXact_Resp_Code>00</EXact_Resp_Code>
+        <EXact_Message>Transaction Normal</EXact_Message>
+        <Bank_Resp_Code>100</Bank_Resp_Code>
+        <Bank_Message>Approved</Bank_Message>
+        <Bank_Resp_Code_2></Bank_Resp_Code_2>
+        <SequenceNo>000040</SequenceNo>
+        <AVS>1</AVS>
+        <CVV2>M</CVV2>
+        <Retrieval_Ref_No>7228838</Retrieval_Ref_No>
+        <CAVV_Response></CAVV_Response>
+        <Currency>USD</Currency>
+        <AmountRequested></AmountRequested>
+        <PartialRedemption>false</PartialRedemption>
+        <MerchantName>FriendlyInc</MerchantName>
+        <MerchantAddress>123 Main Street</MerchantAddress>
+        <MerchantCity>Durham</MerchantCity>
+        <MerchantProvince>North Carolina</MerchantProvince>
+        <MerchantCountry>United States</MerchantCountry>
+        <MerchantPostal>27592</MerchantPostal>
+        <MerchantURL></MerchantURL>
+        <TransarmorToken></TransarmorToken>
+        <CardType>Visa</CardType>
+        <CurrentBalance></CurrentBalance>
+        <PreviousBalance></PreviousBalance>
+        <EAN></EAN>
+        <CardCost></CardCost>
+        <VirtualCard>false</VirtualCard>
+        <CTR>=========== TRANSACTION RECORD ==========
+      FriendlyInc DEMO0
+      123 Main Street
+      Durham, NC 27592
+      United States
 
 
-TYPE: Auth Only
+      TYPE: Auth Only
 
-ACCT: Visa  $ 0.00 USD
+      ACCT: Visa  $ 0.00 USD
 
-CARDHOLDER NAME : Longbob Longsen
-CARD NUMBER     : ############4242
-DATE/TIME       : 04 Jul 14 14:21:52
-REFERENCE #     :  000040 M
-AUTHOR. #       : ET184931
-TRANS. REF.     : 1
+      CARDHOLDER NAME : Longbob Longsen
+      CARD NUMBER     : ############4242
+      DATE/TIME       : 04 Jul 14 14:21:52
+      REFERENCE #     :  000040 M
+      AUTHOR. #       : ET184931
+      TRANS. REF.     : 1
 
-    Approved - Thank You 100
+          Approved - Thank You 100
 
 
-Please retain this copy for your records.
+      Please retain this copy for your records.
 
-Cardholder will pay above amount to card
-issuer pursuant to cardholder agreement.
-=========================================</CTR>
-</TransactionResult>
+      Cardholder will pay above amount to card
+      issuer pursuant to cardholder agreement.
+      =========================================</CTR>
+      </TransactionResult>
     RESPONSE
   end
 
   def no_transaction_response
-    yamlexcep = <<-RESPONSE
---- !ruby/exception:ActiveMerchant::ResponseError
-message: Failed with 400 Bad Request
-message:
-response: !ruby/object:Net::HTTPBadRequest
-  body: "Malformed request: Transaction Type is missing."
-  body_exist: true
-  code: "400"
-  header:
-    connection:
-    - Close
-    content-type:
-    - text/html; charset=utf-8
-    server:
-    - Apache
-    date:
-    - Fri, 28 Sep 2012 18:21:37 GMT
-    content-length:
-    - "47"
-    status:
-    - "400"
-    cache-control:
-    - no-cache
-  http_version: "1.1"
-  message: Bad Request
-  read: true
-  socket:
+    yamlexcep = <<~RESPONSE
+      --- !ruby/exception:ActiveMerchant::ResponseError
+      message: Failed with 400 Bad Request
+      message:
+      response: !ruby/object:Net::HTTPBadRequest
+        body: "Malformed request: Transaction Type is missing."
+        body_exist: true
+        code: "400"
+        header:
+          connection:
+          - Close
+          content-type:
+          - text/html; charset=utf-8
+          server:
+          - Apache
+          date:
+          - Fri, 28 Sep 2012 18:21:37 GMT
+          content-length:
+          - "47"
+          status:
+          - "400"
+          cache-control:
+          - no-cache
+        http_version: "1.1"
+        message: Bad Request
+        read: true
+        socket:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
+    YAML.safe_load(yamlexcep, permitted_classes: ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def bad_credentials_response
-    yamlexcep = <<-RESPONSE
---- !ruby/exception:ActiveMerchant::ResponseError
-message:
-response: !ruby/object:Net::HTTPUnauthorized
-  code: '401'
-  message: Authorization Required
-  body: Unauthorized Request. Bad or missing credentials.
-  read: true
-  header:
-    cache-control:
-    - no-cache
-    content-type:
-    - text/html; charset=utf-8
-    date:
-    - Tue, 30 Dec 2014 23:28:32 GMT
-    server:
-    - Apache
-    status:
-    - '401'
-    x-rack-cache:
-    - invalidate, pass
-    x-request-id:
-    - 4157e21cc5620a95ead8d2025b55bdf4
-    x-ua-compatible:
-    - IE=Edge,chrome=1
-    content-length:
-    - '49'
-    connection:
-    - Close
-  body_exist: true
-  http_version: '1.1'
-  socket:
+    yamlexcep = <<~RESPONSE
+      --- !ruby/exception:ActiveMerchant::ResponseError
+      message:
+      response: !ruby/object:Net::HTTPUnauthorized
+        code: '401'
+        message: Authorization Required
+        body: Unauthorized Request. Bad or missing credentials.
+        read: true
+        header:
+          cache-control:
+          - no-cache
+          content-type:
+          - text/html; charset=utf-8
+          date:
+          - Tue, 30 Dec 2014 23:28:32 GMT
+          server:
+          - Apache
+          status:
+          - '401'
+          x-rack-cache:
+          - invalidate, pass
+          x-request-id:
+          - 4157e21cc5620a95ead8d2025b55bdf4
+          x-ua-compatible:
+          - IE=Edge,chrome=1
+          content-length:
+          - '49'
+          connection:
+          - Close
+        body_exist: true
+        http_version: '1.1'
+        socket:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
+    YAML.safe_load(yamlexcep, permitted_classes: ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
   end
 
   def successful_void_response
-    <<-RESPONSE
-    <?xml version="1.0" encoding="UTF-8"?>
-  <TransactionResult>
-    <ExactID>AD1234-56</ExactID>
-    <Password></Password>
-    <Transaction_Type>33</Transaction_Type>
-    <DollarAmount>11.45</DollarAmount>
-    <SurchargeAmount></SurchargeAmount>
-    <Card_Number>############1111</Card_Number>
-    <Transaction_Tag>987123</Transaction_Tag>
-    <Track1></Track1>
-    <Track2></Track2>
-    <PAN></PAN>
-    <Authorization_Num>ET112112</Authorization_Num>
-    <Expiry_Date>0913</Expiry_Date>
-    <CardHoldersName>Fred Burfle</CardHoldersName>
-    <VerificationStr1></VerificationStr1>
-    <VerificationStr2></VerificationStr2>
-    <CVD_Presence_Ind>0</CVD_Presence_Ind>
-    <ZipCode></ZipCode>
-    <Tax1Amount></Tax1Amount>
-    <Tax1Number></Tax1Number>
-    <Tax2Amount></Tax2Amount>
-    <Tax2Number></Tax2Number>
-    <Secure_AuthRequired></Secure_AuthRequired>
-    <Secure_AuthResult></Secure_AuthResult>
-    <Ecommerce_Flag></Ecommerce_Flag>
-    <XID></XID>
-    <CAVV></CAVV>
-    <CAVV_Algorithm></CAVV_Algorithm>
-    <Reference_No></Reference_No>
-    <Customer_Ref></Customer_Ref>
-    <Reference_3></Reference_3>
-    <Language></Language>
-    <Client_IP>1.1.1.10</Client_IP>
-    <Client_Email></Client_Email>
-    <LogonMessage></LogonMessage>
-    <Error_Number>0</Error_Number>
-    <Error_Description> </Error_Description>
-    <Transaction_Error>false</Transaction_Error>
-    <Transaction_Approved>true</Transaction_Approved>
-    <EXact_Resp_Code>00</EXact_Resp_Code>
-    <EXact_Message>Transaction Normal</EXact_Message>
-    <Bank_Resp_Code>100</Bank_Resp_Code>
-    <Bank_Message>Approved</Bank_Message>
-    <Bank_Resp_Code_2></Bank_Resp_Code_2>
-    <SequenceNo>000166</SequenceNo>
-    <AVS></AVS>
-    <CVV2>I</CVV2>
-    <Retrieval_Ref_No>2046743</Retrieval_Ref_No>
-    <CAVV_Response></CAVV_Response>
-    <Currency>USD</Currency>
-    <AmountRequested></AmountRequested>
-    <PartialRedemption>false</PartialRedemption>
-    <MerchantName>FreshBooks DEMO0785</MerchantName>
-    <MerchantAddress>35 Golden Ave</MerchantAddress>
-    <MerchantCity>Toronto</MerchantCity>
-    <MerchantProvince>Ontario</MerchantProvince>
-    <MerchantCountry>Canada</MerchantCountry>
-    <MerchantPostal>M6R 2J5</MerchantPostal>
-    <MerchantURL></MerchantURL>
-<CTR>=========== TRANSACTION RECORD ==========
-FreshBooks DEMO0785
-35 Golden Ave
-Toronto, ON M6R 2J5
-Canada
+    <<~RESPONSE
+          <?xml version="1.0" encoding="UTF-8"?>
+        <TransactionResult>
+          <ExactID>AD1234-56</ExactID>
+          <Password></Password>
+          <Transaction_Type>33</Transaction_Type>
+          <DollarAmount>11.45</DollarAmount>
+          <SurchargeAmount></SurchargeAmount>
+          <Card_Number>############1111</Card_Number>
+          <Transaction_Tag>987123</Transaction_Tag>
+          <Track1></Track1>
+          <Track2></Track2>
+          <PAN></PAN>
+          <Authorization_Num>ET112112</Authorization_Num>
+          <Expiry_Date>0913</Expiry_Date>
+          <CardHoldersName>Fred Burfle</CardHoldersName>
+          <VerificationStr1></VerificationStr1>
+          <VerificationStr2></VerificationStr2>
+          <CVD_Presence_Ind>0</CVD_Presence_Ind>
+          <ZipCode></ZipCode>
+          <Tax1Amount></Tax1Amount>
+          <Tax1Number></Tax1Number>
+          <Tax2Amount></Tax2Amount>
+          <Tax2Number></Tax2Number>
+          <Secure_AuthRequired></Secure_AuthRequired>
+          <Secure_AuthResult></Secure_AuthResult>
+          <Ecommerce_Flag></Ecommerce_Flag>
+          <XID></XID>
+          <CAVV></CAVV>
+          <CAVV_Algorithm></CAVV_Algorithm>
+          <Reference_No></Reference_No>
+          <Customer_Ref></Customer_Ref>
+          <Reference_3></Reference_3>
+          <Language></Language>
+          <Client_IP>1.1.1.10</Client_IP>
+          <Client_Email></Client_Email>
+          <LogonMessage></LogonMessage>
+          <Error_Number>0</Error_Number>
+          <Error_Description> </Error_Description>
+          <Transaction_Error>false</Transaction_Error>
+          <Transaction_Approved>true</Transaction_Approved>
+          <EXact_Resp_Code>00</EXact_Resp_Code>
+          <EXact_Message>Transaction Normal</EXact_Message>
+          <Bank_Resp_Code>100</Bank_Resp_Code>
+          <Bank_Message>Approved</Bank_Message>
+          <Bank_Resp_Code_2></Bank_Resp_Code_2>
+          <SequenceNo>000166</SequenceNo>
+          <AVS></AVS>
+          <CVV2>I</CVV2>
+          <Retrieval_Ref_No>2046743</Retrieval_Ref_No>
+          <CAVV_Response></CAVV_Response>
+          <Currency>USD</Currency>
+          <AmountRequested></AmountRequested>
+          <PartialRedemption>false</PartialRedemption>
+          <MerchantName>FreshBooks DEMO0785</MerchantName>
+          <MerchantAddress>35 Golden Ave</MerchantAddress>
+          <MerchantCity>Toronto</MerchantCity>
+          <MerchantProvince>Ontario</MerchantProvince>
+          <MerchantCountry>Canada</MerchantCountry>
+          <MerchantPostal>M6R 2J5</MerchantPostal>
+          <MerchantURL></MerchantURL>
+      <CTR>=========== TRANSACTION RECORD ==========
+      FreshBooks DEMO0785
+      35 Golden Ave
+      Toronto, ON M6R 2J5
+      Canada
 
 
-TYPE: Void
+      TYPE: Void
 
-ACCT: Visa  $ 47.38 USD
+      ACCT: Visa  $ 47.38 USD
 
-CARD NUMBER : ############1111
-DATE/TIME   : 15 Nov 12 08:20:36
-REFERENCE # :  000166 M
-AUTHOR. #   : ET112112
-TRANS. REF. :
+      CARD NUMBER : ############1111
+      DATE/TIME   : 15 Nov 12 08:20:36
+      REFERENCE # :  000166 M
+      AUTHOR. #   : ET112112
+      TRANS. REF. :
 
-Approved - Thank You 100
+      Approved - Thank You 100
 
 
-Please retain this copy for your records.
+      Please retain this copy for your records.
 
-Cardholder will pay above amount to card
-issuer pursuant to cardholder agreement.
-=========================================</CTR>
-    </TransactionResult>
-RESPONSE
+      Cardholder will pay above amount to card
+      issuer pursuant to cardholder agreement.
+      =========================================</CTR>
+          </TransactionResult>
+    RESPONSE
   end
 end

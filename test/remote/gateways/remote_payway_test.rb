@@ -4,46 +4,52 @@ class PaywayTest < Test::Unit::TestCase
   def setup
     @amount = 1100
 
-    @options = {:order_id => generate_unique_id}
+    @options = { order_id: generate_unique_id }
 
     @gateway = ActiveMerchant::Billing::PaywayGateway.new(fixtures(:payway))
 
-    @visa = credit_card('4564710000000004',
-      :month              => 2,
-      :year               => 2019,
-      :verification_value => '847'
+    @visa = credit_card(
+      '4564710000000004',
+      month: 2,
+      year: 2019,
+      verification_value: '847'
     )
 
-    @mastercard = credit_card('5163200000000008',
-      :month              => 8,
-      :year               => 2020,
-      :verification_value => '070',
-      :brand              => 'master'
+    @mastercard = credit_card(
+      '5163200000000008',
+      month: 8,
+      year: 2020,
+      verification_value: '070',
+      brand: 'master'
     )
 
-    @expired = credit_card('4564710000000012',
-      :month              => 2,
-      :year               => 2005,
-      :verification_value => '963'
+    @expired = credit_card(
+      '4564710000000012',
+      month: 2,
+      year: 2005,
+      verification_value: '963'
     )
 
-    @low = credit_card('4564710000000020',
-      :month              => 5,
-      :year               => 2020,
-      :verification_value => '234'
+    @low = credit_card(
+      '4564710000000020',
+      month: 5,
+      year: 2020,
+      verification_value: '234'
     )
 
-    @stolen_mastercard = credit_card('5163200000000016',
-      :month              => 12,
-      :year               => 2019,
-      :verification_value => '728',
-      :brand              => 'master'
+    @stolen_mastercard = credit_card(
+      '5163200000000016',
+      month: 12,
+      year: 2019,
+      verification_value: '728',
+      brand: 'master'
     )
 
-    @invalid = credit_card('4564720000000037',
-      :month              => 9,
-      :year               => 2019,
-      :verification_value => '030'
+    @invalid = credit_card(
+      '4564720000000037',
+      month: 9,
+      year: 2019,
+      verification_value: '030'
     )
   end
 
@@ -85,10 +91,10 @@ class PaywayTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = ActiveMerchant::Billing::PaywayGateway.new(
-      :username => 'bogus',
-      :password => 'bogus',
-      :merchant => 'TEST',
-      :pem      => fixtures(:payway)['pem']
+      username: 'bogus',
+      password: 'bogus',
+      merchant: 'TEST',
+      pem: fixtures(:payway)['pem']
     )
     assert response = gateway.purchase(@amount, @visa, @options)
     assert_failure response

@@ -5,32 +5,37 @@ class BanwireTest < Test::Unit::TestCase
 
   def setup
     @gateway = BanwireGateway.new(
-                 :login => 'desarrollo',
-                 :currency => 'MXN')
+      login: 'desarrollo',
+      currency: 'MXN'
+    )
 
-    @credit_card = credit_card('5204164299999999',
-      :month => 11,
-      :year => 2012,
-      :verification_value => '999')
+    @credit_card = credit_card(
+      '5204164299999999',
+      month: 11,
+      year: 2012,
+      verification_value: '999'
+    )
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :email => 'test@email.com',
-      :billing_address => address,
-      :description => 'Store purchase'
+      order_id: '1',
+      email: 'test@email.com',
+      billing_address: address,
+      description: 'Store purchase'
     }
 
-    @amex_credit_card = credit_card('375932134599999',
-      :month => 3,
-      :year => 2017,
-      :first_name => 'Banwire',
-      :last_name => 'Test Card')
+    @amex_credit_card = credit_card(
+      '375932134599999',
+      month: 3,
+      year: 2017,
+      first_name: 'Banwire',
+      last_name: 'Test Card'
+    )
     @amex_options = {
-        :order_id => '2',
-        :email => 'test@email.com',
-        :billing_address => address(:address1 => 'Horacio', :zip => 11560),
-        :description  => 'Store purchase amex'
+      order_id: '2',
+      email: 'test@email.com',
+      billing_address: address(address1: 'Horacio', zip: 11560),
+      description: 'Store purchase amex'
     }
   end
 
@@ -65,7 +70,7 @@ class BanwireTest < Test::Unit::TestCase
   def test_successful_amex_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @amex_credit_card, @amex_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/post_code=11560/, data)
     end.respond_with(successful_purchase_amex_response)
 

@@ -3,18 +3,18 @@ require 'test_helper'
 class NetworkMerchantsTest < Test::Unit::TestCase
   def setup
     @gateway = NetworkMerchantsGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      login: 'login',
+      password: 'password'
+    )
 
     @credit_card = credit_card
     @check = check
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -60,7 +60,7 @@ class NetworkMerchantsTest < Test::Unit::TestCase
   def test_purchase_and_store
     @gateway.expects(:ssl_post).returns(successful_purchase_and_store)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:store => true))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(store: true))
     assert_success response
     assert_equal 'SUCCESS', response.message
     assert_equal '1378262091', response.params['customer_vault_id']
@@ -156,7 +156,7 @@ class NetworkMerchantsTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = NetworkMerchantsGateway.new(:login => '', :password => '')
+    gateway = NetworkMerchantsGateway.new(login: '', password: '')
     gateway.expects(:ssl_post).returns(failed_login)
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

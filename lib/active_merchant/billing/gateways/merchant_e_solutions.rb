@@ -10,13 +10,15 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover jcb]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.merchante-solutions.com/'
 
       # The name of the gateway
       self.display_name = 'Merchant e-Solutions'
+
+      SUCCESS_RESPONSE_CODES = %w(000 085)
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -25,28 +27,26 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard_or_card_id, options = {})
         post = {}
-        post[:client_reference_number] = options[:customer] if options.has_key?(:customer)
-        post[:moto_ecommerce_ind] = options[:moto_ecommerce_ind] if options.has_key?(:moto_ecommerce_ind)
         add_invoice(post, options)
         add_payment_source(post, creditcard_or_card_id, options)
         add_address(post, options)
         add_3dsecure_params(post, options)
+        add_stored_credentials(post, options)
         commit('P', money, post)
       end
 
       def purchase(money, creditcard_or_card_id, options = {})
         post = {}
-        post[:client_reference_number] = options[:customer] if options.has_key?(:customer)
-        post[:moto_ecommerce_ind] = options[:moto_ecommerce_ind] if options.has_key?(:moto_ecommerce_ind)
         add_invoice(post, options)
         add_payment_source(post, creditcard_or_card_id, options)
         add_address(post, options)
         add_3dsecure_params(post, options)
+        add_stored_credentials(post, options)
         commit('D', money, post)
       end
 
       def capture(money, transaction_id, options = {})
-        post ={}
+        post = {}
         post[:transaction_id] = transaction_id
         post[:client_reference_number] = options[:customer] if options.has_key?(:customer)
         add_invoice(post, options)
@@ -55,10 +55,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(creditcard, options = {})
-        post = {}
-        post[:client_reference_number] = options[:customer] if options.has_key?(:customer)
-        add_creditcard(post, creditcard, options)
-        commit('T', nil, post)
+        MultiResponse.run do |r|
+          r.process { temporary_store(creditcard, options) }
+          r.process { verify(r.authorization, { store_card: 'y' }) }
+        end
       end
 
       def unstore(card_id, options = {})
@@ -94,6 +94,13 @@ module ActiveMerchant #:nodoc:
         commit('V', nil, options.merge(post))
       end
 
+      def verify(credit_card, options = {})
+        post = {}
+        post[:store_card] = options[:store_card] if options[:store_card]
+        add_payment_source(post, credit_card, options)
+        commit('A', 0, post)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -106,6 +113,13 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def temporary_store(creditcard, options = {})
+        post = {}
+        post[:client_reference_number] = options[:customer] if options.has_key?(:customer)
+        add_creditcard(post, creditcard, options)
+        commit('T', nil, post)
+      end
 
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
@@ -133,9 +147,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(post, creditcard, options)
-        post[:card_number]  = creditcard.number
+        post[:card_number] = creditcard.number
         post[:cvv2] = creditcard.verification_value if creditcard.verification_value?
-        post[:card_exp_date]  = expdate(creditcard)
+        post[:card_exp_date] = expdate(creditcard)
       end
 
       def add_3dsecure_params(post, options)
@@ -143,6 +157,16 @@ module ActiveMerchant #:nodoc:
         post[:cavv] = options[:cavv] unless empty?(options[:cavv])
         post[:ucaf_collection_ind] = options[:ucaf_collection_ind] unless empty?(options[:ucaf_collection_ind])
         post[:ucaf_auth_data] = options[:ucaf_auth_data] unless empty?(options[:ucaf_auth_data])
+      end
+
+      def add_stored_credentials(post, options)
+        post[:client_reference_number] = options[:client_reference_number] if options[:client_reference_number]
+        post[:moto_ecommerce_ind] = options[:moto_ecommerce_ind] if options[:moto_ecommerce_ind]
+        post[:recurring_pmt_num] = options[:recurring_pmt_num] if options[:recurring_pmt_num]
+        post[:recurring_pmt_count] = options[:recurring_pmt_count] if options[:recurring_pmt_count]
+        post[:card_on_file] = options[:card_on_file] if options[:card_on_file]
+        post[:cit_mit_indicator] = options[:cit_mit_indicator] if options[:cit_mit_indicator]
+        post[:account_data_source] = options[:account_data_source] if options[:account_data_source]
       end
 
       def parse(body)
@@ -156,20 +180,34 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, money, parameters)
         url = test? ? self.test_url : self.live_url
-        parameters[:transaction_amount]  = amount(money) if money unless action == 'V'
+        parameters[:transaction_amount] = amount(money) if money unless action == 'V'
 
-        response = begin
-          parse(ssl_post(url, post_data(action, parameters)))
-        rescue ActiveMerchant::ResponseError => e
-          { 'error_code' => '404',  'auth_response_text' => e.to_s }
-        end
+        response =
+          begin
+            parse(ssl_post(url, post_data(action, parameters)))
+          rescue ActiveMerchant::ResponseError => e
+            { 'error_code' => '404', 'auth_response_text' => e.to_s }
+          end
 
-        Response.new(response['error_code'] == '000', message_from(response), response,
-          :authorization => response['transaction_id'],
-          :test => test?,
-          :cvv_result => response['cvv2_result'],
-          :avs_result => { :code => response['avs_result'] }
+        Response.new(
+          success_from(response),
+          message_from(response),
+          response,
+          authorization: authorization_from(response),
+          test: test?,
+          cvv_result: response['cvv2_result'],
+          avs_result: { code: response['avs_result'] }
         )
+      end
+
+      def authorization_from(response)
+        return response['card_id'] if response['card_id']
+
+        response['transaction_id']
+      end
+
+      def success_from(response)
+        SUCCESS_RESPONSE_CODES.include?(response['error_code'])
       end
 
       def message_from(response)

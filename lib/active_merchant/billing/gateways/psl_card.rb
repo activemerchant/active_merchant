@@ -21,7 +21,7 @@ module ActiveMerchant
       # American Express, Diners Club, JCB, International Maestro,
       # Style, Clydesdale Financial Services, Other
 
-      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb, :maestro ]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb maestro]
       self.homepage_url = 'http://www.paymentsolutionsltd.com/'
       self.display_name = 'PSL Payment Solutions'
 
@@ -183,7 +183,7 @@ module ActiveMerchant
         address = options[:billing_address] || options[:address]
         return if address.nil?
 
-        post[:QAAddress] = [:address1, :address2, :city, :state].collect { |a| address[a] }.reject(&:blank?).join(' ')
+        post[:QAAddress] = %i[address1 address2 city state].collect { |a| address[a] }.reject(&:blank?).join(' ')
         post[:QAPostcode] = address[:zip]
       end
 
@@ -211,7 +211,7 @@ module ActiveMerchant
 
       def add_purchase_details(post)
         post[:EchoAmount] = 'YES'
-        post[:SCBI] = 'YES'                   # Return information about the transaction
+        post[:SCBI] = 'YES' # Return information about the transaction
         post[:MessageType] = MESSAGE_TYPE
       end
 
@@ -259,11 +259,14 @@ module ActiveMerchant
       def commit(request)
         response = parse(ssl_post(self.live_url, post_data(request)))
 
-        Response.new(response[:ResponseCode] == APPROVED, response[:Message], response,
-          :test => test?,
-          :authorization => response[:CrossReference],
-          :cvv_result => CVV_CODE[response[:AVSCV2Check]],
-          :avs_result => { :code => AVS_CODE[response[:AVSCV2Check]] }
+        Response.new(
+          response[:ResponseCode] == APPROVED,
+          response[:Message],
+          response,
+          test: test?,
+          authorization: response[:CrossReference],
+          cvv_result: CVV_CODE[response[:AVSCV2Check]],
+          avs_result: { code: AVS_CODE[response[:AVSCV2Check]] }
         )
       end
 

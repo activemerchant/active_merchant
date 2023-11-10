@@ -29,10 +29,10 @@ class SSLVersion
         success << g
       when :fail
         print 'F'
-        failed << {:gateway => g, :message => message}
+        failed << { gateway: g, message: message }
       when :error
         print 'E'
-        errored << {:gateway => g, :message => message}
+        errored << { gateway: g, message: message }
       end
     end
 
@@ -75,13 +75,12 @@ class SSLVersion
     return :success
   rescue Net::HTTPBadResponse
     return :success # version negotiation succeeded
-  rescue OpenSSL::SSL::SSLError => ex
-    return :fail, ex.inspect
-  rescue Interrupt => ex
+  rescue OpenSSL::SSL::SSLError => e
+    return :fail, e.inspect
+  rescue Interrupt => e
     print_summary
-    raise ex
-  rescue StandardError => ex
-    return :error, ex.inspect
+    raise e
+  rescue StandardError => e
+    return :error, e.inspect
   end
-
 end

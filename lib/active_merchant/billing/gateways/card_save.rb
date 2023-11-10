@@ -6,17 +6,16 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :cents
       self.default_currency = 'GBP'
-      self.supported_cardtypes = [ :visa, :maestro, :master, :american_express, :jcb ]
-      self.supported_countries = [ 'GB' ]
+      self.supported_cardtypes = %i[visa maestro master american_express jcb]
+      self.supported_countries = ['GB']
       self.homepage_url = 'http://www.cardsave.net/'
       self.display_name = 'CardSave'
 
-      def initialize(options={})
+      def initialize(options = {})
         super
         @test_url = 'https://gw1.cardsaveonlinepayments.com:4430/'
         @live_url = 'https://gw1.cardsaveonlinepayments.com:4430/'
       end
-
     end
   end
 end

@@ -9,146 +9,146 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   def test1
     credit_card = CreditCard.new(
-      :number => '4457010000000009',
-      :month => '01',
-      :year => '2021',
-      :verification_value => '349',
-      :brand => 'visa'
+      number: '4457010000000009',
+      month: '01',
+      year: '2021',
+      verification_value: '349',
+      brand: 'visa'
     )
 
     options = {
-      :order_id => '1',
-      :billing_address => {
-        :name => 'John & Mary Smith',
-        :address1 => '1 Main St.',
-        :city => 'Burlington',
-        :state => 'MA',
-        :zip => '01803-3747',
-        :country => 'US'
+      order_id: '1',
+      billing_address: {
+        name: 'John & Mary Smith',
+        address1: '1 Main St.',
+        city: 'Burlington',
+        state: 'MA',
+        zip: '01803-3747',
+        country: 'US'
       }
     }
 
-    auth_assertions(10100, credit_card, options, :avs => 'X', :cvv => 'M')
+    auth_assertions(10100, credit_card, options, avs: 'X', cvv: 'M')
 
-    authorize_avs_assertions(credit_card, options, :avs => 'X', :cvv => 'M')
+    authorize_avs_assertions(credit_card, options, avs: 'X', cvv: 'M')
 
-    sale_assertions(10100, credit_card, options, :avs => 'X', :cvv => 'M')
+    sale_assertions(10100, credit_card, options, avs: 'X', cvv: 'M')
   end
 
   def test2
-    credit_card = CreditCard.new(:number => '5112010000000003', :month => '02',
-                                 :year => '2021', :brand => 'master',
-                                 :verification_value => '261',
-                                 :name => 'Mike J. Hammer')
+    credit_card = CreditCard.new(number: '5112010000000003', month: '02',
+                                 year: '2021', brand: 'master',
+                                 verification_value: '261',
+                                 name: 'Mike J. Hammer')
 
     options = {
-      :order_id => '2',
-      :billing_address => {
-        :address1 => '2 Main St.',
-        :address2 => 'Apt. 222',
-        :city => 'Riverside',
-        :state => 'RI',
-        :zip => '02915',
-        :country => 'US'
+      order_id: '2',
+      billing_address: {
+        address1: '2 Main St.',
+        address2: 'Apt. 222',
+        city: 'Riverside',
+        state: 'RI',
+        zip: '02915',
+        country: 'US'
       }
     }
 
-    auth_assertions(10100, credit_card, options, :avs => 'Z', :cvv => 'M')
+    auth_assertions(10100, credit_card, options, avs: 'Z', cvv: 'M')
 
-    authorize_avs_assertions(credit_card, options, :avs => 'Z', :cvv => 'M')
+    authorize_avs_assertions(credit_card, options, avs: 'Z', cvv: 'M')
 
-    sale_assertions(10100, credit_card, options, :avs => 'Z', :cvv => 'M')
+    sale_assertions(10100, credit_card, options, avs: 'Z', cvv: 'M')
   end
 
   def test3
     credit_card = CreditCard.new(
-      :number => '6011010000000003',
-      :month => '03',
-      :year => '2021',
-      :verification_value => '758',
-      :brand => 'discover'
+      number: '6011010000000003',
+      month: '03',
+      year: '2021',
+      verification_value: '758',
+      brand: 'discover'
     )
 
     options = {
-      :order_id => '3',
-      :billing_address => {
-        :name => 'Eileen Jones',
-        :address1 => '3 Main St.',
-        :city => 'Bloomfield',
-        :state => 'CT',
-        :zip => '06002',
-        :country => 'US'
+      order_id: '3',
+      billing_address: {
+        name: 'Eileen Jones',
+        address1: '3 Main St.',
+        city: 'Bloomfield',
+        state: 'CT',
+        zip: '06002',
+        country: 'US'
       }
     }
-    auth_assertions(10100, credit_card, options, :avs => 'Z', :cvv => 'M')
+    auth_assertions(10100, credit_card, options, avs: 'Z', cvv: 'M')
 
-    authorize_avs_assertions(credit_card, options, :avs => 'Z', :cvv => 'M')
+    authorize_avs_assertions(credit_card, options, avs: 'Z', cvv: 'M')
 
-    sale_assertions(10100, credit_card, options, :avs => 'Z', :cvv => 'M')
+    sale_assertions(10100, credit_card, options, avs: 'Z', cvv: 'M')
   end
 
   def test4
     credit_card = CreditCard.new(
-      :number => '375001000000005',
-      :month => '04',
-      :year => '2021',
-      :brand => 'american_express'
+      number: '375001000000005',
+      month: '04',
+      year: '2021',
+      brand: 'american_express'
     )
 
     options = {
-      :order_id => '4',
-      :billing_address => {
-        :name => 'Bob Black',
-        :address1 => '4 Main St.',
-        :city => 'Laurel',
-        :state => 'MD',
-        :zip => '20708',
-        :country => 'US'
+      order_id: '4',
+      billing_address: {
+        name: 'Bob Black',
+        address1: '4 Main St.',
+        city: 'Laurel',
+        state: 'MD',
+        zip: '20708',
+        country: 'US'
       }
     }
 
-    auth_assertions(10100, credit_card, options, :avs => 'A', :cvv => nil)
+    auth_assertions(10100, credit_card, options, avs: 'A', cvv: nil)
 
-    authorize_avs_assertions(credit_card, options, :avs => 'A')
+    authorize_avs_assertions(credit_card, options, avs: 'A')
 
-    sale_assertions(10100, credit_card, options, :avs => 'A', :cvv => nil)
+    sale_assertions(10100, credit_card, options, avs: 'A', cvv: nil)
   end
 
   def test5
     credit_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
-      :number => '4100200300011001',
-      :month => '05',
-      :year => '2021',
-      :verification_value => '463',
-      :brand => 'visa',
-      :payment_cryptogram => 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+      number: '4100200300011001',
+      month: '05',
+      year: '2021',
+      verification_value: '463',
+      brand: 'visa',
+      payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
     )
 
     options = {
-      :order_id => '5'
+      order_id: '5'
     }
 
-    auth_assertions(10100, credit_card, options, :avs => 'U', :cvv => 'M')
+    auth_assertions(10100, credit_card, options, avs: 'U', cvv: 'M')
 
-    authorize_avs_assertions(credit_card, options, :avs => 'U', :cvv => 'M')
+    authorize_avs_assertions(credit_card, options, avs: 'U', cvv: 'M')
 
-    sale_assertions(10100, credit_card, options, :avs => 'U', :cvv => 'M')
+    sale_assertions(10100, credit_card, options, avs: 'U', cvv: 'M')
   end
 
   def test6
-    credit_card = CreditCard.new(:number => '4457010100000008', :month => '06',
-                                 :year => '2021', :brand => 'visa',
-                                 :verification_value => '992')
+    credit_card = CreditCard.new(number: '4457010100000008', month: '06',
+                                 year: '2021', brand: 'visa',
+                                 verification_value: '992')
 
     options = {
-      :order_id => '6',
-      :billing_address => {
-        :name => 'Joe Green',
-        :address1 => '6 Main St.',
-        :city => 'Derry',
-        :state => 'NH',
-        :zip => '03038',
-        :country => 'US'
+      order_id: '6',
+      billing_address: {
+        name: 'Joe Green',
+        address1: '6 Main St.',
+        city: 'Derry',
+        state: 'NH',
+        zip: '03038',
+        country: 'US'
       }
     }
 
@@ -171,26 +171,26 @@ class RemoteLitleCertification < Test::Unit::TestCase
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
 
     # 6A. void
-    assert response = @gateway.void(response.authorization, {:order_id => '6A'})
+    assert response = @gateway.void(response.authorization, { order_id: '6A' })
     assert_equal '360', response.params['response']
     assert_equal 'No transaction found with specified transaction Id', response.message
     puts "Test #{options[:order_id]}A: #{txn_id(response)}"
   end
 
   def test7
-    credit_card = CreditCard.new(:number => '5112010100000002', :month => '07',
-                                 :year => '2021', :brand => 'master',
-                                 :verification_value => '251')
+    credit_card = CreditCard.new(number: '5112010100000002', month: '07',
+                                 year: '2021', brand: 'master',
+                                 verification_value: '251')
 
     options = {
-      :order_id => '7',
-      :billing_address => {
-        :name => 'Jane Murray',
-        :address1 => '7 Main St.',
-        :city => 'Amesbury',
-        :state => 'MA',
-        :zip => '01913',
-        :country => 'US'
+      order_id: '7',
+      billing_address: {
+        name: 'Jane Murray',
+        address1: '7 Main St.',
+        city: 'Amesbury',
+        state: 'MA',
+        zip: '01913',
+        country: 'US'
       }
     }
 
@@ -204,7 +204,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     puts "Test #{options[:order_id]} Authorize: #{txn_id(response)}"
 
     # 7: authorize avs
-    authorize_avs_assertions(credit_card, options, :avs => 'I', :cvv => 'N', :message => 'Invalid Account Number', :success => false)
+    authorize_avs_assertions(credit_card, options, avs: 'I', cvv: 'N', message: 'Invalid Account Number', success: false)
 
     # 7. sale
     assert response = @gateway.purchase(10100, credit_card, options)
@@ -217,19 +217,19 @@ class RemoteLitleCertification < Test::Unit::TestCase
   end
 
   def test8
-    credit_card = CreditCard.new(:number => '6011010100000002', :month => '08',
-                                 :year => '2021', :brand => 'discover',
-                                 :verification_value => '184')
+    credit_card = CreditCard.new(number: '6011010100000002', month: '08',
+                                 year: '2021', brand: 'discover',
+                                 verification_value: '184')
 
     options = {
-      :order_id => '8',
-      :billing_address => {
-        :name => 'Mark Johnson',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US'
+      order_id: '8',
+      billing_address: {
+        name: 'Mark Johnson',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US'
       }
     }
 
@@ -243,7 +243,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     puts "Test #{options[:order_id]} Authorize: #{txn_id(response)}"
 
     # 8: authorize avs
-    authorize_avs_assertions(credit_card, options, :avs => 'I', :cvv => 'P', :message => 'Call Discover', :success => false)
+    authorize_avs_assertions(credit_card, options, avs: 'I', cvv: 'P', message: 'Call Discover', success: false)
 
     # 8: sale
     assert response = @gateway.purchase(80080, credit_card, options)
@@ -256,19 +256,19 @@ class RemoteLitleCertification < Test::Unit::TestCase
   end
 
   def test9
-    credit_card = CreditCard.new(:number => '375001010000003', :month => '09',
-                                 :year => '2021', :brand => 'american_express',
-                                 :verification_value => '0421')
+    credit_card = CreditCard.new(number: '375001010000003', month: '09',
+                                 year: '2021', brand: 'american_express',
+                                 verification_value: '0421')
 
     options = {
-      :order_id => '9',
-      :billing_address => {
-        :name => 'James Miller',
-        :address1 => '9 Main St.',
-        :city => 'Boston',
-        :state => 'MA',
-        :zip => '02134',
-        :country => 'US'
+      order_id: '9',
+      billing_address: {
+        name: 'James Miller',
+        address1: '9 Main St.',
+        city: 'Boston',
+        state: 'MA',
+        zip: '02134',
+        country: 'US'
       }
     }
 
@@ -281,7 +281,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     puts "Test #{options[:order_id]} Authorize: #{txn_id(response)}"
 
     # 9: authorize avs
-    authorize_avs_assertions(credit_card, options, :avs => 'I', :message => 'Pick Up Card', :success => false)
+    authorize_avs_assertions(credit_card, options, avs: 'I', message: 'Pick Up Card', success: false)
 
     # 9: sale
     assert response = @gateway.purchase(10100, credit_card, options)
@@ -294,19 +294,19 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   # Authorization Reversal Tests
   def test32
-    credit_card = CreditCard.new(:number => '4457010000000009', :month => '01',
-                                 :year => '2021', :brand => 'visa',
-                                 :verification_value => '349')
+    credit_card = CreditCard.new(number: '4457010000000009', month: '01',
+                                 year: '2021', brand: 'visa',
+                                 verification_value: '349')
 
     options = {
-      :order_id => '32',
-      :billing_address => {
-        :name => 'John Smith',
-        :address1 => '1 Main St.',
-        :city => 'Burlington',
-        :state => 'MA',
-        :zip => '01803-3747',
-        :country => 'US'
+      order_id: '32',
+      billing_address: {
+        name: 'John Smith',
+        address1: '1 Main St.',
+        city: 'Burlington',
+        state: 'MA',
+        zip: '01803-3747',
+        country: 'US'
       }
     }
 
@@ -326,21 +326,21 @@ class RemoteLitleCertification < Test::Unit::TestCase
   end
 
   def test33
-    credit_card = CreditCard.new(:number => '5112010000000003', :month => '01',
-                                 :year => '2021', :brand => 'master',
-                                 :verification_value => '261')
+    credit_card = CreditCard.new(number: '5112010000000003', month: '01',
+                                 year: '2021', brand: 'master',
+                                 verification_value: '261')
 
     options = {
-      :order_id => '33',
-      :billing_address => {
-        :name => 'Mike J. Hammer',
-        :address1 => '2 Main St.',
-        :address2 => 'Apt. 222',
-        :city => 'Riverside',
-        :state => 'RI',
-        :zip => '02915',
-        :country => 'US',
-        :payment_cryptogram => 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+      order_id: '33',
+      billing_address: {
+        name: 'Mike J. Hammer',
+        address1: '2 Main St.',
+        address2: 'Apt. 222',
+        city: 'Riverside',
+        state: 'RI',
+        zip: '02915',
+        country: 'US',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
       }
     }
 
@@ -355,19 +355,19 @@ class RemoteLitleCertification < Test::Unit::TestCase
   end
 
   def test34
-    credit_card = CreditCard.new(:number => '6011010000000003', :month => '01',
-                                 :year => '2021', :brand => 'discover',
-                                 :verification_value => '758')
+    credit_card = CreditCard.new(number: '6011010000000003', month: '01',
+                                 year: '2021', brand: 'discover',
+                                 verification_value: '758')
 
     options = {
-      :order_id => '34',
-      :billing_address => {
-        :name => 'Eileen Jones',
-        :address1 => '3 Main St.',
-        :city => 'Bloomfield',
-        :state => 'CT',
-        :zip => '06002',
-        :country => 'US'
+      order_id: '34',
+      billing_address: {
+        name: 'Eileen Jones',
+        address1: '3 Main St.',
+        city: 'Bloomfield',
+        state: 'CT',
+        zip: '06002',
+        country: 'US'
       }
     }
 
@@ -382,18 +382,18 @@ class RemoteLitleCertification < Test::Unit::TestCase
   end
 
   def test35
-    credit_card = CreditCard.new(:number => '375001000000005', :month => '01',
-                                 :year => '2021', :brand => 'american_express')
+    credit_card = CreditCard.new(number: '375001000000005', month: '01',
+                                 year: '2021', brand: 'american_express')
 
     options = {
-      :order_id => '35',
-      :billing_address => {
-        :name => 'Bob Black',
-        :address1 => '4 Main St.',
-        :city => 'Laurel',
-        :state => 'MD',
-        :zip => '20708',
-        :country => 'US'
+      order_id: '35',
+      billing_address: {
+        name: 'Bob Black',
+        address1: '4 Main St.',
+        city: 'Laurel',
+        state: 'MD',
+        zip: '20708',
+        country: 'US'
       }
     }
 
@@ -414,12 +414,12 @@ class RemoteLitleCertification < Test::Unit::TestCase
   end
 
   def test36
-    credit_card = CreditCard.new(:number => '375000026600004', :month => '01',
-                                 :year => '2021', :brand => 'american_express')
+    credit_card = CreditCard.new(number: '375000026600004', month: '01',
+                                 year: '2021', brand: 'american_express')
 
     options = {
-      :order_id => '36'
-      }
+      order_id: '36'
+    }
 
     assert auth_response = @gateway.authorize(20500, credit_card, options)
     assert_success auth_response
@@ -440,16 +440,16 @@ class RemoteLitleCertification < Test::Unit::TestCase
       account_type: 'Checking'
     )
     options = {
-      :order_id => '37',
-      :billing_address => {
-        :name => 'Tom Black',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US',
-        :email => 'test@test.com',
-        :phone => '2233334444'
+      order_id: '37',
+      billing_address: {
+        name: 'Tom Black',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US',
+        email: 'test@test.com',
+        phone: '2233334444'
       }
     }
     assert auth_response = @gateway.authorize(3001, check, options)
@@ -467,16 +467,16 @@ class RemoteLitleCertification < Test::Unit::TestCase
       account_type: 'Checking'
     )
     options = {
-      :order_id => '38',
-      :billing_address => {
-        :name => 'John Smith',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US',
-        :email => 'test@test.com',
-        :phone => '2233334444'
+      order_id: '38',
+      billing_address: {
+        name: 'John Smith',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US',
+        email: 'test@test.com',
+        phone: '2233334444'
       }
     }
     assert auth_response = @gateway.authorize(3002, check, options)
@@ -494,17 +494,17 @@ class RemoteLitleCertification < Test::Unit::TestCase
       account_type: 'Corporate'
     )
     options = {
-      :order_id => '39',
-      :billing_address => {
-        :name => 'John Smith',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US',
-        :company => 'Good Goods Inc',
-        :email => 'test@test.com',
-        :phone => '2233334444'
+      order_id: '39',
+      billing_address: {
+        name: 'John Smith',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US',
+        company: 'Good Goods Inc',
+        email: 'test@test.com',
+        phone: '2233334444'
       }
     }
     assert auth_response = @gateway.authorize(3003, check, options)
@@ -522,17 +522,17 @@ class RemoteLitleCertification < Test::Unit::TestCase
       account_type: 'Corporate'
     )
     options = {
-      :order_id => '40',
-      :billing_address => {
-        :name => 'Peter Green',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US',
-        :company => 'Green Co',
-        :email => 'test@test.com',
-        :phone => '2233334444'
+      order_id: '40',
+      billing_address: {
+        name: 'Peter Green',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US',
+        company: 'Green Co',
+        email: 'test@test.com',
+        phone: '2233334444'
       }
     }
     assert auth_response = @gateway.authorize(3004, declined_authorize_check, options)
@@ -550,16 +550,16 @@ class RemoteLitleCertification < Test::Unit::TestCase
       account_type: 'Checking'
     )
     options = {
-      :order_id => '41',
-      :billing_address => {
-        :name => 'Mike Hammer',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US',
-        :email => 'test@test.com',
-        :phone => '2233334444'
+      order_id: '41',
+      billing_address: {
+        name: 'Mike Hammer',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US',
+        email: 'test@test.com',
+        phone: '2233334444'
       }
     }
     assert purchase_response = @gateway.purchase(2008, check, options)
@@ -577,16 +577,16 @@ class RemoteLitleCertification < Test::Unit::TestCase
       account_type: 'Checking'
     )
     options = {
-      :order_id => '42',
-      :billing_address => {
-        :name => 'Tom Black',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US',
-        :email => 'test@test.com',
-        :phone => '2233334444'
+      order_id: '42',
+      billing_address: {
+        name: 'Tom Black',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US',
+        email: 'test@test.com',
+        phone: '2233334444'
       }
     }
     assert purchase_response = @gateway.purchase(2004, check, options)
@@ -604,17 +604,17 @@ class RemoteLitleCertification < Test::Unit::TestCase
       account_type: 'Corporate'
     )
     options = {
-      :order_id => '43',
-      :billing_address => {
-        :name => 'Peter Green',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US',
-        :company => 'Green Co',
-        :email => 'test@test.com',
-        :phone => '2233334444'
+      order_id: '43',
+      billing_address: {
+        name: 'Peter Green',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US',
+        company: 'Green Co',
+        email: 'test@test.com',
+        phone: '2233334444'
       }
     }
     assert purchase_response = @gateway.purchase(2007, check, options)
@@ -632,17 +632,17 @@ class RemoteLitleCertification < Test::Unit::TestCase
       account_type: 'Corporate'
     )
     options = {
-      :order_id => '44',
-      :billing_address => {
-        :name => 'Peter Green',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US',
-        :company => 'Green Co',
-        :email => 'test@test.com',
-        :phone => '2233334444'
+      order_id: '44',
+      billing_address: {
+        name: 'Peter Green',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US',
+        company: 'Green Co',
+        email: 'test@test.com',
+        phone: '2233334444'
       }
     }
     assert purchase_response = @gateway.purchase(2009, check, options)
@@ -660,16 +660,16 @@ class RemoteLitleCertification < Test::Unit::TestCase
       account_type: 'Checking'
     )
     options = {
-      :order_id => '45',
-      :billing_address => {
-        :name => 'John Smith',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US',
-        :email => 'test@test.com',
-        :phone => '2233334444'
+      order_id: '45',
+      billing_address: {
+        name: 'John Smith',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US',
+        email: 'test@test.com',
+        phone: '2233334444'
       }
     }
     assert refund_response = @gateway.refund(1001, check, options)
@@ -687,18 +687,18 @@ class RemoteLitleCertification < Test::Unit::TestCase
       account_type: 'Corporate'
     )
     options = {
-      :order_id => '46',
-      :order_source => 'telephone',
-      :billing_address => {
-        :name => 'Robert Jones',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US',
-        :email => 'test@test.com',
-        :phone => '2233334444',
-        :company => 'Widget Inc'
+      order_id: '46',
+      order_source: 'telephone',
+      billing_address: {
+        name: 'Robert Jones',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US',
+        email: 'test@test.com',
+        phone: '2233334444',
+        company: 'Widget Inc'
       }
     }
     assert purchase_response = @gateway.purchase(1003, check, options)
@@ -718,17 +718,17 @@ class RemoteLitleCertification < Test::Unit::TestCase
       account_type: 'Corporate'
     )
     options = {
-      :order_id => '47',
-      :billing_address => {
-        :name => 'Peter Green',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US',
-        :company => 'Green Co',
-        :email => 'test@test.com',
-        :phone => '2233334444'
+      order_id: '47',
+      billing_address: {
+        name: 'Peter Green',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US',
+        company: 'Green Co',
+        email: 'test@test.com',
+        phone: '2233334444'
       }
     }
     assert purchase_response = @gateway.purchase(1007, check, options)
@@ -747,17 +747,17 @@ class RemoteLitleCertification < Test::Unit::TestCase
       account_type: 'Corporate'
     )
     options = {
-      :order_id => '43',
-      :billing_address => {
-        :name => 'Peter Green',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US',
-        :company => 'Green Co',
-        :email => 'test@test.com',
-        :phone => '2233334444'
+      order_id: '43',
+      billing_address: {
+        name: 'Peter Green',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US',
+        company: 'Green Co',
+        email: 'test@test.com',
+        phone: '2233334444'
       }
     }
     assert purchase_response = @gateway.purchase(2007, check, options)
@@ -783,17 +783,17 @@ class RemoteLitleCertification < Test::Unit::TestCase
       account_type: 'Checking'
     )
     options = {
-      :order_id => '42',
-      :id => '236222',
-      :billing_address => {
-        :name => 'Tom Black',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US',
-        :email => 'test@test.com',
-        :phone => '2233334444'
+      order_id: '42',
+      id: '236222',
+      billing_address: {
+        name: 'Tom Black',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US',
+        email: 'test@test.com',
+        phone: '2233334444'
       }
     }
     assert purchase_response = @gateway.purchase(2004, check, options)
@@ -812,17 +812,17 @@ class RemoteLitleCertification < Test::Unit::TestCase
       account_type: 'Checking'
     )
     options = {
-      :order_id => '46',
-      :id => '232222',
-      :billing_address => {
-        :name => 'Robert Jones',
-        :address1 => '8 Main St.',
-        :city => 'Manchester',
-        :state => 'NH',
-        :zip => '03101',
-        :country => 'US',
-        :email => 'test@test.com',
-        :phone => '2233334444'
+      order_id: '46',
+      id: '232222',
+      billing_address: {
+        name: 'Robert Jones',
+        address1: '8 Main St.',
+        city: 'Manchester',
+        state: 'NH',
+        zip: '03101',
+        country: 'US',
+        email: 'test@test.com',
+        phone: '2233334444'
       }
     }
     assert purchase_response = @gateway.purchase(1003, check, options)
@@ -843,9 +843,9 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   # Explicit Token Registration Tests
   def test50
-    credit_card = CreditCard.new(:number => '4457119922390123')
+    credit_card = CreditCard.new(number: '4457119922390123')
     options     = {
-      :order_id => '50'
+      order_id: '50'
     }
 
     # store
@@ -861,9 +861,9 @@ class RemoteLitleCertification < Test::Unit::TestCase
   end
 
   def test51
-    credit_card = CreditCard.new(:number => '4457119999999999')
+    credit_card = CreditCard.new(number: '4457119999999999')
     options = {
-      :order_id => '51'
+      order_id: '51'
     }
 
     # store
@@ -876,9 +876,9 @@ class RemoteLitleCertification < Test::Unit::TestCase
   end
 
   def test52
-    credit_card = CreditCard.new(:number => '4457119922390123')
+    credit_card = CreditCard.new(number: '4457119922390123')
     options = {
-      :order_id => '52'
+      order_id: '52'
     }
 
     # store
@@ -898,8 +898,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
       routing_number: '011100012',
       account_number: '1099999998'
     )
-    options     = {
-      :order_id => '53'
+    options = {
+      order_id: '53'
     }
 
     store_response = @gateway.store(check, options)
@@ -917,8 +917,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
       routing_number: '1145_7895',
       account_number: '1022222102'
     )
-    options     = {
-      :order_id => '54'
+    options = {
+      order_id: '54'
     }
 
     store_response = @gateway.store(check, options)
@@ -931,13 +931,13 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   # Implicit Token Registration Tests
   def test55
-    credit_card = CreditCard.new(:number             => '5435101234510196',
-                                 :month              => '11',
-                                 :year               => '2014',
-                                 :brand              => 'master',
-                                 :verification_value => '987')
+    credit_card = CreditCard.new(number: '5435101234510196',
+                                 month: '11',
+                                 year: '2014',
+                                 brand: 'master',
+                                 verification_value: '987')
     options = {
-      :order_id => '55'
+      order_id: '55'
     }
 
     # authorize
@@ -952,13 +952,13 @@ class RemoteLitleCertification < Test::Unit::TestCase
   end
 
   def test56
-    credit_card = CreditCard.new(:number             => '5435109999999999',
-                                 :month              => '11',
-                                 :year               => '2014',
-                                 :brand              => 'master',
-                                 :verification_value => '987')
+    credit_card = CreditCard.new(number: '5435109999999999',
+                                 month: '11',
+                                 year: '2014',
+                                 brand: 'master',
+                                 verification_value: '987')
     options = {
-      :order_id => '56'
+      order_id: '56'
     }
 
     # authorize
@@ -970,13 +970,13 @@ class RemoteLitleCertification < Test::Unit::TestCase
   end
 
   def test57_58
-    credit_card = CreditCard.new(:number             => '5435101234510196',
-                                 :month              => '11',
-                                 :year               => '2014',
-                                 :brand              => 'master',
-                                 :verification_value => '987')
+    credit_card = CreditCard.new(number: '5435101234510196',
+                                 month: '11',
+                                 year: '2014',
+                                 brand: 'master',
+                                 verification_value: '987')
     options = {
-      :order_id => '57'
+      order_id: '57'
     }
 
     # authorize card
@@ -993,10 +993,10 @@ class RemoteLitleCertification < Test::Unit::TestCase
     # authorize token
     token   = response.params['tokenResponse_litleToken']
     options = {
-      :order_id => '58',
-      :token    => {
-        :month => credit_card.month,
-        :year  => credit_card.year
+      order_id: '58',
+      token: {
+        month: credit_card.month,
+        year: credit_card.year
       }
     }
 
@@ -1011,10 +1011,10 @@ class RemoteLitleCertification < Test::Unit::TestCase
   def test59
     token   = '1111000100092332'
     options = {
-      :order_id => '59',
-      :token    => {
-        :month => '11',
-        :year  => '2021'
+      order_id: '59',
+      token: {
+        month: '11',
+        year: '2021'
       }
     }
 
@@ -1030,10 +1030,10 @@ class RemoteLitleCertification < Test::Unit::TestCase
   def test60
     token   = '171299999999999'
     options = {
-      :order_id => '60',
-      :token    => {
-        :month => '11',
-        :year  => '2014'
+      order_id: '60',
+      token: {
+        month: '11',
+        year: '2014'
       }
     }
 
@@ -1048,7 +1048,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   def test_apple_pay_purchase
     options = {
-      :order_id => transaction_id,
+      order_id: transaction_id
     }
     decrypted_apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       {
@@ -1057,7 +1057,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
         brand: 'visa',
         number:  '4457000300000007',
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
-      })
+      }
+    )
 
     assert response = @gateway.purchase(10010, decrypted_apple_pay, options)
     assert_success response
@@ -1066,7 +1067,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   def test_android_pay_purchase
     options = {
-      :order_id => transaction_id,
+      order_id: transaction_id
     }
     decrypted_android_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       {
@@ -1076,7 +1077,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
         brand: 'visa',
         number:  '4457000300000007',
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
-      })
+      }
+    )
 
     assert response = @gateway.purchase(10010, decrypted_android_pay, options)
     assert_success response
@@ -1104,22 +1106,22 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   def test_authorize_and_purchase_and_credit_with_token
     options = {
-      :order_id => transaction_id,
-      :billing_address => {
-        :name => 'John Smith',
-        :address1 => '1 Main St.',
-        :city => 'Burlington',
-        :state => 'MA',
-        :zip => '01803-3747',
-        :country => 'US'
+      order_id: transaction_id,
+      billing_address: {
+        name: 'John Smith',
+        address1: '1 Main St.',
+        city: 'Burlington',
+        state: 'MA',
+        zip: '01803-3747',
+        country: 'US'
       }
     }
 
-    credit_card = CreditCard.new(:number             => '5435101234510196',
-                                 :month              => '11',
-                                 :year               => '2014',
-                                 :brand              => 'master',
-                                 :verification_value => '987')
+    credit_card = CreditCard.new(number: '5435101234510196',
+                                 month: '11',
+                                 year: '2014',
+                                 brand: 'master',
+                                 verification_value: '987')
 
     # authorize
     assert auth_response = @gateway.authorize(0, credit_card, options)
@@ -1132,12 +1134,12 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
     # purchase
     purchase_options = options.merge({
-                                         :order_id => transaction_id,
-                                         :token    => {
-                                             :month => credit_card.month,
-                                             :year  => credit_card.year
-                                         }
-                                     })
+      order_id: transaction_id,
+      token: {
+        month: credit_card.month,
+        year: credit_card.year
+      }
+    })
 
     assert purchase_response = @gateway.purchase(100, token, purchase_options)
     assert_success purchase_response
@@ -1146,12 +1148,12 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
     # credit
     credit_options = options.merge({
-                                       :order_id => transaction_id,
-                                       :token    => {
-                                           :month => credit_card.month,
-                                           :year  => credit_card.year
-                                       }
-                                   })
+      order_id: transaction_id,
+      token: {
+        month: credit_card.month,
+        year: credit_card.year
+      }
+    })
 
     assert credit_response = @gateway.credit(500, token, credit_options)
     assert_success credit_response
@@ -1161,7 +1163,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   private
 
-  def auth_assertions(amount, card, options, assertions={})
+  def auth_assertions(amount, card, options, assertions = {})
     # 1: authorize
     assert response = @gateway.authorize(amount, card, options)
     assert_success response
@@ -1171,19 +1173,19 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal auth_code(options[:order_id]), response.params['authCode']
 
     # 1A: capture
-    assert response = @gateway.capture(amount, response.authorization, {:id => transaction_id})
+    assert response = @gateway.capture(amount, response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
 
     # 1B: credit
-    assert response = @gateway.credit(amount, response.authorization, {:id => transaction_id})
+    assert response = @gateway.credit(amount, response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
 
     # 1C: void
-    assert response = @gateway.void(response.authorization, {:id => transaction_id})
+    assert response = @gateway.void(response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
   end
 
-  def authorize_avs_assertions(credit_card, options, assertions={})
+  def authorize_avs_assertions(credit_card, options, assertions = {})
     assert response = @gateway.authorize(000, credit_card, options)
     assert_equal assertions.key?(:success) ? assertions[:success] : true, response.success?
     assert_equal assertions[:message] || 'Approved', response.message
@@ -1191,7 +1193,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal assertions[:cvv], response.cvv_result['code'], caller.inspect if assertions[:cvv]
   end
 
-  def sale_assertions(amount, card, options, assertions={})
+  def sale_assertions(amount, card, options, assertions = {})
     # 1: sale
     assert response = @gateway.purchase(amount, card, options)
     assert_success response
@@ -1201,19 +1203,19 @@ class RemoteLitleCertification < Test::Unit::TestCase
     # assert_equal auth_code(options[:order_id]), response.params['authCode']
 
     # 1B: credit
-    assert response = @gateway.credit(amount, response.authorization, {:id => transaction_id})
+    assert response = @gateway.credit(amount, response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
 
     # 1C: void
-    assert response = @gateway.void(response.authorization, {:id => transaction_id})
+    assert response = @gateway.void(response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
   end
 
   def three_d_secure_assertions(test_id, card, type, source, result)
-    credit_card = CreditCard.new(:number => card, :month => '01',
-                                 :year => '2021', :brand => type,
-                                 :verification_value => '261',
-                                 :name => 'Mike J. Hammer')
+    credit_card = CreditCard.new(number: card, month: '01',
+                                 year: '2021', brand: type,
+                                 verification_value: '261',
+                                 name: 'Mike J. Hammer')
 
     options = {
       order_id: test_id,

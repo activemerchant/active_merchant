@@ -5,19 +5,17 @@ require 'test_helper'
 class PayboxDirectTest < Test::Unit::TestCase
   def setup
     @gateway = PayboxDirectGateway.new(
-                 :login => 'l',
-                 :password => 'p'
-               )
-
-    @credit_card = credit_card('1111222233334444',
-      :brand => 'visa'
+      login: 'l',
+      password: 'p'
     )
+
+    @credit_card = credit_card('1111222233334444', brand: 'visa')
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -82,7 +80,7 @@ class PayboxDirectTest < Test::Unit::TestCase
   end
 
   def test_keep_the_card_code_not_considered_fraudulent
-    @gateway.expects(:ssl_post).returns(purchase_response('00104'))
+    @gateway.expects(:ssl_post).returns(purchase_response('00103'))
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -113,7 +111,7 @@ class PayboxDirectTest < Test::Unit::TestCase
   private
 
   # Place raw successful response from gateway here
-  def purchase_response(code='00000')
+  def purchase_response(code = '00000')
     "NUMTRANS=0720248861&NUMAPPEL=0713790302&NUMQUESTION=0000790217&SITE=1999888&RANG=99&AUTORISATION=XXXXXX&CODEREPONSE=#{code}&COMMENTAIRE=Demande trait?e avec succ?s ✔漢"
   end
 

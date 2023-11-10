@@ -1,13 +1,13 @@
 require 'test_helper'
 
 class RemoteSpreedlyCoreTest < Test::Unit::TestCase
-
   def setup
     @gateway = SpreedlyCoreGateway.new(fixtures(:spreedly_core))
 
     @amount = 100
     @credit_card = credit_card('5555555555554444')
     @declined_card = credit_card('4012888888881881')
+    @check = check({ routing_number: '021000021', account_number: '9876543210' })
     @existing_payment_method = '3rEkRlZur2hXKbwwRBidHJAIUTO'
     @declined_payment_method = 'UPfh3J3JbekLeYC88BP741JWnS5'
     @existing_transaction = 'PJ5ICgM6h7v9pBNxDCJjRHDDxBC'
@@ -60,10 +60,18 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_equal 'cached', response.params['payment_method_storage_state']
   end
 
+  def test_successful_purchase_with_check
+    assert response = @gateway.purchase(@amount, @check)
+    assert_success response
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Purchase', response.params['transaction_type']
+    assert_equal 'cached', response.params['payment_method_storage_state']
+  end
+
   def test_successful_purchase_with_card_and_address
     options = {
-      :email => 'joebob@example.com',
-      :billing_address => address,
+      email: 'joebob@example.com',
+      billing_address: address
     }
 
     assert response = @gateway.purchase(@amount, @credit_card, options)
@@ -88,7 +96,8 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     @credit_card.first_name = ' '
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_failure response
-    assert_equal "First name can't be blank", response.message
+    assert_equal 'The payment method is invalid.', response.message
+    assert_equal "First name can't be blank", response.params['payment_method_errors'].strip
   end
 
   def test_successful_purchase_with_store
@@ -96,7 +105,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded!', response.message
     assert_equal 'Purchase', response.params['transaction_type']
-    assert_equal 'retained', response.params['payment_method_storage_state']
+    assert %w(retained cached).include?(response.params['payment_method_storage_state'])
     assert !response.params['payment_method_token'].blank?
   end
 
@@ -114,8 +123,8 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_card_and_address
     options = {
-      :email => 'joebob@example.com',
-      :billing_address => address,
+      email: 'joebob@example.com',
+      billing_address: address
     }
 
     assert response = @gateway.authorize(@amount, @credit_card, options)
@@ -141,7 +150,8 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     @credit_card.first_name = ' '
     assert response = @gateway.authorize(@amount, @credit_card)
     assert_failure response
-    assert_equal "First name can't be blank", response.message
+    assert_equal 'The payment method is invalid.', response.message
+    assert_equal "First name can't be blank", response.params['payment_method_errors'].strip
   end
 
   def test_successful_authorize_with_store
@@ -149,7 +159,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded!', response.message
     assert_equal 'Authorization', response.params['transaction_type']
-    assert_equal 'retained', response.params['payment_method_storage_state']
+    assert %w(retained cached).include?(response.params['payment_method_storage_state'])
     assert !response.params['payment_method_token'].blank?
   end
 
@@ -163,28 +173,28 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
   end
 
   def test_successful_store_simple_data
-    assert response = @gateway.store(@credit_card, { :data => 'SomeData' })
+    assert response = @gateway.store(@credit_card, { data: 'SomeData' })
     assert_success response
     assert_equal 'SomeData', response.params['payment_method_data']
   end
 
   def test_successful_store_nested_data
     options = {
-      :data => {
-        :first_attribute => { :sub_dude => 'ExcellentSubValue' },
-        :second_attribute => 'AnotherValue'
+      data: {
+        first_attribute: { sub_dude: 'ExcellentSubValue' },
+        second_attribute: 'AnotherValue'
       }
     }
     assert response = @gateway.store(@credit_card, options)
     assert_success response
-    expected_data = { 'first_attribute' => { 'sub_dude'=>'ExcellentSubValue' }, 'second_attribute' =>'AnotherValue' }
+    expected_data = { 'first_attribute' => { 'sub_dude' => 'ExcellentSubValue' }, 'second_attribute' => 'AnotherValue' }
     assert_equal expected_data, response.params['payment_method_data']
   end
 
   def test_successful_store_with_address
     options = {
-      :email => 'joebob@example.com',
-      :billing_address => address,
+      email: 'joebob@example.com',
+      billing_address: address
     }
 
     assert response = @gateway.store(@credit_card, options)
@@ -198,7 +208,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
   end
 
   def test_failed_store
-    assert response = @gateway.store(credit_card('5555555555554444', :last_name => '  '))
+    assert response = @gateway.store(credit_card('5555555555554444', last_name: '  '))
     assert_failure response
     assert_equal "Last name can't be blank", response.message
   end
@@ -281,7 +291,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = SpreedlyCoreGateway.new(:login => 'Bogus', :password => 'MoreBogus', :gateway_token => 'EvenMoreBogus')
+    gateway = SpreedlyCoreGateway.new(login: 'Bogus', password: 'MoreBogus', gateway_token: 'EvenMoreBogus')
 
     assert response = gateway.purchase(@amount, @existing_payment_method)
     assert_failure response

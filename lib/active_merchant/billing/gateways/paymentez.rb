@@ -7,9 +7,9 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://ccapi-stg.paymentez.com/v2/'
       self.live_url = 'https://ccapi.paymentez.com/v2/'
 
-      self.supported_countries = %w[MX EC VE CO BR CL]
+      self.supported_countries = %w[MX EC CO BR CL PE]
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express diners_club elo]
+      self.supported_cardtypes = %i[visa master american_express diners_club elo alia olimpica discover maestro sodexo carnet unionpay jcb]
 
       self.homepage_url = 'https://secure.paymentez.com/'
       self.display_name = 'Paymentez'
@@ -34,12 +34,21 @@ module ActiveMerchant #:nodoc:
         28 => :card_declined
       }.freeze
 
+      SUCCESS_STATUS = ['success', 'pending', 1, 0]
+
       CARD_MAPPING = {
         'visa' => 'vi',
         'master' => 'mc',
         'american_express' => 'ax',
         'diners_club' => 'di',
-        'elo' => 'el'
+        'elo' => 'el',
+        'discover' => 'dc',
+        'maestro' => 'ms',
+        'sodexo' => 'sx',
+        'olimpica' => 'ol',
+        'carnet' => 'ct',
+        'unionpay' => 'up',
+        'jcb' => 'jc'
       }.freeze
 
       def initialize(options = {})
@@ -60,6 +69,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment, options = {})
+        return purchase(money, payment, options) if options[:otp_flow]
+
         post = {}
 
         add_invoice(post, money, options)
@@ -70,18 +81,27 @@ module ActiveMerchant #:nodoc:
         commit_transaction('authorize', post)
       end
 
-      def capture(money, authorization, _options = {})
+      def capture(money, authorization, options = {})
         post = {
-            transaction: { id: authorization }
+          transaction: { id: authorization }
         }
-        post[:order] = {amount: amount(money).to_f} if money
+        verify_flow = options[:type] && options[:value]
 
-        commit_transaction('capture', post)
+        if verify_flow
+          add_customer_data(post, options)
+          add_verify_value(post, options)
+        elsif money
+          post[:order] = { amount: amount(money).to_f }
+        end
+
+        action = verify_flow ? 'verify' : 'capture'
+        commit_transaction(action, post)
       end
 
       def refund(money, authorization, options = {})
-        post = {transaction: {id: authorization}}
-        post[:order] = {amount: amount(money).to_f} if money
+        post = { transaction: { id: authorization } }
+        post[:order] = { amount: amount(money).to_f } if money
+        add_more_info(post, options)
 
         commit_transaction('refund', post)
       end
@@ -113,8 +133,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def unstore(identification, options = {})
-        post = { card: { token: identification }, user: { id: options[:user_id] }}
+        post = { card: { token: identification }, user: { id: options[:user_id] } }
         commit_card('delete', post)
+      end
+
+      def inquire(authorization, options = {})
+        commit_transaction('inquire', authorization)
       end
 
       def supports_scrubbing?
@@ -131,10 +155,10 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_customer_data(post, options)
-        requires!(options, :user_id, :email)
+        requires!(options, :user_id)
         post[:user] ||= {}
         post[:user][:id] = options[:user_id]
-        post[:user][:email] = options[:email]
+        post[:user][:email] = options[:email] if options[:email]
         post[:user][:ip_address] = options[:ip] if options[:ip]
         post[:user][:fiscal_number] = options[:fiscal_number] if options[:fiscal_number]
         if phone = options[:phone] || options.dig(:billing_address, :phone)
@@ -171,11 +195,40 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_verify_value(post, options)
+        post[:type] = options[:type] if options[:type]
+        post[:value] = options[:value] if options[:value]
+      end
+
       def add_extra_params(post, options)
         extra_params = {}
         extra_params.merge!(options[:extra_params]) if options[:extra_params]
 
+        add_external_mpi_fields(extra_params, options)
+
         post['extra_params'] = extra_params unless extra_params.empty?
+      end
+
+      def add_external_mpi_fields(extra_params, options)
+        three_d_secure_options = options[:three_d_secure]
+        return unless three_d_secure_options
+
+        auth_data = {
+          cavv: three_d_secure_options[:cavv],
+          xid: three_d_secure_options[:xid],
+          eci: three_d_secure_options[:eci],
+          version: three_d_secure_options[:version],
+          reference_id: three_d_secure_options[:three_ds_server_trans_id],
+          status: three_d_secure_options[:authentication_response_status] || three_d_secure_options[:directory_response_status]
+        }.compact
+
+        return if auth_data.empty?
+
+        extra_params[:auth_data] = auth_data
+      end
+
+      def add_more_info(post, options)
+        post[:more_info] = options[:more_info] if options[:more_info]
       end
 
       def parse(body)
@@ -183,18 +236,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit_raw(object, action, parameters)
-        url = "#{(test? ? test_url : live_url)}#{object}/#{action}"
-
-        begin
-          raw_response = ssl_post(url, post_data(parameters), headers)
-        rescue ResponseError => e
-          raw_response = e.response.body
+        if action == 'inquire'
+          url = "#{(test? ? test_url : live_url)}#{object}/#{parameters}"
+          begin
+            raw_response = ssl_get(url, headers)
+          rescue ResponseError => e
+            raw_response = e.response.body
+          end
+        else
+          url = "#{(test? ? test_url : live_url)}#{object}/#{action}"
+          begin
+            raw_response = ssl_post(url, post_data(parameters), headers)
+          rescue ResponseError => e
+            raw_response = e.response.body
+          end
         end
 
         begin
           parse(raw_response)
         rescue JSON::ParserError
-          {'status' => 'Internal server error'}
+          { 'status' => 'Internal server error' }
         end
       end
 
@@ -230,20 +291,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        !response.include?('error') && (response['status'] || response['transaction']['status']) == 'success'
+        return false if response.include?('error')
+
+        SUCCESS_STATUS.include?(response['status'] || response['transaction']['status'])
       end
 
       def card_success_from(response)
         return false if response.include?('error')
         return true if response['message'] == 'card deleted'
+
         response['card']['status'] == 'valid'
       end
 
       def message_from(response)
+        return response['detail'] if response['detail'].present?
+
         if !success_from(response) && response['error']
           response['error'] && response['error']['type']
         else
-          response['transaction'] && response['transaction']['message']
+          (response['transaction'] && response['transaction']['message']) || (response['message'])
         end
       end
 
@@ -274,11 +340,10 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         return if success_from(response)
+
         if response['transaction']
           detail = response['transaction']['status_detail']
-          if STANDARD_ERROR_CODE_MAPPING.include?(detail)
-            return STANDARD_ERROR_CODE[STANDARD_ERROR_CODE_MAPPING[detail]]
-          end
+          return STANDARD_ERROR_CODE[STANDARD_ERROR_CODE_MAPPING[detail]] if STANDARD_ERROR_CODE_MAPPING.include?(detail)
         elsif response['error']
           return STANDARD_ERROR_CODE[:config_error]
         end

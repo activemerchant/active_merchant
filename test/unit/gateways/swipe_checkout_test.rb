@@ -19,7 +19,7 @@ class SwipeCheckoutTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert @gateway.supported_countries == ['NZ', 'CA']
+    assert @gateway.supported_countries == %w[NZ CA]
   end
 
   def test_successful_purchase

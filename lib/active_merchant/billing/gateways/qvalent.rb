@@ -10,78 +10,87 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AU']
       self.default_currency = 'AUD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners]
 
       CVV_CODE_MAPPING = {
         'S' => 'D'
       }
 
-      def initialize(options={})
-        requires!(options, :username, :password, :merchant, :pem, :pem_password)
+      def initialize(options = {})
+        requires!(options, :username, :password, :merchant, :pem)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_order_number(post, options)
         add_payment_method(post, payment_method)
         add_verification_value(post, payment_method)
+        add_stored_credential_data(post, payment_method, options)
         add_customer_data(post, options)
         add_soft_descriptors(post, options)
+        add_customer_reference(post, options)
 
         commit('capture', post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_order_number(post, options)
         add_payment_method(post, payment_method)
         add_verification_value(post, payment_method)
+        add_stored_credential_data(post, payment_method, options)
         add_customer_data(post, options)
         add_soft_descriptors(post, options)
+        add_customer_reference(post, options)
 
         commit('preauth', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization, options)
         add_customer_data(post, options)
         add_soft_descriptors(post, options)
+        add_customer_reference(post, options)
 
         commit('captureWithoutAuth', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization, options)
         add_customer_data(post, options)
         add_soft_descriptors(post, options)
+        post['order.ECI'] = options[:eci] || 'SSL'
+        add_customer_reference(post, options)
 
         commit('refund', post)
       end
 
       # Credit requires the merchant account to be enabled for "Adhoc Refunds"
-      def credit(amount, payment_method, options={})
+      def credit(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_order_number(post, options)
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
         add_soft_descriptors(post, options)
+        add_customer_reference(post, options)
 
         commit('refund', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, authorization, options)
         add_customer_data(post, options)
         add_soft_descriptors(post, options)
+        add_customer_reference(post, options)
 
         commit('reversal', post)
       end
@@ -89,7 +98,7 @@ module ActiveMerchant #:nodoc:
       def store(payment_method, options = {})
         post = {}
         add_payment_method(post, payment_method)
-        add_card_reference(post)
+        add_card_reference(post, options)
 
         commit('registerAccount', post)
       end
@@ -107,7 +116,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new { |h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
+      CURRENCY_CODES = Hash.new { |_h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
       CURRENCY_CODES['AUD'] = 'AUD'
       CURRENCY_CODES['INR'] = 'INR'
 
@@ -124,7 +133,6 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post['order.amount'] = amount(money)
         post['card.currency'] = CURRENCY_CODES[options[:currency] || currency(money)]
-        post['order.ECI'] = options[:eci] || 'SSL'
       end
 
       def add_payment_method(post, payment_method)
@@ -134,12 +142,61 @@ module ActiveMerchant #:nodoc:
         post['card.expiryMonth'] = format(payment_method.month, :two_digits)
       end
 
+      def add_stored_credential_data(post, payment_method, options)
+        post['order.ECI'] = options[:eci] || eci(options)
+        if (stored_credential = options[:stored_credential]) && %w(visa master).include?(payment_method.brand)
+          post['card.posEntryMode'] = stored_credential[:initial_transaction] ? 'MANUAL' : 'STORED_CREDENTIAL'
+          stored_credential_usage(post, payment_method, options) unless stored_credential[:initiator] && stored_credential[:initiator] == 'cardholder'
+          post['order.authTraceId'] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
+        end
+      end
+
+      def stored_credential_usage(post, payment_method, options)
+        return unless payment_method.brand == 'visa'
+
+        stored_credential = options[:stored_credential]
+        if stored_credential[:reason_type] == 'unscheduled'
+          if stored_credential[:initiator] == 'merchant'
+            post['card.storedCredentialUsage'] = 'UNSCHEDULED_MIT'
+          elsif stored_credential[:initiator] == 'customer'
+            post['card.storedCredentialUsage'] = 'UNSCHEDULED_CIT'
+          end
+        elsif stored_credential[:reason_type] == 'recurring'
+          post['card.storedCredentialUsage'] = 'RECURRING'
+        elsif stored_credential[:reason_type] == 'installment'
+          post['card.storedCredentialUsage'] = 'INSTALLMENT'
+        end
+      end
+
+      def eci(options)
+        if options.dig(:stored_credential, :initial_transaction)
+          'SSL'
+        elsif options.dig(:stored_credential, :initiator) && options[:stored_credential][:initiator] == 'cardholder'
+          'MTO'
+        elsif options.dig(:stored_credential, :reason_type)
+          case options[:stored_credential][:reason_type]
+          when 'recurring'
+            'REC'
+          when 'installment'
+            'INS'
+          when 'unscheduled'
+            'MTO'
+          end
+        else
+          'SSL'
+        end
+      end
+
       def add_verification_value(post, payment_method)
         post['card.CVN'] = payment_method.verification_value
       end
 
-      def add_card_reference(post)
-        post['customer.customerReferenceNumber'] = options[:order_id]
+      def add_card_reference(post, options)
+        post['customer.customerReferenceNumber'] = options[:customer_reference_number] || options[:order_id]
+      end
+
+      def add_customer_reference(post, options)
+        post['customer.customerReferenceNumber'] = options[:customer_reference_number] if options[:customer_reference_number]
       end
 
       def add_reference(post, authorization, options)
@@ -180,13 +237,14 @@ module ActiveMerchant #:nodoc:
 
       def cvv_result(succeeded, raw)
         return unless succeeded
+
         code = CVV_CODE_MAPPING[raw['response.cvnResponse']] || raw['response.cvnResponse']
         CVVResult.new(code)
       end
 
       def headers
         {
-          'Content-Type'  => 'application/x-www-form-urlencoded'
+          'Content-Type' => 'application/x-www-form-urlencoded'
         }
       end
 
@@ -236,7 +294,7 @@ module ActiveMerchant #:nodoc:
         '12' => STANDARD_ERROR_CODE[:card_declined],
         '06' => STANDARD_ERROR_CODE[:processing_error],
         '01' => STANDARD_ERROR_CODE[:call_issuer],
-        '04' => STANDARD_ERROR_CODE[:pickup_card],
+        '04' => STANDARD_ERROR_CODE[:pickup_card]
       }
 
       def error_code_from(succeeded, response)

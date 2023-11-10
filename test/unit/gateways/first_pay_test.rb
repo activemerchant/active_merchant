@@ -21,7 +21,7 @@ class FirstPayTest < Test::Unit::TestCase
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FIELD KEY="transaction_center_id">1234<\/FIELD>/, data)
       assert_match(/<FIELD KEY="gateway_id">a91c38c3-7d7f-4d29-acc7-927b4dca0dbe<\/FIELD>/, data)
       assert_match(/<FIELD KEY="operation_type">sale<\/FIELD>/, data)
@@ -62,7 +62,7 @@ class FirstPayTest < Test::Unit::TestCase
   def test_successful_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FIELD KEY="transaction_center_id">1234<\/FIELD>/, data)
       assert_match(/<FIELD KEY="gateway_id">a91c38c3-7d7f-4d29-acc7-927b4dca0dbe<\/FIELD>/, data)
       assert_match(/<FIELD KEY="operation_type">auth<\/FIELD>/, data)
@@ -101,7 +101,7 @@ class FirstPayTest < Test::Unit::TestCase
   def test_successful_capture
     response = stub_comms do
       @gateway.capture(@amount, '47920')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FIELD KEY="transaction_center_id">1234<\/FIELD>/, data)
       assert_match(/<FIELD KEY="gateway_id">a91c38c3-7d7f-4d29-acc7-927b4dca0dbe<\/FIELD>/, data)
       assert_match(/<FIELD KEY="operation_type">settle<\/FIELD>/, data)
@@ -129,7 +129,7 @@ class FirstPayTest < Test::Unit::TestCase
   def test_successful_refund
     response = stub_comms do
       @gateway.refund(@amount, '47925')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FIELD KEY="transaction_center_id">1234<\/FIELD>/, data)
       assert_match(/<FIELD KEY="gateway_id">a91c38c3-7d7f-4d29-acc7-927b4dca0dbe<\/FIELD>/, data)
       assert_match(/<FIELD KEY="operation_type">credit<\/FIELD>/, data)
@@ -157,7 +157,7 @@ class FirstPayTest < Test::Unit::TestCase
   def test_successful_void
     response = stub_comms do
       @gateway.void('47934')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FIELD KEY="transaction_center_id">1234<\/FIELD>/, data)
       assert_match(/<FIELD KEY="gateway_id">a91c38c3-7d7f-4d29-acc7-927b4dca0dbe<\/FIELD>/, data)
       assert_match(/<FIELD KEY="operation_type">void<\/FIELD>/, data)
@@ -188,7 +188,7 @@ class FirstPayTest < Test::Unit::TestCase
     @options[:recurring_type] = 'monthly'
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{<FIELD KEY="recurring">1</FIELD>}, data)
       assert_match(%r{<FIELD KEY="recurring_start_date">01/01/1900</FIELD>}, data)
       assert_match(%r{<FIELD KEY="recurring_end_date">02/02/1901</FIELD>}, data)

@@ -7,8 +7,8 @@ class OppTest < Test::Unit::TestCase
     @gateway = OppGateway.new(fixtures(:opp))
     @amount = 100
 
-    @valid_card = credit_card('4200000000000000', month: 05, year: 2018, verification_value: '123')
-    @invalid_card = credit_card('4444444444444444', month: 05, year: 2018, verification_value: '123')
+    @valid_card = credit_card('4200000000000000', month: 05, year: Date.today.year + 2, verification_value: '123')
+    @invalid_card = credit_card('4444444444444444', month: 05, year: Date.today.year + 2, verification_value: '123')
 
     request_type = 'complete' # 'minimal' || 'complete'
     time = Time.now.to_i
@@ -27,7 +27,7 @@ class OppTest < Test::Unit::TestCase
         city:     'Istambul',
         state:    'IS',
         zip:      'H12JK2354',
-        country:  'TR',
+        country:  'TR'
       },
       shipping_address: {
         name:     '',
@@ -35,7 +35,7 @@ class OppTest < Test::Unit::TestCase
         city:     'Moskau',
         state:    'MO',
         zip:      'MO2342432',
-        country:  'RU',
+        country:  'RU'
       },
       customer: {
         merchant_customer_id:  "merchantCustomerId #{ip}",
@@ -48,13 +48,13 @@ class OppTest < Test::Unit::TestCase
         company_name:  'No such deal Ltd.',
         identification_doctype:  'PASSPORT',
         identification_docid:  'FakeID2342431234123',
-        ip:  ip,
-      },
+        ip:  ip
+      }
     }
 
     @minimal_request_options = {
       order_id: "Order #{time}",
-      description: 'Store Purchase - Books',
+      description: 'Store Purchase - Books'
     }
 
     @complete_request_options['customParameters[SHOPPER_test124TestName009]'] = 'customParameters_test'
@@ -121,6 +121,14 @@ class OppTest < Test::Unit::TestCase
     assert void.test?
   end
 
+  def test_successful_store
+    @gateway.expects(:raw_ssl_request).returns(successful_store_response(@test_success_id))
+    store = @gateway.store(@valid_card)
+    assert_success store
+    assert_equal "Request successfully processed in 'Merchant in Integrator Test Mode'", store.message
+    assert_equal @test_success_id, store.authorization
+  end
+
   # ****************************************** FAILURE TESTS ******************************************
   def test_failed_purchase
     @gateway.expects(:raw_ssl_request).returns(failed_response('DB', @test_failure_id))
@@ -157,12 +165,19 @@ class OppTest < Test::Unit::TestCase
     assert_equal '100.100.101', response.error_code
   end
 
+  def test_failed_store
+    @gateway.expects(:raw_ssl_request).returns(failed_store_response(@test_failure_id))
+    store = @gateway.store(@invalid_card)
+    assert_failure store
+    assert_equal '100.100.101', store.error_code
+  end
+
   def test_passes_3d_secure_fields
-    options = @complete_request_options.merge({eci: 'eci', cavv: 'cavv', xid: 'xid'})
+    options = @complete_request_options.merge({ eci: 'eci', cavv: 'cavv', xid: 'xid' })
 
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @valid_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/threeDSecure.eci=eci/, data)
       assert_match(/threeDSecure.verificationId=cavv/, data)
       assert_match(/threeDSecure.xid=xid/, data)
@@ -179,27 +194,109 @@ class OppTest < Test::Unit::TestCase
   private
 
   def pre_scrubbed
-    'paymentType=DB&amount=1.00&currency=EUR&paymentBrand=VISA&card.holder=Longbob+Longsen&card.number=4200000000000000&card.expiryMonth=05&card.expiryYear=2018&      card.cvv=123&billing.street1=456+My+Street&billing.street2=Apt+1&billing.city=Ottawa&billing.state=ON&billing.postcode=K1C2N6&billing.country=CA&authentication.entityId=8a8294174b7ecb28014b9699220015ca&authentication.password=sy6KJsT8&authentication.userId=8a8294174b7ecb28014b9699220015cc'
+    'paymentType=DB&amount=1.00&currency=EUR&descriptor=&merchantInvoiceId=&merchantTransactionId=50b5c1763c20c456a6208f7831dd0a04&paymentBrand=VISA&card.holder=Longbob+Longsen&card.number=4200000000000000&card.expiryMonth=05&card.expiryYear=2022&card.cvv=123&customParameters[SHOPPER_pluginId]=activemerchant&authentication.entityId=5c6602174b7ecb28014b96992'
   end
 
   def post_scrubbed
-    'paymentType=DB&amount=1.00&currency=EUR&paymentBrand=VISA&card.holder=Longbob+Longsen&card.number=[FILTERED]&card.expiryMonth=05&card.expiryYear=2018&      card.cvv=[FILTERED]&billing.street1=456+My+Street&billing.street2=Apt+1&billing.city=Ottawa&billing.state=ON&billing.postcode=K1C2N6&billing.country=CA&authentication.entityId=8a8294174b7ecb28014b9699220015ca&authentication.password=[FILTERED]&authentication.userId=8a8294174b7ecb28014b9699220015cc'
+    'paymentType=DB&amount=1.00&currency=EUR&descriptor=&merchantInvoiceId=&merchantTransactionId=50b5c1763c20c456a6208f7831dd0a04&paymentBrand=VISA&card.holder=Longbob+Longsen&card.number=[FILTERED]&card.expiryMonth=05&card.expiryYear=2022&card.cvv=[FILTERED]&customParameters[SHOPPER_pluginId]=activemerchant&authentication.entityId=5c6602174b7ecb28014b96992'
   end
 
   def successful_response(type, id)
-    OppMockResponse.new(200,
-      JSON.generate({'id' => id, 'paymentType' => type, 'paymentBrand' => 'VISA', 'amount' => '1.00', 'currency' => 'EUR', "des
-      criptor" => '5410.9959.0306 OPP_Channel ', 'result' => {'code' => '000.100.110', 'description' => "Request successfully processed in 'Merchant in Integrator Test Mode'"}, 'card' => {"bin
-      " => '420000', 'last4Digits' => '0000', 'holder' => 'Longbob Longsen', 'expiryMonth' => '05', 'expiryYear' => '2018'}, 'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage', "time
-      stamp" => '2015-06-20 19:31:01+0000', 'ndc' => '8a8294174b7ecb28014b9699220015ca_4453edbc001f405da557c05cb3c3add9'})
+    OppMockResponse.new(
+      200,
+      JSON.generate({
+        'id' => id,
+        'paymentType' => type,
+        'paymentBrand' => 'VISA',
+        'amount' => '1.00',
+        'currency' => 'EUR',
+        'descriptor' => '5410.9959.0306 OPP_Channel',
+        'result' => {
+          'code' => '000.100.110',
+          'description' => "Request successfully processed in 'Merchant in Integrator Test Mode'"
+        },
+        'card' => {
+          'bin' => '420000',
+          'last4Digits' => '0000',
+          'holder' => 'Longbob Longsen',
+          'expiryMonth' => '05',
+          'expiryYear' => '2018'
+        },
+        'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage',
+        'timestamp' => '2015-06-20 19:31:01+0000',
+        'ndc' => '8a8294174b7ecb28014b9699220015ca_4453edbc001f405da557c05cb3c3add9'
+      })
     )
   end
 
-  def failed_response(type, id, code='100.100.101')
-    OppMockResponse.new(400,
-      JSON.generate({'id' => id, 'paymentType' => type, 'paymentBrand' => 'VISA', 'result' => {'code' => code, "des
-        cription" => 'invalid creditcard, bank account number or bank name'}, 'card' => {'bin' => '444444', 'last4Digits' => '4444', 'holder' => 'Longbob Longsen', 'expiryMonth' => '05', 'expiryYear' => '2018'},
-                     'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage', 'timestamp' => '2015-06-20 20:40:26+0000', 'ndc' => '8a8294174b7ecb28014b9699220015ca_5200332e7d664412a84ed5f4777b3c7d'})
+  def successful_store_response(id)
+    OppMockResponse.new(
+      200,
+      JSON.generate({
+        'id' => id,
+        'result' => {
+          'code' => '000.100.110',
+          'description' => "Request successfully processed in 'Merchant in Integrator Test Mode'"
+        },
+        'card' => {
+          'bin' => '420000',
+          'last4Digits' => '0000',
+          'holder' => 'Longbob Longsen',
+          'expiryMonth' => '05',
+          'expiryYear' => '2018'
+        },
+        'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage',
+        'timestamp' => '2015-06-20 19:31:01+0000',
+        'ndc' => '8a8294174b7ecb28014b9699220015ca_4453edbc001f405da557c05cb3c3add9'
+      })
+    )
+  end
+
+  def failed_response(type, id, code = '100.100.101')
+    OppMockResponse.new(
+      400,
+      JSON.generate({
+        'id' => id,
+        'paymentType' => type,
+        'paymentBrand' => 'VISA',
+        'result' => {
+          'code' => code,
+          'description' => 'invalid creditcard, bank account number or bank name'
+        },
+        'card' => {
+          'bin' => '444444',
+          'last4Digits' => '4444',
+          'holder' => 'Longbob Longsen',
+          'expiryMonth' => '05',
+          'expiryYear' => '2018'
+        },
+        'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage',
+        'timestamp' => '2015-06-20 20:40:26+0000',
+        'ndc' => '8a8294174b7ecb28014b9699220015ca_5200332e7d664412a84ed5f4777b3c7d'
+      })
+    )
+  end
+
+  def failed_store_response(id, code = '100.100.101')
+    OppMockResponse.new(
+      400,
+      JSON.generate({
+        'id' => id,
+        'result' => {
+          'code' => code,
+          'description' => 'invalid creditcard, bank account number or bank name'
+        },
+        'card' => {
+          'bin' => '444444',
+          'last4Digits' => '4444',
+          'holder' => 'Longbob Longsen',
+          'expiryMonth' => '05',
+          'expiryYear' => '2018'
+        },
+        'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage',
+        'timestamp' => '2015-06-20 20:40:26+0000',
+        'ndc' => '8a8294174b7ecb28014b9699220015ca_5200332e7d664412a84ed5f4777b3c7d'
+      })
     )
   end
 
@@ -211,5 +308,4 @@ class OppTest < Test::Unit::TestCase
       @body = body
     end
   end
-
 end

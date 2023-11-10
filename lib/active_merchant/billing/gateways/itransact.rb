@@ -38,7 +38,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.itransact.com/'
@@ -301,8 +301,8 @@ module ActiveMerchant #:nodoc:
       def add_invoice(xml, money, options)
         xml.AuthCode options[:force] if options[:force]
         if options[:order_items].blank?
-          xml.Total(amount(money)) unless(money.nil? || money < 0.01)
-          xml.Description(options[:description]) unless(options[:description].blank?)
+          xml.Total(amount(money)) unless money.nil? || money < 0.01
+          xml.Description(options[:description]) unless options[:description].blank?
         else
           xml.OrderItems {
             options[:order_items].each do |item|
@@ -371,6 +371,7 @@ module ActiveMerchant #:nodoc:
 
       def add_vendor_data(xml, options)
         return if options[:vendor_data].blank?
+
         xml.VendorData {
           options[:vendor_data].each do |k, v|
             xml.Element {
@@ -386,15 +387,19 @@ module ActiveMerchant #:nodoc:
         # the Base64 encoded payload signature!
         response = parse(ssl_post(self.live_url, post_data(payload), 'Content-Type' => 'text/xml'))
 
-        Response.new(successful?(response), response[:error_message], response,
-          :test => test?,
-          :authorization => response[:xid],
-          :avs_result => { :code => response[:avs_response] },
-          :cvv_result => response[:cvv_response])
+        Response.new(
+          successful?(response),
+          response[:error_message],
+          response,
+          test: test?,
+          authorization: response[:xid],
+          avs_result: { code: response[:avs_response] },
+          cvv_result: response[:cvv_response]
+        )
       end
 
       def post_data(payload)
-        payload_xml = payload.root.to_xml(:indent => 0)
+        payload_xml = payload.root.to_xml(indent: 0)
 
         payload_signature = sign_payload(payload_xml)
 
@@ -409,7 +414,7 @@ module ActiveMerchant #:nodoc:
         end.doc
 
         request.root.children.first.after payload.root
-        request.to_xml(:indent => 0)
+        request.to_xml(indent: 0)
       end
 
       def parse(raw_xml)
@@ -438,7 +443,7 @@ module ActiveMerchant #:nodoc:
 
       def sign_payload(payload)
         key = @options[:password].to_s
-        digest=OpenSSL::HMAC.digest(OpenSSL::Digest::SHA1.new(key), key, payload)
+        digest = OpenSSL::HMAC.digest(OpenSSL::Digest::SHA1.new(key), key, payload)
         signature = Base64.encode64(digest)
         signature.chomp!
       end

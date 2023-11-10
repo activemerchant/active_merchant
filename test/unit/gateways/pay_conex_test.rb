@@ -140,7 +140,7 @@ class PayConexTest < Test::Unit::TestCase
   def test_card_present_purchase_passes_track_data
     stub_comms do
       @gateway.purchase(@amount, credit_card_with_track_data('4000100011112224'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/card_tracks/, data)
     end.respond_with(successful_card_present_purchase_response)
   end
@@ -171,6 +171,11 @@ class PayConexTest < Test::Unit::TestCase
     assert_equal post_scrubbed, @gateway.scrub(pre_scrubbed)
   end
 
+  def test_scrub_check
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed_check), post_scrubbed_check
+  end
+
   private
 
   def pre_scrubbed
@@ -194,6 +199,18 @@ class PayConexTest < Test::Unit::TestCase
       -> \"?H?f<\u0002\u0000\u0000\"
       D, [2015-03-04T18:13:07.219562 #71589] DEBUG -- : {\"transaction_id\":\"000000002021\",\"tender_type\":\"CARD\",\"transaction_timestamp\":\"2015-03-04 17:13:04\",\"card_brand\":\"VISA\",\"transaction_type\":\"SALE\",\"last4\":\"2224\",\"card_expiration\":\"0916\",\"authorization_code\":\"CVI292\",\"authorization_message\":\"APPROVED\",\"request_amount\":1,\"transaction_amount\":1,\"first_name\":\"Longbob\",\"last_name\":\"Longsen\",\"keyed\":true,\"swiped\":false,\"transaction_approved\":true,\"avs_response\":\"Z\",\"cvv2_response\":\"U\",\"transaction_description\":\"Store Purchase\",\"balance\":1,\"currency\":\"USD\",\"error\":false,\"error_code\":0,\"error_message\":null,\"error_msg\":null}
       {\"transaction_id\":\"000000002021\",\"tender_type\":\"CARD\",\"transaction_timestamp\":\"2015-03-04 17:13:04\",\"card_brand\":\"VISA\",\"transaction_type\":\"SALE\",\"last4\":\"2224\",\"card_expiration\":\"0916\",\"authorization_code\":\"CVI292\",\"authorization_message\":\"APPROVED\",\"request_amount\":1,\"transaction_amount\":1,\"first_name\":\"Longbob\",\"last_name\":\"Longsen\",\"keyed\":true,\"swiped\":false,\"transaction_approved\":true,\"avs_response\":\"Z\",\"cvv2_response\":\"U\",\"transaction_description\":\"Store Purchase\",\"balance\":1,\"currency\":\"USD\",\"error\":false,\"error_code\":0,\"error_message\":null,\"error_msg\":null}
+    POST_SCRUBBED
+  end
+
+  def pre_scrubbed_check
+    <<-PRE_SCRUBBED
+      <- "account_id=220614968961&api_accesskey=69e9c4dd6b8ab9ab47da4e288df78315&tender_type=ACH&first_name=Jim&last_name=Smith&bank_account_number=15378535&bank_routing_number=244183602&check_number=1&ach_account_type=checking&street_address1=456+My+Street&street_address2=Apt+1&city=Ottawa&state=ON&zip=K1C2N6&country=CA&phone=%28555%29555-5555&transaction_description=Store+Purchase&response_format=JSON&transaction_amount=1.00&currency=USD&email=joe%40example.com&transaction_type=SALE"
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed_check
+    <<-POST_SCRUBBED
+      <- "account_id=220614968961&api_accesskey=[FILTERED]&tender_type=ACH&first_name=Jim&last_name=Smith&bank_account_number=[FILTERED]&bank_routing_number=[FILTERED]&check_number=1&ach_account_type=checking&street_address1=456+My+Street&street_address2=Apt+1&city=Ottawa&state=ON&zip=K1C2N6&country=CA&phone=%28555%29555-5555&transaction_description=Store+Purchase&response_format=JSON&transaction_amount=1.00&currency=USD&email=joe%40example.com&transaction_type=SALE"
     POST_SCRUBBED
   end
 

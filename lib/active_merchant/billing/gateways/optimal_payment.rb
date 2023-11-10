@@ -5,12 +5,12 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://webservices.optimalpayments.com/creditcardWS/CreditCardServlet/v1'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['CA', 'US', 'GB', 'AU', 'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK',
-                                  'EE', 'FI', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT',
-                                  'NL', 'NO', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'CH']
+      self.supported_countries = %w[CA US GB AU AT BE BG HR CY CZ DK
+                                    EE FI DE GR HU IE IT LV LT LU MT
+                                    NL NO PL PT RO SK SI ES SE CH]
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.optimalpayments.com/'
@@ -19,12 +19,12 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Optimal Payments'
 
       def initialize(options = {})
-        if(options[:login])
+        if options[:login]
           ActiveMerchant.deprecated("The 'login' option is deprecated in favor of 'store_id' and will be removed in a future version.")
           options[:store_id] = options[:login]
         end
 
-        if(options[:account])
+        if options[:account]
           ActiveMerchant.deprecated("The 'account' option is deprecated in favor of 'account_number' and will be removed in a future version.")
           options[:account_number] = options[:account]
         end
@@ -65,6 +65,10 @@ module ActiveMerchant #:nodoc:
         commit('ccVerification', 0, options)
       end
 
+      def store(credit_card, options = {})
+        verify(credit_card, options)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -95,32 +99,36 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, post)
         post[:order_id] ||= 'order_id'
 
-        xml = case action
-        when 'ccAuthorize', 'ccPurchase', 'ccVerification'
-          cc_auth_request(money, post)
-        when 'ccCredit', 'ccSettlement'
-          cc_post_auth_request(money, post)
-        when 'ccStoredDataAuthorize', 'ccStoredDataPurchase'
-          cc_stored_data_request(money, post)
-        when 'ccAuthorizeReversal'
-          cc_auth_reversal_request(post)
-        # when 'ccCancelSettle', 'ccCancelCredit', 'ccCancelPayment'
-        #  cc_cancel_request(money, post)
-        # when 'ccPayment'
-        #  cc_payment_request(money, post)
-        # when 'ccAuthenticate'
-        #  cc_authenticate_request(money, post)
-        else
-          raise 'Unknown Action'
-        end
+        xml =
+          case action
+          when 'ccAuthorize', 'ccPurchase', 'ccVerification'
+            cc_auth_request(money, post)
+          when 'ccCredit', 'ccSettlement'
+            cc_post_auth_request(money, post)
+          when 'ccStoredDataAuthorize', 'ccStoredDataPurchase'
+            cc_stored_data_request(money, post)
+          when 'ccAuthorizeReversal'
+            cc_auth_reversal_request(post)
+          # when 'ccCancelSettle', 'ccCancelCredit', 'ccCancelPayment'
+          #  cc_cancel_request(money, post)
+          # when 'ccPayment'
+          #  cc_payment_request(money, post)
+          # when 'ccAuthenticate'
+          #  cc_authenticate_request(money, post)
+          else
+            raise 'Unknown Action'
+          end
         txnRequest = escape_uri(xml)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, "txnMode=#{action}&txnRequest=#{txnRequest}"))
 
-        Response.new(successful?(response), message_from(response), hash_from_xml(response),
-          :test          => test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => avs_result_from(response) },
-          :cvv_result => cvv_result_from(response)
+        Response.new(
+          successful?(response),
+          message_from(response),
+          hash_from_xml(response),
+          test: test?,
+          authorization: authorization_from(response),
+          avs_result: { code: avs_result_from(response) },
+          cvv_result: cvv_result_from(response)
         )
       end
 
@@ -135,9 +143,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         REXML::XPath.each(response, '//detail') do |detail|
-          if detail.is_a?(REXML::Element) && detail.elements['tag'].text == 'InternalResponseDescription'
-            return detail.elements['value'].text
-          end
+          return detail.elements['value'].text if detail.is_a?(REXML::Element) && detail.elements['tag'].text == 'InternalResponseDescription'
         end
         nil
       end
@@ -159,13 +165,13 @@ module ActiveMerchant #:nodoc:
         %w(confirmationNumber authCode
            decision code description
            actionCode avsResponse cvdResponse
-           txnTime duplicateFound
-        ).each do |tag|
+           txnTime duplicateFound).each do |tag|
           node = REXML::XPath.first(response, "//#{tag}")
           hsh[tag] = node.text if node
         end
         REXML::XPath.each(response, '//detail') do |detail|
           next unless detail.is_a?(REXML::Element)
+
           tag = detail.elements['tag'].text
           value = detail.elements['value'].text
           hsh[tag] = value
@@ -174,7 +180,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def xml_document(root_tag)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag!(root_tag, schema) do
           yield xml
         end
@@ -190,7 +196,7 @@ module ActiveMerchant #:nodoc:
         xml_document('ccAuthRequestV1') do |xml|
           build_merchant_account(xml)
           xml.merchantRefNum opts[:order_id]
-          xml.amount(money/100.0)
+          xml.amount(money / 100.0)
           build_card(xml, opts)
           build_billing_details(xml, opts)
           build_shipping_details(xml, opts)
@@ -211,7 +217,7 @@ module ActiveMerchant #:nodoc:
           build_merchant_account(xml)
           xml.confirmationNumber opts[:confirmationNumber]
           xml.merchantRefNum opts[:order_id]
-          xml.amount(money/100.0)
+          xml.amount(money / 100.0)
         end
       end
 
@@ -220,7 +226,7 @@ module ActiveMerchant #:nodoc:
           build_merchant_account(xml)
           xml.merchantRefNum opts[:order_id]
           xml.confirmationNumber opts[:confirmationNumber]
-          xml.amount(money/100.0)
+          xml.amount(money / 100.0)
         end
       end
 
@@ -254,8 +260,7 @@ module ActiveMerchant #:nodoc:
       def schema
         { 'xmlns' => 'http://www.optimalpayments.com/creditcard/xmlschema/v1',
           'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
-          'xsi:schemaLocation' => 'http://www.optimalpayments.com/creditcard/xmlschema/v1'
-        }
+          'xsi:schemaLocation' => 'http://www.optimalpayments.com/creditcard/xmlschema/v1' }
       end
 
       def build_merchant_account(xml)
@@ -321,12 +326,10 @@ module ActiveMerchant #:nodoc:
       def card_type(key)
         { 'visa'            => 'VI',
           'master'          => 'MC',
-          'american_express'=> 'AM',
+          'american_express' => 'AM',
           'discover'        => 'DI',
-          'diners_club'     => 'DC',
-        }[key]
+          'diners_club'     => 'DC' }[key]
       end
-
     end
   end
 end

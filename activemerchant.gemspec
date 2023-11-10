@@ -1,4 +1,4 @@
-$:.push File.expand_path('../lib', __FILE__)
+$LOAD_PATH.push File.expand_path('../lib', __FILE__)
 require 'active_merchant/version'
 
 Gem::Specification.new do |s|
@@ -12,22 +12,26 @@ Gem::Specification.new do |s|
   s.author = 'Tobias Luetke'
   s.email = 'tobi@leetsoft.com'
   s.homepage = 'http://activemerchant.org/'
-  s.rubyforge_project = 'activemerchant'
 
-  s.required_ruby_version = '>= 2.3'
+  s.required_ruby_version = '>= 2.7'
 
   s.files = Dir['CHANGELOG', 'README.md', 'MIT-LICENSE', 'CONTRIBUTORS', 'lib/**/*', 'vendor/**/*']
   s.require_path = 'lib'
 
+  s.metadata['allowed_push_host'] = 'https://rubygems.org'
+
   s.has_rdoc = true if Gem::VERSION < '1.7.0'
 
   s.add_dependency('activesupport', '>= 4.2')
-  s.add_dependency('i18n', '>= 0.6.9')
   s.add_dependency('builder', '>= 2.1.2', '< 4.0.0')
+  s.add_dependency('i18n', '>= 0.6.9')
   s.add_dependency('nokogiri', '~> 1.4')
+  s.add_dependency('rexml', '~> 3.2.5')
 
+  s.add_development_dependency('mocha', '~> 1')
+  s.add_development_dependency('pry')
+  s.add_development_dependency('pry-byebug')
   s.add_development_dependency('rake')
   s.add_development_dependency('test-unit', '~> 3')
-  s.add_development_dependency('mocha', '~> 1')
   s.add_development_dependency('thor')
 end

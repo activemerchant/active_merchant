@@ -5,19 +5,19 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def setup
     @gateway = PaymentExpressGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD'
+      login: 'LOGIN',
+      password: 'PASSWORD'
     )
 
     @visa = credit_card
 
-    @solo = credit_card('6334900000000005', :brand => 'maestro')
+    @solo = credit_card('6334900000000005', brand: 'maestro')
 
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :email => 'cody@example.com',
-      :description => 'Store purchase'
+      order_id: generate_unique_id,
+      billing_address: address,
+      email: 'cody@example.com',
+      description: 'Store purchase'
     }
 
     @amount = 100
@@ -43,6 +43,24 @@ class PaymentExpressTest < Test::Unit::TestCase
     assert response.test?
     assert_equal 'The Transaction was approved', response.message
     assert_equal '00000004011a2478', response.authorization
+  end
+
+  def test_pass_currency_code_on_validation
+    stub_comms do
+      @gateway.verify(@visa, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<InputCurrency>NZD<\/InputCurrency>/, data)
+    end.respond_with(successful_validation_response)
+  end
+
+  def test_successful_validation
+    @gateway.expects(:ssl_post).returns(successful_validation_response)
+
+    assert response = @gateway.verify(@visa, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'The Transaction was approved', response.message
+    assert_equal '0000000c025d2744', response.authorization
   end
 
   def test_purchase_request_should_include_cvc2_presence
@@ -74,9 +92,9 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_successful_card_store_with_custom_billing_id
-    @gateway.expects(:ssl_post).returns(successful_store_response(:billing_id => 'my-custom-id'))
+    @gateway.expects(:ssl_post).returns(successful_store_response(billing_id: 'my-custom-id'))
 
-    assert response = @gateway.store(@visa, :billing_id => 'my-custom-id')
+    assert response = @gateway.store(@visa, billing_id: 'my-custom-id')
     assert_success response
     assert response.test?
     assert_equal 'my-custom-id', response.token
@@ -107,14 +125,14 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_purchase_using_merchant_specified_billing_id_token
     @gateway = PaymentExpressGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD',
-      :use_custom_payment_token => true
+      login: 'LOGIN',
+      password: 'PASSWORD',
+      use_custom_payment_token: true
     )
 
-    @gateway.expects(:ssl_post).returns(successful_store_response({:billing_id => 'TEST1234'}))
+    @gateway.expects(:ssl_post).returns(successful_store_response({ billing_id: 'TEST1234' }))
 
-    assert response = @gateway.store(@visa, {:billing_id => 'TEST1234'})
+    assert response = @gateway.store(@visa, { billing_id: 'TEST1234' })
     assert_equal 'TEST1234', response.token
 
     @gateway.expects(:ssl_post).returns(successful_billing_id_token_purchase_response)
@@ -130,7 +148,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [ :visa, :master, :american_express, :diners_club, :jcb ], PaymentExpressGateway.supported_cardtypes
+    assert_equal %i[visa master american_express diners_club jcb], PaymentExpressGateway.supported_cardtypes
   end
 
   def test_avs_result_not_supported
@@ -158,9 +176,9 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_pass_optional_txn_data
     options = {
-      :txn_data1 => 'Transaction Data 1',
-      :txn_data2 => 'Transaction Data 2',
-      :txn_data3 => 'Transaction Data 3'
+      txn_data1: 'Transaction Data 1',
+      txn_data2: 'Transaction Data 2',
+      txn_data3: 'Transaction Data 3'
     }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
@@ -172,9 +190,9 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_pass_optional_txn_data_truncated_to_255_chars
     options = {
-      :txn_data1 => 'Transaction Data 1-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA',
-      :txn_data2 => 'Transaction Data 2-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA',
-      :txn_data3 => 'Transaction Data 3-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA'
+      txn_data1: 'Transaction Data 1-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA',
+      txn_data2: 'Transaction Data 2-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA',
+      txn_data3: 'Transaction Data 3-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA'
     }
 
     truncated_addendum = '01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345'
@@ -186,8 +204,26 @@ class PaymentExpressTest < Test::Unit::TestCase
     end
   end
 
+  def test_pass_enable_avs_data_and_avs_action
+    options = {
+      address: {
+        address1: '123 Pine Street',
+        zip: '12345'
+      },
+    enable_avs_data: 0,
+    avs_action: 3
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @visa, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<EnableAvsData>0<\/EnableAvsData>/, data)
+      assert_match(/<AvsAction>3<\/AvsAction>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_pass_client_type_as_symbol_for_web
-    options = {:client_type => :web}
+    options = { client_type: :web }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientType>Web<\/ClientType>/, body)
@@ -195,7 +231,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_client_type_as_symbol_for_ivr
-    options = {:client_type => :ivr}
+    options = { client_type: :ivr }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientType>IVR<\/ClientType>/, body)
@@ -203,7 +239,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_client_type_as_symbol_for_moto
-    options = {:client_type => :moto}
+    options = { client_type: :moto }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientType>MOTO<\/ClientType>/, body)
@@ -211,7 +247,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_client_type_as_symbol_for_unattended
-    options = {:client_type => :unattended}
+    options = { client_type: :unattended }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientType>Unattended<\/ClientType>/, body)
@@ -219,7 +255,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_client_type_as_symbol_for_internet
-    options = {:client_type => :internet}
+    options = { client_type: :internet }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientType>Internet<\/ClientType>/, body)
@@ -227,7 +263,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_client_type_as_symbol_for_recurring
-    options = {:client_type => :recurring}
+    options = { client_type: :recurring }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientType>Recurring<\/ClientType>/, body)
@@ -235,7 +271,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_client_type_as_symbol_for_unknown_type_omits_element
-    options = {:client_type => :unknown}
+    options = { client_type: :unknown }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_no_match(/<ClientType>/, body)
@@ -243,7 +279,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_ip_as_client_info
-    options = {:ip => '192.168.0.1'}
+    options = { ip: '192.168.0.1' }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientInfo>192.168.0.1<\/ClientInfo>/, body)
@@ -252,64 +288,64 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_purchase_truncates_order_id_to_16_chars
     stub_comms do
-      @gateway.purchase(@amount, @visa, {:order_id => '16chars---------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(@amount, @visa, { order_id: '16chars---------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
   end
 
   def test_authorize_truncates_order_id_to_16_chars
     stub_comms do
-      @gateway.authorize(@amount, @visa, {:order_id => '16chars---------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.authorize(@amount, @visa, { order_id: '16chars---------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
   end
 
   def test_capture_truncates_order_id_to_16_chars
     stub_comms do
-      @gateway.capture(@amount, 'identification', {:order_id => '16chars---------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.capture(@amount, 'identification', { order_id: '16chars---------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
   end
 
   def test_refund_truncates_order_id_to_16_chars
     stub_comms do
-      @gateway.refund(@amount, 'identification', {:description => 'refund', :order_id => '16chars---------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.refund(@amount, 'identification', { description: 'refund', order_id: '16chars---------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
   end
 
   def test_purchase_truncates_description_to_50_chars
     stub_comms do
-      @gateway.purchase(@amount, @visa, {:description => '50chars-------------------------------------------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(@amount, @visa, { description: '50chars-------------------------------------------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
 
   def test_authorize_truncates_description_to_50_chars
     stub_comms do
-      @gateway.authorize(@amount, @visa, {:description => '50chars-------------------------------------------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.authorize(@amount, @visa, { description: '50chars-------------------------------------------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
 
   def test_capture_truncates_description_to_50_chars
     stub_comms do
-      @gateway.capture(@amount, 'identification', {:description => '50chars-------------------------------------------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.capture(@amount, 'identification', { description: '50chars-------------------------------------------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
 
   def test_refund_truncates_description_to_50_chars
     stub_comms do
-      @gateway.capture(@amount, 'identification', {:description => '50chars-------------------------------------------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.capture(@amount, 'identification', { description: '50chars-------------------------------------------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
@@ -324,35 +360,35 @@ class PaymentExpressTest < Test::Unit::TestCase
     # purchase
     stub_comms do
       @gateway.purchase(@amount, @visa, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_authorization_response)
 
     # authorize
     stub_comms do
       @gateway.authorize(@amount, @visa, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_authorization_response)
 
     # capture
     stub_comms do
       @gateway.capture(@amount, 'identification', options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_authorization_response)
 
     # refund
     stub_comms do
-      @gateway.refund(@amount, 'identification', {:description => 'description'}.merge(options))
-    end.check_request do |endpoint, data, headers|
+      @gateway.refund(@amount, 'identification', { description: 'description' }.merge(options))
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_authorization_response)
 
     # store
     stub_comms do
       @gateway.store(@visa, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_store_response)
   end
@@ -366,74 +402,398 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def successful_authorization_response
-    <<-RESPONSE
-<Txn>
-  <Transaction success="1" reco="00" responsetext="APPROVED">
-    <Authorized>1</Authorized>
-    <MerchantReference>Test Transaction</MerchantReference>
-    <Cvc2>M</Cvc2>
-    <CardName>Visa</CardName>
-    <Retry>0</Retry>
-    <StatusRequired>0</StatusRequired>
-    <AuthCode>015921</AuthCode>
-    <Amount>1.23</Amount>
-    <InputCurrencyId>1</InputCurrencyId>
-    <InputCurrencyName>NZD</InputCurrencyName>
-    <Acquirer>WestpacTrust</Acquirer>
-    <CurrencyId>1</CurrencyId>
-    <CurrencyName>NZD</CurrencyName>
-    <CurrencyRate>1.00</CurrencyRate>
-    <Acquirer>WestpacTrust</Acquirer>
-    <AcquirerDate>30102000</AcquirerDate>
-    <AcquirerId>1</AcquirerId>
-    <CardHolderName>DPS</CardHolderName>
-    <DateSettlement>20050811</DateSettlement>
-    <TxnType>Purchase</TxnType>
-    <CardNumber>411111</CardNumber>
-    <DateExpiry>0807</DateExpiry>
-    <ProductId></ProductId>
-    <AcquirerDate>20050811</AcquirerDate>
-    <AcquirerTime>060039</AcquirerTime>
-    <AcquirerId>9000</AcquirerId>
-    <Acquirer>Test</Acquirer>
-    <TestMode>1</TestMode>
-    <CardId>2</CardId>
-    <CardHolderResponseText>APPROVED</CardHolderResponseText>
-    <CardHolderHelpText>The Transaction was approved</CardHolderHelpText>
-    <CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription>
-    <MerchantResponseText>APPROVED</MerchantResponseText>
-    <MerchantHelpText>The Transaction was approved</MerchantHelpText>
-    <MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription>
-    <GroupAccount>9997</GroupAccount>
-    <DpsTxnRef>00000004011a2478</DpsTxnRef>
-    <AllowRetry>0</AllowRetry>
-    <DpsBillingId></DpsBillingId>
-    <BillingId></BillingId>
-    <TransactionId>011a2478</TransactionId>
-  </Transaction>
-  <ReCo>00</ReCo>
-  <ResponseText>APPROVED</ResponseText>
-  <HelpText>The Transaction was approved</HelpText>
-  <Success>1</Success>
-  <TxnRef>00000004011a2478</TxnRef>
-</Txn>
+    <<~RESPONSE
+      <Txn>
+        <Transaction success="1" reco="00" responsetext="APPROVED">
+          <Authorized>1</Authorized>
+          <MerchantReference>Test Transaction</MerchantReference>
+          <Cvc2>M</Cvc2>
+          <CardName>Visa</CardName>
+          <Retry>0</Retry>
+          <StatusRequired>0</StatusRequired>
+          <AuthCode>015921</AuthCode>
+          <Amount>1.23</Amount>
+          <InputCurrencyId>1</InputCurrencyId>
+          <InputCurrencyName>NZD</InputCurrencyName>
+          <Acquirer>WestpacTrust</Acquirer>
+          <CurrencyId>1</CurrencyId>
+          <CurrencyName>NZD</CurrencyName>
+          <CurrencyRate>1.00</CurrencyRate>
+          <Acquirer>WestpacTrust</Acquirer>
+          <AcquirerDate>30102000</AcquirerDate>
+          <AcquirerId>1</AcquirerId>
+          <CardHolderName>DPS</CardHolderName>
+          <DateSettlement>20050811</DateSettlement>
+          <TxnType>Purchase</TxnType>
+          <CardNumber>411111</CardNumber>
+          <DateExpiry>0807</DateExpiry>
+          <ProductId></ProductId>
+          <AcquirerDate>20050811</AcquirerDate>
+          <AcquirerTime>060039</AcquirerTime>
+          <AcquirerId>9000</AcquirerId>
+          <Acquirer>Test</Acquirer>
+          <TestMode>1</TestMode>
+          <CardId>2</CardId>
+          <CardHolderResponseText>APPROVED</CardHolderResponseText>
+          <CardHolderHelpText>The Transaction was approved</CardHolderHelpText>
+          <CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription>
+          <MerchantResponseText>APPROVED</MerchantResponseText>
+          <MerchantHelpText>The Transaction was approved</MerchantHelpText>
+          <MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription>
+          <GroupAccount>9997</GroupAccount>
+          <DpsTxnRef>00000004011a2478</DpsTxnRef>
+          <AllowRetry>0</AllowRetry>
+          <DpsBillingId></DpsBillingId>
+          <BillingId></BillingId>
+          <TransactionId>011a2478</TransactionId>
+        </Transaction>
+        <ReCo>00</ReCo>
+        <ResponseText>APPROVED</ResponseText>
+        <HelpText>The Transaction was approved</HelpText>
+        <Success>1</Success>
+        <TxnRef>00000004011a2478</TxnRef>
+      </Txn>
+    RESPONSE
+  end
+
+  def successful_validation_response
+    <<~RESPONSE
+      <Txn>
+        <Transaction success="1" reco="00" responseText="APPROVED" pxTxn="true">
+          <Authorized>1</Authorized>
+          <ReCo>00</ReCo>
+          <RxDate>20210126161020</RxDate>
+          <RxDateLocal>20210127051020</RxDateLocal>
+          <LocalTimeZone>NZT</LocalTimeZone>
+          <MerchantReference>Store purchase</MerchantReference>
+          <CardName>Visa</CardName>
+          <Retry>0</Retry>
+          <StatusRequired>0</StatusRequired>
+          <AuthCode>051020XXX</AuthCode>
+          <AmountBalance>0.00</AmountBalance>
+          <Amount>1.00</Amount>
+          <CurrencyId>554</CurrencyId>
+          <CurrencyName>NZD</CurrencyName>
+          <InputCurrencyId>554</InputCurrencyId>
+          <InputCurrencyName>NZD</InputCurrencyName>
+          <CurrencyRate>1.00</CurrencyRate>
+          <CardHolderName>LONGBOB LONGSEN</CardHolderName>
+          <DateSettlement>20210127</DateSettlement>
+          <TxnType>Auth</TxnType>
+          <CardNumber>411111........11</CardNumber>
+          <TxnMac>2BC20210</TxnMac>
+          <DateExpiry>0922</DateExpiry>
+          <ProductId></ProductId>
+          <AcquirerDate>20210127</AcquirerDate>
+          <AcquirerTime>051020</AcquirerTime>
+          <AcquirerId>9001</AcquirerId>
+          <Acquirer>Undefined</Acquirer>
+          <AcquirerReCo>00</AcquirerReCo>
+          <AcquirerResponseText>APPROVED</AcquirerResponseText>
+          <TestMode>1</TestMode>
+          <CardId>2</CardId>
+          <CardHolderResponseText>APPROVED</CardHolderResponseText>
+          <CardHolderHelpText>The Transaction was approved</CardHolderHelpText>
+          <CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription>
+          <MerchantResponseText>APPROVED</MerchantResponseText>
+          <MerchantHelpText>The Transaction was approved</MerchantHelpText>
+          <MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription>
+          <UrlFail></UrlFail>
+          <UrlSuccess></UrlSuccess>
+          <EnablePostResponse>0</EnablePostResponse>
+          <PxPayName></PxPayName>
+          <PxPayLogoSrc></PxPayLogoSrc>
+          <PxPayUserId></PxPayUserId>
+          <PxPayXsl></PxPayXsl>
+          <PxPayBgColor></PxPayBgColor>
+          <PxPayOptions></PxPayOptions>
+          <Cvc2ResultCode>U</Cvc2ResultCode>
+          <AvsPostCode>K1C2N6</AvsPostCode>
+          <AvsStreetAddress>456 My Street</AvsStreetAddress>
+          <AvsResultCode>E</AvsResultCode>
+          <AvsResultName>E - AVS data is invalid, or AVS not allowed for this card type</AvsResultName>
+          <AvsActionName>Attempt</AvsActionName>
+          <AcquirerPort>10000000-10003813</AcquirerPort>
+          <AcquirerTxnRef>451734</AcquirerTxnRef>
+          <GroupAccount>9997</GroupAccount>
+          <DpsTxnRef>0000000c025d2744</DpsTxnRef>
+          <AllowRetry>0</AllowRetry>
+          <DpsBillingId></DpsBillingId>
+          <PhoneNumber></PhoneNumber>
+          <HomePhoneNumber></HomePhoneNumber>
+          <AccountInfo></AccountInfo>
+          <BillingId></BillingId>
+          <CardNumber2>9310200000000010</CardNumber2>
+          <EnableCardNumber2UniqueEveryGenerate>0</EnableCardNumber2UniqueEveryGenerate>
+          <TransactionId>025d2744</TransactionId>
+          <PxHostId>0000000c</PxHostId>
+          <RmReason></RmReason>
+          <RmReasonId>0000000000000000</RmReasonId>
+          <RiskScore>-1</RiskScore>
+          <RiskScoreText></RiskScoreText>
+        </Transaction>
+        <RuleName></RuleName>
+        <RmReason></RmReason>
+        <RmReasonId>0000000000000000</RmReasonId>
+        <RiskScore>-1</RiskScore>
+        <RiskScoreText></RiskScoreText>
+        <ReCo>00</ReCo>
+        <ResponseText>APPROVED</ResponseText>
+        <HelpText>Transaction Approved</HelpText>
+        <Success>1</Success>
+        <DpsTxnRef>0000000c025d2744</DpsTxnRef>
+        <ICCResult></ICCResult>
+        <TxnRef>5f3d2cde30deeef0</TxnRef>
+      </Txn>
     RESPONSE
   end
 
   def successful_store_response(options = {})
-    %(<Txn><Transaction success="1" reco="00" responsetext="APPROVED"><Authorized>1</Authorized><MerchantReference></MerchantReference><CardName>Visa</CardName><Retry>0</Retry><StatusRequired>0</StatusRequired><AuthCode>02381203accf5c00000003</AuthCode><Amount>0.01</Amount><CurrencyId>554</CurrencyId><InputCurrencyId>554</InputCurrencyId><InputCurrencyName>NZD</InputCurrencyName><CurrencyRate>1.00</CurrencyRate><CurrencyName>NZD</CurrencyName><CardHolderName>BOB BOBSEN</CardHolderName><DateSettlement>20070323</DateSettlement><TxnType>Auth</TxnType><CardNumber>424242........42</CardNumber><DateExpiry>0809</DateExpiry><ProductId></ProductId><AcquirerDate>20070323</AcquirerDate><AcquirerTime>023812</AcquirerTime><AcquirerId>9000</AcquirerId><Acquirer>Test</Acquirer><TestMode>1</TestMode><CardId>2</CardId><CardHolderResponseText>APPROVED</CardHolderResponseText><CardHolderHelpText>The Transaction was approved</CardHolderHelpText><CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription><MerchantResponseText>APPROVED</MerchantResponseText><MerchantHelpText>The Transaction was approved</MerchantHelpText><MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription><UrlFail></UrlFail><UrlSuccess></UrlSuccess><EnablePostResponse>0</EnablePostResponse><PxPayName></PxPayName><PxPayLogoSrc></PxPayLogoSrc><PxPayUserId></PxPayUserId><PxPayXsl></PxPayXsl><PxPayBgColor></PxPayBgColor><AcquirerPort>9999999999-99999999</AcquirerPort><AcquirerTxnRef>12835</AcquirerTxnRef><GroupAccount>9997</GroupAccount><DpsTxnRef>0000000303accf5c</DpsTxnRef><AllowRetry>0</AllowRetry><DpsBillingId>0000030000141581</DpsBillingId><BillingId>#{options[:billing_id]}</BillingId><TransactionId>03accf5c</TransactionId><PxHostId>00000003</PxHostId></Transaction><ReCo>00</ReCo><ResponseText>APPROVED</ResponseText><HelpText>The Transaction was approved</HelpText><Success>1</Success><DpsTxnRef>0000000303accf5c</DpsTxnRef><TxnRef></TxnRef></Txn>)
+    <<~RESPONSE
+      <Txn>
+        <Transaction success="1" reco="00" responsetext="APPROVED">
+          <Authorized>1</Authorized>
+          <MerchantReference></MerchantReference>
+          <CardName>Visa</CardName>
+          <Retry>0</Retry>
+          <StatusRequired>0</StatusRequired>
+          <AuthCode>02381203accf5c00000003</AuthCode>
+          <Amount>0.01</Amount>
+          <CurrencyId>554</CurrencyId>
+          <InputCurrencyId>554</InputCurrencyId>
+          <InputCurrencyName>NZD</InputCurrencyName>
+          <CurrencyRate>1.00</CurrencyRate>
+          <CurrencyName>NZD</CurrencyName>
+          <CardHolderName>BOB BOBSEN</CardHolderName>
+          <DateSettlement>20070323</DateSettlement>
+          <TxnType>Auth</TxnType>
+          <CardNumber>424242........42</CardNumber>
+          <DateExpiry>0809</DateExpiry>
+          <ProductId></ProductId>
+          <AcquirerDate>20070323</AcquirerDate>
+          <AcquirerTime>023812</AcquirerTime>
+          <AcquirerId>9000</AcquirerId>
+          <Acquirer>Test</Acquirer>
+          <TestMode>1</TestMode>
+          <CardId>2</CardId>
+          <CardHolderResponseText>APPROVED</CardHolderResponseText>
+          <CardHolderHelpText>The Transaction was approved</CardHolderHelpText>
+          <CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription>
+          <MerchantResponseText>APPROVED</MerchantResponseText>
+          <MerchantHelpText>The Transaction was approved</MerchantHelpText>
+          <MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription>
+          <UrlFail></UrlFail>
+          <UrlSuccess></UrlSuccess>
+          <EnablePostResponse>0</EnablePostResponse>
+          <PxPayName></PxPayName>
+          <PxPayLogoSrc></PxPayLogoSrc>
+          <PxPayUserId></PxPayUserId>
+          <PxPayXsl></PxPayXsl>
+          <PxPayBgColor></PxPayBgColor>
+          <AcquirerPort>9999999999-99999999</AcquirerPort>
+          <AcquirerTxnRef>12835</AcquirerTxnRef>
+          <GroupAccount>9997</GroupAccount>
+          <DpsTxnRef>0000000303accf5c</DpsTxnRef>
+          <AllowRetry>0</AllowRetry>
+          <DpsBillingId>0000030000141581</DpsBillingId>
+          <BillingId>#{options[:billing_id]}</BillingId>
+          <TransactionId>03accf5c</TransactionId>
+          <PxHostId>00000003</PxHostId>
+        </Transaction>
+        <ReCo>00</ReCo>
+        <ResponseText>APPROVED</ResponseText>
+        <HelpText>The Transaction was approved</HelpText>
+        <Success>1</Success>
+        <DpsTxnRef>0000000303accf5c</DpsTxnRef>
+        <TxnRef></TxnRef>
+      </Txn>
+    RESPONSE
   end
 
   def unsuccessful_store_response(options = {})
-    %(<Txn><Transaction success="0" reco="QK" responsetext="INVALID CARD NUMBER"><Authorized>0</Authorized><MerchantReference></MerchantReference><CardName></CardName><Retry>0</Retry><StatusRequired>0</StatusRequired><AuthCode></AuthCode><Amount>0.01</Amount><CurrencyId>554</CurrencyId><InputCurrencyId>554</InputCurrencyId><InputCurrencyName>NZD</InputCurrencyName><CurrencyRate>1.00</CurrencyRate><CurrencyName>NZD</CurrencyName><CardHolderName>LONGBOB LONGSEN</CardHolderName><DateSettlement>19800101</DateSettlement><TxnType>Validate</TxnType><CardNumber>000000........00</CardNumber><DateExpiry>0808</DateExpiry><ProductId></ProductId><AcquirerDate></AcquirerDate><AcquirerTime></AcquirerTime><AcquirerId>9000</AcquirerId><Acquirer></Acquirer><TestMode>0</TestMode><CardId>0</CardId><CardHolderResponseText>INVALID CARD NUMBER</CardHolderResponseText><CardHolderHelpText>An Invalid Card Number was entered. Check the card number</CardHolderHelpText><CardHolderResponseDescription>An Invalid Card Number was entered. Check the card number</CardHolderResponseDescription><MerchantResponseText>INVALID CARD NUMBER</MerchantResponseText><MerchantHelpText>An Invalid Card Number was entered. Check the card number</MerchantHelpText><MerchantResponseDescription>An Invalid Card Number was entered. Check the card number</MerchantResponseDescription><UrlFail></UrlFail><UrlSuccess></UrlSuccess><EnablePostResponse>0</EnablePostResponse><PxPayName></PxPayName><PxPayLogoSrc></PxPayLogoSrc><PxPayUserId></PxPayUserId><PxPayXsl></PxPayXsl><PxPayBgColor></PxPayBgColor><AcquirerPort>9999999999-99999999</AcquirerPort><AcquirerTxnRef>0</AcquirerTxnRef><GroupAccount>9997</GroupAccount><DpsTxnRef></DpsTxnRef><AllowRetry>0</AllowRetry><DpsBillingId></DpsBillingId><BillingId></BillingId><TransactionId>00000000</TransactionId><PxHostId>00000003</PxHostId></Transaction><ReCo>QK</ReCo><ResponseText>INVALID CARD NUMBER</ResponseText><HelpText>An Invalid Card Number was entered. Check the card number</HelpText><Success>0</Success><DpsTxnRef></DpsTxnRef><TxnRef></TxnRef></Txn>)
+    <<~RESPONSE
+      <Txn>
+        <Transaction success="0" reco="QK" responsetext="INVALID CARD NUMBER">
+          <Authorized>0</Authorized>
+          <MerchantReference></MerchantReference>
+          <CardName></CardName>
+          <Retry>0</Retry>
+          <StatusRequired>0</StatusRequired>
+          <AuthCode></AuthCode>
+          <Amount>0.01</Amount>
+          <CurrencyId>554</CurrencyId>
+          <InputCurrencyId>554</InputCurrencyId>
+          <InputCurrencyName>NZD</InputCurrencyName>
+          <CurrencyRate>1.00</CurrencyRate>
+          <CurrencyName>NZD</CurrencyName>
+          <CardHolderName>LONGBOB LONGSEN</CardHolderName>
+          <DateSettlement>19800101</DateSettlement>
+          <TxnType>Validate</TxnType>
+          <CardNumber>000000........00</CardNumber>
+          <DateExpiry>0808</DateExpiry>
+          <ProductId></ProductId>
+          <AcquirerDate></AcquirerDate>
+          <AcquirerTime></AcquirerTime>
+          <AcquirerId>9000</AcquirerId>
+          <Acquirer></Acquirer>
+          <TestMode>0</TestMode>
+          <CardId>0</CardId>
+          <CardHolderResponseText>INVALID CARD NUMBER</CardHolderResponseText>
+          <CardHolderHelpText>An Invalid Card Number was entered. Check the card number</CardHolderHelpText>
+          <CardHolderResponseDescription>An Invalid Card Number was entered. Check the card number</CardHolderResponseDescription>
+          <MerchantResponseText>INVALID CARD NUMBER</MerchantResponseText>
+          <MerchantHelpText>An Invalid Card Number was entered. Check the card number</MerchantHelpText>
+          <MerchantResponseDescription>An Invalid Card Number was entered. Check the card number</MerchantResponseDescription>
+          <UrlFail></UrlFail>
+          <UrlSuccess></UrlSuccess>
+          <EnablePostResponse>0</EnablePostResponse>
+          <PxPayName></PxPayName>
+          <PxPayLogoSrc></PxPayLogoSrc>
+          <PxPayUserId></PxPayUserId>
+          <PxPayXsl></PxPayXsl>
+          <PxPayBgColor></PxPayBgColor>
+          <AcquirerPort>9999999999-99999999</AcquirerPort>
+          <AcquirerTxnRef>0</AcquirerTxnRef>
+          <GroupAccount>9997</GroupAccount>
+          <DpsTxnRef></DpsTxnRef>
+          <AllowRetry>0</AllowRetry>
+          <DpsBillingId></DpsBillingId>
+          <BillingId></BillingId>
+          <TransactionId>00000000</TransactionId>
+          <PxHostId>00000003</PxHostId>
+        </Transaction>
+        <ReCo>QK</ReCo>
+        <ResponseText>INVALID CARD NUMBER</ResponseText>
+        <HelpText>An Invalid Card Number was entered. Check the card number</HelpText>
+        <Success>0</Success>
+        <DpsTxnRef></DpsTxnRef>
+        <TxnRef></TxnRef>
+      </Txn>
+    RESPONSE
   end
 
   def successful_dps_billing_id_token_purchase_response
-    %(<Txn><Transaction success="1" reco="00" responsetext="APPROVED"><Authorized>1</Authorized><MerchantReference></MerchantReference><CardName>Visa</CardName><Retry>0</Retry><StatusRequired>0</StatusRequired><AuthCode>030817</AuthCode><Amount>10.00</Amount><CurrencyId>554</CurrencyId><InputCurrencyId>554</InputCurrencyId><InputCurrencyName>NZD</InputCurrencyName><CurrencyRate>1.00</CurrencyRate><CurrencyName>NZD</CurrencyName><CardHolderName>LONGBOB LONGSEN</CardHolderName><DateSettlement>20070323</DateSettlement><TxnType>Purchase</TxnType><CardNumber>424242........42</CardNumber><DateExpiry>0808</DateExpiry><ProductId></ProductId><AcquirerDate>20070323</AcquirerDate><AcquirerTime>030817</AcquirerTime><AcquirerId>9000</AcquirerId><Acquirer>Test</Acquirer><TestMode>1</TestMode><CardId>2</CardId><CardHolderResponseText>APPROVED</CardHolderResponseText><CardHolderHelpText>The Transaction was approved</CardHolderHelpText><CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription><MerchantResponseText>APPROVED</MerchantResponseText><MerchantHelpText>The Transaction was approved</MerchantHelpText><MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription><UrlFail></UrlFail><UrlSuccess></UrlSuccess><EnablePostResponse>0</EnablePostResponse><PxPayName></PxPayName><PxPayLogoSrc></PxPayLogoSrc><PxPayUserId></PxPayUserId><PxPayXsl></PxPayXsl><PxPayBgColor></PxPayBgColor><AcquirerPort>9999999999-99999999</AcquirerPort><AcquirerTxnRef>12859</AcquirerTxnRef><GroupAccount>9997</GroupAccount><DpsTxnRef>0000000303ace8db</DpsTxnRef><AllowRetry>0</AllowRetry><DpsBillingId>0000030000141581</DpsBillingId><BillingId></BillingId><TransactionId>03ace8db</TransactionId><PxHostId>00000003</PxHostId></Transaction><ReCo>00</ReCo><ResponseText>APPROVED</ResponseText><HelpText>The Transaction was approved</HelpText><Success>1</Success><DpsTxnRef>0000000303ace8db</DpsTxnRef><TxnRef></TxnRef></Txn>)
+    <<~RESPONSE
+      <Txn>
+        <Transaction success="1" reco="00" responsetext="APPROVED">
+          <Authorized>1</Authorized>
+          <MerchantReference></MerchantReference>
+          <CardName>Visa</CardName>
+          <Retry>0</Retry>
+          <StatusRequired>0</StatusRequired>
+          <AuthCode>030817</AuthCode>
+          <Amount>10.00</Amount>
+          <CurrencyId>554</CurrencyId>
+          <InputCurrencyId>554</InputCurrencyId>
+          <InputCurrencyName>NZD</InputCurrencyName>
+          <CurrencyRate>1.00</CurrencyRate>
+          <CurrencyName>NZD</CurrencyName>
+          <CardHolderName>LONGBOB LONGSEN</CardHolderName>
+          <DateSettlement>20070323</DateSettlement>
+          <TxnType>Purchase</TxnType>
+          <CardNumber>424242........42</CardNumber>
+          <DateExpiry>0808</DateExpiry>
+          <ProductId></ProductId>
+          <AcquirerDate>20070323</AcquirerDate>
+          <AcquirerTime>030817</AcquirerTime>
+          <AcquirerId>9000</AcquirerId>
+          <Acquirer>Test</Acquirer>
+          <TestMode>1</TestMode>
+          <CardId>2</CardId>
+          <CardHolderResponseText>APPROVED</CardHolderResponseText>
+          <CardHolderHelpText>The Transaction was approved</CardHolderHelpText>
+          <CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription>
+          <MerchantResponseText>APPROVED</MerchantResponseText>
+          <MerchantHelpText>The Transaction was approved</MerchantHelpText>
+          <MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription>
+          <UrlFail></UrlFail>
+          <UrlSuccess></UrlSuccess>
+          <EnablePostResponse>0</EnablePostResponse>
+          <PxPayName></PxPayName>
+          <PxPayLogoSrc></PxPayLogoSrc>
+          <PxPayUserId></PxPayUserId>
+          <PxPayXsl></PxPayXsl>
+          <PxPayBgColor></PxPayBgColor>
+          <AcquirerPort>9999999999-99999999</AcquirerPort>
+          <AcquirerTxnRef>12859</AcquirerTxnRef>
+          <GroupAccount>9997</GroupAccount>
+          <DpsTxnRef>0000000303ace8db</DpsTxnRef>
+          <AllowRetry>0</AllowRetry>
+          <DpsBillingId>0000030000141581</DpsBillingId>
+          <BillingId></BillingId>
+          <TransactionId>03ace8db</TransactionId>
+          <PxHostId>00000003</PxHostId>
+        </Transaction>
+        <ReCo>00</ReCo>
+        <ResponseText>APPROVED</ResponseText>
+        <HelpText>The Transaction was approved</HelpText>
+        <Success>1</Success>
+        <DpsTxnRef>0000000303ace8db</DpsTxnRef>
+        <TxnRef></TxnRef>
+      </Txn>
+    RESPONSE
   end
 
   def successful_billing_id_token_purchase_response
-    %(<Txn><Transaction success="1" reco="00" responsetext="APPROVED"><Authorized>1</Authorized><MerchantReference></MerchantReference><CardName>Visa</CardName><Retry>0</Retry><StatusRequired>0</StatusRequired><AuthCode>030817</AuthCode><Amount>10.00</Amount><CurrencyId>554</CurrencyId><InputCurrencyId>554</InputCurrencyId><InputCurrencyName>NZD</InputCurrencyName><CurrencyRate>1.00</CurrencyRate><CurrencyName>NZD</CurrencyName><CardHolderName>LONGBOB LONGSEN</CardHolderName><DateSettlement>20070323</DateSettlement><TxnType>Purchase</TxnType><CardNumber>424242........42</CardNumber><DateExpiry>0808</DateExpiry><ProductId></ProductId><AcquirerDate>20070323</AcquirerDate><AcquirerTime>030817</AcquirerTime><AcquirerId>9000</AcquirerId><Acquirer>Test</Acquirer><TestMode>1</TestMode><CardId>2</CardId><CardHolderResponseText>APPROVED</CardHolderResponseText><CardHolderHelpText>The Transaction was approved</CardHolderHelpText><CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription><MerchantResponseText>APPROVED</MerchantResponseText><MerchantHelpText>The Transaction was approved</MerchantHelpText><MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription><UrlFail></UrlFail><UrlSuccess></UrlSuccess><EnablePostResponse>0</EnablePostResponse><PxPayName></PxPayName><PxPayLogoSrc></PxPayLogoSrc><PxPayUserId></PxPayUserId><PxPayXsl></PxPayXsl><PxPayBgColor></PxPayBgColor><AcquirerPort>9999999999-99999999</AcquirerPort><AcquirerTxnRef>12859</AcquirerTxnRef><GroupAccount>9997</GroupAccount><DpsTxnRef>0000000303ace8db</DpsTxnRef><AllowRetry>0</AllowRetry><DpsBillingId></DpsBillingId><BillingId>TEST1234</BillingId><TransactionId>03ace8db</TransactionId><PxHostId>00000003</PxHostId></Transaction><ReCo>00</ReCo><ResponseText>APPROVED</ResponseText><HelpText>The Transaction was approved</HelpText><Success>1</Success><DpsTxnRef>0000000303ace8db</DpsTxnRef><TxnRef></TxnRef></Txn>)
+    <<~RESPONSE
+      <Txn>
+        <Transaction success="1" reco="00" responsetext="APPROVED">
+          <Authorized>1</Authorized>
+          <MerchantReference></MerchantReference>
+          <CardName>Visa</CardName>
+          <Retry>0</Retry>
+          <StatusRequired>0</StatusRequired>
+          <AuthCode>030817</AuthCode>
+          <Amount>10.00</Amount>
+          <CurrencyId>554</CurrencyId>
+          <InputCurrencyId>554</InputCurrencyId>
+          <InputCurrencyName>NZD</InputCurrencyName>
+          <CurrencyRate>1.00</CurrencyRate>
+          <CurrencyName>NZD</CurrencyName>
+          <CardHolderName>LONGBOB LONGSEN</CardHolderName>
+          <DateSettlement>20070323</DateSettlement>
+          <TxnType>Purchase</TxnType>
+          <CardNumber>424242........42</CardNumber>
+          <DateExpiry>0808</DateExpiry>
+          <ProductId></ProductId>
+          <AcquirerDate>20070323</AcquirerDate>
+          <AcquirerTime>030817</AcquirerTime>
+          <AcquirerId>9000</AcquirerId>
+          <Acquirer>Test</Acquirer>
+          <TestMode>1</TestMode>
+          <CardId>2</CardId>
+          <CardHolderResponseText>APPROVED</CardHolderResponseText>
+          <CardHolderHelpText>The Transaction was approved</CardHolderHelpText>
+          <CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription>
+          <MerchantResponseText>APPROVED</MerchantResponseText>
+          <MerchantHelpText>The Transaction was approved</MerchantHelpText>
+          <MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription>
+          <UrlFail></UrlFail>
+          <UrlSuccess></UrlSuccess>
+          <EnablePostResponse>0</EnablePostResponse>
+          <PxPayName></PxPayName>
+          <PxPayLogoSrc></PxPayLogoSrc>
+          <PxPayUserId></PxPayUserId>
+          <PxPayXsl></PxPayXsl>
+          <PxPayBgColor></PxPayBgColor>
+          <AcquirerPort>9999999999-99999999</AcquirerPort>
+          <AcquirerTxnRef>12859</AcquirerTxnRef>
+          <GroupAccount>9997</GroupAccount>
+          <DpsTxnRef>0000000303ace8db</DpsTxnRef>
+          <AllowRetry>0</AllowRetry>
+          <DpsBillingId></DpsBillingId>
+          <BillingId>TEST1234</BillingId>
+          <TransactionId>03ace8db</TransactionId>
+          <PxHostId>00000003</PxHostId>
+        </Transaction>
+        <ReCo>00</ReCo>
+        <ResponseText>APPROVED</ResponseText>
+        <HelpText>The Transaction was approved</HelpText>
+        <Success>1</Success>
+        <DpsTxnRef>0000000303ace8db</DpsTxnRef>
+        <TxnRef></TxnRef>
+      </Txn>
+    RESPONSE
   end
 
   def transcript

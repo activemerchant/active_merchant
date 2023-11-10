@@ -8,9 +8,9 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     @credit_card_with_track_data = credit_card_with_track_data('4003000123456781')
     @amount = 100
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
     @options_with_authentication_data = @options.merge({
       eci: '5',
@@ -26,7 +26,8 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_network_tokenization
-    @credit_card = network_tokenization_credit_card('4242424242424242',
+    @credit_card = network_tokenization_credit_card(
+      '4242424242424242',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: nil
     )
@@ -37,7 +38,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     assert response = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
     assert_match(/Transaction Normal/, response.message)
     assert_success response
@@ -119,7 +120,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_purchase_and_credit_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     assert purchase = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
     assert_success purchase
     assert purchase.authorization
@@ -178,8 +179,8 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = FirstdataE4Gateway.new(:login    => 'NotARealUser',
-                                     :password => 'NotARealPassword')
+    gateway = FirstdataE4Gateway.new(login: 'NotARealUser',
+                                     password: 'NotARealPassword')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_match %r{Unauthorized Request}, response.message
     assert_failure response
@@ -204,7 +205,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_refund_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     assert purchase = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
     assert_match(/Transaction Normal/, purchase.message)
     assert_success purchase
@@ -248,5 +249,4 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_scrubbed(cc_with_different_cvc.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
-
 end
