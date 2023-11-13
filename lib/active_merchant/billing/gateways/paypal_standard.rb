@@ -181,7 +181,7 @@ module ActiveMerchant
       end
 
       def error_code_from(response)
-        response[:name] unless success_from(response)
+        response['name'] unless success_from(response)
       end
 
       def add_purchase_units(post, amount, options)

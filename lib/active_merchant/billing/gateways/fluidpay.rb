@@ -205,6 +205,7 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, response),
           response,
+          error_code: error_code_from(succeeded, response),
           authorization: authorization_from(response, params[:payment], action),
           avs_result: AVSResult.new(code: response.dig('data', 'response_body', 'card', 'avs_response_code')),
           cvv_result: CVVResult.new(response.dig('data', 'response_body', 'card', 'avs_response_code')),
@@ -249,6 +250,10 @@ module ActiveMerchant #:nodoc:
         else
           response["msg"]
         end
+      end
+
+      def error_code_from(succeeded, response)
+        return response.dig('data', 'response_code').to_s unless succeeded
       end
 
       def response_type(code)
