@@ -57,6 +57,7 @@
 * Worldpay: Update stored credentials logic [DustinHaefele] #4950
 * Vantiv Express: New Xml gateway [DustinHaefele] #4956
 * Shift4 V2: Add unstore function [javierpedrozaing] #4953
+* CommerceHub: Add 3DS global support [sinourain] #4957
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

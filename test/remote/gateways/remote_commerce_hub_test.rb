@@ -40,9 +40,24 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220', month: '02', year: '2035', verification_value: '123')
     @master_card = credit_card('5454545454545454', brand: 'master')
     @options = {}
+    @three_d_secure = {
+      ds_transaction_id: '3543-b90d-d6dc1765c98',
+      authentication_response_status: 'A',
+      cavv: 'AAABCZIhcQAAAABZlyFxAAAAAAA',
+      eci: '05',
+      xid: '&x_MD5_Hash=abfaf1d1df004e3c27d5d2e05929b529&x_state=BC&x_reference_3=&x_auth_code=ET141870&x_fp_timestamp=1231877695',
+      version: '2.2.0'
+    }
   end
 
   def test_successful_purchase
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_3ds_purchase
+    @options.merge!(three_d_secure: @three_d_secure)
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
