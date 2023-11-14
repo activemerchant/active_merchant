@@ -64,6 +64,92 @@ module ActiveMerchant #:nodoc:
         'NoShow' => 6
       }
 
+      LODGING_PPC = {
+        'NonParticipant' => 0,
+        'DollarLimit500' => 1,
+        'DollarLimit1000' => 2,
+        'DollarLimit1500' => 3
+      }
+
+      LODGING_SPC = {
+        'Default' => 0,
+        'Sale' => 1,
+        'NoShow' => 2,
+        'AdvancedDeposit' => 3
+      }
+
+      LODGING_CHARGE_TYPE = {
+        'Default' => 0,
+        'Restaurant' => 1,
+        'GiftShop' => 2
+      }
+
+      TERMINAL_TYPE = {
+        'Unknown' => 0,
+        'PointOfSale' => 1,
+        'Ecommerce' => 2,
+        'MOTO' => 3,
+        'FuelPump' => 4,
+        'ATM' => 5,
+        'Voice' => 6,
+        'Mobile' => 7,
+        'WebSiteGiftCard' => 8
+      }
+
+      CARD_HOLDER_PRESENT_CODE = {
+        'Default' => 0,
+        'Unknown' => 1,
+        'Present' => 2,
+        'NotPresent' => 3,
+        'MailOrder' => 4,
+        'PhoneOrder' => 5,
+        'StandingAuth' => 6,
+        'ECommerce' => 7
+      }
+
+      CARD_INPUT_CODE = {
+        'Default' => 0,
+        'Unknown' => 1,
+        'MagstripeRead' => 2,
+        'ContactlessMagstripeRead' => 3,
+        'ManualKeyed' => 4,
+        'ManualKeyedMagstripeFailure' => 5,
+        'ChipRead' => 6,
+        'ContactlessChipRead' => 7,
+        'ManualKeyedChipReadFailure' => 8,
+        'MagstripeReadChipReadFailure' => 9,
+        'MagstripeReadNonTechnicalFallback' => 10
+      }
+
+      CVV_PRESENCE_CODE = {
+        'UseDefault' => 0,
+        'NotProvided' => 1,
+        'Provided' => 2,
+        'Illegible' => 3,
+        'CustomerIllegible' => 4
+      }
+
+      TERMINAL_CAPABILITY_CODE = {
+        'Default' => 0,
+        'Unknown' => 1,
+        'NoTerminal' => 2,
+        'MagstripeReader' => 3,
+        'ContactlessMagstripeReader' => 4,
+        'KeyEntered' => 5,
+        'ChipReader' => 6,
+        'ContactlessChipReader' => 7
+      }
+
+      TERMINAL_ENVIRONMENT_CODE = {
+        'Default' => 0,
+        'NoTerminal' => 1,
+        'LocalAttended' => 2,
+        'LocalUnattended' => 3,
+        'RemoteAttended' => 4,
+        'RemoteUnattended' => 5,
+        'ECommerce' => 6
+      }
+
       def initialize(options = {})
         requires!(options, :account_id, :account_token, :application_id, :acceptor_id, :application_name, :application_version)
         super
@@ -273,7 +359,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_lodging(xml, options)
-        if lodging = options[:lodging]
+        if options[:lodging]
+          lodging = parse_lodging(options[:lodging])
           xml.ExtendedParameters do
             xml.Lodging do
               xml.LodgingAgreementNumber lodging[:agreement_number] if lodging[:agreement_number]
@@ -296,12 +383,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_terminal(xml, options, network_token_eci = nil)
-        card_present = CARD_PRESENT_CODE[options[:card_present_code]] || options[:card_present_code] || 0
+        options = parse_terminal(options)
 
         xml.Terminal do
           xml.TerminalID options[:terminal_id] || '01'
           xml.TerminalType options[:terminal_type] if options[:terminal_type]
-          xml.CardPresentCode card_present
+          xml.CardPresentCode options[:card_present_code] || 0
           xml.CardholderPresentCode options[:card_holder_present_code] || 0
           xml.CardInputCode options[:card_input_code] || 0
           xml.CVVPresenceCode options[:cvv_presence_code] || 0
@@ -395,6 +482,26 @@ module ActiveMerchant #:nodoc:
         end
 
         response
+      end
+
+      def parse_lodging(lodging)
+        lodging[:prestigious_property_code] = LODGING_PPC[lodging[:prestigious_property_code]] || lodging[:prestigious_property_code] if lodging[:prestigious_property_code]
+        lodging[:special_program_code] = LODGING_SPC[lodging[:special_program_code]] || lodging[:special_program_code] if lodging[:special_program_code]
+        lodging[:charge_type] = LODGING_CHARGE_TYPE[lodging[:charge_type]] || lodging[:charge_type] if lodging[:charge_type]
+
+        lodging
+      end
+
+      def parse_terminal(options)
+        options[:terminal_type] = TERMINAL_TYPE[options[:terminal_type]] || options[:terminal_type]
+        options[:card_present_code] = CARD_PRESENT_CODE[options[:card_present_code]] || options[:card_present_code]
+        options[:card_holder_present_code] = CARD_HOLDER_PRESENT_CODE[options[:card_holder_present_code]] || options[:card_holder_present_code]
+        options[:card_input_code] = CARD_INPUT_CODE[options[:card_input_code]] || options[:card_input_code]
+        options[:cvv_presence_code] = CVV_PRESENCE_CODE[options[:cvv_presence_code]] || options[:cvv_presence_code]
+        options[:terminal_capability_code] = TERMINAL_CAPABILITY_CODE[options[:terminal_capability_code]] || options[:terminal_capability_code]
+        options[:terminal_environment_code] = TERMINAL_ENVIRONMENT_CODE[options[:terminal_environment_code]] || options[:terminal_environment_code]
+
+        options
       end
 
       def commit(xml, amount = nil, payment = nil, action = nil)

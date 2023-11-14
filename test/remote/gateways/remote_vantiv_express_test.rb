@@ -84,19 +84,19 @@ class RemoteVantivExpressTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
-  def test_successful_purchase_with_card_present_code
+  def test_successful_purchase_with_card_present_code_string
     response = @gateway.purchase(@amount, @credit_card, @options.merge(card_present_code: 'Present'))
     assert_success response
     assert_equal 'Approved', response.message
   end
 
-  def test_successful_purchase_with_payment_type
+  def test_successful_purchase_with_payment_type_string
     response = @gateway.purchase(@amount, @credit_card, @options.merge(payment_type: 'NotUsed'))
     assert_success response
     assert_equal 'Approved', response.message
   end
 
-  def test_successful_purchase_with_submission_type
+  def test_successful_purchase_with_submission_type_string
     response = @gateway.purchase(@amount, @credit_card, @options.merge(submission_type: 'NotUsed'))
     assert_success response
     assert_equal 'Approved', response.message
@@ -166,13 +166,51 @@ class RemoteVantivExpressTest < Test::Unit::TestCase
         client_code: 'Default',
         extra_charges_detail: '01',
         extra_charges_amounts: 'Default',
+        prestigious_property_code: 'DollarLimit500',
+        special_program_code: 'AdvancedDeposit',
+        charge_type: 'Restaurant'
+      },
+      card_holder_present_code: '2',
+      card_input_code: '4',
+      card_present_code: 'NotPresent',
+      cvv_presence_code: '2',
+      market_code: 'HotelLodging',
+      terminal_capability_code: 'ChipReader',
+      terminal_environment_code: 'LocalUnattended',
+      terminal_type: 'Mobile',
+      terminal_id: '0001',
+      ticket_number: 182726718192
+    }
+    response = @gateway.purchase(@amount, @credit_card, lodging_options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_enum_fields
+    lodging_options = {
+      order_id: '2',
+      billing_address: address.merge(zip: '87654'),
+      description: 'Store Purchase',
+      duplicate_override_flag: 'true',
+      lodging: {
+        agreement_number: SecureRandom.hex(12),
+        check_in_date: 20250910,
+        check_out_date: 20250915,
+        room_amount: 1000,
+        room_tax: 0,
+        no_show_indicator: 0,
+        duration: 5,
+        customer_name: 'francois dubois',
+        client_code: 'Default',
+        extra_charges_detail: '01',
+        extra_charges_amounts: 'Default',
         prestigious_property_code: 1,
         special_program_code: 2,
         charge_type: 2
       },
-      card_holder_present_code: 2,
-      card_input_code: 4,
-      card_present_code: 'NotPresent',
+      card_holder_present_code: '2',
+      card_input_code: '4',
+      card_present_code: 0,
       cvv_presence_code: 2,
       market_code: 5,
       terminal_capability_code: 5,

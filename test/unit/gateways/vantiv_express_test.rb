@@ -213,6 +213,77 @@ class VantivExpressTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_element_string_lodging_fields
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(lodging: lodging_fields))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match "<LodgingAgreementNumber>#{lodging_fields[:agreement_number]}</LodgingAgreementNumber>", data
+      assert_match "<LodgingCheckInDate>#{lodging_fields[:check_in_date]}</LodgingCheckInDate>", data
+      assert_match "<LodgingCheckOutDate>#{lodging_fields[:check_out_date]}</LodgingCheckOutDate>", data
+      assert_match "<LodgingRoomAmount>#{lodging_fields[:room_amount]}</LodgingRoomAmount>", data
+      assert_match "<LodgingRoomTax>#{lodging_fields[:room_tax]}</LodgingRoomTax>", data
+      assert_match "<LodgingNoShowIndicator>#{lodging_fields[:no_show_indicator]}</LodgingNoShowIndicator>", data
+      assert_match "<LodgingDuration>#{lodging_fields[:duration]}</LodgingDuration>", data
+      assert_match "<LodgingCustomerName>#{lodging_fields[:customer_name]}</LodgingCustomerName>", data
+      assert_match "<LodgingClientCode>#{lodging_fields[:client_code]}</LodgingClientCode>", data
+      assert_match "<LodgingExtraChargesDetail>#{lodging_fields[:extra_charges_detail]}</LodgingExtraChargesDetail>", data
+      assert_match "<LodgingExtraChargesAmounts>#{lodging_fields[:extra_charges_amounts]}</LodgingExtraChargesAmounts>", data
+      assert_match '<LodgingPrestigiousPropertyCode>1</LodgingPrestigiousPropertyCode>', data
+      assert_match '<LodgingSpecialProgramCode>3</LodgingSpecialProgramCode>', data
+      assert_match '<LodgingChargeType>1</LodgingChargeType>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_element_enum_lodging_fields
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(lodging: enum_lodging_fields))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<LodgingPrestigiousPropertyCode>1</LodgingPrestigiousPropertyCode>', data
+      assert_match '<LodgingSpecialProgramCode>3</LodgingSpecialProgramCode>', data
+      assert_match '<LodgingChargeType>1</LodgingChargeType>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_element_string_terminal_fields
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(terminal_fields))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<TerminalID>02</TerminalID>', data
+      assert_match '<TerminalType>0</TerminalType>', data
+      assert_match '<CardPresentCode>1</CardPresentCode>', data
+      assert_match '<CardholderPresentCode>0</CardholderPresentCode>', data
+      assert_match '<CardInputCode>4</CardInputCode>', data
+      assert_match '<CVVPresenceCode>3</CVVPresenceCode>', data
+      assert_match '<TerminalCapabilityCode>3</TerminalCapabilityCode>', data
+      assert_match '<TerminalEnvironmentCode>2</TerminalEnvironmentCode>', data
+      assert_match '<MotoECICode>7</MotoECICode>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_enum_terminal_fields
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(enum_terminal_fields))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<TerminalID>02</TerminalID>', data
+      assert_match '<TerminalType>0</TerminalType>', data
+      assert_match '<CardPresentCode>0</CardPresentCode>', data
+      assert_match '<CardholderPresentCode>0</CardholderPresentCode>', data
+      assert_match '<CardInputCode>4</CardInputCode>', data
+      assert_match '<CVVPresenceCode>3</CVVPresenceCode>', data
+      assert_match '<TerminalCapabilityCode>3</TerminalCapabilityCode>', data
+      assert_match '<TerminalEnvironmentCode>2</TerminalEnvironmentCode>', data
+      assert_match '<MotoECICode>7</MotoECICode>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_payment_type
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(payment_type: 'NotUsed'))
@@ -373,6 +444,59 @@ class VantivExpressTest < Test::Unit::TestCase
   end
 
   private
+
+  def lodging_fields
+    {
+      agreement_number: '5a43d41dc251949cc3395542',
+      check_in_date: 20250910,
+      check_out_date: 20250915,
+      room_amount: 1000,
+      room_tax: 0,
+      no_show_indicator: 0,
+      duration: 5,
+      customer_name: 'francois dubois',
+      client_code: 'Default',
+      extra_charges_detail: '01',
+      extra_charges_amounts: 'Default',
+      prestigious_property_code: 'DollarLimit500',
+      special_program_code: 'AdvancedDeposit',
+      charge_type: 'Restaurant'
+    }
+  end
+
+  def enum_lodging_fields
+    {
+      prestigious_property_code: 1,
+      special_program_code: 3,
+      charge_type: 1
+    }
+  end
+
+  def terminal_fields
+    {
+      terminal_id: '02',
+      terminal_type: 'Unknown',
+      card_present_code: 'Unknown',
+      card_holder_present_code: 'Default',
+      card_input_code: 'ManualKeyed',
+      cvv_presence_code: 'Illegible',
+      terminal_capability_code: 'MagstripeReader',
+      terminal_environment_code: 'LocalAttended'
+    }
+  end
+
+  def enum_terminal_fields
+    {
+      terminal_id: '02',
+      terminal_type: 0,
+      card_present_code: 0,
+      card_holder_present_code: 0,
+      card_input_code: 4,
+      cvv_presence_code: 3,
+      terminal_capability_code: 3,
+      terminal_environment_code: 2
+    }
+  end
 
   def pre_scrubbed
     <<~XML
