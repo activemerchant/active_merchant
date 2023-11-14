@@ -488,12 +488,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_successful_auth_and_capture_with_normalized_stored_credential
-    stored_credential_params = {
-      initial_transaction: true,
-      reason_type: 'unscheduled',
-      initiator: 'merchant',
-      network_transaction_id: nil
-    }
+    stored_credential_params = stored_credential(:initial, :unscheduled, :merchant)
 
     assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
     assert_success auth
@@ -505,12 +500,31 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success capture
 
     @options[:order_id] = generate_unique_id
-    @options[:stored_credential] = {
-      initial_transaction: false,
-      reason_type: 'installment',
-      initiator: 'merchant',
-      network_transaction_id: auth.params['transaction_identifier']
-    }
+    @options[:stored_credential] = stored_credential(:used, :installment, :merchant, network_transaction_id: auth.params['transaction_identifier'])
+
+    assert next_auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert next_auth.authorization
+    assert next_auth.params['scheme_response']
+    assert next_auth.params['transaction_identifier']
+
+    assert capture = @gateway.capture(@amount, next_auth.authorization, authorization_validated: true)
+    assert_success capture
+  end
+
+  def test_successful_auth_and_capture_with_normalized_recurring_stored_credential
+    stored_credential_params = stored_credential(:initial, :recurring, :merchant)
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    assert_success auth
+    assert auth.authorization
+    assert auth.params['scheme_response']
+    assert auth.params['transaction_identifier']
+
+    assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
+    assert_success capture
+
+    @options[:order_id] = generate_unique_id
+    @options[:stored_credential] = stored_credential(:used, :recurring, :merchant, network_transaction_id: auth.params['transaction_identifier'])
 
     assert next_auth = @gateway.authorize(@amount, @credit_card, @options)
     assert next_auth.authorization
@@ -546,14 +560,34 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_auth_and_capture_with_gateway_specific_recurring_stored_credentials
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential_usage: 'FIRST', stored_credential_initiated_reason: 'RECURRING'))
+    assert_success auth
+    assert auth.authorization
+    assert auth.params['scheme_response']
+    assert auth.params['transaction_identifier']
+
+    assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
+    assert_success capture
+
+    options = @options.merge(
+      order_id: generate_unique_id,
+      stored_credential_usage: 'USED',
+      stored_credential_initiated_reason: 'RECURRING',
+      stored_credential_transaction_id: auth.params['transaction_identifier']
+    )
+    assert next_auth = @gateway.authorize(@amount, @credit_card, options)
+    assert next_auth.authorization
+    assert next_auth.params['scheme_response']
+    assert next_auth.params['transaction_identifier']
+
+    assert capture = @gateway.capture(@amount, next_auth.authorization, authorization_validated: true)
+    assert_success capture
+  end
+
   def test_successful_authorize_with_3ds_with_normalized_stored_credentials
     session_id = generate_unique_id
-    stored_credential_params = {
-      initial_transaction: true,
-      reason_type: 'unscheduled',
-      initiator: 'merchant',
-      network_transaction_id: nil
-    }
+    stored_credential_params = stored_credential(:initial, :unscheduled, :merchant)
     options = @options.merge(
       {
         execute_threed: true,
@@ -846,32 +880,35 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', credit.message
   end
 
-  def test_successful_fast_fund_credit_on_cft_gateway
-    options = @options.merge({ fast_fund_credit: true })
+  # These three fast_fund_credit tests are currently failing with the message: Disbursement transaction not supported
+  # It seems that the current sandbox setup does not support testing this.
 
-    credit = @cftgateway.credit(@amount, @credit_card, options)
-    assert_success credit
-    assert_equal 'SUCCESS', credit.message
-  end
+  # def test_successful_fast_fund_credit_on_cft_gateway
+  #   options = @options.merge({ fast_fund_credit: true })
 
-  def test_successful_fast_fund_credit_with_token_on_cft_gateway
-    assert store = @gateway.store(@credit_card, @store_options)
-    assert_success store
+  #   credit = @cftgateway.credit(@amount, @credit_card, options)
+  #   assert_success credit
+  #   assert_equal 'SUCCESS', credit.message
+  # end
 
-    options = @options.merge({ fast_fund_credit: true })
-    assert credit = @cftgateway.credit(@amount, store.authorization, options)
-    assert_success credit
-  end
+  # def test_successful_fast_fund_credit_with_token_on_cft_gateway
+  #   assert store = @gateway.store(@credit_card, @store_options)
+  #   assert_success store
 
-  def test_failed_fast_fund_credit_on_cft_gateway
-    options = @options.merge({ fast_fund_credit: true })
-    refused_card = credit_card('4444333322221111', name: 'REFUSED') # 'magic' value for testing failures, provided by Worldpay
+  #   options = @options.merge({ fast_fund_credit: true })
+  #   assert credit = @cftgateway.credit(@amount, store.authorization, options)
+  #   assert_success credit
+  # end
 
-    credit = @cftgateway.credit(@amount, refused_card, options)
-    assert_failure credit
-    assert_equal '01', credit.params['action_code']
-    assert_equal "A transaction status of 'ok' or 'PUSH_APPROVED' is required.", credit.message
-  end
+  # def test_failed_fast_fund_credit_on_cft_gateway
+  #   options = @options.merge({ fast_fund_credit: true })
+  #   refused_card = credit_card('4444333322221111', name: 'REFUSED') # 'magic' value for testing failures, provided by Worldpay
+
+  #   credit = @cftgateway.credit(@amount, refused_card, options)
+  #   assert_failure credit
+  #   assert_equal '01', credit.params['action_code']
+  #   assert_equal "A transaction status of 'ok' or 'PUSH_APPROVED' is required.", credit.message
+  # end
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
@@ -1153,12 +1190,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_options_synchronous_response
     options = @options
-    stored_credential_params = {
-      initial_transaction: true,
-      reason_type: 'unscheduled',
-      initiator: 'merchant',
-      network_transaction_id: nil
-    }
+    stored_credential_params = stored_credential(:initial, :unscheduled, :merchant)
     options.merge(stored_credential: stored_credential_params)
 
     assert purchase = @cftgateway.purchase(@amount, @credit_card, options.merge(instalments: 3, skip_capture: true, authorization_validated: true))
