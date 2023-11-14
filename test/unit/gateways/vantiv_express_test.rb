@@ -4,7 +4,7 @@ class VantivExpressTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = VantivExpressGateway.new(account_id: '', account_token: '', application_id: '', acceptor_id: '', application_name: '', application_version: '')
+    @gateway = VantivExpressGateway.new(fixtures(:element))
     @credit_card = credit_card
     @check = check
     @amount = 100

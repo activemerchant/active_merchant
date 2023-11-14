@@ -170,14 +170,14 @@ class RemoteVantivExpressTest < Test::Unit::TestCase
         special_program_code: 2,
         charge_type: 2
       },
-      card_holder_present_code: 'ECommerce',
-      card_input_code: 'ManualKeyed',
+      card_holder_present_code: 2,
+      card_input_code: 4,
       card_present_code: 'NotPresent',
-      cvv_presence_code: 'NotProvided',
-      market_code: 'HotelLodging',
-      terminal_capability_code: 'KeyEntered',
-      terminal_environment_code: 'ECommerce',
-      terminal_type: 'ECommerce',
+      cvv_presence_code: 2,
+      market_code: 5,
+      terminal_capability_code: 5,
+      terminal_environment_code: 6,
+      terminal_type: 2,
       terminal_id: '0001',
       ticket_number: 182726718192
     }

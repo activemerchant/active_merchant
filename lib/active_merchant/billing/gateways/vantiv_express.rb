@@ -300,14 +300,15 @@ module ActiveMerchant #:nodoc:
 
         xml.Terminal do
           xml.TerminalID options[:terminal_id] || '01'
-          xml.CardPresentCode network_token_eci ? 3 : card_present
-          xml.CardholderPresentCode network_token_eci ? 7 : 0
-          xml.CardInputCode network_token_eci ? 4 : 0
-          xml.CVVPresenceCode 0
-          xml.TerminalCapabilityCode network_token_eci ? 5 : 0
-          xml.TerminalEnvironmentCode network_token_eci ? 6 : 0
+          xml.TerminalType options[:terminal_type] if options[:terminal_type]
+          xml.CardPresentCode card_present
+          xml.CardholderPresentCode options[:card_holder_present_code] || 0
+          xml.CardInputCode options[:card_input_code] || 0
+          xml.CVVPresenceCode options[:cvv_presence_code] || 0
+          xml.TerminalCapabilityCode options[:terminal_capability_code] || 0
+          xml.TerminalEnvironmentCode options[:terminal_environment_code] || 0
           xml.MotoECICode network_token_eci || 7
-          xml.TerminalType 1 if network_token_eci
+          xml.PartialApprovedFlag options[:partial_approved_flag] if options[:partial_approved_flag]
         end
       end
 
