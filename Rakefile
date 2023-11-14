@@ -1,6 +1,8 @@
 $:.unshift File.expand_path('../lib', __FILE__)
 require 'active_merchant/version'
 
+require "rubygems"
+
 begin
   require 'bundler'
   Bundler.setup
@@ -28,14 +30,12 @@ task :test => 'test:units'
 namespace :test do
   Rake::TestTask.new(:units) do |t|
     t.pattern = 'test/unit/**/*_test.rb'
-    t.ruby_opts << '-rubygems -w'
     t.libs << 'test'
-    t.verbose = true
+    t.verbose = false
   end
 
   Rake::TestTask.new(:remote) do |t|
     t.pattern = 'test/remote/**/*_test.rb'
-    t.ruby_opts << '-rubygems -w'
     t.libs << 'test'
     t.verbose = true
   end

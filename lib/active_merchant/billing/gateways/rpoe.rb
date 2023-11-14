@@ -1,74 +1,67 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class RpoeGateway < Gateway
-      self.test_url = 'https://example.com/test'
-      self.live_url = 'https://example.com/live'
+      class_attribute :transaction_path, :tokenization_path
+
+      self.test_url = 'https://guse4-pmtmidtiergw-qaa.dqs.pcln.com'
+      self.live_url = ''
+      self.transaction_path = '/paymenttransactionalapi'
+      self.tokenization_path = '/tokenizeapi/api/tokenizeCreditCard'
 
       self.supported_countries = ["US", "CA"]
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
-      self.homepage_url = 'http://www.example.net/'
+      self.homepage_url = ''
       self.display_name = 'RPOE Gateway'
 
       STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options = {})
-        requires!(options, :merchant_id)
-        requires!(options, :login, :password) unless options[:ip_authentication]
+        requires!(options, :auth_token)
+        configure_auth_token(auth_token)
         super
       end
 
       def purchase(money, payment, options={})
-        post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_address(post, payment, options)
-        add_customer_data(post, options)
-
-        commit('sale', post)
+        MultiResponse.run do |r|
+          r.process { authorize(money, payment, options) }
+          r.process { capture(money, r.authorization, options) }
+        end
       end
 
-      def authorize_params(options={})
-        RPOE::TokenizationRequest.new(
-          full_name: options[:given_family],
-          card_number: options[:credit_card_account_number],
-          cvv: options[:verification_value],
-          expiry_date: options[:expiry_date],
-          payment_method: 'CC',
-          retain_card: false,
-          eligible_for_card_updater: false,
-          billing_address: {
-            address_line_1: options[:street_address],
-            address_line_2: options[:extended_addresses],
-            city: options[:locality],
-            state: options[:region],
-            zip_code: options[:postal_code],
-            country: options[:country_code],
-            phone_number: options[:billing_phone]
-          }
-        ).as_json
+      def tokenize
+        post = {}
+        post.merge(authorize_params(options[:rpoe_tokenize] || {}))
+
+        commit('tokenize', post)
       end
 
       def authorize(money, payment, options={})
         post = {}
-        post.merge(authorize_params(options[:rpoe_auth] || {}))
+        post.merge(authorize_params(options[:rpoe_authorize] || {}))
 
-        commit('authonly', post)
+        commit('pay', post)
       end
 
       def capture(money, authorization, options={})
         post = {}
-        post.merge(authorize_params(options[:rpoe_capture] || {}))
+        post.merge(capture_params(options[:rpoe_capture] || {}))
 
         commit('capture', post)
       end
 
       def refund(money, authorization, options={})
+        post = {}
+        post.merge(refund_params(options[:rpoe_refund] || {}))
+
         commit('refund', post)
       end
 
       def void(authorization, options={})
+        post = {}
+        post.merge(void_params(options[:rpoe_void] || {}))
+
         commit('void', post)
       end
 
@@ -89,39 +82,49 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_customer_data(post, options)
+      def configure_auth_token(auth_token) do
+        base_uri = (test? ? test_url : live_url)
+
+        RPOE.configure do |c|
+          c.base_uri = base_uri
+          c.auth_token = auth_token
+        end
       end
 
-      def add_address(post, creditcard, options)
+      def tokenize_params(rpoe_tokenize_params)
+        RPOE::TokenizationRequest.new(rpoe_tokenize_params).as_json
       end
 
-      def add_invoice(post, money, options)
-        post[:amount] = amount(money)
-        post[:currency] = (options[:currency] || currency(money))
+      def authorize_params(rpoe_authorize_params)
+        RPOE::AuthorizationRequest.new(rpoe_authorize_params).as_json
       end
 
-      def add_payment(post, payment)
+      def capture_params(rpoe_capture_params)
+        RPOE::CaptureRequest.new(rpoe_capture_params).as_json
+      end
+
+      def void_params(rpoe_void_params)
+        RPOE::VoidRequest.new(rpoe_void_params).as_json
+      end
+
+      def refund_params(rpoe_refund_params)
+        RPOE::RefundRequest.new(rpoe_refund_params).as_json
       end
 
       def parse(body)
         JSON.parse(body)
       end
 
-      def one_of_test_url(action)
-        if action == 'authonly'
-          URI("https://guse4-pmtmidtiergw-qaa.dqs.pcln.com/paymenttransactionalapi/pay")
-        elsif action == 'capture'
-          URI("https://guse4-pmtmidtiergw-qaa.dqs.pcln.com/paymenttransactionalapi/capture")
-        end
-      end
+      def url(action)
+        base_uri = (test? ? test_url : live_url)
+        path = if action == "tokenize" ? self.tokenization_path : self.transaction_path + "/#{action}"
 
-      def one_of_live_url(action)
-
+        base_uri + path
       end
 
       def commit(action, parameters)
-        url = (test? ? one_of_test_url(action) : one_of_live_url(action))
-        response = parse(ssl_post(url, post_data(action, parameters)))
+        url = url(action)
+        response = parse(ssl_post(url, parameters))
 
         Response.new(
           success_from(response),
@@ -148,6 +151,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, parameters = {})
+        case action
+        when 'tokenize'
+          RPOE::TokenizationRequest.new(parameters).as_json
+        when 'authorize'
+          RPOE::AuthorizationRequest.new(rpoe_authorize_params).as_json
+        when 'capture'
+          RPOE::CaptureRequest.new(parameters).as_json
+        when 'void'
+          RPOE::VoidRequest.new(parameters).as_json
+        when 'refund'
+          RPOE::RefundRequest.new(parameters).as_json
+        end
       end
 
       def error_code_from(response)
