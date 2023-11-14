@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
         'Default' => 0,
         'Sale' => 1,
         'NoShow' => 2,
-        'AdvancedDeposit' => 3
+        'AdvanceDeposit' => 3
       }
 
       LODGING_CHARGE_TYPE = {
@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
       TERMINAL_TYPE = {
         'Unknown' => 0,
         'PointOfSale' => 1,
-        'Ecommerce' => 2,
+        'ECommerce' => 2,
         'MOTO' => 3,
         'FuelPump' => 4,
         'ATM' => 5,

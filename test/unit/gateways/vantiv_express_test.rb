@@ -459,7 +459,7 @@ class VantivExpressTest < Test::Unit::TestCase
       extra_charges_detail: '01',
       extra_charges_amounts: 'Default',
       prestigious_property_code: 'DollarLimit500',
-      special_program_code: 'AdvancedDeposit',
+      special_program_code: 'AdvanceDeposit',
       charge_type: 'Restaurant'
     }
   end
