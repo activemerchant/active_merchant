@@ -54,6 +54,8 @@
 * Payeezy: Add the customer_ref and reference_3 fields [yunnydang] #4942
 * Redsys Rest: Add support for new gateway type Redsys Rest [aenand] #4951
 * CyberSource: surface the reconciliationID2 field [yunnydang] #4934
+* Worldpay: Update stored credentials logic [DustinHaefele] #4950
+* Vantiv Express: New Xml gateway [DustinHaefele] #4956
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
