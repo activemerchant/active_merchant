@@ -565,15 +565,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_safetech_token_data(xml, payment_source, options)
+        payment_source_token = split_authorization(payment_source).values_at(2).first
         xml.tag! :CardBrand, options[:card_brand]
-        xml.tag! :AccountNum, payment_source
+        xml.tag! :AccountNum, payment_source_token
       end
 
       #=====PAYMENT SOURCE FIELDS=====
 
       # Payment can be done through either Credit Card or Electronic Check
       def add_payment_source(xml, payment_source, options = {})
-        add_safetech_token_data(xml, payment_source, options) if options[:token_txn_type] == USE_TOKEN
+        add_safetech_token_data(xml, payment_source, options) if payment_source.is_a?(String)
         payment_source.is_a?(Check) ? add_echeck(xml, payment_source, options) : add_credit_card(xml, payment_source, options)
       end
 
@@ -901,7 +902,7 @@ module ActiveMerchant #:nodoc:
             request.call(remote_url(:secondary))
           end
 
-        authorization = order.include?('<TokenTxnType>GT</TokenTxnType>') ? response[:safetech_token] : authorization_string(response[:tx_ref_num], response[:order_id])
+        authorization = authorization_string(response[:tx_ref_num], response[:order_id], response[:safetech_token], response[:card_brand])
 
         Response.new(
           success?(response, message_type),
