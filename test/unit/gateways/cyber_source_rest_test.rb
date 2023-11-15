@@ -98,7 +98,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
 
     assert_equal 'def345', parsed['keyid']
     assert_equal 'HmacSHA256', parsed['algorithm']
-    assert_equal 'host date (request-target) digest v-c-merchant-id', parsed['headers']
+    assert_equal 'host date request-target digest v-c-merchant-id', parsed['headers']
     assert_equal %w[algorithm headers keyid signature], signature.split(', ').map { |v| v.split('=').first }.sort
   end
 
@@ -106,7 +106,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
     signature = @gateway.send :get_http_signature, @resource, nil, 'get', @gmt_time
 
     parsed = parse_signature(signature)
-    assert_equal 'host date (request-target) v-c-merchant-id', parsed['headers']
+    assert_equal 'host date request-target v-c-merchant-id', parsed['headers']
   end
 
   def test_scrub
