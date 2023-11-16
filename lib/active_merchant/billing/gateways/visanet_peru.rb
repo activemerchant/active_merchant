@@ -148,7 +148,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, params, options = {})
         raw_response = ssl_request(method(action), url(action, params, options), params.to_json, headers)
-        response = parse(raw_response)
+        response = parse(raw_response).merge('purchaseNumber' => params[:purchaseNumber])
       rescue ResponseError => e
         raw_response = e.response.body
         response_error(raw_response, options, action)
