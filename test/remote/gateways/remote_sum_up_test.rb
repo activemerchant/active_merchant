@@ -123,6 +123,32 @@ class RemoteSumUpTest < Test::Unit::TestCase
     assert_equal 'Resource not found', response.message
   end
 
+  # In Sum Up the account can only return checkout/purchase in pending or success status,
+  # to obtain a successful refund we will need an account that returns the checkout/purchase in successful status
+  #
+  # For this example configure in the fixtures => :sum_up_account_for_successful_purchases
+  def test_successful_refund
+    gateway = SumUpGateway.new(fixtures(:sum_up_account_for_successful_purchases))
+    purchase = gateway.purchase(@amount, @credit_card, @options)
+    transaction_id = purchase.params['transaction_id']
+    assert_not_nil transaction_id
+
+    response = gateway.refund(@amount, transaction_id, {})
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_partial_refund
+    gateway = SumUpGateway.new(fixtures(:sum_up_account_for_successful_purchases))
+    purchase = gateway.purchase(@amount * 10, @credit_card, @options)
+    transaction_id = purchase.params['transaction_id']
+    assert_not_nil transaction_id
+
+    response = gateway.refund(@amount, transaction_id, {})
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_refund_for_pending_checkout
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase

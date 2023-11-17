@@ -1343,6 +1343,10 @@ sum_up:
   access_token: SOMECREDENTIAL
   pay_to_email: SOMECREDENTIAL
 
+sum_up_account_for_successful_purchases:
+  access_token: SOMECREDENTIAL
+  pay_to_email: SOMECREDENTIAL
+
 # Working credentials, no need to replace
 swipe_checkout:
   login: 2077103073D8B5
