@@ -478,4 +478,25 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
+
+  def test_successful_purchase_with_fx_fields_with_currency_exchange
+    @options[:pm_type] = 'gb_visa_card'
+    @options[:currency] = 'GBP'
+    @options[:requested_currency] = 'USD'
+    @options[:fixed_side] = 'buy'
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_fx_fields_us_debit_card
+    @options[:currency] = 'EUR'
+    @options[:requested_currency] = 'USD'
+    @options[:fixed_side] = 'buy'
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
 end
