@@ -453,6 +453,27 @@ class OgoneTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrub), post_scrub
   end
 
+  def test_signatire_calculation_with_with_space
+    payload = {
+      orderID: 'abc123',
+      currency: 'EUR',
+      amount: '100',
+      PM: 'CreditCard',
+      ACCEPTANCE: 'test123',
+      STATUS: '9',
+      CARDNO: 'XXXXXXXXXXXX3310',
+      ED: '1029',
+      DCC_INDICATOR: '0',
+      DCC_EXCHRATE: ''
+    }
+
+    signature_with = @gateway.send(:calculate_signature, payload, 'sha512', 'ABC123')
+    payload.delete(:DCC_EXCHRATE)
+    signature_without = @gateway.send(:calculate_signature, payload, 'sha512', 'ABC123')
+
+    assert_equal signature_without, signature_with
+  end
+
   private
 
   def string_to_digest
