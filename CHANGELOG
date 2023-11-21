@@ -61,6 +61,7 @@
 * SumUp Gateway: Fix refund method [sinourain] #4924
 * Braintree: Add v2 stored credential option [aenand] #4937
 * Cybersource REST: Remove request-target parens [curiousepic] #4960
+* Ogone: Fix signature calulcation for blank fields [Heavyblade] #4963
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
