@@ -378,7 +378,7 @@ module ActiveMerchant #:nodoc:
         string_to_sign = {
           host: host,
           date: gmtdatetime,
-          "(request-target)": "#{http_method} /pts/v2/#{resource}",
+          "request-target": "#{http_method} /pts/v2/#{resource}",
           digest: digest,
           "v-c-merchant-id": @options[:merchant_id]
         }.map { |k, v| "#{k}: #{v}" }.join("\n").force_encoding(Encoding::UTF_8)
@@ -386,7 +386,7 @@ module ActiveMerchant #:nodoc:
         {
           keyid: @options[:public_key],
           algorithm: 'HmacSHA256',
-          headers: "host date (request-target)#{digest.present? ? ' digest' : ''} v-c-merchant-id",
+          headers: "host date request-target#{digest.present? ? ' digest' : ''} v-c-merchant-id",
           signature: sign_payload(string_to_sign)
         }.map { |k, v| %{#{k}="#{v}"} }.join(', ')
       end
