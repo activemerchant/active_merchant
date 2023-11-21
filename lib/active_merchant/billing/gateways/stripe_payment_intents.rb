@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
             add_fulfillment_date(post, options)
             request_three_d_secure(post, options)
             add_level_three(post, options)
+            add_card_brand(post, options)
             post[:expand] = ['charges.data.balance_transaction']
 
             CREATE_INTENT_ATTRIBUTES.each do |attribute|
@@ -140,6 +141,7 @@ module ActiveMerchant #:nodoc:
             add_return_url(post, options)
             add_fulfillment_date(post, options)
             request_three_d_secure(post, options)
+            add_card_brand(post, options)
             post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
             post[:usage] = options[:usage] if %w(on_session off_session).include?(options[:usage])
             post[:description] = options[:description] if options[:description]
@@ -321,6 +323,14 @@ module ActiveMerchant #:nodoc:
         super
 
         post[:metadata][:event_type] = options[:event_type] if options[:event_type]
+      end
+
+      def add_card_brand(post, options)
+        return unless options[:card_brand]
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:network] = options[:card_brand] if options[:card_brand]
       end
 
       def add_level_three(post, options = {})

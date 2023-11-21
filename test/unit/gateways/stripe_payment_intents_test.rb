@@ -371,6 +371,16 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response)
   end
 
+  def test_successful_purchase_with_card_brand
+    @options[:card_brand] = 'cartes_bancaires'
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][network]=cartes_bancaires', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_succesful_purchase_with_stored_credentials_without_sending_ntid
     [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
       network_transaction_id = '1098510912210968'
