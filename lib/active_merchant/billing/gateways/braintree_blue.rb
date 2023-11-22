@@ -854,6 +854,8 @@ module ActiveMerchant #:nodoc:
           end
         when 'recurring_first', 'moto'
           parameters[:transaction_source] = stored_credential[:reason_type]
+        when 'unscheduled'
+          parameters[:transaction_source] = stored_credential[:initiator] == 'merchant' ? stored_credential[:reason_type] : ''
         else
           parameters[:transaction_source] = ''
         end
