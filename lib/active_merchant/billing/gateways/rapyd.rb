@@ -1,8 +1,13 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class RapydGateway < Gateway
+      class_attribute :payment_redirect_test, :payment_redirect_live
+
       self.test_url = 'https://sandboxapi.rapyd.net/v1/'
       self.live_url = 'https://api.rapyd.net/v1/'
+
+      self.payment_redirect_test = 'https://sandboxpayment-redirect.rapyd.net/v1/'
+      self.payment_redirect_live = 'https://payment-redirect.rapyd.net/v1/'
 
       self.supported_countries = %w(CA CL CO DO SV PE PT VI AU HK IN ID JP MY NZ PH SG KR TW TH VN AD AT BE BA BG HR CY CZ DK EE FI FR GE DE GI GR GL HU IS IE IL IT LV LI LT LU MK MT MD MC ME NL GB NO PL RO RU SM SK SI ZA ES SE CH TR VA)
       self.default_currency = 'USD'
@@ -294,10 +299,17 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
+      def url(action, url_override = nil)
+        if url_override.to_s == 'payment_redirect' && action == 'payments'
+          (self.test? ? self.payment_redirect_test : self.payment_redirect_live) + action.to_s
+        else
+          (self.test? ? self.test_url : self.live_url) + action.to_s
+        end
+      end
+
       def commit(method, action, parameters)
-        url = (test? ? test_url : live_url) + action.to_s
         rel_path = "#{method}/v1/#{action}"
-        response = api_request(method, url, rel_path, parameters)
+        response = api_request(method, url(action, @options[:url_override]), rel_path, parameters)
 
         Response.new(
           success_from(response),
