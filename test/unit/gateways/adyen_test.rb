@@ -1061,6 +1061,42 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal @options[:shipping_address][:country], post[:deliveryAddress][:country]
   end
 
+  def test_default_billing_address_country
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({
+        billing_address: {
+          address1: 'Infinite Loop',
+          address2: 1,
+          country: '',
+          city: 'Cupertino',
+          state: 'CA',
+          zip: '95014'
+        }
+      }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"country":"ZZ"/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_default_shipping_address_country
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({
+        shipping_address: {
+          address1: 'Infinite Loop',
+          address2: 1,
+          country: '',
+          city: 'Cupertino',
+          state: 'CA',
+          zip: '95014'
+        }
+      }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"country":"ZZ"/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_address_override_that_will_swap_housenumberorname_and_street
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(address_override: true))

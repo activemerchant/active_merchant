@@ -530,6 +530,36 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal response.authorization, first_auth
   end
 
+  def test_successful_purchase_with_billing_default_country_code
+    options = @options.dup.update({
+      billing_address: {
+        address1: 'Infinite Loop',
+        address2: 1,
+        country: '',
+        city: 'Cupertino',
+        state: 'CA',
+        zip: '95014'
+      }
+    })
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_shipping_default_country_code
+    options = @options.dup.update({
+      shipping_address: {
+        address1: 'Infinite Loop',
+        address2: 1,
+        country: '',
+        city: 'Cupertino',
+        state: 'CA',
+        zip: '95014'
+      }
+    })
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+  end
+
   def test_successful_purchase_with_apple_pay
     response = @gateway.purchase(@amount, @apple_pay_card, @options)
     assert_success response
@@ -1234,12 +1264,17 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_blank_country_for_purchase
     @options[:billing_address][:country] = ''
     response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+    assert_success response
   end
 
   def test_nil_state_for_purchase
     @options[:billing_address][:state] = nil
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_nil_country_for_purchase
+    @options[:billing_address][:country] = nil
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
   end

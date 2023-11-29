@@ -499,7 +499,7 @@ module ActiveMerchant #:nodoc:
           post[:deliveryAddress][:postalCode] = address[:zip] if address[:zip]
           post[:deliveryAddress][:city] = address[:city] || 'NA'
           post[:deliveryAddress][:stateOrProvince] = get_state(address)
-          post[:deliveryAddress][:country] = address[:country] if address[:country]
+          post[:deliveryAddress][:country] = get_country(address)
         end
         return unless post[:bankAccount]&.kind_of?(Hash) || post[:card]&.kind_of?(Hash)
 
@@ -515,12 +515,16 @@ module ActiveMerchant #:nodoc:
         post[:billingAddress][:postalCode] = address[:zip] if address[:zip]
         post[:billingAddress][:city] = address[:city] || 'NA'
         post[:billingAddress][:stateOrProvince] = get_state(address)
-        post[:billingAddress][:country] = address[:country] if address[:country]
+        post[:billingAddress][:country] = get_country(address)
         post[:telephoneNumber] = address[:phone_number] || address[:phone] || ''
       end
 
       def get_state(address)
         address[:state] && !address[:state].blank? ? address[:state] : 'NA'
+      end
+
+      def get_country(address)
+        address[:country].present? ? address[:country] : 'ZZ'
       end
 
       def add_invoice(post, money, options)
