@@ -33,7 +33,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
     assert_match '106900640', response.message
-    assert_match '1-190', response.error_code
+    assert_match '190', response.error_code
   end
 
   def test_successful_capture
@@ -61,7 +61,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_match '106900640', response.message
-    assert_match '1-190', response.error_code
+    assert_match '190', response.error_code
   end
 
   def test_successful_refund
@@ -155,6 +155,11 @@ class RemoteCecabankTest < Test::Unit::TestCase
   end
 
   private
+
+  def get_response_params(transcript)
+    response = JSON.parse(transcript.gsub(%r(\\\")i, "'").scan(/{[^>]*}/).first.gsub("'", '"'))
+    JSON.parse(Base64.decode64(response['parametros']))
+  end
 
   def three_d_secure
     {
