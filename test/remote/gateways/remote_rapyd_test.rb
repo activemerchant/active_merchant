@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteRapydTest < Test::Unit::TestCase
   def setup
     @gateway = RapydGateway.new(fixtures(:rapyd))
-
+    @gateway_payment_redirect = RapydGateway.new(fixtures(:rapyd).merge(url_override: 'payment_redirect'))
     @amount = 100
     @credit_card = credit_card('4111111111111111', first_name: 'Ryan', last_name: 'Reynolds', month: '12', year: '2035', verification_value: '345')
     @declined_card = credit_card('4111111111111105')
@@ -410,6 +410,45 @@ class RemoteRapydTest < Test::Unit::TestCase
 
   def test_successful_purchase_nil_network_transaction_id
     response = @gateway.purchase(15000, @credit_card, @stored_credential_options.merge(network_transaction_id: nil, initiation_type: 'customer_present'))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_payment_redirect_url
+    response = @gateway_payment_redirect.purchase(@amount, @credit_card, @options.merge(pm_type: 'gb_visa_mo_card'))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_3ds_v2_gateway_specific_payment_redirect_url
+    options = @options.merge(three_d_secure: { required: true })
+    options[:pm_type] = 'gb_visa_card'
+
+    response = @gateway_payment_redirect.purchase(105000, @credit_card, options)
+    assert_success response
+    assert_equal 'ACT', response.params['data']['status']
+    assert_equal '3d_verification', response.params['data']['payment_method_data']['next_action']
+  end
+
+  def test_successful_purchase_without_cvv_payment_redirect_url
+    options = @options.merge({ pm_type: 'gb_visa_card', network_transaction_id: rand.to_s[2..11] })
+    @credit_card.verification_value = nil
+    response = @gateway_payment_redirect.purchase(100, @credit_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_refund_payment_redirect_url
+    purchase = @gateway_payment_redirect.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal 'SUCCESS', refund.message
+  end
+
+  def test_successful_subsequent_purchase_stored_credential_payment_redirect_url
+    response = @gateway_payment_redirect.purchase(15000, @credit_card, @stored_credential_options.merge(stored_credential: { network_transaction_id: rand.to_s[2..11], reason_type: 'recurring' }))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end

@@ -5,6 +5,7 @@ class RapydTest < Test::Unit::TestCase
 
   def setup
     @gateway = RapydGateway.new(secret_key: 'secret_key', access_key: 'access_key')
+    @gateway_payment_redirect = RapydGateway.new(secret_key: 'secret_key', access_key: 'access_key', url_override: 'payment_redirect')
     @credit_card = credit_card
     @check = check
     @amount = 100
@@ -474,6 +475,27 @@ class RapydTest < Test::Unit::TestCase
       request = JSON.parse(data)
       assert_nil request['customer']
     end
+  end
+
+  def test_successful_purchase_for_payment_redirect_url
+    @gateway_payment_redirect.expects(:ssl_request).returns(successful_purchase_response)
+    response = @gateway_payment_redirect.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_use_proper_url_for_payment_redirect_url
+    url = @gateway_payment_redirect.send(:url, 'payments', 'payment_redirect')
+    assert_equal url, 'https://sandboxpayment-redirect.rapyd.net/v1/payments'
+  end
+
+  def test_use_proper_url_for_default_url
+    url = @gateway_payment_redirect.send(:url, 'payments')
+    assert_equal url, 'https://sandboxapi.rapyd.net/v1/payments'
+  end
+
+  def test_wrong_url_for_payment_redirect_url
+    url = @gateway_payment_redirect.send(:url, 'refund', 'payment_redirect')
+    assert_no_match %r{https://sandboxpayment-redirect.rapyd.net/v1/}, url
   end
 
   private

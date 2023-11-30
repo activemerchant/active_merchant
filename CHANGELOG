@@ -69,6 +69,7 @@
 * WorldPay: Accept GooglePay pan only [almalee24] #4943
 * Braintree: Correct issue in v2 stored credentials [aenand] #4967
 * Stripe Payment Intents: Add the card brand field [yunnydang] #4964
+* Rapyd: Enable new auth mode payment_redirect [javierpedrozaing] #4970
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
