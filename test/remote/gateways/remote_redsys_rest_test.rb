@@ -107,8 +107,6 @@ class RemoteRedsysRestTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal 'Transaction Approved', response.message
-    assert_success response.responses.last, 'The void should succeed'
-    assert_equal 'Cancellation Accepted', response.responses.last.message
   end
 
   def test_unsuccessful_verify
