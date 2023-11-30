@@ -82,7 +82,8 @@ module ActiveMerchant #:nodoc:
         authorize:  '1',
         capture:    '2',
         refund:     '3',
-        cancel:     '9'
+        cancel:     '9',
+        verify:     '7'
       }
 
       # These are the text meanings sent back by the acquirer when
@@ -249,10 +250,16 @@ module ActiveMerchant #:nodoc:
       def verify(creditcard, options = {})
         requires!(options, :order_id)
 
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, creditcard, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        post = {}
+        add_action(post, :verify, options)
+        add_amount(post, 0, options)
+        add_order(post, options[:order_id])
+        add_payment(post, creditcard)
+        add_description(post, options)
+        add_direct_payment(post, options)
+        add_threeds(post, options)
+
+        commit(post, options)
       end
 
       def supports_scrubbing?
