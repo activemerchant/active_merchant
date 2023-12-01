@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        requires!(options, :username, :password)
+        requires!(options, :username, :password, :integrator_id)
         super
         acquire_access_token unless options[:access_token]
       end
