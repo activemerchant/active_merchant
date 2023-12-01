@@ -22,25 +22,27 @@ module ActiveMerchant
 
       def authorize(amount, payment_method, options = {})
         post = {}
-        add_amount(post, amount, options)
+        add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
-        add_point_of_sale(post, options) if payment_method[:token_id].present?
+        add_transaction_descriptor(post, options)
+        add_point_of_sale(post, options) if payment_method.is_a?(String)
         commit(post, "auth")
       end
 
       def purchase(amount, payment_method, options = {})
         post = {}
-        add_amount(post, amount, options)
+        add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
-        add_point_of_sale(post, options) if payment_method[:token_id].present?
+        add_transaction_descriptor(post, options)
+        add_point_of_sale(post, options) if payment_method.is_a?(String)
         commit(post, "authcapture")
       end
 
       def refund(amount, authorization, options = {})
         post = {}
-        add_amount(post, amount, options)
+        add_invoice(post, amount, options)
         add_customer_data(post, options)
         process_payment(post, authorization)
         commit(post, "refund")
@@ -48,7 +50,7 @@ module ActiveMerchant
 
       def capture(amount, authorization, options = {})
         post = {}
-        add_amount(post, amount, options)
+        add_invoice(post, amount, options)
         add_customer_data(post, options)
         process_payment(post, authorization)
         commit(post, "capture")
@@ -64,19 +66,19 @@ module ActiveMerchant
 
       private
 
-      def add_amount(post, amount, options)
+      def add_invoice(post, amount, options)
         post["Amount"] = {}
-        post["Amount"]["Total"] = "%.2f" % amount
-        post["Amount"]["Currency"] = options[:currency].present? ? options[:currency] : default_currency
+        post["Amount"]["Total"] = localized_amount(amount, options[:currency])
+        post["Amount"]["Currency"] = options[:currency] || currency(amount)
       end
 
       def add_payment_method(post, payment_method, options)
         post["PaymentMethod"] = {}
         post["PaymentMethod"]["Card"] = {}
-        if payment_method[:token_id].present?
+        if payment_method.is_a?(String)
           post["PaymentMethod"]["Card"]["CardPresent"] = false
           post["PaymentMethod"]["Token"] = {}
-          post["PaymentMethod"]["Token"]["TokenID"] = payment_method[:token_id]
+          post["PaymentMethod"]["Token"]["TokenID"] = payment_method
         else
           post["DataAction"] = "token/add"
           post["PaymentMethod"]["Card"]["CardPresent"] = true
@@ -97,17 +99,17 @@ module ActiveMerchant
           post["PaymentMethod"]["Card"]["BillingAddress"]["PostalCode"] = options[:billing_address][:zip]
           post["PaymentMethod"]["Card"]["BillingAddress"]["Country"] = options[:billing_address][:country]
           post["PaymentMethod"]["Card"]["BillingAddress"]["Phone"] = options[:billing_address][:phone]
-          post["PaymentMethod"]["Card"]["BillingAddress"]["Email"] = options[:billing_address][:email]
+          post["PaymentMethod"]["Card"]["BillingAddress"]["Email"] = options[:email]
         end
       end
 
       def add_point_of_sale(post, options)
         post["POS"] = {}
-        post["POS"]["EntryMode"] = options[:point_of_sale][:entry_mode]
-        post["POS"]["Type"] = options[:point_of_sale][:type]
-        post["POS"]["Device"] = options[:point_of_sale][:device]
-        post["POS"]["DeviceVersion"] = options[:point_of_sale][:device_version]
-        post["POS"]["Application"] = options[:point_of_sale][:application]
+        post["POS"]["EntryMode"] = "card-on-file"
+        post["POS"]["Type"] = "recurring"
+        post["POS"]["Device"] = "NA"
+        post["POS"]["DeviceVersion"] = "NA"
+        post["POS"]["Application"] = "Swiss CRM"
         post["POS"]["ApplicationVersion"] = API_VERSION
         post["POS"]["Timestamp"] = formated_timestamp
       end
@@ -115,8 +117,16 @@ module ActiveMerchant
       def add_customer_data(post, options)
         post["Detail"] = {}
         post["Detail"]["MerchantData"] = {}
-        post["Detail"]["MerchantData"]["OrderNumber"] = options[:order_id] if options[:order_id].present?
+        post["Detail"]["MerchantData"]["OrderNumber"] = options[:order_id]
         post["Detail"]["MerchantData"]["CustomerID"] = options[:customer_id]
+      end
+
+      def add_transaction_descriptor(post, options)
+        return unless options[:descriptor]
+
+        post["Attributes"] = {}
+        post["Attributes"]["TransactionDescriptor"] = {}
+        post["Attributes"]["TransactionDescriptor"]["Prefix"] = split_descriptor(options[:descriptor])
       end
 
       def process_payment(post, authorization)
@@ -144,12 +154,20 @@ module ActiveMerchant
           response_data,
           authorization: authorization_from(response_data, action),
           test: test?,
-          response_type: response_type(response_data["ResponseCode"])
+          response_type: response_type(response_data["ResponseCode"]),
+          response_http_code: response.code,
+          request_endpoint: url.to_s,
+          request_method: :post,
+          request_body: request.body
         )
       end
 
       def split_authorization(authorization)
         authorization.split('#')
+      end
+
+      def split_descriptor(descriptor)
+        descriptor.split('*')[0]
       end
 
       def success_from(resonse_message)
