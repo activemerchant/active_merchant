@@ -68,6 +68,15 @@ module ActiveMerchant #:nodoc:
         commit('refund', post, options)
       end
 
+      def credit(money, payment_method, options = {})
+        post = {}
+        add_invoice(post, money, options)
+        add_transaction_interaction(post, options)
+        add_payment(post, payment_method, options)
+
+        commit('refund', post, options)
+      end
+
       def void(authorization, options = {})
         post = {}
         add_transaction_details(post, options)
