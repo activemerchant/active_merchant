@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        requires!(options, :username, :password, :integrator_id)
+        requires!(options, :username, :password)
         super
         acquire_access_token unless options[:access_token]
       end
@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Bearer )[a-zA-Z0-9:_]+), '\1[FILTERED]').
           gsub(%r(("credit_card\\?":{\\?"number\\?":\\?")\d+), '\1[FILTERED]').
-          gsub(%r(("cvv\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r(("csc\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("username\\?":\\?")\w+@+\w+.+\w+), '\1[FILTERED]').
           gsub(%r(("password\\?":\\?")\w+), '\1[FILTERED]').
           gsub(%r(("integrator_id\\?":\\?")\w+), '\1[FILTERED]')
