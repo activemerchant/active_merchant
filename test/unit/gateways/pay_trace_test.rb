@@ -28,9 +28,16 @@ class PayTraceTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    response = stub_comms(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['amount'], '1.00'
+      assert_equal request['credit_card']['number'], @credit_card.number
+      assert_equal request['integrator_id'], @gateway.options[:integrator_id]
+      assert_equal request['csc'], @credit_card.verification_value
+    end.respond_with(successful_purchase_response)
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 392483066, response.authorization
   end

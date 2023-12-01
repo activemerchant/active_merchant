@@ -288,6 +288,7 @@ module ActiveMerchant #:nodoc:
           post[:credit_card][:number] = payment.number
           post[:credit_card][:expiration_month] = payment.month
           post[:credit_card][:expiration_year] = payment.year
+          post[:csc] = payment.verification_value
         end
       end
 
