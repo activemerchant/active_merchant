@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
         authorize(0, credit_card, options)
       end
 
-      def verify_payment(authorization, option = {})
+      def verify_payment(authorization, options = {})
         commit(:verify_payment, nil, options, authorization, :get)
       end
 
@@ -457,18 +457,18 @@ module ActiveMerchant #:nodoc:
 
         succeeded = success_from(action, response)
 
-        response(action, succeeded, response, source_id)
+        response(action, succeeded, response, options, source_id)
       end
 
-      def response(action, succeeded, response, source_id = nil)
+      def response(action, succeeded, response, options = {}, source_id = nil)
         authorization = authorization_from(response) unless action == :unstore
         body = action == :unstore ? { response_code: response.to_s } : response
         Response.new(
           succeeded,
-          message_from(succeeded, response),
+          message_from(succeeded, response, options),
           body,
           authorization: authorization,
-          error_code: error_code_from(succeeded, body),
+          error_code: error_code_from(succeeded, body, options),
           test: test?,
           avs_result: avs_result(response),
           cvv_result: cvv_result(response)
@@ -552,13 +552,19 @@ module ActiveMerchant #:nodoc:
         response['response_summary'] == 'Approved' || response['approved'] == true || !response.key?('response_summary') && response.key?('action_id')
       end
 
-      def message_from(succeeded, response)
+      def message_from(succeeded, response, options)
         if succeeded
           'Succeeded'
         elsif response['error_type']
           response['error_type'] + ': ' + response['error_codes'].first
         else
-          response['response_summary'] || response['response_code'] || response['status'] || response['message'] || 'Unable to read error message'
+          response_summary = if options[:threeds_response_message]
+                               response['response_summary'] || response.dig('actions', 0, 'response_summary')
+                             else
+                               response['response_summary']
+                             end
+
+          response_summary || response['response_code'] || response['status'] || response['message'] || 'Unable to read error message'
         end
       end
 
@@ -579,7 +585,7 @@ module ActiveMerchant #:nodoc:
         raw['id']
       end
 
-      def error_code_from(succeeded, response)
+      def error_code_from(succeeded, response, options)
         return if succeeded
 
         if response['error_type'] && response['error_codes']
@@ -587,7 +593,13 @@ module ActiveMerchant #:nodoc:
         elsif response['error_type']
           response['error_type']
         else
-          STANDARD_ERROR_CODE_MAPPING[response['response_code']]
+          response_code = if options[:threeds_response_message]
+                            response['response_code'] || response.dig('actions', 0, 'response_code')
+                          else
+                            response['response_code']
+                          end
+
+          STANDARD_ERROR_CODE_MAPPING[response_code]
         end
       end
 

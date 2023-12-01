@@ -92,6 +92,7 @@
 * Rapyd: Update email mapping [javierpedrozaing] #4996
 * SagePay: Add support for v4 [aenand] #4990
 * Braintree: Send merchant_account_id when generating client token [almalee24] #4991
+* CheckoutV2: Update reponse message for 3DS transactions [almalee24] #4975
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

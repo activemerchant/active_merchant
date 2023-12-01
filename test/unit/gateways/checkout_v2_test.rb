@@ -316,6 +316,26 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
   end
 
+  def test_failed_purchase_3ds_with_threeds_response_message
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, { execute_threed: true, exemption: 'no_preference', challenge_indicator: 'trusted_listing', threeds_response_message: true })
+    end.respond_with(failed_purchase_3ds_response)
+
+    assert_failure response
+    assert_equal 'Insufficient Funds', response.message
+    assert_equal nil, response.error_code
+  end
+
+  def test_failed_purchase_3ds_without_threeds_response_message
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, { execute_threed: true, exemption: 'no_preference', challenge_indicator: 'trusted_listing' })
+    end.respond_with(failed_purchase_3ds_response)
+
+    assert_failure response
+    assert_equal 'Declined', response.message
+    assert_equal nil, response.error_code
+  end
+
   def test_successful_authorize_and_capture
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card)
@@ -1055,6 +1075,79 @@ class CheckoutV2Test < Test::Unit::TestCase
        }
       }
     )
+  end
+
+  def failed_purchase_3ds_response
+    %({
+        "id": "pay_awjzhfj776gulbp2nuslj4agbu",
+        "requested_on": "2019-08-14T18:13:54Z",
+        "source": {
+          "id": "src_lot2ch4ygk3ehi4fugxmk7r2di",
+          "type": "card",
+          "expiry_month": 12,
+          "expiry_year": 2020,
+          "name": "Jane Doe",
+          "scheme": "Visa",
+          "last4": "0907",
+          "fingerprint": "E4048195442B0059D73FD47F6E1961A02CD085B0B34B7703CE4A93750DB5A0A1",
+          "bin": "457382",
+          "avs_check": "S",
+          "cvv_check": "Y"
+        },
+        "amount": 100,
+        "currency": "USD",
+        "payment_type": "Regular",
+        "reference": "Dvy8EMaEphrMWolKsLVHcUqPsyx",
+        "status": "Declined",
+        "approved": false,
+        "3ds": {
+          "downgraded": false,
+          "enrolled": "Y",
+          "authentication_response": "Y",
+          "cryptogram": "ce49b5c1-5d3c-4864-bd16-2a8c",
+          "xid": "95202312-f034-48b4-b9b2-54254a2b49fb",
+          "version": "2.1.0"
+        },
+        "risk": {
+          "flagged": false
+        },
+        "customer": {
+          "id": "cus_zt5pspdtkypuvifj7g6roy7p6y",
+          "name": "Jane Doe"
+        },
+        "billing_descriptor": {
+          "name": "",
+          "city": "London"
+        },
+        "payment_ip": "127.0.0.1",
+        "metadata": {
+          "Udf5": "ActiveMerchant"
+        },
+        "eci": "05",
+        "scheme_id": "638284745624527",
+        "actions": [
+          {
+            "id": "act_tkvif5mf54eerhd3ysuawfcnt4",
+            "type": "Authorization",
+            "response_code": "20051",
+            "response_summary": "Insufficient Funds"
+          }
+        ],
+        "_links": {
+          "self": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4"
+          },
+          "actions": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4/actions"
+          },
+          "capture": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4/captures"
+          },
+          "void": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4/voids"
+          }
+        }
+      })
   end
 
   def successful_authorize_response
