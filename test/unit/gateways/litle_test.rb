@@ -54,7 +54,8 @@ class LitleTest < Test::Unit::TestCase
       name: 'John Smith',
       routing_number: '011075150',
       account_number: '1099999999',
-      account_type: 'checking'
+      account_type: nil,
+      account_holder_type: 'checking'
     )
 
     @long_address = {
@@ -132,6 +133,21 @@ class LitleTest < Test::Unit::TestCase
   def test_successful_purchase_with_echeck
     response = stub_comms do
       @gateway.purchase(2004, @check)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<accType>Checking</accType>), data)
+    end.respond_with(successful_purchase_with_echeck_response)
+
+    assert_success response
+
+    assert_equal '621100411297330000;echeckSales;2004', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_echeck_and_account_holder_type
+    response = stub_comms do
+      @gateway.purchase(2004, @authorize_check)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<accType>Checking</accType>), data)
     end.respond_with(successful_purchase_with_echeck_response)
 
     assert_success response

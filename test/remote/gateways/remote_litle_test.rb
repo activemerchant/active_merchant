@@ -86,7 +86,8 @@ class RemoteLitleTest < Test::Unit::TestCase
       name: 'John Smith',
       routing_number: '011075150',
       account_number: '1099999999',
-      account_type: 'checking'
+      account_type: nil,
+      account_holder_type: 'checking'
     )
     @store_check = check(
       routing_number: '011100012',
