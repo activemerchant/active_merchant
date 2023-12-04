@@ -171,6 +171,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r(("credit_card\\?":{\\?"number\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("csc\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("username\\?":\\?")\w+@+\w+.+\w+), '\1[FILTERED]').
+          gsub(%r(("username\\?":\\?")\w+), '\1[FILTERED]').
           gsub(%r(("password\\?":\\?")\w+), '\1[FILTERED]').
           gsub(%r(("integrator_id\\?":\\?")\w+), '\1[FILTERED]')
       end
