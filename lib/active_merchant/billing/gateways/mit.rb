@@ -7,6 +7,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MitGateway < Gateway
       self.live_url = 'https://wpy.mitec.com.mx/ModuloUtilWS/activeCDP.htm'
+      self.test_url = 'https://scqa.mitec.com.mx/ModuloUtilWS/activeCDP.htm'
 
       self.supported_countries = ['MX']
       self.default_currency = 'MXN'
@@ -220,8 +221,12 @@ module ActiveMerchant #:nodoc:
         post[:name_client] = [payment.first_name, payment.last_name].join(' ')
       end
 
+      def url
+        test? ? test_url : live_url
+      end
+
       def commit(action, parameters)
-        raw_response = ssl_post(live_url, parameters, { 'Content-type' => 'text/plain' })
+        raw_response = ssl_post(url, parameters, { 'Content-type' => 'text/plain' })
         response = JSON.parse(decrypt(raw_response, @options[:key_session]))
 
         Response.new(
