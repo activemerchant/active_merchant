@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayTraceGateway < Gateway
-      self.test_url = 'https://api.paytrace.com'
+      self.test_url = 'https://api.sandbox.paytrace.com'
       self.live_url = 'https://api.paytrace.com'
 
       self.supported_countries = ['US']
@@ -177,11 +177,12 @@ module ActiveMerchant #:nodoc:
 
       def acquire_access_token
         post = {}
+        base_url = (test? ? test_url : live_url)
         post[:grant_type] = 'password'
         post[:username] = @options[:username]
         post[:password] = @options[:password]
         data = post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        url = live_url + '/oauth/token'
+        url = base_url + '/oauth/token'
         oauth_headers = {
           'Accept'            => '*/*',
           'Content-Type'      => 'application/x-www-form-urlencoded'
