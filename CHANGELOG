@@ -2,7 +2,6 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* Xpay: New adapter basic operations added [jherreraa] #4669
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860
 * TNS: Use the specified order_id in request if available [yunnydang] #4880
 * Cybersource: Support recurring apple pay [aenand] #4874
@@ -86,6 +85,7 @@
 * Litle: Update account type [almalee24] #4976
 * Wompi: Add support for `tip_in_cents` [rachelkirk] #4983
 * HiPay: Add Gateway [gasb150] #4979
+* Xpay: New adapter basic operations added [jherreraa] #4669
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

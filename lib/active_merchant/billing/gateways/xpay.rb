@@ -15,11 +15,12 @@ module ActiveMerchant #:nodoc:
 
       ENDPOINTS_MAPPING = {
         purchase: 'orders/2steps/payment',
+        authorize: 'orders/2steps/payment',
         preauth: 'orders/2steps/init',
-        capture: 'operations/{%s}/captures',
+        capture: 'operations/%s/captures',
         verify: 'orders/card_verification',
-        void: 'operations/{%s}/cancels',
-        refund: 'operations/{%s}/refunds'
+        void: 'operations/%s/cancels',
+        refund: 'operations/%s/refunds'
       }
 
       def initialize(options = {})
@@ -28,31 +29,35 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      def preauth(amount, payment_method, options = {})
+        post = {}
+        add_transaction_params_commit(:preauth, amount, post, payment_method, options)
+      end
+
       def purchase(amount, payment_method, options = {})
         post = {}
-        add_auth_purchase_params(post, amount, payment_method, options)
-        action = options[:operation_id] ? :purchase : :preauth
-        commit(action, post, options)
+        add_transaction_params_commit(:purchase, amount, post, payment_method, options)
       end
 
       def authorize(amount, payment_method, options = {})
         post = {}
-        add_auth_purchase_params(post, amount, payment_method, options)
-        commit(:preauth, post, options)
+        add_transaction_params_commit(:authorize, amount, post, payment_method, options)
       end
 
       def capture(amount, authorization, options = {})
         post = {}
+        add_refund_capture_params(amount, post, options)
         commit(:capture, post, options)
       end
 
       def void(authorization, options = {})
-        post = {}
+        post = { description: options[:description] }
         commit(:void, post, options)
       end
 
       def refund(amount, authorization, options = {})
         post = {}
+        add_refund_capture_params(amount, post, options)
         commit(:refund, post, options)
       end
 
@@ -75,6 +80,27 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_transaction_params_commit(action, amount, post, payment_method, options = {})
+        add_capture_type(post, options, action)
+        add_auth_purchase_params(post, amount, payment_method, options)
+        commit(action, post, options)
+      end
+
+      def add_capture_type(post, options, action)
+        case action
+        when :purchase
+          post[:captureType] = 'IMPLICIT'
+        when :authorize
+          post[:captureType] = 'EXPLICIT'
+        end
+      end
+
+      def add_refund_capture_params(amount, post, options)
+        post[:amount] = amount
+        post[:currency] = options[:order][:currency]
+        post[:description] = options[:order][:description]
+      end
 
       def add_invoice(post, amount, options)
         currency = options[:currency] || currency(amount)
@@ -151,19 +177,15 @@ module ActiveMerchant #:nodoc:
         add_3ds_params(post, options)
       end
 
-      def add_reference(post, authorization) end
-
-      def add_auth_purchase(post, money, payment, options) end
-
       def parse(body = {})
         JSON.parse(body)
       end
 
       def commit(action, params, options)
-        transaction_id = params.dig(:operation_id) unless action != 'capture'
+        transaction_id = transaction_id_from(params, options, action)
         begin
           url = build_request_url(action, transaction_id)
-          raw_response = ssl_post(url, params.to_json, request_headers(options))
+          raw_response = ssl_post(url, params.to_json, request_headers(options, action))
           response = parse(raw_response)
         rescue ResponseError => e
           response = e.response.body
@@ -180,12 +202,27 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def request_headers(options)
-        {
-          'Content-Type' => 'application/json',
+      def request_headers(options, action = nil)
+        headers = {
           'X-Api-Key' => @api_key,
-          'Correlation-Id' => options[:order_id] || SecureRandom.uuid
+          'Correlation-Id' => options.dig(:order_id) || SecureRandom.uuid
         }
+        case action
+        when :preauth, :purchase, :authorize
+          headers.merge!('Content-Type' => 'application/json')
+        when :refund, :capture
+          headers.merge!('Idempotency-Key' => SecureRandom.uuid)
+        end
+        headers
+      end
+
+      def transaction_id_from(params, options, action = nil)
+        case action
+        when :refund, :capture, :void
+          return options[:operation_id]
+        else
+          return params[:operation_id]
+        end
       end
 
       def build_request_url(action, id = nil)
@@ -195,7 +232,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response.dig('operation', 'operationResult') == 'PENDING' || response.dig('operation', 'operationResult') == 'FAILED' || response.dig('operation', 'operationResult') == 'AUTHORIZED'
+        response.dig('operation', 'operationResult') == 'PENDING' || response.dig('operation', 'operationResult') == 'AUTHORIZED'
       end
 
       def message_from(response)
