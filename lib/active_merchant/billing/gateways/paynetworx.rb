@@ -73,33 +73,46 @@ module ActiveMerchant
       end
 
       def add_payment_method(post, payment_method, options)
-        post["PaymentMethod"] = {}
-        post["PaymentMethod"]["Card"] = {}
+        post["PaymentMethod"] = { "Card" => {} }
+
         if payment_method.is_a?(String)
           post["PaymentMethod"]["Card"]["CardPresent"] = false
-          post["PaymentMethod"]["Token"] = {}
-          post["PaymentMethod"]["Token"]["TokenID"] = payment_method
+          post["PaymentMethod"]["Token"] = { "TokenID" => payment_method }
         else
           post["DataAction"] = "token/add"
           post["PaymentMethod"]["Card"]["CardPresent"] = true
-          post["PaymentMethod"]["Card"]["CVC"] = {}
-          post["PaymentMethod"]["Card"]["CVC"]["CVC"] = payment_method.verification_value unless empty?(payment_method.verification_value)
-          post["PaymentMethod"]["Card"]["PAN"] = {}
-          post["PaymentMethod"]["Card"]["PAN"]["PAN"] = payment_method.number
-          post["PaymentMethod"]["Card"]["PAN"]["ExpMonth"] = format(payment_method.month, :two_digits)
-          post["PaymentMethod"]["Card"]["PAN"]["ExpYear"] = format(payment_method.year, :two_digits)
+          card_info = post["PaymentMethod"]["Card"]
+
+          card_info["CVC"] = { "CVC" => payment_method.verification_value } unless empty?(payment_method.verification_value)
+          card_info["PAN"] = {
+            "PAN" => payment_method.number,
+            "ExpMonth" => format(payment_method.month, :two_digits),
+            "ExpYear" => format(payment_method.year, :two_digits)
+          }
         end
+
+        card_info = post["PaymentMethod"]["Card"]
+
         if options[:billing_address].present?
-          post["PaymentMethod"]["Card"]["BillingAddress"] = {}
-          post["PaymentMethod"]["Card"]["BillingAddress"]["Name"] = options[:billing_address][:name]
-          post["PaymentMethod"]["Card"]["BillingAddress"]["Line1"] = options[:billing_address][:address1]
-          post["PaymentMethod"]["Card"]["BillingAddress"]["Line2"] = options[:billing_address][:address2]
-          post["PaymentMethod"]["Card"]["BillingAddress"]["City"] = options[:billing_address][:city]
-          post["PaymentMethod"]["Card"]["BillingAddress"]["State"] = options[:billing_address][:state]
-          post["PaymentMethod"]["Card"]["BillingAddress"]["PostalCode"] = options[:billing_address][:zip]
-          post["PaymentMethod"]["Card"]["BillingAddress"]["Country"] = options[:billing_address][:country]
-          post["PaymentMethod"]["Card"]["BillingAddress"]["Phone"] = options[:billing_address][:phone]
-          post["PaymentMethod"]["Card"]["BillingAddress"]["Email"] = options[:email]
+          billing_address = options[:billing_address]
+          card_info["BillingAddress"] = {
+            "Name" => billing_address[:name],
+            "Line1" => billing_address[:address1],
+            "Line2" => billing_address[:address2],
+            "City" => billing_address[:city],
+            "State" => billing_address[:state],
+            "PostalCode" => billing_address[:zip],
+            "Country" => billing_address[:country],
+            "Phone" => billing_address[:phone],
+            "Email" => options[:email]
+          }
+        end
+
+        if options[:three_d_secure].present?
+          secure_info = card_info["3DSecure"] = {}
+          secure_info["AuthenticationValue"] = options[:three_d_secure][:splitSdkServerTransId]
+          secure_info["ECommerceIndicator"] = options[:three_d_secure][:eci]
+          secure_info["3DSecureTransactionID"] = options[:three_d_secure][:authenticationValue]
         end
       end
 
