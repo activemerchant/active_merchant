@@ -73,6 +73,7 @@
 * Cecabank: Fix exemption_type when it is blank and update the error code for some tests [sinourain] #4968
 * RedsysRest: Update to $0 verify [almalee24] #4973
 * CommerceHub: Add credit transaction [sinourain] #4965
+* PayTrace: Send CSC value on gateway request. [DustinHaefele] #4974
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
