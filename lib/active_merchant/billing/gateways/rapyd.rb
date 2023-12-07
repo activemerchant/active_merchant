@@ -112,6 +112,11 @@ module ActiveMerchant #:nodoc:
         add_ewallet(post, options)
         add_payment_fields(post, options)
         add_payment_urls(post, options)
+        add_idempotency(options)
+      end
+
+      def add_idempotency(options)
+        @options[:idempotency] = options[:idempotency_key] if options[:idempotency_key]
       end
 
       def add_address(post, creditcard, options)
@@ -347,8 +352,9 @@ module ActiveMerchant #:nodoc:
           'access_key' => @options[:access_key],
           'salt' => salt,
           'timestamp' => timestamp,
-          'signature' => generate_hmac(rel_path, salt, timestamp, payload)
-        }
+          'signature' => generate_hmac(rel_path, salt, timestamp, payload),
+          'idempotency' => @options[:idempotency]
+        }.delete_if { |_, value| value.nil? }
       end
 
       def generate_hmac(rel_path, salt, timestamp, payload)

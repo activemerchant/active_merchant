@@ -70,6 +70,31 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_purchase_for_idempotent_requests
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(idempotency_key: '1234567890'))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    original_operation_id = response.params['status']['operation_id']
+    original_data_id = response.params['data']['id']
+    idempotent_request = @gateway.purchase(@amount, @credit_card, @options.merge(idempotency_key: '1234567890'))
+    assert_success idempotent_request
+    assert_equal 'SUCCESS', idempotent_request.message
+    assert_equal original_operation_id, idempotent_request.params['status']['operation_id']
+    assert_equal original_data_id, idempotent_request.params['data']['id']
+  end
+
+  def test_successful_purchase_for_non_idempotent_requests
+    # is not a idemptent request due the amount is different
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(idempotency_key: '1234567890'))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    original_operation_id = response.params['status']['operation_id']
+    idempotent_request = @gateway.purchase(25, @credit_card, @options.merge(idempotency_key: '1234567890'))
+    assert_success idempotent_request
+    assert_equal 'SUCCESS', idempotent_request.message
+    assert_not_equal original_operation_id, idempotent_request.params['status']['operation_id']
+  end
+
   def test_successful_authorize_with_mastercard
     @options[:pm_type] = 'us_debit_mastercard_card'
     response = @gateway.authorize(@amount, @credit_card, @options)
@@ -416,6 +441,7 @@ class RemoteRapydTest < Test::Unit::TestCase
 
   def test_successful_purchase_payment_redirect_url
     response = @gateway_payment_redirect.purchase(@amount, @credit_card, @options.merge(pm_type: 'gb_visa_mo_card'))
+
     assert_success response
     assert_equal 'SUCCESS', response.message
   end

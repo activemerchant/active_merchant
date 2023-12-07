@@ -45,6 +45,21 @@ class RapydTest < Test::Unit::TestCase
     @address_object = address(line_1: '123 State Street', line_2: 'Apt. 34', phone_number: '12125559999')
   end
 
+  def test_request_headers_building
+    @options.merge!(idempotency_key: '123')
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, _data, headers|
+      assert_equal 'application/json', headers['Content-Type']
+      assert_equal '123', headers['idempotency']
+      assert_equal 'access_key', headers['access_key']
+      assert headers['salt']
+      assert headers['signature']
+      assert headers['timestamp']
+    end
+  end
+
   def test_successful_purchase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: address(name: 'Joe John-ston')))
