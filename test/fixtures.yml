@@ -462,6 +462,10 @@ hdfc:
   login: LOGIN
   password: PASSWORD
 
+hi_pay:
+  username: "USERNAME"
+  password: "PASSWORD"
+
 # Working credentials, no need to replace
 hps:
   secret_api_key: "skapi_cert_MYl2AQAowiQAbLp5JesGKh7QFkcizOP2jcX9BrEMqQ"
