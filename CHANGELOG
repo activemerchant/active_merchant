@@ -83,6 +83,7 @@
 * Xpay: New adapter basic operations added [jherreraa] #4669
 * Rapyd: Enable idempotent request support [javierpedrozaing] #4980
 * Litle: Update account type [almalee24] #4976
+* Wompi: Add support for `tip_in_cents` [rachelkirk] #4983
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
