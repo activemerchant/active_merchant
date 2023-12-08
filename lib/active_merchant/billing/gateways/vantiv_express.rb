@@ -157,7 +157,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options = {})
         action = payment.is_a?(Check) ? 'CheckSale' : 'CreditCardSale'
-        eci = payment.is_a?(NetworkTokenizationCreditCard) ? parse_eci(payment) : nil
+        eci = parse_eci(payment)
 
         request = build_xml_request do |xml|
           xml.send(action, xmlns: live_url) do
@@ -174,7 +174,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment, options = {})
-        eci = payment.is_a?(NetworkTokenizationCreditCard) ? parse_eci(payment) : nil
+        eci = parse_eci(payment)
 
         request = build_xml_request do |xml|
           xml.CreditCardAuthorization(xmlns: live_url) do
@@ -221,7 +221,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, payment, options = {})
-        eci = payment.is_a?(NetworkTokenizationCreditCard) ? parse_eci(payment) : nil
+        eci = parse_eci(payment)
 
         request = build_xml_request do |xml|
           xml.CreditCardCredit(xmlns: live_url) do
@@ -264,7 +264,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(payment, options = {})
-        eci = payment.is_a?(NetworkTokenizationCreditCard) ? parse_eci(payment) : nil
+        eci = parse_eci(payment)
 
         request = build_xml_request do |xml|
           xml.CreditCardAVSOnly(xmlns: live_url) do
@@ -348,8 +348,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse_eci(payment)
-        eci = payment.eci
-        eci[0] == '0' ? eci.sub!(/^0/, '') : eci
+        return nil unless payment.is_a?(NetworkTokenizationCreditCard)
+
+        if (eci = payment.eci)
+          eci = eci[0] == '0' ? eci.sub!(/^0/, '') : eci
+          return eci
+        else
+          payment.brand == 'american_express' ? '9' : '6'
+        end
       end
 
       def market_code(money, options, network_token_eci)
@@ -524,7 +530,7 @@ module ActiveMerchant #:nodoc:
 
         if response['transaction']
           authorization = "#{response.dig('transaction', 'transactionid')}|#{amount}"
-          authorization << "|#{parse_eci(payment)}" if payment.is_a?(NetworkTokenizationCreditCard)
+          authorization << "|#{parse_eci(payment)}" if parse_eci(payment)
           authorization
         end
       end

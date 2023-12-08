@@ -77,6 +77,7 @@
 * Orbital: Remove needless GSF for TPV [javierpedrozaing] #4959
 * Adyen: Provide ZZ as default country code [jcreiff] #4971
 * MIT: Add test_url [jcreiff] #4977
+* VantivExpress: Fix eci bug [almalee24] #4982
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
