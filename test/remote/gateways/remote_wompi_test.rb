@@ -34,6 +34,11 @@ class RemoteWompiTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_tip_in_cents
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(tip_in_cents: 300))
+    assert_success response
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response

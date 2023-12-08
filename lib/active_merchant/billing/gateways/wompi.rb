@@ -34,6 +34,7 @@ module ActiveMerchant #:nodoc:
           public_key: public_key
         }
         add_invoice(post, money, options)
+        add_tip_in_cents(post, options)
         add_card(post, payment, options)
 
         commit('sale', post, '/transactions_sync')
@@ -139,6 +140,10 @@ module ActiveMerchant #:nodoc:
         post[:installments] = installments
         post[:card_holder] = card.name
         post[:cvc] = cvc if cvc && !cvc.empty?
+      end
+
+      def add_tip_in_cents(post, options)
+        post[:tip_in_cents] = options[:tip_in_cents].to_i if options[:tip_in_cents]
       end
 
       def parse(body)
