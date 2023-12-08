@@ -39,6 +39,19 @@ class VantivExpressTest < Test::Unit::TestCase
       transaction_id: '123456789',
       source: :google_pay
     )
+
+    @apple_pay_amex = network_tokenization_credit_card(
+      '34343434343434',
+      month: '01',
+      year: Time.new.year + 2,
+      first_name: 'Jane',
+      last_name: 'Doe',
+      verification_value: '7373',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      transaction_id: '123456789',
+      source: :apple_pay,
+      brand: 'american_express'
+    )
   end
 
   def test_successful_purchase
@@ -83,6 +96,30 @@ class VantivExpressTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @check, @options)
     assert_failure response
+  end
+
+  def test_successful_purchase_with_apple_pay_visa_no_eci
+    @apple_pay_network_token.eci = nil
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @apple_pay_network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<MotoECICode>6</MotoECICode>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_apple_pay_amex_no_eci
+    response = stub_comms do
+      @gateway.purchase(@amount, @apple_pay_amex, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<MotoECICode>9</MotoECICode>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'Approved', response.message
   end
 
   def test_successful_purchase_with_apple_pay

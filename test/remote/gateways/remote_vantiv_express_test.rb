@@ -230,6 +230,14 @@ class RemoteVantivExpressTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_apple_pay_no_eci
+    @apple_pay_network_token.eci = nil
+
+    response = @gateway.purchase(1202, @apple_pay_network_token, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_apple_pay
     response = @gateway.purchase(@amount, @apple_pay_network_token, @options)
     assert_success response
