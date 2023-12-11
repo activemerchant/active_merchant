@@ -5,6 +5,7 @@ class IpgTest < Test::Unit::TestCase
 
   def setup
     @gateway = IpgGateway.new(fixtures(:ipg))
+    @gateway_ma = IpgGateway.new(fixtures(:ipg_ma))
     @credit_card = credit_card
     @amount = 100
 
@@ -127,6 +128,31 @@ class IpgTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
+  end
+
+  def test_successful_ma_purchase_with_store_id
+    response = stub_comms(@gateway_ma) do
+      @gateway_ma.purchase(@amount, @credit_card, @options.merge({ store_id: '1234' }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      assert_match('1234', REXML::XPath.first(doc, '//v1:StoreId').text)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_basic_auth_builds_correctly_with_differing_ma_credential_structures
+    user_id_without_ws = fixtures(:ipg_ma)[:user_id].sub(/^WS/, '')
+    gateway_ma2 = IpgGateway.new(fixtures(:ipg_ma).merge({ user_id: user_id_without_ws }))
+
+    assert_equal(@gateway_ma.send(:build_header), gateway_ma2.send(:build_header))
+  end
+
+  def test_basic_auth_builds_correctly_with_differing_credential_structures
+    user_id_without_ws = fixtures(:ipg)[:user_id].sub(/^WS/, '')
+    gateway2 = IpgGateway.new(fixtures(:ipg).merge({ user_id: user_id_without_ws }))
+
+    assert_equal(@gateway.send(:build_header), gateway2.send(:build_header))
   end
 
   def test_successful_purchase_with_payment_token
@@ -332,38 +358,6 @@ class IpgTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
-  def test_store_and_user_id_from_with_complete_credentials
-    test_combined_user_id = 'WS5921102002._.1'
-    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
-
-    assert_equal '5921102002', split_credentials[:store_id]
-    assert_equal '1', split_credentials[:user_id]
-  end
-
-  def test_store_and_user_id_from_missing_store_id_prefix
-    test_combined_user_id = '5921102002._.1'
-    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
-
-    assert_equal '5921102002', split_credentials[:store_id]
-    assert_equal '1', split_credentials[:user_id]
-  end
-
-  def test_store_and_user_id_misplaced_store_id_prefix
-    test_combined_user_id = '5921102002WS._.1'
-    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
-
-    assert_equal '5921102002WS', split_credentials[:store_id]
-    assert_equal '1', split_credentials[:user_id]
-  end
-
-  def test_store_and_user_id_from_missing_delimiter
-    test_combined_user_id = 'WS59211020021'
-    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
-
-    assert_equal '59211020021', split_credentials[:store_id]
-    assert_equal nil, split_credentials[:user_id]
-  end
-
   def test_message_from_just_with_transaction_result
     am_response = { TransactionResult: 'success !' }
     assert_equal 'success !', @gateway.send(:message_from, am_response)
@@ -372,6 +366,13 @@ class IpgTest < Test::Unit::TestCase
   def test_message_from_with_an_error
     am_response = { TransactionResult: 'DECLINED', ErrorMessage: 'CODE: this is an error message' }
     assert_equal 'DECLINED, this is an error message', @gateway.send(:message_from, am_response)
+  end
+
+  def test_failed_without_store_id
+    bad_gateway = IpgGateway.new(fixtures(:ipg).merge({ store_id: nil }))
+    assert_raises(ArgumentError) do
+      bad_gateway.purchase(@amount, @credit_card, @options)
+    end
   end
 
   private
