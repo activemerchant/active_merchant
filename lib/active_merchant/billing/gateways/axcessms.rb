@@ -38,63 +38,63 @@ module ActiveMerchant #:nodoc:
         @response_http_code = nil
       end
 
-      def authorize(money, payment_method, options = {})
+      def authorize(amount, payment_method, options = {})
         post = {}
-        add_card_details(post, payment_method, options)
-        add_three_d_secure_data(post, money, options) if options[:three_d_secure_data].present?
-        add_request_details(post, PAYMENT_CODE_PREAUTHORIZATION, money, options)
-        commit(post)
+        add_payment_method(post, payment_method, options)
+        add_customer_details(post, options)
+        add_three_d_secure_data(post, amount, options) if options[:three_d_secure_data].present?
+        add_invoice_details(post, PAYMENT_CODE_PREAUTHORIZATION, amount, options)
+        commit(:authorize, post)
       end
 
-      def purchase(money, payment_method, options = {})
+      def purchase(amount, payment_method, options = {})
         post = {}
-        add_three_d_secure_data(post, money, options) if options[:three_d_secure_data].present?
-        add_card_details(post, payment_method, options)
-        add_request_details(post, PAYMENT_CODE_DEBIT, money, options)
-        commit(post)
+        add_payment_method(post, payment_method, options)
+        add_customer_details(post, options)
+        add_three_d_secure_data(post, amount, options) if options[:three_d_secure_data].present?
+        add_invoice_details(post, PAYMENT_CODE_DEBIT, amount, options)
+        commit(:purchase, post)
       end
 
-      def rebill(money, transaction_id, options = {})
+      def rebill(amount, authorization, options = {})
         post = {}
-        add_request_details(post, PAYMENT_CODE_REBILL, money, options)
-        commit(post, transaction_id)
+        add_invoice_details(post, PAYMENT_CODE_REBILL, amount, options)
+        commit(:rebill, post, :post, authorization)
       end
 
-      def capture(money, transaction_id, options = {})
+      def capture(amount, authorization, options = {})
         post = {}
-        add_request_details(post, PAYMENT_CODE_CAPTURE, money, options)
-        commit(post, transaction_id)
+        add_invoice_details(post, PAYMENT_CODE_CAPTURE, amount, options)
+        commit(:capture, post, :post, authorization)
       end
 
-      def refund(money, transaction_id, options = {})
+      def refund(amount, authorization, options = {})
         post = {}
-        add_request_details(post, PAYMENT_CODE_REFUND, money, options)
-        commit(post, transaction_id)
+        add_invoice_details(post, PAYMENT_CODE_REFUND, amount, options)
+        commit(:refund, post, :post, authorization)
       end
 
-      def void(money, transaction_id, options = {})
+      def void(amount, authorization, options = {})
         post = {}
-        add_request_details(post, PAYMENT_CODE_REVERSAL, money, options)
-        commit(post, transaction_id)
+        add_invoice_details(post, PAYMENT_CODE_REVERSAL, amount, options)
+        commit(:void, post, :post, authorization)
       end
 
-      def confirm(transaction_id)
+      def confirm(authorization)
         post = {}
-        commit(post, transaction_id, 'confirm')
+        commit(:confirm, post, :get, authorization)
       end
 
       private
 
-      def add_card_details(post, payment_method, options)
-        post["customer.email"] = options[:email]
-        post["customer.ip"] = options[:ip]
+      def add_payment_method(post, payment_method, options)
         post["card.number"] = payment_method.number
-        post["card.holder"] = payment_method.name
         post["card.expiryMonth"] = format(payment_method.month, :two_digits)
         post["card.expiryYear"] = format(payment_method.year, :four_digits)
         post["card.cvv"] = payment_method.verification_value unless empty?(payment_method.verification_value)
-        post["shopperResultUrl"] = options[:redirect_links][:success_url]
+
         if options[:billing_address].present?
+          post["card.holder"] = options[:billing_address][:name]
           post["billing.street1"] = options[:billing_address][:address1]
           post["billing.street2"] = options[:billing_address][:address2]
           post["billing.city"] = options[:billing_address][:city]
@@ -103,25 +103,22 @@ module ActiveMerchant #:nodoc:
           post["billing.country"] = options[:billing_address][:country]
           post['customer.phone'] = options[:billing_address][:phone]
         end
-        if options[:shipping_address].present?
-          post["shipping.street1"] = options[:shipping_address][:address1]
-          post["shipping.street2"] = options[:shipping_address][:address2]
-          post["shipping.city"] = options[:shipping_address][:city]
-          post["shipping.postcode"] = options[:shipping_address][:zip]
-          post["shipping.state"] = options[:shipping_address][:state]
-          post["shipping.country"] = options[:shipping_address][:country]
-          post['customer.phone'] = options[:shipping_address][:phone]
-        end
-        post["customer.browser.userAgent"] = options[:browser_details][:identity]
       end
 
-      def add_request_details(post, payment_code, money, options)
-        post["amount"] = money
+      def add_customer_details(post, options)
+        post["customer.email"] = options[:email]
+        post["customer.ip"] = options[:ip]
+        post["customer.browser.userAgent"] = options[:browser_details][:identity] if options[:browser_details].present?
+        post["shopperResultUrl"] = options[:redirect_links][:success_url] if options[:redirect_links].present?
+      end
+
+      def add_invoice_details(post, payment_code, amount, options)
+        post["amount"] = amount
         post["currency"] = options[:currency]
         post["paymentType"] = payment_code
       end
 
-      def add_three_d_secure_data(post, money, options)
+      def add_three_d_secure_data(post, amount, options)
         post["threeDSecure.challengeIndicator"]= options[:three_d_secure_data][:challengeIndicator]
         post["threeDSecure.exemptionFlag"]= options[:three_d_secure_data][:exemptionFlag]
         post["threeDSecure.verificationId"]= options[:three_d_secure_data][:verificationId]
@@ -129,41 +126,48 @@ module ActiveMerchant #:nodoc:
         post["threeDSecure.xid"]= options[:three_d_secure_data][:xid]
       end
 
-      def commit(params, transaction_id = "", action=nil)
+      def commit(action, params, method = :post, authorization=nil)
         params = params.merge("entityId" => @options[:entityId])
-        path = generate_path(action, transaction_id)
-        uri = URI(path)
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true
-        req = Net::HTTP::Post.new(uri.path)
-        req['Authorization'] = 'Bearer ' + @options[:token]
-        req.set_form_data(params)
-        res = http.request(req)
-        response_data = JSON.parse(res.body)
-        succeeded = success_from(response_data)
+        request_body = post_data(action, params)
+        request_endpoint = url(action, authorization)
+        raw_response = ssl_request(method, request_endpoint, request_body, headers)
+        response = JSON.parse(raw_response)
+
+        succeeded = success_from(response)
         Response.new(
           succeeded,
-          message_from(succeeded, response_data),
-          response_data,
-          authorization: authorization_from(response_data, params["paymentType"]),
+          message_from(succeeded, response),
+          response,
+          authorization: authorization_from(response, params["paymentType"]),
+          response_type: response_type(response.dig('result', 'code')),
           test: test?,
           response_http_code: @response_http_code,
-          request_endpoint: path,
-          request_method: :post,
+          request_endpoint:,
+          request_method: method,
           request_body: params
         )
       end
 
-      def url
+      def base_url
         test? ? test_url : live_url
       end
 
-      def generate_path(action, transaction_id)
-        base_path = "#{url}#{API_VERSION}/"
-        path_suffix = action == 'confirm' ? 'threeDSecure' : 'payments'
-        path = "#{base_path}#{path_suffix}"
-        path << "/#{transaction_id}" if transaction_id.present?
-        path
+      def url(action, authorization)
+        case action
+        when :authorize, :purchase
+          "#{base_url}#{API_VERSION}/payments"
+        when :capture, :refund, :void, :rebill, :confirm
+          "#{base_url}#{API_VERSION}/payments/#{authorization}"
+        end
+      end
+
+      def headers
+        headers = { 'Authorization' => 'Bearer ' + @options[:token] }
+        headers
+      end
+
+      def post_data(action, params)
+        params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def authorization_from(response, payment_type)
@@ -186,7 +190,7 @@ module ActiveMerchant #:nodoc:
 
 
       def response_type(code)
-        if code == SUCCESS_CODE
+        if SUCCESS_CODES.include?(code)
           0
         elsif SOFT_DECLINE_CODES.include?(code)
           1
@@ -197,12 +201,7 @@ module ActiveMerchant #:nodoc:
 
       def handle_response(response)
         @response_http_code = response.code.to_i
-        case @response_http_code
-        when 200...300
-          response.body
-        else
-          raise ResponseError.new(response)
-        end
+        response.body
       end
     end
   end
