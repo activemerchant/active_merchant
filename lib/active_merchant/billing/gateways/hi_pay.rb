@@ -51,15 +51,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options)
-        post = {}
-        post[:operation] = 'capture'
-        post[:currency] = (options[:currency] || currency(money))
-        transaction_ref, _card_token, _payment_product = authorization.split('|')
-        commit('capture', post, { transaction_reference: transaction_ref })
+        maintenance_operation(money, authorization, options.merge({ operation: 'capture' }))
       end
 
       def store(payment_method, options = {})
         tokenize(payment_method, options.merge({ multiuse: '1' }))
+      end
+
+      def refund(money, authorization, options)
+        maintenance_operation(money, authorization, options.merge({ operation: 'refund' }))
+      end
+
+      def void(authorization, options)
+        maintenance_operation(nil, authorization, options.merge({ operation: 'cancel' }))
       end
 
       def scrub(transcrip)
@@ -67,6 +71,14 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def maintenance_operation(money, authorization, options)
+        post = {}
+        post[:operation] = options[:operation]
+        post[:currency] = (options[:currency] || currency(money))
+        post[:amount] = amount(money) if options[:operation] == 'refund' || options[:operation] == 'capture'
+        commit(options[:operation], post, { transaction_reference: authorization.split('|').first })
+      end
 
       def add_product_data(post, options)
         post[:orderid] = options[:order_id] if options[:order_id]
@@ -143,6 +155,10 @@ module ActiveMerchant #:nodoc:
           response['state'] == 'completed'
         when 'capture'
           response['status'] == '118' && response['message'] == 'Captured'
+        when 'refund'
+          response['status'] == '124' && response['message'] == 'Refund Requested'
+        when 'cancel'
+          response['status'] == '175' && response['message'] == 'Authorization Cancellation requested'
         when 'store'
           response.include? 'token'
         else
@@ -170,7 +186,7 @@ module ActiveMerchant #:nodoc:
         case action
         when 'store'
           "#{token_url}/create"
-        when 'capture'
+        when 'capture', 'refund', 'cancel'
           endpoint = "maintenance/transaction/#{options[:transaction_reference]}"
           base_url(endpoint)
         else

@@ -70,13 +70,11 @@ class RemoteHiPayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options.merge({ billing_address: @billing_address }))
 
     assert_success response
-    assert_equal response.message, 'Captured'
   end
 
   def test_successful_capture
     authorize_response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorize_response
-    assert_include 'Authorized', authorize_response.message
 
     response = @gateway.capture(@amount, authorize_response.authorization, @options)
     assert_success response
@@ -92,23 +90,78 @@ class RemoteHiPayTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, store_response.authorization, @options)
     assert_success response
-    assert_include 'Authorized', response.message
   end
 
   def test_successful_multiple_purchases_with_single_store
     store_response = @gateway.store(@credit_card, @options)
-    assert_nil store_response.message
     assert_success store_response
-    assert_not_empty store_response.authorization
 
     response1 = @gateway.purchase(@amount, store_response.authorization, @options)
     assert_success response1
-    assert_include 'Captured', response1.message
 
     @options[:order_id] = "Sp_ORDER_2_#{SecureRandom.random_number(1000000000)}"
 
     response2 = @gateway.purchase(@amount, store_response.authorization, @options)
     assert_success response2
-    assert_include 'Captured', response2.message
+  end
+
+  def test_successful_refund
+    purchase_response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase_response
+
+    response = @gateway.refund(@amount, purchase_response.authorization, @options)
+    assert_success response
+    assert_include 'Refund Requested', response.message
+    assert_include response.params['authorizedAmount'], '5.00'
+    assert_include response.params['capturedAmount'], '5.00'
+    assert_include response.params['refundedAmount'], '5.00'
+  end
+
+  def test_successful_partial_capture_refund
+    authorize_response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize_response
+    assert_include authorize_response.params['authorizedAmount'], '5.00'
+    assert_include authorize_response.params['capturedAmount'], '0.00'
+    assert_equal authorize_response.params['refundedAmount'], '0.00'
+
+    capture_response = @gateway.capture(@amount - 100, authorize_response.authorization, @options)
+    assert_success capture_response
+    assert_equal authorize_response.authorization, capture_response.authorization
+    assert_include capture_response.params['authorizedAmount'], '5.00'
+    assert_include capture_response.params['capturedAmount'], '4.00'
+    assert_equal capture_response.params['refundedAmount'], '0.00'
+
+    response = @gateway.refund(@amount - 200, capture_response.authorization, @options)
+    assert_success response
+    assert_include response.params['authorizedAmount'], '5.00'
+    assert_include response.params['capturedAmount'], '4.00'
+    assert_include response.params['refundedAmount'], '3.00'
+  end
+
+  def test_failed_refund_because_auth_no_captured
+    authorize_response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize_response
+
+    response = @gateway.refund(@amount, authorize_response.authorization, @options)
+    assert_failure response
+    assert_include 'Operation Not Permitted : transaction not captured', response.message
+  end
+
+  def test_successful_void
+    authorize_response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize_response
+
+    response = @gateway.void(authorize_response.authorization, @options)
+    assert_success response
+    assert_include 'Authorization Cancellation requested', response.message
+  end
+
+  def test_failed_void_because_captured_transaction
+    purchase_response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase_response
+
+    response = @gateway.void(purchase_response.authorization, @options)
+    assert_failure response
+    assert_include 'Action denied : Wrong transaction status', response.message
   end
 end

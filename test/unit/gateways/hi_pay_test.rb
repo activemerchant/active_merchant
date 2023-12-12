@@ -150,12 +150,52 @@ class HiPayTest < Test::Unit::TestCase
         "https://stage-secure-gateway.hipay-tpp.com/rest/v1/maintenance/transaction/#{transaction_reference}",
         all_of(
           includes('operation=capture'),
-          includes('currency=EUR')
+          includes('currency=EUR'),
+          includes('amount=1.00')
         ),
         anything
       ).
       returns(successful_capture_response)
     @gateway.capture(@amount, transaction_reference, @options)
+  end
+
+  def test_refund
+    @gateway.expects(:ssl_post).with('https://stage-secure2-vault.hipay-tpp.com/rest/v2/token/create', anything, anything).returns(successful_tokenize_response)
+    @gateway.expects(:ssl_post).with('https://stage-secure-gateway.hipay-tpp.com/rest/v1/order', anything, anything).returns(successful_capture_response)
+
+    authorize_response = @gateway.purchase(@amount, @credit_card, @options)
+    transaction_reference, _card_token, _brand = authorize_response.authorization.split('|')
+    @gateway.expects(:ssl_post).
+      with(
+        "https://stage-secure-gateway.hipay-tpp.com/rest/v1/maintenance/transaction/#{transaction_reference}",
+        all_of(
+          includes('operation=refund'),
+          includes('currency=EUR'),
+          includes('amount=1.00')
+        ),
+        anything
+      ).
+      returns(successful_refund_response)
+    @gateway.refund(@amount, transaction_reference, @options)
+  end
+
+  def test_void
+    @gateway.expects(:ssl_post).with('https://stage-secure2-vault.hipay-tpp.com/rest/v2/token/create', anything, anything).returns(successful_tokenize_response)
+    @gateway.expects(:ssl_post).with('https://stage-secure-gateway.hipay-tpp.com/rest/v1/order', anything, anything).returns(successful_authorize_response)
+
+    authorize_response = @gateway.authorize(@amount, @credit_card, @options)
+    transaction_reference, _card_token, _brand = authorize_response.authorization.split('|')
+    @gateway.expects(:ssl_post).
+      with(
+        "https://stage-secure-gateway.hipay-tpp.com/rest/v1/maintenance/transaction/#{transaction_reference}",
+        all_of(
+          includes('operation=cancel'),
+          includes('currency=EUR')
+        ),
+        anything
+      ).
+      returns(successful_void_response)
+    @gateway.void(transaction_reference, @options)
   end
 
   def test_required_client_id_and_client_secret
@@ -239,5 +279,13 @@ class HiPayTest < Test::Unit::TestCase
 
   def successful_capture_response
     '{"operation":"capture","test":"true","mid":"00001331069","authorizationCode":"no_code","transactionReference":"800271033524","dateCreated":"2023-12-05T23:36:43+0000","dateUpdated":"2023-12-05T23:37:21+0000","dateAuthorized":"2023-12-05T23:36:48+0000","status":"118","message":"Captured","authorizedAmount":"500.00","capturedAmount":"500.00","refundedAmount":"0.00","decimals":"2","currency":"EUR"}'
+  end
+
+  def successful_refund_response
+    '{"operation":"refund","test":"true","mid":"00001331069","authorizationCode":"no_code","transactionReference":"800272279241","dateCreated":"2023-12-12T16:36:46+0000","dateUpdated":"2023-12-12T16:36:54+0000","dateAuthorized":"2023-12-12T16:36:50+0000","status":"124","message":"Refund Requested","authorizedAmount":"500.00","capturedAmount":"500.00","refundedAmount":"500.00","decimals":"2","currency":"EUR"}'
+  end
+
+  def successful_void_response
+    '{"operation":"cancel","test":"true","mid":"00001331069","authorizationCode":"no_code","transactionReference":"800272279254","dateCreated":"2023-12-12T16:38:49+0000","dateUpdated":"2023-12-12T16:38:55+0000","dateAuthorized":"2023-12-12T16:38:53+0000","status":"175","message":"Authorization Cancellation requested","authorizedAmount":"500.00","capturedAmount":"0.00","refundedAmount":"0.00","decimals":"2","currency":"EUR"}'
   end
 end
