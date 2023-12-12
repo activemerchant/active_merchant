@@ -62,8 +62,15 @@ module ActiveMerchant #:nodoc:
         tokenize(payment_method, options.merge({ multiuse: '1' }))
       end
 
-      def scrub(transcrip)
-        # code
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )[\w =]+), '\1[FILTERED]').
+          gsub(%r((card_number=)\w+), '\1[FILTERED]\2').
+          gsub(%r((cvc=)\w+), '\1[FILTERED]\2')
       end
 
       private

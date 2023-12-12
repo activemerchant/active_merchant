@@ -218,14 +218,10 @@ class HiPayTest < Test::Unit::TestCase
     assert_equal 'Basic YWJjMTIzOmRlZjQ1Ng==', headers['Authorization']
   end
 
-  # def test_scrub
-  #   assert @gateway.supports_scrubbing?
-
-  #   pre_scrubbed = File.read('test/unit/transcripts/alelo_purchase')
-  #   post_scrubbed = File.read('test/unit/transcripts/alelo_purchase_scrubbed')
-
-  #   assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
-  # end
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
 
   private
 
@@ -239,5 +235,111 @@ class HiPayTest < Test::Unit::TestCase
 
   def successful_capture_response
     '{"operation":"capture","test":"true","mid":"00001331069","authorizationCode":"no_code","transactionReference":"800271033524","dateCreated":"2023-12-05T23:36:43+0000","dateUpdated":"2023-12-05T23:37:21+0000","dateAuthorized":"2023-12-05T23:36:48+0000","status":"118","message":"Captured","authorizedAmount":"500.00","capturedAmount":"500.00","refundedAmount":"0.00","decimals":"2","currency":"EUR"}'
+  end
+
+  def pre_scrubbed
+    <<~PRE_SCRUBBED
+      opening connection to stage-secure2-vault.hipay-tpp.com:443...
+      opened
+      starting SSL for stage-secure2-vault.hipay-tpp.com:443...
+      SSL established, protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384
+      <- "POST /rest/v2/token/create HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept: application/json\r\nAuthorization: Basic OTQ2NTgzNjUuc3RhZ2Utc2VjdXJlLWdhdGV3YXkuaGlwYXktdHBwLmNvbTpUZXN0X1JoeXBWdktpUDY4VzNLQUJ4eUdoS3Zlcw==\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nHost: stage-secure2-vault.hipay-tpp.com\r\nContent-Length: 136\r\n\r\n"
+      <- "card_number=4111111111111111&card_expiry_month=12&card_expiry_year=2025&card_holder=John+Smith&cvc=514&multi_use=0&generate_request_id=0"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Server: nginx\r\n"
+      -> "Date: Tue, 12 Dec 2023 14:49:44 GMT\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "Connection: close\r\n"
+      -> "Vary: Authorization\r\n"
+      -> "Cache-Control: max-age=0, must-revalidate, private\r\n"
+      -> "Expires: Tue, 12 Dec 2023 14:49:44 GMT\r\n"
+      -> "X-XSS-Protection: 1; mode=block\r\n"
+      -> "Set-Cookie: PHPSESSID=j9bfv7gaml9uslij70e15kvrm6; path=/; HttpOnly\r\n"
+      -> "Strict-Transport-Security: max-age=86400\r\n"
+      -> "\r\n"
+      -> "17c\r\n"
+      reading 380 bytes...
+      -> "{\"token\":\"0acbbfcbd5bf202a05acc0e9c00f79158a2fe8b60caad2213b09e901b89dc28e\",\"request_id\":\"0\",\"card_id\":\"9fd81707-8f41-4a01-b6ed-279954336ada\",\"multi_use\":0,\"brand\":\"VISA\",\"pan\":\"411111xxxxxx1111\",\"card_holder\":\"John Smith\",\"card_expiry_month\":\"12\",\"card_expiry_year\":\"2025\",\"issuer\":\"JPMORGAN CHASE BANK, N.A.\",\"country\":\"US\",\"card_type\":\"CREDIT\",\"forbidden_issuer_country\":false}"
+      reading 2 bytes...
+      -> "\r\n"
+      0
+      \r\nConn close
+      opening connection to stage-secure-gateway.hipay-tpp.com:443...
+      opened
+      starting SSL for stage-secure-gateway.hipay-tpp.com:443...
+      SSL established, protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384
+      <- "POST /rest/v1/order HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept: application/json\r\nAuthorization: Basic OTQ2NTgzNjUuc3RhZ2Utc2VjdXJlLWdhdGV3YXkuaGlwYXktdHBwLmNvbTpUZXN0X1JoeXBWdktpUDY4VzNLQUJ4eUdoS3Zlcw==\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nHost: stage-secure-gateway.hipay-tpp.com\r\nContent-Length: 186\r\n\r\n"
+      <- "payment_product=visa&operation=Sale&cardtoken=0acbbfcbd5bf202a05acc0e9c00f79158a2fe8b60caad2213b09e901b89dc28e&order_id=Sp_ORDER_100432071&description=An+authorize&currency=EUR&amount=500"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "date: Tue, 12 Dec 2023 14:49:45 GMT\r\n"
+      -> "expires: Thu, 19 Nov 1981 08:52:00 GMT\r\n"
+      -> "cache-control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n"
+      -> "pragma: no-cache\r\n"
+      -> "access-control-allow-origin: \r\n"
+      -> "access-control-allow-headers: \r\n"
+      -> "access-control-allow-credentials: true\r\n"
+      -> "content-length: 1472\r\n"
+      -> "content-type: application/json; encoding=UTF-8\r\n"
+      -> "connection: close\r\n"
+      -> "\r\n"
+      reading 1472 bytes...
+      -> "{\"state\":\"completed\",\"reason\":\"\",\"forwardUrl\":\"\",\"test\":\"true\",\"mid\":\"00001331069\",\"attemptId\":\"1\",\"authorizationCode\":\"no_code\",\"transactionReference\":\"800272278410\",\"referenceToPay\":\"\",\"dateCreated\":\"2023-12-12T14:49:45+0000\",\"dateUpdated\":\"2023-12-12T14:49:50+0000\",\"dateAuthorized\":\"2023-12-12T14:49:49+0000\",\"status\":\"118\",\"message\":\"Captured\",\"authorizedAmount\":\"500.00\",\"capturedAmount\":\"500.00\",\"refundedAmount\":\"0.00\",\"creditedAmount\":\"0.00\",\"decimals\":\"2\",\"currency\":\"EUR\",\"ipAddress\":\"0.0.0.0\",\"ipCountry\":\"\",\"deviceId\":\"\",\"cdata1\":\"\",\"cdata2\":\"\",\"cdata3\":\"\",\"cdata4\":\"\",\"cdata5\":\"\",\"cdata6\":\"\",\"cdata7\":\"\",\"cdata8\":\"\",\"cdata9\":\"\",\"cdata10\":\"\",\"avsResult\":\"\",\"eci\":\"7\",\"paymentProduct\":\"visa\",\"paymentMethod\":{\"token\":\"0acbbfcbd5bf202a05acc0e9c00f79158a2fe8b60caad2213b09e901b89dc28e\",\"cardId\":\"9fd81707-8f41-4a01-b6ed-279954336ada\",\"brand\":\"VISA\",\"pan\":\"411111******1111\",\"cardHolder\":\"JOHN SMITH\",\"cardExpiryMonth\":\"12\",\"cardExpiryYear\":\"2025\",\"issuer\":\"JPMORGAN CHASE BANK, N.A.\",\"country\":\"US\"},\"threeDSecure\":{\"eci\":\"\",\"authenticationStatus\":\"Y\",\"authenticationMessage\":\"Authentication Successful\",\"authenticationToken\":\"\",\"xid\":\"\"},\"fraudScreening\":{\"scoring\":\"0\",\"result\":\"ACCEPTED\",\"review\":\"\"},\"order\":{\"id\":\"Sp_ORDER_100432071\",\"dateCreated\":\"2023-12-12T14:49:45+0000\",\"attempts\":\"1\",\"amount\":\"500.00\",\"shipping\":\"0.00\",\"tax\":\"0.00\",\"decimals\":\"2\",\"currency\":\"EUR\",\"customerId\":\"\",\"language\":\"en_US\",\"email\":\"\"},\"debitAgreement\":{\"id\":\"\",\"status\":\"\"}}"
+      reading 1472 bytes...
+      Conn close
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed
+    <<~POST_SCRUBBED
+      opening connection to stage-secure2-vault.hipay-tpp.com:443...
+      opened
+      starting SSL for stage-secure2-vault.hipay-tpp.com:443...
+      SSL established, protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384
+      <- "POST /rest/v2/token/create HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept: application/json\r\nAuthorization: Basic [FILTERED]\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nHost: stage-secure2-vault.hipay-tpp.com\r\nContent-Length: 136\r\n\r\n"
+      <- "card_number=[FILTERED]&card_expiry_month=12&card_expiry_year=2025&card_holder=John+Smith&cvc=[FILTERED]&multi_use=0&generate_request_id=0"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Server: nginx\r\n"
+      -> "Date: Tue, 12 Dec 2023 14:49:44 GMT\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "Connection: close\r\n"
+      -> "Vary: Authorization\r\n"
+      -> "Cache-Control: max-age=0, must-revalidate, private\r\n"
+      -> "Expires: Tue, 12 Dec 2023 14:49:44 GMT\r\n"
+      -> "X-XSS-Protection: 1; mode=block\r\n"
+      -> "Set-Cookie: PHPSESSID=j9bfv7gaml9uslij70e15kvrm6; path=/; HttpOnly\r\n"
+      -> "Strict-Transport-Security: max-age=86400\r\n"
+      -> "\r\n"
+      -> "17c\r\n"
+      reading 380 bytes...
+      -> "{\"token\":\"0acbbfcbd5bf202a05acc0e9c00f79158a2fe8b60caad2213b09e901b89dc28e\",\"request_id\":\"0\",\"card_id\":\"9fd81707-8f41-4a01-b6ed-279954336ada\",\"multi_use\":0,\"brand\":\"VISA\",\"pan\":\"411111xxxxxx1111\",\"card_holder\":\"John Smith\",\"card_expiry_month\":\"12\",\"card_expiry_year\":\"2025\",\"issuer\":\"JPMORGAN CHASE BANK, N.A.\",\"country\":\"US\",\"card_type\":\"CREDIT\",\"forbidden_issuer_country\":false}"
+      reading 2 bytes...
+      -> "\r\n"
+      0
+      \r\nConn close
+      opening connection to stage-secure-gateway.hipay-tpp.com:443...
+      opened
+      starting SSL for stage-secure-gateway.hipay-tpp.com:443...
+      SSL established, protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384
+      <- "POST /rest/v1/order HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept: application/json\r\nAuthorization: Basic [FILTERED]\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nHost: stage-secure-gateway.hipay-tpp.com\r\nContent-Length: 186\r\n\r\n"
+      <- "payment_product=visa&operation=Sale&cardtoken=0acbbfcbd5bf202a05acc0e9c00f79158a2fe8b60caad2213b09e901b89dc28e&order_id=Sp_ORDER_100432071&description=An+authorize&currency=EUR&amount=500"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "date: Tue, 12 Dec 2023 14:49:45 GMT\r\n"
+      -> "expires: Thu, 19 Nov 1981 08:52:00 GMT\r\n"
+      -> "cache-control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n"
+      -> "pragma: no-cache\r\n"
+      -> "access-control-allow-origin: \r\n"
+      -> "access-control-allow-headers: \r\n"
+      -> "access-control-allow-credentials: true\r\n"
+      -> "content-length: 1472\r\n"
+      -> "content-type: application/json; encoding=UTF-8\r\n"
+      -> "connection: close\r\n"
+      -> "\r\n"
+      reading 1472 bytes...
+      -> "{\"state\":\"completed\",\"reason\":\"\",\"forwardUrl\":\"\",\"test\":\"true\",\"mid\":\"00001331069\",\"attemptId\":\"1\",\"authorizationCode\":\"no_code\",\"transactionReference\":\"800272278410\",\"referenceToPay\":\"\",\"dateCreated\":\"2023-12-12T14:49:45+0000\",\"dateUpdated\":\"2023-12-12T14:49:50+0000\",\"dateAuthorized\":\"2023-12-12T14:49:49+0000\",\"status\":\"118\",\"message\":\"Captured\",\"authorizedAmount\":\"500.00\",\"capturedAmount\":\"500.00\",\"refundedAmount\":\"0.00\",\"creditedAmount\":\"0.00\",\"decimals\":\"2\",\"currency\":\"EUR\",\"ipAddress\":\"0.0.0.0\",\"ipCountry\":\"\",\"deviceId\":\"\",\"cdata1\":\"\",\"cdata2\":\"\",\"cdata3\":\"\",\"cdata4\":\"\",\"cdata5\":\"\",\"cdata6\":\"\",\"cdata7\":\"\",\"cdata8\":\"\",\"cdata9\":\"\",\"cdata10\":\"\",\"avsResult\":\"\",\"eci\":\"7\",\"paymentProduct\":\"visa\",\"paymentMethod\":{\"token\":\"0acbbfcbd5bf202a05acc0e9c00f79158a2fe8b60caad2213b09e901b89dc28e\",\"cardId\":\"9fd81707-8f41-4a01-b6ed-279954336ada\",\"brand\":\"VISA\",\"pan\":\"411111******1111\",\"cardHolder\":\"JOHN SMITH\",\"cardExpiryMonth\":\"12\",\"cardExpiryYear\":\"2025\",\"issuer\":\"JPMORGAN CHASE BANK, N.A.\",\"country\":\"US\"},\"threeDSecure\":{\"eci\":\"\",\"authenticationStatus\":\"Y\",\"authenticationMessage\":\"Authentication Successful\",\"authenticationToken\":\"\",\"xid\":\"\"},\"fraudScreening\":{\"scoring\":\"0\",\"result\":\"ACCEPTED\",\"review\":\"\"},\"order\":{\"id\":\"Sp_ORDER_100432071\",\"dateCreated\":\"2023-12-12T14:49:45+0000\",\"attempts\":\"1\",\"amount\":\"500.00\",\"shipping\":\"0.00\",\"tax\":\"0.00\",\"decimals\":\"2\",\"currency\":\"EUR\",\"customerId\":\"\",\"language\":\"en_US\",\"email\":\"\"},\"debitAgreement\":{\"id\":\"\",\"status\":\"\"}}"
+      reading 1472 bytes...
+      Conn close
+    POST_SCRUBBED
   end
 end
