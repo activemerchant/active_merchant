@@ -157,7 +157,7 @@ module ActiveMerchant #:nodoc:
         when :authorize, :purchase
           "#{base_url}#{API_VERSION}/payments"
         when :capture, :refund, :void, :rebill, :confirm
-          "#{base_url}#{API_VERSION}/payments/#{authorization}"
+          "#{base_url}#{API_VERSION}/payments/#{split_authorization(authorization)}"
         end
       end
 
@@ -173,6 +173,11 @@ module ActiveMerchant #:nodoc:
       def authorization_from(response, payment_type)
         authorization = response["id"].present? ? response["id"] : "Failed"
         [authorization, payment_type].join('#')
+      end
+
+      def split_authorization(authorization)
+        transaction_id, = authorization.split('#')
+        transaction_id
       end
 
       def message_from(succeeded, response)
