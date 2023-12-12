@@ -760,6 +760,11 @@ paypal_certificate:
     w00oJt7RcWBpIkpS18Qpmk6KZ7o=
     -----END CERTIFICATE-----
 
+paypal_complete:
+  client_id:
+  secret:
+  bn_code:
+
 paypal_signature:
   login: activemerchant-test_api1.example.com
   password: HBC6A84QLRWC923A

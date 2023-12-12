@@ -42,6 +42,7 @@ require 'cgi'
 require 'rexml/document'
 require 'timeout'
 require 'socket'
+require 'jwt'
 
 require 'active_merchant/network_connection_retries'
 require 'active_merchant/connection'
