@@ -1542,6 +1542,26 @@ class AdyenTest < Test::Unit::TestCase
     end
   end
 
+  def test_metadata_sent_through_in_authorize
+    metadata = {
+      field_one: 'A',
+      field_two: 'B',
+      field_three: 'C',
+      field_four: 'EASY AS ONE TWO THREE'
+    }
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(metadata: metadata))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      assert_equal parsed['metadata']['field_one'], metadata[:field_one]
+      assert_equal parsed['metadata']['field_two'], metadata[:field_two]
+      assert_equal parsed['metadata']['field_three'], metadata[:field_three]
+      assert_equal parsed['metadata']['field_four'], metadata[:field_four]
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   private
 
   def stored_credential_options(*args, ntid: nil)

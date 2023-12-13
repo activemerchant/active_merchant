@@ -1738,6 +1738,19 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_successful_purchase_with_metadata
+    metadata = {
+      field_one: 'A',
+      field_two: 'B',
+      field_three: 'C',
+      field_four: 'EASY AS ONE TWO THREE'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(metadata: metadata))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   private
 
   def stored_credential_options(*args, ntid: nil)

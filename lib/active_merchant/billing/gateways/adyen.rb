@@ -70,6 +70,7 @@ module ActiveMerchant #:nodoc:
         add_level_3_data(post, options)
         add_data_airline(post, options)
         add_data_lodging(post, options)
+        add_metadata(post, options)
         commit('authorise', post, options)
       end
 
@@ -745,6 +746,13 @@ module ActiveMerchant #:nodoc:
         if (address = fund_source[:billing_address])
           add_billing_address(post[:fundSource], options, address)
         end
+      end
+
+      def add_metadata(post, options = {})
+        return unless options[:metadata]
+
+        post[:metadata] ||= {}
+        post[:metadata].merge!(options[:metadata]) if options[:metadata]
       end
 
       def parse(body)
