@@ -86,8 +86,7 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((<v1:CardNumber>).+(</v1:CardNumber>)), '\1[FILTERED]\2').
-          gsub(%r((<v1:CardCodeValue>).+(</v1:CardCodeValue>)), '\1[FILTERED]\2').
-          gsub(%r((<v1:StoreId>).+(</v1:StoreId>)), '\1[FILTERED]\2')
+          gsub(%r((<v1:CardCodeValue>).+(</v1:CardCodeValue>)), '\1[FILTERED]\2')
       end
 
       private
