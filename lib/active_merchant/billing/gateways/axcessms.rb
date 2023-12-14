@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
         add_customer_details(post, options)
         add_three_d_secure_data(post, amount, options) if options[:three_d_secure_data].present?
         add_invoice_details(post, PAYMENT_CODE_PREAUTHORIZATION, amount, options)
+        add_recurring_details(post, options)
         commit(:authorize, post)
       end
 
@@ -53,7 +54,16 @@ module ActiveMerchant #:nodoc:
         add_customer_details(post, options)
         add_three_d_secure_data(post, amount, options) if options[:three_d_secure_data].present?
         add_invoice_details(post, PAYMENT_CODE_DEBIT, amount, options)
+        add_recurring_details(post, options)
         commit(:purchase, post)
+      end
+
+      def registration_token_purchase(amount, payment_method, options)
+        post = {}
+        add_customer_details(post, options)
+        add_invoice_details(post, PAYMENT_CODE_DEBIT, amount, options)
+        add_repeated_recurring_details(post, options)
+        commit(:registration_token_purchase, post, :post, payment_method)
       end
 
       def rebill(amount, authorization, options = {})
@@ -88,13 +98,21 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_payment_method(post, payment_method, options)
+        post["createRegistration"] = true
         post["card.number"] = payment_method.number
         post["card.expiryMonth"] = format(payment_method.month, :two_digits)
         post["card.expiryYear"] = format(payment_method.year, :four_digits)
         post["card.cvv"] = payment_method.verification_value unless empty?(payment_method.verification_value)
+        post["card.holder"] = options[:billing_address][:name] if options[:billing_address].present?
+      end
+
+      def add_customer_details(post, options)
+        post["customer.email"] = options[:email]
+        post["customer.ip"] = options[:ip]
+        post["customer.browser.userAgent"] = options[:browser_details][:identity] if options[:browser_details].present?
+        post["shopperResultUrl"] = options[:redirect_links][:success_url] if options[:redirect_links].present?
 
         if options[:billing_address].present?
-          post["card.holder"] = options[:billing_address][:name]
           post["billing.street1"] = options[:billing_address][:address1]
           post["billing.street2"] = options[:billing_address][:address2]
           post["billing.city"] = options[:billing_address][:city]
@@ -103,13 +121,6 @@ module ActiveMerchant #:nodoc:
           post["billing.country"] = options[:billing_address][:country]
           post['customer.phone'] = options[:billing_address][:phone]
         end
-      end
-
-      def add_customer_details(post, options)
-        post["customer.email"] = options[:email]
-        post["customer.ip"] = options[:ip]
-        post["customer.browser.userAgent"] = options[:browser_details][:identity] if options[:browser_details].present?
-        post["shopperResultUrl"] = options[:redirect_links][:success_url] if options[:redirect_links].present?
       end
 
       def add_invoice_details(post, payment_code, amount, options)
@@ -124,6 +135,18 @@ module ActiveMerchant #:nodoc:
         post["threeDSecure.verificationId"]= options[:three_d_secure_data][:verificationId]
         post["threeDSecure.eci"]= options[:three_d_secure_data][:eci]
         post["threeDSecure.xid"]= options[:three_d_secure_data][:xid]
+      end
+
+      def add_recurring_details(post, options)
+        post["standingInstruction.type"] = "RECURRING"
+        post["standingInstruction.mode"] = "INITIAL"
+        post["standingInstruction.source"] = "CIT"
+      end
+
+      def add_repeated_recurring_details(post, options)
+        post["standingInstruction.type"] = "RECURRING"
+        post["standingInstruction.mode"] = "REPEATED"
+        post["standingInstruction.source"] = "MIT"
       end
 
       def commit(action, params, method = :post, authorization=nil)
@@ -158,6 +181,8 @@ module ActiveMerchant #:nodoc:
           "#{base_url}#{API_VERSION}/payments"
         when :capture, :refund, :void, :rebill, :confirm
           "#{base_url}#{API_VERSION}/payments/#{split_authorization(authorization)}"
+        when :registration_token_purchase
+           "#{base_url}#{API_VERSION}/registrations/#{authorization}/payments"
         end
       end
 
