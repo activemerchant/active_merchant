@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :user_id, :password, :pem, :pem_password)
-        @credentials = options.merge(store_and_user_id_from(options[:user_id]))
+        @credentials = options
         @hosted_data_id = nil
         super
       end
@@ -86,8 +86,7 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((<v1:CardNumber>).+(</v1:CardNumber>)), '\1[FILTERED]\2').
-          gsub(%r((<v1:CardCodeValue>).+(</v1:CardCodeValue>)), '\1[FILTERED]\2').
-          gsub(%r((<v1:StoreId>).+(</v1:StoreId>)), '\1[FILTERED]\2')
+          gsub(%r((<v1:CardCodeValue>).+(</v1:CardCodeValue>)), '\1[FILTERED]\2')
       end
 
       private
@@ -317,7 +316,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def encoded_credentials
-        Base64.encode64("WS#{@credentials[:store_id]}._.#{@credentials[:user_id]}:#{@credentials[:password]}").delete("\n")
+        # We remove 'WS' and add it back on the next line because the ipg docs are a little confusing.
+        # Some merchants will likely add it to their user_id and others won't.
+        user_id = @credentials[:user_id].sub(/^WS/, '')
+        Base64.encode64("WS#{user_id}:#{@credentials[:password]}").delete("\n")
       end
 
       def envelope_namespaces
@@ -344,6 +346,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def override_store_id(options)
+        raise ArgumentError, 'store_id must be provieded' if @credentials[:store_id].blank? && options[:store_id].blank?
+
         @credentials[:store_id] = options[:store_id] if options[:store_id].present?
       end
 
@@ -393,11 +397,6 @@ module ActiveMerchant #:nodoc:
           reply["#{parent}#{node.name}".to_sym] ||= node.text
         end
         return reply
-      end
-
-      def store_and_user_id_from(user_id)
-        split_credentials = user_id.split('._.')
-        { store_id: split_credentials[0].sub(/^WS/, ''), user_id: split_credentials[1] }
       end
 
       def message_from(response)
