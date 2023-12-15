@@ -28,9 +28,16 @@ class PayTraceTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    response = stub_comms(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['amount'], '1.00'
+      assert_equal request['credit_card']['number'], @credit_card.number
+      assert_equal request['integrator_id'], @gateway.options[:integrator_id]
+      assert_equal request['csc'], @credit_card.verification_value
+    end.respond_with(successful_purchase_response)
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 392483066, response.authorization
   end
@@ -400,7 +407,7 @@ class PayTraceTest < Test::Unit::TestCase
       starting SSL for api.paytrace.com:443...
       SSL established
       <- "POST /v1/transactions/sale/keyed HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Bearer 96e647567627164796f6e63704370727565646c697e236f6d6:5427e43707866415555426a68723848763574533d476a466:QryC8bI6hfidGVcFcwnago3t77BSzW8ItUl9GWhsx9Y\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: api.paytrace.com\r\nContent-Length: 335\r\n\r\n"
-      <- "{\"amount\":\"1.00\",\"credit_card\":{\"number\":\"4012000098765439\",\"expiration_month\":9,\"expiration_year\":2022},\"billing_address\":{\"name\":\"Longbob Longsen\",\"street_address\":\"456 My Street\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\"},\"password\":\"ErNsphFQUEbjx2Hx6uT3MgJf\",\"username\":\"integrations@spreedly.com\",\"integrator_id\":\"9575315uXt4u\"}"
+      <- "{\"amount\":\"1.00\",\"credit_card\":{\"number\":\"4012000098765439\",\"expiration_month\":9,\"expiration_year\":2022},\"csc\":\"123\",\"billing_address\":{\"name\":\"Longbob Longsen\",\"street_address\":\"456 My Street\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\"},\"password\":\"ErNsphFQUEbjx2Hx6uT3MgJf\",\"username\":\"integrations@spreedly.com\",\"integrator_id\":\"9575315uXt4u\"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Thu, 03 Jun 2021 22:03:24 GMT\r\n"
       -> "Content-Type: application/json; charset=utf-8\r\n"
@@ -443,7 +450,7 @@ class PayTraceTest < Test::Unit::TestCase
       starting SSL for api.paytrace.com:443...
       SSL established
       <- "POST /v1/transactions/sale/keyed HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Bearer [FILTERED]\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: api.paytrace.com\r\nContent-Length: 335\r\n\r\n"
-      <- "{\"amount\":\"1.00\",\"credit_card\":{\"number\":\"[FILTERED]\",\"expiration_month\":9,\"expiration_year\":2022},\"billing_address\":{\"name\":\"Longbob Longsen\",\"street_address\":\"456 My Street\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\"},\"password\":\"[FILTERED]\",\"username\":\"[FILTERED]\"}"
+      <- "{\"amount\":\"1.00\",\"credit_card\":{\"number\":\"[FILTERED]\",\"expiration_month\":9,\"expiration_year\":2022},\"csc\":\"[FILTERED]\",\"billing_address\":{\"name\":\"Longbob Longsen\",\"street_address\":\"456 My Street\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\"},\"password\":\"[FILTERED]\",\"username\":\"[FILTERED]\"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Thu, 03 Jun 2021 22:03:24 GMT\r\n"
       -> "Content-Type: application/json; charset=utf-8\r\n"

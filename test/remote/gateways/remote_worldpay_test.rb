@@ -197,6 +197,30 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_authorize_with_google_pay_pan_only
+    response = @gateway.authorize(@amount, @credit_card, @options.merge!(wallet_type: :google_pay))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_purchase_with_google_pay_pan_only
+    assert auth = @gateway.purchase(@amount, @credit_card, @options.merge!(wallet_type: :google_pay))
+    assert_success auth
+    assert_equal 'SUCCESS', auth.message
+    assert auth.authorization
+  end
+
+  def test_successful_authorize_with_void_google_pay_pan_only
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge!(wallet_type: :google_pay))
+    assert_success auth
+    assert_equal 'authorize', auth.params['action']
+    assert auth.authorization
+    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge(authorization_validated: true))
+    assert_success capture
+    assert void = @gateway.void(auth.authorization, @options.merge(authorization_validated: true))
+    assert_success void
+  end
+
   def test_successful_authorize_without_card_holder_name_apple_pay
     @apple_pay_network_token.first_name = ''
     @apple_pay_network_token.last_name = ''

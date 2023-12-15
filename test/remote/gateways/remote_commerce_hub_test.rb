@@ -232,6 +232,19 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     assert_equal 'Referenced transaction is invalid or not found', response.message
   end
 
+  def test_successful_credit
+    response = @gateway.credit(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_failed_credit
+    response = @gateway.credit(@amount, '')
+    assert_failure response
+    assert_equal 'Invalid or Missing Field Data', response.message
+  end
+
   def test_successful_store
     response = @gateway.store(@credit_card, @options)
     assert_success response

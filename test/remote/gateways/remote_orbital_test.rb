@@ -839,9 +839,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_purchase_stored_token
     store = @tpv_orbital_gateway.store(@credit_card, @options)
     assert_success store
-    # The 'UT' value means use token, To tell Orbital we want to use the stored payment method
-    # The 'VI' value means an abbreviation for the card brand 'VISA'.
-    response = @tpv_orbital_gateway.purchase(@amount, store.authorization, @options.merge(card_brand: 'VI', token_txn_type: 'UT'))
+    response = @tpv_orbital_gateway.purchase(@amount, store.authorization, @options.merge(card_brand: 'VI'))
     assert_success response
     assert_equal response.params['card_brand'], 'VI'
   end
@@ -849,61 +847,63 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_authorize_stored_token
     store = @tpv_orbital_gateway.store(@credit_card, @options)
     assert_success store
-    auth = @tpv_orbital_gateway.authorize(29, store.authorization, @options.merge(card_brand: 'VI', token_txn_type: 'UT'))
+    auth = @tpv_orbital_gateway.authorize(29, store.authorization, @options.merge(card_brand: 'VI'))
     assert_success auth
   end
 
   def test_successful_authorize_stored_token_mastercard
-    store = @tpv_orbital_gateway.store(@credit_card, @options)
+    store = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
     assert_success store
-    response = @tpv_orbital_gateway.authorize(29, store.authorization, @options.merge(card_brand: 'VI', token_txn_type: 'UT'))
+    response = @tpv_orbital_gateway.authorize(29, store.authorization, @options.merge(card_brand: 'MC'))
     assert_success response
-    assert_equal response.params['card_brand'], 'VI'
+    assert_equal response.params['card_brand'], 'MC'
   end
 
   def test_failed_authorize_and_capture
     store = @tpv_orbital_gateway.store(@credit_card, @options)
     assert_success store
-    response = @tpv_orbital_gateway.capture(39, store.authorization, @options.merge(card_brand: 'VI', token_txn_type: 'UT'))
+    authorization = store.authorization.split(';').values_at(2).first
+    response = @tpv_orbital_gateway.capture(39, authorization, @options.merge(card_brand: 'VI'))
     assert_failure response
-    assert_equal response.params['status_msg'], "The LIDM you supplied (#{store.authorization}) does not match with any existing transaction"
+    assert_equal response.params['status_msg'], "The LIDM you supplied (#{authorization}) does not match with any existing transaction"
   end
 
   def test_successful_authorize_and_capture_with_stored_token
     store = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
     assert_success store
-    auth = @tpv_orbital_gateway.authorize(28, store.authorization, @options.merge(card_brand: 'MC', token_txn_type: 'UT'))
+    auth = @tpv_orbital_gateway.authorize(28, store.authorization, @options.merge(card_brand: 'MC'))
     assert_success auth
     assert_equal auth.params['card_brand'], 'MC'
-    response = @tpv_orbital_gateway.capture(28, auth.authorization, @options)
+    response = @tpv_orbital_gateway.capture(28, auth.authorization, @options.merge(card_brand: 'MC'))
     assert_success response
   end
 
   def test_successful_authorize_with_stored_token_and_refund
     store = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
     assert_success store
-    auth = @tpv_orbital_gateway.authorize(38, store.authorization, @options.merge(card_brand: 'MC', token_txn_type: 'UT'))
+    auth = @tpv_orbital_gateway.authorize(38, store.authorization, @options.merge(card_brand: 'MC'))
     assert_success auth
-    response = @tpv_orbital_gateway.refund(38, auth.authorization, @options)
+    response = @tpv_orbital_gateway.refund(38, auth.authorization, @options.merge(card_brand: 'MC'))
     assert_success response
   end
 
   def test_failed_refund_wrong_token
     store = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
     assert_success store
-    auth = @tpv_orbital_gateway.authorize(38, store.authorization, @options.merge(card_brand: 'MC', token_txn_type: 'UT'))
+    auth = @tpv_orbital_gateway.authorize(38, store.authorization, @options.merge(card_brand: 'MC'))
     assert_success auth
-    response = @tpv_orbital_gateway.refund(38, store.authorization, @options)
+    authorization = store.authorization.split(';').values_at(2).first
+    response = @tpv_orbital_gateway.refund(38, authorization, @options.merge(card_brand: 'MC'))
     assert_failure response
-    assert_equal response.params['status_msg'], "The LIDM you supplied (#{store.authorization}) does not match with any existing transaction"
+    assert_equal response.params['status_msg'], "The LIDM you supplied (#{authorization}) does not match with any existing transaction"
   end
 
   def test_successful_purchase_with_stored_token_and_refund
     store = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
     assert_success store
-    purchase = @tpv_orbital_gateway.purchase(38, store.authorization, @options.merge(card_brand: 'MC', token_txn_type: 'UT'))
+    purchase = @tpv_orbital_gateway.purchase(38, store.authorization, @options.merge(card_brand: 'MC'))
     assert_success purchase
-    response = @tpv_orbital_gateway.refund(38, purchase.authorization, @options)
+    response = @tpv_orbital_gateway.refund(38, purchase.authorization, @options.merge(card_brand: 'MC'))
     assert_success response
   end
 
@@ -919,7 +919,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     options = @options.merge!(card_brand: 'VI')
     response = @tpv_orbital_gateway.purchase(@amount, nil, options)
     assert_failure response
-    assert_equal response.params['status_msg'], 'Error. The Orbital Gateway has received a badly formatted message. The account number is required for this transaction'
+    assert_equal response.params['status_msg'], 'Error validating card/account number range'
   end
 
   def test_successful_different_cards

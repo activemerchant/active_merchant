@@ -1061,6 +1061,42 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal @options[:shipping_address][:country], post[:deliveryAddress][:country]
   end
 
+  def test_default_billing_address_country
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({
+        billing_address: {
+          address1: 'Infinite Loop',
+          address2: 1,
+          country: '',
+          city: 'Cupertino',
+          state: 'CA',
+          zip: '95014'
+        }
+      }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"country":"ZZ"/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_default_shipping_address_country
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({
+        shipping_address: {
+          address1: 'Infinite Loop',
+          address2: 1,
+          country: '',
+          city: 'Cupertino',
+          state: 'CA',
+          zip: '95014'
+        }
+      }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"country":"ZZ"/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_address_override_that_will_swap_housenumberorname_and_street
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(address_override: true))
@@ -1504,6 +1540,26 @@ class AdyenTest < Test::Unit::TestCase
     end.check_request(skip_response: true) do |_endpoint, data|
       assert_match(/"amount\":{\"value\":\"1000\",\"currency\":\"JOD\"}/, data)
     end
+  end
+
+  def test_metadata_sent_through_in_authorize
+    metadata = {
+      field_one: 'A',
+      field_two: 'B',
+      field_three: 'C',
+      field_four: 'EASY AS ONE TWO THREE'
+    }
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(metadata: metadata))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      assert_equal parsed['metadata']['field_one'], metadata[:field_one]
+      assert_equal parsed['metadata']['field_two'], metadata[:field_two]
+      assert_equal parsed['metadata']['field_three'], metadata[:field_three]
+      assert_equal parsed['metadata']['field_four'], metadata[:field_four]
+    end.respond_with(successful_authorize_response)
+    assert_success response
   end
 
   private

@@ -597,7 +597,7 @@ class LitleTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(%r(<processingType>cardholderInitiatedCOF</processingType>), data)
-      assert_match(%r(<originalNetworkTransactionId>#{network_transaction_id}</originalNetworkTransactionId>), data)
+      assert_not_match(%r(<originalNetworkTransactionId>#{network_transaction_id}</originalNetworkTransactionId>), data)
       assert_match(%r(<orderSource>ecommerce</orderSource>), data)
     end.respond_with(successful_authorize_stored_credentials)
 
@@ -621,8 +621,8 @@ class LitleTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(%r(<processingType>cardholderInitiatedCOF</processingType>), data)
-      assert_match(%r(<originalNetworkTransactionId>#{network_transaction_id}</originalNetworkTransactionId>), data)
-      assert_match(%r(<orderSource>3dsAuthenticated</orderSource>), data)
+      assert_not_match(%r(<originalNetworkTransactionId>#{network_transaction_id}</originalNetworkTransactionId>), data)
+      assert_match(%r(<orderSource>ecommerce</orderSource>), data)
     end.respond_with(successful_authorize_stored_credentials)
 
     assert_success response
@@ -641,6 +641,7 @@ class LitleTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<orderSource>ecommerce</orderSource>), data)
       assert_match(%r(<processingType>initialCOF</processingType>), data)
     end.respond_with(successful_authorize_stored_credentials)
 
@@ -700,6 +701,7 @@ class LitleTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
+      assert_not_match(%r(<processingType>), data)
       assert_match(%r(<originalNetworkTransactionId>#{network_transaction_id}</originalNetworkTransactionId>), data)
       assert_match(%r(<orderSource>installment</orderSource>), data)
     end.respond_with(successful_authorize_stored_credentials)

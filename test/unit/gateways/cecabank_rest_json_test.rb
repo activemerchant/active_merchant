@@ -18,6 +18,16 @@ class CecabankJsonTest < Test::Unit::TestCase
       order_id: '1',
       description: 'Store Purchase'
     }
+
+    @three_d_secure = {
+      version: '2.2.0',
+      eci: '02',
+      cavv: '4F80DF50ADB0F9502B91618E9B704790EABA35FDFC972DDDD0BF498C6A75E492',
+      ds_transaction_id: 'a2bf089f-cefc-4d2c-850f-9153827fe070',
+      acs_transaction_id: '18c353b0-76e3-4a4c-8033-f14fe9ce39dc',
+      authentication_response_status: 'Y',
+      three_ds_server_trans_id: '9bd9aa9c-3beb-4012-8e52-214cccb25ec5'
+    }
   end
 
   def test_successful_authorize
@@ -108,6 +118,51 @@ class CecabankJsonTest < Test::Unit::TestCase
     assert response = @gateway.void('reference', @options)
     assert_failure response
     assert response.test?
+  end
+
+  def test_purchase_without_exemption_type
+    @options[:exemption_type] = nil
+    @options[:three_d_secure] = @three_d_secure
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      data = JSON.parse(data)
+      params = JSON.parse(Base64.decode64(data['parametros']))
+      three_d_secure = JSON.parse(params['ThreeDsResponse'])
+      assert_nil three_d_secure['exemption_type']
+      assert_match params['exencionSCA'], 'NONE'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_low_value_exemption
+    @options[:exemption_type] = 'low_value_exemption'
+    @options[:three_d_secure] = @three_d_secure
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      data = JSON.parse(data)
+      params = JSON.parse(Base64.decode64(data['parametros']))
+      three_d_secure = JSON.parse(params['ThreeDsResponse'])
+      assert_match three_d_secure['exemption_type'], 'low_value_exemption'
+      assert_match params['exencionSCA'], 'LOW'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_transaction_risk_analysis_exemption
+    @options[:exemption_type] = 'transaction_risk_analysis_exemption'
+    @options[:three_d_secure] = @three_d_secure
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      data = JSON.parse(data)
+      params = JSON.parse(Base64.decode64(data['parametros']))
+      three_d_secure = JSON.parse(params['ThreeDsResponse'])
+      assert_match three_d_secure['exemption_type'], 'transaction_risk_analysis_exemption'
+      assert_match params['exencionSCA'], 'TRA'
+    end.respond_with(successful_purchase_response)
   end
 
   def test_transcript_scrubbing

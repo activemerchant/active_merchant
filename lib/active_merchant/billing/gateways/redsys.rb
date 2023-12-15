@@ -266,14 +266,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(creditcard, options = {})
-        if options[:sca_exemption_behavior_override] == 'endpoint_and_ntid'
-          purchase(0, creditcard, options)
-        else
-          MultiResponse.run(:use_first_response) do |r|
-            r.process { authorize(100, creditcard, options) }
-            r.process(:ignore_result) { void(r.authorization, options) }
-          end
-        end
+        purchase(0, creditcard, options)
       end
 
       def supports_scrubbing

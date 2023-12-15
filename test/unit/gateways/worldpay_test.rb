@@ -1463,6 +1463,14 @@ class WorldpayTest < Test::Unit::TestCase
     end
   end
 
+  def test_network_token_type_assignation_when_google_pay_pan_only
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge!(wallet_type: :google_pay))
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="GOOGLEPAY">), data
+    end
+  end
+
   def test_order_id_crop_and_clean
     @options[:order_id] = "abc1234 abc1234 'abc1234' <abc1234> \"abc1234\" | abc1234 abc1234 abc1234 abc1234 abc1234"
     response = stub_comms do

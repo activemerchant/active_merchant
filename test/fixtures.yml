@@ -482,9 +482,15 @@ instapay:
   login: TEST0
   password:
 
-# Working credentials, no need to replace
 ipg:
   store_id: "YOUR STORE ID"
+  user_id: "YOUR USER ID"
+  password: "YOUR PASSWORD"
+  pem_password: "CERTIFICATE PASSWORD"
+  pem: "YOUR CERTIFICATE WITH PRIVATE KEY"
+
+ipg_ma:
+  store_id: "ONE OF YOUR STORE IDs"
   user_id: "YOUR USER ID"
   password: "YOUR PASSWORD"
   pem_password: "CERTIFICATE PASSWORD"
@@ -1340,6 +1346,10 @@ stripe_verified_bank_account:
   bank_account_id: "ba_17cHxeAWOtgoysogv3NM8CJ1"
 
 sum_up:
+  access_token: SOMECREDENTIAL
+  pay_to_email: SOMECREDENTIAL
+
+sum_up_account_for_successful_purchases:
   access_token: SOMECREDENTIAL
   pay_to_email: SOMECREDENTIAL
 

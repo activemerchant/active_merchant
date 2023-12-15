@@ -175,12 +175,9 @@ class RemoteRedsysTest < Test::Unit::TestCase
     authorize = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorize
 
-    void = @gateway.void(authorize.authorization)
-    assert_success void
-
-    another_void = @gateway.void(authorize.authorization)
-    assert_failure another_void
-    assert_equal 'SIS0222 ERROR', another_void.message
+    void = @gateway.void(authorize.authorization << '123')
+    assert_failure void
+    assert_equal 'SIS0007 ERROR', void.message
   end
 
   def test_successful_verify
@@ -188,8 +185,6 @@ class RemoteRedsysTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal 'Transaction Approved', response.message
-    assert_success response.responses.last, 'The void should succeed'
-    assert_equal 'Cancellation Accepted', response.responses.last.message
   end
 
   def test_unsuccessful_verify

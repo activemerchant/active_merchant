@@ -55,6 +55,13 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       year: 2028
     )
 
+    @visa_card_brand_choice = credit_card(
+      '4000002500001001',
+      verification_value: '737',
+      month: 10,
+      year: 2028
+    )
+
     @google_pay = network_tokenization_credit_card(
       '4242424242424242',
       payment_cryptogram: 'dGVzdGNyeXB0b2dyYW1YWFhYWFhYWFhYWFg9PQ==',
@@ -117,6 +124,20 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     assert purchase.params.dig('charges', 'data')[0]['captured']
     assert purchase.params.dig('charges', 'data')[0]['balance_transaction']
+  end
+
+  def test_successful_purchase_with_card_brand
+    options = {
+      currency: 'USD',
+      customer: @customer,
+      card_brand: 'cartes_bancaires'
+    }
+    assert purchase = @gateway.purchase(@amount, @visa_card_brand_choice, options)
+    assert_equal 'succeeded', purchase.params['status']
+
+    assert purchase.params.dig('charges', 'data')[0]['captured']
+    assert purchase.params.dig('charges', 'data')[0]['balance_transaction']
+    assert_equal purchase.params['payment_method_options']['card']['network'], 'cartes_bancaires'
   end
 
   def test_successful_purchase_with_shipping_address
@@ -634,6 +655,33 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       assert_not_empty si_reponse.params.dig('latest_attempt', 'payment_method_details', 'card')
       assert_nil si_reponse.params.dig('latest_attempt', 'payment_method_details', 'card', 'network_transaction_id')
     end
+  end
+
+  def test_create_setup_intent_with_setup_future_usage_and_card_brand
+    response = @gateway.create_setup_intent(@visa_card_brand_choice, {
+      address: {
+        email: 'test@example.com',
+        name: 'John Doe',
+        line1: '1 Test Ln',
+        city: 'Durham',
+        tracking_number: '123456789'
+      },
+      currency: 'USD',
+      card_brand: 'cartes_bancaires',
+      confirm: true,
+      execute_threed: true,
+      return_url: 'https://example.com'
+    })
+
+    assert_equal 'succeeded', response.params['status']
+    assert_equal response.params['payment_method_options']['card']['network'], 'cartes_bancaires'
+    # since we cannot "click" the stripe hooks URL to confirm the authorization
+    # we will at least confirm we can retrieve the created setup_intent and it contains the structure we expect
+    setup_intent_id = response.params['id']
+    assert si_response = @gateway.retrieve_setup_intent(setup_intent_id)
+
+    assert_equal 'succeeded', si_response.params['status']
+    assert_not_empty si_response.params.dig('latest_attempt', 'payment_method_details', 'card')
   end
 
   def test_create_setup_intent_with_connected_account

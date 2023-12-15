@@ -155,23 +155,15 @@ class RedsysRestTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response).then.returns(successful_void_response)
+    @gateway.expects(:ssl_post).returns(successful_verify_response)
     response = @gateway.verify(credit_card, @options)
     assert_success response
-  end
-
-  def test_successful_verify_with_failed_void
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response).then.returns(error_void_response)
-    response = @gateway.verify(credit_card, @options)
-    assert_success response
-    assert_equal 'Transaction Approved', response.message
   end
 
   def test_unsuccessful_verify
-    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+    @gateway.expects(:ssl_post).returns(failed_verify_response)
     response = @gateway.verify(credit_card, @options)
     assert_failure response
-    assert_equal 'Refusal with no specific reason', response.message
   end
 
   def test_unknown_currency
@@ -209,6 +201,14 @@ class RedsysRestTest < Test::Unit::TestCase
     '
       merchant_parameters: {"DS_MERCHANT_CURRENCY"=>"978", "DS_MERCHANT_AMOUNT"=>"100", "DS_MERCHANT_ORDER"=>"165126475243", "DS_MERCHANT_TRANSACTIONTYPE"=>"1", "DS_MERCHANT_PRODUCTDESCRIPTION"=>"", "DS_MERCHANT_TERMINAL"=>"3", "DS_MERCHANT_MERCHANTCODE"=>"327234688", "DS_MERCHANT_TITULAR"=>"Longbob Longsen", "DS_MERCHANT_PAN"=>"[FILTERED]", "DS_MERCHANT_EXPIRYDATE"=>"2309", "DS_MERCHANT_CVV2"=>"[FILTERED]"}
     '
+  end
+
+  def successful_verify_response
+    %[{\"Ds_SignatureVersion\":\"HMAC_SHA256_V1\",\"Ds_MerchantParameters\":\"eyJEc19BbW91bnQiOiIwIiwiRHNfQ3VycmVuY3kiOiI5NzgiLCJEc19PcmRlciI6IjE3MDEzNjk0NzQ1NCIsIkRzX01lcmNoYW50Q29kZSI6Ijk5OTAwODg4MSIsIkRzX1Rlcm1pbmFsIjoiMjAxIiwiRHNfUmVzcG9uc2UiOiIwMDAwIiwiRHNfQXV0aG9yaXNhdGlvbkNvZGUiOiI1NDE4MTMiLCJEc19UcmFuc2FjdGlvblR5cGUiOiI3IiwiRHNfU2VjdXJlUGF5bWVudCI6IjAiLCJEc19MYW5ndWFnZSI6IjEiLCJEc19DYXJkTnVtYmVyIjoiNDU0ODgxKioqKioqMDAwNCIsIkRzX01lcmNoYW50RGF0YSI6IiIsIkRzX0NhcmRfQ291bnRyeSI6IjcyNCIsIkRzX0NhcmRfQnJhbmQiOiIxIiwiRHNfUHJvY2Vzc2VkUGF5TWV0aG9kIjoiMyIsIkRzX0NvbnRyb2xfMTcwMTM2OTQ3Njc2OCI6IjE3MDEzNjk0NzY3NjgifQ==\",\"Ds_Signature\":\"uoS0PJelg5_c4_7UgkYEJyatDuS3p2a-uJ3tB7SZPL4=\"}]
+  end
+
+  def failed_verify_response
+    %[{\"Ds_SignatureVersion\":\"HMAC_SHA256_V1\",\"Ds_MerchantParameters\":\"eyJEc19BbW91bnQiOiIwIiwiRHNfQ3VycmVuY3kiOiI5NzgiLCJEc19PcmRlciI6IjE3MDEzNjk2NDI4NyIsIkRzX01lcmNoYW50Q29kZSI6Ijk5OTAwODg4MSIsIkRzX1Rlcm1pbmFsIjoiMjAxIiwiRHNfUmVzcG9uc2UiOiIwMTkwIiwiRHNfQXV0aG9yaXNhdGlvbkNvZGUiOiIiLCJEc19UcmFuc2FjdGlvblR5cGUiOiI3IiwiRHNfU2VjdXJlUGF5bWVudCI6IjAiLCJEc19MYW5ndWFnZSI6IjEiLCJEc19DYXJkTnVtYmVyIjoiNDI0MjQyKioqKioqNDI0MiIsIkRzX01lcmNoYW50RGF0YSI6IiIsIkRzX0NhcmRfQ291bnRyeSI6IjgyNiIsIkRzX1Byb2Nlc3NlZFBheU1ldGhvZCI6IjMiLCJEc19Db250cm9sXzE3MDEzNjk2NDUxMjIiOiIxNzAxMzY5NjQ1MTIyIn0=\",\"Ds_Signature\":\"oaS6-Zuz6v6l-Jgs5hKDZ0tn01W9Z3gKNfhmfAGdfMo=\"}]
   end
 
   def successful_purchase_response

@@ -123,7 +123,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(50, credit_card, order_id: '1')
     assert_instance_of Response, response
     assert_success response
-    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', response.authorization
   end
 
   def test_successful_purchase_with_echeck
@@ -133,7 +133,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_equal 'Approved', response.message
     assert_success response
-    assert_equal '5F8E8BEE7299FD339A38F70CFF6E5D010EF55498;9baedc697f2cf06457de78', response.authorization
+    assert_equal '5F8E8BEE7299FD339A38F70CFF6E5D010EF55498;9baedc697f2cf06457de78;EC', response.authorization
   end
 
   def test_successful_purchase_with_commercial_echeck
@@ -163,7 +163,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_match 'APPROVAL', response.message
     assert_equal 'Approved and Completed', response.params['status_msg']
-    assert_equal '5F8ED3D950A43BD63369845D5385B6354C3654B4;2930847bc732eb4e8102cf', response.authorization
+    assert_equal '5F8ED3D950A43BD63369845D5385B6354C3654B4;2930847bc732eb4e8102cf;EC', response.authorization
   end
 
   def test_successful_force_capture_with_echeck_prenote
@@ -173,7 +173,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_match 'APPROVAL', response.message
     assert_equal 'Approved and Completed', response.params['status_msg']
-    assert_equal '5F8ED3D950A43BD63369845D5385B6354C3654B4;2930847bc732eb4e8102cf', response.authorization
+    assert_equal '5F8ED3D950A43BD63369845D5385B6354C3654B4;2930847bc732eb4e8102cf;EC', response.authorization
   end
 
   def test_failed_force_capture_with_echeck_prenote
@@ -509,9 +509,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_order_id_format_for_capture
     response = stub_comms do
-      @gateway.capture(101, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1001.1', order_id: '#1001.1')
+      @gateway.capture(101, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI001.1;VI', order_id: '#1001.1')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<OrderID>1001-1<\/OrderID>/, data)
+      assert_match(/<OrderID>1<\/OrderID>/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -524,7 +524,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     )
 
     response = stub_comms(gateway) do
-      gateway.capture(101, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', @options)
+      gateway.capture(101, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantID>700000123456<\/MerchantID>/, data)
     end.respond_with(successful_purchase_response)
@@ -1056,11 +1056,10 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_successful_payment_request_with_token_stored
-    options = @options.merge(card_brand: 'MC', token_txn_type: 'UT')
     stub_comms do
-      @gateway.purchase(50, '2521002395820006', options)
+      @gateway.purchase(50, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;2521002395820006;VI', @options.merge(card_brand: 'VI'))
     end.check_request(skip_response: true) do |_endpoint, data, _headers|
-      assert_match %{<CardBrand>MC</CardBrand>}, data
+      assert_match %{<CardBrand>VI</CardBrand>}, data
       assert_match %{<AccountNum>2521002395820006</AccountNum>}, data
     end
   end
@@ -1242,7 +1241,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_equal 'Approved', response.message
     assert_success response
-    assert_equal '5F8E8D2B077217F3EF1ACD3B61610E4CD12954A3;2', response.authorization
+    assert_equal '5F8E8D2B077217F3EF1ACD3B61610E4CD12954A3;2;EC', response.authorization
   end
 
   def test_failed_authorize_with_echeck
@@ -1586,7 +1585,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.verify(credit_card, @options)
     end.respond_with(successful_purchase_response, successful_purchase_response)
     assert_success response
-    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', response.authorization
     assert_equal 'Approved', response.message
   end
 
@@ -1614,7 +1613,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_purchase_response)
     assert_success response
-    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', response.authorization
     assert_equal 'Approved', response.message
   end
 
@@ -1633,7 +1632,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_purchase_response, successful_void_response)
     assert_success response
-    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', response.authorization
     assert_equal 'Approved', response.message
   end
 
@@ -1643,7 +1642,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.verify(credit_card, @options)
     end.respond_with(successful_purchase_response, failed_purchase_response)
     assert_success response
-    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', response.authorization
     assert_equal 'Approved', response.message
   end
 
@@ -1652,7 +1651,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.verify(credit_card, @options)
     end.respond_with(successful_purchase_response, failed_purchase_response)
     assert_success response
-    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', response.authorization
     assert_equal 'Approved', response.message
   end
 

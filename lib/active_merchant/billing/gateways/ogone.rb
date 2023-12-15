@@ -460,7 +460,7 @@ module ActiveMerchant #:nodoc:
             raise "Unknown signature algorithm #{algorithm}"
           end
 
-        filtered_params = signed_parameters.compact
+        filtered_params = signed_parameters.reject { |_k, v| v.nil? || v == '' }
         sha_encryptor.hexdigest(
           filtered_params.sort_by { |k, _v| k.upcase }.map { |k, v| "#{k.upcase}=#{v}#{secret}" }.join('')
         ).upcase

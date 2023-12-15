@@ -225,6 +225,16 @@ class CommerceHubTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_credit
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_not_nil request['amount']
+      assert_equal request['source']['card']['cardData'], @credit_card.number
+    end.respond_with(successful_credit_response)
+  end
+
   def test_successful_purchase_cit_with_gsf
     options = stored_credential_options(:cardholder, :unscheduled, :initial)
     options[:data_entry_source] = 'MOBILE_WEB'
@@ -670,6 +680,107 @@ class CommerceHubTest < Test::Unit::TestCase
         },
         "transactionDetails": {
           "merchantInvoiceNumber": "123456789012"
+        }
+      }
+    RESPONSE
+  end
+
+  def successful_credit_response
+    <<~RESPONSE
+      {
+        "gatewayResponse": {
+          "transactionType": "REFUND",
+          "transactionState": "CAPTURED",
+          "transactionOrigin": "ECOM",
+          "transactionProcessingDetails": {
+            "orderId": "CHG01edceac93c72d31489f14a994f77b5e93",
+            "transactionTimestamp": "2023-11-22T01:09:26.833753719Z",
+            "apiTraceId": "4dcb1fc8ea9d4f1084046a77cf250292",
+            "clientRequestId": "4519030",
+            "transactionId": "4dcb1fc8ea9d4f1084046a77cf250292"
+          }
+        },
+        "source": {
+          "sourceType": "PaymentCard",
+          "card": {
+            "nameOnCard": "Joe Bloggs",
+            "expirationMonth": "02",
+            "expirationYear": "2035",
+            "bin": "400555",
+            "last4": "0019",
+            "scheme": "VISA"
+          }
+        },
+        "transactionDetails": {
+          "captureFlag": true,
+          "transactionCaptureType": "host",
+          "processingCode": "200000",
+          "merchantInvoiceNumber": "593041958876",
+          "physicalGoodsIndicator": false,
+          "createToken": true,
+          "retrievalReferenceNumber": "6a77cf250292"
+        },
+        "transactionInteraction": {
+          "posEntryMode": "MANUAL",
+          "posConditionCode": "CARD_NOT_PRESENT_ECOM",
+          "additionalPosInformation": {
+            "stan": "009748",
+            "dataEntrySource": "UNSPECIFIED",
+            "posFeatures": {
+              "pinAuthenticationCapability": "UNSPECIFIED",
+              "terminalEntryCapability": "UNSPECIFIED"
+            }
+          },
+          "authorizationCharacteristicsIndicator": "N",
+          "hostPosEntryMode": "010",
+          "hostPosConditionCode": "59"
+        },
+        "merchantDetails": {
+          "tokenType": "LTDC",
+          "terminalId": "10000001",
+          "merchantId": "100039000301165"
+        },
+        "paymentReceipt": {
+          "approvedAmount": {
+            "total": 1.0,
+            "currency": "USD"
+          },
+          "processorResponseDetails": {
+            "approvalStatus": "APPROVED",
+            "approvalCode": "OK7975",
+            "referenceNumber": "6a77cf250292",
+            "processor": "FISERV",
+            "host": "NASHVILLE",
+            "networkRouted": "VISA",
+            "networkInternationalId": "0001",
+            "responseCode": "000",
+            "responseMessage": "Approved",
+            "hostResponseCode": "00",
+            "hostResponseMessage": "APPROVAL",
+            "responseIndicators": {
+              "alternateRouteDebitIndicator": false,
+              "signatureLineIndicator": false,
+              "signatureDebitRouteIndicator": false
+            },
+            "bankAssociationDetails": {
+              "associationResponseCode": "V000"
+            },
+            "additionalInfo": [
+              {
+                "name": "HOST_RAW_PROCESSOR_RESPONSE",
+                "value": "ARAyIAGADoAAAiAAAAAAAAABABEiAQknAJdIAAFZNmE3N2NmMjUwMjkyT0s3OTc1MDAwMTc2MTYxMwGRAEgxNE4wMTMzMjY4MTE5MjEwMTBJViAgICAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAAGDIyQVBQUk9WQUwgICAgICAgIAAGVklDUkggAHRTRFhZMDAzUlNUVEMwMTU2MDExMDAwMDAwMDAwMDBSSTAxNTAwMDAwMDAwMDAwMDAwME5MMDA0VklTQVRZMDAxQ0FSMDA0VjAwMAA1QVJDSTAwM1VOS0NQMDAxP0RQMDAxSFJDMDAyMDBDQjAwMVY="
+              }
+            ]
+          }
+        },
+        "networkDetails": {
+          "network": {
+            "network": "Visa"
+          },
+          "networkResponseCode": "00",
+          "cardLevelResultCode": "CRH ",
+          "validationCode": "IV  ",
+          "transactionIdentifier": "013326811921010"
         }
       }
     RESPONSE

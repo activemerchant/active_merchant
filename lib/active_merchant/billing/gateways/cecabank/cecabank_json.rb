@@ -26,8 +26,7 @@ module ActiveMerchant
 
       CECA_SCA_TYPES = {
         low_value_exemption: :LOW,
-        transaction_risk_analysis_exemption: :TRA,
-        nil: :NONE
+        transaction_risk_analysis_exemption: :TRA
       }.freeze
 
       self.test_url = 'https://tpv.ceca.es/tpvweb/rest/procesos/'
@@ -164,7 +163,8 @@ module ActiveMerchant
         params = post[:parametros] ||= {}
         return unless three_d_secure = options[:three_d_secure]
 
-        params[:exencionSCA] ||= CECA_SCA_TYPES[options[:exemption_type]&.to_sym]
+        params[:exencionSCA] ||= CECA_SCA_TYPES.fetch(options[:exemption_type]&.to_sym, :NONE)
+
         three_d_response = {
           exemption_type: options[:exemption_type],
           three_ds_version: three_d_secure[:version],
@@ -182,7 +182,7 @@ module ActiveMerchant
         params[:ThreeDsResponse] = three_d_response.to_json
       end
 
-      def commit(action, post, method = :post)
+      def commit(action, post)
         auth_options = {
           operation_number: post[:parametros][:numOperacion],
           amount: post[:parametros][:importe]
@@ -193,8 +193,7 @@ module ActiveMerchant
 
         params_encoded = encode_post_parameters(post)
         add_signature(post, params_encoded, options)
-
-        response = parse(ssl_request(method, url(action), post.to_json, headers))
+        response = parse(ssl_post(url(action), post.to_json, headers))
         response[:parametros] = parse(response[:parametros]) if response[:parametros]
 
         Response.new(

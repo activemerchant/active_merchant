@@ -827,15 +827,41 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_stored_credential_data(parameters, credit_card_or_vault_id, options)
+        # Braintree has informed us that the stored_credential mapping may be incorrect
+        # In order to prevent possible breaking changes we will only apply the new logic if
+        # specifically requested. This will be the default behavior in a future release.
         return unless (stored_credential = options[:stored_credential])
 
-        parameters[:external_vault] = {}
-        if stored_credential[:initial_transaction]
-          parameters[:external_vault][:status] = 'will_vault'
+        add_external_vault(parameters, stored_credential)
+
+        if options[:stored_credentials_v2]
+          stored_credentials_v2(parameters, stored_credential)
         else
-          parameters[:external_vault][:status] = 'vaulted'
-          parameters[:external_vault][:previous_network_transaction_id] = stored_credential[:network_transaction_id]
+          stored_credentials_v1(parameters, stored_credential)
         end
+      end
+
+      def stored_credentials_v2(parameters, stored_credential)
+        # Differences between v1 and v2 are
+        # initial_transaction + recurring/installment should be labeled {{reason_type}}_first
+        # unscheduled in AM should map to '' at BT because unscheduled here means not on a fixed timeline or fixed amount
+        case stored_credential[:reason_type]
+        when 'recurring', 'installment'
+          if stored_credential[:initial_transaction]
+            parameters[:transaction_source] = "#{stored_credential[:reason_type]}_first"
+          else
+            parameters[:transaction_source] = stored_credential[:reason_type]
+          end
+        when 'recurring_first', 'moto'
+          parameters[:transaction_source] = stored_credential[:reason_type]
+        when 'unscheduled'
+          parameters[:transaction_source] = stored_credential[:initiator] == 'merchant' ? stored_credential[:reason_type] : ''
+        else
+          parameters[:transaction_source] = ''
+        end
+      end
+
+      def stored_credentials_v1(parameters, stored_credential)
         if stored_credential[:initiator] == 'merchant'
           if stored_credential[:reason_type] == 'installment'
             parameters[:transaction_source] = 'recurring'
@@ -846,6 +872,16 @@ module ActiveMerchant #:nodoc:
           parameters[:transaction_source] = stored_credential[:reason_type]
         else
           parameters[:transaction_source] = ''
+        end
+      end
+
+      def add_external_vault(parameters, stored_credential)
+        parameters[:external_vault] = {}
+        if stored_credential[:initial_transaction]
+          parameters[:external_vault][:status] = 'will_vault'
+        else
+          parameters[:external_vault][:status] = 'vaulted'
+          parameters[:external_vault][:previous_network_transaction_id] = stored_credential[:network_transaction_id]
         end
       end
 

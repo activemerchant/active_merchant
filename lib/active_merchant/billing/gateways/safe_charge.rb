@@ -149,26 +149,46 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment, options = {})
-        post[:sg_ExpMonth] = format(payment.month, :two_digits)
-        post[:sg_ExpYear] = format(payment.year, :two_digits)
-        post[:sg_CardNumber] = payment.number
+        case payment
+        when String
+          add_token(post, payment)
+        when CreditCard
+          post[:sg_ExpMonth] = format(payment.month, :two_digits)
+          post[:sg_ExpYear] = format(payment.year, :two_digits)
+          post[:sg_CardNumber] = payment.number
 
-        if payment.is_a?(NetworkTokenizationCreditCard) && payment.source == :network_token
-          post[:sg_CAVV] = payment.payment_cryptogram
-          post[:sg_ECI] = options[:three_d_secure] && options[:three_d_secure][:eci] || '05'
-          post[:sg_IsExternalMPI] = 1
-          post[:sg_ExternalTokenProvider] = 5
-        else
-          post[:sg_CVV2] = payment.verification_value
-          post[:sg_NameOnCard] = payment.name
-          post[:sg_StoredCredentialMode] = (options[:stored_credential_mode] == true ? 1 : 0)
+          if payment.is_a?(NetworkTokenizationCreditCard) && payment.source == :network_token
+            add_network_token(post, payment, options)
+          else
+            add_credit_card(post, payment, options)
+          end
         end
+      end
+
+      def add_token(post, payment)
+        _, transaction_id, token = payment.split('|')
+
+        post[:sg_TransactionID] = transaction_id
+        post[:sg_CCToken] = token
+      end
+
+      def add_credit_card(post, payment, options)
+        post[:sg_CVV2] = payment.verification_value
+        post[:sg_NameOnCard] = payment.name
+        post[:sg_StoredCredentialMode] = (options[:stored_credential_mode] == true ? 1 : 0)
+      end
+
+      def add_network_token(post, payment, options)
+        post[:sg_CAVV] = payment.payment_cryptogram
+        post[:sg_ECI] = options[:three_d_secure] && options[:three_d_secure][:eci] || '05'
+        post[:sg_IsExternalMPI] = 1
+        post[:sg_ExternalTokenProvider] = 5
       end
 
       def add_customer_details(post, payment, options)
         if address = options[:billing_address] || options[:address]
-          post[:sg_FirstName] = payment.first_name
-          post[:sg_LastName] = payment.last_name
+          post[:sg_FirstName] = payment.first_name if payment.respond_to?(:first_name)
+          post[:sg_LastName] = payment.last_name if payment.respond_to?(:last_name)
           post[:sg_Address] = address[:address1] if address[:address1]
           post[:sg_City] = address[:city] if address[:city]
           post[:sg_State] = address[:state]  if address[:state]

@@ -63,6 +63,16 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_token
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+
+    subsequent_response = @gateway.purchase(@amount, response.authorization, @options)
+    assert_success subsequent_response
+    assert_equal 'Success', subsequent_response.message
+  end
+
   def test_successful_purchase_with_non_fractional_currency
     options = @options.merge(currency: 'CLP')
     response = @gateway.purchase(127999, @credit_card, options)
