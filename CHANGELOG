@@ -80,6 +80,7 @@
 * VantivExpress: Fix eci bug [almalee24] #4982
 * IPG: Allow for Merchant Aggregator credential usage [DustinHaefele] #4986
 * Adyen: Add support for `metadata` object [rachelkirk] #4987
+* Xpay: New adapter basic operations added [jherreraa] #4669
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

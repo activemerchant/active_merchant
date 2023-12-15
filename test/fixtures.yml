@@ -1501,5 +1501,5 @@ worldpay_us:
   subid: SPREE
   merchantpin: "1234567890"
 
-x_pay:
-  api_key: 2d708950-50a1-434e-9a93-5d3ae2f1dd9f
+xpay:
+  api_key: 5d952446-9004-4023-9eae-a527a152846b
