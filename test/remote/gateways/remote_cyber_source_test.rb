@@ -94,6 +94,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       original_amount: '4',
       reference_data_code: 'ABC123',
       invoice_number: '123',
+      first_recurring_payment: true,
       mobile_remote_payment_type: 'A1',
       vat_tax_rate: '1'
     }

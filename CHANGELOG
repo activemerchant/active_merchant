@@ -87,6 +87,7 @@
 * HiPay: Add Gateway [gasb150] #4979
 * Xpay: New adapter basic operations added [jherreraa] #4669
 * Braintree: Add support for more payment details fields in response [yunnydang] #4992
+* CyberSource: Add the first_recurring_payment auth service field [yunnydang] #4989
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

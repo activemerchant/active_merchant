@@ -111,6 +111,14 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
+  def test_successful_authorize_with_cc_auth_service_first_recurring_payment
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(first_recurring_payment: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<firstRecurringPayment>true<\/firstRecurringPayment>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_successful_credit_card_purchase_with_elo
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 

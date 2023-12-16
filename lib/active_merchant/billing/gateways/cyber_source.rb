@@ -751,6 +751,7 @@ module ActiveMerchant #:nodoc:
               xml.tag!('commerceIndicator', indicator) if indicator
             end
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+            xml.tag!('firstRecurringPayment', options[:first_recurring_payment]) if options[:first_recurring_payment]
             xml.tag!('mobileRemotePaymentType', options[:mobile_remote_payment_type]) if options[:mobile_remote_payment_type]
           end
         end
