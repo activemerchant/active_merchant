@@ -78,6 +78,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login)
+        @protocol_version = options.fetch(:protocol_version, '3.00')
         super
       end
 
@@ -86,6 +87,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
 
+        add_override_protocol_version(options)
         add_amount(post, money, options)
         add_invoice(post, options)
         add_payment_method(post, payment_method, options)
@@ -101,6 +103,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
 
+        add_override_protocol_version(options)
         add_amount(post, money, options)
         add_invoice(post, options)
         add_payment_method(post, payment_method, options)
@@ -115,6 +118,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, identification, options = {})
         post = {}
 
+        add_override_protocol_version(options)
         add_reference(post, identification)
         add_release_amount(post, money, options)
 
@@ -124,6 +128,7 @@ module ActiveMerchant #:nodoc:
       def void(identification, options = {})
         post = {}
 
+        add_override_protocol_version(options)
         add_reference(post, identification)
         action = abort_or_void_from(identification)
 
@@ -136,6 +141,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
 
+        add_override_protocol_version(options)
         add_related_reference(post, identification)
         add_amount(post, money, options)
         add_invoice(post, options)
@@ -150,6 +156,7 @@ module ActiveMerchant #:nodoc:
 
       def store(credit_card, options = {})
         post = {}
+        add_override_protocol_version(options)
         add_credit_card(post, credit_card)
         add_currency(post, 0, options)
 
@@ -158,6 +165,7 @@ module ActiveMerchant #:nodoc:
 
       def unstore(token, options = {})
         post = {}
+        add_override_protocol_version(options)
         add_token(post, token)
         commit(:unstore, post)
       end
@@ -181,6 +189,10 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_override_protocol_version(options)
+        @protocol_version = options[:protocol_version] if options[:protocol_version]
+      end
 
       def truncate(value, max_size)
         return nil unless value
@@ -405,7 +417,7 @@ module ActiveMerchant #:nodoc:
         parameters.update(
           Vendor: @options[:login],
           TxType: TRANSACTIONS[action],
-          VPSProtocol: @options.fetch(:protocol_version, '3.00')
+          VPSProtocol: @protocol_version
         )
 
         parameters.update(ReferrerID: application_id) if application_id && (application_id != Gateway.application_id)
