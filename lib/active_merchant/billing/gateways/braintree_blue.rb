@@ -607,6 +607,23 @@ module ActiveMerchant #:nodoc:
           'issuing_bank'        => transaction.credit_card_details.issuing_bank
         }
 
+        network_token_details = {
+          'debit'               => transaction.network_token_details.debit,
+          'prepaid'             => transaction.network_token_details.prepaid,
+          'issuing_bank'        => transaction.network_token_details.issuing_bank
+        }
+
+        google_pay_details = {
+          'debit'               => transaction.google_pay_details.debit,
+          'prepaid'             => transaction.google_pay_details.prepaid
+        }
+
+        apple_pay_details = {
+          'debit'               => transaction.apple_pay_details.debit,
+          'prepaid'             => transaction.apple_pay_details.prepaid,
+          'issuing_bank'        => transaction.apple_pay_details.issuing_bank
+        }
+
         if transaction.risk_data
           risk_data = {
             'id'                      => transaction.risk_data.id,
@@ -631,6 +648,9 @@ module ActiveMerchant #:nodoc:
           'amount'                       => transaction.amount.to_s,
           'status'                       => transaction.status,
           'credit_card_details'          => credit_card_details,
+          'network_token_details'        => network_token_details,
+          'apple_pay_details'            => apple_pay_details,
+          'google_pay_details'           => google_pay_details,
           'customer_details'             => customer_details,
           'billing_details'              => billing_details,
           'shipping_details'             => shipping_details,
@@ -641,7 +661,8 @@ module ActiveMerchant #:nodoc:
           'processor_response_code'      => response_code_from_result(result),
           'processor_authorization_code' => transaction.processor_authorization_code,
           'recurring'                    => transaction.recurring,
-          'payment_receipt'              => payment_receipt
+          'payment_receipt'              => payment_receipt,
+          'payment_instrument_type'      => transaction.payment_instrument_type
         }
       end
 

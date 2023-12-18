@@ -1266,13 +1266,56 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_not_nil response.params['braintree_transaction']['processor_authorization_code']
   end
 
-  def test_successful_purchase_with_with_prepaid_debit_issuing_bank
+  def test_successful_credit_card_purchase_with_prepaid_debit_issuing_bank
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_success response
     assert_equal '1000 Approved', response.message
     assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['prepaid']
     assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['debit']
     assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['issuing_bank']
+  end
+
+  def test_successful_network_token_purchase_with_prepaid_debit_issuing_bank
+    assert response = @gateway.purchase(@amount, @nt_credit_card)
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['prepaid']
+    assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['debit']
+    assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['issuing_bank']
+  end
+
+  def test_successful_google_pay_purchase_with_prepaid_debit
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      month: '01',
+      year: '2024',
+      source: :google_pay,
+      transaction_id: '123456789',
+      eci: '05'
+    )
+
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'Unknown', response.params['braintree_transaction']['google_pay_details']['prepaid']
+    assert_equal 'Unknown', response.params['braintree_transaction']['google_pay_details']['debit']
+  end
+
+  def test_successful_apple_pay_purchase_with_prepaid_debit_issuing_bank
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
+
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['prepaid']
+    assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['debit']
+    assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['issuing_bank']
   end
 
   def test_successful_purchase_with_global_id
