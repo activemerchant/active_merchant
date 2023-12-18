@@ -1517,6 +1517,15 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal filtered_success_token_nonce, @gateway.scrub(success_create_token_nonce)
   end
 
+  def test_setup_purchase
+    Braintree::ClientTokenGateway.any_instance.expects(:generate).with do |params|
+      (params[:merchant_account_id] == 'merchant_account_id')
+    end.returns('client_token')
+
+    response = @gateway.setup_purchase(merchant_account_id: 'merchant_account_id')
+    assert_equal 'client_token', response.params['client_token']
+  end
+
   private
 
   def braintree_result(options = {})

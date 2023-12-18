@@ -75,9 +75,12 @@ module ActiveMerchant #:nodoc:
         @braintree_gateway = Braintree::Gateway.new(@configuration)
       end
 
-      def setup_purchase
+      def setup_purchase(options = {})
+        post = {}
+        add_merchant_account_id(post, options)
+
         commit do
-          Response.new(true, 'Client token created', { client_token: @braintree_gateway.client_token.generate })
+          Response.new(true, 'Client token created', { client_token: @braintree_gateway.client_token.generate(post) })
         end
       end
 
