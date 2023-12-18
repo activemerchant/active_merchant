@@ -103,6 +103,14 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_not_nil response.params['client_token']
   end
 
+  def test_successful_setup_purchase_with_merchant_account_id
+    assert response = @gateway.setup_purchase(merchant_account_id: fixtures(:braintree_blue)[:merchant_account_id])
+    assert_success response
+    assert_equal 'Client token created', response.message
+
+    assert_not_nil response.params['client_token']
+  end
+
   def test_successful_authorize_with_order_id
     assert response = @gateway.authorize(@amount, @credit_card, order_id: '123')
     assert_success response
@@ -282,7 +290,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert transaction = response.params['braintree_transaction']
     assert transaction['risk_data']
     assert transaction['risk_data']['id']
-    assert_equal 'Approve', transaction['risk_data']['decision']
+    assert_equal 'Not Evaluated', transaction['risk_data']['decision']
     assert_equal false, transaction['risk_data']['device_data_captured']
     assert_equal 'fraud_protection', transaction['risk_data']['fraud_service_provider']
   end
@@ -542,7 +550,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert transaction = response.params['braintree_transaction']
     assert transaction['risk_data']
     assert transaction['risk_data']['id']
-    assert_equal 'Approve', transaction['risk_data']['decision']
+    assert_equal 'Not Evaluated', transaction['risk_data']['decision']
     assert_equal false, transaction['risk_data']['device_data_captured']
     assert_equal 'fraud_protection', transaction['risk_data']['fraud_service_provider']
   end
