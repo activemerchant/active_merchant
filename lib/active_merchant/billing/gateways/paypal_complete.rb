@@ -111,20 +111,48 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_order_id(post, money, options)
+        line_items = options[:line_items].map do |item|
+          {
+            name: item[:title],
+            quantity: item[:quantity],
+            description: item[:description],
+            category: physical_retail?(options) ? "PHYSICAL_GOODS" : "DIGITAL_GOODS",
+            unit_amount: {
+              currency_code: options[:currency],
+              value: amount(item[:price_in_cents])
+            },
+            tax: {
+              currency_code: options[:currency],
+              value: amount(item[:tax_amount_in_cents])
+            }
+          }
+        end
+
         post[:intent] = 'CAPTURE'
         post[:purchase_units] ||= {}
         post[:purchase_units] = [{
                                    reference_id: options[:order_id],
                                    payee: {
                                      merchant_id: @options[:merchant_id]
-                                   }
+                                   },
+                                   items: line_items
                                  }]
+      end
+
+      def physical_retail?(options)
+        !!options.dig(:metadata, :is_physical)
       end
 
       def add_amount(post, money, options)
         post[:amount] = {
           currency_code: options[:currency],
-          value: amount(money)
+          value: amount(money),
+          breakdown: {
+            item_total: {
+              currency_code: options[:currency],
+              value: amount(money)
+            }
+          }
         }
       end
 
