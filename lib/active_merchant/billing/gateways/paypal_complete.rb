@@ -15,18 +15,23 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_order_id(post, money, options)
         add_amount(post[:purchase_units].first, money, options)
-        add_payment_source(post, payment_method)
-
+        add_payment_source(post, payment_method, options)
         commit(:post, '/v2/checkout/orders', post, options)
       end
 
       def store(payment_method, options = {})
-        post = { payment_source: {} }
-        add_credit_card(post[:payment_source], payment_method, options)
-        response = commit(:post, '/v3/vault/setup-tokens', post, options)
+        token_id = if payment_method[:payment_method_nonce]
+                     payment_method[:payment_method_nonce]
+                   else
+                     post = { payment_source: {} }
+                     add_credit_card(post[:payment_source], payment_method, options)
+                     response = commit(:post, '/v3/vault/setup-tokens', post, options)
+
+                     response['id']
+                   end
 
         post = { payment_source: {} }
-        add_token(post[:payment_source], response.params)
+        add_token(post[:payment_source], token_id)
         commit(:post, '/v3/vault/payment-tokens', post, options)
       end
 
@@ -90,17 +95,18 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_token(params, options)
+      def add_token(params, token_id)
         params[:token] = {
-          id: options["id"],
+          id: token_id,
           type: "SETUP_TOKEN"
         }
       end
 
-      def add_payment_source(post, payment_method)
+      def add_payment_source(post, vault_id, options)
         post[:payment_source] ||= {}
-        post[:payment_source][:card] = {
-          vault_id: payment_method
+        payment_source = options[:payment_type] == "paypal_account" ? :paypal : :card
+        post[:payment_source][payment_source] = {
+          vault_id: vault_id
         }
       end
 
