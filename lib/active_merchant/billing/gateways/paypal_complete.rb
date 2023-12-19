@@ -20,14 +20,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(payment_method, options = {})
-        token_id = if payment_method[:payment_method_nonce]
+        token_id = if payment_method.kind_of?(Hash) && payment_method[:payment_method_nonce]
                      payment_method[:payment_method_nonce]
                    else
                      post = { payment_source: {} }
                      add_credit_card(post[:payment_source], payment_method, options)
                      response = commit(:post, '/v3/vault/setup-tokens', post, options)
 
-                     response['id']
+                     response.params['id']
                    end
 
         post = { payment_source: {} }
