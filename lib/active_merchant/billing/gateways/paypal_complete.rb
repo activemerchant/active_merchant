@@ -236,6 +236,9 @@ module ActiveMerchant #:nodoc:
           )
         }.tap do |h|
           h['PayPal-Request-Id'] = options[:order_id] if options[:order_id]
+          if options[:device_data] && options[:device_data][:correlation_id]
+            h['PAYPAL-CLIENT-METADATA-ID'] = options[:device_data][:correlation_id]
+          end
         end
       end
     end
