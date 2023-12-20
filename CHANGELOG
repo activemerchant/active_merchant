@@ -90,6 +90,7 @@
 * CyberSource: Add the first_recurring_payment auth service field [yunnydang] #4989
 * CommerceHub: Add dynamic descriptors [jcreiff] #4994
 * Rapyd: Update email mapping [javierpedrozaing] #4996
+* SagePay: Add support for v4 [aenand] #4990
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

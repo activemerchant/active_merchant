@@ -88,6 +88,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_override_protocol_version(options)
+        add_three_ds_data(post, options)
         add_amount(post, money, options)
         add_invoice(post, options)
         add_payment_method(post, payment_method, options)
@@ -103,6 +104,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
 
+        add_three_ds_data(post, options)
         add_override_protocol_version(options)
         add_amount(post, money, options)
         add_invoice(post, options)
@@ -192,6 +194,29 @@ module ActiveMerchant #:nodoc:
 
       def add_override_protocol_version(options)
         @protocol_version = options[:protocol_version] if options[:protocol_version]
+      end
+
+      def add_three_ds_data(post, options)
+        return unless @protocol_version == '4.00'
+        return unless three_ds_2_options = options[:three_ds_2]
+
+        add_pair(post, :ThreeDSNotificationURL, three_ds_2_options[:notification_url])
+        return unless three_ds_2_options[:browser_info]
+
+        add_browser_info(post, three_ds_2_options[:browser_info])
+      end
+
+      def add_browser_info(post, browser_info)
+        add_pair(post, :BrowserAcceptHeader, browser_info[:accept_header])
+        add_pair(post, :BrowserColorDepth, browser_info[:depth])
+        add_pair(post, :BrowserJavascriptEnabled, format_boolean(browser_info[:java]))
+        add_pair(post, :BrowserJavaEnabled, format_boolean(browser_info[:java]))
+        add_pair(post, :BrowserLanguage, browser_info[:language])
+        add_pair(post, :BrowserScreenHeight, browser_info[:height])
+        add_pair(post, :BrowserScreenWidth, browser_info[:width])
+        add_pair(post, :BrowserTZ, browser_info[:timezone])
+        add_pair(post, :BrowserUserAgent, browser_info[:user_agent])
+        add_pair(post, :ChallengeWindowSize, browser_info[:browser_size])
       end
 
       def truncate(value, max_size)
@@ -423,6 +448,12 @@ module ActiveMerchant #:nodoc:
         parameters.update(ReferrerID: application_id) if application_id && (application_id != Gateway.application_id)
 
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+      end
+
+      def format_boolean(value)
+        return if value.nil?
+
+        value ? '1' : '0'
       end
 
       # SagePay returns data in the following format

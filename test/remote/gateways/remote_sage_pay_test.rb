@@ -53,6 +53,16 @@ class RemoteSagePayTest < Test::Unit::TestCase
       brand: 'master'
     )
 
+    @frictionless = CreditCard.new(
+      number: '5186150660000009',
+      month: 12,
+      year: next_year,
+      verification_value: 419,
+      first_name: 'SUCCESSFUL',
+      last_name: '',
+      brand: 'master'
+    )
+
     @electron = CreditCard.new(
       number: '4917300000000008',
       month: 12,
@@ -97,9 +107,75 @@ class RemoteSagePayTest < Test::Unit::TestCase
       phone: '0161 123 4567'
     }
 
+    @options_v4 = {
+      billing_address: {
+        name: 'Tekin Suleyman',
+        address1: 'Flat 10 Lapwing Court',
+        address2: 'West Didsbury',
+        city: 'Manchester',
+        county: 'Greater Manchester',
+        country: 'GB',
+        zip: 'M20 2PS'
+      },
+      shipping_address: {
+        name: 'Tekin Suleyman',
+        address1: '120 Grosvenor St',
+        city: 'Manchester',
+        county: 'Greater Manchester',
+        country: 'GB',
+        zip: 'M1 7QW'
+      },
+      order_id: generate_unique_id,
+      description: 'Store purchase',
+      ip: '86.150.65.37',
+      email: 'tekin@tekin.co.uk',
+      phone: '0161 123 4567',
+      protocol_version: '4.00',
+      three_ds_2: {
+        channel: 'browser',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 48,
+          java: true,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown',
+          browser_size: '05'
+        },
+        notification_url: 'https://example.com/notification'
+      }
+    }
+
     @amount = 100
   end
 
+  # Protocol 4
+  def test_successful_purchase_v4
+    assert response = @gateway.purchase(@amount, @mastercard, @options_v4)
+    assert_success response
+
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
+  def test_three_ds_challenge_purchase_v4
+    assert response = @gateway.purchase(@amount, @mastercard, @options_v4.merge(apply_3d_secure: 1))
+
+    assert_equal '3DAUTH', response.params['Status']
+    assert response.params.include?('ACSURL')
+    assert response.params.include?('CReq')
+  end
+
+  def test_frictionless_purchase_v4
+    assert response = @gateway.purchase(@amount, @frictionless, @options_v4.merge(apply_3d_secure: 1))
+    assert_success response
+
+    assert_equal 'OK', response.params['3DSecureStatus']
+  end
+
+  # Protocol 3
   def test_successful_mastercard_purchase
     assert response = @gateway.purchase(@amount, @mastercard, @options)
     assert_success response

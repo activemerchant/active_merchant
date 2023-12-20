@@ -348,6 +348,94 @@ class SagePayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_true_boolean_3ds_fields
+    options = @options.merge({
+      protocol_version: '4.00',
+      three_ds_2: {
+        channel: 'browser',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 48,
+          java: true,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown',
+          browser_size: '05'
+        },
+        notification_url: 'https://example.com/notification'
+      }
+    })
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/BrowserJavascriptEnabled=1/, data)
+      assert_match(/BrowserJavaEnabled=1/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_false_boolean_3ds_fields
+    options = @options.merge({
+      protocol_version: '4.00',
+      three_ds_2: {
+        channel: 'browser',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 48,
+          java: false,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown',
+          browser_size: '05'
+        },
+        notification_url: 'https://example.com/notification'
+      }
+    })
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/BrowserJavascriptEnabled=0/, data)
+      assert_match(/BrowserJavaEnabled=0/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_sending_3ds2_params
+    options = @options.merge({
+      protocol_version: '4.00',
+      three_ds_2: {
+        channel: 'browser',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 48,
+          java: true,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown',
+          browser_size: '05'
+        },
+        notification_url: 'https://example.com/notification'
+      }
+    })
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/VPSProtocol=4.00/, data)
+      assert_match(/BrowserAcceptHeader=unknown/, data)
+      assert_match(/BrowserLanguage=US/, data)
+      assert_match(/BrowserUserAgent=unknown/, data)
+      assert_match(/BrowserColorDepth=48/, data)
+      assert_match(/BrowserScreenHeight=1000/, data)
+      assert_match(/BrowserScreenWidth=500/, data)
+      assert_match(/BrowserTZ=-120/, data)
+      assert_match(/ChallengeWindowSize=05/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def purchase_with_options(optional)
