@@ -85,6 +85,7 @@
 * Litle: Update account type [almalee24] #4976
 * Wompi: Add support for `tip_in_cents` [rachelkirk] #4983
 * HiPay: Add Gateway [gasb150] #4979
+* Xpay: New adapter basic operations added [jherreraa] #4669
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

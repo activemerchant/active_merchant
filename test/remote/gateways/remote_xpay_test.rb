@@ -23,7 +23,7 @@ class RemoteRapydTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.preauth(@amount, @credit_card, @options)
     assert_success response
     assert_true response.params.has_key?('threeDSAuthUrl')
     assert_true response.params.has_key?('threeDSAuthRequest')

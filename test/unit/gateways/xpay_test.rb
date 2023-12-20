@@ -40,7 +40,7 @@ class XpayTest < Test::Unit::TestCase
   def test_build_request_url_with_id_param
     action = :refund
     id = 123
-    assert_equal @gateway.send(:build_request_url, action, id), "#{@base_url}operations/{123}/refunds"
+    assert_equal @gateway.send(:build_request_url, action, id), "#{@base_url}operations/123/refunds"
   end
 
   def test_invalid_instance
@@ -60,7 +60,7 @@ class XpayTest < Test::Unit::TestCase
 
   def test_check_authorize_endpoint
     stub_comms(@gateway, :ssl_post) do
-      @gateway.authorize(@amount, @credit_card, @options)
+      @gateway.preauth(@amount, @credit_card, @options)
     end.check_request do |endpoint, _data|
       assert_match(/orders\/2steps\/init/, endpoint)
     end.respond_with(successful_purchase_response)
