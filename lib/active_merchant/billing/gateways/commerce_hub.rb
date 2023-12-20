@@ -55,6 +55,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_transaction_details(post, options, 'capture')
         add_reference_transaction_details(post, authorization, options, :capture)
+        add_dynamic_descriptors(post, options)
 
         commit('sale', post, options)
       end
@@ -220,6 +221,21 @@ module ActiveMerchant #:nodoc:
         add_transaction_interaction(post, options)
         add_billing_address(post, payment, options)
         add_shipping_address(post, options)
+        add_dynamic_descriptors(post, options)
+      end
+
+      def add_dynamic_descriptors(post, options)
+        dynamic_descriptors_fields = %i[mcc merchant_name customer_service_number service_entitlement dynamic_descriptors_address]
+        return unless dynamic_descriptors_fields.any? { |key| options.include?(key) }
+
+        dynamic_descriptors = {}
+        dynamic_descriptors[:mcc] = options[:mcc] if options[:mcc]
+        dynamic_descriptors[:merchantName] = options[:merchant_name] if options [:merchant_name]
+        dynamic_descriptors[:customerServiceNumber] = options[:customer_service_number] if options[:customer_service_number]
+        dynamic_descriptors[:serviceEntitlement] = options[:service_entitlement] if options[:service_entitlement]
+        dynamic_descriptors[:address] = options[:dynamic_descriptors_address] if options[:dynamic_descriptors_address]
+
+        post[:dynamicDescriptors] = dynamic_descriptors
       end
 
       def add_reference_transaction_details(post, authorization, options, action = nil)

@@ -38,6 +38,20 @@ class CommerceHubTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
     )
     @declined_card = credit_card('4000300011112220', month: '02', year: '2035', verification_value: '123')
+    @dynamic_descriptors = {
+      mcc: '1234',
+      merchant_name: 'Spreedly',
+      customer_service_number: '555444321',
+      service_entitlement: '123444555',
+      dynamic_descriptors_address: {
+        'street' => '123 Main Street',
+        'houseNumberOrName' => 'Unit B',
+        'city' => 'Atlanta',
+        'stateOrProvince' => 'GA',
+        'postalCode' => '30303',
+        'country' => 'US'
+      }
+    }
     @options = {}
     @post = {}
   end
@@ -134,6 +148,35 @@ class CommerceHubTest < Test::Unit::TestCase
       assert_equal request['source']['card']['cardData'], @apple_pay.number
       assert_equal request['source']['cavv'], @apple_pay.payment_cryptogram
       assert_equal request['source']['walletType'], 'APPLE_PAY'
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_all_dynamic_descriptors
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(@dynamic_descriptors))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['dynamicDescriptors']['mcc'], @dynamic_descriptors[:mcc]
+      assert_equal request['dynamicDescriptors']['merchantName'], @dynamic_descriptors[:merchant_name]
+      assert_equal request['dynamicDescriptors']['customerServiceNumber'], @dynamic_descriptors[:customer_service_number]
+      assert_equal request['dynamicDescriptors']['serviceEntitlement'], @dynamic_descriptors[:service_entitlement]
+      assert_equal request['dynamicDescriptors']['address'], @dynamic_descriptors[:dynamic_descriptors_address]
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_some_dynamic_descriptors
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(mcc: '1234', customer_service_number: '555444321'))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['dynamicDescriptors']['mcc'], @dynamic_descriptors[:mcc]
+      assert_nil request['dynamicDescriptors']['merchantName']
+      assert_equal request['dynamicDescriptors']['customerServiceNumber'], @dynamic_descriptors[:customer_service_number]
+      assert_nil request['dynamicDescriptors']['serviceEntitlement']
     end.respond_with(successful_purchase_response)
 
     assert_success response
