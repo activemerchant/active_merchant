@@ -89,6 +89,7 @@
 * Braintree: Add support for more payment details fields in response [yunnydang] #4992
 * CyberSource: Add the first_recurring_payment auth service field [yunnydang] #4989
 * CommerceHub: Add dynamic descriptors [jcreiff] #4994
+* Rapyd: Update email mapping [javierpedrozaing] #4996
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

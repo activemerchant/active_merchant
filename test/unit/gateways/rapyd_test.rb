@@ -321,6 +321,34 @@ class RapydTest < Test::Unit::TestCase
     assert_equal customer_id, unstore.params.dig('data', 'id')
   end
 
+  def test_send_receipt_email_and_customer_id_for_purchase
+    store = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options)
+    end.respond_with(successful_store_response)
+
+    assert customer_id = store.params.dig('data', 'id')
+    assert card_id = store.params.dig('data', 'default_payment_method')
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, store.authorization, @options.merge(customer_id: customer_id))
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['receipt_email'], @options[:email]
+      assert_equal request['customer'], customer_id
+      assert_equal request['payment_method'], card_id
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_send_email_with_customer_object_for_purchase
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      request_body = JSON.parse(data)
+      assert request_body['customer']
+      assert_equal request_body['customer']['email'], @options[:email]
+    end
+  end
+
   def test_failed_purchase_without_customer_object
     @options[:pm_type] = 'us_debit_visa_card'
     @gateway.expects(:ssl_request).returns(failed_purchase_response)

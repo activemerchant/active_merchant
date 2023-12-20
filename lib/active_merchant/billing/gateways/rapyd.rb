@@ -256,7 +256,10 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, payment, options, action = '')
         phone_number = options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
         post[:phone_number] = phone_number.gsub(/\D/, '') unless phone_number.nil?
-        post[:email] = options[:email] unless send_customer_object?(options)
+        if payment.is_a?(String) && options[:customer_id].present?
+          post[:receipt_email] = options[:email] unless send_customer_object?(options)
+        end
+
         return if payment.is_a?(String)
         return add_customer_id(post, options) if options[:customer_id]
 
@@ -273,6 +276,7 @@ module ActiveMerchant #:nodoc:
         customer_address = address(options)
         customer_data = {}
         customer_data[:name] = "#{payment.first_name} #{payment.last_name}" unless payment.is_a?(String)
+        customer_data[:email] = options[:email] unless payment.is_a?(String) && options[:customer_id].blank?
         customer_data[:addresses] = [customer_address] if customer_address
         customer_data
       end
