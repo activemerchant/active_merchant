@@ -48,7 +48,8 @@ module ActiveMerchant #:nodoc:
         'tarjeta-d' => ->(num) { num =~ /^601828\d{10}$/ },
         'hipercard' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), HIPERCARD_RANGES) },
         'panal' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), PANAL_RANGES) },
-        'verve' => ->(num) { (16..19).cover?(num&.size) && in_bin_range?(num.slice(0, 6), VERVE_RANGES) }
+        'verve' => ->(num) { (16..19).cover?(num&.size) && in_bin_range?(num.slice(0, 6), VERVE_RANGES) },
+        'tuya' => ->(num) { num =~ /^588800\d{10}$/ }
       }
 
       SODEXO_NO_LUHN = ->(num) { num =~ /^(505864|505865)\d{10}$/ }
