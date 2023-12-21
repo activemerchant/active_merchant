@@ -153,7 +153,12 @@ module ActiveMerchant #:nodoc:
         params = params.merge("entityId" => @options[:entityId])
         request_body = post_data(action, params)
         request_endpoint = url(action, authorization)
-        raw_response = ssl_request(method, request_endpoint, request_body, headers)
+        raw_response =  if method == :post
+                          ssl_post(request_endpoint, request_body, headers)
+                        else
+                          request_endpoint = request_endpoint + "?#{request_body}"
+                          ssl_get(request_endpoint, headers)
+                        end
         response = JSON.parse(raw_response)
 
         succeeded = success_from(response)
