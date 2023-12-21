@@ -18,8 +18,9 @@ class HiPayTest < Test::Unit::TestCase
   end
 
   def test_tokenize_pm_with_authorize
-    @gateway.expects(:ssl_post).
+    @gateway.expects(:ssl_request).
       with(
+        :post,
         'https://stage-secure2-vault.hipay-tpp.com/rest/v2/token/create',
         all_of(
           includes("card_number=#{@credit_card.number}"),
@@ -33,13 +34,14 @@ class HiPayTest < Test::Unit::TestCase
         anything
       ).
       returns(successful_tokenize_response)
-    @gateway.expects(:ssl_post).with('https://stage-secure-gateway.hipay-tpp.com/rest/v1/order', anything, anything).returns(successful_authorize_response)
+    @gateway.expects(:ssl_request).with(:post, 'https://stage-secure-gateway.hipay-tpp.com/rest/v1/order', anything, anything).returns(successful_authorize_response)
     @gateway.authorize(@amount, @credit_card, @options)
   end
 
   def test_tokenize_pm_with_store
-    @gateway.expects(:ssl_post).
+    @gateway.expects(:ssl_request).
       with(
+        :post,
         'https://stage-secure2-vault.hipay-tpp.com/rest/v2/token/create',
         all_of(
           includes("card_number=#{@credit_card.number}"),
@@ -57,8 +59,9 @@ class HiPayTest < Test::Unit::TestCase
   end
 
   def test_authorize_with_credit_card
-    @gateway.expects(:ssl_post).
+    @gateway.expects(:ssl_request).
       with(
+        :post,
         'https://stage-secure2-vault.hipay-tpp.com/rest/v2/token/create',
         all_of(
           includes("card_number=#{@credit_card.number}"),
@@ -75,48 +78,54 @@ class HiPayTest < Test::Unit::TestCase
 
     tokenize_response_token = JSON.parse(successful_tokenize_response)['token']
 
-    @gateway.expects(:ssl_post).
-      with('https://stage-secure-gateway.hipay-tpp.com/rest/v1/order',
-           all_of(
-             includes('payment_product=visa'),
-             includes('operation=Authorization'),
-             regexp_matches(%r{orderid=\d+}),
-             includes("description=#{@options[:description]}"),
-             includes('currency=EUR'),
-             includes('amount=1.00'),
-             includes("cardtoken=#{tokenize_response_token}")
-           ),
-           anything).
+    @gateway.expects(:ssl_request).
+      with(
+        :post,
+        'https://stage-secure-gateway.hipay-tpp.com/rest/v1/order',
+        all_of(
+          includes('payment_product=visa'),
+          includes('operation=Authorization'),
+          regexp_matches(%r{orderid=\d+}),
+          includes("description=#{@options[:description]}"),
+          includes('currency=EUR'),
+          includes('amount=1.00'),
+          includes("cardtoken=#{tokenize_response_token}")
+        ),
+        anything
+      ).
       returns(successful_capture_response)
 
     @gateway.authorize(@amount, @credit_card, @options)
   end
 
   def test_authorize_with_credit_card_and_billing_address
-    @gateway.expects(:ssl_post).returns(successful_tokenize_response)
+    @gateway.expects(:ssl_request).returns(successful_tokenize_response)
 
     tokenize_response_token = JSON.parse(successful_tokenize_response)['token']
 
-    @gateway.expects(:ssl_post).
-      with('https://stage-secure-gateway.hipay-tpp.com/rest/v1/order',
-           all_of(
-             includes('payment_product=visa'),
-             includes('operation=Authorization'),
-             includes('streetaddress=456+My+Street'),
-             includes('streetaddress2=Apt+1'),
-             includes('city=Ottawa'),
-             includes('recipient_info=Widgets+Inc'),
-             includes('state=ON'),
-             includes('country=CA'),
-             includes('zipcode=K1C2N6'),
-             includes('phone=%28555%29555-5555'),
-             regexp_matches(%r{orderid=\d+}),
-             includes("description=#{@options[:description]}"),
-             includes('currency=EUR'),
-             includes('amount=1.00'),
-             includes("cardtoken=#{tokenize_response_token}")
-           ),
-           anything).
+    @gateway.expects(:ssl_request).
+      with(
+        :post,
+        'https://stage-secure-gateway.hipay-tpp.com/rest/v1/order',
+        all_of(
+          includes('payment_product=visa'),
+          includes('operation=Authorization'),
+          includes('streetaddress=456+My+Street'),
+          includes('streetaddress2=Apt+1'),
+          includes('city=Ottawa'),
+          includes('recipient_info=Widgets+Inc'),
+          includes('state=ON'),
+          includes('country=CA'),
+          includes('zipcode=K1C2N6'),
+          includes('phone=%28555%29555-5555'),
+          regexp_matches(%r{orderid=\d+}),
+          includes("description=#{@options[:description]}"),
+          includes('currency=EUR'),
+          includes('amount=1.00'),
+          includes("cardtoken=#{tokenize_response_token}")
+        ),
+        anything
+      ).
       returns(successful_capture_response)
 
     @gateway.authorize(@amount, @credit_card, @options.merge({ billing_address: @billing_address }))
@@ -140,13 +149,14 @@ class HiPayTest < Test::Unit::TestCase
   def test_purhcase_with_credit_card; end
 
   def test_capture
-    @gateway.expects(:ssl_post).with('https://stage-secure2-vault.hipay-tpp.com/rest/v2/token/create', anything, anything).returns(successful_tokenize_response)
-    @gateway.expects(:ssl_post).with('https://stage-secure-gateway.hipay-tpp.com/rest/v1/order', anything, anything).returns(successful_authorize_response)
+    @gateway.expects(:ssl_request).with(:post, 'https://stage-secure2-vault.hipay-tpp.com/rest/v2/token/create', anything, anything).returns(successful_tokenize_response)
+    @gateway.expects(:ssl_request).with(:post, 'https://stage-secure-gateway.hipay-tpp.com/rest/v1/order', anything, anything).returns(successful_authorize_response)
 
     authorize_response = @gateway.authorize(@amount, @credit_card, @options)
     transaction_reference, _card_token, _brand = authorize_response.authorization.split('|')
-    @gateway.expects(:ssl_post).
+    @gateway.expects(:ssl_request).
       with(
+        :post,
         "https://stage-secure-gateway.hipay-tpp.com/rest/v1/maintenance/transaction/#{transaction_reference}",
         all_of(
           includes('operation=capture'),
@@ -160,13 +170,14 @@ class HiPayTest < Test::Unit::TestCase
   end
 
   def test_refund
-    @gateway.expects(:ssl_post).with('https://stage-secure2-vault.hipay-tpp.com/rest/v2/token/create', anything, anything).returns(successful_tokenize_response)
-    @gateway.expects(:ssl_post).with('https://stage-secure-gateway.hipay-tpp.com/rest/v1/order', anything, anything).returns(successful_capture_response)
+    @gateway.expects(:ssl_request).with(:post, 'https://stage-secure2-vault.hipay-tpp.com/rest/v2/token/create', anything, anything).returns(successful_tokenize_response)
+    @gateway.expects(:ssl_request).with(:post, 'https://stage-secure-gateway.hipay-tpp.com/rest/v1/order', anything, anything).returns(successful_capture_response)
 
     authorize_response = @gateway.purchase(@amount, @credit_card, @options)
     transaction_reference, _card_token, _brand = authorize_response.authorization.split('|')
-    @gateway.expects(:ssl_post).
+    @gateway.expects(:ssl_request).
       with(
+        :post,
         "https://stage-secure-gateway.hipay-tpp.com/rest/v1/maintenance/transaction/#{transaction_reference}",
         all_of(
           includes('operation=refund'),
@@ -180,13 +191,14 @@ class HiPayTest < Test::Unit::TestCase
   end
 
   def test_void
-    @gateway.expects(:ssl_post).with('https://stage-secure2-vault.hipay-tpp.com/rest/v2/token/create', anything, anything).returns(successful_tokenize_response)
-    @gateway.expects(:ssl_post).with('https://stage-secure-gateway.hipay-tpp.com/rest/v1/order', anything, anything).returns(successful_authorize_response)
+    @gateway.expects(:ssl_request).with(:post, 'https://stage-secure2-vault.hipay-tpp.com/rest/v2/token/create', anything, anything).returns(successful_tokenize_response)
+    @gateway.expects(:ssl_request).with(:post, 'https://stage-secure-gateway.hipay-tpp.com/rest/v1/order', anything, anything).returns(successful_authorize_response)
 
     authorize_response = @gateway.authorize(@amount, @credit_card, @options)
     transaction_reference, _card_token, _brand = authorize_response.authorization.split('|')
-    @gateway.expects(:ssl_post).
+    @gateway.expects(:ssl_request).
       with(
+        :post,
         "https://stage-secure-gateway.hipay-tpp.com/rest/v1/maintenance/transaction/#{transaction_reference}",
         all_of(
           includes('operation=cancel'),

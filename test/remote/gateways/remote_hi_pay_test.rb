@@ -105,6 +105,38 @@ class RemoteHiPayTest < Test::Unit::TestCase
     assert_success response2
   end
 
+  def test_successful_unstore
+    store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+
+    response = @gateway.unstore(store_response.authorization, @options)
+    assert_success response
+  end
+
+  def test_failed_purchase_after_unstore_payment_method
+    store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+
+    purchase_response = @gateway.purchase(@amount, store_response.authorization, @options)
+    assert_success purchase_response
+
+    unstore_response = @gateway.unstore(store_response.authorization, @options)
+    assert_success unstore_response
+
+    response = @gateway.purchase(
+      @amount,
+      store_response.authorization,
+      @options.merge(
+        {
+          order_id: "Sp_UNSTORE_#{SecureRandom.random_number(1000000000)}"
+        }
+      )
+    )
+    assert_failure response
+    assert_equal 'Unknown Token', response.message
+    assert_equal '3040001', response.error_code
+  end
+
   def test_successful_refund
     purchase_response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase_response
