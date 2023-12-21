@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice_details(post, payment_code, amount, options)
-        post["amount"] = amount
+        post["amount"] = localized_amount(amount, options[:currency])
         post["currency"] = options[:currency]
         post["paymentType"] = payment_code
       end
