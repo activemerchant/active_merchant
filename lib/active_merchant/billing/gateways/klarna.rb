@@ -128,6 +128,17 @@ module ActiveMerchant
         end
       end
 
+      def get_customer_token(authorize_token)
+        response = Klarna.client(:customer_token).get(authorize_token)
+
+        if response.success?
+          message = "Client token details"
+          generate_success_response(response, message)
+        else
+          generate_failure_response(response)
+        end
+      end
+
       alias_method :credit, :refund
 
       def get(order_id)
