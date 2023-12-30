@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
       def add_credit_card(post, credit_card)
         post[:card_number] = credit_card.number
         post[:card_holder_name] = credit_card.name
-        post[:card_expiration_date] = "#{credit_card.month}/#{credit_card.year}"
+        post[:card_expiration_date] = expdate(credit_card)
         post[:card_cvv] = credit_card.verification_value
       end
 
