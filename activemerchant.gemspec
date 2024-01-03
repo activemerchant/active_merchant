@@ -3,7 +3,7 @@ require 'active_merchant/version'
 
 Gem::Specification.new do |s|
   s.platform     = Gem::Platform::RUBY
-  s.name         = 'activemerchant'
+  s.name         = 'swiss-activemerchant'
   s.version      = ActiveMerchant::VERSION
   s.summary      = 'Framework and tools for dealing with credit card transactions.'
   s.description  = 'Active Merchant is a simple payment abstraction library used in and sponsored by Shopify. It is written by Tobias Luetke, Cody Fauser, and contributors. The aim of the project is to feel natural to Ruby users and to abstract as many parts as possible away from the user to offer a consistent interface across all supported gateways.'
