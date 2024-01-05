@@ -180,13 +180,13 @@ class RemoteShift4Test < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@amount, @declined_card, @options)
+    response = @gateway.purchase(1500000000, @credit_card, @options)
     assert_failure response
-    assert_include response.message, 'Card  for Merchant Id 0008628968 not found'
+    assert_include response.message, 'Transaction declined'
   end
 
   def test_failure_on_referral_transactions
-    response = @gateway.purchase(67800, @credit_card, @options)
+    response = @gateway.purchase(99999899, @credit_card, @options)
     assert_failure response
     assert_include 'Transaction declined', response.message
   end
@@ -197,10 +197,18 @@ class RemoteShift4Test < Test::Unit::TestCase
     assert_include response.message, 'Card  for Merchant Id 0008628968 not found'
   end
 
-  def test_failed_authorize_with_error_message
-    response = @gateway.authorize(@amount, @unsupported_card, @options)
+  def test_failed_authorize_with_failure_amount
+    # this amount triggers failure according to Shift4 docs
+    response = @gateway.authorize(1500000000, @credit_card, @options)
     assert_failure response
-    assert_equal response.message, 'Format \'UTF8: An unexpected continuatio\' invalid or incompatible with argument'
+    assert_equal response.message, 'Transaction declined'
+  end
+
+  def test_failed_authorize_with_error_message
+    # this amount triggers failure according to Shift4 docs
+    response = @gateway.authorize(1500000000, @credit_card, @options)
+    assert_failure response
+    assert_equal response.message, 'Transaction declined'
   end
 
   def test_failed_capture
@@ -210,9 +218,9 @@ class RemoteShift4Test < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.refund(@amount, 'YC', @options)
+    response = @gateway.refund(1919, @credit_card, @options)
     assert_failure response
-    assert_include response.message, 'record not posted'
+    assert_include response.message, 'Transaction declined'
   end
 
   def test_successful_credit
@@ -222,9 +230,9 @@ class RemoteShift4Test < Test::Unit::TestCase
   end
 
   def test_failed_credit
-    response = @gateway.credit(@amount, @declined_card, @options)
+    response = @gateway.credit(1919, @credit_card, @options)
     assert_failure response
-    assert_include response.message, 'Card type not recognized'
+    assert_include response.message, 'Transaction declined'
   end
 
   def test_successful_refund
