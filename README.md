@@ -223,10 +223,10 @@ The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wiki
 * [Worldpay Global](http://www.worldpay.com/) - HK, GB, AU, AD, BE, CH, CY, CZ, DE, DK, ES, FI, FR, GI, GR, HU, IE, IL, IT, LI, LU, MC, MT, NL, NO, NZ, PL, PT, SE, SG, SI, SM, TR, UM, VA
 * [Worldpay Online](https://online.worldpay.com/) - HK, US, GB, AU, AD, BE, CH, CY, CZ, DE, DK, ES, FI, FR, GI, GR, HU, IE, IL, IT, LI, LU, MC, MT, NL, NO, NZ, PL, PT, SE, SG, SI, SM, TR, UM, VA
 * [Worldpay US](http://www.worldpay.com/us) - US
-* [Pixxel] (https://pixxles.com/) - GB
-* [Paynetworx] (https://paynetworx.com/) - US
-* [Klarna] (https://www.klarna.com/) - AD, AT, BE, BG, CA, CH, CZ, DE, DK, EE, ES, FI, FR, GB, GR, HR, HU, IE, IS, IT, LI, LT, LU, LV, MC, MT, NL, NO, PL, PT, RO, SE, SI, SK, US
-* [Fluidpay] (https://www.fluidpay.com/) - US, CA, GB, AU, DE, FR, ES, IT, JP, SG, HK, BR, MX
+* [Pixxel](https://pixxles.com/) - GB
+* [Paynetworx](https://paynetworx.com/) - US
+* [Klarna](https://www.klarna.com/) - AD, AT, BE, BG, CA, CH, CZ, DE, DK, EE, ES, FI, FR, GB, GR, HR, HU, IE, IS, IT, LI, LT, LU, LV, MC, MT, NL, NO, PL, PT, RO, SE, SI, SK, US
+* [Fluidpay](https://www.fluidpay.com/) - US, CA, GB, AU, DE, FR, ES, IT, JP, SG, HK, BR, MX
 
 ## Publishing Changes to RubyGems
 
