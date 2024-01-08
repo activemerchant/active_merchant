@@ -1,4 +1,4 @@
-# Active Merchant
+# Swiss Active Merchant
 [![Build Status](https://github.com/activemerchant/active_merchant/workflows/CI/badge.svg?branch=master)](https://github.com/activemerchant/active_merchant/actions?query=workflow%3ACI)
 [![Code Climate](https://codeclimate.com/github/activemerchant/active_merchant.svg)](https://codeclimate.com/github/activemerchant/active_merchant)
 
@@ -17,28 +17,20 @@ from an ever-growing set of contributors.
 See [GettingStarted.md](GettingStarted.md) if you want to learn more about using Active Merchant in your
 applications.
 
-If you'd like to contribute to Active Merchant, please start with our [Contribution Guide](https://github.com/activemerchant/active_merchant/wiki/Contributing).
-
 ## Installation
-
-### From Git
-
-You can check out the latest source from git:
-
-    git clone git://github.com/activemerchant/active_merchant.git
 
 ### From RubyGems
 
 Installation from RubyGems:
 
 ```console
-gem install activemerchant
+gem install swiss-activemerchant
 ```
 
 Or, if you're using Bundler, just add the following to your Gemfile:
 
 ```ruby
-gem 'activemerchant'
+gem 'swiss-activemerchant'
 ```
 
 ## Usage
@@ -80,14 +72,6 @@ if credit_card.validate.empty?
   end
 end
 ```
-
-## Contributing
-
-For more in-depth documentation and tutorials, see [GettingStarted.md](GettingStarted.md) and the
-[API documentation](http://www.rubydoc.info/github/activemerchant/active_merchant/).
-
-Emerging ActiveMerchant 3DS conventions are documented in the [Contributing](https://github.com/activemerchant/active_merchant/wiki/Contributing#3ds-options)
-guide and [Standardized 3DS Fields](https://github.com/activemerchant/active_merchant/wiki/Standardized-3DS-Fields) guide of the wiki.
 
 ## Supported Payment Gateways
 
@@ -239,6 +223,40 @@ The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wiki
 * [Worldpay Global](http://www.worldpay.com/) - HK, GB, AU, AD, BE, CH, CY, CZ, DE, DK, ES, FI, FR, GI, GR, HU, IE, IL, IT, LI, LU, MC, MT, NL, NO, NZ, PL, PT, SE, SG, SI, SM, TR, UM, VA
 * [Worldpay Online](https://online.worldpay.com/) - HK, US, GB, AU, AD, BE, CH, CY, CZ, DE, DK, ES, FI, FR, GI, GR, HU, IE, IL, IT, LI, LU, MC, MT, NL, NO, NZ, PL, PT, SE, SG, SI, SM, TR, UM, VA
 * [Worldpay US](http://www.worldpay.com/us) - US
+* [Pixxel] (https://pixxles.com/) - GB
+* [Paynetworx] (https://paynetworx.com/) - US
+* [Klarna] (https://www.klarna.com/) - AD, AT, BE, BG, CA, CH, CZ, DE, DK, EE, ES, FI, FR, GB, GR, HR, HU, IE, IS, IT, LI, LT, LU, LV, MC, MT, NL, NO, PL, PT, RO, SE, SI, SK, US
+* [Fluidpay] (https://www.fluidpay.com/) - US, CA, GB, AU, DE, FR, ES, IT, JP, SG, HK, BR, MX
+
+## Publishing Changes to RubyGems
+
+If you make changes or improvements to this project, we encourage you to share these updates with the community. Follow the steps below to publish your changes to RubyGems:
+
+1. Increment Version: Update the version number in the lib/your_gem/version.rb file.
+
+```ruby
+module YourGem
+  VERSION = 'x.x.x'
+end
+```
+
+2. Build Gem: Build the gem using the following command:
+
+```console
+gem build activemerchant.gemspec
+```
+
+3. Push to RubyGems: Push the updated gem to RubyGems:
+
+```console
+gem push swiss-activemerchant-x.x.x.gem
+```
+
+4. Yank Previous Version: If necessary, yank the previous version to prevent installations:
+
+```console
+gem yank swiss-activemerchant -v x.x.x
+```
 
 ## API stability policy
 
