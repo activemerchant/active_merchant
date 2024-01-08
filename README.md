@@ -1,21 +1,6 @@
 # Swiss Active Merchant
-[![Build Status](https://github.com/activemerchant/active_merchant/workflows/CI/badge.svg?branch=master)](https://github.com/activemerchant/active_merchant/actions?query=workflow%3ACI)
-[![Code Climate](https://codeclimate.com/github/activemerchant/active_merchant.svg)](https://codeclimate.com/github/activemerchant/active_merchant)
 
-Active Merchant is an extraction from the ecommerce system [Shopify](http://www.shopify.com).
-Shopify's requirements for a simple and unified API to access dozens of different payment
-gateways with very different internal APIs was the chief principle in designing the library.
-
-It was developed for usage in Ruby on Rails web applications and integrates seamlessly
-as a Rails plugin, but it also works excellently as a stand alone Ruby library.
-
-Active Merchant has been in production use since June 2006 and is now used in most modern
-Ruby applications which deal with financial transactions. It is maintained by the
-[Shopify](http://www.shopify.com) and [Spreedly](https://spreedly.com) teams, with much help
-from an ever-growing set of contributors.
-
-See [GettingStarted.md](GettingStarted.md) if you want to learn more about using Active Merchant in your
-applications.
+Swiss Active Merchant stands as an expanded iteration of the Active Merchant gem, designed to offer an enriched experience in handling financial transactions within Ruby applications. Serving as an extension to the renowned Active Merchant, Swiss Active Merchant introduces additional payment gateways.
 
 ## Installation
 
