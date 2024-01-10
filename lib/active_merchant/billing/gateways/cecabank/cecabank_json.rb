@@ -69,15 +69,23 @@ module ActiveMerchant
         request_data = JSON.parse(before_message)
         params = parse(request_data['parametros'])
 
-        sensible_fields = decrypt_sensible_fields(params['encryptedData']).
-                          gsub(%r(("pan\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-                          gsub(%r(("caducidad\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-                          gsub(%r(("cvv2\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-                          gsub(%r(("csc\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-                          gsub(%r(("authentication_value\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
+        if @options[:encryption_key]
+          sensitive_fields = decrypt_sensitive_fields(params['encryptedData']).
+                            gsub(%r(("pan\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+                            gsub(%r(("caducidad\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+                            gsub(%r(("cvv2\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+                            gsub(%r(("csc\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+                            gsub(%r(("authentication_value\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
+          params['encryptedData'] = encrypt_sensitive_fields(sensitive_fields)
+        else
+          params =  decode_params(request_data['parametros']).
+                  gsub(%r(("pan\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+                  gsub(%r(("caducidad\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+                  gsub(%r(("cvv2\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+                  gsub(%r(("csc\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
+        end
 
-        params['encryptedData'] = encrypt_sensible_fields(sensible_fields)
-        request_data['parametros'] = encode_params(params.to_json)
+        request_data['parametros'] = encode_params(params)
         before_message = before_message.gsub(%r(\")i, '\\\"')
         after_message = request_data.to_json.gsub(%r(\")i, '\\\"')
         transcript.sub(before_message, after_message)
@@ -85,14 +93,14 @@ module ActiveMerchant
 
       private
 
-      def decrypt_sensible_fields(data)
+      def decrypt_sensitive_fields(data)
         cipher = OpenSSL::Cipher.new('AES-256-CBC').decrypt
         cipher.key = [@options[:encryption_key]].pack('H*')
         cipher.iv = @options[:initiator_vector]&.split('')&.map(&:to_i)&.pack('c*')
         cipher.update([data].pack('H*')) + cipher.final
       end
 
-      def encrypt_sensible_fields(data)
+      def encrypt_sensitive_fields(data)
         cipher = OpenSSL::Cipher.new('AES-256-CBC').encrypt
         cipher.key = [@options[:encryption_key]].pack('H*')
         cipher.iv = @options[:initiator_vector]&.split('')&.map(&:to_i)&.pack('c*')
@@ -128,7 +136,7 @@ module ActiveMerchant
 
       def add_encryption(post)
         post[:cifrado] = CECA_ENCRIPTION
-        post[:parametros][:encryptedData] = encrypt_sensible_fields(post[:parametros][:encryptedData])
+        post[:parametros][:encryptedData] = encrypt_sensitive_fields(post[:parametros][:encryptedData]) if @options[:encryption_key]
       end
 
       def add_signature(post, params_encoded, options)
@@ -152,12 +160,15 @@ module ActiveMerchant
 
       def add_creditcard(post, creditcard)
         params = post[:parametros] ||= {}
-        params[:encryptedData] = {
+
+        payment_method = {
           pan: creditcard.number,
           caducidad: strftime_yyyymm(creditcard),
           cvv2: creditcard.verification_value
         }
-        params[:encryptedData][:csc] = creditcard.verification_value if CreditCard.brand?(creditcard.number) == 'american_express'
+        payment_method[:csc] = creditcard.verification_value if CreditCard.brand?(creditcard.number) == 'american_express'
+
+        @options[:encryption_key] ? params[:encryptedData] = payment_method : params.merge!(payment_method)
       end
 
       def add_stored_credentials(post, creditcard, options)
@@ -199,10 +210,14 @@ module ActiveMerchant
           enrolled: three_d_secure[:enrolled]
         }
 
-        three_d_response.merge!({ amount: post[:parametros][:importe] })
+        if @options[:encryption_key]
+          params[:encryptedData].merge!({ authentication_value: three_d_secure[:cavv] })
+        else
+          three_d_response[:authentication_value] = three_d_secure[:cavv]
+        end
 
+        three_d_response[:amount] = post[:parametros][:importe]
         params[:ThreeDsResponse] = three_d_response.to_json
-        params[:encryptedData].merge!({ authentication_value: three_d_secure[:cavv] })
       end
 
       def commit(action, post)
@@ -253,11 +268,11 @@ module ActiveMerchant
       end
 
       def encode_post_parameters(post)
-        post[:parametros] = encode_params(post[:parametros].to_json)
+        post[:parametros] = encode_params(post[:parametros])
       end
 
       def encode_params(params)
-        Base64.strict_encode64(params)
+        Base64.strict_encode64(params.to_json)
       end
 
       def decode_params(params)

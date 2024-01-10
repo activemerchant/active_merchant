@@ -14,7 +14,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
     }
 
     @cit_options = @options.merge({
-      recurring_end_date: '20231231',
+      recurring_end_date: "#{Time.now.year}1231",
       recurring_frequency: '1',
       stored_credential: {
         reason_type: 'unscheduled',
