@@ -177,7 +177,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, payment_object, options = {})
-        if payment_object&.kind_of?(String)
+        if payment_object.kind_of?(String)
           ActiveMerchant.deprecated 'credit should only be used to credit a payment method'
           return refund(money, payment_object, options)
         end
@@ -355,7 +355,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         # The bp20api has max one value per form field.
-        response_fields = Hash[CGI::parse(body).map { |k, v| [k.upcase, v.first] }]
+        response_fields = CGI::parse(body).map { |k, v| [k.upcase, v.first] }.to_h
 
         return parse_recurring(response_fields) if response_fields.include? 'REBILL_ID'
 
@@ -532,7 +532,7 @@ module ActiveMerchant #:nodoc:
             post[:MASTER_ID],
             post[:NAME1],
             post[:PAYMENT_ACCOUNT]
-          ].join('')
+          ].join
         )
       end
 
@@ -543,7 +543,7 @@ module ActiveMerchant #:nodoc:
             @options[:login],
             post[:TRANS_TYPE],
             post[:REBILL_ID]
-          ].join('')
+          ].join
         )
       end
 

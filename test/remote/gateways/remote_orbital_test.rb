@@ -1,4 +1,4 @@
-require 'test_helper.rb'
+require 'test_helper'
 
 class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def setup

@@ -280,7 +280,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Adds customer’s credit card information
-      # Note: This element should only be included
+      # NOTE: This element should only be included
       # when the payment method is credit card.
       def add_credit_card(xml, options)
         credit_card = options[:credit_card]
@@ -295,7 +295,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Adds customer’s bank account information
-      # Note: This element should only be included
+      # NOTE: This element should only be included
       # when the payment method is bank account.
       def add_bank_account(xml, options)
         bank_account = options[:bank_account]
@@ -380,7 +380,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def expdate(credit_card)
-        sprintf('%04d-%02d', credit_card.year, credit_card.month)
+        sprintf('%<year>04d-%<month>02d', year: credit_card.year, month: credit_card.month)
       end
 
       def recurring_commit(action, request)

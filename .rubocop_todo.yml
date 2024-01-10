@@ -3,7 +3,7 @@
 # on 2018-11-20 16:45:49 -0500 using RuboCop version 0.60.0.
 # The point is for the user to remove these configuration records
 # one by one as the offenses are removed from the code base.
-# Note that changes in the inspected code, or installation of new
+# NOTE: that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
 # Offense count: 1828
@@ -12,7 +12,7 @@
 # SupportedHashRocketStyles: key, separator, table
 # SupportedColonStyles: key, separator, table
 # SupportedLastArgumentHashStyles: always_inspect, always_ignore, ignore_implicit, ignore_explicit
-Layout/AlignHash:
+Layout/HashAlignment:
   Enabled: false
 
 # Offense count: 150
@@ -26,7 +26,7 @@ Lint/FormatParameterMismatch:
     - 'test/unit/credit_card_formatting_test.rb'
 
 # Offense count: 2
-Lint/HandleExceptions:
+Lint/SuppressedException:
   Exclude:
     - 'lib/active_merchant/billing/gateways/mastercard.rb'
     - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
@@ -99,7 +99,7 @@ Naming/MethodName:
 # Offense count: 14
 # Configuration parameters: MinNameLength, AllowNamesEndingInNumbers, AllowedNames, ForbiddenNames.
 # AllowedNames: io, id, to, by, on, in, at, ip, db
-Naming/UncommunicativeMethodParamName:
+Naming/MethodParameterName:
   Exclude:
     - 'lib/active_merchant/billing/gateways/blue_snap.rb'
     - 'lib/active_merchant/billing/gateways/cyber_source.rb'
@@ -171,13 +171,6 @@ Style/BarePercentLiterals:
 # FunctionalMethods: let, let!, subject, watch
 # IgnoredMethods: lambda, proc, it
 Style/BlockDelimiters:
-  Enabled: false
-
-# Offense count: 440
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: braces, no_braces, context_dependent
-Style/BracesAroundHashParameters:
   Enabled: false
 
 # Offense count: 2
@@ -392,6 +385,7 @@ Style/FormatStringToken:
     - 'test/unit/gateways/exact_test.rb'
     - 'test/unit/gateways/firstdata_e4_test.rb'
     - 'test/unit/gateways/safe_charge_test.rb'
+    - 'lib/active_merchant/billing/gateways/airwallex.rb'
 
 # Offense count: 679
 # Cop supports --auto-correct.
@@ -626,6 +620,7 @@ Style/PerlBackrefs:
     - 'lib/active_merchant/billing/gateways/sage_pay.rb'
     - 'lib/support/outbound_hosts.rb'
     - 'test/unit/gateways/payu_in_test.rb'
+    - 'lib/active_merchant/billing/compatibility.rb'
 
 # Offense count: 96
 # Cop supports --auto-correct.
@@ -735,4 +730,3 @@ Style/ZeroLengthPredicate:
 # URISchemes: http, https
 Metrics/LineLength:
   Max: 2602
-

@@ -53,7 +53,7 @@ class Latitude19Test < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    authorization = 'auth' + '|' + SecureRandom.hex(6)
+    authorization = "auth|#{SecureRandom.hex(6)}"
     response = @gateway.capture(@amount, authorization, @options)
     assert_failure response
     assert_equal 'Not submitted', response.message
@@ -110,7 +110,7 @@ class Latitude19Test < Test::Unit::TestCase
 
     @gateway.expects(:ssl_post).returns(failed_reversal_response)
 
-    authorization = auth.authorization[0..9] + 'XX'
+    authorization = "#{auth.authorization[0..9]}XX"
     response = @gateway.void(authorization, @options)
 
     assert_failure response

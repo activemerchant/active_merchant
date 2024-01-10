@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
       def authorization_from(response, params)
         return response['credit_card_id'].to_s if response['credit_card_id']
 
-        original_amount = response['amount'].nil? ? nil : sprintf('%0.02f', response['amount'])
+        original_amount = response['amount'].nil? ? nil : sprintf('%<amount>0.02f', amount: response['amount'])
         [response['checkout_id'], original_amount].join('|')
       end
 

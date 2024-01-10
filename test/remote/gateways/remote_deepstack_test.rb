@@ -218,7 +218,7 @@ class RemoteDeepstackTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
-    expiration = '%02d%02d' % [@credit_card.month, @credit_card.year % 100]
+    expiration = format('%<month>02d%<year>02d', month: @credit_card.month, year: @credit_card.year % 100)
     assert_scrubbed(expiration, transcript)
 
     transcript = capture_transcript(@gateway) do

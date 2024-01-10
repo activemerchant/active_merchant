@@ -429,6 +429,7 @@ module ActiveMerchant #:nodoc:
 
       class ExpiryDate #:nodoc:
         attr_reader :month, :year
+
         def initialize(month, year)
           @month = month.to_i
           @year = year.to_i

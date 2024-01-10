@@ -101,6 +101,15 @@ module ActiveMerchant #:nodoc:
         'failtoprocess' => 'The bank servers are offline and unable to authorize transactions'
       }
 
+      PERIODICITY = {
+        monthly: '1m',
+        bimonthly: '2m',
+        weekly: '1w',
+        biweekly: '2w',
+        yearly: '1y',
+        daily: '1d'
+      }
+
       TEST_LOGIN = 'TestMerchant'
       TEST_PASSWORD = 'password'
 
@@ -270,25 +279,9 @@ module ActiveMerchant #:nodoc:
 
         requires!(options, %i[periodicity bimonthly monthly biweekly weekly yearly daily])
 
-        cycle =
-          case options[:periodicity]
-          when :monthly
-            '1m'
-          when :bimonthly
-            '2m'
-          when :weekly
-            '1w'
-          when :biweekly
-            '2w'
-          when :yearly
-            '1y'
-          when :daily
-            '1d'
-          end
-
         parameters = {
           amount: amount(money),
-          cycle: cycle,
+          cycle: PERIODICITY[options[:periodicity]],
           verify: options[:verify] || 'y',
           billingid: options[:billingid] || nil,
           payments: options[:payments] || nil

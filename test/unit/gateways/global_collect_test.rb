@@ -140,7 +140,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['dpan'], '4444333322221111'
     assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['cryptogram'], 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
     assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['eci'], '05'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate'], "01#{payment.year.to_s[-2..-1]}"
+    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate'], "01#{payment.year.to_s[-2..]}"
     assert_equal 'TOKENIZED_CARD', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['paymentMethod']
   end
 
@@ -154,7 +154,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal post['mobilePaymentMethodSpecificInput']['authorizationMode'], 'FINAL_AUTHORIZATION'
     assert_includes post['mobilePaymentMethodSpecificInput'].keys, 'decryptedPaymentData'
     assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['pan'], '4444333322221111'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate'], "01#{payment.year.to_s[-2..-1]}"
+    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate'], "01#{payment.year.to_s[-2..]}"
     assert_equal 'CARD', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['paymentMethod']
   end
 

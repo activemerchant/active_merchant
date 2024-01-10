@@ -151,7 +151,7 @@ module ActiveMerchant
           post['card.PAN']            = payment_method.number
           post['card.CVN']            = payment_method.verification_value
           post['card.expiryYear']     = payment_method.year.to_s[-2, 2]
-          post['card.expiryMonth']    = sprintf('%02d', payment_method.month)
+          post['card.expiryMonth']    = sprintf('%<month>02d', month: payment_method.month)
         else
           post['customer.customerReferenceNumber'] = payment_method
         end

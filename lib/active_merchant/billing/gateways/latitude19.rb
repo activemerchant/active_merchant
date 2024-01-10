@@ -159,9 +159,9 @@ module ActiveMerchant #:nodoc:
 
       def add_hmac(params, method)
         if method == 'getSession'
-          hmac_message = params[:pgwAccountNumber] + '|' + params[:pgwConfigurationId] + '|' + params[:requestTimeStamp] + '|' + method
+          hmac_message = "#{params[:pgwAccountNumber]}|#{params[:pgwConfigurationId]}|#{params[:requestTimeStamp]}|#{method}"
         else
-          hmac_message = params[:pgwAccountNumber] + '|' + params[:pgwConfigurationId] + '|' + (params[:orderNumber] || '') + '|' + method + '|' + (params[:amount] || '') + '|' + (params[:sessionToken] || '') + '|' + (params[:accountToken] || '')
+          hmac_message = "#{params[:pgwAccountNumber]}|#{params[:pgwConfigurationId]}|#{params[:orderNumber] || ''}|#{method}|#{params[:amount] || ''}|#{params[:sessionToken] || ''}|#{params[:accountToken] || ''}"
         end
 
         OpenSSL::HMAC.hexdigest('sha512', @options[:secret], hmac_message)
@@ -183,7 +183,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(params, credit_card)
-        params[:cardExp] = format(credit_card.month, :two_digits).to_s + '/' + format(credit_card.year, :two_digits).to_s
+        params[:cardExp] = "#{format(credit_card.month, :two_digits)}/#{format(credit_card.year, :two_digits)}"
         params[:cardType] = BRAND_MAP[credit_card.brand.to_s]
         params[:cvv] = credit_card.verification_value
         params[:firstName] = credit_card.first_name
@@ -369,7 +369,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, method)
-        method + '|' + (
+        "#{method}|" + (
           response['result']['sessionId'] ||
           response['result']['sessionToken'] ||
           response['result']['pgwTID'] ||

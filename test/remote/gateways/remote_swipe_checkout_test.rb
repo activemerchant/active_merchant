@@ -47,7 +47,7 @@ class RemoteSwipeCheckoutTest < Test::Unit::TestCase
   end
 
   def test_invalid_card
-    # Note: Swipe Checkout transaction API returns declined if the card number
+    # NOTE: Swipe Checkout transaction API returns declined if the card number
     # is invalid, and "invalid card data" if the card number is empty
     assert response = @gateway.purchase(@amount, @invalid_card, @options)
     assert_failure response

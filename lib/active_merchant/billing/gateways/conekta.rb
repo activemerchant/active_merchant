@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
           post[:card][:name] = payment_source.name
           post[:card][:cvc] = payment_source.verification_value
           post[:card][:number] = payment_source.number
-          post[:card][:exp_month] = sprintf('%02d', payment_source.month)
+          post[:card][:exp_month] = sprintf('%<month>02d', month: payment_source.month)
           post[:card][:exp_year] = payment_source.year.to_s[-2, 2]
           add_address(post[:card], options)
         end
@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
         {
           'Accept' => "application/vnd.conekta-v#{@options[:version]}+json",
           'Accept-Language' => 'es',
-          'Authorization' => 'Basic ' + Base64.encode64("#{@options[:key]}:"),
+          'Authorization' => "Basic #{Base64.encode64("#{@options[:key]}:")}",
           'RaiseHtmlError' => 'false',
           'Conekta-Client-User-Agent' => { 'agent' => "Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}" }.to_json,
           'X-Conekta-Client-User-Agent' => conekta_client_user_agent(options),

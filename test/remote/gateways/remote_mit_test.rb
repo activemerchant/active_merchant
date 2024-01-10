@@ -46,7 +46,7 @@ class RemoteMitTest < Test::Unit::TestCase
     # create unique id based on timestamp for testing purposes
     # Each order / transaction passed to the gateway must be unique
     time = Time.now.to_i.to_s
-    @options_success[:order_id] = 'TID|' + time
+    @options_success[:order_id] = "TID|#{time}"
     response = @gateway.purchase(@amount, @credit_card, @options_success)
     assert_success response
     assert_equal 'approved', response.message
@@ -63,7 +63,7 @@ class RemoteMitTest < Test::Unit::TestCase
     # create unique id based on timestamp for testing purposes
     # Each order / transaction passed to the gateway must be unique
     time = Time.now.to_i.to_s
-    @options_success[:order_id] = 'TID|' + time
+    @options_success[:order_id] = "TID|#{time}"
     auth = @gateway.authorize(@amount, @credit_card, @options_success)
     assert_success auth
 
@@ -83,7 +83,7 @@ class RemoteMitTest < Test::Unit::TestCase
     # create unique id based on timestamp for testing purposes
     # Each order / transaction passed to the gateway must be unique
     time = Time.now.to_i.to_s
-    @options[:order_id] = 'TID|' + time
+    @options[:order_id] = "TID|#{time}"
     response = @gateway.capture(@amount_fail, 'requiredauth', @options)
     assert_failure response
     assert_not_equal 'approved', response.message
@@ -94,7 +94,7 @@ class RemoteMitTest < Test::Unit::TestCase
     # create unique id based on timestamp for testing purposes
     # Each order / transaction passed to the gateway must be unique
     time = Time.now.to_i.to_s
-    @options_success[:order_id] = 'TID|' + time
+    @options_success[:order_id] = "TID|#{time}"
     purchase = @gateway.purchase(@amount, @credit_card, @options_success)
     assert_success purchase
 
@@ -109,7 +109,7 @@ class RemoteMitTest < Test::Unit::TestCase
     # create unique id based on timestamp for testing purposes
     # Each order / transaction passed to the gateway must be unique
     time = Time.now.to_i.to_s
-    @options[:order_id] = 'TID|' + time
+    @options[:order_id] = "TID|#{time}"
     response = @gateway.refund(@amount, 'invalidauth', @options)
     assert_failure response
     assert_not_equal 'approved', response.message

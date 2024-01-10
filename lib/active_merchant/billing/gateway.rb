@@ -214,10 +214,9 @@ module ActiveMerchant #:nodoc:
 
       def normalize(field)
         case field
-        when 'true'   then true
-        when 'false'  then false
-        when ''       then nil
-        when 'null'   then nil
+        when 'true' then true
+        when 'false' then false
+        when '', 'null' then nil
         else field
         end
       end
@@ -264,7 +263,7 @@ module ActiveMerchant #:nodoc:
         if self.money_format == :cents
           cents.to_s
         else
-          sprintf('%.2f', cents.to_f / 100)
+          sprintf('%<cents>.2f', cents: cents.to_f / 100)
         end
       end
 
@@ -283,7 +282,7 @@ module ActiveMerchant #:nodoc:
 
         if non_fractional_currency?(currency)
           if self.money_format == :cents
-            sprintf('%.0f', amount.to_f / 100)
+            sprintf('%<amount>.0f', amount: amount.to_f / 100)
           else
             amount.split('.').first
           end
@@ -291,7 +290,7 @@ module ActiveMerchant #:nodoc:
           if self.money_format == :cents
             amount.to_s
           else
-            sprintf('%.3f', (amount.to_f / 10))
+            sprintf('%<amount>.3f', amount: amount.to_f / 10)
           end
         end
       end
@@ -329,7 +328,7 @@ module ActiveMerchant #:nodoc:
           if param.is_a?(Array)
             raise ArgumentError.new("Missing required parameter: #{param.first}") unless hash.has_key?(param.first)
 
-            valid_options = param[1..-1]
+            valid_options = param[1..]
             raise ArgumentError.new("Parameter: #{param.first} must be one of #{valid_options.to_sentence(words_connector: 'or')}") unless valid_options.include?(hash[param.first])
           else
             raise ArgumentError.new("Missing required parameter: #{param}") unless hash.has_key?(param)

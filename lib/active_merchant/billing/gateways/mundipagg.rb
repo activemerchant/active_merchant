@@ -242,7 +242,7 @@ module ActiveMerchant #:nodoc:
       def headers(authorization_secret_key = nil)
         basic_token = authorization_secret_key || @options[:api_key]
         {
-          'Authorization' => 'Basic ' + Base64.strict_encode64("#{basic_token}:"),
+          'Authorization' => "Basic #{Base64.strict_encode64("#{basic_token}:")}",
           'Content-Type' => 'application/json',
           'Accept' => 'application/json'
         }

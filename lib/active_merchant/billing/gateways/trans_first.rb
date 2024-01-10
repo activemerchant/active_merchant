@@ -192,13 +192,7 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response)
         case response[:status]
-        when 'Authorized'
-          true
-        when 'Voided'
-          true
-        when 'APPROVED'
-          true
-        when 'VOIDED'
+        when 'Authorized', 'Voided', 'APPROVED', 'VOIDED'
           true
         else
           false
@@ -219,8 +213,7 @@ module ActiveMerchant #:nodoc:
         params[:MerchantID] = @options[:login]
         params[:RegKey] = @options[:password]
 
-        request = params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def add_pair(post, key, value, options = {})

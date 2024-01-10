@@ -41,7 +41,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/payment=creditcard/, data)
       assert_match(/ccnumber=#{@credit_card.number}/, data)
       assert_match(/cvv=#{@credit_card.verification_value}/, data)
-      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
+      assert_match(/ccexp=#{sprintf('%<month>.2i', month: @credit_card.month)}#{@credit_card.year.to_s[-2..]}/, data)
     end.respond_with(successful_authorization_response)
     assert_success response
     capture = stub_comms do
@@ -76,7 +76,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/payment=creditcard/, data)
       assert_match(/ccnumber=#{@credit_card.number}/, data)
       assert_match(/cvv=#{@credit_card.verification_value}/, data)
-      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
+      assert_match(/ccexp=#{sprintf('%<month>.2i', month: @credit_card.month)}#{@credit_card.year.to_s[-2..]}/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
     assert response.test?
@@ -102,7 +102,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/payment=creditcard/, data)
       assert_match(/ccnumber=#{@credit_card.number}/, data)
       assert_match(/cvv=#{@credit_card.verification_value}/, data)
-      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
+      assert_match(/ccexp=#{sprintf('%<month>.2i', month: @credit_card.month)}#{@credit_card.year.to_s[-2..]}/, data)
       assert_not_match(/dup_seconds/, data)
     end.respond_with(successful_purchase_response)
 
@@ -340,7 +340,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/payment=creditcard/, data)
       assert_match(/ccnumber=#{@credit_card.number}/, data)
       assert_match(/cvv=#{@credit_card.verification_value}/, data)
-      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
+      assert_match(/ccexp=#{sprintf('%<month>.2i', month: @credit_card.month)}#{@credit_card.year.to_s[-2..]}/, data)
     end.respond_with(successful_authorization_response)
 
     assert_success response
@@ -445,7 +445,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/payment=creditcard/, data)
       assert_match(/ccnumber=#{@credit_card.number}/, data)
       assert_match(/cvv=#{@credit_card.verification_value}/, data)
-      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
+      assert_match(/ccexp=#{sprintf('%<month>.2i', month: @credit_card.month)}#{@credit_card.year.to_s[-2..]}/, data)
     end.respond_with(successful_credit_response)
 
     assert_success response
@@ -501,7 +501,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/payment=creditcard/, data)
       assert_match(/ccnumber=#{@credit_card.number}/, data)
       assert_match(/cvv=#{@credit_card.verification_value}/, data)
-      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
+      assert_match(/ccexp=#{sprintf('%<month>.2i', month: @credit_card.month)}#{@credit_card.year.to_s[-2..]}/, data)
     end.respond_with(successful_store_response)
 
     assert_success response
@@ -823,7 +823,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/payment=creditcard/, data)
       assert_match(/ccnumber=#{@credit_card.number}/, data)
       assert_match(/cvv=#{@credit_card.verification_value}/, data)
-      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
+      assert_match(/ccexp=#{sprintf('%<month>.2i', month: @credit_card.month)}#{@credit_card.year.to_s[-2..]}/, data)
 
       test_level3_options(data) if options.any?
     end.respond_with(successful_validate_response)

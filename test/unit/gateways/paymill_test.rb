@@ -240,7 +240,7 @@ class PaymillTest < Test::Unit::TestCase
   private
 
   def store_endpoint_url(credit_card, currency, amount)
-    "https://test-token.paymill.com?account.holder=#{credit_card.first_name}+#{credit_card.last_name}&account.number=#{credit_card.number}&account.expiry.month=#{'%02d' % credit_card.month}&account.expiry.year=#{credit_card.year}&account.verification=#{credit_card.verification_value}&presentation.amount3D=#{amount}&presentation.currency3D=#{currency}&channel.id=PUBLIC&jsonPFunction=jsonPFunction&transaction.mode=CONNECTOR_TEST"
+    "https://test-token.paymill.com?account.holder=#{credit_card.first_name}+#{credit_card.last_name}&account.number=#{credit_card.number}&account.expiry.month=#{format('%<month>02d', month: credit_card.month)}&account.expiry.year=#{credit_card.year}&account.verification=#{credit_card.verification_value}&presentation.amount3D=#{amount}&presentation.currency3D=#{currency}&channel.id=PUBLIC&jsonPFunction=jsonPFunction&transaction.mode=CONNECTOR_TEST"
   end
 
   def successful_store_response

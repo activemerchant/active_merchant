@@ -1,6 +1,6 @@
 require 'test_helper'
 require 'active_merchant/billing/gateway'
-require File.expand_path(File.dirname(__FILE__) + '/../../../../lib/active_merchant/billing/gateways/paypal/paypal_common_api')
+require File.expand_path("#{File.dirname(__FILE__)}/../../../../lib/active_merchant/billing/gateways/paypal/paypal_common_api")
 require 'nokogiri'
 
 class CommonPaypalGateway < ActiveMerchant::Billing::Gateway

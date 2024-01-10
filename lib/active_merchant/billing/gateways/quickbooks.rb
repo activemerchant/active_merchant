@@ -145,7 +145,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        return unless post[:card]&.kind_of?(Hash)
+        return unless post[:card].kind_of?(Hash)
 
         card_address = {}
         if address = options[:billing_address] || options[:address]
@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, creditcard, options = {})
         card = {}
         card[:number] = creditcard.number
-        card[:expMonth] = '%02d' % creditcard.month
+        card[:expMonth] = format('%<month>02d', month: creditcard.month)
         card[:expYear] = creditcard.year
         card[:cvc] = creditcard.verification_value if creditcard.verification_value?
         card[:name] = creditcard.name if creditcard.name
@@ -263,7 +263,7 @@ module ActiveMerchant #:nodoc:
         oauth_parameters[:oauth_signature] = CGI.escape(Base64.encode64(hmac_signature).chomp.delete("\n"))
 
         # prepare Authorization header string
-        oauth_parameters = Hash[oauth_parameters.sort_by { |k, _| k }]
+        oauth_parameters = oauth_parameters.to_h.sort_by { |k, _| k }
         oauth_headers = ["OAuth realm=\"#{@options[:realm]}\""]
         oauth_headers += oauth_parameters.map { |k, v| "#{k}=\"#{v}\"" }
 

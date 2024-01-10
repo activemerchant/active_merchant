@@ -165,10 +165,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def expdate(credit_card)
-        year  = sprintf('%.4i', credit_card.year)
-        month = sprintf('%.2i', credit_card.month)
+        year  = sprintf('%<year>.4i', year: credit_card.year)
+        month = sprintf('%<month>.2i', month: credit_card.month)
 
-        "#{month}/#{year[-2..-1]}"
+        "#{month}/#{year[-2..]}"
       end
 
       def url

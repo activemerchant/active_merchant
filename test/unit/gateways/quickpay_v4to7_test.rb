@@ -223,7 +223,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
   end
 
   def expected_expiration_date
-    '%02d%02d' % [@credit_card.year.to_s[2..4], @credit_card.month]
+    format('%<year>02d%<month>02d', year: @credit_card.year.to_s[2..4], month: @credit_card.month)
   end
 
   def mock_md5_hash

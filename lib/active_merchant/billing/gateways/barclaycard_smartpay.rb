@@ -177,7 +177,7 @@ module ActiveMerchant #:nodoc:
           if e.response.body.split(/\W+/).any? { |word| %w(validation configuration security).include?(word) }
             error_message = e.response.body[/#{Regexp.escape('message=')}(.*?)#{Regexp.escape('&')}/m, 1].tr('+', ' ')
             error_code = e.response.body[/#{Regexp.escape('errorCode=')}(.*?)#{Regexp.escape('&')}/m, 1]
-            return Response.new(false, error_code + ': ' + error_message, {}, test: test?)
+            return Response.new(false, "#{error_code}: #{error_message}", {}, test: test?)
           end
         end
         raise
@@ -211,7 +211,7 @@ module ActiveMerchant #:nodoc:
       def headers(account, password)
         {
           'Content-Type' => 'application/x-www-form-urlencoded; charset=utf-8',
-          'Authorization' => 'Basic ' + Base64.strict_encode64("#{account}@Company.#{@options[:company]}:#{password}").strip
+          'Authorization' => "Basic #{Base64.strict_encode64("#{account}@Company.#{@options[:company]}:#{password}").strip}"
         }
       end
 

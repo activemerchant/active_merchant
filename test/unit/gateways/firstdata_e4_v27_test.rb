@@ -138,7 +138,7 @@ class FirstdataE4V27Test < Test::Unit::TestCase
 
   def test_expdate
     assert_equal(
-      '%02d%2s' % [@credit_card.month, @credit_card.year.to_s[-2..-1]],
+      format('%<month>02d%<year>2s', month: @credit_card.month, year: @credit_card.year.to_s[-2..]),
       @gateway.send(:expdate, @credit_card)
     )
   end

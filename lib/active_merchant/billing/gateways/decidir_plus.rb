@@ -179,8 +179,6 @@ module ActiveMerchant #:nodoc:
 
         if options[:debit]
           case options[:card_brand]
-          when 'visa'
-            31
           when 'master'
             105
           when 'maestro'
@@ -192,8 +190,6 @@ module ActiveMerchant #:nodoc:
           end
         else
           case options[:card_brand]
-          when 'visa'
-            1
           when 'master'
             104
           when 'american_express'
@@ -277,19 +273,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response.dig('status') == 'approved' || response.dig('status') == 'active' || response.dig('status') == 'pre_approved' || response.empty?
+        response['status'] == 'approved' || response['status'] == 'active' || response['status'] == 'pre_approved' || response.empty?
       end
 
       def message_from(response)
         return '' if response.empty?
 
-        rejected?(response) ? message_from_status_details(response) : response.dig('status') || error_message(response) || response.dig('message')
+        rejected?(response) ? message_from_status_details(response) : response['status'] || error_message(response) || response['message']
       end
 
       def authorization_from(response)
-        return nil unless response.dig('id') || response.dig('bin')
+        return nil unless response['id'] || response['bin']
 
-        "#{response.dig('id')}|#{response.dig('bin')}"
+        "#{response['id']}|#{response['bin']}"
       end
 
       def post_data(parameters = {})
@@ -305,12 +301,12 @@ module ActiveMerchant #:nodoc:
         elsif response['error_type']
           error_code = response['error_type']
         elsif response.dig('error', 'validation_errors')
-          error = response.dig('error')
+          error = response['error']
           validation_errors = error.dig('validation_errors', 0)
           code = validation_errors['code'] if validation_errors && validation_errors['code']
           param = validation_errors['param'] if validation_errors && validation_errors['param']
           error_code = "#{error['error_type']} | #{code} | #{param}" if error['error_type']
-        elsif error = response.dig('error')
+        elsif error = response['error']
           error_code = error.dig('reason', 'id')
         end
 
@@ -318,22 +314,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_message(response)
-        return error_code_from(response) unless validation_errors = response.dig('validation_errors')
+        return error_code_from(response) unless validation_errors = response['validation_errors']
 
         validation_errors = validation_errors[0]
 
-        "#{validation_errors.dig('code')}: #{validation_errors.dig('param')}"
+        "#{validation_errors['code']}: #{validation_errors['param']}"
       end
 
       def rejected?(response)
-        return response.dig('status') == 'rejected'
+        return response['status'] == 'rejected'
       end
 
       def message_from_status_details(response)
         return unless error = response.dig('status_details', 'error')
-        return message_from_fraud_detection(response) if error.dig('type') == 'cybersource_error'
+        return message_from_fraud_detection(response) if error['type'] == 'cybersource_error'
 
-        "#{error.dig('type')}: #{error.dig('reason', 'description')}"
+        "#{error['type']}: #{error.dig('reason', 'description')}"
       end
 
       def message_from_fraud_detection(response)

@@ -204,9 +204,10 @@ module ActiveMerchant #:nodoc:
         response = {}
         xml = REXML::Document.new(xml)
 
-        if root = REXML::XPath.first(xml, '//types:TransactionResult')
-          parse_elements(response, root)
-        elsif root = REXML::XPath.first(xml, '//soap:Fault')
+        transaction_result = REXML::XPath.first(xml, '//types:TransactionResult')
+        fault = REXML::XPath.first(xml, '//soap:Fault')
+
+        if root = transaction_result || fault
           parse_elements(response, root)
         end
 

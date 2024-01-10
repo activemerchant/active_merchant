@@ -28,7 +28,7 @@ module ActiveMerchant
 
       self.supported_countries = ['AU']
 
-      # Note that support for Diners, Amex, and JCB require extra
+      # NOTE: that support for Diners, Amex, and JCB require extra
       # steps in setting up your account, as detailed in
       # "Programming for NetRegistry's E-commerce Gateway."
       # [http://rubyurl.com/hNG]
@@ -52,7 +52,7 @@ module ActiveMerchant
         super
       end
 
-      # Note that #authorize and #capture only work if your account
+      # NOTE: that #authorize and #capture only work if your account
       # vendor is St George, and if your account has been setup as
       # described in "Programming for NetRegistry's E-commerce
       # Gateway." [http://rubyurl.com/hNG]
@@ -66,7 +66,7 @@ module ActiveMerchant
         commit(:authorization, params)
       end
 
-      # Note that #authorize and #capture only work if your account
+      # NOTE: that #authorize and #capture only work if your account
       # vendor is St George, and if your account has been setup as
       # described in "Programming for NetRegistry's E-commerce
       # Gateway." [http://rubyurl.com/hNG]

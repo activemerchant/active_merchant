@@ -1159,7 +1159,7 @@ module ActiveMerchant #:nodoc:
         else
           if /item/.match?(node.parent.name)
             parent = node.parent.name
-            parent += '_' + node.parent.attributes['id'] if node.parent.attributes['id']
+            parent += "_#{node.parent.attributes['id']}" if node.parent.attributes['id']
             parent += '_'
           end
           reply[:reconciliationID2] = node.text if node.name == 'reconciliationID' && reply[:reconciliationID]
@@ -1202,7 +1202,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def format_routing_number(routing_number, options)
-        options[:currency] == 'CAD' && routing_number.length > 8 ? routing_number[-8..-1] : routing_number
+        options[:currency] == 'CAD' && routing_number.length > 8 ? routing_number[-8..] : routing_number
       end
     end
   end

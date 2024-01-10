@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
         response[:risk]             = data[44, 2]
         response[:reference]        = data[46, 10]
 
-        response[:order_number], response[:recurring] = data[57...-1].split("\034")
+        response[:order_number], response[:recurring] = data[57...].split("\034")
         response
       end
 
@@ -360,10 +360,10 @@ module ActiveMerchant #:nodoc:
         end
 
         def exp_date(credit_card)
-          year  = sprintf('%.4i', credit_card.year)
-          month = sprintf('%.2i', credit_card.month)
+          year  = sprintf('%<year>.4i', year: credit_card.year)
+          month = sprintf('%<month>.2i', month: credit_card.month)
 
-          "#{month}#{year[-2..-1]}"
+          "#{month}#{year[-2..]}"
         end
 
         def commit(action, request)

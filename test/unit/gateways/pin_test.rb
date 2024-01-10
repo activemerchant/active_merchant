@@ -100,7 +100,7 @@ class PinTest < Test::Unit::TestCase
     post = {}
     @gateway.send(:add_platform_adjustment, post, @options.merge(options_with_platform_adjustment))
     assert_equal 30, post[:platform_adjustment][:amount]
-    assert_equal 'AUD', post[:platform_adjustment][:currency]    
+    assert_equal 'AUD', post[:platform_adjustment][:currency]
   end
 
   def test_unsuccessful_request

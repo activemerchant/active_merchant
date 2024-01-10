@@ -424,7 +424,7 @@ module ActiveMerchant
       end
 
       def network_token?(payment_method, options, action)
-        payment_method.class == NetworkTokenizationCreditCard && action != :credit && options[:turn_on_nt_flow]
+        payment_method.is_a?(NetworkTokenizationCreditCard) && action != :credit && options[:turn_on_nt_flow]
       end
 
       def camel_case_lower(key)
@@ -503,7 +503,7 @@ module ActiveMerchant
           xml.payment do
             xml.creditCard do
               xml.cardNumber(truncate(credit_card.number, 16))
-              xml.expirationDate(format(credit_card.month, :two_digits) + '/' + format(credit_card.year, :four_digits))
+              xml.expirationDate("#{format(credit_card.month, :two_digits)}/#{format(credit_card.year, :four_digits)}")
               xml.cardCode(credit_card.verification_value) if credit_card.valid_card_verification_value?(credit_card.verification_value, credit_card.brand)
               xml.cryptogram(credit_card.payment_cryptogram) if credit_card.is_a?(NetworkTokenizationCreditCard) && action != :credit
             end
@@ -536,7 +536,7 @@ module ActiveMerchant
         xml.payment do
           xml.creditCard do
             xml.cardNumber(truncate(payment_method.number, 16))
-            xml.expirationDate(format(payment_method.month, :two_digits) + '/' + format(payment_method.year, :four_digits))
+            xml.expirationDate("#{format(payment_method.month, :two_digits)}/#{format(payment_method.year, :four_digits)}")
             xml.isPaymentToken(true)
             xml.cryptogram(payment_method.payment_cryptogram)
           end
@@ -939,7 +939,7 @@ module ActiveMerchant
 
         response[:account_number] =
           if element = doc.at_xpath('//accountNumber')
-            empty?(element.content) ? nil : element.content[-4..-1]
+            empty?(element.content) ? nil : element.content[-4..]
           end
 
         response[:test_request] =

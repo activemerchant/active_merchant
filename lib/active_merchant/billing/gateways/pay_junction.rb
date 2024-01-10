@@ -150,6 +150,12 @@ module ActiveMerchant #:nodoc:
         'AB'  => 'Aborted because of an upstream system error, please try again later.'
       }
 
+      PERIODICITY = {
+        monthly: 'month',
+        weekly: 'week',
+        daily: 'day'
+      }
+
       self.supported_cardtypes = %i[visa master american_express discover]
       self.supported_countries = ['US']
       self.homepage_url = 'http://www.payjunction.com/'
@@ -243,15 +249,7 @@ module ActiveMerchant #:nodoc:
 
         requires!(options, %i[periodicity monthly weekly daily], :payments)
 
-        periodic_type =
-          case options[:periodicity]
-          when :monthly
-            'month'
-          when :weekly
-            'week'
-          when :daily
-            'day'
-          end
+        periodic_type = PERIODICITY[options[:periodicity]]
 
         if options[:starting_at].nil?
           start_date = Time.now.strftime('%Y-%m-%d')
@@ -385,7 +383,7 @@ module ActiveMerchant #:nodoc:
         response = {}
         pairs.each do |pair|
           key, val = pair.split('=')
-          response[key[3..-1].to_sym] = val ? normalize(val) : nil
+          response[key[3..].to_sym] = val ? normalize(val) : nil
         end
         response
       end

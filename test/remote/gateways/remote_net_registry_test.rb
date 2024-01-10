@@ -4,7 +4,7 @@ require 'test_helper'
 # To run these tests, set the variables at the top of the class
 # definition.
 #
-# Note that NetRegistry does not provide any sort of test
+# NOTE: that NetRegistry does not provide any sort of test
 # server/account, so you'll probably want to refund any uncredited
 # purchases through the NetRegistry console at www.netregistry.com .
 # All purchases made in these tests are $1, so hopefully you won't be

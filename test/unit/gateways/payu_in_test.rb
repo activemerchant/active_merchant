@@ -46,7 +46,7 @@ class PayuInTest < Test::Unit::TestCase
         assert_parameter('ccnum', @credit_card.number, data)
         assert_parameter('ccvv', @credit_card.verification_value, data)
         assert_parameter('ccname', @credit_card.name, data)
-        assert_parameter('ccexpmon', '%02d' % @credit_card.month.to_i, data)
+        assert_parameter('ccexpmon', format('%<month>02d', month: @credit_card.month.to_i), data)
         assert_parameter('ccexpyr', @credit_card.year, data)
         assert_parameter('email', 'unknown@example.com', data)
         assert_parameter('phone', '11111111111', data)
@@ -174,33 +174,33 @@ class PayuInTest < Test::Unit::TestCase
         100,
         credit_card(
           '4242424242424242',
-          first_name: ('3' + ('a' * 61)),
-          last_name: ('3' + ('a' * 21)),
+          first_name: "3#{'a' * 61}",
+          last_name: "3#{'a' * 21}",
           month: '4',
           year: '2015'
         ),
-        order_id: ('!@#' + ('a' * 31)),
+        order_id: "!@##{'a' * 31}",
         description: ('a' * 101),
         email: ('c' * 51),
         billing_address: {
           name: 'Jim Smith',
-          address1: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 101)),
-          address2: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 101)),
-          city: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 51)),
-          state: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 51)),
-          country: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 51)),
-          zip: ('a-' + ('1' * 21)),
-          phone: ('a-' + ('1' * 51))
+          address1: "!#$%^&'\"()Aa0@-_/ .#{'a' * 101}",
+          address2: "!#$%^&'\"()Aa0@-_/ .#{'a' * 101}",
+          city: "!#$%^&'\"()Aa0@-_/ .#{'a' * 51}",
+          state: "!#$%^&'\"()Aa0@-_/ .#{'a' * 51}",
+          country: "!#$%^&'\"()Aa0@-_/ .#{'a' * 51}",
+          zip: "a-#{'1' * 21}",
+          phone: "a-#{'1' * 51}"
         },
         shipping_address: {
-          name: (('3' + ('a' * 61)) + ' ' + ('3' + ('a' * 21))),
-          address1: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 101)),
-          address2: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 101)),
-          city: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 51)),
-          state: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 51)),
-          country: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 51)),
-          zip: ('a-' + ('1' * 21)),
-          phone: ('a-' + ('1' * 51))
+          name: "3#{'a' * 61} 3#{'a' * 21}",
+          address1: "!#$%^&'\"()Aa0@-_/ .#{'a' * 101}",
+          address2: "!#$%^&'\"()Aa0@-_/ .#{'a' * 101}",
+          city: "!#$%^&'\"()Aa0@-_/ .#{'a' * 51}",
+          state: "!#$%^&'\"()Aa0@-_/ .#{'a' * 51}",
+          country: "!#$%^&'\"()Aa0@-_/ .#{'a' * 51}",
+          zip: "a-#{'1' * 21}",
+          phone: "a-#{'1' * 51}"
         }
       )
     end.check_request do |endpoint, data, _headers|

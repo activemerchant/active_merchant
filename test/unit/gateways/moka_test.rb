@@ -178,7 +178,7 @@ class MokaTest < Test::Unit::TestCase
       basket.each_with_index do |product, i|
         assert_equal product['ProductId'], options[:basket_product][i][:product_id]
         assert_equal product['ProductCode'], options[:basket_product][i][:product_code]
-        assert_equal product['UnitPrice'], (sprintf '%.2f', options[:basket_product][i][:unit_price] / 100)
+        assert_equal product['UnitPrice'], sprintf('%<item>.2f', item: options[:basket_product][i][:unit_price] / 100)
         assert_equal product['Quantity'], options[:basket_product][i][:quantity]
       end
     end.respond_with(successful_response)

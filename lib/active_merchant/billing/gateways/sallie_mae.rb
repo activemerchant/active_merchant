@@ -110,13 +110,11 @@ module ActiveMerchant #:nodoc:
         parameters[:amount] = amount(money)
 
         case action
-        when :sale
+        when :sale, :capture
           parameters[:action] = 'ns_quicksale_cc'
         when :authonly
           parameters[:action] = 'ns_quicksale_cc'
           parameters[:authonly] = 1
-        when :capture
-          parameters[:action] = 'ns_quicksale_cc'
         end
 
         response = parse(ssl_post(self.live_url, parameters.to_post_data) || '')

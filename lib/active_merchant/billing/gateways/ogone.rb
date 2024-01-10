@@ -368,7 +368,7 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, creditcard)
         add_pair post, 'CN',     creditcard.name
         add_pair post, 'CARDNO', creditcard.number
-        add_pair post, 'ED',     '%02d%02s' % [creditcard.month, creditcard.year.to_s[-2..-1]]
+        add_pair post, 'ED',     format('%<month>02d%<year>02s', month: creditcard.month, year: creditcard.year.to_s[-2..])
         add_pair post, 'CVC',    creditcard.verification_value
       end
 
@@ -377,7 +377,7 @@ module ActiveMerchant #:nodoc:
         response = convert_attributes_to_hash(xml_root.attributes)
 
         # Add HTML_ANSWER element (3-D Secure specific to the response's params)
-        # Note: HTML_ANSWER is not an attribute so we add it "by hand" to the response
+        # NOTE: HTML_ANSWER is not an attribute so we add it "by hand" to the response
         if html_answer = REXML::XPath.first(xml_root, '//HTML_ANSWER')
           response['HTML_ANSWER'] = html_answer.text
         end
@@ -462,7 +462,7 @@ module ActiveMerchant #:nodoc:
 
         filtered_params = signed_parameters.reject { |_k, v| v.nil? || v == '' }
         sha_encryptor.hexdigest(
-          filtered_params.sort_by { |k, _v| k.upcase }.map { |k, v| "#{k.upcase}=#{v}#{secret}" }.join('')
+          filtered_params.sort_by { |k, _v| k.upcase }.map { |k, v| "#{k.upcase}=#{v}#{secret}" }.join
         ).upcase
       end
 
@@ -479,7 +479,7 @@ module ActiveMerchant #:nodoc:
               ALIAS
             ).map { |key| parameters[key] } +
             [secret]
-          ).join('')
+          ).join
         ).upcase
       end
 

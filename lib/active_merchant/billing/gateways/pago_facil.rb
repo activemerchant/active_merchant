@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
         post[:apellidos] = credit_card.last_name
         post[:numeroTarjeta] = credit_card.number
         post[:cvt] = credit_card.verification_value
-        post[:mesExpiracion] = sprintf('%02d', credit_card.month)
+        post[:mesExpiracion] = sprintf('%<month>02d', month: credit_card.month)
         post[:anyoExpiracion] = credit_card.year.to_s.slice(-2, 2)
       end
 

@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Transfers funds immediately.
-      # Note that Swipe Checkout only supports purchase at this stage
+      # NOTE: that Swipe Checkout only supports purchase at this stage
       def purchase(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)

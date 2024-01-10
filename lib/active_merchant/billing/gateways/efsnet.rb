@@ -138,8 +138,8 @@ module ActiveMerchant #:nodoc:
         post[:billing_name] = creditcard.name if creditcard.name
         post[:account_number] = creditcard.number
         post[:card_verification_value] = creditcard.verification_value if creditcard.verification_value?
-        post[:expiration_month] = sprintf('%.2i', creditcard.month)
-        post[:expiration_year] = sprintf('%.4i', creditcard.year)[-2..-1]
+        post[:expiration_month] = sprintf('%<month>.2i', month: creditcard.month)
+        post[:expiration_year] = sprintf('%<year>.4i', year: creditcard.year)[-2..]
       end
 
       def commit(action, parameters)

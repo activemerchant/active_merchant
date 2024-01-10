@@ -194,17 +194,18 @@ module ActiveMerchant #:nodoc:
         commit(:post, "application_fees/#{CGI.escape(identification)}/refunds", post, options)
       end
 
-      # Note: creating a new credit card will not change the customer's existing default credit card (use :set_default => true)
+      # NOTE: creating a new credit card will not change the customer's existing default credit card (use :set_default => true)
       def store(payment, options = {})
         params = {}
         post = {}
 
-        if payment.is_a?(ApplePayPaymentToken)
+        case payment
+        when ApplePayPaymentToken
           token_exchange_response = tokenize_apple_pay_token(payment)
           params = { card: token_exchange_response.params['token']['id'] } if token_exchange_response.success?
-        elsif payment.is_a?(StripePaymentToken)
+        when StripePaymentToken
           add_payment_token(params, payment, options)
-        elsif payment.is_a?(Check)
+        when Check
           bank_token_response = tokenize_bank_account(payment)
           return bank_token_response unless bank_token_response.success?
 
@@ -268,7 +269,7 @@ module ActiveMerchant #:nodoc:
 
       def verify_credentials
         begin
-          ssl_get(live_url + 'charges/nonexistent', headers)
+          ssl_get("#{live_url}charges/nonexistent", headers)
         rescue ResponseError => e
           return false if e.response.code.to_i == 401
         end
@@ -305,7 +306,7 @@ module ActiveMerchant #:nodoc:
       def delete_latest_test_external_account(account)
         return unless test?
 
-        auth_header = { 'Authorization' => 'Basic ' + Base64.strict_encode64(options[:login].to_s + ':').strip }
+        auth_header = { 'Authorization' => "Basic #{Base64.strict_encode64("#{options[:login]}:").strip}" }
         url = "#{live_url}accounts/#{CGI.escape(account)}/external_accounts"
         accounts_response = JSON.parse(ssl_get("#{url}?limit=100", auth_header))
         to_delete = accounts_response['data'].reject { |ac| ac['default_for_currency'] }
@@ -324,10 +325,12 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options, true)
         post[:type] = type
-        if type == 'card'
+
+        case type
+        when 'card'
           add_creditcard(post, payment, options, true)
           add_source_owner(post, payment, options)
-        elsif type == 'three_d_secure'
+        when 'three_d_secure'
           post[:three_d_secure] = { card: payment }
           post[:redirect] = { return_url: options[:redirect_url] }
         end
@@ -459,8 +462,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        return unless post[:card]&.kind_of?(Hash)
-
         if address = options[:billing_address] || options[:address]
           post[:card][:address_line1] = address[:address1] if address[:address1]
           post[:card][:address_line2] = address[:address2] if address[:address2]
@@ -630,9 +631,10 @@ module ActiveMerchant #:nodoc:
           next if value != false && value.blank?
 
           flattened_key = prefix.nil? ? key : "#{prefix}[#{key}]"
-          if value.is_a?(Hash)
+          case value
+          when Hash
             flatten_params(flattened, value, flattened_key)
-          elsif value.is_a?(Array)
+          when Array
             flatten_array(flattened, value, flattened_key)
           else
             flattened << "#{flattened_key}=#{CGI.escape(value.to_s)}"
@@ -644,9 +646,10 @@ module ActiveMerchant #:nodoc:
       def flatten_array(flattened, array, prefix)
         array.each_with_index do |item, idx|
           key = "#{prefix}[#{idx}]"
-          if item.is_a?(Hash)
+          case item
+          when Hash
             flatten_params(flattened, item, key)
-          elsif item.is_a?(Array)
+          when Array
             flatten_array(flattened, item, key)
           else
             flattened << "#{key}=#{CGI.escape(item.to_s)}"
@@ -660,7 +663,7 @@ module ActiveMerchant #:nodoc:
 
       def headers(options = {})
         headers = {
-          'Authorization' => 'Basic ' + Base64.strict_encode64(key(options).to_s + ':').strip,
+          'Authorization' => "Basic #{Base64.strict_encode64("#{key(options)}:").strip}",
           'User-Agent' => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Stripe-Version' => api_version(options),
           'X-Stripe-Client-User-Agent' => stripe_client_user_agent(options),
@@ -724,9 +727,7 @@ module ActiveMerchant #:nodoc:
         return true unless test?
 
         %w(sk rk).each do |k|
-          if key(options).start_with?(k)
-            return false unless key(options).start_with?("#{k}_test")
-          end
+          key(options).start_with?("#{k}_test") if key(options).start_with?(k)
         end
 
         true

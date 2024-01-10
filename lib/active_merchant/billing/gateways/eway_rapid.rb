@@ -287,8 +287,8 @@ module ActiveMerchant #:nodoc:
           card_details = params['Customer']['CardDetails'] = {}
           card_details['Name'] = truncate(credit_card.name, 50)
           card_details['Number'] = credit_card.number
-          card_details['ExpiryMonth'] = '%02d' % (credit_card.month || 0)
-          card_details['ExpiryYear'] = '%02d' % (credit_card.year || 0)
+          card_details['ExpiryMonth'] = format('%<month>02d', month: credit_card.month || 0)
+          card_details['ExpiryYear'] = format('%<year>02d', year: credit_card.year || 0)
           card_details['CVN'] = credit_card.verification_value
         else
           add_customer_token(params, credit_card)
@@ -306,7 +306,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(url, params)
         headers = {
-          'Authorization' => ('Basic ' + Base64.strict_encode64(@options[:login].to_s + ':' + @options[:password].to_s).chomp),
+          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:login]}:#{@options[:password]}").chomp}",
           'Content-Type' => 'application/json'
         }
         request = params.to_json
@@ -362,7 +362,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        # Note: TransactionID is always null for store requests, but TokenCustomerID is also sent back for purchase from
+        # NOTE: TransactionID is always null for store requests, but TokenCustomerID is also sent back for purchase from
         # stored card transactions so we give precedence to TransactionID
         response['TransactionID'] || response['Customer']['TokenCustomerID']
       end

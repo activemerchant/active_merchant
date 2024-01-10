@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
       # This method retrieves locked funds from a customer's account (from a
       # PreAuth) and prepares them for deposit in a merchant's account.
       #
-      # Note: Moneris requires both the order_id and the transaction number of
+      # NOTE: Moneris requires both the order_id and the transaction number of
       # the original authorization.  To maintain the same interface as the other
       # gateways the two numbers are concatenated together with a ; separator as
       # the authorization number returned by authorization
@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
       private # :nodoc: all
 
       def expdate(creditcard)
-        sprintf('%.4i', creditcard.year)[-2..-1] + sprintf('%.2i', creditcard.month)
+        sprintf('%<year>.4i', year: creditcard.year)[-2..] + sprintf('%<month>.2i', month: creditcard.month)
       end
 
       def add_external_mpi_fields(post, options)

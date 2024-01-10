@@ -201,14 +201,14 @@ module ActiveMerchant #:nodoc:
       def soap_post(method, params)
         data = xml_builder(params, method)
         headers = make_headers(data, method)
-        REXML::Document.new(ssl_post(live_url + 'remote/payment.asmx', data, headers))
+        REXML::Document.new(ssl_post("#{live_url}remote/payment.asmx", data, headers))
       end
 
       def do_authorize(params)
         headers = {}
-        headers['Referer'] = (options[:password] || 'activemerchant.org')
+        headers['Referer'] = options[:password] || 'activemerchant.org'
 
-        response = raw_ssl_request(:post, live_url + 'auth/default.aspx', authorize_post_data(params), headers)
+        response = raw_ssl_request(:post, "#{live_url}auth/default.aspx", authorize_post_data(params), headers)
         # Authorize gives the response back by redirecting with the values in
         # the URL query
         if location = response['Location']
@@ -260,7 +260,7 @@ module ActiveMerchant #:nodoc:
           'Content-Type' => 'text/xml; charset=utf-8',
           'Host' => 'ssl.ditonlinebetalingssystem.dk',
           'Content-Length' => data.size.to_s,
-          'SOAPAction' => self.live_url + 'remote/payment/' + soap_call
+          'SOAPAction' => "#{self.live_url}remote/payment/#{soap_call}"
         }
       end
 
@@ -284,8 +284,8 @@ module ActiveMerchant #:nodoc:
       def authorize_post_data(params = {})
         params[:language] = '2'
         params[:cms] = 'activemerchant_3ds'
-        params[:accepturl] = live_url + 'auth/default.aspx?accept=1'
-        params[:declineurl] = live_url + 'auth/default.aspx?decline=1'
+        params[:accepturl] = "#{live_url}auth/default.aspx?accept=1"
+        params[:declineurl] = "#{live_url}auth/default.aspx?decline=1"
         params[:merchantnumber] = @options[:login]
 
         params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')

@@ -184,7 +184,7 @@ module ActiveMerchant #:nodoc:
           'Content-Type'    => 'application/json;utf-8',
           'Omise-Version'   => @api_version || '2014-07-27',
           'User-Agent'      => "ActiveMerchantBindings/#{ActiveMerchant::VERSION} Ruby/#{RUBY_VERSION}",
-          'Authorization'   => 'Basic ' + Base64.encode64(key.to_s + ':').strip,
+          'Authorization'   => "Basic #{Base64.encode64("#{key}:").strip}",
           'Accept-Encoding' => 'utf-8'
         }
       end

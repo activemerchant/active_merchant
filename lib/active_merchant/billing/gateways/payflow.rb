@@ -14,6 +14,17 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-pro-overview-outside'
       self.display_name = 'PayPal Payflow Pro'
 
+      PAY_PERIOD_VALUES = {
+        weekly: 'Weekly',
+        biweekly: 'Bi-weekly',
+        semimonthly: 'Semi-monthly',
+        quadweekly: 'Every four weeks',
+        monthly: 'Monthly',
+        quarterly: 'Quarterly',
+        semiyearly: 'Semi-yearly',
+        yearly: 'Yearly'
+      }
+
       def authorize(money, credit_card_or_reference, options = {})
         request = build_sale_or_authorization_request(:authorization, money, credit_card_or_reference, options)
 
@@ -380,8 +391,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def expdate(creditcard)
-        year  = sprintf('%.4i', creditcard.year.to_s.sub(/^0+/, ''))
-        month = sprintf('%.2i', creditcard.month.to_s.sub(/^0+/, ''))
+        year  = sprintf('%<year>.4i', year: creditcard.year.to_s.sub(/^0+/, ''))
+        month = sprintf('%<month>.2i', month: creditcard.month.to_s.sub(/^0+/, ''))
 
         "#{year}#{month}"
       end
@@ -445,16 +456,7 @@ module ActiveMerchant #:nodoc:
 
       def get_pay_period(options)
         requires!(options, %i[periodicity bimonthly monthly biweekly weekly yearly daily semimonthly quadweekly quarterly semiyearly])
-        case options[:periodicity]
-        when :weekly then 'Weekly'
-        when :biweekly then 'Bi-weekly'
-        when :semimonthly then 'Semi-monthly'
-        when :quadweekly then 'Every four weeks'
-        when :monthly then 'Monthly'
-        when :quarterly then 'Quarterly'
-        when :semiyearly then 'Semi-yearly'
-        when :yearly then 'Yearly'
-        end
+        PAY_PERIOD_VALUES[options[:periodicity]]
       end
 
       def format_rp_date(time)

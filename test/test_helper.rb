@@ -18,8 +18,8 @@ ActiveMerchant::Billing::Base.mode = :test
 
 if ENV['DEBUG_ACTIVE_MERCHANT'] == 'true'
   require 'logger'
-  ActiveMerchant::Billing::Gateway.logger = Logger.new(STDOUT)
-  ActiveMerchant::Billing::Gateway.wiredump_device = STDOUT
+  ActiveMerchant::Billing::Gateway.logger = Logger.new($stdout)
+  ActiveMerchant::Billing::Gateway.wiredump_device = $stdout
 end
 
 # Test gateways
@@ -70,14 +70,14 @@ module ActiveMerchant
     # object if things go afoul.
     def assert_success(response, message = nil)
       clean_backtrace do
-        assert response.success?, build_message(nil, "#{message + "\n" if message}Response expected to succeed: <?>", response)
+        assert response.success?, build_message(nil, "#{"#{message}\n" if message}Response expected to succeed: <?>", response)
       end
     end
 
     # The negative of +assert_success+
     def assert_failure(response, message = nil)
       clean_backtrace do
-        assert !response.success?, build_message(nil, "#{message + "\n" if message}Response expected to fail: <?>", response)
+        assert !response.success?, build_message(nil, "#{"#{message}\n" if message}Response expected to fail: <?>", response)
       end
     end
 

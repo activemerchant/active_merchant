@@ -151,8 +151,8 @@ module ActiveMerchant #:nodoc:
       def add_payment_cc(post, credit_card)
         post[:cc] = credit_card.number
         post[:cvv] = credit_card.verification_value if credit_card.verification_value?
-        year  = sprintf('%.4i', credit_card.year)
-        month = sprintf('%.2i', credit_card.month)
+        year  = sprintf('%<year>.4i', year: credit_card.year)
+        month = sprintf('%<month>.2i', month: credit_card.month)
         post[:expire] = "#{month}/#{year[2..3]}"
       end
 
@@ -172,7 +172,7 @@ module ActiveMerchant #:nodoc:
             { status: 'success', id: m[2] } :
             { status: 'failure', message: m[2] }
         else
-          Hash[status: body]
+          { status: body }
         end
       end
 

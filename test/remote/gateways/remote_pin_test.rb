@@ -123,7 +123,7 @@ class RemotePinTest < Test::Unit::TestCase
   def test_store_and_charge_with_pinjs_card_token
     headers = {
       'Content-Type' => 'application/json',
-      'Authorization' => "Basic #{Base64.strict_encode64(@gateway.options[:api_key] + ':').strip}"
+      'Authorization' => "Basic #{Base64.strict_encode64("#{@gateway.options[:api_key]}:").strip}"
     }
     # Get a token equivalent to what is returned by Pin.js
     card_attrs = {
@@ -138,7 +138,7 @@ class RemotePinTest < Test::Unit::TestCase
       address_start: 'WA',
       address_country: 'Australia'
     }
-    url = @gateway.test_url + '/cards'
+    url = "#{@gateway.test_url}/cards"
 
     body = JSON.parse(@gateway.ssl_post(url, card_attrs.to_json, headers))
 

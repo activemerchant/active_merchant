@@ -425,7 +425,7 @@ module ActiveMerchant #:nodoc:
 
       def add_risk_data(post, options)
         if (risk_data = options[:risk_data])
-          risk_data = Hash[risk_data.map { |k, v| ["riskdata.#{k}", v] }]
+          risk_data = risk_data.transform_keys { |k| "riskdata.#{k}" }
           post[:additionalData].merge!(risk_data)
         end
       end
@@ -502,7 +502,7 @@ module ActiveMerchant #:nodoc:
           post[:deliveryAddress][:stateOrProvince] = get_state(address)
           post[:deliveryAddress][:country] = get_country(address)
         end
-        return unless post[:bankAccount]&.kind_of?(Hash) || post[:card]&.kind_of?(Hash)
+        return unless post[:bankAccount].kind_of?(Hash) || post[:card].kind_of?(Hash)
 
         if (address = options[:billing_address] || options[:address]) && address[:country]
           add_billing_address(post, options, address)
@@ -548,11 +548,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment, options, action = nil)
-        if payment.is_a?(String)
+        case payment
+        when String
           _, _, recurring_detail_reference = payment.split('#')
           post[:selectedRecurringDetailReference] = recurring_detail_reference
           options[:recurring_contract_type] ||= 'RECURRING'
-        elsif payment.is_a?(Check)
+        when Check
           add_bank_account(post, payment, options, action)
         else
           add_mpi_data_for_network_tokenization_card(post, payment, options) if payment.is_a?(NetworkTokenizationCreditCard)
@@ -827,7 +828,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(action, response, options)
-        if %w[RedirectShopper ChallengeShopper].include?(response.dig('resultCode')) && !options[:execute_threed] && !options[:threed_dynamic]
+        if %w[RedirectShopper ChallengeShopper].include?(response['resultCode']) && !options[:execute_threed] && !options[:threed_dynamic]
           response['refusalReason'] = 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.'
           return false
         end

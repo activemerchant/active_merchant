@@ -181,9 +181,11 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment, options)
         post[:processingInformation] = {}
-        if payment.is_a?(NetworkTokenizationCreditCard)
+
+        case payment
+        when NetworkTokenizationCreditCard
           add_network_tokenization_card(post, payment, options)
-        elsif payment.is_a?(Check)
+        when Check
           add_ach(post, payment)
         else
           add_credit_card(post, payment)
@@ -315,7 +317,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action)
-        "#{(test? ? test_url : live_url)}/pts/v2/#{action}"
+        "#{test? ? test_url : live_url}/pts/v2/#{action}"
       end
 
       def host
@@ -344,7 +346,7 @@ module ActiveMerchant #:nodoc:
         )
       rescue ActiveMerchant::ResponseError => e
         response = e.response.body.present? ? parse(e.response.body) : { 'response' => { 'rmsg' => e.response.msg } }
-        message = response.dig('response', 'rmsg') || response.dig('message')
+        message = response.dig('response', 'rmsg') || response['message']
         Response.new(false, message, response, test: test?)
       end
 

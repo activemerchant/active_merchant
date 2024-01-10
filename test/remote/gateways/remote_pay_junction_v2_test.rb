@@ -70,7 +70,7 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
-    assert_equal sprintf('%.2f', (@amount - 1).to_f / 100), capture.params['amountTotal']
+    assert_equal sprintf('%<amount>.2f', amount: (@amount - 1).to_f / 100), capture.params['amountTotal']
   end
 
   def test_failed_capture
@@ -95,7 +95,7 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
     assert_equal 'Approved', refund.message
-    assert_equal sprintf('%.2f', @amount.to_f / 100), refund.params['amountTotal']
+    assert_equal sprintf('%<amount>.2f', amount: @amount.to_f / 100), refund.params['amountTotal']
   end
 
   def test_failed_refund

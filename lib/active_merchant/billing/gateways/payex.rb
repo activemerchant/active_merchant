@@ -336,7 +336,7 @@ module ActiveMerchant #:nodoc:
       def add_request_hash(properties, fields)
         data = fields.map { |e| properties[e] }
         data << @options[:encryption_key]
-        properties['hash_'] = Digest::MD5.hexdigest(data.join(''))
+        properties['hash_'] = Digest::MD5.hexdigest(data.join)
       end
 
       def build_xml_request(soap_action, properties)

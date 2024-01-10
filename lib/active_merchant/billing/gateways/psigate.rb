@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
         }
 
         if creditcard
-          exp_month = sprintf('%.2i', creditcard.month) unless creditcard.month.blank?
+          exp_month = sprintf('%<month>.2i', month: creditcard.month) unless creditcard.month.blank?
           exp_year = creditcard.year.to_s[2, 2] unless creditcard.year.blank?
           card_id_code = (creditcard.verification_value.blank? ? nil : '1')
 

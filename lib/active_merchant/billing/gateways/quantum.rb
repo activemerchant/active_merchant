@@ -257,8 +257,8 @@ module ActiveMerchant #:nodoc:
           node.elements.each { |e| parse_element(reply, e) }
         else
           if /item/.match?(node.parent.name)
-            parent = node.parent.name + (node.parent.attributes['id'] ? '_' + node.parent.attributes['id'] : '')
-            reply[(parent + '_' + node.name).to_sym] = node.text
+            parent = node.parent.name + (node.parent.attributes['id'] ? "_#{node.parent.attributes['id']}" : '')
+            reply["#{parent}_node.name".to_sym] = node.text
           else
             reply[node.name.to_sym] = node.text
           end

@@ -479,7 +479,7 @@ module ActiveMerchant #:nodoc:
 
       def expdate(credit_card)
         if credit_card.year.present? && credit_card.month.present?
-          sprintf('%04d-%02d', credit_card.year, credit_card.month)
+          sprintf('%<year>04d-%<month>02d', year: credit_card.year, month: credit_card.month)
         else
           'XXXX'
         end
@@ -791,7 +791,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Adds customer’s credit card information
-      # Note: This element should only be included
+      # NOTE: This element should only be included
       # when the payment method is credit card.
       def add_credit_card(xml, credit_card)
         return unless credit_card
@@ -801,7 +801,7 @@ module ActiveMerchant #:nodoc:
           xml.tag!('cardNumber', full_or_masked_card_number(credit_card.number))
           # The expiration date of the credit card used for the subscription
           xml.tag!('expirationDate', expdate(credit_card))
-          # Note that Authorize.net does not save CVV codes as part of the
+          # NOTE: that Authorize.net does not save CVV codes as part of the
           # payment profile. Any transactions/validations after the payment
           # profile is created that wish to use CVV verification must pass
           # the CVV code to authorize.net again.
@@ -810,7 +810,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Adds customer’s bank account information
-      # Note: This element should only be included
+      # NOTE: This element should only be included
       # when the payment method is bank account.
       def add_bank_account(xml, bank_account)
         raise StandardError, "Invalid Bank Account Type: #{bank_account[:account_type]}" unless BANK_ACCOUNT_TYPES.include?(bank_account[:account_type])
@@ -835,7 +835,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Adds customer’s driver's license information
-      # Note: This element is only required for
+      # NOTE: This element is only required for
       # Wells Fargo SecureSource eCheck.Net merchants
       def add_drivers_license(xml, drivers_license)
         xml.tag!('driversLicense') do

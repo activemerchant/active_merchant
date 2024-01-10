@@ -161,14 +161,11 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         return response['Message'] if response['Message']
 
-        if response['Status'] == 'Approved'
-          'This transaction has been approved'
-        elsif response['Status'] == 'Declined'
-          'This transaction has been declined'
-        elsif response['Status'] == 'Voided'
-          'This transaction has been voided'
+        case status = response['Status']
+        when 'Approved', 'Declined', 'Voided'
+          "This transaction has been #{status.downcase}"
         else
-          response['Status']
+          status
         end
       end
 
@@ -182,8 +179,7 @@ module ActiveMerchant #:nodoc:
         post['RequestID']     = request_id
         post['Signature']     = signature(action, post, parameters)
 
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def timestamp
