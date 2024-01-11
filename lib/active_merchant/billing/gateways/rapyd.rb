@@ -179,8 +179,8 @@ module ActiveMerchant #:nodoc:
 
         post[:payment_method][:type] = options[:pm_type]
         pm_fields[:number] = payment.number
-        pm_fields[:expiration_month] = payment.month.to_s
-        pm_fields[:expiration_year] = payment.year.to_s
+        pm_fields[:expiration_month] = format(payment.month, :two_digits).to_s
+        pm_fields[:expiration_year] = format(payment.year, :two_digits).to_s
         pm_fields[:name] = "#{payment.first_name} #{payment.last_name}"
         pm_fields[:cvv] = payment.verification_value.to_s unless valid_network_transaction_id?(options) || payment.verification_value.blank?
         pm_fields[:recurrence_type] = options[:recurrence_type] if options[:recurrence_type]
