@@ -204,7 +204,7 @@ module ActiveMerchant
         params[:apikey] = @options[:apikey]
         params[:ta_token] = options[:ta_token]
         params[:type] = 'FDToken'
-        params[:credit_card] = add_card_data(payment_method)
+        params[:credit_card] = add_card_data(payment_method, options)
         params[:auth] = 'false'
       end
 
@@ -220,7 +220,7 @@ module ActiveMerchant
         elsif payment_method.is_a? NetworkTokenizationCreditCard
           add_network_tokenization(params, payment_method, options)
         else
-          add_creditcard(params, payment_method)
+          add_creditcard(params, payment_method, options)
         end
       end
 
@@ -257,17 +257,17 @@ module ActiveMerchant
         params[:token] = token
       end
 
-      def add_creditcard(params, creditcard)
-        credit_card = add_card_data(creditcard)
+      def add_creditcard(params, creditcard, options)
+        credit_card = add_card_data(creditcard, options)
 
         params[:method] = 'credit_card'
         params[:credit_card] = credit_card
       end
 
-      def add_card_data(payment_method)
+      def add_card_data(payment_method, options = {})
         card = {}
         card[:type] = CREDIT_CARD_BRAND[payment_method.brand]
-        card[:cardholder_name] = payment_method.name
+        card[:cardholder_name] = name_from_payment_method(payment_method) || name_from_address(options)
         card[:card_number] = payment_method.number
         card[:exp_date] = format_exp_date(payment_method.month, payment_method.year)
         card[:cvv] = payment_method.verification_value if payment_method.verification_value?

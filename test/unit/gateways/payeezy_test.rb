@@ -98,8 +98,15 @@ class PayeezyGateway < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    @credit_card.first_name = nil
+    @credit_card.last_name = nil
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'Jim Smith', request.dig('credit_card', 'cardholder_name')
+    end.respond_with(successful_purchase_response)
     assert_success response
     assert_equal 'ET114541|55083431|credit_card|1', response.authorization
     assert response.test?
