@@ -76,7 +76,7 @@ class RapydTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"number":"4242424242424242","expiration_month":"9","expiration_year":"2024","name":"Longbob Longsen/, data)
+      assert_match(/"number":"4242424242424242","expiration_month":"9","expiration_year":"#{ Time.now.year + 1}","name":"Longbob Longsen/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
     assert_equal 'payment_716ce0efc63aa8d91579e873d29d9d5e', response.authorization.split('|')[0]
@@ -539,6 +539,54 @@ class RapydTest < Test::Unit::TestCase
   def test_wrong_url_for_payment_redirect_url
     url = @gateway_payment_redirect.send(:url, 'refund', 'payment_redirect')
     assert_no_match %r{https://sandboxpayment-redirect.rapyd.net/v1/}, url
+  end
+
+  def test_add_extra_fields_for_fx_transactions
+    @options[:requested_currency] = 'EUR'
+    @options[:fixed_side] = 'buy'
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'EUR', request['requested_currency']
+      assert_equal 'buy', request['fixed_side']
+    end
+  end
+
+  def test_not_add_extra_fields_for_non_fx_transactions
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_nil request['requested_currency']
+      assert_nil request['fixed_side']
+    end
+  end
+
+  def test_implicit_expire_unix_time
+    @options[:requested_currency] = 'EUR'
+    @options[:fixed_side] = 'buy'
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_in_delta 7.to_i.days.from_now.to_i, request['expiration'], 60
+    end
+  end
+
+  def test_sending_explicitly_expire_time
+    @options[:requested_currency] = 'EUR'
+    @options[:fixed_side] = 'buy'
+    @options[:expiration_days] = 2
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_in_delta @options[:expiration_days].to_i.days.from_now.to_i, request['expiration'], 60
+    end
   end
 
   private
