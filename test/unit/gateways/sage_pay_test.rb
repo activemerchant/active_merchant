@@ -436,6 +436,54 @@ class SagePayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_sending_cit_params
+    options = @options.merge!({
+      protocol_version: '4.00',
+      stored_credential: {
+        initial_transaction: true,
+        initiator: 'cardholder',
+        reason_type: 'installment'
+      },
+      recurring_frequency: '30',
+      recurring_expiry: "#{Time.now.year + 1}-04-21",
+      installment_data: 5
+    })
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/COFUsage=FIRST/, data)
+      assert_match(/MITType=INSTALMENT/, data)
+      assert_match(/RecurringFrequency=30/, data)
+      assert_match(/PurchaseInstalData=5/, data)
+      assert_match(/RecurringExpiry=#{Time.now.year + 1}-04-21/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_sending_mit_params
+    options = @options.merge({
+      protocol_version: '4.00',
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'recurring',
+        network_transaction_id: '123'
+      },
+      recurring_frequency: '30',
+      recurring_expiry: "#{Time.now.year + 1}-04-21"
+    })
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/COFUsage=SUBSEQUENT/, data)
+      assert_match(/MITType=RECURRING/, data)
+      assert_match(/RecurringFrequency=30/, data)
+      assert_match(/SchemeTraceID=123/, data)
+      assert_match(/RecurringExpiry=#{Time.now.year + 1}-04-21/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def purchase_with_options(optional)

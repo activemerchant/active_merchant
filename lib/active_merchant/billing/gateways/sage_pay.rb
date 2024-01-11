@@ -89,6 +89,7 @@ module ActiveMerchant #:nodoc:
 
         add_override_protocol_version(options)
         add_three_ds_data(post, options)
+        add_stored_credentials_data(post, options)
         add_amount(post, money, options)
         add_invoice(post, options)
         add_payment_method(post, payment_method, options)
@@ -105,6 +106,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_three_ds_data(post, options)
+        add_stored_credentials_data(post, options)
         add_override_protocol_version(options)
         add_amount(post, money, options)
         add_invoice(post, options)
@@ -217,6 +219,31 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :BrowserTZ, browser_info[:timezone])
         add_pair(post, :BrowserUserAgent, browser_info[:user_agent])
         add_pair(post, :ChallengeWindowSize, browser_info[:browser_size])
+      end
+
+      def add_stored_credentials_data(post, options)
+        return unless @protocol_version == '4.00'
+        return unless stored_credential = options[:stored_credential]
+
+        initiator = stored_credential[:initiator] == 'cardholder' ? 'CIT' : 'MIT'
+        cof_usage = if stored_credential[:initial_transaction] && initiator == 'CIT'
+                      'FIRST'
+                    elsif !stored_credential[:initial_transaction] && initiator == 'MIT'
+                      'SUBSEQUENT'
+                    end
+
+        add_pair(post, :COFUsage, cof_usage) if cof_usage
+        add_pair(post, :InitiatedTYPE, initiator)
+        add_pair(post, :SchemeTraceID, stored_credential[:network_transaction_id]) if stored_credential[:network_transaction_id]
+
+        reasoning = stored_credential[:reason_type] == 'installment' ? 'instalment' : stored_credential[:reason_type]
+        add_pair(post, :MITType, reasoning.upcase)
+
+        if %w(instalment recurring).any?(reasoning)
+          add_pair(post, :RecurringExpiry, options[:recurring_expiry])
+          add_pair(post, :RecurringFrequency, options[:recurring_frequency])
+          add_pair(post, :PurchaseInstalData, options[:installment_data])
+        end
       end
 
       def truncate(value, max_size)

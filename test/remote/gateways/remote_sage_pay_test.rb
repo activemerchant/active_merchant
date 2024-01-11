@@ -175,6 +175,42 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert_equal 'OK', response.params['3DSecureStatus']
   end
 
+  def test_successful_purchase_v4_cit
+    cit_options = @options_v4.merge!({
+      stored_credential: {
+        initial_transaction: true,
+        initiator: 'cardholder',
+        reason_type: 'installment'
+      },
+      recurring_frequency: '30',
+      recurring_expiry: "#{Time.now.year + 1}-04-21",
+      installment_data: 5,
+      order_id: generate_unique_id
+    })
+    assert response = @gateway.purchase(@amount, @mastercard, cit_options)
+    assert_success response
+    assert response.test?
+    assert !response.authorization.blank?
+
+    network_transaction_id = response.params['SchemeTraceID']
+    cit_options = @options_v4.merge!({
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'installment',
+        network_transaction_id: network_transaction_id
+      },
+      recurring_frequency: '30',
+      recurring_expiry: "#{Time.now.year + 1}-04-21",
+      installment_data: 5,
+      order_id: generate_unique_id
+    })
+    assert response = @gateway.purchase(@amount, @mastercard, cit_options)
+    assert_success response
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
   # Protocol 3
   def test_successful_mastercard_purchase
     assert response = @gateway.purchase(@amount, @mastercard, @options)
