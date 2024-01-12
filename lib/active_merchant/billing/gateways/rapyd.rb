@@ -138,6 +138,9 @@ module ActiveMerchant #:nodoc:
         post[:amount] = money.zero? ? 0 : amount(money).to_f.to_s
         post[:currency] = (options[:currency] || currency(money))
         post[:merchant_reference_id] = options[:merchant_reference_id] || options[:order_id]
+        post[:requested_currency] = options[:requested_currency] if options[:requested_currency].present?
+        post[:fixed_side] = options[:fixed_side] if options[:fixed_side].present?
+        post[:expiration] = (options[:expiration_days] || 7).to_i.days.from_now.to_i if options[:fixed_side].present?
       end
 
       def add_payment(post, payment, options)

@@ -229,7 +229,7 @@ class Shift4Test < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['card']['present'], 'N'
-      assert_equal request['card']['expirationDate'], '0924'
+      assert_equal request['card']['expirationDate'], @credit_card.expiry_date.expiration.strftime('%m%y')
       assert_nil request['card']['entryMode']
       assert_nil request['customer']
     end.respond_with(successful_refund_response)
