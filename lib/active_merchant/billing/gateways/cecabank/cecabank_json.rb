@@ -63,6 +63,8 @@ module ActiveMerchant
       end
 
       def scrub(transcript)
+        return '' if transcript.blank?
+
         before_message = transcript.gsub(%r(\\\")i, "'").scan(/{[^>]*}/).first.gsub("'", '"')
         request_data = JSON.parse(before_message)
         params =  decode_params(request_data['parametros']).
