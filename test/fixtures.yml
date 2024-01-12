@@ -179,7 +179,7 @@ cecabank:
   acquirer_bin: ACQUIRERBIN
   terminal_id: TERMINALID
   signature_key: KEY
-  is_rest_json: true
+  encryption_key: KEY
 
 cenpos:
   merchant_id: SOMECREDENTIAL
