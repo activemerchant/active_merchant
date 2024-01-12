@@ -58,6 +58,11 @@ module ActiveMerchant #:nodoc:
         tokenize(payment_method, options.merge({ multiuse: '1' }))
       end
 
+      def unstore(authorization, options = {})
+        _transaction_ref, card_token, _payment_product = authorization.split('|')
+        commit('unstore', { card_token: card_token }, options, :delete)
+      end
+
       def refund(money, authorization, options)
         reference_operation(money, authorization, options.merge({ operation: 'refund' }))
       end
@@ -133,9 +138,9 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(action, post, options = {})
+      def commit(action, post, options = {}, method = :post)
         raw_response = begin
-                          ssl_post(url(action, options), post_data(post), request_headers)
+                          ssl_request(method, url(action, options), post_data(post), request_headers)
                        rescue ResponseError => e
                          e.response.body
                         end
@@ -168,6 +173,8 @@ module ActiveMerchant #:nodoc:
           response['status'] == '175' && response['message'] == 'Authorization Cancellation requested'
         when 'store'
           response.include? 'token'
+        when 'unstore'
+          response['code'] == '204'
         else
           false
         end
@@ -193,6 +200,8 @@ module ActiveMerchant #:nodoc:
         case action
         when 'store'
           "#{token_url}/create"
+        when 'unstore'
+          token_url
         when 'capture', 'refund', 'cancel'
           endpoint = "maintenance/transaction/#{options[:transaction_reference]}"
           base_url(endpoint)
@@ -220,6 +229,16 @@ module ActiveMerchant #:nodoc:
           'Authorization' => "Basic #{basic_auth}"
         }
         headers
+      end
+
+      def handle_response(response)
+        case response.code.to_i
+        # to get the response code after unstore(delete instrument), because the body is nil
+        when 200...300
+          response.body || { code: response.code }.to_json
+        else
+          raise ResponseError.new(response)
+        end
       end
     end
   end
