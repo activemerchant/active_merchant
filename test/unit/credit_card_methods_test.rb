@@ -540,6 +540,16 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     credit_cards.all? { |cc| CreditCard.brand?(cc) == 'verve' }
   end
 
+  def test_should_detect_tuya_card
+    assert_equal 'tuya', CreditCard.brand?('5888000000000000')
+  end
+
+  def test_should_validate_tuya_card
+    assert_true CreditCard.valid_number?('5888001211111111')
+    # numbers with invalid formats
+    assert_false CreditCard.valid_number?('5888_0000_0000_0030')
+  end
+
   def test_credit_card?
     assert credit_card.credit_card?
   end

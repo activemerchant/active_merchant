@@ -95,6 +95,7 @@
 * CheckoutV2: Update reponse message for 3DS transactions [almalee24] #4975
 * HiPay: Scrub/Refund/Void [gasb150] #4995
 * Rapyd: Adding fixed_side and requested_currency options [Heavyblade] #4962
+* Add new card type Tuya. GlobalCollect & Decidir: Improve support for Tuya card type [sinourain] #4993
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
