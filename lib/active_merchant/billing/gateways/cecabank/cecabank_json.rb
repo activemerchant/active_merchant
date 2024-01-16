@@ -67,22 +67,14 @@ module ActiveMerchant
 
         before_message = transcript.gsub(%r(\\\")i, "'").scan(/{[^>]*}/).first.gsub("'", '"')
         request_data = JSON.parse(before_message)
-        params = parse(request_data['parametros'])
 
         if @options[:encryption_key]
-          sensitive_fields = decrypt_sensitive_fields(params['encryptedData']).
-                            gsub(%r(("pan\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-                            gsub(%r(("caducidad\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-                            gsub(%r(("cvv2\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-                            gsub(%r(("csc\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-                            gsub(%r(("authentication_value\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
-          params['encryptedData'] = encrypt_sensitive_fields(sensitive_fields)
+          params = parse(request_data['parametros'])
+          sensitive_fields = decrypt_sensitive_fields(params['encryptedData'])
+          filtered_params = filter_params(sensitive_fields)
+          params['encryptedData'] = encrypt_sensitive_fields(filtered_params)
         else
-          params =  decode_params(request_data['parametros']).
-                  gsub(%r(("pan\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-                  gsub(%r(("caducidad\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-                  gsub(%r(("cvv2\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-                  gsub(%r(("csc\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
+          params = filter_params(decode_params(request_data['parametros']))
         end
 
         request_data['parametros'] = encode_params(params)
@@ -92,6 +84,15 @@ module ActiveMerchant
       end
 
       private
+
+      def filter_params(params)
+        params.
+          gsub(%r(("pan\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("caducidad\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("cvv2\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("csc\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("authentication_value\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
+      end
 
       def decrypt_sensitive_fields(data)
         cipher = OpenSSL::Cipher.new('AES-256-CBC').decrypt
@@ -272,7 +273,7 @@ module ActiveMerchant
       end
 
       def encode_params(params)
-        Base64.strict_encode64(params.to_json)
+        Base64.strict_encode64(params.is_a?(Hash) ? params.to_json : params)
       end
 
       def decode_params(params)
