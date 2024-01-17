@@ -7,6 +7,12 @@ module ActiveMerchant #:nodoc:
         'master' => 'mastercard'
       }
 
+      DEVICE_CHANEL = {
+        app: 1,
+        browser:  2,
+        three_ds_requestor_initiaded:  3
+      }
+
       self.test_url = 'https://stage-secure-gateway.hipay-tpp.com/rest'
       self.live_url = 'https://secure-gateway.hipay-tpp.com/rest'
 
@@ -46,6 +52,7 @@ module ActiveMerchant #:nodoc:
           add_address(post, options)
           add_product_data(post, options)
           add_invoice(post, money, options)
+          add_3ds(post, options)
           r.process { commit('order', post) }
         end
       end
@@ -132,6 +139,37 @@ module ActiveMerchant #:nodoc:
         commit('store', post, options)
       end
 
+      def add_3ds(post, options)
+        return unless options.has_key?(:execute_threed)
+
+        browser_info_3ds = options[:three_ds_2][:browser_info]
+
+        browser_info_hash = {
+          "java_enabled": browser_info_3ds[:java],
+            "javascript_enabled": (browser_info_3ds[:javascript] || false),
+            "ipaddr":  options[:ip],
+            "http_accept": '*\\/*',
+            "http_user_agent": browser_info_3ds[:user_agent],
+            "language": browser_info_3ds[:language],
+            "color_depth": browser_info_3ds[:depth],
+            "screen_height":   browser_info_3ds[:height],
+            "screen_width": browser_info_3ds[:width],
+            "timezone": browser_info_3ds[:timezone]
+        }
+
+        browser_info_hash['device_fingerprint'] = options[:device_fingerprint] if options[:device_fingerprint]
+        post[:browser_info] = browser_info_hash.to_json
+        post.to_json
+
+        post[:accept_url] = options[:accept_url] if options[:accept_url]
+        post[:decline_url] = options[:decline_url] if options[:decline_url]
+        post[:pending_url] = options[:pending_url] if options[:pending_url]
+        post[:exception_url] = options[:exception_url] if options[:exception_url]
+        post[:cancel_url] = options[:cancel_url] if options[:cancel_url]
+        post[:notify_url] = browser_info_3ds[:notification_url] if browser_info_3ds[:notification_url]
+        post[:authentication_indicator] = DEVICE_CHANEL[options[:three_ds_2][:channel]] || 0
+      end
+
       def parse(body)
         return {} if body.blank?
 
@@ -158,13 +196,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(action, response)
-        response['code'].to_s unless success_from(action, response)
+        (response['code'] || response.dig('reason', 'code')).to_s unless success_from(action, response)
       end
 
       def success_from(action, response)
         case action
         when 'order'
-          response['state'] == 'completed'
+          response['state'] == 'completed' || (response['state'] == 'forwarding' && response['status'] == '140')
         when 'capture'
           response['status'] == '118' && response['message'] == 'Captured'
         when 'refund'

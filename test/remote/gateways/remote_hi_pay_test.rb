@@ -7,8 +7,9 @@ class RemoteHiPayTest < Test::Unit::TestCase
 
     @amount = 500
     @credit_card = credit_card('4111111111111111', verification_value: '514', first_name: 'John', last_name: 'Smith', month: 12, year: 2025)
-    @bad_credit_card = credit_card('5144144373781246')
+    @bad_credit_card = credit_card('4150551403657424')
     @master_credit_card = credit_card('5399999999999999')
+    @challenge_credit_card = credit_card('4242424242424242')
 
     @options = {
       order_id: "Sp_ORDER_#{SecureRandom.random_number(1000000000)}",
@@ -17,6 +18,26 @@ class RemoteHiPayTest < Test::Unit::TestCase
     }
 
     @billing_address = address
+
+    @execute_threed = {
+      execute_threed: true,
+      redirect_url: 'http://www.example.com/redirect',
+      callback_url: 'http://www.example.com/callback',
+      three_ds_2: {
+        browser_info:  {
+          "width": 390,
+          "height": 400,
+          "depth": 24,
+          "timezone": 300,
+          "user_agent": 'Spreedly Agent',
+          "java": false,
+          "javascript": true,
+          "language": 'en-US',
+          "browser_size": '05',
+          "accept_header": 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+        }
+      }
+    }
   end
 
   def test_successful_authorize
@@ -29,7 +50,17 @@ class RemoteHiPayTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_include 'Captured', response.message
+    assert_equal 'Captured', response.message
+
+    assert_kind_of MultiResponse, response
+    assert_equal 2, response.responses.size
+  end
+
+  def test_successful_purchase_with_3ds
+    response = @gateway.purchase(@amount, @challenge_credit_card, @options.merge(@billing_address).merge(@execute_threed))
+    assert_success response
+    assert_equal 'Authentication requested', response.message
+    assert_match %r{stage-secure-gateway.hipay-tpp.com\/gateway\/forward\/[\w]+}, response.params['forwardUrl']
 
     assert_kind_of MultiResponse, response
     assert_equal 2, response.responses.size
@@ -38,7 +69,7 @@ class RemoteHiPayTest < Test::Unit::TestCase
   def test_successful_purchase_with_mastercard
     response = @gateway.purchase(@amount, @master_credit_card, @options)
     assert_success response
-    assert_include 'Captured', response.message
+    assert_equal 'Captured', response.message
 
     assert_kind_of MultiResponse, response
     assert_equal 2, response.responses.size
@@ -47,19 +78,20 @@ class RemoteHiPayTest < Test::Unit::TestCase
   def test_failed_purchase_due_failed_tokenization
     response = @bad_gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_include 'Incorrect Credentials _ Username and/or password is incorrect', response.message
-    assert_include '1000001', response.error_code
+    assert_equal 'Incorrect Credentials _ Username and/or password is incorrect', response.message
+    assert_equal '1000001', response.error_code
 
     assert_kind_of MultiResponse, response
     # Failed in tokenization step
     assert_equal 1, response.responses.size
   end
 
-  def test_failed_purchase_due_authentication_requested
+  def test_failed_purchase_due_authorization_refused
     response = @gateway.purchase(@amount, @bad_credit_card, @options)
     assert_failure response
-    assert_include 'Authentication requested', response.message
-    assert_include '1000001', response.error_code
+    assert_equal 'Authorization Refused', response.message
+    assert_equal '1010201', response.error_code
+    assert_equal 'Invalid Parameter', response.params['reason']['message']
 
     assert_kind_of MultiResponse, response
     # Complete tokenization, failed in the purhcase step
@@ -78,7 +110,7 @@ class RemoteHiPayTest < Test::Unit::TestCase
 
     response = @gateway.capture(@amount, authorize_response.authorization, @options)
     assert_success response
-    assert_include 'Captured', response.message
+    assert_equal 'Captured', response.message
     assert_equal authorize_response.authorization, response.authorization
   end
 
@@ -143,7 +175,7 @@ class RemoteHiPayTest < Test::Unit::TestCase
 
     response = @gateway.refund(@amount, purchase_response.authorization, @options)
     assert_success response
-    assert_include 'Refund Requested', response.message
+    assert_equal 'Refund Requested', response.message
     assert_include response.params['authorizedAmount'], '5.00'
     assert_include response.params['capturedAmount'], '5.00'
     assert_include response.params['refundedAmount'], '5.00'
@@ -176,7 +208,7 @@ class RemoteHiPayTest < Test::Unit::TestCase
 
     response = @gateway.refund(@amount, authorize_response.authorization, @options)
     assert_failure response
-    assert_include 'Operation Not Permitted : transaction not captured', response.message
+    assert_equal 'Operation Not Permitted : transaction not captured', response.message
   end
 
   def test_successful_void
@@ -185,7 +217,7 @@ class RemoteHiPayTest < Test::Unit::TestCase
 
     response = @gateway.void(authorize_response.authorization, @options)
     assert_success response
-    assert_include 'Authorization Cancellation requested', response.message
+    assert_equal 'Authorization Cancellation requested', response.message
   end
 
   def test_failed_void_because_captured_transaction
@@ -194,7 +226,7 @@ class RemoteHiPayTest < Test::Unit::TestCase
 
     response = @gateway.void(purchase_response.authorization, @options)
     assert_failure response
-    assert_include 'Action denied : Wrong transaction status', response.message
+    assert_equal 'Action denied : Wrong transaction status', response.message
   end
 
   def test_transcript_scrubbing
