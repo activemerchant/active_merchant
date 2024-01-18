@@ -110,24 +110,59 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_order_id(post, money, options)
-        line_items = options[:line_items].map do |item|
+      def level_2_data(options)
+        {
+          tax_total: price_object(options[:tax_amount_in_cents], options[:currency])
+        }
+      end
+
+      def level_3_data(options)
+        {}.tap do |hash|
+          hash[:shipping_address] = shipping_address(options) unless shipping_address(options).blank?
+          hash[:ships_from_postal_code] = options[:shipping_from_zip] if options[:shipping_from_zip]
+          hash[:shipping_amount] = price_object(0, options[:currency])
+          hash[:discount_amount] = price_object(options[:discount_amount_in_cents], options[:currency])
+          hash[:line_items] = line_items(options)
+        end
+      end
+
+      def shipping_address(options)
+        return {} if options[:shipping_address].blank?
+        return {} if options[:shipping_address].values.compact.blank?
+
+        {
+          address_line_1: options[:shipping_address][:address],
+          admin_area_2: options[:shipping_address][:city],
+          admin_area_1: options[:shipping_address][:state],
+          postal_code: options[:shipping_address][:zip],
+          country_code: options[:shipping_address][:country]
+        }
+      end
+
+      def line_items(options)
+        options[:line_items].map do |item|
           {
             name: item[:title],
-            quantity: item[:quantity],
             description: item[:description],
+            quantity: item[:quantity],
+            unit_amount: price_object(item[:price_in_cents], options[:currency]),
+            tax: price_object(item[:tax_amount_in_cents], options[:currency]),
+            discount_amount: price_object(item[:discount_amount_in_cents], options[:currency]),
+            total_amount: price_object(item[:total_amount_in_cents], options[:currency]),
             category: physical_retail?(options) ? "PHYSICAL_GOODS" : "DIGITAL_GOODS",
-            unit_amount: {
-              currency_code: options[:currency],
-              value: amount(item[:price_in_cents])
-            },
-            tax: {
-              currency_code: options[:currency],
-              value: amount(item[:tax_amount_in_cents])
-            }
+            commodity_code: item[:commodity_code]
           }
         end
+      end
 
+      def price_object(price_in_cent, currency)
+        {
+          currency_code: currency,
+          value: amount(price_in_cent)
+        }
+      end
+
+      def add_order_id(post, _money, options)
         post[:intent] = 'CAPTURE'
         post[:purchase_units] ||= {}
         post[:purchase_units] = [{
@@ -135,7 +170,9 @@ module ActiveMerchant #:nodoc:
                                    payee: {
                                      merchant_id: @options[:merchant_id]
                                    },
-                                   items: line_items
+                                   items: line_items(options),
+                                   level_2: level_2_data(options),
+                                   level_3: level_3_data(options)
                                  }]
       end
 
@@ -148,12 +185,21 @@ module ActiveMerchant #:nodoc:
           currency_code: options[:currency],
           value: amount(money),
           breakdown: {
-            item_total: {
-              currency_code: options[:currency],
-              value: amount(money)
-            }
+            item_total: price_object(items_total(options), options[:currency]),
+            tax_total: price_object(options[:tax_amount_in_cents], options[:currency]),
+            discount: price_object(discount_total(options), options[:currency])
           }
         }
+      end
+
+      def items_total(options)
+        options[:line_items].sum do |item|
+          item[:price_in_cents] * item[:quantity]
+        end
+      end
+
+      def discount_total(options)
+        options[:line_items].sum { |item| item[:discount_amount_in_cents] }
       end
 
       def access_token
@@ -207,7 +253,6 @@ module ActiveMerchant #:nodoc:
         response['purchase_units'].first['payments']['captures'].first['processor_response'] || {}
       end
 
-      # ToDo: To check
       def format_card_brand(card_brand)
         {
           master: :mastercard,
