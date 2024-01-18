@@ -70,6 +70,51 @@ class RemotePriorityTest < Test::Unit::TestCase
         }
       ]
     }
+
+    @all_gateway_fields = {
+      is_auth: true,
+      invoice: '123',
+      source: 'test',
+      replay_id: @replay_id,
+      ship_amount: 1,
+      ship_to_country: 'US',
+      ship_to_zip: '12345',
+      payment_type: '',
+      tender_type: '',
+      tax_exempt: true,
+      pos_data: {
+        cardholder_presence: 'NotPresent',
+        device_attendance: 'Unknown',
+        device_input_capability: 'KeyedOnly',
+        device_location: 'Unknown',
+        pan_capture_method: 'Manual',
+        partial_approval_support: 'Supported',
+        pin_capture_capability: 'Twelve'
+      },
+      purchases: [
+        {
+          line_item_id: 79402,
+          name: 'Book',
+          description: 'The Elements of Style',
+          quantity: 1,
+          unit_price: 1.23,
+          discount_amount: 0,
+          extended_amount: '1.23',
+          discount_rate: 0,
+          tax_amount: 1
+        },
+        {
+          line_item_id: 79403,
+          name: 'Cat Poster',
+          description: 'A sleeping cat',
+          quantity: 1,
+          unit_price: '2.34',
+          discount_amount: 0,
+          extended_amount: '2.34',
+          discount_rate: 0
+        }
+      ]
+    }
   end
 
   def test_successful_authorize
@@ -160,6 +205,15 @@ class RemotePriorityTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'Approved or completed successfully', response.message
+  end
+
+  def test_successful_authorize_and_capture_with_auth_purchase_params
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    capture = @gateway.capture(@amount, auth.authorization, @all_gateway_fields)
+    assert_success capture
+    assert_equal 'Approved', capture.message
   end
 
   def test_successful_credit
@@ -267,7 +321,7 @@ class RemotePriorityTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(credit_card('411111111111111'))
     assert_success response
-    assert_match 'JPMORGAN CHASE BANK, N.A.', response.params['bank']['name']
+    assert_match 'JPMORGAN CHASE BANK N.A.', response.params['bank']['name']
   end
 
   def test_failed_verify

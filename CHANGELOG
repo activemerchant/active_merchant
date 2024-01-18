@@ -104,6 +104,7 @@
 * HiPay: Add 3ds params [gasb150] #5012
 * Cecabank: Fix gateway scrub method [sinourain] #5009
 * Pin: Add the platform_adjustment field [yunnydang] #5011
+* Priority: Allow gateway fields to be available on capture [yunnydang] #5010
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

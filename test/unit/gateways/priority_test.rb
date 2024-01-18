@@ -10,6 +10,40 @@ class PriorityTest < Test::Unit::TestCase
     @replay_id = rand(100...1000)
     @approval_message = 'Approved or completed successfully. '
     @options = { billing_address: address }
+    @all_gateway_fields = {
+      is_auth: true,
+      invoice: '123',
+      source: 'test',
+      replay_id: @replay_id,
+      ship_amount: 1,
+      ship_to_country: 'US',
+      ship_to_zip: '12345',
+      payment_type: 'Sale',
+      tender_type: 'Card',
+      tax_exempt: true,
+      pos_data: {
+        cardholder_presence: 'NotPresent',
+        device_attendance: 'Unknown',
+        device_input_capability: 'KeyedOnly',
+        device_location: 'Unknown',
+        pan_capture_method: 'Manual',
+        partial_approval_support: 'Supported',
+        pin_capture_capability: 'Twelve'
+      },
+      purchases: [
+        {
+          line_item_id: 79402,
+          name: 'Book',
+          description: 'The Elements of Style',
+          quantity: 1,
+          unit_price: 1.23,
+          discount_amount: 0,
+          extended_amount: '1.23',
+          discount_rate: 0,
+          tax_amount: 1
+        }
+      ]
+    }
   end
 
   def test_successful_purchase
@@ -65,6 +99,45 @@ class PriorityTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Approved', response.message
     assert_equal '10000001625061|PaQLIYLRdWtcFKl5VaKTdUVxMutXJ5Ru', response.authorization
+  end
+
+  def test_successful_capture_with_auth_purchase_params
+    stub_comms do
+      @gateway.capture(@amount, 'PaQLIYLRdWtcFKl5VaKTdUVxMutXJ5Ru', @all_gateway_fields)
+    end.check_request do |_endpoint, data, _headers|
+      purchase_item = @all_gateway_fields[:purchases].first
+      purchase_object = JSON.parse(data)['purchases'].first
+      response_object = JSON.parse(data)
+
+      assert_equal(purchase_item[:name], purchase_object['name'])
+      assert_equal(purchase_item[:description], purchase_object['description'])
+      assert_equal(purchase_item[:unit_price], purchase_object['unitPrice'])
+      assert_equal(purchase_item[:quantity], purchase_object['quantity'])
+      assert_equal(purchase_item[:tax_amount], purchase_object['taxAmount'])
+      assert_equal(purchase_item[:discount_rate], purchase_object['discountRate'])
+      assert_equal(purchase_item[:discount_amount], purchase_object['discountAmount'])
+      assert_equal(purchase_item[:extended_amount], purchase_object['extendedAmount'])
+      assert_equal(purchase_item[:line_item_id], purchase_object['lineItemId'])
+
+      assert_equal(@all_gateway_fields[:is_auth], response_object['isAuth'])
+      assert_equal(@all_gateway_fields[:invoice], response_object['invoice'])
+      assert_equal(@all_gateway_fields[:source], response_object['source'])
+      assert_equal(@all_gateway_fields[:replay_id], response_object['replayId'])
+      assert_equal(@all_gateway_fields[:ship_amount], response_object['shipAmount'])
+      assert_equal(@all_gateway_fields[:ship_to_country], response_object['shipToCountry'])
+      assert_equal(@all_gateway_fields[:ship_to_zip], response_object['shipToZip'])
+      assert_equal(@all_gateway_fields[:payment_type], response_object['paymentType'])
+      assert_equal(@all_gateway_fields[:tender_type], response_object['tenderType'])
+      assert_equal(@all_gateway_fields[:tax_exempt], response_object['taxExempt'])
+
+      assert_equal(@all_gateway_fields[:pos_data][:cardholder_presence], response_object['posData']['cardholderPresence'])
+      assert_equal(@all_gateway_fields[:pos_data][:device_attendance], response_object['posData']['deviceAttendance'])
+      assert_equal(@all_gateway_fields[:pos_data][:device_input_capability], response_object['posData']['deviceInputCapability'])
+      assert_equal(@all_gateway_fields[:pos_data][:device_location], response_object['posData']['deviceLocation'])
+      assert_equal(@all_gateway_fields[:pos_data][:pan_capture_method], response_object['posData']['panCaptureMethod'])
+      assert_equal(@all_gateway_fields[:pos_data][:partial_approval_support], response_object['posData']['partialApprovalSupport'])
+      assert_equal(@all_gateway_fields[:pos_data][:pin_capture_capability], response_object['posData']['pinCaptureCapability'])
+    end.respond_with(successful_capture_response)
   end
 
   def test_failed_capture
