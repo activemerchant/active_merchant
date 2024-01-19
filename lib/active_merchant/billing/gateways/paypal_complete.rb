@@ -184,11 +184,17 @@ module ActiveMerchant #:nodoc:
         post[:amount] = {
           currency_code: options[:currency],
           value: amount(money),
-          breakdown: {
-            item_total: price_object(items_total(options), options[:currency]),
-            tax_total: price_object(options[:tax_amount_in_cents], options[:currency]),
-            discount: price_object(discount_total(options), options[:currency])
-          }
+          breakdown: breakdown(options)
+        }
+      end
+
+      def breakdown(options)
+        return {} if options[:line_items].blank?
+
+        {
+          item_total: price_object(items_total(options), options[:currency]),
+          tax_total: price_object(options[:tax_amount_in_cents], options[:currency]),
+          discount: price_object(discount_total(options), options[:currency])
         }
       end
 
