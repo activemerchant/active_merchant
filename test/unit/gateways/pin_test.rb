@@ -89,6 +89,20 @@ class PinTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_send_platform_adjustment
+    options_with_platform_adjustment = {
+      platform_adjustment: {
+        amount: 30,
+        currency: 'AUD'
+      }
+    }
+
+    post = {}
+    @gateway.send(:add_platform_adjustment, post, @options.merge(options_with_platform_adjustment))
+    assert_equal 30, post[:platform_adjustment][:amount]
+    assert_equal 'AUD', post[:platform_adjustment][:currency]    
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
 

@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
         add_capture(post, options)
         add_metadata(post, options)
         add_3ds(post, options)
+        add_platform_adjustment(post, options)
 
         commit(:post, 'charges', post, options)
       end
@@ -173,6 +174,10 @@ module ActiveMerchant #:nodoc:
 
       def add_metadata(post, options)
         post[:metadata] = options[:metadata] if options[:metadata]
+      end
+
+      def add_platform_adjustment(post, options)
+        post[:platform_adjustment] = options[:platform_adjustment] if options[:platform_adjustment]
       end
 
       def add_3ds(post, options)
