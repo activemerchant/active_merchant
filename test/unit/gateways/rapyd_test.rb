@@ -71,12 +71,21 @@ class RapydTest < Test::Unit::TestCase
     assert_equal 'payment_716ce0efc63aa8d91579e873d29d9d5e', response.authorization.split('|')[0]
   end
 
+  def test_send_month_and_year_with_two_digits
+    credit_card = credit_card('4242424242424242', month: '9', year: '30')
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      assert_match(/"number":"4242424242424242","expiration_month":"09","expiration_year":"30","name":"Longbob Longsen/, data)
+    end
+  end
+
   def test_successful_purchase_without_cvv
     @credit_card.verification_value = nil
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"number":"4242424242424242","expiration_month":"9","expiration_year":"#{ Time.now.year + 1}","name":"Longbob Longsen/, data)
+      assert_match(/"number":"4242424242424242","expiration_month":"09","expiration_year":"#{ (Time.now.year + 1).to_s.slice(-2, 2) }","name":"Longbob Longsen/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
     assert_equal 'payment_716ce0efc63aa8d91579e873d29d9d5e', response.authorization.split('|')[0]

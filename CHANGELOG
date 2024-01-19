@@ -97,6 +97,7 @@
 * Rapyd: Adding fixed_side and requested_currency options [Heavyblade] #4962
 * Add new card type Tuya. GlobalCollect & Decidir: Improve support for Tuya card type [sinourain] #4993
 * Cecabank: Encrypt credit card fields [sinourain] #4998
+* Rapyd: Fix transaction with two digits in month and year [javierpedrozaing] #5008
 * HiPay: Add unstore [gasb150] #4999
 
 == Version 1.135.0 (August 24, 2023)
