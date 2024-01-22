@@ -101,6 +101,7 @@
 * Rapyd: Fix transaction with two digits in month and year [javierpedrozaing] #5008
 * SagePay: Add support for stored credentials [almalee24] #5007
 * Payeezy: Pull cardholer name from billing address [almalee24] #5006
+* HiPay: Add 3ds params [gasb150] #5012
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
