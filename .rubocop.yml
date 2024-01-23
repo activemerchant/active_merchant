@@ -24,7 +24,7 @@ Metrics/ClassLength:
 Metrics/ModuleLength:
   Enabled: false
 
-Layout/AlignParameters:
+Layout/ParameterAlignment:
   EnforcedStyle: with_fixed_indentation
 
 Layout/DotPosition:
@@ -33,7 +33,7 @@ Layout/DotPosition:
 Layout/CaseIndentation:
   EnforcedStyle: end
 
-Layout/IndentHash:
+Layout/FirstHashElementIndentation:
   EnforcedStyle: consistent
 
 Naming/PredicateName:

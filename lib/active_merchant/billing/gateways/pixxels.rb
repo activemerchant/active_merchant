@@ -113,14 +113,14 @@ module ActiveMerchant #:nodoc:
       def add_three_ds_fields(post, options)
         if (three_d_secure = options[:pixxel_three_d_secure])
           post[:threeDSRef] = three_d_secure[:threeDSRef]
-          post["threeDSResponse[threeDSMethodData]"] = three_d_secure[:threeDSMethodData]
+          post['threeDSResponse[threeDSMethodData]'] = three_d_secure[:threeDSMethodData]
         end
       end
 
       def add_three_ds_level_2_fields(post, options)
         if (three_d_secure = options[:pixxel_three_d_secure])
           post[:threeDSRef] = three_d_secure[:threeDSRef]
-          post["threeDSResponse[cres]"] = three_d_secure[:cres]
+          post['threeDSResponse[cres]'] = three_d_secure[:cres]
         end
       end
 
@@ -144,13 +144,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_recurring_type(post)
-        post[:rtAgreementType] = "recurring"
+        post[:rtAgreementType] = 'recurring'
       end
 
       def add_recurring_details(post, amount, options)
         post[:amount] = amount.to_s
-        post[:type] = "9"
-        post[:avscv2CheckRequired] = "N"
+        post[:type] = '9'
+        post[:avscv2CheckRequired] = 'N'
       end
 
       def add_refund_details(post, amount, options)
@@ -163,7 +163,7 @@ module ActiveMerchant #:nodoc:
         params[:merchantID] = @options[:merchant_id]
         sorted_params = params.transform_keys(&:to_s).sort.to_h
 
-        sorted_params["signature"] = get_signature(sorted_params)
+        sorted_params['signature'] = get_signature(sorted_params)
         raw_response = ssl_post(url, post_data(action, sorted_params), headers)
         response = parse(raw_response)
         succeeded = success_from(response)
@@ -208,7 +208,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[CGI::parse(body).map { |k, v| [k.intern, v.first] }]
+        Hash[CGI.parse(body).map { |k, v| [k.intern, v.first] }]
       end
 
       def success_from(response)
@@ -219,7 +219,7 @@ module ActiveMerchant #:nodoc:
         if succeeded
           'Succeeded'
         else
-          response[:responseMessage] == "3DS authentication required" ? "3DS_REQUIRED" : response[:responseMessage]
+          response[:responseMessage] == '3DS authentication required' ? '3DS_REQUIRED' : response[:responseMessage]
         end
       end
 
@@ -252,7 +252,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def get_signature(params)
-        signature = params.map { |k, v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}" }.join('&')
+        signature = params.map { |k, v| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}" }.join('&')
         signature += @options[:signature_key]
         signature.gsub!(/(\r\n|\n\r|\r)/, "\n")
 
