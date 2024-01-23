@@ -152,14 +152,10 @@ module ActiveMerchant
       end
 
       def commit(params, action)
-        path = "#{url}#{action}"
-        url = URI(path)
-        http = Net::HTTP.new(url.host, url.port)
-        http.use_ssl = true
-        request = Net::HTTP::Post.new(url.path, headers)
-        request.body = params.to_json
-        response = http.request(request)
-        response_data = JSON.parse(response.body)
+        request_body = params.to_json
+        request_endpoint = "#{url}#{action}"
+        response = ssl_post(request_endpoint, request_body, headers)
+        response_data = JSON.parse(response)
         succeeded = success_from(response_data['ResponseText'])
         Response.new(
           succeeded,
@@ -168,10 +164,10 @@ module ActiveMerchant
           authorization: authorization_from(response_data, action),
           test: test?,
           response_type: response_type(response_data['ResponseCode']),
-          response_http_code: response.code,
-          request_endpoint: url.to_s,
+          response_http_code: @response_http_code,
+          request_endpoint: request_endpoint,
           request_method: :post,
-          request_body: request.body
+          request_body: request_body
         )
       end
 
@@ -221,6 +217,11 @@ module ActiveMerchant
       def formated_timestamp
         current_time = Time.now.utc
         current_time.strftime('%Y-%m-%dT%H:%M:%S')
+      end
+
+      def handle_response(response)
+        @response_http_code = response.code.to_i
+        response.body
       end
     end
   end
