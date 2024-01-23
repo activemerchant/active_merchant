@@ -228,7 +228,7 @@ module ActiveMerchant #:nodoc:
         product_items = {
           product: product_items_array
         }
-        
+
         post[:productDetails] = product_items
       end
 
