@@ -795,6 +795,17 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), scrubbed
   end
 
+  def test_passing_payment_method_types_to_purchase
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, {
+        currency: 'CAD',
+        payment_method_types: %w[card acss_debit]
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_types[0]=card&payment_method_types[1]=acss_debit', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_succesful_purchase_with_initial_cit_unscheduled
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @visa_token, {
