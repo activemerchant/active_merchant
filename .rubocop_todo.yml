@@ -12,7 +12,7 @@
 # SupportedHashRocketStyles: key, separator, table
 # SupportedColonStyles: key, separator, table
 # SupportedLastArgumentHashStyles: always_inspect, always_ignore, ignore_implicit, ignore_explicit
-Layout/AlignHash:
+Layout/HashAlignment:
   Enabled: false
 
 # Offense count: 150
@@ -26,7 +26,7 @@ Lint/FormatParameterMismatch:
     - 'test/unit/credit_card_formatting_test.rb'
 
 # Offense count: 2
-Lint/HandleExceptions:
+Lint/SuppressedException:
   Exclude:
     - 'lib/active_merchant/billing/gateways/mastercard.rb'
     - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
@@ -99,7 +99,7 @@ Naming/MethodName:
 # Offense count: 14
 # Configuration parameters: MinNameLength, AllowNamesEndingInNumbers, AllowedNames, ForbiddenNames.
 # AllowedNames: io, id, to, by, on, in, at, ip, db
-Naming/UncommunicativeMethodParamName:
+Naming/MethodParameterName:
   Exclude:
     - 'lib/active_merchant/billing/gateways/blue_snap.rb'
     - 'lib/active_merchant/billing/gateways/cyber_source.rb'
@@ -171,13 +171,6 @@ Style/BarePercentLiterals:
 # FunctionalMethods: let, let!, subject, watch
 # IgnoredMethods: lambda, proc, it
 Style/BlockDelimiters:
-  Enabled: false
-
-# Offense count: 440
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: braces, no_braces, context_dependent
-Style/BracesAroundHashParameters:
   Enabled: false
 
 # Offense count: 2

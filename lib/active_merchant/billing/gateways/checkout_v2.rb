@@ -401,7 +401,7 @@ module ActiveMerchant #:nodoc:
         succeeded = success_from(action, response)
 
         additional_data = {
-          request_endpoint:,
+          request_endpoint: request_endpoint,
           request_method: method,
           request_body: parse(request_body),
           response_http_code: @response_http_code
@@ -416,7 +416,7 @@ module ActiveMerchant #:nodoc:
         cvv_result = successful_response ? cvv_result(response) : nil
         authorization = authorization_from(response) unless action == :unstore
         body = action == :unstore ? { response_code: response.to_s } : response
-        response_code = (action == :refund && succeeded) ? '10000' : response.dig('response_code')
+        response_code = action == :refund && succeeded ? '10000' : response.dig('response_code')
 
         Response.new(
           succeeded,

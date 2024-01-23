@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://app.fluidpay.com'
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_countries = ['US', 'CA', 'GB', 'AU', 'DE', 'FR', 'ES', 'IT', 'JP', 'SG', 'HK', 'BR', 'MX']
+      self.supported_countries = %w[US CA GB AU DE FR ES IT JP SG HK BR MX]
       self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
       self.homepage_url = 'https://www.fluidpay.com/'
       self.display_name = 'Fluidpay'
@@ -195,8 +195,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, params)
-        request_url = action == "customer" ? "#{url}/api/vault/customer" : "#{url}/api/transaction"
-        request_url = (request_url + "/" + params[:transactionid] + "/" + action) if params[:transactionid].present?
+        request_url = action == 'customer' ? "#{url}/api/vault/customer" : "#{url}/api/transaction"
+        request_url = (request_url + '/' + params[:transactionid] + '/' + action) if params[:transactionid].present?
         raw_response = ssl_post(request_url, params.to_json, headers)
         response = parse(raw_response)
         succeeded = success_from(response)
@@ -241,14 +241,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response["msg"] == "success"
+        response['msg'] == 'success'
       end
 
       def message_from(succeeded, response)
         if succeeded
           'Succeeded'
         else
-          response["msg"]
+          response['msg']
         end
       end
 

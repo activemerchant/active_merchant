@@ -98,67 +98,67 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_payment_method(post, payment_method, options)
-        post["createRegistration"] = true
-        post["card.number"] = payment_method.number
-        post["card.expiryMonth"] = format(payment_method.month, :two_digits)
-        post["card.expiryYear"] = format(payment_method.year, :four_digits)
-        post["card.cvv"] = payment_method.verification_value unless empty?(payment_method.verification_value)
-        post["card.holder"] = options[:billing_address][:name] if options[:billing_address].present?
+        post['createRegistration'] = true
+        post['card.number'] = payment_method.number
+        post['card.expiryMonth'] = format(payment_method.month, :two_digits)
+        post['card.expiryYear'] = format(payment_method.year, :four_digits)
+        post['card.cvv'] = payment_method.verification_value unless empty?(payment_method.verification_value)
+        post['card.holder'] = options[:billing_address][:name] if options[:billing_address].present?
       end
 
       def add_customer_details(post, options)
-        post["customer.email"] = options[:email]
-        post["customer.ip"] = options[:ip]
-        post["customer.browser.userAgent"] = options[:browser_details][:identity] if options[:browser_details].present?
-        post["shopperResultUrl"] = options[:redirect_links][:success_url] if options[:redirect_links].present?
+        post['customer.email'] = options[:email]
+        post['customer.ip'] = options[:ip]
+        post['customer.browser.userAgent'] = options[:browser_details][:identity] if options[:browser_details].present?
+        post['shopperResultUrl'] = options[:redirect_links][:success_url] if options[:redirect_links].present?
 
         if options[:billing_address].present?
-          post["billing.street1"] = options[:billing_address][:address1]
-          post["billing.street2"] = options[:billing_address][:address2]
-          post["billing.city"] = options[:billing_address][:city]
-          post["billing.postcode"] = options[:billing_address][:zip]
-          post["billing.state"] = options[:billing_address][:state]
-          post["billing.country"] = options[:billing_address][:country]
+          post['billing.street1'] = options[:billing_address][:address1]
+          post['billing.street2'] = options[:billing_address][:address2]
+          post['billing.city'] = options[:billing_address][:city]
+          post['billing.postcode'] = options[:billing_address][:zip]
+          post['billing.state'] = options[:billing_address][:state]
+          post['billing.country'] = options[:billing_address][:country]
           post['customer.phone'] = options[:billing_address][:phone]
         end
       end
 
       def add_invoice_details(post, payment_code, amount, options)
-        post["amount"] = localized_amount(amount, options[:currency])
-        post["currency"] = options[:currency]
-        post["paymentType"] = payment_code
+        post['amount'] = localized_amount(amount, options[:currency])
+        post['currency'] = options[:currency]
+        post['paymentType'] = payment_code
       end
 
       def add_three_d_secure_data(post, amount, options)
-        post["threeDSecure.challengeIndicator"]= options[:three_d_secure_data][:challengeIndicator]
-        post["threeDSecure.exemptionFlag"]= options[:three_d_secure_data][:exemptionFlag]
-        post["threeDSecure.verificationId"]= options[:three_d_secure_data][:verificationId]
-        post["threeDSecure.eci"]= options[:three_d_secure_data][:eci]
-        post["threeDSecure.xid"]= options[:three_d_secure_data][:xid]
+        post['threeDSecure.challengeIndicator'] = options[:three_d_secure_data][:challengeIndicator]
+        post['threeDSecure.exemptionFlag'] = options[:three_d_secure_data][:exemptionFlag]
+        post['threeDSecure.verificationId'] = options[:three_d_secure_data][:verificationId]
+        post['threeDSecure.eci'] = options[:three_d_secure_data][:eci]
+        post['threeDSecure.xid'] = options[:three_d_secure_data][:xid]
       end
 
       def add_recurring_details(post, options)
-        post["standingInstruction.type"] = "RECURRING"
-        post["standingInstruction.mode"] = "INITIAL"
-        post["standingInstruction.source"] = "CIT"
+        post['standingInstruction.type'] = 'RECURRING'
+        post['standingInstruction.mode'] = 'INITIAL'
+        post['standingInstruction.source'] = 'CIT'
       end
 
       def add_repeated_recurring_details(post, options)
-        post["standingInstruction.type"] = "RECURRING"
-        post["standingInstruction.mode"] = "REPEATED"
-        post["standingInstruction.source"] = "MIT"
+        post['standingInstruction.type'] = 'RECURRING'
+        post['standingInstruction.mode'] = 'REPEATED'
+        post['standingInstruction.source'] = 'MIT'
       end
 
-      def commit(action, params, method = :post, authorization=nil)
-        params = params.merge("entityId" => @options[:entityId])
+      def commit(action, params, method = :post, authorization = nil)
+        params = params.merge('entityId' => @options[:entityId])
         request_body = post_data(action, params)
         request_endpoint = url(action, authorization)
-        raw_response =  if method == :post
-                          ssl_post(request_endpoint, request_body, headers)
-                        else
-                          request_endpoint = request_endpoint + "?#{request_body}"
-                          ssl_get(request_endpoint, headers)
-                        end
+        raw_response = if method == :post
+                         ssl_post(request_endpoint, request_body, headers)
+                       else
+                         request_endpoint += "?#{request_body}"
+                         ssl_get(request_endpoint, headers)
+                       end
         response = JSON.parse(raw_response)
 
         succeeded = success_from(response)
@@ -166,11 +166,11 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, response),
           response,
-          authorization: authorization_from(response, params["paymentType"]),
+          authorization: authorization_from(response, params['paymentType']),
           response_type: response_type(response.dig('result', 'code')),
           test: test?,
           response_http_code: @response_http_code,
-          request_endpoint:,
+          request_endpoint: request_endpoint,
           request_method: method,
           request_body: params
         )
@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
         when :capture, :refund, :void, :rebill, :confirm
           "#{base_url}#{API_VERSION}/payments/#{split_authorization(authorization)}"
         when :registration_token_purchase
-           "#{base_url}#{API_VERSION}/registrations/#{authorization}/payments"
+          "#{base_url}#{API_VERSION}/registrations/#{authorization}/payments"
         end
       end
 
@@ -201,7 +201,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, payment_type)
-        authorization = response["id"].present? ? response["id"] : "Failed"
+        authorization = response['id'].present? ? response['id'] : 'Failed'
         [authorization, payment_type].join('#')
       end
 
@@ -222,7 +222,6 @@ module ActiveMerchant #:nodoc:
         code = response.dig('result', 'code')
         SUCCESS_CODES.include?(code)
       end
-
 
       def response_type(code)
         if SUCCESS_CODES.include?(code)

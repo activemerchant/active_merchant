@@ -9,7 +9,7 @@ module ActiveMerchant
       self.display_name = 'Klarna'
       self.homepage_url = 'https://www.klarna.com/'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :login, :password, :zone)
         @options = options
 
@@ -55,17 +55,17 @@ module ActiveMerchant
         end
       end
 
-      def purchase(amount, authorize_token, options={})
+      def purchase(amount, authorize_token, options = {})
         post = {}
         prepare_billing_address(post, options)
         prepare_line_items(post, options)
         prepare_order_data(post, options)
-        post["order_amount"] = amount.to_f
+        post['order_amount'] = amount.to_f
 
         customer_order(amount, authorize_token, post)
       end
 
-      def authorize(amount, authorize_token, options={})
+      def authorize(amount, authorize_token, options = {})
         response = Klarna.client(:payment).place_order(authorize_token, options)
 
         if response.success?
@@ -76,7 +76,7 @@ module ActiveMerchant
         end
       end
 
-      def customer_order(amount, customer_token, options={})
+      def customer_order(amount, customer_token, options = {})
         response = Klarna.client(:customer_token).place_order(customer_token, options)
 
         if response.success?
@@ -87,8 +87,8 @@ module ActiveMerchant
         end
       end
 
-      def capture(amount, order_id, options={})
-        response = Klarna.client.capture(order_id, {captured_amount: amount, shipping_info: options[:shipping_info]})
+      def capture(amount, order_id, options = {})
+        response = Klarna.client.capture(order_id, { captured_amount: amount, shipping_info: options[:shipping_info] })
 
         if response.success?
           message = "Captured order with Klarna id: '#{order_id}' Capture id: '#{response['Capture-ID']}'"
@@ -98,12 +98,12 @@ module ActiveMerchant
         end
       end
 
-      def refund(amount, order_id, options={})
+      def refund(amount, order_id, options = {})
         # Get the refunded line items for better customer communications
         post = {}
         prepare_line_items(post, options)
 
-        response = Klarna.client(:refund).create(order_id, {refunded_amount: amount})
+        response = Klarna.client(:refund).create(order_id, { refunded_amount: amount })
 
         if response.success?
           message = "Refunded order with Klarna id: #{order_id}"
@@ -113,7 +113,7 @@ module ActiveMerchant
         end
       end
 
-      def store(authorize_token, options={})
+      def store(authorize_token, options = {})
         post = {}
         prepare_billing_address(post, options)
         prepare_customer_data(post, options)
@@ -121,7 +121,7 @@ module ActiveMerchant
         response = Klarna.client(:payment).customer_token(authorize_token, post)
 
         if response.success?
-          message = "Client token Created"
+          message = 'Client token Created'
           generate_success_response(response, message)
         else
           generate_failure_response(response)
@@ -132,14 +132,14 @@ module ActiveMerchant
         response = Klarna.client(:customer_token).get(authorize_token)
 
         if response.success?
-          message = "Client token details"
+          message = 'Client token details'
           generate_success_response(response, message)
         else
           generate_failure_response(response)
         end
       end
 
-      alias_method :credit, :refund
+      alias credit refund
 
       def get(order_id)
         Klarna.client.get(order_id)
@@ -218,14 +218,14 @@ module ActiveMerchant
 
       private
 
-      def generate_success_response(response, message, authorization=nil, fraud_status=nil)
+      def generate_success_response(response, message, authorization = nil, fraud_status = nil)
         ActiveMerchant::Billing::Response.new(
           true,
           message,
           response.body || {},
           {
-            authorization:,
-            fraud_status:,
+            authorization: authorization,
+            fraud_status: fraud_status,
             response_http_code: response.http_response&.code,
             request_endpoint: response.request_endpoint,
             request_method: response.request_method,
@@ -265,52 +265,52 @@ module ActiveMerchant
       def prepare_line_items(post, options)
         return unless options[:order_line_items].present?
 
-        post["order_lines"] = options[:order_line_items].map do |item|
-          final_amount = item["final_amount"] ? item["final_amount"].to_f * 100 : nil
-          unit_price = item["price"] ? item["price"].to_f * 100 : nil
+        post['order_lines'] = options[:order_line_items].map do |item|
+          final_amount = item['final_amount'] ? item['final_amount'].to_f * 100 : nil
+          unit_price = item['price'] ? item['price'].to_f * 100 : nil
 
           {
-            "name" => item["name"],
-            "quantity" => item["quantity"],
-            "total_amount" => final_amount,
-            "unit_price" => unit_price
+            'name' => item['name'],
+            'quantity' => item['quantity'],
+            'total_amount' => final_amount,
+            'unit_price' => unit_price
           }
         end
       end
 
       def prepare_billing_address(post, options)
         return unless options[:billing_address].present?
+
         firstname, lastname = split_names(options[:billing_address][:name])
 
-        post["billing_address"] = {}
-        post["billing_address"]["given_name"] = firstname
-        post["billing_address"]["family_name"] = lastname
-        post["billing_address"]["email"] = options[:email]
-        post["billing_address"]["street_address"] = options[:billing_address][:address1]
-        post["billing_address"]["street_address2"] = options[:billing_address][:address2]
-        post["billing_address"]["organization_name"] = options[:billing_address][:company]
-        post["billing_address"]["city"] = options[:billing_address][:city]
-        post["billing_address"]["region"] = options[:billing_address][:state]
-        post["billing_address"]["postal_code"] = options[:billing_address][:zip]
-        post["billing_address"]["country"] = options[:billing_address][:country]
+        post['billing_address'] = {}
+        post['billing_address']['given_name'] = firstname
+        post['billing_address']['family_name'] = lastname
+        post['billing_address']['email'] = options[:email]
+        post['billing_address']['street_address'] = options[:billing_address][:address1]
+        post['billing_address']['street_address2'] = options[:billing_address][:address2]
+        post['billing_address']['organization_name'] = options[:billing_address][:company]
+        post['billing_address']['city'] = options[:billing_address][:city]
+        post['billing_address']['region'] = options[:billing_address][:state]
+        post['billing_address']['postal_code'] = options[:billing_address][:zip]
+        post['billing_address']['country'] = options[:billing_address][:country]
       end
 
-
       def prepare_order_data(post, options)
-        post["auto_capture"] = true
-        post["intent"] = "buy_and_tokenize"
-        post["purchase_country"] = options.dig(:billing_address, :country)
-        post["purchase_currency"] = options[:currency]
-        post["order_amount"] = options[:total]&.to_f
-        post["order_tax_amount"] = options[:tax]&.to_f
+        post['auto_capture'] = true
+        post['intent'] = 'buy_and_tokenize'
+        post['purchase_country'] = options.dig(:billing_address, :country)
+        post['purchase_currency'] = options[:currency]
+        post['order_amount'] = options[:total]&.to_f
+        post['order_tax_amount'] = options[:tax]&.to_f
       end
 
       def prepare_customer_data(post, options)
-        post["purchase_country"] = options.dig(:billing_address, :country)
-        post["purchase_currency"] = options[:currency]
-        post["intended_use"] = "SUBSCRIPTION"
-        post["description"] = "For Recurring Payments"
-        post["locale"] = options[:locale]
+        post['purchase_country'] = options.dig(:billing_address, :country)
+        post['purchase_currency'] = options[:currency]
+        post['intended_use'] = 'SUBSCRIPTION'
+        post['description'] = 'For Recurring Payments'
+        post['locale'] = options[:locale]
       end
     end
   end

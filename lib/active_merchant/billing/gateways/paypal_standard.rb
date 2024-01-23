@@ -98,7 +98,7 @@ module ActiveMerchant
 
       def normalize_response(action, response)
         if action == :create_order && response.present?
-          redirect_link = response['links'].find { |link| link['rel'] == "payer-action" }
+          redirect_link = response['links'].find { |link| link['rel'] == 'payer-action' }
           response['_links'] = { 'redirect' => { 'href' => redirect_link['href'] } } if redirect_link
           response['order_id'] = response['id']
         end
@@ -132,7 +132,7 @@ module ActiveMerchant
       end
 
       def headers
-       { 'Authorization' => "Bearer #{@access_token}", 'Content-Type' => 'application/json', 'PayPal-Request-Id' => @request_id}
+        { 'Authorization' => "Bearer #{@access_token}", 'Content-Type' => 'application/json', 'PayPal-Request-Id' => @request_id }
       end
 
       def post_data(post)
@@ -152,7 +152,7 @@ module ActiveMerchant
       end
 
       def grant_type
-        "grant_type=client_credentials"
+        'grant_type=client_credentials'
       end
 
       def success_from(response)
@@ -205,8 +205,8 @@ module ActiveMerchant
           payment_source = post[:payment_source][:paypal] = {}
           experience_context = payment_source[:experience_context] = {}
 
-          experience_context[:landing_page] = "LOGIN"
-          experience_context[:user_action] = "PAY_NOW"
+          experience_context[:landing_page] = 'LOGIN'
+          experience_context[:user_action] = 'PAY_NOW'
           experience_context[:return_url] = redirect_links[:success_url] if redirect_links
           experience_context[:cancel_url] = redirect_links[:failure_url] if redirect_links
         when 'giropay'
@@ -241,7 +241,7 @@ module ActiveMerchant
       end
 
       def add_payment_intent(post)
-        post[:intent] = "CAPTURE"
+        post[:intent] = 'CAPTURE'
       end
 
       def add_refund_amount(post, amount, options)
