@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Authorization' => "Basic #{Base64.encode64("#{@options[:api_login]}:#{@options[:api_password]}").strip}",
+          'Authorization' => 'Basic ' + Base64.encode64("#{@options[:api_login]}:#{@options[:api_password]}").strip,
           'Content-Type'  => 'application/x-www-form-urlencoded;charset=UTF-8',
           'Accept' => 'application/json',
           'X-PJ-Application-Key' => @options[:api_key].to_s
@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         return response['response']['message'] if response['response']
 
-        response['errors']&.inject('') { |message, error| "#{error['message']}|#{message}" }
+        response['errors']&.inject('') { |message, error| error['message'] + '|' + message }
       end
 
       def authorization_from(response)

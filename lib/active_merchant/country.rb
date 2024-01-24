@@ -9,7 +9,6 @@ module ActiveMerchant #:nodoc:
 
   class CountryCode
     attr_reader :value, :format
-
     def initialize(value)
       @value = value.to_s.upcase
       detect_format

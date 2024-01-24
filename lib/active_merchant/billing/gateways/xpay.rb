@@ -205,7 +205,7 @@ module ActiveMerchant #:nodoc:
       def request_headers(options, action = nil)
         headers = {
           'X-Api-Key' => @api_key,
-          'Correlation-Id' => options[:order_id] || SecureRandom.uuid,
+          'Correlation-Id' => options.dig(:order_id) || SecureRandom.uuid,
           'Content-Type' => 'application/json'
         }
         case action

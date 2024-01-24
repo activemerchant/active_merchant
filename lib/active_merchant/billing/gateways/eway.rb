@@ -71,8 +71,8 @@ module ActiveMerchant #:nodoc:
 
       def add_creditcard(post, creditcard)
         post[:CardNumber] = creditcard.number
-        post[:CardExpiryMonth] = sprintf('%<month>.2i', month: creditcard.month)
-        post[:CardExpiryYear] = sprintf('%<year>.4i', year: creditcard.year)[-2..]
+        post[:CardExpiryMonth] = sprintf('%.2i', creditcard.month)
+        post[:CardExpiryYear] = sprintf('%.4i', creditcard.year)[-2..-1]
         post[:CustomerFirstName] = creditcard.first_name
         post[:CustomerLastName]  = creditcard.last_name
         post[:CardHoldersName] = creditcard.name

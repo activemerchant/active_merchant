@@ -138,8 +138,8 @@ module ActiveMerchant #:nodoc:
         post[:card] ||= {}
         post[:card][:number] = payment.number
         post[:card][:holder] = payment.name
-        post[:card][:expiryMonth] = sprintf('%<month>02d', month: payment.month)
-        post[:card][:expiryYear] = sprintf('%<year>02d', year: payment.year)
+        post[:card][:expiryMonth] = sprintf('%02d', payment.month)
+        post[:card][:expiryYear] = sprintf('%02d', payment.year)
         post[:card][:cvv] = payment.verification_value
       end
 
@@ -221,6 +221,8 @@ module ActiveMerchant #:nodoc:
             STANDARD_ERROR_CODE[:config_error]
           when /^(800\.[17]00|800\.800\.[123])/
             STANDARD_ERROR_CODE[:card_declined]
+          when /^(900\.[1234]00)/
+            STANDARD_ERROR_CODE[:processing_error]
           else
             STANDARD_ERROR_CODE[:processing_error]
           end
@@ -242,7 +244,7 @@ module ActiveMerchant #:nodoc:
         h = {}
         hash.each_pair do |k, v|
           if v.is_a?(Hash)
-            h.merge!(dot_flatten_hash(v, "#{prefix}#{k}."))
+            h.merge!(dot_flatten_hash(v, prefix + k.to_s + '.'))
           else
             h[prefix + k.to_s] = v
           end

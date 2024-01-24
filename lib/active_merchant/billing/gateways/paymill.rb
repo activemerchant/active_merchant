@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
 
       def verify_credentials
         begin
-          ssl_get("#{live_url}transactions/nonexistent", headers)
+          ssl_get(live_url + 'transactions/nonexistent', headers)
         rescue ResponseError => e
           return false if e.response.code.to_i == 401
         end
@@ -82,8 +82,8 @@ module ActiveMerchant #:nodoc:
       def add_credit_card(post, credit_card, options)
         post['account.holder'] = (credit_card.try(:name) || '')
         post['account.number'] = credit_card.number
-        post['account.expiry.month'] = sprintf('%<month>.2i', month: credit_card.month)
-        post['account.expiry.year'] = sprintf('%<year>.4i', year: credit_card.year)
+        post['account.expiry.month'] = sprintf('%.2i', credit_card.month)
+        post['account.expiry.year'] = sprintf('%.4i', credit_card.year)
         post['account.verification'] = credit_card.verification_value
         post['account.email'] = (options[:email] || nil)
         post['presentation.amount3D'] = (options[:money] || nil)
@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        { 'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:private_key]}:X").chomp}" }
+        { 'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:private_key]}:X").chomp) }
       end
 
       def commit(method, action, parameters = nil)

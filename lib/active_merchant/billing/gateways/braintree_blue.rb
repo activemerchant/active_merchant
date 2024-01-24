@@ -521,10 +521,9 @@ module ActiveMerchant #:nodoc:
         options = args.extract_options!
 
         # money, transaction_id, options
-        case args.length
-        when 1 # legacy signature
+        if args.length == 1 # legacy signature
           return nil, args[0], options
-        when 2
+        elsif args.length == 2
           return args[0], args[1], options
         else
           raise ArgumentError, "wrong number of arguments (#{args.length} for 2)"
@@ -1064,7 +1063,7 @@ module ActiveMerchant #:nodoc:
         Response.new(
           result.success?,
           message_from_result(result),
-          { customer_vault_id: customer_id, exists: true }
+          { customer_vault_id: customer_id, 'exists': true }
         )
       end
     end

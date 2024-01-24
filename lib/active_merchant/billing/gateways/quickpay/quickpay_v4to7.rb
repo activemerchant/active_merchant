@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
       def generate_check_hash(action, params)
         string = MD5_CHECK_FIELDS[@protocol][action].collect do |key|
           params[key.to_sym]
-        end.join
+        end.join('')
 
         # Add the md5checkword
         string << @options[:password].to_s

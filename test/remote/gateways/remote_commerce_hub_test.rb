@@ -54,12 +54,12 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
       customer_service_number: '555444321',
       service_entitlement: '123444555',
       dynamic_descriptors_address: {
-        street: '123 Main Street',
-        houseNumberOrName: 'Unit B',
-        city: 'Atlanta',
-        stateOrProvince: 'GA',
-        postalCode: '30303',
-        country: 'US'
+        'street': '123 Main Street',
+        'houseNumberOrName': 'Unit B',
+        'city': 'Atlanta',
+        'stateOrProvince': 'GA',
+        'postalCode': '30303',
+        'country': 'US'
       }
     }
   end

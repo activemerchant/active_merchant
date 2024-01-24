@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_transaction_id(post, transaction_id)
-        post[:card_number] = "CS:#{transaction_id}"
+        post[:card_number] = 'CS:' + transaction_id
       end
 
       def add_credit_card(post, credit_card)

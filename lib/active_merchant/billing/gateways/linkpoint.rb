@@ -445,7 +445,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def format_creditcard_expiry_year(year)
-        sprintf('%<year>.4i', year: year)[-2..]
+        sprintf('%.4i', year)[-2..-1]
       end
     end
   end

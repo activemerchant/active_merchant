@@ -214,14 +214,14 @@ module ActiveMerchant #:nodoc:
       def parse_element(parsed, node)
         if !node.attributes.empty?
           node.attributes.each do |a|
-            parsed["#{underscore(node.name)}_#{underscore(a[1].name)}"] = a[1].value
+            parsed[underscore(node.name) + '_' + underscore(a[1].name)] = a[1].value
           end
         end
 
-        if node.elements.empty?
-          parsed[underscore(node.name)] = node.text
-        else
+        if !node.elements.empty?
           node.elements.each { |e| parse_element(parsed, e) }
+        else
+          parsed[underscore(node.name)] = node.text
         end
       end
 

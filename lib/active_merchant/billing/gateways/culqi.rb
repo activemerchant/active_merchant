@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
         else
           post[:cardnumber] = payment_method.number
           post[:cvv] = payment_method.verification_value
-          post[:firstname], post[:lastname] = payment_method.name.split
+          post[:firstname], post[:lastname] = payment_method.name.split(' ')
           if action == :tokenize
             post[:expirymonth] = format(payment_method.month, :two_digits)
             post[:expiryyear] = format(payment_method.year, :four_digits)

@@ -52,7 +52,7 @@ class RemoteLatitude19Test < Test::Unit::TestCase
   # end
 
   def test_failed_capture
-    authorization = "auth|#{SecureRandom.hex(6)}"
+    authorization = 'auth' + '|' + SecureRandom.hex(6)
     response = @gateway.capture(@amount, authorization, @options)
     assert_failure response
     assert_equal 'Not submitted', response.message
@@ -91,7 +91,7 @@ class RemoteLatitude19Test < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    authorization = "#{auth.authorization[0..9]}XX"
+    authorization = auth.authorization[0..9] + 'XX'
     response = @gateway.void(authorization, @options)
 
     assert_failure response

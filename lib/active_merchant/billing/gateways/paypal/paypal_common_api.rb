@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
       #     Sale – This is a final sale for which you are requesting payment.
       #
       # * <tt>:ip_address</tt> -- (Optional) IP address of the buyer’s browser.
-      # NOTE: PayPal records this IP addresses as a means to detect possible fraud.
+      # Note: PayPal records this IP addresses as a means to detect possible fraud.
       # * <tt>:req_confirm_shipping</tt> -- Whether you require that the buyer’s shipping address on file with PayPal be a confirmed address. You must have permission from PayPal to not require a confirmed address. It is one of the following values:
       #
       #     0 – You do not require that the buyer’s shipping address be a confirmed address.
@@ -287,11 +287,11 @@ module ActiveMerchant #:nodoc:
 
       def build_request_wrapper(action, options = {})
         xml = Builder::XmlMarkup.new :indent => 2
-        xml.tag! "#{action}Req", 'xmlns' => PAYPAL_NAMESPACE do
-          xml.tag! "#{action}Request", 'xmlns:n2' => EBAY_NAMESPACE do
+        xml.tag! action + 'Req', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! action + 'Request', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
             if options[:request_details]
-              xml.tag! "n2:#{action}RequestDetails" do
+              xml.tag! 'n2:' + action + 'RequestDetails' do
                 yield(xml)
               end
             else

@@ -167,7 +167,7 @@ module ActiveMerchant #:nodoc:
         order[:accountId] = @options[:account_id]
         order[:partnerId] = options[:partner_id] if options[:partner_id]
         order[:referenceCode] = options[:order_id] || generate_unique_id
-        order[:description] = options[:description] || "Compra en #{@options[:merchant_id]}"
+        order[:description] = options[:description] || 'Compra en ' + @options[:merchant_id]
         order[:language] = options[:language] || 'en'
         order[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
         post[:transaction][:order] = order
@@ -296,7 +296,7 @@ module ActiveMerchant #:nodoc:
           credit_card = {}
           credit_card[:number] = payment_method.number
           credit_card[:securityCode] = payment_method.verification_value || options[:cvv]
-          credit_card[:expirationDate] = "#{format(payment_method.year, :four_digits)}/#{format(payment_method.month, :two_digits)}"
+          credit_card[:expirationDate] = format(payment_method.year, :four_digits).to_s + '/' + format(payment_method.month, :two_digits).to_s
           credit_card[:name] = payment_method.name.strip
           credit_card[:processWithoutCvv2] = true if add_process_without_cvv2(payment_method, options)
           post[:transaction][:creditCard] = credit_card
@@ -335,7 +335,7 @@ module ActiveMerchant #:nodoc:
         credit_card_token[:identificationNumber] = options[:dni_number]
         credit_card_token[:paymentMethod] = BRAND_MAP[payment_method.brand.to_s]
         credit_card_token[:number] = payment_method.number
-        credit_card_token[:expirationDate] = "#{format(payment_method.year, :four_digits)}/#{format(payment_method.month, :two_digits)}"
+        credit_card_token[:expirationDate] = format(payment_method.year, :four_digits).to_s + '/' + format(payment_method.month, :two_digits).to_s
         post[:creditCardToken] = credit_card_token
       end
 
@@ -419,7 +419,7 @@ module ActiveMerchant #:nodoc:
       def message_from_transaction_response(success, response)
         response_code = response.dig('transactionResponse', 'responseCode') || response.dig('transactionResponse', 'pendingReason')
         return response_code if success
-        return "#{response_code} | #{response.dig('transactionResponse', 'paymentNetworkResponseErrorMessage')}" if response.dig('transactionResponse', 'paymentNetworkResponseErrorMessage')
+        return response_code + ' | ' + response.dig('transactionResponse', 'paymentNetworkResponseErrorMessage') if response.dig('transactionResponse', 'paymentNetworkResponseErrorMessage')
         return response.dig('transactionResponse', 'responseMessage') if response.dig('transactionResponse', 'responseMessage')
         return response['error'] if response['error']
         return response_code if response_code

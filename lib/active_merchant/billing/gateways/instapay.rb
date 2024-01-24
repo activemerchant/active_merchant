@@ -129,7 +129,7 @@ module ActiveMerchant #:nodoc:
           results[:message] = response_data[2]
         end
 
-        fields[1..].each do |pair|
+        fields[1..-1].each do |pair|
           key, value = pair.split('=')
           results[key] = value
         end
@@ -155,7 +155,8 @@ module ActiveMerchant #:nodoc:
         post[:acctid] = @options[:login]
         post[:merchantpin] = @options[:password] if @options[:password]
         post[:action] = action
-        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        request
       end
     end
   end

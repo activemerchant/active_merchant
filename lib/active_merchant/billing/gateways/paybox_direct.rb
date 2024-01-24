@@ -158,7 +158,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(post, money, options)
-        post[:montant] = ("0000000000#{money ? amount(money) : ''}")[-10..]
+        post[:montant] = ('0000000000' + (money ? amount(money) : ''))[-10..-1]
         post[:devise] = CURRENCY_CODES[options[:currency] || currency(money)]
       end
 
@@ -205,7 +205,7 @@ module ActiveMerchant #:nodoc:
           dateq: Time.now.strftime('%d%m%Y%H%M%S'),
           numquestion: unique_id(parameters[:order_id]),
           site: @options[:login].to_s[0, 7],
-          rang: @options[:rang] || @options[:login].to_s[7..],
+          rang: @options[:rang] || @options[:login].to_s[7..-1],
           cle: @options[:password],
           pays: '',
           archivage: parameters[:order_id]
@@ -217,7 +217,7 @@ module ActiveMerchant #:nodoc:
       def unique_id(seed = 0)
         randkey = "#{seed}#{Time.now.usec}".to_i % 2147483647 # Max paybox value for the question number
 
-        "0000000000#{randkey}"[-10..]
+        "0000000000#{randkey}"[-10..-1]
       end
     end
   end

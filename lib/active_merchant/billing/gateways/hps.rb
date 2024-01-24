@@ -289,10 +289,9 @@ module ActiveMerchant #:nodoc:
         return unless options[:stored_credential]
 
         xml.hps :CardOnFileData do
-          case options[:stored_credential][:initiator]
-          when 'customer'
+          if options[:stored_credential][:initiator] == 'customer'
             xml.hps :CardOnFile, 'C'
-          when 'merchant'
+          elsif options[:stored_credential][:initiator] == 'merchant'
             xml.hps :CardOnFile, 'M'
           else
             return
@@ -331,7 +330,7 @@ module ActiveMerchant #:nodoc:
         } do
           xml.SOAP :Body do
             xml.hps :PosRequest do
-              xml.hps :"Ver1.0" do
+              xml.hps 'Ver1.0'.to_sym do
                 xml.hps :Header do
                   xml.hps :SecretAPIKey, @options[:secret_api_key]
                   xml.hps :DeveloperID, @options[:developer_id] if @options[:developer_id]

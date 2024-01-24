@@ -230,7 +230,7 @@ module ActiveMerchant #:nodoc:
 
         dynamic_descriptors = {}
         dynamic_descriptors[:mcc] = options[:mcc] if options[:mcc]
-        dynamic_descriptors[:merchantName] = options[:merchant_name] if options[:merchant_name]
+        dynamic_descriptors[:merchantName] = options[:merchant_name] if options [:merchant_name]
         dynamic_descriptors[:customerServiceNumber] = options[:customer_service_number] if options[:customer_service_number]
         dynamic_descriptors[:serviceEntitlement] = options[:service_entitlement] if options[:service_entitlement]
         dynamic_descriptors[:address] = options[:dynamic_descriptors_address] if options[:dynamic_descriptors_address]

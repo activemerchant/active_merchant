@@ -167,16 +167,15 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:access_key_id]}:#{@options[:secret_access_key]}").strip}",
+          'Authorization' => 'Basic ' + Base64.strict_encode64("#{@options[:access_key_id]}:#{@options[:secret_access_key]}").strip,
           'Content-Type'  => 'application/json'
         }
       end
 
       def url(action, params, options = {})
-        case action
-        when 'authorize'
+        if action == 'authorize'
           "#{base_url}/#{@options[:merchant_id]}"
-        when 'refund'
+        elsif action == 'refund'
           "#{base_url}/#{@options[:merchant_id]}/#{action}/#{options[:transaction_id]}"
         else
           "#{base_url}/#{@options[:merchant_id]}/#{action}/#{params[:purchaseNumber]}"

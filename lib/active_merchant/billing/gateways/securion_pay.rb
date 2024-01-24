@@ -200,6 +200,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
+        return unless post[:card]&.kind_of?(Hash)
+
         if address = options[:billing_address]
           post[:card][:addressLine1] = address[:address1] if address[:address1]
           post[:card][:addressLine2] = address[:address2] if address[:address2]
@@ -248,10 +250,11 @@ module ActiveMerchant #:nodoc:
       def headers(options = {})
         secret_key = options[:secret_key] || @options[:secret_key]
 
-        {
-          'Authorization' => "Basic #{Base64.encode64("#{secret_key}:").strip}",
+        headers = {
+          'Authorization' => 'Basic ' + Base64.encode64(secret_key.to_s + ':').strip,
           'User-Agent' => "SecurionPay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
+        headers
       end
 
       def response_error(raw_response)
@@ -266,14 +269,13 @@ module ActiveMerchant #:nodoc:
         params.map do |key, value|
           next if value.blank?
 
-          case value
-          when Hash
+          if value.is_a?(Hash)
             h = {}
             value.each do |k, v|
               h["#{key}[#{k}]"] = v unless v.blank?
             end
             post_data(h)
-          when Array
+          elsif value.is_a?(Array)
             value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join('&')
           else
             "#{key}=#{CGI.escape(value.to_s)}"
@@ -310,7 +312,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def test?
-        @options[:secret_key]&.include?('_test_')
+        (@options[:secret_key]&.include?('_test_'))
       end
     end
   end

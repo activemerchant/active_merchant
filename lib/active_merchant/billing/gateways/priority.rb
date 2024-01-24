@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
         params['paymentToken'] = payment_token(authorization) || options[:payment_token]
 
         # refund amounts must be negative
-        params['amount'] = "-#{localized_amount(amount.to_f, options[:currency])}".to_f
+        params['amount'] = ('-' + localized_amount(amount.to_f, options[:currency])).to_f
 
         commit('refund', params: params)
       end
@@ -171,7 +171,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(params, credit_card, action, options)
-        return unless credit_card.is_a?(CreditCard)
+        return unless credit_card&.is_a?(CreditCard)
 
         card_details = {}
         card_details['expiryMonth'] = format(credit_card.month, :two_digits).to_s
@@ -313,15 +313,15 @@ module ActiveMerchant #:nodoc:
       def url(action, params, ref_number: '', credit_card_number: nil)
         case action
         when 'void'
-          "#{base_url}/#{ref_number}?force=true"
+          base_url + "/#{ref_number}?force=true"
         when 'verify'
-          "#{verify_url}?search=#{credit_card_number.to_s[0..6]}"
+          (verify_url + '?search=') + credit_card_number.to_s[0..6]
         when 'get_payment_status', 'close_batch'
-          "#{batch_url}/#{params}"
+          batch_url + "/#{params}"
         when 'create_jwt'
-          "#{jwt_url}/#{params}/token"
+          jwt_url + "/#{params}/token"
         else
-          "#{base_url}?includeCustomerMatches=false&echo=true"
+          base_url + '?includeCustomerMatches=false&echo=true'
         end
       end
 

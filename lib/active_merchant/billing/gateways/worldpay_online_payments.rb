@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, credit_card, options = {})
-        response = create_token(true, "#{credit_card.first_name} #{credit_card.last_name}", credit_card.month, credit_card.year, credit_card.number, credit_card.verification_value)
+        response = create_token(true, credit_card.first_name + ' ' + credit_card.last_name, credit_card.month, credit_card.year, credit_card.number, credit_card.verification_value)
         if response.success?
           options[:authorizeOnly] = true
           post = create_post_for_auth_or_purchase(response.authorization, money, options)
@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, credit_card, options = {})
-        response = create_token(true, "#{credit_card.first_name} #{credit_card.last_name}", credit_card.month, credit_card.year, credit_card.number, credit_card.verification_value)
+        response = create_token(true, credit_card.first_name + ' ' + credit_card.last_name, credit_card.month, credit_card.year, credit_card.number, credit_card.verification_value)
         if response.success?
           post = create_post_for_auth_or_purchase(response.authorization, money, options)
           response = commit(:post, 'orders', post, options, 'purchase')
@@ -86,7 +86,8 @@ module ActiveMerchant #:nodoc:
           },
           'clientKey' => @client_key
         }
-        commit(:post, 'tokens', obj, { 'Authorization' => @service_key }, 'token')
+        token_response = commit(:post, 'tokens', obj, { 'Authorization' => @service_key }, 'token')
+        token_response
       end
 
       def create_post_for_auth_or_purchase(token, money, options)
@@ -135,10 +136,7 @@ module ActiveMerchant #:nodoc:
 
           raw_response = ssl_request(method, self.live_url + url, json, headers(options))
 
-          if raw_response == ''
-            success = true
-            response = {}
-          else
+          if raw_response != ''
             response = parse(raw_response)
             if type == 'token'
               success = response.key?('token')
@@ -146,16 +144,18 @@ module ActiveMerchant #:nodoc:
               if response.key?('httpStatusCode')
                 success = false
               else
-                success = case type
-                          when 'authorize'
-                            response['paymentStatus'] == 'AUTHORIZED'
-                          when 'purchase'
-                            response['paymentStatus'] == 'SUCCESS'
-                          when 'capture', 'refund', 'void'
-                            true
-                          end
+                if type == 'authorize' && response['paymentStatus'] == 'AUTHORIZED'
+                  success = true
+                elsif type == 'purchase' && response['paymentStatus'] == 'SUCCESS'
+                  success = true
+                elsif type == 'capture' || type == 'refund' || type == 'void'
+                  success = true
+                end
               end
             end
+          else
+            success = true
+            response = {}
           end
         rescue ResponseError => e
           raw_response = e.response.body

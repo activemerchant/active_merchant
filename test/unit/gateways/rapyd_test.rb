@@ -24,20 +24,20 @@ class RapydTest < Test::Unit::TestCase
     }
 
     @metadata = {
-      array_of_objects: [
-        { name: 'John Doe' },
-        { type: 'customer' }
+      'array_of_objects': [
+        { 'name': 'John Doe' },
+        { 'type': 'customer' }
       ],
-      array_of_strings: %w[
+      'array_of_strings': %w[
         color
         size
       ],
-      number: 1234567890,
-      object: {
-        string: 'person'
+      'number': 1234567890,
+      'object': {
+        'string': 'person'
       },
-      string: 'preferred',
-      Boolean: true
+      'string': 'preferred',
+      'Boolean': true
     }
 
     @ewallet_id = 'ewallet_1a867a32b47158b30a8c17d42f12f3f1'
@@ -85,7 +85,7 @@ class RapydTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"number":"4242424242424242","expiration_month":"09","expiration_year":"#{(Time.now.year + 1).to_s.slice(-2, 2)}","name":"Longbob Longsen/, data)
+      assert_match(/"number":"4242424242424242","expiration_month":"09","expiration_year":"#{ (Time.now.year + 1).to_s.slice(-2, 2) }","name":"Longbob Longsen/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
     assert_equal 'payment_716ce0efc63aa8d91579e873d29d9d5e', response.authorization.split('|')[0]

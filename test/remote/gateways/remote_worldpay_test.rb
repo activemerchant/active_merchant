@@ -6,7 +6,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @cftgateway = WorldpayGateway.new(fixtures(:world_pay_gateway_cft))
 
     @amount = 100
-    @year = (Time.now.year + 2).to_s[-2..].to_i
+    @year = (Time.now.year + 2).to_s[-2..-1].to_i
     @credit_card = credit_card('4111111111111111')
     @amex_card = credit_card('3714 496353 98431')
     @elo_credit_card = credit_card(

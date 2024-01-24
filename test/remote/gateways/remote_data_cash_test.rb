@@ -77,7 +77,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert_success response
   end
 
-  # NOTE: the Datacash test server regularly times out on switch requests
+  # Note the Datacash test server regularly times out on switch requests
   def test_successful_purchase_with_solo_card
     response = @gateway.purchase(@amount, @solo, @params)
     assert_success response

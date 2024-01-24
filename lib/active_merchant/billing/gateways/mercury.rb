@@ -125,7 +125,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'Transaction' do
             xml.tag! 'TranType', 'Credit'
             xml.tag! 'PartialAuth', 'Allow' if options[:allow_partial_auth] && (action == 'PreAuthCapture')
-            xml.tag! 'TranCode', @use_tokenization ? "#{action}ByRecordNo" : action
+            xml.tag! 'TranCode', (@use_tokenization ? (action + 'ByRecordNo') : action)
             add_invoice(xml, invoice_no, ref_no, options)
             add_reference(xml, record_no)
             add_customer_data(xml, options)

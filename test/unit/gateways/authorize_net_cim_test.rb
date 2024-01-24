@@ -176,7 +176,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
   end
 
-  # NOTE: do not pattern your production application after this (refer to
+  # NOTE - do not pattern your production application after this (refer to
   # test_should_create_customer_profile_transaction_auth_only_and_then_prior_auth_capture_requests
   # instead as the correct way to do an auth then capture). capture_only
   # "is used to complete a previously authorized transaction that was not

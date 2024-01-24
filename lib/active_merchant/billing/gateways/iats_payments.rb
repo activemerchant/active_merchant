@@ -93,10 +93,9 @@ module ActiveMerchant #:nodoc:
       private
 
       def determine_purchase_type(payment)
-        case payment
-        when String
+        if payment.is_a?(String)
           :purchase_customer_code
-        when Check
+        elsif payment.is_a?(Check)
           :purchase_check
         else
           :purchase
@@ -130,10 +129,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment)
-        case payment
-        when String
+        if payment.is_a?(String)
           post[:customer_code] = payment
-        when Check
+        elsif payment.is_a?(Check)
           add_check(post, payment)
         else
           add_credit_card(post, payment)
@@ -168,10 +166,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def expdate(creditcard)
-        year  = sprintf('%<year>.4i', year: creditcard.year)
-        month = sprintf('%<month>.2i', month: creditcard.month)
+        year  = sprintf('%.4i', creditcard.year)
+        month = sprintf('%.2i', creditcard.month)
 
-        "#{month}/#{year[-2..]}"
+        "#{month}/#{year[-2..-1]}"
       end
 
       def creditcard_brand(brand)

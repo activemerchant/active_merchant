@@ -123,9 +123,9 @@ class RemoteCardConnectTest < Test::Unit::TestCase
       order_date: '20170507',
       ship_from_date: '20877',
       user_fields: [
-        { udf0: 'value0' },
-        { udf1: 'value1' },
-        { udf2: 'value2' }
+        { 'udf0': 'value0' },
+        { 'udf1': 'value1' },
+        { 'udf2': 'value2' }
       ]
     }
 

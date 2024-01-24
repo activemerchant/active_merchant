@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
       #                 :description      Merchant created authorization description (optional)
       #                 :currency         Sale currency to override money object or default (optional)
       #
-      # NOTE: you should pass either order_id or description
+      # Note: you should pass either order_id or description
       #
       # Returns Active Merchant response object
       def capture(money, authorization, options = {})
@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
       #                 :description      Merchant created authorization description (optional)
       #                 :currency         Sale currency to override money object or default (optional)
       #
-      # NOTE: you should pass either order_id or description
+      # Note: you should pass either order_id or description
       #
       # Returns Active Merchant response object
       def refund(money, authorization, options = {})
@@ -336,9 +336,9 @@ module ActiveMerchant #:nodoc:
         url = (test? ? test_url : live_url)
         endpoint = translate_action_endpoint(action, options)
         headers = {
-          'Content-Type' => 'application/json;charset=UTF-8',
-          'Authorization' => @options[:api_key],
-          'User-Agent' => 'MONEI/Shopify/0.1.0'
+          'Content-Type': 'application/json;charset=UTF-8',
+          'Authorization': @options[:api_key],
+          'User-Agent': 'MONEI/Shopify/0.1.0'
         }
 
         response = api_request(url + endpoint, params(request, action), headers)

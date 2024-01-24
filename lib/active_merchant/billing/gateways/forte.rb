@@ -249,7 +249,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:api_key]}:#{@options[:secret]}")}",
+          'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:api_key]}:#{@options[:secret]}")),
           'X-Forte-Auth-Account-Id' => "act_#{@options[:account_id]}",
           'Content-Type' => 'application/json'
         }

@@ -122,7 +122,7 @@ class LinkpointTest < Test::Unit::TestCase
   end
 
   def test_cleans_whitespace_from_pem
-    @gateway = LinkpointGateway.new(fixtures(:linkpoint).merge(pem: " #{fixtures(:linkpoint)[:pem]}"))
+    @gateway = LinkpointGateway.new(fixtures(:linkpoint).merge(pem: ' ' + fixtures(:linkpoint)[:pem]))
     assert response = @gateway.authorize(1000, @credit_card, @options)
     assert_success response
   end

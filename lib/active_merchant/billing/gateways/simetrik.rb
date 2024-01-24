@@ -318,7 +318,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action, url_params)
-        "#{test? ? test_url : live_url}/#{url_params[:token_acquirer]}/#{action}"
+        "#{(test? ? test_url : live_url)}/#{url_params[:token_acquirer]}/#{action}"
       end
 
       def post_data(data = {})

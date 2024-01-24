@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options = {})
         post = {}
 
-        add_external_mpi_data(post, options) if options[:three_d_secure].is_a?(Hash)
+        add_external_mpi_data(post, options) if options[:three_d_secure]&.is_a?(Hash)
         add_transaction_data('Auth', post, money, options)
         add_payment(post, payment, options)
         add_customer_details(post, payment, options)

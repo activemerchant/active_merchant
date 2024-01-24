@@ -180,12 +180,11 @@ module ActiveMerchant #:nodoc:
       def add_payment_method(doc, payment_method, options)
         doc.retain_on_success(true) if options[:store]
 
-        case payment_method
-        when String
+        if payment_method.is_a?(String)
           doc.payment_method_token(payment_method)
-        when CreditCard
+        elsif payment_method.is_a?(CreditCard)
           add_credit_card(doc, payment_method, options)
-        when Check
+        elsif payment_method.is_a?(Check)
           add_bank_account(doc, payment_method, options)
         else
           raise TypeError, 'Payment method not supported'
@@ -304,7 +303,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:login]}:#{@options[:password]}").chomp}",
+          'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:login]}:#{@options[:password]}").chomp),
           'Content-Type' => 'text/xml'
         }
       end

@@ -896,7 +896,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
   def test_that_setting_a_wiredump_device_on_the_gateway_sets_the_braintree_logger_upon_instantiation
     with_braintree_configuration_restoration do
-      logger = Logger.new($stdout)
+      logger = Logger.new(STDOUT)
       ActiveMerchant::Billing::BraintreeBlueGateway.wiredump_device = logger
 
       assert_not_equal logger, Braintree::Configuration.logger

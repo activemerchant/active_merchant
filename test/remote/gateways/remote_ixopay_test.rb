@@ -28,10 +28,10 @@ class RemoteIxopayTest < Test::Unit::TestCase
     assert_match(/[0-9a-zA-Z]+(|[0-9a-zA-Z]+)*/, response.authorization)
 
     assert_equal @credit_card.name,           response.params.dig('return_data', 'creditcard_data', 'card_holder')
-    assert_equal format('%<month>02d', month: @credit_card.month), response.params.dig('return_data', 'creditcard_data', 'expiry_month')
+    assert_equal '%02d' % @credit_card.month, response.params.dig('return_data', 'creditcard_data', 'expiry_month')
     assert_equal @credit_card.year.to_s,      response.params.dig('return_data', 'creditcard_data', 'expiry_year')
     assert_equal @credit_card.number[0..5],   response.params.dig('return_data', 'creditcard_data', 'first_six_digits')
-    assert_equal @credit_card.number.chars.last(4).join, response.params.dig('return_data', 'creditcard_data', 'last_four_digits')
+    assert_equal @credit_card.number.split(//).last(4).join, response.params.dig('return_data', 'creditcard_data', 'last_four_digits')
     assert_equal 'FINISHED', response.params['return_type']
 
     assert_not_nil response.params['purchase_id']
@@ -45,10 +45,10 @@ class RemoteIxopayTest < Test::Unit::TestCase
     assert_match(/[0-9a-zA-Z]+(|[0-9a-zA-Z]+)*/, response.authorization)
 
     assert_equal @credit_card.name,           response.params.dig('return_data', 'creditcard_data', 'card_holder')
-    assert_equal format('%<month>02d', month: @credit_card.month), response.params.dig('return_data', 'creditcard_data', 'expiry_month')
+    assert_equal '%02d' % @credit_card.month, response.params.dig('return_data', 'creditcard_data', 'expiry_month')
     assert_equal @credit_card.year.to_s,      response.params.dig('return_data', 'creditcard_data', 'expiry_year')
     assert_equal @credit_card.number[0..5],   response.params.dig('return_data', 'creditcard_data', 'first_six_digits')
-    assert_equal @credit_card.number.chars.last(4).join, response.params.dig('return_data', 'creditcard_data', 'last_four_digits')
+    assert_equal @credit_card.number.split(//).last(4).join, response.params.dig('return_data', 'creditcard_data', 'last_four_digits')
     assert_equal 'FINISHED', response.params['return_type']
 
     assert_not_nil response.params['purchase_id']

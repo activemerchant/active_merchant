@@ -25,7 +25,7 @@ class RemoteWompiTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options.merge(reference: reference, installments: 3))
     assert_success response
     response_data = response.params['data']
-    assert_equal response_data['reference'], reference
+    assert_equal response_data.dig('reference'), reference
     assert_equal response_data.dig('payment_method', 'installments'), 3
   end
 

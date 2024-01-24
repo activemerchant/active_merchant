@@ -120,14 +120,13 @@ module ActiveMerchant #:nodoc:
         params.map do |key, value|
           next if value != false && value.blank?
 
-          case value
-          when Hash
+          if value.is_a?(Hash)
             h = {}
             value.each do |k, v|
               h["#{key}[#{k}]"] = v unless v.blank?
             end
             post_data(h)
-          when Array
+          elsif value.is_a?(Array)
             value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join('&')
           else
             "#{key}=#{CGI.escape(value.to_s)}"
@@ -137,7 +136,7 @@ module ActiveMerchant #:nodoc:
 
       def headers(options = {})
         {
-          'Authorization' => "Basic #{Base64.encode64("#{@api_key}:x").strip}",
+          'Authorization' => 'Basic ' + Base64.encode64(@api_key.to_s + ':x').strip,
           'User-Agent' => "Pagar.me/1 ActiveMerchant/#{ActiveMerchant::VERSION}",
           'Accept-Encoding' => 'deflate'
         }

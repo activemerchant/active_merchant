@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
           post[:source][:credit_card] = {}
           post[:source][:credit_card][:account_number] = payment.number
           post[:source][:credit_card][:cvv] = payment.verification_value || ''
-          post[:source][:credit_card][:expiration] = format('%<month>02d%<year>02d', month: payment.month, year: payment.year % 100)
+          post[:source][:credit_card][:expiration] = '%02d%02d' % [payment.month, payment.year % 100]
           post[:source][:credit_card][:customer_id] = options[:customer_id] || ''
         end
       end
@@ -194,7 +194,7 @@ module ActiveMerchant #:nodoc:
         post[:payment_instrument][:type] = 'credit_card'
         post[:payment_instrument][:credit_card] = {}
         post[:payment_instrument][:credit_card][:account_number] = creditcard.number
-        post[:payment_instrument][:credit_card][:expiration] = format('%<month>02d%<year>02d', month: creditcard.month, year: creditcard.year % 100)
+        post[:payment_instrument][:credit_card][:expiration] = '%02d%02d' % [creditcard.month, creditcard.year % 100]
         post[:payment_instrument][:credit_card][:cvv] = creditcard.verification_value
       end
 
@@ -321,9 +321,9 @@ module ActiveMerchant #:nodoc:
       def error_code_from(response)
         error_code = nil
         error_code = response['response_code'] unless success_from(response)
-        if error = response['detail']
+        if error = response.dig('detail')
           error_code = error
-        elsif error = response['error']
+        elsif error = response.dig('error')
           error_code = error.dig('reason', 'id')
         end
         error_code
@@ -332,23 +332,32 @@ module ActiveMerchant #:nodoc:
       def get_url(action)
         base = '/api/v1/'
         case action
-        when 'sale', 'auth'
-          "#{base}payments/charge"
+        when 'sale'
+          return base + 'payments/charge'
+        when 'auth'
+          return base + 'payments/charge'
         when 'capture'
-          "#{base}payments/capture"
-        when 'void', 'refund'
-          "#{base}payments/refund"
+          return base + 'payments/capture'
+        when 'void'
+          return base + 'payments/refund'
+        when 'refund'
+          return base + 'payments/refund'
         when 'gettoken'
-          "#{base}vault/token"
+          return base + 'vault/token'
         when 'vault'
-          "#{base}vault/payment-instrument/token"
+          return base + 'vault/payment-instrument/token'
         else
-          "#{base}noaction"
+          return base + 'noaction'
         end
       end
 
       def no_hmac(action)
-        action == 'gettoken'
+        case action
+        when 'gettoken'
+          return true
+        else
+          return false
+        end
       end
 
       def create_basic(post, method)

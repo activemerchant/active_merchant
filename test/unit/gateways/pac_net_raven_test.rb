@@ -338,7 +338,7 @@ class PacNetRavenGatewayTest < Test::Unit::TestCase
     @gateway.stubs(timestamp: '2013-10-08T14:31:54.Z')
 
     assert_equal(
-      "PymtType=cc_preauth&RAPIVersion=2&UserName=user&Timestamp=2013-10-08T14%3A31%3A54.Z&RequestID=wouykiikdvqbwwxueppby&Signature=7794efc8c0d39f0983edc10f778e6143ba13531d&CardNumber=4242424242424242&Expiry=09#{@credit_card.year.to_s[-2..]}&CVV2=123&Currency=USD&BillingStreetAddressLineOne=Address+1&BillingStreetAddressLineFour=Address+2&BillingPostalCode=ZIP123",
+      "PymtType=cc_preauth&RAPIVersion=2&UserName=user&Timestamp=2013-10-08T14%3A31%3A54.Z&RequestID=wouykiikdvqbwwxueppby&Signature=7794efc8c0d39f0983edc10f778e6143ba13531d&CardNumber=4242424242424242&Expiry=09#{@credit_card.year.to_s[-2..-1]}&CVV2=123&Currency=USD&BillingStreetAddressLineOne=Address+1&BillingStreetAddressLineFour=Address+2&BillingPostalCode=ZIP123",
       @gateway.send(:post_data, 'cc_preauth', {
         'CardNumber' => @credit_card.number,
         'Expiry' => @gateway.send(:expdate, @credit_card),

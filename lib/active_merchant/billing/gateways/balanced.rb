@@ -184,13 +184,12 @@ module ActiveMerchant #:nodoc:
 
       def success_from(entity_name, raw_response)
         entity = (raw_response[entity_name] || []).first
-
-        return false unless entity
-
-        if entity_name == 'refunds' && entity.include?('status')
+        if !entity
+          false
+        elsif (entity_name == 'refunds') && entity.include?('status')
           %w(succeeded pending).include?(entity['status'])
         elsif entity.include?('status')
-          entity['status'] == 'succeeded'
+          (entity['status'] == 'succeeded')
         elsif entity_name == 'cards'
           !!entity['id']
         else
@@ -253,7 +252,7 @@ module ActiveMerchant #:nodoc:
         )
 
         {
-          'Authorization' => "Basic #{Base64.encode64("#{@options[:login]}:").strip}",
+          'Authorization' => 'Basic ' + Base64.encode64(@options[:login].to_s + ':').strip,
           'User-Agent' => "Balanced/v1.1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Accept' => 'application/vnd.api+json;revision=1.1',
           'X-Balanced-User-Agent' => @@ua

@@ -311,10 +311,9 @@ module ActiveMerchant #:nodoc:
         when 'recurring', 'installment'
           post[:storedCredential][:type] = 'RECURRING'
         when 'unscheduled'
-          case options[:stored_credential][:initiator]
-          when 'merchant'
+          if options[:stored_credential][:initiator] == 'merchant'
             post[:storedCredential][:type] = 'TOPUP'
-          when 'cardholder'
+          elsif options[:stored_credential][:initiator] == 'cardholder'
             post[:storedCredential][:type] = 'ADHOC'
           else
             return
@@ -357,7 +356,7 @@ module ActiveMerchant #:nodoc:
       def headers
         {
           'Content-Type' => 'application/json',
-          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:username]}:#{@options[:password]}")}"
+          'Authorization' => 'Basic ' + Base64.strict_encode64("#{@options[:username]}:#{@options[:password]}")
         }
       end
 

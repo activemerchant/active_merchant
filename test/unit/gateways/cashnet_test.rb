@@ -178,7 +178,7 @@ class Cashnet < Test::Unit::TestCase
   private
 
   def expected_expiration_date
-    format('%<month>02d%<year>02d', month: @credit_card.month, year: @credit_card.year.to_s[2..4])
+    '%02d%02d' % [@credit_card.month, @credit_card.year.to_s[2..4]]
   end
 
   def minimum_requirements

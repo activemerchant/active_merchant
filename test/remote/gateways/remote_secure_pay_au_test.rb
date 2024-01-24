@@ -114,7 +114,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     assert_success response
     authorization = response.authorization
 
-    assert response = @gateway.void("#{authorization}1")
+    assert response = @gateway.void(authorization + '1')
     assert_failure response
     assert_equal 'Unable to retrieve original FDR txn', response.message
   end

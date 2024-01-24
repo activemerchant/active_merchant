@@ -229,7 +229,7 @@ module ActiveMerchant #:nodoc:
         if shipping_address = options[:shipping_address]
           address(post, shipping_address, 'shipping')
           if shipping_address[:name]
-            firstname, lastname = shipping_address[:name].split
+            firstname, lastname = shipping_address[:name].split(' ')
             post[:shipping] = { givenName: firstname, surname: lastname }
           end
         end
@@ -266,7 +266,7 @@ module ActiveMerchant #:nodoc:
           post[:card] = {
             holder: payment.name,
             number: payment.number,
-            expiryMonth: format('%<month>02d', month: payment.month),
+            expiryMonth: '%02d' % payment.month,
             expiryYear: payment.year,
             cvv: payment.verification_value
           }
@@ -356,7 +356,11 @@ module ActiveMerchant #:nodoc:
 
         success_regex = /^(000\.000\.|000\.100\.1|000\.[36])/
 
-        success_regex.match?(response['result']['code'])
+        if success_regex.match?(response['result']['code'])
+          true
+        else
+          false
+        end
       end
 
       def message_from(response)

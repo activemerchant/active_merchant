@@ -217,8 +217,7 @@ module ActiveMerchant #:nodoc:
           specificationVersion: three_d_secure[:version]
         }
 
-        case payment_method.brand
-        when 'master'
+        if payment_method.brand == 'master'
           post[:threeDomainSecure][:acceptRisk] = three_d_secure[:eci] == '00'
           post[:threeDomainSecure][:ucaf] = three_d_secure[:cavv]
           post[:threeDomainSecure][:directoryServerTransactionID] = three_d_secure[:ds_transaction_id]
@@ -230,7 +229,7 @@ module ActiveMerchant #:nodoc:
           else
             post[:threeDomainSecure][:collectionIndicator] = '2'
           end
-        when 'visa'
+        elsif payment_method.brand == 'visa'
           post[:threeDomainSecure][:acceptRisk] = three_d_secure[:eci] == '07'
           post[:threeDomainSecure][:cavv] = three_d_secure[:cavv]
           post[:threeDomainSecure][:xid] = three_d_secure[:xid] if three_d_secure[:xid].present?
@@ -294,9 +293,9 @@ module ActiveMerchant #:nodoc:
         base_url = test? ? test_url : live_url
 
         if %w[void refund].include?(action)
-          "#{base_url}v1/#{ENDPOINT[action]}/#{params[:ticketNumber]}"
+          base_url + 'v1/' + ENDPOINT[action] + '/' + params[:ticketNumber].to_s
         else
-          "#{base_url}card/v1/#{ENDPOINT[action]}"
+          base_url + 'card/v1/' + ENDPOINT[action]
         end
       end
 

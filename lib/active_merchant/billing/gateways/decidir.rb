@@ -42,21 +42,6 @@ module ActiveMerchant #:nodoc:
         97 => STANDARD_ERROR_CODE[:processing_error]
       }
 
-      DEBIT_CARD_CODES = {
-        'visa' => 31,
-        'master' => 105,
-        'maestro' => 106,
-        'cabal' => 108
-      }
-
-      CREDIT_CARD_CODES = {
-        'master' => 104,
-        'american_express' => 65,
-        'diners_club' => 8,
-        'cabal' => 63,
-        'naranja' => 24
-      }
-
       def initialize(options = {})
         requires!(options, :api_key)
         super
@@ -145,13 +130,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method_id(credit_card, options)
-        brand = CreditCard.brand?(credit_card.number)
         if options[:payment_method_id]
           options[:payment_method_id].to_i
         elsif options[:debit]
-          DEBIT_CARD_CODES[brand]
+          if CreditCard.brand?(credit_card.number) == 'visa'
+            31
+          elsif CreditCard.brand?(credit_card.number) == 'master'
+            105
+          elsif CreditCard.brand?(credit_card.number) == 'maestro'
+            106
+          elsif CreditCard.brand?(credit_card.number) == 'cabal'
+            108
+          end
+        elsif CreditCard.brand?(credit_card.number) == 'master'
+          104
+        elsif CreditCard.brand?(credit_card.number) == 'american_express'
+          65
+        elsif CreditCard.brand?(credit_card.number) == 'diners_club'
+          8
+        elsif CreditCard.brand?(credit_card.number) == 'cabal'
+          63
+        elsif CreditCard.brand?(credit_card.number) == 'naranja'
+          24
         else
-          CREDIT_CARD_CODES[brand] || 1
+          1
         end
       end
 
@@ -286,7 +288,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(method, endpoint, parameters, options = {})
-        url = "#{test? ? test_url : live_url}/#{endpoint}"
+        url = "#{(test? ? test_url : live_url)}/#{endpoint}"
 
         begin
           raw_response = ssl_request(method, url, post_data(parameters), headers(options))
@@ -326,16 +328,15 @@ module ActiveMerchant #:nodoc:
         message = nil
         if error = response.dig('status_details', 'error')
           message = "#{error.dig('reason', 'description')} | #{error['type']}"
-        elsif error_type = response['error_type']
-          case validation_errors = response['validation_errors']
-          when Array
-            message = validation_errors.map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ')
-          when Hash
-            errors = validation_errors.map { |k, v| "#{k}: #{v}" }.join(', ')
-            message = "#{error_type} - #{errors}"
+        elsif response['error_type']
+          if response['validation_errors'].is_a?(Array)
+            message = response['validation_errors'].map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ')
+          elsif response['validation_errors'].is_a?(Hash)
+            errors = response['validation_errors'].map { |k, v| "#{k}: #{v}" }.join(', ')
+            message = "#{response['error_type']} - #{errors}"
           end
 
-          message ||= error_type
+          message ||= response['error_type']
         end
 
         message
@@ -365,12 +366,12 @@ module ActiveMerchant #:nodoc:
         elsif response['error_type']
           error_code = response['error_type'] if response['validation_errors']
         elsif response.dig('error', 'validation_errors')
-          error = response['error']
+          error = response.dig('error')
           validation_errors = error.dig('validation_errors', 0)
           code = validation_errors['code'] if validation_errors && validation_errors['code']
           param = validation_errors['param'] if validation_errors && validation_errors['param']
           error_code = "#{error['error_type']} | #{code} | #{param}" if error['error_type']
-        elsif error = response['error']
+        elsif error = response.dig('error')
           code = error.dig('reason', 'id')
           standard_error_code = STANDARD_ERROR_CODE_MAPPING[code]
           error_code = "#{code}, #{standard_error_code}"

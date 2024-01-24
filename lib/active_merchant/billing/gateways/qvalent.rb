@@ -16,12 +16,6 @@ module ActiveMerchant #:nodoc:
         'S' => 'D'
       }
 
-      ECI_MAPPING = {
-        'recurring' => 'REC',
-        'installment' => 'INS',
-        'unscheduled' => 'MTO'
-      }
-
       def initialize(options = {})
         requires!(options, :username, :password, :merchant, :pem)
         super
@@ -161,22 +155,33 @@ module ActiveMerchant #:nodoc:
         return unless payment_method.brand == 'visa'
 
         stored_credential = options[:stored_credential]
-        post['card.storedCredentialUsage'] = case reason_type = stored_credential[:reason_type]
-                                             when 'unscheduled'
-                                               type = stored_credential[:initiator] == 'merchant' ? 'MIT' : 'CIT'
-                                               "#{reason_type&.upcase}_#{type}"
-                                             else
-                                               reason_type&.upcase
-                                             end
+        if stored_credential[:reason_type] == 'unscheduled'
+          if stored_credential[:initiator] == 'merchant'
+            post['card.storedCredentialUsage'] = 'UNSCHEDULED_MIT'
+          elsif stored_credential[:initiator] == 'customer'
+            post['card.storedCredentialUsage'] = 'UNSCHEDULED_CIT'
+          end
+        elsif stored_credential[:reason_type] == 'recurring'
+          post['card.storedCredentialUsage'] = 'RECURRING'
+        elsif stored_credential[:reason_type] == 'installment'
+          post['card.storedCredentialUsage'] = 'INSTALLMENT'
+        end
       end
 
       def eci(options)
         if options.dig(:stored_credential, :initial_transaction)
           'SSL'
-        elsif options.dig(:stored_credential, :initiator) == 'cardholder'
+        elsif options.dig(:stored_credential, :initiator) && options[:stored_credential][:initiator] == 'cardholder'
           'MTO'
-        elsif reason = options.dig(:stored_credential, :reason_type)
-          ECI_MAPPING[reason]
+        elsif options.dig(:stored_credential, :reason_type)
+          case options[:stored_credential][:reason_type]
+          when 'recurring'
+            'REC'
+          when 'installment'
+            'INS'
+          when 'unscheduled'
+            'MTO'
+          end
         else
           'SSL'
         end
@@ -244,7 +249,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(post)
-        "#{post.to_query}&message.end"
+        post.to_query + '&message.end'
       end
 
       def url(action)

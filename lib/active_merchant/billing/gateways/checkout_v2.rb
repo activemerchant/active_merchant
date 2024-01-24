@@ -215,11 +215,10 @@ module ActiveMerchant #:nodoc:
           end
         end
         if payment_method.is_a?(String)
-          case payment_method
-          when /tok/
+          if /tok/.match?(payment_method)
             post[:type] = 'token'
             post[:token] = payment_method
-          when /src/
+          elsif /src/.match?(payment_method)
             post[key][:type] = 'id'
             post[key][:id] = payment_method
           else
@@ -557,7 +556,7 @@ module ActiveMerchant #:nodoc:
         if succeeded
           'Succeeded'
         elsif response['error_type']
-          "#{response['error_type']}: #{response['error_codes']&.first}"
+          response['error_type'] + ': ' + response['error_codes'].first
         else
           response_summary = if options[:threeds_response_message]
                                response['response_summary'] || response.dig('actions', 0, 'response_summary')

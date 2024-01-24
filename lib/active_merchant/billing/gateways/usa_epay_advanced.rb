@@ -287,7 +287,7 @@ module ActiveMerchant #:nodoc:
       # Make a purchase with a credit card. (Authorize and
       # capture for settlement.)
       #
-      # NOTE: See run_transaction for additional options.
+      # Note: See run_transaction for additional options.
       #
       def purchase(money, creditcard, options = {})
         run_sale(options.merge!(amount: money, payment_method: creditcard))
@@ -295,7 +295,7 @@ module ActiveMerchant #:nodoc:
 
       # Authorize an amount on a credit card or account.
       #
-      # NOTE: See run_transaction for additional options.
+      # Note: See run_transaction for additional options.
       #
       def authorize(money, creditcard, options = {})
         run_auth_only(options.merge!(amount: money, payment_method: creditcard))
@@ -303,7 +303,7 @@ module ActiveMerchant #:nodoc:
 
       # Capture an authorized transaction.
       #
-      # NOTE: See run_transaction for additional options.
+      # Note: See run_transaction for additional options.
       #
       def capture(money, identification, options = {})
         capture_transaction(options.merge!(amount: money, reference_number: identification))
@@ -311,7 +311,7 @@ module ActiveMerchant #:nodoc:
 
       # Void a previous transaction that has not been settled.
       #
-      # NOTE: See run_transaction for additional options.
+      # Note: See run_transaction for additional options.
       #
       def void(identification, options = {})
         void_transaction(options.merge!(reference_number: identification))
@@ -319,7 +319,7 @@ module ActiveMerchant #:nodoc:
 
       # Refund a previous transaction.
       #
-      # NOTE: See run_transaction for additional options.
+      # Note: See run_transaction for additional options.
       #
       def refund(money, identification, options = {})
         refund_transaction(options.merge!(amount: money, reference_number: identification))
@@ -439,7 +439,7 @@ module ActiveMerchant #:nodoc:
 
       # Enable a customer for recurring billing.
       #
-      # NOTE: Customer does not need to have all recurring parameters to succeed.
+      # Note: Customer does not need to have all recurring parameters to succeed.
       #
       # ==== Required
       # * <tt>:customer_number</tt>
@@ -618,7 +618,7 @@ module ActiveMerchant #:nodoc:
 
       # Run a transaction.
       #
-      # NOTE: run_sale, run_auth_only, run_credit, run_check_sale, run_check_credit
+      # Note: run_sale, run_auth_only, run_credit, run_check_sale, run_check_credit
       # methods are also available. Each takes the same options as
       # run_transaction, but the :command option is not required.
       #
@@ -709,7 +709,7 @@ module ActiveMerchant #:nodoc:
       # Capture an authorized transaction and move it into the current batch
       # for settlement.
       #
-      # NOTE: Check with merchant bank for details/restrictions on differing
+      # Note: Check with merchant bank for details/restrictions on differing
       # amounts than the original authorization.
       #
       # ==== Required
@@ -730,7 +730,7 @@ module ActiveMerchant #:nodoc:
 
       # Void a transaction.
       #
-      # NOTE: Can only be voided before being settled.
+      # Note: Can only be voided before being settled.
       #
       # ==== Required
       # * <tt>:reference_number</tt>
@@ -747,7 +747,7 @@ module ActiveMerchant #:nodoc:
 
       # Refund transaction.
       #
-      # NOTE: Required after a transaction has been settled. Refunds
+      # Note: Required after a transaction has been settled. Refunds
       # both credit card and check transactions.
       #
       # ==== Required
@@ -766,7 +766,7 @@ module ActiveMerchant #:nodoc:
 
       # Override transaction flagged for manager approval.
       #
-      # NOTE: Checks only!
+      # Note: Checks only!
       #
       # ==== Required
       # * <tt>:reference_number</tt>
@@ -1337,7 +1337,7 @@ module ActiveMerchant #:nodoc:
         case
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::CreditCard)
           build_tag soap, :string, 'CardNumber', payment_method[:method].number
-          build_tag soap, :string, 'CardExpiration', "#{format('%<month>02d', month: payment_method[:method].month)}#{payment_method[:method].year.to_s[-2..]}"
+          build_tag soap, :string, 'CardExpiration', "#{'%02d' % payment_method[:method].month}#{payment_method[:method].year.to_s[-2..-1]}"
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
             build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
@@ -1433,7 +1433,7 @@ module ActiveMerchant #:nodoc:
       def build_card_expiration(options)
         month = options[:payment_method].month
         year  = options[:payment_method].year
-        "#{format('%<month>02d', month: month)}#{year.to_s[-2..]}" unless month.nil? || year.nil?
+        "#{'%02d' % month}#{year.to_s[-2..-1]}" unless month.nil? || year.nil?
       end
 
       def build_check_data(soap, options)

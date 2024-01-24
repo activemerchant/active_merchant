@@ -446,10 +446,10 @@ module ActiveMerchant
       end
 
       def parse_element(parsed, node)
-        if node.elements.empty?
-          parsed[node.name.downcase] = node.text
-        else
+        if !node.elements.empty?
           node.elements.each { |e| parse_element(parsed, e) }
+        else
+          parsed[node.name.downcase] = node.text
         end
       end
 
@@ -504,7 +504,7 @@ module ActiveMerchant
         return 'Success' if succeeded
 
         parsed = parse(response)
-        if parsed['error-name'] == 'FRAUD_DETECTED'
+        if parsed.dig('error-name') == 'FRAUD_DETECTED'
           fraud_codes_from(response)
         else
           parsed['description']
@@ -566,7 +566,7 @@ module ActiveMerchant
 
         headers = {
           'Content-Type' => 'application/xml',
-          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:api_username]}:#{@options[:api_password]}").strip}"
+          'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:api_username]}:#{@options[:api_password]}").strip)
         }
 
         headers['Idempotency-Key'] = idempotency_key if idempotency_key
@@ -630,11 +630,10 @@ module ActiveMerchant
       def parse(payment_method)
         return unless payment_method
 
-        case payment_method
-        when String
+        if payment_method.is_a?(String)
           @vaulted_shopper_id, payment_method_type = payment_method.split('|')
           @payment_method_type = payment_method_type if payment_method_type.present?
-        when Check
+        elsif payment_method.is_a?(Check)
           @payment_method_type = payment_method.type
         else
           @payment_method_type = 'credit_card'

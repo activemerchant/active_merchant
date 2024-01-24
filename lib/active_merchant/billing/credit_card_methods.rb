@@ -407,7 +407,7 @@ module ActiveMerchant #:nodoc:
         def last_digits(number)
           return '' if number.nil?
 
-          number.length <= 4 ? number : number.slice(-4..)
+          number.length <= 4 ? number : number.slice(-4..-1)
         end
 
         def mask(number)

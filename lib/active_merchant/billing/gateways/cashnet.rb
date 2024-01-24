@@ -127,10 +127,10 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if address = (options[:shipping_address] || options[:billing_address] || options[:address])
-          post[:addr_g] = "#{String(address[:address1])},#{String(address[:address2])}"
-          post[:city_g] = address[:city]
-          post[:state_g] = address[:state]
-          post[:zip_g] = address[:zip]
+          post[:addr_g]       = String(address[:address1]) + ',' + String(address[:address2])
+          post[:city_g]       = address[:city]
+          post[:state_g]      = address[:state]
+          post[:zip_g]        = address[:zip]
         end
       end
 
@@ -150,18 +150,17 @@ module ActiveMerchant #:nodoc:
         match = body.match(/<cngateway>(.*)<\/cngateway>/)
         return nil unless match
 
-        CGI::parse(match[1]).map { |k, v| [k.to_sym, v.first] }.to_h
+        Hash[CGI::parse(match[1]).map { |k, v| [k.to_sym, v.first] }]
       end
 
       def handle_response(response)
-        case response.code.to_i
-        when 200...300
-          response.body
-        when 302
-          ssl_get(URI.parse(response['location']))
-        else
-          raise ResponseError.new(response)
+        if (200...300).cover?(response.code.to_i)
+          return response.body
+        elsif response.code.to_i == 302
+          return ssl_get(URI.parse(response['location']))
         end
+
+        raise ResponseError.new(response)
       end
 
       def unparsable_response(raw_response)

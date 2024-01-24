@@ -303,7 +303,7 @@ module ActiveMerchant #:nodoc:
       def add_stored_credential(post, options)
         add_transaction_type(post, options)
         # if :transaction_type option is not passed, then check for :stored_credential options
-        return unless (stored_credential = options[:stored_credential]) && options[:transaction_type].nil?
+        return unless (stored_credential = options[:stored_credential]) && options.dig(:transaction_type).nil?
 
         if stored_credential[:initiator] == 'merchant'
           case stored_credential[:reason_type]
@@ -489,7 +489,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, params, reference_action)
-        params.each_key { |key| params[key] = params[key].to_s }
+        params.keys.each { |key| params[key] = params[key].to_s }
         params[:M] = @options[:merchant_id]
         params[:O] = request_action(action, reference_action)
         params[:K] = sign_request(params)
@@ -507,7 +507,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        CGI::parse(body).map { |k, v| [k.upcase, v.first] }.to_h
+        Hash[CGI::parse(body).map { |k, v| [k.upcase, v.first] }]
       end
 
       def success_from(response)

@@ -109,7 +109,7 @@ module ActiveMerchant #:nodoc:
       #   "validated" by the Authorization Check.  This amount will
       #   be reserved and then reversed.  Default is 100.
       #
-      # NOTE: This is not the only way to achieve a card store
+      # Note: This is not the only way to achieve a card store
       # operation at Wirecard.  Any +purchase+ or +authorize+
       # can be sent with +options[:recurring] = 'Initial'+ to make
       # the returned authorization/GuWID usable in later transactions

@@ -68,7 +68,7 @@ class SSLVerify
   def ssl_verify_peer?(uri)
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
-    http.ca_file = "#{File.dirname(__FILE__)}/certs/cacert.pem"
+    http.ca_file = File.dirname(__FILE__) + '/certs/cacert.pem'
     http.verify_mode = OpenSSL::SSL::VERIFY_PEER
     http.open_timeout = 60
     http.read_timeout = 60

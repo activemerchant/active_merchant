@@ -167,7 +167,7 @@ class PayHubTest < Test::Unit::TestCase
   end
 
   def test_avs_codes
-    PayHubGateway::AVS_CODE_TRANSLATOR.each_key do |code|
+    PayHubGateway::AVS_CODE_TRANSLATOR.keys.each do |code|
       @gateway.expects(:ssl_request).returns(response_for_avs_codes(code))
 
       response = @gateway.purchase(@amount, @credit_card, @options)
@@ -177,7 +177,7 @@ class PayHubTest < Test::Unit::TestCase
   end
 
   def test_cvv_codes
-    PayHubGateway::CVV_CODE_TRANSLATOR.each_key do |code|
+    PayHubGateway::CVV_CODE_TRANSLATOR.keys.each do |code|
       @gateway.expects(:ssl_request).returns(response_for_cvv_codes(code))
 
       response = @gateway.purchase(@amount, @credit_card, @options)

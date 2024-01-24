@@ -254,10 +254,9 @@ module ActiveMerchant #:nodoc:
         return unless options[:recurring_fields].is_a?(Hash)
 
         options[:recurring_fields].each do |key, value|
-          case value
-          when true
+          if value == true
             value = 'yes'
-          when false
+          elsif value == false
             next
           end
 

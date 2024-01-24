@@ -199,7 +199,8 @@ module ActiveMerchant #:nodoc:
         post[:password]   = @options[:password]
         post[:type]       = action if action
 
-        post.merge(parameters).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        request = post.merge(parameters).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        request
       end
 
       def determine_funding_source(source)

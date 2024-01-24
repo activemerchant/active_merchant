@@ -209,12 +209,12 @@ module ActiveMerchant #:nodoc:
 
       def get_url(uri)
         base = test? ? self.test_url : self.live_url
-        "#{base}/#{uri}"
+        base + '/' + uri
       end
 
       def headers
         {
-          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:username]}:#{@options[:token]}").strip}",
+          'Authorization' => 'Basic ' + Base64.strict_encode64(@options[:username].to_s + ':' + @options[:token].to_s).strip,
           'User-Agent' => "Fat Zebra v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
         }
       end

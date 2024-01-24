@@ -26,16 +26,16 @@ class RemoteOgoneTest < Test::Unit::TestCase
     @options_browser_info = {
       three_ds_2: {
         browser_info:  {
-          width: 390,
-          height: 400,
-          depth: 24,
-          timezone: 300,
-          user_agent: 'Spreedly Agent',
-          java: false,
-          javascript: true,
-          language: 'en-US',
-          browser_size: '05',
-          accept_header: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+          "width": 390,
+          "height": 400,
+          "depth": 24,
+          "timezone": 300,
+          "user_agent": 'Spreedly Agent',
+          "java": false,
+          "javascript": true,
+          "language": 'en-US',
+          "browser_size": '05',
+          "accept_header": 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
         }
       }
     }
@@ -298,13 +298,13 @@ class RemoteOgoneTest < Test::Unit::TestCase
 
   def test_reference_transactions
     # Setting an alias
-    assert response = @gateway_3ds.purchase(@amount, credit_card('4000100011112224'), @options.merge(billing_id: 'awesomeman', order_id: "#{Time.now.to_i}1"))
+    assert response = @gateway_3ds.purchase(@amount, credit_card('4000100011112224'), @options.merge(billing_id: 'awesomeman', order_id: Time.now.to_i.to_s + '1'))
     assert_success response
     # Updating an alias
-    assert response = @gateway_3ds.purchase(@amount, credit_card('4111111111111111'), @options.merge(billing_id: 'awesomeman', order_id: "#{Time.now.to_i}2"))
+    assert response = @gateway_3ds.purchase(@amount, credit_card('4111111111111111'), @options.merge(billing_id: 'awesomeman', order_id: Time.now.to_i.to_s + '2'))
     assert_success response
     # Using an alias (i.e. don't provide the credit card)
-    assert response = @gateway_3ds.purchase(@amount, 'awesomeman', @options.merge(order_id: "#{Time.now.to_i}3"))
+    assert response = @gateway_3ds.purchase(@amount, 'awesomeman', @options.merge(order_id: Time.now.to_i.to_s + '3'))
     assert_success response
   end
 

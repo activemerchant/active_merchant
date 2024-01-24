@@ -341,7 +341,7 @@ module ActiveMerchant #:nodoc:
         result[:success] = (result[:szErrorCode] == '0')
 
         if result[:success]
-          lines[1..].each do |line|
+          lines[1..-1].each do |line|
             values = split_line(line)
             response_keys.each_with_index do |key, index|
               result[key] = values[index]
@@ -423,6 +423,8 @@ module ActiveMerchant #:nodoc:
         case action
         when :authorization
           message_from_authorization(response)
+        when :get_status
+          message_from_status(response)
         else
           message_from_status(response)
         end

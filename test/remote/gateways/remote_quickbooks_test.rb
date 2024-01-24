@@ -50,7 +50,7 @@ class RemoteTest < Test::Unit::TestCase
     assert_success auth
 
     assert capture = @gateway.capture(@partial_amount, auth.authorization)
-    assert_equal capture.params['captureDetail']['amount'], sprintf('%<amount>.2f', @partial_amount.to_f / 100)
+    assert_equal capture.params['captureDetail']['amount'], sprintf('%.2f', @partial_amount.to_f / 100)
     assert_success capture
   end
 
@@ -72,7 +72,7 @@ class RemoteTest < Test::Unit::TestCase
     assert_success purchase
 
     assert refund = @gateway.refund(@partial_amount, purchase.authorization)
-    assert_equal refund.params['amount'], sprintf('%<amount>.2f', @partial_amount.to_f / 100)
+    assert_equal refund.params['amount'], sprintf('%.2f', @partial_amount.to_f / 100)
     assert_success refund
   end
 

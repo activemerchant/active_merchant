@@ -401,10 +401,10 @@ module ActiveMerchant #:nodoc:
       def format_date(month, year)
         return nil if year.blank? || month.blank?
 
-        year  = sprintf('%<year>.4i', year: year)
-        month = sprintf('%<month>.2i', month: month)
+        year  = sprintf('%.4i', year)
+        month = sprintf('%.2i', month)
 
-        "#{month}#{year[-2..]}"
+        "#{month}#{year[-2..-1]}"
       end
 
       def commit(action, parameters)

@@ -214,14 +214,14 @@ class CommerceHubTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       %w(shipping billing).each do |key|
-        assert_equal request["#{key}Address"]['address']['street'], address_with_phone[:address1]
-        assert_equal request["#{key}Address"]['address']['houseNumberOrName'], address_with_phone[:address2]
-        assert_equal request["#{key}Address"]['address']['recipientNameOrAddress'], address_with_phone[:name]
-        assert_equal request["#{key}Address"]['address']['city'], address_with_phone[:city]
-        assert_equal request["#{key}Address"]['address']['stateOrProvince'], address_with_phone[:state]
-        assert_equal request["#{key}Address"]['address']['postalCode'], address_with_phone[:zip]
-        assert_equal request["#{key}Address"]['address']['country'], address_with_phone[:country]
-        assert_equal request["#{key}Address"]['phone']['phoneNumber'], address_with_phone[:phone_number]
+        assert_equal request[key + 'Address']['address']['street'], address_with_phone[:address1]
+        assert_equal request[key + 'Address']['address']['houseNumberOrName'], address_with_phone[:address2]
+        assert_equal request[key + 'Address']['address']['recipientNameOrAddress'], address_with_phone[:name]
+        assert_equal request[key + 'Address']['address']['city'], address_with_phone[:city]
+        assert_equal request[key + 'Address']['address']['stateOrProvince'], address_with_phone[:state]
+        assert_equal request[key + 'Address']['address']['postalCode'], address_with_phone[:zip]
+        assert_equal request[key + 'Address']['address']['country'], address_with_phone[:country]
+        assert_equal request[key + 'Address']['phone']['phoneNumber'], address_with_phone[:phone_number]
       end
     end.respond_with(successful_authorize_response)
   end

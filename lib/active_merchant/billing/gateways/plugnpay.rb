@@ -277,10 +277,10 @@ module ActiveMerchant
       end
 
       def expdate(creditcard)
-        year  = sprintf('%<year>.4i', year: creditcard.year)
-        month = sprintf('%<month>.2i', month: creditcard.month)
+        year  = sprintf('%.4i', creditcard.year)
+        month = sprintf('%.2i', creditcard.month)
 
-        "#{month}/#{year[-2..]}"
+        "#{month}/#{year[-2..-1]}"
       end
     end
   end

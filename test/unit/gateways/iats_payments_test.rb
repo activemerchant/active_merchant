@@ -42,7 +42,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
       assert_match(/<customerIPAddress>#{@options[:ip]}<\/customerIPAddress>/, data)
       assert_match(/<invoiceNum>#{@options[:order_id]}<\/invoiceNum>/, data)
       assert_match(/<creditCardNum>#{@credit_card.number}<\/creditCardNum>/, data)
-      assert_match(/<creditCardExpiry>0#{@credit_card.month}\/#{@credit_card.year.to_s[-2..]}<\/creditCardExpiry>/, data)
+      assert_match(/<creditCardExpiry>0#{@credit_card.month}\/#{@credit_card.year.to_s[-2..-1]}<\/creditCardExpiry>/, data)
       assert_match(/<cvv2>#{@credit_card.verification_value}<\/cvv2>/, data)
       assert_match(/<mop>VISA<\/mop>/, data)
       assert_match(/<firstName>#{@credit_card.first_name}<\/firstName>/, data)

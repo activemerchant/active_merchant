@@ -23,12 +23,6 @@ module ActiveMerchant #:nodoc:
         query: 'MerchantAccountQuery'
       }
 
-      CVV_RESULT = {
-        'Pass' => 'M',
-        'Fail' => 'N',
-        'NotAvailable' => 'P'
-      }
-
       # Creates a new QbmsGateway
       #
       # The gateway requires that a valid app id, app login, and ticket be passed
@@ -287,18 +281,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def cvv_result(response)
-        CVV_RESULT[response[:card_security_code_match]]
+        case response[:card_security_code_match]
+        when 'Pass'         then 'M'
+        when 'Fail'         then 'N'
+        when 'NotAvailable' then 'P'
+        end
       end
 
       def avs_result(response)
         case "#{response[:avs_street]}|#{response[:avs_zip]}"
-        when 'Pass|Pass' then 'D'
-        when 'Pass|Fail' then 'A'
-        when 'Pass|NotAvailable' then 'B'
-        when 'Fail|Pass' then 'Z'
-        when 'Fail|Fail' then 'C'
-        when 'Fail|NotAvailable', 'NotAvailable|Fail' then 'N'
-        when 'NotAvailable|Pass' then 'P'
+        when 'Pass|Pass'                 then 'D'
+        when 'Pass|Fail'                 then 'A'
+        when 'Pass|NotAvailable'         then 'B'
+        when 'Fail|Pass'                 then 'Z'
+        when 'Fail|Fail'                 then 'C'
+        when 'Fail|NotAvailable'         then 'N'
+        when 'NotAvailable|Pass'         then 'P'
+        when 'NotAvailable|Fail'         then 'N'
         when 'NotAvailable|NotAvailable' then 'U'
         end
       end

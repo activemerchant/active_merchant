@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
 
         add_secure_hash(post)
 
-        "#{self.server_hosted_url}?#{post_data(post)}"
+        self.server_hosted_url + '?' + post_data(post)
       end
 
       # Parses a response from purchase_offsite_url once user is redirected back

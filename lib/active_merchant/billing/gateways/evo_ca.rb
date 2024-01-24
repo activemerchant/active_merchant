@@ -161,7 +161,7 @@ module ActiveMerchant #:nodoc:
       # In most situations credits are disabled as transaction refunds should
       # be used instead.
       #
-      # NOTE: that this is different from a {#refund} (which is usually what
+      # Note that this is different from a {#refund} (which is usually what
       # you'll be looking for).
       def credit(money, credit_card, options = {})
         post = {}

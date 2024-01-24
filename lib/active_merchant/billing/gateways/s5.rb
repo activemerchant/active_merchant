@@ -128,7 +128,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_account(xml, payment_method)
-        if payment_method.respond_to?(:number)
+        if !payment_method.respond_to?(:number)
+          xml.Account(registration: payment_method)
+        else
           xml.Account do
             xml.Number        payment_method.number
             xml.Holder        "#{payment_method.first_name} #{payment_method.last_name}"
@@ -136,8 +138,6 @@ module ActiveMerchant #:nodoc:
             xml.Expiry(year: payment_method.year, month: payment_method.month)
             xml.Verification payment_method.verification_value
           end
-        else
-          xml.Account(registration: payment_method)
         end
       end
 

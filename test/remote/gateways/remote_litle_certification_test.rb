@@ -1241,7 +1241,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
   end
 
   def auth_code(order_id)
-    "#{order_id * 5} "
+    order_id * 5 + ' '
   end
 
   def txn_id(response)

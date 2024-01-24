@@ -48,12 +48,6 @@ module ActiveMerchant #:nodoc:
         'D' => 'N' # Does not match
       }
 
-      SC_REASON_TYPE = {
-        'installment' => 'INSTALMENT',
-        'recurring' => 'RECURRING',
-        'unscheduled' => 'UNSCHEDULED'
-      }
-
       def initialize(options = {})
         requires!(options, :login, :password)
         super
@@ -515,7 +509,7 @@ module ActiveMerchant #:nodoc:
           'shopperAccountPasswordChangeIndicator' => shopper_account_risk_data[:shopper_account_password_change_indicator],
           'shopperAccountShippingAddressUsageIndicator' => shopper_account_risk_data[:shopper_account_shipping_address_usage_indicator],
           'shopperAccountPaymentAccountIndicator' => shopper_account_risk_data[:shopper_account_payment_account_indicator]
-        }.compact
+        }.reject { |_k, v| v.nil? }
 
         xml.shopperAccountRiskData(data) do
           add_date_element(xml, 'shopperAccountCreationDate', shopper_account_risk_data[:shopper_account_creation_date])
@@ -536,7 +530,7 @@ module ActiveMerchant #:nodoc:
           'reorderingPreviousPurchases' => transaction_risk_data[:reordering_previous_purchases],
           'preOrderPurchase' => transaction_risk_data[:pre_order_purchase],
           'giftCardCount' => transaction_risk_data[:gift_card_count]
-        }.compact
+        }.reject { |_k, v| v.nil? }
 
         xml.transactionRiskData(data) do
           xml.transactionRiskDataGiftCardAmount do
@@ -691,7 +685,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_stored_credential_using_normalized_fields(xml, options)
-        reason = SC_REASON_TYPE[options[:stored_credential][:reason_type]]
+        reason = case options[:stored_credential][:reason_type]
+                 when 'installment' then 'INSTALMENT'
+                 when 'recurring' then 'RECURRING'
+                 when 'unscheduled' then 'UNSCHEDULED'
+                 end
         is_initial_transaction = options[:stored_credential][:initial_transaction]
         stored_credential_params = generate_stored_credential_params(is_initial_transaction, reason)
 

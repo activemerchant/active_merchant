@@ -12,7 +12,7 @@ class RemoteFinansbankTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
 
     @options = {
-      order_id: "##{generate_unique_id}",
+      order_id: '#' + generate_unique_id,
       billing_address: address,
       description: 'Store Purchase',
       email: 'xyz@gmail.com'

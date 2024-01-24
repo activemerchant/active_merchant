@@ -305,8 +305,8 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, card)
         name = [card.first_name, card.last_name].join(' ').slice(0, 60)
-        year = sprintf('%<year>.4i', year: card.year)
-        month = sprintf('%<month>.2i', month: card.month)
+        year = sprintf('%.4i', card.year)
+        month = sprintf('%.2i', card.month)
         post['DS_MERCHANT_TITULAR'] = CGI.escape(name)
         post['DS_MERCHANT_PAN'] = card.number
         post['DS_MERCHANT_EXPIRYDATE'] = "#{year[2..3]}#{month}"
@@ -428,7 +428,8 @@ module ActiveMerchant #:nodoc:
 
         order_id += "\0" until order_id.bytesize % block_length == 0 # Pad with zeros
 
-        cipher.update(order_id) + cipher.final
+        output = cipher.update(order_id) + cipher.final
+        output
       end
 
       def mac256(key, data)

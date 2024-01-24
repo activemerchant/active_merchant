@@ -227,7 +227,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        return response[:response_reason_text].nil? ? '' : response[:response_reason_text][0..]
+        return response[:response_reason_text].nil? ? '' : response[:response_reason_text][0..-1]
       end
 
       def parse(xml)

@@ -881,13 +881,12 @@ class CheckoutV2Test < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.store(@credit_card)
     end.check_request do |_method, endpoint, data, _headers|
-      case endpoint
-      when /tokens/
+      if /tokens/.match?(endpoint)
         assert_match(%r{"type":"card"}, data)
         assert_match(%r{"number":"4242424242424242"}, data)
         assert_match(%r{"cvv":"123"}, data)
         assert_match('/tokens', endpoint)
-      when /instruments/
+      elsif /instruments/.match?(endpoint)
         assert_match(%r{"type":"token"}, data)
         assert_match(%r{"token":"tok_}, data)
       end

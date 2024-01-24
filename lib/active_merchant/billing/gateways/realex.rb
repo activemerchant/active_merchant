@@ -367,12 +367,16 @@ module ActiveMerchant
         case response[:result]
         when '00'
           SUCCESS
-        when '101', /^5[0-9][0-9]/
+        when '101'
           response[:message]
+        when '102', '103'
+          DECLINED
         when /^2[0-9][0-9]/
           BANK_ERROR
         when /^3[0-9][0-9]/
           REALEX_ERROR
+        when /^5[0-9][0-9]/
+          response[:message]
         when '600', '601', '603'
           ERROR
         when '666'

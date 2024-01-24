@@ -180,10 +180,10 @@ module ActiveMerchant #:nodoc:
         # MD5(username|password|orderid|amount|time)
         now = Time.now.to_i.to_s
         md5 = Digest::MD5.new
-        md5 << "#{@options[:login]}|"
-        md5 << "#{@options[:password]}|"
-        md5 << "#{options[:order_id]}|"
-        md5 << "#{amount(money)}|"
+        md5 << @options[:login].to_s + '|'
+        md5 << @options[:password].to_s + '|'
+        md5 << options[:order_id].to_s + '|'
+        md5 << amount(money).to_s + '|'
         md5 << now
         post[:key]  = md5.hexdigest
         post[:time] = now

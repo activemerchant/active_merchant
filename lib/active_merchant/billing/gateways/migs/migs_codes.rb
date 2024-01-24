@@ -71,7 +71,6 @@ module ActiveMerchant
 
       class CreditCardType
         attr_accessor :am_code, :migs_code, :migs_long_code, :name
-
         def initialize(am_code, migs_code, migs_long_code, name)
           @am_code        = am_code
           @migs_code      = migs_code
