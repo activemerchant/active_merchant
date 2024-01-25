@@ -323,6 +323,8 @@ module ActiveMerchant #:nodoc:
         rel_path = "#{method}/v1/#{action}"
         response = api_request(method, url(action, @options[:url_override]), rel_path, parameters)
 
+        return response unless response.is_a?(Hash) && response.dig('status', 'status')
+
         Response.new(
           success_from(response),
           message_from(response),
@@ -383,7 +385,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response.dig('status', 'status') == 'SUCCESS' && response.dig('status', 'error') != 'ERR'
+        response.dig('status', 'status') == 'SUCCESS' && response.dig('status', 'error') != 'ERR' && response.dig('status', 'message') == ''
       end
 
       def message_from(response)
@@ -402,7 +404,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        response.dig('status', 'error_code') unless success_from(response)
+        error_code = response.dig('status', 'error_code') unless success_from(response)
+        response_code = response.dig('status', 'response_code') unless success_from(response)
+        response_code unless error_code
       end
 
       def handle_response(response)

@@ -231,7 +231,7 @@ class RapydTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'ERROR_PROCESSING_CARD - [05]', response.error_code
+    assert_equal 'ERROR_PROCESSING_CARD - [05]', response.params['status']['response_code']
   end
 
   def test_successful_authorize
