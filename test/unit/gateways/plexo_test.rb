@@ -119,6 +119,24 @@ class PlexoTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_successful_authorize_with_invoice_number
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ invoice_number: '12345abcde' }))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['InvoiceNumber'], '12345abcde'
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_successful_authorize_with_merchant_id
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ merchant_id: 1234 }))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['MerchantId'], 1234
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_successful_reordering_of_amount_in_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
@@ -277,6 +295,24 @@ class PlexoTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['Amount']['Total'], '9.00'
+    end.respond_with(successful_verify_response)
+  end
+
+  def test_successful_verify_with_invoice_number
+    stub_comms do
+      @gateway.verify(@credit_card, @options.merge({ invoice_number: '12345abcde' }))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['InvoiceNumber'], '12345abcde'
+    end.respond_with(successful_verify_response)
+  end
+
+  def test_successful_verify_with_merchant_id
+    stub_comms do
+      @gateway.verify(@credit_card, @options.merge({ merchant_id: 1234 }))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['MerchantId'], 1234
     end.respond_with(successful_verify_response)
   end
 

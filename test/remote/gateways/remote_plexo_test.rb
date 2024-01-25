@@ -43,6 +43,24 @@ class RemotePlexoTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_invoice_number
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ invoice_number: '12345abcde' }))
+    assert_success response
+    assert_equal '12345abcde', response.params['invoiceNumber']
+  end
+
+  def test_successfully_send_merchant_id
+    # ensures that we can set and send the merchant_id and get a successful response
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ merchant_id: 3243 }))
+    assert_success response
+    assert_equal 3243, response.params['merchant']['id']
+
+    # ensures that we can set and send the merchant_id and expect a failed response for invalid merchant_id
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ merchant_id: 1234 }))
+    assert_failure response
+    assert_equal 'The requested Merchant was not found.', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -133,6 +151,11 @@ class RemotePlexoTest < Test::Unit::TestCase
 
   def test_successful_verify_with_custom_amount
     response = @gateway.verify(@credit_card, @options.merge({ verify_amount: '400' }))
+    assert_success response
+  end
+
+  def test_successful_verify_with_invoice_number
+    response = @gateway.verify(@credit_card, @options.merge({ invoice_number: '12345abcde' }))
     assert_success response
   end
 
