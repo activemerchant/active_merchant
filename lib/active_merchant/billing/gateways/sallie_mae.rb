@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SallieMaeGateway < Gateway
       self.live_url = self.test_url = 'https://trans.salliemae.com/cgi-bin/process.cgi'
 
@@ -110,12 +110,10 @@ module ActiveMerchant #:nodoc:
         parameters[:amount] = amount(money)
 
         case action
-        when :sale
-          parameters[:action] = 'ns_quicksale_cc'
         when :authonly
           parameters[:action] = 'ns_quicksale_cc'
           parameters[:authonly] = 1
-        when :capture
+        when :capture, :sale
           parameters[:action] = 'ns_quicksale_cc'
         end
 

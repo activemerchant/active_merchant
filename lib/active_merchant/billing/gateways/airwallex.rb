@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class AirwallexGateway < Gateway
       self.test_url = 'https://api-demo.airwallex.com/api/v1'
       self.live_url = 'https://pci-api.airwallex.com/api/v1'
@@ -15,10 +15,10 @@ module ActiveMerchant #:nodoc:
       ENDPOINTS = {
         login: '/authentication/login',
         setup: '/pa/payment_intents/create',
-        sale: '/pa/payment_intents/%{id}/confirm',
-        capture: '/pa/payment_intents/%{id}/capture',
+        sale: '/pa/payment_intents/%<id>s/confirm',
+        capture: '/pa/payment_intents/%<id>s/capture',
         refund: '/pa/refunds/create',
-        void: '/pa/payment_intents/%{id}/cancel'
+        void: '/pa/payment_intents/%<id>s/cancel'
       }
 
       # Provided by Airwallex for testing purposes
@@ -105,8 +105,8 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(/(\\\"number\\\":\\\")\d+/, '\1[REDACTED]').
-          gsub(/(\\\"cvc\\\":\\\")\d+/, '\1[REDACTED]')
+          gsub(/(\\"number\\":\\")\d+/, '\1[REDACTED]').
+          gsub(/(\\"cvc\\":\\")\d+/, '\1[REDACTED]')
       end
 
       private
@@ -152,7 +152,7 @@ module ActiveMerchant #:nodoc:
       def build_request_url(action, id = nil)
         base_url = (test? ? test_url : live_url)
         endpoint = ENDPOINTS[action].to_s
-        endpoint = id.present? ? endpoint % { id: id } : endpoint
+        endpoint %= { id: id } if id.present?
         base_url + endpoint
       end
 
@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
 
       def has_required_address_info?(address)
         # These fields are required if address data is sent.
-        return unless address
+        return false unless address
 
         address[:address1] && address[:country]
       end
@@ -262,15 +262,15 @@ module ActiveMerchant #:nodoc:
 
         external_recurring_data = post[:external_recurring_data] = {}
 
-        case stored_credential.dig(:reason_type)
+        case stored_credential[:reason_type]
         when 'recurring', 'installment'
           external_recurring_data[:merchant_trigger_reason] = 'scheduled'
         when 'unscheduled'
           external_recurring_data[:merchant_trigger_reason] = 'unscheduled'
         end
 
-        external_recurring_data[:original_transaction_id] = test_mit?(options) ? test_network_transaction_id(post) : stored_credential.dig(:network_transaction_id)
-        external_recurring_data[:triggered_by] = stored_credential.dig(:initiator) == 'cardholder' ? 'customer' : 'merchant'
+        external_recurring_data[:original_transaction_id] = test_mit?(options) ? test_network_transaction_id(post) : stored_credential[:network_transaction_id]
+        external_recurring_data[:triggered_by] = stored_credential[:initiator] == 'cardholder' ? 'customer' : 'merchant'
       end
 
       def test_network_transaction_id(post)
@@ -292,11 +292,11 @@ module ActiveMerchant #:nodoc:
         pm_options = post.dig('payment_method_options', 'card')
 
         external_three_ds = {
-          'version': format_three_ds_version(three_d_secure),
-          'eci': three_d_secure[:eci]
+          version: format_three_ds_version(three_d_secure),
+          eci: three_d_secure[:eci]
         }.merge(three_ds_version_specific_fields(three_d_secure))
 
-        pm_options ? pm_options.merge!('external_three_ds': external_three_ds) : post['payment_method_options'] = { 'card': { 'external_three_ds': external_three_ds } }
+        pm_options ? pm_options.merge!(external_three_ds: external_three_ds) : post['payment_method_options'] = { card: { external_three_ds: external_three_ds } }
       end
 
       def format_three_ds_version(three_d_secure)
@@ -309,14 +309,14 @@ module ActiveMerchant #:nodoc:
       def three_ds_version_specific_fields(three_d_secure)
         if three_d_secure[:version].to_f >= 2
           {
-            'authentication_value': three_d_secure[:cavv],
-            'ds_transaction_id': three_d_secure[:ds_transaction_id],
-            'three_ds_server_transaction_id': three_d_secure[:three_ds_server_trans_id]
+            authentication_value: three_d_secure[:cavv],
+            ds_transaction_id: three_d_secure[:ds_transaction_id],
+            three_ds_server_transaction_id: three_d_secure[:three_ds_server_trans_id]
           }
         else
           {
-            'cavv': three_d_secure[:cavv],
-            'xid': three_d_secure[:xid]
+            cavv: three_d_secure[:cavv],
+            xid: three_d_secure[:xid]
           }
         end
       end

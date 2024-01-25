@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MerchantESolutionsGateway < Gateway
       include Empty
 
@@ -171,8 +171,8 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         results = {}
-        body.split(/&/).each do |pair|
-          key, val = pair.split(/=/)
+        body.split('&').each do |pair|
+          key, val = pair.split('=')
           results[key] = val
         end
         results
@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, money, parameters)
         url = test? ? self.test_url : self.live_url
-        parameters[:transaction_amount] = amount(money) if money unless action == 'V'
+        parameters[:transaction_amount] = amount(money) if action != 'V' && money
 
         response =
           begin
@@ -224,8 +224,7 @@ module ActiveMerchant #:nodoc:
         post[:profile_key] = @options[:password]
         post[:transaction_type] = action if action
 
-        request = post.merge(parameters).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ViaklixGateway < Gateway
       class_attribute :test_url, :live_url, :delimiter, :actions
 

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class FirstdataE4Gateway < Gateway
       # TransArmor support requires v11 or lower
       self.test_url = 'https://api.demo.globalgatewaye4.firstdata.com/transaction/v11'
@@ -319,7 +319,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, options)
-        if address = (options[:billing_address] || options[:address])
+        if address = options[:billing_address] || options[:address]
           xml.tag! 'ZipCode', address[:zip]
         end
       end
@@ -406,7 +406,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def money_from_authorization(auth)
-        _, _, amount = auth.split(/;/, 3)
+        _, _, amount = auth.split(';', 3)
         amount.to_i
       end
 
@@ -416,7 +416,7 @@ module ActiveMerchant #:nodoc:
         elsif response[:error_number] && response[:error_number] != '0'
           response[:error_description]
         else
-          result = (response[:exact_message] || '')
+          result = response[:exact_message] || ''
           result << " - #{response[:bank_message]}" if response[:bank_message].present?
           result
         end
@@ -448,7 +448,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_elements(response, root)
         root.elements.to_a.each do |node|
-          response[node.name.gsub(/EXact/, 'Exact').underscore.to_sym] = (node.text || '').strip
+          response[node.name.gsub('EXact', 'Exact').underscore.to_sym] = (node.text || '').strip
         end
       end
     end

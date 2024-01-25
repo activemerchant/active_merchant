@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information on the Iridium Gateway please download the
     # documentation from their Merchant Management System.
     #
@@ -380,7 +380,7 @@ module ActiveMerchant #:nodoc:
           ssl_post(
             test? ? self.test_url : self.live_url, request,
             {
-              'SOAPAction' => 'https://www.thepaymentgateway.net/' + options[:action],
+              'SOAPAction' => "https://www.thepaymentgateway.net/#{options[:action]}",
               'Content-Type' => 'text/xml; charset=utf-8'
             }
           )
@@ -426,20 +426,12 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(reply, node)
         case node.name
-        when 'CrossReferenceTransactionResult'
+        when 'CrossReferenceTransactionResult', 'CardDetailsTransactionResult'
           reply[:transaction_result] = {}
           node.attributes.each do |a, b|
             reply[:transaction_result][a.underscore.to_sym] = b
           end
           node.elements.each { |e| parse_element(reply[:transaction_result], e) } if node.has_elements?
-
-        when 'CardDetailsTransactionResult'
-          reply[:transaction_result] = {}
-          node.attributes.each do |a, b|
-            reply[:transaction_result][a.underscore.to_sym] = b
-          end
-          node.elements.each { |e| parse_element(reply[:transaction_result], e) } if node.has_elements?
-
         when 'TransactionOutputData'
           reply[:transaction_output_data] = {}
           node.attributes.each { |a, b| reply[:transaction_output_data][a.underscore.to_sym] = b }

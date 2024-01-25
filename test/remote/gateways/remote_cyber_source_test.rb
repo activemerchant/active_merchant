@@ -308,7 +308,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(void)
   end
 
-  # Note: This test will only pass with test account credentials which
+  # NOTE: This test will only pass with test account credentials which
   # have asynchronous adjustments enabled.
   def test_successful_asynchronous_adjust
     assert authorize = @gateway_latam.authorize(@amount, @credit_card, @options)
@@ -354,7 +354,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_void_with_mdd_fields
-    (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
+    (1..20).each { |e| @options[:"mdd_field_#{e}"] = "value #{e}" }
 
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_successful_response(auth)
@@ -764,14 +764,14 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_mdd_fields
-    (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
+    (1..20).each { |e| @options[:"mdd_field_#{e}"] = "value #{e}" }
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_successful_response(response)
   end
 
   def test_successful_purchase_with_mdd_fields
-    (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
+    (1..20).each { |e| @options[:"mdd_field_#{e}"] = "value #{e}" }
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_successful_response(response)
   end
@@ -780,7 +780,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_successful_response(auth)
 
-    (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
+    (1..20).each { |e| @options[:"mdd_field_#{e}"] = "value #{e}" }
     assert capture = @gateway.capture(@amount, auth.authorization, @options.merge({ national_tax_indicator: 1 }))
     assert_successful_response(capture)
   end
@@ -875,7 +875,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_standalone_credit_to_card_with_mdd_fields
-    (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
+    (1..20).each { |e| @options[:"mdd_field_#{e}"] = "value #{e}" }
     assert response = @gateway.credit(@amount, @credit_card, @options)
     assert_successful_response(response)
   end

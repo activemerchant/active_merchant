@@ -171,7 +171,7 @@ class ProPayTest < Test::Unit::TestCase
       starting SSL for xmltest.propay.com:443...
       SSL established
       <- "POST /API/PropayAPI.aspx HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: xmltest.propay.com\r\nContent-Length: 547\r\n\r\n"
-      <- "<?xml version=\"1.0\"?>\n<XMLRequest>\n  <certStr>5ab9cddef2e4911b77e0c4ffb70f03</certStr>\n  <class>partner</class>\n  <XMLTrans>\n    <amount>100</amount>\n    <currencyCode>USD</currencyCode>\n    <ccNum>4747474747474747</ccNum>\n    <expDate>0918</expDate>\n    <CVV2>999</CVV2>\n    <cardholderName>Longbob Longsen</cardholderName>\n    <addr>456 My Street</addr>\n    <aptNum>Apt 1</aptNum>\n    <city>Ottawa</city>\n    <state>ON</state>\n    <zip>K1C2N6</zip>\n    <accountNum>32287391</accountNum>\n    <transType>04</transType>\n  </XMLTrans>\n</XMLRequest>\n"
+      <- "<?xml version="1.0"?>\n<XMLRequest>\n  <certStr>5ab9cddef2e4911b77e0c4ffb70f03</certStr>\n  <class>partner</class>\n  <XMLTrans>\n    <amount>100</amount>\n    <currencyCode>USD</currencyCode>\n    <ccNum>4747474747474747</ccNum>\n    <expDate>0918</expDate>\n    <CVV2>999</CVV2>\n    <cardholderName>Longbob Longsen</cardholderName>\n    <addr>456 My Street</addr>\n    <aptNum>Apt 1</aptNum>\n    <city>Ottawa</city>\n    <state>ON</state>\n    <zip>K1C2N6</zip>\n    <accountNum>32287391</accountNum>\n    <transType>04</transType>\n  </XMLTrans>\n</XMLRequest>\n"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Cache-Control: max-age=0,no-cache,no-store,must-revalidate\r\n"
       -> "Pragma: no-cache\r\n"
@@ -202,7 +202,7 @@ class ProPayTest < Test::Unit::TestCase
       starting SSL for xmltest.propay.com:443...
       SSL established
       <- "POST /API/PropayAPI.aspx HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: xmltest.propay.com\r\nContent-Length: 547\r\n\r\n"
-      <- "<?xml version=\"1.0\"?>\n<XMLRequest>\n  <certStr>[FILTERED]</certStr>\n  <class>partner</class>\n  <XMLTrans>\n    <amount>100</amount>\n    <currencyCode>USD</currencyCode>\n    <ccNum>[FILTERED]</ccNum>\n    <expDate>0918</expDate>\n    <CVV2>[FILTERED]</CVV2>\n    <cardholderName>Longbob Longsen</cardholderName>\n    <addr>456 My Street</addr>\n    <aptNum>Apt 1</aptNum>\n    <city>Ottawa</city>\n    <state>ON</state>\n    <zip>K1C2N6</zip>\n    <accountNum>32287391</accountNum>\n    <transType>04</transType>\n  </XMLTrans>\n</XMLRequest>\n"
+      <- "<?xml version="1.0"?>\n<XMLRequest>\n  <certStr>[FILTERED]</certStr>\n  <class>partner</class>\n  <XMLTrans>\n    <amount>100</amount>\n    <currencyCode>USD</currencyCode>\n    <ccNum>[FILTERED]</ccNum>\n    <expDate>0918</expDate>\n    <CVV2>[FILTERED]</CVV2>\n    <cardholderName>Longbob Longsen</cardholderName>\n    <addr>456 My Street</addr>\n    <aptNum>Apt 1</aptNum>\n    <city>Ottawa</city>\n    <state>ON</state>\n    <zip>K1C2N6</zip>\n    <accountNum>32287391</accountNum>\n    <transType>04</transType>\n  </XMLTrans>\n</XMLRequest>\n"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Cache-Control: max-age=0,no-cache,no-store,must-revalidate\r\n"
       -> "Pragma: no-cache\r\n"

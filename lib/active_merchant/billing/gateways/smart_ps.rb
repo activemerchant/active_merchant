@@ -1,8 +1,8 @@
 require File.join(File.dirname(__FILE__), '..', 'check.rb')
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-    class SmartPs < Gateway #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
+    class SmartPs < Gateway # :nodoc:
       ##
       # This is the base gateway for processors who use the smartPS processing system
 
@@ -136,14 +136,14 @@ module ActiveMerchant #:nodoc:
       def add_address(post, address, prefix = '')
         prefix += '_' unless prefix.blank?
         unless address.blank? || address.values.blank?
-          post[prefix + 'address1']    = address[:address1].to_s
-          post[prefix + 'address2']    = address[:address2].to_s unless address[:address2].blank?
-          post[prefix + 'company']    = address[:company].to_s
-          post[prefix + 'phone']      = address[:phone].to_s
-          post[prefix + 'zip']        = address[:zip].to_s
-          post[prefix + 'city']       = address[:city].to_s
-          post[prefix + 'country']    = address[:country].to_s
-          post[prefix + 'state']      = address[:state].blank? ? 'n/a' : address[:state]
+          post["#{prefix}address1"]    = address[:address1].to_s
+          post["#{prefix}address2"]    = address[:address2].to_s unless address[:address2].blank?
+          post["#{prefix}company"]    = address[:company].to_s
+          post["#{prefix}phone"]      = address[:phone].to_s
+          post["#{prefix}zip"]        = address[:zip].to_s
+          post["#{prefix}city"]       = address[:city].to_s
+          post["#{prefix}country"]    = address[:country].to_s
+          post["#{prefix}state"]      = address[:state].blank? ? 'n/a' : address[:state]
         end
       end
 
@@ -215,8 +215,8 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         results = {}
-        body.split(/&/).each do |pair|
-          key, val = pair.split(/=/)
+        body.split('&').each do |pair|
+          key, val = pair.split('=')
           results[key] = val
         end
 
@@ -230,7 +230,7 @@ module ActiveMerchant #:nodoc:
           response['response'] == '1',
           message_from(response),
           response,
-          authorization: (response['transactionid'] || response['customer_vault_id']),
+          authorization: response['transactionid'] || response['customer_vault_id'],
           test: test?,
           cvv_result: response['cvvresponse'],
           avs_result: { code: response['avsresponse'] }
@@ -241,7 +241,7 @@ module ActiveMerchant #:nodoc:
         year  = sprintf('%.04i', creditcard.year)
         month = sprintf('%.02i', creditcard.month)
 
-        "#{month}#{year[-2..-1]}"
+        "#{month}#{year[-2..]}"
       end
 
       def message_from(response)
@@ -261,8 +261,7 @@ module ActiveMerchant #:nodoc:
         post[:password]   = @options[:password]
         post[:type]       = action if action
 
-        request = post.merge(parameters).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def determine_funding_source(source)

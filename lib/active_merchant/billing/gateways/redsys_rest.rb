@@ -1,7 +1,7 @@
 # coding: utf-8
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # = Redsys Merchant Gateway
     #
     # Gateway support for the Spanish "Redsys" payment gateway system. This is
@@ -268,8 +268,8 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((PAN\"=>\")(\d+)), '\1[FILTERED]').
-          gsub(%r((CVV2\"=>\")(\d+)), '\1[FILTERED]')
+          gsub(%r((PAN"=>")(\d+)), '\1[FILTERED]').
+          gsub(%r((CVV2"=>")(\d+)), '\1[FILTERED]')
       end
 
       private
@@ -406,7 +406,7 @@ module ActiveMerchant #:nodoc:
         if /^\d{4}/.match?(cleansed)
           cleansed[0..11]
         else
-          '%04d' % [rand(0..9999)] + cleansed[0...8]
+          ('%04d' % [rand(0..9999)]) + cleansed[0...8]
         end
       end
 
@@ -428,8 +428,7 @@ module ActiveMerchant #:nodoc:
 
         order_id += "\0" until order_id.bytesize % block_length == 0 # Pad with zeros
 
-        output = cipher.update(order_id) + cipher.final
-        output
+        cipher.update(order_id) + cipher.final
       end
 
       def mac256(key, data)

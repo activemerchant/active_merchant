@@ -548,10 +548,10 @@ class StripeTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, 'cus_xxx|card_xxx', @options.merge({ application: application }))
     end.check_request do |_method, _endpoint, _data, headers|
-      assert_match(/\"application\"/, headers['X-Stripe-Client-User-Agent'])
-      assert_match(/\"name\":\"app\"/, headers['X-Stripe-Client-User-Agent'])
-      assert_match(/\"version\":\"1.0\"/, headers['X-Stripe-Client-User-Agent'])
-      assert_match(/\"url\":\"https:\/\/example.com\"/, headers['X-Stripe-Client-User-Agent'])
+      assert_match(/"application"/, headers['X-Stripe-Client-User-Agent'])
+      assert_match(/"name":"app"/, headers['X-Stripe-Client-User-Agent'])
+      assert_match(/"version":"1.0"/, headers['X-Stripe-Client-User-Agent'])
+      assert_match(/"url":"https:\/\/example.com"/, headers['X-Stripe-Client-User-Agent'])
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -1065,10 +1065,10 @@ class StripeTest < Test::Unit::TestCase
       assert_match(/ip=127\.127\.127\.127/, data)
       assert_match(/user_agent=some\+browser/, data)
       assert_match(/external_id=42/, data)
-      assert_match(/referrer=http\%3A\%2F\%2Fwww\.shopify\.com/, data)
-      assert_match(/payment_user_agent=Stripe\%2Fv1\+ActiveMerchantBindings\%2F\d+\.\d+\.\d+/, data)
-      assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
-      assert_match(/receipt_email=receipt-receiver\%40wonderfullyfakedomain\.com/, data)
+      assert_match(/referrer=http%3A%2F%2Fwww\.shopify\.com/, data)
+      assert_match(/payment_user_agent=Stripe%2Fv1\+ActiveMerchantBindings%2F\d+\.\d+\.\d+/, data)
+      assert_match(/metadata\[email\]=foo%40wonderfullyfakedomain\.com/, data)
+      assert_match(/receipt_email=receipt-receiver%40wonderfullyfakedomain\.com/, data)
       assert_match(/metadata\[order_id\]=42/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -1081,8 +1081,8 @@ class StripeTest < Test::Unit::TestCase
       assert_match(/description=a\+test\+customer/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
       assert_match(/user_agent=some\+browser/, data)
-      assert_match(/referrer=http\%3A\%2F\%2Fwww\.shopify\.com/, data)
-      assert_match(/payment_user_agent=Stripe\%2Fv1\+ActiveMerchantBindings\%2F\d+\.\d+\.\d+/, data)
+      assert_match(/referrer=http%3A%2F%2Fwww\.shopify\.com/, data)
+      assert_match(/payment_user_agent=Stripe%2Fv1\+ActiveMerchantBindings%2F\d+\.\d+\.\d+/, data)
       refute data.include?('metadata')
     end.respond_with(successful_purchase_response)
   end
@@ -1094,7 +1094,7 @@ class StripeTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
       assert_match(/metadata\[i_made_up_this_key_too\]=canyoutell/, data)
-      assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
+      assert_match(/metadata\[email\]=foo%40wonderfullyfakedomain\.com/, data)
       assert_match(/metadata\[order_id\]=42/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -1106,7 +1106,7 @@ class StripeTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
       assert_match(/metadata\[i_made_up_this_key_too\]=canyoutell/, data)
-      assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
+      assert_match(/metadata\[email\]=foo%40wonderfullyfakedomain\.com/, data)
       assert_match(/metadata\[order_id\]=42/, data)
       assert_match(/metadata\[card_read_method\]=contact/, data)
     end.respond_with(successful_purchase_response)
@@ -1119,7 +1119,7 @@ class StripeTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
       assert_match(/metadata\[i_made_up_this_key_too\]=canyoutell/, data)
-      assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
+      assert_match(/metadata\[email\]=foo%40wonderfullyfakedomain\.com/, data)
       assert_match(/metadata\[order_id\]=42/, data)
       assert_match(/metadata\[card_read_method\]=contact/, data)
     end.respond_with(successful_purchase_response)
@@ -1553,7 +1553,7 @@ class StripeTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, 'ch_test_charge', application_fee: 100, icc_data: @emv_credit_card.icc_data)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert data =~ /capture\=false/, 'request should set capture to false'
+      assert data =~ /capture=false/, 'request should set capture to false'
     end.respond_with(successful_capture_response_with_icc_data)
 
     assert_success response
@@ -1638,7 +1638,7 @@ class StripeTest < Test::Unit::TestCase
       opened
       starting SSL for api.stripe.com:443...
       SSL established
-      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF9oQkwwTXF6ZGZ6Rnk3OXU0cFloUmVhQlo6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.45.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.3 p242 (2014-09-19)\",\"platform\":\"x86_64-linux\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF9oQkwwTXF6ZGZ6Rnk3OXU0cFloUmVhQlo6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {"bindings_version":"1.45.0","lang":"ruby","lang_version":"2.1.3 p242 (2014-09-19)","platform":"x86_64-linux","publisher":"active_merchant"}\r\nX-Stripe-Client-User-Metadata: {"ip":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
       <- "amount=100&currency=usd&card[number]=4242424242424242&card[exp_month]=9&card[exp_year]=2015&card[cvc]=123&card[name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com&card[cryptogram]=sensitive_data&three_d_secure[cryptogram]=123456789abcdefghijklmnop&three_d_secure[apple_pay]=true"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -1655,7 +1655,7 @@ class StripeTest < Test::Unit::TestCase
       -> "Strict-Transport-Security: max-age=31556926; includeSubDomains\r\n"
       -> "\r\n"
       reading 1303 bytes...
-      -> "{\n  \"id\": \"ch_155MZJ2gKyKnHxtY1dGqFhSb\",\n  \"object\": \"charge\",\n  \"created\": 1417549457,\n  \"livemode\": false,\n  \"paid\": true,\n  \"amount\": 100,\n  \"currency\": \"usd\",\n  \"refunded\": false,\n  \"captured\": true,\n  \"refunds\": [],\n  \"card\": {\n    \"id\": \"card_155MZJ2gKyKnHxtYihrJ8z94\",\n    \"object\": \"card\",\n    \"last4\": \"4242\",\n    \"brand\": \"Visa\",\n    \"funding\": \"credit\",\n    \"exp_month\": 9,\n    \"exp_year\": 2015,\n    \"fingerprint\": \"944LvWcY01HVTbVc\",\n    \"country\": \"US\",\n    \"name\": \"Longbob Longsen\",\n    \"address_line1\": null,\n    \"address_line2\": null,\n    \"address_city\": null,\n    \"address_state\": null,\n    \"address_zip\": null,\n    \"address_country\": null,\n    \"cvc_check\": \"pass\",\n    \"address_line1_check\": null,\n    \"address_zip_check\": null,\n    \"dynamic_last4\": null,\n    \"customer\": null,\n    \"type\": \"Visa\"\n  },\n  \"balance_transaction\": \"txn_155MZJ2gKyKnHxtYxpYDI5OW\",\n  \"failure_message\": null,\n  \"failure_code\": null,\n  \"amount_refunded\": 0,\n  \"customer\": null,\n  \"invoice\": null,\n  \"description\": \"ActiveMerchant Test Purchase\",\n  \"dispute\": null,\n  \"metadata\": {\n    \"email\": \"wow@example.com\"\n  },\n  \"statement_description\": null,\n  \"fraud_details\": {\n    \"stripe_report\": \"unavailable\",\n    \"user_report\": null\n  },\n  \"receipt_email\": null,\n  \"receipt_number\": null,\n  \"shipping\": null\n}\n"
+      -> "{\n  "id": "ch_155MZJ2gKyKnHxtY1dGqFhSb",\n  "object": "charge",\n  "created": 1417549457,\n  "livemode": false,\n  "paid": true,\n  "amount": 100,\n  "currency": "usd",\n  "refunded": false,\n  "captured": true,\n  "refunds": [],\n  "card": {\n    "id": "card_155MZJ2gKyKnHxtYihrJ8z94",\n    "object": "card",\n    "last4": "4242",\n    "brand": "Visa",\n    "funding": "credit",\n    "exp_month": 9,\n    "exp_year": 2015,\n    "fingerprint": "944LvWcY01HVTbVc",\n    "country": "US",\n    "name": "Longbob Longsen",\n    "address_line1": null,\n    "address_line2": null,\n    "address_city": null,\n    "address_state": null,\n    "address_zip": null,\n    "address_country": null,\n    "cvc_check": "pass",\n    "address_line1_check": null,\n    "address_zip_check": null,\n    "dynamic_last4": null,\n    "customer": null,\n    "type": "Visa"\n  },\n  "balance_transaction": "txn_155MZJ2gKyKnHxtYxpYDI5OW",\n  "failure_message": null,\n  "failure_code": null,\n  "amount_refunded": 0,\n  "customer": null,\n  "invoice": null,\n  "description": "ActiveMerchant Test Purchase",\n  "dispute": null,\n  "metadata": {\n    "email": "wow@example.com"\n  },\n  "statement_description": null,\n  "fraud_details": {\n    "stripe_report": "unavailable",\n    "user_report": null\n  },\n  "receipt_email": null,\n  "receipt_number": null,\n  "shipping": null\n}\n"
       read 1303 bytes
       Conn close
     PRE_SCRUBBED
@@ -1667,7 +1667,7 @@ class StripeTest < Test::Unit::TestCase
       opened
       starting SSL for api.stripe.com:443...
       SSL established
-      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF9oQkwwTXF6ZGZ6Rnk3OXU0cFloUmVhQlo6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.45.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.3 p242 (2014-09-19)\",\"platform\":\"x86_64-linux\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF9oQkwwTXF6ZGZ6Rnk3OXU0cFloUmVhQlo6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {"bindings_version":"1.45.0","lang":"ruby","lang_version":"2.1.3 p242 (2014-09-19)","platform":"x86_64-linux","publisher":"active_merchant"}\r\nX-Stripe-Client-User-Metadata: {"ip":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
       <- "amount=100&currency=usd&payment_method_data[card][number]=4242424242424242&payment_method_data[card][exp_month]=9&payment_method_data[card][exp_year]=2015&payment_method_data[card][cvc]=123&payment_method_data[card][name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com&payment_method_data[card][cryptogram]=sensitive_data&three_d_secure[cryptogram]=123456789abcdefghijklmnop&three_d_secure[apple_pay]=true"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -1684,7 +1684,7 @@ class StripeTest < Test::Unit::TestCase
       -> "Strict-Transport-Security: max-age=31556926; includeSubDomains\r\n"
       -> "\r\n"
       reading 1303 bytes...
-      -> "{\n  \"id\": \"ch_155MZJ2gKyKnHxtY1dGqFhSb\",\n  \"object\": \"charge\",\n  \"created\": 1417549457,\n  \"livemode\": false,\n  \"paid\": true,\n  \"amount\": 100,\n  \"currency\": \"usd\",\n  \"refunded\": false,\n  \"captured\": true,\n  \"refunds\": [],\n  \"card\": {\n    \"id\": \"card_155MZJ2gKyKnHxtYihrJ8z94\",\n    \"object\": \"card\",\n    \"last4\": \"4242\",\n    \"brand\": \"Visa\",\n    \"funding\": \"credit\",\n    \"exp_month\": 9,\n    \"exp_year\": 2015,\n    \"fingerprint\": \"944LvWcY01HVTbVc\",\n    \"country\": \"US\",\n    \"name\": \"Longbob Longsen\",\n    \"address_line1\": null,\n    \"address_line2\": null,\n    \"address_city\": null,\n    \"address_state\": null,\n    \"address_zip\": null,\n    \"address_country\": null,\n    \"cvc_check\": \"pass\",\n    \"address_line1_check\": null,\n    \"address_zip_check\": null,\n    \"dynamic_last4\": null,\n    \"customer\": null,\n    \"type\": \"Visa\"\n  },\n  \"balance_transaction\": \"txn_155MZJ2gKyKnHxtYxpYDI5OW\",\n  \"failure_message\": null,\n  \"failure_code\": null,\n  \"amount_refunded\": 0,\n  \"customer\": null,\n  \"invoice\": null,\n  \"description\": \"ActiveMerchant Test Purchase\",\n  \"dispute\": null,\n  \"metadata\": {\n    \"email\": \"wow@example.com\"\n  },\n  \"statement_description\": null,\n  \"fraud_details\": {\n    \"stripe_report\": \"unavailable\",\n    \"user_report\": null\n  },\n  \"receipt_email\": null,\n  \"receipt_number\": null,\n  \"shipping\": null\n}\n"
+      -> "{\n  "id": "ch_155MZJ2gKyKnHxtY1dGqFhSb",\n  "object": "charge",\n  "created": 1417549457,\n  "livemode": false,\n  "paid": true,\n  "amount": 100,\n  "currency": "usd",\n  "refunded": false,\n  "captured": true,\n  "refunds": [],\n  "card": {\n    "id": "card_155MZJ2gKyKnHxtYihrJ8z94",\n    "object": "card",\n    "last4": "4242",\n    "brand": "Visa",\n    "funding": "credit",\n    "exp_month": 9,\n    "exp_year": 2015,\n    "fingerprint": "944LvWcY01HVTbVc",\n    "country": "US",\n    "name": "Longbob Longsen",\n    "address_line1": null,\n    "address_line2": null,\n    "address_city": null,\n    "address_state": null,\n    "address_zip": null,\n    "address_country": null,\n    "cvc_check": "pass",\n    "address_line1_check": null,\n    "address_zip_check": null,\n    "dynamic_last4": null,\n    "customer": null,\n    "type": "Visa"\n  },\n  "balance_transaction": "txn_155MZJ2gKyKnHxtYxpYDI5OW",\n  "failure_message": null,\n  "failure_code": null,\n  "amount_refunded": 0,\n  "customer": null,\n  "invoice": null,\n  "description": "ActiveMerchant Test Purchase",\n  "dispute": null,\n  "metadata": {\n    "email": "wow@example.com"\n  },\n  "statement_description": null,\n  "fraud_details": {\n    "stripe_report": "unavailable",\n    "user_report": null\n  },\n  "receipt_email": null,\n  "receipt_number": null,\n  "shipping": null\n}\n"
       read 1303 bytes
       Conn close
     PRE_SCRUBBED
@@ -1696,7 +1696,7 @@ class StripeTest < Test::Unit::TestCase
       opened
       starting SSL for api.stripe.com:443...
       SSL established
-      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF8zT0Q0VGRLU0lPaERPTDIxNDZKSmNDNzk6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.54.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.54.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.1 p76 (2014-02-24)\",\"platform\":\"x86_64-darwin12.0\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 165\r\n\r\n"
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF8zT0Q0VGRLU0lPaERPTDIxNDZKSmNDNzk6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.54.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {"bindings_version":"1.54.0","lang":"ruby","lang_version":"2.1.1 p76 (2014-02-24)","platform":"x86_64-darwin12.0","publisher":"active_merchant"}\r\nX-Stripe-Client-User-Metadata: {"ip":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 165\r\n\r\n"
       <- "card[swipe_data]=%25B378282246310005%5ELONGSON%2FLONGBOB%5E1705101130504392%3F&amount=100&currency=usd&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.54.0"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -1714,7 +1714,7 @@ class StripeTest < Test::Unit::TestCase
       -> "Strict-Transport-Security: max-age=31556926; includeSubDomains\r\n"
       -> "\r\n"
       reading 1446 bytes...
-      -> "{\n  \"id\": \"ch_16yQHtAWOtgoysogh1YOAtDB\",\n  \"object\": \"charge\",\n  \"amount\": 100,\n  \"amount_refunded\": 0,\n  \"application_fee\": null,\n  \"balance_transaction\": \"txn_16yQHtAWOtgoysogTNhtGJBn\",\n  \"captured\": true,\n  \"created\": 1445448129,\n  \"currency\": \"usd\",\n  \"customer\": null,\n  \"description\": null,\n  \"destination\": null,\n  \"dispute\": null,\n  \"failure_code\": null,\n  \"failure_message\": null,\n  \"fraud_details\": {},\n  \"invoice\": null,\n  \"livemode\": false,\n  \"metadata\": {},\n  \"paid\": true,\n  \"receipt_email\": null,\n  \"receipt_number\": null,\n  \"refunded\": false,\n  \"refunds\": {\n    \"object\": \"list\",\n    \"data\": [],\n    \"has_more\": false,\n    \"total_count\": 0,\n    \"url\": \"/v1/charges/ch_16yQHtAWOtgoysogh1YOAtDB/refunds\"\n  },\n  \"shipping\": null,\n  \"source\": {\n    \"id\": \"card_16yQHtAWOtgoysogdSGVCkXK\",\n    \"object\": \"card\",\n    \"address_city\": null,\n    \"address_country\": null,\n    \"address_line1\": null,\n    \"address_line1_check\": null,\n    \"address_line2\": null,\n    \"address_state\": null,\n    \"address_zip\": null,\n    \"address_zip_check\": null,\n    \"brand\": \"American Express\",\n    \"country\": \"US\",\n    \"customer\": null,\n    \"cvc_check\": null,\n    \"dynamic_last4\": null,\n    \"exp_month\": 5,\n    \"exp_year\": 2017,\n    \"fingerprint\": \"DjZpoV89lmOMsJLF\",\n    \"funding\": \"credit\",\n    \"last4\": \"0005\",\n    \"metadata\": {},\n    \"name\": \"LONGSON/LONGBOB\",\n    \"tokenization_method\": null\n  },\n  \"statement_descriptor\": null,\n  \"status\": \"succeeded\"\n}\n"
+      -> "{\n  "id": "ch_16yQHtAWOtgoysogh1YOAtDB",\n  "object": "charge",\n  "amount": 100,\n  "amount_refunded": 0,\n  "application_fee": null,\n  "balance_transaction": "txn_16yQHtAWOtgoysogTNhtGJBn",\n  "captured": true,\n  "created": 1445448129,\n  "currency": "usd",\n  "customer": null,\n  "description": null,\n  "destination": null,\n  "dispute": null,\n  "failure_code": null,\n  "failure_message": null,\n  "fraud_details": {},\n  "invoice": null,\n  "livemode": false,\n  "metadata": {},\n  "paid": true,\n  "receipt_email": null,\n  "receipt_number": null,\n  "refunded": false,\n  "refunds": {\n    "object": "list",\n    "data": [],\n    "has_more": false,\n    "total_count": 0,\n    "url": "/v1/charges/ch_16yQHtAWOtgoysogh1YOAtDB/refunds"\n  },\n  "shipping": null,\n  "source": {\n    "id": "card_16yQHtAWOtgoysogdSGVCkXK",\n    "object": "card",\n    "address_city": null,\n    "address_country": null,\n    "address_line1": null,\n    "address_line1_check": null,\n    "address_line2": null,\n    "address_state": null,\n    "address_zip": null,\n    "address_zip_check": null,\n    "brand": "American Express",\n    "country": "US",\n    "customer": null,\n    "cvc_check": null,\n    "dynamic_last4": null,\n    "exp_month": 5,\n    "exp_year": 2017,\n    "fingerprint": "DjZpoV89lmOMsJLF",\n    "funding": "credit",\n    "last4": "0005",\n    "metadata": {},\n    "name": "LONGSON/LONGBOB",\n    "tokenization_method": null\n  },\n  "statement_descriptor": null,\n  "status": "succeeded"\n}\n"
       read 1446 bytes
       Conn close
     PRE_SCRUBBED
@@ -1726,7 +1726,7 @@ class StripeTest < Test::Unit::TestCase
       opened
       starting SSL for api.stripe.com:443...
       SSL established
-      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF8zT0Q0VGRLU0lPaERPTDIxNDZKSmNDNzk6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.54.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.54.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.1 p76 (2014-02-24)\",\"platform\":\"x86_64-darwin12.0\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 713\r\n\r\n"
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF8zT0Q0VGRLU0lPaERPTDIxNDZKSmNDNzk6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.54.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {"bindings_version":"1.54.0","lang":"ruby","lang_version":"2.1.1 p76 (2014-02-24)","platform":"x86_64-darwin12.0","publisher":"active_merchant"}\r\nX-Stripe-Client-User-Metadata: {"ip":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 713\r\n\r\n"
       <- "card[emv_auth_data]=500B56495341204352454449545F201A56495341204143515549524552205445535420434152442030315F24031512315F280208405F2A0208265F300202015F34010182025C008407A0000000031010950502000080009A031408259B02E8009C01009F02060000000734499F03060000000000009F0607A00000000310109F0902008C9F100706010A03A080009F120F4352454449544F20444520564953419F1A0208269F1C0831373030303437309F1E0831373030303437309F2608EB2EC0F472BEA0A49F2701809F3303E0B8C89F34031E03009F3501229F360200C39F37040A27296F9F4104000001319F4502DAC5DFAE5711476173FFFFFF0119D15122011758989389DFAE5A08476173FFFFFF011957114761739001010119D151220117589893895A084761739001010119&card[emv_approval_data]=garbage&card[encrypted_pin]=8b68af72199529b8&card[encrypted_pin_key_id]=ffff0102628d12000001"
       -> "HTTP/1.1 402 Payment Required\r\n"
       -> "Server: nginx\r\n"
@@ -1743,7 +1743,7 @@ class StripeTest < Test::Unit::TestCase
       -> "Stripe-Version: 2015-04-07\r\n"
       -> "\r\n"
       reading 195 bytes...
-      -> "{\n  \"error\": {\n    \"message\": \"Your card was declined.\",\n    \"type\": \"card_error\",\n    \"code\": \"card_declined\",\n    \"charge\": \"ch_16yQYEAWOtgoysogscsBRQwg\",\n    \"emv_auth_data\": \"8A023035\"\n  }\n}\n"
+      -> "{\n  "error": {\n    "message": "Your card was declined.",\n    "type": "card_error",\n    "code": "card_declined",\n    "charge": "ch_16yQYEAWOtgoysogscsBRQwg",\n    "emv_auth_data": "8A023035"\n  }\n}\n"
       read 195 bytes
       Conn close
     PRE_SCRUBBED
@@ -1755,7 +1755,7 @@ class StripeTest < Test::Unit::TestCase
       opened
       starting SSL for api.stripe.com:443...
       SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256
-      <- "POST /v1/tokens?bank_account[account_number]=000123456789&bank_account[country]=US&bank_account[currency]=usd&bank_account[routing_number]=110000000&bank_account[name]=Jim+Smith&bank_account[account_holder_type]=individual HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF8zT0Q0VGRLU0lPaERPTDIxNDZKSmNDNzk6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.123.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.123.0\",\"lang\":\"ruby\",\"lang_version\":\"2.6.6 p146 (2020-03-31)\",\"platform\":\"x86_64-darwin20\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.stripe.com\r\nContent-Length: 0\r\n\r\n"
+      <- "POST /v1/tokens?bank_account[account_number]=000123456789&bank_account[country]=US&bank_account[currency]=usd&bank_account[routing_number]=110000000&bank_account[name]=Jim+Smith&bank_account[account_holder_type]=individual HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF8zT0Q0VGRLU0lPaERPTDIxNDZKSmNDNzk6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.123.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {"bindings_version":"1.123.0","lang":"ruby","lang_version":"2.6.6 p146 (2020-03-31)","platform":"x86_64-darwin20","publisher":"active_merchant"}\r\nX-Stripe-Client-User-Metadata: {"ip":null}\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.stripe.com\r\nContent-Length: 0\r\n\r\n"
       <- ""
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -1774,14 +1774,14 @@ class StripeTest < Test::Unit::TestCase
       -> "Strict-Transport-Security: max-age=31556926; includeSubDomains; preload\r\n"
       -> "\r\n"
       reading 610 bytes...
-      -> "{\n  \"id\": \"btok_1JhfDCAWOtgoysogF0IbYRWH\",\n  \"object\": \"token\",\n  \"bank_account\": {\n    \"id\": \"ba_1JhfDCAWOtgoysogLB5vljcp\",\n    \"object\": \"bank_account\",\n    \"account_holder_name\": \"Jim Smith\",\n    \"account_holder_type\": \"individual\",\n    \"account_type\": null,\n    \"bank_name\": \"STRIPE TEST BANK\",\n    \"country\": \"US\",\n    \"currency\": \"usd\",\n    \"fingerprint\": \"uCkXlMFxqys7GosR\",\n    \"last4\": \"6789\",\n    \"name\": \"Jim Smith\",\n    \"routing_number\": \"110000000\",\n    \"status\": \"new\"\n  },\n  \"client_ip\": \"172.74.90.160\",\n  \"created\": 1633546290,\n  \"livemode\": false,\n  \"type\": \"bank_account\",\n  \"used\": false\n}\n"
+      -> "{\n  "id": "btok_1JhfDCAWOtgoysogF0IbYRWH",\n  "object": "token",\n  "bank_account": {\n    "id": "ba_1JhfDCAWOtgoysogLB5vljcp",\n    "object": "bank_account",\n    "account_holder_name": "Jim Smith",\n    "account_holder_type": "individual",\n    "account_type": null,\n    "bank_name": "STRIPE TEST BANK",\n    "country": "US",\n    "currency": "usd",\n    "fingerprint": "uCkXlMFxqys7GosR",\n    "last4": "6789",\n    "name": "Jim Smith",\n    "routing_number": "110000000",\n    "status": "new"\n  },\n  "client_ip": "172.74.90.160",\n  "created": 1633546290,\n  "livemode": false,\n  "type": "bank_account",\n  "used": false\n}\n"
       read 610 bytes
       Conn close
       opening connection to api.stripe.com:443...
       opened
       starting SSL for api.stripe.com:443...
       SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256
-      <- "POST /v1/customers HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF8zT0Q0VGRLU0lPaERPTDIxNDZKSmNDNzk6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.123.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.123.0\",\"lang\":\"ruby\",\"lang_version\":\"2.6.6 p146 (2020-03-31)\",\"platform\":\"x86_64-darwin20\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.stripe.com\r\nContent-Length: 36\r\n\r\n"
+      <- "POST /v1/customers HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF8zT0Q0VGRLU0lPaERPTDIxNDZKSmNDNzk6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.123.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {"bindings_version":"1.123.0","lang":"ruby","lang_version":"2.6.6 p146 (2020-03-31)","platform":"x86_64-darwin20","publisher":"active_merchant"}\r\nX-Stripe-Client-User-Metadata: {"ip":null}\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.stripe.com\r\nContent-Length: 36\r\n\r\n"
       <- "source=btok_1JhfDCAWOtgoysogF0IbYRWH"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -1800,7 +1800,7 @@ class StripeTest < Test::Unit::TestCase
       -> "Strict-Transport-Security: max-age=31556926; includeSubDomains; preload\r\n"
       -> "\r\n"
       reading 1713 bytes...
-      -> "{\n  \"id\": \"cus_KMNzQZK4SN7Agn\",\n  \"object\": \"customer\",\n  \"account_balance\": 0,\n  \"address\": null,\n  \"balance\": 0,\n  \"created\": 1633546290,\n  \"currency\": null,\n  \"default_source\": \"ba_1JhfDCAWOtgoysogLB5vljcp\",\n  \"delinquent\": false,\n  \"description\": null,\n  \"discount\": null,\n  \"email\": null,\n  \"invoice_prefix\": \"02D58981\",\n  \"invoice_settings\": {\n    \"custom_fields\": null,\n    \"default_payment_method\": null,\n    \"footer\": null\n  },\n  \"livemode\": false,\n  \"metadata\": {\n  },\n  \"name\": null,\n  \"next_invoice_sequence\": 1,\n  \"phone\": null,\n  \"preferred_locales\": [\n\n  ],\n  \"shipping\": null,\n  \"sources\": {\n    \"object\": \"list\",\n    \"data\": [\n      {\n        \"id\": \"ba_1JhfDCAWOtgoysogLB5vljcp\",\n        \"object\": \"bank_account\",\n        \"account_holder_name\": \"Jim Smith\",\n        \"account_holder_type\": \"individual\",\n        \"account_type\": null,\n        \"bank_name\": \"STRIPE TEST BANK\",\n        \"country\": \"US\",\n        \"currency\": \"usd\",\n        \"customer\": \"cus_KMNzQZK4SN7Agn\",\n        \"fingerprint\": \"uCkXlMFxqys7GosR\",\n        \"last4\": \"6789\",\n        \"metadata\": {\n        },\n        \"name\": \"Jim Smith\",\n        \"routing_number\": \"110000000\",\n        \"status\": \"new\"\n      }\n    ],\n    \"has_more\": false,\n    \"total_count\": 1,\n    \"url\": \"/v1/customers/cus_KMNzQZK4SN7Agn/sources\"\n  },\n  \"subscriptions\": {\n    \"object\": \"list\",\n    \"data\": [\n\n    ],\n    \"has_more\": false,\n    \"total_count\": 0,\n    \"url\": \"/v1/customers/cus_KMNzQZK4SN7Agn/subscriptions\"\n  },\n  \"tax_exempt\": \"none\",\n  \"tax_ids\": {\n    \"object\": \"list\",\n    \"data\": [\n\n    ],\n    \"has_more\": false,\n    \"total_count\": 0,\n    \"url\": \"/v1/customers/cus_KMNzQZK4SN7Agn/tax_ids\"\n  },\n  \"tax_info\": null,\n  \"tax_info_verification\": null\n}\n"
+      -> "{\n  "id": "cus_KMNzQZK4SN7Agn",\n  "object": "customer",\n  "account_balance": 0,\n  "address": null,\n  "balance": 0,\n  "created": 1633546290,\n  "currency": null,\n  "default_source": "ba_1JhfDCAWOtgoysogLB5vljcp",\n  "delinquent": false,\n  "description": null,\n  "discount": null,\n  "email": null,\n  "invoice_prefix": "02D58981",\n  "invoice_settings": {\n    "custom_fields": null,\n    "default_payment_method": null,\n    "footer": null\n  },\n  "livemode": false,\n  "metadata": {\n  },\n  "name": null,\n  "next_invoice_sequence": 1,\n  "phone": null,\n  "preferred_locales": [\n\n  ],\n  "shipping": null,\n  "sources": {\n    "object": "list",\n    "data": [\n      {\n        "id": "ba_1JhfDCAWOtgoysogLB5vljcp",\n        "object": "bank_account",\n        "account_holder_name": "Jim Smith",\n        "account_holder_type": "individual",\n        "account_type": null,\n        "bank_name": "STRIPE TEST BANK",\n        "country": "US",\n        "currency": "usd",\n        "customer": "cus_KMNzQZK4SN7Agn",\n        "fingerprint": "uCkXlMFxqys7GosR",\n        "last4": "6789",\n        "metadata": {\n        },\n        "name": "Jim Smith",\n        "routing_number": "110000000",\n        "status": "new"\n      }\n    ],\n    "has_more": false,\n    "total_count": 1,\n    "url": "/v1/customers/cus_KMNzQZK4SN7Agn/sources"\n  },\n  "subscriptions": {\n    "object": "list",\n    "data": [\n\n    ],\n    "has_more": false,\n    "total_count": 0,\n    "url": "/v1/customers/cus_KMNzQZK4SN7Agn/subscriptions"\n  },\n  "tax_exempt": "none",\n  "tax_ids": {\n    "object": "list",\n    "data": [\n\n    ],\n    "has_more": false,\n    "total_count": 0,\n    "url": "/v1/customers/cus_KMNzQZK4SN7Agn/tax_ids"\n  },\n  "tax_info": null,\n  "tax_info_verification": null\n}\n"
       read 1713 bytes
       Conn close
     PRE_SCRUBBED
@@ -1812,7 +1812,7 @@ class StripeTest < Test::Unit::TestCase
       opened
       starting SSL for api.stripe.com:443...
       SSL established
-      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.54.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.54.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.1 p76 (2014-02-24)\",\"platform\":\"x86_64-darwin12.0\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 713\r\n\r\n"
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.54.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {"bindings_version":"1.54.0","lang":"ruby","lang_version":"2.1.1 p76 (2014-02-24)","platform":"x86_64-darwin12.0","publisher":"active_merchant"}\r\nX-Stripe-Client-User-Metadata: {"ip":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 713\r\n\r\n"
       <- "card[emv_auth_data]=[FILTERED]&card[emv_approval_data]=[FILTERED]&card[encrypted_pin]=[FILTERED]&card[encrypted_pin_key_id]=[FILTERED]"
       -> "HTTP/1.1 402 Payment Required\r\n"
       -> "Server: nginx\r\n"
@@ -1829,7 +1829,7 @@ class StripeTest < Test::Unit::TestCase
       -> "Stripe-Version: 2015-04-07\r\n"
       -> "\r\n"
       reading 195 bytes...
-      -> "{\n  \"error\": {\n    \"message\": \"Your card was declined.\",\n    \"type\": \"card_error\",\n    \"code\": \"card_declined\",\n    \"charge\": \"ch_16yQYEAWOtgoysogscsBRQwg\",\n    \"emv_auth_data\": \"8A023035\"\n  }\n}\n"
+      -> "{\n  "error": {\n    "message": "Your card was declined.",\n    "type": "card_error",\n    "code": "card_declined",\n    "charge": "ch_16yQYEAWOtgoysogscsBRQwg",\n    "emv_auth_data": "8A023035"\n  }\n}\n"
       read 195 bytes
       Conn close
     POST_SCRUBBED
@@ -1841,7 +1841,7 @@ class StripeTest < Test::Unit::TestCase
       opened
       starting SSL for api.stripe.com:443...
       SSL established
-      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.54.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.54.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.1 p76 (2014-02-24)\",\"platform\":\"x86_64-darwin12.0\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 165\r\n\r\n"
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.54.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {"bindings_version":"1.54.0","lang":"ruby","lang_version":"2.1.1 p76 (2014-02-24)","platform":"x86_64-darwin12.0","publisher":"active_merchant"}\r\nX-Stripe-Client-User-Metadata: {"ip":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 165\r\n\r\n"
       <- "card[swipe_data]=[FILTERED]&amount=100&currency=usd&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.54.0"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -1859,7 +1859,7 @@ class StripeTest < Test::Unit::TestCase
       -> "Strict-Transport-Security: max-age=31556926; includeSubDomains\r\n"
       -> "\r\n"
       reading 1446 bytes...
-      -> "{\n  \"id\": \"ch_16yQHtAWOtgoysogh1YOAtDB\",\n  \"object\": \"charge\",\n  \"amount\": 100,\n  \"amount_refunded\": 0,\n  \"application_fee\": null,\n  \"balance_transaction\": \"txn_16yQHtAWOtgoysogTNhtGJBn\",\n  \"captured\": true,\n  \"created\": 1445448129,\n  \"currency\": \"usd\",\n  \"customer\": null,\n  \"description\": null,\n  \"destination\": null,\n  \"dispute\": null,\n  \"failure_code\": null,\n  \"failure_message\": null,\n  \"fraud_details\": {},\n  \"invoice\": null,\n  \"livemode\": false,\n  \"metadata\": {},\n  \"paid\": true,\n  \"receipt_email\": null,\n  \"receipt_number\": null,\n  \"refunded\": false,\n  \"refunds\": {\n    \"object\": \"list\",\n    \"data\": [],\n    \"has_more\": false,\n    \"total_count\": 0,\n    \"url\": \"/v1/charges/ch_16yQHtAWOtgoysogh1YOAtDB/refunds\"\n  },\n  \"shipping\": null,\n  \"source\": {\n    \"id\": \"card_16yQHtAWOtgoysogdSGVCkXK\",\n    \"object\": \"card\",\n    \"address_city\": null,\n    \"address_country\": null,\n    \"address_line1\": null,\n    \"address_line1_check\": null,\n    \"address_line2\": null,\n    \"address_state\": null,\n    \"address_zip\": null,\n    \"address_zip_check\": null,\n    \"brand\": \"American Express\",\n    \"country\": \"US\",\n    \"customer\": null,\n    \"cvc_check\": null,\n    \"dynamic_last4\": null,\n    \"exp_month\": 5,\n    \"exp_year\": 2017,\n    \"fingerprint\": \"DjZpoV89lmOMsJLF\",\n    \"funding\": \"credit\",\n    \"last4\": \"0005\",\n    \"metadata\": {},\n    \"name\": \"LONGSON/LONGBOB\",\n    \"tokenization_method\": null\n  },\n  \"statement_descriptor\": null,\n  \"status\": \"succeeded\"\n}\n"
+      -> "{\n  "id": "ch_16yQHtAWOtgoysogh1YOAtDB",\n  "object": "charge",\n  "amount": 100,\n  "amount_refunded": 0,\n  "application_fee": null,\n  "balance_transaction": "txn_16yQHtAWOtgoysogTNhtGJBn",\n  "captured": true,\n  "created": 1445448129,\n  "currency": "usd",\n  "customer": null,\n  "description": null,\n  "destination": null,\n  "dispute": null,\n  "failure_code": null,\n  "failure_message": null,\n  "fraud_details": {},\n  "invoice": null,\n  "livemode": false,\n  "metadata": {},\n  "paid": true,\n  "receipt_email": null,\n  "receipt_number": null,\n  "refunded": false,\n  "refunds": {\n    "object": "list",\n    "data": [],\n    "has_more": false,\n    "total_count": 0,\n    "url": "/v1/charges/ch_16yQHtAWOtgoysogh1YOAtDB/refunds"\n  },\n  "shipping": null,\n  "source": {\n    "id": "card_16yQHtAWOtgoysogdSGVCkXK",\n    "object": "card",\n    "address_city": null,\n    "address_country": null,\n    "address_line1": null,\n    "address_line1_check": null,\n    "address_line2": null,\n    "address_state": null,\n    "address_zip": null,\n    "address_zip_check": null,\n    "brand": "American Express",\n    "country": "US",\n    "customer": null,\n    "cvc_check": null,\n    "dynamic_last4": null,\n    "exp_month": 5,\n    "exp_year": 2017,\n    "fingerprint": "DjZpoV89lmOMsJLF",\n    "funding": "credit",\n    "last4": "0005",\n    "metadata": {},\n    "name": "LONGSON/LONGBOB",\n    "tokenization_method": null\n  },\n  "statement_descriptor": null,\n  "status": "succeeded"\n}\n"
       read 1446 bytes
       Conn close
     POST_SCRUBBED
@@ -1871,7 +1871,7 @@ class StripeTest < Test::Unit::TestCase
       opened
       starting SSL for api.stripe.com:443...
       SSL established
-      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.45.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.3 p242 (2014-09-19)\",\"platform\":\"x86_64-linux\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {"bindings_version":"1.45.0","lang":"ruby","lang_version":"2.1.3 p242 (2014-09-19)","platform":"x86_64-linux","publisher":"active_merchant"}\r\nX-Stripe-Client-User-Metadata: {"ip":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
       <- "amount=100&currency=usd&card[number]=[FILTERED]&card[exp_month]=9&card[exp_year]=2015&card[cvc]=[FILTERED]&card[name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com&card[cryptogram]=[FILTERED]&three_d_secure[cryptogram]=[FILTERED]&three_d_secure[apple_pay]=true"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -1888,7 +1888,7 @@ class StripeTest < Test::Unit::TestCase
       -> "Strict-Transport-Security: max-age=31556926; includeSubDomains\r\n"
       -> "\r\n"
       reading 1303 bytes...
-      -> "{\n  \"id\": \"ch_155MZJ2gKyKnHxtY1dGqFhSb\",\n  \"object\": \"charge\",\n  \"created\": 1417549457,\n  \"livemode\": false,\n  \"paid\": true,\n  \"amount\": 100,\n  \"currency\": \"usd\",\n  \"refunded\": false,\n  \"captured\": true,\n  \"refunds\": [],\n  \"card\": {\n    \"id\": \"card_155MZJ2gKyKnHxtYihrJ8z94\",\n    \"object\": \"card\",\n    \"last4\": \"4242\",\n    \"brand\": \"Visa\",\n    \"funding\": \"credit\",\n    \"exp_month\": 9,\n    \"exp_year\": 2015,\n    \"fingerprint\": \"944LvWcY01HVTbVc\",\n    \"country\": \"US\",\n    \"name\": \"Longbob Longsen\",\n    \"address_line1\": null,\n    \"address_line2\": null,\n    \"address_city\": null,\n    \"address_state\": null,\n    \"address_zip\": null,\n    \"address_country\": null,\n    \"cvc_check\": \"pass\",\n    \"address_line1_check\": null,\n    \"address_zip_check\": null,\n    \"dynamic_last4\": null,\n    \"customer\": null,\n    \"type\": \"Visa\"\n  },\n  \"balance_transaction\": \"txn_155MZJ2gKyKnHxtYxpYDI5OW\",\n  \"failure_message\": null,\n  \"failure_code\": null,\n  \"amount_refunded\": 0,\n  \"customer\": null,\n  \"invoice\": null,\n  \"description\": \"ActiveMerchant Test Purchase\",\n  \"dispute\": null,\n  \"metadata\": {\n    \"email\": \"wow@example.com\"\n  },\n  \"statement_description\": null,\n  \"fraud_details\": {\n    \"stripe_report\": \"unavailable\",\n    \"user_report\": null\n  },\n  \"receipt_email\": null,\n  \"receipt_number\": null,\n  \"shipping\": null\n}\n"
+      -> "{\n  "id": "ch_155MZJ2gKyKnHxtY1dGqFhSb",\n  "object": "charge",\n  "created": 1417549457,\n  "livemode": false,\n  "paid": true,\n  "amount": 100,\n  "currency": "usd",\n  "refunded": false,\n  "captured": true,\n  "refunds": [],\n  "card": {\n    "id": "card_155MZJ2gKyKnHxtYihrJ8z94",\n    "object": "card",\n    "last4": "4242",\n    "brand": "Visa",\n    "funding": "credit",\n    "exp_month": 9,\n    "exp_year": 2015,\n    "fingerprint": "944LvWcY01HVTbVc",\n    "country": "US",\n    "name": "Longbob Longsen",\n    "address_line1": null,\n    "address_line2": null,\n    "address_city": null,\n    "address_state": null,\n    "address_zip": null,\n    "address_country": null,\n    "cvc_check": "pass",\n    "address_line1_check": null,\n    "address_zip_check": null,\n    "dynamic_last4": null,\n    "customer": null,\n    "type": "Visa"\n  },\n  "balance_transaction": "txn_155MZJ2gKyKnHxtYxpYDI5OW",\n  "failure_message": null,\n  "failure_code": null,\n  "amount_refunded": 0,\n  "customer": null,\n  "invoice": null,\n  "description": "ActiveMerchant Test Purchase",\n  "dispute": null,\n  "metadata": {\n    "email": "wow@example.com"\n  },\n  "statement_description": null,\n  "fraud_details": {\n    "stripe_report": "unavailable",\n    "user_report": null\n  },\n  "receipt_email": null,\n  "receipt_number": null,\n  "shipping": null\n}\n"
       read 1303 bytes
       Conn close
     POST_SCRUBBED
@@ -1900,7 +1900,7 @@ class StripeTest < Test::Unit::TestCase
       opened
       starting SSL for api.stripe.com:443...
       SSL established
-      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.45.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.3 p242 (2014-09-19)\",\"platform\":\"x86_64-linux\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {"bindings_version":"1.45.0","lang":"ruby","lang_version":"2.1.3 p242 (2014-09-19)","platform":"x86_64-linux","publisher":"active_merchant"}\r\nX-Stripe-Client-User-Metadata: {"ip":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
       <- "amount=100&currency=usd&payment_method_data[card][number]=[FILTERED]&payment_method_data[card][exp_month]=9&payment_method_data[card][exp_year]=2015&payment_method_data[card][cvc]=[FILTERED]&payment_method_data[card][name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com&payment_method_data[card][cryptogram]=[FILTERED]&three_d_secure[cryptogram]=[FILTERED]&three_d_secure[apple_pay]=true"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -1917,7 +1917,7 @@ class StripeTest < Test::Unit::TestCase
       -> "Strict-Transport-Security: max-age=31556926; includeSubDomains\r\n"
       -> "\r\n"
       reading 1303 bytes...
-      -> "{\n  \"id\": \"ch_155MZJ2gKyKnHxtY1dGqFhSb\",\n  \"object\": \"charge\",\n  \"created\": 1417549457,\n  \"livemode\": false,\n  \"paid\": true,\n  \"amount\": 100,\n  \"currency\": \"usd\",\n  \"refunded\": false,\n  \"captured\": true,\n  \"refunds\": [],\n  \"card\": {\n    \"id\": \"card_155MZJ2gKyKnHxtYihrJ8z94\",\n    \"object\": \"card\",\n    \"last4\": \"4242\",\n    \"brand\": \"Visa\",\n    \"funding\": \"credit\",\n    \"exp_month\": 9,\n    \"exp_year\": 2015,\n    \"fingerprint\": \"944LvWcY01HVTbVc\",\n    \"country\": \"US\",\n    \"name\": \"Longbob Longsen\",\n    \"address_line1\": null,\n    \"address_line2\": null,\n    \"address_city\": null,\n    \"address_state\": null,\n    \"address_zip\": null,\n    \"address_country\": null,\n    \"cvc_check\": \"pass\",\n    \"address_line1_check\": null,\n    \"address_zip_check\": null,\n    \"dynamic_last4\": null,\n    \"customer\": null,\n    \"type\": \"Visa\"\n  },\n  \"balance_transaction\": \"txn_155MZJ2gKyKnHxtYxpYDI5OW\",\n  \"failure_message\": null,\n  \"failure_code\": null,\n  \"amount_refunded\": 0,\n  \"customer\": null,\n  \"invoice\": null,\n  \"description\": \"ActiveMerchant Test Purchase\",\n  \"dispute\": null,\n  \"metadata\": {\n    \"email\": \"wow@example.com\"\n  },\n  \"statement_description\": null,\n  \"fraud_details\": {\n    \"stripe_report\": \"unavailable\",\n    \"user_report\": null\n  },\n  \"receipt_email\": null,\n  \"receipt_number\": null,\n  \"shipping\": null\n}\n"
+      -> "{\n  "id": "ch_155MZJ2gKyKnHxtY1dGqFhSb",\n  "object": "charge",\n  "created": 1417549457,\n  "livemode": false,\n  "paid": true,\n  "amount": 100,\n  "currency": "usd",\n  "refunded": false,\n  "captured": true,\n  "refunds": [],\n  "card": {\n    "id": "card_155MZJ2gKyKnHxtYihrJ8z94",\n    "object": "card",\n    "last4": "4242",\n    "brand": "Visa",\n    "funding": "credit",\n    "exp_month": 9,\n    "exp_year": 2015,\n    "fingerprint": "944LvWcY01HVTbVc",\n    "country": "US",\n    "name": "Longbob Longsen",\n    "address_line1": null,\n    "address_line2": null,\n    "address_city": null,\n    "address_state": null,\n    "address_zip": null,\n    "address_country": null,\n    "cvc_check": "pass",\n    "address_line1_check": null,\n    "address_zip_check": null,\n    "dynamic_last4": null,\n    "customer": null,\n    "type": "Visa"\n  },\n  "balance_transaction": "txn_155MZJ2gKyKnHxtYxpYDI5OW",\n  "failure_message": null,\n  "failure_code": null,\n  "amount_refunded": 0,\n  "customer": null,\n  "invoice": null,\n  "description": "ActiveMerchant Test Purchase",\n  "dispute": null,\n  "metadata": {\n    "email": "wow@example.com"\n  },\n  "statement_description": null,\n  "fraud_details": {\n    "stripe_report": "unavailable",\n    "user_report": null\n  },\n  "receipt_email": null,\n  "receipt_number": null,\n  "shipping": null\n}\n"
       read 1303 bytes
       Conn close
     POST_SCRUBBED
@@ -1929,7 +1929,7 @@ class StripeTest < Test::Unit::TestCase
       opened
       starting SSL for api.stripe.com:443...
       SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256
-      <- "POST /v1/tokens?bank_account[account_number]=[FILTERED]&bank_account[country]=US&bank_account[currency]=usd&bank_account[routing_number]=110000000&bank_account[name]=Jim+Smith&bank_account[account_holder_type]=individual HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.123.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.123.0\",\"lang\":\"ruby\",\"lang_version\":\"2.6.6 p146 (2020-03-31)\",\"platform\":\"x86_64-darwin20\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.stripe.com\r\nContent-Length: 0\r\n\r\n"
+      <- "POST /v1/tokens?bank_account[account_number]=[FILTERED]&bank_account[country]=US&bank_account[currency]=usd&bank_account[routing_number]=110000000&bank_account[name]=Jim+Smith&bank_account[account_holder_type]=individual HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.123.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {"bindings_version":"1.123.0","lang":"ruby","lang_version":"2.6.6 p146 (2020-03-31)","platform":"x86_64-darwin20","publisher":"active_merchant"}\r\nX-Stripe-Client-User-Metadata: {"ip":null}\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.stripe.com\r\nContent-Length: 0\r\n\r\n"
       <- ""
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -1948,14 +1948,14 @@ class StripeTest < Test::Unit::TestCase
       -> "Strict-Transport-Security: max-age=31556926; includeSubDomains; preload\r\n"
       -> "\r\n"
       reading 610 bytes...
-      -> "{\n  \"id\": \"btok_1JhfDCAWOtgoysogF0IbYRWH\",\n  \"object\": \"token\",\n  \"bank_account\": {\n    \"id\": \"ba_1JhfDCAWOtgoysogLB5vljcp\",\n    \"object\": \"bank_account\",\n    \"account_holder_name\": \"Jim Smith\",\n    \"account_holder_type\": \"individual\",\n    \"account_type\": null,\n    \"bank_name\": \"STRIPE TEST BANK\",\n    \"country\": \"US\",\n    \"currency\": \"usd\",\n    \"fingerprint\": \"uCkXlMFxqys7GosR\",\n    \"last4\": \"6789\",\n    \"name\": \"Jim Smith\",\n    \"routing_number\": \"110000000\",\n    \"status\": \"new\"\n  },\n  \"client_ip\": \"172.74.90.160\",\n  \"created\": 1633546290,\n  \"livemode\": false,\n  \"type\": \"bank_account\",\n  \"used\": false\n}\n"
+      -> "{\n  "id": "btok_1JhfDCAWOtgoysogF0IbYRWH",\n  "object": "token",\n  "bank_account": {\n    "id": "ba_1JhfDCAWOtgoysogLB5vljcp",\n    "object": "bank_account",\n    "account_holder_name": "Jim Smith",\n    "account_holder_type": "individual",\n    "account_type": null,\n    "bank_name": "STRIPE TEST BANK",\n    "country": "US",\n    "currency": "usd",\n    "fingerprint": "uCkXlMFxqys7GosR",\n    "last4": "6789",\n    "name": "Jim Smith",\n    "routing_number": "110000000",\n    "status": "new"\n  },\n  "client_ip": "172.74.90.160",\n  "created": 1633546290,\n  "livemode": false,\n  "type": "bank_account",\n  "used": false\n}\n"
       read 610 bytes
       Conn close
       opening connection to api.stripe.com:443...
       opened
       starting SSL for api.stripe.com:443...
       SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256
-      <- "POST /v1/customers HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.123.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.123.0\",\"lang\":\"ruby\",\"lang_version\":\"2.6.6 p146 (2020-03-31)\",\"platform\":\"x86_64-darwin20\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.stripe.com\r\nContent-Length: 36\r\n\r\n"
+      <- "POST /v1/customers HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.123.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {"bindings_version":"1.123.0","lang":"ruby","lang_version":"2.6.6 p146 (2020-03-31)","platform":"x86_64-darwin20","publisher":"active_merchant"}\r\nX-Stripe-Client-User-Metadata: {"ip":null}\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.stripe.com\r\nContent-Length: 36\r\n\r\n"
       <- "source=btok_1JhfDCAWOtgoysogF0IbYRWH"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -1974,7 +1974,7 @@ class StripeTest < Test::Unit::TestCase
       -> "Strict-Transport-Security: max-age=31556926; includeSubDomains; preload\r\n"
       -> "\r\n"
       reading 1713 bytes...
-      -> "{\n  \"id\": \"cus_KMNzQZK4SN7Agn\",\n  \"object\": \"customer\",\n  \"account_balance\": 0,\n  \"address\": null,\n  \"balance\": 0,\n  \"created\": 1633546290,\n  \"currency\": null,\n  \"default_source\": \"ba_1JhfDCAWOtgoysogLB5vljcp\",\n  \"delinquent\": false,\n  \"description\": null,\n  \"discount\": null,\n  \"email\": null,\n  \"invoice_prefix\": \"02D58981\",\n  \"invoice_settings\": {\n    \"custom_fields\": null,\n    \"default_payment_method\": null,\n    \"footer\": null\n  },\n  \"livemode\": false,\n  \"metadata\": {\n  },\n  \"name\": null,\n  \"next_invoice_sequence\": 1,\n  \"phone\": null,\n  \"preferred_locales\": [\n\n  ],\n  \"shipping\": null,\n  \"sources\": {\n    \"object\": \"list\",\n    \"data\": [\n      {\n        \"id\": \"ba_1JhfDCAWOtgoysogLB5vljcp\",\n        \"object\": \"bank_account\",\n        \"account_holder_name\": \"Jim Smith\",\n        \"account_holder_type\": \"individual\",\n        \"account_type\": null,\n        \"bank_name\": \"STRIPE TEST BANK\",\n        \"country\": \"US\",\n        \"currency\": \"usd\",\n        \"customer\": \"cus_KMNzQZK4SN7Agn\",\n        \"fingerprint\": \"uCkXlMFxqys7GosR\",\n        \"last4\": \"6789\",\n        \"metadata\": {\n        },\n        \"name\": \"Jim Smith\",\n        \"routing_number\": \"110000000\",\n        \"status\": \"new\"\n      }\n    ],\n    \"has_more\": false,\n    \"total_count\": 1,\n    \"url\": \"/v1/customers/cus_KMNzQZK4SN7Agn/sources\"\n  },\n  \"subscriptions\": {\n    \"object\": \"list\",\n    \"data\": [\n\n    ],\n    \"has_more\": false,\n    \"total_count\": 0,\n    \"url\": \"/v1/customers/cus_KMNzQZK4SN7Agn/subscriptions\"\n  },\n  \"tax_exempt\": \"none\",\n  \"tax_ids\": {\n    \"object\": \"list\",\n    \"data\": [\n\n    ],\n    \"has_more\": false,\n    \"total_count\": 0,\n    \"url\": \"/v1/customers/cus_KMNzQZK4SN7Agn/tax_ids\"\n  },\n  \"tax_info\": null,\n  \"tax_info_verification\": null\n}\n"
+      -> "{\n  "id": "cus_KMNzQZK4SN7Agn",\n  "object": "customer",\n  "account_balance": 0,\n  "address": null,\n  "balance": 0,\n  "created": 1633546290,\n  "currency": null,\n  "default_source": "ba_1JhfDCAWOtgoysogLB5vljcp",\n  "delinquent": false,\n  "description": null,\n  "discount": null,\n  "email": null,\n  "invoice_prefix": "02D58981",\n  "invoice_settings": {\n    "custom_fields": null,\n    "default_payment_method": null,\n    "footer": null\n  },\n  "livemode": false,\n  "metadata": {\n  },\n  "name": null,\n  "next_invoice_sequence": 1,\n  "phone": null,\n  "preferred_locales": [\n\n  ],\n  "shipping": null,\n  "sources": {\n    "object": "list",\n    "data": [\n      {\n        "id": "ba_1JhfDCAWOtgoysogLB5vljcp",\n        "object": "bank_account",\n        "account_holder_name": "Jim Smith",\n        "account_holder_type": "individual",\n        "account_type": null,\n        "bank_name": "STRIPE TEST BANK",\n        "country": "US",\n        "currency": "usd",\n        "customer": "cus_KMNzQZK4SN7Agn",\n        "fingerprint": "uCkXlMFxqys7GosR",\n        "last4": "6789",\n        "metadata": {\n        },\n        "name": "Jim Smith",\n        "routing_number": "110000000",\n        "status": "new"\n      }\n    ],\n    "has_more": false,\n    "total_count": 1,\n    "url": "/v1/customers/cus_KMNzQZK4SN7Agn/sources"\n  },\n  "subscriptions": {\n    "object": "list",\n    "data": [\n\n    ],\n    "has_more": false,\n    "total_count": 0,\n    "url": "/v1/customers/cus_KMNzQZK4SN7Agn/subscriptions"\n  },\n  "tax_exempt": "none",\n  "tax_ids": {\n    "object": "list",\n    "data": [\n\n    ],\n    "has_more": false,\n    "total_count": 0,\n    "url": "/v1/customers/cus_KMNzQZK4SN7Agn/tax_ids"\n  },\n  "tax_info": null,\n  "tax_info_verification": null\n}\n"
       read 1713 bytes
       Conn close
     POST_SCRUBBED
@@ -2932,8 +2932,7 @@ class StripeTest < Test::Unit::TestCase
         'exp_year' => 2017,
         'funding' => 'credit',
         'last4' => '4242',
-        'metadata' => {
-        },
+        'metadata' => {},
         'name' => nil,
         'tokenization_method' => nil
       },

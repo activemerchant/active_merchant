@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CenposGateway < Gateway
       self.display_name = 'CenPOS'
       self.homepage_url = 'https://www.cenpos.com/'
@@ -112,7 +112,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        if (billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = options[:billing_address] || options[:address])
           post[:CustomerEmailAddress] = billing_address[:email]
           post[:CustomerPhone] = billing_address[:phone]
           post[:CustomerBillingAddress] = billing_address[:address1]

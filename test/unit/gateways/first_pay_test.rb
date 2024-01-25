@@ -419,22 +419,22 @@ class FirstPayTest < Test::Unit::TestCase
   def post_scrubbed
     %(<RESPONSE>
   <FIELDS>
-    <FIELD KEY=\"order_id\">77b61bfe08510e00852f2f20011e7952d80f9a4be17d27cf</FIELD>
-    <FIELD KEY=\"total\">1.00</FIELD><FIELD KEY=\"card_name\">visa</FIELD>
-    <FIELD KEY=\"card_number[FILTERED]</FIELD>
-    <FIELD KEY=\"card_exp\">0919</FIELD>
-    <FIELD KEY=\"cvv2[FILTERED]</FIELD>
-    <FIELD KEY=\"owner_name\">Jim Smith</FIELD>
-    <FIELD KEY=\"owner_street\">456 My Street</FIELD>
-    <FIELD KEY=\"owner_street2\">Apt 1</FIELD>
-    <FIELD KEY=\"owner_city\">Ottawa</FIELD>
-    <FIELD KEY=\"owner_state\">ON</FIELD>
-    <FIELD KEY=\"owner_zip\">K1C2N6</FIELD>
-    <FIELD KEY=\"owner_country\">CA</FIELD>
-    <FIELD KEY=\"owner_phone\">(555)555-5555</FIELD>
-    <FIELD KEY=\"transaction_center_id\">1264</FIELD>
-    <FIELD KEY=\"gateway_id[FILTERED]</FIELD>
-    <FIELD KEY=\"operation_type\">sale</FIELD>
+    <FIELD KEY="order_id">77b61bfe08510e00852f2f20011e7952d80f9a4be17d27cf</FIELD>
+    <FIELD KEY="total">1.00</FIELD><FIELD KEY="card_name">visa</FIELD>
+    <FIELD KEY="card_number[FILTERED]</FIELD>
+    <FIELD KEY="card_exp">0919</FIELD>
+    <FIELD KEY="cvv2[FILTERED]</FIELD>
+    <FIELD KEY="owner_name">Jim Smith</FIELD>
+    <FIELD KEY="owner_street">456 My Street</FIELD>
+    <FIELD KEY="owner_street2">Apt 1</FIELD>
+    <FIELD KEY="owner_city">Ottawa</FIELD>
+    <FIELD KEY="owner_state">ON</FIELD>
+    <FIELD KEY="owner_zip">K1C2N6</FIELD>
+    <FIELD KEY="owner_country">CA</FIELD>
+    <FIELD KEY="owner_phone">(555)555-5555</FIELD>
+    <FIELD KEY="transaction_center_id">1264</FIELD>
+    <FIELD KEY="gateway_id[FILTERED]</FIELD>
+    <FIELD KEY="operation_type">sale</FIELD>
   </FIELDS>
 </RESPONSE>)
   end

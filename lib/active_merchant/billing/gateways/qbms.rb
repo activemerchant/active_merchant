@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class QbmsGateway < Gateway
       API_VERSION = '4.0'
 
@@ -280,12 +280,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      CVV_RESULT = {
+        'Pass' => 'M',
+        'Fail' => 'N',
+        'NotAvailable' => 'P'
+      }
       def cvv_result(response)
-        case response[:card_security_code_match]
-        when 'Pass'         then 'M'
-        when 'Fail'         then 'N'
-        when 'NotAvailable' then 'P'
-        end
+        CVV_RESULT[response[:card_security_code_match]]
       end
 
       def avs_result(response)
@@ -295,9 +296,8 @@ module ActiveMerchant #:nodoc:
         when 'Pass|NotAvailable'         then 'B'
         when 'Fail|Pass'                 then 'Z'
         when 'Fail|Fail'                 then 'C'
-        when 'Fail|NotAvailable'         then 'N'
+        when 'Fail|NotAvailable', 'NotAvailable|Fail' then 'N'
         when 'NotAvailable|Pass'         then 'P'
-        when 'NotAvailable|Fail'         then 'N'
         when 'NotAvailable|NotAvailable' then 'U'
         end
       end

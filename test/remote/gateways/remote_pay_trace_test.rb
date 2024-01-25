@@ -1,7 +1,7 @@
 require 'test_helper'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayTraceGateway < Gateway
       def settle
         post = {}

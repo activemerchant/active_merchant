@@ -295,8 +295,7 @@ class FatZebraTest < Test::Unit::TestCase
         captured_amount: 349,
         rrn: '000000000000',
         cvv_match: 'U',
-        metadata: {
-        }
+        metadata: {}
       },
       test: true,
       errors: []
@@ -360,8 +359,7 @@ class FatZebraTest < Test::Unit::TestCase
         captured_amount: 0,
         rrn: '000000000001',
         cvv_match: 'U',
-        metadata: {
-        }
+        metadata: {}
       },
       test: true,
       errors: []
@@ -388,8 +386,7 @@ class FatZebraTest < Test::Unit::TestCase
         transaction_date: '2013-07-01T12:00:00+11:00',
         response_code: '08',
         settlement_date: '2013-07-01',
-        metadata: {
-        },
+        metadata: {},
         standalone: false,
         rrn: '000000000002'
       },

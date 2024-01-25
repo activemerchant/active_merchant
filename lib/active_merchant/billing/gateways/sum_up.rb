@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SumUpGateway < Gateway
       self.live_url = 'https://api.sumup.com/v0.1/'
 
@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         checkout_id = authorization.split('#')[0]
-        commit('checkouts/' + checkout_id, {}, :delete)
+        commit("checkouts/#{checkout_id}", {}, :delete)
       end
 
       def refund(money, authorization, options = {})
@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
         post = money ? { amount: amount(money) } : {}
         add_merchant_data(post, options)
 
-        commit('me/refund/' + transaction_id, post)
+        commit("me/refund/#{transaction_id}", post)
       end
 
       def supports_scrubbing?
@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
 
         add_payment(post, payment, options)
 
-        commit('checkouts/' + checkout_id, post, :put)
+        commit("checkouts/#{checkout_id}", post, :put)
       end
 
       def add_customer_data(post, payment, options)
@@ -93,7 +93,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         post[:personal_details] ||= {}
-        if address = (options[:billing_address] || options[:shipping_address] || options[:address])
+        if address = options[:billing_address] || options[:shipping_address] || options[:address]
           post[:personal_details][:address] = {
             city:        address[:city],
             state:       address[:state],
@@ -145,7 +145,7 @@ module ActiveMerchant #:nodoc:
             e.response.body
           end
         response = parse(raw_response)
-        response = response.is_a?(Hash) ? response.symbolize_keys : response
+        response = response.symbolize_keys if response.is_a?(Hash)
 
         return format_errors(response) if raw_response.include?('error_code') && response.is_a?(Array)
 

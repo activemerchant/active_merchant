@@ -4,8 +4,8 @@ rescue LoadError
   # Falls back to an SSL post to TrustCommerce
 end
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # TO USE:
     # First, make sure you have everything setup correctly and all of your dependencies in place with:
     #
@@ -141,7 +141,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def test?
-        ((@options[:login] == TEST_LOGIN && @options[:password] == TEST_PASSWORD) || super)
+        (@options[:login] == TEST_LOGIN && @options[:password] == TEST_PASSWORD) || super
       end
 
       # authorize() is the first half of the preauth(authorize)/postauth(capture) model. The TC API docs call this
@@ -265,26 +265,22 @@ module ActiveMerchant #:nodoc:
       #   gateway.recurring(tendollar, creditcard, :periodicity => :weekly)
       #
       # You can optionally specify how long you want payments to continue using 'payments'
+
+      PERIODICITY = {
+        monthly: '1m',
+        bimonthly: '2m',
+        weekly: '1w',
+        biweekly: '2w',
+        yearly: '1y',
+        daily: '1d'
+      }
+
       def recurring(money, creditcard, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
         requires!(options, %i[periodicity bimonthly monthly biweekly weekly yearly daily])
 
-        cycle =
-          case options[:periodicity]
-          when :monthly
-            '1m'
-          when :bimonthly
-            '2m'
-          when :weekly
-            '1w'
-          when :biweekly
-            '2w'
-          when :yearly
-            '1y'
-          when :daily
-            '1d'
-          end
+        cycle = PERIODICITY[options[:periodicity]]
 
         parameters = {
           amount: amount(money),
@@ -464,8 +460,8 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         results = {}
 
-        body.split(/\n/).each do |pair|
-          key, val = pair.split(/=/)
+        body.split("\n").each do |pair|
+          key, val = pair.split('=')
           results[key] = val
         end
 

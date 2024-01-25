@@ -66,63 +66,63 @@ class SimetrikTest < Test::Unit::TestCase
     }
 
     @authorize_capture_expected_body = {
-      "forward_route": {
-        "trace_id": @trace_id,
-        "psp_extra_fields": {}
+      forward_route: {
+        trace_id: @trace_id,
+        psp_extra_fields: {}
       },
-      "forward_payload": {
-        "user": {
-          "id": '123',
-          "email": 's@example.com'
+      forward_payload: {
+        user: {
+          id: '123',
+          email: 's@example.com'
         },
-        "order": {
-          "id": @order_id,
-          "description": 'a popsicle',
-          "installments": 1,
-          "datetime_local_transaction": @datetime,
-          "amount": {
-            "total_amount": 10.0,
-            "currency": 'USD',
-            "vat": 1.9
+        order: {
+          id: @order_id,
+          description: 'a popsicle',
+          installments: 1,
+          datetime_local_transaction: @datetime,
+          amount: {
+            total_amount: 10.0,
+            currency: 'USD',
+            vat: 1.9
           }
         },
-        "payment_method": {
-          "card": {
-            "number": '4551478422045511',
-            "exp_month": 12,
-            "exp_year": 2029,
-            "security_code": '111',
-            "type": 'visa',
-            "holder_first_name": 'sergiod',
-            "holder_last_name": 'lobob'
+        payment_method: {
+          card: {
+            number: '4551478422045511',
+            exp_month: 12,
+            exp_year: 2029,
+            security_code: '111',
+            type: 'visa',
+            holder_first_name: 'sergiod',
+            holder_last_name: 'lobob'
           }
         },
-        "authentication": {
-          "three_ds_fields": {
-            "version": '2.1.0',
-            "eci": '02',
-            "cavv": 'jJ81HADVRtXfCBATEp01CJUAAAA',
-            "ds_transaction_id": '97267598-FAE6-48F2-8083-C23433990FBC',
-            "acs_transaction_id": '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
-            "xid": '00000000000000000501',
-            "enrolled": 'string',
-            "cavv_algorithm": '1',
-            "directory_response_status": 'Y',
-            "authentication_response_status": 'Y',
-            "three_ds_server_trans_id": '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
+        authentication: {
+          three_ds_fields: {
+            version: '2.1.0',
+            eci: '02',
+            cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
+            ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+            acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
+            xid: '00000000000000000501',
+            enrolled: 'string',
+            cavv_algorithm: '1',
+            directory_response_status: 'Y',
+            authentication_response_status: 'Y',
+            three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
           }
         },
-        "sub_merchant": {
-          "merchant_id": 'string',
-          "extra_params": {},
-          "mcc": 'string',
-          "name": 'string',
-          "address": 'string',
-          "postal_code": 'string',
-          "url": 'string',
-          "phone_number": 'string'
+        sub_merchant: {
+          merchant_id: 'string',
+          extra_params: {},
+          mcc: 'string',
+          name: 'string',
+          address: 'string',
+          postal_code: 'string',
+          url: 'string',
+          phone_number: 'string'
         },
-        "acquire_extra_options": {}
+        acquire_extra_options: {}
       }
     }.to_json.to_s
   end
@@ -355,7 +355,7 @@ class SimetrikTest < Test::Unit::TestCase
       starting SSL for payments.sta.simetrik.com:443...
       SSL established
       <- "POST /v1/bc4c0f26-a357-4294-9b9e-a90e6c868c6e/charge HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Bearer      eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InYwZ0ZNM1QwY1BpZ3J2OTBrS1dEZSJ9.     eyJpc3MiOiJodHRwczovL3RlbmFudC1wYXltZW50cy1kZXYudXMuYXV0aDAuY29tLyIsInN1YiI6IndOaEpCZHJLRGszdlRta1FNQVdpNXpXTjd5MjFhZE8zQGNsaWVudHMiL   CJhdWQiOiJodHRwczovL3RlbmFudC1wYXltZW50cy1kZXYudXMuYXV0aDAuY29tL2FwaS92Mi8iLCJpYXQiOjE2NTExNjk1OTYsImV4cCI6MTY1MTI1NTk5NiwiYXpwIjoid0      5oSkJkcktEazN2VG1rUU1BV2k1eldON3kyMWFkTzMiLCJzY29wZSI6InJlYWQ6Y2xpZW50X2dyYW50cyIsImd0eSI6ImNsaWVudC1jcmVkZW50aWFscyJ9.     mAaWcAiq0t_UnXQGMv2uHcOfFoxclfPBU9Wa_Tmzmps3jIZnCggGxptAjaxn_Hj7Mteni4u9t7QVDUA6pQ1nVT4hfuFbFiC3CcvB8AKb6_PgIYLHuZ1i0VKyS6VtdB04_Sl8u     kbBcnXXt2GrRps23OPwwBjdJOKzXhz0pLeiDeBA_0SkF6LXqmbMuFB5PPGC2hyQUOOlkrqBjXH8meIMfnBh4GooF3AnsuhDT3hSu8t0gpQAVmQatxqPQwce8WXkD6qnCM6Q81   LnZCBjfzyF2T_LN4q9GmFkcy3NGkEXXNC1UigPxqbgDmf448biCKiMv1NnXyMhfknxH_kR2f6QdQ\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,      deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: payments.sta.simetrik.com\r\nContent-Length: 720\r\n\r\n"
-      <- "{\"forward_route\":{\"trace_id\":\"ce4091cf-3656-4c78-b835-f9fcf2b2cb11\",\"psp_extra_fields\":{}},\"forward_payload\":{\"user\":     {\"id\":\"123\",\"email\":\"s@example.com\"},\"order\":{\"id\":\"191885304068\",\"description\":\"apopsicle\",\"installments\":1,     \"datetime_local_transaction\":\"2022-04-28T14:13:16.117-04:00\",\"amount\":{\"total_amount\":1.0,\"currency\":\"USD\",\"vat\":19.0}}   ,\"payment_method\":{\"card\":{\"number\":\"4551708161768059\",\"exp_month\":7,\"exp_year\":2022,\"security_code\":\"111\",      \"type\":\"visa\",\"holder_first_name\":\"Joe\",\"holder_last_name\":\"Doe\"}},\"sub_merchant\":{\"merchant_id\":\"400000008\",     \"extra_params\":{},\"mcc\":\"5816\",\"name\":\"885.519.237\",\"address\":\"None\",\"postal_code\":\"None\",\"url\":\"string\",     \"phone_number\":\"3434343\"},\"acquire_extra_options\":{}}}"
+      <- "{"forward_route":{"trace_id":"ce4091cf-3656-4c78-b835-f9fcf2b2cb11","psp_extra_fields":{}},"forward_payload":{"user":     {"id":"123","email":"s@example.com"},"order":{"id":"191885304068","description":"apopsicle","installments":1,     "datetime_local_transaction":"2022-04-28T14:13:16.117-04:00","amount":{"total_amount":1.0,"currency":"USD","vat":19.0}}   ,"payment_method":{"card":{"number":"4551708161768059","exp_month":7,"exp_year":2022,"security_code":"111",      "type":"visa","holder_first_name":"Joe","holder_last_name":"Doe"}},"sub_merchant":{"merchant_id":"400000008",     "extra_params":{},"mcc":"5816","name":"885.519.237","address":"None","postal_code":"None","url":"string",     "phone_number":"3434343"},"acquire_extra_options":{}}}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
       -> "Date: Thu, 28 Apr 2022 18:13:34 GMT\r\n"
@@ -387,7 +387,7 @@ class SimetrikTest < Test::Unit::TestCase
       starting SSL for payments.sta.simetrik.com:443...
       SSL established
       <- "POST /v1/bc4c0f26-a357-4294-9b9e-a90e6c868c6e/charge HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Bearer [FILTERED]\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,      deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: payments.sta.simetrik.com\r\nContent-Length: 720\r\n\r\n"
-      <- "{\"forward_route\":{\"trace_id\":\"ce4091cf-3656-4c78-b835-f9fcf2b2cb11\",\"psp_extra_fields\":{}},\"forward_payload\":{\"user\":     {\"id\":\"123\",\"email\":\"s@example.com\"},\"order\":{\"id\":\"191885304068\",\"description\":\"apopsicle\",\"installments\":1,     \"datetime_local_transaction\":\"2022-04-28T14:13:16.117-04:00\",\"amount\":{\"total_amount\":1.0,\"currency\":\"USD\",\"vat\":19.0}}   ,\"payment_method\":{\"card\":{\"number\":\"[FILTERED]\",\"exp_month\":7,\"exp_year\":2022,\"security_code\":\"[FILTERED]\",      \"type\":\"visa\",\"holder_first_name\":\"Joe\",\"holder_last_name\":\"Doe\"}},\"sub_merchant\":{\"merchant_id\":\"400000008\",     \"extra_params\":{},\"mcc\":\"5816\",\"name\":\"885.519.237\",\"address\":\"None\",\"postal_code\":\"None\",\"url\":\"string\",     \"phone_number\":\"3434343\"},\"acquire_extra_options\":{}}}"
+      <- "{"forward_route":{"trace_id":"ce4091cf-3656-4c78-b835-f9fcf2b2cb11","psp_extra_fields":{}},"forward_payload":{"user":     {"id":"123","email":"s@example.com"},"order":{"id":"191885304068","description":"apopsicle","installments":1,     "datetime_local_transaction":"2022-04-28T14:13:16.117-04:00","amount":{"total_amount":1.0,"currency":"USD","vat":19.0}}   ,"payment_method":{"card":{"number":"[FILTERED]","exp_month":7,"exp_year":2022,"security_code":"[FILTERED]",      "type":"visa","holder_first_name":"Joe","holder_last_name":"Doe"}},"sub_merchant":{"merchant_id":"400000008",     "extra_params":{},"mcc":"5816","name":"885.519.237","address":"None","postal_code":"None","url":"string",     "phone_number":"3434343"},"acquire_extra_options":{}}}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
       -> "Date: Thu, 28 Apr 2022 18:13:34 GMT\r\n"

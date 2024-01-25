@@ -150,7 +150,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(100, @credit_card, order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
+      assert_match(/<mddField id="2">CustomValue2</m, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -272,7 +272,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(100, @credit_card, order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
+      assert_match(/<mddField id="2">CustomValue2</m, data)
     end.respond_with(successful_authorization_response)
   end
 
@@ -694,7 +694,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.capture(100, '1846925324700976124593', order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
+      assert_match(/<mddField id="2">CustomValue2</m, data)
     end.respond_with(successful_capture_response)
   end
 
@@ -855,7 +855,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.credit(@amount, @credit_card, mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
+      assert_match(/<mddField id="2">CustomValue2</m, data)
     end.respond_with(successful_card_credit_response)
   end
 
@@ -865,7 +865,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.void(purchase, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(<voidService run=\"true\"), data)
+      assert_match(%r(<voidService run="true"), data)
     end.respond_with(successful_void_response)
   end
 
@@ -875,7 +875,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.void(capture, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(<voidService run=\"true\"), data)
+      assert_match(%r(<voidService run="true"), data)
     end.respond_with(successful_void_response)
   end
 
@@ -885,7 +885,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.void(authorization, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(<ccAuthReversalService run=\"true\"), data)
+      assert_match(%r(<ccAuthReversalService run="true"), data)
     end.respond_with(successful_auth_reversal_response)
   end
 
@@ -905,7 +905,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.void(authorization, mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
+      assert_match(/<mddField id="2">CustomValue2</m, data)
     end.respond_with(successful_void_response)
   end
 
@@ -922,7 +922,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.store(@credit_card, @subscription_options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r(<amount>1.00<\/amount>), data
+      assert_match %r(<amount>1.00</amount>), data
     end.respond_with(successful_update_subscription_response)
   end
 
@@ -938,7 +938,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_post) do
       @gateway.verify(@credit_card, @options)
     end.check_request(skip_response: true) do |_endpoint, data|
-      assert_match %r(<grandTotalAmount>0.00<\/grandTotalAmount>), data
+      assert_match %r(<grandTotalAmount>0.00</grandTotalAmount>), data
     end
   end
 
@@ -946,7 +946,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_post) do
       @gateway.verify(@credit_card, @options)
     end.check_request(skip_response: true) do |_endpoint, data|
-      assert_match %r(<grandTotalAmount>1.00<\/grandTotalAmount>), data
+      assert_match %r(<grandTotalAmount>1.00</grandTotalAmount>), data
     end
   end
 
@@ -970,7 +970,7 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @network_token, @options)
     end.check_request do |_endpoint, body, _headers|
       assert_xml_valid_to_xsd(body)
-      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>111111111100cryptogram</cavv>\n  <commerceIndicator>vbv</commerceIndicator>\n  <xid>111111111100cryptogram</xid>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', body
+      assert_match %r'<ccAuthService run="true">\n  <cavv>111111111100cryptogram</cavv>\n  <commerceIndicator>vbv</commerceIndicator>\n  <xid>111111111100cryptogram</xid>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', body
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -990,7 +990,7 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_auth_with_network_tokenization_for_mastercard
     @gateway.expects(:ssl_post).with do |_host, request_body|
       assert_xml_valid_to_xsd(request_body)
-      assert_match %r'<ucaf>\n  <authenticationData>111111111100cryptogram</authenticationData>\n  <collectionIndicator>2</collectionIndicator>\n</ucaf>\n<ccAuthService run=\"true\">\n  <commerceIndicator>spa</commerceIndicator>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
+      assert_match %r'<ucaf>\n  <authenticationData>111111111100cryptogram</authenticationData>\n  <collectionIndicator>2</collectionIndicator>\n</ucaf>\n<ccAuthService run="true">\n  <commerceIndicator>spa</commerceIndicator>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
       true
     end.returns(successful_purchase_response)
 
@@ -1009,7 +1009,7 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_auth_with_network_tokenization_for_amex
     @gateway.expects(:ssl_post).with do |_host, request_body|
       assert_xml_valid_to_xsd(request_body)
-      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</cavv>\n  <commerceIndicator>aesk</commerceIndicator>\n  <xid>YW0=\n</xid>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
+      assert_match %r'<ccAuthService run="true">\n  <cavv>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</cavv>\n  <commerceIndicator>aesk</commerceIndicator>\n  <xid>YW0=\n</xid>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
       true
     end.returns(successful_purchase_response)
 
@@ -1036,11 +1036,11 @@ class CyberSourceTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\<subsequentAuthFirst\>true/, data)
-      assert_not_match(/\<subsequentAuthStoredCredential\>true/, data)
-      assert_not_match(/\<subsequentAuth\>/, data)
-      assert_not_match(/\<subsequentAuthTransactionID\>/, data)
-      assert_match(/\<commerceIndicator\>internet/, data)
+      assert_match(/<subsequentAuthFirst>true/, data)
+      assert_not_match(/<subsequentAuthStoredCredential>true/, data)
+      assert_not_match(/<subsequentAuth>/, data)
+      assert_not_match(/<subsequentAuthTransactionID>/, data)
+      assert_match(/<commerceIndicator>internet/, data)
     end.respond_with(successful_authorization_response)
     assert response.success?
   end
@@ -1055,10 +1055,10 @@ class CyberSourceTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_not_match(/\<subsequentAuthFirst\>/, data)
-      assert_match(/\<subsequentAuthStoredCredential\>/, data)
-      assert_not_match(/\<subsequentAuth\>/, data)
-      assert_not_match(/\<subsequentAuthTransactionID\>/, data)
+      assert_not_match(/<subsequentAuthFirst>/, data)
+      assert_match(/<subsequentAuthStoredCredential>/, data)
+      assert_not_match(/<subsequentAuth>/, data)
+      assert_not_match(/<subsequentAuthTransactionID>/, data)
     end.respond_with(successful_authorization_response)
     assert response.success?
   end
@@ -1073,10 +1073,10 @@ class CyberSourceTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_not_match(/\<subsequentAuthFirst\>/, data)
-      assert_match(/\<subsequentAuthStoredCredential\>true/, data)
-      assert_match(/\<subsequentAuth\>true/, data)
-      assert_match(/\<subsequentAuthTransactionID\>016150703802094/, data)
+      assert_not_match(/<subsequentAuthFirst>/, data)
+      assert_match(/<subsequentAuthStoredCredential>true/, data)
+      assert_match(/<subsequentAuth>true/, data)
+      assert_match(/<subsequentAuthTransactionID>016150703802094/, data)
     end.respond_with(successful_authorization_response)
     assert response.success?
   end
@@ -1091,11 +1091,11 @@ class CyberSourceTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_not_match(/\<subsequentAuthFirst\>/, data)
-      assert_not_match(/\<subsequentAuthStoredCredential\>/, data)
-      assert_match(/\<subsequentAuth\>true/, data)
-      assert_match(/\<subsequentAuthTransactionID\>016150703802094/, data)
-      assert_match(/\<commerceIndicator\>install/, data)
+      assert_not_match(/<subsequentAuthFirst>/, data)
+      assert_not_match(/<subsequentAuthStoredCredential>/, data)
+      assert_match(/<subsequentAuth>true/, data)
+      assert_match(/<subsequentAuthTransactionID>016150703802094/, data)
+      assert_match(/<commerceIndicator>install/, data)
     end.respond_with(successful_authorization_response)
     assert response.success?
   end
@@ -1110,11 +1110,11 @@ class CyberSourceTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_not_match(/\<subsequentAuthFirst\>/, data)
-      assert_not_match(/\<subsequentAuthStoredCredential\>/, data)
-      assert_match(/\<subsequentAuth\>true/, data)
-      assert_match(/\<subsequentAuthTransactionID\>016150703802094/, data)
-      assert_match(/\<commerceIndicator\>recurring/, data)
+      assert_not_match(/<subsequentAuthFirst>/, data)
+      assert_not_match(/<subsequentAuthStoredCredential>/, data)
+      assert_match(/<subsequentAuth>true/, data)
+      assert_match(/<subsequentAuthTransactionID>016150703802094/, data)
+      assert_match(/<commerceIndicator>recurring/, data)
     end.respond_with(successful_authorization_response)
     assert response.success?
   end
@@ -1129,11 +1129,11 @@ class CyberSourceTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_not_match(/\<subsequentAuthFirst\>/, data)
-      assert_not_match(/\<subsequentAuthStoredCredential\>/, data)
-      assert_match(/\<subsequentAuth\>true/, data)
-      assert_match(/\<subsequentAuthTransactionID\>016150703802094/, data)
-      assert_match(/\<commerceIndicator\>recurring/, data)
+      assert_not_match(/<subsequentAuthFirst>/, data)
+      assert_not_match(/<subsequentAuthStoredCredential>/, data)
+      assert_match(/<subsequentAuth>true/, data)
+      assert_match(/<subsequentAuthTransactionID>016150703802094/, data)
+      assert_match(/<commerceIndicator>recurring/, data)
     end.respond_with(successful_purchase_response)
     assert response.success?
   end
@@ -1155,11 +1155,11 @@ class CyberSourceTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\<subsequentAuthFirst\>false/, data)
-      assert_match(/\<subsequentAuthStoredCredential\>true/, data)
-      assert_match(/\<subsequentAuth\>true/, data)
-      assert_match(/\<subsequentAuthTransactionID\>54321/, data)
-      assert_match(/\<commerceIndicator\>internet/, data)
+      assert_match(/<subsequentAuthFirst>false/, data)
+      assert_match(/<subsequentAuthStoredCredential>true/, data)
+      assert_match(/<subsequentAuth>true/, data)
+      assert_match(/<subsequentAuthTransactionID>54321/, data)
+      assert_match(/<commerceIndicator>internet/, data)
     end.respond_with(successful_authorization_response)
     assert response.success?
   end
@@ -1188,7 +1188,7 @@ class CyberSourceTest < Test::Unit::TestCase
     purchase = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(payer_auth_enroll_service: true))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\<payerAuthEnrollService run=\"true\"\/\>/, data)
+      assert_match(/<payerAuthEnrollService run="true"\/>/, data)
     end.respond_with(threedeesecure_purchase_response)
 
     assert_failure purchase
@@ -1201,8 +1201,8 @@ class CyberSourceTest < Test::Unit::TestCase
     validation = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(payer_auth_validate_service: true, pares: 'ABC123'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\<payerAuthValidateService run=\"true\"\>/, data)
-      assert_match(/\<signedPARes\>ABC123\<\/signedPARes\>/, data)
+      assert_match(/<payerAuthValidateService run="true">/, data)
+      assert_match(/<signedPARes>ABC123<\/signedPARes>/, data)
     end.respond_with(successful_threedeesecure_validate_response)
 
     assert_success validation
@@ -1215,7 +1215,7 @@ class CyberSourceTest < Test::Unit::TestCase
       stub_comms do
         @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: { cavv: 'anything but empty' }))
       end.check_request do |_endpoint, data, _headers|
-        assert_match(/commerceIndicator\>#{CyberSourceGateway::ECI_BRAND_MAPPING[brand.to_sym]}</, data)
+        assert_match(/commerceIndicator>#{CyberSourceGateway::ECI_BRAND_MAPPING[brand.to_sym]}</, data)
       end.respond_with(successful_purchase_response)
     end
   end
@@ -1245,14 +1245,14 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<eciRaw\>#{eci}/, data)
-      assert_match(/<cavv\>#{cavv}/, data)
-      assert_match(/<paSpecificationVersion\>#{version}/, data)
-      assert_match(/<directoryServerTransactionID\>#{ds_transaction_id}/, data)
-      assert_match(/<paresStatus\>#{authentication_response_status}/, data)
-      assert_match(/<cavvAlgorithm\>#{cavv_algorithm}/, data)
-      assert_match(/<commerceIndicator\>#{commerce_indicator}/, data)
-      assert_match(/<veresEnrolled\>#{enrolled}/, data)
+      assert_match(/<eciRaw>#{eci}/, data)
+      assert_match(/<cavv>#{cavv}/, data)
+      assert_match(/<paSpecificationVersion>#{version}/, data)
+      assert_match(/<directoryServerTransactionID>#{ds_transaction_id}/, data)
+      assert_match(/<paresStatus>#{authentication_response_status}/, data)
+      assert_match(/<cavvAlgorithm>#{cavv_algorithm}/, data)
+      assert_match(/<commerceIndicator>#{commerce_indicator}/, data)
+      assert_match(/<veresEnrolled>#{enrolled}/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1261,14 +1261,14 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_, data, _|
-      assert_not_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
-      assert_not_match(/<cavv\>#{options[:three_d_secure][:cavv]}</, data)
-      assert_not_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
-      assert_not_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
-      assert_not_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
-      assert_not_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
-      assert_not_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
-      assert_not_match(/<commerceIndicator\>#{options[:commerce_indicator]}</, data)
+      assert_not_match(/<eciRaw>#{options[:three_d_secure][:eci]}</, data)
+      assert_not_match(/<cavv>#{options[:three_d_secure][:cavv]}</, data)
+      assert_not_match(/<paSpecificationVersion>#{options[:three_d_secure][:version]}</, data)
+      assert_not_match(/<directoryServerTransactionID>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_not_match(/<paresStatus>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_not_match(/<cavvAlgorithm>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_not_match(/<veresEnrolled>#{options[:three_d_secure][:enrolled]}</, data)
+      assert_not_match(/<commerceIndicator>#{options[:commerce_indicator]}</, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1280,12 +1280,12 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_, data, _|
-      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
-      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
-      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
-      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
-      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
-      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
+      assert_match(/<eciRaw>#{options[:three_d_secure][:eci]}</, data)
+      assert_match(/<paSpecificationVersion>#{options[:three_d_secure][:version]}</, data)
+      assert_match(/<directoryServerTransactionID>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_match(/<paresStatus>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_match(/<cavvAlgorithm>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_match(/<veresEnrolled>#{options[:three_d_secure][:enrolled]}</, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1294,13 +1294,13 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_, data, _|
-      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
-      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
-      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
-      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
-      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
-      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
-      assert_match(/<commerceIndicator\>#{options[:commerce_indicator]}</, data)
+      assert_match(/<eciRaw>#{options[:three_d_secure][:eci]}</, data)
+      assert_match(/<paSpecificationVersion>#{options[:three_d_secure][:version]}</, data)
+      assert_match(/<directoryServerTransactionID>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_match(/<paresStatus>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_match(/<cavvAlgorithm>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_match(/<veresEnrolled>#{options[:three_d_secure][:enrolled]}</, data)
+      assert_match(/<commerceIndicator>#{options[:commerce_indicator]}</, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1309,13 +1309,13 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_, data, _|
-      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
-      assert_match(/<cavv\>#{options[:three_d_secure][:cavv]}</, data)
-      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
-      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
-      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
-      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
-      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
+      assert_match(/<eciRaw>#{options[:three_d_secure][:eci]}</, data)
+      assert_match(/<cavv>#{options[:three_d_secure][:cavv]}</, data)
+      assert_match(/<paSpecificationVersion>#{options[:three_d_secure][:version]}</, data)
+      assert_match(/<directoryServerTransactionID>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_match(/<paresStatus>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_match(/<cavvAlgorithm>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_match(/<veresEnrolled>#{options[:three_d_secure][:enrolled]}</, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1342,13 +1342,13 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @master_credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<eciRaw\>#{eci}/, data)
-      assert_match(/<authenticationData\>#{cavv}/, data)
-      assert_match(/<paSpecificationVersion\>#{version}/, data)
-      assert_match(/<directoryServerTransactionID\>#{ds_transaction_id}/, data)
-      assert_match(/<cavvAlgorithm\>#{cavv_algorithm}/, data)
-      assert_match(/<commerceIndicator\>#{commerce_indicator}/, data)
-      assert_match(/<collectionIndicator\>#{collection_indicator}/, data)
+      assert_match(/<eciRaw>#{eci}/, data)
+      assert_match(/<authenticationData>#{cavv}/, data)
+      assert_match(/<paSpecificationVersion>#{version}/, data)
+      assert_match(/<directoryServerTransactionID>#{ds_transaction_id}/, data)
+      assert_match(/<cavvAlgorithm>#{cavv_algorithm}/, data)
+      assert_match(/<commerceIndicator>#{commerce_indicator}/, data)
+      assert_match(/<collectionIndicator>#{collection_indicator}/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1366,7 +1366,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @master_credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<collectionIndicator\>2/, data)
+      assert_match(/<collectionIndicator>2/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1384,7 +1384,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @elo_credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<xid\>this-is-an-xid/, data)
+      assert_match(/<xid>this-is-an-xid/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1403,7 +1403,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @master_credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<xid\>this-is-an-xid/, data)
+      assert_match(/<xid>this-is-an-xid/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1423,7 +1423,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<xid\>#{cavv}/, data)
+      assert_match(/<xid>#{cavv}/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1442,7 +1442,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<xid\>this-is-an-xid/, data)
+      assert_match(/<xid>this-is-an-xid/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1476,7 +1476,7 @@ class CyberSourceTest < Test::Unit::TestCase
         assert_match(%r(<purchaseTotals>\n), data)
         assert_match(%r(<grandTotalAmount>#{@gateway.send(:localized_amount, @amount.to_i, @options[:currency])}</grandTotalAmount>), data)
         # 3ds exemption tag
-        assert_match %r(<ccAuthService run=\"true\">\n), data
+        assert_match %r(<ccAuthService run="true">\n), data
         assert_match(%r(<#{CyberSourceGateway::THREEDS_EXEMPTIONS[exemption]}>1</#{CyberSourceGateway::THREEDS_EXEMPTIONS[exemption]}>), data)
       end.respond_with(successful_purchase_response)
     end
@@ -1760,7 +1760,7 @@ class CyberSourceTest < Test::Unit::TestCase
     starting SSL for ics2wstest.ic3.com:443...
     SSL established
     <- "POST /commerce/1.x/transactionProcessor HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: ics2wstest.ic3.com\r\nContent-Length: 2459\r\n\r\n"
-    <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <s:Header>\n    <wsse:Security s:mustUnderstand=\"1\" xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">\n      <wsse:UsernameToken>\n        <wsse:Username>test</wsse:Username>\n        <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">DT3MZm8t8BsDZC9ZoKl592lvlRbQCcEXmEcYlh3gZObo6zTLQdf2m5klbqXlTq31iTJ5/Ctl/Z5LFE60GFnWGR8Cn5GeXuToZNbMHAvZKZ3sw9tC3Hf4U3Dj8XS2EI4OBvA1jcw38hd3VEm0ZZCAQEDZCC+AnM2ya9417zqynYjwgSyPOfh6CfMlSJKTgxQJLot7jFxYNvM/s9yBZoh37wJZUXdZ9Bf/CH6O3tKzafbyfn5rK25+GeYN9koih4O8c+PLQepzj5miiR7bikFzgEnsVs6LaZdLM8Sx/XVXk+60h02lg/a6KdS3kmUvnTGOihg5JUnl2JucBpH/P4aQYZ==</wsse:Password>\n      </wsse:UsernameToken>\n    </wsse:Security>\n  </s:Header>\n  <s:Body xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n    <requestMessage xmlns=\"urn:schemas-cybersource-com:transaction-data-1.109\">\n      <merchantID>test</merchantID>\n      <merchantReferenceCode>734dda9bb6446f2f2638ab7faf34682f</merchantReferenceCode>\n      <clientLibrary>Ruby Active Merchant</clientLibrary>\n      <clientLibraryVersion>1.50.0</clientLibraryVersion>\n      <clientEnvironment>x86_64-darwin14.0</clientEnvironment>\n<billTo>\n  <firstName>Longbob</firstName>\n  <lastName>Longsen</lastName>\n  <street1>456 My Street</street1>\n  <street2>Apt 1</street2>\n  <city>Ottawa</city>\n  <state>NC</state>\n  <postalCode>K1C2N6</postalCode>\n  <country>US</country>\n  <company>Widgets Inc</company>\n  <phoneNumber>(555)555-5555</phoneNumber>\n  <email>someguy1232@fakeemail.net</email>\n</billTo>\n<shipTo>\n  <firstName>Longbob</firstName>\n  <lastName>Longsen</lastName>\n  <street1/>\n  <city/>\n  <state/>\n  <postalCode/>\n  <country/>\n  <email>someguy1232@fakeemail.net</email>\n</shipTo>\n<purchaseTotals>\n  <currency>USD</currency>\n  <grandTotalAmount>1.00</grandTotalAmount>\n</purchaseTotals>\n<card>\n  <accountNumber>4111111111111111</accountNumber>\n  <expirationMonth>09</expirationMonth>\n  <expirationYear>2016</expirationYear>\n  <cvNumber>123</cvNumber>\n  <cardType>001</cardType>\n</card>\n<ccAuthService run=\"true\"/>\n<ccCaptureService run=\"true\"/>\n<businessRules>\n  <ignoreAVSResult>true</ignoreAVSResult>\n  <ignoreCVResult>true</ignoreCVResult>\n</businessRules>\n    </requestMessage>\n  </s:Body>\n</s:Envelope>\n"
+    <- "<?xml version="1.0" encoding="UTF-8"?>\n<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">\n  <s:Header>\n    <wsse:Security s:mustUnderstand="1" xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">\n      <wsse:UsernameToken>\n        <wsse:Username>test</wsse:Username>\n        <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">DT3MZm8t8BsDZC9ZoKl592lvlRbQCcEXmEcYlh3gZObo6zTLQdf2m5klbqXlTq31iTJ5/Ctl/Z5LFE60GFnWGR8Cn5GeXuToZNbMHAvZKZ3sw9tC3Hf4U3Dj8XS2EI4OBvA1jcw38hd3VEm0ZZCAQEDZCC+AnM2ya9417zqynYjwgSyPOfh6CfMlSJKTgxQJLot7jFxYNvM/s9yBZoh37wJZUXdZ9Bf/CH6O3tKzafbyfn5rK25+GeYN9koih4O8c+PLQepzj5miiR7bikFzgEnsVs6LaZdLM8Sx/XVXk+60h02lg/a6KdS3kmUvnTGOihg5JUnl2JucBpH/P4aQYZ==</wsse:Password>\n      </wsse:UsernameToken>\n    </wsse:Security>\n  </s:Header>\n  <s:Body xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">\n    <requestMessage xmlns="urn:schemas-cybersource-com:transaction-data-1.109">\n      <merchantID>test</merchantID>\n      <merchantReferenceCode>734dda9bb6446f2f2638ab7faf34682f</merchantReferenceCode>\n      <clientLibrary>Ruby Active Merchant</clientLibrary>\n      <clientLibraryVersion>1.50.0</clientLibraryVersion>\n      <clientEnvironment>x86_64-darwin14.0</clientEnvironment>\n<billTo>\n  <firstName>Longbob</firstName>\n  <lastName>Longsen</lastName>\n  <street1>456 My Street</street1>\n  <street2>Apt 1</street2>\n  <city>Ottawa</city>\n  <state>NC</state>\n  <postalCode>K1C2N6</postalCode>\n  <country>US</country>\n  <company>Widgets Inc</company>\n  <phoneNumber>(555)555-5555</phoneNumber>\n  <email>someguy1232@fakeemail.net</email>\n</billTo>\n<shipTo>\n  <firstName>Longbob</firstName>\n  <lastName>Longsen</lastName>\n  <street1/>\n  <city/>\n  <state/>\n  <postalCode/>\n  <country/>\n  <email>someguy1232@fakeemail.net</email>\n</shipTo>\n<purchaseTotals>\n  <currency>USD</currency>\n  <grandTotalAmount>1.00</grandTotalAmount>\n</purchaseTotals>\n<card>\n  <accountNumber>4111111111111111</accountNumber>\n  <expirationMonth>09</expirationMonth>\n  <expirationYear>2016</expirationYear>\n  <cvNumber>123</cvNumber>\n  <cardType>001</cardType>\n</card>\n<ccAuthService run="true"/>\n<ccCaptureService run="true"/>\n<businessRules>\n  <ignoreAVSResult>true</ignoreAVSResult>\n  <ignoreCVResult>true</ignoreCVResult>\n</businessRules>\n    </requestMessage>\n  </s:Body>\n</s:Envelope>\n"
     -> "HTTP/1.1 200 OK\r\n"
     -> "Server: Apache-Coyote/1.1\r\n"
     -> "X-OPNET-Transaction-Trace: pid=18901,requestid=08985faa-d84a-4200-af8a-1d0a4d50f391\r\n"
@@ -1771,7 +1771,7 @@ class CyberSourceTest < Test::Unit::TestCase
     -> "Connection: close\r\n"
     -> "\r\n"
     reading 1572 bytes...
-    -> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n<soap:Header>\n<wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><wsu:Timestamp xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\" wsu:Id=\"Timestamp-513448318\"><wsu:Created>2015-06-05T13:01:57.974Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c=\"urn:schemas-cybersource-com:transaction-data-1.109\"><c:merchantReferenceCode>734dda9bb6446f2f2638ab7faf34682f</c:merchantReferenceCode><c:requestID>4335093172165000001515</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Ahj//wSR1gMBn41YRu/WIkGLlo3asGzCbBky4VOjHT9/xXHSYBT9/xXHSbSA+RQkhk0ky3SA3+mwMCcjrAYDPxqwjd+sKWXL</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>1.00</c:amount><c:authorizationCode>888888</c:authorizationCode><c:avsCode>X</c:avsCode><c:avsCodeRaw>I1</c:avsCodeRaw><c:cvCode/><c:authorizedDateTime>2015-06-05T13:01:57Z</c:authorizedDateTime><c:processorResponse>100</c:processorResponse><c:reconciliationID>19475060MAIKBSQG</c:reconciliationID></c:ccAuthReply><c:ccCaptureReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2015-06-05T13:01:57Z</c:requestDateTime><c:amount>1.00</c:amount><c:reconciliationID>19475060MAIKBSQG</c:reconciliationID></c:ccCaptureReply></c:replyMessage></soap:Body></soap:Envelope>"
+    -> "<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">\n<soap:Header>\n<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-513448318"><wsu:Created>2015-06-05T13:01:57.974Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.109"><c:merchantReferenceCode>734dda9bb6446f2f2638ab7faf34682f</c:merchantReferenceCode><c:requestID>4335093172165000001515</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Ahj//wSR1gMBn41YRu/WIkGLlo3asGzCbBky4VOjHT9/xXHSYBT9/xXHSbSA+RQkhk0ky3SA3+mwMCcjrAYDPxqwjd+sKWXL</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>1.00</c:amount><c:authorizationCode>888888</c:authorizationCode><c:avsCode>X</c:avsCode><c:avsCodeRaw>I1</c:avsCodeRaw><c:cvCode/><c:authorizedDateTime>2015-06-05T13:01:57Z</c:authorizedDateTime><c:processorResponse>100</c:processorResponse><c:reconciliationID>19475060MAIKBSQG</c:reconciliationID></c:ccAuthReply><c:ccCaptureReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2015-06-05T13:01:57Z</c:requestDateTime><c:amount>1.00</c:amount><c:reconciliationID>19475060MAIKBSQG</c:reconciliationID></c:ccCaptureReply></c:replyMessage></soap:Body></soap:Envelope>"
     read 1572 bytes
     Conn close
     PRE_SCRUBBED
@@ -1784,7 +1784,7 @@ class CyberSourceTest < Test::Unit::TestCase
     starting SSL for ics2wstest.ic3.com:443...
     SSL established
     <- "POST /commerce/1.x/transactionProcessor HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: ics2wstest.ic3.com\r\nContent-Length: 2459\r\n\r\n"
-    <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <s:Header>\n    <wsse:Security s:mustUnderstand=\"1\" xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">\n      <wsse:UsernameToken>\n        <wsse:Username>test</wsse:Username>\n        <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">[FILTERED]</wsse:Password>\n      </wsse:UsernameToken>\n    </wsse:Security>\n  </s:Header>\n  <s:Body xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n    <requestMessage xmlns=\"urn:schemas-cybersource-com:transaction-data-1.109\">\n      <merchantID>test</merchantID>\n      <merchantReferenceCode>734dda9bb6446f2f2638ab7faf34682f</merchantReferenceCode>\n      <clientLibrary>Ruby Active Merchant</clientLibrary>\n      <clientLibraryVersion>1.50.0</clientLibraryVersion>\n      <clientEnvironment>x86_64-darwin14.0</clientEnvironment>\n<billTo>\n  <firstName>Longbob</firstName>\n  <lastName>Longsen</lastName>\n  <street1>456 My Street</street1>\n  <street2>Apt 1</street2>\n  <city>Ottawa</city>\n  <state>NC</state>\n  <postalCode>K1C2N6</postalCode>\n  <country>US</country>\n  <company>Widgets Inc</company>\n  <phoneNumber>(555)555-5555</phoneNumber>\n  <email>someguy1232@fakeemail.net</email>\n</billTo>\n<shipTo>\n  <firstName>Longbob</firstName>\n  <lastName>Longsen</lastName>\n  <street1/>\n  <city/>\n  <state/>\n  <postalCode/>\n  <country/>\n  <email>someguy1232@fakeemail.net</email>\n</shipTo>\n<purchaseTotals>\n  <currency>USD</currency>\n  <grandTotalAmount>1.00</grandTotalAmount>\n</purchaseTotals>\n<card>\n  <accountNumber>[FILTERED]</accountNumber>\n  <expirationMonth>09</expirationMonth>\n  <expirationYear>2016</expirationYear>\n  <cvNumber>[FILTERED]</cvNumber>\n  <cardType>001</cardType>\n</card>\n<ccAuthService run=\"true\"/>\n<ccCaptureService run=\"true\"/>\n<businessRules>\n  <ignoreAVSResult>true</ignoreAVSResult>\n  <ignoreCVResult>true</ignoreCVResult>\n</businessRules>\n    </requestMessage>\n  </s:Body>\n</s:Envelope>\n"
+    <- "<?xml version="1.0" encoding="UTF-8"?>\n<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">\n  <s:Header>\n    <wsse:Security s:mustUnderstand="1" xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">\n      <wsse:UsernameToken>\n        <wsse:Username>test</wsse:Username>\n        <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">[FILTERED]</wsse:Password>\n      </wsse:UsernameToken>\n    </wsse:Security>\n  </s:Header>\n  <s:Body xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">\n    <requestMessage xmlns="urn:schemas-cybersource-com:transaction-data-1.109">\n      <merchantID>test</merchantID>\n      <merchantReferenceCode>734dda9bb6446f2f2638ab7faf34682f</merchantReferenceCode>\n      <clientLibrary>Ruby Active Merchant</clientLibrary>\n      <clientLibraryVersion>1.50.0</clientLibraryVersion>\n      <clientEnvironment>x86_64-darwin14.0</clientEnvironment>\n<billTo>\n  <firstName>Longbob</firstName>\n  <lastName>Longsen</lastName>\n  <street1>456 My Street</street1>\n  <street2>Apt 1</street2>\n  <city>Ottawa</city>\n  <state>NC</state>\n  <postalCode>K1C2N6</postalCode>\n  <country>US</country>\n  <company>Widgets Inc</company>\n  <phoneNumber>(555)555-5555</phoneNumber>\n  <email>someguy1232@fakeemail.net</email>\n</billTo>\n<shipTo>\n  <firstName>Longbob</firstName>\n  <lastName>Longsen</lastName>\n  <street1/>\n  <city/>\n  <state/>\n  <postalCode/>\n  <country/>\n  <email>someguy1232@fakeemail.net</email>\n</shipTo>\n<purchaseTotals>\n  <currency>USD</currency>\n  <grandTotalAmount>1.00</grandTotalAmount>\n</purchaseTotals>\n<card>\n  <accountNumber>[FILTERED]</accountNumber>\n  <expirationMonth>09</expirationMonth>\n  <expirationYear>2016</expirationYear>\n  <cvNumber>[FILTERED]</cvNumber>\n  <cardType>001</cardType>\n</card>\n<ccAuthService run="true"/>\n<ccCaptureService run="true"/>\n<businessRules>\n  <ignoreAVSResult>true</ignoreAVSResult>\n  <ignoreCVResult>true</ignoreCVResult>\n</businessRules>\n    </requestMessage>\n  </s:Body>\n</s:Envelope>\n"
     -> "HTTP/1.1 200 OK\r\n"
     -> "Server: Apache-Coyote/1.1\r\n"
     -> "X-OPNET-Transaction-Trace: pid=18901,requestid=08985faa-d84a-4200-af8a-1d0a4d50f391\r\n"
@@ -1795,7 +1795,7 @@ class CyberSourceTest < Test::Unit::TestCase
     -> "Connection: close\r\n"
     -> "\r\n"
     reading 1572 bytes...
-    -> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n<soap:Header>\n<wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><wsu:Timestamp xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\" wsu:Id=\"Timestamp-513448318\"><wsu:Created>2015-06-05T13:01:57.974Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c=\"urn:schemas-cybersource-com:transaction-data-1.109\"><c:merchantReferenceCode>734dda9bb6446f2f2638ab7faf34682f</c:merchantReferenceCode><c:requestID>4335093172165000001515</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Ahj//wSR1gMBn41YRu/WIkGLlo3asGzCbBky4VOjHT9/xXHSYBT9/xXHSbSA+RQkhk0ky3SA3+mwMCcjrAYDPxqwjd+sKWXL</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>1.00</c:amount><c:authorizationCode>888888</c:authorizationCode><c:avsCode>X</c:avsCode><c:avsCodeRaw>I1</c:avsCodeRaw><c:cvCode/><c:authorizedDateTime>2015-06-05T13:01:57Z</c:authorizedDateTime><c:processorResponse>100</c:processorResponse><c:reconciliationID>19475060MAIKBSQG</c:reconciliationID></c:ccAuthReply><c:ccCaptureReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2015-06-05T13:01:57Z</c:requestDateTime><c:amount>1.00</c:amount><c:reconciliationID>19475060MAIKBSQG</c:reconciliationID></c:ccCaptureReply></c:replyMessage></soap:Body></soap:Envelope>"
+    -> "<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">\n<soap:Header>\n<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-513448318"><wsu:Created>2015-06-05T13:01:57.974Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.109"><c:merchantReferenceCode>734dda9bb6446f2f2638ab7faf34682f</c:merchantReferenceCode><c:requestID>4335093172165000001515</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Ahj//wSR1gMBn41YRu/WIkGLlo3asGzCbBky4VOjHT9/xXHSYBT9/xXHSbSA+RQkhk0ky3SA3+mwMCcjrAYDPxqwjd+sKWXL</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>1.00</c:amount><c:authorizationCode>888888</c:authorizationCode><c:avsCode>X</c:avsCode><c:avsCodeRaw>I1</c:avsCodeRaw><c:cvCode/><c:authorizedDateTime>2015-06-05T13:01:57Z</c:authorizedDateTime><c:processorResponse>100</c:processorResponse><c:reconciliationID>19475060MAIKBSQG</c:reconciliationID></c:ccAuthReply><c:ccCaptureReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2015-06-05T13:01:57Z</c:requestDateTime><c:amount>1.00</c:amount><c:reconciliationID>19475060MAIKBSQG</c:reconciliationID></c:ccCaptureReply></c:replyMessage></soap:Body></soap:Envelope>"
     read 1572 bytes
     Conn close
     POST_SCRUBBED
@@ -1947,7 +1947,7 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def successful_card_credit_response
     <<~XML
-      <?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n<soap:Header>\n<wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><wsu:Timestamp xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\" wsu:Id=\"Timestamp-1360351593\"><wsu:Created>2019-05-16T20:25:05.234Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c=\"urn:schemas-cybersource-com:transaction-data-1.153\"><c:merchantReferenceCode>329b25a4540e05c731a4fb16112e4c72</c:merchantReferenceCode><c:requestID>5580383051126990804008</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Ahj/7wSTLoNfMt0KyZQoGxDdm1ctGjlmo0/RdCA4BUafouhAdpAfJHYQyaSZbpAdvSeAnJl0GvmW6FZMoUAA/SE0</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccCreditReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2019-05-16T20:25:05Z</c:requestDateTime><c:amount>1.00</c:amount><c:reconciliationID>73594493</c:reconciliationID></c:ccCreditReply><c:acquirerMerchantNumber>000123456789012</c:acquirerMerchantNumber><c:pos><c:terminalID>01234567</c:terminalID></c:pos></c:replyMessage></soap:Body></soap:Envelope>
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">\n<soap:Header>\n<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-1360351593"><wsu:Created>2019-05-16T20:25:05.234Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.153"><c:merchantReferenceCode>329b25a4540e05c731a4fb16112e4c72</c:merchantReferenceCode><c:requestID>5580383051126990804008</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Ahj/7wSTLoNfMt0KyZQoGxDdm1ctGjlmo0/RdCA4BUafouhAdpAfJHYQyaSZbpAdvSeAnJl0GvmW6FZMoUAA/SE0</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccCreditReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2019-05-16T20:25:05Z</c:requestDateTime><c:amount>1.00</c:amount><c:reconciliationID>73594493</c:reconciliationID></c:ccCreditReply><c:acquirerMerchantNumber>000123456789012</c:acquirerMerchantNumber><c:pos><c:terminalID>01234567</c:terminalID></c:pos></c:replyMessage></soap:Body></soap:Envelope>
     XML
   end
 

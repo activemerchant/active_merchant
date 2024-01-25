@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ReachGateway < Gateway
       self.test_url = 'https://checkout.rch.how/'
       self.live_url = 'https://checkout.rch.io/'
@@ -78,10 +78,10 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r(((MerchantId)[% \w]+[%]\d{2})[\w -]+), '\1[FILTERED]').
+          gsub(%r(((MerchantId)[% \w]+%\d{2})[\w -]+), '\1[FILTERED]').
           gsub(%r((signature=)[\w%]+), '\1[FILTERED]\2').
-          gsub(%r((Number%22%3A%22)[\d]+), '\1[FILTERED]\2').
-          gsub(%r((VerificationCode%22%3A)[\d]+), '\1[FILTERED]\2')
+          gsub(%r((Number%22%3A%22)\d+), '\1[FILTERED]\2').
+          gsub(%r((VerificationCode%22%3A)\d+), '\1[FILTERED]\2')
       end
 
       def refund(amount, authorization, options = {})
@@ -128,7 +128,7 @@ module ActiveMerchant #:nodoc:
           Items: [
             Sku: options[:item_sku] || SecureRandom.alphanumeric,
             ConsumerPrice: localized_amount(amount, currency),
-            Quantity: (options[:item_quantity] || 1)
+            Quantity: options[:item_quantity] || 1
           ]
         }
       end

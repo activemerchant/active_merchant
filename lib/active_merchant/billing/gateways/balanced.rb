@@ -1,7 +1,7 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information on Balanced visit https://www.balancedpayments.com
     # or visit #balanced on irc.freenode.net
     #
@@ -122,7 +122,7 @@ module ActiveMerchant #:nodoc:
                 split('|').
                 detect { |part| part.size > 0 }
           uri.split('/')[2]
-        when %r{\/}
+        when %r{/}
           identifier.split('/')[5]
         else
           identifier
@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        address = (options[:billing_address] || options[:address])
+        address = options[:billing_address] || options[:address]
         if address && address[:zip].present?
           post[:address] = {}
           post[:address][:line1] = address[:address1] if address[:address1]
@@ -184,9 +184,10 @@ module ActiveMerchant #:nodoc:
 
       def success_from(entity_name, raw_response)
         entity = (raw_response[entity_name] || []).first
-        if !entity
-          false
-        elsif (entity_name == 'refunds') && entity.include?('status')
+
+        return false unless entity
+
+        if (entity_name == 'refunds') && entity.include?('status')
           %w(succeeded pending).include?(entity['status'])
         elsif entity.include?('status')
           (entity['status'] == 'succeeded')
@@ -200,7 +201,7 @@ module ActiveMerchant #:nodoc:
       def message_from(raw_response)
         if raw_response['errors']
           error = raw_response['errors'].first
-          (error['additional'] || error['message'] || error['description'])
+          error['additional'] || error['message'] || error['description']
         else
           'Success'
         end
@@ -208,7 +209,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(entity_name, raw_response)
         entity = (raw_response[entity_name] || []).first
-        (entity && entity['id'])
+        entity && entity['id']
       end
 
       def parse(body)
@@ -252,7 +253,7 @@ module ActiveMerchant #:nodoc:
         )
 
         {
-          'Authorization' => 'Basic ' + Base64.encode64(@options[:login].to_s + ':').strip,
+          'Authorization' => "Basic #{Base64.encode64("#{@options[:login]}:").strip}",
           'User-Agent' => "Balanced/v1.1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Accept' => 'application/vnd.api+json;revision=1.1',
           'X-Balanced-User-Agent' => @@ua

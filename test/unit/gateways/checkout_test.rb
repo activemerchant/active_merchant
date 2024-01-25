@@ -97,7 +97,7 @@ class CheckoutTest < Test::Unit::TestCase
       @gateway.void('36919371|9c38d0506da258e216fa072197faaf37|1|CAD|100', @options)
     end.check_request do |_method, _endpoint, data, _headers|
       # Should only be one pair of track id tags.
-      assert_equal 2, data.scan(/trackid/).count
+      assert_equal 2, data.scan('trackid').count
     end.respond_with(successful_void_response)
 
     assert void
@@ -195,25 +195,25 @@ class CheckoutTest < Test::Unit::TestCase
 
   def successful_void_response
     <<-RESPONSE
-    <?xml version=\"1.0\" encoding=\"UTF-8\"?><response type=\"valid\"><result>Successful</result><responsecode>0</responsecode><tranid>36919479</tranid><authcode>447338</authcode><trackid>dd7bd9e2c8d79eb16c88a29fdfe846fe</trackid><merchantid>SBMTEST</merchantid></response>
+    <?xml version="1.0" encoding="UTF-8"?><response type="valid"><result>Successful</result><responsecode>0</responsecode><tranid>36919479</tranid><authcode>447338</authcode><trackid>dd7bd9e2c8d79eb16c88a29fdfe846fe</trackid><merchantid>SBMTEST</merchantid></response>
     RESPONSE
   end
 
   def failed_void_response
     <<-RESPONSE
-    <?xml version=\"1.0\" encoding=\"UTF-8\"?><response type=\"error\"><error_code_tag>EGP00165</error_code_tag><error_text>EGP00165-Invalid Track ID data</error_text></response>
+    <?xml version="1.0" encoding="UTF-8"?><response type="error"><error_code_tag>EGP00165</error_code_tag><error_text>EGP00165-Invalid Track ID data</error_text></response>
     RESPONSE
   end
 
   def successful_refund_response
     <<-RESPONSE
-    <?xml version=\"1.0\" encoding=\"UTF-8\"?><response type=\"valid\"><result>Successful</result><responsecode>0</responsecode><tranid>36919603</tranid><authcode>454744</authcode><trackid>91654e4413a1a1c0a7f4f84880984872</trackid><merchantid>SBMTEST</merchantid></response>
+    <?xml version="1.0" encoding="UTF-8"?><response type="valid"><result>Successful</result><responsecode>0</responsecode><tranid>36919603</tranid><authcode>454744</authcode><trackid>91654e4413a1a1c0a7f4f84880984872</trackid><merchantid>SBMTEST</merchantid></response>
     RESPONSE
   end
 
   def failed_refund_response
     <<-RESPONSE
-    <?xml version=\"1.0\" encoding=\"UTF-8\"?><response type=\"error\"><error_code_tag>EGP00165</error_code_tag><error_text>EGP00165-Invalid Track ID data</error_text></response>
+    <?xml version="1.0" encoding="UTF-8"?><response type="error"><error_code_tag>EGP00165</error_code_tag><error_text>EGP00165-Invalid Track ID data</error_text></response>
     RESPONSE
   end
 end

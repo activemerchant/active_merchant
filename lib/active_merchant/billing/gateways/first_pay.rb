@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class FirstPayGateway < Gateway
       self.live_url = 'https://secure.goemerchant.com/secure/gateway/xmlgateway.aspx'
 
@@ -140,15 +140,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        (
-          (response['status'] == '1') ||
+        (response['status'] == '1') ||
           (response['status1'] == '1')
-        )
       end
 
       def message_from(response)
         # Silly inconsistent gateway. Always make capitalized (but not all caps)
-        msg = (response['auth_response'] || response['response1'])
+        msg = response['auth_response'] || response['response1']
         msg&.downcase&.capitalize
       end
 

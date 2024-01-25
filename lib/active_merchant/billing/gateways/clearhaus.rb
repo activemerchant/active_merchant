@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ClearhausGateway < Gateway
       self.test_url = 'https://gateway.test.clearhaus.com'
       self.live_url = 'https://gateway.clearhaus.com'
@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
 
       def headers(api_key)
         {
-          'Authorization' => 'Basic ' + Base64.strict_encode64("#{api_key}:"),
+          'Authorization' => "Basic #{Base64.strict_encode64("#{api_key}:")}",
           'User-Agent'    => "Clearhaus ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
       end
@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        (response && (response['status']['code'] == 20000))
+        response && (response['status']['code'] == 20000)
       end
 
       def message_from(response)
@@ -189,7 +189,7 @@ module ActiveMerchant #:nodoc:
         if success_from(response)
           default_message
         else
-          (response['status']['message'] || default_message)
+          response['status']['message'] || default_message
         end
       end
 

@@ -175,7 +175,7 @@ module ActiveMerchant
         started = false
         lines.each do |line|
           if started
-            key, val = line.chomp.split(/=/, 2)
+            key, val = line.chomp.split('=', 2)
             params[key] = val unless FILTERED_PARAMS.include?(key)
           end
 

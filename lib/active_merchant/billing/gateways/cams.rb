@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CamsGateway < Gateway
       self.live_url = 'https://secure.centralams.com/gw/api/transact.php'
 
@@ -167,7 +167,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment)
         post[:ccnumber] = payment.number
-        post[:ccexp] = "#{payment.month.to_s.rjust(2, '0')}#{payment.year.to_s[-2..-1]}"
+        post[:ccexp] = "#{payment.month.to_s.rjust(2, '0')}#{payment.year.to_s[-2..]}"
         post[:cvv] = payment.verification_value
       end
 

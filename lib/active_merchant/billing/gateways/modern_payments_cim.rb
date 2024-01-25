@@ -1,6 +1,6 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-    class ModernPaymentsCimGateway < Gateway #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
+    class ModernPaymentsCimGateway < Gateway # :nodoc:
       self.test_url = 'https://secure.modpay.com/netservices/test/ModpayTest.asmx'
       self.live_url = 'https://secure.modpay.com/ws/modpay.asmx'
 
@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_key(action)
-        action == 'AuthorizeCreditCardPayment' ? :trans_id : "#{action.underscore}_result".to_sym
+        action == 'AuthorizeCreditCardPayment' ? :trans_id : :"#{action.underscore}_result"
       end
 
       def successful?(action, response)

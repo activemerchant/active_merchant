@@ -24,7 +24,7 @@ Metrics/ClassLength:
 Metrics/ModuleLength:
   Enabled: false
 
-Layout/AlignParameters:
+Layout/ParameterAlignment:
   EnforcedStyle: with_fixed_indentation
 
 Layout/DotPosition:
@@ -33,10 +33,23 @@ Layout/DotPosition:
 Layout/CaseIndentation:
   EnforcedStyle: end
 
-Layout/IndentFirstHashElement:
+Layout/FirstHashElementIndentation:
   EnforcedStyle: consistent
 
 Naming/PredicateName:
   Exclude:
     - "lib/active_merchant/billing/gateways/payeezy.rb"
     - 'lib/active_merchant/billing/gateways/airwallex.rb'
+
+Naming/VariableNumber:
+  Enabled: false
+
+Style/OptionalBooleanParameter:
+  Enabled: false
+
+Lint/MissingSuper:
+  Enabled: false
+
+Lint/FloatComparison:
+  Exclude: 
+    - 'lib/active_merchant/billing/gateways/payu_latam.rb'

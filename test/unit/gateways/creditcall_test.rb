@@ -173,61 +173,61 @@ class CreditcallTest < Test::Unit::TestCase
 
   def successful_purchase_response
     %(
-    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>0999da90-b342-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814143753</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814183753</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity></Result><CardDetails><CardReference>c2c5fa63-3dd1-da11-8531-01422187e37</CardReference><CardHash>8CtuNPQnryhFt6amPWtp6PLZYXI=</CardHash><PAN>341111xxxxx1002</PAN><ExpiryDate format=”yyMM”>2012</ExpiryDate><CardScheme><Description>AMEX</Description></CardScheme></CardDetails></Response>
+    <?xml version="1.0" encoding="utf-8"?><Response type="CardEaseXML" version="1.0.0"><TransactionDetails><CardEaseReference>0999da90-b342-e511-b302-00505692354f</CardEaseReference><LocalDateTime format="yyyyMMddHHmmss">20150814143753</LocalDateTime><UTC format="yyyyMMddHHmmss">20150814183753</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity></Result><CardDetails><CardReference>c2c5fa63-3dd1-da11-8531-01422187e37</CardReference><CardHash>8CtuNPQnryhFt6amPWtp6PLZYXI=</CardHash><PAN>341111xxxxx1002</PAN><ExpiryDate format=”yyMM”>2012</ExpiryDate><CardScheme><Description>AMEX</Description></CardScheme></CardDetails></Response>
     )
   end
 
   def failed_purchase_response
     %(
-    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>55ec5427-b642-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814145622</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814185622</UTC></TransactionDetails><Result><LocalResult>1</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity><Errors><Error code=\"1001\">ExpiredCard</Error></Errors></Result><CardDetails><CardReference>2468f656-9242-e511-ab11-002219649f24</CardReference><CardHash>WSknCJJIvbog334uwCNWUKE9ZbI=</CardHash><PAN>xxxxxxxxxxxx2220</PAN><ExpiryDate format=\"yyMM\">1609</ExpiryDate><CardScheme><Description>VISA</Description></CardScheme></CardDetails></Response>"
+    <?xml version="1.0" encoding="utf-8"?><Response type="CardEaseXML" version="1.0.0"><TransactionDetails><CardEaseReference>55ec5427-b642-e511-b302-00505692354f</CardEaseReference><LocalDateTime format="yyyyMMddHHmmss">20150814145622</LocalDateTime><UTC format="yyyyMMddHHmmss">20150814185622</UTC></TransactionDetails><Result><LocalResult>1</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity><Errors><Error code="1001">ExpiredCard</Error></Errors></Result><CardDetails><CardReference>2468f656-9242-e511-ab11-002219649f24</CardReference><CardHash>WSknCJJIvbog334uwCNWUKE9ZbI=</CardHash><PAN>xxxxxxxxxxxx2220</PAN><ExpiryDate format="yyMM">1609</ExpiryDate><CardScheme><Description>VISA</Description></CardScheme></CardDetails></Response>"
     )
   end
 
   def successful_authorize_response
     %(
-    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>86dd2c0f-b742-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814150251</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814190251</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthCode>5ECC4B</AuthCode><AuthorisationEntity>Unknown</AuthorisationEntity><AmountOnlineApproved unit=\"major\">1.00</AmountOnlineApproved></Result><CardDetails><CardReference>ed79bf2f-6d3c-e511-ab11-002219649f24</CardReference><CardHash>YO5CqO1QQbHbMaFRuSV2vVq7uqQ=</CardHash><PAN>xxxxxxxxxxxx2224</PAN><ExpiryDate format=\"yyMM\">1609</ExpiryDate><CardScheme><Description>VISA</Description></CardScheme><ICC type=\"EMV\"><ICCTag tagid=\"0x9F02\">000000000100</ICCTag></ICC></CardDetails></Response>
+    <?xml version="1.0" encoding="utf-8"?><Response type="CardEaseXML" version="1.0.0"><TransactionDetails><CardEaseReference>86dd2c0f-b742-e511-b302-00505692354f</CardEaseReference><LocalDateTime format="yyyyMMddHHmmss">20150814150251</LocalDateTime><UTC format="yyyyMMddHHmmss">20150814190251</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthCode>5ECC4B</AuthCode><AuthorisationEntity>Unknown</AuthorisationEntity><AmountOnlineApproved unit="major">1.00</AmountOnlineApproved></Result><CardDetails><CardReference>ed79bf2f-6d3c-e511-ab11-002219649f24</CardReference><CardHash>YO5CqO1QQbHbMaFRuSV2vVq7uqQ=</CardHash><PAN>xxxxxxxxxxxx2224</PAN><ExpiryDate format="yyMM">1609</ExpiryDate><CardScheme><Description>VISA</Description></CardScheme><ICC type="EMV"><ICCTag tagid="0x9F02">000000000100</ICCTag></ICC></CardDetails></Response>
     )
   end
 
   def failed_authorize_response
     %(
-    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>877c147c-b742-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814150556</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814190556</UTC></TransactionDetails><Result><LocalResult>1</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity><Errors><Error code=\"1001\">ExpiredCard</Error></Errors></Result><CardDetails><CardReference>2468f656-9242-e511-ab11-002219649f24</CardReference><CardHash>WSknCJJIvbog334uwCNWUKE9ZbI=</CardHash><PAN>xxxxxxxxxxxx2220</PAN><ExpiryDate format=\"yyMM\">1609</ExpiryDate><CardScheme><Description>VISA</Description></CardScheme></CardDetails></Response>
+    <?xml version="1.0" encoding="utf-8"?><Response type="CardEaseXML" version="1.0.0"><TransactionDetails><CardEaseReference>877c147c-b742-e511-b302-00505692354f</CardEaseReference><LocalDateTime format="yyyyMMddHHmmss">20150814150556</LocalDateTime><UTC format="yyyyMMddHHmmss">20150814190556</UTC></TransactionDetails><Result><LocalResult>1</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity><Errors><Error code="1001">ExpiredCard</Error></Errors></Result><CardDetails><CardReference>2468f656-9242-e511-ab11-002219649f24</CardReference><CardHash>WSknCJJIvbog334uwCNWUKE9ZbI=</CardHash><PAN>xxxxxxxxxxxx2220</PAN><ExpiryDate format="yyMM">1609</ExpiryDate><CardScheme><Description>VISA</Description></CardScheme></CardDetails></Response>
     )
   end
 
   def successful_capture_response
     %(
-    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>607c64ca-b742-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814150811</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814190811</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity></Result></Response>
+    <?xml version="1.0" encoding="utf-8"?><Response type="CardEaseXML" version="1.0.0"><TransactionDetails><CardEaseReference>607c64ca-b742-e511-b302-00505692354f</CardEaseReference><LocalDateTime format="yyyyMMddHHmmss">20150814150811</LocalDateTime><UTC format="yyyyMMddHHmmss">20150814190811</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity></Result></Response>
     )
   end
 
   def failed_capture_response
     %(
-    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>c4e68fe7-b742-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814150903</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814190903</UTC></TransactionDetails><Result><LocalResult>1</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity><Errors><Error code=\"2101\">CardEaseReferenceInvalid</Error></Errors></Result></Response>
+    <?xml version="1.0" encoding="utf-8"?><Response type="CardEaseXML" version="1.0.0"><TransactionDetails><CardEaseReference>c4e68fe7-b742-e511-b302-00505692354f</CardEaseReference><LocalDateTime format="yyyyMMddHHmmss">20150814150903</LocalDateTime><UTC format="yyyyMMddHHmmss">20150814190903</UTC></TransactionDetails><Result><LocalResult>1</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity><Errors><Error code="2101">CardEaseReferenceInvalid</Error></Errors></Result></Response>
     )
   end
 
   def successful_refund_response
     %(
-    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>c8c758b9-b942-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814152200</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814192200</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthCode>AE9111</AuthCode><AuthorisationEntity>Unknown</AuthorisationEntity></Result><CardDetails><CardReference>ed79bf2f-6d3c-e511-ab11-002219649f24</CardReference><CardHash>zLVjUTo7jcI8Z+8hKKd5nqqn4a0=</CardHash><PAN>400010xxxxxx2224</PAN><ExpiryDate format=\"yyMM\">1609</ExpiryDate></CardDetails></Response>
+    <?xml version="1.0" encoding="utf-8"?><Response type="CardEaseXML" version="1.0.0"><TransactionDetails><CardEaseReference>c8c758b9-b942-e511-b302-00505692354f</CardEaseReference><LocalDateTime format="yyyyMMddHHmmss">20150814152200</LocalDateTime><UTC format="yyyyMMddHHmmss">20150814192200</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthCode>AE9111</AuthCode><AuthorisationEntity>Unknown</AuthorisationEntity></Result><CardDetails><CardReference>ed79bf2f-6d3c-e511-ab11-002219649f24</CardReference><CardHash>zLVjUTo7jcI8Z+8hKKd5nqqn4a0=</CardHash><PAN>400010xxxxxx2224</PAN><ExpiryDate format="yyMM">1609</ExpiryDate></CardDetails></Response>
     )
   end
 
   def failed_refund_response
     %(
-    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>0732d424-ba42-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814152505</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814192505</UTC></TransactionDetails><Result><LocalResult>1</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity><Errors><Error code=\"2101\">CardEaseReferenceInvalid</Error></Errors></Result></Response>
+    <?xml version="1.0" encoding="utf-8"?><Response type="CardEaseXML" version="1.0.0"><TransactionDetails><CardEaseReference>0732d424-ba42-e511-b302-00505692354f</CardEaseReference><LocalDateTime format="yyyyMMddHHmmss">20150814152505</LocalDateTime><UTC format="yyyyMMddHHmmss">20150814192505</UTC></TransactionDetails><Result><LocalResult>1</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity><Errors><Error code="2101">CardEaseReferenceInvalid</Error></Errors></Result></Response>
     )
   end
 
   def successful_void_response
     %(
-    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>170c0e63-ba42-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814152646</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814192646</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity></Result></Response>
+    <?xml version="1.0" encoding="utf-8"?><Response type="CardEaseXML" version="1.0.0"><TransactionDetails><CardEaseReference>170c0e63-ba42-e511-b302-00505692354f</CardEaseReference><LocalDateTime format="yyyyMMddHHmmss">20150814152646</LocalDateTime><UTC format="yyyyMMddHHmmss">20150814192646</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity></Result></Response>
     )
   end
 
   def failed_void_response
     %(
-    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>e5b1b672-ba42-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814152716</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814192716</UTC></TransactionDetails><Result><LocalResult>1</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity><Errors><Error code=\"2101\">CardEaseReferenceInvalid</Error></Errors></Result></Response>
+    <?xml version="1.0" encoding="utf-8"?><Response type="CardEaseXML" version="1.0.0"><TransactionDetails><CardEaseReference>e5b1b672-ba42-e511-b302-00505692354f</CardEaseReference><LocalDateTime format="yyyyMMddHHmmss">20150814152716</LocalDateTime><UTC format="yyyyMMddHHmmss">20150814192716</UTC></TransactionDetails><Result><LocalResult>1</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity><Errors><Error code="2101">CardEaseReferenceInvalid</Error></Errors></Result></Response>
     )
   end
 end

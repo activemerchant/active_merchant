@@ -2,8 +2,8 @@ require 'active_merchant/billing/gateways/paypal/paypal_common_api'
 require 'active_merchant/billing/gateways/paypal/paypal_recurring_api'
 require 'active_merchant/billing/gateways/paypal_express'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PaypalGateway < Gateway
       include PaypalCommonAPI
       include PaypalRecurringApi
@@ -56,10 +56,10 @@ module ActiveMerchant #:nodoc:
         currency_code = options[:currency] || currency(money)
 
         xml = Builder::XmlMarkup.new indent: 2
-        xml.tag! transaction_type + 'Req', 'xmlns' => PAYPAL_NAMESPACE do
-          xml.tag! transaction_type + 'Request', 'xmlns:n2' => EBAY_NAMESPACE do
+        xml.tag! "#{transaction_type}Req", 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! "#{transaction_type}Request", 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', api_version(options)
-            xml.tag! 'n2:' + transaction_type + 'RequestDetails' do
+            xml.tag! "n2:#{transaction_type}RequestDetails" do
               xml.tag! 'n2:ReferenceID', reference_id if transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:PaymentAction', action
               add_descriptors(xml, options)
@@ -119,13 +119,15 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      CARD_TYPE = {
+        'visa' => 'Visa',
+        'master' => 'MasterCard',
+        'discover' => 'Discover',
+        'american_express' => 'Amex'
+      }
+
       def credit_card_type(type)
-        case type
-        when 'visa'             then 'Visa'
-        when 'master'           then 'MasterCard'
-        when 'discover'         then 'Discover'
-        when 'american_express' then 'Amex'
-        end
+        CARD_TYPE[type]
       end
 
       def build_response(success, message, response, options = {})

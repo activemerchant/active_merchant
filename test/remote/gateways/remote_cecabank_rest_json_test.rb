@@ -157,7 +157,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
   private
 
   def get_response_params(transcript)
-    response = JSON.parse(transcript.gsub(%r(\\\")i, "'").scan(/{[^>]*}/).first.gsub("'", '"'))
+    response = JSON.parse(transcript.gsub(%r(\\")i, "'").scan(/{[^>]*}/).first.gsub("'", '"'))
     JSON.parse(Base64.decode64(response['parametros']))
   end
 

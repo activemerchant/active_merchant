@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class Flo2cashGateway < Gateway
       self.display_name = 'Flo2Cash'
       self.homepage_url = 'http://www.flo2cash.co.nz/'
@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        if (billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = options[:billing_address] || options[:address])
           post[:Email] = billing_address[:email]
         end
       end
@@ -161,7 +161,7 @@ module ActiveMerchant #:nodoc:
       def parse(body, action)
         response = {}
         xml = REXML::Document.new(body)
-        root = (REXML::XPath.first(xml, "//#{action}Response") || REXML::XPath.first(xml, '//detail'))
+        root = REXML::XPath.first(xml, "//#{action}Response") || REXML::XPath.first(xml, '//detail')
 
         root.elements.to_a.each do |node|
           parse_element(response, node)

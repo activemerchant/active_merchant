@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class NmiGateway < Gateway
       include Empty
 
@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
         post[:orderdescription] = options[:description]
         post[:currency] = options[:currency] || currency(money)
         post[:billing_method] = 'recurring' if options[:recurring]
-        if (dup_seconds = (options[:dup_seconds] || self.class.duplicate_window))
+        if (dup_seconds = options[:dup_seconds] || self.class.duplicate_window)
           post[:dup_seconds] = dup_seconds
         end
       end
@@ -268,7 +268,7 @@ module ActiveMerchant #:nodoc:
 
       def add_merchant_defined_fields(post, options)
         (1..20).each do |each|
-          key = "merchant_defined_field_#{each}".to_sym
+          key = :"merchant_defined_field_#{each}"
           post[key] = options[key] if options[key]
         end
       end
@@ -334,8 +334,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        headers = { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
-        headers
+        { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
       end
 
       def post_data(action, params)
@@ -347,7 +346,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[CGI::parse(body).map { |k, v| [k.intern, v.first] }]
+        CGI::parse(body).to_h { |k, v| [k.intern, v.first] }
       end
 
       def success_from(response)

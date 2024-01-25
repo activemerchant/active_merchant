@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CommercegateGateway < Gateway
       self.test_url = self.live_url = 'https://secure.commercegate.com/gateway/nvp'
 
@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         results = {}
 
-        body.split(/\&/).each do |pair|
+        body.split('&').each do |pair|
           key, val = pair.split(%r{=})
           results[key] = CGI.unescape(val)
         end
@@ -127,8 +127,8 @@ module ActiveMerchant #:nodoc:
           response['returnText']
         else
           'Invalid response received from the CommerceGate API. ' \
-          'Please contact CommerceGate support if you continue to receive this message. ' \
-          "(The raw response returned by the API was #{response.inspect})"
+            'Please contact CommerceGate support if you continue to receive this message. ' \
+            "(The raw response returned by the API was #{response.inspect})"
         end
       end
 

@@ -12,7 +12,7 @@
 # SupportedHashRocketStyles: key, separator, table
 # SupportedColonStyles: key, separator, table
 # SupportedLastArgumentHashStyles: always_inspect, always_ignore, ignore_implicit, ignore_explicit
-Layout/AlignHash:
+Layout/HashAlignment:
   Enabled: false
 
 # Offense count: 150
@@ -26,7 +26,7 @@ Lint/FormatParameterMismatch:
     - 'test/unit/credit_card_formatting_test.rb'
 
 # Offense count: 2
-Lint/HandleExceptions:
+Lint/SuppressedException:
   Exclude:
     - 'lib/active_merchant/billing/gateways/mastercard.rb'
     - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
@@ -99,7 +99,7 @@ Naming/MethodName:
 # Offense count: 14
 # Configuration parameters: MinNameLength, AllowNamesEndingInNumbers, AllowedNames, ForbiddenNames.
 # AllowedNames: io, id, to, by, on, in, at, ip, db
-Naming/UncommunicativeMethodParamName:
+Naming/MethodParameterName:
   Exclude:
     - 'lib/active_merchant/billing/gateways/blue_snap.rb'
     - 'lib/active_merchant/billing/gateways/cyber_source.rb'
@@ -171,13 +171,6 @@ Style/BarePercentLiterals:
 # FunctionalMethods: let, let!, subject, watch
 # IgnoredMethods: lambda, proc, it
 Style/BlockDelimiters:
-  Enabled: false
-
-# Offense count: 440
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: braces, no_braces, context_dependent
-Style/BracesAroundHashParameters:
   Enabled: false
 
 # Offense count: 2
@@ -381,17 +374,7 @@ Style/FormatString:
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: annotated, template, unannotated
 Style/FormatStringToken:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/redsys.rb'
-    - 'lib/active_merchant/connection.rb'
-    - 'lib/active_merchant/network_connection_retries.rb'
-    - 'test/remote/gateways/remote_balanced_test.rb'
-    - 'test/remote/gateways/remote_openpay_test.rb'
-    - 'test/unit/gateways/balanced_test.rb'
-    - 'test/unit/gateways/elavon_test.rb'
-    - 'test/unit/gateways/exact_test.rb'
-    - 'test/unit/gateways/firstdata_e4_test.rb'
-    - 'test/unit/gateways/safe_charge_test.rb'
+  Enabled: false
 
 # Offense count: 679
 # Cop supports --auto-correct.
@@ -736,3 +719,71 @@ Style/ZeroLengthPredicate:
 Metrics/LineLength:
   Max: 2602
 
+Layout/SpaceBeforeBrackets: # new in 1.7
+  Enabled: true
+Lint/AmbiguousAssignment: # new in 1.7
+  Enabled: true
+Lint/DeprecatedConstants: # new in 1.8
+  Enabled: true
+Lint/DuplicateBranch: # new in 1.3
+  Enabled: true
+  Exclude:
+    - 'lib/active_merchant/billing/gateways/qvalent.rb'
+Lint/DuplicateRegexpCharacterClassElement: # new in 1.1
+  Enabled: true
+Lint/EmptyBlock: # new in 1.1
+  Enabled: true
+  Exclude: 
+    - 'lib/active_merchant/billing/gateways/authorize_net.rb'
+Lint/EmptyClass: # new in 1.3
+  Enabled: true
+Lint/LambdaWithoutLiteralBlock: # new in 1.8
+  Enabled: true
+Lint/NoReturnInBeginEndBlocks: # new in 1.2
+  Enabled: true
+Lint/NumberedParameterAssignment: # new in 1.9
+  Enabled: true
+Lint/OrAssignmentToConstant: # new in 1.9
+  Enabled: true
+Lint/RedundantDirGlobSort: # new in 1.8
+  Enabled: true
+Lint/SymbolConversion: # new in 1.9
+  Enabled: true
+Lint/ToEnumArguments: # new in 1.1
+  Enabled: true
+Lint/TripleQuotes: # new in 1.9
+  Enabled: true
+Lint/UnexpectedBlockArity: # new in 1.5
+  Enabled: true
+Lint/UnmodifiedReduceAccumulator: # new in 1.1
+  Enabled: true
+Style/ArgumentsForwarding: # new in 1.1
+  Enabled: true
+Style/CollectionCompact: # new in 1.2
+  Enabled: true
+Style/DocumentDynamicEvalDefinition: # new in 1.1
+  Enabled: true
+  Exclude:
+    - 'lib/active_merchant/billing/credit_card.rb'
+    - 'lib/active_merchant/billing/response.rb'
+Style/EndlessMethod: # new in 1.8
+  Enabled: true
+Style/HashConversion: # new in 1.10
+  Enabled: true
+  Exclude:
+    - 'lib/active_merchant/billing/gateways/payscout.rb'
+    - 'lib/active_merchant/billing/gateways/pac_net_raven.rb'
+Style/HashExcept: # new in 1.7
+  Enabled: true
+Style/IfWithBooleanLiteralBranches: # new in 1.9
+  Enabled: true
+Style/NegatedIfElseCondition: # new in 1.2
+  Enabled: true
+Style/NilLambda: # new in 1.3
+  Enabled: true
+Style/RedundantArgument: # new in 1.4
+  Enabled: true
+Style/StringChars: # new in 1.12
+  Enabled: true
+Style/SwapValues: # new in 1.1
+  Enabled: true

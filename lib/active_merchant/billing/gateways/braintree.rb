@@ -1,7 +1,7 @@
 require 'active_merchant/billing/gateways/braintree/braintree_common'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class BraintreeGateway < Gateway
       include BraintreeCommon
 

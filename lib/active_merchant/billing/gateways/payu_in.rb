@@ -1,7 +1,7 @@
 # encoding: utf-8
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayuInGateway < Gateway
       self.test_url = 'https://test.payu.in/_payment'
       self.live_url = 'https://secure.payu.in/_payment'
@@ -163,7 +163,7 @@ module ActiveMerchant #:nodoc:
           when :numeric
             value.gsub(/[^0-9]/, '')
           when :text
-            value.gsub(/[^A-Za-z0-9@\-_\/\. ]/, '')
+            value.gsub(/[^A-Za-z0-9@\-_\/. ]/, '')
           when nil
             value
           else
@@ -223,14 +223,14 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response)
         if response['result_status']
-          (response['status'] == 'success' && response['result_status'] == 'success')
+          response['status'] == 'success' && response['result_status'] == 'success'
         else
-          (response['status'] == 'success' || response['status'].to_s == '1')
+          response['status'] == 'success' || response['status'].to_s == '1'
         end
       end
 
       def message_from(response)
-        (response['error_message'] || response['error'] || response['msg'])
+        response['error_message'] || response['error'] || response['msg']
       end
 
       def authorization_from(response)

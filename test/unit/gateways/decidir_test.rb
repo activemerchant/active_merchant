@@ -557,7 +557,7 @@ class DecidirTest < Test::Unit::TestCase
 
   def failed_purchase_with_invalid_field_response
     %(
-      {\"error_type\":\"invalid_request_error\",\"validation_errors\":[{\"code\":\"invalid_param\",\"param\":\"installments\"}]}    )
+      {"error_type":"invalid_request_error","validation_errors":[{"code":"invalid_param","param":"installments"}]}    )
   end
 
   def successful_authorize_response
@@ -681,19 +681,19 @@ class DecidirTest < Test::Unit::TestCase
 
   def unique_purchase_error_response
     %{
-      {\"error\":{\"error_type\":\"invalid_request_error\",\"validation_errors\":[{\"code\":\"invalid_param\",\"param\":\"payment_type\"}]}}
+      {"error":{"error_type":"invalid_request_error","validation_errors":[{"code":"invalid_param","param":"payment_type"}]}}
     }
   end
 
   def unique_void_error_response
     %{
-      {\"error_type\":\"invalid_status_error\",\"validation_errors\":{\"status\":\"refunded\"}}
+      {"error_type":"invalid_status_error","validation_errors":{"status":"refunded"}}
     }
   end
 
   def error_response_with_error_code
     %{
-      {\"error\":{\"type\":\"invalid_number\",\"reason\":{\"id\":14,\"description\":\"TARJETA INVALIDA\",\"additional_description\":\"\"}}}
+      {"error":{"type":"invalid_number","reason":{"id":14,"description":"TARJETA INVALIDA","additional_description":""}}}
     }
   end
 end

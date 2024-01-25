@@ -1,8 +1,8 @@
 require 'nokogiri'
 require 'securerandom'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class VantivExpressGateway < Gateway
       self.test_url = 'https://certtransaction.elementexpress.com'
       self.live_url = 'https://transaction.elementexpress.com'
@@ -308,11 +308,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(xml, payment)
-        if payment.is_a?(String)
+        case payment
+        when String
           add_payment_account_id(xml, payment)
-        elsif payment.is_a?(Check)
+        when Check
           add_echeck(xml, payment)
-        elsif payment.is_a?(NetworkTokenizationCreditCard)
+        when NetworkTokenizationCreditCard
           add_network_tokenization_card(xml, payment)
         else
           add_credit_card(xml, payment)
@@ -351,7 +352,7 @@ module ActiveMerchant #:nodoc:
         return nil unless payment.is_a?(NetworkTokenizationCreditCard)
 
         if (eci = payment.eci)
-          eci = eci[0] == '0' ? eci.sub!(/^0/, '') : eci
+          eci = eci.sub!(/^0/, '') if eci[0] == '0'
           return eci
         else
           payment.brand == 'american_express' ? '9' : '6'
@@ -551,10 +552,8 @@ module ActiveMerchant #:nodoc:
         CVVResult.new(response['card']['cvvresponsecode']) if response['card']
       end
 
-      def build_xml_request
-        builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
-          yield(xml)
-        end
+      def build_xml_request(&block)
+        builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8', &block)
 
         builder.to_xml
       end
@@ -562,9 +561,10 @@ module ActiveMerchant #:nodoc:
       def payment_account_type(payment)
         return 0 unless payment.is_a?(Check)
 
-        if payment.account_type == 'checking'
+        case payment.account_type
+        when 'checking'
           1
-        elsif payment.account_type == 'savings'
+        when 'savings'
           2
         else
           3

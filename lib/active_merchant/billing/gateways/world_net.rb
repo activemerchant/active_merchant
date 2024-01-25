@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # See https://helpdesk.worldnettps.com/support/solutions/articles/1000167298-integrator-guide
     class WorldNetGateway < Gateway
       self.test_url = 'https://testpayments.worldnettps.com/merchant/xmlpayment'
@@ -251,7 +251,7 @@ module ActiveMerchant #:nodoc:
 
       def build_signature(parameters)
         str = parameters[:terminalid]
-        str += (parameters[:uniqueref] || parameters[:orderid])
+        str += parameters[:uniqueref] || parameters[:orderid]
         str += (parameters[:amount].to_s + parameters[:datetime])
         Digest::MD5.hexdigest(str + @options[:secret])
       end

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class OpenpayGateway < Gateway
       class_attribute :mx_live_url, :mx_test_url
       class_attribute :co_live_url, :co_test_url
@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
       def add_address(card, options)
         return unless card.kind_of?(Hash)
 
-        if address = (options[:billing_address] || options[:address])
+        if address = options[:billing_address] || options[:address]
           card[:address] = {
             line1: address[:address1],
             line2: address[:address2],
@@ -185,7 +185,7 @@ module ActiveMerchant #:nodoc:
       def headers(options = {})
         {
           'Content-Type' => 'application/json',
-          'Authorization' => 'Basic ' + Base64.strict_encode64(@api_key.to_s + ':').strip,
+          'Authorization' => "Basic #{Base64.strict_encode64("#{@api_key}:").strip}",
           'User-Agent' => "Openpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'X-Openpay-Client-User-Agent' => user_agent
         }
@@ -211,7 +211,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def http_request(method, resource, parameters = {}, options = {})
-        url = gateway_url(options) + @merchant_id + '/' + resource
+        url = "#{gateway_url(options)}#{@merchant_id}/#{resource}"
         raw_response = nil
         begin
           raw_response = ssl_request(method, url, (parameters ? parameters.to_json : nil), headers(options))

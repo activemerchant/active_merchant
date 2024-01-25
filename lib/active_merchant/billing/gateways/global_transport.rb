@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class GlobalTransportGateway < Gateway
       self.test_url = 'https://certapia.globalpay.com/GlobalPay/transact.asmx/ProcessCreditCard'
       self.live_url = 'https://api.globalpay.com/GlobalPay/transact.asmx/ProcessCreditCard'
@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_address(post, options)
-        if address = (options[:billing_address] || options[:address])
+        if address = options[:billing_address] || options[:address]
           post[:Street] = address[:address1]
           post[:Zip] = address[:zip]
         end
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, money, options)
-        currency = (options[:currency] || currency(money))
+        currency = options[:currency] || currency(money)
 
         post[:Amount] = localized_amount(money, currency)
         post[:InvNum] = truncate(options[:order_id], 16)

@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-module ActiveMerchant #:nodoc:
+module ActiveMerchant # :nodoc:
   class InvalidCountryCodeError < StandardError
   end
 
@@ -9,6 +9,7 @@ module ActiveMerchant #:nodoc:
 
   class CountryCode
     attr_reader :value, :format
+
     def initialize(value)
       @value = value.to_s.upcase
       detect_format

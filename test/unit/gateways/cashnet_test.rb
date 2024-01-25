@@ -223,13 +223,13 @@ class Cashnet < Test::Unit::TestCase
       -> "Cache-Control: private\r\n"
       -> "Location: https://train.cashnet.com/cashneti/Gateway/htmlgw.aspx?client=EMARKETVENDOR_DEMO&command=SALE&merchant=GiveCorpGW&operator=givecorp&password=14givecorps&station=WEB&custcode=ActiveMerchant%2f1.76.0&cardno=5454545454545454&cid=123&expdate=1215&card_name_g=Longbob+Longsen&fname=Longbob&lname=Longsen&order_number=c440ec8493f215d21c8a993ceae30129&itemcode=FEE&addr_g=456+My+Street%2cApt+1&city_g=Ottawa&state_g=ON&zip_g=K1C2N6&email_g=&amount=1.00\r\n"
       -> "Set-Cookie: ASP.NET_SessionId=; path=/; HttpOnly\r\n"
-      -> "P3P: CP=\"NOI DSP COR NID NOR\"\r\n"
+      -> "P3P: CP="NOI DSP COR NID NOR"\r\n"
       -> "Set-Cookie: BNI_persistence=0000000000000000000000004d79da0a00005000; Path=/\r\n"
       -> "Strict-Transport-Security: max-age=31536000\r\n"
       -> "\r\n"
       -> "282\r\n"
       reading 642 bytes...
-      -> "<html><head><title>Object moved</title></head><body>\r\n<h2>Object moved to <a href=\"https://train.cashnet.com/cashneti/Gateway/htmlgw.aspx?client=EMARKETVENDOR_DEMO&amp;command=SALE&amp;merchant=GiveCorpGW&amp;operator=givecorp&amp;password=14givecorps&amp;station=WEB&amp;custcode=ActiveMerchant%2f1.76.0&amp;cardno=5454545454545454&amp;cid=123&amp;expdate=1215&amp;card_name_g=Longbob+Longsen&amp;fname=Longbob&amp;lname=Longsen&amp;order_number=c440ec8493f215d21c8a993ceae30129&amp;itemcode=FEE&amp;addr_g=456+My+Street%2cApt+1&amp;city_g=Ottawa&amp;state_g=ON&amp;zip_g=K1C2N6&amp;email_g=&amp;amount=1.00\">here</a>.</h2>\r\n</body></html>\r\n"
+      -> "<html><head><title>Object moved</title></head><body>\r\n<h2>Object moved to <a href="https://train.cashnet.com/cashneti/Gateway/htmlgw.aspx?client=EMARKETVENDOR_DEMO&amp;command=SALE&amp;merchant=GiveCorpGW&amp;operator=givecorp&amp;password=14givecorps&amp;station=WEB&amp;custcode=ActiveMerchant%2f1.76.0&amp;cardno=5454545454545454&amp;cid=123&amp;expdate=1215&amp;card_name_g=Longbob+Longsen&amp;fname=Longbob&amp;lname=Longsen&amp;order_number=c440ec8493f215d21c8a993ceae30129&amp;itemcode=FEE&amp;addr_g=456+My+Street%2cApt+1&amp;city_g=Ottawa&amp;state_g=ON&amp;zip_g=K1C2N6&amp;email_g=&amp;amount=1.00">here</a>.</h2>\r\n</body></html>\r\n"
       read 642 bytes
       reading 2 bytes...
       -> "\r\n"
@@ -251,7 +251,7 @@ class Cashnet < Test::Unit::TestCase
       -> "Set-Cookie: AWSALB=mEfysFNBclo1/9+tTuI/XtHrmVkD89Fh6tAJ3Gl0u2EuLCYTW5VwEq+fVqYG1fEkN02dbhKSkIdM22QvyT6cRccDaUBsYAnOKjg2JlVShJlf+li5tfbrsUDk14jG; Expires=Wed, 10 Jan 2018 17:03:35 GMT; Path=/\r\n"
       -> "Cache-Control: private\r\n"
       -> "Set-Cookie: ASP.NET_SessionId=3ocslggtk4cdz54unbdnm25o; path=/; HttpOnly\r\n"
-      -> "P3P: CP=\"NOI DSP COR NID NOR\"\r\n"
+      -> "P3P: CP="NOI DSP COR NID NOR"\r\n"
       -> "Set-Cookie: BNI_persistence=0000000000000000000000004d79da0a00005000; Path=/\r\n"
       -> "Strict-Transport-Security: max-age=31536000\r\n"
       -> "\r\n"
@@ -286,13 +286,13 @@ class Cashnet < Test::Unit::TestCase
       -> "Cache-Control: private\r\n"
       -> "Location: https://train.cashnet.com/cashneti/Gateway/htmlgw.aspx?client=EMARKETVENDOR_DEMO&command=SALE&merchant=GiveCorpGW&operator=givecorp&password=[FILTERED]&station=WEB&custcode=ActiveMerchant%2f1.76.0&cardno=[FILTERED]&cid=[FILTERED]&expdate=1215&card_name_g=Longbob+Longsen&fname=Longbob&lname=Longsen&order_number=c440ec8493f215d21c8a993ceae30129&itemcode=FEE&addr_g=456+My+Street%2cApt+1&city_g=Ottawa&state_g=ON&zip_g=K1C2N6&email_g=&amount=1.00\r\n"
       -> "Set-Cookie: ASP.NET_SessionId=; path=/; HttpOnly\r\n"
-      -> "P3P: CP=\"NOI DSP COR NID NOR\"\r\n"
+      -> "P3P: CP="NOI DSP COR NID NOR"\r\n"
       -> "Set-Cookie: BNI_persistence=0000000000000000000000004d79da0a00005000; Path=/\r\n"
       -> "Strict-Transport-Security: max-age=31536000\r\n"
       -> "\r\n"
       -> "282\r\n"
       reading 642 bytes...
-      -> "<html><head><title>Object moved</title></head><body>\r\n<h2>Object moved to <a href=\"https://train.cashnet.com/cashneti/Gateway/htmlgw.aspx?client=EMARKETVENDOR_DEMO&amp;command=SALE&amp;merchant=GiveCorpGW&amp;operator=givecorp&amp;password=[FILTERED]&amp;station=WEB&amp;custcode=ActiveMerchant%2f1.76.0&amp;cardno=[FILTERED]&amp;cid=[FILTERED]&amp;expdate=1215&amp;card_name_g=Longbob+Longsen&amp;fname=Longbob&amp;lname=Longsen&amp;order_number=c440ec8493f215d21c8a993ceae30129&amp;itemcode=FEE&amp;addr_g=456+My+Street%2cApt+1&amp;city_g=Ottawa&amp;state_g=ON&amp;zip_g=K1C2N6&amp;email_g=&amp;amount=1.00\">here</a>.</h2>\r\n</body></html>\r\n"
+      -> "<html><head><title>Object moved</title></head><body>\r\n<h2>Object moved to <a href="https://train.cashnet.com/cashneti/Gateway/htmlgw.aspx?client=EMARKETVENDOR_DEMO&amp;command=SALE&amp;merchant=GiveCorpGW&amp;operator=givecorp&amp;password=[FILTERED]&amp;station=WEB&amp;custcode=ActiveMerchant%2f1.76.0&amp;cardno=[FILTERED]&amp;cid=[FILTERED]&amp;expdate=1215&amp;card_name_g=Longbob+Longsen&amp;fname=Longbob&amp;lname=Longsen&amp;order_number=c440ec8493f215d21c8a993ceae30129&amp;itemcode=FEE&amp;addr_g=456+My+Street%2cApt+1&amp;city_g=Ottawa&amp;state_g=ON&amp;zip_g=K1C2N6&amp;email_g=&amp;amount=1.00">here</a>.</h2>\r\n</body></html>\r\n"
       read 642 bytes
       reading 2 bytes...
       -> "\r\n"
@@ -314,7 +314,7 @@ class Cashnet < Test::Unit::TestCase
       -> "Set-Cookie: AWSALB=mEfysFNBclo1/9+tTuI/XtHrmVkD89Fh6tAJ3Gl0u2EuLCYTW5VwEq+fVqYG1fEkN02dbhKSkIdM22QvyT6cRccDaUBsYAnOKjg2JlVShJlf+li5tfbrsUDk14jG; Expires=Wed, 10 Jan 2018 17:03:35 GMT; Path=/\r\n"
       -> "Cache-Control: private\r\n"
       -> "Set-Cookie: ASP.NET_SessionId=3ocslggtk4cdz54unbdnm25o; path=/; HttpOnly\r\n"
-      -> "P3P: CP=\"NOI DSP COR NID NOR\"\r\n"
+      -> "P3P: CP="NOI DSP COR NID NOR"\r\n"
       -> "Set-Cookie: BNI_persistence=0000000000000000000000004d79da0a00005000; Path=/\r\n"
       -> "Strict-Transport-Security: max-age=31536000\r\n"
       -> "\r\n"

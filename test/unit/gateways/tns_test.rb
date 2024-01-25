@@ -234,7 +234,7 @@ class TnsTest < Test::Unit::TestCase
 
   def failed_void_response
     %(
-      {\"error\":{\"cause\":\"INVALID_REQUEST\",\"explanation\":\"Value 'VOID' is invalid. There is no transaction to void.\",\"field\":\"apiOperation\",\"validationType\":\"INVALID\"},\"result\":\"ERROR\"}
+      {"error":{"cause":"INVALID_REQUEST","explanation":"Value 'VOID' is invalid. There is no transaction to void.","field":"apiOperation","validationType":"INVALID"},"result":"ERROR"}
     )
   end
 end

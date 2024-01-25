@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class NetworkTokenizationCreditCard < CreditCard
       # A +NetworkTokenizationCreditCard+ object represents a tokenized credit card
       # using the EMV Network Tokenization specification, http://www.emvco.com/specifications.aspx?id=263.

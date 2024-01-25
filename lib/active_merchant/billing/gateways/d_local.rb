@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class DLocalGateway < Gateway
       self.test_url = 'https://sandbox.dlocal.com'
       self.live_url = 'https://api.dlocal.com'
@@ -76,8 +76,8 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((X-Trans-Key: )\w+), '\1[FILTERED]').
-          gsub(%r((\"number\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"cvv\\\":\\\")\d+), '\1[FILTERED]')
+          gsub(%r(("number\\":\\")\d+), '\1[FILTERED]').
+          gsub(%r(("cvv\\":\\")\d+), '\1[FILTERED]')
       end
 
       private
@@ -250,14 +250,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action, parameters, options = {})
-        "#{(test? ? test_url : live_url)}/#{endpoint(action, parameters, options)}/"
+        "#{test? ? test_url : live_url}/#{endpoint(action, parameters, options)}/"
       end
 
       def endpoint(action, parameters, options)
         case action
-        when 'purchase'
-          'secure_payments'
-        when 'authorize'
+        when 'purchase', 'authorize'
           'secure_payments'
         when 'refund'
           'refunds'

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # The Mercury gateway integration by default requires that the Mercury
     # account being used has tokenization turned. This enables the use of
     # capture/refund/void without having to pass the credit card back in each
@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        @use_tokenization = (!options.has_key?(:tokenization) || options[:tokenization])
+        @use_tokenization = !options.has_key?(:tokenization) || options[:tokenization]
         super
       end
 
@@ -125,7 +125,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'Transaction' do
             xml.tag! 'TranType', 'Credit'
             xml.tag! 'PartialAuth', 'Allow' if options[:allow_partial_auth] && (action == 'PreAuthCapture')
-            xml.tag! 'TranCode', (@use_tokenization ? (action + 'ByRecordNo') : action)
+            xml.tag! 'TranCode', (@use_tokenization ? "#{action}ByRecordNo" : action)
             add_invoice(xml, invoice_no, ref_no, options)
             add_reference(xml, record_no)
             add_customer_data(xml, options)
@@ -349,7 +349,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def unescape_xml(escaped_xml)
-        escaped_xml.gsub(/\&gt;/, '>').gsub(/\&lt;/, '<')
+        escaped_xml.gsub('&gt;', '>').gsub('&lt;', '<')
       end
     end
   end

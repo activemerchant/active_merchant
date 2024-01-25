@@ -1,8 +1,8 @@
 require 'rubygems'
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CheckoutGateway < Gateway
       self.default_currency = 'USD'
       self.money_format = :cents

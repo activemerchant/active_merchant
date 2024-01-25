@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # The Check object is a plain old Ruby object, similar to CreditCard. It supports validation
     # of necessary attributes such as checkholder's name, routing and account numbers, but it is
     # not backed by any database.
@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
         return if empty?(value)
 
         @name = value
-        segments = value.split(' ')
+        segments = value.split
         @last_name = segments.pop
         @first_name = segments.join(' ')
       end
@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def valid_routing_number?
-        digits = routing_number.to_s.split('').map(&:to_i).select { |d| (0..9).cover?(d) }
+        digits = routing_number.to_s.chars.map(&:to_i).select { |d| (0..9).cover?(d) }
         case digits.size
         when 9
           return checksum(digits) == 0 || CAN_INSTITUTION_NUMBERS.include?(routing_number[1..3])
@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
 
       # Always return MICR-formatted routing number for Canadian routing numbers, US routing numbers unchanged
       def micr_format_routing_number
-        digits = routing_number.to_s.split('').map(&:to_i).select { |d| (0..9).cover?(d) }
+        digits = routing_number.to_s.chars.map(&:to_i).select { |d| (0..9).cover?(d) }
         case digits.size
         when 9
           if checksum(digits) == 0
@@ -99,12 +99,12 @@ module ActiveMerchant #:nodoc:
 
       # Always return electronic-formatted routing number for Canadian routing numbers, US routing numbers unchanged
       def electronic_format_routing_number
-        digits = routing_number.to_s.split('').map(&:to_i).select { |d| (0..9).cover?(d) }
+        digits = routing_number.to_s.chars.map(&:to_i).select { |d| (0..9).cover?(d) }
         case digits.size
         when 9
           return routing_number
         when 8
-          return '0' + routing_number[5..7] + routing_number[0..4]
+          return "0#{routing_number[5..7]}#{routing_number[0..4]}"
         end
       end
     end

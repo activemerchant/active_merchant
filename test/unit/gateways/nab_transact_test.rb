@@ -228,9 +228,7 @@ class NabTransactTest < Test::Unit::TestCase
   end
 
   def assert_metadata(name, location, &block)
-    stub_comms(@gateway, :ssl_request) do
-      yield
-    end.check_request do |_method, _endpoint, data, _headers|
+    stub_comms(@gateway, :ssl_request, &block).check_request do |_method, _endpoint, data, _headers|
       metadata_matcher = Regexp.escape(valid_metadata(name, location))
       assert_match %r{#{metadata_matcher}}, data
     end.respond_with(successful_purchase_response)
@@ -328,7 +326,7 @@ class NabTransactTest < Test::Unit::TestCase
 
   def successful_authorize_response
     <<-XML.gsub(/^\s{4}/, '')
-    <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
+    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
     <NABTransactMessage>
       <MessageInfo>
         <messageID>4650de0ab4db398640b672a85e59ac</messageID>
@@ -344,8 +342,8 @@ class NabTransactTest < Test::Unit::TestCase
         <statusDescription>Normal</statusDescription>
       </Status>
       <Payment>
-        <TxnList count=\"1\">
-          <Txn ID=\"1\">
+        <TxnList count="1">
+          <Txn ID="1">
             <txnType>10</txnType>
             <txnSource>23</txnSource>
             <amount>200</amount>

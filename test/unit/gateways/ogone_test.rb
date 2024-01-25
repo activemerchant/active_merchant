@@ -477,16 +477,16 @@ class OgoneTest < Test::Unit::TestCase
   private
 
   def string_to_digest
-    'ALIAS=2mynicesigAMOUNT=100mynicesigCARDNO=4111111111111111mynicesig'\
-    'CN=Client NamemynicesigCURRENCY=EURmynicesigOPERATION=RESmynicesig'\
-    'ORDERID=1mynicesigPSPID=MrPSPIDmynicesig'
+    'ALIAS=2mynicesigAMOUNT=100mynicesigCARDNO=4111111111111111mynicesig' \
+      'CN=Client NamemynicesigCURRENCY=EURmynicesigOPERATION=RESmynicesig' \
+      'ORDERID=1mynicesigPSPID=MrPSPIDmynicesig'
   end
 
   def d3d_string_to_digest
-    'ALIAS=2mynicesigAMOUNT=100mynicesigCARDNO=4111111111111111mynicesig'\
-    'CN=Client NamemynicesigCURRENCY=EURmynicesigFLAG3D=Ymynicesig'\
-    'HTTP_ACCEPT=*/*mynicesigOPERATION=RESmynicesigORDERID=1mynicesig'\
-    'PSPID=MrPSPIDmynicesigWIN3DS=MAINWmynicesig'
+    'ALIAS=2mynicesigAMOUNT=100mynicesigCARDNO=4111111111111111mynicesig' \
+      'CN=Client NamemynicesigCURRENCY=EURmynicesigFLAG3D=Ymynicesig' \
+      'HTTP_ACCEPT=*/*mynicesigOPERATION=RESmynicesigORDERID=1mynicesig' \
+      'PSPID=MrPSPIDmynicesigWIN3DS=MAINWmynicesig'
   end
 
   def successful_authorize_response

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MoneyMoversGateway < Gateway
       self.live_url = self.test_url = 'https://secure.mmoagateway.com/api/transact.php'
 
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        if address = (options[:billing_address] || options[:address])
+        if address = options[:billing_address] || options[:address]
           post[:company] = address[:company]
           post[:address1] = address[:address1]
           post[:address2] = address[:address2]

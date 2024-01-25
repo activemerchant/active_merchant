@@ -1,7 +1,7 @@
 require 'digest/sha2'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class Be2billGateway < Gateway
       self.test_url = 'https://secure-test.be2bill.com/front/service/rest/process.php'
       self.live_url = 'https://secure-magenta1.be2bill.com/front/service/rest/process.php'
@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, creditcard)
         post[:CARDFULLNAME]     = creditcard ? creditcard.name : ''
         post[:CARDCODE]         = creditcard ? creditcard.number : ''
-        post[:CARDVALIDITYDATE] = creditcard ? '%02d-%02s' % [creditcard.month, creditcard.year.to_s[-2..-1]] : ''
+        post[:CARDVALIDITYDATE] = creditcard ? '%02d-%02s' % [creditcard.month, creditcard.year.to_s[-2..]] : ''
         post[:CARDCVV]          = creditcard ? creditcard.verification_value : ''
       end
 

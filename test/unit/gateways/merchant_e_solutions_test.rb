@@ -129,7 +129,7 @@ class MerchantESolutionsTest < Test::Unit::TestCase
   end
 
   def test_successful_avs_check
-    @gateway.expects(:ssl_post).returns(successful_purchase_response + '&avs_result=Y')
+    @gateway.expects(:ssl_post).returns("#{successful_purchase_response}&avs_result=Y")
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal response.avs_result['code'], 'Y'
     assert_equal response.avs_result['message'], 'Street address and 5-digit postal code match.'
@@ -138,7 +138,7 @@ class MerchantESolutionsTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_avs_check_with_bad_street_address
-    @gateway.expects(:ssl_post).returns(successful_purchase_response + '&avs_result=Z')
+    @gateway.expects(:ssl_post).returns("#{successful_purchase_response}&avs_result=Z")
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal response.avs_result['code'], 'Z'
     assert_equal response.avs_result['message'], 'Street address does not match, but 5-digit postal code matches.'
@@ -147,7 +147,7 @@ class MerchantESolutionsTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_avs_check_with_bad_zip
-    @gateway.expects(:ssl_post).returns(successful_purchase_response + '&avs_result=A')
+    @gateway.expects(:ssl_post).returns("#{successful_purchase_response}&avs_result=A")
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal response.avs_result['code'], 'A'
     assert_equal response.avs_result['message'], 'Street address matches, but postal code does not match.'
@@ -156,14 +156,14 @@ class MerchantESolutionsTest < Test::Unit::TestCase
   end
 
   def test_successful_cvv_check
-    @gateway.expects(:ssl_post).returns(successful_purchase_response + '&cvv2_result=M')
+    @gateway.expects(:ssl_post).returns("#{successful_purchase_response}&cvv2_result=M")
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal response.cvv_result['code'], 'M'
     assert_equal response.cvv_result['message'], 'CVV matches'
   end
 
   def test_unsuccessful_cvv_check
-    @gateway.expects(:ssl_post).returns(failed_purchase_response + '&cvv2_result=N')
+    @gateway.expects(:ssl_post).returns("#{failed_purchase_response}&cvv2_result=N")
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal response.cvv_result['code'], 'N'
     assert_equal response.cvv_result['message'], 'CVV does not match'

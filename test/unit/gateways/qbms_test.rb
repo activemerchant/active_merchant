@@ -43,7 +43,7 @@ class QbmsTest < Test::Unit::TestCase
 
   def test_truncated_address_is_sent
     @gateway.expects(:ssl_post).
-      with(anything, regexp_matches(/12345 Ridiculously Lengthy Roa\<.*445566778\</), anything).
+      with(anything, regexp_matches(/12345 Ridiculously Lengthy Roa<.*445566778</), anything).
       returns(charge_response)
 
     options = { billing_address: address.update(address1: '12345 Ridiculously Lengthy Road Name', zip: '4455667788') }
@@ -164,7 +164,7 @@ class QbmsTest < Test::Unit::TestCase
   # helper methods start here
 
   def query_response(opts = {})
-    wrap 'MerchantAccountQuery', opts, <<-"XML"
+    wrap 'MerchantAccountQuery', opts, <<-XML
       <ConvenienceFees>0.0</ConvenienceFees>
       <CreditCardType>Visa</CreditCardType>
       <CreditCardType>MasterCard</CreditCardType>
@@ -190,7 +190,7 @@ class QbmsTest < Test::Unit::TestCase
   end
 
   def capture_response(opts = {})
-    wrap 'CustomerCreditCardCapture', opts, <<-"XML"
+    wrap 'CustomerCreditCardCapture', opts, <<-XML
       <CreditCardTransID>1000</CreditCardTransID>
       <AuthorizationCode>STRTYPE</AuthorizationCode>
       <MerchantAccountNumber>STRTYPE</MerchantAccountNumber>
@@ -219,14 +219,14 @@ class QbmsTest < Test::Unit::TestCase
   end
 
   def void_response(opts = {})
-    wrap 'CustomerCreditCardTxnVoid', opts, <<-"XML"
+    wrap 'CustomerCreditCardTxnVoid', opts, <<-XML
       <CreditCardTransID>1000</CreditCardTransID>
       <ClientTransID>STRTYPE</ClientTransID>
     XML
   end
 
   def credit_response(opts = {})
-    wrap 'CustomerCreditCardTxnVoidOrRefund', opts, <<-"XML"
+    wrap 'CustomerCreditCardTxnVoidOrRefund', opts, <<-XML
       <CreditCardTransID>1000</CreditCardTransID>
       <VoidOrRefundTxnType>STRTYPE</VoidOrRefundTxnType>
       <MerchantAccountNumber>STRTYPE</MerchantAccountNumber>

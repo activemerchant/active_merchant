@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayexGateway < Gateway
       class_attribute :live_external_url, :test_external_url, :live_confined_url, :test_confined_url
 
@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
           purchaseOperation: is_auth ? 'AUTHORIZATION' : 'SALE',
           price: amount,
           priceArgList: nil,
-          currency: (options[:currency] || default_currency),
+          currency: options[:currency] || default_currency,
           vat: options[:vat] || 0,
           orderID: options[:order_id],
           productNumber: options[:product_number] || '1',
@@ -231,7 +231,7 @@ module ActiveMerchant #:nodoc:
           description: options[:description] || options[:order_id],
           orderId: options[:order_id],
           purchaseOperation: is_auth ? 'AUTHORIZATION' : 'SALE',
-          currency: (options[:currency] || default_currency)
+          currency: options[:currency] || default_currency
         }
         hash_fields = %i[accountNumber agreementRef price productNumber description orderId purchaseOperation currency]
         add_request_hash(properties, hash_fields)
@@ -336,7 +336,7 @@ module ActiveMerchant #:nodoc:
       def add_request_hash(properties, fields)
         data = fields.map { |e| properties[e] }
         data << @options[:encryption_key]
-        properties['hash_'] = Digest::MD5.hexdigest(data.join(''))
+        properties['hash_'] = Digest::MD5.hexdigest(data.join)
       end
 
       def build_xml_request(soap_action, properties)

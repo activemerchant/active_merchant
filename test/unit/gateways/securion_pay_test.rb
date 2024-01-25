@@ -184,8 +184,8 @@ class SecurionPayTest < Test::Unit::TestCase
       assert_match(/description=test\+charge/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
       assert_match(/user_agent=browser\+XXX/, data)
-      assert_match(/referrer=http\%3A\%2F\%2Fwww\.foobar\.com/, data)
-      assert_match(/metadata\[email\]=foo\%40bar\.com/, data)
+      assert_match(/referrer=http%3A%2F%2Fwww\.foobar\.com/, data)
+      assert_match(/metadata\[email\]=foo%40bar\.com/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -197,7 +197,7 @@ class SecurionPayTest < Test::Unit::TestCase
       assert_match(/description=test\+charge/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
       assert_match(/user_agent=browser\+XXX/, data)
-      assert_match(/referrer=http\%3A\%2F\%2Fwww\.foobar\.com/, data)
+      assert_match(/referrer=http%3A%2F%2Fwww\.foobar\.com/, data)
       refute data.include?('metadata')
     end.respond_with(successful_purchase_response)
   end
@@ -424,7 +424,7 @@ class SecurionPayTest < Test::Unit::TestCase
       -> "\r\n"
       -> "1f4\r\n"
       reading 500 bytes...
-      -> "{\"id\":\"char_TOnen0ZcDMYzECNS4fItK9P4\",\"created\":1434144998,\"objectType\":\"charge\",\"amount\":2000,\"currency\":\"USD\",\"description\":\"ActiveMerchant test charge\",\"card\":{\"id\":\"card_yJ4JNcp6P4sG8UrtZ62VWb5e\",\"created\":1434144998,\"objectType\":\"card\",\"first6\":\"424242\",\"last4\":\"4242\",\"fingerprint\":\"ecAKhFD1dmDAMKD9\",\"expMonth\":\"9\",\"expYear\":\"2016\",\"cardholderName\":\"Longbob Longsen\",\"brand\":\"Visa\",\"type\":\"Credit Card\"},\"captured\":true,\"refunded\":false,\"disputed\":false,\"metadata\":{\"email\":\"foo@example.com\"}}"
+      -> "{"id":"char_TOnen0ZcDMYzECNS4fItK9P4","created":1434144998,"objectType":"charge","amount":2000,"currency":"USD","description":"ActiveMerchant test charge","card":{"id":"card_yJ4JNcp6P4sG8UrtZ62VWb5e","created":1434144998,"objectType":"card","first6":"424242","last4":"4242","fingerprint":"ecAKhFD1dmDAMKD9","expMonth":"9","expYear":"2016","cardholderName":"Longbob Longsen","brand":"Visa","type":"Credit Card"},"captured":true,"refunded":false,"disputed":false,"metadata":{"email":"foo@example.com"}}"
       read 500 bytes
       reading 2 bytes...
       -> "\r\n"
@@ -454,7 +454,7 @@ class SecurionPayTest < Test::Unit::TestCase
       -> "\r\n"
       -> "1f4\r\n"
       reading 500 bytes...
-      -> "{\"id\":\"char_TOnen0ZcDMYzECNS4fItK9P4\",\"created\":1434144998,\"objectType\":\"charge\",\"amount\":2000,\"currency\":\"USD\",\"description\":\"ActiveMerchant test charge\",\"card\":{\"id\":\"card_yJ4JNcp6P4sG8UrtZ62VWb5e\",\"created\":1434144998,\"objectType\":\"card\",\"first6\":\"424242\",\"last4\":\"4242\",\"fingerprint\":\"ecAKhFD1dmDAMKD9\",\"expMonth\":\"9\",\"expYear\":\"2016\",\"cardholderName\":\"Longbob Longsen\",\"brand\":\"Visa\",\"type\":\"Credit Card\"},\"captured\":true,\"refunded\":false,\"disputed\":false,\"metadata\":{\"email\":\"foo@example.com\"}}"
+      -> "{"id":"char_TOnen0ZcDMYzECNS4fItK9P4","created":1434144998,"objectType":"charge","amount":2000,"currency":"USD","description":"ActiveMerchant test charge","card":{"id":"card_yJ4JNcp6P4sG8UrtZ62VWb5e","created":1434144998,"objectType":"card","first6":"424242","last4":"4242","fingerprint":"ecAKhFD1dmDAMKD9","expMonth":"9","expYear":"2016","cardholderName":"Longbob Longsen","brand":"Visa","type":"Credit Card"},"captured":true,"refunded":false,"disputed":false,"metadata":{"email":"foo@example.com"}}"
       read 500 bytes
       reading 2 bytes...
       -> "\r\n"

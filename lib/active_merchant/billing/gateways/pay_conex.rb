@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayConexGateway < Gateway
       include Empty
 
@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(post, money, options)
         post[:transaction_amount] = amount(money)
-        currency_code = (options[:currency] || currency(money))
+        currency_code = options[:currency] || currency(money)
         add_if_present(post, :currency, currency_code)
       end
 

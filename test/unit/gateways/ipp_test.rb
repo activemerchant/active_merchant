@@ -24,7 +24,7 @@ class IppTest < Test::Unit::TestCase
       assert_match(%r{<Amount>100<}, data)
       assert_match(%r{<TrnType>1<}, data)
       assert_match(%r{<CardNumber>#{@credit_card.number}<}, data)
-      assert_match(%r{<ExpM>#{"%02d" % @credit_card.month}<}, data)
+      assert_match(%r{<ExpM>#{'%02d' % @credit_card.month}<}, data)
       assert_match(%r{<ExpY>#{@credit_card.year}<}, data)
       assert_match(%r{<CVN>#{@credit_card.verification_value}<}, data)
       assert_match(%r{<CardHolderName>#{@credit_card.name}<}, data)

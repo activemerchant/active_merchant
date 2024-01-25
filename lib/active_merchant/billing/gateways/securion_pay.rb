@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SecurionPayGateway < Gateway
       self.test_url = 'https://api.securionpay.com/'
       self.live_url = 'https://api.securionpay.com/'
@@ -122,9 +122,9 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options)
         post[:description] = options[:description]
-        post[:ip] =          options[:ip]
-        post[:user_agent] =  options[:user_agent]
-        post[:referrer] =    options[:referrer]
+        post[:ip] = options[:ip]
+        post[:user_agent] = options[:user_agent]
+        post[:referrer] = options[:referrer]
       end
 
       def create_post_for_auth_or_purchase(money, payment, options)
@@ -176,7 +176,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(post, money, options, include_currency = false)
-        currency = (options[:currency] || default_currency)
+        currency = options[:currency] || default_currency
         post[:amount] = localized_amount(money, currency)
         post[:currency] = currency.downcase if include_currency
       end
@@ -200,7 +200,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        return unless post[:card]&.kind_of?(Hash)
+        return unless post[:card].kind_of?(Hash)
 
         if address = options[:billing_address]
           post[:card][:addressLine1] = address[:address1] if address[:address1]
@@ -250,11 +250,10 @@ module ActiveMerchant #:nodoc:
       def headers(options = {})
         secret_key = options[:secret_key] || @options[:secret_key]
 
-        headers = {
-          'Authorization' => 'Basic ' + Base64.encode64(secret_key.to_s + ':').strip,
+        {
+          'Authorization' => "Basic #{Base64.encode64("#{secret_key}:").strip}",
           'User-Agent' => "SecurionPay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
-        headers
       end
 
       def response_error(raw_response)
@@ -269,13 +268,14 @@ module ActiveMerchant #:nodoc:
         params.map do |key, value|
           next if value.blank?
 
-          if value.is_a?(Hash)
+          case value
+          when Hash
             h = {}
             value.each do |k, v|
               h["#{key}[#{k}]"] = v unless v.blank?
             end
             post_data(h)
-          elsif value.is_a?(Array)
+          when Array
             value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join('&')
           else
             "#{key}=#{CGI.escape(value.to_s)}"
@@ -312,7 +312,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def test?
-        (@options[:secret_key]&.include?('_test_'))
+        @options[:secret_key]&.include?('_test_')
       end
     end
   end

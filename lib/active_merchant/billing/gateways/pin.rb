@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PinGateway < Gateway
       self.test_url = 'https://test-api.pinpayments.com/1'
       self.live_url = 'https://api.pinpayments.com/1'
@@ -120,7 +120,7 @@ module ActiveMerchant #:nodoc:
       def add_address(post, creditcard, options)
         return if creditcard.kind_of?(String)
 
-        address = (options[:billing_address] || options[:address])
+        address = options[:billing_address] || options[:address]
         return unless address
 
         post[:card] ||= {}
@@ -193,7 +193,7 @@ module ActiveMerchant #:nodoc:
       def headers(params = {})
         result = {
           'Content-Type' => 'application/json',
-          'Authorization' => "Basic #{Base64.strict_encode64(options[:api_key] + ':').strip}"
+          'Authorization' => "Basic #{Base64.strict_encode64("#{options[:api_key]}:").strip}"
         }
 
         result['X-Partner-Key'] = params[:partner_key] if params[:partner_key]

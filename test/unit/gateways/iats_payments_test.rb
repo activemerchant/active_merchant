@@ -42,7 +42,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
       assert_match(/<customerIPAddress>#{@options[:ip]}<\/customerIPAddress>/, data)
       assert_match(/<invoiceNum>#{@options[:order_id]}<\/invoiceNum>/, data)
       assert_match(/<creditCardNum>#{@credit_card.number}<\/creditCardNum>/, data)
-      assert_match(/<creditCardExpiry>0#{@credit_card.month}\/#{@credit_card.year.to_s[-2..-1]}<\/creditCardExpiry>/, data)
+      assert_match(/<creditCardExpiry>0#{@credit_card.month}\/#{@credit_card.year.to_s[-2..]}<\/creditCardExpiry>/, data)
       assert_match(/<cvv2>#{@credit_card.verification_value}<\/cvv2>/, data)
       assert_match(/<mop>VISA<\/mop>/, data)
       assert_match(/<firstName>#{@credit_card.first_name}<\/firstName>/, data)
@@ -592,7 +592,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
       starting SSL for www.iatspayments.com:443...
       SSL established
       <- "POST /NetGate/ProcessLink.asmx?op=ProcessCreditCard HTTP/1.1\r\nContent-Type: application/soap+xml; charset=utf-8\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.iatspayments.com\r\nContent-Length: 779\r\n\r\n"
-      <- "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap12=\"http://www.w3.org/2003/05/soap-envelope\"><soap12:Body><ProcessCreditCard xmlns=\"https://www.iatspayments.com/NetGate/\"><agentCode>TEST88</agentCode><password>TEST88</password><invoiceNum>63b5dd7098e8e3a9ff9a6f0992fdb6d5</invoiceNum><total>1.00</total><firstName>Longbob</firstName><lastName>Longsen</lastName><creditCardNum>4222222222222220</creditCardNum><creditCardExpiry>09/17</creditCardExpiry><cvv2>123</cvv2><mop>VISA</mop><address>456 My Street</address><city>Ottawa</city><state>ON</state><zipCode>K1C2N6</zipCode><comment>Store purchase</comment></ProcessCreditCard></soap12:Body></soap12:Envelope>"
+      <- "<?xml version="1.0" encoding="utf-8"?><soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope"><soap12:Body><ProcessCreditCard xmlns="https://www.iatspayments.com/NetGate/"><agentCode>TEST88</agentCode><password>TEST88</password><invoiceNum>63b5dd7098e8e3a9ff9a6f0992fdb6d5</invoiceNum><total>1.00</total><firstName>Longbob</firstName><lastName>Longsen</lastName><creditCardNum>4222222222222220</creditCardNum><creditCardExpiry>09/17</creditCardExpiry><cvv2>123</cvv2><mop>VISA</mop><address>456 My Street</address><city>Ottawa</city><state>ON</state><zipCode>K1C2N6</zipCode><comment>Store purchase</comment></ProcessCreditCard></soap12:Body></soap12:Envelope>"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Cache-Control: private, max-age=0\r\n"
       -> "Content-Type: application/soap+xml; charset=utf-8\r\n"
@@ -604,7 +604,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
       -> "Via: 1.1 sjc1-10\r\n"
       -> "\r\n"
       reading 719 bytes...
-      -> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><ProcessCreditCardResponse xmlns=\"https://www.iatspayments.com/NetGate/\"><ProcessCreditCardResult><IATSRESPONSE xmlns=\"\"><STATUS>Success</STATUS><ERRORS /><PROCESSRESULT><AUTHORIZATIONRESULT> OK: 678594:\n</AUTHORIZATIONRESULT><CUSTOMERCODE /><SETTLEMENTBATCHDATE> 09/28/2016\n</SETTLEMENTBATCHDATE><SETTLEMENTDATE> 09/29/2016\n</SETTLEMENTDATE><TRANSACTIONID>A92E3B72\n</TRANSACTIONID></PROCESSRESULT></IATSRESPONSE></ProcessCreditCardResult></ProcessCreditCardResponse></soap:Body></soap:Envelope>"
+      -> "<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ProcessCreditCardResponse xmlns="https://www.iatspayments.com/NetGate/"><ProcessCreditCardResult><IATSRESPONSE xmlns=""><STATUS>Success</STATUS><ERRORS /><PROCESSRESULT><AUTHORIZATIONRESULT> OK: 678594:\n</AUTHORIZATIONRESULT><CUSTOMERCODE /><SETTLEMENTBATCHDATE> 09/28/2016\n</SETTLEMENTBATCHDATE><SETTLEMENTDATE> 09/29/2016\n</SETTLEMENTDATE><TRANSACTIONID>A92E3B72\n</TRANSACTIONID></PROCESSRESULT></IATSRESPONSE></ProcessCreditCardResult></ProcessCreditCardResponse></soap:Body></soap:Envelope>"
       read 719 bytes
       Conn close
     XML
@@ -617,7 +617,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
       starting SSL for www.iatspayments.com:443...
       SSL established
       <- "POST /NetGate/ProcessLink.asmx?op=ProcessCreditCard HTTP/1.1\r\nContent-Type: application/soap+xml; charset=utf-8\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.iatspayments.com\r\nContent-Length: 779\r\n\r\n"
-      <- "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap12=\"http://www.w3.org/2003/05/soap-envelope\"><soap12:Body><ProcessCreditCard xmlns=\"https://www.iatspayments.com/NetGate/\"><agentCode>[FILTERED]</agentCode><password>[FILTERED]</password><invoiceNum>63b5dd7098e8e3a9ff9a6f0992fdb6d5</invoiceNum><total>1.00</total><firstName>Longbob</firstName><lastName>Longsen</lastName><creditCardNum>[FILTERED]</creditCardNum><creditCardExpiry>09/17</creditCardExpiry><cvv2>[FILTERED]</cvv2><mop>VISA</mop><address>456 My Street</address><city>Ottawa</city><state>ON</state><zipCode>K1C2N6</zipCode><comment>Store purchase</comment></ProcessCreditCard></soap12:Body></soap12:Envelope>"
+      <- "<?xml version="1.0" encoding="utf-8"?><soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope"><soap12:Body><ProcessCreditCard xmlns="https://www.iatspayments.com/NetGate/"><agentCode>[FILTERED]</agentCode><password>[FILTERED]</password><invoiceNum>63b5dd7098e8e3a9ff9a6f0992fdb6d5</invoiceNum><total>1.00</total><firstName>Longbob</firstName><lastName>Longsen</lastName><creditCardNum>[FILTERED]</creditCardNum><creditCardExpiry>09/17</creditCardExpiry><cvv2>[FILTERED]</cvv2><mop>VISA</mop><address>456 My Street</address><city>Ottawa</city><state>ON</state><zipCode>K1C2N6</zipCode><comment>Store purchase</comment></ProcessCreditCard></soap12:Body></soap12:Envelope>"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Cache-Control: private, max-age=0\r\n"
       -> "Content-Type: application/soap+xml; charset=utf-8\r\n"
@@ -629,7 +629,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
       -> "Via: 1.1 sjc1-10\r\n"
       -> "\r\n"
       reading 719 bytes...
-      -> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><ProcessCreditCardResponse xmlns=\"https://www.iatspayments.com/NetGate/\"><ProcessCreditCardResult><IATSRESPONSE xmlns=\"\"><STATUS>Success</STATUS><ERRORS /><PROCESSRESULT><AUTHORIZATIONRESULT> OK: 678594:\n</AUTHORIZATIONRESULT><CUSTOMERCODE /><SETTLEMENTBATCHDATE> 09/28/2016\n</SETTLEMENTBATCHDATE><SETTLEMENTDATE> 09/29/2016\n</SETTLEMENTDATE><TRANSACTIONID>A92E3B72\n</TRANSACTIONID></PROCESSRESULT></IATSRESPONSE></ProcessCreditCardResult></ProcessCreditCardResponse></soap:Body></soap:Envelope>"
+      -> "<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ProcessCreditCardResponse xmlns="https://www.iatspayments.com/NetGate/"><ProcessCreditCardResult><IATSRESPONSE xmlns=""><STATUS>Success</STATUS><ERRORS /><PROCESSRESULT><AUTHORIZATIONRESULT> OK: 678594:\n</AUTHORIZATIONRESULT><CUSTOMERCODE /><SETTLEMENTBATCHDATE> 09/28/2016\n</SETTLEMENTBATCHDATE><SETTLEMENTDATE> 09/29/2016\n</SETTLEMENTDATE><TRANSACTIONID>A92E3B72\n</TRANSACTIONID></PROCESSRESULT></IATSRESPONSE></ProcessCreditCardResult></ProcessCreditCardResponse></soap:Body></soap:Envelope>"
       read 719 bytes
       Conn close
     XML

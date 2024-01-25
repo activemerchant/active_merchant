@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CredoraxGateway < Gateway
       class_attribute :test_url, :live_na_url, :live_eu_url
 
@@ -254,9 +254,7 @@ module ActiveMerchant #:nodoc:
             normalized_value = normalize(value)
             next if normalized_value.nil?
 
-            if key == :'3ds_homephonecountry'
-              next unless options[:billing_address] && options[:billing_address][:phone]
-            end
+            next if key == :'3ds_homephonecountry' && !(options[:billing_address] && options[:billing_address][:phone])
 
             post[key] = normalized_value unless post[key]
           end
@@ -303,7 +301,7 @@ module ActiveMerchant #:nodoc:
       def add_stored_credential(post, options)
         add_transaction_type(post, options)
         # if :transaction_type option is not passed, then check for :stored_credential options
-        return unless (stored_credential = options[:stored_credential]) && options.dig(:transaction_type).nil?
+        return unless (stored_credential = options[:stored_credential]) && options[:transaction_type].nil?
 
         if stored_credential[:initiator] == 'merchant'
           case stored_credential[:reason_type]
@@ -489,7 +487,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, params, reference_action)
-        params.keys.each { |key| params[key] = params[key].to_s }
+        params.each_key { |key| params[key] = params[key].to_s }
         params[:M] = @options[:merchant_id]
         params[:O] = request_action(action, reference_action)
         params[:K] = sign_request(params)
@@ -497,7 +495,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def request_action(action, reference_action)
-        return ACTIONS["#{reference_action}_#{action}".to_sym] if reference_action
+        return ACTIONS[:"#{reference_action}_#{action}"] if reference_action
 
         ACTIONS[action]
       end
@@ -507,7 +505,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[CGI::parse(body).map { |k, v| [k.upcase, v.first] }]
+        CGI::parse(body).to_h { |k, v| [k.upcase, v.first] }
       end
 
       def success_from(response)

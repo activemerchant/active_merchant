@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class KushkiGateway < Gateway
       self.display_name = 'Kushki'
       self.homepage_url = 'https://www.kushkipagos.com'
@@ -70,8 +70,8 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((Private-Merchant-Id: )\d+), '\1[FILTERED]').
-          gsub(%r((\"card\\\":{\\\"number\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"cvv\\\":\\\")\d+), '\1[FILTERED]')
+          gsub(%r(("card\\":{\\"number\\":\\")\d+), '\1[FILTERED]').
+          gsub(%r(("cvv\\":\\")\d+), '\1[FILTERED]')
       end
 
       private
@@ -217,7 +217,8 @@ module ActiveMerchant #:nodoc:
           specificationVersion: three_d_secure[:version]
         }
 
-        if payment_method.brand == 'master'
+        case payment_method.brand
+        when 'master'
           post[:threeDomainSecure][:acceptRisk] = three_d_secure[:eci] == '00'
           post[:threeDomainSecure][:ucaf] = three_d_secure[:cavv]
           post[:threeDomainSecure][:directoryServerTransactionID] = three_d_secure[:ds_transaction_id]
@@ -229,7 +230,7 @@ module ActiveMerchant #:nodoc:
           else
             post[:threeDomainSecure][:collectionIndicator] = '2'
           end
-        elsif payment_method.brand == 'visa'
+        when 'visa'
           post[:threeDomainSecure][:acceptRisk] = three_d_secure[:eci] == '07'
           post[:threeDomainSecure][:cavv] = three_d_secure[:cavv]
           post[:threeDomainSecure][:xid] = three_d_secure[:xid] if three_d_secure[:xid].present?
@@ -293,9 +294,9 @@ module ActiveMerchant #:nodoc:
         base_url = test? ? test_url : live_url
 
         if %w[void refund].include?(action)
-          base_url + 'v1/' + ENDPOINT[action] + '/' + params[:ticketNumber].to_s
+          "#{base_url}v1/#{ENDPOINT[action]}/#{params[:ticketNumber]}"
         else
-          base_url + 'card/v1/' + ENDPOINT[action]
+          "#{base_url}card/v1/#{ENDPOINT[action]}"
         end
       end
 

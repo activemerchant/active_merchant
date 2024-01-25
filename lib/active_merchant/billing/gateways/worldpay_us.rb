@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class WorldpayUsGateway < Gateway
       class_attribute :backup_url
 
@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        if (billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = options[:billing_address] || options[:address])
           post[:ci_companyname] = billing_address[:company]
           post[:ci_billaddr1]   = billing_address[:address1]
           post[:ci_billaddr2]   = billing_address[:address2]
@@ -209,7 +209,7 @@ module ActiveMerchant #:nodoc:
         if succeeded
           'Succeeded'
         else
-          (response['transresult'] || response['Reason'] || 'Unable to read error message')
+          response['transresult'] || response['Reason'] || 'Unable to read error message'
         end
       end
 

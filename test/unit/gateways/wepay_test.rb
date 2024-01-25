@@ -169,7 +169,7 @@ class WepayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(version: '2017-05-31'))
     end.check_request do |_endpoint, _data, headers|
-      assert_match(/"Api-Version\"=>\"2017-05-31\"/, headers.to_s)
+      assert_match(/"Api-Version"=>"2017-05-31"/, headers.to_s)
     end.respond_with(successful_authorize_response)
   end
 
@@ -407,15 +407,15 @@ class WepayTest < Test::Unit::TestCase
   end
 
   def successful_authorize_response
-    %({\"checkout_id\":1181910285,\"account_id\":2080478981,\"type\":\"goods\",\"short_description\":\"Purchase\",\"currency\":\"USD\",\"amount\":20,\"state\":\"authorized\",\"soft_descriptor\":\"WPY*Spreedly\",\"create_time\":1481836590,\"gross\":20.88,\"reference_id\":null,\"callback_uri\":null,\"long_description\":null,\"delivery_type\":null,\"fee\":{\"app_fee\":0,\"processing_fee\":0.88,\"fee_payer\":\"payer\"},\"chargeback\":{\"amount_charged_back\":0,\"dispute_uri\":null},\"refund\":{\"amount_refunded\":0,\"refund_reason\":null},\"payment_method\":{\"type\":\"credit_card\",\"credit_card\":{\"id\":1929540809,\"data\":{\"emv_receipt\":null,\"signature_url\":null},\"auto_capture\":false}},\"hosted_checkout\":null,\"payer\":{\"email\":\"test@example.com\",\"name\":\"Longbob Longsen\",\"home_address\":null},\"npo_information\":null,\"payment_error\":null,\"in_review\":false,\"auto_release\":true})
+    %({"checkout_id":1181910285,"account_id":2080478981,"type":"goods","short_description":"Purchase","currency":"USD","amount":20,"state":"authorized","soft_descriptor":"WPY*Spreedly","create_time":1481836590,"gross":20.88,"reference_id":null,"callback_uri":null,"long_description":null,"delivery_type":null,"fee":{"app_fee":0,"processing_fee":0.88,"fee_payer":"payer"},"chargeback":{"amount_charged_back":0,"dispute_uri":null},"refund":{"amount_refunded":0,"refund_reason":null},"payment_method":{"type":"credit_card","credit_card":{"id":1929540809,"data":{"emv_receipt":null,"signature_url":null},"auto_capture":false}},"hosted_checkout":null,"payer":{"email":"test@example.com","name":"Longbob Longsen","home_address":null},"npo_information":null,"payment_error":null,"in_review":false,"auto_release":true})
   end
 
   def failed_authorize_response
-    %({\"error\":\"invalid_request\",\"error_description\":\"Invalid credit card number\",\"error_code\":1003})
+    %({"error":"invalid_request","error_description":"Invalid credit card number","error_code":1003})
   end
 
   def successful_capture_response
-    %({\"checkout_id\":1181910285,\"account_id\":2080478981,\"type\":\"goods\",\"short_description\":\"Purchase\",\"currency\":\"USD\",\"amount\":20,\"state\":\"authorized\",\"soft_descriptor\":\"WPY*Spreedly\",\"create_time\":1481836590,\"gross\":20.88,\"reference_id\":null,\"callback_uri\":null,\"long_description\":null,\"delivery_type\":null,\"fee\":{\"app_fee\":0,\"processing_fee\":0.88,\"fee_payer\":\"payer\"},\"chargeback\":{\"amount_charged_back\":0,\"dispute_uri\":null},\"refund\":{\"amount_refunded\":0,\"refund_reason\":null},\"payment_method\":{\"type\":\"credit_card\",\"credit_card\":{\"id\":1929540809,\"data\":{\"emv_receipt\":null,\"signature_url\":null},\"auto_capture\":false}},\"hosted_checkout\":null,\"payer\":{\"email\":\"test@example.com\",\"name\":\"Longbob Longsen\",\"home_address\":null},\"npo_information\":null,\"payment_error\":null,\"in_review\":false,\"auto_release\":true})
+    %({"checkout_id":1181910285,"account_id":2080478981,"type":"goods","short_description":"Purchase","currency":"USD","amount":20,"state":"authorized","soft_descriptor":"WPY*Spreedly","create_time":1481836590,"gross":20.88,"reference_id":null,"callback_uri":null,"long_description":null,"delivery_type":null,"fee":{"app_fee":0,"processing_fee":0.88,"fee_payer":"payer"},"chargeback":{"amount_charged_back":0,"dispute_uri":null},"refund":{"amount_refunded":0,"refund_reason":null},"payment_method":{"type":"credit_card","credit_card":{"id":1929540809,"data":{"emv_receipt":null,"signature_url":null},"auto_capture":false}},"hosted_checkout":null,"payer":{"email":"test@example.com","name":"Longbob Longsen","home_address":null},"npo_information":null,"payment_error":null,"in_review":false,"auto_release":true})
   end
 
   def failed_capture_response

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class AdyenGateway < Gateway
       # we recommend setting up merchant-specific endpoints.
       # https://docs.adyen.com/developers/api-manual#apiendpoints
@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
-        amount = options[:verify_amount]&.to_i || 0
+        amount = options[:verify_amount].to_i
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(amount, credit_card, options) }
           options[:idempotency_key] = nil
@@ -293,8 +293,8 @@ module ActiveMerchant #:nodoc:
         return unless options[:level_2_data].present?
 
         mapper = {
-          "enhancedSchemeData.totalTaxAmount": 'total_tax_amount',
-          "enhancedSchemeData.customerReference": 'customer_reference'
+          'enhancedSchemeData.totalTaxAmount': 'total_tax_amount',
+          'enhancedSchemeData.customerReference': 'customer_reference'
         }
         post[:additionalData].merge!(extract_and_transform(mapper, options[:level_2_data]))
       end
@@ -302,13 +302,13 @@ module ActiveMerchant #:nodoc:
       def add_level_3_data(post, options)
         return unless options[:level_3_data].present?
 
-        mapper = { "enhancedSchemeData.freightAmount": 'freight_amount',
-          "enhancedSchemeData.destinationStateProvinceCode": 'destination_state_province_code',
-          "enhancedSchemeData.shipFromPostalCode": 'ship_from_postal_code',
-          "enhancedSchemeData.orderDate": 'order_date',
-          "enhancedSchemeData.destinationPostalCode": 'destination_postal_code',
-          "enhancedSchemeData.destinationCountryCode": 'destination_country_code',
-          "enhancedSchemeData.dutyAmount": 'duty_amount' }
+        mapper = { 'enhancedSchemeData.freightAmount': 'freight_amount',
+          'enhancedSchemeData.destinationStateProvinceCode': 'destination_state_province_code',
+          'enhancedSchemeData.shipFromPostalCode': 'ship_from_postal_code',
+          'enhancedSchemeData.orderDate': 'order_date',
+          'enhancedSchemeData.destinationPostalCode': 'destination_postal_code',
+          'enhancedSchemeData.destinationCountryCode': 'destination_country_code',
+          'enhancedSchemeData.dutyAmount': 'duty_amount' }
 
         post[:additionalData].merge!(extract_and_transform(mapper, options[:level_3_data]))
 
@@ -425,7 +425,7 @@ module ActiveMerchant #:nodoc:
 
       def add_risk_data(post, options)
         if (risk_data = options[:risk_data])
-          risk_data = Hash[risk_data.map { |k, v| ["riskdata.#{k}", v] }]
+          risk_data = risk_data.transform_keys { |k| "riskdata.#{k}" }
           post[:additionalData].merge!(risk_data)
         end
       end
@@ -502,7 +502,7 @@ module ActiveMerchant #:nodoc:
           post[:deliveryAddress][:stateOrProvince] = get_state(address)
           post[:deliveryAddress][:country] = get_country(address)
         end
-        return unless post[:bankAccount]&.kind_of?(Hash) || post[:card]&.kind_of?(Hash)
+        return unless post[:bankAccount].kind_of?(Hash) || post[:card].kind_of?(Hash)
 
         if (address = options[:billing_address] || options[:address]) && address[:country]
           add_billing_address(post, options, address)
@@ -548,11 +548,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment, options, action = nil)
-        if payment.is_a?(String)
+        case payment
+        when String
           _, _, recurring_detail_reference = payment.split('#')
           post[:selectedRecurringDetailReference] = recurring_detail_reference
           options[:recurring_contract_type] ||= 'RECURRING'
-        elsif payment.is_a?(Check)
+        when Check
           add_bank_account(post, payment, options, action)
         else
           add_mpi_data_for_network_tokenization_card(post, payment, options) if payment.is_a?(NetworkTokenizationCreditCard)
@@ -827,7 +828,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(action, response, options)
-        if %w[RedirectShopper ChallengeShopper].include?(response.dig('resultCode')) && !options[:execute_threed] && !options[:threed_dynamic]
+        if %w[RedirectShopper ChallengeShopper].include?(response['resultCode']) && !options[:execute_threed] && !options[:threed_dynamic]
           response['refusalReason'] = 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.'
           return false
         end

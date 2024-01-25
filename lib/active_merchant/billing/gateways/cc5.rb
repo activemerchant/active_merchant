@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # CC5 API is used by many banks in Turkey. Extend this base class to provide
     # concrete implementations.
     class CC5Gateway < Gateway
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
           add_amount_tags(money, options, xml)
           xml.tag! 'Email', options[:email] if options[:email]
 
-          if (address = (options[:billing_address] || options[:address]))
+          if (address = options[:billing_address] || options[:address])
             xml.tag! 'BillTo' do
               add_address(xml, address)
             end
@@ -143,11 +143,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def currency_code(currency)
-        (CURRENCY_CODES[currency] || CURRENCY_CODES[default_currency])
+        CURRENCY_CODES[currency] || CURRENCY_CODES[default_currency]
       end
 
       def commit(request)
-        raw_response = ssl_post((test? ? self.test_url : self.live_url), 'DATA=' + request)
+        raw_response = ssl_post((test? ? self.test_url : self.live_url), "DATA=#{request}")
 
         response = parse(raw_response)
 

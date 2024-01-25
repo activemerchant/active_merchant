@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # Initialization Options
     # :login                Your store number
     # :pem                  The text of your linkpoint PEM file. Note
@@ -445,7 +445,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def format_creditcard_expiry_year(year)
-        sprintf('%.4i', year)[-2..-1]
+        sprintf('%.4i', year)[-2..]
       end
     end
   end

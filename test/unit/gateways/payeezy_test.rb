@@ -416,7 +416,7 @@ class PayeezyGateway < Test::Unit::TestCase
     response = stub_comms do
       @gateway.credit(@amount, @credit_card, @options.merge(order_id: 1234))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\"merchant_ref\":1234/, data)
+      assert_match(/"merchant_ref":1234/, data)
     end.respond_with(successful_refund_response)
 
     assert_success response
@@ -547,7 +547,7 @@ class PayeezyGateway < Test::Unit::TestCase
       starting SSL for api-cert.payeezy.com:443...
         SSL established
       <- "POST /v1/transactions HTTP/1.1\r\nContent-Type: application/json\r\nApikey: oKB61AAxbN3xwC6gVAH3dp58FmioHSAT\r\nToken: fdoa-a480ce8951daa73262734cf102641994c1e55e7cdf4c02b6\r\nNonce: 5803993876.636232\r\nTimestamp: 1449523748359\r\nAuthorization: NGRlZjJkMWNlMDc5NGI5OTVlYTQxZDRkOGQ4NjRhNmZhNDgwZmIyNTZkMWJhN2M3MDdkNDI0ZWI1OGUwMGExMA==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api-cert.payeezy.com\r\nContent-Length: 365\r\n\r\n"
-      <- "{\"transaction_type\":\"purchase\",\"merchant_ref\":null,\"method\":\"credit_card\",\"credit_card\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"card_number\":\"4242424242424242\",\"exp_date\":\"0916\",\"cvv\":\"123\"},\"billing_address\":{\"street\":\"456 My Street\",\"city\":\"Ottawa\",\"state_province\":\"ON\",\"zip_postal_code\":\"K1C2N6\",\"country\":\"CA\"},\"currency_code\":\"USD\",\"amount\":\"100\"}"
+      <- "{"transaction_type":"purchase","merchant_ref":null,"method":"credit_card","credit_card":{"type":"Visa","cardholder_name":"Longbob Longsen","card_number":"4242424242424242","exp_date":"0916","cvv":"123"},"billing_address":{"street":"456 My Street","city":"Ottawa","state_province":"ON","zip_postal_code":"K1C2N6","country":"CA"},"currency_code":"USD","amount":"100"}"
       -> "HTTP/1.1 201 Created\r\n"
       -> "Access-Control-Allow-Headers: Content-Type, apikey, token\r\n"
       -> "Access-Control-Allow-Methods: GET, PUT, POST, DELETE\r\n"
@@ -568,7 +568,7 @@ class PayeezyGateway < Test::Unit::TestCase
       -> "Connection: Close\r\n"
       -> "\r\n"
       reading 549 bytes...
-        -> "{\"correlation_id\":\"228.1449523748595\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET189831\",\"transaction_tag\":\"69607700\",\"method\":\"credit_card\",\"amount\":\"100\",\"currency\":\"USD\",\"avs\":\"4\",\"cvv2\":\"M\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"1950935021264242\"}},\"card\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"card_number\":\"4242\",\"exp_date\":\"0916\"},\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\"}"
+        -> "{"correlation_id":"228.1449523748595","transaction_status":"approved","validation_status":"success","transaction_type":"purchase","transaction_id":"ET189831","transaction_tag":"69607700","method":"credit_card","amount":"100","currency":"USD","avs":"4","cvv2":"M","token":{"token_type":"FDToken","token_data":{"value":"1950935021264242"}},"card":{"type":"Visa","cardholder_name":"Longbob Longsen","card_number":"4242","exp_date":"0916"},"bank_resp_code":"100","bank_message":"Approved","gateway_resp_code":"00","gateway_message":"Transaction Normal"}"
         read 549 bytes
         Conn close
     TRANSCRIPT
@@ -581,7 +581,7 @@ class PayeezyGateway < Test::Unit::TestCase
       starting SSL for api-cert.payeezy.com:443...
         SSL established
       <- "POST /v1/transactions HTTP/1.1\r\nContent-Type: application/json\r\nApikey: [FILTERED]\r\nToken: [FILTERED]\r\nNonce: 5803993876.636232\r\nTimestamp: 1449523748359\r\nAuthorization: NGRlZjJkMWNlMDc5NGI5OTVlYTQxZDRkOGQ4NjRhNmZhNDgwZmIyNTZkMWJhN2M3MDdkNDI0ZWI1OGUwMGExMA==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api-cert.payeezy.com\r\nContent-Length: 365\r\n\r\n"
-      <- "{\"transaction_type\":\"purchase\",\"merchant_ref\":null,\"method\":\"credit_card\",\"credit_card\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"card_number\":\"[FILTERED]\",\"exp_date\":\"0916\",\"cvv\":\"[FILTERED]\"},\"billing_address\":{\"street\":\"456 My Street\",\"city\":\"Ottawa\",\"state_province\":\"ON\",\"zip_postal_code\":\"K1C2N6\",\"country\":\"CA\"},\"currency_code\":\"USD\",\"amount\":\"100\"}"
+      <- "{"transaction_type":"purchase","merchant_ref":null,"method":"credit_card","credit_card":{"type":"Visa","cardholder_name":"Longbob Longsen","card_number":"[FILTERED]","exp_date":"0916","cvv":"[FILTERED]"},"billing_address":{"street":"456 My Street","city":"Ottawa","state_province":"ON","zip_postal_code":"K1C2N6","country":"CA"},"currency_code":"USD","amount":"100"}"
       -> "HTTP/1.1 201 Created\r\n"
       -> "Access-Control-Allow-Headers: Content-Type, apikey, token\r\n"
       -> "Access-Control-Allow-Methods: GET, PUT, POST, DELETE\r\n"
@@ -602,7 +602,7 @@ class PayeezyGateway < Test::Unit::TestCase
       -> "Connection: Close\r\n"
       -> "\r\n"
       reading 549 bytes...
-        -> "{\"correlation_id\":\"228.1449523748595\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET189831\",\"transaction_tag\":\"69607700\",\"method\":\"credit_card\",\"amount\":\"100\",\"currency\":\"USD\",\"avs\":\"4\",\"cvv2\":\"M\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"1950935021264242\"}},\"card\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"card_number\":\"[FILTERED]\",\"exp_date\":\"0916\"},\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\"}"
+        -> "{"correlation_id":"228.1449523748595","transaction_status":"approved","validation_status":"success","transaction_type":"purchase","transaction_id":"ET189831","transaction_tag":"69607700","method":"credit_card","amount":"100","currency":"USD","avs":"4","cvv2":"M","token":{"token_type":"FDToken","token_data":{"value":"1950935021264242"}},"card":{"type":"Visa","cardholder_name":"Longbob Longsen","card_number":"[FILTERED]","exp_date":"0916"},"bank_resp_code":"100","bank_message":"Approved","gateway_resp_code":"00","gateway_message":"Transaction Normal"}"
         read 549 bytes
         Conn close
     TRANSCRIPT
@@ -610,7 +610,7 @@ class PayeezyGateway < Test::Unit::TestCase
 
   def pre_scrubbed_echeck
     <<~TRANSCRIPT
-      {\"transaction_type\":\"purchase\",\"merchant_ref\":null,\"method\":\"tele_check\",\"tele_check\":{\"check_number\":\"1\",\"check_type\":\"P\",\"routing_number\":\"244183602\",\"account_number\":\"15378535\",\"accountholder_name\":\"Jim Smith\"},\"billing_address\":{\"street\":\"456 My Street\",\"city\":\"Ottawa\",\"state_province\":\"ON\",\"zip_postal_code\":\"K1C2N6\",\"country\":\"CA\"},\"currency_code\":\"USD\",\"amount\":\"100\"}"
+      {"transaction_type":"purchase","merchant_ref":null,"method":"tele_check","tele_check":{"check_number":"1","check_type":"P","routing_number":"244183602","account_number":"15378535","accountholder_name":"Jim Smith"},"billing_address":{"street":"456 My Street","city":"Ottawa","state_province":"ON","zip_postal_code":"K1C2N6","country":"CA"},"currency_code":"USD","amount":"100"}"
       -> "HTTP/1.1 201 Created\r\n"
       -> "Access-Control-Allow-Headers: Content-Type, apikey, token\r\n"
       -> "Access-Control-Allow-Methods: GET, PUT, POST, DELETE\r\n"
@@ -631,13 +631,13 @@ class PayeezyGateway < Test::Unit::TestCase
       -> "Connection: Close\r\n"
       -> "\r\n"
       reading 491 bytes...
-      -> "{\"correlation_id\":\"228.1449689594381\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET196703\",\"transaction_tag\":\"69865571\",\"method\":\"tele_check\",\"amount\":\"100\",\"currency\":\"USD\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"tele_check\":{\"accountholder_name\":\"Jim Smith\",\"check_number\":\"1\",\"check_type\":\"P\",\"account_number\":\"8535\",\"routing_number\":\"244183602\"}}
+      -> "{"correlation_id":"228.1449689594381","transaction_status":"approved","validation_status":"success","transaction_type":"purchase","transaction_id":"ET196703","transaction_tag":"69865571","method":"tele_check","amount":"100","currency":"USD","bank_resp_code":"100","bank_message":"Approved","gateway_resp_code":"00","gateway_message":"Transaction Normal","tele_check":{"accountholder_name":"Jim Smith","check_number":"1","check_type":"P","account_number":"8535","routing_number":"244183602"}}
     TRANSCRIPT
   end
 
   def post_scrubbed_echeck
     <<~TRANSCRIPT
-      {\"transaction_type\":\"purchase\",\"merchant_ref\":null,\"method\":\"tele_check\",\"tele_check\":{\"check_number\":\"1\",\"check_type\":\"P\",\"routing_number\":\"[FILTERED]\",\"account_number\":\"[FILTERED]\",\"accountholder_name\":\"Jim Smith\"},\"billing_address\":{\"street\":\"456 My Street\",\"city\":\"Ottawa\",\"state_province\":\"ON\",\"zip_postal_code\":\"K1C2N6\",\"country\":\"CA\"},\"currency_code\":\"USD\",\"amount\":\"100\"}"
+      {"transaction_type":"purchase","merchant_ref":null,"method":"tele_check","tele_check":{"check_number":"1","check_type":"P","routing_number":"[FILTERED]","account_number":"[FILTERED]","accountholder_name":"Jim Smith"},"billing_address":{"street":"456 My Street","city":"Ottawa","state_province":"ON","zip_postal_code":"K1C2N6","country":"CA"},"currency_code":"USD","amount":"100"}"
       -> "HTTP/1.1 201 Created\r\n"
       -> "Access-Control-Allow-Headers: Content-Type, apikey, token\r\n"
       -> "Access-Control-Allow-Methods: GET, PUT, POST, DELETE\r\n"
@@ -658,7 +658,7 @@ class PayeezyGateway < Test::Unit::TestCase
       -> "Connection: Close\r\n"
       -> "\r\n"
       reading 491 bytes...
-      -> "{\"correlation_id\":\"228.1449689594381\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET196703\",\"transaction_tag\":\"69865571\",\"method\":\"tele_check\",\"amount\":\"100\",\"currency\":\"USD\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"tele_check\":{\"accountholder_name\":\"Jim Smith\",\"check_number\":\"1\",\"check_type\":\"P\",\"account_number\":\"[FILTERED]\",\"routing_number\":\"[FILTERED]\"}}
+      -> "{"correlation_id":"228.1449689594381","transaction_status":"approved","validation_status":"success","transaction_type":"purchase","transaction_id":"ET196703","transaction_tag":"69865571","method":"tele_check","amount":"100","currency":"USD","bank_resp_code":"100","bank_message":"Approved","gateway_resp_code":"00","gateway_message":"Transaction Normal","tele_check":{"accountholder_name":"Jim Smith","check_number":"1","check_type":"P","account_number":"[FILTERED]","routing_number":"[FILTERED]"}}
     TRANSCRIPT
   end
 
@@ -684,7 +684,7 @@ class PayeezyGateway < Test::Unit::TestCase
       -> "Connection: Close\r\n"
       -> "\r\n"
       reading 266 bytes...
-      -> "\n       Payeezy.callback({\n        \t\"status\":201,\n        \t\"results\":{\"correlation_id\":\"228.1574930196886\",\"status\":\"success\",\"type\":\"FDToken\",\"token\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"exp_date\":\"0919\",\"value\":\"2158545373614242\"}}\n        })\n      "
+      -> "\n       Payeezy.callback({\n        \t"status":201,\n        \t"results":{"correlation_id":"228.1574930196886","status":"success","type":"FDToken","token":{"type":"Visa","cardholder_name":"Longbob Longsen","exp_date":"0919","value":"2158545373614242"}}\n        })\n      "
       read 266 bytes
       Conn close
     TRANSCRIPT
@@ -712,7 +712,7 @@ class PayeezyGateway < Test::Unit::TestCase
       -> "Connection: Close\r\n"
       -> "\r\n"
       reading 266 bytes...
-      -> "\n       Payeezy.callback({\n        \t\"status\":201,\n        \t\"results\":{\"correlation_id\":\"228.1574930196886\",\"status\":\"success\",\"type\":\"FDToken\",\"token\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"exp_date\":\"0919\",\"value\":\"2158545373614242\"}}\n        })\n      "
+      -> "\n       Payeezy.callback({\n        \t"status":201,\n        \t"results":{"correlation_id":"228.1574930196886","status":"success","type":"FDToken","token":{"type":"Visa","cardholder_name":"Longbob Longsen","exp_date":"0919","value":"2158545373614242"}}\n        })\n      "
       read 266 bytes
       Conn close
     TRANSCRIPT
@@ -725,7 +725,7 @@ class PayeezyGateway < Test::Unit::TestCase
       starting SSL for api-cert.payeezy.com:443...
       SSL established
       <- "POST /v1/transactions HTTP/1.1\r\nContent-Type: application/json\r\nApikey: oKB61AAxbN3xwC6gVAH3dp58FmioHSAT\r\nToken: fdoa-a480ce8951daa73262734cf102641994c1e55e7cdf4c02b6\r\nNonce: 2713241561.4909368\r\nTimestamp: 1668784714406\r\nAuthorization: NDU2ZWRiNmUwMmUxNGMwOGIwYjMxYTAxMDkzZDcwNWNhM2Y0ODExNmRmMTNjNDVjMTFhODMyNTg4NDdiNzZiNw==\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: api-cert.payeezy.com\r\nContent-Length: 462\r\n\r\n"
-      <- "{\"transaction_type\":\"purchase\",\"merchant_ref\":null,\"3DS\":{\"type\":\"D\",\"cardholder_name\":\"Longbob\",\"card_number\":\"4761209980011439\",\"exp_date\":\"1122\",\"cvv\":569,\"xid\":\"YwAAAAAABaYcCMX/OhNRQAAAAAA=\",\"cavv\":\"YwAAAAAABaYcCMX/OhNRQAAAAAA=\",\"wallet_provider_id\":\"APPLE_PAY\"},\"method\":\"3DS\",\"eci_indicator\":5,\"billing_address\":{\"street\":\"456 My Street\",\"city\":\"Ottawa\",\"state_province\":\"ON\",\"zip_postal_code\":\"K1C2N6\",\"country\":\"CA\"},\"currency_code\":\"USD\",\"amount\":\"100\"}"
+      <- "{"transaction_type":"purchase","merchant_ref":null,"3DS":{"type":"D","cardholder_name":"Longbob","card_number":"4761209980011439","exp_date":"1122","cvv":569,"xid":"YwAAAAAABaYcCMX/OhNRQAAAAAA=","cavv":"YwAAAAAABaYcCMX/OhNRQAAAAAA=","wallet_provider_id":"APPLE_PAY"},"method":"3DS","eci_indicator":5,"billing_address":{"street":"456 My Street","city":"Ottawa","state_province":"ON","zip_postal_code":"K1C2N6","country":"CA"},"currency_code":"USD","amount":"100"}"
       -> "HTTP/1.1 201 Created\r\n"
       -> "Date: Fri, 18 Nov 2022 15:18:35 GMT\r\n"
       -> "Content-Type: application/json;charset=UTF-8\r\n"
@@ -751,7 +751,7 @@ class PayeezyGateway < Test::Unit::TestCase
       -> "\r\n"
       -> "249\r\n"
       reading 585 bytes...
-      -> "{\"correlation_id\":\"134.6878471461658\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET188163\",\"transaction_tag\":\"10032826722\",\"method\":\"3ds\",\"amount\":\"100\",\"currency\":\"USD\",\"avs\":\"4\",\"cvv2\":\"U\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"9324008290401439\"}},\"card\":{\"type\":\"VISA\",\"cardholder_name\":\"Longbob\",\"card_number\":\"1439\",\"exp_date\":\"1122\"},\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"eCommerce_flag\":\"5\",\"retrieval_ref_no\":\"221118\"}"
+      -> "{"correlation_id":"134.6878471461658","transaction_status":"approved","validation_status":"success","transaction_type":"purchase","transaction_id":"ET188163","transaction_tag":"10032826722","method":"3ds","amount":"100","currency":"USD","avs":"4","cvv2":"U","token":{"token_type":"FDToken","token_data":{"value":"9324008290401439"}},"card":{"type":"VISA","cardholder_name":"Longbob","card_number":"1439","exp_date":"1122"},"bank_resp_code":"100","bank_message":"Approved","gateway_resp_code":"00","gateway_message":"Transaction Normal","eCommerce_flag":"5","retrieval_ref_no":"221118"}"
       read 585 bytes
       reading 2 bytes...
       -> "\r\n"
@@ -769,7 +769,7 @@ class PayeezyGateway < Test::Unit::TestCase
       starting SSL for api-cert.payeezy.com:443...
       SSL established
       <- "POST /v1/transactions HTTP/1.1\r\nContent-Type: application/json\r\nApikey: [FILTERED]\r\nToken: [FILTERED]\r\nNonce: 2713241561.4909368\r\nTimestamp: 1668784714406\r\nAuthorization: NDU2ZWRiNmUwMmUxNGMwOGIwYjMxYTAxMDkzZDcwNWNhM2Y0ODExNmRmMTNjNDVjMTFhODMyNTg4NDdiNzZiNw==\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: api-cert.payeezy.com\r\nContent-Length: 462\r\n\r\n"
-      <- "{\"transaction_type\":\"purchase\",\"merchant_ref\":null,\"3DS\":{\"type\":\"D\",\"cardholder_name\":\"Longbob\",\"card_number\":\"[FILTERED]\",\"exp_date\":\"1122\",\"cvv\":[FILTERED],\"xid\":[FILTERED],\"cavv\":[FILTERED],\"wallet_provider_id\":\"APPLE_PAY\"},\"method\":\"3DS\",\"eci_indicator\":5,\"billing_address\":{\"street\":\"456 My Street\",\"city\":\"Ottawa\",\"state_province\":\"ON\",\"zip_postal_code\":\"K1C2N6\",\"country\":\"CA\"},\"currency_code\":\"USD\",\"amount\":\"100\"}"
+      <- "{"transaction_type":"purchase","merchant_ref":null,"3DS":{"type":"D","cardholder_name":"Longbob","card_number":"[FILTERED]","exp_date":"1122","cvv":[FILTERED],"xid":[FILTERED],"cavv":[FILTERED],"wallet_provider_id":"APPLE_PAY"},"method":"3DS","eci_indicator":5,"billing_address":{"street":"456 My Street","city":"Ottawa","state_province":"ON","zip_postal_code":"K1C2N6","country":"CA"},"currency_code":"USD","amount":"100"}"
       -> "HTTP/1.1 201 Created\r\n"
       -> "Date: Fri, 18 Nov 2022 15:18:35 GMT\r\n"
       -> "Content-Type: application/json;charset=UTF-8\r\n"
@@ -795,7 +795,7 @@ class PayeezyGateway < Test::Unit::TestCase
       -> "\r\n"
       -> "249\r\n"
       reading 585 bytes...
-      -> "{\"correlation_id\":\"134.6878471461658\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET188163\",\"transaction_tag\":\"10032826722\",\"method\":\"3ds\",\"amount\":\"100\",\"currency\":\"USD\",\"avs\":\"4\",\"cvv2\":\"U\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"9324008290401439\"}},\"card\":{\"type\":\"VISA\",\"cardholder_name\":\"Longbob\",\"card_number\":\"[FILTERED]\",\"exp_date\":\"1122\"},\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"eCommerce_flag\":\"5\",\"retrieval_ref_no\":\"221118\"}"
+      -> "{"correlation_id":"134.6878471461658","transaction_status":"approved","validation_status":"success","transaction_type":"purchase","transaction_id":"ET188163","transaction_tag":"10032826722","method":"3ds","amount":"100","currency":"USD","avs":"4","cvv2":"U","token":{"token_type":"FDToken","token_data":{"value":"9324008290401439"}},"card":{"type":"VISA","cardholder_name":"Longbob","card_number":"[FILTERED]","exp_date":"1122"},"bank_resp_code":"100","bank_message":"Approved","gateway_resp_code":"00","gateway_message":"Transaction Normal","eCommerce_flag":"5","retrieval_ref_no":"221118"}"
       read 585 bytes
       reading 2 bytes...
       -> "\r\n"
@@ -808,7 +808,7 @@ class PayeezyGateway < Test::Unit::TestCase
 
   def successful_purchase_response
     <<~RESPONSE
-      {\"method\":\"credit_card\",\"amount\":\"1\",\"currency\":\"USD\",\"avs\":\"4\",\"card\":{\"type\":\"Visa\",\"cardholder_name\":\"Bobsen 995\",\"card_number\":\"4242\",\"exp_date\":\"0816\"},\"token\":{\"token_type\":\"transarmor\",\"token_data\":{\"value\":\"0152552999534242\"}},\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET114541\",\"transaction_tag\":\"55083431\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"correlation_id\":\"124.1433862672836\"}
+      {"method":"credit_card","amount":"1","currency":"USD","avs":"4","card":{"type":"Visa","cardholder_name":"Bobsen 995","card_number":"4242","exp_date":"0816"},"token":{"token_type":"transarmor","token_data":{"value":"0152552999534242"}},"transaction_status":"approved","validation_status":"success","transaction_type":"purchase","transaction_id":"ET114541","transaction_tag":"55083431","bank_resp_code":"100","bank_message":"Approved","gateway_resp_code":"00","gateway_message":"Transaction Normal","correlation_id":"124.1433862672836"}
     RESPONSE
   end
 
@@ -818,19 +818,19 @@ class PayeezyGateway < Test::Unit::TestCase
 
   def successful_purchase_echeck_response
     <<~RESPONSE
-      {\"correlation_id\":\"228.1449688619062\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET133078\",\"transaction_tag\":\"69864362\",\"method\":\"tele_check\",\"amount\":\"100\",\"currency\":\"USD\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"tele_check\":{\"accountholder_name\":\"Jim Smith\",\"check_number\":\"1\",\"check_type\":\"P\",\"account_number\":\"8535\",\"routing_number\":\"244183602\"}}
+      {"correlation_id":"228.1449688619062","transaction_status":"approved","validation_status":"success","transaction_type":"purchase","transaction_id":"ET133078","transaction_tag":"69864362","method":"tele_check","amount":"100","currency":"USD","bank_resp_code":"100","bank_message":"Approved","gateway_resp_code":"00","gateway_message":"Transaction Normal","tele_check":{"accountholder_name":"Jim Smith","check_number":"1","check_type":"P","account_number":"8535","routing_number":"244183602"}}
     RESPONSE
   end
 
   def successful_store_response
     <<~RESPONSE
-      {\"correlation_id\":\"124.1792879391754\",\"status\":\"success\",\"type\":\"FDToken\",\"token\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"exp_date\":\"0919\",\"value\":\"9045348309244242\"}}
+      {"correlation_id":"124.1792879391754","status":"success","type":"FDToken","token":{"type":"Visa","cardholder_name":"Longbob Longsen","exp_date":"0919","value":"9045348309244242"}}
     RESPONSE
   end
 
   def failed_store_response
     <<~RESPONSE
-      {\"correlation_id\":\"124.1792940806770\",\"status\":\"failed\",\"Error\":{\"messages\":[{\"code\":\"invalid_card_number\",\"description\":\"The credit card number check failed\"}]},\"type\":\"FDToken\"}
+      {"correlation_id":"124.1792940806770","status":"failed","Error":{"messages":[{"code":"invalid_card_number","description":"The credit card number check failed"}]},"type":"FDToken"}
     RESPONSE
   end
 
@@ -881,43 +881,43 @@ class PayeezyGateway < Test::Unit::TestCase
 
   def successful_authorize_response
     <<~RESPONSE
-      {\"correlation_id\":\"228.1449517682800\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"authorize\",\"transaction_id\":\"ET156862\",\"transaction_tag\":\"69601979\",\"method\":\"credit_card\",\"amount\":\"100\",\"currency\":\"USD\",\"avs\":\"4\",\"cvv2\":\"M\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"1446473518714242\"}},\"card\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"card_number\":\"4242\",\"exp_date\":\"0916\"},\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\"}
+      {"correlation_id":"228.1449517682800","transaction_status":"approved","validation_status":"success","transaction_type":"authorize","transaction_id":"ET156862","transaction_tag":"69601979","method":"credit_card","amount":"100","currency":"USD","avs":"4","cvv2":"M","token":{"token_type":"FDToken","token_data":{"value":"1446473518714242"}},"card":{"type":"Visa","cardholder_name":"Longbob Longsen","card_number":"4242","exp_date":"0916"},"bank_resp_code":"100","bank_message":"Approved","gateway_resp_code":"00","gateway_message":"Transaction Normal"}
     RESPONSE
   end
 
   def failed_authorize_response
     <<~RESPONSE
-      {\"correlation_id\":\"228.1449522605561\",\"transaction_status\":\"declined\",\"validation_status\":\"success\",\"transaction_type\":\"authorize\",\"transaction_tag\":\"69607256\",\"method\":\"credit_card\",\"amount\":\"501300\",\"currency\":\"USD\",\"avs\":\"4\",\"cvv2\":\"M\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"0843687226934242\"}},\"card\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"card_number\":\"4242\",\"exp_date\":\"0916\"},\"bank_resp_code\":\"013\",\"bank_message\":\"Transaction not approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\"}
+      {"correlation_id":"228.1449522605561","transaction_status":"declined","validation_status":"success","transaction_type":"authorize","transaction_tag":"69607256","method":"credit_card","amount":"501300","currency":"USD","avs":"4","cvv2":"M","token":{"token_type":"FDToken","token_data":{"value":"0843687226934242"}},"card":{"type":"Visa","cardholder_name":"Longbob Longsen","card_number":"4242","exp_date":"0916"},"bank_resp_code":"013","bank_message":"Transaction not approved","gateway_resp_code":"00","gateway_message":"Transaction Normal"}
     RESPONSE
   end
 
   def successful_capture_response
     <<~RESPONSE
-      {\"correlation_id\":\"228.1449517473876\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"capture\",\"transaction_id\":\"ET176427\",\"transaction_tag\":\"69601874\",\"method\":\"credit_card\",\"amount\":\"100\",\"currency\":\"USD\",\"cvv2\":\"I\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"8129044621504242\"}},\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\"}
+      {"correlation_id":"228.1449517473876","transaction_status":"approved","validation_status":"success","transaction_type":"capture","transaction_id":"ET176427","transaction_tag":"69601874","method":"credit_card","amount":"100","currency":"USD","cvv2":"I","token":{"token_type":"FDToken","token_data":{"value":"8129044621504242"}},"bank_resp_code":"100","bank_message":"Approved","gateway_resp_code":"00","gateway_message":"Transaction Normal"}
     RESPONSE
   end
 
   def successful_refund_response
     <<~RESPONSE
-      {\"method\":\"credit_card\",\"amount\":\"1\",\"currency\":\"USD\",\"cvv2\":\"I\",\"token\":{\"token_type\":\"transarmor\",\"token_data\":{\"value\":\"9968749582724242\"}},\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"refund\",\"transaction_id\":\"55084328\",\"transaction_tag\":\"55084328\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"correlation_id\":\"124.1433864648126\"}
+      {"method":"credit_card","amount":"1","currency":"USD","cvv2":"I","token":{"token_type":"transarmor","token_data":{"value":"9968749582724242"}},"transaction_status":"approved","validation_status":"success","transaction_type":"refund","transaction_id":"55084328","transaction_tag":"55084328","bank_resp_code":"100","bank_message":"Approved","gateway_resp_code":"00","gateway_message":"Transaction Normal","correlation_id":"124.1433864648126"}
     RESPONSE
   end
 
   def successful_refund_echeck_response
     <<~RESPONSE
-      {\"correlation_id\":\"228.1449688783287\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"refund\",\"transaction_id\":\"69864710\",\"transaction_tag\":\"69864710\",\"method\":\"tele_check\",\"amount\":\"50\",\"currency\":\"USD\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\"}
+      {"correlation_id":"228.1449688783287","transaction_status":"approved","validation_status":"success","transaction_type":"refund","transaction_id":"69864710","transaction_tag":"69864710","method":"tele_check","amount":"50","currency":"USD","bank_resp_code":"100","bank_message":"Approved","gateway_resp_code":"00","gateway_message":"Transaction Normal"}
     RESPONSE
   end
 
   def below_minimum_response
     <<~RESPONSE
-      {\"correlation_id\":\"123.1234678982\",\"transaction_status\":\"declined\",\"validation_status\":\"success\",\"transaction_type\":\"authorize\",\"transaction_tag\":\"92384753\",\"method\":\"credit_card\",\"amount\":\"250\",\"currency\":\"USD\",\"card\":{\"type\":\"Mastercard\",\"cardholder_name\":\"Omri Test\",\"card_number\":\"[FILTERED]\",\"exp_date\":\"0123\"},\"gateway_resp_code\":\"36\",\"gateway_message\":\"Below Minimum Sale\"}
+      {"correlation_id":"123.1234678982","transaction_status":"declined","validation_status":"success","transaction_type":"authorize","transaction_tag":"92384753","method":"credit_card","amount":"250","currency":"USD","card":{"type":"Mastercard","cardholder_name":"Omri Test","card_number":"[FILTERED]","exp_date":"0123"},"gateway_resp_code":"36","gateway_message":"Below Minimum Sale"}
     RESPONSE
   end
 
   def failed_purchase_no_name_response
     <<~RESPONSE
-      {\"correlation_id\":\"29.7337367613551\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET106024\",\"transaction_tag\":\"10049930801\",\"method\":\"3ds\",\"amount\":\"100\",\"currency\":\"USD\",\"avs\":\"4\",\"cvv2\":\"U\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"1141044316391439\"}},\"card\":{\"type\":\"VISA\",\"cardholder_name\":\"Jim Smith\",\"card_number\":\"1439\",\"exp_date\":\"1124\"},\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"eCommerce_flag\":\"5\",\"retrieval_ref_no\":\"230110\"}
+      {"correlation_id":"29.7337367613551","transaction_status":"approved","validation_status":"success","transaction_type":"purchase","transaction_id":"ET106024","transaction_tag":"10049930801","method":"3ds","amount":"100","currency":"USD","avs":"4","cvv2":"U","token":{"token_type":"FDToken","token_data":{"value":"1141044316391439"}},"card":{"type":"VISA","cardholder_name":"Jim Smith","card_number":"1439","exp_date":"1124"},"bank_resp_code":"100","bank_message":"Approved","gateway_resp_code":"00","gateway_message":"Transaction Normal","eCommerce_flag":"5","retrieval_ref_no":"230110"}
     RESPONSE
   end
 
@@ -962,7 +962,7 @@ class PayeezyGateway < Test::Unit::TestCase
 
   def successful_void_response
     <<~RESPONSE
-      {\"method\":\"credit_card\",\"amount\":\"1\",\"currency\":\"USD\",\"cvv2\":\"I\",\"token\":{\"token_type\":\"transarmor\",\"token_data\":{\"value\":\"9594258319174242\"}},\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"void\",\"transaction_id\":\"ET196233\",\"transaction_tag\":\"55083674\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"correlation_id\":\"124.1433863576596\"}
+      {"method":"credit_card","amount":"1","currency":"USD","cvv2":"I","token":{"token_type":"transarmor","token_data":{"value":"9594258319174242"}},"transaction_status":"approved","validation_status":"success","transaction_type":"void","transaction_id":"ET196233","transaction_tag":"55083674","bank_resp_code":"100","bank_message":"Approved","gateway_resp_code":"00","gateway_message":"Transaction Normal","correlation_id":"124.1433863576596"}
     RESPONSE
   end
 
@@ -1098,7 +1098,7 @@ class PayeezyGateway < Test::Unit::TestCase
           - '125'
           connection:
           - Close
-        body: '{\"fault\":{\"faultstring\":\"Invalid ApiKey for given resource\",\"detail\":{\"errorcode\":\"oauth.v2.InvalidApiKeyForGivenResource\"}}}'
+        body: '{"fault":{"faultstring":"Invalid ApiKey for given resource","detail":{"errorcode":"oauth.v2.InvalidApiKeyForGivenResource"}}}'
         read: true
         uri:
         decode_content: true

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class VisanetPeruGateway < Gateway
       include Empty
       self.display_name = 'VisaNet Peru Gateway'
@@ -79,8 +79,8 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(%r((\"cardNumber\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"cvv2Code\\\":\\\")\d+), '\1[FILTERED]')
+          gsub(%r(("cardNumber\\":\\")\d+), '\1[FILTERED]').
+          gsub(%r(("cvv2Code\\":\\")\d+), '\1[FILTERED]')
       end
 
       private
@@ -167,15 +167,16 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Authorization' => 'Basic ' + Base64.strict_encode64("#{@options[:access_key_id]}:#{@options[:secret_access_key]}").strip,
+          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:access_key_id]}:#{@options[:secret_access_key]}").strip}",
           'Content-Type'  => 'application/json'
         }
       end
 
       def url(action, params, options = {})
-        if action == 'authorize'
+        case action
+        when 'authorize'
           "#{base_url}/#{@options[:merchant_id]}"
-        elsif action == 'refund'
+        when 'refund'
           "#{base_url}/#{@options[:merchant_id]}/#{action}/#{options[:transaction_id]}"
         else
           "#{base_url}/#{@options[:merchant_id]}/#{action}/#{params[:purchaseNumber]}"

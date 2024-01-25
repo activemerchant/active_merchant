@@ -114,7 +114,7 @@ class HdfcTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, order_id: 'a' * 41, description: "This has 'Hack Characters' ~`!\#$%^=+|\\:'\",;<>{}[]() and non-Hack Characters -_@.")
     end.check_request do |_endpoint, data, _headers|
       assert_match(/>This has Hack Characters  and non-Hack Characters -_@.</, data)
-      assert_match(/>#{"a" * 40}</, data)
+      assert_match(/>#{'a' * 40}</, data)
     end.respond_with(successful_purchase_response)
   end
 

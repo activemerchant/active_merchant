@@ -728,8 +728,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   end
 
   def successful_post_auth_response
-    <<-XML
-    XML
+    ''
   end
 
   def failed_post_auth_response
@@ -746,8 +745,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   end
 
   def successful_override_transaction_response
-    <<-XML
-    XML
+    ''
   end
 
   def failed_override_transaction_response

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class DecidirGateway < Gateway
       self.test_url = 'https://developers.decidir.com/api/v2'
       self.live_url = 'https://live.decidir.com/api/v2'
@@ -104,9 +104,9 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((apikey: )\w+)i, '\1[FILTERED]').
-          gsub(%r((\"card_number\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"security_code\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"emv_issuer_data\\\":\\\")\d+), '\1[FILTERED]')
+          gsub(%r(("card_number\\":\\")\d+), '\1[FILTERED]').
+          gsub(%r(("security_code\\":\\")\d+), '\1[FILTERED]').
+          gsub(%r(("emv_issuer_data\\":\\")\d+), '\1[FILTERED]')
       end
 
       private
@@ -129,31 +129,29 @@ module ActiveMerchant #:nodoc:
         add_sub_payments(post, options)
       end
 
+      DEBIT_CODES = {
+        'visa' => 31,
+        'master' => 105,
+        'maestro' => 106,
+        'cabal' => 108
+      }
+
+      CREDIT_CODES = {
+        'master' => 104,
+        'american_express' => 65,
+        'diners_club' => 8,
+        'cabal' => 63,
+        'naranja' => 24
+      }
+
       def add_payment_method_id(credit_card, options)
+        brand = CreditCard.brand?(credit_card.number)
         if options[:payment_method_id]
           options[:payment_method_id].to_i
         elsif options[:debit]
-          if CreditCard.brand?(credit_card.number) == 'visa'
-            31
-          elsif CreditCard.brand?(credit_card.number) == 'master'
-            105
-          elsif CreditCard.brand?(credit_card.number) == 'maestro'
-            106
-          elsif CreditCard.brand?(credit_card.number) == 'cabal'
-            108
-          end
-        elsif CreditCard.brand?(credit_card.number) == 'master'
-          104
-        elsif CreditCard.brand?(credit_card.number) == 'american_express'
-          65
-        elsif CreditCard.brand?(credit_card.number) == 'diners_club'
-          8
-        elsif CreditCard.brand?(credit_card.number) == 'cabal'
-          63
-        elsif CreditCard.brand?(credit_card.number) == 'naranja'
-          24
+          DEBIT_CODES[brand]
         else
-          1
+          CREDIT_CODES[brand] || 1
         end
       end
 
@@ -163,7 +161,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(post, money, options)
-        currency = (options[:currency] || currency(money))
+        currency = options[:currency] || currency(money)
         post[:amount] = localized_amount(money, currency).to_i
       end
 
@@ -288,7 +286,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(method, endpoint, parameters, options = {})
-        url = "#{(test? ? test_url : live_url)}/#{endpoint}"
+        url = "#{test? ? test_url : live_url}/#{endpoint}"
 
         begin
           raw_response = ssl_request(method, url, post_data(parameters), headers(options))
@@ -329,9 +327,10 @@ module ActiveMerchant #:nodoc:
         if error = response.dig('status_details', 'error')
           message = "#{error.dig('reason', 'description')} | #{error['type']}"
         elsif response['error_type']
-          if response['validation_errors'].is_a?(Array)
+          case response['validation_errors']
+          when Array
             message = response['validation_errors'].map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ')
-          elsif response['validation_errors'].is_a?(Hash)
+          when Hash
             errors = response['validation_errors'].map { |k, v| "#{k}: #{v}" }.join(', ')
             message = "#{response['error_type']} - #{errors}"
           end
@@ -366,12 +365,12 @@ module ActiveMerchant #:nodoc:
         elsif response['error_type']
           error_code = response['error_type'] if response['validation_errors']
         elsif response.dig('error', 'validation_errors')
-          error = response.dig('error')
+          error = response['error']
           validation_errors = error.dig('validation_errors', 0)
           code = validation_errors['code'] if validation_errors && validation_errors['code']
           param = validation_errors['param'] if validation_errors && validation_errors['param']
           error_code = "#{error['error_type']} | #{code} | #{param}" if error['error_type']
-        elsif error = response.dig('error')
+        elsif error = response['error']
           code = error.dig('reason', 'id')
           standard_error_code = STANDARD_ERROR_CODE_MAPPING[code]
           error_code = "#{code}, #{standard_error_code}"

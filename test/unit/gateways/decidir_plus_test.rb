@@ -158,7 +158,7 @@ class DecidirPlusTest < Test::Unit::TestCase
       assert_equal(@sub_payments, JSON.parse(data, symbolize_names: true)[:sub_payments])
       assert_match(/#{options[:installments]}/, data)
       assert_match(/#{options[:payment_type]}/, data)
-      assert_match(/\"payment_method_id\":31/, data)
+      assert_match(/"payment_method_id":31/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -312,7 +312,7 @@ class DecidirPlusTest < Test::Unit::TestCase
 
   def successful_store_response
     %{
-      {\"id\":\"cd4ba1c0-4b41-4c5c-8530-d0c757df8603\",\"status\":\"active\",\"card_number_length\":16,\"date_created\":\"2022-01-07T17:37Z\",\"bin\":\"448459\",\"last_four_digits\":\"3090\",\"security_code_length\":3,\"expiration_month\":9,\"expiration_year\":23,\"date_due\":\"2022-01-07T17:52Z\",\"cardholder\":{\"identification\":{\"type\":\"\",\"number\":\"\"},\"name\":\"Longbob Longsen\"}}
+      {"id":"cd4ba1c0-4b41-4c5c-8530-d0c757df8603","status":"active","card_number_length":16,"date_created":"2022-01-07T17:37Z","bin":"448459","last_four_digits":"3090","security_code_length":3,"expiration_month":9,"expiration_year":23,"date_due":"2022-01-07T17:52Z","cardholder":{"identification":{"type":"","number":""},"name":"Longbob Longsen"}}
     }
   end
 
@@ -320,37 +320,37 @@ class DecidirPlusTest < Test::Unit::TestCase
 
   def successful_purchase_response
     %{
-      {\"id\":12232003,\"site_transaction_id\":\"d80cb4c7430b558cb9362b7bb89d2d38\",\"payment_method_id\":1,\"card_brand\":\"Visa\",\"amount\":100,\"currency\":\"ars\",\"status\":\"approved\",\"status_details\":{\"ticket\":\"4588\",\"card_authorization_code\":\"173710\",\"address_validation_code\":\"VTE0011\",\"error\":null},\"date\":\"2022-01-07T17:37Z\",\"customer\":null,\"bin\":\"448459\",\"installments\":1,\"first_installment_expiration_date\":null,\"payment_type\":\"single\",\"sub_payments\":[],\"site_id\":\"99999999\",\"fraud_detection\":null,\"aggregate_data\":null,\"establishment_name\":null,\"spv\":null,\"confirmed\":null,\"pan\":\"48d2eeca7a9041dc4b2008cf495bc5a8c4\",\"customer_token\":null,\"card_data\":\"/tokens/12232003\",\"token\":\"cd4ba1c0-4b41-4c5c-8530-d0c757df8603\"}
+      {"id":12232003,"site_transaction_id":"d80cb4c7430b558cb9362b7bb89d2d38","payment_method_id":1,"card_brand":"Visa","amount":100,"currency":"ars","status":"approved","status_details":{"ticket":"4588","card_authorization_code":"173710","address_validation_code":"VTE0011","error":null},"date":"2022-01-07T17:37Z","customer":null,"bin":"448459","installments":1,"first_installment_expiration_date":null,"payment_type":"single","sub_payments":[],"site_id":"99999999","fraud_detection":null,"aggregate_data":null,"establishment_name":null,"spv":null,"confirmed":null,"pan":"48d2eeca7a9041dc4b2008cf495bc5a8c4","customer_token":null,"card_data":"/tokens/12232003","token":"cd4ba1c0-4b41-4c5c-8530-d0c757df8603"}
     }
   end
 
   def failed_purchase_response
     %{
-      {\"error_type\":\"invalid_request_error\",\"validation_errors\":[{\"code\":\"invalid_param\",\"param\":\"site_transaction_id\"}]}
+      {"error_type":"invalid_request_error","validation_errors":[{"code":"invalid_param","param":"site_transaction_id"}]}
     }
   end
 
   def failed_purchase_message_response
     %{
-      {\"id\":552537664,\"site_transaction_id\":\"9a59630fd51de97fbd8390adf796c683\",\"payment_method_id\":1,\"card_brand\":\"Visa\",\"amount\":74416,\"currency\":\"ars\",\"status\":\"rejected\",\"status_details\":{\"ticket\":\"2\",\"card_authorization_code\":\"\",\"address_validation_code\":\"VTE0000\",\"error\":{\"type\":\"invalid_card\",\"reason\":{\"id\":57,\"description\":\"TRANS. NO PERMITIDA\",\"additional_description\":\"\"}}},\"date\":\"2022-02-07T10:16Z\",\"customer\":null,\"bin\":\"466057\",\"installments\":1,\"first_installment_expiration_date\":null,\"payment_type\":\"single\",\"sub_payments\":[],\"site_id\":\"92003011\",\"fraud_detection\":{\"status\":null},\"aggregate_data\":null,\"establishment_name\":null,\"spv\":null,\"confirmed\":null,\"pan\":null,\"customer_token\":null,\"card_data\":\"/tokens/552537664\",\"token\":\"ea1bde57-5bdf-4f58-8586-df45c4359664\"}
+      {"id":552537664,"site_transaction_id":"9a59630fd51de97fbd8390adf796c683","payment_method_id":1,"card_brand":"Visa","amount":74416,"currency":"ars","status":"rejected","status_details":{"ticket":"2","card_authorization_code":"","address_validation_code":"VTE0000","error":{"type":"invalid_card","reason":{"id":57,"description":"TRANS. NO PERMITIDA","additional_description":""}}},"date":"2022-02-07T10:16Z","customer":null,"bin":"466057","installments":1,"first_installment_expiration_date":null,"payment_type":"single","sub_payments":[],"site_id":"92003011","fraud_detection":{"status":null},"aggregate_data":null,"establishment_name":null,"spv":null,"confirmed":null,"pan":null,"customer_token":null,"card_data":"/tokens/552537664","token":"ea1bde57-5bdf-4f58-8586-df45c4359664"}
     }
   end
 
   def successful_refund_response
     %{
-      {\"id\":417921,\"amount\":100,\"sub_payments\":null,\"error\":null,\"status\":\"approved\",\"status_details\":{\"ticket\":\"4589\",\"card_authorization_code\":\"173711\",\"address_validation_code\":\"VTE0011\",\"error\":null}}
+      {"id":417921,"amount":100,"sub_payments":null,"error":null,"status":"approved","status_details":{"ticket":"4589","card_authorization_code":"173711","address_validation_code":"VTE0011","error":null}}
     }
   end
 
   def failed_refund_response
     %{
-      {\"error_type\":\"not_found_error\",\"entity_name\":\"\",\"id\":\"\"}
+      {"error_type":"not_found_error","entity_name":"","id":""}
     }
   end
 
   def failed_authorize_response
     %{
-      {\"id\": 12516088,  \"site_transaction_id\": \"e77f40284fd5e0fba8e8ef7d1b784c5e\",  \"payment_method_id\": 1,  \"card_brand\": \"Visa\",  \"amount\": 100,  \"currency\": \"ars\",  \"status\": \"rejected\",  \"status_details\": {    \"ticket\": \"393\",    \"card_authorization_code\": \"\",    \"address_validation_code\": \"VTE0000\",    \"error\": {      \"type\": \"invalid_card\",      \"reason\": {        \"id\": 3,        \"description\": \"COMERCIO INVALIDO\",        \"additional_description\": \"\"      }    }  },  \"date\": \"2022-03-21T13:08Z\",  \"customer\": null,  \"bin\": \"400030\",  \"installments\": 1,  \"first_installment_expiration_date\": null,  \"payment_type\": \"single\",  \"sub_payments\": [],  \"site_id\": \"92002480\",  \"fraud_detection\": {    \"status\": null  },  \"aggregate_data\": null,  \"establishment_name\": null,  \"spv\": null,  \"confirmed\": null,  \"pan\": null,  \"customer_token\": null,  \"card_data\": \"/tokens/12516088\",  \"token\": \"058972ba-4235-4452-bfdf-fc9f61e2c0f9\"}
+      {"id": 12516088,  "site_transaction_id": "e77f40284fd5e0fba8e8ef7d1b784c5e",  "payment_method_id": 1,  "card_brand": "Visa",  "amount": 100,  "currency": "ars",  "status": "rejected",  "status_details": {    "ticket": "393",    "card_authorization_code": "",    "address_validation_code": "VTE0000",    "error": {      "type": "invalid_card",      "reason": {        "id": 3,        "description": "COMERCIO INVALIDO",        "additional_description": ""      }    }  },  "date": "2022-03-21T13:08Z",  "customer": null,  "bin": "400030",  "installments": 1,  "first_installment_expiration_date": null,  "payment_type": "single",  "sub_payments": [],  "site_id": "92002480",  "fraud_detection": {    "status": null  },  "aggregate_data": null,  "establishment_name": null,  "spv": null,  "confirmed": null,  "pan": null,  "customer_token": null,  "card_data": "/tokens/12516088",  "token": "058972ba-4235-4452-bfdf-fc9f61e2c0f9"}
     }
   end
 

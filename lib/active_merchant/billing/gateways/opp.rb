@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class OppGateway < Gateway
       # = Open Payment Platform
       #
@@ -229,7 +229,7 @@ module ActiveMerchant #:nodoc:
         if shipping_address = options[:shipping_address]
           address(post, shipping_address, 'shipping')
           if shipping_address[:name]
-            firstname, lastname = shipping_address[:name].split(' ')
+            firstname, lastname = shipping_address[:name].split
             post[:shipping] = { givenName: firstname, surname: lastname }
           end
         end
@@ -286,16 +286,16 @@ module ActiveMerchant #:nodoc:
       def add_options(post, options)
         post[:createRegistration] = options[:create_registration] if options[:create_registration] && !options[:registrationId]
         post[:testMode] = options[:test_mode] if test? && options[:test_mode]
-        options.each { |key, value| post[key] = value if key.to_s =~ /'customParameters\[[a-zA-Z0-9\._]{3,64}\]'/ }
+        options.each { |key, value| post[key] = value if key.to_s =~ /'customParameters\[[a-zA-Z0-9._]{3,64}\]'/ }
         post['customParameters[SHOPPER_pluginId]'] = 'activemerchant'
         post['customParameters[custom_disable3DSecure]'] = options[:disable_3d_secure] if options[:disable_3d_secure]
       end
 
       def build_url(url, authorization, options)
         if options[:store]
-          url.gsub(/payments/, 'registrations')
+          url.gsub('payments', 'registrations')
         elsif options[:registrationId]
-          "#{url.gsub(/payments/, 'registrations')}/#{options[:registrationId]}/payments"
+          "#{url.gsub('payments', 'registrations')}/#{options[:registrationId]}/payments"
         elsif authorization
           "#{url}/#{authorization}"
         else
@@ -356,11 +356,7 @@ module ActiveMerchant #:nodoc:
 
         success_regex = /^(000\.000\.|000\.100\.1|000\.[36])/
 
-        if success_regex.match?(response['result']['code'])
-          true
-        else
-          false
-        end
+        success_regex.match?(response['result']['code'])
       end
 
       def message_from(response)
@@ -381,7 +377,7 @@ module ActiveMerchant #:nodoc:
         hash.each_with_object({}) do |(k, v), h|
           if v.is_a? Hash
             flatten_hash(v).map do |h_k, h_v|
-              h["#{k}.#{h_k}".to_sym] = h_v
+              h[:"#{k}.#{h_k}"] = h_v
             end
           else
             h[k] = v

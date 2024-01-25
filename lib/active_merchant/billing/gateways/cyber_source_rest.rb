@@ -1,7 +1,7 @@
 require 'active_merchant/billing/gateways/cyber_source/cyber_source_common'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CyberSourceRestGateway < Gateway
       include ActiveMerchant::Billing::CyberSourceCommon
 
@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
           gsub(/(\\?"securityCode\\?":\\?")\d+/, '\1[FILTERED]').
           gsub(/(signature=")[^"]*/, '\1[FILTERED]').
           gsub(/(keyid=")[^"]*/, '\1[FILTERED]').
-          gsub(/(Digest: SHA-256=)[\w\/\+=]*/, '\1[FILTERED]')
+          gsub(/(Digest: SHA-256=)[\w\/+=]*/, '\1[FILTERED]')
       end
 
       private
@@ -181,9 +181,10 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment, options)
         post[:processingInformation] = {}
-        if payment.is_a?(NetworkTokenizationCreditCard)
+        case payment
+        when NetworkTokenizationCreditCard
           add_network_tokenization_card(post, payment, options)
-        elsif payment.is_a?(Check)
+        when Check
           add_ach(post, payment)
         else
           add_credit_card(post, payment)
@@ -315,7 +316,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action)
-        "#{(test? ? test_url : live_url)}/pts/v2/#{action}"
+        "#{test? ? test_url : live_url}/pts/v2/#{action}"
       end
 
       def host
@@ -344,7 +345,7 @@ module ActiveMerchant #:nodoc:
         )
       rescue ActiveMerchant::ResponseError => e
         response = e.response.body.present? ? parse(e.response.body) : { 'response' => { 'rmsg' => e.response.msg } }
-        message = response.dig('response', 'rmsg') || response.dig('message')
+        message = response.dig('response', 'rmsg') || response['message']
         Response.new(false, message, response, test: test?)
       end
 
@@ -378,9 +379,9 @@ module ActiveMerchant #:nodoc:
         string_to_sign = {
           host: host,
           date: gmtdatetime,
-          "request-target": "#{http_method} /pts/v2/#{resource}",
+          'request-target': "#{http_method} /pts/v2/#{resource}",
           digest: digest,
-          "v-c-merchant-id": @options[:merchant_id]
+          'v-c-merchant-id': @options[:merchant_id]
         }.map { |k, v| "#{k}: #{v}" }.join("\n").force_encoding(Encoding::UTF_8)
 
         {

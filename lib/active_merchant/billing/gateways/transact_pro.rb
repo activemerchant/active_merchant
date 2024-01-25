@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information visit {Transact Pro Services}[https://www.transactpro.lv/business/]
     #
     # This gateway was formerly associated with www.1stpayments.net
@@ -172,7 +172,7 @@ module ActiveMerchant #:nodoc:
             { status: 'success', id: m[2] } :
             { status: 'failure', message: m[2] }
         else
-          Hash[status: body]
+          { status: body }
         end
       end
 
@@ -190,7 +190,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(parameters, response, amount)
-        identifier = (response[:id] || parameters[:init_transaction_id])
+        identifier = response[:id] || parameters[:init_transaction_id]
         authorization = [identifier]
         authorization << amount if amount
         authorization.join('|')
@@ -206,11 +206,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        (response[:status] =~ /success/i || response[:status] =~ /ok/i)
+        response[:status] =~ /success/i || response[:status] =~ /ok/i
       end
 
       def message_from(response)
-        (response[:message] || response[:status])
+        response[:message] || response[:status]
       end
 
       def post_data(action, parameters = {})

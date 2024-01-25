@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class JetpayV2Gateway < Gateway
       self.test_url = 'https://test1.jetpay.com/jetpay'
       self.live_url = 'https://gateway20.jetpay.com/jetpay'
@@ -345,7 +345,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, money, previous_token)
         original_amount = amount(money) if money
-        [response[:transaction_id], response[:approval], original_amount, (response[:token] || previous_token)].join(';')
+        [response[:transaction_id], response[:approval], original_amount, response[:token] || previous_token].join(';')
       end
 
       def error_code_from(response)

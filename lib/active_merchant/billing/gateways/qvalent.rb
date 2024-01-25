@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class QvalentGateway < Gateway
       self.display_name = 'Qvalent'
       self.homepage_url = 'https://www.qvalent.com/'
@@ -155,33 +155,34 @@ module ActiveMerchant #:nodoc:
         return unless payment_method.brand == 'visa'
 
         stored_credential = options[:stored_credential]
-        if stored_credential[:reason_type] == 'unscheduled'
-          if stored_credential[:initiator] == 'merchant'
+        case stored_credential[:reason_type]
+        when 'unscheduled'
+          case stored_credential[:initiator]
+          when 'merchant'
             post['card.storedCredentialUsage'] = 'UNSCHEDULED_MIT'
-          elsif stored_credential[:initiator] == 'customer'
+          when 'customer'
             post['card.storedCredentialUsage'] = 'UNSCHEDULED_CIT'
           end
-        elsif stored_credential[:reason_type] == 'recurring'
+        when 'recurring'
           post['card.storedCredentialUsage'] = 'RECURRING'
-        elsif stored_credential[:reason_type] == 'installment'
+        when 'installment'
           post['card.storedCredentialUsage'] = 'INSTALLMENT'
         end
       end
 
+      ECI_MAPPING = {
+        'recurring' => 'REC',
+        'installment' => 'INS',
+        'unscheduled' => 'MTO'
+      }
+
       def eci(options)
         if options.dig(:stored_credential, :initial_transaction)
           'SSL'
-        elsif options.dig(:stored_credential, :initiator) && options[:stored_credential][:initiator] == 'cardholder'
+        elsif options.dig(:stored_credential, :initiator) == 'cardholder'
           'MTO'
-        elsif options.dig(:stored_credential, :reason_type)
-          case options[:stored_credential][:reason_type]
-          when 'recurring'
-            'REC'
-          when 'installment'
-            'INS'
-          when 'unscheduled'
-            'MTO'
-          end
+        elsif reason = options.dig(:stored_credential, :reason_type)
+          ECI_MAPPING[reason]
         else
           'SSL'
         end
@@ -249,7 +250,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(post)
-        post.to_query + '&message.end'
+        "#{post.to_query}&message.end"
       end
 
       def url(action)

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # Initial setup instructions can be found in
     # http://apps.cybersource.com/library/documentation/dev_guides/SOAP_Toolkits/SOAP_toolkits.pdf
     #
@@ -716,7 +716,7 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'merchantDefinedData' do
           (1..100).each do |each|
-            key = "mdd_field_#{each}".to_sym
+            key = :"mdd_field_#{each}"
             xml.tag!('mddField', options[key], 'id' => each) if options[key]
           end
         end
@@ -946,7 +946,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'recurringSubscriptionInfo' do
           if reference
             subscription_id = reference.split(';')[6]
-            xml.tag! 'subscriptionID',  subscription_id
+            xml.tag! 'subscriptionID', subscription_id
           end
 
           xml.tag! 'status',            options[:subscription][:status] if options[:subscription][:status]
@@ -1159,11 +1159,11 @@ module ActiveMerchant #:nodoc:
         else
           if /item/.match?(node.parent.name)
             parent = node.parent.name
-            parent += '_' + node.parent.attributes['id'] if node.parent.attributes['id']
+            parent += "_#{node.parent.attributes['id']}" if node.parent.attributes['id']
             parent += '_'
           end
           reply[:reconciliationID2] = node.text if node.name == 'reconciliationID' && reply[:reconciliationID]
-          reply["#{parent}#{node.name}".to_sym] ||= node.text
+          reply[:"#{parent}#{node.name}"] ||= node.text
         end
         return reply
       end
@@ -1202,7 +1202,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def format_routing_number(routing_number, options)
-        options[:currency] == 'CAD' && routing_number.length > 8 ? routing_number[-8..-1] : routing_number
+        options[:currency] == 'CAD' && routing_number.length > 8 ? routing_number[-8..] : routing_number
       end
     end
   end

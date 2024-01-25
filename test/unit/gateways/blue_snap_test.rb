@@ -871,8 +871,8 @@ class BlueSnapTest < Test::Unit::TestCase
 
   def successful_stateless_purchase_response
     MockResponse.succeeded <<-XML
-      <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-      <card-transaction xmlns=\"http://ws.plimus.com\">
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <card-transaction xmlns="http://ws.plimus.com">
       <card-transaction-type>AUTH_CAPTURE</card-transaction-type>
       <transaction-id>1021645629</transaction-id>
       <recurring-transaction>ECOMMERCE</recurring-transaction>
@@ -1367,8 +1367,8 @@ class BlueSnapTest < Test::Unit::TestCase
 
   def fraudulent_purchase_response
     body = <<-XML
-      <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-        <messages xmlns=\"http://ws.plimus.com\">
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <messages xmlns="http://ws.plimus.com">
           <message>
             <error-name>FRAUD_DETECTED</error-name>
             <code>15011</code>
@@ -1389,8 +1389,8 @@ class BlueSnapTest < Test::Unit::TestCase
 
   def fraudulent_purchase_response_multiple_triggers
     body = <<-XML
-      <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-        <messages xmlns=\"http://ws.plimus.com\">
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <messages xmlns="http://ws.plimus.com">
           <message>
             <error-name>FRAUD_DETECTED</error-name>
             <code>15011</code>

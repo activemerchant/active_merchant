@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayArcGateway < Gateway
       self.test_url = 'https://testapi.payarc.net/v1'
       self.live_url = 'https://api.payarc.net/v1'
@@ -242,7 +242,7 @@ module ActiveMerchant #:nodoc:
         token(creditcard, options)
       end
 
-      #:nodoc:
+      # :nodoc:
       def token(creditcard, options = {})
         post = {}
         post['authorize_card'] = 1
@@ -253,12 +253,12 @@ module ActiveMerchant #:nodoc:
         commit(STANDARD_ACTIONS[:token][:end_point], post)
       end
 
-      def supports_scrubbing? #:nodoc:
+      def supports_scrubbing? # :nodoc:
         true
       end
 
       def scrub(transcript)
-        #:nodoc:
+        # :nodoc:
         transcript.
           gsub(%r((Authorization: Bearer )[^\s]+\s)i, '\1[FILTERED]\2').
           gsub(%r((&?card_number=)[^&]*)i, '\1[FILTERED]').
@@ -308,7 +308,7 @@ module ActiveMerchant #:nodoc:
 
       def headers(api_key)
         {
-          'Authorization' => 'Bearer ' + api_key.strip,
+          'Authorization' => "Bearer #{api_key.strip}",
           'Accept' => 'application/json',
           'User-Agent' => "PayArc ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
@@ -358,7 +358,7 @@ module ActiveMerchant #:nodoc:
       def success_from(response, action)
         if action == STANDARD_ACTIONS[:token][:end_point]
           token = parse_response_id(response)
-          (!token.nil? && !token.empty?)
+          !token.nil? && !token.empty?
         elsif response
           return SUCCESS_STATUS.include? response['data']['status'] if response['data']
         end

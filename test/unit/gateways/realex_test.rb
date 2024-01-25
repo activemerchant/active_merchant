@@ -336,7 +336,7 @@ class RealexTest < Test::Unit::TestCase
         <merchantid>your_merchant_id</merchantid>
         <account>your_account</account>
         <orderid>1</orderid>
-        <amount currency=\"EUR\">100</amount>
+        <amount currency="EUR">100</amount>
         <card>
           <number>4263971921001307</number>
           <expdate>0808</expdate>
@@ -538,7 +538,7 @@ class RealexTest < Test::Unit::TestCase
         <merchantid>your_merchant_id</merchantid>
         <account>your_account</account>
         <orderid>1</orderid>
-        <amount currency=\"EUR\">100</amount>
+        <amount currency="EUR">100</amount>
         <card>
           <number>4263971921001307</number>
           <expdate>0808</expdate>
@@ -582,7 +582,7 @@ class RealexTest < Test::Unit::TestCase
         <merchantid>your_merchant_id</merchantid>
         <account>your_account</account>
         <orderid>1</orderid>
-        <amount currency=\"EUR\">100</amount>
+        <amount currency="EUR">100</amount>
         <card>
           <number>4263971921001307</number>
           <expdate>0808</expdate>

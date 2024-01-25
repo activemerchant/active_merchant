@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # ActiveMerchant Implementation for Quantum Gateway XML Requester Service
     # Based on API Doc from 8/6/2009
     #
@@ -257,8 +257,8 @@ module ActiveMerchant #:nodoc:
           node.elements.each { |e| parse_element(reply, e) }
         else
           if /item/.match?(node.parent.name)
-            parent = node.parent.name + (node.parent.attributes['id'] ? '_' + node.parent.attributes['id'] : '')
-            reply[(parent + '_' + node.name).to_sym] = node.text
+            parent = node.parent.name + (node.parent.attributes['id'] ? "_#{node.parent.attributes['id']}" : '')
+            reply[:"#{parent}_#{node.name}"] = node.text
           else
             reply[node.name.to_sym] = node.text
           end
@@ -271,7 +271,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_parts_from(authorization)
-        authorization.split(/;/)
+        authorization.split(';')
       end
     end
   end

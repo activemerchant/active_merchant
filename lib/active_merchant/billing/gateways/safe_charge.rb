@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SafeChargeGateway < Gateway
       self.test_url = 'https://process.sandbox.safecharge.com/service.asmx/Process'
       self.live_url = 'https://process.safecharge.com/service.asmx/Process'
@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options = {})
         post = {}
 
-        add_external_mpi_data(post, options) if options[:three_d_secure]&.is_a?(Hash)
+        add_external_mpi_data(post, options) if options[:three_d_secure].is_a?(Hash)
         add_transaction_data('Auth', post, money, options)
         add_payment(post, payment, options)
         add_customer_details(post, payment, options)
@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
 
       def add_network_token(post, payment, options)
         post[:sg_CAVV] = payment.payment_cryptogram
-        post[:sg_ECI] = options[:three_d_secure] && options[:three_d_secure][:eci] || '05'
+        post[:sg_ECI] = (options[:three_d_secure] && options[:three_d_secure][:eci]) || '05'
         post[:sg_IsExternalMPI] = 1
         post[:sg_ExternalTokenProvider] = 5
       end
@@ -308,7 +308,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def underscore(camel_cased_word)
-        camel_cased_word.to_s.gsub(/::/, '/').
+        camel_cased_word.to_s.gsub('::', '/').
           gsub(/([A-Z]+)([A-Z][a-z])/, '\1_\2').
           gsub(/([a-z\d])([A-Z])/, '\1_\2').
           tr('-', '_').

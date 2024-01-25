@@ -353,7 +353,7 @@ class RemoteNmiTest < Test::Unit::TestCase
   end
 
   def test_merchant_defined_fields
-    (1..20).each { |e| @options["merchant_defined_field_#{e}".to_sym] = "value #{e}" }
+    (1..20).each { |e| @options[:"merchant_defined_field_#{e}"] = "value #{e}" }
     assert_success @gateway.purchase(@amount, @credit_card, @options)
   end
 

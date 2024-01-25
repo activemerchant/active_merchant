@@ -1,7 +1,7 @@
 require 'digest/md5'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class NetaxeptGateway < Gateway
       self.test_url = 'https://epayment-test.bbs.no/'
       self.live_url = 'https://epayment.bbs.no/'
@@ -122,13 +122,13 @@ module ActiveMerchant #:nodoc:
         raw = parse(ssl_get(build_url(path, parameters)), xml)
 
         success = false
-        authorization = (raw['TransactionId'] || parameters[:transactionId])
+        authorization = raw['TransactionId'] || parameters[:transactionId]
         if /Exception|Error/.match?(raw[:container])
-          message = (raw['Message'] || raw['Error']['Message'])
+          message = raw['Message'] || raw['Error']['Message']
         elsif raw['Error'] && !raw['Error'].empty?
-          message = (raw['Error']['ResponseText'] || raw['Error']['ResponseCode'])
+          message = raw['Error']['ResponseText'] || raw['Error']['ResponseCode']
         else
-          message = (raw['ResponseText'] || raw['ResponseCode'] || 'OK')
+          message = raw['ResponseText'] || raw['ResponseCode'] || 'OK'
           success = true
         end
 

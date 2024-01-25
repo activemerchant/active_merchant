@@ -190,8 +190,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert response = @gateway.purchase(10010, @credit_card1, {
       order_id: '1',
       email: 'wow@example.com',
-      billing_address: {
-      }
+      billing_address: {}
     })
     assert_success response
     assert_equal 'Approved', response.message

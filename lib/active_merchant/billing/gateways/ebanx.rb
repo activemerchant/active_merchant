@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class EbanxGateway < Gateway
       self.test_url = 'https://sandbox.ebanxpay.com/ws/'
       self.live_url = 'https://api.ebanxpay.com/ws/'
@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
-          post[:payment][:address] = address[:address1].split[1..-1].join(' ') if address[:address1]
+          post[:payment][:address] = address[:address1].split[1..].join(' ') if address[:address1]
           post[:payment][:street_number] = address[:address1].split.first if address[:address1]
           post[:payment][:city] = address[:city]
           post[:payment][:state] = address[:state]
@@ -268,7 +268,7 @@ module ActiveMerchant #:nodoc:
         when :verify
           response.dig('card_verification', 'transaction_status', 'code') == 'OK'
         when :store, :inquire
-          response.dig('status') == 'SUCCESS'
+          response['status'] == 'SUCCESS'
         else
           false
         end

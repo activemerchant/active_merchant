@@ -1,7 +1,7 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SwipeCheckoutGateway < Gateway
       TRANSACTION_APPROVED_MSG = 'Transaction approved'
       TRANSACTION_DECLINED_MSG = 'Transaction declined'
@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
 
             if code == 200
               result = response['data']['result']
-              success = (result == 'accepted' || (test? && result == 'test-accepted'))
+              success = result == 'accepted' || (test? && result == 'test-accepted')
 
               Response.new(
                 success,
@@ -119,8 +119,8 @@ module ActiveMerchant #:nodoc:
             build_error_response("ssl_post() with url #{url} raised ResponseError: #{e}")
           rescue JSON::ParserError => e
             msg = 'Invalid response received from the Swipe Checkout API. ' \
-                  'Please contact support@optimizerhq.com if you continue to receive this message.' \
-                  " (Full error message: #{e})"
+                  'Please contact support@optimizerhq.com if you continue to receive this message. ' \
+                  "(Full error message: #{e})"
             build_error_response(msg)
           end
         end

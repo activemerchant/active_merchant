@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class WepayGateway < Gateway
       self.test_url = 'https://stage.wepayapi.com/v2'
       self.live_url = 'https://wepayapi.com/v2'
@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
         post[:expiration_month] = creditcard.month
         post[:expiration_year] = creditcard.year
 
-        if (billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = options[:billing_address] || options[:address])
           post[:address] = {}
           post[:address]['address1'] = billing_address[:address1] if billing_address[:address1]
           post[:address]['city']     = billing_address[:city] if billing_address[:city]

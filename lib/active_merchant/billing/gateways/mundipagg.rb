@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MundipaggGateway < Gateway
       self.live_url = 'https://api.mundipagg.com/core/v1'
 
@@ -116,7 +116,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_address(post, type, options)
-        if address = (options[:billing_address] || options[:address])
+        if address = options[:billing_address] || options[:address]
           billing = {}
           address = options[:billing_address] || options[:address]
           billing[:street] = address[:address1].match(/\D+/)[0].strip if address[:address1]
@@ -242,7 +242,7 @@ module ActiveMerchant #:nodoc:
       def headers(authorization_secret_key = nil)
         basic_token = authorization_secret_key || @options[:api_key]
         {
-          'Authorization' => 'Basic ' + Base64.strict_encode64("#{basic_token}:"),
+          'Authorization' => "Basic #{Base64.strict_encode64("#{basic_token}:")}",
           'Content-Type' => 'application/json',
           'Accept' => 'application/json'
         }
@@ -316,7 +316,7 @@ module ActiveMerchant #:nodoc:
         parsed_response_body = parse(error.response.body)
         message = parsed_response_body['message']
 
-        parsed_response_body['errors']&.each do |_type, descriptions|
+        parsed_response_body['errors']&.each_value do |descriptions|
           message += ' | '
           message += descriptions.join(', ')
         end
@@ -332,7 +332,7 @@ module ActiveMerchant #:nodoc:
         error_string = ''
 
         response['last_transaction']['gateway_response']['errors']&.each do |error|
-          error.each do |_key, value|
+          error.each_value do |value|
             error_string += ' | ' unless error_string.blank?
             error_string += value
           end

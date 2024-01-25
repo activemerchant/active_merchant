@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CardknoxGateway < Gateway
       self.live_url = 'https://x1.cardknox.com/gateway'
 
@@ -209,7 +209,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def address_key(prefix, key)
-        "#{prefix}#{key}".to_sym
+        :"#{prefix}#{key}"
       end
 
       def add_invoice(post, options)
@@ -255,7 +255,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         fields = {}
         for line in body.split('&')
-          key, value = *line.scan(%r{^(\w+)\=(.*)$}).flatten
+          key, value = *line.scan(%r{^(\w+)=(.*)$}).flatten
           fields[key] = CGI.unescape(value.to_s)
         end
 
@@ -276,7 +276,7 @@ module ActiveMerchant #:nodoc:
           amount:            fields['xAuthAmount'],
           masked_card_num:   fields['xMaskedCardNumber'],
           masked_account_number: fields['MaskedAccountNumber']
-        }.delete_if { |_k, v| v.nil? }
+        }.compact
       end
 
       def commit(action, source_type, parameters)

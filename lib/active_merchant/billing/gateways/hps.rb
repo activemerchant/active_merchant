@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class HpsGateway < Gateway
       self.live_url = 'https://posgateway.secureexchange.net/Hps.Exchange.PosGateway/PosGatewayService.asmx?wsdl'
       self.test_url = 'https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway/PosGatewayService.asmx?wsdl'
@@ -105,12 +105,12 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((<hps:CardNbr>)[^<]*(<\/hps:CardNbr>))i, '\1[FILTERED]\2').
-          gsub(%r((<hps:CVV2>)[^<]*(<\/hps:CVV2>))i, '\1[FILTERED]\2').
-          gsub(%r((<hps:SecretAPIKey>)[^<]*(<\/hps:SecretAPIKey>))i, '\1[FILTERED]\2').
-          gsub(%r((<hps:PaymentData>)[^<]*(<\/hps:PaymentData>))i, '\1[FILTERED]\2').
-          gsub(%r((<hps:RoutingNumber>)[^<]*(<\/hps:RoutingNumber>))i, '\1[FILTERED]\2').
-          gsub(%r((<hps:AccountNumber>)[^<]*(<\/hps:AccountNumber>))i, '\1[FILTERED]\2')
+          gsub(%r((<hps:CardNbr>)[^<]*(</hps:CardNbr>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:CVV2>)[^<]*(</hps:CVV2>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:SecretAPIKey>)[^<]*(</hps:SecretAPIKey>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:PaymentData>)[^<]*(</hps:PaymentData>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:RoutingNumber>)[^<]*(</hps:RoutingNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:AccountNumber>)[^<]*(</hps:AccountNumber>))i, '\1[FILTERED]\2')
       end
 
       private
@@ -171,7 +171,7 @@ module ActiveMerchant #:nodoc:
           xml.hps :CardHolderEmail, options[:email] if options[:email]
           xml.hps :CardHolderPhone, options[:phone] if options[:phone]
 
-          if (billing_address = (options[:billing_address] || options[:address]))
+          if (billing_address = options[:billing_address] || options[:address])
             xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
             xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
             xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
@@ -289,9 +289,10 @@ module ActiveMerchant #:nodoc:
         return unless options[:stored_credential]
 
         xml.hps :CardOnFileData do
-          if options[:stored_credential][:initiator] == 'customer'
+          case options[:stored_credential][:initiator]
+          when 'customer'
             xml.hps :CardOnFile, 'C'
-          elsif options[:stored_credential][:initiator] == 'merchant'
+          when 'merchant'
             xml.hps :CardOnFile, 'M'
           else
             return
@@ -330,7 +331,7 @@ module ActiveMerchant #:nodoc:
         } do
           xml.SOAP :Body do
             xml.hps :PosRequest do
-              xml.hps 'Ver1.0'.to_sym do
+              xml.hps :'Ver1.0' do
                 xml.hps :Header do
                   xml.hps :SecretAPIKey, @options[:secret_api_key]
                   xml.hps :DeveloperID, @options[:developer_id] if @options[:developer_id]
@@ -409,10 +410,8 @@ module ActiveMerchant #:nodoc:
 
       SUCCESSFUL_RESPONSE_CODES = %w(0 00 85)
       def successful?(response)
-        (
-          (response['GatewayRspCode'] == '0') &&
+        (response['GatewayRspCode'] == '0') &&
           ((SUCCESSFUL_RESPONSE_CODES.include? response['RspCode']) || !response['RspCode'])
-        )
       end
 
       def message_from(response)
@@ -425,7 +424,7 @@ module ActiveMerchant #:nodoc:
             issuer_message(response['RspCode'])
           end
         else
-          (GATEWAY_MESSAGES[response['GatewayRspCode']] || response['GatewayRspMsg'])
+          GATEWAY_MESSAGES[response['GatewayRspCode']] || response['GatewayRspMsg']
         end
       end
 

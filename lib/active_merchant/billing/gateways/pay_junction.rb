@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # PayJunction Gateway
     #
     # This gateway accepts the following arguments:
@@ -238,20 +238,19 @@ module ActiveMerchant #:nodoc:
       # The optional parameter :starting_at takes a date or time argument or a string in
       # YYYYMMDD format and can be used to specify when the first charge will be made.
       # If omitted the first charge will be immediate.
+
+      PERIODICITY = {
+        monthly: 'month',
+        weekly: 'week',
+        daily: 'day'
+      }
+
       def recurring(money, payment_source, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
         requires!(options, %i[periodicity monthly weekly daily], :payments)
 
-        periodic_type =
-          case options[:periodicity]
-          when :monthly
-            'month'
-          when :weekly
-            'week'
-          when :daily
-            'day'
-          end
+        periodic_type = PERIODICITY[options[:periodicity]]
 
         if options[:starting_at].nil?
           start_date = Time.now.strftime('%Y-%m-%d')
@@ -278,7 +277,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def test?
-        (test_login? || super)
+        test_login? || super
       end
 
       private
@@ -385,7 +384,7 @@ module ActiveMerchant #:nodoc:
         response = {}
         pairs.each do |pair|
           key, val = pair.split('=')
-          response[key[3..-1].to_sym] = val ? normalize(val) : nil
+          response[key[3..].to_sym] = val ? normalize(val) : nil
         end
         response
       end

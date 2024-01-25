@@ -84,7 +84,7 @@ class XpayTest < Test::Unit::TestCase
     starting SSL for stg-ta.nexigroup.com:443...
     SSL established, protocol: TLSv1.3, cipher: TLS_AES_128_GCM_SHA256
     <- "POST /api/phoenix-0.0/psp/api/v1/orders/2steps/init HTTP/1.1\r\nContent-Type: application/json\r\nX-Api-Key: 5d952446-9004-4023-9eae-a527a152846b\r\nCorrelation-Id: ngGFbpHStk\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: stg-ta.nexigroup.com\r\nContent-Length: 268\r\n\r\n"
-    <- "{\"order\":{\"orderId\":\"ngGFbpHStk\",\"amount\":\"100\",\"currency\":\"EUR\",\"customerInfo\":{\"cardHolderName\":\"John Smith\"}},\"card\":{\"pan\":\"4349940199004549\",\"expiryDate\":\"0526\",\"cvv\":\"396\"},\"recurrence\":{\"action\":\"NO_RECURRING\"},\"exemptions\":\"NO_PREFERENCE\",\"threeDSAuthData\":{}}"
+    <- "{"order":{"orderId":"ngGFbpHStk","amount":"100","currency":"EUR","customerInfo":{"cardHolderName":"John Smith"}},"card":{"pan":"4349940199004549","expiryDate":"0526","cvv":"396"},"recurrence":{"action":"NO_RECURRING"},"exemptions":"NO_PREFERENCE","threeDSAuthData":{}}"
     -> "HTTP/1.1 200 \r\n"
     -> "cid: 2dd22695-c628-41d3-9c11-cdd6a72a59ec\r\n"
     -> "Content-Type: application/json\r\n"
@@ -93,7 +93,7 @@ class XpayTest < Test::Unit::TestCase
     -> "Connection: close\r\n"
     -> "\r\n"
     reading 970 bytes...
-    -> "{\"operation\":{\"orderId\":\"ngGFbpHStk\",\"operationId\":\"829023675869933329\",\"channel\":null,\"operationType\":\"AUTHORIZATION\",\"operationResult\":\"PENDING\",\"operationTime\":\"2023-11-28 12:41:46.724\",\"paymentMethod\":\"CARD\",\"paymentCircuit\":\"VISA\",\"paymentInstrumentInfo\":\"***4549\",\"paymentEndToEndId\":\"829023675869933329\",\"cancelledOperationId\":null,\"operationAmount\":\"100\",\"operationCurrency\":\"EUR\",\"customerInfo\":{\"cardHolderName\":\"John Smith\",\"cardHolderEmail\":null,\"billingAddress\":null,\"shippingAddress\":null,\"mobilePhoneCountryCode\":null,\"mobilePhone\":null,\"homePhone\":null,\"workPhone\":null,\"cardHolderAcctInfo\":null,\"merchantRiskIndicator\":null},\"warnings\":[],\"paymentLinkId\":null,\"additionalData\":{\"maskedPan\":\"434994******4549\",\"cardId\":\"952fd84b4562026c9f35345599e1f043d893df720b914619b55d682e7435e13d\",\"cardExpiryDate\":\"202605\"}},\"threeDSEnrollmentStatus\":\"ENROLLED\",\"threeDSAuthRequest\":\"notneeded\",\"threeDSAuthUrl\":\"https://stg-ta.nexigroup.com/monetaweb/phoenixstos\"}"
+    -> "{"operation":{"orderId":"ngGFbpHStk","operationId":"829023675869933329","channel":null,"operationType":"AUTHORIZATION","operationResult":"PENDING","operationTime":"2023-11-28 12:41:46.724","paymentMethod":"CARD","paymentCircuit":"VISA","paymentInstrumentInfo":"***4549","paymentEndToEndId":"829023675869933329","cancelledOperationId":null,"operationAmount":"100","operationCurrency":"EUR","customerInfo":{"cardHolderName":"John Smith","cardHolderEmail":null,"billingAddress":null,"shippingAddress":null,"mobilePhoneCountryCode":null,"mobilePhone":null,"homePhone":null,"workPhone":null,"cardHolderAcctInfo":null,"merchantRiskIndicator":null},"warnings":[],"paymentLinkId":null,"additionalData":{"maskedPan":"434994******4549","cardId":"952fd84b4562026c9f35345599e1f043d893df720b914619b55d682e7435e13d","cardExpiryDate":"202605"}},"threeDSEnrollmentStatus":"ENROLLED","threeDSAuthRequest":"notneeded","threeDSAuthUrl":"https://stg-ta.nexigroup.com/monetaweb/phoenixstos"}"
     read 970 bytes
     Conn close
     PRE_SCRUBBED
@@ -106,7 +106,7 @@ class XpayTest < Test::Unit::TestCase
     starting SSL for stg-ta.nexigroup.com:443...
     SSL established, protocol: TLSv1.3, cipher: TLS_AES_128_GCM_SHA256
     <- "POST /api/phoenix-0.0/psp/api/v1/orders/2steps/init HTTP/1.1\r\nContent-Type: application/json\r\nX-Api-Key: [FILTERED]\r\nCorrelation-Id: ngGFbpHStk\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: stg-ta.nexigroup.com\r\nContent-Length: 268\r\n\r\n"
-    <- "{\"order\":{\"orderId\":\"ngGFbpHStk\",\"amount\":\"100\",\"currency\":\"EUR\",\"customerInfo\":{\"cardHolderName\":\"John Smith\"}},\"card\":{\"pan\":\"[FILTERED]\",\"expiryDate\":\"0526\",\"cvv\":\"[FILTERED]\"},\"recurrence\":{\"action\":\"NO_RECURRING\"},\"exemptions\":\"NO_PREFERENCE\",\"threeDSAuthData\":{}}"
+    <- "{"order":{"orderId":"ngGFbpHStk","amount":"100","currency":"EUR","customerInfo":{"cardHolderName":"John Smith"}},"card":{"pan":"[FILTERED]","expiryDate":"0526","cvv":"[FILTERED]"},"recurrence":{"action":"NO_RECURRING"},"exemptions":"NO_PREFERENCE","threeDSAuthData":{}}"
     -> "HTTP/1.1 200 \r\n"
     -> "cid: 2dd22695-c628-41d3-9c11-cdd6a72a59ec\r\n"
     -> "Content-Type: application/json\r\n"
@@ -115,7 +115,7 @@ class XpayTest < Test::Unit::TestCase
     -> "Connection: close\r\n"
     -> "\r\n"
     reading 970 bytes...
-    -> "{\"operation\":{\"orderId\":\"ngGFbpHStk\",\"operationId\":\"829023675869933329\",\"channel\":null,\"operationType\":\"AUTHORIZATION\",\"operationResult\":\"PENDING\",\"operationTime\":\"2023-11-28 12:41:46.724\",\"paymentMethod\":\"CARD\",\"paymentCircuit\":\"VISA\",\"paymentInstrumentInfo\":\"***4549\",\"paymentEndToEndId\":\"829023675869933329\",\"cancelledOperationId\":null,\"operationAmount\":\"100\",\"operationCurrency\":\"EUR\",\"customerInfo\":{\"cardHolderName\":\"John Smith\",\"cardHolderEmail\":null,\"billingAddress\":null,\"shippingAddress\":null,\"mobilePhoneCountryCode\":null,\"mobilePhone\":null,\"homePhone\":null,\"workPhone\":null,\"cardHolderAcctInfo\":null,\"merchantRiskIndicator\":null},\"warnings\":[],\"paymentLinkId\":null,\"additionalData\":{\"maskedPan\":\"434994******4549\",\"cardId\":\"952fd84b4562026c9f35345599e1f043d893df720b914619b55d682e7435e13d\",\"cardExpiryDate\":\"202605\"}},\"threeDSEnrollmentStatus\":\"ENROLLED\",\"threeDSAuthRequest\":\"notneeded\",\"threeDSAuthUrl\":\"https://stg-ta.nexigroup.com/monetaweb/phoenixstos\"}"
+    -> "{"operation":{"orderId":"ngGFbpHStk","operationId":"829023675869933329","channel":null,"operationType":"AUTHORIZATION","operationResult":"PENDING","operationTime":"2023-11-28 12:41:46.724","paymentMethod":"CARD","paymentCircuit":"VISA","paymentInstrumentInfo":"***4549","paymentEndToEndId":"829023675869933329","cancelledOperationId":null,"operationAmount":"100","operationCurrency":"EUR","customerInfo":{"cardHolderName":"John Smith","cardHolderEmail":null,"billingAddress":null,"shippingAddress":null,"mobilePhoneCountryCode":null,"mobilePhone":null,"homePhone":null,"workPhone":null,"cardHolderAcctInfo":null,"merchantRiskIndicator":null},"warnings":[],"paymentLinkId":null,"additionalData":{"maskedPan":"434994******4549","cardId":"952fd84b4562026c9f35345599e1f043d893df720b914619b55d682e7435e13d","cardExpiryDate":"202605"}},"threeDSEnrollmentStatus":"ENROLLED","threeDSAuthRequest":"notneeded","threeDSAuthUrl":"https://stg-ta.nexigroup.com/monetaweb/phoenixstos"}"
     read 970 bytes
     Conn close
     POST_SCRUBBED

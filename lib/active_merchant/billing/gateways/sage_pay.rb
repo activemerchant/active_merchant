@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SagePayGateway < Gateway
       cattr_accessor :simulate
       self.simulate = false
@@ -404,7 +404,7 @@ module ActiveMerchant #:nodoc:
         year  = sprintf('%.4i', year)
         month = sprintf('%.2i', month)
 
-        "#{month}#{year[-2..-1]}"
+        "#{month}#{year[-2..]}"
       end
 
       def commit(action, parameters)

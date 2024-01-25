@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CardStreamGateway < Gateway
       THREEDSECURE_REQUIRED_DEPRECATION_MESSAGE = 'Specifying the :threeDSRequired initialization option is deprecated. Please use the `:threeds_required => true` *transaction* option instead.'
 
@@ -248,12 +248,10 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :orderRef, options[:description] || options[:order_id], required: true)
         add_pair(post, :statementNarrative1, options[:merchant_name]) if options[:merchant_name]
         add_pair(post, :statementNarrative2, options[:dynamic_descriptor]) if options[:dynamic_descriptor]
-        if credit_card_or_reference.respond_to?(:number)
-          if %w[american_express diners_club].include?(card_brand(credit_card_or_reference).to_s)
-            add_pair(post, :item1Quantity, 1)
-            add_pair(post, :item1Description, (options[:description] || options[:order_id]).slice(0, 15))
-            add_pair(post, :item1GrossValue, localized_amount(money, options[:currency] || currency(money)))
-          end
+        if credit_card_or_reference.respond_to?(:number) && %w[american_express diners_club].include?(card_brand(credit_card_or_reference).to_s)
+          add_pair(post, :item1Quantity, 1)
+          add_pair(post, :item1Description, (options[:description] || options[:order_id]).slice(0, 15))
+          add_pair(post, :item1GrossValue, localized_amount(money, options[:currency] || currency(money)))
         end
 
         add_pair(post, :type, options[:type] || '1')

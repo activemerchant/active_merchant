@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PlexoGateway < Gateway
       self.test_url = 'https://api.testing.plexo.com.uy/v1/payments'
       self.live_url = 'https://api.plexo.com.uy/v1/payments'
@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_items(post, items)
-        return unless items&.kind_of?(Array)
+        return unless items.kind_of?(Array)
 
         post[:Items] = []
 
@@ -144,7 +144,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_metadata(post, metadata)
-        return unless metadata&.kind_of?(Hash)
+        return unless metadata.kind_of?(Hash)
 
         metadata.transform_keys! { |key| key.to_s.camelize.to_sym }
         post[:Metadata] = metadata
@@ -189,7 +189,7 @@ module ActiveMerchant #:nodoc:
       def add_payment_method(post, payment, options)
         post[:paymentMethod] = {}
 
-        if payment&.is_a?(CreditCard)
+        if payment.is_a?(CreditCard)
           post[:paymentMethod][:type] = 'card'
           post[:paymentMethod][:Card] = {}
           post[:paymentMethod][:Card][:Number] = payment.number
@@ -285,7 +285,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response = response['transactions']&.first if response['transactions']&.is_a?(Array)
+        response = response['transactions']&.first if response['transactions'].is_a?(Array)
         response['resultMessage'] || response['message']
       end
 
@@ -300,7 +300,7 @@ module ActiveMerchant #:nodoc:
       def error_code_from(response)
         return if success_from(response)
 
-        response = response['transactions']&.first if response['transactions']&.is_a?(Array)
+        response = response['transactions']&.first if response['transactions'].is_a?(Array)
         response['resultCode'] || response['status']
       end
     end

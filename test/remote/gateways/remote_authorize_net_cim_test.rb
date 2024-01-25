@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'pp'
 
 class AuthorizeNetCimTest < Test::Unit::TestCase
   def setup
@@ -97,7 +96,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal @credit_card.first_digits, response.params['profile']['payment_profiles']['payment']['credit_card']['issuer_number']
   end
 
-  # NOTE - prior_auth_capture should be used to complete an auth_only request
+  # NOTE: - prior_auth_capture should be used to complete an auth_only request
   # (not capture_only as that will leak the authorization), so don't use this
   # test as a template.
   def test_successful_create_customer_profile_transaction_auth_only_and_then_capture_only_requests

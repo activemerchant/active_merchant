@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class IveriGateway < Gateway
       class_attribute :iveri_url
 
@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((CertificateID=\\\")[^\\]*), '\1[FILTERED]').
+          gsub(%r((CertificateID=\\")[^\\]*), '\1[FILTERED]').
           gsub(%r((&lt;PAN&gt;)[^&]*), '\1[FILTERED]').
           gsub(%r((&lt;CardSecurityCode&gt;)[^&]*), '\1[FILTERED]')
       end
@@ -214,14 +214,14 @@ module ActiveMerchant #:nodoc:
       def parse_element(parsed, node)
         if !node.attributes.empty?
           node.attributes.each do |a|
-            parsed[underscore(node.name) + '_' + underscore(a[1].name)] = a[1].value
+            parsed["#{underscore(node.name)}_#{underscore(a[1].name)}"] = a[1].value
           end
         end
 
-        if !node.elements.empty?
-          node.elements.each { |e| parse_element(parsed, e) }
-        else
+        if node.elements.empty?
           parsed[underscore(node.name)] = node.text
+        else
+          node.elements.each { |e| parse_element(parsed, e) }
         end
       end
 
@@ -251,7 +251,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def underscore(camel_cased_word)
-        camel_cased_word.to_s.gsub(/::/, '/').
+        camel_cased_word.to_s.gsub('::', '/').
           gsub(/([A-Z]+)([A-Z][a-z])/, '\1_\2').
           gsub(/([a-z\d])([A-Z])/, '\1_\2').
           tr('-', '_').

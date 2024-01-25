@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class DigitzsGateway < Gateway
       include Empty
 
@@ -60,11 +60,11 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Bearer ).+), '\1[FILTERED]').
           gsub(%r((X-Api-Key: )\w+), '\1[FILTERED]').
-          gsub(%r((\"id\\\":\\\").+), '\1[FILTERED]').
-          gsub(%r((\"appKey\\\":\\\").+), '\1[FILTERED]').
-          gsub(%r((\"appToken\\\":\\\").+), '\1[FILTERED]').
-          gsub(%r((\"code\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"number\\\":\\\")\d+), '\1[FILTERED]')
+          gsub(%r(("id\\":\\").+), '\1[FILTERED]').
+          gsub(%r(("appKey\\":\\").+), '\1[FILTERED]').
+          gsub(%r(("appToken\\":\\").+), '\1[FILTERED]').
+          gsub(%r(("code\\":\\")\d+), '\1[FILTERED]').
+          gsub(%r(("number\\":\\")\d+), '\1[FILTERED]')
       end
 
       private
@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
       def add_transaction(post, money, options)
         post[:data][:attributes][:transaction] = {
           amount: amount(money),
-          currency: (options[:currency] || currency(money)),
+          currency: options[:currency] || currency(money),
           invoice: options[:order_id] || generate_unique_id
         }
       end

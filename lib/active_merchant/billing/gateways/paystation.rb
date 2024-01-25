@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PaystationGateway < Gateway
       self.live_url = self.test_url = 'https://www.paystation.co.nz/direct/paystation.dll'
 
@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
           success?(response),
           message,
           response,
-          test: (response[:tm]&.casecmp('t')&.zero?),
+          test: response[:tm]&.casecmp('t')&.zero?,
           authorization: response[:paystation_transaction_id]
         )
       end

@@ -175,7 +175,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     transcript = @gateway.scrub(transcript)
 
     assert_scrubbed(@credit_card.number, transcript)
-    assert_match(%r{paymentCardCSC\=\[FILTERED\]}, transcript)
+    assert_match(%r{paymentCardCSC=\[FILTERED\]}, transcript)
     assert_no_match(%r{paymentCardCSC=#{@credit_card.verification_value}}, transcript)
     assert_scrubbed(@gateway.options[:api_passphrase], transcript)
     assert_scrubbed(@gateway.options[:api_key], transcript)

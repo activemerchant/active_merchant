@@ -215,55 +215,55 @@ Conn close
 
   def successful_app_token_response
     %(
-      {\"links\":{\"self\":\"https://beta.digitzsapi.com/sandbox/auth/token\"},\"data\":{\"type\":\"auth\",\"id\":\"0HhRdOU2AsWVEu3gRIKi2UpMMmj8Fj48qggBYTo4\",\"attributes\":{\"appToken\":\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJwYXJ0bmVySWQiOiJzcHJlZWRseS0xNDgyMzAxOTEiLCJwYXJ0bmVyUHJlZml4Ijoic3ByZWVkbHkiLCJwcm9wYXlUaWVyIjoiU2V0TGlzdGVyIiwicHJvcGF5TWNjIjoiNTk5OSIsImlhdCI6MTQ4NjA2NDIxNiwiZXhwIjoxNDg2MDY3ODE2fQ.MaLR3ijeMuIGSHnNYINVILwa9hpxahd4U4Q44HW4jFQ\"}}}
+      {"links":{"self":"https://beta.digitzsapi.com/sandbox/auth/token"},"data":{"type":"auth","id":"0HhRdOU2AsWVEu3gRIKi2UpMMmj8Fj48qggBYTo4","attributes":{"appToken":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJwYXJ0bmVySWQiOiJzcHJlZWRseS0xNDgyMzAxOTEiLCJwYXJ0bmVyUHJlZml4Ijoic3ByZWVkbHkiLCJwcm9wYXlUaWVyIjoiU2V0TGlzdGVyIiwicHJvcGF5TWNjIjoiNTk5OSIsImlhdCI6MTQ4NjA2NDIxNiwiZXhwIjoxNDg2MDY3ODE2fQ.MaLR3ijeMuIGSHnNYINVILwa9hpxahd4U4Q44HW4jFQ"}}}
     )
   end
 
   def successful_purchase_response
     %(
-      {\"links\":{\"self\":\"https://beta.digitzsapi.com/sandbox/payments/spreedly-susanswidg-32268973-2091076-148408385-124-148606421\"},\"data\":{\"type\":\"payments\",\"id\":\"spreedly-susanswidg-32268973-2091076-148408385-124-148606421\",\"attributes\":{\"paymentType\":\"card\",\"transaction\":{\"code\":\"0\",\"message\":\"Success\",\"amount\":\"200\",\"invoice\":\"42d7b1d026becf29e2005bae84e8935b\",\"currency\":\"USD\",\"authCode\":\"A11111\",\"avsResult\":\"T\",\"codeResult\":\"M\",\"gross\":\"200\",\"net\":\"169\",\"grossMinusNet\":\"31\",\"fee\":\"25\",\"rate\":\"2.90\"}}}}
+      {"links":{"self":"https://beta.digitzsapi.com/sandbox/payments/spreedly-susanswidg-32268973-2091076-148408385-124-148606421"},"data":{"type":"payments","id":"spreedly-susanswidg-32268973-2091076-148408385-124-148606421","attributes":{"paymentType":"card","transaction":{"code":"0","message":"Success","amount":"200","invoice":"42d7b1d026becf29e2005bae84e8935b","currency":"USD","authCode":"A11111","avsResult":"T","codeResult":"M","gross":"200","net":"169","grossMinusNet":"31","fee":"25","rate":"2.90"}}}}
     )
   end
 
   def successful_split_purchase_response
     %(
-      {\"links\":{\"self\":\"https://beta.digitzsapi.com/sandbox/payments/spreedly-susanswidg-32268973-2091076-148408385-153-148658575\"},\"data\":{\"type\":\"payments\",\"id\":\"spreedly-susanswidg-32268973-2091076-148408385-153-148658575\",\"attributes\":{\"paymentType\":\"cardSplit\",\"transaction\":{\"code\":\"0\",\"message\":\"Success\",\"amount\":\"500\",\"invoice\":\"88ec8adf6c86762684ae54820423acc8\",\"currency\":\"USD\",\"authCode\":\"A11111\",\"avsResult\":\"T\",\"codeResult\":\"M\"},\"split\":{\"merchantId\":\"spreedly-susanswidg-32270590-2095203-148657924\",\"amount\":\"100\",\"splitId\":\"spreedly-susanswidg-32270590-2095203-148657924-2-148658575\"}}}}
+      {"links":{"self":"https://beta.digitzsapi.com/sandbox/payments/spreedly-susanswidg-32268973-2091076-148408385-153-148658575"},"data":{"type":"payments","id":"spreedly-susanswidg-32268973-2091076-148408385-153-148658575","attributes":{"paymentType":"cardSplit","transaction":{"code":"0","message":"Success","amount":"500","invoice":"88ec8adf6c86762684ae54820423acc8","currency":"USD","authCode":"A11111","avsResult":"T","codeResult":"M"},"split":{"merchantId":"spreedly-susanswidg-32270590-2095203-148657924","amount":"100","splitId":"spreedly-susanswidg-32270590-2095203-148657924-2-148658575"}}}}
     )
   end
 
   def failed_purchase_response
     %(
-      {\"meta\":{},\"errors\":[{\"status\":\"400\",\"source\":{\"pointer\":\"/payments\"},\"title\":\"Bad Request\",\"detail\":\"Partner error: Credit card declined (transaction element shows reason for decline)\",\"code\":\"58\",\"meta\":{\"debug\":{\"message\":\"Include debug info with support request.\",\"resource\":\"/payments POST\",\"log\":\"2017/02/02/[23]eb325f3ca78b4f7eb2178a0d1e635a0e\",\"request\":\"73c22dc3-e980-11e6-9390-69c24d5ed1f4\"},\"transaction\":{\"code\":\"51\",\"message\":\"Insufficient funds\",\"invoice\":\"3d1f247d9112349e3db252f9f3327047\",\"authCode\":\"A11111\",\"avsResult\":\"T\"}}}]}
+      {"meta":{},"errors":[{"status":"400","source":{"pointer":"/payments"},"title":"Bad Request","detail":"Partner error: Credit card declined (transaction element shows reason for decline)","code":"58","meta":{"debug":{"message":"Include debug info with support request.","resource":"/payments POST","log":"2017/02/02/[23]eb325f3ca78b4f7eb2178a0d1e635a0e","request":"73c22dc3-e980-11e6-9390-69c24d5ed1f4"},"transaction":{"code":"51","message":"Insufficient funds","invoice":"3d1f247d9112349e3db252f9f3327047","authCode":"A11111","avsResult":"T"}}}]}
     )
   end
 
   def successful_refund_response
     %(
-      {\"links\":{\"self\":\"https://beta.digitzsapi.com/sandbox/payments/spreedly-susanswidg-32268973-2091076-148408385-127-148606617\"},\"data\":{\"type\":\"payments\",\"id\":\"spreedly-susanswidg-32268973-2091076-148408385-127-148606617\",\"attributes\":{\"paymentType\":\"cardRefund\",\"transaction\":{\"code\":\"0\",\"message\":\"Success\",\"amount\":\"200\",\"invoice\":\"f87139e53b5273c12bc32d4be6fff9a8\",\"currency\":\"USD\"}}}}
+      {"links":{"self":"https://beta.digitzsapi.com/sandbox/payments/spreedly-susanswidg-32268973-2091076-148408385-127-148606617"},"data":{"type":"payments","id":"spreedly-susanswidg-32268973-2091076-148408385-127-148606617","attributes":{"paymentType":"cardRefund","transaction":{"code":"0","message":"Success","amount":"200","invoice":"f87139e53b5273c12bc32d4be6fff9a8","currency":"USD"}}}}
     )
   end
 
   def failed_refund_response
     %(
-      {\"meta\":{},\"errors\":[{\"status\":\"400\",\"source\":{\"pointer\":\"/data/attributes/originalTransaction/id\"},\"title\":\"Bad Request\",\"detail\":\"\\\"id\\\" is not allowed to be empty\"}]}
+      {"meta":{},"errors":[{"status":"400","source":{"pointer":"/data/attributes/originalTransaction/id"},"title":"Bad Request","detail":"\\"id\\" is not allowed to be empty"}]}
     )
   end
 
   def successful_create_customer_response
     %(
-      {\"links\":{\"self\":\"https://beta.digitzsapi.com/sandbox/customers/spreedly-susanswidg-32268973-2091076-148408385-2894006614343495-148710226\"},\"data\":{\"type\":\"customers\",\"id\":\"spreedly-susanswidg-32268973-2091076-148408385-2894006614343495-148710226\",\"attributes\":{\"name\":\"Longbob Longsen\",\"externalId\":\"2b942bae49e9297f60428ee841f30724\"}}}
+      {"links":{"self":"https://beta.digitzsapi.com/sandbox/customers/spreedly-susanswidg-32268973-2091076-148408385-2894006614343495-148710226"},"data":{"type":"customers","id":"spreedly-susanswidg-32268973-2091076-148408385-2894006614343495-148710226","attributes":{"name":"Longbob Longsen","externalId":"2b942bae49e9297f60428ee841f30724"}}}
     )
   end
 
   def successful_token_response
     %(
-      {\"links\":{\"self\":\"https://beta.digitzsapi.com/sandbox/tokens/c0302d83-a694-4bec-9086-d1886b9eefd9-148710226\"},\"data\":{\"type\":\"tokens\",\"id\":\"c0302d83-a694-4bec-9086-d1886b9eefd9-148710226\",\"attributes\":{\"label\":\"Credit Card\",\"customerId\":\"spreedly-susanswidg-32268973-2091076-148408385-2894006614343495-148710226\"}}}
+      {"links":{"self":"https://beta.digitzsapi.com/sandbox/tokens/c0302d83-a694-4bec-9086-d1886b9eefd9-148710226"},"data":{"type":"tokens","id":"c0302d83-a694-4bec-9086-d1886b9eefd9-148710226","attributes":{"label":"Credit Card","customerId":"spreedly-susanswidg-32268973-2091076-148408385-2894006614343495-148710226"}}}
     )
   end
 
   def customer_id_exists_response
     %(
-      {\"links\":{\"self\":\"https://beta.digitzsapi.com/sandbox/customers/spreedly-susanswidg-32268973-2091076-148408385-5980208887457495-148700575\"},\"data\":{\"id\":\"spreedly-susanswidg-32268973-2091076-148408385-5980208887457495-148700575\",\"attributes\":{\"merchantId\":\"spreedly-susanswidg-32268973-2091076-148408385\",\"created\":\"2017-02-13T17:09:12.724Z\",\"name\":\"Jon Doe\",\"externalId\":\"123456\"},\"type\":\"customers\"}}
+      {"links":{"self":"https://beta.digitzsapi.com/sandbox/customers/spreedly-susanswidg-32268973-2091076-148408385-5980208887457495-148700575"},"data":{"id":"spreedly-susanswidg-32268973-2091076-148408385-5980208887457495-148700575","attributes":{"merchantId":"spreedly-susanswidg-32268973-2091076-148408385","created":"2017-02-13T17:09:12.724Z","name":"Jon Doe","externalId":"123456"},"type":"customers"}}
     )
   end
 end

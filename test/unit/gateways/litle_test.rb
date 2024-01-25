@@ -218,7 +218,7 @@ class LitleTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, customer_id: '8675309')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(customerId=\"8675309\">\n), data)
+      assert_match(%r(customerId="8675309">\n), data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -226,7 +226,7 @@ class LitleTest < Test::Unit::TestCase
     stub_comms do
       @gateway.capture(@amount, @credit_card, customer_id: '8675309')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(customerId=\"8675309\">\n), data)
+      assert_match(%r(customerId="8675309">\n), data)
     end.respond_with(successful_capture_response)
   end
 
@@ -234,7 +234,7 @@ class LitleTest < Test::Unit::TestCase
     stub_comms do
       @gateway.credit(@amount, @credit_card, customer_id: '8675309')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(customerId=\"8675309\">\n), data)
+      assert_match(%r(customerId="8675309">\n), data)
     end.respond_with(successful_credit_response)
   end
 
@@ -549,7 +549,7 @@ class LitleTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match '<track>Track Data</track>', data
       assert_match '<orderSource>retail</orderSource>', data
-      assert_match %r{<pos>.+<\/pos>}m, data
+      assert_match %r{<pos>.+</pos>}m, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -558,7 +558,7 @@ class LitleTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |_endpoint, data, _headers|
       assert_match '<orderSource>ecommerce</orderSource>', data
-      assert %r{<pos>.+<\/pos>}m !~ data
+      assert %r{<pos>.+</pos>}m !~ data
     end.respond_with(successful_purchase_response)
   end
 
@@ -1105,7 +1105,7 @@ class LitleTest < Test::Unit::TestCase
       starting SSL for www.testlitle.com:443...
       SSL established
       <- "POST /sandbox/communicator/online HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.testlitle.com\r\nContent-Length: 406\r\n\r\n"
-      <- "<litleOnlineRequest xmlns=\"http://www.litle.com/schema\" merchantId=\"101\" version=\"9.4\">\n  <authentication>\n    <user>ACTIVE</user>\n    <password>MERCHANT</password>\n  </authentication>\n  <registerTokenRequest reportGroup=\"Default Report Group\">\n    <orderId/>\n    <accountNumber>4242424242424242</accountNumber>\n    <cardValidationNum>111</cardValidationNum>\n  </registerTokenRequest>\n</litleOnlineRequest>"
+      <- "<litleOnlineRequest xmlns="http://www.litle.com/schema" merchantId="101" version="9.4">\n  <authentication>\n    <user>ACTIVE</user>\n    <password>MERCHANT</password>\n  </authentication>\n  <registerTokenRequest reportGroup="Default Report Group">\n    <orderId/>\n    <accountNumber>4242424242424242</accountNumber>\n    <cardValidationNum>111</cardValidationNum>\n  </registerTokenRequest>\n</litleOnlineRequest>"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Mon, 16 May 2016 03:07:36 GMT\r\n"
       -> "Server: Apache-Coyote/1.1\r\n"
@@ -1135,7 +1135,7 @@ class LitleTest < Test::Unit::TestCase
       starting SSL for www.testlitle.com:443...
       SSL established
       <- "POST /sandbox/communicator/online HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.testlitle.com\r\nContent-Length: 406\r\n\r\n"
-      <- "<litleOnlineRequest xmlns=\"http://www.litle.com/schema\" merchantId=\"101\" version=\"9.4\">\n  <authentication>\n    <user>[FILTERED]</user>\n    <password>[FILTERED]</password>\n  </authentication>\n  <registerTokenRequest reportGroup=\"Default Report Group\">\n    <orderId/>\n    <accountNumber>[FILTERED]</accountNumber>\n    <cardValidationNum>[FILTERED]</cardValidationNum>\n  </registerTokenRequest>\n</litleOnlineRequest>"
+      <- "<litleOnlineRequest xmlns="http://www.litle.com/schema" merchantId="101" version="9.4">\n  <authentication>\n    <user>[FILTERED]</user>\n    <password>[FILTERED]</password>\n  </authentication>\n  <registerTokenRequest reportGroup="Default Report Group">\n    <orderId/>\n    <accountNumber>[FILTERED]</accountNumber>\n    <cardValidationNum>[FILTERED]</cardValidationNum>\n  </registerTokenRequest>\n</litleOnlineRequest>"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Mon, 16 May 2016 03:07:36 GMT\r\n"
       -> "Server: Apache-Coyote/1.1\r\n"

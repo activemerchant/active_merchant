@@ -1,7 +1,7 @@
 require 'test_helper'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class VposGateway
       def one_time_public_key
         OpenSSL::PKey::RSA.new(2048)
@@ -88,7 +88,7 @@ class VposTest < Test::Unit::TestCase
       starting SSL for vpos.infonet.com.py:8888...
       SSL established
       <- "POST /vpos/api/0.3/application/encryption-key HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: vpos.infonet.com.py:8888\r\nContent-Length: 106\r\n\r\n"
-      <- "{\"public_key\":\"joszzJzNMkn6SKn0a5P9GcMw1HqZjC1u\",\"operation\":{\"token\":\"683137179e606c700805e7773751b705\"}}"
+      <- "{"public_key":"joszzJzNMkn6SKn0a5P9GcMw1HqZjC1u","operation":{"token":"683137179e606c700805e7773751b705"}}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx/1.18.0\r\n"
       -> "Date: Tue, 06 Apr 2021 01:56:12 GMT\r\n"
@@ -115,7 +115,7 @@ class VposTest < Test::Unit::TestCase
       starting SSL for vpos.infonet.com.py:8888...
       SSL established
       <- "POST /vpos/api/0.3/pci/encrypted HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: vpos.infonet.com.py:8888\r\nContent-Length: 850\r\n\r\n"
-      <- "{\"public_key\":\"joszzJzNMkn6SKn0a5P9GcMw1HqZjC1u\",\"operation\":{\"token\":\"e0ca140e32edb506b20f47260b97b1ad\",\"commerce\":232,\"commerce_branch\":77,\"shop_process_id\":552384714818596,\"number_of_payments\":1,\"recursive\":false,\"amount\":\"1000.00\",\"currency\":\"PYG\",\"card_encrypted_data\":\"eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkExMjhHQ00ifQ.bWLbgRHAl7GmGveBFEoi64bX472TQao5lCausaMSB2LsES8StjWxPbAZpfrFZDcWksnD2WfDbajSX11WsJJApohjp5fawPP30QcDjmSG-I9WXVnW_Qm-mcrejc82Km8A76-pr9aZd_od81QfQCYwOzpA6V_fz1zY_s8oWBBoudBThDQ__fhazJS5UXM8qMWtooUEmsiiGNDlv-0QTvWAQ-ShhZSDeMRQW6E6p8Jo-1rAlaPEpY2a9yUwT1Emq8eqWz6Fb3w6LA2fUCA1-aXwzfm1vs-LQ2ISgEugMU19gYqhl6qKLNXOJs0KkJCCuKutlHC9zbDPoKU8oO0cDSOfNg.6xi5G9fBauLK2c6p.1pF9qw6fMJyfbNU8y0Hi_x4WNH8GZASuZS6tNpfhnJjhUmdHHcEBV-WGF5FoKw.r4cVO2MlpKe229paSt2D1Q\",\"card_month_expiration\":\"08\",\"card_year_expiration\":\"21\",\"additional_data\":null}}"
+      <- "{"public_key":"joszzJzNMkn6SKn0a5P9GcMw1HqZjC1u","operation":{"token":"e0ca140e32edb506b20f47260b97b1ad","commerce":232,"commerce_branch":77,"shop_process_id":552384714818596,"number_of_payments":1,"recursive":false,"amount":"1000.00","currency":"PYG","card_encrypted_data":"eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkExMjhHQ00ifQ.bWLbgRHAl7GmGveBFEoi64bX472TQao5lCausaMSB2LsES8StjWxPbAZpfrFZDcWksnD2WfDbajSX11WsJJApohjp5fawPP30QcDjmSG-I9WXVnW_Qm-mcrejc82Km8A76-pr9aZd_od81QfQCYwOzpA6V_fz1zY_s8oWBBoudBThDQ__fhazJS5UXM8qMWtooUEmsiiGNDlv-0QTvWAQ-ShhZSDeMRQW6E6p8Jo-1rAlaPEpY2a9yUwT1Emq8eqWz6Fb3w6LA2fUCA1-aXwzfm1vs-LQ2ISgEugMU19gYqhl6qKLNXOJs0KkJCCuKutlHC9zbDPoKU8oO0cDSOfNg.6xi5G9fBauLK2c6p.1pF9qw6fMJyfbNU8y0Hi_x4WNH8GZASuZS6tNpfhnJjhUmdHHcEBV-WGF5FoKw.r4cVO2MlpKe229paSt2D1Q","card_month_expiration":"08","card_year_expiration":"21","additional_data":null}}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx/1.18.0\r\n"
       -> "Date: Tue, 06 Apr 2021 01:56:21 GMT\r\n"
@@ -147,7 +147,7 @@ class VposTest < Test::Unit::TestCase
       starting SSL for vpos.infonet.com.py:8888...
       SSL established
       <- "POST /vpos/api/0.3/application/encryption-key HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: vpos.infonet.com.py:8888\r\nContent-Length: 106\r\n\r\n"
-      <- "{\"public_key\":\"joszzJzNMkn6SKn0a5P9GcMw1HqZjC1u\",\"operation\":{\"token\":\"683137179e606c700805e7773751b705\"}}"
+      <- "{"public_key":"joszzJzNMkn6SKn0a5P9GcMw1HqZjC1u","operation":{"token":"683137179e606c700805e7773751b705"}}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx/1.18.0\r\n"
       -> "Date: Tue, 06 Apr 2021 01:56:12 GMT\r\n"
@@ -174,7 +174,7 @@ class VposTest < Test::Unit::TestCase
       starting SSL for vpos.infonet.com.py:8888...
       SSL established
       <- "POST /vpos/api/0.3/pci/encrypted HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: vpos.infonet.com.py:8888\r\nContent-Length: 850\r\n\r\n"
-      <- "{\"public_key\":\"joszzJzNMkn6SKn0a5P9GcMw1HqZjC1u\",\"operation\":{\"token\":\"e0ca140e32edb506b20f47260b97b1ad\",\"commerce\":232,\"commerce_branch\":77,\"shop_process_id\":552384714818596,\"number_of_payments\":1,\"recursive\":false,\"amount\":\"1000.00\",\"currency\":\"PYG\",\"card_encrypted_data\":\"eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkExMjhHQ00ifQ.bWLbgRHAl7GmGveBFEoi64bX472TQao5lCausaMSB2LsES8StjWxPbAZpfrFZDcWksnD2WfDbajSX11WsJJApohjp5fawPP30QcDjmSG-I9WXVnW_Qm-mcrejc82Km8A76-pr9aZd_od81QfQCYwOzpA6V_fz1zY_s8oWBBoudBThDQ__fhazJS5UXM8qMWtooUEmsiiGNDlv-0QTvWAQ-ShhZSDeMRQW6E6p8Jo-1rAlaPEpY2a9yUwT1Emq8eqWz6Fb3w6LA2fUCA1-aXwzfm1vs-LQ2ISgEugMU19gYqhl6qKLNXOJs0KkJCCuKutlHC9zbDPoKU8oO0cDSOfNg.6xi5G9fBauLK2c6p.1pF9qw6fMJyfbNU8y0Hi_x4WNH8GZASuZS6tNpfhnJjhUmdHHcEBV-WGF5FoKw.r4cVO2MlpKe229paSt2D1Q\",\"card_month_expiration\":\"08\",\"card_year_expiration\":\"21\",\"additional_data\":null}}"
+      <- "{"public_key":"joszzJzNMkn6SKn0a5P9GcMw1HqZjC1u","operation":{"token":"e0ca140e32edb506b20f47260b97b1ad","commerce":232,"commerce_branch":77,"shop_process_id":552384714818596,"number_of_payments":1,"recursive":false,"amount":"1000.00","currency":"PYG","card_encrypted_data":"eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkExMjhHQ00ifQ.bWLbgRHAl7GmGveBFEoi64bX472TQao5lCausaMSB2LsES8StjWxPbAZpfrFZDcWksnD2WfDbajSX11WsJJApohjp5fawPP30QcDjmSG-I9WXVnW_Qm-mcrejc82Km8A76-pr9aZd_od81QfQCYwOzpA6V_fz1zY_s8oWBBoudBThDQ__fhazJS5UXM8qMWtooUEmsiiGNDlv-0QTvWAQ-ShhZSDeMRQW6E6p8Jo-1rAlaPEpY2a9yUwT1Emq8eqWz6Fb3w6LA2fUCA1-aXwzfm1vs-LQ2ISgEugMU19gYqhl6qKLNXOJs0KkJCCuKutlHC9zbDPoKU8oO0cDSOfNg.6xi5G9fBauLK2c6p.1pF9qw6fMJyfbNU8y0Hi_x4WNH8GZASuZS6tNpfhnJjhUmdHHcEBV-WGF5FoKw.r4cVO2MlpKe229paSt2D1Q","card_month_expiration":"08","card_year_expiration":"21","additional_data":null}}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx/1.18.0\r\n"
       -> "Date: Tue, 06 Apr 2021 01:56:21 GMT\r\n"

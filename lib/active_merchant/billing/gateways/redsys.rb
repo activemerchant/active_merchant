@@ -2,8 +2,8 @@
 
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # = Redsys Merchant Gateway
     #
     # Gateway support for the Spanish "Redsys" payment gateway system. This is
@@ -332,7 +332,8 @@ module ActiveMerchant #:nodoc:
       def add_external_mpi_fields(data, options)
         return unless options[:three_d_secure]
 
-        if options[:three_d_secure][:version] == THREE_DS_V2
+        case options[:three_d_secure][:version]
+        when THREE_DS_V2
           data[:threeDSServerTransID] = options[:three_d_secure][:three_ds_server_trans_id] if options[:three_d_secure][:three_ds_server_trans_id]
           data[:dsTransID] = options[:three_d_secure][:ds_transaction_id] if options[:three_d_secure][:ds_transaction_id]
           data[:authenticacionValue] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
@@ -341,7 +342,7 @@ module ActiveMerchant #:nodoc:
           data[:authenticacionType] = options[:authentication_type] if options[:authentication_type]
           data[:authenticacionFlow] = options[:authentication_flow] if options[:authentication_flow]
           data[:eci_v2] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
-        elsif options[:three_d_secure][:version] == THREE_DS_V1
+        when THREE_DS_V1
           data[:txid] = options[:three_d_secure][:xid] if options[:three_d_secure][:xid]
           data[:cavv] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
           data[:eci_v1] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
@@ -523,7 +524,7 @@ module ActiveMerchant #:nodoc:
 
           # Set moto flag only if explicitly requested via moto field
           # Requires account configuration to be able to use
-          xml.DS_MERCHANT_DIRECTPAYMENT 'moto' if options.dig(:moto) && options.dig(:metadata, :manual_entry)
+          xml.DS_MERCHANT_DIRECTPAYMENT 'moto' if options[:moto] && options.dig(:metadata, :manual_entry)
 
           xml.DS_MERCHANT_EMV3DS data[:three_ds_data].to_json if data[:three_ds_data]
 
@@ -689,8 +690,7 @@ module ActiveMerchant #:nodoc:
 
         order_id += "\0" until order_id.bytesize % block_length == 0 # Pad with zeros
 
-        output = cipher.update(order_id) + cipher.final
-        output
+        cipher.update(order_id) + cipher.final
       end
 
       def mac256(key, data)

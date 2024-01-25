@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class WompiGateway < Gateway
       self.test_url = 'https://sync.sandbox.wompi.co/v1'
       self.live_url = 'https://sync.production.wompi.co/v1'
@@ -80,11 +80,11 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.gsub(/(Bearer )\w+/, '\1[REDACTED]').
-          gsub(/(\\\"number\\\":\\\")\d+/, '\1[REDACTED]').
-          gsub(/(\\\"cvc\\\":\\\")\d+/, '\1[REDACTED]').
-          gsub(/(\\\"phone_number\\\":\\\")\+?\d+/, '\1[REDACTED]').
-          gsub(/(\\\"email\\\":\\\")\S+\\\",/, '\1[REDACTED]\",').
-          gsub(/(\\\"legal_id\\\":\\\")\d+/, '\1[REDACTED]')
+          gsub(/(\\"number\\":\\")\d+/, '\1[REDACTED]').
+          gsub(/(\\"cvc\\":\\")\d+/, '\1[REDACTED]').
+          gsub(/(\\"phone_number\\":\\")\+?\d+/, '\1[REDACTED]').
+          gsub(/(\\"email\\":\\")\S+\\",/, '\1[REDACTED]\",').
+          gsub(/(\\"legal_id\\":\\")\d+/, '\1[REDACTED]')
       end
 
       private
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
       def add_auth_params(post, money, card, options)
         data = {
           amount_in_cents: amount(money).to_i,
-          currency: (options[:currency] || currency(money))
+          currency: options[:currency] || currency(money)
         }
         add_basic_card_info(data, card, options)
         post[:data] = data

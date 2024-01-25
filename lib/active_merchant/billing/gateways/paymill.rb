@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PaymillGateway < Gateway
       self.supported_countries = %w(AD AT BE BG CH CY CZ DE DK EE ES FI FO FR GB
                                     GI GR HR HU IE IL IM IS IT LI LT LU LV MC MT
@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
 
       def verify_credentials
         begin
-          ssl_get(live_url + 'transactions/nonexistent', headers)
+          ssl_get("#{live_url}transactions/nonexistent", headers)
         rescue ResponseError => e
           return false if e.response.code.to_i == 401
         end
@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        { 'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:private_key]}:X").chomp) }
+        { 'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:private_key]}:X").chomp}" }
       end
 
       def commit(method, action, parameters = nil)
@@ -188,7 +188,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse_reponse(response)
-        JSON.parse(response.sub(/jsonPFunction\(/, '').sub(/\)\z/, ''))
+        JSON.parse(response.sub('jsonPFunction(', '').sub(/\)\z/, ''))
       end
 
       def save_card_url
@@ -347,7 +347,7 @@ module ActiveMerchant #:nodoc:
         private
 
         def parse_response
-          @parsed = JSON.parse(raw_response.sub(/jsonPFunction\(/, '').sub(/\)\z/, ''))
+          @parsed = JSON.parse(raw_response.sub('jsonPFunction(', '').sub(/\)\z/, ''))
         end
 
         def handle_response_parse_error

@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # In NZ DPS supports ANZ, Westpac, National Bank, ASB and BNZ.
     # In Australia DPS supports ANZ, NAB, Westpac, CBA, St George and Bank of South Australia.
     # The Maybank in Malaysia is supported and the Citibank for Singapore.
@@ -337,13 +337,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        (response[:card_holder_help_text] || response[:response_text])
+        response[:card_holder_help_text] || response[:response_text]
       end
 
       def authorization_from(action, response)
         case action
         when :validate
-          (response[:billing_id] || response[:dps_billing_id] || response[:dps_txn_ref])
+          response[:billing_id] || response[:dps_billing_id] || response[:dps_txn_ref]
         else
           response[:dps_txn_ref]
         end

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class FirstdataE4V27Gateway < Gateway
       self.test_url = 'https://api.demo.globalgatewaye4.firstdata.com/transaction/v28'
       self.live_url = 'https://api.globalgatewaye4.firstdata.com/transaction/v28'
@@ -316,7 +316,7 @@ module ActiveMerchant #:nodoc:
       def strip_line_breaks(address)
         return unless address.is_a?(Hash)
 
-        Hash[address.map { |k, s| [k, s&.tr("\r\n", ' ')&.strip] }]
+        address.transform_values { |s| s&.tr("\r\n", ' ')&.strip }
       end
 
       def add_invoice(xml, options)
@@ -403,7 +403,7 @@ module ActiveMerchant #:nodoc:
         {
           'x-gge4-date' => sending_time,
           'x-gge4-content-sha1' => content_digest,
-          'Authorization' => 'GGE4_API ' + @options[:key_id].to_s + ':' + encoded,
+          'Authorization' => "GGE4_API #{@options[:key_id]}:#{encoded}",
           'Accepts' => content_type,
           'Content-Type' => content_type
         }
@@ -449,7 +449,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def money_from_authorization(auth)
-        _, _, amount = auth.split(/;/, 3)
+        _, _, amount = auth.split(';', 3)
         amount.to_i
       end
 
@@ -459,7 +459,7 @@ module ActiveMerchant #:nodoc:
         elsif response[:error_number] && response[:error_number] != '0'
           response[:error_description]
         else
-          result = (response[:exact_message] || '')
+          result = response[:exact_message] || ''
           result << " - #{response[:bank_message]}" if response[:bank_message].present?
           result
         end
@@ -502,7 +502,7 @@ module ActiveMerchant #:nodoc:
 
       def name_node(root, node)
         parent = root.name unless root.name == 'TransactionResult'
-        "#{parent}#{node.name}".gsub(/EXact/, 'Exact').underscore.to_sym
+        "#{parent}#{node.name}".gsub('EXact', 'Exact').underscore.to_sym
       end
     end
   end

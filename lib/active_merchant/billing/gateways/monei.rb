@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     #
     # == Monei gateway
     # This class implements Monei gateway for Active Merchant. For more information about Monei
@@ -337,7 +337,7 @@ module ActiveMerchant #:nodoc:
         endpoint = translate_action_endpoint(action, options)
         headers = {
           'Content-Type': 'application/json;charset=UTF-8',
-          'Authorization': @options[:api_key],
+          Authorization: @options[:api_key],
           'User-Agent': 'MONEI/Shopify/0.1.0'
         }
 

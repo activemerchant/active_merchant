@@ -199,9 +199,9 @@ class PriorityTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_shipping)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/shipAmount\":0.01/, data)
-      assert_match(/shipToZip\":27703/, data)
-      assert_match(/shipToCountry\":\"USA/, data)
+      assert_match(/shipAmount":0.01/, data)
+      assert_match(/shipToZip":27703/, data)
+      assert_match(/shipToCountry":"USA/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1340,13 +1340,13 @@ class PriorityTest < Test::Unit::TestCase
 
   def pre_scrubbed
     %(
-      {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv\":\"123\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number\":\"4111111111111111\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":12345678,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Tester\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
+      {"achIndicator":null,"amount":2.11,"authCode":null,"authOnly":false,"bankAccount":null,"cardAccount":{"avsStreet":"1","avsZip":"88888","cvv":"123","entryMode":"Keyed","expiryDate":"01/29","expiryMonth":"01","expiryYear":"29","last4":null,"magstripe":null,"number":"4111111111111111"},"cardPresent":false,"cardPresentType":"CardNotPresent","isAuth":true,"isSettleFunds":true,"isTicket":false,"merchantId":12345678,"mxAdvantageEnabled":false,"mxAdvantageFeeLabel":"","paymentType":"Sale","purchases":[{"taxRate":"0.0000","additionalTaxRate":null,"discountRate":null}],"shouldGetCreditCardLevel":true,"shouldVaultCard":true,"source":"Tester","sourceZip":"K1C2N6","taxExempt":false,"tenderType":"Card","terminals":[]}
      )
   end
 
   def post_scrubbed
     %(
-      {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv\":\"[FILTERED]\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number\":\"[FILTERED]\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":12345678,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Tester\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
+      {"achIndicator":null,"amount":2.11,"authCode":null,"authOnly":false,"bankAccount":null,"cardAccount":{"avsStreet":"1","avsZip":"88888","cvv":"[FILTERED]","entryMode":"Keyed","expiryDate":"01/29","expiryMonth":"01","expiryYear":"29","last4":null,"magstripe":null,"number":"[FILTERED]"},"cardPresent":false,"cardPresentType":"CardNotPresent","isAuth":true,"isSettleFunds":true,"isTicket":false,"merchantId":12345678,"mxAdvantageEnabled":false,"mxAdvantageFeeLabel":"","paymentType":"Sale","purchases":[{"taxRate":"0.0000","additionalTaxRate":null,"discountRate":null}],"shouldGetCreditCardLevel":true,"shouldVaultCard":true,"source":"Tester","sourceZip":"K1C2N6","taxExempt":false,"tenderType":"Card","terminals":[]}
      )
   end
 

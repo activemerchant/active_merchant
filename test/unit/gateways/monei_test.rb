@@ -143,9 +143,9 @@ class MoneiTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\"eci\":\"#{authentication_eci}\"/, data)
-      assert_match(/\"cavv\":\"#{authentication_cavv}\"/, data)
-      assert_match(/\"xid\":\"#{authentication_xid}\"/, data)
+      assert_match(/"eci":"#{authentication_eci}"/, data)
+      assert_match(/"cavv":"#{authentication_cavv}"/, data)
+      assert_match(/"xid":"#{authentication_xid}"/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -315,7 +315,7 @@ class MoneiTest < Test::Unit::TestCase
   def pre_scrubbed
     <<-PRE_SCRUBBED
       <- "POST /v1/payments HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: pk_test_3cb2d54b7ee145fa92d683c01816ad15\r\nUser-Agent: MONEI/Shopify/0.1.0\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.monei.com\r\nContent-Length: 443\r\n\r\n"
-      <- "{\"livemode\":\"false\",\"orderId\":\"66e0d04361fb7b401bec3b078744c21e\",\"transactionType\":\"AUTH\",\"description\":\"Store Purchase\",\"amount\":100,\"currency\":\"EUR\",\"paymentMethod\":{\"card\":{\"number\":\"5453010000059675\",\"expMonth\":\"12\",\"expYear\":\"34\",\"cvc\":\"123\"}},\"customer\":{\"email\":\"support@monei.com\",\"name\":\"Jim Smith\"},\"billingDetails\":{\"address\":{\"line1\":\"456 My Street\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\",\"country\":\"CA\"}},\"sessionDetails\":{}}"
+      <- "{"livemode":"false","orderId":"66e0d04361fb7b401bec3b078744c21e","transactionType":"AUTH","description":"Store Purchase","amount":100,"currency":"EUR","paymentMethod":{"card":{"number":"5453010000059675","expMonth":"12","expYear":"34","cvc":"123"}},"customer":{"email":"support@monei.com","name":"Jim Smith"},"billingDetails":{"address":{"line1":"456 My Street","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"}},"sessionDetails":{}}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Content-Type: application/json\r\n"
       -> "Content-Length: 1069\r\n"
@@ -332,7 +332,7 @@ class MoneiTest < Test::Unit::TestCase
       -> "X-Amz-Cf-Id: SH_5SGGltcCwOgNwn4cnuZAYCa8__JZuUe5lj_Dnvkhigu2yB8M-SQ==\r\n"
       -> "\r\n"
       reading 1069 bytes...
-      -> "{\"id\":\"cdc503654e76e29051bce6054e4b4d47dfb63edc\",\"amount\":100,\"currency\":\"EUR\",\"orderId\":\"66e0d04361fb7b401bec3b078744c21e\",\"description\":\"Store Purchase\",\"accountId\":\"00000000-aaaa-bbbb-cccc-dddd123456789\",\"authorizationCode\":\"++++++\",\"livemode\":false,\"status\":\"FAILED\",\"statusCode\":\"E501\",\"statusMessage\":\"Card rejected: invalid card number\",\"customer\":{\"name\":\"Jim Smith\",\"email\":\"support@monei.com\"},\"billingDetails\":{\"address\":{\"zip\":\"K1C2N6\",\"country\":\"CA\",\"state\":\"ON\",\"city\":\"Ottawa\",\"line1\":\"456 My Street\"}},\"sessionDetails\":{\"deviceType\":\"desktop\"},\"traceDetails\":{\"deviceType\":\"desktop\",\"sourceVersion\":\"0.1.0\",\"countryCode\":\"ES\",\"ip\":\"217.61.227.107\",\"userAgent\":\"MONEI/Shopify/0.1.0\",\"source\":\"MONEI/Shopify\",\"lang\":\"en\"},\"createdAt\":1625500773,\"updatedAt\":1625500776,\"paymentMethod\":{\"method\":\"card\",\"card\":{\"country\":\"US\",\"last4\":\"9675\",\"threeDSecure\":false,\"expiration\":2048544000,\"type\":\"credit\",\"brand\":\"mastercard\"}},\"nextAction\":{\"type\":\"COMPLETE\",\"redirectUrl\":\"https://secure.monei.com/payments/cdc503654e76e29051bce6054e4b4d47dfb63edc/receipt\"}}"
+      -> "{"id":"cdc503654e76e29051bce6054e4b4d47dfb63edc","amount":100,"currency":"EUR","orderId":"66e0d04361fb7b401bec3b078744c21e","description":"Store Purchase","accountId":"00000000-aaaa-bbbb-cccc-dddd123456789","authorizationCode":"++++++","livemode":false,"status":"FAILED","statusCode":"E501","statusMessage":"Card rejected: invalid card number","customer":{"name":"Jim Smith","email":"support@monei.com"},"billingDetails":{"address":{"zip":"K1C2N6","country":"CA","state":"ON","city":"Ottawa","line1":"456 My Street"}},"sessionDetails":{"deviceType":"desktop"},"traceDetails":{"deviceType":"desktop","sourceVersion":"0.1.0","countryCode":"ES","ip":"217.61.227.107","userAgent":"MONEI/Shopify/0.1.0","source":"MONEI/Shopify","lang":"en"},"createdAt":1625500773,"updatedAt":1625500776,"paymentMethod":{"method":"card","card":{"country":"US","last4":"9675","threeDSecure":false,"expiration":2048544000,"type":"credit","brand":"mastercard"}},"nextAction":{"type":"COMPLETE","redirectUrl":"https://secure.monei.com/payments/cdc503654e76e29051bce6054e4b4d47dfb63edc/receipt"}}"
       read 1069 bytes
       Conn close
     PRE_SCRUBBED
@@ -341,7 +341,7 @@ class MoneiTest < Test::Unit::TestCase
   def pre_scrubbed_with_auth
     <<-PRE_SCRUBBED_WITH_AUTH
       <- "POST /v1/payments HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: pk_test_3cb2d54b7ee145fa92d683c01816ad15\r\nUser-Agent: MONEI/Shopify/0.1.0\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.monei.com\r\nContent-Length: 1063\r\n\r\n"
-      <- "{\"livemode\":\"false\",\"orderId\":\"851925032d391d67e3fbf70b06aa182d\",\"transactionType\":\"SALE\",\"description\":\"Store Purchase\",\"amount\":100,\"currency\":\"EUR\",\"paymentMethod\":{\"card\":{\"number\":\"4444444444444406\",\"expMonth\":\"12\",\"expYear\":\"34\",\"cvc\":\"123\",\"auth\":{\"threeDSVersion\":null,\"eci\":\"05\",\"cavv\":\"AAACAgSRBklmQCFgMpEGAAAAAAA=\",\"dsTransID\":\"7eac9571-3533-4c38-addd-00cf34af6a52\",\"directoryResponse\":null,\"authenticationResponse\":null,\"notificationUrl\":\"https://example.com/notification\"}}},\"customer\":{\"email\":\"support@monei.com\",\"name\":\"Jim Smith\"},\"billingDetails\":{\"address\":{\"line1\":\"456 My Street\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\",\"country\":\"CA\"}},\"sessionDetails\":{\"ip\":\"77.110.174.153\",\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36\",\"browserAccept\":\"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8,application/json\",\"browserColorDepth\":\"100\",\"lang\":\"US\",\"browserScreenHeight\":\"1000\",\"browserScreenWidth\":\"500\",\"browserTimezoneOffset\":\"-120\"}}"
+      <- "{"livemode":"false","orderId":"851925032d391d67e3fbf70b06aa182d","transactionType":"SALE","description":"Store Purchase","amount":100,"currency":"EUR","paymentMethod":{"card":{"number":"4444444444444406","expMonth":"12","expYear":"34","cvc":"123","auth":{"threeDSVersion":null,"eci":"05","cavv":"AAACAgSRBklmQCFgMpEGAAAAAAA=","dsTransID":"7eac9571-3533-4c38-addd-00cf34af6a52","directoryResponse":null,"authenticationResponse":null,"notificationUrl":"https://example.com/notification"}}},"customer":{"email":"support@monei.com","name":"Jim Smith"},"billingDetails":{"address":{"line1":"456 My Street","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"}},"sessionDetails":{"ip":"77.110.174.153","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36","browserAccept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8,application/json","browserColorDepth":"100","lang":"US","browserScreenHeight":"1000","browserScreenWidth":"500","browserTimezoneOffset":"-120"}}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Content-Type: application/json\r\n"
       -> "Content-Length: 253\r\n"
@@ -358,7 +358,7 @@ class MoneiTest < Test::Unit::TestCase
       -> "X-Amz-Cf-Id: RVunC63Qvaswh2fcVB5n0p0BB_1zxbMOx68nuq5m6GKhWUFPpfAgVQ==\r\n"
       -> "\r\n"
       reading 253 bytes...
-      -> "{\"id\":\"e1310ab50f7cf1dcf87f1ae75b2ed0fbd2a4d05f\",\"amount\":100,\"currency\":\"EUR\",\"orderId\":\"851925032d391d67e3fbf70b06aa182d\",\"accountId\":\"00000000-aaaa-bbbb-cccc-dddd123456789\",\"liveMode\":false,\"status\":\"SUCCEEDED\",\"statusMessage\":\"Transaction Approved\"}"
+      -> "{"id":"e1310ab50f7cf1dcf87f1ae75b2ed0fbd2a4d05f","amount":100,"currency":"EUR","orderId":"851925032d391d67e3fbf70b06aa182d","accountId":"00000000-aaaa-bbbb-cccc-dddd123456789","liveMode":false,"status":"SUCCEEDED","statusMessage":"Transaction Approved"}"
       read 253 bytes
       Conn close
     PRE_SCRUBBED_WITH_AUTH
@@ -367,7 +367,7 @@ class MoneiTest < Test::Unit::TestCase
   def post_scrubbed
     <<-POST_SCRUBBED
       <- "POST /v1/payments HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\n\Authorization: [FILTERED]\r\nUser-Agent: MONEI/Shopify/0.1.0\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.monei.com\r\nContent-Length: 443\r\n\r\n"
-      <- "{\"livemode\":\"false\",\"orderId\":\"66e0d04361fb7b401bec3b078744c21e\",\"transactionType\":\"AUTH\",\"description\":\"Store Purchase\",\"amount\":100,\"currency\":\"EUR\",\"paymentMethod\":{\"card\":{\"number\":\"[FILTERED]\",\"expMonth\":\"12\",\"expYear\":\"34\",\"cvc\":\"[FILTERED]\"}},\"customer\":{\"email\":\"support@monei.com\",\"name\":\"Jim Smith\"},\"billingDetails\":{\"address\":{\"line1\":\"456 My Street\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\",\"country\":\"CA\"}},\"sessionDetails\":{}}"
+      <- "{"livemode":"false","orderId":"66e0d04361fb7b401bec3b078744c21e","transactionType":"AUTH","description":"Store Purchase","amount":100,"currency":"EUR","paymentMethod":{"card":{"number":"[FILTERED]","expMonth":"12","expYear":"34","cvc":"[FILTERED]"}},"customer":{"email":"support@monei.com","name":"Jim Smith"},"billingDetails":{"address":{"line1":"456 My Street","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"}},"sessionDetails":{}}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Content-Type: application/json\r\n"
       -> "Content-Length: 1069\r\n"
@@ -384,7 +384,7 @@ class MoneiTest < Test::Unit::TestCase
       -> "X-Amz-Cf-Id: SH_5SGGltcCwOgNwn4cnuZAYCa8__JZuUe5lj_Dnvkhigu2yB8M-SQ==\r\n"
       -> "\r\n"
       reading 1069 bytes...
-      -> "{\"id\":\"cdc503654e76e29051bce6054e4b4d47dfb63edc\",\"amount\":100,\"currency\":\"EUR\",\"orderId\":\"66e0d04361fb7b401bec3b078744c21e\",\"description\":\"Store Purchase\",\"accountId\":\"00000000-aaaa-bbbb-cccc-dddd123456789\",\"authorizationCode\":\"++++++\",\"livemode\":false,\"status\":\"FAILED\",\"statusCode\":\"E501\",\"statusMessage\":\"Card rejected: invalid card number\",\"customer\":{\"name\":\"Jim Smith\",\"email\":\"support@monei.com\"},\"billingDetails\":{\"address\":{\"zip\":\"K1C2N6\",\"country\":\"CA\",\"state\":\"ON\",\"city\":\"Ottawa\",\"line1\":\"456 My Street\"}},\"sessionDetails\":{\"deviceType\":\"desktop\"},\"traceDetails\":{\"deviceType\":\"desktop\",\"sourceVersion\":\"0.1.0\",\"countryCode\":\"ES\",\"ip\":\"217.61.227.107\",\"userAgent\":\"MONEI/Shopify/0.1.0\",\"source\":\"MONEI/Shopify\",\"lang\":\"en\"},\"createdAt\":1625500773,\"updatedAt\":1625500776,\"paymentMethod\":{\"method\":\"card\",\"card\":{\"country\":\"US\",\"last4\":\"9675\",\"threeDSecure\":false,\"expiration\":2048544000,\"type\":\"credit\",\"brand\":\"mastercard\"}},\"nextAction\":{\"type\":\"COMPLETE\",\"redirectUrl\":\"https://secure.monei.com/payments/cdc503654e76e29051bce6054e4b4d47dfb63edc/receipt\"}}"
+      -> "{"id":"cdc503654e76e29051bce6054e4b4d47dfb63edc","amount":100,"currency":"EUR","orderId":"66e0d04361fb7b401bec3b078744c21e","description":"Store Purchase","accountId":"00000000-aaaa-bbbb-cccc-dddd123456789","authorizationCode":"++++++","livemode":false,"status":"FAILED","statusCode":"E501","statusMessage":"Card rejected: invalid card number","customer":{"name":"Jim Smith","email":"support@monei.com"},"billingDetails":{"address":{"zip":"K1C2N6","country":"CA","state":"ON","city":"Ottawa","line1":"456 My Street"}},"sessionDetails":{"deviceType":"desktop"},"traceDetails":{"deviceType":"desktop","sourceVersion":"0.1.0","countryCode":"ES","ip":"217.61.227.107","userAgent":"MONEI/Shopify/0.1.0","source":"MONEI/Shopify","lang":"en"},"createdAt":1625500773,"updatedAt":1625500776,"paymentMethod":{"method":"card","card":{"country":"US","last4":"9675","threeDSecure":false,"expiration":2048544000,"type":"credit","brand":"mastercard"}},"nextAction":{"type":"COMPLETE","redirectUrl":"https://secure.monei.com/payments/cdc503654e76e29051bce6054e4b4d47dfb63edc/receipt"}}"
       read 1069 bytes
       Conn close
     POST_SCRUBBED
@@ -393,7 +393,7 @@ class MoneiTest < Test::Unit::TestCase
   def post_scrubbed_with_auth
     <<-POST_SCRUBBED_WITH_AUTH
       <- "POST /v1/payments HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: [FILTERED]\r\nUser-Agent: MONEI/Shopify/0.1.0\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.monei.com\r\nContent-Length: 1063\r\n\r\n"
-      <- "{\"livemode\":\"false\",\"orderId\":\"851925032d391d67e3fbf70b06aa182d\",\"transactionType\":\"SALE\",\"description\":\"Store Purchase\",\"amount\":100,\"currency\":\"EUR\",\"paymentMethod\":{\"card\":{\"number\":\"[FILTERED]\",\"expMonth\":\"12\",\"expYear\":\"34\",\"cvc\":\"[FILTERED]\",\"auth\":{\"threeDSVersion\":null,\"eci\":\"05\",\"cavv\":\"[FILTERED]\",\"dsTransID\":\"7eac9571-3533-4c38-addd-00cf34af6a52\",\"directoryResponse\":null,\"authenticationResponse\":null,\"notificationUrl\":\"https://example.com/notification\"}}},\"customer\":{\"email\":\"support@monei.com\",\"name\":\"Jim Smith\"},\"billingDetails\":{\"address\":{\"line1\":\"456 My Street\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\",\"country\":\"CA\"}},\"sessionDetails\":{\"ip\":\"77.110.174.153\",\"userAgent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36\",\"browserAccept\":\"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8,application/json\",\"browserColorDepth\":\"100\",\"lang\":\"US\",\"browserScreenHeight\":\"1000\",\"browserScreenWidth\":\"500\",\"browserTimezoneOffset\":\"-120\"}}"
+      <- "{"livemode":"false","orderId":"851925032d391d67e3fbf70b06aa182d","transactionType":"SALE","description":"Store Purchase","amount":100,"currency":"EUR","paymentMethod":{"card":{"number":"[FILTERED]","expMonth":"12","expYear":"34","cvc":"[FILTERED]","auth":{"threeDSVersion":null,"eci":"05","cavv":"[FILTERED]","dsTransID":"7eac9571-3533-4c38-addd-00cf34af6a52","directoryResponse":null,"authenticationResponse":null,"notificationUrl":"https://example.com/notification"}}},"customer":{"email":"support@monei.com","name":"Jim Smith"},"billingDetails":{"address":{"line1":"456 My Street","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"}},"sessionDetails":{"ip":"77.110.174.153","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36","browserAccept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8,application/json","browserColorDepth":"100","lang":"US","browserScreenHeight":"1000","browserScreenWidth":"500","browserTimezoneOffset":"-120"}}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Content-Type: application/json\r\n"
       -> "Content-Length: 253\r\n"
@@ -410,7 +410,7 @@ class MoneiTest < Test::Unit::TestCase
       -> "X-Amz-Cf-Id: RVunC63Qvaswh2fcVB5n0p0BB_1zxbMOx68nuq5m6GKhWUFPpfAgVQ==\r\n"
       -> "\r\n"
       reading 253 bytes...
-      -> "{\"id\":\"e1310ab50f7cf1dcf87f1ae75b2ed0fbd2a4d05f\",\"amount\":100,\"currency\":\"EUR\",\"orderId\":\"851925032d391d67e3fbf70b06aa182d\",\"accountId\":\"00000000-aaaa-bbbb-cccc-dddd123456789\",\"liveMode\":false,\"status\":\"SUCCEEDED\",\"statusMessage\":\"Transaction Approved\"}"
+      -> "{"id":"e1310ab50f7cf1dcf87f1ae75b2ed0fbd2a4d05f","amount":100,"currency":"EUR","orderId":"851925032d391d67e3fbf70b06aa182d","accountId":"00000000-aaaa-bbbb-cccc-dddd123456789","liveMode":false,"status":"SUCCEEDED","statusMessage":"Transaction Approved"}"
       read 253 bytes
       Conn close
     POST_SCRUBBED_WITH_AUTH

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class BanwireGateway < Gateway
       URL = 'https://banwire.com/api.pago_pro'
 
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
 
       def card_brand(card)
         brand = super
-        ({ 'master' => 'mastercard', 'american_express' => 'amex' }[brand] || brand)
+        { 'master' => 'mastercard', 'american_express' => 'amex' }[brand] || brand
       end
 
       def parse(body)

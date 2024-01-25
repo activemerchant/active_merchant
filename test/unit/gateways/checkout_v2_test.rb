@@ -291,7 +291,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, { descriptor_city: 'london', descriptor_name: 'sherlock' })
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"billing_descriptor\":{\"name\":\"sherlock\",\"city\":\"london\"}/, data)
+      assert_match(/"billing_descriptor":{"name":"sherlock","city":"london"}/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -881,12 +881,13 @@ class CheckoutV2Test < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.store(@credit_card)
     end.check_request do |_method, endpoint, data, _headers|
-      if /tokens/.match?(endpoint)
+      case endpoint
+      when /tokens/
         assert_match(%r{"type":"card"}, data)
         assert_match(%r{"number":"4242424242424242"}, data)
         assert_match(%r{"cvv":"123"}, data)
         assert_match('/tokens', endpoint)
-      elsif /instruments/.match?(endpoint)
+      when /instruments/
         assert_match(%r{"type":"token"}, data)
         assert_match(%r{"token":"tok_}, data)
       end

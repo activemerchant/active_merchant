@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class S5Gateway < Gateway
       self.test_url = 'https://test.ctpe.io/payment/ctpe'
       self.live_url = 'https://ctpe.io/payment/ctpe'
@@ -128,9 +128,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_account(xml, payment_method)
-        if !payment_method.respond_to?(:number)
-          xml.Account(registration: payment_method)
-        else
+        if payment_method.respond_to?(:number)
           xml.Account do
             xml.Number        payment_method.number
             xml.Holder        "#{payment_method.first_name} #{payment_method.last_name}"
@@ -138,6 +136,8 @@ module ActiveMerchant #:nodoc:
             xml.Expiry(year: payment_method.year, month: payment_method.month)
             xml.Verification payment_method.verification_value
           end
+        else
+          xml.Account(registration: payment_method)
         end
       end
 

@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # To learn more about the Moneris gateway, please contact
     # eselectplus@moneris.com for a copy of their integration guide. For
     # information on remote testing, please see "Test Environment Penny Value
@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
       private # :nodoc: all
 
       def expdate(creditcard)
-        sprintf('%.4i', creditcard.year)[-2..-1] + sprintf('%.2i', creditcard.month)
+        sprintf('%.4i', creditcard.year)[-2..] + sprintf('%.2i', creditcard.month)
       end
 
       def add_external_mpi_fields(post, options)
@@ -399,8 +399,8 @@ module ActiveMerchant #:nodoc:
         tokens = full_address.split(/\s+/)
 
         element = REXML::Element.new('avs_info')
-        element.add_element('avs_street_number').text = tokens.select { |x| x =~ /\d/ }.join(' ')
-        element.add_element('avs_street_name').text = tokens.reject { |x| x =~ /\d/ }.join(' ')
+        element.add_element('avs_street_number').text = tokens.grep(/\d/).join(' ')
+        element.add_element('avs_street_name').text = tokens.grep_v(/\d/).join(' ')
         element.add_element('avs_zipcode').text = address[:zip]
         element
       end

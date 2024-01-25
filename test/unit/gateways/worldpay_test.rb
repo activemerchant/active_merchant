@@ -324,8 +324,8 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
-      assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+      assert_match(/<storedCredentials usage="USED" merchantInitiatedReason="UNSCHEDULED">/, data)
+      assert_match(/<schemeTransactionIdentifier>000000000000020005060720116005060<\/schemeTransactionIdentifier>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -338,7 +338,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"FIRST\" customerInitiatedReason\=\"RECURRING\"\>/, data)
+      assert_match(/<storedCredentials usage="FIRST" customerInitiatedReason="RECURRING">/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -352,8 +352,8 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"RECURRING\"\>/, data)
-      assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005061\<\/schemeTransactionIdentifier\>/, data)
+      assert_match(/<storedCredentials usage="USED" merchantInitiatedReason="RECURRING">/, data)
+      assert_match(/<schemeTransactionIdentifier>000000000000020005060720116005061<\/schemeTransactionIdentifier>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -366,7 +366,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"FIRST\" merchantInitiatedReason\=\"INSTALMENT\"\>/, data)
+      assert_match(/<storedCredentials usage="FIRST" merchantInitiatedReason="INSTALMENT">/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -1396,7 +1396,7 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options)
     end.respond_with('Temporary Failure, please Retry')
     assert_failure response
-    assert_match "Unparsable response received from Worldpay. Please contact Worldpay if you continue to receive this message. \(The raw response returned by the API was: \"Temporary Failure, please Retry\"\)", response.message
+    assert_match 'Unparsable response received from Worldpay. Please contact Worldpay if you continue to receive this message. (The raw response returned by the API was: "Temporary Failure, please Retry")', response.message
   end
 
   def test_successful_authorize_synchronous_response
@@ -2164,7 +2164,7 @@ class WorldpayTest < Test::Unit::TestCase
                                       "http://dtd.worldpay.com/paymentService_v1.dtd">
       <paymentService version="1.4" merchantCode="YOUR_MERCHANT_CODE">
         <reply>
-          <orderStatus orderCode="f25257d251b81fb1fd9c210973c941ff\">
+          <orderStatus orderCode="f25257d251b81fb1fd9c210973c941ff">
             <payment>
               <paymentMethod>ECMC_DEBIT-SSL</paymentMethod>
               <amount value="1110" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>

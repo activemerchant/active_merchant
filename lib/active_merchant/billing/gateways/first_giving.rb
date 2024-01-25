@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class FirstGivingGateway < Gateway
       self.test_url = 'http://usapisandbox.fgdev.net'
       self.live_url = 'https://api.firstgiving.com'
@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
         get = {}
         get[:transactionId] = identifier
         get[:tranType] = 'REFUNDREQUEST'
-        commit('/transaction/refundrequest?' + encode(get))
+        commit("/transaction/refundrequest?#{encode(get)}")
       end
 
       private
@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        if (billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = options[:billing_address] || options[:address])
           post[:billToAddressLine1]  = billing_address[:address1]
           post[:billToCity]          = billing_address[:city]
           post[:billToState]         = billing_address[:state]

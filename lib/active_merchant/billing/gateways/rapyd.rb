@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class RapydGateway < Gateway
       class_attribute :payment_redirect_test, :payment_redirect_live
 
@@ -144,9 +144,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment, options)
-        if payment.is_a?(CreditCard)
+        case payment
+        when CreditCard
           add_creditcard(post, payment, options)
-        elsif payment.is_a?(Check)
+        when Check
           add_ach(post, payment, options)
         else
           add_tokens(post, payment, options)
@@ -259,9 +260,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, payment, options, action = '')
         phone_number = options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
         post[:phone_number] = phone_number.gsub(/\D/, '') unless phone_number.nil?
-        if payment.is_a?(String) && options[:customer_id].present?
-          post[:receipt_email] = options[:email] unless send_customer_object?(options)
-        end
+        post[:receipt_email] = options[:email] if payment.is_a?(String) && options[:customer_id].present? && !send_customer_object?(options)
 
         return if payment.is_a?(String)
         return add_customer_id(post, options) if options[:customer_id]
@@ -361,13 +360,12 @@ module ActiveMerchant #:nodoc:
           'timestamp' => timestamp,
           'signature' => generate_hmac(rel_path, salt, timestamp, payload),
           'idempotency' => @options[:idempotency]
-        }.delete_if { |_, value| value.nil? }
+        }.compact
       end
 
       def generate_hmac(rel_path, salt, timestamp, payload)
         signature = "#{rel_path}#{salt}#{timestamp}#{@options[:access_key]}#{@options[:secret_key]}#{payload}"
-        hash = Base64.urlsafe_encode64(OpenSSL::HMAC.hexdigest('sha256', @options[:secret_key], signature))
-        hash
+        Base64.urlsafe_encode64(OpenSSL::HMAC.hexdigest('sha256', @options[:secret_key], signature))
       end
 
       def avs_result(response)
@@ -396,7 +394,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        id = response.dig('data') ? response.dig('data', 'id') : response.dig('status', 'operation_id')
+        id = response['data'] ? response.dig('data', 'id') : response.dig('status', 'operation_id')
 
         "#{id}|#{response.dig('data', 'default_payment_method')}"
       end

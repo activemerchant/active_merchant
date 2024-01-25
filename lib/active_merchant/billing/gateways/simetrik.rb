@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SimetrikGateway < Gateway
       self.test_url = 'https://payments.sta.simetrik.com/v1'
       self.live_url = 'https://payments.simetrik.com/v1'
@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
           forward_payload: {
             amount: {
               total_amount: amount(money).to_f,
-              currency: (options[:currency] || currency(money))
+              currency: options[:currency] || currency(money)
             },
             transaction: {
               id: authorization
@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
           forward_payload: {
             amount: {
               total_amount: amount(money).to_f,
-              currency: (options[:currency] || currency(money))
+              currency: options[:currency] || currency(money)
             },
             transaction: {
               id: authorization
@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
         sub_merchant = {}
         sub_merchant[:merchant_id] = sub_merchant_options[:merchant_id] if sub_merchant_options[:merchant_id]
         sub_merchant[:extra_params] = sub_merchant_options[:extra_params] if sub_merchant_options[:extra_params]
-        sub_merchant[:mcc] =  sub_merchant_options[:mcc] if sub_merchant_options[:mcc]
+        sub_merchant[:mcc] = sub_merchant_options[:mcc] if sub_merchant_options[:mcc]
         sub_merchant[:name] = sub_merchant_options[:name] if sub_merchant_options[:name]
         sub_merchant[:address] = sub_merchant_options[:address] if sub_merchant_options[:address]
         sub_merchant[:postal_code] = sub_merchant_options[:postal_code] if sub_merchant_options[:postal_code]
@@ -318,7 +318,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action, url_params)
-        "#{(test? ? test_url : live_url)}/#{url_params[:token_acquirer]}/#{action}"
+        "#{test? ? test_url : live_url}/#{url_params[:token_acquirer]}/#{action}"
       end
 
       def post_data(data = {})

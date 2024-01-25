@@ -1,8 +1,8 @@
 require 'digest/md5'
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MerchantWarriorGateway < Gateway
       TOKEN_TEST_URL = 'https://base.merchantwarrior.com/token/'
       TOKEN_LIVE_URL = 'https://api.merchantwarrior.com/token/'
@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        return unless (address = (options[:billing_address] || options[:address]))
+        return unless (address = options[:billing_address] || options[:address])
 
         post['customerName'] = scrub_name(address[:name])
         post['customerCountry'] = address[:country]
@@ -140,11 +140,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub_name(name)
-        name.gsub(/[^a-zA-Z\. -]/, '')
+        name.gsub(/[^a-zA-Z. -]/, '')
       end
 
       def add_amount(post, money, options)
-        currency = (options[:currency] || currency(money))
+        currency = options[:currency] || currency(money)
 
         post['transactionAmount'] = amount(money)
         post['transactionCurrency'] = currency
@@ -214,7 +214,7 @@ module ActiveMerchant #:nodoc:
           response[:response_message],
           response,
           test: test?,
-          authorization: (response[:card_id] || response[:transaction_id])
+          authorization: response[:card_id] || response[:transaction_id]
         )
       end
 
@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def token?(post)
-        (post['cardID'] || post['cardName'])
+        post['cardID'] || post['cardName']
       end
 
       def success?(response)

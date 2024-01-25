@@ -1,6 +1,6 @@
 require 'nokogiri'
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     module PayflowCommonAPI
       def self.included(base)
         base.default_currency = 'USD'
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
           end
           xml.tag! 'RequestAuth' do
             xml.tag! 'UserPass' do
-              xml.tag! 'User', !@options[:user].blank? ? @options[:user] : @options[:login]
+              xml.tag! 'User', @options[:user].blank? ? @options[:login] : @options[:user]
               xml.tag! 'Password', @options[:password]
             end
           end

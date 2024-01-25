@@ -192,43 +192,43 @@ class DibsTest < Test::Unit::TestCase
   private
 
   def successful_authorize_response
-    %({\"transactionId\":\"1066662996\",\"status\":\"ACCEPT\",\"acquirer\":\"TEST\"})
+    %({"transactionId":"1066662996","status":"ACCEPT","acquirer":"TEST"})
   end
 
   def failed_authorize_response
-    %({\"status\":\"DECLINE\",\"declineReason\":\"REJECTED_BY_ACQUIRER\"})
+    %({"status":"DECLINE","declineReason":"REJECTED_BY_ACQUIRER"})
   end
 
   def successful_capture_response
-    %({\"status\":\"ACCEPT\"})
+    %({"status":"ACCEPT"})
   end
 
   def failed_capture_response
-    %({\"status\":\"DECLINE\",\"declineReason\":\"1\"})
+    %({"status":"DECLINE","declineReason":"1"})
   end
 
   def successful_void_response
-    %({\"status\":\"ACCEPT\"})
+    %({"status":"ACCEPT"})
   end
 
   def failed_void_response
-    %({\"status\":\"ERROR\",\"declineReason\":\"Validation error at field: transactionId - Parameter length should not be less than 1 characters\"})
+    %({"status":"ERROR","declineReason":"Validation error at field: transactionId - Parameter length should not be less than 1 characters"})
   end
 
   def successful_refund_response
-    %({\"status\":\"ACCEPT\"})
+    %({"status":"ACCEPT"})
   end
 
   def failed_refund_response
-    %({\"status\":\"ERROR\",\"declineReason\":\"Validation error at field: transactionId - Parameter length should not be less than 1 characters\"})
+    %({"status":"ERROR","declineReason":"Validation error at field: transactionId - Parameter length should not be less than 1 characters"})
   end
 
   def successful_store_response
-    %({\"ticketId\":\"1070103439\",\"status\":\"ACCEPT\",\"acquirer\":\"TEST\"})
+    %({"ticketId":"1070103439","status":"ACCEPT","acquirer":"TEST"})
   end
 
   def failed_store_response
-    %({\"status\":\"DECLINE\",\"declineReason\":\"REJECTED_BY_ACQUIRER\"})
+    %({"status":"DECLINE","declineReason":"REJECTED_BY_ACQUIRER"})
   end
 
   def invalid_json_response
@@ -238,18 +238,18 @@ class DibsTest < Test::Unit::TestCase
   def transcript
     %(
       <- "POST /merchant/v1/JSON/Transaction/AuthorizeCard HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.dibspayment.com\r\nContent-Length: 293\r\n\r\n"
-      <- "request={\"amount\":100,\"orderId\":\"a1f3d8c03f1490750812085ea21852f1\",\"currency\":\"840\",\"cardNumber\":\"4711100000000000\",\"cvc\":\"684\",\"expYear\":\"24\",\"expMonth\":\"6\",\"test\":true,\"clientIp\":\"45.37.180.92\",\"merchantId\":\"90196871\",\"MAC\":\"4ffe83a971fc96075a9fbaae1e9bbdcbfdf8842365f381d6151162dd59e3875f\"}"
+      <- "request={"amount":100,"orderId":"a1f3d8c03f1490750812085ea21852f1","currency":"840","cardNumber":"4711100000000000","cvc":"684","expYear":"24","expMonth":"6","test":true,"clientIp":"45.37.180.92","merchantId":"90196871","MAC":"4ffe83a971fc96075a9fbaae1e9bbdcbfdf8842365f381d6151162dd59e3875f"}"
       <- "POST /merchant/v1/JSON/Transaction/CaptureTransaction HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.dibspayment.com\r\nContent-Length: 148\r\n\r\n"
-      <- "request={\"amount\":100,\"transactionId\":\"1066783460\",\"merchantId\":\"90196871\",\"MAC\":\"5bc0307d55a4f146cfb9d97c42e9bb7b8112c93d4cd8349d38aa5f0360a45e08\"}"
+      <- "request={"amount":100,"transactionId":"1066783460","merchantId":"90196871","MAC":"5bc0307d55a4f146cfb9d97c42e9bb7b8112c93d4cd8349d38aa5f0360a45e08"}"
     )
   end
 
   def scrubbed_transcript
     %(
       <- "POST /merchant/v1/JSON/Transaction/AuthorizeCard HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.dibspayment.com\r\nContent-Length: 293\r\n\r\n"
-      <- "request={\"amount\":100,\"orderId\":\"a1f3d8c03f1490750812085ea21852f1\",\"currency\":\"840\",\"cardNumber\":\"[FILTERED]\",\"cvc\":\"[FILTERED]\",\"expYear\":\"24\",\"expMonth\":\"6\",\"test\":true,\"clientIp\":\"45.37.180.92\",\"merchantId\":\"90196871\",\"MAC\":\"4ffe83a971fc96075a9fbaae1e9bbdcbfdf8842365f381d6151162dd59e3875f\"}"
+      <- "request={"amount":100,"orderId":"a1f3d8c03f1490750812085ea21852f1","currency":"840","cardNumber":"[FILTERED]","cvc":"[FILTERED]","expYear":"24","expMonth":"6","test":true,"clientIp":"45.37.180.92","merchantId":"90196871","MAC":"4ffe83a971fc96075a9fbaae1e9bbdcbfdf8842365f381d6151162dd59e3875f"}"
       <- "POST /merchant/v1/JSON/Transaction/CaptureTransaction HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.dibspayment.com\r\nContent-Length: 148\r\n\r\n"
-      <- "request={\"amount\":100,\"transactionId\":\"1066783460\",\"merchantId\":\"90196871\",\"MAC\":\"5bc0307d55a4f146cfb9d97c42e9bb7b8112c93d4cd8349d38aa5f0360a45e08\"}"
+      <- "request={"amount":100,"transactionId":"1066783460","merchantId":"90196871","MAC":"5bc0307d55a4f146cfb9d97c42e9bb7b8112c93d4cd8349d38aa5f0360a45e08"}"
     )
   end
 end

@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class HdfcGateway < Gateway
       self.display_name = 'HDFC'
       self.homepage_url = 'http://www.hdfcbank.com/sme/sme-details/merchant-services/guzh6m0i'
@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options)
         post[:udf2] = escape(options[:email]) if options[:email]
-        if address = (options[:billing_address] || options[:address])
+        if address = options[:billing_address] || options[:address]
           post[:udf3] = escape(address[:phone]) if address[:phone]
           post[:udf4] = escape(<<~ADDRESS)
             #{address[:name]}
@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc:
         return '' unless string
 
         string = string[0...max_length] if max_length
-        string.gsub(/[^A-Za-z0-9 \-_@\.\n]/, '')
+        string.gsub(/[^A-Za-z0-9 \-_@.\n]/, '')
       end
     end
   end

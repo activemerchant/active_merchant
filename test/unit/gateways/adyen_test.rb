@@ -738,13 +738,13 @@ class AdyenTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(200, @credit_card, @options.merge(currency: 'JPY'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/"amount\":{\"value\":\"2\",\"currency\":\"JPY\"}/, data)
+      assert_match(/"amount":{"value":"2","currency":"JPY"}/, data)
     end.respond_with(successful_authorize_response)
 
     stub_comms do
       @gateway.authorize(200, @credit_card, @options.merge(currency: 'CLP'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/"amount\":{\"value\":\"200\",\"currency\":\"CLP\"}/, data)
+      assert_match(/"amount":{"value":"200","currency":"CLP"}/, data)
     end.respond_with(successful_authorize_response)
   end
 
@@ -814,9 +814,9 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.credit(2500, @credit_card, payout_options)
     end.check_request do |endpoint, data, _headers|
       assert_match(/payout/, endpoint)
-      assert_match(/"dateOfBirth\":\"1990-01-01\"/, data)
-      assert_match(/"nationality\":\"NL\"/, data)
-      assert_match(/"shopperName\":{\"firstName\":\"Test\",\"lastName\":\"Card\"}/, data)
+      assert_match(/"dateOfBirth":"1990-01-01"/, data)
+      assert_match(/"nationality":"NL"/, data)
+      assert_match(/"shopperName":{"firstName":"Test","lastName":"Card"}/, data)
     end.respond_with(successful_payout_response)
   end
 
@@ -1273,41 +1273,41 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_authorize_with_sub_sellers
     sub_seller_options = {
-      "subMerchant.numberOfSubSellers": '2',
-      "subMerchant.subSeller1.id": '111111111',
-      "subMerchant.subSeller1.name": 'testSub1',
-      "subMerchant.subSeller1.street": 'Street1',
-      "subMerchant.subSeller1.postalCode": '12242840',
-      "subMerchant.subSeller1.city": 'Sao jose dos campos',
-      "subMerchant.subSeller1.state": 'SP',
-      "subMerchant.subSeller1.country": 'BRA',
-      "subMerchant.subSeller1.taxId": '12312312340',
-      "subMerchant.subSeller1.mcc": '5691',
-      "subMerchant.subSeller1.debitSettlementBank": '1',
-      "subMerchant.subSeller1.debitSettlementAgency": '1',
-      "subMerchant.subSeller1.debitSettlementAccountType": '1',
-      "subMerchant.subSeller1.debitSettlementAccount": '1',
-      "subMerchant.subSeller1.creditSettlementBank": '1',
-      "subMerchant.subSeller1.creditSettlementAgency": '1',
-      "subMerchant.subSeller1.creditSettlementAccountType": '1',
-      "subMerchant.subSeller1.creditSettlementAccount": '1',
-      "subMerchant.subSeller2.id": '22222222',
-      "subMerchant.subSeller2.name": 'testSub2',
-      "subMerchant.subSeller2.street": 'Street2',
-      "subMerchant.subSeller2.postalCode": '12300000',
-      "subMerchant.subSeller2.city": 'Jacarei',
-      "subMerchant.subSeller2.state": 'SP',
-      "subMerchant.subSeller2.country": 'BRA',
-      "subMerchant.subSeller2.taxId": '12312312340',
-      "subMerchant.subSeller2.mcc": '5691',
-      "subMerchant.subSeller2.debitSettlementBank": '1',
-      "subMerchant.subSeller2.debitSettlementAgency": '1',
-      "subMerchant.subSeller2.debitSettlementAccountType": '1',
-      "subMerchant.subSeller2.debitSettlementAccount": '1',
-      "subMerchant.subSeller2.creditSettlementBank": '1',
-      "subMerchant.subSeller2.creditSettlementAgency": '1',
-      "subMerchant.subSeller2.creditSettlementAccountType": '1',
-      "subMerchant.subSeller2.creditSettlementAccount": '1'
+      'subMerchant.numberOfSubSellers': '2',
+      'subMerchant.subSeller1.id': '111111111',
+      'subMerchant.subSeller1.name': 'testSub1',
+      'subMerchant.subSeller1.street': 'Street1',
+      'subMerchant.subSeller1.postalCode': '12242840',
+      'subMerchant.subSeller1.city': 'Sao jose dos campos',
+      'subMerchant.subSeller1.state': 'SP',
+      'subMerchant.subSeller1.country': 'BRA',
+      'subMerchant.subSeller1.taxId': '12312312340',
+      'subMerchant.subSeller1.mcc': '5691',
+      'subMerchant.subSeller1.debitSettlementBank': '1',
+      'subMerchant.subSeller1.debitSettlementAgency': '1',
+      'subMerchant.subSeller1.debitSettlementAccountType': '1',
+      'subMerchant.subSeller1.debitSettlementAccount': '1',
+      'subMerchant.subSeller1.creditSettlementBank': '1',
+      'subMerchant.subSeller1.creditSettlementAgency': '1',
+      'subMerchant.subSeller1.creditSettlementAccountType': '1',
+      'subMerchant.subSeller1.creditSettlementAccount': '1',
+      'subMerchant.subSeller2.id': '22222222',
+      'subMerchant.subSeller2.name': 'testSub2',
+      'subMerchant.subSeller2.street': 'Street2',
+      'subMerchant.subSeller2.postalCode': '12300000',
+      'subMerchant.subSeller2.city': 'Jacarei',
+      'subMerchant.subSeller2.state': 'SP',
+      'subMerchant.subSeller2.country': 'BRA',
+      'subMerchant.subSeller2.taxId': '12312312340',
+      'subMerchant.subSeller2.mcc': '5691',
+      'subMerchant.subSeller2.debitSettlementBank': '1',
+      'subMerchant.subSeller2.debitSettlementAgency': '1',
+      'subMerchant.subSeller2.debitSettlementAccountType': '1',
+      'subMerchant.subSeller2.debitSettlementAccount': '1',
+      'subMerchant.subSeller2.creditSettlementBank': '1',
+      'subMerchant.subSeller2.creditSettlementAgency': '1',
+      'subMerchant.subSeller2.creditSettlementAccountType': '1',
+      'subMerchant.subSeller2.creditSettlementAccount': '1'
     }
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(sub_merchant_data: sub_seller_options))
@@ -1410,13 +1410,13 @@ class AdyenTest < Test::Unit::TestCase
       additional_data_keys = additional_data.keys
       assert_all(leve_3_keys) { |item| additional_data_keys.include?(item) }
 
-      mapper = { "enhancedSchemeData.freightAmount": 'freight_amount',
-                "enhancedSchemeData.destinationStateProvinceCode": 'destination_state_province_code',
-                "enhancedSchemeData.shipFromPostalCode": 'ship_from_postal_code',
-                "enhancedSchemeData.orderDate": 'order_date',
-                "enhancedSchemeData.destinationPostalCode": 'destination_postal_code',
-                "enhancedSchemeData.destinationCountryCode": 'destination_country_code',
-                "enhancedSchemeData.dutyAmount": 'duty_amount' }
+      mapper = { 'enhancedSchemeData.freightAmount': 'freight_amount',
+                'enhancedSchemeData.destinationStateProvinceCode': 'destination_state_province_code',
+                'enhancedSchemeData.shipFromPostalCode': 'ship_from_postal_code',
+                'enhancedSchemeData.orderDate': 'order_date',
+                'enhancedSchemeData.destinationPostalCode': 'destination_postal_code',
+                'enhancedSchemeData.destinationCountryCode': 'destination_country_code',
+                'enhancedSchemeData.dutyAmount': 'duty_amount' }
 
       mapper.each do |item|
         assert_equal additional_data[item[0]], level_3_options[item[1]]
@@ -1538,7 +1538,7 @@ class AdyenTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(1000, @credit_card, @options.merge(currency: 'JOD'))
     end.check_request(skip_response: true) do |_endpoint, data|
-      assert_match(/"amount\":{\"value\":\"1000\",\"currency\":\"JOD\"}/, data)
+      assert_match(/"amount":{"value":"1000","currency":"JOD"}/, data)
     end
   end
 
@@ -1581,7 +1581,7 @@ class AdyenTest < Test::Unit::TestCase
       starting SSL for pal-test.adyen.com:443...
       SSL established
       <- "POST /pal/servlet/Payment/v18/authorise HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic d3NfMTYzMjQ1QENvbXBhbnkuRGFuaWVsYmFra2Vybmw6eXU0aD50ZlxIVEdydSU1PDhxYTVMTkxVUw==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pal-test.adyen.com\r\nContent-Length: 308\r\n\r\n"
-      <- "{\"merchantAccount\":\"DanielbakkernlNL\",\"reference\":\"345123\",\"amount\":{\"value\":\"100\",\"currency\":\"USD\"},\"card\":{\"expiryMonth\":8,\"expiryYear\":2018,\"holderName\":\"John Smith\",\"number\":\"4111111111111111\",\"cvc\":\"737\"},\"shopperEmail\":\"john.smith@test.com\",\"shopperIP\":\"77.110.174.153\",\"shopperReference\":\"John Smith\"}"
+      <- "{"merchantAccount":"DanielbakkernlNL","reference":"345123","amount":{"value":"100","currency":"USD"},"card":{"expiryMonth":8,"expiryYear":2018,"holderName":"John Smith","number":"4111111111111111","cvc":"737"},"shopperEmail":"john.smith@test.com","shopperIP":"77.110.174.153","shopperReference":"John Smith"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Thu, 27 Oct 2016 11:37:13 GMT\r\n"
       -> "Server: Apache\r\n"
@@ -1594,7 +1594,7 @@ class AdyenTest < Test::Unit::TestCase
       -> "50\r\n"
       reading 80 bytes...
       -> ""
-      -> "{\"pspReference\":\"8514775682339577\",\"resultCode\":\"Authorised\",\"authCode\":\"31845\"}"
+      -> "{"pspReference":"8514775682339577","resultCode":"Authorised","authCode":"31845"}"
       read 80 bytes
       reading 2 bytes...
       -> ""
@@ -1613,7 +1613,7 @@ class AdyenTest < Test::Unit::TestCase
       starting SSL for pal-test.adyen.com:443...
       SSL established
       <- "POST /pal/servlet/Payment/v18/authorise HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pal-test.adyen.com\r\nContent-Length: 308\r\n\r\n"
-      <- "{\"merchantAccount\":\"DanielbakkernlNL\",\"reference\":\"345123\",\"amount\":{\"value\":\"100\",\"currency\":\"USD\"},\"card\":{\"expiryMonth\":8,\"expiryYear\":2018,\"holderName\":\"John Smith\",\"number\":\"[FILTERED]\",\"cvc\":\"[FILTERED]\"},\"shopperEmail\":\"john.smith@test.com\",\"shopperIP\":\"77.110.174.153\",\"shopperReference\":\"John Smith\"}"
+      <- "{"merchantAccount":"DanielbakkernlNL","reference":"345123","amount":{"value":"100","currency":"USD"},"card":{"expiryMonth":8,"expiryYear":2018,"holderName":"John Smith","number":"[FILTERED]","cvc":"[FILTERED]"},"shopperEmail":"john.smith@test.com","shopperIP":"77.110.174.153","shopperReference":"John Smith"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Thu, 27 Oct 2016 11:37:13 GMT\r\n"
       -> "Server: Apache\r\n"
@@ -1626,7 +1626,7 @@ class AdyenTest < Test::Unit::TestCase
       -> "50\r\n"
       reading 80 bytes...
       -> ""
-      -> "{\"pspReference\":\"8514775682339577\",\"resultCode\":\"Authorised\",\"authCode\":\"31845\"}"
+      -> "{"pspReference":"8514775682339577","resultCode":"Authorised","authCode":"31845"}"
       read 80 bytes
       reading 2 bytes...
       -> ""
@@ -1645,7 +1645,7 @@ class AdyenTest < Test::Unit::TestCase
       starting SSL for pal-test.adyen.com:443...
       SSL established
       <- "POST /pal/servlet/Payment/v18/authorise HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic d3NfMTYzMjQ1QENvbXBhbnkuRGFuaWVsYmFra2Vybmw6eXU0aD50ZlxIVEdydSU1PDhxYTVMTkxVUw==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pal-test.adyen.com\r\nContent-Length: 308\r\n\r\n"
-      <- "{\"merchantAccount\":\"DanielbakkernlNL\",\"reference\":\"345123\",\"amount\":{\"value\":\"100\",\"currency\":\"USD\"},\"bankAccount\":{\"bankAccountNumber\":\"15378535\",\"bankLocationId\":\"244183602\",\"ownerName\":\"Jim Smith\",\"shopperEmail\":\"john.smith@test.com\",\"shopperIP\":\"77.110.174.153\",\"shopperReference\":\"John Smith\"}"
+      <- "{"merchantAccount":"DanielbakkernlNL","reference":"345123","amount":{"value":"100","currency":"USD"},"bankAccount":{"bankAccountNumber":"15378535","bankLocationId":"244183602","ownerName":"Jim Smith","shopperEmail":"john.smith@test.com","shopperIP":"77.110.174.153","shopperReference":"John Smith"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Thu, 27 Oct 2016 11:37:13 GMT\r\n"
       -> "Server: Apache\r\n"
@@ -1658,7 +1658,7 @@ class AdyenTest < Test::Unit::TestCase
       -> "50\r\n"
       reading 80 bytes...
       -> ""
-      -> "{\"pspReference\":\"8514775682339577\",\"resultCode\":\"Authorised\",\"authCode\":\"31845\"}"
+      -> "{"pspReference":"8514775682339577","resultCode":"Authorised","authCode":"31845"}"
       read 80 bytes
       reading 2 bytes...
       -> ""
@@ -1677,7 +1677,7 @@ class AdyenTest < Test::Unit::TestCase
       starting SSL for pal-test.adyen.com:443...
       SSL established
       <- "POST /pal/servlet/Payment/v18/authorise HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pal-test.adyen.com\r\nContent-Length: 308\r\n\r\n"
-      <- "{\"merchantAccount\":\"DanielbakkernlNL\",\"reference\":\"345123\",\"amount\":{\"value\":\"100\",\"currency\":\"USD\"},\"bankAccount\":{\"bankAccountNumber\":\"[FILTERED]\",\"bankLocationId\":\"[FILTERED]\",\"ownerName\":\"Jim Smith\",\"shopperEmail\":\"john.smith@test.com\",\"shopperIP\":\"77.110.174.153\",\"shopperReference\":\"John Smith\"}"
+      <- "{"merchantAccount":"DanielbakkernlNL","reference":"345123","amount":{"value":"100","currency":"USD"},"bankAccount":{"bankAccountNumber":"[FILTERED]","bankLocationId":"[FILTERED]","ownerName":"Jim Smith","shopperEmail":"john.smith@test.com","shopperIP":"77.110.174.153","shopperReference":"John Smith"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Thu, 27 Oct 2016 11:37:13 GMT\r\n"
       -> "Server: Apache\r\n"
@@ -1690,7 +1690,7 @@ class AdyenTest < Test::Unit::TestCase
       -> "50\r\n"
       reading 80 bytes...
       -> ""
-      -> "{\"pspReference\":\"8514775682339577\",\"resultCode\":\"Authorised\",\"authCode\":\"31845\"}"
+      -> "{"pspReference":"8514775682339577","resultCode":"Authorised","authCode":"31845"}"
       read 80 bytes
       reading 2 bytes...
       -> ""
@@ -1711,7 +1711,7 @@ class AdyenTest < Test::Unit::TestCase
       I, [2018-06-18T11:53:47.394267 #25363]  INFO -- : [ActiveMerchant::Billing::AdyenGateway] connection_ssl_version=TLSv1.2 connection_ssl_cipher=ECDHE-RSA-AES128-GCM-SHA256
       D, [2018-06-18T11:53:47.394346 #25363] DEBUG -- : {"merchantAccount":"SpreedlyCOM294","reference":"123","amount":{"value":"100","currency":"USD"},"mpiData":{"authenticationResponse":"Y","cavv":"YwAAAAAABaYcCMX/OhNRQAAAAAA=","directoryResponse":"Y","eci":"07"},"card":{"expiryMonth":8,"expiryYear":2018,"holderName":"Longbob Longsen","number":"4111111111111111","billingAddress":{"street":"456 My Street","houseNumberOrName":"Apt 1","postalCode":"K1C2N6","city":"Ottawa","stateOrProvince":"ON","country":"CA"}},"shopperEmail":"john.smith@test.com","shopperIP":"77.110.174.153","shopperReference":"John Smith","selectedBrand":"applepay","shopperInteraction":"Ecommerce"}
       <- "POST /pal/servlet/Payment/v18/authorise HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic d3NAQ29tcGFueS5TcHJlZWRseTQ3MTo3c3d6U0p2R1VWViUvP3Q0Uy9bOVtoc0hF\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: pal-test.adyen.com\r\nContent-Length: 618\r\n\r\n"
-      <- "{\"merchantAccount\":\"SpreedlyCOM294\",\"reference\":\"123\",\"amount\":{\"value\":\"100\",\"currency\":\"USD\"},\"mpiData\":{\"authenticationResponse\":\"Y\",\"cavv\":\"YwAAAAAABaYcCMX/OhNRQAAAAAA=\",\"directoryResponse\":\"Y\",\"eci\":\"07\"},\"card\":{\"expiryMonth\":8,\"expiryYear\":2018,\"holderName\":\"Longbob Longsen\",\"number\":\"4111111111111111\",\"billingAddress\":{\"street\":\"456 My Street\",\"houseNumberOrName\":\"Apt 1\",\"postalCode\":\"K1C2N6\",\"city\":\"Ottawa\",\"stateOrProvince\":\"ON\",\"country\":\"CA\"}},\"shopperEmail\":\"john.smith@test.com\",\"shopperIP\":\"77.110.174.153\",\"shopperReference\":\"John Smith\",\"selectedBrand\":\"applepay\",\"shopperInteraction\":\"Ecommerce\"}"
+      <- "{"merchantAccount":"SpreedlyCOM294","reference":"123","amount":{"value":"100","currency":"USD"},"mpiData":{"authenticationResponse":"Y","cavv":"YwAAAAAABaYcCMX/OhNRQAAAAAA=","directoryResponse":"Y","eci":"07"},"card":{"expiryMonth":8,"expiryYear":2018,"holderName":"Longbob Longsen","number":"4111111111111111","billingAddress":{"street":"456 My Street","houseNumberOrName":"Apt 1","postalCode":"K1C2N6","city":"Ottawa","stateOrProvince":"ON","country":"CA"}},"shopperEmail":"john.smith@test.com","shopperIP":"77.110.174.153","shopperReference":"John Smith","selectedBrand":"applepay","shopperInteraction":"Ecommerce"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Mon, 18 Jun 2018 15:53:47 GMT\r\n"
       -> "Server: Apache\r\n"
@@ -1724,7 +1724,7 @@ class AdyenTest < Test::Unit::TestCase
       -> "50\r\n"
       reading 80 bytes...
       -> ""
-      -> "{\"pspReference\":\"8835293372276408\",\"resultCode\":\"Authorised\",\"authCode\":\"26056\"}"
+      -> "{"pspReference":"8835293372276408","resultCode":"Authorised","authCode":"26056"}"
       read 80 bytes
       reading 2 bytes...
       -> ""
@@ -1745,7 +1745,7 @@ class AdyenTest < Test::Unit::TestCase
       I, [2018-06-18T11:53:47.394267 #25363]  INFO -- : [ActiveMerchant::Billing::AdyenGateway] connection_ssl_version=TLSv1.2 connection_ssl_cipher=ECDHE-RSA-AES128-GCM-SHA256
       D, [2018-06-18T11:53:47.394346 #25363] DEBUG -- : {"merchantAccount":"SpreedlyCOM294","reference":"123","amount":{"value":"100","currency":"USD"},"mpiData":{"authenticationResponse":"Y","cavv":"[FILTERED]","directoryResponse":"Y","eci":"07"},"card":{"expiryMonth":8,"expiryYear":2018,"holderName":"Longbob Longsen","number":"[FILTERED]","billingAddress":{"street":"456 My Street","houseNumberOrName":"Apt 1","postalCode":"K1C2N6","city":"Ottawa","stateOrProvince":"ON","country":"CA"}},"shopperEmail":"john.smith@test.com","shopperIP":"77.110.174.153","shopperReference":"John Smith","selectedBrand":"applepay","shopperInteraction":"Ecommerce"}
       <- "POST /pal/servlet/Payment/v18/authorise HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: pal-test.adyen.com\r\nContent-Length: 618\r\n\r\n"
-      <- "{\"merchantAccount\":\"SpreedlyCOM294\",\"reference\":\"123\",\"amount\":{\"value\":\"100\",\"currency\":\"USD\"},\"mpiData\":{\"authenticationResponse\":\"Y\",\"cavv\":\"[FILTERED]\",\"directoryResponse\":\"Y\",\"eci\":\"07\"},\"card\":{\"expiryMonth\":8,\"expiryYear\":2018,\"holderName\":\"Longbob Longsen\",\"number\":\"[FILTERED]\",\"billingAddress\":{\"street\":\"456 My Street\",\"houseNumberOrName\":\"Apt 1\",\"postalCode\":\"K1C2N6\",\"city\":\"Ottawa\",\"stateOrProvince\":\"ON\",\"country\":\"CA\"}},\"shopperEmail\":\"john.smith@test.com\",\"shopperIP\":\"77.110.174.153\",\"shopperReference\":\"John Smith\",\"selectedBrand\":\"applepay\",\"shopperInteraction\":\"Ecommerce\"}"
+      <- "{"merchantAccount":"SpreedlyCOM294","reference":"123","amount":{"value":"100","currency":"USD"},"mpiData":{"authenticationResponse":"Y","cavv":"[FILTERED]","directoryResponse":"Y","eci":"07"},"card":{"expiryMonth":8,"expiryYear":2018,"holderName":"Longbob Longsen","number":"[FILTERED]","billingAddress":{"street":"456 My Street","houseNumberOrName":"Apt 1","postalCode":"K1C2N6","city":"Ottawa","stateOrProvince":"ON","country":"CA"}},"shopperEmail":"john.smith@test.com","shopperIP":"77.110.174.153","shopperReference":"John Smith","selectedBrand":"applepay","shopperInteraction":"Ecommerce"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Mon, 18 Jun 2018 15:53:47 GMT\r\n"
       -> "Server: Apache\r\n"
@@ -1758,7 +1758,7 @@ class AdyenTest < Test::Unit::TestCase
       -> "50\r\n"
       reading 80 bytes...
       -> ""
-      -> "{\"pspReference\":\"8835293372276408\",\"resultCode\":\"Authorised\",\"authCode\":\"26056\"}"
+      -> "{"pspReference":"8835293372276408","resultCode":"Authorised","authCode":"26056"}"
       read 80 bytes
       reading 2 bytes...
       -> ""
@@ -2043,13 +2043,13 @@ class AdyenTest < Test::Unit::TestCase
 
   def successful_synchronous_adjust_response
     <<-RESPONSE
-    {\"additionalData\":{\"authCode\":\"70125\",\"adjustAuthorisationData\":\"BQABAQA9NtGnJAkLXKqW1C+VUeCNMzDf4WwzLFBiuQ8iaA2Yvflz41t0cYxtA7XVzG2pzlJPMnkSK75k3eByNS0\\/m0\\/N2+NnnKv\\/9rYPn8Pjq1jc7CapczdqZNl8P9FwqtIa4Kdeq7ZBNeGalx9oH4reutlFggzWCr+4eYXMRqMgQNI2Bu5XvwkqBbXwbDL05CuNPjjEwO64YrCpVBLrxk4vlW4fvCLFR0u8O68C+Y4swmsPDvGUxWpRgwNVqXsTmvt9z8hlej21BErL8fPEy+fJP4Zab8oyfcLrv9FJkHZq03cyzJpOzqX458Ctn9sIwBawXzNEFN5bCt6eT1rgp0yuHeMGEGwrjNl8rijez7Rd\\/vy1WUYAAMfmZFuJMQ73l1+Hkr0VlHv6crlyP\\/FVTY\\/XIUiGMqa1yM08Zu\\/Gur5N7lU8qnMi2WO9QPyHmmdlfo7+AGsrKrzV4wY\\/wISg0pcv8PypBWVq\\/hYoCqlHsGUuIiyGLIW7A8LtG6\\/JqAA9t\\/0EdnQVz0k06IEEYnBzkQoY8Qv3cVszgPQukGstBraB47gQdVDp9vmuQjMstt8Te56SDRxtfcu0z4nQIURVSkJJNj8RYfwXH9OUbz3Vd2vwoR3lCJFTCKIeW8sidNVB3xAZnddBVQ3P\\/QxPnrrRdCcnoWSGoEOBBIxgF00XwNxJ4P7Xj1bB7oq3M7k99dgPnSdZIjyvG6BWKnCQcGyVRB0yOaYBaOCmN66EgWfXoJR5BA4Jo6gnWnESWV62iUC8OCzmis1VagfaBn0A9vWNcqKFkUr\\/68s3w8ixLJFy+WdpAS\\/flzC3bJbvy9YR9nESKAP40XiNGz9iBROCfPI2bSOvdFf831RdTxWaE+ewAC3w9GsgEKAXxzWsVeSODWRZQA0TEVOfX8SaNVa5w3EXLDsRVnmKgUH8yQnEJQBGhDJXg1sEbowE07CzzdAY5Mc=\",\"refusalReasonRaw\":\"AUTHORISED\"},\"pspReference\":\"8835574118820108\",\"response\":\"Authorised\"}
+    {"additionalData":{"authCode":"70125","adjustAuthorisationData":"BQABAQA9NtGnJAkLXKqW1C+VUeCNMzDf4WwzLFBiuQ8iaA2Yvflz41t0cYxtA7XVzG2pzlJPMnkSK75k3eByNS0\\/m0\\/N2+NnnKv\\/9rYPn8Pjq1jc7CapczdqZNl8P9FwqtIa4Kdeq7ZBNeGalx9oH4reutlFggzWCr+4eYXMRqMgQNI2Bu5XvwkqBbXwbDL05CuNPjjEwO64YrCpVBLrxk4vlW4fvCLFR0u8O68C+Y4swmsPDvGUxWpRgwNVqXsTmvt9z8hlej21BErL8fPEy+fJP4Zab8oyfcLrv9FJkHZq03cyzJpOzqX458Ctn9sIwBawXzNEFN5bCt6eT1rgp0yuHeMGEGwrjNl8rijez7Rd\\/vy1WUYAAMfmZFuJMQ73l1+Hkr0VlHv6crlyP\\/FVTY\\/XIUiGMqa1yM08Zu\\/Gur5N7lU8qnMi2WO9QPyHmmdlfo7+AGsrKrzV4wY\\/wISg0pcv8PypBWVq\\/hYoCqlHsGUuIiyGLIW7A8LtG6\\/JqAA9t\\/0EdnQVz0k06IEEYnBzkQoY8Qv3cVszgPQukGstBraB47gQdVDp9vmuQjMstt8Te56SDRxtfcu0z4nQIURVSkJJNj8RYfwXH9OUbz3Vd2vwoR3lCJFTCKIeW8sidNVB3xAZnddBVQ3P\\/QxPnrrRdCcnoWSGoEOBBIxgF00XwNxJ4P7Xj1bB7oq3M7k99dgPnSdZIjyvG6BWKnCQcGyVRB0yOaYBaOCmN66EgWfXoJR5BA4Jo6gnWnESWV62iUC8OCzmis1VagfaBn0A9vWNcqKFkUr\\/68s3w8ixLJFy+WdpAS\\/flzC3bJbvy9YR9nESKAP40XiNGz9iBROCfPI2bSOvdFf831RdTxWaE+ewAC3w9GsgEKAXxzWsVeSODWRZQA0TEVOfX8SaNVa5w3EXLDsRVnmKgUH8yQnEJQBGhDJXg1sEbowE07CzzdAY5Mc=","refusalReasonRaw":"AUTHORISED"},"pspReference":"8835574118820108","response":"Authorised"}
     RESPONSE
   end
 
   def failed_synchronous_adjust_response
     <<-RESPONSE
-    {\"additionalData\":{\"authCode\":\"90745\",\"refusalReasonRaw\":\"2\"},\"pspReference\":\"8835574120337117\",\"response\":\"Refused\"}
+    {"additionalData":{"authCode":"90745","refusalReasonRaw":"2"},"pspReference":"8835574120337117","response":"Refused"}
     RESPONSE
   end
 
@@ -2163,7 +2163,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def failed_authorize_avs_response
     <<-RESPONSE
-    {\"additionalData\":{\"cvcResult\":\"0 Unknown\",\"fraudResultType\":\"GREEN\",\"avsResult\":\"3 AVS unavailable\",\"fraudManualReview\":\"false\",\"avsResultRaw\":\"U\",\"refusalReasonRaw\":\"05 : Do not honor\",\"authorisationMid\":\"494619000001174\",\"acquirerCode\":\"AdyenVisa_BR_494619\",\"acquirerReference\":\"802320302458\",\"acquirerAccountCode\":\"AdyenVisa_BR_Cabify\"},\"fraudResult\":{\"accountScore\":0,\"results\":[{\"FraudCheckResult\":{\"accountScore\":0,\"checkId\":46,\"name\":\"DistinctCountryUsageByShopper\"}}]},\"pspReference\":\"1715167376763498\",\"refusalReason\":\"Refused\",\"resultCode\":\"Refused\"}
+    {"additionalData":{"cvcResult":"0 Unknown","fraudResultType":"GREEN","avsResult":"3 AVS unavailable","fraudManualReview":"false","avsResultRaw":"U","refusalReasonRaw":"05 : Do not honor","authorisationMid":"494619000001174","acquirerCode":"AdyenVisa_BR_494619","acquirerReference":"802320302458","acquirerAccountCode":"AdyenVisa_BR_Cabify"},"fraudResult":{"accountScore":0,"results":[{"FraudCheckResult":{"accountScore":0,"checkId":46,"name":"DistinctCountryUsageByShopper"}}]},"pspReference":"1715167376763498","refusalReason":"Refused","resultCode":"Refused"}
     RESPONSE
   end
 
@@ -2199,7 +2199,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def extended_avs_response
     <<-RESPONSE
-    {\"additionalData\":{\"cvcResult\":\"1 Matches\",\"cvcResultRaw\":\"Y\",\"avsResult\":\"20 Name, address and zip match\",\"avsResultRaw\":\"M\"}}
+    {"additionalData":{"cvcResult":"1 Matches","cvcResultRaw":"Y","avsResult":"20 Name, address and zip match","avsResultRaw":"M"}}
     RESPONSE
   end
 end

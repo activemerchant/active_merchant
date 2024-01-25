@@ -3,8 +3,8 @@ require 'openssl'
 require 'digest'
 require 'base64'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MitGateway < Gateway
       self.live_url = 'https://wpy.mitec.com.mx/ModuloUtilWS/activeCDP.htm'
       self.test_url = 'https://scqa.mitec.com.mx/ModuloUtilWS/activeCDP.htm'
@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
         # original message
         full_data = unpacked[0].bytes.slice(16, unpacked[0].bytes.length)
         # Creates the engine
-        engine = OpenSSL::Cipher::AES128.new(:CBC)
+        engine = OpenSSL::Cipher.new('aes-128-cbc')
         # Set engine as decrypt mode
         engine.decrypt
         # Converts the key from hex to bytes
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
 
       def encrypt(val, keyinhex)
         # Creates the engine motor
-        engine = OpenSSL::Cipher::AES128.new(:CBC)
+        engine = OpenSSL::Cipher.new('aes-128-cbc')
         # Set engine as encrypt mode
         engine.encrypt
         # Converts the key from hex to bytes
@@ -93,7 +93,7 @@ module ActiveMerchant #:nodoc:
         post_to_json = post.to_json
         post_to_json_encrypt = encrypt(post_to_json, @options[:key_session])
 
-        final_post = '<authorization>' + post_to_json_encrypt + '</authorization><dataID>' + @options[:user] + '</dataID>'
+        final_post = "<authorization>#{post_to_json_encrypt}</authorization><dataID>#{@options[:user]}</dataID>"
         json_post = final_post
         commit('sale', json_post)
       end
@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
         post_to_json = post.to_json
         post_to_json_encrypt = encrypt(post_to_json, @options[:key_session])
 
-        final_post = '<capture>' + post_to_json_encrypt + '</capture><dataID>' + @options[:user] + '</dataID>'
+        final_post = "<capture>#{post_to_json_encrypt}</capture><dataID>#{@options[:user]}</dataID>"
         json_post = final_post
         commit('capture', json_post)
       end
@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
         post_to_json = post.to_json
         post_to_json_encrypt = encrypt(post_to_json, @options[:key_session])
 
-        final_post = '<refund>' + post_to_json_encrypt + '</refund><dataID>' + @options[:user] + '</dataID>'
+        final_post = "<refund>#{post_to_json_encrypt}</refund><dataID>#{@options[:user]}</dataID>"
         json_post = final_post
         commit('refund', json_post)
       end
@@ -146,7 +146,7 @@ module ActiveMerchant #:nodoc:
       def extract_mit_responses_from_transcript(transcript)
         groups = transcript.scan(/reading \d+ bytes(.*?)read \d+ bytes/m)
         groups.map do |group|
-          group.first.scan(/-> "(.*?)"/).flatten.map(&:strip).join('')
+          group.first.scan(/-> "(.*?)"/).flatten.map(&:strip).join
         end
       end
 
@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
           auth_json['apikey'] = '[FILTERED]'
           auth_json['key_session'] = '[FILTERED]'
           auth_to_json = auth_json.to_json
-          auth_tagged = '<authorization>' + auth_to_json + '</authorization>'
+          auth_tagged = "<authorization>#{auth_to_json}</authorization>"
           ret_transcript = ret_transcript.gsub(/<authorization>(.*?)<\/authorization>/, auth_tagged)
         end
 
@@ -174,7 +174,7 @@ module ActiveMerchant #:nodoc:
           cap_json['apikey'] = '[FILTERED]'
           cap_json['key_session'] = '[FILTERED]'
           cap_to_json = cap_json.to_json
-          cap_tagged = '<capture>' + cap_to_json + '</capture>'
+          cap_tagged = "<capture>#{cap_to_json}</capture>"
           ret_transcript = ret_transcript.gsub(/<capture>(.*?)<\/capture>/, cap_tagged)
         end
 
@@ -186,14 +186,14 @@ module ActiveMerchant #:nodoc:
           ref_json['apikey'] = '[FILTERED]'
           ref_json['key_session'] = '[FILTERED]'
           ref_to_json = ref_json.to_json
-          ref_tagged = '<refund>' + ref_to_json + '</refund>'
+          ref_tagged = "<refund>#{ref_to_json}</refund>"
           ret_transcript = ret_transcript.gsub(/<refund>(.*?)<\/refund>/, ref_tagged)
         end
 
         groups = extract_mit_responses_from_transcript(transcript)
         groups.each do |group|
           group_decrypted = decrypt(group, @options[:key_session])
-          ret_transcript = ret_transcript.gsub('Conn close', "\n" + group_decrypted + "\nConn close")
+          ret_transcript = ret_transcript.gsub('Conn close', "\n#{group_decrypted}\nConn close")
         end
 
         ret_transcript

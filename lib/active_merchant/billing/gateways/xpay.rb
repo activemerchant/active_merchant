@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class XpayGateway < Gateway
       self.display_name = 'XPay Gateway'
       self.homepage_url = 'https://developer.nexi.it/en'
@@ -205,7 +205,7 @@ module ActiveMerchant #:nodoc:
       def request_headers(options, action = nil)
         headers = {
           'X-Api-Key' => @api_key,
-          'Correlation-Id' => options.dig(:order_id) || SecureRandom.uuid,
+          'Correlation-Id' => options[:order_id] || SecureRandom.uuid,
           'Content-Type' => 'application/json'
         }
         case action

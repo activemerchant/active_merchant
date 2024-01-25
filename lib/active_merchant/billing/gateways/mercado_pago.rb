@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MercadoPagoGateway < Gateway
       self.live_url = self.test_url = 'https://api.mercadopago.com/v1'
 
@@ -72,8 +72,8 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((access_token=).*?([^\s]+)), '\1[FILTERED]').
-          gsub(%r((\"card_number\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"security_code\\\":\\\")\d+), '\1[FILTERED]')
+          gsub(%r(("card_number\\":\\")\d+), '\1[FILTERED]').
+          gsub(%r(("security_code\\":\\")\d+), '\1[FILTERED]')
       end
 
       private
@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        if address = (options[:billing_address] || options[:address])
+        if address = options[:billing_address] || options[:address]
 
           post[:additional_info].merge!({
             payer: {
@@ -182,9 +182,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_street_address(address1)
-        street_number = address1.split(' ').first
+        street_number = address1.split.first
 
-        if street_name = address1.split(' ')[1..-1]
+        if street_name = address1.split[1..]
           street_name = street_name.join(' ')
         else
           nil
@@ -218,9 +218,10 @@ module ActiveMerchant #:nodoc:
       def add_taxes(post, options)
         return unless (tax_object = options[:taxes])
 
-        if tax_object.is_a?(Array)
+        case tax_object
+        when Array
           post[:taxes] = process_taxes_array(tax_object)
-        elsif tax_object.is_a?(Hash)
+        when Hash
           post[:taxes] = process_taxes_hash(tax_object)
         else
           raise taxes_error

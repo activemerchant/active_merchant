@@ -146,7 +146,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     second_refund = @gateway.refund(@refund_amount, purchase.authorization)
     assert_success second_refund
     assert second_refund.params['refunded']
-    assert_equal @amount - 2 * @refund_amount, second_refund.params['amount']
+    assert_equal @amount - (2 * @refund_amount), second_refund.params['amount']
     assert_equal 2, second_refund.params['refunds'].size
     assert_equal 2 * @refund_amount, second_refund.params['refunds'].map { |r| r['amount'] }.sum
     assert second_refund.authorization

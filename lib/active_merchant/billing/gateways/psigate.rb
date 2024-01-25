@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # This class implements the Psigate gateway for the ActiveMerchant module.
     #
     # Modifications by Sean O'Hara ( sohara at sohara dot com )
@@ -183,7 +183,7 @@ module ActiveMerchant #:nodoc:
           )
         end
 
-        if (address = (options[:billing_address] || options[:address]))
+        if (address = options[:billing_address] || options[:address])
           params[:Bname] = address[:name] || creditcard.name
           params[:Baddress1]    = address[:address1] unless address[:address1].blank?
           params[:Baddress2]    = address[:address2] unless address[:address2].blank?

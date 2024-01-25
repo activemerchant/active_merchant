@@ -2,8 +2,8 @@ require 'net/http'
 require 'net/https'
 require 'active_merchant/billing/response'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     #
     # == Description
     # The Gateway class is the base class for all ActiveMerchant gateway implementations.
@@ -163,7 +163,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def self.supported_countries
-        @supported_countries ||= (self.superclass.supported_countries || [])
+        @supported_countries ||= self.superclass.supported_countries || []
       end
 
       def supported_countries
@@ -216,8 +216,7 @@ module ActiveMerchant #:nodoc:
         case field
         when 'true'   then true
         when 'false'  then false
-        when ''       then nil
-        when 'null'   then nil
+        when '', 'null' then nil
         else field
         end
       end
@@ -245,7 +244,7 @@ module ActiveMerchant #:nodoc:
       private # :nodoc: all
 
       def name
-        self.class.name.scan(/\:\:(\w+)Gateway/).flatten.first
+        self.class.name.scan(/::(\w+)Gateway/).flatten.first
       end
 
       def amount(money)
@@ -329,7 +328,7 @@ module ActiveMerchant #:nodoc:
           if param.is_a?(Array)
             raise ArgumentError.new("Missing required parameter: #{param.first}") unless hash.has_key?(param.first)
 
-            valid_options = param[1..-1]
+            valid_options = param[1..]
             raise ArgumentError.new("Parameter: #{param.first} must be one of #{valid_options.to_sentence(words_connector: 'or')}") unless valid_options.include?(hash[param.first])
           else
             raise ArgumentError.new("Missing required parameter: #{param}") unless hash.has_key?(param)

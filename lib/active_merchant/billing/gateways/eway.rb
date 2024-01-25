@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # Public: For more information on the Eway Gateway please visit their
     # {Developers Area}[http://www.eway.com.au/developers/api/direct-payments]
     class EwayGateway < Gateway
@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, creditcard)
         post[:CardNumber] = creditcard.number
         post[:CardExpiryMonth] = sprintf('%.2i', creditcard.month)
-        post[:CardExpiryYear] = sprintf('%.4i', creditcard.year)[-2..-1]
+        post[:CardExpiryYear] = sprintf('%.4i', creditcard.year)[-2..]
         post[:CustomerFirstName] = creditcard.first_name
         post[:CustomerLastName]  = creditcard.last_name
         post[:CardHoldersName] = creditcard.name

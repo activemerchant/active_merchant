@@ -85,8 +85,8 @@ module ActiveMerchant
       AVS_REASON_CODES = %w(27 45)
 
       TRACKS = {
-        1 => /^%(?<format_code>.)(?<pan>[\d]{1,19}+)\^(?<name>.{2,26})\^(?<expiration>[\d]{0,4}|\^)(?<service_code>[\d]{0,3}|\^)(?<discretionary_data>.*)\?\Z/,
-        2 => /\A;(?<pan>[\d]{1,19}+)=(?<expiration>[\d]{0,4}|=)(?<service_code>[\d]{0,3}|=)(?<discretionary_data>.*)\?\Z/
+        1 => /^%(?<format_code>.)(?<pan>\d{1,19}+)\^(?<name>.{2,26})\^(?<expiration>\d{0,4}|\^)(?<service_code>\d{0,3}|\^)(?<discretionary_data>.*)\?\Z/,
+        2 => /\A;(?<pan>\d{1,19}+)=(?<expiration>\d{0,4}|=)(?<service_code>\d{0,3}|=)(?<discretionary_data>.*)\?\Z/
       }.freeze
 
       PAYMENT_METHOD_NOT_SUPPORTED_ERROR = '155'
@@ -189,7 +189,7 @@ module ActiveMerchant
         return 100 unless options[:verify_amount].present?
 
         amount = options[:verify_amount]
-        raise ArgumentError.new 'verify_amount value must be an integer' unless amount.is_a?(Integer) && !amount.negative? || amount.is_a?(String) && amount.match?(/^\d+$/) && !amount.to_i.negative?
+        raise ArgumentError.new 'verify_amount value must be an integer' unless (amount.is_a?(Integer) && !amount.negative?) || (amount.is_a?(String) && amount.match?(/^\d+$/) && !amount.to_i.negative?)
         raise ArgumentError.new 'Billing address including zip code is required for a 0 amount verify' if amount.to_i.zero? && !validate_billing_address_values?(options)
 
         amount.to_i
@@ -424,7 +424,7 @@ module ActiveMerchant
       end
 
       def network_token?(payment_method, options, action)
-        payment_method.class == NetworkTokenizationCreditCard && action != :credit && options[:turn_on_nt_flow]
+        payment_method.instance_of?(NetworkTokenizationCreditCard) && action != :credit && options[:turn_on_nt_flow]
       end
 
       def camel_case_lower(key)
@@ -481,7 +481,7 @@ module ActiveMerchant
 
       def add_user_fields(xml, amount, options)
         xml.userFields do
-          if currency = (options[:currency] || currency(amount))
+          if currency = options[:currency] || currency(amount)
             xml.userField do
               xml.name('x_currency_code')
               xml.value(currency)
@@ -503,7 +503,7 @@ module ActiveMerchant
           xml.payment do
             xml.creditCard do
               xml.cardNumber(truncate(credit_card.number, 16))
-              xml.expirationDate(format(credit_card.month, :two_digits) + '/' + format(credit_card.year, :four_digits))
+              xml.expirationDate("#{format(credit_card.month, :two_digits)}/#{format(credit_card.year, :four_digits)}")
               xml.cardCode(credit_card.verification_value) if credit_card.valid_card_verification_value?(credit_card.verification_value, credit_card.brand)
               xml.cryptogram(credit_card.payment_cryptogram) if credit_card.is_a?(NetworkTokenizationCreditCard) && action != :credit
             end
@@ -536,7 +536,7 @@ module ActiveMerchant
         xml.payment do
           xml.creditCard do
             xml.cardNumber(truncate(payment_method.number, 16))
-            xml.expirationDate(format(payment_method.month, :two_digits) + '/' + format(payment_method.year, :four_digits))
+            xml.expirationDate("#{format(payment_method.month, :two_digits)}/#{format(payment_method.year, :four_digits)}")
             xml.isPaymentToken(true)
             xml.cryptogram(payment_method.payment_cryptogram)
           end
@@ -794,7 +794,7 @@ module ActiveMerchant
       def names_from(payment_source, address, options)
         if payment_source && !payment_source.is_a?(PaymentToken) && !payment_source.is_a?(String)
           first_name, last_name = split_names(address[:name])
-          [(payment_source.first_name || first_name), (payment_source.last_name || last_name)]
+          [payment_source.first_name || first_name, payment_source.last_name || last_name]
         else
           [options[:first_name], options[:last_name]]
         end
@@ -939,7 +939,7 @@ module ActiveMerchant
 
         response[:account_number] =
           if element = doc.at_xpath('//accountNumber')
-            empty?(element.content) ? nil : element.content[-4..-1]
+            empty?(element.content) ? nil : element.content[-4..]
           end
 
         response[:test_request] =

@@ -1043,12 +1043,12 @@ class PaypalExpressTest < Test::Unit::TestCase
                 <OrderURL xsi:type="xs:string"/>
                 <SoftDescriptor xsi:type="xs:string"/>
               </PaymentDetails>
-              <UserSelectedOptions xsi:type=\"ebl:UserSelectedOptionType\">
-                <ShippingCalculationMode xsi:type=\"xs:string\">Callback</ShippingCalculationMode>
-                <InsuranceOptionSelected xsi:type=\"xs:string\">false</InsuranceOptionSelected>
-                <ShippingOptionIsDefault xsi:type=\"xs:string\">true</ShippingOptionIsDefault>
-                <ShippingOptionAmount xsi:type=\"cc:BasicAmountType\" currencyID=\"USD\">2.95</ShippingOptionAmount>
-                <ShippingOptionName xsi:type=\"xs:string\">default</ShippingOptionName>
+              <UserSelectedOptions xsi:type="ebl:UserSelectedOptionType">
+                <ShippingCalculationMode xsi:type="xs:string">Callback</ShippingCalculationMode>
+                <InsuranceOptionSelected xsi:type="xs:string">false</InsuranceOptionSelected>
+                <ShippingOptionIsDefault xsi:type="xs:string">true</ShippingOptionIsDefault>
+                <ShippingOptionAmount xsi:type="cc:BasicAmountType" currencyID="USD">2.95</ShippingOptionAmount>
+                <ShippingOptionName xsi:type="xs:string">default</ShippingOptionName>
               </UserSelectedOptions>
               <CheckoutStatus xsi:type="xs:string">PaymentActionNotInitiated</CheckoutStatus>
               <PaymentRequestInfo xsi:type="ebl:PaymentRequestInfoType" />
@@ -1334,8 +1334,8 @@ class PaypalExpressTest < Test::Unit::TestCase
 
   def pre_scrubbed
     <<~TRANSCRIPT
-      <?xml version=\"1.0\" encoding=\"UTF-8\"?><env:Envelope xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><env:Header><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xmlns:n1=\"urn:ebay:apis:eBLBaseComponents\" env:mustUnderstand=\"0\"><n1:Credentials><n1:Username>activemerchant-cert-test_api1.example.com</n1:Username><n1:Password>ERDD3JRFU5H5DQXS</n1:Password><n1:Subject/></n1:Credentials></RequesterCredentials></env:Header><env:Body><SetExpressCheckoutReq xmlns=\"urn:ebay:api:PayPalAPI\">
-        <SetExpressCheckoutRequest xmlns:n2=\"urn:ebay:apis:eBLBaseComponents\">
+      <?xml version="1.0" encoding="UTF-8"?><env:Envelope xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:env="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><env:Header><RequesterCredentials xmlns="urn:ebay:api:PayPalAPI" xmlns:n1="urn:ebay:apis:eBLBaseComponents" env:mustUnderstand="0"><n1:Credentials><n1:Username>activemerchant-cert-test_api1.example.com</n1:Username><n1:Password>ERDD3JRFU5H5DQXS</n1:Password><n1:Subject/></n1:Credentials></RequesterCredentials></env:Header><env:Body><SetExpressCheckoutReq xmlns="urn:ebay:api:PayPalAPI">
+        <SetExpressCheckoutRequest xmlns:n2="urn:ebay:apis:eBLBaseComponents">
           <n2:Version>124</n2:Version>
           <n2:SetExpressCheckoutRequestDetails>
             <n2:ReturnURL>http://example.com/return</n2:ReturnURL>
@@ -1345,7 +1345,7 @@ class PaypalExpressTest < Test::Unit::TestCase
             <n2:AddressOverride>0</n2:AddressOverride>
             <n2:BuyerEmail>buyer@jadedpallet.com</n2:BuyerEmail>
             <n2:PaymentDetails>
-              <n2:OrderTotal currencyID=\"USD\">5.00</n2:OrderTotal>
+              <n2:OrderTotal currencyID="USD">5.00</n2:OrderTotal>
               <n2:OrderDescription>Stuff that you purchased, yo!</n2:OrderDescription>
               <n2:InvoiceID>230000</n2:InvoiceID>
               <n2:PaymentAction>Authorization</n2:PaymentAction>
@@ -1354,14 +1354,14 @@ class PaypalExpressTest < Test::Unit::TestCase
         </SetExpressCheckoutRequest>
       </SetExpressCheckoutReq>
       </env:Body></env:Envelope>
-      <?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:cc=\"urn:ebay:apis:CoreComponentTypes\" xmlns:wsu=\"http://schemas.xmlsoap.org/ws/2002/07/utility\" xmlns:saml=\"urn:oasis:names:tc:SAML:1.0:assertion\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:wsse=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xmlns:ed=\"urn:ebay:apis:EnhancedDataTypes\" xmlns:ebl=\"urn:ebay:apis:eBLBaseComponents\" xmlns:ns=\"urn:ebay:api:PayPalAPI\"><SOAP-ENV:Header><Security xmlns=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xsi:type=\"wsse:SecurityType\"></Security><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xsi:type=\"ebl:CustomSecurityHeaderType\"><Credentials xmlns=\"urn:ebay:apis:eBLBaseComponents\" xsi:type=\"ebl:UserIdPasswordType\"><Username xsi:type=\"xs:string\"></Username><Password xsi:type=\"xs:string\"></Password><Signature xsi:type=\"xs:string\"></Signature><Subject xsi:type=\"xs:string\"></Subject></Credentials></RequesterCredentials></SOAP-ENV:Header><SOAP-ENV:Body id=\"_0\"><SetExpressCheckoutResponse xmlns=\"urn:ebay:api:PayPalAPI\"><Timestamp xmlns=\"urn:ebay:apis:eBLBaseComponents\">2018-05-24T20:23:54Z</Timestamp><Ack xmlns=\"urn:ebay:apis:eBLBaseComponents\">Success</Ack><CorrelationID xmlns=\"urn:ebay:apis:eBLBaseComponents\">b6dd2a043921b</CorrelationID><Version xmlns=\"urn:ebay:apis:eBLBaseComponents\">124</Version><Build xmlns=\"urn:ebay:apis:eBLBaseComponents\">46549960</Build><Token xsi:type=\"ebl:ExpressCheckoutTokenType\">EC-7KR85820NC734104L</Token></SetExpressCheckoutResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
+      <?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ed="urn:ebay:apis:EnhancedDataTypes" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI"><SOAP-ENV:Header><Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext" xsi:type="wsse:SecurityType"></Security><RequesterCredentials xmlns="urn:ebay:api:PayPalAPI" xsi:type="ebl:CustomSecurityHeaderType"><Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType"><Username xsi:type="xs:string"></Username><Password xsi:type="xs:string"></Password><Signature xsi:type="xs:string"></Signature><Subject xsi:type="xs:string"></Subject></Credentials></RequesterCredentials></SOAP-ENV:Header><SOAP-ENV:Body id="_0"><SetExpressCheckoutResponse xmlns="urn:ebay:api:PayPalAPI"><Timestamp xmlns="urn:ebay:apis:eBLBaseComponents">2018-05-24T20:23:54Z</Timestamp><Ack xmlns="urn:ebay:apis:eBLBaseComponents">Success</Ack><CorrelationID xmlns="urn:ebay:apis:eBLBaseComponents">b6dd2a043921b</CorrelationID><Version xmlns="urn:ebay:apis:eBLBaseComponents">124</Version><Build xmlns="urn:ebay:apis:eBLBaseComponents">46549960</Build><Token xsi:type="ebl:ExpressCheckoutTokenType">EC-7KR85820NC734104L</Token></SetExpressCheckoutResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
     TRANSCRIPT
   end
 
   def post_scrubbed
     <<~TRANSCRIPT
-      <?xml version=\"1.0\" encoding=\"UTF-8\"?><env:Envelope xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><env:Header><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xmlns:n1=\"urn:ebay:apis:eBLBaseComponents\" env:mustUnderstand=\"0\"><n1:Credentials><n1:Username>[FILTERED]</n1:Username><n1:Password>[FILTERED]</n1:Password><n1:Subject/></n1:Credentials></RequesterCredentials></env:Header><env:Body><SetExpressCheckoutReq xmlns=\"urn:ebay:api:PayPalAPI\">
-        <SetExpressCheckoutRequest xmlns:n2=\"urn:ebay:apis:eBLBaseComponents\">
+      <?xml version="1.0" encoding="UTF-8"?><env:Envelope xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:env="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><env:Header><RequesterCredentials xmlns="urn:ebay:api:PayPalAPI" xmlns:n1="urn:ebay:apis:eBLBaseComponents" env:mustUnderstand="0"><n1:Credentials><n1:Username>[FILTERED]</n1:Username><n1:Password>[FILTERED]</n1:Password><n1:Subject/></n1:Credentials></RequesterCredentials></env:Header><env:Body><SetExpressCheckoutReq xmlns="urn:ebay:api:PayPalAPI">
+        <SetExpressCheckoutRequest xmlns:n2="urn:ebay:apis:eBLBaseComponents">
           <n2:Version>124</n2:Version>
           <n2:SetExpressCheckoutRequestDetails>
             <n2:ReturnURL>http://example.com/return</n2:ReturnURL>
@@ -1371,7 +1371,7 @@ class PaypalExpressTest < Test::Unit::TestCase
             <n2:AddressOverride>0</n2:AddressOverride>
             <n2:BuyerEmail>buyer@jadedpallet.com</n2:BuyerEmail>
             <n2:PaymentDetails>
-              <n2:OrderTotal currencyID=\"USD\">5.00</n2:OrderTotal>
+              <n2:OrderTotal currencyID="USD">5.00</n2:OrderTotal>
               <n2:OrderDescription>Stuff that you purchased, yo!</n2:OrderDescription>
               <n2:InvoiceID>230000</n2:InvoiceID>
               <n2:PaymentAction>Authorization</n2:PaymentAction>
@@ -1380,7 +1380,7 @@ class PaypalExpressTest < Test::Unit::TestCase
         </SetExpressCheckoutRequest>
       </SetExpressCheckoutReq>
       </env:Body></env:Envelope>
-      <?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:cc=\"urn:ebay:apis:CoreComponentTypes\" xmlns:wsu=\"http://schemas.xmlsoap.org/ws/2002/07/utility\" xmlns:saml=\"urn:oasis:names:tc:SAML:1.0:assertion\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:wsse=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xmlns:ed=\"urn:ebay:apis:EnhancedDataTypes\" xmlns:ebl=\"urn:ebay:apis:eBLBaseComponents\" xmlns:ns=\"urn:ebay:api:PayPalAPI\"><SOAP-ENV:Header><Security xmlns=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xsi:type=\"wsse:SecurityType\"></Security><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xsi:type=\"ebl:CustomSecurityHeaderType\"><Credentials xmlns=\"urn:ebay:apis:eBLBaseComponents\" xsi:type=\"ebl:UserIdPasswordType\"><Username xsi:type=\"xs:string\"></Username><Password xsi:type=\"xs:string\"></Password><Signature xsi:type=\"xs:string\"></Signature><Subject xsi:type=\"xs:string\"></Subject></Credentials></RequesterCredentials></SOAP-ENV:Header><SOAP-ENV:Body id=\"_0\"><SetExpressCheckoutResponse xmlns=\"urn:ebay:api:PayPalAPI\"><Timestamp xmlns=\"urn:ebay:apis:eBLBaseComponents\">2018-05-24T20:23:54Z</Timestamp><Ack xmlns=\"urn:ebay:apis:eBLBaseComponents\">Success</Ack><CorrelationID xmlns=\"urn:ebay:apis:eBLBaseComponents\">b6dd2a043921b</CorrelationID><Version xmlns=\"urn:ebay:apis:eBLBaseComponents\">124</Version><Build xmlns=\"urn:ebay:apis:eBLBaseComponents\">46549960</Build><Token xsi:type=\"ebl:ExpressCheckoutTokenType\">EC-7KR85820NC734104L</Token></SetExpressCheckoutResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
+      <?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ed="urn:ebay:apis:EnhancedDataTypes" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI"><SOAP-ENV:Header><Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext" xsi:type="wsse:SecurityType"></Security><RequesterCredentials xmlns="urn:ebay:api:PayPalAPI" xsi:type="ebl:CustomSecurityHeaderType"><Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType"><Username xsi:type="xs:string"></Username><Password xsi:type="xs:string"></Password><Signature xsi:type="xs:string"></Signature><Subject xsi:type="xs:string"></Subject></Credentials></RequesterCredentials></SOAP-ENV:Header><SOAP-ENV:Body id="_0"><SetExpressCheckoutResponse xmlns="urn:ebay:api:PayPalAPI"><Timestamp xmlns="urn:ebay:apis:eBLBaseComponents">2018-05-24T20:23:54Z</Timestamp><Ack xmlns="urn:ebay:apis:eBLBaseComponents">Success</Ack><CorrelationID xmlns="urn:ebay:apis:eBLBaseComponents">b6dd2a043921b</CorrelationID><Version xmlns="urn:ebay:apis:eBLBaseComponents">124</Version><Build xmlns="urn:ebay:apis:eBLBaseComponents">46549960</Build><Token xsi:type="ebl:ExpressCheckoutTokenType">EC-7KR85820NC734104L</Token></SetExpressCheckoutResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
     TRANSCRIPT
   end
 end

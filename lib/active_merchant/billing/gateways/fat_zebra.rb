@@ -1,7 +1,7 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class FatZebraGateway < Gateway
       self.live_url = 'https://gateway.fatzebra.com.au/v1.0'
       self.test_url = 'https://gateway.sandbox.fatzebra.com.au/v1.0'
@@ -148,14 +148,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(method, uri, parameters = nil)
-        response =
-          begin
-            parse(ssl_request(method, get_url(uri), parameters.to_json, headers))
-          rescue ResponseError => e
-            return Response.new(false, 'Invalid Login') if e.response.code == '401'
+        begin
+          response = parse(ssl_request(method, get_url(uri), parameters.to_json, headers))
+        rescue ResponseError => e
+          return Response.new(false, 'Invalid Login') if e.response.code == '401'
 
-            parse(e.response.body)
-          end
+          response = parse(e.response.body)
+        end
 
         success = success_from(response)
         Response.new(
@@ -168,11 +167,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        (
-          response['successful'] &&
+        response['successful'] &&
           response['response'] &&
           (response['response']['successful'] || response['response']['token'] || response['response']['response_code'] == '00')
-        )
       end
 
       def authorization_from(response, success, uri)
@@ -209,12 +206,12 @@ module ActiveMerchant #:nodoc:
 
       def get_url(uri)
         base = test? ? self.test_url : self.live_url
-        base + '/' + uri
+        "#{base}/#{uri}"
       end
 
       def headers
         {
-          'Authorization' => 'Basic ' + Base64.strict_encode64(@options[:username].to_s + ':' + @options[:token].to_s).strip,
+          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:username]}:#{@options[:token]}").strip}",
           'User-Agent' => "Fat Zebra v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
         }
       end

@@ -2,8 +2,8 @@ require 'rexml/document'
 require 'digest/md5'
 require 'active_merchant/billing/gateways/quickpay/quickpay_common'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class QuickpayV4to7Gateway < Gateway
       include QuickpayCommon
       self.live_url = self.test_url = 'https://secure.quickpay.dk/api'
@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
       def generate_check_hash(action, params)
         string = MD5_CHECK_FIELDS[@protocol][action].collect do |key|
           params[key.to_sym]
-        end.join('')
+        end.join
 
         # Add the md5checkword
         string << @options[:password].to_s

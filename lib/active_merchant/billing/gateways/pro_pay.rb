@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ProPayGateway < Gateway
       self.test_url = 'https://xmltest.propay.com/API/PropayAPI.aspx'
       self.live_url = 'https://epay.propay.com/api/propayapi.aspx'
@@ -315,7 +315,7 @@ module ActiveMerchant #:nodoc:
     end
 
     def underscore(camel_cased_word)
-      camel_cased_word.to_s.gsub(/::/, '/').
+      camel_cased_word.to_s.gsub('::', '/').
         gsub(/([A-Z]+)([A-Z][a-z])/, '\1_\2').
         gsub(/([a-z\d])([A-Z])/, '\1_\2').
         tr('-', '_').

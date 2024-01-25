@@ -136,7 +136,7 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_authorize_with_check
-    assert  @gateway.authorize(1000, check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: nil)).success?
+    assert @gateway.authorize(1000, check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: nil)).success?
     assert !@gateway.authorize(1000, check(account_number: CHECK_FAILURE_PLACEHOLDER, number: nil)).success?
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.authorize(1000, check(account_number: '123', number: nil))
@@ -146,11 +146,11 @@ class BogusTest < Test::Unit::TestCase
 
   def test_purchase_with_check
     # use account number if number isn't given
-    assert  @gateway.purchase(1000, check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: nil)).success?
+    assert @gateway.purchase(1000, check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: nil)).success?
     assert !@gateway.purchase(1000, check(account_number: CHECK_FAILURE_PLACEHOLDER, number: nil)).success?
     # give priority to number over account_number if given
     assert !@gateway.purchase(1000, check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: CHECK_FAILURE_PLACEHOLDER)).success?
-    assert  @gateway.purchase(1000, check(account_number: CHECK_FAILURE_PLACEHOLDER, number: CHECK_SUCCESS_PLACEHOLDER)).success?
+    assert @gateway.purchase(1000, check(account_number: CHECK_FAILURE_PLACEHOLDER, number: CHECK_SUCCESS_PLACEHOLDER)).success?
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.purchase(1000, check(account_number: '123', number: nil))
     end
@@ -158,7 +158,7 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_store_with_check
-    assert  @gateway.store(check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: nil)).success?
+    assert @gateway.store(check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: nil)).success?
     assert !@gateway.store(check(account_number: CHECK_FAILURE_PLACEHOLDER, number: nil)).success?
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.store(check(account_number: '123', number: nil))
@@ -167,7 +167,7 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_credit_with_check
-    assert  @gateway.credit(1000, check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: nil)).success?
+    assert @gateway.credit(1000, check(account_number: CHECK_SUCCESS_PLACEHOLDER, number: nil)).success?
     assert !@gateway.credit(1000, check(account_number: CHECK_FAILURE_PLACEHOLDER, number: nil)).success?
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.credit(1000, check(account_number: '123', number: nil))

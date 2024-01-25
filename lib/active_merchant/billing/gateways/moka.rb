@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MokaGateway < Gateway
       self.test_url = 'https://service.refmoka.com'
       self.live_url = 'https://service.moka.com'

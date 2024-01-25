@@ -18,8 +18,8 @@ ActiveMerchant::Billing::Base.mode = :test
 
 if ENV['DEBUG_ACTIVE_MERCHANT'] == 'true'
   require 'logger'
-  ActiveMerchant::Billing::Gateway.logger = Logger.new(STDOUT)
-  ActiveMerchant::Billing::Gateway.wiredump_device = STDOUT
+  ActiveMerchant::Billing::Gateway.logger = Logger.new($stdout)
+  ActiveMerchant::Billing::Gateway.wiredump_device = $stdout
 end
 
 # Test gateways
@@ -70,14 +70,14 @@ module ActiveMerchant
     # object if things go afoul.
     def assert_success(response, message = nil)
       clean_backtrace do
-        assert response.success?, build_message(nil, "#{message + "\n" if message}Response expected to succeed: <?>", response)
+        assert response.success?, build_message(nil, "#{"#{message}\n" if message}Response expected to succeed: <?>", response)
       end
     end
 
     # The negative of +assert_success+
     def assert_failure(response, message = nil)
       clean_backtrace do
-        assert !response.success?, build_message(nil, "#{message + "\n" if message}Response expected to fail: <?>", response)
+        assert !response.success?, build_message(nil, "#{"#{message}\n" if message}Response expected to fail: <?>", response)
       end
     end
 
@@ -136,7 +136,7 @@ module ActiveMerchant
   end
 
   module Fixtures
-    HOME_DIR = RUBY_PLATFORM.match?('mswin32') ? ENV['HOMEPATH'] : ENV['HOME'] unless defined?(HOME_DIR)
+    HOME_DIR = RUBY_PLATFORM.match?('mswin32') ? ENV.fetch('HOMEPATH', nil) : Dir.home unless defined?(HOME_DIR)
     LOCAL_CREDENTIALS = File.join(HOME_DIR.to_s, '.active_merchant/fixtures.yml') unless defined?(LOCAL_CREDENTIALS)
     DEFAULT_CREDENTIALS = File.join(File.dirname(__FILE__), 'fixtures.yml') unless defined?(DEFAULT_CREDENTIALS)
 
@@ -151,7 +151,7 @@ module ActiveMerchant
     end
 
     def credit_card(number = '4242424242424242', options = {})
-      number = number.is_a?(Integer) ? number.to_s : number
+      number = number.to_s if number.is_a?(Integer)
       defaults = {
         number: number,
         month: default_expiration_date.month,
@@ -309,7 +309,7 @@ module ActiveMerchant
       return unless hash.is_a?(Hash)
 
       hash.symbolize_keys!
-      hash.each { |_k, v| symbolize_keys(v) }
+      hash.each_value { |v| symbolize_keys(v) }
     end
   end
 end
@@ -333,7 +333,7 @@ Test::Unit::TestCase.class_eval do
       gateway.purchase(amount, credit_card, params)
     end
 
-    File.open('transcript.log', 'w') { |f| f.write(transcript) }
+    File.write('transcript.log', transcript)
     assert false, 'A purchase transcript has been written to transcript.log for you to test scrubbing with.'
   end
 end

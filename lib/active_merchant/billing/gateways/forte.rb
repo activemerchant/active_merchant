@@ -1,7 +1,7 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ForteGateway < Gateway
       include Empty
 
@@ -128,7 +128,7 @@ module ActiveMerchant #:nodoc:
         post[:xdata] = {}
         if xdata = options[:xdata]
           (1..9).each do |n|
-            field = "xdata_#{n}".to_sym
+            field = :"xdata_#{n}"
             post[:xdata][field] = xdata[field] if xdata[field]
           end
         end
@@ -249,7 +249,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:api_key]}:#{@options[:secret]}")),
+          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:api_key]}:#{@options[:secret]}")}",
           'X-Forte-Auth-Account-Id' => "act_#{@options[:account_id]}",
           'Content-Type' => 'application/json'
         }

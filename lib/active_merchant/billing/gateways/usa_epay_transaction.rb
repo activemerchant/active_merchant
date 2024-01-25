@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class UsaEpayTransactionGateway < Gateway
       self.live_url = 'https://www.usaepay.com/gate'
       self.test_url = 'https://sandbox.usaepay.com/gate'
@@ -196,7 +196,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def address_key(prefix, key)
-        "#{prefix}#{key}".to_sym
+        :"#{prefix}#{key}"
       end
 
       def add_invoice(post, options)
@@ -254,9 +254,10 @@ module ActiveMerchant #:nodoc:
         return unless options[:recurring_fields].is_a?(Hash)
 
         options[:recurring_fields].each do |key, value|
-          if value == true
+          case value
+          when true
             value = 'yes'
-          elsif value == false
+          when false
             next
           end
 
@@ -300,7 +301,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         fields = {}
         for line in body.split('&')
-          key, value = *line.scan(%r{^(\w+)\=(.*)$}).flatten
+          key, value = *line.scan(%r{^(\w+)=(.*)$}).flatten
           fields[key] = CGI.unescape(value.to_s)
         end
 
@@ -320,7 +321,7 @@ module ActiveMerchant #:nodoc:
           error_code: fields['UMerrorcode'],
           acs_url: fields['UMacsurl'],
           payload: fields['UMpayload']
-        }.delete_if { |_k, v| v.nil? }
+        }.compact
       end
 
       def commit(action, parameters)
@@ -328,7 +329,7 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, post_data(action, parameters)))
         approved = response[:status] == 'Approved'
         error_code = nil
-        error_code = (STANDARD_ERROR_CODE_MAPPING[response[:error_code]] || STANDARD_ERROR_CODE[:processing_error]) unless approved
+        error_code = STANDARD_ERROR_CODE_MAPPING[response[:error_code]] || STANDARD_ERROR_CODE[:processing_error] unless approved
         Response.new(
           approved,
           message_from(response),

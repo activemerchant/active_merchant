@@ -2,8 +2,8 @@
 
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # = Ogone DirectLink Gateway
     #
     # DirectLink is the API version of the Ogone Payment Platform. It allows server to server
@@ -293,7 +293,7 @@ module ActiveMerchant #:nodoc:
         add_pair post, 'PARAMPLUS',       options[:paramplus]       if options[:paramplus]
         add_pair post, 'COMPLUS',         options[:complus]         if options[:complus]
         add_pair post, 'LANGUAGE',        options[:language]        if options[:language]
-        if  options[:three_ds_2]
+        if options[:three_ds_2]
           browser_info = options[:three_ds_2][:browser_info]
           ecom_postal = options[:billing_address]
           if browser_info
@@ -368,7 +368,7 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, creditcard)
         add_pair post, 'CN',     creditcard.name
         add_pair post, 'CARDNO', creditcard.number
-        add_pair post, 'ED',     '%02d%02s' % [creditcard.month, creditcard.year.to_s[-2..-1]]
+        add_pair post, 'ED',     '%02d%02s' % [creditcard.month, creditcard.year.to_s[-2..]]
         add_pair post, 'CVC',    creditcard.verification_value
       end
 
@@ -462,7 +462,7 @@ module ActiveMerchant #:nodoc:
 
         filtered_params = signed_parameters.reject { |_k, v| v.nil? || v == '' }
         sha_encryptor.hexdigest(
-          filtered_params.sort_by { |k, _v| k.upcase }.map { |k, v| "#{k.upcase}=#{v}#{secret}" }.join('')
+          filtered_params.sort_by { |k, _v| k.upcase }.map { |k, v| "#{k.upcase}=#{v}#{secret}" }.join
         ).upcase
       end
 
@@ -479,7 +479,7 @@ module ActiveMerchant #:nodoc:
               ALIAS
             ).map { |key| parameters[key] } +
             [secret]
-          ).join('')
+          ).join
         ).upcase
       end
 

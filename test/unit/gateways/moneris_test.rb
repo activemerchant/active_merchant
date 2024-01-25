@@ -722,7 +722,7 @@ class MonerisTest < Test::Unit::TestCase
 
   def successful_first_cof_purchase_response
     <<~RESPONSE
-      <?xml version=\"1.0\" standalone=\"yes\"?>
+      <?xml version="1.0" standalone="yes"?>
       <?xml version=“1.0” standalone=“yes”?>
       <response>
        <receipt>
@@ -751,7 +751,7 @@ class MonerisTest < Test::Unit::TestCase
 
   def successful_first_cof_authorize_response
     <<~RESPONSE
-      <?xml version=\"1.0\" standalone=\"yes\"?>
+      <?xml version="1.0" standalone="yes"?>
       <response>
         <receipt>
           <ReceiptId>8dbc28468af2007779bbede7ec1bab6c</ReceiptId>
@@ -1108,7 +1108,7 @@ class MonerisTest < Test::Unit::TestCase
       -> "\r\n"
       -> "391\r\n"
       reading 913 bytes...
-      -> "<?xml version=\"1.0\"?><response><receipt><DataKey>LAmXQeZwdtzUtz1QI1vF6etR2</DataKey><ReceiptId>null</ReceiptId><ReferenceNum>null</ReferenceNum><ResponseCode>001</ResponseCode><ISO>null</ISO><AuthCode>null</AuthCode><Message>Successfully registered CC details.</Message><TransTime>22:35:23</TransTime><TransDate>2016-05-15</TransDate><TransType>null</TransType><Complete>true</Complete><TransAmount>null</TransAmount><CardType>null</CardType><TransID>null</TransID><TimedOut>false</TimedOut><CorporateCard>null</CorporateCard><RecurSuccess>null</RecurSuccess><AvsResultCode>null</AvsResultCode><CvdResultCode>null</CvdResultCode><ResSuccess>true</ResSuccess><PaymentType>cc</PaymentType><IsVisaDebit>null</IsVisaDebit><ResolveData><cust_id></cust_id><phone></phone><email></email><note></note><crypt_type>7</crypt_type><masked_pan>4242***4242</masked_pan><expdate>1705</expdate></ResolveData></receipt></response>"
+      -> "<?xml version="1.0"?><response><receipt><DataKey>LAmXQeZwdtzUtz1QI1vF6etR2</DataKey><ReceiptId>null</ReceiptId><ReferenceNum>null</ReferenceNum><ResponseCode>001</ResponseCode><ISO>null</ISO><AuthCode>null</AuthCode><Message>Successfully registered CC details.</Message><TransTime>22:35:23</TransTime><TransDate>2016-05-15</TransDate><TransType>null</TransType><Complete>true</Complete><TransAmount>null</TransAmount><CardType>null</CardType><TransID>null</TransID><TimedOut>false</TimedOut><CorporateCard>null</CorporateCard><RecurSuccess>null</RecurSuccess><AvsResultCode>null</AvsResultCode><CvdResultCode>null</CvdResultCode><ResSuccess>true</ResSuccess><PaymentType>cc</PaymentType><IsVisaDebit>null</IsVisaDebit><ResolveData><cust_id></cust_id><phone></phone><email></email><note></note><crypt_type>7</crypt_type><masked_pan>4242***4242</masked_pan><expdate>1705</expdate></ResolveData></receipt></response>"
       read 913 bytes
       reading 2 bytes...
       -> "\r\n"
@@ -1136,7 +1136,7 @@ class MonerisTest < Test::Unit::TestCase
       -> "\r\n"
       -> "391\r\n"
       reading 913 bytes...
-      -> "<?xml version=\"1.0\"?><response><receipt><DataKey>LAmXQeZwdtzUtz1QI1vF6etR2</DataKey><ReceiptId>null</ReceiptId><ReferenceNum>null</ReferenceNum><ResponseCode>001</ResponseCode><ISO>null</ISO><AuthCode>null</AuthCode><Message>Successfully registered CC details.</Message><TransTime>22:35:23</TransTime><TransDate>2016-05-15</TransDate><TransType>null</TransType><Complete>true</Complete><TransAmount>null</TransAmount><CardType>null</CardType><TransID>null</TransID><TimedOut>false</TimedOut><CorporateCard>null</CorporateCard><RecurSuccess>null</RecurSuccess><AvsResultCode>null</AvsResultCode><CvdResultCode>null</CvdResultCode><ResSuccess>true</ResSuccess><PaymentType>cc</PaymentType><IsVisaDebit>null</IsVisaDebit><ResolveData><cust_id></cust_id><phone></phone><email></email><note></note><crypt_type>7</crypt_type><masked_pan>4242***4242</masked_pan><expdate>1705</expdate></ResolveData></receipt></response>"
+      -> "<?xml version="1.0"?><response><receipt><DataKey>LAmXQeZwdtzUtz1QI1vF6etR2</DataKey><ReceiptId>null</ReceiptId><ReferenceNum>null</ReferenceNum><ResponseCode>001</ResponseCode><ISO>null</ISO><AuthCode>null</AuthCode><Message>Successfully registered CC details.</Message><TransTime>22:35:23</TransTime><TransDate>2016-05-15</TransDate><TransType>null</TransType><Complete>true</Complete><TransAmount>null</TransAmount><CardType>null</CardType><TransID>null</TransID><TimedOut>false</TimedOut><CorporateCard>null</CorporateCard><RecurSuccess>null</RecurSuccess><AvsResultCode>null</AvsResultCode><CvdResultCode>null</CvdResultCode><ResSuccess>true</ResSuccess><PaymentType>cc</PaymentType><IsVisaDebit>null</IsVisaDebit><ResolveData><cust_id></cust_id><phone></phone><email></email><note></note><crypt_type>7</crypt_type><masked_pan>4242***4242</masked_pan><expdate>1705</expdate></ResolveData></receipt></response>"
       read 913 bytes
       reading 2 bytes...
       -> "\r\n"

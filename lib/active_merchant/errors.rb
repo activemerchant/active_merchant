@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  class ActiveMerchantError < StandardError #:nodoc:
+module ActiveMerchant # :nodoc:
+  class ActiveMerchantError < StandardError # :nodoc:
   end
 
   class ConnectionError < ActiveMerchantError # :nodoc:
@@ -31,9 +31,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      if response.respond_to?(:message)
-        return response.message if response.message.start_with?('Failed')
-      end
+      return response.message if response.respond_to?(:message) && response.message.start_with?('Failed')
 
       "Failed with #{response.code if response.respond_to?(:code)} #{response.message if response.respond_to?(:message)}"
     end

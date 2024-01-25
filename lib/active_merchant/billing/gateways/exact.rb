@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ExactGateway < Gateway
       self.live_url = self.test_url = 'https://secure2.e-xact.com/vplug-in/transaction/rpc-enc/service.asmx'
 
@@ -204,18 +204,15 @@ module ActiveMerchant #:nodoc:
         response = {}
         xml = REXML::Document.new(xml)
 
-        if root = REXML::XPath.first(xml, '//types:TransactionResult')
-          parse_elements(response, root)
-        elsif root = REXML::XPath.first(xml, '//soap:Fault')
-          parse_elements(response, root)
-        end
+        root = REXML::XPath.first(xml, '//types:TransactionResult') || REXML::XPath.first(xml, '//soap:Fault')
+        parse_elements(response, root)
 
         response.delete_if { |k, _v| SENSITIVE_FIELDS.include?(k) }
       end
 
       def parse_elements(response, root)
         root.elements.to_a.each do |node|
-          response[node.name.gsub(/EXact/, 'Exact').underscore.to_sym] = (node.text || '').strip
+          response[node.name.gsub('EXact', 'Exact').underscore.to_sym] = (node.text || '').strip
         end
       end
     end

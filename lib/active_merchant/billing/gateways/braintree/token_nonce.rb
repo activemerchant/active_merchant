@@ -1,6 +1,6 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-    class TokenNonce #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
+    class TokenNonce # :nodoc:
       include PostsData
       # This class emulates the behavior of the front-end js library to
       # create token nonce for a bank account base on the docs:

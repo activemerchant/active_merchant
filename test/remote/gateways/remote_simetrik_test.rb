@@ -23,8 +23,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     @amount = 100
     @sub_merchant = {
       address: 'None',
-      extra_params: {
-      },
+      extra_params: {},
       mcc: '5816',
       merchant_id: '400000008',
       name: '885.519.237',

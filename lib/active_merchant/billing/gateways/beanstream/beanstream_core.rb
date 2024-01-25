@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     module BeanstreamCore
       include Empty
 
@@ -288,9 +288,9 @@ module ActiveMerchant #:nodoc:
           post[:trnExpYear] = format(credit_card.year, :two_digits)
           post[:trnCardCvd] = credit_card.verification_value
           if credit_card.is_a?(NetworkTokenizationCreditCard)
-            post[:"3DSecureXID"] = credit_card.transaction_id
-            post[:"3DSecureECI"] = credit_card.eci
-            post[:"3DSecureCAVV"] = credit_card.payment_cryptogram
+            post[:'3DSecureXID'] = credit_card.transaction_id
+            post[:'3DSecureECI'] = credit_card.eci
+            post[:'3DSecureCAVV'] = credit_card.payment_cryptogram
           end
         end
       end
@@ -380,14 +380,14 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         results = {}
-        body&.split(/&/)&.each do |pair|
-          key, val = pair.split(/\=/)
+        body&.split('&')&.each do |pair|
+          key, val = pair.split('=')
           results[key.to_sym] = val.nil? ? nil : CGI.unescape(val)
         end
 
         # Clean up the message text if there is any
         if results[:messageText]
-          results[:messageText].gsub!(/<LI>/, '')
+          results[:messageText].gsub!('<LI>', '')
           results[:messageText].gsub!(/(\.)?<br>/, '. ')
           results[:messageText].strip!
         end

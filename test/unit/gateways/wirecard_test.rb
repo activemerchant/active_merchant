@@ -371,7 +371,7 @@ class WirecardTest < Test::Unit::TestCase
     successful_authorization_response.
       gsub('ACK', 'NOK').
       gsub(result_node, result_node + error).
-      gsub(/<#{auth}>\w+<\/#{auth}>/, "<#{auth}><\/#{auth}>").
+      gsub(/<#{auth}>\w+<\/#{auth}>/, "<#{auth}></#{auth}>").
       gsub(/<Info>.+<\/Info>/, '')
   end
 

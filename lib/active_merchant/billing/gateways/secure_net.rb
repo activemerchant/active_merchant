@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SecureNetGateway < Gateway
       API_VERSION = '4.0'
 
@@ -184,8 +184,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'ZIP', address[:zip].to_s
           end
         else
-          xml.tag!('CUSTOMER_SHIP', NIL_ATTRIBUTE) do
-          end
+          xml.tag!('CUSTOMER_SHIP', NIL_ATTRIBUTE)
         end
       end
 
@@ -227,7 +226,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        return response[:response_reason_text].nil? ? '' : response[:response_reason_text][0..-1]
+        return response[:response_reason_text].nil? ? '' : response[:response_reason_text][0..]
       end
 
       def parse(xml)

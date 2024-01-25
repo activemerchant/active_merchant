@@ -65,7 +65,7 @@ module ActiveMerchant
       def scrub(transcript)
         return '' if transcript.blank?
 
-        before_message = transcript.gsub(%r(\\\")i, "'").scan(/{[^>]*}/).first.gsub("'", '"')
+        before_message = transcript.gsub(%r(\\")i, "'").scan(/{[^>]*}/).first.gsub("'", '"')
         request_data = JSON.parse(before_message)
 
         if @options[:encryption_key]
@@ -78,8 +78,8 @@ module ActiveMerchant
         end
 
         request_data['parametros'] = encode_params(params)
-        before_message = before_message.gsub(%r(\")i, '\\\"')
-        after_message = request_data.to_json.gsub(%r(\")i, '\\\"')
+        before_message = before_message.gsub(%r(")i, '\\\"')
+        after_message = request_data.to_json.gsub(%r(")i, '\\\"')
         transcript.sub(before_message, after_message)
       end
 
@@ -97,14 +97,14 @@ module ActiveMerchant
       def decrypt_sensitive_fields(data)
         cipher = OpenSSL::Cipher.new('AES-256-CBC').decrypt
         cipher.key = [@options[:encryption_key]].pack('H*')
-        cipher.iv = @options[:initiator_vector]&.split('')&.map(&:to_i)&.pack('c*')
+        cipher.iv = @options[:initiator_vector]&.chars&.map(&:to_i)&.pack('c*')
         cipher.update([data].pack('H*')) + cipher.final
       end
 
       def encrypt_sensitive_fields(data)
         cipher = OpenSSL::Cipher.new('AES-256-CBC').encrypt
         cipher.key = [@options[:encryption_key]].pack('H*')
-        cipher.iv = @options[:initiator_vector]&.split('')&.map(&:to_i)&.pack('c*')
+        cipher.iv = @options[:initiator_vector]&.chars&.map(&:to_i)&.pack('c*')
         encrypted = cipher.update(data.to_json) + cipher.final
         encrypted.unpack1('H*')
       end
@@ -305,7 +305,7 @@ module ActiveMerchant
       end
 
       def error_code_from(response)
-        (response[:codResult] || :paramsEntradaError) unless success_from(response)
+        response[:codResult] || :paramsEntradaError unless success_from(response)
       end
     end
   end

@@ -269,7 +269,7 @@ class PagarmeTest < Test::Unit::TestCase
       -> "Charset: utf-8\r\n"
       -> "Content-Type: application/json\r\n"
       -> "Date: Wed, 23 Mar 2016 08:17:52 GMT\r\n"
-      -> "ETag: \"1486888623\"\r\n"
+      -> "ETag: "1486888623"\r\n"
       -> "Server: nginx\r\n"
       -> "X-Powered-By: Express\r\n"
       -> "X-Response-Time: 260ms\r\n"
@@ -282,7 +282,7 @@ class PagarmeTest < Test::Unit::TestCase
       -> "X-CDN: Incapsula\r\n"
       -> "\r\n"
       reading 1217 bytes...
-      -> "{\"object\":\"transaction\",\"status\":\"paid\",\"refuse_reason\":null,\"status_reason\":\"acquirer\",\"acquirer_response_code\":\"00\",\"acquirer_name\":\"development\",\"authorization_code\":\"606507\",\"soft_descriptor\":null,\"tid\":1458721084304,\"nsu\":1458721084304,\"date_created\":\"2016-03-23T08:18:04.162Z\",\"date_updated\":\"2016-03-23T08:18:04.388Z\",\"amount\":1000,\"authorized_amount\":1000,\"paid_amount\":1000,\"refunded_amount\":0,\"installments\":1,\"id\":428211,\"cost\":65,\"card_holder_name\":\"Richard Deschamps\",\"card_last_digits\":\"4242\",\"card_first_digits\":\"424242\",\"card_brand\":\"visa\",\"postback_url\":null,\"payment_method\":\"credit_card\",\"capture_method\":\"ecommerce\",\"antifraud_score\":null,\"boleto_url\":null,\"boleto_barcode\":null,\"boleto_expiration_date\":null,\"referer\":\"api_key\",\"ip\":\"179.191.82.50\",\"subscription_id\":null,\"phone\":null,\"address\":null,\"customer\":null,\"card\":{\"object\":\"card\",\"id\":\"card_cim4ccq3p00q1ju6e4aw4tdon\",\"date_created\":\"2016-03-23T04:19:38.917Z\",\"date_updated\":\"2016-03-23T04:19:39.160Z\",\"brand\":\"visa\",\"holder_name\":\"Richard Deschamps\",\"first_digits\":\"424242\",\"last_digits\":\"4242\",\"country\":\"US\",\"fingerprint\":\"VpmCgO7Ub/rS\",\"valid\":true},\"metadata\":{\"description\":\"ActiveMerchant Test Purchase\"},\"antifraud_metadata\":{}}"
+      -> "{"object":"transaction","status":"paid","refuse_reason":null,"status_reason":"acquirer","acquirer_response_code":"00","acquirer_name":"development","authorization_code":"606507","soft_descriptor":null,"tid":1458721084304,"nsu":1458721084304,"date_created":"2016-03-23T08:18:04.162Z","date_updated":"2016-03-23T08:18:04.388Z","amount":1000,"authorized_amount":1000,"paid_amount":1000,"refunded_amount":0,"installments":1,"id":428211,"cost":65,"card_holder_name":"Richard Deschamps","card_last_digits":"4242","card_first_digits":"424242","card_brand":"visa","postback_url":null,"payment_method":"credit_card","capture_method":"ecommerce","antifraud_score":null,"boleto_url":null,"boleto_barcode":null,"boleto_expiration_date":null,"referer":"api_key","ip":"179.191.82.50","subscription_id":null,"phone":null,"address":null,"customer":null,"card":{"object":"card","id":"card_cim4ccq3p00q1ju6e4aw4tdon","date_created":"2016-03-23T04:19:38.917Z","date_updated":"2016-03-23T04:19:39.160Z","brand":"visa","holder_name":"Richard Deschamps","first_digits":"424242","last_digits":"4242","country":"US","fingerprint":"VpmCgO7Ub/rS","valid":true},"metadata":{"description":"ActiveMerchant Test Purchase"},"antifraud_metadata":{}}"
       read 1217 bytes
       Conn close
     PRE_SCRUBBED
@@ -304,7 +304,7 @@ class PagarmeTest < Test::Unit::TestCase
       -> "Charset: utf-8\r\n"
       -> "Content-Type: application/json\r\n"
       -> "Date: Wed, 23 Mar 2016 08:17:52 GMT\r\n"
-      -> "ETag: \"1486888623\"\r\n"
+      -> "ETag: "1486888623"\r\n"
       -> "Server: nginx\r\n"
       -> "X-Powered-By: Express\r\n"
       -> "X-Response-Time: 260ms\r\n"
@@ -317,7 +317,7 @@ class PagarmeTest < Test::Unit::TestCase
       -> "X-CDN: Incapsula\r\n"
       -> "\r\n"
       reading 1217 bytes...
-      -> "{\"object\":\"transaction\",\"status\":\"paid\",\"refuse_reason\":null,\"status_reason\":\"acquirer\",\"acquirer_response_code\":\"00\",\"acquirer_name\":\"development\",\"authorization_code\":\"606507\",\"soft_descriptor\":null,\"tid\":1458721084304,\"nsu\":1458721084304,\"date_created\":\"2016-03-23T08:18:04.162Z\",\"date_updated\":\"2016-03-23T08:18:04.388Z\",\"amount\":1000,\"authorized_amount\":1000,\"paid_amount\":1000,\"refunded_amount\":0,\"installments\":1,\"id\":428211,\"cost\":65,\"card_holder_name\":\"Richard Deschamps\",\"card_last_digits\":\"4242\",\"card_first_digits\":\"424242\",\"card_brand\":\"visa\",\"postback_url\":null,\"payment_method\":\"credit_card\",\"capture_method\":\"ecommerce\",\"antifraud_score\":null,\"boleto_url\":null,\"boleto_barcode\":null,\"boleto_expiration_date\":null,\"referer\":\"api_key\",\"ip\":\"179.191.82.50\",\"subscription_id\":null,\"phone\":null,\"address\":null,\"customer\":null,\"card\":{\"object\":\"card\",\"id\":\"card_cim4ccq3p00q1ju6e4aw4tdon\",\"date_created\":\"2016-03-23T04:19:38.917Z\",\"date_updated\":\"2016-03-23T04:19:39.160Z\",\"brand\":\"visa\",\"holder_name\":\"Richard Deschamps\",\"first_digits\":\"424242\",\"last_digits\":\"4242\",\"country\":\"US\",\"fingerprint\":\"VpmCgO7Ub/rS\",\"valid\":true},\"metadata\":{\"description\":\"ActiveMerchant Test Purchase\"},\"antifraud_metadata\":{}}"
+      -> "{"object":"transaction","status":"paid","refuse_reason":null,"status_reason":"acquirer","acquirer_response_code":"00","acquirer_name":"development","authorization_code":"606507","soft_descriptor":null,"tid":1458721084304,"nsu":1458721084304,"date_created":"2016-03-23T08:18:04.162Z","date_updated":"2016-03-23T08:18:04.388Z","amount":1000,"authorized_amount":1000,"paid_amount":1000,"refunded_amount":0,"installments":1,"id":428211,"cost":65,"card_holder_name":"Richard Deschamps","card_last_digits":"4242","card_first_digits":"424242","card_brand":"visa","postback_url":null,"payment_method":"credit_card","capture_method":"ecommerce","antifraud_score":null,"boleto_url":null,"boleto_barcode":null,"boleto_expiration_date":null,"referer":"api_key","ip":"179.191.82.50","subscription_id":null,"phone":null,"address":null,"customer":null,"card":{"object":"card","id":"card_cim4ccq3p00q1ju6e4aw4tdon","date_created":"2016-03-23T04:19:38.917Z","date_updated":"2016-03-23T04:19:39.160Z","brand":"visa","holder_name":"Richard Deschamps","first_digits":"424242","last_digits":"4242","country":"US","fingerprint":"VpmCgO7Ub/rS","valid":true},"metadata":{"description":"ActiveMerchant Test Purchase"},"antifraud_metadata":{}}"
       read 1217 bytes
       Conn close
     POST_SCRUBBED

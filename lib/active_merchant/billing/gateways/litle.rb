@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class LitleGateway < Gateway
       SCHEMA_VERSION = '9.14'
 
@@ -276,9 +276,10 @@ module ActiveMerchant #:nodoc:
       }
 
       def void_type(kind)
-        if kind == 'authorization'
+        case kind
+        when 'authorization'
           :authReversal
-        elsif kind == 'echeckSales'
+        when 'echeckSales'
           :echeckVoid
         else
           :void
@@ -602,11 +603,9 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def build_xml_request
+      def build_xml_request(&block)
         builder = Nokogiri::XML::Builder.new
-        builder.__send__('litleOnlineRequest', root_attributes) do |doc|
-          yield(doc)
-        end
+        builder.__send__('litleOnlineRequest', root_attributes, &block)
         builder.doc.root.to_xml
       end
 

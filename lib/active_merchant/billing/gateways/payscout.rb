@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayscoutGateway < Gateway
       self.live_url = self.test_url = 'https://secure.payscout.com/api/transact.php'
 
@@ -114,7 +114,7 @@ module ActiveMerchant #:nodoc:
         response[:action] = action
 
         message = message_from(response)
-        test_mode = (test? || message =~ /TESTMODE/)
+        test_mode = test? || message =~ /TESTMODE/
         Response.new(
           success?(response),
           message,
@@ -155,8 +155,7 @@ module ActiveMerchant #:nodoc:
         post[:password]       = @options[:password]
         post[:type]           = action
 
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

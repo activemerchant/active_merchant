@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PaywayDotComGateway < Gateway
       self.test_url = 'https://paywaywsdev.com/PaywayWS/Payment/CreditCard'
       self.live_url = 'https://paywayws.net/PaywayWS/Payment/CreditCard'
@@ -191,14 +191,13 @@ module ActiveMerchant #:nodoc:
         url = (test? ? test_url : live_url)
         payload = parameters.to_json unless parameters.nil?
 
-        response =
-          begin
-            parse(ssl_request(:post, url, payload, headers))
-          rescue ResponseError => e
-            return Response.new(false, 'Invalid Login') if e.response.code == '401'
+        begin
+          response = parse(ssl_request(:post, url, payload, headers))
+        rescue ResponseError => e
+          return Response.new(false, 'Invalid Login') if e.response.code == '401'
 
-            parse(e.response.body)
-          end
+          response = parse(e.response.body)
+        end
 
         success = success_from(response)
         avs_result_code = response['cardTransaction'].nil? || response['cardTransaction']['addressVerificationResults'].nil? ? '' : response['cardTransaction']['addressVerificationResults']
@@ -224,14 +223,14 @@ module ActiveMerchant #:nodoc:
       def error_code_from(response)
         return '' if success_from(response)
 
-        error = !STANDARD_ERROR_CODE_MAPPING[response['paywayCode']].nil? ? STANDARD_ERROR_CODE_MAPPING[response['paywayCode']] : STANDARD_ERROR_CODE[:processing_error]
+        error = STANDARD_ERROR_CODE_MAPPING[response['paywayCode']].nil? ? STANDARD_ERROR_CODE[:processing_error] : STANDARD_ERROR_CODE_MAPPING[response['paywayCode']]
         return error
       end
 
       def message_from(success, response)
         return '' if response['paywayCode'].nil?
 
-        return response['paywayCode'] + '-' + 'success' if success
+        return "#{response['paywayCode']}-success" if success
 
         response['paywayCode']
       end

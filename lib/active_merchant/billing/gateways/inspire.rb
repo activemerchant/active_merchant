@@ -1,6 +1,6 @@
 require File.join(File.dirname(__FILE__), '..', 'check.rb')
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class InspireGateway < Gateway
       self.live_url = self.test_url = 'https://secure.inspiregateway.net/api/transact.php'
 
@@ -159,7 +159,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         results = {}
-        body.split(/&/).each do |pair|
+        body.split('&').each do |pair|
           key, val = pair.split(%r{=})
           results[key] = val
         end
@@ -199,8 +199,7 @@ module ActiveMerchant #:nodoc:
         post[:password]   = @options[:password]
         post[:type]       = action if action
 
-        request = post.merge(parameters).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def determine_funding_source(source)

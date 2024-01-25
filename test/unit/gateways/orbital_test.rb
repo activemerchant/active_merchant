@@ -279,7 +279,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.purchase(50, network_tokenization_credit_card(nil, eci: '5', transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA='), options)
     end.check_request do |_endpoint, data, _headers|
       # Soft descriptor fields should come before dpan and cryptogram fields
-      assert_match %{<SDMerchantEmail>email@example<\/SDMerchantEmail><DPANInd>Y<\/DPANInd><DigitalTokenCryptogram}, data.gsub(/\s+/, '')
+      assert_match %{<SDMerchantEmail>email@example</SDMerchantEmail><DPANInd>Y</DPANInd><DigitalTokenCryptogram}, data.gsub(/\s+/, '')
     end.respond_with(successful_purchase_response)
   end
 
@@ -440,19 +440,19 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(50, credit_card, order_id: '1')
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r{<CurrencyExponent>2<\/CurrencyExponent>}, data
+      assert_match %r{<CurrencyExponent>2</CurrencyExponent>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.purchase(50, credit_card, order_id: '1', currency: 'CAD')
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r{<CurrencyExponent>2<\/CurrencyExponent>}, data
+      assert_match %r{<CurrencyExponent>2</CurrencyExponent>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.purchase(50, credit_card, order_id: '1', currency: 'JPY')
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r{<CurrencyExponent>0<\/CurrencyExponent>}, data
+      assert_match %r{<CurrencyExponent>0</CurrencyExponent>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -856,7 +856,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, card, order_id: 1, billing_address: billing_address)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\<AVSname\/>\n/, data)
+      assert_match(/<AVSname\/>\n/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -1593,7 +1593,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.verify(credit_card, @options.merge({ verify_amount: '101' }))
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r{<Amount>101<\/Amount>}, data if data.include?('MessageType')
+      assert_match %r{<Amount>101</Amount>}, data if data.include?('MessageType')
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -1603,7 +1603,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.verify(@credit_card, @options)
     end.check_request(skip_response: true) do |_endpoint, data, _headers|
-      assert_match %r{<Amount>0<\/Amount>}, data
+      assert_match %r{<Amount>0</Amount>}, data
     end
   end
 
@@ -1622,7 +1622,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.verify(@credit_card, @options)
     end.check_request(skip_response: true) do |_endpoint, data, _headers|
-      assert_match %r{<Amount>100<\/Amount>}, data
+      assert_match %r{<Amount>100</Amount>}, data
     end
   end
 
@@ -1670,22 +1670,22 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(50, credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r{<CardSecValInd>1<\/CardSecValInd>}, data
-      assert_match %r{<CardSecVal>123<\/CardSecVal>}, data
+      assert_match %r{<CardSecValInd>1</CardSecValInd>}, data
+      assert_match %r{<CardSecVal>123</CardSecVal>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.purchase(50, discover, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r{<CardSecValInd>1<\/CardSecValInd>}, data
-      assert_match %r{<CardSecVal>123<\/CardSecVal>}, data
+      assert_match %r{<CardSecValInd>1</CardSecValInd>}, data
+      assert_match %r{<CardSecVal>123</CardSecVal>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.purchase(50, diners_club, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r{<CardSecValInd>1<\/CardSecValInd>}, data
-      assert_match %r{<CardSecVal>123<\/CardSecVal>}, data
+      assert_match %r{<CardSecValInd>1</CardSecValInd>}, data
+      assert_match %r{<CardSecVal>123</CardSecVal>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -1696,7 +1696,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.purchase(50, mastercard, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_no_match %r{<CardSecValInd>}, data
-      assert_match %r{<CardSecVal>123<\/CardSecVal>}, data
+      assert_match %r{<CardSecVal>123</CardSecVal>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -1831,7 +1831,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       starting SSL for orbitalvar1.paymentech.net:443...
       SSL established
       <- "POST /authorize HTTP/1.1\r\nContent-Type: application/PTI71\r\nMime-Version: 1.1\r\nContent-Transfer-Encoding: text\r\nRequest-Number: 1\r\nDocument-Type: Request\r\nInterface-Version: Ruby|ActiveMerchant|Proprietary Gateway\r\nContent-Length: 964\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: orbitalvar1.paymentech.net\r\n\r\n"
-      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>T16WAYSACT</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>zbp8X1ykGZ</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>041756</MerchantID>\n    <TerminalID>001</TerminalID>\n    <AccountNum>4112344112344113</AccountNum>\n    <Exp>0917</Exp>\n    <CurrencyCode>840</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <CardSecValInd>1</CardSecValInd>\n    <CardSecVal>123</CardSecVal>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Longbob Longsen</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>b141cf3ce2a442732e1906</OrderID>\n    <Amount>100</Amount>\n  </NewOrder>\n</Request>\n"
+      <- "<?xml version="1.0" encoding="UTF-8"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>T16WAYSACT</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>zbp8X1ykGZ</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>041756</MerchantID>\n    <TerminalID>001</TerminalID>\n    <AccountNum>4112344112344113</AccountNum>\n    <Exp>0917</Exp>\n    <CurrencyCode>840</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <CardSecValInd>1</CardSecValInd>\n    <CardSecVal>123</CardSecVal>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Longbob Longsen</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>b141cf3ce2a442732e1906</OrderID>\n    <Amount>100</Amount>\n  </NewOrder>\n</Request>\n"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Thu, 02 Jun 2016 07:04:44 GMT\r\n"
       -> "content-type: text/plain; charset=ISO-8859-1\r\n"
@@ -1842,7 +1842,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       -> "Connection: close\r\n"
       -> "\r\n"
       reading 1200 bytes...
-      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>041756</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4112344112344113</AccountNum><OrderID>b141cf3ce2a442732e1906</OrderID><TxRefNum>574FDA8CECFBC3DA073FF74A7E6DE4E0BA87545B</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>7 </AVSRespCode><CVV2RespCode>M</CVV2RespCode><AuthCode>tst595</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode>IU</HostAVSRespCode><HostCVV2RespCode>M</HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>030444</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
+      -> "<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>041756</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4112344112344113</AccountNum><OrderID>b141cf3ce2a442732e1906</OrderID><TxRefNum>574FDA8CECFBC3DA073FF74A7E6DE4E0BA87545B</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>7 </AVSRespCode><CVV2RespCode>M</CVV2RespCode><AuthCode>tst595</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode>IU</HostAVSRespCode><HostCVV2RespCode>M</HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>030444</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
       read 1200 bytes
       Conn close
     REQUEST
@@ -1855,7 +1855,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       starting SSL for orbitalvar1.paymentech.net:443...
       SSL established
       <- "POST /authorize HTTP/1.1\r\nContent-Type: application/PTI71\r\nMime-Version: 1.1\r\nContent-Transfer-Encoding: text\r\nRequest-Number: 1\r\nDocument-Type: Request\r\nInterface-Version: Ruby|ActiveMerchant|Proprietary Gateway\r\nContent-Length: 964\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: orbitalvar1.paymentech.net\r\n\r\n"
-      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>[FILTERED]</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>[FILTERED]</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>[FILTERED]</MerchantID>\n    <TerminalID>001</TerminalID>\n    <AccountNum>[FILTERED]</AccountNum>\n    <Exp>0917</Exp>\n    <CurrencyCode>840</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <CardSecValInd>1</CardSecValInd>\n    <CardSecVal>[FILTERED]</CardSecVal>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Longbob Longsen</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>b141cf3ce2a442732e1906</OrderID>\n    <Amount>100</Amount>\n  </NewOrder>\n</Request>\n"
+      <- "<?xml version="1.0" encoding="UTF-8"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>[FILTERED]</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>[FILTERED]</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>[FILTERED]</MerchantID>\n    <TerminalID>001</TerminalID>\n    <AccountNum>[FILTERED]</AccountNum>\n    <Exp>0917</Exp>\n    <CurrencyCode>840</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <CardSecValInd>1</CardSecValInd>\n    <CardSecVal>[FILTERED]</CardSecVal>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Longbob Longsen</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>b141cf3ce2a442732e1906</OrderID>\n    <Amount>100</Amount>\n  </NewOrder>\n</Request>\n"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Thu, 02 Jun 2016 07:04:44 GMT\r\n"
       -> "content-type: text/plain; charset=ISO-8859-1\r\n"
@@ -1866,7 +1866,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       -> "Connection: close\r\n"
       -> "\r\n"
       reading 1200 bytes...
-      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>[FILTERED]</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>[FILTERED]</AccountNum><OrderID>b141cf3ce2a442732e1906</OrderID><TxRefNum>574FDA8CECFBC3DA073FF74A7E6DE4E0BA87545B</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>7 </AVSRespCode><CVV2RespCode>M</CVV2RespCode><AuthCode>tst595</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode>IU</HostAVSRespCode><HostCVV2RespCode>M</HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>030444</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
+      -> "<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>[FILTERED]</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>[FILTERED]</AccountNum><OrderID>b141cf3ce2a442732e1906</OrderID><TxRefNum>574FDA8CECFBC3DA073FF74A7E6DE4E0BA87545B</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>7 </AVSRespCode><CVV2RespCode>M</CVV2RespCode><AuthCode>tst595</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode>IU</HostAVSRespCode><HostCVV2RespCode>M</HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>030444</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
       read 1200 bytes
       Conn close
     REQUEST
@@ -1891,7 +1891,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       starting SSL for orbitalvar1.chasepaymentech.com:443...
       SSL established, protocol: TLSv1.2, cipher: AES128-GCM-SHA256
       <- "POST /authorize HTTP/1.1\r\nContent-Type: application/PTI81\r\nMime-Version: 1.1\r\nContent-Transfer-Encoding: text\r\nRequest-Number: 1\r\nDocument-Type: Request\r\nInterface-Version: Ruby|ActiveMerchant|Proprietary Gateway\r\nContent-Length: 999\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: orbitalvar1.chasepaymentech.com\r\n\r\n"
-      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>SPREEDLYTEST1</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>2NnPnYZylV8ft</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>408449</MerchantID>\n    <TerminalID>001</TerminalID>\n    <CardBrand>EC</CardBrand>\n    <CurrencyCode>124</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <BCRtNum>072403004</BCRtNum>\n    <CheckDDA>072403004</CheckDDA>\n    <BankAccountType>S</BankAccountType>\n    <BankPmtDelv>B</BankPmtDelv>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Jim Smith</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>5fe1bb6dcd2cd401f2a277</OrderID>\n    <Amount>20</Amount>\n  </NewOrder>\n</Request>\n"
+      <- "<?xml version="1.0" encoding="UTF-8"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>SPREEDLYTEST1</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>2NnPnYZylV8ft</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>408449</MerchantID>\n    <TerminalID>001</TerminalID>\n    <CardBrand>EC</CardBrand>\n    <CurrencyCode>124</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <BCRtNum>072403004</BCRtNum>\n    <CheckDDA>072403004</CheckDDA>\n    <BankAccountType>S</BankAccountType>\n    <BankPmtDelv>B</BankPmtDelv>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Jim Smith</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>5fe1bb6dcd2cd401f2a277</OrderID>\n    <Amount>20</Amount>\n  </NewOrder>\n</Request>\n"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Mon, 09 Aug 2021 21:00:41 GMT\r\n"
       -> "Strict-Transport-Security: max-age=63072000; includeSubdomains; preload\r\n"
@@ -1912,7 +1912,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       -> "Connection: close\r\n"
       -> "\r\n"
       reading 1185 bytes...
-      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>408449</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>5fe1bb6dcd2cd401f2a277</OrderID><TxRefNum>611197795A217041FDC714407285C2FC74F9533B</TxRefNum><TxRefIdx>1</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode>123456</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespC"
+      -> "<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>408449</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>5fe1bb6dcd2cd401f2a277</OrderID><TxRefNum>611197795A217041FDC714407285C2FC74F9533B</TxRefNum><TxRefIdx>1</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode>123456</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespC"
       -> "ode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>102</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>170041</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
       read 1185 bytes
       Conn close
@@ -1926,7 +1926,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       starting SSL for orbitalvar1.chasepaymentech.com:443...
       SSL established, protocol: TLSv1.2, cipher: AES128-GCM-SHA256
       <- "POST /authorize HTTP/1.1\r\nContent-Type: application/PTI81\r\nMime-Version: 1.1\r\nContent-Transfer-Encoding: text\r\nRequest-Number: 1\r\nDocument-Type: Request\r\nInterface-Version: Ruby|ActiveMerchant|Proprietary Gateway\r\nContent-Length: 999\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: orbitalvar1.chasepaymentech.com\r\n\r\n"
-      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>[FILTERED]</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>[FILTERED]</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>[FILTERED]</MerchantID>\n    <TerminalID>001</TerminalID>\n    <CardBrand>EC</CardBrand>\n    <CurrencyCode>124</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <BCRtNum>[FILTERED]</BCRtNum>\n    <CheckDDA>[FILTERED]</CheckDDA>\n    <BankAccountType>S</BankAccountType>\n    <BankPmtDelv>B</BankPmtDelv>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Jim Smith</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>5fe1bb6dcd2cd401f2a277</OrderID>\n    <Amount>20</Amount>\n  </NewOrder>\n</Request>\n"
+      <- "<?xml version="1.0" encoding="UTF-8"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>[FILTERED]</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>[FILTERED]</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>[FILTERED]</MerchantID>\n    <TerminalID>001</TerminalID>\n    <CardBrand>EC</CardBrand>\n    <CurrencyCode>124</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <BCRtNum>[FILTERED]</BCRtNum>\n    <CheckDDA>[FILTERED]</CheckDDA>\n    <BankAccountType>S</BankAccountType>\n    <BankPmtDelv>B</BankPmtDelv>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Jim Smith</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>5fe1bb6dcd2cd401f2a277</OrderID>\n    <Amount>20</Amount>\n  </NewOrder>\n</Request>\n"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Mon, 09 Aug 2021 21:00:41 GMT\r\n"
       -> "Strict-Transport-Security: max-age=63072000; includeSubdomains; preload\r\n"
@@ -1947,7 +1947,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       -> "Connection: close\r\n"
       -> "\r\n"
       reading 1185 bytes...
-      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>[FILTERED]</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>5fe1bb6dcd2cd401f2a277</OrderID><TxRefNum>611197795A217041FDC714407285C2FC74F9533B</TxRefNum><TxRefIdx>1</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode>123456</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespC"
+      -> "<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>[FILTERED]</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>5fe1bb6dcd2cd401f2a277</OrderID><TxRefNum>611197795A217041FDC714407285C2FC74F9533B</TxRefNum><TxRefIdx>1</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode>123456</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespC"
       -> "ode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>102</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>170041</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
       read 1185 bytes
       Conn close

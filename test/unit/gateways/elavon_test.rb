@@ -825,7 +825,7 @@ class ElavonTest < Test::Unit::TestCase
 
   def successful_authorization_response
     <<-XML
-    <?xml version=\"1.0\" encoding=\"UTF-8\"?>
+    <?xml version="1.0" encoding="UTF-8"?>
     <txn>
       <ssl_issuer_response>00</ssl_issuer_response>
       <ssl_transaction_type>AUTHONLY</ssl_transaction_type>
@@ -953,7 +953,7 @@ class ElavonTest < Test::Unit::TestCase
 
   def failed_store_response
     <<-XML
-      <?xml version=\"1.0\" encoding=\"UTF-8\"?>
+      <?xml version="1.0" encoding="UTF-8"?>
       <txn>
         <errorCode>5000</errorCode>
         <errorName>Credit Card Number Invalid</errorName>

@@ -407,7 +407,7 @@ class PayTraceTest < Test::Unit::TestCase
       starting SSL for api.paytrace.com:443...
       SSL established
       <- "POST /v1/transactions/sale/keyed HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Bearer 96e647567627164796f6e63704370727565646c697e236f6d6:5427e43707866415555426a68723848763574533d476a466:QryC8bI6hfidGVcFcwnago3t77BSzW8ItUl9GWhsx9Y\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: api.paytrace.com\r\nContent-Length: 335\r\n\r\n"
-      <- "{\"amount\":\"1.00\",\"credit_card\":{\"number\":\"4012000098765439\",\"expiration_month\":9,\"expiration_year\":2022},\"csc\":\"123\",\"billing_address\":{\"name\":\"Longbob Longsen\",\"street_address\":\"456 My Street\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\"},\"password\":\"ErNsphFQUEbjx2Hx6uT3MgJf\",\"username\":\"integrations@spreedly.com\",\"integrator_id\":\"9575315uXt4u\"}"
+      <- "{"amount":"1.00","credit_card":{"number":"4012000098765439","expiration_month":9,"expiration_year":2022},"csc":"123","billing_address":{"name":"Longbob Longsen","street_address":"456 My Street","city":"Ottawa","state":"ON","zip":"K1C2N6"},"password":"ErNsphFQUEbjx2Hx6uT3MgJf","username":"integrations@spreedly.com","integrator_id":"9575315uXt4u"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Thu, 03 Jun 2021 22:03:24 GMT\r\n"
       -> "Content-Type: application/json; charset=utf-8\r\n"
@@ -420,7 +420,7 @@ class PayTraceTest < Test::Unit::TestCase
       -> "X-XSS-Protection: 1; mode=block\r\n"
       -> "X-Request-Id: f008583e-3755-4eca-b8a0-83d8d82cefca\r\n"
       -> "X-Download-Options: noopen\r\n"
-      -> "ETag: W/\"4edcbabd892d2f033a4cbc7932f26fae\"\r\n"
+      -> "ETag: W/"4edcbabd892d2f033a4cbc7932f26fae"\r\n"
       -> "X-Frame-Options: SAMEORIGIN\r\n"
       -> "X-Runtime: 1.984489\r\n"
       -> "X-Content-Type-Options: nosniff\r\n"
@@ -432,7 +432,7 @@ class PayTraceTest < Test::Unit::TestCase
       -> "\r\n"
       -> "142\r\n"
       reading 322 bytes...
-      -> "{\"success\":true,\"response_code\":101,\"status_message\":\"Your transaction was successfully approved.\",\"transaction_id\":395970044,\"approval_code\":\"TAS679\",\"approval_message\":\"  NO  MATCH - Approved and completed\",\"avs_response\":\"No Match\",\"csc_response\":\"\",\"external_transaction_id\":\"\",\"masked_card_number\":\"xxxxxxxxxxxx5439\"}"
+      -> "{"success":true,"response_code":101,"status_message":"Your transaction was successfully approved.","transaction_id":395970044,"approval_code":"TAS679","approval_message":"  NO  MATCH - Approved and completed","avs_response":"No Match","csc_response":"","external_transaction_id":"","masked_card_number":"xxxxxxxxxxxx5439"}"
       read 322 bytes
       reading 2 bytes...
       -> "\r\n"
@@ -450,7 +450,7 @@ class PayTraceTest < Test::Unit::TestCase
       starting SSL for api.paytrace.com:443...
       SSL established
       <- "POST /v1/transactions/sale/keyed HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Bearer [FILTERED]\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: api.paytrace.com\r\nContent-Length: 335\r\n\r\n"
-      <- "{\"amount\":\"1.00\",\"credit_card\":{\"number\":\"[FILTERED]\",\"expiration_month\":9,\"expiration_year\":2022},\"csc\":\"[FILTERED]\",\"billing_address\":{\"name\":\"Longbob Longsen\",\"street_address\":\"456 My Street\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\"},\"password\":\"[FILTERED]\",\"username\":\"[FILTERED]\"}"
+      <- "{"amount":"1.00","credit_card":{"number":"[FILTERED]","expiration_month":9,"expiration_year":2022},"csc":"[FILTERED]","billing_address":{"name":"Longbob Longsen","street_address":"456 My Street","city":"Ottawa","state":"ON","zip":"K1C2N6"},"password":"[FILTERED]","username":"[FILTERED]"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Thu, 03 Jun 2021 22:03:24 GMT\r\n"
       -> "Content-Type: application/json; charset=utf-8\r\n"
@@ -463,7 +463,7 @@ class PayTraceTest < Test::Unit::TestCase
       -> "X-XSS-Protection: 1; mode=block\r\n"
       -> "X-Request-Id: f008583e-3755-4eca-b8a0-83d8d82cefca\r\n"
       -> "X-Download-Options: noopen\r\n"
-      -> "ETag: W/\"4edcbabd892d2f033a4cbc7932f26fae\"\r\n"
+      -> "ETag: W/"4edcbabd892d2f033a4cbc7932f26fae"\r\n"
       -> "X-Frame-Options: SAMEORIGIN\r\n"
       -> "X-Runtime: 1.984489\r\n"
       -> "X-Content-Type-Options: nosniff\r\n"
@@ -475,7 +475,7 @@ class PayTraceTest < Test::Unit::TestCase
       -> "\r\n"
       -> "142\r\n"
       reading 322 bytes...
-      -> "{\"success\":true,\"response_code\":101,\"status_message\":\"Your transaction was successfully approved.\",\"transaction_id\":395970044,\"approval_code\":\"TAS679\",\"approval_message\":\"  NO  MATCH - Approved and completed\",\"avs_response\":\"No Match\",\"csc_response\":\"\",\"external_transaction_id\":\"\",\"masked_card_number\":\"xxxxxxxxxxxx5439\"}"
+      -> "{"success":true,"response_code":101,"status_message":"Your transaction was successfully approved.","transaction_id":395970044,"approval_code":"TAS679","approval_message":"  NO  MATCH - Approved and completed","avs_response":"No Match","csc_response":"","external_transaction_id":"","masked_card_number":"xxxxxxxxxxxx5439"}"
       read 322 bytes
       reading 2 bytes...
       -> "\r\n"

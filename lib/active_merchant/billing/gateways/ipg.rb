@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class IpgGateway < Gateway
       self.test_url = 'https://test.ipg-online.com/ipgapi/services'
       self.live_url = 'https://www5.ipg-online.com/ipgapi/services'
@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(xml, payment, options = {}, credit_envelope = 'v1')
-        if payment&.is_a?(CreditCard)
+        if payment.is_a?(CreditCard)
           requires!(options.merge!({ card_number: payment.number, month: payment.month, year: payment.year }), :card_number, :month, :year)
 
           xml.tag!("#{credit_envelope}:CreditCardData") do
@@ -266,7 +266,7 @@ module ActiveMerchant #:nodoc:
       def add_payment(xml, money, payment, options)
         requires!(options.merge!({ money: money }), :currency, :money)
         xml.tag!('v1:Payment') do
-          xml.tag!('v1:HostedDataID', payment) if payment&.is_a?(String)
+          xml.tag!('v1:HostedDataID', payment) if payment.is_a?(String)
           xml.tag!('v1:HostedDataStoreID', options[:hosted_data_store_id]) if options[:hosted_data_store_id]
           xml.tag!('v1:DeclineHostedDataDuplicates', options[:decline_hosted_data_duplicates]) if options[:decline_hosted_data_duplicates]
           xml.tag!('v1:SubTotal', options[:sub_total]) if options[:sub_total]
@@ -391,10 +391,10 @@ module ActiveMerchant #:nodoc:
         else
           if /item/.match?(node.parent.name)
             parent = node.parent.name
-            parent += '_' + node.parent.attributes['id'] if node.parent.attributes['id']
+            parent += "_#{node.parent.attributes['id']}" if node.parent.attributes['id']
             parent += '_'
           end
-          reply["#{parent}#{node.name}".to_sym] ||= node.text
+          reply[:"#{parent}#{node.name}"] ||= node.text
         end
         return reply
       end

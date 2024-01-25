@@ -1,7 +1,7 @@
 require 'digest/md5'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # This gateway accepts the following arguments:
     #   :login    => your PayJunction username
     #   :password => your PayJunction pass
@@ -228,7 +228,7 @@ module ActiveMerchant #:nodoc:
           exp: "#{format(creditcard.month, :two_digits)}#{format(creditcard.year, :four_digits)}",
           budp: 0,
           amt: amount(money),
-          cur: (options[:currency] || currency(money)),
+          cur: options[:currency] || currency(money),
           cvv: creditcard.verification_value,
           email: options[:email],
           ip: options[:ip]
@@ -252,7 +252,7 @@ module ActiveMerchant #:nodoc:
         hash  = {}
         xml   = REXML::Document.new(body)
 
-        response_action = action.gsub(/tx/, 'rx')
+        response_action = action.gsub('tx', 'rx')
         root  = REXML::XPath.first(xml.root, response_action)
         # we might have gotten an error
         root  = REXML::XPath.first(xml.root, 'errorrx') if root.nil?
@@ -274,7 +274,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        (response[:rdesc] || response[:edesc])
+        response[:rdesc] || response[:edesc]
       end
     end
   end

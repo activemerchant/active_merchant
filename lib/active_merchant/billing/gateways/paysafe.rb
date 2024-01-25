@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PaysafeGateway < Gateway
       self.test_url = 'https://api.test.paysafe.com'
       self.live_url = 'https://api.paysafe.com'
@@ -244,7 +244,7 @@ module ActiveMerchant #:nodoc:
 
         trip_legs_hash = {}
         trip_legs.each.with_index(1) do |leg, i|
-          my_leg = "leg#{i}".to_sym
+          my_leg = :"leg#{i}"
           details = add_leg_details(my_leg, leg[1])
 
           trip_legs_hash[my_leg] = details
@@ -311,9 +311,10 @@ module ActiveMerchant #:nodoc:
         when 'recurring', 'installment'
           post[:storedCredential][:type] = 'RECURRING'
         when 'unscheduled'
-          if options[:stored_credential][:initiator] == 'merchant'
+          case options[:stored_credential][:initiator]
+          when 'merchant'
             post[:storedCredential][:type] = 'TOPUP'
-          elsif options[:stored_credential][:initiator] == 'cardholder'
+          when 'cardholder'
             post[:storedCredential][:type] = 'ADHOC'
           else
             return
@@ -356,7 +357,7 @@ module ActiveMerchant #:nodoc:
       def headers
         {
           'Content-Type' => 'application/json',
-          'Authorization' => 'Basic ' + Base64.strict_encode64("#{@options[:username]}:#{@options[:password]}")
+          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:username]}:#{@options[:password]}")}"
         }
       end
 

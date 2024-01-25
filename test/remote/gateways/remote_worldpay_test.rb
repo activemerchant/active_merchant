@@ -6,7 +6,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @cftgateway = WorldpayGateway.new(fixtures(:world_pay_gateway_cft))
 
     @amount = 100
-    @year = (Time.now.year + 2).to_s[-2..-1].to_i
+    @year = (Time.now.year + 2).to_s[-2..].to_i
     @credit_card = credit_card('4111111111111111')
     @amex_card = credit_card('3714 496353 98431')
     @elo_credit_card = credit_card(
@@ -680,7 +680,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@level_three_data))
     assert_failure response
     assert_equal response.error_code, '2'
-    assert_equal response.params['error'].gsub(/\"+/, ''), 'The content of element type item is incomplete, it must match (description,productCode?,commodityCode?,quantity?,unitCost?,unitOfMeasure?,itemTotal?,itemTotalWithTax?,itemDiscountAmount?,taxAmount?,categories?,pageURL?,imageURL?).'
+    assert_equal response.params['error'].gsub(/"+/, ''), 'The content of element type item is incomplete, it must match (description,productCode?,commodityCode?,quantity?,unitCost?,unitOfMeasure?,itemTotal?,itemTotalWithTax?,itemDiscountAmount?,taxAmount?,categories?,pageURL?,imageURL?).'
   end
 
   def test_successful_purchase_with_level_two_and_three_fields

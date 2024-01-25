@@ -10,8 +10,8 @@ end
 
 raise 'Need braintree gem >= 2.0.0.' unless Braintree::Version::Major >= 2 && Braintree::Version::Minor >= 0
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information on the Braintree Gateway please visit their
     # {Developer Portal}[https://www.braintreepayments.com/developers]
     #
@@ -327,7 +327,7 @@ module ActiveMerchant #:nodoc:
       def scrub_email(email)
         return nil unless email.present?
         return nil if
-          email !~ /^.+@[^\.]+(\.[^\.]+)+[a-z]$/i ||
+          email !~ /^.+@[^.]+(\.[^.]+)+[a-z]$/i ||
           email =~ /\.(con|met)$/i
 
         email
@@ -521,9 +521,10 @@ module ActiveMerchant #:nodoc:
         options = args.extract_options!
 
         # money, transaction_id, options
-        if args.length == 1 # legacy signature
+        case args.length
+        when 1 # legacy signature
           return nil, args[0], options
-        elsif args.length == 2
+        when 2
           return args[0], args[1], options
         else
           raise ArgumentError, "wrong number of arguments (#{args.length} for 2)"
@@ -563,8 +564,7 @@ module ActiveMerchant #:nodoc:
 
         transaction = result.transaction
         if transaction.vault_customer
-          vault_customer = {
-          }
+          vault_customer = {}
           vault_customer['credit_cards'] = transaction.vault_customer.credit_cards.map do |cc|
             {
               'bin' => cc.bin
@@ -733,7 +733,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_merchant_account_id(parameters, options)
-        return unless merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
+        return unless merchant_account_id = options[:merchant_account_id] || @merchant_account_id
 
         parameters[:merchant_account_id] = merchant_account_id
       end
@@ -1063,7 +1063,7 @@ module ActiveMerchant #:nodoc:
         Response.new(
           result.success?,
           message_from_result(result),
-          { customer_vault_id: customer_id, 'exists': true }
+          { customer_vault_id: customer_id, exists: true }
         )
       end
     end

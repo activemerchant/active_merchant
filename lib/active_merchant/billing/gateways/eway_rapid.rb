@@ -1,7 +1,7 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class EwayRapidGateway < Gateway
       self.test_url = 'https://api.sandbox.ewaypayments.com/'
       self.live_url = 'https://api.ewaypayments.com/'
@@ -306,7 +306,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(url, params)
         headers = {
-          'Authorization' => ('Basic ' + Base64.strict_encode64(@options[:login].to_s + ':' + @options[:password].to_s).chomp),
+          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:login]}:#{@options[:password]}").chomp}",
           'Content-Type' => 'application/json'
         }
         request = params.to_json
@@ -362,7 +362,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        # Note: TransactionID is always null for store requests, but TokenCustomerID is also sent back for purchase from
+        # NOTE: TransactionID is always null for store requests, but TokenCustomerID is also sent back for purchase from
         # stored card transactions so we give precedence to TransactionID
         response['TransactionID'] || response['Customer']['TokenCustomerID']
       end

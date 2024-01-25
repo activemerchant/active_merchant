@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class EfsnetGateway < Gateway
       self.supported_countries = ['US']
       self.supported_cardtypes = %i[visa master american_express discover]
@@ -139,7 +139,7 @@ module ActiveMerchant #:nodoc:
         post[:account_number] = creditcard.number
         post[:card_verification_value] = creditcard.verification_value if creditcard.verification_value?
         post[:expiration_month] = sprintf('%.2i', creditcard.month)
-        post[:expiration_year] = sprintf('%.4i', creditcard.year)[-2..-1]
+        post[:expiration_year] = sprintf('%.4i', creditcard.year)[-2..]
       end
 
       def commit(action, parameters)

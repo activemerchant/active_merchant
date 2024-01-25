@@ -211,7 +211,7 @@ class MokaTest < Test::Unit::TestCase
       starting SSL for service.testmoka.com:443...
       SSL established
       <- "POST /PaymentDealer/DoDirectPayment HTTP/1.1\r\nContent-Type: application/json\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: service.testmoka.com\r\nContent-Length: 443\r\n\r\n"
-      <- "{\"PaymentDealerRequest\":{\"Amount\":\"1.00\",\"Currency\":\"TL\",\"CardHolderFullName\":\"Longbob Longsen\",\"CardNumber\":\"5269111122223332\",\"ExpMonth\":10,\"ExpYear\":2024,\"CvcNumber\":\"123\",\"IsPreAuth\":0,\"BuyerInformation\":{\"BuyerFullName\":\"Longbob Longsen\"}},\"PaymentDealerAuthentication\":{\"DealerCode\":\"1731\",\"Username\":\"TestMoka2\",\"Password\":\"HYSYHDS8DU8HU\",\"CheckKey\":\"1c1cccfe19b782415c207f1d66f97889cf11ed6d1e1ad6f585e5fe70b6f5da90\"},\"IsPoolPayment\":0}"
+      <- "{"PaymentDealerRequest":{"Amount":"1.00","Currency":"TL","CardHolderFullName":"Longbob Longsen","CardNumber":"5269111122223332","ExpMonth":10,"ExpYear":2024,"CvcNumber":"123","IsPreAuth":0,"BuyerInformation":{"BuyerFullName":"Longbob Longsen"}},"PaymentDealerAuthentication":{"DealerCode":"1731","Username":"TestMoka2","Password":"HYSYHDS8DU8HU","CheckKey":"1c1cccfe19b782415c207f1d66f97889cf11ed6d1e1ad6f585e5fe70b6f5da90"},"IsPoolPayment":0}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Cache-Control: no-cache\r\n"
       -> "Pragma: no-cache\r\n"
@@ -227,7 +227,7 @@ class MokaTest < Test::Unit::TestCase
       -> "Content-Length: 188\r\n"
       -> "\r\n"
       reading 188 bytes...
-      -> "{\"Data\":{\"IsSuccessful\":true,\"ResultCode\":\"\",\"ResultMessage\":\"\",\"VirtualPosOrderId\":\"Test-e8345c66-b614-4490-83ce-7be510f22312\"},\"ResultCode\":\"Success\",\"ResultMessage\":\"\",\"Exception\":null}"
+      -> "{"Data":{"IsSuccessful":true,"ResultCode":"","ResultMessage":"","VirtualPosOrderId":"Test-e8345c66-b614-4490-83ce-7be510f22312"},"ResultCode":"Success","ResultMessage":"","Exception":null}"
       read 188 bytes
       Conn close
     PRE_SCRUBBED
@@ -240,7 +240,7 @@ class MokaTest < Test::Unit::TestCase
       starting SSL for service.testmoka.com:443...
       SSL established
       <- "POST /PaymentDealer/DoDirectPayment HTTP/1.1\r\nContent-Type: application/json\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: service.testmoka.com\r\nContent-Length: 443\r\n\r\n"
-      <- "{\"PaymentDealerRequest\":{\"Amount\":\"1.00\",\"Currency\":\"TL\",\"CardHolderFullName\":\"Longbob Longsen\",\"CardNumber\":\"[FILTERED]\",\"ExpMonth\":10,\"ExpYear\":2024,\"CvcNumber\":\"[FILTERED]\",\"IsPreAuth\":0,\"BuyerInformation\":{\"BuyerFullName\":\"Longbob Longsen\"}},\"PaymentDealerAuthentication\":{\"DealerCode\":\"[FILTERED]\",\"Username\":\"[FILTERED]\",\"Password\":\"[FILTERED]\",\"CheckKey\":\"[FILTERED]\"},\"IsPoolPayment\":0}"
+      <- "{"PaymentDealerRequest":{"Amount":"1.00","Currency":"TL","CardHolderFullName":"Longbob Longsen","CardNumber":"[FILTERED]","ExpMonth":10,"ExpYear":2024,"CvcNumber":"[FILTERED]","IsPreAuth":0,"BuyerInformation":{"BuyerFullName":"Longbob Longsen"}},"PaymentDealerAuthentication":{"DealerCode":"[FILTERED]","Username":"[FILTERED]","Password":"[FILTERED]","CheckKey":"[FILTERED]"},"IsPoolPayment":0}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Cache-Control: no-cache\r\n"
       -> "Pragma: no-cache\r\n"
@@ -256,7 +256,7 @@ class MokaTest < Test::Unit::TestCase
       -> "Content-Length: 188\r\n"
       -> "\r\n"
       reading 188 bytes...
-      -> "{\"Data\":{\"IsSuccessful\":true,\"ResultCode\":\"\",\"ResultMessage\":\"\",\"VirtualPosOrderId\":\"Test-e8345c66-b614-4490-83ce-7be510f22312\"},\"ResultCode\":\"Success\",\"ResultMessage\":\"\",\"Exception\":null}"
+      -> "{"Data":{"IsSuccessful":true,"ResultCode":"","ResultMessage":"","VirtualPosOrderId":"Test-e8345c66-b614-4490-83ce-7be510f22312"},"ResultCode":"Success","ResultMessage":"","Exception":null}"
       read 188 bytes
       Conn close
     POST_SCRUBBED

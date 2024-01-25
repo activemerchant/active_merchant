@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CashnetGateway < Gateway
       include Empty
 
@@ -126,8 +126,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        if address = (options[:shipping_address] || options[:billing_address] || options[:address])
-          post[:addr_g]       = String(address[:address1]) + ',' + String(address[:address2])
+        if address = options[:shipping_address] || options[:billing_address] || options[:address]
+          post[:addr_g]       = "#{String(address[:address1])},#{String(address[:address2])}"
           post[:city_g]       = address[:city]
           post[:state_g]      = address[:state]
           post[:zip_g]        = address[:zip]
@@ -150,13 +150,14 @@ module ActiveMerchant #:nodoc:
         match = body.match(/<cngateway>(.*)<\/cngateway>/)
         return nil unless match
 
-        Hash[CGI::parse(match[1]).map { |k, v| [k.to_sym, v.first] }]
+        CGI::parse(match[1]).to_h { |k, v| [k.to_sym, v.first] }
       end
 
       def handle_response(response)
-        if (200...300).cover?(response.code.to_i)
+        case response.code.to_i
+        when 200...300
           return response.body
-        elsif response.code.to_i == 302
+        when 302
           return ssl_get(URI.parse(response['location']))
         end
 

@@ -1,8 +1,8 @@
 require 'active_merchant/billing/gateways/orbital/orbital_soft_descriptors'
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information on Orbital, visit the {integration center}[http://download.chasepaymentech.com]
     #
     # ==== Authentication Options
@@ -487,7 +487,7 @@ module ActiveMerchant #:nodoc:
                 if [:line_tot, 'line_tot'].include? key
                   formatted_key = :PC3Dtllinetot
                 else
-                  formatted_key = "PC3Dtl#{key.to_s.camelize}".to_sym
+                  formatted_key = :"PC3Dtl#{key.to_s.camelize}"
                 end
                 xml.tag! formatted_key, value
               end
@@ -733,7 +733,7 @@ module ActiveMerchant #:nodoc:
       #=====SCA (STORED CREDENTIAL) FIELDS=====
 
       def add_stored_credentials(xml, parameters)
-        return unless parameters[:mit_stored_credential_ind] == 'Y' || parameters[:stored_credential] && !parameters[:stored_credential].values.all?(&:nil?)
+        return unless parameters[:mit_stored_credential_ind] == 'Y' || (parameters[:stored_credential] && !parameters[:stored_credential].values.all?(&:nil?))
 
         if msg_type = get_msg_type(parameters)
           xml.tag! :MITMsgType, msg_type
@@ -746,6 +746,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      # stored credential
+      RESPONSE_TYPE = {
+        'recurring' => 'REC',
+        'installment' => 'INS',
+        'unscheduled' => 'USE'
+      }
+
       def get_msg_type(parameters)
         return parameters[:mit_msg_type] if parameters[:mit_msg_type]
         return 'CSTO' if parameters[:stored_credential][:initial_transaction]
@@ -756,12 +763,7 @@ module ActiveMerchant #:nodoc:
           when 'cardholder', 'customer' then 'C'
           when 'merchant' then 'M'
           end
-        reason =
-          case parameters[:stored_credential][:reason_type]
-          when 'recurring' then 'REC'
-          when 'installment' then 'INS'
-          when 'unscheduled' then 'USE'
-          end
+        reason = RESPONSE_TYPE[parameters[:stored_credential][:reason_type]]
 
         "#{initiator}#{reason}"
       end
@@ -785,7 +787,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_digital_token_cryptogram(xml, credit_card, three_d_secure)
-        return unless credit_card.is_a?(NetworkTokenizationCreditCard) || three_d_secure && credit_card.brand == 'discover'
+        return unless credit_card.is_a?(NetworkTokenizationCreditCard) || (three_d_secure && credit_card.brand == 'discover')
 
         cryptogram =
           if three_d_secure && credit_card.brand == 'discover'
@@ -836,11 +838,11 @@ module ActiveMerchant #:nodoc:
       def add_ews_details(xml, payment_source, parameters = {})
         split_name = payment_source.first_name.split if payment_source.first_name
         xml.tag! :EWSFirstName, split_name[0]
-        xml.tag! :EWSMiddleName, split_name[1..-1].join(' ')
+        xml.tag! :EWSMiddleName, split_name[1..].join(' ')
         xml.tag! :EWSLastName, payment_source.last_name
         xml.tag! :EWSBusinessName, parameters[:company] if payment_source.first_name.empty? && payment_source.last_name.empty?
 
-        if (address = (parameters[:billing_address] || parameters[:address]))
+        if (address = parameters[:billing_address] || parameters[:address])
           xml.tag! :EWSAddressLine1, byte_limit(format_address_field(address[:address1]), 30)
           xml.tag! :EWSAddressLine2, byte_limit(format_address_field(address[:address2]), 30)
           xml.tag! :EWSCity, byte_limit(format_address_field(address[:city]), 20)
@@ -855,16 +857,16 @@ module ActiveMerchant #:nodoc:
 
       # Adds ECP conditional attributes depending on other attribute values
       def add_ecp_details(xml, payment_source, parameters = {})
-        requires!(payment_source.account_number) if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
+        requires!(payment_source.account_number) if parameters[:auth_method].eql?('A') || parameters[:auth_method].eql?('P')
         xml.tag! :ECPActionCode, parameters[:action_code] if parameters[:action_code]
-        xml.tag! :ECPCheckSerialNumber, payment_source.account_number if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
-        if parameters[:auth_method]&.eql?('P')
+        xml.tag! :ECPCheckSerialNumber, payment_source.account_number if parameters[:auth_method].eql?('A') || parameters[:auth_method].eql?('P')
+        if parameters[:auth_method].eql?('P')
           xml.tag! :ECPTerminalCity, parameters[:terminal_city] if parameters[:terminal_city]
           xml.tag! :ECPTerminalState, parameters[:terminal_state] if parameters[:terminal_state]
           xml.tag! :ECPImageReferenceNumber, parameters[:image_reference_number] if parameters[:image_reference_number]
         end
-        if parameters[:action_code]&.eql?('W3') || parameters[:action_code]&.eql?('W5') ||
-           parameters[:action_code]&.eql?('W7') || parameters[:action_code]&.eql?('W9')
+        if parameters[:action_code].eql?('W3') || parameters[:action_code].eql?('W5') ||
+           parameters[:action_code].eql?('W7') || parameters[:action_code].eql?('W9')
           add_ews_details(xml, payment_source, parameters)
         end
       end
@@ -1086,7 +1088,7 @@ module ActiveMerchant #:nodoc:
       # Null characters are possible in some responses (namely, the respMsg field), causing XML parsing errors
       # Prevent by substituting these with a valid placeholder string
       def strip_invalid_xml_chars(xml)
-        xml.gsub(/\u0000/, '[null]')
+        xml.gsub("\u0000", '[null]')
       end
 
       # The valid characters include:
@@ -1105,7 +1107,7 @@ module ActiveMerchant #:nodoc:
       # Address-related fields cannot contain % | ^ \ /
       # Returns the value with these characters removed, or nil
       def format_address_field(value)
-        value.gsub(/[%\|\^\\\/]/, '') if value.respond_to?(:gsub)
+        value.gsub(/[%|\^\\\/]/, '') if value.respond_to?(:gsub)
       end
 
       # Field lengths should be limited by byte count instead of character count

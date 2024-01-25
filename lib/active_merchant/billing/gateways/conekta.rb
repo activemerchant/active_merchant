@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ConektaGateway < Gateway
       self.live_url = 'https://api.conekta.io/'
 
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_address(post, options)
-        if (address = (options[:billing_address] || options[:address]))
+        if (address = options[:billing_address] || options[:address])
           post[:billing_address] = {}
           post[:billing_address][:street1] = address[:address1] if address[:address1]
           post[:billing_address][:street2] = address[:address2] if address[:address2]
@@ -142,7 +142,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        if (address = (options[:billing_address] || options[:address]))
+        if (address = options[:billing_address] || options[:address])
           post[:address] = {}
           post[:address][:street1] = address[:address1] if address[:address1]
           post[:address][:street2] = address[:address2] if address[:address2]
@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
         {
           'Accept' => "application/vnd.conekta-v#{@options[:version]}+json",
           'Accept-Language' => 'es',
-          'Authorization' => 'Basic ' + Base64.encode64("#{@options[:key]}:"),
+          'Authorization' => "Basic #{Base64.encode64("#{@options[:key]}:")}",
           'RaiseHtmlError' => 'false',
           'Conekta-Client-User-Agent' => { 'agent' => "Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}" }.to_json,
           'X-Conekta-Client-User-Agent' => conekta_client_user_agent(options),
@@ -196,7 +196,7 @@ module ActiveMerchant #:nodoc:
         success = false
         begin
           raw_response = parse(ssl_request(method, live_url + url, (parameters ? parameters.to_query : nil), headers(options)))
-          success = (raw_response.key?('object') && (raw_response['object'] != 'error'))
+          success = raw_response.key?('object') && (raw_response['object'] != 'error')
         rescue ResponseError => e
           raw_response = response_error(e.response.body)
         rescue JSON::ParserError

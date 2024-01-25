@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CheckoutV2Gateway < Gateway
       self.display_name = 'Checkout.com Unified Payments'
       self.homepage_url = 'https://www.checkout.com/'
@@ -215,10 +215,11 @@ module ActiveMerchant #:nodoc:
           end
         end
         if payment_method.is_a?(String)
-          if /tok/.match?(payment_method)
+          case payment_method
+          when /tok/
             post[:type] = 'token'
             post[:token] = payment_method
-          elsif /src/.match?(payment_method)
+          when /src/
             post[key][:type] = 'id'
             post[key][:id] = payment_method
           else
@@ -546,17 +547,16 @@ module ActiveMerchant #:nodoc:
         return true if action == :unstore && response == 204
 
         store_response = response['token'] || response['id']
-        if store_response
-          return true if (action == :tokens && store_response.match(/tok/)) || (action == :store && store_response.match(/src_/))
-        end
-        response['response_summary'] == 'Approved' || response['approved'] == true || !response.key?('response_summary') && response.key?('action_id')
+        return true if store_response && ((action == :tokens && store_response.match(/tok/)) || (action == :store && store_response.match(/src_/)))
+
+        response['response_summary'] == 'Approved' || response['approved'] == true || (!response.key?('response_summary') && response.key?('action_id'))
       end
 
       def message_from(succeeded, response, options)
         if succeeded
           'Succeeded'
         elsif response['error_type']
-          response['error_type'] + ': ' + response['error_codes'].first
+          "#{response['error_type']}: #{response['error_codes'].first}"
         else
           response_summary = if options[:threeds_response_message]
                                response['response_summary'] || response.dig('actions', 0, 'response_summary')

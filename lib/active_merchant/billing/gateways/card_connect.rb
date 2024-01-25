@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CardConnectGateway < Gateway
       self.test_url = 'https://fts-uat.cardconnect.com/cardconnect/rest/'
       self.live_url = 'https://fts.cardconnect.com/cardconnect/rest/'
@@ -70,9 +70,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def require_valid_domain!(options, param)
-        if options[param]
-          raise ArgumentError.new('not a valid cardconnect domain') unless /https:\/\/\D*cardconnect.com/ =~ options[param]
-        end
+        raise ArgumentError.new('not a valid cardconnect domain') if options[param] && !(/https:\/\/\D*cardconnect.com/ =~ options[param])
       end
 
       def purchase(money, payment, options = {})
@@ -270,7 +268,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Authorization' => 'Basic ' + Base64.strict_encode64("#{@options[:username]}:#{@options[:password]}"),
+          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:username]}:#{@options[:password]}")}",
           'Content-Type' => 'application/json'
         }
       end

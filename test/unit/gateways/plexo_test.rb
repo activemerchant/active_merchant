@@ -101,7 +101,7 @@ class PlexoTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
-      @options[:metadata].keys.each do |meta_key|
+      @options[:metadata].each_key do |meta_key|
         camel_key = meta_key.to_s.camelize
         assert_equal request['Metadata'][camel_key], @options[:metadata][meta_key]
       end
@@ -302,19 +302,19 @@ class PlexoTest < Test::Unit::TestCase
       starting SSL for api.testing.plexo.com.uy:443...
       SSL established, protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384
       <- "POST /v1/payments/628b723aa450dab85ba2fa03/captures HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic MjIxOjlkZWZhZWVlYmMzOTQ1NDFhZmY2MzMyOTE4MmRkODQyNDA1MTJhYTI0NWE0NDY2MDkxZWQ3MGY2OTAxYjQ5NDc=\r\nX-Mock-Tokenization: true\r\nX-Mock-Switcher: true\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: api.testing.plexo.com.uy\r\nContent-Length: 66\r\n\r\n"
-      <- "{\"ReferenceId\":\"e6742109bb60458b1c5a7c69ffcc3f54\",\"Amount\":\"1.00\"}"
+      <- "{"ReferenceId":"e6742109bb60458b1c5a7c69ffcc3f54","Amount":"1.00"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Mon, 23 May 2022 11:38:35 GMT\r\n"
       -> "Content-Type: application/json; charset=utf-8\r\n"
       -> "Transfer-Encoding: chunked\r\n"
       -> "Connection: close\r\n"
-      -> "X-MiniProfiler-Ids: [\"c6b2ce60-757c-4115-b802-e33a27c2e311\",\"e1533461-72dc-4693-97a6-deea47601ca4\",\"da8b919f-a1f8-4051-870d-3679f4c8ac6b\",\"4465311a-ab60-470d-8f69-e06eed35c271\",\"c4b23b7d-e824-4fd6-95b9-82fa4786f4a2\",\"c5fe47c7-6155-4eb7-b9f4-84cd7fae7acf\",\"80e2f132-1ac1-4b25-b030-5eaccd44a0db\",\"525c97a7-5df7-4dd5-b1da-4c6abe9a5995\",\"98694fd6-f3ff-497a-b6d4-477a50a093aa\",\"802b9242-97c6-4438-bd72-960dbdf2f752\",\"7aa9078c-12f1-41f4-bc57-c77fb8a9ecc8\",\"4890d7e1-22c9-4e9d-afe1-88149e743aa0\",\"cafed17f-08ce-49cc-91d0-d8d9865facc7\",\"98fea53d-ad00-44cb-8e82-0829e5c8aaee\",\"5730d4fa-1c70-4679-a097-d9c8b7156f2d\",\"ba7d9c5a-e2bc-461f-b87d-552ae9fabb65\",\"3b1dbbbe-8112-4293-9be3-c865741c5494\",\"3ab01bd5-a2b5-4d9c-84c7-9c743f1e9978\",\"d6e397a3-cf95-413c-b3c6-4729aa463d33\",\"fc9cb79e-ab22-42b0-b611-0b3f62a203bb\",\"b16fd902-f50a-43e2-8e82-cc0fe763b16b\",\"dc702114-866c-4b9a-bc07-291b0b0f8b73\"]\r\n"
+      -> "X-MiniProfiler-Ids: ["c6b2ce60-757c-4115-b802-e33a27c2e311","e1533461-72dc-4693-97a6-deea47601ca4","da8b919f-a1f8-4051-870d-3679f4c8ac6b","4465311a-ab60-470d-8f69-e06eed35c271","c4b23b7d-e824-4fd6-95b9-82fa4786f4a2","c5fe47c7-6155-4eb7-b9f4-84cd7fae7acf","80e2f132-1ac1-4b25-b030-5eaccd44a0db","525c97a7-5df7-4dd5-b1da-4c6abe9a5995","98694fd6-f3ff-497a-b6d4-477a50a093aa","802b9242-97c6-4438-bd72-960dbdf2f752","7aa9078c-12f1-41f4-bc57-c77fb8a9ecc8","4890d7e1-22c9-4e9d-afe1-88149e743aa0","cafed17f-08ce-49cc-91d0-d8d9865facc7","98fea53d-ad00-44cb-8e82-0829e5c8aaee","5730d4fa-1c70-4679-a097-d9c8b7156f2d","ba7d9c5a-e2bc-461f-b87d-552ae9fabb65","3b1dbbbe-8112-4293-9be3-c865741c5494","3ab01bd5-a2b5-4d9c-84c7-9c743f1e9978","d6e397a3-cf95-413c-b3c6-4729aa463d33","fc9cb79e-ab22-42b0-b611-0b3f62a203bb","b16fd902-f50a-43e2-8e82-cc0fe763b16b","dc702114-866c-4b9a-bc07-291b0b0f8b73"]\r\n"
       -> "x-correlation-id: 24ebd1ee-a69a-4163-85cf-e5a1ab7fd26b\r\n"
       -> "Strict-Transport-Security: max-age=15724800; includeSubDomains\r\n"
       -> "\r\n"
       -> "192\r\n"
       reading 402 bytes...
-      -> "{\"id\":\"628b723ba450dab85ba2fa0a\",\"uniqueId\":\"978260656060936192\",\"parentId\":\"cf8ecc4a-b0ed-4a40-945e-0eaff39e66f9\",\"referenceId\":\"e6742109bb60458b1c5a7c69ffcc3f54\",\"type\":\"capture\",\"status\":\"approved\",\"createdAt\":\"2022-05-23T11:38:35.6091676Z\",\"processedAt\":\"2022-05-23T11:38:35.6091521Z\",\"resultCode\":\"0\",\"resultMessage\":\"You have been mocked.\",\"authorization\":\"12133\",\"ticket\":\"111111\",\"amount\":1.00}"
+      -> "{"id":"628b723ba450dab85ba2fa0a","uniqueId":"978260656060936192","parentId":"cf8ecc4a-b0ed-4a40-945e-0eaff39e66f9","referenceId":"e6742109bb60458b1c5a7c69ffcc3f54","type":"capture","status":"approved","createdAt":"2022-05-23T11:38:35.6091676Z","processedAt":"2022-05-23T11:38:35.6091521Z","resultCode":"0","resultMessage":"You have been mocked.","authorization":"12133","ticket":"111111","amount":1.00}"
       read 402 bytes
       reading 2 bytes...
       -> "\r\n"
@@ -332,19 +332,19 @@ class PlexoTest < Test::Unit::TestCase
       starting SSL for api.testing.plexo.com.uy:443...
       SSL established, protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384
       <- "POST /v1/payments/628b723aa450dab85ba2fa03/captures HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]=\r\nX-Mock-Tokenization: true\r\nX-Mock-Switcher: true\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: api.testing.plexo.com.uy\r\nContent-Length: 66\r\n\r\n"
-      <- "{\"ReferenceId\":\"e6742109bb60458b1c5a7c69ffcc3f54",\"Amount\":\"1.00\"}"
+      <- "{"ReferenceId":"e6742109bb60458b1c5a7c69ffcc3f54","Amount":"1.00"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Mon, 23 May 2022 11:38:35 GMT\r\n"
       -> "Content-Type: application/json; charset=utf-8\r\n"
       -> "Transfer-Encoding: chunked\r\n"
       -> "Connection: close\r\n"
-      -> "X-MiniProfiler-Ids: [\"c6b2ce60-757c-4115-b802-e33a27c2e311\",\"e1533461-72dc-4693-97a6-deea47601ca4\",\"da8b919f-a1f8-4051-870d-3679f4c8ac6b\",\"4465311a-ab60-470d-8f69-e06eed35c271\",\"c4b23b7d-e824-4fd6-95b9-82fa4786f4a2\",\"c5fe47c7-6155-4eb7-b9f4-84cd7fae7acf\",\"80e2f132-1ac1-4b25-b030-5eaccd44a0db\",\"525c97a7-5df7-4dd5-b1da-4c6abe9a5995\",\"98694fd6-f3ff-497a-b6d4-477a50a093aa\",\"802b9242-97c6-4438-bd72-960dbdf2f752\",\"7aa9078c-12f1-41f4-bc57-c77fb8a9ecc8\",\"4890d7e1-22c9-4e9d-afe1-88149e743aa0\",\"cafed17f-08ce-49cc-91d0-d8d9865facc7\",\"98fea53d-ad00-44cb-8e82-0829e5c8aaee\",\"5730d4fa-1c70-4679-a097-d9c8b7156f2d\",\"ba7d9c5a-e2bc-461f-b87d-552ae9fabb65\",\"3b1dbbbe-8112-4293-9be3-c865741c5494\",\"3ab01bd5-a2b5-4d9c-84c7-9c743f1e9978\",\"d6e397a3-cf95-413c-b3c6-4729aa463d33\",\"fc9cb79e-ab22-42b0-b611-0b3f62a203bb\",\"b16fd902-f50a-43e2-8e82-cc0fe763b16b\",\"dc702114-866c-4b9a-bc07-291b0b0f8b73\"]\r\n"
+      -> "X-MiniProfiler-Ids: ["c6b2ce60-757c-4115-b802-e33a27c2e311","e1533461-72dc-4693-97a6-deea47601ca4","da8b919f-a1f8-4051-870d-3679f4c8ac6b","4465311a-ab60-470d-8f69-e06eed35c271","c4b23b7d-e824-4fd6-95b9-82fa4786f4a2","c5fe47c7-6155-4eb7-b9f4-84cd7fae7acf","80e2f132-1ac1-4b25-b030-5eaccd44a0db","525c97a7-5df7-4dd5-b1da-4c6abe9a5995","98694fd6-f3ff-497a-b6d4-477a50a093aa","802b9242-97c6-4438-bd72-960dbdf2f752","7aa9078c-12f1-41f4-bc57-c77fb8a9ecc8","4890d7e1-22c9-4e9d-afe1-88149e743aa0","cafed17f-08ce-49cc-91d0-d8d9865facc7","98fea53d-ad00-44cb-8e82-0829e5c8aaee","5730d4fa-1c70-4679-a097-d9c8b7156f2d","ba7d9c5a-e2bc-461f-b87d-552ae9fabb65","3b1dbbbe-8112-4293-9be3-c865741c5494","3ab01bd5-a2b5-4d9c-84c7-9c743f1e9978","d6e397a3-cf95-413c-b3c6-4729aa463d33","fc9cb79e-ab22-42b0-b611-0b3f62a203bb","b16fd902-f50a-43e2-8e82-cc0fe763b16b","dc702114-866c-4b9a-bc07-291b0b0f8b73"]\r\n"
       -> "x-correlation-id: 24ebd1ee-a69a-4163-85cf-e5a1ab7fd26b\r\n"
       -> "Strict-Transport-Security: max-age=15724800; includeSubDomains\r\n"
       -> "\r\n"
       -> "192\r\n"
       reading 402 bytes...
-      -> "{\"id\":\"628b723ba450dab85ba2fa0a\",\"uniqueId\":\"978260656060936192\",\"parentId\":\"cf8ecc4a-b0ed-4a40-945e-0eaff39e66f9\",\"referenceId\":\"e6742109bb60458b1c5a7c69ffcc3f54",\"type\":\"capture\",\"status\":\"approved\",\"createdAt\":\"2022-05-23T11:38:35.6091676Z\",\"processedAt\":\"2022-05-23T11:38:35.6091521Z\",\"resultCode\":\"0\",\"resultMessage\":\"You have been mocked.\",\"authorization\":\"12133\",\"ticket\":\"111111\",\"amount\":1.00}"
+      -> "{"id":"628b723ba450dab85ba2fa0a","uniqueId":"978260656060936192","parentId":"cf8ecc4a-b0ed-4a40-945e-0eaff39e66f9","referenceId":"e6742109bb60458b1c5a7c69ffcc3f54","type":"capture","status":"approved","createdAt":"2022-05-23T11:38:35.6091676Z","processedAt":"2022-05-23T11:38:35.6091521Z","resultCode":"0","resultMessage":"You have been mocked.","authorization":"12133","ticket":"111111","amount":1.00}"
       read 402 bytes
       reading 2 bytes...
       -> "\r\n"
