@@ -272,7 +272,7 @@ module ActiveMerchant #:nodoc:
           xml.tag!('v1:SubTotal', options[:sub_total]) if options[:sub_total]
           xml.tag!('v1:ValueAddedTax', options[:value_added_tax]) if options[:value_added_tax]
           xml.tag!('v1:DeliveryAmount', options[:delivery_amount]) if options[:delivery_amount]
-          xml.tag!('v1:ChargeTotal', money)
+          xml.tag!('v1:ChargeTotal', amount(money))
           xml.tag!('v1:Currency', CURRENCY_CODES[options[:currency]])
           xml.tag!('v1:numberOfInstallments', options[:number_of_installments]) if options[:number_of_installments]
         end

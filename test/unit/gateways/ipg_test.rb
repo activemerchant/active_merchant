@@ -20,6 +20,7 @@ class IpgTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       doc = REXML::Document.new(data)
       assert_match('sale', REXML::XPath.first(doc, '//v1:CreditCardTxType//v1:Type').text)
+      assert_match('1.00', REXML::XPath.first(doc, '//v1:Transaction//v1:ChargeTotal').text)
     end.respond_with(successful_purchase_response)
 
     assert_success response
