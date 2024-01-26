@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
         post[:ExpDate] = format(payment_method.year, :two_digits) + format(payment_method.month, :two_digits)
         post[:CVC2] = payment_method.verification_value
         post[:DateAndTime] = Time.now.strftime('%y%m%d%H%M%S')
-        post[:RRN] = 'AMRCNT' + six_random_digits
+        post[:RRN] = "AMRCNT#{six_random_digits}"
       end
 
       def add_reference(post, authorization)
@@ -211,7 +211,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Authorization' => 'Basic ' + Base64.strict_encode64(@options[:username].to_s + ':' + @options[:password].to_s)
+          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:username]}:#{@options[:password]}")}"
         }
       end
 

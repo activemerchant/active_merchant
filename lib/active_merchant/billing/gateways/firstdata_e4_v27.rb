@@ -403,7 +403,7 @@ module ActiveMerchant #:nodoc:
         {
           'x-gge4-date' => sending_time,
           'x-gge4-content-sha1' => content_digest,
-          'Authorization' => 'GGE4_API ' + @options[:key_id].to_s + ':' + encoded,
+          'Authorization' => "GGE4_API #{@options[:key_id]}:#{encoded}",
           'Accepts' => content_type,
           'Content-Type' => content_type
         }

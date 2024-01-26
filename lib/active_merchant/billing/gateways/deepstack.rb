@@ -321,9 +321,9 @@ module ActiveMerchant #:nodoc:
       def error_code_from(response)
         error_code = nil
         error_code = response['response_code'] unless success_from(response)
-        if error = response.dig('detail')
+        if error = response['detail']
           error_code = error
-        elsif error = response.dig('error')
+        elsif error = response['error']
           error_code = error.dig('reason', 'id')
         end
         error_code
@@ -332,22 +332,18 @@ module ActiveMerchant #:nodoc:
       def get_url(action)
         base = '/api/v1/'
         case action
-        when 'sale'
-          return base + 'payments/charge'
-        when 'auth'
-          return base + 'payments/charge'
+        when 'sale', 'auth'
+          return "#{base}payments/charge"
         when 'capture'
-          return base + 'payments/capture'
-        when 'void'
-          return base + 'payments/refund'
-        when 'refund'
-          return base + 'payments/refund'
+          return "#{base}payments/capture"
+        when 'void', 'refund'
+          return "#{base}payments/refund"
         when 'gettoken'
-          return base + 'vault/token'
+          return "#{base}vault/token"
         when 'vault'
-          return base + 'vault/payment-instrument/token'
+          return "#{base}vault/payment-instrument/token"
         else
-          return base + 'noaction'
+          return "#{base}noaction"
         end
       end
 

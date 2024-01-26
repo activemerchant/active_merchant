@@ -163,7 +163,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/iniciaPeticion/, data)
       assert_match(/<DS_MERCHANT_TERMINAL>12<\/DS_MERCHANT_TERMINAL>/, data)
-      assert_match(/\"threeDSInfo\":\"CardData\"/, data)
+      assert_match(/"threeDSInfo":"CardData"/, data)
 
       # as per docs on Inicia Peticion Y must be passed
       assert_match(/<DS_MERCHANT_EXCEP_SCA>Y<\/DS_MERCHANT_EXCEP_SCA>/, data)
@@ -177,7 +177,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/iniciaPeticion/, data)
       assert_match(/<DS_MERCHANT_TERMINAL>12<\/DS_MERCHANT_TERMINAL>/, data)
-      assert_match(/\"threeDSInfo\":\"CardData\"/, data)
+      assert_match(/"threeDSInfo":"CardData"/, data)
 
       # as per docs on Inicia Peticion Y must be passed
       assert_match(/<DS_MERCHANT_EXCEP_SCA>Y<\/DS_MERCHANT_EXCEP_SCA>/, data)

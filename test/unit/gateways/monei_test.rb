@@ -143,9 +143,9 @@ class MoneiTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\"eci\":\"#{authentication_eci}\"/, data)
-      assert_match(/\"cavv\":\"#{authentication_cavv}\"/, data)
-      assert_match(/\"xid\":\"#{authentication_xid}\"/, data)
+      assert_match(/"eci":"#{authentication_eci}"/, data)
+      assert_match(/"cavv":"#{authentication_cavv}"/, data)
+      assert_match(/"xid":"#{authentication_xid}"/, data)
     end.respond_with(successful_purchase_response)
   end
 

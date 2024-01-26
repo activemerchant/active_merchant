@@ -266,8 +266,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
   def test_paypal_options_can_be_specified
     Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
-      (params[:options][:paypal][:custom_field] == 'abc')
-      (params[:options][:paypal][:description] == 'shoes')
+      paypal_options = params.dig(:options, :paypal)
+      (paypal_options[:custom_field] == 'abc' && paypal_options[:description] == 'shoes')
     end.returns(braintree_result)
 
     @gateway.authorize(100, credit_card('4111111111111111'), paypal_custom_field: 'abc', paypal_description: 'shoes')
@@ -757,8 +757,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     }
 
     Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
-      (params[:sca_exemption] == 'low_value')
-      (params[:three_d_secure_pass_thru] == three_ds_expectation)
+      (params[:sca_exemption] == 'low_value' && params[:three_d_secure_pass_thru] == three_ds_expectation)
     end.returns(braintree_result)
 
     options = {
@@ -896,7 +895,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
   def test_that_setting_a_wiredump_device_on_the_gateway_sets_the_braintree_logger_upon_instantiation
     with_braintree_configuration_restoration do
-      logger = Logger.new(STDOUT)
+      logger = Logger.new($stdout)
       ActiveMerchant::Billing::BraintreeBlueGateway.wiredump_device = logger
 
       assert_not_equal logger, Braintree::Configuration.logger

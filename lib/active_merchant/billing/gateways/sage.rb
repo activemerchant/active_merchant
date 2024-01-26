@@ -363,7 +363,7 @@ module ActiveMerchant #:nodoc:
           year  = sprintf('%.4i', credit_card.year)
           month = sprintf('%.2i', credit_card.month)
 
-          "#{month}#{year[-2..-1]}"
+          "#{month}#{year[-2..]}"
         end
 
         def commit(action, request)

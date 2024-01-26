@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
 
       def headers(options = {})
         {
-          'Authorization' => 'Basic ' + Base64.encode64(@api_key.to_s + ':').strip,
+          'Authorization' => "Basic #{Base64.encode64("#{@api_key}:").strip}",
           'User-Agent' => "Webpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'X-Webpay-Client-User-Agent' => user_agent,
           'X-Webpay-Client-User-Metadata' => { ip: options[:ip] }.to_json

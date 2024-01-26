@@ -250,14 +250,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action, parameters, options = {})
-        "#{(test? ? test_url : live_url)}/#{endpoint(action, parameters, options)}/"
+        "#{test? ? test_url : live_url}/#{endpoint(action, parameters, options)}/"
       end
 
       def endpoint(action, parameters, options)
         case action
-        when 'purchase'
-          'secure_payments'
-        when 'authorize'
+        when 'purchase', 'authorize'
           'secure_payments'
         when 'refund'
           'refunds'

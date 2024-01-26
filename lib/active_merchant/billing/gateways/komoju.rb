@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Authorization' => 'Basic ' + Base64.encode64(@options[:login].to_s + ':').strip,
+          'Authorization' => "Basic #{Base64.encode64("#{@options[:login]}:").strip}",
           'Accept' => 'application/json',
           'Content-Type' => 'application/json',
           'User-Agent' => "Komoju/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"

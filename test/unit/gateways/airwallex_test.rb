@@ -75,7 +75,7 @@ class AirwallexTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(return_url: return_url))
     end.check_request do |endpoint, data, _headers|
-      assert_match(/\"return_url\":\"https:\/\/example.com\"/, data) unless endpoint == setup_endpoint
+      assert_match(/"return_url":"https:\/\/example.com"/, data) unless endpoint == setup_endpoint
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -95,10 +95,10 @@ class AirwallexTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, _headers|
       unless endpoint == setup_endpoint
-        assert_match(/\"version\":\"1.0.0\"/, data)
-        assert_match(/\"cavv\":\"VGhpcyBpcyBhIHRlc3QgYmFzZTY=\"/, data)
-        assert_match(/\"eci\":\"02\"/, data)
-        assert_match(/\"xid\":\"b2h3aDZrd3BJWXVCWEFMbzJqSGQ=\"/, data)
+        assert_match(/"version":"1.0.0"/, data)
+        assert_match(/"cavv":"VGhpcyBpcyBhIHRlc3QgYmFzZTY="/, data)
+        assert_match(/"eci":"02"/, data)
+        assert_match(/"xid":"b2h3aDZrd3BJWXVCWEFMbzJqSGQ="/, data)
       end
     end.respond_with(successful_authorize_response)
 
@@ -120,11 +120,11 @@ class AirwallexTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, _headers|
       unless endpoint == setup_endpoint
-        assert_match(/\"version\":\"2.2.0\"/, data)
-        assert_match(/\"authentication_value\":\"MTIzNDU2Nzg5MDA5ODc2NTQzMjE=\"/, data)
-        assert_match(/\"ds_transaction_id\":\"f25084f0-5b16-4c0a-ae5d-b24808a95e4b\"/, data)
-        assert_match(/\"eci\":\"02\"/, data)
-        assert_match(/\"three_ds_server_transaction_id\":\"df8b9557-e41b-4e17-87e9-2328694a2ea0\"/, data)
+        assert_match(/"version":"2.2.0"/, data)
+        assert_match(/"authentication_value":"MTIzNDU2Nzg5MDA5ODc2NTQzMjE="/, data)
+        assert_match(/"ds_transaction_id":"f25084f0-5b16-4c0a-ae5d-b24808a95e4b"/, data)
+        assert_match(/"eci":"02"/, data)
+        assert_match(/"three_ds_server_transaction_id":"df8b9557-e41b-4e17-87e9-2328694a2ea0"/, data)
       end
     end.respond_with(successful_authorize_response)
 
@@ -273,10 +273,10 @@ class AirwallexTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       if data.include?('payment_method')
         # check for this on the purchase call
-        assert_match(/\"request_id\":\"#{request_id}\"/, data)
+        assert_match(/"request_id":"#{request_id}"/, data)
       else
         # check for this on the create_payment_intent calls
-        assert_match(/\"request_id\":\"#{request_id}_setup\"/, data)
+        assert_match(/"request_id":"#{request_id}_setup"/, data)
       end
     end.respond_with(successful_purchase_response)
   end
@@ -286,7 +286,7 @@ class AirwallexTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(merchant_order_id: merchant_order_id))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\"merchant_order_id\":\"#{merchant_order_id}\"/, data)
+      assert_match(/"merchant_order_id":"#{merchant_order_id}"/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -304,7 +304,7 @@ class AirwallexTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       # only look for referrer data on the create_payment_intent request
-      assert_match(/\"referrer_data\":{\"type\":\"spreedly\"}/, data) if data.include?('_setup')
+      assert_match(/"referrer_data":{"type":"spreedly"}/, data) if data.include?('_setup')
     end.respond_with(successful_purchase_response)
   end
 
@@ -328,10 +328,10 @@ class AirwallexTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, _headers|
       # This conditional runs assertions after the initial setup call is made
       unless endpoint == setup_endpoint
-        assert_match(/"external_recurring_data\"/, data)
-        assert_match(/"merchant_trigger_reason\":\"scheduled\"/, data)
-        assert_match(/"original_transaction_id\":null,/, data)
-        assert_match(/"triggered_by\":\"customer\"/, data)
+        assert_match(/"external_recurring_data"/, data)
+        assert_match(/"merchant_trigger_reason":"scheduled"/, data)
+        assert_match(/"original_transaction_id":null,/, data)
+        assert_match(/"triggered_by":"customer"/, data)
       end
     end.respond_with(successful_authorize_response)
     assert_success auth
@@ -342,10 +342,10 @@ class AirwallexTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options.merge!({ stored_credential: @stored_credential_cit_options }))
     end.check_request do |endpoint, data, _headers|
       unless endpoint == setup_endpoint
-        assert_match(/"external_recurring_data\"/, data)
-        assert_match(/"merchant_trigger_reason\":\"scheduled\"/, data)
-        assert_match(/"original_transaction_id\":null,/, data)
-        assert_match(/"triggered_by\":\"customer\"/, data)
+        assert_match(/"external_recurring_data"/, data)
+        assert_match(/"merchant_trigger_reason":"scheduled"/, data)
+        assert_match(/"original_transaction_id":null,/, data)
+        assert_match(/"triggered_by":"customer"/, data)
       end
     end.respond_with(successful_authorize_response)
     assert_success auth
@@ -356,10 +356,10 @@ class AirwallexTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge!({ stored_credential: @stored_credential_mit_options }))
     end.check_request do |endpoint, data, _headers|
       unless endpoint == setup_endpoint
-        assert_match(/"external_recurring_data\"/, data)
-        assert_match(/"merchant_trigger_reason\":\"scheduled\"/, data)
-        assert_match(/"original_transaction_id\":\"123456789012345\"/, data)
-        assert_match(/"triggered_by\":\"merchant\"/, data)
+        assert_match(/"external_recurring_data"/, data)
+        assert_match(/"merchant_trigger_reason":"scheduled"/, data)
+        assert_match(/"original_transaction_id":"123456789012345"/, data)
+        assert_match(/"triggered_by":"merchant"/, data)
       end
     end.respond_with(successful_purchase_response)
     assert_success purchase
@@ -373,10 +373,10 @@ class AirwallexTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options.merge!({ stored_credential: @stored_credential_cit_options }))
     end.check_request do |endpoint, data, _headers|
       unless endpoint == setup_endpoint
-        assert_match(/"external_recurring_data\"/, data)
-        assert_match(/"merchant_trigger_reason\":\"unscheduled\"/, data)
-        assert_match(/"original_transaction_id\":null,/, data)
-        assert_match(/"triggered_by\":\"customer\"/, data)
+        assert_match(/"external_recurring_data"/, data)
+        assert_match(/"merchant_trigger_reason":"unscheduled"/, data)
+        assert_match(/"original_transaction_id":null,/, data)
+        assert_match(/"triggered_by":"customer"/, data)
       end
     end.respond_with(successful_authorize_response)
     assert_success auth
@@ -387,10 +387,10 @@ class AirwallexTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge!({ stored_credential: @stored_credential_mit_options }))
     end.check_request do |endpoint, data, _headers|
       unless endpoint == setup_endpoint
-        assert_match(/"external_recurring_data\"/, data)
-        assert_match(/"merchant_trigger_reason\":\"unscheduled\"/, data)
-        assert_match(/"original_transaction_id\":\"123456789012345\"/, data)
-        assert_match(/"triggered_by\":\"merchant\"/, data)
+        assert_match(/"external_recurring_data"/, data)
+        assert_match(/"merchant_trigger_reason":"unscheduled"/, data)
+        assert_match(/"original_transaction_id":"123456789012345"/, data)
+        assert_match(/"triggered_by":"merchant"/, data)
       end
     end.respond_with(successful_purchase_response)
     assert_success purchase
@@ -404,10 +404,10 @@ class AirwallexTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options.merge!({ stored_credential: @stored_credential_cit_options }))
     end.check_request do |endpoint, data, _headers|
       unless endpoint == setup_endpoint
-        assert_match(/"external_recurring_data\"/, data)
-        assert_match(/"merchant_trigger_reason\":\"scheduled\"/, data)
-        assert_match(/"original_transaction_id\":null,/, data)
-        assert_match(/"triggered_by\":\"customer\"/, data)
+        assert_match(/"external_recurring_data"/, data)
+        assert_match(/"merchant_trigger_reason":"scheduled"/, data)
+        assert_match(/"original_transaction_id":null,/, data)
+        assert_match(/"triggered_by":"customer"/, data)
       end
     end.respond_with(successful_authorize_response)
     assert_success auth
@@ -418,10 +418,10 @@ class AirwallexTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge!({ stored_credential: @stored_credential_mit_options }))
     end.check_request do |endpoint, data, _headers|
       unless endpoint == setup_endpoint
-        assert_match(/"external_recurring_data\"/, data)
-        assert_match(/"merchant_trigger_reason\":\"scheduled\"/, data)
-        assert_match(/"original_transaction_id\":\"123456789012345\"/, data)
-        assert_match(/"triggered_by\":\"merchant\"/, data)
+        assert_match(/"external_recurring_data"/, data)
+        assert_match(/"merchant_trigger_reason":"scheduled"/, data)
+        assert_match(/"original_transaction_id":"123456789012345"/, data)
+        assert_match(/"triggered_by":"merchant"/, data)
       end
     end.respond_with(successful_purchase_response)
     assert_success purchase
@@ -434,10 +434,10 @@ class AirwallexTest < Test::Unit::TestCase
       @gateway.authorize(@amount, mastercard, @options.merge!({ stored_credential: @stored_credential_cit_options }))
     end.check_request do |endpoint, data, _headers|
       unless endpoint == setup_endpoint
-        assert_match(/"external_recurring_data\"/, data)
-        assert_match(/"merchant_trigger_reason\":\"scheduled\"/, data)
-        assert_match(/"original_transaction_id\":null,/, data)
-        assert_match(/"triggered_by\":\"customer\"/, data)
+        assert_match(/"external_recurring_data"/, data)
+        assert_match(/"merchant_trigger_reason":"scheduled"/, data)
+        assert_match(/"original_transaction_id":null,/, data)
+        assert_match(/"triggered_by":"customer"/, data)
       end
     end.respond_with(successful_authorize_response)
     assert_success auth
@@ -448,10 +448,10 @@ class AirwallexTest < Test::Unit::TestCase
       @gateway.purchase(@amount, mastercard, @options.merge!({ stored_credential: @stored_credential_mit_options }))
     end.check_request do |endpoint, data, _headers|
       unless endpoint == setup_endpoint
-        assert_match(/"external_recurring_data\"/, data)
-        assert_match(/"merchant_trigger_reason\":\"scheduled\"/, data)
-        assert_match(/"original_transaction_id\":\"MCC123ABC0101\"/, data)
-        assert_match(/"triggered_by\":\"merchant\"/, data)
+        assert_match(/"external_recurring_data"/, data)
+        assert_match(/"merchant_trigger_reason":"scheduled"/, data)
+        assert_match(/"original_transaction_id":"MCC123ABC0101"/, data)
+        assert_match(/"triggered_by":"merchant"/, data)
       end
     end.respond_with(successful_purchase_response)
     assert_success purchase

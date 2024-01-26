@@ -746,6 +746,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      REASON_TYPE = {
+        'recurring' => 'REC',
+        'installment' => 'INS',
+        'unscheduled' => 'USE'
+      }
+
       def get_msg_type(parameters)
         return parameters[:mit_msg_type] if parameters[:mit_msg_type]
         return 'CSTO' if parameters[:stored_credential][:initial_transaction]
@@ -756,12 +762,7 @@ module ActiveMerchant #:nodoc:
           when 'cardholder', 'customer' then 'C'
           when 'merchant' then 'M'
           end
-        reason =
-          case parameters[:stored_credential][:reason_type]
-          when 'recurring' then 'REC'
-          when 'installment' then 'INS'
-          when 'unscheduled' then 'USE'
-          end
+        reason = REASON_TYPE[parameters.dig(:stored_credential, :reason_type)]
 
         "#{initiator}#{reason}"
       end
@@ -836,7 +837,7 @@ module ActiveMerchant #:nodoc:
       def add_ews_details(xml, payment_source, parameters = {})
         split_name = payment_source.first_name.split if payment_source.first_name
         xml.tag! :EWSFirstName, split_name[0]
-        xml.tag! :EWSMiddleName, split_name[1..-1].join(' ')
+        xml.tag! :EWSMiddleName, split_name[1..].join(' ')
         xml.tag! :EWSLastName, payment_source.last_name
         xml.tag! :EWSBusinessName, parameters[:company] if payment_source.first_name.empty? && payment_source.last_name.empty?
 
@@ -855,16 +856,16 @@ module ActiveMerchant #:nodoc:
 
       # Adds ECP conditional attributes depending on other attribute values
       def add_ecp_details(xml, payment_source, parameters = {})
-        requires!(payment_source.account_number) if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
+        requires!(payment_source.account_number) if parameters[:auth_method].eql?('A') || parameters[:auth_method].eql?('P')
         xml.tag! :ECPActionCode, parameters[:action_code] if parameters[:action_code]
-        xml.tag! :ECPCheckSerialNumber, payment_source.account_number if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
-        if parameters[:auth_method]&.eql?('P')
+        xml.tag! :ECPCheckSerialNumber, payment_source.account_number if parameters[:auth_method].eql?('A') || parameters[:auth_method].eql?('P')
+        if parameters[:auth_method].eql?('P')
           xml.tag! :ECPTerminalCity, parameters[:terminal_city] if parameters[:terminal_city]
           xml.tag! :ECPTerminalState, parameters[:terminal_state] if parameters[:terminal_state]
           xml.tag! :ECPImageReferenceNumber, parameters[:image_reference_number] if parameters[:image_reference_number]
         end
-        if parameters[:action_code]&.eql?('W3') || parameters[:action_code]&.eql?('W5') ||
-           parameters[:action_code]&.eql?('W7') || parameters[:action_code]&.eql?('W9')
+        if parameters[:action_code].eql?('W3') || parameters[:action_code].eql?('W5') ||
+           parameters[:action_code].eql?('W7') || parameters[:action_code].eql?('W9')
           add_ews_details(xml, payment_source, parameters)
         end
       end

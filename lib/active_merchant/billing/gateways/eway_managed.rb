@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, creditcard)
         post[:CCNumber] = creditcard.number
         post[:CCExpiryMonth] = sprintf('%.2i', creditcard.month)
-        post[:CCExpiryYear] = sprintf('%.4i', creditcard.year)[-2..-1]
+        post[:CCExpiryYear] = sprintf('%.4i', creditcard.year)[-2..]
         post[:CCNameOnCard] = creditcard.name
         post[:FirstName] = creditcard.first_name
         post[:LastName]  = creditcard.last_name
@@ -239,9 +239,7 @@ module ActiveMerchant #:nodoc:
                  arguments
                when 'ProcessPayment'
                  default_payment_fields.merge(arguments)
-               when 'CreateCustomer'
-                 default_customer_fields.merge(arguments)
-               when 'UpdateCustomer'
+               when 'CreateCustomer', 'UpdateCustomer'
                  default_customer_fields.merge(arguments)
                end
 

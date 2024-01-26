@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
 
       def headers(api_key)
         {
-          'Authorization' => 'Basic ' + Base64.strict_encode64("#{api_key}:"),
+          'Authorization' => "Basic #{Base64.strict_encode64("#{api_key}:")}",
           'User-Agent'    => "Clearhaus ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
       end

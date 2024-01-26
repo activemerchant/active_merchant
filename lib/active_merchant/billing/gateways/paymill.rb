@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
 
       def verify_credentials
         begin
-          ssl_get(live_url + 'transactions/nonexistent', headers)
+          ssl_get("#{live_url}transactions/nonexistent", headers)
         rescue ResponseError => e
           return false if e.response.code.to_i == 401
         end
@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        { 'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:private_key]}:X").chomp) }
+        { 'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:private_key]}:X").chomp}" }
       end
 
       def commit(method, action, parameters = nil)

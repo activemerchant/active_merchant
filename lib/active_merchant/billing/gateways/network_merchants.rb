@@ -234,7 +234,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(raw_response)
         rsp = CGI.parse(raw_response)
-        rsp.keys.each { |k| rsp[k] = rsp[k].first } # flatten out the values
+        rsp.each_key { |k| rsp[k] = rsp[k].first } # flatten out the values
         rsp
       end
     end

@@ -224,14 +224,14 @@ module ActiveMerchant #:nodoc:
       def error_code_from(response)
         return '' if success_from(response)
 
-        error = !STANDARD_ERROR_CODE_MAPPING[response['paywayCode']].nil? ? STANDARD_ERROR_CODE_MAPPING[response['paywayCode']] : STANDARD_ERROR_CODE[:processing_error]
+        error = STANDARD_ERROR_CODE_MAPPING[response['paywayCode']].nil? ? STANDARD_ERROR_CODE[:processing_error] : STANDARD_ERROR_CODE_MAPPING[response['paywayCode']]
         return error
       end
 
       def message_from(success, response)
         return '' if response['paywayCode'].nil?
 
-        return response['paywayCode'] + '-' + 'success' if success
+        return "#{response['paywayCode']}-success" if success
 
         response['paywayCode']
       end

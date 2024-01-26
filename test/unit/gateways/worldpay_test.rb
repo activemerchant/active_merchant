@@ -324,8 +324,8 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
-      assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+      assert_match(/<storedCredentials usage="USED" merchantInitiatedReason="UNSCHEDULED">/, data)
+      assert_match(/<schemeTransactionIdentifier>000000000000020005060720116005060<\/schemeTransactionIdentifier>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -338,7 +338,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"FIRST\" customerInitiatedReason\=\"RECURRING\"\>/, data)
+      assert_match(/<storedCredentials usage="FIRST" customerInitiatedReason="RECURRING">/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -352,8 +352,8 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"RECURRING\"\>/, data)
-      assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005061\<\/schemeTransactionIdentifier\>/, data)
+      assert_match(/<storedCredentials usage="USED" merchantInitiatedReason="RECURRING">/, data)
+      assert_match(/<schemeTransactionIdentifier>000000000000020005060720116005061<\/schemeTransactionIdentifier>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -366,7 +366,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"FIRST\" merchantInitiatedReason\=\"INSTALMENT\"\>/, data)
+      assert_match(/<storedCredentials usage="FIRST" merchantInitiatedReason="INSTALMENT">/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end

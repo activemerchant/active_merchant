@@ -183,7 +183,7 @@ module ActiveMerchant #:nodoc:
         post[:username] = @options[:username]
         post[:password] = @options[:password]
         data = post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        url = base_url + '/oauth/token'
+        url = "#{base_url}/oauth/token"
         oauth_headers = {
           'Accept'            => '*/*',
           'Content-Type'      => 'application/x-www-form-urlencoded'
@@ -244,11 +244,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def customer_id?(payment_or_customer_id)
-        payment_or_customer_id.class == String
+        payment_or_customer_id.kind_of?(String)
       end
 
       def string_literal_to_boolean(value)
-        return value unless value.class == String
+        return value unless value.kind_of?(String)
 
         if value.casecmp('true').zero?
           true
@@ -378,7 +378,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         base_url = (test? ? test_url : live_url)
-        url = base_url + '/v1/' + action
+        url = "#{base_url}/v1/#{action}"
         raw_response = ssl_post(url, post_data(parameters), headers)
         response = parse(raw_response)
         handle_final_response(action, response)
@@ -410,7 +410,7 @@ module ActiveMerchant #:nodoc:
       def headers
         {
           'Content-type' => 'application/json',
-          'Authorization' => 'Bearer ' + @options[:access_token]
+          'Authorization' => "Bearer #{@options[:access_token]}"
         }
       end
 

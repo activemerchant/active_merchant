@@ -192,9 +192,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end
 
-            if %i(authorization purchase).include? action
-              add_mpi_3ds(xml, options[:three_d_secure]) if options[:three_d_secure]
-            end
+            add_mpi_3ds(xml, options[:three_d_secure]) if %i(authorization purchase).include?(action) && (options[:three_d_secure])
 
             xml.tag! 'Tender' do
               add_credit_card(xml, credit_card, options)
@@ -443,18 +441,20 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      PERIODICITY = {
+        weekly: 'Weekly',
+        biweekly: 'Bi-weekly',
+        semimonthly: 'Semi-monthly',
+        quadweekly: 'Every four weeks',
+        monthly: 'Monthly',
+        quarterly: 'Quarterly',
+        semiyearly: 'Semi-yearly',
+        yearly: 'Yearly'
+      }
+
       def get_pay_period(options)
         requires!(options, %i[periodicity bimonthly monthly biweekly weekly yearly daily semimonthly quadweekly quarterly semiyearly])
-        case options[:periodicity]
-        when :weekly then 'Weekly'
-        when :biweekly then 'Bi-weekly'
-        when :semimonthly then 'Semi-monthly'
-        when :quadweekly then 'Every four weeks'
-        when :monthly then 'Monthly'
-        when :quarterly then 'Quarterly'
-        when :semiyearly then 'Semi-yearly'
-        when :yearly then 'Yearly'
-        end
+        PERIODICITY[options[:periodicity]]
       end
 
       def format_rp_date(time)

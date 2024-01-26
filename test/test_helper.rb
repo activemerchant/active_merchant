@@ -70,14 +70,14 @@ module ActiveMerchant
     # object if things go afoul.
     def assert_success(response, message = nil)
       clean_backtrace do
-        assert response.success?, build_message(nil, "#{message + "\n" if message}Response expected to succeed: <?>", response)
+        assert response.success?, build_message(nil, "#{"#{message}\n" if message}Response expected to succeed: <?>", response)
       end
     end
 
     # The negative of +assert_success+
     def assert_failure(response, message = nil)
       clean_backtrace do
-        assert !response.success?, build_message(nil, "#{message + "\n" if message}Response expected to fail: <?>", response)
+        assert !response.success?, build_message(nil, "#{"#{message}\n" if message}Response expected to fail: <?>", response)
       end
     end
 

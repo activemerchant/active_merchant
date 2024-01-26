@@ -416,7 +416,7 @@ class PayeezyGateway < Test::Unit::TestCase
     response = stub_comms do
       @gateway.credit(@amount, @credit_card, @options.merge(order_id: 1234))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\"merchant_ref\":1234/, data)
+      assert_match(/"merchant_ref":1234/, data)
     end.respond_with(successful_refund_response)
 
     assert_success response

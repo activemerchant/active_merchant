@@ -162,7 +162,7 @@ class JetpayV2Test < Test::Unit::TestCase
 
   def test_purchase_sends_additional_options
     @gateway.expects(:ssl_post).
-      with(anything, regexp_matches(/<TaxAmount ExemptInd=\"false\">777<\/TaxAmount>/)).
+      with(anything, regexp_matches(/<TaxAmount ExemptInd="false">777<\/TaxAmount>/)).
       with(anything, regexp_matches(/<UDField1>Value1<\/UDField1>/)).
       with(anything, regexp_matches(/<UDField2>Value2<\/UDField2>/)).
       with(anything, regexp_matches(/<UDField3>Value3<\/UDField3>/)).

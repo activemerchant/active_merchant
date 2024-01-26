@@ -440,19 +440,19 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(50, credit_card, order_id: '1')
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r{<CurrencyExponent>2<\/CurrencyExponent>}, data
+      assert_match %r{<CurrencyExponent>2</CurrencyExponent>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.purchase(50, credit_card, order_id: '1', currency: 'CAD')
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r{<CurrencyExponent>2<\/CurrencyExponent>}, data
+      assert_match %r{<CurrencyExponent>2</CurrencyExponent>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.purchase(50, credit_card, order_id: '1', currency: 'JPY')
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r{<CurrencyExponent>0<\/CurrencyExponent>}, data
+      assert_match %r{<CurrencyExponent>0</CurrencyExponent>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -856,7 +856,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, card, order_id: 1, billing_address: billing_address)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\<AVSname\/>\n/, data)
+      assert_match(/<AVSname\/>\n/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -1593,7 +1593,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.verify(credit_card, @options.merge({ verify_amount: '101' }))
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r{<Amount>101<\/Amount>}, data if data.include?('MessageType')
+      assert_match %r{<Amount>101</Amount>}, data if data.include?('MessageType')
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -1603,7 +1603,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.verify(@credit_card, @options)
     end.check_request(skip_response: true) do |_endpoint, data, _headers|
-      assert_match %r{<Amount>0<\/Amount>}, data
+      assert_match %r{<Amount>0</Amount>}, data
     end
   end
 
@@ -1622,7 +1622,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.verify(@credit_card, @options)
     end.check_request(skip_response: true) do |_endpoint, data, _headers|
-      assert_match %r{<Amount>100<\/Amount>}, data
+      assert_match %r{<Amount>100</Amount>}, data
     end
   end
 
@@ -1670,22 +1670,22 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(50, credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r{<CardSecValInd>1<\/CardSecValInd>}, data
-      assert_match %r{<CardSecVal>123<\/CardSecVal>}, data
+      assert_match %r{<CardSecValInd>1</CardSecValInd>}, data
+      assert_match %r{<CardSecVal>123</CardSecVal>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.purchase(50, discover, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r{<CardSecValInd>1<\/CardSecValInd>}, data
-      assert_match %r{<CardSecVal>123<\/CardSecVal>}, data
+      assert_match %r{<CardSecValInd>1</CardSecValInd>}, data
+      assert_match %r{<CardSecVal>123</CardSecVal>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.purchase(50, diners_club, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r{<CardSecValInd>1<\/CardSecValInd>}, data
-      assert_match %r{<CardSecVal>123<\/CardSecVal>}, data
+      assert_match %r{<CardSecValInd>1</CardSecValInd>}, data
+      assert_match %r{<CardSecVal>123</CardSecVal>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -1696,7 +1696,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.purchase(50, mastercard, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_no_match %r{<CardSecValInd>}, data
-      assert_match %r{<CardSecVal>123<\/CardSecVal>}, data
+      assert_match %r{<CardSecVal>123</CardSecVal>}, data
     end.respond_with(successful_purchase_response)
   end
 

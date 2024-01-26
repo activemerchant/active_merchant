@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
       private # :nodoc: all
 
       def expdate(creditcard)
-        sprintf('%.4i', creditcard.year)[-2..-1] + sprintf('%.2i', creditcard.month)
+        sprintf('%.4i', creditcard.year)[-2..] + sprintf('%.2i', creditcard.month)
       end
 
       def add_external_mpi_fields(post, options)

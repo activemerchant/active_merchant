@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
         if succeeded
           'Succeeded'
         else
-          response['status'] + ': ' + response['declineReason'] || 'Unable to read error message'
+          "#{response['status']}: #{response['declineReason']}" || 'Unable to read error message'
         end
       end
 

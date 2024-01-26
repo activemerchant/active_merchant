@@ -183,11 +183,11 @@ class DLocalTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"state\":\"ON\"/, data)
-      assert_match(/"city\":\"Ottawa\"/, data)
-      assert_match(/"zip_code\":\"K1C2N6\"/, data)
-      assert_match(/"street\":\"My Street\"/, data)
-      assert_match(/"number\":\"456\"/, data)
+      assert_match(/"state":"ON"/, data)
+      assert_match(/"city":"Ottawa"/, data)
+      assert_match(/"zip_code":"K1C2N6"/, data)
+      assert_match(/"street":"My Street"/, data)
+      assert_match(/"number":"456"/, data)
     end.respond_with(successful_authorize_response)
   end
 
@@ -195,10 +195,10 @@ class DLocalTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address(address1: 'Just a Street')))
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"state\":\"ON\"/, data)
-      assert_match(/"city\":\"Ottawa\"/, data)
-      assert_match(/"zip_code\":\"K1C2N6\"/, data)
-      assert_match(/"street\":\"Just a Street\"/, data)
+      assert_match(/"state":"ON"/, data)
+      assert_match(/"city":"Ottawa"/, data)
+      assert_match(/"zip_code":"K1C2N6"/, data)
+      assert_match(/"street":"Just a Street"/, data)
     end.respond_with(successful_authorize_response)
   end
 
@@ -206,7 +206,7 @@ class DLocalTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address(address1: nil)))
     end.check_request do |_method, _endpoint, data, _headers|
-      refute_match(/"street\"/, data)
+      refute_match(/"street"/, data)
     end.respond_with(successful_authorize_response)
   end
 
@@ -232,7 +232,7 @@ class DLocalTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"country\":\"CA\"/, data)
+      assert_match(/"country":"CA"/, data)
     end.respond_with(successful_authorize_response)
   end
 
@@ -240,7 +240,7 @@ class DLocalTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address(country: 'INVALID')))
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/\"country\":null/, data)
+      assert_match(/"country":null/, data)
     end.respond_with(successful_authorize_response)
   end
 

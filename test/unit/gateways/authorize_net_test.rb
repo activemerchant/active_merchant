@@ -1415,7 +1415,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_card_number_truncation
-    card = credit_card(@credit_card.number + '0123456789')
+    card = credit_card("#{@credit_card.number}0123456789")
     stub_comms do
       @gateway.purchase(@amount, card)
     end.check_request do |_endpoint, data, _headers|

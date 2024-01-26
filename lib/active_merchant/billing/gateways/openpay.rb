@@ -185,7 +185,7 @@ module ActiveMerchant #:nodoc:
       def headers(options = {})
         {
           'Content-Type' => 'application/json',
-          'Authorization' => 'Basic ' + Base64.strict_encode64(@api_key.to_s + ':').strip,
+          'Authorization' => "Basic #{Base64.strict_encode64("#{@api_key}:").strip}",
           'User-Agent' => "Openpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'X-Openpay-Client-User-Agent' => user_agent
         }
@@ -211,7 +211,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def http_request(method, resource, parameters = {}, options = {})
-        url = gateway_url(options) + @merchant_id + '/' + resource
+        url = "#{gateway_url(options)}#{@merchant_id}/#{resource}"
         raw_response = nil
         begin
           raw_response = ssl_request(method, url, (parameters ? parameters.to_json : nil), headers(options))

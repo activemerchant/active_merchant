@@ -95,7 +95,6 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_successful_purchase_with_requires_approval_true
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@accepted_amount, @credit_card, @options.merge(requires_approval: true))
-    end.check_request do |_method, _endpoint, _data, _headers|
     end.respond_with(successful_authorize_response, successful_capture_response)
   end
 
@@ -140,7 +139,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['dpan'], '4444333322221111'
     assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['cryptogram'], 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
     assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['eci'], '05'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate'], "01#{payment.year.to_s[-2..-1]}"
+    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate'], "01#{payment.year.to_s[-2..]}"
     assert_equal 'TOKENIZED_CARD', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['paymentMethod']
   end
 
@@ -154,7 +153,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal post['mobilePaymentMethodSpecificInput']['authorizationMode'], 'FINAL_AUTHORIZATION'
     assert_includes post['mobilePaymentMethodSpecificInput'].keys, 'decryptedPaymentData'
     assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['pan'], '4444333322221111'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate'], "01#{payment.year.to_s[-2..-1]}"
+    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate'], "01#{payment.year.to_s[-2..]}"
     assert_equal 'CARD', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['paymentMethod']
   end
 
@@ -334,7 +333,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@accepted_amount, @credit_card, @options.merge(number_of_installments: '3'))
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"numberOfInstallments\":\"3\"/, data)
+      assert_match(/"numberOfInstallments":"3"/, data)
     end.respond_with(successful_authorize_response, successful_capture_response)
   end
 
@@ -402,14 +401,14 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/threeDSecure/, data)
       assert_match(/externalCardholderAuthenticationData/, data)
-      assert_match(/"eci\":\"05\"/, data)
-      assert_match(/"cavv\":\"jJ81HADVRtXfCBATEp01CJUAAAA=\"/, data)
-      assert_match(/"xid\":\"BwABBJQ1AgAAAAAgJDUCAAAAAAA=\"/, data)
-      assert_match(/"threeDSecureVersion\":\"2.1.0\"/, data)
-      assert_match(/"directoryServerTransactionId\":\"97267598-FAE6-48F2-8083-C23433990FBC\"/, data)
-      assert_match(/"acsTransactionId\":\"13c701a3-5a88-4c45-89e9-ef65e50a8bf9\"/, data)
-      assert_match(/"cavvAlgorithm\":1/, data)
-      assert_match(/"validationResult\":\"Y\"/, data)
+      assert_match(/"eci":"05"/, data)
+      assert_match(/"cavv":"jJ81HADVRtXfCBATEp01CJUAAAA="/, data)
+      assert_match(/"xid":"BwABBJQ1AgAAAAAgJDUCAAAAAAA="/, data)
+      assert_match(/"threeDSecureVersion":"2.1.0"/, data)
+      assert_match(/"directoryServerTransactionId":"97267598-FAE6-48F2-8083-C23433990FBC"/, data)
+      assert_match(/"acsTransactionId":"13c701a3-5a88-4c45-89e9-ef65e50a8bf9"/, data)
+      assert_match(/"cavvAlgorithm":1/, data)
+      assert_match(/"validationResult":"Y"/, data)
     end.respond_with(successful_authorize_with_3ds2_data_response)
 
     assert_success response
@@ -437,7 +436,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@accepted_amount, @credit_card, { three_ds_exemption_type: 'moto' })
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"transactionChannel\":\"MOTO\"/, data)
+      assert_match(/"transactionChannel":"MOTO"/, data)
     end.respond_with(successful_authorize_with_3ds2_data_response)
 
     assert_success response
@@ -598,7 +597,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.refund(@accepted_amount, '000000142800000000920000100001', { currency: 'COP' })
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"currencyCode\":\"COP\"/, data)
+      assert_match(/"currencyCode":"COP"/, data)
     end.respond_with(failed_refund_response)
   end
 

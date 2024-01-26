@@ -71,7 +71,7 @@ class RemoteTrexleTest < Test::Unit::TestCase
   def test_store_and_charge_with_trexle_js_card_token
     headers = {
       'Content-Type' => 'application/json',
-      'Authorization' => "Basic #{Base64.strict_encode64(@gateway.options[:api_key] + ':').strip}"
+      'Authorization' => "Basic #{Base64.strict_encode64("#{@gateway.options[:api_key]}:").strip}"
     }
     # Get a token equivalent to what is returned by trexle.js
     card_attrs = {
@@ -87,7 +87,7 @@ class RemoteTrexleTest < Test::Unit::TestCase
       address_state: 'CA',
       address_country: 'United States'
     }
-    url = @gateway.test_url + '/tokens'
+    url = "#{@gateway.test_url}/tokens"
 
     body = JSON.parse(@gateway.ssl_post(url, card_attrs.to_json, headers))
 

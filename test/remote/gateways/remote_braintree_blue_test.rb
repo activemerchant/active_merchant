@@ -1144,7 +1144,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 1, bank_accounts.size
     assert created_bank_account.verified
     assert_equal bank_account.routing_number, created_bank_account.routing_number
-    assert_equal bank_account.account_number[-4..-1], created_bank_account.last_4
+    assert_equal bank_account.account_number[-4..], created_bank_account.last_4
     assert_equal 'checking', created_bank_account.account_type
     assert_equal 'Jim', customer.first_name
     assert_equal 'Smith', customer.last_name
@@ -1190,7 +1190,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert created_bank_account.verified
     assert_equal 1, bank_accounts.size
     assert_equal bank_account.routing_number, created_bank_account.routing_number
-    assert_equal bank_account.account_number[-4..-1], created_bank_account.last_4
+    assert_equal bank_account.account_number[-4..], created_bank_account.last_4
     assert_equal customer_id, customer.id
     assert_equal 'checking', created_bank_account.account_type
     assert_equal 'Jim', customer.first_name

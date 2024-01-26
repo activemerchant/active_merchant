@@ -199,9 +199,9 @@ class PriorityTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_shipping)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/shipAmount\":0.01/, data)
-      assert_match(/shipToZip\":27703/, data)
-      assert_match(/shipToCountry\":\"USA/, data)
+      assert_match(/shipAmount":0.01/, data)
+      assert_match(/shipToZip":27703/, data)
+      assert_match(/shipToCountry":"USA/, data)
     end.respond_with(successful_purchase_response)
   end
 

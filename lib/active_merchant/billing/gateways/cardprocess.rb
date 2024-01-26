@@ -221,8 +221,6 @@ module ActiveMerchant #:nodoc:
             STANDARD_ERROR_CODE[:config_error]
           when /^(800\.[17]00|800\.800\.[123])/
             STANDARD_ERROR_CODE[:card_declined]
-          when /^(900\.[1234]00)/
-            STANDARD_ERROR_CODE[:processing_error]
           else
             STANDARD_ERROR_CODE[:processing_error]
           end
@@ -244,7 +242,7 @@ module ActiveMerchant #:nodoc:
         h = {}
         hash.each_pair do |k, v|
           if v.is_a?(Hash)
-            h.merge!(dot_flatten_hash(v, prefix + k.to_s + '.'))
+            h.merge!(dot_flatten_hash(v, "#{prefix}#{k}."))
           else
             h[prefix + k.to_s] = v
           end

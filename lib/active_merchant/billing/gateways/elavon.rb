@@ -451,8 +451,8 @@ module ActiveMerchant #:nodoc:
         if value.is_a?(String)
           encoded = CGI.escape(value)
           encoded = encoded.tr('+', ' ') # don't encode spaces
-          encoded = encoded.gsub('%26', '%26amp;') # account for Elavon's weird '&' handling
-          encoded
+          encoded.gsub('%26', '%26amp;') # account for Elavon's weird '&' handling
+
         else
           value.to_s
         end
@@ -460,11 +460,12 @@ module ActiveMerchant #:nodoc:
 
       def hash_html_decode(hash)
         hash.each do |k, v|
-          if v.is_a?(String)
+          case v
+          when String
             # decode all string params
             v = v.gsub('&amp;amp;', '&amp;') # account for Elavon's weird '&' handling
             hash[k] = CGI.unescape_html(v)
-          elsif v.is_a?(Hash)
+          when Hash
             hash_html_decode(v)
           end
         end

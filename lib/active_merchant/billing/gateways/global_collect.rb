@@ -102,8 +102,8 @@ module ActiveMerchant #:nodoc:
         'diners_club' => '132',
         'cabal' => '135',
         'naranja' => '136',
-        'apple_pay': '302',
-        'google_pay': '320'
+        'apple_pay' => '302',
+        'google_pay' => '320'
       }
 
       def add_order(post, money, options, capture: false)
@@ -274,9 +274,10 @@ module ActiveMerchant #:nodoc:
           'authorizationMode' => pre_authorization
         }
         specifics_inputs['requiresApproval'] = options[:requires_approval] unless options[:requires_approval].nil?
-        if payment.is_a?(NetworkTokenizationCreditCard)
+        case payment
+        when NetworkTokenizationCreditCard
           add_mobile_credit_card(post, payment, options, specifics_inputs, expirydate)
-        elsif payment.is_a?(CreditCard)
+        when CreditCard
           options[:google_pay_pan_only] ? add_mobile_credit_card(post, payment, options, specifics_inputs, expirydate) : add_credit_card(post, payment, specifics_inputs, expirydate)
         end
       end
@@ -293,7 +294,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mobile_credit_card(post, payment, options, specifics_inputs, expirydate)
-        specifics_inputs['paymentProductId'] = options[:google_pay_pan_only] ? BRAND_MAP[:google_pay] : BRAND_MAP[payment.source]
+        specifics_inputs['paymentProductId'] = options[:google_pay_pan_only] ? BRAND_MAP['google_pay'] : BRAND_MAP[payment.source.to_s]
         post['mobilePaymentMethodSpecificInput'] = specifics_inputs
         add_decrypted_payment_data(post, payment, options, expirydate)
       end
@@ -328,8 +329,8 @@ module ActiveMerchant #:nodoc:
         post['order']['customer']['merchantCustomerId'] = options[:customer] if options[:customer]
         post['order']['customer']['companyInformation']['name'] = options[:company] if options[:company]
         post['order']['customer']['contactDetails']['emailAddress'] = options[:email] if options[:email]
-        if address = options[:billing_address] || options[:address]
-          post['order']['customer']['contactDetails']['phoneNumber'] = address[:phone] if address[:phone]
+        if address = options[:billing_address] || options[:address] && (address[:phone])
+          post['order']['customer']['contactDetails']['phoneNumber'] = address[:phone]
         end
       end
 
@@ -339,8 +340,8 @@ module ActiveMerchant #:nodoc:
             'countryCode' => address[:country]
           }
           post['customer']['contactDetails']['emailAddress'] = options[:email] if options[:email]
-          if address = options[:billing_address] || options[:address]
-            post['customer']['contactDetails']['phoneNumber'] = address[:phone] if address[:phone]
+          if address = options[:billing_address] || options[:address] && (address[:phone])
+            post['customer']['contactDetails']['phoneNumber'] = address[:phone]
           end
         end
       end
@@ -441,7 +442,7 @@ module ActiveMerchant #:nodoc:
         uri = "/#{version}/#{@options[:merchant_id]}/"
         case action
         when :authorize
-          uri + 'payments'
+          "#{uri}payments"
         when :capture
           capture_name = ogone_direct? ? 'capture' : 'approve'
           uri + "payments/#{authorization}/#{capture_name}"
@@ -526,13 +527,13 @@ module ActiveMerchant #:nodoc:
         when :authorize
           response.dig('payment', 'statusOutput', 'isAuthorized')
         when :capture
-          capture_status = response.dig('status') || response.dig('payment', 'status')
+          capture_status = response['status'] || response.dig('payment', 'status')
           %w(CAPTURED CAPTURE_REQUESTED).include?(capture_status)
         when :void
           void_response_id = response.dig('cardPaymentMethodSpecificOutput', 'voidResponseId') || response.dig('mobilePaymentMethodSpecificOutput', 'voidResponseId')
           %w(00 0 8 11).include?(void_response_id) || response.dig('payment', 'status') == 'CANCELLED'
         when :refund
-          refund_status = response.dig('status') || response.dig('payment', 'status')
+          refund_status = response['status'] || response.dig('payment', 'status')
           %w(REFUNDED REFUND_REQUESTED).include?(refund_status)
         else
           response['status'] != 'REJECTED'
@@ -547,14 +548,14 @@ module ActiveMerchant #:nodoc:
         elsif response['error_message']
           response['error_message']
         elsif response['status']
-          'Status: ' + response['status']
+          "Status: #{response['status']}"
         else
           'No message available'
         end
       end
 
       def authorization_from(response)
-        response.dig('id') || response.dig('payment', 'id') || response.dig('paymentResult', 'payment', 'id')
+        response['id'] || response.dig('payment', 'id') || response.dig('paymentResult', 'payment', 'id')
       end
 
       def error_code_from(succeeded, response)

@@ -323,7 +323,7 @@ class EwayManagedTest < Test::Unit::TestCase
           <CCName>#{@credit_card.first_name} #{@credit_card.last_name}</CCName>
           <CCNumber>#{@credit_card.number}</CCNumber>
           <CCExpiryMonth>#{sprintf('%.2i', @credit_card.month)}</CCExpiryMonth>
-          <CCExpiryYear>#{sprintf('%.4i', @credit_card.year)[-2..-1]}</CCExpiryYear>
+          <CCExpiryYear>#{sprintf('%.4i', @credit_card.year)[-2..]}</CCExpiryYear>
         </QueryCustomerResult>
         </QueryCustomerResponse>
       </soap12:Body>
@@ -365,7 +365,7 @@ class EwayManagedTest < Test::Unit::TestCase
             <CCNumber>#{@credit_card.number}</CCNumber>
             <CCNameOnCard>#{@credit_card.first_name} #{@credit_card.last_name}</CCNameOnCard>
             <CCExpiryMonth>#{sprintf('%.2i', @credit_card.month)}</CCExpiryMonth>
-            <CCExpiryYear>#{sprintf('%.4i', @credit_card.year)[-2..-1]}</CCExpiryYear>
+            <CCExpiryYear>#{sprintf('%.4i', @credit_card.year)[-2..]}</CCExpiryYear>
           </CreateCustomer>
         </soap12:Body>
       </soap12:Envelope>

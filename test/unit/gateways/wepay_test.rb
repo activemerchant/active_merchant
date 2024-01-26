@@ -169,7 +169,7 @@ class WepayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(version: '2017-05-31'))
     end.check_request do |_endpoint, _data, headers|
-      assert_match(/"Api-Version\"=>\"2017-05-31\"/, headers.to_s)
+      assert_match(/"Api-Version"=>"2017-05-31"/, headers.to_s)
     end.respond_with(successful_authorize_response)
   end
 

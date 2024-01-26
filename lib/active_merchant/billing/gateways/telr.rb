@@ -231,8 +231,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(action, response, amount, currency)
         auth = response[:tranref]
-        auth = [auth, amount, currency].join('|')
-        auth
+        [auth, amount, currency].join('|')
       end
 
       def split_authorization(authorization)
