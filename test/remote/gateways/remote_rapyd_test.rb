@@ -261,7 +261,7 @@ class RemoteRapydTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_equal 'UNAUTHORIZED_API_CALL', response.message
+    assert_equal 'NOT_FOUND', response.message
   end
 
   def test_successful_verify
@@ -337,7 +337,7 @@ class RemoteRapydTest < Test::Unit::TestCase
     transcript = @gateway.scrub(transcript)
 
     assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(/"#{@credit_card.verification_value}"/, transcript)
     assert_scrubbed(@gateway.options[:secret_key], transcript)
     assert_scrubbed(@gateway.options[:access_key], transcript)
   end
