@@ -167,6 +167,18 @@ class CecabankJsonTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_purchase_without_threed_secure_data
+    @options[:three_d_secure] = nil
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      data = JSON.parse(data)
+      params = JSON.parse(Base64.decode64(data['parametros']))
+      assert_nil params['ThreeDsResponse']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
