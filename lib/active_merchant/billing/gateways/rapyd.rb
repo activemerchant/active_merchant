@@ -308,7 +308,8 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         return {} if body.empty? || body.nil?
 
-        JSON.parse(body)
+        parsed = JSON.parse(body)
+        parsed.is_a?(Hash) ? parsed : { 'status' => { 'status' => parsed } }
       end
 
       def url(action, url_override = nil)
@@ -333,6 +334,10 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: error_code_from(response)
         )
+      rescue ActiveMerchant::ResponseError => e
+        response = e.response.body.present? ? parse(e.response.body) : { 'status' => { 'response_code' => e.response.msg } }
+        message = response['status'].slice('message', 'response_code').values.compact_blank.first || ''
+        Response.new(false, message, response, test: test?, error_code: error_code_from(response))
       end
 
       # We need to revert the work of ActiveSupport JSON encoder to prevent discrepancies
@@ -402,7 +407,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        response.dig('status', 'error_code') unless success_from(response)
+        response.dig('status', 'error_code') || response.dig('status', 'response_code') || ''
       end
 
       def handle_response(response)

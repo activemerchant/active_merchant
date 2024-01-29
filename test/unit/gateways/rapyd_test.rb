@@ -598,7 +598,45 @@ class RapydTest < Test::Unit::TestCase
     end
   end
 
+  def test_handling_500_errors
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(response_500)
+
+    assert_failure response
+    assert_equal 'some_error_message', response.message
+    assert_equal 'ERROR_PAYMENT_METHODS_GET', response.error_code
+  end
+
+  def test_handling_500_errors_with_blank_message
+    response_without_message = response_500
+    response_without_message.body = response_without_message.body.gsub('some_error_message', '')
+
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(response_without_message)
+
+    assert_failure response
+    assert_equal 'ERROR_PAYMENT_METHODS_GET', response.message
+    assert_equal 'ERROR_PAYMENT_METHODS_GET', response.error_code
+  end
+
   private
+
+  def response_500
+    OpenStruct.new(
+      code: 500,
+      body:  {
+        status: {
+          error_code: 'ERROR_PAYMENT_METHODS_GET',
+          status: 'ERROR',
+          message: 'some_error_message',
+          response_code: 'ERROR_PAYMENT_METHODS_GET',
+          operation_id: '77703d8c-6636-48fc-bc2f-1154b5d29857'
+        }
+      }.to_json
+    )
+  end
 
   def pre_scrubbed
     '
