@@ -48,7 +48,23 @@ class RemoteKushkiTest < Test::Unit::TestCase
       months: 2,
       deferred_grace_months: '05',
       deferred_credit_type: '01',
-      deferred_months: 3
+      deferred_months: 3,
+      product_details: [
+        {
+          id: 'test1',
+          title: 'tester1',
+          price: 10,
+          sku: 'abcde',
+          quantity: 1
+        },
+        {
+          id: 'test2',
+          title: 'tester2',
+          price: 5,
+          sku: 'edcba',
+          quantity: 2
+        }
+      ]
     }
 
     amount = 100 * (

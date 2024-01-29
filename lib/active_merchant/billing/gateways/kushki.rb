@@ -102,6 +102,7 @@ module ActiveMerchant #:nodoc:
         add_months(post, options)
         add_deferred(post, options)
         add_three_d_secure(post, payment_method, options)
+        add_product_details(post, options)
 
         commit(action, post)
       end
@@ -206,6 +207,29 @@ module ActiveMerchant #:nodoc:
           creditType: options[:deferred_credit_type],
           months: options[:deferred_months]
         }
+      end
+
+      def add_product_details(post, options)
+        return unless options[:product_details]
+
+        product_items_array = []
+        options[:product_details].each do |item|
+          product_items_obj = {}
+
+          product_items_obj[:id] = item[:id] if item[:id]
+          product_items_obj[:title] = item[:title] if item[:title]
+          product_items_obj[:price] = item[:price].to_i if item[:price]
+          product_items_obj[:sku] = item[:sku] if item[:sku]
+          product_items_obj[:quantity] = item[:quantity].to_i if item[:quantity]
+
+          product_items_array << product_items_obj
+        end
+
+        product_items = {
+          product: product_items_array
+        }
+        
+        post[:productDetails] = product_items
       end
 
       def add_three_d_secure(post, payment_method, options)
