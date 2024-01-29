@@ -154,6 +154,13 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_authorization_with_aggregator_id
+    options = @options.merge(aggregator_id: 'ABCDE')
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
   def test_successful_authorize_with_solution_id
     ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
     assert response = @gateway.authorize(@amount, @credit_card, @options)

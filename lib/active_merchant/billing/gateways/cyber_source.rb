@@ -750,6 +750,7 @@ module ActiveMerchant #:nodoc:
               indicator = options[:commerce_indicator] || stored_credential_commerce_indicator(options)
               xml.tag!('commerceIndicator', indicator) if indicator
             end
+            xml.tag!('aggregatorID', options[:aggregator_id]) if options[:aggregator_id]
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
             xml.tag!('firstRecurringPayment', options[:first_recurring_payment]) if options[:first_recurring_payment]
             xml.tag!('mobileRemotePaymentType', options[:mobile_remote_payment_type]) if options[:mobile_remote_payment_type]

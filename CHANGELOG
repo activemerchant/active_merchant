@@ -109,6 +109,7 @@
 * IPG: Update handling of ChargeTotal [jcreiff] #5017
 * Plexo: Add the invoice_number field [yunnydang] #5019
 * CheckoutV2: Handle empty address in payout destination data [jcreiff] #5024
+* CyberSource: Add the auth service aggregator_id field [yunnydang] #5026
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

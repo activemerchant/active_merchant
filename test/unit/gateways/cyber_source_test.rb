@@ -119,6 +119,14 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
+  def test_successful_authorize_with_cc_auth_service_aggregator_id
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(aggregator_id: 'ABCDE'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<aggregatorID>ABCDE<\/aggregatorID>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_successful_credit_card_purchase_with_elo
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
