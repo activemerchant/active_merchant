@@ -54,6 +54,7 @@ module ActiveMerchant #:nodoc:
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         add_external_mpi_fields(post, options)
         add_stored_credential(post, options)
+        add_cust_id(post, options)
         action = if post[:cavv] || options[:three_d_secure]
                    'cavv_preauth'
                  elsif post[:data_key].blank?
@@ -78,6 +79,7 @@ module ActiveMerchant #:nodoc:
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         add_external_mpi_fields(post, options)
         add_stored_credential(post, options)
+        add_cust_id(post, options)
         action = if post[:cavv] || options[:three_d_secure]
                    'cavv_purchase'
                  elsif post[:data_key].blank?
@@ -246,6 +248,10 @@ module ActiveMerchant #:nodoc:
         post[:issuer_id] = options[:issuer_id] if options[:issuer_id]
         post[:payment_indicator] = options[:payment_indicator] if options[:payment_indicator]
         post[:payment_information] = options[:payment_information] if options[:payment_information]
+      end
+
+      def add_cust_id(post, options)
+        post[:cust_id] = options[:cust_id] if options[:cust_id]
       end
 
       def add_stored_credential(post, options)
