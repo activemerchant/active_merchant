@@ -108,6 +108,7 @@
 * Add payment_data to NetworkTokenizationCreditCard [almalee24] #4888
 * IPG: Update handling of ChargeTotal [jcreiff] #5017
 * Plexo: Add the invoice_number field [yunnydang] #5019
+* CheckoutV2: Handle empty address in payout destination data [jcreiff] #5024
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

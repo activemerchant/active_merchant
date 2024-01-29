@@ -398,14 +398,15 @@ module ActiveMerchant #:nodoc:
         post[:destination][:account_holder][:identification][:issuing_country] = options.dig(:destination, :account_holder, :identification, :issuing_country) if options.dig(:destination, :account_holder, :identification, :issuing_country)
         post[:destination][:account_holder][:identification][:date_of_expiry] = options.dig(:destination, :account_holder, :identification, :date_of_expiry) if options.dig(:destination, :account_holder, :identification, :date_of_expiry)
 
-        address = options[:billing_address] || options[:address] # destination address will come from the tokenized card billing address
-        post[:destination][:account_holder][:billing_address] = {}
-        post[:destination][:account_holder][:billing_address][:address_line1] = address[:address1] unless address[:address1].blank?
-        post[:destination][:account_holder][:billing_address][:address_line2] = address[:address2] unless address[:address2].blank?
-        post[:destination][:account_holder][:billing_address][:city] = address[:city] unless address[:city].blank?
-        post[:destination][:account_holder][:billing_address][:state] = address[:state] unless address[:state].blank?
-        post[:destination][:account_holder][:billing_address][:country] = address[:country] unless address[:country].blank?
-        post[:destination][:account_holder][:billing_address][:zip] = address[:zip] unless address[:zip].blank?
+        if address = options[:billing_address] || options[:address] # destination address will come from the tokenized card billing address
+          post[:destination][:account_holder][:billing_address] = {}
+          post[:destination][:account_holder][:billing_address][:address_line1] = address[:address1] unless address[:address1].blank?
+          post[:destination][:account_holder][:billing_address][:address_line2] = address[:address2] unless address[:address2].blank?
+          post[:destination][:account_holder][:billing_address][:city] = address[:city] unless address[:city].blank?
+          post[:destination][:account_holder][:billing_address][:state] = address[:state] unless address[:state].blank?
+          post[:destination][:account_holder][:billing_address][:country] = address[:country] unless address[:country].blank?
+          post[:destination][:account_holder][:billing_address][:zip] = address[:zip] unless address[:zip].blank?
+        end
       end
 
       def add_marketplace_data(post, options)
