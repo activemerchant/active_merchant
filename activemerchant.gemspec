@@ -1,4 +1,5 @@
 $:.push File.expand_path("../lib", __FILE__)
+
 require 'active_merchant/version'
 
 Gem::Specification.new do |s|
@@ -21,7 +22,7 @@ Gem::Specification.new do |s|
 
   s.has_rdoc = true if Gem::VERSION < '1.7.0'
 
-  s.add_dependency('activesupport', '>= 3.2.14', '< 5.1')
+  s.add_dependency('activesupport', '>= 4.2')
   s.add_dependency('i18n', '>= 0.6.9')
   s.add_dependency('builder', '>= 2.1.2', '< 4.0.0')
   s.add_dependency('nokogiri', "~> 1.4")
