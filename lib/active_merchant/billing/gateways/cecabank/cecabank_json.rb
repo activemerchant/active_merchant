@@ -196,7 +196,7 @@ module ActiveMerchant
 
       def add_three_d_secure(post, options)
         params = post[:parametros] ||= {}
-        return params[:ThreeDsResponse] = '{}' unless three_d_secure = options[:three_d_secure]
+        return unless three_d_secure = options[:three_d_secure]
 
         params[:exencionSCA] ||= CECA_SCA_TYPES.fetch(options[:exemption_type]&.to_sym, :NONE)
 
