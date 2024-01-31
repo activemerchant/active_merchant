@@ -183,6 +183,10 @@ class QuickBooksTest < Test::Unit::TestCase
     assert_equal @oauth_1_gateway.scrub(pre_scrubbed_small_json), post_scrubbed_small_json
   end
 
+  def test_scrub_amex_credit_cards
+    assert_equal @oauth_1_gateway.scrub(pre_scrubbed_small_json('376414000000009', '1234')), post_scrubbed_small_json
+  end
+
   def test_default_context
     [@oauth_1_gateway, @oauth_2_gateway].each do |gateway|
       stub_comms(gateway) do
@@ -258,8 +262,8 @@ class QuickBooksTest < Test::Unit::TestCase
 
   private
 
-  def pre_scrubbed_small_json
-    "intuit.com\\r\\nContent-Length: 258\\r\\n\\r\\n\"\n<- \"{\\\"amount\\\":\\\"34.50\\\",\\\"currency\\\":\\\"USD\\\",\\\"card\\\":{\\\"number\\\":\\\"4111111111111111\\\",\\\"expMonth\\\":\\\"09\\\",\\\"expYear\\\":2016,\\\"cvc\\\":\\\"123\\\",\\\"name\\\":\\\"Bob Bobson\\\",\\\"address\\\":{\\\"streetAddress\\\":null,\\\"city\\\":\\\"Los Santos\\\",\\\"region\\\":\\\"CA\\\",\\\"country\\\":\\\"US\\\",\\\"postalCode\\\":\\\"90210\\\"}},\\\"capture\\\":\\\"true\\\"}\"\n-> \"HTTP/1.1 201 Created\\r\\n\"\n-> \"Date: Tue, 03 Mar 2015 20:00:35 GMT\\r\\n\"\n-> \"Content-Type: "
+  def pre_scrubbed_small_json(number = '4111111111111111', cvc = '123')
+    "intuit.com\\r\\nContent-Length: 258\\r\\n\\r\\n\"\n<- \"{\\\"amount\\\":\\\"34.50\\\",\\\"currency\\\":\\\"USD\\\",\\\"card\\\":{\\\"number\\\":\\\"#{number}\\\",\\\"expMonth\\\":\\\"09\\\",\\\"expYear\\\":2016,\\\"cvc\\\":\\\"#{cvc}\\\",\\\"name\\\":\\\"Bob Bobson\\\",\\\"address\\\":{\\\"streetAddress\\\":null,\\\"city\\\":\\\"Los Santos\\\",\\\"region\\\":\\\"CA\\\",\\\"country\\\":\\\"US\\\",\\\"postalCode\\\":\\\"90210\\\"}},\\\"capture\\\":\\\"true\\\"}\"\n-> \"HTTP/1.1 201 Created\\r\\n\"\n-> \"Date: Tue, 03 Mar 2015 20:00:35 GMT\\r\\n\"\n-> \"Content-Type: "
   end
 
   def post_scrubbed_small_json
