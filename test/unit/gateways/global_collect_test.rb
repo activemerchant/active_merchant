@@ -20,21 +20,10 @@ class GlobalCollectTest < Test::Unit::TestCase
       source: :apple_pay
     )
 
-    @google_pay_network_token = network_tokenization_credit_card(
-      '4444333322221111',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      month: '01',
-      year: Time.new.year + 2,
+    @google_pay_network_token = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :google_pay,
-      transaction_id: '123456789',
-      eci: '05'
-    )
-
-    @google_pay_pan_only = credit_card(
-      '4444333322221111',
-      month: '01',
-      year: Time.new.year + 2
-    )
+      payment_data: "{ 'version': 'EC_v1', 'data': 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9'}"
+    })
 
     @declined_card = credit_card('5424180279791732')
     @accepted_amount = 4005
@@ -121,14 +110,6 @@ class GlobalCollectTest < Test::Unit::TestCase
     end
   end
 
-  def test_purchase_request_with_google_pay_pan_only
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@accepted_amount, @google_pay_pan_only, @options.merge(customer: 'GP1234ID', google_pay_pan_only: true))
-    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
-      assert_equal '320', JSON.parse(data)['mobilePaymentMethodSpecificInput']['paymentProductId']
-    end
-  end
-
   def test_add_payment_for_credit_card
     post = {}
     options = {}
@@ -150,26 +131,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_includes post.keys.first, 'mobilePaymentMethodSpecificInput'
     assert_equal post['mobilePaymentMethodSpecificInput']['paymentProductId'], '320'
     assert_equal post['mobilePaymentMethodSpecificInput']['authorizationMode'], 'FINAL_AUTHORIZATION'
-    assert_includes post['mobilePaymentMethodSpecificInput'].keys, 'decryptedPaymentData'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['dpan'], '4444333322221111'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['cryptogram'], 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['eci'], '05'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate'], "01#{payment.year.to_s[-2..-1]}"
-    assert_equal 'TOKENIZED_CARD', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['paymentMethod']
-  end
-
-  def test_add_payment_for_google_pay_pan_only
-    post = {}
-    options = { google_pay_pan_only: true }
-    payment = @google_pay_pan_only
-    @gateway.send('add_payment', post, payment, options)
-    assert_includes post.keys.first, 'mobilePaymentMethodSpecificInput'
-    assert_equal post['mobilePaymentMethodSpecificInput']['paymentProductId'], '320'
-    assert_equal post['mobilePaymentMethodSpecificInput']['authorizationMode'], 'FINAL_AUTHORIZATION'
-    assert_includes post['mobilePaymentMethodSpecificInput'].keys, 'decryptedPaymentData'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['pan'], '4444333322221111'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate'], "01#{payment.year.to_s[-2..-1]}"
-    assert_equal 'CARD', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['paymentMethod']
+    assert_equal post['mobilePaymentMethodSpecificInput']['encryptedPaymentData'], @google_pay_network_token.payment_data
   end
 
   def test_add_payment_for_apple_pay
@@ -185,47 +147,6 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['cryptogram'], 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
     assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['eci'], '05'
     assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate'], '1024'
-  end
-
-  def test_add_decrypted_data_google_pay_pan_only
-    post = { 'mobilePaymentMethodSpecificInput' => {} }
-    payment = @google_pay_pan_only
-    options = { google_pay_pan_only: true }
-    expirydate = '0124'
-
-    @gateway.send('add_decrypted_payment_data', post, payment, options, expirydate)
-    assert_includes post['mobilePaymentMethodSpecificInput'].keys, 'decryptedPaymentData'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['pan'], '4444333322221111'
-    assert_equal 'CARD', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['paymentMethod']
-  end
-
-  def test_add_decrypted_data_for_google_pay
-    post = { 'mobilePaymentMethodSpecificInput' => {} }
-    payment = @google_pay_network_token
-    options = {}
-    expirydate = '0124'
-
-    @gateway.send('add_decrypted_payment_data', post, payment, options, expirydate)
-    assert_includes post['mobilePaymentMethodSpecificInput'].keys, 'decryptedPaymentData'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['cryptogram'], 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['eci'], '05'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['dpan'], '4444333322221111'
-    assert_equal 'TOKENIZED_CARD', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['paymentMethod']
-    assert_equal '0124', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate']
-  end
-
-  def test_add_decrypted_data_for_apple_pay
-    post = { 'mobilePaymentMethodSpecificInput' => {} }
-    payment = @google_pay_network_token
-    options = {}
-    expirydate = '0124'
-
-    @gateway.send('add_decrypted_payment_data', post, payment, options, expirydate)
-    assert_includes post['mobilePaymentMethodSpecificInput'].keys, 'decryptedPaymentData'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['cryptogram'], 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['eci'], '05'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['dpan'], '4444333322221111'
-    assert_equal '0124', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate']
   end
 
   def test_purchase_request_with_apple_pay

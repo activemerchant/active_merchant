@@ -629,7 +629,7 @@ module ActiveMerchant #:nodoc:
 
         paypal_details = {
           'payer_id'            => transaction.paypal_details.payer_id,
-          'payer_email'         => transaction.paypal_details.payer_email,
+          'payer_email'         => transaction.paypal_details.payer_email
         }
 
         if transaction.risk_data

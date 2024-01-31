@@ -696,7 +696,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(method, url, parameters = nil, options = {})
-
         add_expand_parameters(parameters, options) if parameters
 
         return Response.new(false, 'Invalid API Key provided') unless key_valid?(options)

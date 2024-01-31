@@ -237,7 +237,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).returns(failed_verify_response)
 
     assert create = @gateway.verify(@credit_card)
-    assert_equal "seti_nhtadoeunhtaobjntaheodu", create.authorization
+    assert_equal 'seti_nhtadoeunhtaobjntaheodu', create.authorization
   end
 
   def test_connected_account

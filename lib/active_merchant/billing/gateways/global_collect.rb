@@ -277,7 +277,7 @@ module ActiveMerchant #:nodoc:
         if payment.is_a?(NetworkTokenizationCreditCard)
           add_mobile_credit_card(post, payment, options, specifics_inputs, expirydate)
         elsif payment.is_a?(CreditCard)
-          options[:google_pay_pan_only] ? add_mobile_credit_card(post, payment, options, specifics_inputs, expirydate) : add_credit_card(post, payment, specifics_inputs, expirydate)
+          add_credit_card(post, payment, specifics_inputs, expirydate)
         end
       end
 
@@ -293,7 +293,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mobile_credit_card(post, payment, options, specifics_inputs, expirydate)
-        specifics_inputs['paymentProductId'] = options[:google_pay_pan_only] ? BRAND_MAP[:google_pay] : BRAND_MAP[payment.source]
+        specifics_inputs['paymentProductId'] = BRAND_MAP[payment.source]
         post['mobilePaymentMethodSpecificInput'] = specifics_inputs
 
         if options[:use_encrypted_payment_data]
@@ -304,25 +304,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_decrypted_payment_data(post, payment, options, expirydate)
-        if payment.is_a?(NetworkTokenizationCreditCard) && payment.payment_cryptogram
-          data = {
-            'cardholderName' => payment.name,
-            'cryptogram' => payment.payment_cryptogram,
-            'eci' => payment.eci,
-            'expiryDate' => expirydate,
-            'dpan' => payment.number
-          }
-          data['paymentMethod'] = 'TOKENIZED_CARD' if payment.source == :google_pay
-        # else case when google payment is an ONLY_PAN, doesn't have cryptogram or eci.
-        elsif options[:google_pay_pan_only]
-          data = {
-            'cardholderName' => payment.name,
-            'expiryDate' => expirydate,
-            'pan' => payment.number,
-            'paymentMethod' => 'CARD'
-          }
-        end
-        post['mobilePaymentMethodSpecificInput']['decryptedPaymentData'] = data if data
+        data_type = payment.source == :apple_pay ? 'decrypted' : 'encrypted'
+        data = case payment.source
+               when :apple_pay
+                 {
+                   'cardholderName' => payment.name,
+                   'cryptogram' => payment.payment_cryptogram,
+                   'eci' => payment.eci,
+                   'expiryDate' => expirydate,
+                   'dpan' => payment.number
+                 }
+               when :google_pay
+                 payment.payment_data
+               end
+
+        post['mobilePaymentMethodSpecificInput']["#{data_type}PaymentData"] = data if data
       end
 
       def add_customer_data(post, options, payment = nil)
