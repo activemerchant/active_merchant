@@ -99,6 +99,20 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response, successful_capture_response)
   end
 
+  def test_purchase_request_with_encrypted_google_pay
+    google_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      source: :google_pay,
+      payment_data: "{ 'version': 'EC_v1', 'data': 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9'}"
+    })
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@accepted_amount, google_pay, { use_encrypted_payment_data: true })
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      assert_equal '320', JSON.parse(data)['mobilePaymentMethodSpecificInput']['paymentProductId']
+      assert_equal google_pay.payment_data, JSON.parse(data)['mobilePaymentMethodSpecificInput']['encryptedPaymentData']
+    end
+  end
+
   def test_purchase_request_with_google_pay
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@accepted_amount, @google_pay_network_token)

@@ -58,6 +58,17 @@ class MonerisTest < Test::Unit::TestCase
     assert_equal '69785-0_98;a131684dbecc1d89d9927c539ed3791b', response.authorization
   end
 
+  def test_successful_purchase_with_cust_id
+    response = stub_comms do
+      @gateway.purchase(100, @credit_card, @options.merge(cust_id: 'test1234'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<cust_id>test1234<\/cust_id>/, data)
+    end.respond_with(successful_cavv_purchase_response)
+
+    assert_success response
+    assert_equal '69785-0_98;a131684dbecc1d89d9927c539ed3791b', response.authorization
+  end
+
   def test_failed_mpi_cavv_purchase
     options = @options.merge(
       three_d_secure: {

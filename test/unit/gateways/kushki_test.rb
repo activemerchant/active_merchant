@@ -45,7 +45,23 @@ class KushkiTest < Test::Unit::TestCase
       months: 2,
       deferred_grace_months: '05',
       deferred_credit_type: '01',
-      deferred_months: 3
+      deferred_months: 3,
+      product_details: [
+        {
+          id: 'test1',
+          title: 'tester1',
+          price: 10,
+          sku: 'abcde',
+          quantity: 1
+        },
+        {
+          id: 'test2',
+          title: 'tester2',
+          price: 5,
+          sku: 'edcba',
+          quantity: 2
+        }
+      ]
     }
 
     amount = 100 * (
@@ -63,9 +79,8 @@ class KushkiTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_includes data, 'metadata'
       assert_includes data, 'months'
-      assert_includes data, 'deferred_grace_month'
-      assert_includes data, 'deferred_credit_type'
-      assert_includes data, 'deferred_months'
+      assert_includes data, 'deferred'
+      assert_includes data, 'productDetails'
     end.respond_with(successful_token_response, successful_charge_response)
 
     assert_success response

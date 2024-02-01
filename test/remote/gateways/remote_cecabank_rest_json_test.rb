@@ -32,7 +32,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
   def test_unsuccessful_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_match '106900640', response.message
+    assert_match @gateway.options[:merchant_id], response.message
     assert_match '190', response.error_code
   end
 
@@ -47,12 +47,12 @@ class RemoteCecabankTest < Test::Unit::TestCase
   def test_unsuccessful_capture
     assert response = @gateway.capture(@amount, 'abc123', @options)
     assert_failure response
-    assert_match '106900640', response.message
+    assert_match @gateway.options[:merchant_id], response.message
     assert_match '807', response.error_code
   end
 
   def test_successful_purchase
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.purchase(@amount, @credit_card, order_id: generate_unique_id)
     assert_success response
     assert_equal %i[codAut numAut referencia], JSON.parse(response.message).symbolize_keys.keys.sort
   end
@@ -60,7 +60,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_match '106900640', response.message
+    assert_match @gateway.options[:merchant_id], response.message
     assert_match '190', response.error_code
   end
 
@@ -76,7 +76,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     assert response = @gateway.refund(@amount, 'reference', @options)
     assert_failure response
-    assert_match '106900640', response.message
+    assert_match @gateway.options[:merchant_id], response.message
     assert_match '15', response.error_code
   end
 
@@ -92,7 +92,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
   def test_unsuccessful_void
     assert response = @gateway.void('reference', { order_id: generate_unique_id })
     assert_failure response
-    assert_match '106900640', response.message
+    assert_match @gateway.options[:merchant_id], response.message
     assert_match '15', response.error_code
   end
 
@@ -140,7 +140,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
 
     assert purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_failure purchase
-    assert_match '106900640', purchase.message
+    assert_match @gateway.options[:merchant_id], purchase.message
     assert_match '810', purchase.error_code
   end
 

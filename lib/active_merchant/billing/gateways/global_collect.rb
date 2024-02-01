@@ -295,7 +295,12 @@ module ActiveMerchant #:nodoc:
       def add_mobile_credit_card(post, payment, options, specifics_inputs, expirydate)
         specifics_inputs['paymentProductId'] = options[:google_pay_pan_only] ? BRAND_MAP[:google_pay] : BRAND_MAP[payment.source]
         post['mobilePaymentMethodSpecificInput'] = specifics_inputs
-        add_decrypted_payment_data(post, payment, options, expirydate)
+
+        if options[:use_encrypted_payment_data]
+          post['mobilePaymentMethodSpecificInput']['encryptedPaymentData'] = payment.payment_data
+        else
+          add_decrypted_payment_data(post, payment, options, expirydate)
+        end
       end
 
       def add_decrypted_payment_data(post, payment, options, expirydate)
@@ -378,7 +383,6 @@ module ActiveMerchant #:nodoc:
       def add_fraud_fields(post, options)
         fraud_fields = {}
         fraud_fields.merge!(options[:fraud_fields]) if options[:fraud_fields]
-        fraud_fields[:customerIpAddress] = options[:ip] if options[:ip]
 
         post['fraudFields'] = fraud_fields unless fraud_fields.empty?
       end
