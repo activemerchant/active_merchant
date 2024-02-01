@@ -109,6 +109,12 @@ class RemoteCecabankTest < Test::Unit::TestCase
     assert_success purchase
   end
 
+  def test_purchase_stored_credential_with_network_transaction_id
+    @cit_options.merge!({ network_transaction_id: '999999999999999' })
+    assert purchase = @gateway.purchase(@amount, @credit_card, @cit_options)
+    assert_success purchase
+  end
+
   def test_purchase_using_auth_capture_and_stored_credential_cit
     assert authorize = @gateway.authorize(@amount, @credit_card, @cit_options)
     assert_success authorize

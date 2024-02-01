@@ -78,6 +78,17 @@ class CecabankJsonTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_stored_credentials_with_network_transaction_id_as_gsf
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    @options.merge!({ network_transaction_id: '12345678901234567890' })
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '12004172192310181720006007000#1#100', response.authorization
+    assert response.test?
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
     response = @gateway.purchase(@amount, @credit_card, @options)
