@@ -255,13 +255,27 @@ class RemoteRapydTest < Test::Unit::TestCase
 
     assert void = @gateway.void(auth.authorization)
     assert_failure void
-    assert_equal 'ERROR_PAYMENT_METHOD_TYPE_DOES_NOT_SUPPORT_PAYMENT_CANCELLATION', void.error_code
+    assert_equal 'ERROR_PAYMENT_METHOD_TYPE_DOES_NOT_SUPPORT_PAYMENT_CANCELLATION', void.params['status']['response_code']
+  end
+
+  def test_failed_authorize_with_payment_method_type_error
+    auth = @gateway_payment_redirect.authorize(@amount, @credit_card, @options.merge(pm_type: 'worng_type'))
+    assert_failure auth
+    assert_equal 'ERROR', auth.params['status']['status']
+    assert_equal 'ERROR_GET_PAYMENT_METHOD_TYPE', auth.params['status']['response_code']
+  end
+
+  def test_failed_purchase_with_zero_amount
+    response = @gateway_payment_redirect.purchase(0, @credit_card, @options)
+    assert_failure response
+    assert_equal 'ERROR', response.params['status']['status']
+    assert_equal 'ERROR_CARD_VALIDATION_CAPTURE_TRUE', response.params['status']['response_code']
   end
 
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_equal 'UNAUTHORIZED_API_CALL', response.message
+    assert_equal 'NOT_FOUND', response.message
   end
 
   def test_successful_verify
@@ -320,6 +334,7 @@ class RemoteRapydTest < Test::Unit::TestCase
 
     unstore = @gateway.unstore('')
     assert_failure unstore
+    assert_equal 'NOT_FOUND', unstore.message
   end
 
   def test_invalid_login
@@ -337,7 +352,7 @@ class RemoteRapydTest < Test::Unit::TestCase
     transcript = @gateway.scrub(transcript)
 
     assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(/"#{@credit_card.verification_value}"/, transcript)
     assert_scrubbed(@gateway.options[:secret_key], transcript)
     assert_scrubbed(@gateway.options[:access_key], transcript)
   end
