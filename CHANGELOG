@@ -114,6 +114,7 @@
 * Moneris: Add the customer id field [yunnydang] #5028
 * Kushki: Add the product_details field [yunnydang] #5027
 * GlobalCollect: Add support for encryptedPaymentData [almalee24] #5015
+* Rapyd: Adding 500 errors handling [Heavyblade] #5029
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
