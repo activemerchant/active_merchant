@@ -63,6 +63,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_address(post, options)
         add_customer_data(post, payment, options)
+        add_3ds_data(post, options)
 
         commit('checkouts', post)
       end
@@ -123,6 +124,10 @@ module ActiveMerchant #:nodoc:
         }
       end
 
+      def add_3ds_data(post, options)
+        post[:redirect_url] = options[:redirect_url] if options[:redirect_url]
+      end
+
       def commit(action, post, method = :post)
         response = api_request(action, post.compact, method)
         succeeded = success_from(response)
@@ -157,7 +162,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        return true if response == 204
+        return true if (response.is_a?(Hash) && response[:next_step]) || response == 204
 
         return false unless %w(PENDING EXPIRED PAID).include?(response[:status])
 
@@ -170,7 +175,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(succeeded, response)
         if succeeded
-          return 'Succeeded' if response.is_a?(Integer)
+          return 'Succeeded' if (response.is_a?(Hash) && response[:next_step]) || response == 204
 
           return response[:status]
         end

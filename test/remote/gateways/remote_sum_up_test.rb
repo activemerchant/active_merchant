@@ -126,9 +126,9 @@ class RemoteSumUpTest < Test::Unit::TestCase
   # In Sum Up the account can only return checkout/purchase in pending or success status,
   # to obtain a successful refund we will need an account that returns the checkout/purchase in successful status
   #
-  # For this example configure in the fixtures => :sum_up_account_for_successful_purchases
+  # For the following refund tests configure in the fixtures => :sum_up_successful_purchase
   def test_successful_refund
-    gateway = SumUpGateway.new(fixtures(:sum_up_account_for_successful_purchases))
+    gateway = SumUpGateway.new(fixtures(:sum_up_successful_purchase))
     purchase = gateway.purchase(@amount, @credit_card, @options)
     transaction_id = purchase.params['transaction_id']
     assert_not_nil transaction_id
@@ -139,7 +139,7 @@ class RemoteSumUpTest < Test::Unit::TestCase
   end
 
   def test_successful_partial_refund
-    gateway = SumUpGateway.new(fixtures(:sum_up_account_for_successful_purchases))
+    gateway = SumUpGateway.new(fixtures(:sum_up_successful_purchase))
     purchase = gateway.purchase(@amount * 10, @credit_card, @options)
     transaction_id = purchase.params['transaction_id']
     assert_not_nil transaction_id
@@ -166,6 +166,21 @@ class RemoteSumUpTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'CONFLICT', response.error_code
     assert_equal 'The transaction is not refundable in its current state', response.message
+  end
+
+  # In Sum Up to trigger the 3DS flow (next_step object) you need to an European account
+  #
+  # For this example configure in the fixtures => :sum_up_3ds
+  def test_trigger_3ds_flow
+    gateway = SumUpGateway.new(fixtures(:sum_up_3ds))
+    options = @options.merge(
+      currency: 'EUR',
+      redirect_url: 'https://mysite.com/completed_purchase'
+    )
+    purchase = gateway.purchase(@amount, @credit_card, options)
+    assert_success purchase
+    assert_equal 'Succeeded', purchase.message
+    assert_not_nil purchase.params['next_step']
   end
 
   def test_transcript_scrubbing
