@@ -10,6 +10,26 @@ class FirstPayJsonTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card
+    @google_pay = network_tokenization_credit_card(
+      '4005550000000019',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :google_pay,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      transaction_id: '13456789'
+    )
+    @apple_pay = network_tokenization_credit_card(
+      '4005550000000019',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :apple_pay,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      transaction_id: '13456789'
+    )
     @amount = 100
 
     @options = {
@@ -54,6 +74,62 @@ class FirstPayJsonTest < Test::Unit::TestCase
     assert_failure response
     assert_equal '31076656', response.authorization
     assert_equal 'Auth Declined', response.message
+  end
+
+  def test_successful_google_pay_purchase
+    response = stub_comms do
+      @gateway.purchase(@amount, @google_pay, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/\"walletType\":\"GooglePay\"/, data)
+      assert_match(/\"paymentCryptogram\":\"EHuWW9PiBkWvqE5juRwDzAUFBAk=\"/, data)
+      assert_match(/\"eciIndicator\":\"05\"/, data)
+      assert_match(/\"transactionAmount\":\"1.00\"/, data)
+      assert_match(/\"cardNumber\":\"4005550000000019\"/, data)
+      assert_match(/\"cardExpMonth\":2/, data)
+      assert_match(/\"cardExpYear\":\"35\"/, data)
+      assert_match(/\"ownerName\":\"Jim Smith\"/, data)
+      assert_match(/\"ownerStreet\":\"456 My Street\"/, data)
+      assert_match(/\"ownerCity\":\"Ottawa\"/, data)
+      assert_match(/\"ownerState\":\"ON\"/, data)
+      assert_match(/\"ownerZip\":\"K1C2N6\"/, data)
+      assert_match(/\"ownerCountry\":\"CA\"/, data)
+      assert_match(/\"processorId\":1234/, data)
+      assert_match(/\"merchantKey\":\"a91c38c3-7d7f-4d29-acc7-927b4dca0dbe\"/, data)
+    end.respond_with(successful_purchase_google_pay_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '31079731', response.authorization
+    assert_equal 'Approved 507983', response.message
+  end
+
+  def test_successful_apple_pay_purchase
+    response = stub_comms do
+      @gateway.purchase(@amount, @apple_pay, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/\"walletType\":\"ApplePay\"/, data)
+      assert_match(/\"paymentCryptogram\":\"EHuWW9PiBkWvqE5juRwDzAUFBAk=\"/, data)
+      assert_match(/\"eciIndicator\":\"05\"/, data)
+      assert_match(/\"transactionAmount\":\"1.00\"/, data)
+      assert_match(/\"cardNumber\":\"4005550000000019\"/, data)
+      assert_match(/\"cardExpMonth\":2/, data)
+      assert_match(/\"cardExpYear\":\"35\"/, data)
+      assert_match(/\"ownerName\":\"Jim Smith\"/, data)
+      assert_match(/\"ownerStreet\":\"456 My Street\"/, data)
+      assert_match(/\"ownerCity\":\"Ottawa\"/, data)
+      assert_match(/\"ownerState\":\"ON\"/, data)
+      assert_match(/\"ownerZip\":\"K1C2N6\"/, data)
+      assert_match(/\"ownerCountry\":\"CA\"/, data)
+      assert_match(/\"processorId\":1234/, data)
+      assert_match(/\"merchantKey\":\"a91c38c3-7d7f-4d29-acc7-927b4dca0dbe\"/, data)
+    end.respond_with(successful_purchase_apple_pay_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '31080040', response.authorization
+    assert_equal 'Approved 576126', response.message
   end
 
   def test_successful_authorize
@@ -248,6 +324,74 @@ class FirstPayJsonTest < Test::Unit::TestCase
         "validationFailures": [],
         "isSuccess": false,
         "action": "Sale"
+      }
+    RESPONSE
+  end
+
+  def successful_purchase_google_pay_response
+    <<~RESPONSE
+      {
+        "data":{
+          "authResponse":"Approved 507983",
+          "authCode":"507983",
+          "referenceNumber":"31079731",
+          "isPartial":false,
+          "partialId":"",
+          "originalFullAmount":1.0,
+          "partialAmountApproved":0.0,
+          "avsResponse":"Y",
+          "cvv2Response":"",
+          "orderId":"bbabd4c3b486eed0935a0e12bf4b000579274dfea330223a",
+          "cardType":"Visa-GooglePay",
+          "last4":"0019",
+          "maskedPan":"400555******0019",
+          "token":"8257959132340019",
+          "cardExpMonth":"2",
+          "cardExpYear":"35",
+          "hasFee":false,
+          "fee":null,
+          "billingAddress":{"ownerName":"Jim Smith", "ownerStreet":"456 My Street", "ownerStreet2":null, "ownerCity":"Ottawa", "ownerState":"ON", "ownerZip":"K1C2N6", "ownerCountry":"CA", "ownerEmail":null, "ownerPhone":null}
+        },
+        "isError":false,
+        "errorMessages":[],
+        "validationHasFailed":false,
+        "validationFailures":[],
+        "isSuccess":true,
+        "action":"Sale"
+      }
+    RESPONSE
+  end
+
+  def successful_purchase_apple_pay_response
+    <<~RESPONSE
+      {
+        "data":{
+          "authResponse":"Approved 576126",
+          "authCode":"576126",
+          "referenceNumber":"31080040",
+          "isPartial":false,
+          "partialId":"",
+          "originalFullAmount":1.0,
+          "partialAmountApproved":0.0,
+          "avsResponse":"Y",
+          "cvv2Response":"",
+          "orderId":"f6527d4f5ebc29a60662239be0221f612797030cde82d50c",
+          "cardType":"Visa-ApplePay",
+          "last4":"0019",
+          "maskedPan":"400555******0019",
+          "token":"8257959132340019",
+          "cardExpMonth":"2",
+          "cardExpYear":"35",
+          "hasFee":false,
+          "fee":null,
+          "billingAddress":{"ownerName":"Jim Smith", "ownerStreet":"456 My Street", "ownerStreet2":null, "ownerCity":"Ottawa", "ownerState":"ON", "ownerZip":"K1C2N6", "ownerCountry":"CA", "ownerEmail":null, "ownerPhone":null}
+        },
+        "isError":false,
+        "errorMessages":[],
+        "validationHasFailed":false,
+        "validationFailures":[],
+        "isSuccess":true,
+        "action":"Sale"
       }
     RESPONSE
   end
