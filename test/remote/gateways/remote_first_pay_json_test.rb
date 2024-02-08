@@ -6,10 +6,10 @@ class RemoteFirstPayJsonTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
+    @declined_card = credit_card('5130405452262903')
 
     @options = {
       order_id: SecureRandom.hex(24),
-      billing_address: address,
       description: 'Store Purchase'
     }
   end
@@ -22,6 +22,11 @@ class RemoteFirstPayJsonTest < Test::Unit::TestCase
 
   def test_failed_purchase
     response = @gateway.purchase(200, @credit_card, @options)
+    assert_match 'APPROVED', response.message
+  end
+
+  def test_failed_purchase
+    response = @gateway.purchase(1, @declined_card, @options)
     assert_failure response
     assert_equal 'isError', response.error_code
     assert_match 'Declined', response.message
@@ -45,7 +50,7 @@ class RemoteFirstPayJsonTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(200, @credit_card, @options)
+    response = @gateway.authorize(99999999999, @credit_card, @options)
     assert_failure response
   end
 
@@ -89,6 +94,17 @@ class RemoteFirstPayJsonTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('1')
     assert_failure response
+  end
+
+  def test_recurring_payment
+    @options.merge!({
+      recurring: 'monthly',
+      recurring_start_date: (DateTime.now + 1.day).strftime('%m/%d/%Y'),
+      recurring_end_date: (DateTime.now + 1.month).strftime('%m/%d/%Y')
+    })
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_match 'APPROVED', response.message
   end
 
   def test_invalid_login
