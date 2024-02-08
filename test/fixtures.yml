@@ -411,6 +411,11 @@ first_pay:
   transaction_center_id: 1264
   gateway_id: "a91c38c3-7d7f-4d29-acc7-927b4dca0dbe"
 
+first_pay_rest_json:
+  mode: "rest_json"
+  merchant_key: "a91c38c3-7d7f-4d29-acc7-927b4dca0dbe"
+  processor_id: "15417"
+
 firstdata_e4:
   login: SD8821-67
   password: T6bxSywbcccbJ19eDXNIGaCDOBg1W7T8
