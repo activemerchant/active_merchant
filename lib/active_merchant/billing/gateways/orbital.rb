@@ -1008,9 +1008,16 @@ module ActiveMerchant #:nodoc:
             add_level2_advice_addendum(xml, parameters)
 
             add_aav(xml, payment_source, three_d_secure)
+            add_soft_descriptors(xml, parameters[:soft_descriptors])
+            add_level2_purchase(xml, parameters)
+            add_level3_purchase(xml, parameters)
+            add_level3_tax(xml, parameters)
+            add_line_items(xml, parameters) if parameters[:line_items]
+
             # CustomerAni, AVSPhoneType and AVSDestPhoneType could be added here.
 
-            add_soft_descriptors(xml, parameters[:soft_descriptors])
+            add_card_indicators(xml, parameters)
+
             add_payment_action_ind(xml, parameters[:payment_action_ind])
             add_dpanind(xml, payment_source, parameters[:industry_type])
             add_aevv(xml, payment_source, three_d_secure)
@@ -1023,12 +1030,7 @@ module ActiveMerchant #:nodoc:
             # Append Transaction Reference Number at the end for Refund transactions
             add_tx_ref_num(xml, parameters[:authorization]) if action == REFUND && payment_source.nil?
 
-            add_level2_purchase(xml, parameters)
-            add_level3_purchase(xml, parameters)
-            add_level3_tax(xml, parameters)
-            add_line_items(xml, parameters) if parameters[:line_items]
             add_ecp_details(xml, payment_source, parameters) if payment_source.is_a?(Check)
-            add_card_indicators(xml, parameters)
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, payment_source, three_d_secure)
             add_mastercard_fields(xml, payment_source, parameters, three_d_secure) if mastercard?(payment_source)
