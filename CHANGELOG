@@ -116,6 +116,7 @@
 * GlobalCollect: Add support for encryptedPaymentData [almalee24] #5015
 * Rapyd: Adding 500 errors handling [Heavyblade] #5029
 * SumUp: Add 3DS fields [sinourain] #5030
+* Cecabank: Enable network_transaction_id as GSF [javierpedrozaing] #5034
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

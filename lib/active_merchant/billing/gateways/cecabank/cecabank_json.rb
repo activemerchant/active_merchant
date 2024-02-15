@@ -191,7 +191,8 @@ module ActiveMerchant
           params[:frecRec] = options[:recurring_frequency]
         end
 
-        params[:mmppTxId] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
+        network_transaction_id = options[:network_transaction_id].present? ? options[:network_transaction_id] : stored_credential[:network_transaction_id]
+        params[:mmppTxId] = network_transaction_id unless network_transaction_id.blank?
       end
 
       def add_three_d_secure(post, options)
