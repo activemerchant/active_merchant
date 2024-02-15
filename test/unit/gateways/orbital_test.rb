@@ -424,6 +424,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<DigitalTokenCryptogram>TESTCAVV</DigitalTokenCryptogram>}, data
+      assert_match %{<PymtBrandProgramCode>DPB</PymtBrandProgramCode>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -433,6 +434,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<DigitalTokenCryptogram>TESTCAVV</DigitalTokenCryptogram>}, data
+      assert_match %{<PymtBrandProgramCode>DPB</PymtBrandProgramCode>}, data
     end.respond_with(successful_purchase_response)
   end
 
