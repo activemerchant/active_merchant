@@ -725,9 +725,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mc_ucafind(xml, credit_card, three_d_secure)
-        return unless three_d_secure
-
-        xml.tag! :UCAFInd, '4'
+        # for backwards-compatibility, we default to '4' if not specified in the options
+        return unless three_d_secure && (ucafind = three_d_secure.fetch(:ucaf_collection_ind, '4'))
+        xml.tag! :UCAFInd, ucafind
       end
 
       #=====SCA (STORED CREDENTIAL) FIELDS=====

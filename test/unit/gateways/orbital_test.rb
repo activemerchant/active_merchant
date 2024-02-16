@@ -303,7 +303,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_three_d_secure_data_on_master_purchase
+  def test_three_d_secure_data_on_master_purchase_with_default_ucafind
     stub_comms do
       @gateway.purchase(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_options))
     end.check_request do |_endpoint, data, _headers|
@@ -312,6 +312,26 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
       assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
       assert_match %{<UCAFInd>4</UCAFInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_master_purchase_with_custom_ucafind
+    options = @options.merge(@three_d_secure_options)
+    options[:three_d_secure].merge!(ucaf_collection_ind: '5')
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'master'), options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<UCAFInd>5</UCAFInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_master_purchase_with_nil_ucafind
+    options = @options.merge(@three_d_secure_options)
+    options[:three_d_secure].merge!(ucaf_collection_ind: nil)
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'master'), options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_no_match(/\<UCAFInd/, data)
     end.respond_with(successful_purchase_response)
   end
 
