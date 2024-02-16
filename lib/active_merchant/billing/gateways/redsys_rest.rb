@@ -283,7 +283,29 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_threeds(post, options)
-        post[:DS_MERCHANT_EMV3DS] = { threeDSInfo: 'CardData' } if options[:execute_threed]
+        return unless options[:execute_threed] || options[:three_ds_2]
+
+        post[:DS_MERCHANT_EMV3DS] = if options[:execute_threed]
+                                      { threeDSInfo: 'CardData' }
+                                    else
+                                      add_browser_info(post, options)
+                                    end
+      end
+
+      def add_browser_info(post, options)
+        return unless browser_info = options.dig(:three_ds_2, :browser_info)
+
+        {
+          browserAcceptHeader: browser_info[:accept_header],
+          browserUserAgent: browser_info[:user_agent],
+          browserJavaEnabled: browser_info[:java],
+          browserJavascriptEnabled: browser_info[:java],
+          browserLanguage: browser_info[:language],
+          browserColorDepth: browser_info[:depth],
+          browserScreenHeight: browser_info[:height],
+          browserScreenWidth: browser_info[:width],
+          browserTZ: browser_info[:timezone]
+        }
       end
 
       def add_action(post, action, options = {})
@@ -329,13 +351,14 @@ module ActiveMerchant #:nodoc:
         response = JSON.parse(Base64.decode64(payload)).transform_keys!(&:downcase).with_indifferent_access
         return Response.new(false, 'Unable to verify response') unless validate_signature(payload, raw_response['Ds_Signature'], response[:ds_order])
 
+        succeeded = success_from(response, options)
         Response.new(
-          success_from(response),
+          succeeded,
           message_from(response),
           response,
           authorization: authorization_from(response),
           test: test?,
-          error_code: success_from(response) ? nil : response[:ds_response]
+          error_code: succeeded ? nil : response[:ds_response]
         )
       end
 
@@ -359,7 +382,9 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def success_from(response)
+      def success_from(response, options)
+        return true if response[:ds_emv3ds] && options[:execute_threed]
+
         # Need to get updated for 3DS support
         if code = response[:ds_response]
           (code.to_i < 100) || [400, 481, 500, 900].include?(code.to_i)
@@ -369,7 +394,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        # Need to get updated for 3DS support
+        return response.dig(:ds_emv3ds, :threeDSInfo) if response[:ds_emv3ds]
+
         code = response[:ds_response]&.to_i
         code = 0 if code < 100
         RESPONSE_TEXTS[code] || 'Unknown code, please check in manual'

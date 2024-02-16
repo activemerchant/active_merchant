@@ -146,28 +146,26 @@ class RemoteRedsysRestTest < Test::Unit::TestCase
     assert response
   end
 
-  # Pending 3DS support
-  # def test_successful_authorize_3ds_setup
-  #   options = @options.merge(execute_threed: true, terminal: 12)
-  #   response = @gateway.authorize(@amount, @credit_card, options)
-  #   assert_success response
-  #   assert response.params['ds_emv3ds']
-  #   assert_equal '2.2.0', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
-  #   assert_equal 'CardConfiguration', response.message
-  #   assert response.authorization
-  # end
+  def test_successful_authorize_3ds_setup
+    options = @options.merge(execute_threed: true, terminal: 12)
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert response.params['ds_emv3ds']
+    assert_equal '2.2.0', response.params['ds_emv3ds']['protocolVersion']
+    assert_equal 'CardConfiguration', response.message
+    assert response.authorization
+  end
 
-  # Pending 3DS support
-  # def test_successful_purchase_3ds
-  #   options = @options.merge(execute_threed: true)
-  #   response = @gateway.purchase(@amount, @threeds2_credit_card, options)
-  #   assert_success response
-  #   assert three_ds_data = JSON.parse(response.params['ds_emv3ds'])
-  #   assert_equal '2.1.0', three_ds_data['protocolVersion']
-  #   assert_equal 'https://sis-d.redsys.es/sis-simulador-web/threeDsMethod.jsp', three_ds_data['threeDSMethodURL']
-  #   assert_equal 'CardConfiguration', response.message
-  #   assert response.authorization
-  # end
+  def test_successful_purchase_3ds
+    options = @options.merge(execute_threed: true)
+    response = @gateway.purchase(@amount, @threeds2_credit_card, options)
+    assert_success response
+    assert three_ds_data = response.params['ds_emv3ds']
+    assert_equal '2.1.0', three_ds_data['protocolVersion']
+    assert_equal 'https://sis-d.redsys.es/sis-simulador-web/threeDsMethod.jsp', three_ds_data['threeDSMethodURL']
+    assert_equal 'CardConfiguration', response.message
+    assert response.authorization
+  end
 
   # Pending 3DS support
   # Requires account configuration to allow setting moto flag

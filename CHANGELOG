@@ -952,6 +952,7 @@
 * PayU Latam: Improve error response [esmitperez] #3717
 * Vantiv: Vantiv Express - CardPresentCode, PaymentType, SubmissionType, DuplicateCheckDisableFlag [esmitperez] #3730,#3731
 * Cybersource: Ensure issueradditionaldata comes before partnerSolutionId [britth] #3733
+* RedsysRest: Add support for 3DS [almalee24] #5042
 
 == Version 1.111.0
 * Fat Zebra: standardized 3DS fields and card on file extra data for Visa scheme rules [montdidier] #3409

@@ -68,6 +68,45 @@ class RedsysRestTest < Test::Unit::TestCase
     assert_equal '446527', res.params['ds_authorisationcode']
   end
 
+  def test_successful_purchase_with_execute_threed
+    @gateway.expects(:ssl_post).returns(succcessful_3ds_auth_response_with_threeds_url)
+    @options.merge!(execute_threed: true)
+    res = @gateway.purchase(123, credit_card, @options)
+
+    assert_equal res.success?, true
+    assert_equal res.message, 'CardConfiguration'
+    assert_equal res.params.include?('ds_emv3ds'), true
+  end
+
+  def test_use_of_add_threeds
+    post = {}
+    @gateway.send(:add_threeds, post, @options)
+    assert_equal post, {}
+
+    execute3ds_post = {}
+    execute3ds = @options.merge(execute_threed: true)
+    @gateway.send(:add_threeds, execute3ds_post, execute3ds)
+    assert_equal execute3ds_post.dig(:DS_MERCHANT_EMV3DS, :threeDSInfo), 'CardData'
+
+    threeds_post = {}
+    execute3ds[:execute_threed] = false
+    execute3ds[:three_ds_2] = {
+      browser_info: {
+        accept_header: 'unknown',
+        depth: 100,
+        java: false,
+        language: 'US',
+        height: 1000,
+        width: 500,
+        timezone: '-120',
+        user_agent: 'unknown'
+      }
+    }
+    @gateway.send(:add_threeds, threeds_post, execute3ds)
+    assert_equal post.dig(:DS_MERCHANT_EMV3DS, :browserAcceptHeader), execute3ds.dig(:three_ds_2, :accept_header)
+    assert_equal post.dig(:DS_MERCHANT_EMV3DS, :browserScreenHeight), execute3ds.dig(:three_ds_2, :height)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
     res = @gateway.purchase(123, credit_card, @options)
@@ -225,6 +264,10 @@ class RedsysRestTest < Test::Unit::TestCase
 
   def successful_purchase_used_stored_credential_response
     %[{\"Ds_SignatureVersion\":\"HMAC_SHA256_V1\",\"Ds_MerchantParameters\":\"eyJEc19BbW91bnQiOiIxMDAiLCJEc19DdXJyZW5jeSI6Ijk3OCIsIkRzX09yZGVyIjoiMTY1MTUyMDg4MjQ0IiwiRHNfTWVyY2hhbnRDb2RlIjoiMzI3MjM0Njg4IiwiRHNfVGVybWluYWwiOiIzIiwiRHNfUmVzcG9uc2UiOiIwMDAwIiwiRHNfQXV0aG9yaXNhdGlvbkNvZGUiOiI0NDY1MjciLCJEc19UcmFuc2FjdGlvblR5cGUiOiIwIiwiRHNfU2VjdXJlUGF5bWVudCI6IjAiLCJEc19MYW5ndWFnZSI6IjEiLCJEc19NZXJjaGFudERhdGEiOiIiLCJEc19DYXJkX0NvdW50cnkiOiI3MjQiLCJEc19DYXJkX0JyYW5kIjoiMSIsIkRzX1Byb2Nlc3NlZFBheU1ldGhvZCI6IjMiLCJEc19Db250cm9sXzE2NTE1MjA4ODMzMDMiOiIxNjUxNTIwODgzMzAzIn0=\",\"Ds_Signature\":\"BC3UB0Q0IgOyuXbEe8eJddK_H77XJv7d2MQr50d4v2o=\"}]
+  end
+
+  def succcessful_3ds_auth_response_with_threeds_url
+    %[{\"Ds_SignatureVersion\":\"HMAC_SHA256_V1\",\"Ds_MerchantParameters\":\"eyJEc19PcmRlciI6IjAzMTNTZHFrQTcxUSIsIkRzX01lcmNoYW50Q29kZSI6Ijk5OTAwODg4MSIsIkRzX1Rlcm1pbmFsIjoiMjAxIiwiRHNfVHJhbnNhY3Rpb25UeXBlIjoiMCIsIkRzX0VNVjNEUyI6eyJwcm90b2NvbFZlcnNpb24iOiIyLjEuMCIsInRocmVlRFNTZXJ2ZXJUcmFuc0lEIjoiZjEzZTRmNWUtNzcwYS00M2ZhLThhZTktY2M3ZjEwNDVkZWFiIiwidGhyZWVEU0luZm8iOiJDYXJkQ29uZmlndXJhdGlvbiIsInRocmVlRFNNZXRob2RVUkwiOiJodHRwczovL3Npcy1kLnJlZHN5cy5lcy9zaXMtc2ltdWxhZG9yLXdlYi90aHJlZURzTWV0aG9kLmpzcCJ9LCJEc19DYXJkX1BTRDIiOiJZIn0=\",\"Ds_Signature\":\"eDXoo9vInPQtJThDg1hH2ohASsUNKxd9ly8cLeK5vm0=\"}]
   end
 
   def failed_purchase_response
