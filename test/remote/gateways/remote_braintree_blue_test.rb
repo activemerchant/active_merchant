@@ -1274,6 +1274,15 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_not_nil response.params['braintree_transaction']['processor_authorization_code']
   end
 
+  def test_successful_purchase_and_return_paypal_details_object
+    @non_payal_link_gateway = BraintreeGateway.new(fixtures(:braintree_blue_non_linked_paypal))
+    assert response = @non_payal_link_gateway.purchase(400000, 'fake-paypal-one-time-nonce', @options.merge(payment_method_nonce: 'fake-paypal-one-time-nonce'))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'paypal_payer_id', response.params['braintree_transaction']['paypal_details']['payer_id']
+    assert_equal 'payer@example.com', response.params['braintree_transaction']['paypal_details']['payer_email']
+  end
+
   def test_successful_credit_card_purchase_with_prepaid_debit_issuing_bank
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_success response

@@ -627,6 +627,11 @@ module ActiveMerchant #:nodoc:
           'issuing_bank'        => transaction.apple_pay_details.issuing_bank
         }
 
+        paypal_details = {
+          'payer_id'            => transaction.paypal_details.payer_id,
+          'payer_email'         => transaction.paypal_details.payer_email,
+        }
+
         if transaction.risk_data
           risk_data = {
             'id'                      => transaction.risk_data.id,
@@ -654,6 +659,7 @@ module ActiveMerchant #:nodoc:
           'network_token_details'        => network_token_details,
           'apple_pay_details'            => apple_pay_details,
           'google_pay_details'           => google_pay_details,
+          'paypal_details'               => paypal_details,
           'customer_details'             => customer_details,
           'billing_details'              => billing_details,
           'shipping_details'             => shipping_details,
