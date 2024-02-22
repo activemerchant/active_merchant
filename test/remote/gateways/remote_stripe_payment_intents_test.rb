@@ -1442,6 +1442,9 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert verify = @gateway.verify(@declined_payment_method, options)
 
     assert_equal 'Your card was declined.', verify.message
+
+    assert_not_nil verify.authorization
+    assert_equal verify.params.dig('error', 'setup_intent', 'id'), verify.authorization
   end
 
   def test_verify_stores_response_for_payment_method_creation
