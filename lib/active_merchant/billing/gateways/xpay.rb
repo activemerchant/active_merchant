@@ -14,14 +14,17 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = %i[visa master maestro american_express jcb]
 
       ENDPOINTS_MAPPING = {
-        purchase: 'orders/2steps/payment',
-        authorize: 'orders/2steps/payment',
-        preauth: 'orders/2steps/init',
+        validation: 'orders/3steps/validation',
+        purchase: 'orders/3steps/payment',
+        authorize: 'orders/3steps/payment',
+        preauth: 'orders/3steps/init',
         capture: 'operations/%s/captures',
         verify: 'orders/card_verification',
         void: 'operations/%s/cancels',
         refund: 'operations/%s/refunds'
       }
+
+      SUCCESS_MESSAGES = %w(PENDING AUTHORIZED THREEDS_VALIDATED EXECUTED).freeze
 
       def initialize(options = {})
         requires!(options, :api_key)
@@ -31,17 +34,15 @@ module ActiveMerchant #:nodoc:
 
       def preauth(amount, payment_method, options = {})
         post = {}
-        add_transaction_params_commit(:preauth, amount, post, payment_method, options)
+        payment_request(:preauth, amount, post, payment_method, options)
       end
 
       def purchase(amount, payment_method, options = {})
-        post = {}
-        add_transaction_params_commit(:purchase, amount, post, payment_method, options)
+        complete_transaction(:purchase, amount, payment_method, options)
       end
 
       def authorize(amount, payment_method, options = {})
-        post = {}
-        add_transaction_params_commit(:authorize, amount, post, payment_method, options)
+        complete_transaction(:authorize, amount, payment_method, options)
       end
 
       def capture(amount, authorization, options = {})
@@ -81,7 +82,20 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_transaction_params_commit(action, amount, post, payment_method, options = {})
+      def validation(options = {})
+        post = {}
+        add_3ds_validation_params(post, options)
+        commit(:validation, post, options)
+      end
+
+      def complete_transaction(action, amount, payment_method, options = {})
+        MultiResponse.run do |r|
+          r.process { validation(options) }
+          r.process { payment_request(action, amount, {}, payment_method, options.merge!(validation: r.params)) }
+        end
+      end
+
+      def payment_request(action, amount, post, payment_method, options = {})
         add_capture_type(post, options, action)
         add_auth_purchase_params(post, amount, payment_method, options)
         commit(action, post, options)
@@ -162,9 +176,18 @@ module ActiveMerchant #:nodoc:
         post[:exemptions] = options[:exemptions] || 'NO_PREFERENCE'
       end
 
-      def add_3ds_params(post, options)
-        post[:threeDSAuthData] = { threeDSAuthResponse: options[:three_ds_auth_response] }.compact
-        post[:operationId] = options[:operation_id] if options[:operation_id]
+      def add_3ds_params(post, validation)
+        post[:threeDSAuthData] = {
+          authenticationValue: validation['threeDSAuthResult']['authenticationValue'],
+          eci: validation['threeDSAuthResult']['eci'],
+          xid: validation['threeDSAuthResult']['xid']
+        }
+        post[:operationId] = validation['operation']['operationId']
+      end
+
+      def add_3ds_validation_params(post, options)
+        post[:operationId] = options[:operation_id]
+        post[:threeDSAuthResponse] = options[:three_ds_auth_response]
       end
 
       def add_auth_purchase_params(post, amount, payment_method, options)
@@ -174,7 +197,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_recurrence(post, options) unless options[:operation_id]
         add_exemptions(post, options)
-        add_3ds_params(post, options)
+        add_3ds_params(post, options[:validation]) if options[:validation]
       end
 
       def parse(body = {})
@@ -231,11 +254,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response.dig('operation', 'operationResult') == 'PENDING' || response.dig('operation', 'operationResult') == 'AUTHORIZED'
+        SUCCESS_MESSAGES.include?(response.dig('operation', 'operationResult'))
       end
 
       def message_from(response)
-        response['errors'] || response.dig('operation', 'operationResult')
+        response.dig('operation', 'operationResult') || response.dig('errors', 0, 'description')
       end
 
       def authorization_from(response)
