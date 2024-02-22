@@ -34,7 +34,7 @@ class XpayTest < Test::Unit::TestCase
 
   def test_build_request_url_for_purchase
     action = :purchase
-    assert_equal @gateway.send(:build_request_url, action), "#{@base_url}orders/2steps/payment"
+    assert_equal @gateway.send(:build_request_url, action), "#{@base_url}orders/3steps/payment"
   end
 
   def test_build_request_url_with_id_param
@@ -51,24 +51,69 @@ class XpayTest < Test::Unit::TestCase
 
   def test_check_request_headers
     stub_comms(@gateway, :ssl_post) do
-      @gateway.authorize(@amount, @credit_card, @options)
+      @gateway.preauth(@amount, @credit_card, @options)
     end.check_request do |_endpoint, _data, headers|
       assert_equal headers['Content-Type'], 'application/json'
       assert_equal headers['X-Api-Key'], 'some api key'
-    end.respond_with(successful_purchase_response)
+    end.respond_with(successful_preauth_response)
   end
 
   def test_check_authorize_endpoint
     stub_comms(@gateway, :ssl_post) do
       @gateway.preauth(@amount, @credit_card, @options)
     end.check_request do |endpoint, _data|
-      assert_match(/orders\/2steps\/init/, endpoint)
+      assert_match(/orders\/3steps\/init/, endpoint)
     end.respond_with(successful_purchase_response)
   end
 
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def successful_preauth_response
+    <<-RESPONSE
+      {
+        "operation":{
+          "orderId":"OpkGYfLLkYAiqzyxUNkvpB1WB4e",
+          "operationId":"696995050267340689",
+          "channel":null,
+          "operationType":"AUTHORIZATION",
+          "operationResult":"PENDING",
+          "operationTime":"2024-03-08 05:22:36.277",
+          "paymentMethod":"CARD",
+          "paymentCircuit":"VISA",
+          "paymentInstrumentInfo":"***4549",
+          "paymentEndToEndId":"696995050267340689",
+          "cancelledOperationId":null,
+          "operationAmount":"100",
+          "operationCurrency":"EUR",
+          "customerInfo":{
+            "cardHolderName":"Amee Kuhlman",
+            "cardHolderEmail":null,
+            "billingAddress":null,
+            "shippingAddress":null,
+            "mobilePhoneCountryCode":null,
+            "mobilePhone":null,
+            "homePhone":null,
+            "workPhone":null,
+            "cardHolderAcctInfo":null,
+            "merchantRiskIndicator":null
+          },
+          "warnings":[],
+          "paymentLinkId":null,
+          "omnichannelId":null,
+          "additionalData":{
+            "maskedPan":"434994******4549",
+            "cardId":"952fd84b4562026c9f35345599e1f043d893df720b914619b55d682e7435e13d", "cardId4":"B8PJeZ8PQ+/eWfkqJeZr1HDc7wFaS9sbxVOYwBRC9Ro=",
+            "cardExpiryDate":"202605"
+          }
+        },
+        "threeDSEnrollmentStatus":"ENROLLED",
+        "threeDSAuthRequest":"notneeded",
+        "threeDSAuthUrl":"https://stg-ta.nexigroup.com/monetaweb/phoenixstos"
+      }
+    RESPONSE
   end
 
   def successful_purchase_response
