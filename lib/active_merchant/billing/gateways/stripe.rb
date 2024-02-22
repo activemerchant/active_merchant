@@ -696,6 +696,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(method, url, parameters = nil, options = {})
+
         add_expand_parameters(parameters, options) if parameters
 
         return Response.new(false, 'Invalid API Key provided') unless key_valid?(options)
@@ -733,7 +734,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(success, url, method, response)
-        return response.fetch('error', {})['charge'] unless success
+        return response.dig('error', 'charge') || response.dig('error', 'setup_intent', 'id') unless success
 
         if url == 'customers'
           [response['id'], response.dig('sources', 'data').first&.dig('id')].join('|')
