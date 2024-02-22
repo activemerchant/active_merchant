@@ -247,6 +247,7 @@ module ActiveMerchant #:nodoc:
           message_from(action, response),
           response,
           authorization: authorization_from(action, response),
+          avs_result: avs_result_from(response),
           test: test?,
           error_code: error_code_from(action, response)
         )
@@ -283,6 +284,10 @@ module ActiveMerchant #:nodoc:
         else
           response['result'].first&.dig('transaction', 'responseCode')
         end
+      end
+
+      def avs_result_from(response)
+        AVSResult.new(code: response['result'].first&.dig('transaction', 'avs', 'result')) if response['result'].first&.dig('transaction', 'avs')
       end
 
       def authorization_from(action, response)

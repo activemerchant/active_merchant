@@ -249,6 +249,8 @@ class Shift4Test < Test::Unit::TestCase
 
     assert_failure response
     assert_equal response.message, 'Transaction declined'
+    assert_equal 'A', response.avs_result['code']
+    assert_equal 'Street address matches, but postal code does not match.', response.avs_result['message']
     assert_nil response.authorization
   end
 
@@ -268,6 +270,17 @@ class Shift4Test < Test::Unit::TestCase
 
     assert_failure response
     assert_equal 'CVV value N not accepted.', response.message
+    assert response.test?
+  end
+
+  def test_successful_authorize_with_avs_result
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'Y', response.avs_result['code']
+    assert_equal 'Street address and 5-digit postal code match.', response.avs_result['message']
     assert response.test?
   end
 
@@ -636,6 +649,12 @@ class Shift4Test < Test::Unit::TestCase
                 "transaction": {
                     "authorizationCode": "OK168Z",
                     "authSource": "E",
+                    "avs": {
+                      "postalCodeVerified":"Y",
+                      "result":"Y",
+                      "streetVerified":"Y",
+                      "valid":"Y"
+                      },
                     "invoice": "3333333309",
                     "purchaseCard": {
                         "customerReference": "457",
@@ -989,6 +1008,12 @@ class Shift4Test < Test::Unit::TestCase
             },
             "transaction": {
               "authSource":"E",
+              "avs": {
+                "postalCodeVerified":"N",
+                "result":"A",
+                "streetVerified":"Y",
+                "valid":"Y"
+                },
               "invoice":"0705626580",
               "responseCode":"D",
               "saleFlag":"S"
