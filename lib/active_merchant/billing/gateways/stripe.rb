@@ -790,7 +790,7 @@ module ActiveMerchant #:nodoc:
         # StripePI puts the AVS and CVC check significantly deeper into the response object
         response['card'] || response['active_card'] || response['source'] ||
           response.dig('charges', 'data', 0, 'payment_method_details', 'card', 'checks') ||
-          response.dig('latest_attempt', 'payment_method_details', 'card', 'checks') {}
+          response.dig('latest_attempt', 'payment_method_details', 'card', 'checks') || {}
       end
 
       def avs_code_from(card_checks)
