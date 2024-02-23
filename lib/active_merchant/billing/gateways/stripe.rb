@@ -579,7 +579,7 @@ module ActiveMerchant #:nodoc:
 
       def add_source_owner(post, creditcard, options)
         post[:owner] = {}
-        post[:owner][:name] = creditcard.name if creditcard.name
+        post[:owner][:name] = creditcard.name if creditcard.respond_to?(:name) && creditcard.name
         post[:owner][:email] = options[:email] if options[:email]
 
         if address = options[:billing_address] || options[:address]
