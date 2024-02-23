@@ -158,7 +158,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(100, @credit_card, order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
+      assert_match(/<mddField id="2">CustomValue2</m, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -280,7 +280,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(100, @credit_card, order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
+      assert_match(/<mddField id="2">CustomValue2</m, data)
     end.respond_with(successful_authorization_response)
   end
 
@@ -702,7 +702,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.capture(100, '1846925324700976124593', order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
+      assert_match(/<mddField id="2">CustomValue2</m, data)
     end.respond_with(successful_capture_response)
   end
 
@@ -863,7 +863,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.credit(@amount, @credit_card, mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
+      assert_match(/<mddField id="2">CustomValue2</m, data)
     end.respond_with(successful_card_credit_response)
   end
 
@@ -873,7 +873,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.void(purchase, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(<voidService run=\"true\"), data)
+      assert_match(%r(<voidService run="true"), data)
     end.respond_with(successful_void_response)
   end
 
@@ -883,7 +883,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.void(capture, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(<voidService run=\"true\"), data)
+      assert_match(%r(<voidService run="true"), data)
     end.respond_with(successful_void_response)
   end
 
@@ -893,7 +893,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.void(authorization, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(<ccAuthReversalService run=\"true\"), data)
+      assert_match(%r(<ccAuthReversalService run="true"), data)
     end.respond_with(successful_auth_reversal_response)
   end
 
@@ -913,7 +913,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.void(authorization, mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
+      assert_match(/<mddField id="2">CustomValue2</m, data)
     end.respond_with(successful_void_response)
   end
 
@@ -930,7 +930,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.store(@credit_card, @subscription_options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match %r(<amount>1.00<\/amount>), data
+      assert_match %r(<amount>1.00</amount>), data
     end.respond_with(successful_update_subscription_response)
   end
 
@@ -946,7 +946,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_post) do
       @gateway.verify(@credit_card, @options)
     end.check_request(skip_response: true) do |_endpoint, data|
-      assert_match %r(<grandTotalAmount>0.00<\/grandTotalAmount>), data
+      assert_match %r(<grandTotalAmount>0.00</grandTotalAmount>), data
     end
   end
 
@@ -954,7 +954,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_post) do
       @gateway.verify(@credit_card, @options)
     end.check_request(skip_response: true) do |_endpoint, data|
-      assert_match %r(<grandTotalAmount>1.00<\/grandTotalAmount>), data
+      assert_match %r(<grandTotalAmount>1.00</grandTotalAmount>), data
     end
   end
 
@@ -978,7 +978,7 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @network_token, @options)
     end.check_request do |_endpoint, body, _headers|
       assert_xml_valid_to_xsd(body)
-      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>111111111100cryptogram</cavv>\n  <commerceIndicator>vbv</commerceIndicator>\n  <xid>111111111100cryptogram</xid>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', body
+      assert_match %r'<ccAuthService run="true">\n  <cavv>111111111100cryptogram</cavv>\n  <commerceIndicator>vbv</commerceIndicator>\n  <xid>111111111100cryptogram</xid>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', body
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -998,7 +998,7 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_auth_with_network_tokenization_for_mastercard
     @gateway.expects(:ssl_post).with do |_host, request_body|
       assert_xml_valid_to_xsd(request_body)
-      assert_match %r'<ucaf>\n  <authenticationData>111111111100cryptogram</authenticationData>\n  <collectionIndicator>2</collectionIndicator>\n</ucaf>\n<ccAuthService run=\"true\">\n  <commerceIndicator>spa</commerceIndicator>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
+      assert_match %r'<ucaf>\n  <authenticationData>111111111100cryptogram</authenticationData>\n  <collectionIndicator>2</collectionIndicator>\n</ucaf>\n<ccAuthService run="true">\n  <commerceIndicator>spa</commerceIndicator>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
       true
     end.returns(successful_purchase_response)
 
@@ -1017,7 +1017,7 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_auth_with_network_tokenization_for_amex
     @gateway.expects(:ssl_post).with do |_host, request_body|
       assert_xml_valid_to_xsd(request_body)
-      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</cavv>\n  <commerceIndicator>aesk</commerceIndicator>\n  <xid>YW0=\n</xid>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
+      assert_match %r'<ccAuthService run="true">\n  <cavv>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</cavv>\n  <commerceIndicator>aesk</commerceIndicator>\n  <xid>YW0=\n</xid>\n</ccAuthService>\n<businessRules>\n</businessRules>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
       true
     end.returns(successful_purchase_response)
 
@@ -1044,11 +1044,11 @@ class CyberSourceTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\<subsequentAuthFirst\>true/, data)
-      assert_not_match(/\<subsequentAuthStoredCredential\>true/, data)
-      assert_not_match(/\<subsequentAuth\>/, data)
-      assert_not_match(/\<subsequentAuthTransactionID\>/, data)
-      assert_match(/\<commerceIndicator\>internet/, data)
+      assert_match(/<subsequentAuthFirst>true/, data)
+      assert_not_match(/<subsequentAuthStoredCredential>true/, data)
+      assert_not_match(/<subsequentAuth>/, data)
+      assert_not_match(/<subsequentAuthTransactionID>/, data)
+      assert_match(/<commerceIndicator>internet/, data)
     end.respond_with(successful_authorization_response)
     assert response.success?
   end
@@ -1063,10 +1063,10 @@ class CyberSourceTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_not_match(/\<subsequentAuthFirst\>/, data)
-      assert_match(/\<subsequentAuthStoredCredential\>/, data)
-      assert_not_match(/\<subsequentAuth\>/, data)
-      assert_not_match(/\<subsequentAuthTransactionID\>/, data)
+      assert_not_match(/<subsequentAuthFirst>/, data)
+      assert_match(/<subsequentAuthStoredCredential>/, data)
+      assert_not_match(/<subsequentAuth>/, data)
+      assert_not_match(/<subsequentAuthTransactionID>/, data)
     end.respond_with(successful_authorization_response)
     assert response.success?
   end
@@ -1081,10 +1081,10 @@ class CyberSourceTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_not_match(/\<subsequentAuthFirst\>/, data)
-      assert_match(/\<subsequentAuthStoredCredential\>true/, data)
-      assert_match(/\<subsequentAuth\>true/, data)
-      assert_match(/\<subsequentAuthTransactionID\>016150703802094/, data)
+      assert_not_match(/<subsequentAuthFirst>/, data)
+      assert_match(/<subsequentAuthStoredCredential>true/, data)
+      assert_match(/<subsequentAuth>true/, data)
+      assert_match(/<subsequentAuthTransactionID>016150703802094/, data)
     end.respond_with(successful_authorization_response)
     assert response.success?
   end
@@ -1099,11 +1099,11 @@ class CyberSourceTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_not_match(/\<subsequentAuthFirst\>/, data)
-      assert_not_match(/\<subsequentAuthStoredCredential\>/, data)
-      assert_match(/\<subsequentAuth\>true/, data)
-      assert_match(/\<subsequentAuthTransactionID\>016150703802094/, data)
-      assert_match(/\<commerceIndicator\>install/, data)
+      assert_not_match(/<subsequentAuthFirst>/, data)
+      assert_not_match(/<subsequentAuthStoredCredential>/, data)
+      assert_match(/<subsequentAuth>true/, data)
+      assert_match(/<subsequentAuthTransactionID>016150703802094/, data)
+      assert_match(/<commerceIndicator>install/, data)
     end.respond_with(successful_authorization_response)
     assert response.success?
   end
@@ -1118,11 +1118,11 @@ class CyberSourceTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_not_match(/\<subsequentAuthFirst\>/, data)
-      assert_not_match(/\<subsequentAuthStoredCredential\>/, data)
-      assert_match(/\<subsequentAuth\>true/, data)
-      assert_match(/\<subsequentAuthTransactionID\>016150703802094/, data)
-      assert_match(/\<commerceIndicator\>recurring/, data)
+      assert_not_match(/<subsequentAuthFirst>/, data)
+      assert_not_match(/<subsequentAuthStoredCredential>/, data)
+      assert_match(/<subsequentAuth>true/, data)
+      assert_match(/<subsequentAuthTransactionID>016150703802094/, data)
+      assert_match(/<commerceIndicator>recurring/, data)
     end.respond_with(successful_authorization_response)
     assert response.success?
   end
@@ -1137,11 +1137,11 @@ class CyberSourceTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_not_match(/\<subsequentAuthFirst\>/, data)
-      assert_not_match(/\<subsequentAuthStoredCredential\>/, data)
-      assert_match(/\<subsequentAuth\>true/, data)
-      assert_match(/\<subsequentAuthTransactionID\>016150703802094/, data)
-      assert_match(/\<commerceIndicator\>recurring/, data)
+      assert_not_match(/<subsequentAuthFirst>/, data)
+      assert_not_match(/<subsequentAuthStoredCredential>/, data)
+      assert_match(/<subsequentAuth>true/, data)
+      assert_match(/<subsequentAuthTransactionID>016150703802094/, data)
+      assert_match(/<commerceIndicator>recurring/, data)
     end.respond_with(successful_purchase_response)
     assert response.success?
   end
@@ -1163,11 +1163,11 @@ class CyberSourceTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\<subsequentAuthFirst\>false/, data)
-      assert_match(/\<subsequentAuthStoredCredential\>true/, data)
-      assert_match(/\<subsequentAuth\>true/, data)
-      assert_match(/\<subsequentAuthTransactionID\>54321/, data)
-      assert_match(/\<commerceIndicator\>internet/, data)
+      assert_match(/<subsequentAuthFirst>false/, data)
+      assert_match(/<subsequentAuthStoredCredential>true/, data)
+      assert_match(/<subsequentAuth>true/, data)
+      assert_match(/<subsequentAuthTransactionID>54321/, data)
+      assert_match(/<commerceIndicator>internet/, data)
     end.respond_with(successful_authorization_response)
     assert response.success?
   end
@@ -1196,7 +1196,7 @@ class CyberSourceTest < Test::Unit::TestCase
     purchase = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(payer_auth_enroll_service: true))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\<payerAuthEnrollService run=\"true\"\/\>/, data)
+      assert_match(/<payerAuthEnrollService run="true"\/>/, data)
     end.respond_with(threedeesecure_purchase_response)
 
     assert_failure purchase
@@ -1209,8 +1209,8 @@ class CyberSourceTest < Test::Unit::TestCase
     validation = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(payer_auth_validate_service: true, pares: 'ABC123'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\<payerAuthValidateService run=\"true\"\>/, data)
-      assert_match(/\<signedPARes\>ABC123\<\/signedPARes\>/, data)
+      assert_match(/<payerAuthValidateService run="true">/, data)
+      assert_match(/<signedPARes>ABC123<\/signedPARes>/, data)
     end.respond_with(successful_threedeesecure_validate_response)
 
     assert_success validation
@@ -1223,7 +1223,7 @@ class CyberSourceTest < Test::Unit::TestCase
       stub_comms do
         @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: { cavv: 'anything but empty' }))
       end.check_request do |_endpoint, data, _headers|
-        assert_match(/commerceIndicator\>#{CyberSourceGateway::ECI_BRAND_MAPPING[brand.to_sym]}</, data)
+        assert_match(/commerceIndicator>#{CyberSourceGateway::ECI_BRAND_MAPPING[brand.to_sym]}</, data)
       end.respond_with(successful_purchase_response)
     end
   end
@@ -1253,14 +1253,14 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<eciRaw\>#{eci}/, data)
-      assert_match(/<cavv\>#{cavv}/, data)
-      assert_match(/<paSpecificationVersion\>#{version}/, data)
-      assert_match(/<directoryServerTransactionID\>#{ds_transaction_id}/, data)
-      assert_match(/<paresStatus\>#{authentication_response_status}/, data)
-      assert_match(/<cavvAlgorithm\>#{cavv_algorithm}/, data)
-      assert_match(/<commerceIndicator\>#{commerce_indicator}/, data)
-      assert_match(/<veresEnrolled\>#{enrolled}/, data)
+      assert_match(/<eciRaw>#{eci}/, data)
+      assert_match(/<cavv>#{cavv}/, data)
+      assert_match(/<paSpecificationVersion>#{version}/, data)
+      assert_match(/<directoryServerTransactionID>#{ds_transaction_id}/, data)
+      assert_match(/<paresStatus>#{authentication_response_status}/, data)
+      assert_match(/<cavvAlgorithm>#{cavv_algorithm}/, data)
+      assert_match(/<commerceIndicator>#{commerce_indicator}/, data)
+      assert_match(/<veresEnrolled>#{enrolled}/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1269,14 +1269,14 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_, data, _|
-      assert_not_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
-      assert_not_match(/<cavv\>#{options[:three_d_secure][:cavv]}</, data)
-      assert_not_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
-      assert_not_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
-      assert_not_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
-      assert_not_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
-      assert_not_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
-      assert_not_match(/<commerceIndicator\>#{options[:commerce_indicator]}</, data)
+      assert_not_match(/<eciRaw>#{options[:three_d_secure][:eci]}</, data)
+      assert_not_match(/<cavv>#{options[:three_d_secure][:cavv]}</, data)
+      assert_not_match(/<paSpecificationVersion>#{options[:three_d_secure][:version]}</, data)
+      assert_not_match(/<directoryServerTransactionID>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_not_match(/<paresStatus>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_not_match(/<cavvAlgorithm>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_not_match(/<veresEnrolled>#{options[:three_d_secure][:enrolled]}</, data)
+      assert_not_match(/<commerceIndicator>#{options[:commerce_indicator]}</, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1288,12 +1288,12 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_, data, _|
-      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
-      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
-      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
-      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
-      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
-      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
+      assert_match(/<eciRaw>#{options[:three_d_secure][:eci]}</, data)
+      assert_match(/<paSpecificationVersion>#{options[:three_d_secure][:version]}</, data)
+      assert_match(/<directoryServerTransactionID>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_match(/<paresStatus>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_match(/<cavvAlgorithm>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_match(/<veresEnrolled>#{options[:three_d_secure][:enrolled]}</, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1302,13 +1302,13 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_, data, _|
-      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
-      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
-      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
-      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
-      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
-      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
-      assert_match(/<commerceIndicator\>#{options[:commerce_indicator]}</, data)
+      assert_match(/<eciRaw>#{options[:three_d_secure][:eci]}</, data)
+      assert_match(/<paSpecificationVersion>#{options[:three_d_secure][:version]}</, data)
+      assert_match(/<directoryServerTransactionID>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_match(/<paresStatus>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_match(/<cavvAlgorithm>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_match(/<veresEnrolled>#{options[:three_d_secure][:enrolled]}</, data)
+      assert_match(/<commerceIndicator>#{options[:commerce_indicator]}</, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1317,13 +1317,13 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_, data, _|
-      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
-      assert_match(/<cavv\>#{options[:three_d_secure][:cavv]}</, data)
-      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
-      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
-      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
-      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
-      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
+      assert_match(/<eciRaw>#{options[:three_d_secure][:eci]}</, data)
+      assert_match(/<cavv>#{options[:three_d_secure][:cavv]}</, data)
+      assert_match(/<paSpecificationVersion>#{options[:three_d_secure][:version]}</, data)
+      assert_match(/<directoryServerTransactionID>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_match(/<paresStatus>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_match(/<cavvAlgorithm>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_match(/<veresEnrolled>#{options[:three_d_secure][:enrolled]}</, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1350,13 +1350,13 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @master_credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<eciRaw\>#{eci}/, data)
-      assert_match(/<authenticationData\>#{cavv}/, data)
-      assert_match(/<paSpecificationVersion\>#{version}/, data)
-      assert_match(/<directoryServerTransactionID\>#{ds_transaction_id}/, data)
-      assert_match(/<cavvAlgorithm\>#{cavv_algorithm}/, data)
-      assert_match(/<commerceIndicator\>#{commerce_indicator}/, data)
-      assert_match(/<collectionIndicator\>#{collection_indicator}/, data)
+      assert_match(/<eciRaw>#{eci}/, data)
+      assert_match(/<authenticationData>#{cavv}/, data)
+      assert_match(/<paSpecificationVersion>#{version}/, data)
+      assert_match(/<directoryServerTransactionID>#{ds_transaction_id}/, data)
+      assert_match(/<cavvAlgorithm>#{cavv_algorithm}/, data)
+      assert_match(/<commerceIndicator>#{commerce_indicator}/, data)
+      assert_match(/<collectionIndicator>#{collection_indicator}/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1374,7 +1374,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @master_credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<collectionIndicator\>2/, data)
+      assert_match(/<collectionIndicator>2/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1392,7 +1392,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @elo_credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<xid\>this-is-an-xid/, data)
+      assert_match(/<xid>this-is-an-xid/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1411,7 +1411,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @master_credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<xid\>this-is-an-xid/, data)
+      assert_match(/<xid>this-is-an-xid/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1431,7 +1431,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<xid\>#{cavv}/, data)
+      assert_match(/<xid>#{cavv}/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1450,7 +1450,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<xid\>this-is-an-xid/, data)
+      assert_match(/<xid>this-is-an-xid/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1484,7 +1484,7 @@ class CyberSourceTest < Test::Unit::TestCase
         assert_match(%r(<purchaseTotals>\n), data)
         assert_match(%r(<grandTotalAmount>#{@gateway.send(:localized_amount, @amount.to_i, @options[:currency])}</grandTotalAmount>), data)
         # 3ds exemption tag
-        assert_match %r(<ccAuthService run=\"true\">\n), data
+        assert_match %r(<ccAuthService run="true">\n), data
         assert_match(%r(<#{CyberSourceGateway::THREEDS_EXEMPTIONS[exemption]}>1</#{CyberSourceGateway::THREEDS_EXEMPTIONS[exemption]}>), data)
       end.respond_with(successful_purchase_response)
     end

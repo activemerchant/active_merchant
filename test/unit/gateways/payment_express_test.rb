@@ -65,7 +65,7 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_purchase_request_should_include_cvc2_presence
     @gateway.expects(:commit).with do |type, request|
-      type == :purchase && request.to_s =~ %r{<Cvc2Presence>1<\/Cvc2Presence>}
+      type == :purchase && request.to_s =~ %r{<Cvc2Presence>1</Cvc2Presence>}
     end
 
     @gateway.purchase(@amount, @visa, @options)

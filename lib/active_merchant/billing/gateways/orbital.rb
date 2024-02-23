@@ -1105,7 +1105,7 @@ module ActiveMerchant #:nodoc:
       # Address-related fields cannot contain % | ^ \ /
       # Returns the value with these characters removed, or nil
       def format_address_field(value)
-        value.gsub(/[%\|\^\\\/]/, '') if value.respond_to?(:gsub)
+        value.gsub(/[%|\^\\\/]/, '') if value.respond_to?(:gsub)
       end
 
       # Field lengths should be limited by byte count instead of character count

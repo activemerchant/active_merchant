@@ -162,9 +162,9 @@ module ActiveMerchant #:nodoc:
         country.code(:alpha2)
       end
 
-      def commit(action, amount = nil, currency = nil)
+      def commit(action, amount = nil, currency = nil, &block)
         currency = default_currency if currency == nil
-        request = build_xml_request { |doc| yield(doc) }
+        request = build_xml_request(&block)
         response = ssl_post(live_url, request, headers)
         parsed = parse(response)
 
@@ -231,8 +231,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(action, response, amount, currency)
         auth = response[:tranref]
-        auth = [auth, amount, currency].join('|')
-        auth
+        [auth, amount, currency].join('|')
       end
 
       def split_authorization(authorization)

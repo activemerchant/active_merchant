@@ -244,11 +244,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def customer_id?(payment_or_customer_id)
-        payment_or_customer_id.class == String
+        payment_or_customer_id.instance_of?(String)
       end
 
       def string_literal_to_boolean(value)
-        return value unless value.class == String
+        return value unless value.instance_of?(String)
 
         if value.casecmp('true').zero?
           true

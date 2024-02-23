@@ -123,18 +123,18 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((realm=\")\w+), '\1[FILTERED]').
-          gsub(%r((oauth_consumer_key=\")\w+), '\1[FILTERED]').
-          gsub(%r((oauth_nonce=\")\w+), '\1[FILTERED]').
-          gsub(%r((oauth_signature=\")[a-zA-Z%0-9]+), '\1[FILTERED]').
-          gsub(%r((oauth_token=\")\w+), '\1[FILTERED]').
+          gsub(%r((realm=")\w+), '\1[FILTERED]').
+          gsub(%r((oauth_consumer_key=")\w+), '\1[FILTERED]').
+          gsub(%r((oauth_nonce=")\w+), '\1[FILTERED]').
+          gsub(%r((oauth_signature=")[a-zA-Z%0-9]+), '\1[FILTERED]').
+          gsub(%r((oauth_token=")\w+), '\1[FILTERED]').
           gsub(%r((number\D+)\d{16}), '\1[FILTERED]').
           gsub(%r((cvc\D+)\d{3}), '\1[FILTERED]').
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(%r((access_token\\?":\\?")[\w\-\.]+)i, '\1[FILTERED]').
+          gsub(%r((access_token\\?":\\?")[\w\-.]+)i, '\1[FILTERED]').
           gsub(%r((refresh_token\\?":\\?")\w+), '\1[FILTERED]').
           gsub(%r((refresh_token=)\w+), '\1[FILTERED]').
-          gsub(%r((Authorization: Bearer )[\w\-\.]+)i, '\1[FILTERED]\2')
+          gsub(%r((Authorization: Bearer )[\w\-.]+)i, '\1[FILTERED]\2')
       end
 
       private
@@ -263,7 +263,7 @@ module ActiveMerchant #:nodoc:
         oauth_parameters[:oauth_signature] = CGI.escape(Base64.encode64(hmac_signature).chomp.delete("\n"))
 
         # prepare Authorization header string
-        oauth_parameters = Hash[oauth_parameters.sort_by { |k, _| k }]
+        oauth_parameters = oauth_parameters.sort_by { |k, _| k }.to_h
         oauth_headers = ["OAuth realm=\"#{@options[:realm]}\""]
         oauth_headers += oauth_parameters.map { |k, v| "#{k}=\"#{v}\"" }
 

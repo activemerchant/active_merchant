@@ -738,13 +738,13 @@ class AdyenTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(200, @credit_card, @options.merge(currency: 'JPY'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/"amount\":{\"value\":\"2\",\"currency\":\"JPY\"}/, data)
+      assert_match(/"amount":{"value":"2","currency":"JPY"}/, data)
     end.respond_with(successful_authorize_response)
 
     stub_comms do
       @gateway.authorize(200, @credit_card, @options.merge(currency: 'CLP'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/"amount\":{\"value\":\"200\",\"currency\":\"CLP\"}/, data)
+      assert_match(/"amount":{"value":"200","currency":"CLP"}/, data)
     end.respond_with(successful_authorize_response)
   end
 
@@ -814,9 +814,9 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.credit(2500, @credit_card, payout_options)
     end.check_request do |endpoint, data, _headers|
       assert_match(/payout/, endpoint)
-      assert_match(/"dateOfBirth\":\"1990-01-01\"/, data)
-      assert_match(/"nationality\":\"NL\"/, data)
-      assert_match(/"shopperName\":{\"firstName\":\"Test\",\"lastName\":\"Card\"}/, data)
+      assert_match(/"dateOfBirth":"1990-01-01"/, data)
+      assert_match(/"nationality":"NL"/, data)
+      assert_match(/"shopperName":{"firstName":"Test","lastName":"Card"}/, data)
     end.respond_with(successful_payout_response)
   end
 
@@ -1538,7 +1538,7 @@ class AdyenTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(1000, @credit_card, @options.merge(currency: 'JOD'))
     end.check_request(skip_response: true) do |_endpoint, data|
-      assert_match(/"amount\":{\"value\":\"1000\",\"currency\":\"JOD\"}/, data)
+      assert_match(/"amount":{"value":"1000","currency":"JOD"}/, data)
     end
   end
 

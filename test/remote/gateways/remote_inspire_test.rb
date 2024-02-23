@@ -124,7 +124,7 @@ class RemoteBraintreeTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_match %r{Invalid Transaction ID \/ Object ID specified:}, response.message
+    assert_match %r{Invalid Transaction ID / Object ID specified:}, response.message
   end
 
   def test_refund

@@ -161,7 +161,7 @@ module ActiveMerchant #:nodoc:
             add_address(xml, 'BillTo', billing_address, options) if billing_address
             add_address(xml, 'ShipTo', options[:shipping_address], options) if options[:shipping_address]
 
-            # Note: To get order line-items to show up with Payflow Express, this feature has to be enabled on the backend.
+            # NOTE: To get order line-items to show up with Payflow Express, this feature has to be enabled on the backend.
             # Call Support at 888 883 9770, press 2. Then request that they update your account in "Pandora" under Product Settings >> PayPal
             # Mark and update the Features Bitmap to 1111111111111112.  This is 15 ones and a two.
             # See here for the forum discussion: https://www.x.com/message/206214#206214
@@ -171,7 +171,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'ExtData', 'Name' => "L_COST#{index}", 'Value' => amount(item[:amount])
               xml.tag! 'ExtData', 'Name' => "L_QTY#{index}", 'Value' => item[:quantity] || '1'
               xml.tag! 'ExtData', 'Name' => "L_NAME#{index}", 'Value' => item[:name]
-              # Note: An ItemURL is supported in Paypal Express (different API), but not PayFlow Express, as far as I can tell.
+              # NOTE: An ItemURL is supported in Paypal Express (different API), but not PayFlow Express, as far as I can tell.
               # L_URLn nor L_ITEMURLn seem to work
             end
             if items.any?
@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'PageStyle', options[:page_style] unless options[:page_style].blank?
           xml.tag! 'HeaderImage', options[:header_image] unless options[:header_image].blank?
           xml.tag! 'PayflowColor', options[:background_color] unless options[:background_color].blank?
-          # Note: HeaderImage and PayflowColor apply to both the new (as of 2010) and the old checkout experience
+          # NOTE: HeaderImage and PayflowColor apply to both the new (as of 2010) and the old checkout experience
           # HeaderBackColor and HeaderBorderColor apply only to the old checkout experience which is being phased out.
           xml.tag! 'HeaderBackColor', options[:header_background_color] unless options[:header_background_color].blank?
           xml.tag! 'HeaderBorderColor', options[:header_border_color] unless options[:header_border_color].blank?

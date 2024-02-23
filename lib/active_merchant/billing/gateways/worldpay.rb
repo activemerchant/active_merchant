@@ -787,7 +787,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(action, xml)
-        xml = xml.strip.gsub(/\&/, '&amp;')
+        xml = xml.strip.gsub(/&/, '&amp;')
         doc = Nokogiri::XML(xml, &:strict)
         doc.remove_namespaces!
         resp_params = { action: action }

@@ -184,8 +184,8 @@ class SecurionPayTest < Test::Unit::TestCase
       assert_match(/description=test\+charge/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
       assert_match(/user_agent=browser\+XXX/, data)
-      assert_match(/referrer=http\%3A\%2F\%2Fwww\.foobar\.com/, data)
-      assert_match(/metadata\[email\]=foo\%40bar\.com/, data)
+      assert_match(/referrer=http%3A%2F%2Fwww\.foobar\.com/, data)
+      assert_match(/metadata\[email\]=foo%40bar\.com/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -197,7 +197,7 @@ class SecurionPayTest < Test::Unit::TestCase
       assert_match(/description=test\+charge/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
       assert_match(/user_agent=browser\+XXX/, data)
-      assert_match(/referrer=http\%3A\%2F\%2Fwww\.foobar\.com/, data)
+      assert_match(/referrer=http%3A%2F%2Fwww\.foobar\.com/, data)
       refute data.include?('metadata')
     end.respond_with(successful_purchase_response)
   end

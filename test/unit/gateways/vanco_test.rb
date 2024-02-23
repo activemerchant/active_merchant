@@ -32,7 +32,7 @@ class VancoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(fund_id: 'MyEggcellentFund'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(<FundID>MyEggcellentFund<\/FundID>), data) if data =~ /<RequestType>EFTAdd/
+      assert_match(%r(<FundID>MyEggcellentFund</FundID>), data) if data =~ /<RequestType>EFTAdd/
     end.respond_with(successful_login_response, successful_purchase_with_fund_id_response)
 
     assert_success response
@@ -64,7 +64,7 @@ class VancoTest < Test::Unit::TestCase
         )
       )
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(<SessionID>5d4177ec3c356ec5f7abe0e17e814250<\/SessionID>), data) if data =~ /<RequestType>EFTAddCompleteTransaction/
+      assert_match(%r(<SessionID>5d4177ec3c356ec5f7abe0e17e814250</SessionID>), data) if data =~ /<RequestType>EFTAddCompleteTransaction/
     end.respond_with(login_request_response, successful_purchase_with_existing_session_id_response)
 
     assert_success response
@@ -88,7 +88,7 @@ class VancoTest < Test::Unit::TestCase
         )
       )
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(<SessionID>5d8b104c9d8265db46bdf35ae9685472f4789dc8<\/SessionID>), data) if data =~ /<RequestType>EFTAddCompleteTransaction/
+      assert_match(%r(<SessionID>5d8b104c9d8265db46bdf35ae9685472f4789dc8</SessionID>), data) if data =~ /<RequestType>EFTAddCompleteTransaction/
     end.respond_with(successful_login_response, successful_purchase_response)
 
     assert_success response

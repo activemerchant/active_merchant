@@ -65,7 +65,7 @@ module ActiveMerchant
       def scrub(transcript)
         return '' if transcript.blank?
 
-        before_message = transcript.gsub(%r(\\\")i, "'").scan(/{[^>]*}/).first.gsub("'", '"')
+        before_message = transcript.gsub(%r(\\")i, "'").scan(/{[^>]*}/).first.gsub("'", '"')
         request_data = JSON.parse(before_message)
 
         if @options[:encryption_key]
@@ -78,8 +78,8 @@ module ActiveMerchant
         end
 
         request_data['parametros'] = encode_params(params)
-        before_message = before_message.gsub(%r(\")i, '\\\"')
-        after_message = request_data.to_json.gsub(%r(\")i, '\\\"')
+        before_message = before_message.gsub(%r(")i, '\\\"')
+        after_message = request_data.to_json.gsub(%r(")i, '\\\"')
         transcript.sub(before_message, after_message)
       end
 

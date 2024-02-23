@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       def redirect_url_for(token, options = {})
         options = { review: true }.update(options)
-        url  = "#{redirect_url}?token=#{token}"
+        url = "#{redirect_url}?token=#{token}"
         url += '&useraction=commit' unless options[:review]
         url
       end

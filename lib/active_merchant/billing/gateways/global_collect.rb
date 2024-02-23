@@ -102,8 +102,8 @@ module ActiveMerchant #:nodoc:
         'diners_club' => '132',
         'cabal' => '135',
         'naranja' => '136',
-        'apple_pay': '302',
-        'google_pay': '320'
+        apple_pay: '302',
+        google_pay: '320'
       }
 
       def add_order(post, money, options, capture: false)
@@ -333,8 +333,8 @@ module ActiveMerchant #:nodoc:
         post['order']['customer']['merchantCustomerId'] = options[:customer] if options[:customer]
         post['order']['customer']['companyInformation']['name'] = options[:company] if options[:company]
         post['order']['customer']['contactDetails']['emailAddress'] = options[:email] if options[:email]
-        if address = options[:billing_address] || options[:address]
-          post['order']['customer']['contactDetails']['phoneNumber'] = address[:phone] if address[:phone]
+        if address = options[:billing_address] || options[:address] && (address[:phone])
+          post['order']['customer']['contactDetails']['phoneNumber'] = address[:phone]
         end
       end
 
@@ -344,8 +344,8 @@ module ActiveMerchant #:nodoc:
             'countryCode' => address[:country]
           }
           post['customer']['contactDetails']['emailAddress'] = options[:email] if options[:email]
-          if address = options[:billing_address] || options[:address]
-            post['customer']['contactDetails']['phoneNumber'] = address[:phone] if address[:phone]
+          if address = options[:billing_address] || options[:address] && (address[:phone])
+            post['customer']['contactDetails']['phoneNumber'] = address[:phone]
           end
         end
       end

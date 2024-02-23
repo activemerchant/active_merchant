@@ -76,8 +76,8 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((X-Trans-Key: )\w+), '\1[FILTERED]').
-          gsub(%r((\"number\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"cvv\\\":\\\")\d+), '\1[FILTERED]')
+          gsub(%r(("number\\":\\")\d+), '\1[FILTERED]').
+          gsub(%r(("cvv\\":\\")\d+), '\1[FILTERED]')
       end
 
       private
@@ -250,7 +250,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action, parameters, options = {})
-        "#{(test? ? test_url : live_url)}/#{endpoint(action, parameters, options)}/"
+        "#{test? ? test_url : live_url}/#{endpoint(action, parameters, options)}/"
       end
 
       def endpoint(action, parameters, options)

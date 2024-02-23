@@ -4,7 +4,7 @@ class RemoteOmiseTest < Test::Unit::TestCase
   def setup
     @gateway = OmiseGateway.new(fixtures(:omise))
     @amount  = 8888
-    @credit_card   = credit_card('4242424242424242')
+    @credit_card = credit_card('4242424242424242')
     @declined_card = credit_card('4255555555555555')
     @invalid_cvc   = credit_card('4111111111160001', { verification_value: '' })
     @options = {

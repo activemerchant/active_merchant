@@ -268,8 +268,8 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((PAN\"=>\")(\d+)), '\1[FILTERED]').
-          gsub(%r((CVV2\"=>\")(\d+)), '\1[FILTERED]')
+          gsub(%r((PAN"=>")(\d+)), '\1[FILTERED]').
+          gsub(%r((CVV2"=>")(\d+)), '\1[FILTERED]')
       end
 
       private
@@ -428,8 +428,7 @@ module ActiveMerchant #:nodoc:
 
         order_id += "\0" until order_id.bytesize % block_length == 0 # Pad with zeros
 
-        output = cipher.update(order_id) + cipher.final
-        output
+        cipher.update(order_id) + cipher.final
       end
 
       def mac256(key, data)

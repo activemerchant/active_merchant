@@ -85,8 +85,8 @@ module ActiveMerchant
       AVS_REASON_CODES = %w(27 45)
 
       TRACKS = {
-        1 => /^%(?<format_code>.)(?<pan>[\d]{1,19}+)\^(?<name>.{2,26})\^(?<expiration>[\d]{0,4}|\^)(?<service_code>[\d]{0,3}|\^)(?<discretionary_data>.*)\?\Z/,
-        2 => /\A;(?<pan>[\d]{1,19}+)=(?<expiration>[\d]{0,4}|=)(?<service_code>[\d]{0,3}|=)(?<discretionary_data>.*)\?\Z/
+        1 => /^%(?<format_code>.)(?<pan>\d{1,19}+)\^(?<name>.{2,26})\^(?<expiration>\d{0,4}|\^)(?<service_code>\d{0,3}|\^)(?<discretionary_data>.*)\?\Z/,
+        2 => /\A;(?<pan>\d{1,19}+)=(?<expiration>\d{0,4}|=)(?<service_code>\d{0,3}|=)(?<discretionary_data>.*)\?\Z/
       }.freeze
 
       PAYMENT_METHOD_NOT_SUPPORTED_ERROR = '155'
@@ -424,7 +424,7 @@ module ActiveMerchant
       end
 
       def network_token?(payment_method, options, action)
-        payment_method.class == NetworkTokenizationCreditCard && action != :credit && options[:turn_on_nt_flow]
+        payment_method.instance_of?(NetworkTokenizationCreditCard) && action != :credit && options[:turn_on_nt_flow]
       end
 
       def camel_case_lower(key)

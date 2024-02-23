@@ -158,7 +158,7 @@ class DecidirPlusTest < Test::Unit::TestCase
       assert_equal(@sub_payments, JSON.parse(data, symbolize_names: true)[:sub_payments])
       assert_match(/#{options[:installments]}/, data)
       assert_match(/#{options[:payment_type]}/, data)
-      assert_match(/\"payment_method_id\":31/, data)
+      assert_match(/"payment_method_id":31/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response

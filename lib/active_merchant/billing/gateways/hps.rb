@@ -105,12 +105,12 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((<hps:CardNbr>)[^<]*(<\/hps:CardNbr>))i, '\1[FILTERED]\2').
-          gsub(%r((<hps:CVV2>)[^<]*(<\/hps:CVV2>))i, '\1[FILTERED]\2').
-          gsub(%r((<hps:SecretAPIKey>)[^<]*(<\/hps:SecretAPIKey>))i, '\1[FILTERED]\2').
-          gsub(%r((<hps:PaymentData>)[^<]*(<\/hps:PaymentData>))i, '\1[FILTERED]\2').
-          gsub(%r((<hps:RoutingNumber>)[^<]*(<\/hps:RoutingNumber>))i, '\1[FILTERED]\2').
-          gsub(%r((<hps:AccountNumber>)[^<]*(<\/hps:AccountNumber>))i, '\1[FILTERED]\2')
+          gsub(%r((<hps:CardNbr>)[^<]*(</hps:CardNbr>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:CVV2>)[^<]*(</hps:CVV2>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:SecretAPIKey>)[^<]*(</hps:SecretAPIKey>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:PaymentData>)[^<]*(</hps:PaymentData>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:RoutingNumber>)[^<]*(</hps:RoutingNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:AccountNumber>)[^<]*(</hps:AccountNumber>))i, '\1[FILTERED]\2')
       end
 
       private
@@ -330,7 +330,7 @@ module ActiveMerchant #:nodoc:
         } do
           xml.SOAP :Body do
             xml.hps :PosRequest do
-              xml.hps 'Ver1.0'.to_sym do
+              xml.hps :"Ver1.0" do
                 xml.hps :Header do
                   xml.hps :SecretAPIKey, @options[:secret_api_key]
                   xml.hps :DeveloperID, @options[:developer_id] if @options[:developer_id]

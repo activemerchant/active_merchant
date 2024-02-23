@@ -551,7 +551,7 @@ class EwayRapidTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.refund(@amount, '1234567')
     end.check_request do |endpoint, data, _headers|
-      assert_match %r{Transaction\/1234567\/Refund$}, endpoint
+      assert_match %r{Transaction/1234567/Refund$}, endpoint
       json = JSON.parse(data)
       assert_equal '100', json['Refund']['TotalAmount']
       assert_equal '1234567', json['Refund']['TransactionID']

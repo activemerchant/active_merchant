@@ -80,11 +80,11 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.gsub(/(Bearer )\w+/, '\1[REDACTED]').
-          gsub(/(\\\"number\\\":\\\")\d+/, '\1[REDACTED]').
-          gsub(/(\\\"cvc\\\":\\\")\d+/, '\1[REDACTED]').
-          gsub(/(\\\"phone_number\\\":\\\")\+?\d+/, '\1[REDACTED]').
-          gsub(/(\\\"email\\\":\\\")\S+\\\",/, '\1[REDACTED]\",').
-          gsub(/(\\\"legal_id\\\":\\\")\d+/, '\1[REDACTED]')
+          gsub(/(\\"number\\":\\")\d+/, '\1[REDACTED]').
+          gsub(/(\\"cvc\\":\\")\d+/, '\1[REDACTED]').
+          gsub(/(\\"phone_number\\":\\")\+?\d+/, '\1[REDACTED]').
+          gsub(/(\\"email\\":\\")\S+\\",/, '\1[REDACTED]\",').
+          gsub(/(\\"legal_id\\":\\")\d+/, '\1[REDACTED]')
       end
 
       private

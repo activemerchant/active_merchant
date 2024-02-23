@@ -10,9 +10,9 @@ class RemoteOgoneTest < Test::Unit::TestCase
     # https://support.legacy.worldline-solutions.com/en/direct/faq/i-have-noticed-i-have-more-declined-transactions-status-2-than-usual-what-can-i-do
     @gateway_3ds = OgoneGateway.new(fixtures(:ogone).merge(signature_encryptor: 'sha512'))
     @amount = 100
-    @credit_card     = credit_card('4000100011112224')
-    @mastercard      = credit_card('5399999999999999', brand: 'mastercard')
-    @declined_card   = credit_card('1111111111111111')
+    @credit_card = credit_card('4000100011112224')
+    @mastercard = credit_card('5399999999999999', brand: 'mastercard')
+    @declined_card = credit_card('1111111111111111')
     @credit_card_d3d = credit_card('4000000000000002', verification_value: '111')
     @credit_card_d3d_2_challenge = credit_card('5130257474533310', verification_value: '123')
     @credit_card_d3d_2_frictionless = credit_card('4186455175836497', verification_value: '123')
@@ -26,16 +26,16 @@ class RemoteOgoneTest < Test::Unit::TestCase
     @options_browser_info = {
       three_ds_2: {
         browser_info:  {
-          "width": 390,
-          "height": 400,
-          "depth": 24,
-          "timezone": 300,
-          "user_agent": 'Spreedly Agent',
-          "java": false,
-          "javascript": true,
-          "language": 'en-US',
-          "browser_size": '05',
-          "accept_header": 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+          width: 390,
+          height: 400,
+          depth: 24,
+          timezone: 300,
+          user_agent: 'Spreedly Agent',
+          java: false,
+          javascript: true,
+          language: 'en-US',
+          browser_size: '05',
+          accept_header: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
         }
       }
     }

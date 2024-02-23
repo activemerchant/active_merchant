@@ -291,7 +291,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, { descriptor_city: 'london', descriptor_name: 'sherlock' })
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"billing_descriptor\":{\"name\":\"sherlock\",\"city\":\"london\"}/, data)
+      assert_match(/"billing_descriptor":{"name":"sherlock","city":"london"}/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response

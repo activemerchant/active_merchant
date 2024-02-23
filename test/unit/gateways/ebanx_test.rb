@@ -40,7 +40,7 @@ class EbanxTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge(soft_descriptor: 'ActiveMerchant'))
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match %r{"soft_descriptor\":\"ActiveMerchant\"}, data
+      assert_match %r{"soft_descriptor":"ActiveMerchant"}, data
     end.respond_with(successful_purchase_response)
 
     assert_success response

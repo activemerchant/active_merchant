@@ -43,7 +43,7 @@ class QbmsTest < Test::Unit::TestCase
 
   def test_truncated_address_is_sent
     @gateway.expects(:ssl_post).
-      with(anything, regexp_matches(/12345 Ridiculously Lengthy Roa\<.*445566778\</), anything).
+      with(anything, regexp_matches(/12345 Ridiculously Lengthy Roa<.*445566778</), anything).
       returns(charge_response)
 
     options = { billing_address: address.update(address1: '12345 Ridiculously Lengthy Road Name', zip: '4455667788') }

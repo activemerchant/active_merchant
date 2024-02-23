@@ -398,7 +398,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
   private
 
   def parse_signature(signature)
-    signature.gsub(/=\"$/, '').delete('"').split(', ').map { |x| x.split('=') }.to_h
+    signature.gsub(/="$/, '').delete('"').split(', ').map { |x| x.split('=') }.to_h
   end
 
   def pre_scrubbed

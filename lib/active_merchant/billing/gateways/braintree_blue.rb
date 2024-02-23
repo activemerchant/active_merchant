@@ -327,7 +327,7 @@ module ActiveMerchant #:nodoc:
       def scrub_email(email)
         return nil unless email.present?
         return nil if
-          email !~ /^.+@[^\.]+(\.[^\.]+)+[a-z]$/i ||
+          email !~ /^.+@[^.]+(\.[^.]+)+[a-z]$/i ||
           email =~ /\.(con|met)$/i
 
         email
@@ -1063,7 +1063,7 @@ module ActiveMerchant #:nodoc:
         Response.new(
           result.success?,
           message_from_result(result),
-          { customer_vault_id: customer_id, 'exists': true }
+          { customer_vault_id: customer_id, exists: true }
         )
       end
     end

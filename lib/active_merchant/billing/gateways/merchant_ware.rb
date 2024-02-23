@@ -266,7 +266,7 @@ module ActiveMerchant #:nodoc:
 
         document = REXML::Document.new(http_response.body)
 
-        node     = REXML::XPath.first(document, '//soap:Fault')
+        node = REXML::XPath.first(document, '//soap:Fault')
 
         node.elements.each do |element|
           response[element.name] = element.text

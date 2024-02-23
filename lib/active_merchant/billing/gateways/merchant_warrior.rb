@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub_name(name)
-        name.gsub(/[^a-zA-Z\. -]/, '')
+        name.gsub(/[^a-zA-Z. -]/, '')
       end
 
       def add_amount(post, money, options)

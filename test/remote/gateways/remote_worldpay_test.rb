@@ -680,7 +680,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@level_three_data))
     assert_failure response
     assert_equal response.error_code, '2'
-    assert_equal response.params['error'].gsub(/\"+/, ''), 'The content of element type item is incomplete, it must match (description,productCode?,commodityCode?,quantity?,unitCost?,unitOfMeasure?,itemTotal?,itemTotalWithTax?,itemDiscountAmount?,taxAmount?,categories?,pageURL?,imageURL?).'
+    assert_equal response.params['error'].gsub(/"+/, ''), 'The content of element type item is incomplete, it must match (description,productCode?,commodityCode?,quantity?,unitCost?,unitOfMeasure?,itemTotal?,itemTotalWithTax?,itemDiscountAmount?,taxAmount?,categories?,pageURL?,imageURL?).'
   end
 
   def test_successful_purchase_with_level_two_and_three_fields

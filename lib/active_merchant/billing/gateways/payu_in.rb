@@ -163,7 +163,7 @@ module ActiveMerchant #:nodoc:
           when :numeric
             value.gsub(/[^0-9]/, '')
           when :text
-            value.gsub(/[^A-Za-z0-9@\-_\/\. ]/, '')
+            value.gsub(/[^A-Za-z0-9@\-_\/. ]/, '')
           when nil
             value
           else

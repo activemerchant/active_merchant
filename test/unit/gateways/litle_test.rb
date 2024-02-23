@@ -218,7 +218,7 @@ class LitleTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, customer_id: '8675309')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(customerId=\"8675309\">\n), data)
+      assert_match(%r(customerId="8675309">\n), data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -226,7 +226,7 @@ class LitleTest < Test::Unit::TestCase
     stub_comms do
       @gateway.capture(@amount, @credit_card, customer_id: '8675309')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(customerId=\"8675309\">\n), data)
+      assert_match(%r(customerId="8675309">\n), data)
     end.respond_with(successful_capture_response)
   end
 
@@ -234,7 +234,7 @@ class LitleTest < Test::Unit::TestCase
     stub_comms do
       @gateway.credit(@amount, @credit_card, customer_id: '8675309')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(%r(customerId=\"8675309\">\n), data)
+      assert_match(%r(customerId="8675309">\n), data)
     end.respond_with(successful_credit_response)
   end
 
@@ -549,7 +549,7 @@ class LitleTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match '<track>Track Data</track>', data
       assert_match '<orderSource>retail</orderSource>', data
-      assert_match %r{<pos>.+<\/pos>}m, data
+      assert_match %r{<pos>.+</pos>}m, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -558,7 +558,7 @@ class LitleTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |_endpoint, data, _headers|
       assert_match '<orderSource>ecommerce</orderSource>', data
-      assert %r{<pos>.+<\/pos>}m !~ data
+      assert %r{<pos>.+</pos>}m !~ data
     end.respond_with(successful_purchase_response)
   end
 

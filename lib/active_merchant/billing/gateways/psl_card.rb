@@ -242,7 +242,7 @@ module ActiveMerchant
       def parse(body)
         fields = {}
         for line in body.split('&')
-          key, value = *line.scan(%r{^(\w+)\=(.*)$}).flatten
+          key, value = *line.scan(%r{^(\w+)=(.*)$}).flatten
           fields[key] = CGI.unescape(value)
         end
         fields.symbolize_keys

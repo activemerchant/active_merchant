@@ -237,14 +237,14 @@ module ActiveMerchant #:nodoc:
 
       def commit_raw(object, action, parameters)
         if action == 'inquire'
-          url = "#{(test? ? test_url : live_url)}#{object}/#{parameters}"
+          url = "#{test? ? test_url : live_url}#{object}/#{parameters}"
           begin
             raw_response = ssl_get(url, headers)
           rescue ResponseError => e
             raw_response = e.response.body
           end
         else
-          url = "#{(test? ? test_url : live_url)}#{object}/#{action}"
+          url = "#{test? ? test_url : live_url}#{object}/#{action}"
           begin
             raw_response = ssl_post(url, post_data(parameters), headers)
           rescue ResponseError => e
@@ -314,10 +314,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_message_from(response)
-        if !response.include?('error')
-          response['message'] || response['card']['message']
-        else
+        if response.include?('error')
           response['error']['type']
+        else
+          response['message'] || response['card']['message']
         end
       end
 

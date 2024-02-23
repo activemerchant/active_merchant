@@ -338,8 +338,8 @@ module ActiveMerchant
       def add_fraud_info(doc, payment_method, options)
         doc.send('transaction-fraud-info') do
           doc.send('shopper-ip-address', options[:ip]) if options[:ip]
-          if fraud_info = options[:transaction_fraud_info]
-            doc.send('fraud-session-id', fraud_info[:fraud_session_id]) if fraud_info[:fraud_session_id]
+          if fraud_info = options[:transaction_fraud_info] && (fraud_info[:fraud_session_id])
+            doc.send('fraud-session-id', fraud_info[:fraud_session_id])
           end
           unless payment_method.is_a? String
             doc.send('shipping-contact-info') do
@@ -446,10 +446,10 @@ module ActiveMerchant
       end
 
       def parse_element(parsed, node)
-        if !node.elements.empty?
-          node.elements.each { |e| parse_element(parsed, e) }
-        else
+        if node.elements.empty?
           parsed[node.name.downcase] = node.text
+        else
+          node.elements.each { |e| parse_element(parsed, e) }
         end
       end
 
@@ -459,8 +459,8 @@ module ActiveMerchant
         e.response
       end
 
-      def commit(action, options, verb = :post, payment_method_details = PaymentMethodDetails.new())
-        request = build_xml_request(action, payment_method_details) { |doc| yield(doc) }
+      def commit(action, options, verb = :post, payment_method_details = PaymentMethodDetails.new(), &block)
+        request = build_xml_request(action, payment_method_details, &block)
         response = api_request(action, request, verb, payment_method_details, options)
         parsed = parse(response)
 

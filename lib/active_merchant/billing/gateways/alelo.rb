@@ -47,8 +47,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((Authorization: Bearer )[\w -]+), '\1[FILTERED]').
           gsub(%r((client_id=|Client-Id:)[\w -]+), '\1[FILTERED]\2').
           gsub(%r((client_secret=|Client-Secret:)[\w -]+), '\1[FILTERED]\2').
-          gsub(%r((access_token\":\")[^\"]*), '\1[FILTERED]').
-          gsub(%r((publicKey\":\")[^\"]*), '\1[FILTERED]')
+          gsub(%r((access_token":")[^"]*), '\1[FILTERED]').
+          gsub(%r((publicKey":")[^"]*), '\1[FILTERED]')
       end
 
       private

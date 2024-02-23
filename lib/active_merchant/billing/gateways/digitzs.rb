@@ -60,11 +60,11 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Bearer ).+), '\1[FILTERED]').
           gsub(%r((X-Api-Key: )\w+), '\1[FILTERED]').
-          gsub(%r((\"id\\\":\\\").+), '\1[FILTERED]').
-          gsub(%r((\"appKey\\\":\\\").+), '\1[FILTERED]').
-          gsub(%r((\"appToken\\\":\\\").+), '\1[FILTERED]').
-          gsub(%r((\"code\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"number\\\":\\\")\d+), '\1[FILTERED]')
+          gsub(%r(("id\\":\\").+), '\1[FILTERED]').
+          gsub(%r(("appKey\\":\\").+), '\1[FILTERED]').
+          gsub(%r(("appToken\\":\\").+), '\1[FILTERED]').
+          gsub(%r(("code\\":\\")\d+), '\1[FILTERED]').
+          gsub(%r(("number\\":\\")\d+), '\1[FILTERED]')
       end
 
       private

@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         results = {}
         body.split(/&/).each do |pair|
-          key, val = pair.split(/\=/)
+          key, val = pair.split(/=/)
           results[key.downcase.to_sym] = CGI.unescape(val) if val
         end
         results

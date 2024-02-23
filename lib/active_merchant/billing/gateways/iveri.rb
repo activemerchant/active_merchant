@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((CertificateID=\\\")[^\\]*), '\1[FILTERED]').
+          gsub(%r((CertificateID=\\")[^\\]*), '\1[FILTERED]').
           gsub(%r((&lt;PAN&gt;)[^&]*), '\1[FILTERED]').
           gsub(%r((&lt;CardSecurityCode&gt;)[^&]*), '\1[FILTERED]')
       end
@@ -218,10 +218,10 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        if !node.elements.empty?
-          node.elements.each { |e| parse_element(parsed, e) }
-        else
+        if node.elements.empty?
           parsed[underscore(node.name)] = node.text
+        else
+          node.elements.each { |e| parse_element(parsed, e) }
         end
       end
 

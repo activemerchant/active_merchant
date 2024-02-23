@@ -250,11 +250,10 @@ module ActiveMerchant #:nodoc:
       def headers(options = {})
         secret_key = options[:secret_key] || @options[:secret_key]
 
-        headers = {
+        {
           'Authorization' => 'Basic ' + Base64.encode64(secret_key.to_s + ':').strip,
           'User-Agent' => "SecurionPay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
-        headers
       end
 
       def response_error(raw_response)
@@ -312,7 +311,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def test?
-        (@options[:secret_key]&.include?('_test_'))
+        @options[:secret_key]&.include?('_test_')
       end
     end
   end

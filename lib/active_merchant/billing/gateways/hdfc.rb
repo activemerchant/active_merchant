@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc:
         return '' unless string
 
         string = string[0...max_length] if max_length
-        string.gsub(/[^A-Za-z0-9 \-_@\.\n]/, '')
+        string.gsub(/[^A-Za-z0-9 \-_@.\n]/, '')
       end
     end
   end

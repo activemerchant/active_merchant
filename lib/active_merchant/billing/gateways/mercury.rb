@@ -349,7 +349,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def unescape_xml(escaped_xml)
-        escaped_xml.gsub(/\&gt;/, '>').gsub(/\&lt;/, '<')
+        escaped_xml.gsub(/&gt;/, '>').gsub(/&lt;/, '<')
       end
     end
   end

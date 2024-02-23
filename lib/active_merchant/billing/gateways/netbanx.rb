@@ -119,7 +119,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'verifications', post)
       end
 
-      # note: when passing options[:customer] we only attempt to add the
+      # NOTE: when passing options[:customer] we only attempt to add the
       #       card to the profile_id passed as the options[:customer]
       def store(credit_card, options = {})
         # locale can only be one of en_US, fr_CA, en_GB
@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def map_3ds(three_d_secure_options)
-        mapped = {
+        {
           eci: three_d_secure_options[:eci],
           cavv: three_d_secure_options[:cavv],
           xid: three_d_secure_options[:xid],
@@ -241,8 +241,6 @@ module ActiveMerchant #:nodoc:
           threeDSecureVersion: three_d_secure_options[:version],
           directoryServerTransactionId: three_d_secure_options[:ds_transaction_id]
         }
-
-        mapped
       end
 
       def parse(body)

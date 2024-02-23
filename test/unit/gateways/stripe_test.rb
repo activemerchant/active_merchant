@@ -548,10 +548,10 @@ class StripeTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, 'cus_xxx|card_xxx', @options.merge({ application: application }))
     end.check_request do |_method, _endpoint, _data, headers|
-      assert_match(/\"application\"/, headers['X-Stripe-Client-User-Agent'])
-      assert_match(/\"name\":\"app\"/, headers['X-Stripe-Client-User-Agent'])
-      assert_match(/\"version\":\"1.0\"/, headers['X-Stripe-Client-User-Agent'])
-      assert_match(/\"url\":\"https:\/\/example.com\"/, headers['X-Stripe-Client-User-Agent'])
+      assert_match(/"application"/, headers['X-Stripe-Client-User-Agent'])
+      assert_match(/"name":"app"/, headers['X-Stripe-Client-User-Agent'])
+      assert_match(/"version":"1.0"/, headers['X-Stripe-Client-User-Agent'])
+      assert_match(/"url":"https:\/\/example.com"/, headers['X-Stripe-Client-User-Agent'])
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -1065,10 +1065,10 @@ class StripeTest < Test::Unit::TestCase
       assert_match(/ip=127\.127\.127\.127/, data)
       assert_match(/user_agent=some\+browser/, data)
       assert_match(/external_id=42/, data)
-      assert_match(/referrer=http\%3A\%2F\%2Fwww\.shopify\.com/, data)
-      assert_match(/payment_user_agent=Stripe\%2Fv1\+ActiveMerchantBindings\%2F\d+\.\d+\.\d+/, data)
-      assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
-      assert_match(/receipt_email=receipt-receiver\%40wonderfullyfakedomain\.com/, data)
+      assert_match(/referrer=http%3A%2F%2Fwww\.shopify\.com/, data)
+      assert_match(/payment_user_agent=Stripe%2Fv1\+ActiveMerchantBindings%2F\d+\.\d+\.\d+/, data)
+      assert_match(/metadata\[email\]=foo%40wonderfullyfakedomain\.com/, data)
+      assert_match(/receipt_email=receipt-receiver%40wonderfullyfakedomain\.com/, data)
       assert_match(/metadata\[order_id\]=42/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -1081,8 +1081,8 @@ class StripeTest < Test::Unit::TestCase
       assert_match(/description=a\+test\+customer/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
       assert_match(/user_agent=some\+browser/, data)
-      assert_match(/referrer=http\%3A\%2F\%2Fwww\.shopify\.com/, data)
-      assert_match(/payment_user_agent=Stripe\%2Fv1\+ActiveMerchantBindings\%2F\d+\.\d+\.\d+/, data)
+      assert_match(/referrer=http%3A%2F%2Fwww\.shopify\.com/, data)
+      assert_match(/payment_user_agent=Stripe%2Fv1\+ActiveMerchantBindings%2F\d+\.\d+\.\d+/, data)
       refute data.include?('metadata')
     end.respond_with(successful_purchase_response)
   end
@@ -1094,7 +1094,7 @@ class StripeTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
       assert_match(/metadata\[i_made_up_this_key_too\]=canyoutell/, data)
-      assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
+      assert_match(/metadata\[email\]=foo%40wonderfullyfakedomain\.com/, data)
       assert_match(/metadata\[order_id\]=42/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -1106,7 +1106,7 @@ class StripeTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
       assert_match(/metadata\[i_made_up_this_key_too\]=canyoutell/, data)
-      assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
+      assert_match(/metadata\[email\]=foo%40wonderfullyfakedomain\.com/, data)
       assert_match(/metadata\[order_id\]=42/, data)
       assert_match(/metadata\[card_read_method\]=contact/, data)
     end.respond_with(successful_purchase_response)
@@ -1119,7 +1119,7 @@ class StripeTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
       assert_match(/metadata\[i_made_up_this_key_too\]=canyoutell/, data)
-      assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
+      assert_match(/metadata\[email\]=foo%40wonderfullyfakedomain\.com/, data)
       assert_match(/metadata\[order_id\]=42/, data)
       assert_match(/metadata\[card_read_method\]=contact/, data)
     end.respond_with(successful_purchase_response)
@@ -1553,7 +1553,7 @@ class StripeTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, 'ch_test_charge', application_fee: 100, icc_data: @emv_credit_card.icc_data)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert data =~ /capture\=false/, 'request should set capture to false'
+      assert data =~ /capture=false/, 'request should set capture to false'
     end.respond_with(successful_capture_response_with_icc_data)
 
     assert_success response

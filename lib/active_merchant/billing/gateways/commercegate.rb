@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         results = {}
 
-        body.split(/\&/).each do |pair|
+        body.split(/&/).each do |pair|
           key, val = pair.split(%r{=})
           results[key] = CGI.unescape(val)
         end

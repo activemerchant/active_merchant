@@ -104,9 +104,9 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((apikey: )\w+)i, '\1[FILTERED]').
-          gsub(%r((\"card_number\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"security_code\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"emv_issuer_data\\\":\\\")\d+), '\1[FILTERED]')
+          gsub(%r(("card_number\\":\\")\d+), '\1[FILTERED]').
+          gsub(%r(("security_code\\":\\")\d+), '\1[FILTERED]').
+          gsub(%r(("emv_issuer_data\\":\\")\d+), '\1[FILTERED]')
       end
 
       private
@@ -288,7 +288,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(method, endpoint, parameters, options = {})
-        url = "#{(test? ? test_url : live_url)}/#{endpoint}"
+        url = "#{test? ? test_url : live_url}/#{endpoint}"
 
         begin
           raw_response = ssl_request(method, url, post_data(parameters), headers(options))

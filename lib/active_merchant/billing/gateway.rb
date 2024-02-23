@@ -245,7 +245,7 @@ module ActiveMerchant #:nodoc:
       private # :nodoc: all
 
       def name
-        self.class.name.scan(/\:\:(\w+)Gateway/).flatten.first
+        self.class.name.scan(/::(\w+)Gateway/).flatten.first
       end
 
       def amount(money)

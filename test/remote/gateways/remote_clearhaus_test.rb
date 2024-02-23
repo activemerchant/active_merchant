@@ -5,7 +5,7 @@ class RemoteClearhausTest < Test::Unit::TestCase
     @gateway = ClearhausGateway.new(fixtures(:clearhaus))
 
     @amount = 100
-    @credit_card   = credit_card('4111111111111111')
+    @credit_card = credit_card('4111111111111111')
     @declined_card = credit_card('4200000000000000')
     @options = {}
   end

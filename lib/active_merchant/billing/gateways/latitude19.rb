@@ -143,8 +143,8 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((\"cardNumber\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"cvv\\\":\\\")\d+), '\1[FILTERED]')
+          gsub(%r(("cardNumber\\":\\")\d+), '\1[FILTERED]').
+          gsub(%r(("cvv\\":\\")\d+), '\1[FILTERED]')
       end
 
       private

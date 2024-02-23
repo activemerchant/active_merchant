@@ -224,7 +224,7 @@ module ActiveMerchant #:nodoc:
       def error_code_from(response)
         return '' if success_from(response)
 
-        error = !STANDARD_ERROR_CODE_MAPPING[response['paywayCode']].nil? ? STANDARD_ERROR_CODE_MAPPING[response['paywayCode']] : STANDARD_ERROR_CODE[:processing_error]
+        error = STANDARD_ERROR_CODE_MAPPING[response['paywayCode']].nil? ? STANDARD_ERROR_CODE[:processing_error] : STANDARD_ERROR_CODE_MAPPING[response['paywayCode']]
         return error
       end
 

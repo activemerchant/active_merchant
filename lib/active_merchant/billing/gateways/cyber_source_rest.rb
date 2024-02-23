@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
           gsub(/(\\?"securityCode\\?":\\?")\d+/, '\1[FILTERED]').
           gsub(/(signature=")[^"]*/, '\1[FILTERED]').
           gsub(/(keyid=")[^"]*/, '\1[FILTERED]').
-          gsub(/(Digest: SHA-256=)[\w\/\+=]*/, '\1[FILTERED]')
+          gsub(/(Digest: SHA-256=)[\w\/+=]*/, '\1[FILTERED]')
       end
 
       private
@@ -315,7 +315,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action)
-        "#{(test? ? test_url : live_url)}/pts/v2/#{action}"
+        "#{test? ? test_url : live_url}/pts/v2/#{action}"
       end
 
       def host
