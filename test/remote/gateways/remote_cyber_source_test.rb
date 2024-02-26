@@ -315,7 +315,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(void)
   end
 
-  # Note: This test will only pass with test account credentials which
+  # NOTE: This test will only pass with test account credentials which
   # have asynchronous adjustments enabled.
   def test_successful_asynchronous_adjust
     assert authorize = @gateway_latam.authorize(@amount, @credit_card, @options)

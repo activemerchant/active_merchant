@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
         card_number = payment.number
         cvv = payment.verification_value
 
-        payload = { card_number: card_number, 'cvv': cvv }.to_json
+        payload = { card_number: card_number, cvv: cvv }.to_json
 
         encryption_key = @encryption_key || OpenSSL::PKey::RSA.new(one_time_public_key)
 

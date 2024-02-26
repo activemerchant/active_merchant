@@ -4,7 +4,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
   def setup
     @gateway = DLocalGateway.new(fixtures(:d_local))
 
-    @amount = 200
+    @amount = 500
     @credit_card = credit_card('4111111111111111')
     @credit_card_naranja = credit_card('5895627823453005')
     @cabal_credit_card = credit_card('5896 5700 0000 0004')
@@ -84,7 +84,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_installments
-    response = @gateway.purchase(@amount, @credit_card, @options_argentina_installments)
+    response = @gateway.purchase(1000, @credit_card, @options_argentina_installments)
     assert_success response
     assert_match 'The payment was paid', response.message
   end
@@ -170,7 +170,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
 
   # You may need dLocal to enable your test account to support individual countries
   def test_successful_purchase_colombia
-    response = @gateway.purchase(100000, @credit_card, @options_colombia)
+    response = @gateway.purchase(@amount, @credit_card, @options_colombia)
     assert_success response
     assert_match 'The payment was paid', response.message
   end

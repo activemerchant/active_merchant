@@ -263,7 +263,7 @@ module ActiveMerchant #:nodoc:
         oauth_parameters[:oauth_signature] = CGI.escape(Base64.encode64(hmac_signature).chomp.delete("\n"))
 
         # prepare Authorization header string
-        oauth_parameters = Hash[oauth_parameters.sort_by { |k, _| k }]
+        oauth_parameters = oauth_parameters.sort_by { |k, _| k }.to_h
         oauth_headers = ["OAuth realm=\"#{@options[:realm]}\""]
         oauth_headers += oauth_parameters.map { |k, v| "#{k}=\"#{v}\"" }
 

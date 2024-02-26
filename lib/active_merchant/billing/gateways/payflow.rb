@@ -192,9 +192,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end
 
-            if %i(authorization purchase).include? action
-              add_mpi_3ds(xml, options[:three_d_secure]) if options[:three_d_secure]
-            end
+            add_mpi_3ds(xml, options[:three_d_secure]) if %i(authorization purchase).include?(action) && (options[:three_d_secure])
 
             xml.tag! 'Tender' do
               add_credit_card(xml, credit_card, options)

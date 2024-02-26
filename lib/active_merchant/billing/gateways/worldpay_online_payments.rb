@@ -86,8 +86,7 @@ module ActiveMerchant #:nodoc:
           },
           'clientKey' => @client_key
         }
-        token_response = commit(:post, 'tokens', obj, { 'Authorization' => @service_key }, 'token')
-        token_response
+        commit(:post, 'tokens', obj, { 'Authorization' => @service_key }, 'token')
       end
 
       def create_post_for_auth_or_purchase(token, money, options)
@@ -136,7 +135,10 @@ module ActiveMerchant #:nodoc:
 
           raw_response = ssl_request(method, self.live_url + url, json, headers(options))
 
-          if raw_response != ''
+          if raw_response == ''
+            success = true
+            response = {}
+          else
             response = parse(raw_response)
             if type == 'token'
               success = response.key?('token')
@@ -153,9 +155,6 @@ module ActiveMerchant #:nodoc:
                 end
               end
             end
-          else
-            success = true
-            response = {}
           end
         rescue ResponseError => e
           raw_response = e.response.body

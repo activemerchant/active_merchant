@@ -194,7 +194,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, "application_fees/#{CGI.escape(identification)}/refunds", post, options)
       end
 
-      # Note: creating a new credit card will not change the customer's existing default credit card (use :set_default => true)
+      # NOTE: creating a new credit card will not change the customer's existing default credit card (use :set_default => true)
       def store(payment, options = {})
         params = {}
         post = {}
@@ -724,9 +724,7 @@ module ActiveMerchant #:nodoc:
         return true unless test?
 
         %w(sk rk).each do |k|
-          if key(options).start_with?(k)
-            return false unless key(options).start_with?("#{k}_test")
-          end
+          return false if key(options).start_with?(k) && !key(options).start_with?("#{k}_test")
         end
 
         true

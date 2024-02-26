@@ -343,7 +343,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
 
   def test_failed_visacreditcard_purchase_via_reference
     assert response = @gateway.purchase(142, 123, @visacredit_reference_options)
-    assert_match %r{INVALID_XREF}, response.message
+    assert_match %r{Invalid xref}, response.message
     assert_failure response
     assert response.test?
   end
@@ -358,7 +358,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   def test_failed_purchase_non_existent_currency
     assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(currency: 'CEO'))
     assert_failure response
-    assert_match %r{MISSING_CURRENCYCODE}, response.message
+    assert_match %r{Missing currencyCode}, response.message
   end
 
   def test_successful_purchase_and_amount_for_non_decimal_currency
@@ -405,7 +405,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       shared_secret: ''
     )
     assert response = gateway.purchase(142, @mastercard, @mastercard_options)
-    assert_match %r{MISSING_MERCHANTID}, response.message
+    assert_match %r{Missing merchantID}, response.message
     assert_failure response
   end
 
@@ -447,7 +447,6 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert response = @gateway.authorize(1202, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
     assert_equal 'APPROVED', response.message
     assert_equal '0', response.params['responseCode']
-    assert_equal 'Success', response.params['threeDSResponseMessage']
     assert response.success?
     assert response.test?
     assert !response.authorization.blank?

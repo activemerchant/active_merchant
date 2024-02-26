@@ -425,7 +425,7 @@ module ActiveMerchant #:nodoc:
 
       def add_risk_data(post, options)
         if (risk_data = options[:risk_data])
-          risk_data = Hash[risk_data.map { |k, v| ["riskdata.#{k}", v] }]
+          risk_data = risk_data.map { |k, v| ["riskdata.#{k}", v] }.to_h
           post[:additionalData].merge!(risk_data)
         end
       end

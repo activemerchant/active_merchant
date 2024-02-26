@@ -315,7 +315,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action)
-        "#{(test? ? test_url : live_url)}/pts/v2/#{action}"
+        "#{test? ? test_url : live_url}/pts/v2/#{action}"
       end
 
       def host

@@ -106,7 +106,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[body.split('&').map { |x| x.split('=').map { |y| CGI.unescape(y) } }]
+        body.split('&').map { |x| x.split('=').map { |y| CGI.unescape(y) } }.to_h
       end
 
       def commit(action, money, parameters)
@@ -182,8 +182,7 @@ module ActiveMerchant #:nodoc:
         post['RequestID']     = request_id
         post['Signature']     = signature(action, post, parameters)
 
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def timestamp
