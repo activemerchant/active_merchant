@@ -121,6 +121,7 @@
 * Worldline (formerly GlobalCollect): Update API endpoints [deemeyers] #5049
 * Quickbooks: Update scrub method [almalee24] #5049
 *  Worldline (formerly GlobalCollect):Remove decrypted payment data [almalee24] #5032
+* StripePI: Update authorization_from [almalee24] #5048
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
