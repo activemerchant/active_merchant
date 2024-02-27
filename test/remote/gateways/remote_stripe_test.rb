@@ -24,12 +24,25 @@ class RemoteStripeTest < Test::Unit::TestCase
       branch_code: "000000",
       account_number: "000123456"
     })
+    @bacs_direct_debit = check({
+      name: "John Bacs",
+      branch_code: "108800",
+      account_number: "00012345"
+    })
     @verified_bank_account = fixtures(:stripe_verified_bank_account)
 
     @options = {
       :currency => "USD",
       :description => 'ActiveMerchant Test Purchase',
       :email => 'wow@example.com'
+    }
+    @address = {
+      :address1 => '123 Main St', 
+      :address2 => 'Apt 1',
+      :city => 'Anytown',
+      :state => 'CA',
+      :zip => '12345',
+      :country => 'US'
     }
   end
 
@@ -150,6 +163,25 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "Transaction approved", response.message
     assert_equal "processing", response.params["status"]
     assert_equal "aud", response.params["currency"]
+    assert_equal @amount, response.params["amount"]
+    assert_equal @amount, response.params["charges"]["data"].first["amount"]
+    assert_equal @amount, response.params["charges"]["data"].first["amount_captured"]
+  end
+
+  def test_successful_purchase_with_stored_bacs_direct_debit
+    assert response = @gateway.store(@bacs_direct_debit, email: 'bacs@example.com', device_data: { ip: '127.0.0.1', user_agent: 'Firefox' }, currency: 'GBP', address: @address)
+    assert_success response
+    assert_equal 2, response.responses.size
+
+    customer_response = response.responses[0]
+    customer_id = customer_response.params["id"]
+
+    response = @gateway.purchase(@amount, nil, @options.merge(customer: customer_id, payment_type: "bank_account", currency: "GBP"))
+    assert_success response
+    assert response.test?
+    assert_equal "Transaction approved", response.message
+    assert_equal "processing", response.params["status"]
+    assert_equal "gbp", response.params["currency"]
     assert_equal @amount, response.params["amount"]
     assert_equal @amount, response.params["charges"]["data"].first["amount"]
     assert_equal @amount, response.params["charges"]["data"].first["amount_captured"]

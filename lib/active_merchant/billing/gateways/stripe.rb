@@ -26,7 +26,8 @@ module ActiveMerchant #:nodoc:
 
       DIRECT_DEBIT_SUPPORTED_CURRENCIES = [
         "AUD",
-        "EUR"
+        "EUR",
+        "GBP"
       ]
 
       self.supported_countries = %w(AT AU BE CA CH DE DK ES FI FR GB IE IT LU NL NO SE SG US)
@@ -836,7 +837,8 @@ module ActiveMerchant #:nodoc:
       def payment_method_type_for_direct_debit(currency)
         payment_method_types = {
           sepa_debit: currency == "EUR",
-          au_becs_debit: currency == "AUD"
+          au_becs_debit: currency == "AUD",
+          bacs_debit: currency == "GBP"
         }
 
         payment_method_type = payment_method_types.key(true)
@@ -879,12 +881,28 @@ module ActiveMerchant #:nodoc:
         }
       end
 
+      def initial_options_for_bacs_direct_debit(bank_account, options)
+        {
+          type: 'bacs_debit',
+          billing_details: {
+            name: bank_account.name,
+            email: options[:email],
+          },
+          bacs_debit: {
+            sort_code: bank_account.branch_code,
+            account_number: bank_account.account_number
+          }
+        }
+      end
+
       def initial_options_for_direct_debit(bank_account, options)
         case options[:currency]
         when "EUR"
           initial_options_for_sepa_direct_debit(bank_account, options)
         when "AUD"
           initial_options_for_becs_direct_debit(bank_account, options)
+        when "GBP"
+          initial_options_for_bacs_direct_debit(bank_account, options)
         end
       end
 
