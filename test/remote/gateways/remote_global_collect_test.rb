@@ -114,7 +114,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_apple_pay_ogone_direct
-    options = @preprod_options.merge(requires_approval: false, currency: 'USD')
+    options = @preprod_options.merge(requires_approval: false, currency: 'EUR')
     response = @gateway_direct.purchase(100, @apple_pay, options)
     assert_success response
     assert_equal 'Succeeded', response.message
@@ -122,7 +122,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture_with_apple_pay_ogone_direct
-    options = @preprod_options.merge(requires_approval: false, currency: 'USD')
+    options = @preprod_options.merge(requires_approval: false, currency: 'EUR')
     auth = @gateway_direct.authorize(100, @apple_pay, options)
     assert_success auth
 
