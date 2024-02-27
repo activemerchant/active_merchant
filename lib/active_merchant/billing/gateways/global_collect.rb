@@ -9,8 +9,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.globalcollect.com/'
 
       self.test_url = 'https://eu.sandbox.api-ingenico.com'
-      self.preproduction_url = 'https://world.preprod.api-ingenico.com'
-      self.live_url = 'https://world.api-ingenico.com'
+      self.preproduction_url = 'https://api.preprod.connect.worldline-solutions.com'
+      self.live_url = 'https://api.connect.worldline-solutions.com'
       self.ogone_direct_test = 'https://payment.preprod.direct.worldline-solutions.com'
       self.ogone_direct_live = 'https://payment.direct.worldline-solutions.com'
 
