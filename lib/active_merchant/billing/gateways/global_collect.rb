@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
       class_attribute :ogone_direct_test
       class_attribute :ogone_direct_live
 
-      self.display_name = 'GlobalCollect'
+      self.display_name = 'Worldline (formerly GlobalCollect)'
       self.homepage_url = 'http://www.globalcollect.com/'
 
       self.test_url = 'https://eu.sandbox.api-ingenico.com'
