@@ -118,6 +118,7 @@
 * SumUp: Add 3DS fields [sinourain] #5030
 * Cecabank: Enable network_transaction_id as GSF [javierpedrozaing] #5034
 * Braintree: Surface the paypal_details in response object [yunnydang] #5043
+* Worldline (formerly GlobalCollect): Update API endpoints [deemeyers] #5049
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
