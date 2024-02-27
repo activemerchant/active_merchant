@@ -123,6 +123,7 @@
 * Worldline (formerly GlobalCollect):Remove decrypted payment data [almalee24] #5032
 * StripePI: Update authorization_from [almalee24] #5048
 * FirstPay: Add REST JSON transaction methods [sinourain] #5035
+* Braintree: Add payment details to failed transaction hash [yunnydang] #5050
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

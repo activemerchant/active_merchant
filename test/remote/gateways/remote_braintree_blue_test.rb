@@ -290,7 +290,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert transaction = response.params['braintree_transaction']
     assert transaction['risk_data']
     assert transaction['risk_data']['id']
-    assert_equal 'Not Evaluated', transaction['risk_data']['decision']
+    assert_equal 'Approve', transaction['risk_data']['decision']
     assert_equal false, transaction['risk_data']['device_data_captured']
     assert_equal 'fraud_protection', transaction['risk_data']['fraud_service_provider']
   end
@@ -550,7 +550,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert transaction = response.params['braintree_transaction']
     assert transaction['risk_data']
     assert transaction['risk_data']['id']
-    assert_equal 'Not Evaluated', transaction['risk_data']['decision']
+    assert_equal 'Approve', transaction['risk_data']['decision']
     assert_equal false, transaction['risk_data']['device_data_captured']
     assert_equal 'fraud_protection', transaction['risk_data']['fraud_service_provider']
   end
@@ -1287,6 +1287,17 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_success response
     assert_equal '1000 Approved', response.message
+    assert_equal 'credit_card', response.params['braintree_transaction']['payment_instrument_type']
+    assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['prepaid']
+    assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['debit']
+    assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['issuing_bank']
+  end
+
+  def test_unsuccessful_credit_card_purchase_and_return_payment_details
+    assert response = @gateway.purchase(204700, @credit_card)
+    assert_failure response
+    assert_equal('2047 : Call Issuer. Pick Up Card.', response.params['braintree_transaction']['additional_processor_response'])
+    assert_equal 'credit_card', response.params['braintree_transaction']['payment_instrument_type']
     assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['prepaid']
     assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['debit']
     assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['issuing_bank']
@@ -1296,6 +1307,17 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @nt_credit_card)
     assert_success response
     assert_equal '1000 Approved', response.message
+    assert_equal 'network_token', response.params['braintree_transaction']['payment_instrument_type']
+    assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['prepaid']
+    assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['debit']
+    assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['issuing_bank']
+  end
+
+  def test_unsuccessful_network_token_purchase_and_return_payment_details
+    assert response = @gateway.purchase(204700, @nt_credit_card)
+    assert_failure response
+    assert_equal('2047 : Call Issuer. Pick Up Card.', response.params['braintree_transaction']['additional_processor_response'])
+    assert_equal 'network_token', response.params['braintree_transaction']['payment_instrument_type']
     assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['prepaid']
     assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['debit']
     assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['issuing_bank']
@@ -1315,6 +1337,25 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal '1000 Approved', response.message
+    assert_equal 'android_pay_card', response.params['braintree_transaction']['payment_instrument_type']
+    assert_equal 'Unknown', response.params['braintree_transaction']['google_pay_details']['prepaid']
+    assert_equal 'Unknown', response.params['braintree_transaction']['google_pay_details']['debit']
+  end
+
+  def test_unsuccessful_google_pay_purchase_and_return_payment_details
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      month: '01',
+      year: '2024',
+      source: :google_pay,
+      transaction_id: '123456789',
+      eci: '05'
+    )
+    assert response = @gateway.purchase(204700, credit_card, @options)
+    assert_failure response
+    assert_equal('2047 : Call Issuer. Pick Up Card.', response.params['braintree_transaction']['additional_processor_response'])
+    assert_equal 'android_pay_card', response.params['braintree_transaction']['payment_instrument_type']
     assert_equal 'Unknown', response.params['braintree_transaction']['google_pay_details']['prepaid']
     assert_equal 'Unknown', response.params['braintree_transaction']['google_pay_details']['debit']
   end
@@ -1330,6 +1371,24 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal '1000 Approved', response.message
+    assert_equal 'apple_pay_card', response.params['braintree_transaction']['payment_instrument_type']
+    assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['prepaid']
+    assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['debit']
+    assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['issuing_bank']
+  end
+
+  def test_unsuccessful_apple_pay_purchase_and_return_payment_details
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
+
+    assert response = @gateway.purchase(204700, credit_card, @options)
+    assert_failure response
+    assert_equal('2047 : Call Issuer. Pick Up Card.', response.params['braintree_transaction']['additional_processor_response'])
+    assert_equal 'apple_pay_card', response.params['braintree_transaction']['payment_instrument_type']
     assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['prepaid']
     assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['debit']
     assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['issuing_bank']

@@ -499,6 +499,54 @@ module ActiveMerchant #:nodoc:
         result.transaction&.additional_processor_response
       end
 
+      def payment_instrument_type(result)
+        result&.payment_instrument_type
+      end
+
+      def credit_card_details(result)
+        if result
+          {
+            'masked_number'       => result.credit_card_details&.masked_number,
+            'bin'                 => result.credit_card_details&.bin,
+            'last_4'              => result.credit_card_details&.last_4,
+            'card_type'           => result.credit_card_details&.card_type,
+            'token'               => result.credit_card_details&.token,
+            'debit'               => result.credit_card_details&.debit,
+            'prepaid'             => result.credit_card_details&.prepaid,
+            'issuing_bank'        => result.credit_card_details&.issuing_bank
+          }
+        end
+      end
+
+      def network_token_details(result)
+        if result
+          {
+            'debit'               => result.network_token_details&.debit,
+            'prepaid'             => result.network_token_details&.prepaid,
+            'issuing_bank'        => result.network_token_details&.issuing_bank
+          }
+        end
+      end
+
+      def google_pay_details(result)
+        if result
+          {
+            'debit'               => result.google_pay_details&.debit,
+            'prepaid'             => result.google_pay_details&.prepaid
+          }
+        end
+      end
+
+      def apple_pay_details(result)
+        if result
+          {
+            'debit'               => result.apple_pay_details&.debit,
+            'prepaid'             => result.apple_pay_details&.prepaid,
+            'issuing_bank'        => result.apple_pay_details&.issuing_bank
+          }
+        end
+      end
+
       def create_transaction(transaction_type, money, credit_card_or_vault_id, options)
         transaction_params = create_transaction_parameters(money, credit_card_or_vault_id, options)
         commit do
@@ -558,7 +606,12 @@ module ActiveMerchant #:nodoc:
       def transaction_hash(result)
         unless result.success?
           return { 'processor_response_code' => response_code_from_result(result),
-                   'additional_processor_response' => additional_processor_response_from_result(result) }
+                   'additional_processor_response' => additional_processor_response_from_result(result),
+                   'payment_instrument_type' => payment_instrument_type(result.transaction),
+                   'credit_card_details' => credit_card_details(result.transaction),
+                   'network_token_details' => network_token_details(result.transaction),
+                   'google_pay_details' => google_pay_details(result.transaction),
+                   'apple_pay_details' => apple_pay_details(result.transaction) }
         end
 
         transaction = result.transaction
@@ -573,6 +626,14 @@ module ActiveMerchant #:nodoc:
         else
           vault_customer = nil
         end
+
+        credit_card_details = credit_card_details(transaction)
+
+        network_token_details = network_token_details(transaction)
+
+        google_pay_details = google_pay_details(transaction)
+
+        apple_pay_details = apple_pay_details(transaction)
 
         customer_details = {
           'id' => transaction.customer_details.id,
@@ -598,33 +659,6 @@ module ActiveMerchant #:nodoc:
           'region'           => transaction.shipping_details.region,
           'postal_code'      => transaction.shipping_details.postal_code,
           'country_name'     => transaction.shipping_details.country_name
-        }
-        credit_card_details = {
-          'masked_number'       => transaction.credit_card_details.masked_number,
-          'bin'                 => transaction.credit_card_details.bin,
-          'last_4'              => transaction.credit_card_details.last_4,
-          'card_type'           => transaction.credit_card_details.card_type,
-          'token'               => transaction.credit_card_details.token,
-          'debit'               => transaction.credit_card_details.debit,
-          'prepaid'             => transaction.credit_card_details.prepaid,
-          'issuing_bank'        => transaction.credit_card_details.issuing_bank
-        }
-
-        network_token_details = {
-          'debit'               => transaction.network_token_details.debit,
-          'prepaid'             => transaction.network_token_details.prepaid,
-          'issuing_bank'        => transaction.network_token_details.issuing_bank
-        }
-
-        google_pay_details = {
-          'debit'               => transaction.google_pay_details.debit,
-          'prepaid'             => transaction.google_pay_details.prepaid
-        }
-
-        apple_pay_details = {
-          'debit'               => transaction.apple_pay_details.debit,
-          'prepaid'             => transaction.apple_pay_details.prepaid,
-          'issuing_bank'        => transaction.apple_pay_details.issuing_bank
         }
 
         paypal_details = {
@@ -671,7 +705,7 @@ module ActiveMerchant #:nodoc:
           'processor_authorization_code' => transaction.processor_authorization_code,
           'recurring'                    => transaction.recurring,
           'payment_receipt'              => payment_receipt,
-          'payment_instrument_type'      => transaction.payment_instrument_type
+          'payment_instrument_type'      => payment_instrument_type(transaction)
         }
       end
 
