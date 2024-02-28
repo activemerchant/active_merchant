@@ -579,7 +579,7 @@ module ActiveMerchant #:nodoc:
 
       def add_source_owner(post, creditcard, options)
         post[:owner] = {}
-        post[:owner][:name] = creditcard.name if creditcard.name
+        post[:owner][:name] = creditcard.name if creditcard.respond_to?(:name) && creditcard.name
         post[:owner][:email] = options[:email] if options[:email]
 
         if address = options[:billing_address] || options[:address]
@@ -788,7 +788,9 @@ module ActiveMerchant #:nodoc:
 
       def card_from_response(response)
         # StripePI puts the AVS and CVC check significantly deeper into the response object
-        response['card'] || response['active_card'] || response['source'] || response.dig('charges', 'data', 0, 'payment_method_details', 'card', 'checks') || {}
+        response['card'] || response['active_card'] || response['source'] ||
+          response.dig('charges', 'data', 0, 'payment_method_details', 'card', 'checks') ||
+          response.dig('latest_attempt', 'payment_method_details', 'card', 'checks') || {}
       end
 
       def emv_authorization_from_response(response)

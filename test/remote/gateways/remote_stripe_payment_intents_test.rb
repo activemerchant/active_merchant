@@ -1434,6 +1434,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert verify = @gateway.verify(@visa_card, options)
     assert_equal 'US', verify.responses[0].params.dig('card', 'country')
     assert_equal 'succeeded', verify.params['status']
+    assert_equal 'M', verify.cvv_result['code']
   end
 
   def test_failed_verify
