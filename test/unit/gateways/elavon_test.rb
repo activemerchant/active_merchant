@@ -32,6 +32,16 @@ class ElavonTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @google_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      source: :google_pay,
+      payment_data: "{ 'version': 'EC_v1', 'data': 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9'}"
+    })
+
+    @apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      source: :apple_pay,
+      payment_data: "{ 'version': 'EC_v1', 'data': 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9'}"
+    })
   end
 
   def test_successful_purchase
@@ -142,6 +152,22 @@ class ElavonTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(merchant_initiated_unscheduled: 'Y'))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<ssl_merchant_initiated_unscheduled>Y<\/ssl_merchant_initiated_unscheduled>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_apple_pay
+    stub_comms do
+      @gateway.purchase(@amount, @apple_pay, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_applepay_web>%7B %27version%27%3A %27EC_v1%27%2C %27data%27%3A %27QlzLxRFnNP9%2FGTaMhBwgmZ2ywntbr9%27%7D<\/ssl_applepay_web>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_google_pay
+    stub_comms do
+      @gateway.purchase(@amount, @google_pay, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_google_pay>%7B %27version%27%3A %27EC_v1%27%2C %27data%27%3A %27QlzLxRFnNP9%2FGTaMhBwgmZ2ywntbr9%27%7D<\/ssl_google_pay>/, data)
     end.respond_with(successful_purchase_response)
   end
 

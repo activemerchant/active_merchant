@@ -43,12 +43,7 @@ module ActiveMerchant #:nodoc:
           xml.ssl_transaction_type  self.actions[:purchase]
           xml.ssl_amount            amount(money)
 
-          if payment_method.is_a?(String)
-            add_token(xml, payment_method)
-          else
-            add_creditcard(xml, payment_method)
-          end
-
+          add_payment(xml, payment_method, options)
           add_invoice(xml, options)
           add_salestax(xml, options)
           add_currency(xml, money, options)
@@ -62,15 +57,14 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def authorize(money, creditcard, options = {})
+      def authorize(money, payment_method, options = {})
         request = build_xml_request do |xml|
           xml.ssl_vendor_id         @options[:ssl_vendor_id] || options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:authorize]
           xml.ssl_amount            amount(money)
-
           add_salestax(xml, options)
           add_invoice(xml, options)
-          add_creditcard(xml, creditcard)
+          add_payment(xml, payment_method, options)
           add_currency(xml, money, options)
           add_address(xml, options)
           add_customer_email(xml, options)
@@ -200,6 +194,16 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def add_payment(xml, payment, options)
+        if payment.is_a?(String)
+          xml.ssl_token payment
+        elsif payment.is_a?(NetworkTokenizationCreditCard)
+          add_network_token(xml, payment)
+        else
+          add_creditcard(xml, payment)
+        end
+      end
+
       def add_invoice(xml, options)
         xml.ssl_invoice_number    url_encode_truncate((options[:order_id] || options[:invoice]), 25)
         xml.ssl_description       url_encode_truncate(options[:description], 255)
@@ -211,6 +215,16 @@ module ActiveMerchant #:nodoc:
 
       def add_txn_id(xml, authorization)
         xml.ssl_txn_id authorization.split(';').last
+      end
+
+      def add_network_token(xml, payment_method)
+        payment = payment_method.payment_data&.gsub('=>', ':')
+        case payment_method.source
+        when :apple_pay
+          xml.ssl_applepay_web url_encode(payment)
+        when :google_pay
+          xml.ssl_google_pay url_encode(payment)
+        end
       end
 
       def add_creditcard(xml, creditcard)
