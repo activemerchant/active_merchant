@@ -213,11 +213,12 @@ module ActiveMerchant
       end
 
       def add_payment_method(params, payment_method, options)
-        if payment_method.is_a? Check
+        case payment_method
+        when Check
           add_echeck(params, payment_method, options)
-        elsif payment_method.is_a? String
+        when String
           add_token(params, payment_method, options)
-        elsif payment_method.is_a? NetworkTokenizationCreditCard
+        when NetworkTokenizationCreditCard
           add_network_tokenization(params, payment_method, options)
         else
           add_creditcard(params, payment_method, options)
@@ -423,7 +424,7 @@ module ActiveMerchant
           current_timestamp.to_s,
           @options[:token],
           payload
-        ].join('')
+        ].join
         Base64.strict_encode64(OpenSSL::HMAC.hexdigest('sha256', @options[:apisecret], message))
       end
 

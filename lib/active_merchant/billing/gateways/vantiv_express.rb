@@ -308,11 +308,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(xml, payment)
-        if payment.is_a?(String)
+        case payment
+        when String
           add_payment_account_id(xml, payment)
-        elsif payment.is_a?(Check)
+        when Check
           add_echeck(xml, payment)
-        elsif payment.is_a?(NetworkTokenizationCreditCard)
+        when NetworkTokenizationCreditCard
           add_network_tokenization_card(xml, payment)
         else
           add_credit_card(xml, payment)
@@ -560,9 +561,10 @@ module ActiveMerchant #:nodoc:
       def payment_account_type(payment)
         return 0 unless payment.is_a?(Check)
 
-        if payment.account_type == 'checking'
+        case payment.account_type
+        when 'checking'
           1
-        elsif payment.account_type == 'savings'
+        when 'savings'
           2
         else
           3

@@ -262,15 +262,15 @@ module ActiveMerchant #:nodoc:
 
         external_recurring_data = post[:external_recurring_data] = {}
 
-        case stored_credential.dig(:reason_type)
+        case stored_credential[:reason_type]
         when 'recurring', 'installment'
           external_recurring_data[:merchant_trigger_reason] = 'scheduled'
         when 'unscheduled'
           external_recurring_data[:merchant_trigger_reason] = 'unscheduled'
         end
 
-        external_recurring_data[:original_transaction_id] = test_mit?(options) ? test_network_transaction_id(post) : stored_credential.dig(:network_transaction_id)
-        external_recurring_data[:triggered_by] = stored_credential.dig(:initiator) == 'cardholder' ? 'customer' : 'merchant'
+        external_recurring_data[:original_transaction_id] = test_mit?(options) ? test_network_transaction_id(post) : stored_credential[:network_transaction_id]
+        external_recurring_data[:triggered_by] = stored_credential[:initiator] == 'cardholder' ? 'customer' : 'merchant'
       end
 
       def test_network_transaction_id(post)

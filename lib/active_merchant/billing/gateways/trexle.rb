@@ -148,7 +148,7 @@ module ActiveMerchant #:nodoc:
       def headers(params = {})
         result = {
           'Content-Type' => 'application/json',
-          'Authorization' => "Basic #{Base64.strict_encode64(options[:api_key] + ':').strip}"
+          'Authorization' => "Basic #{Base64.strict_encode64("#{options[:api_key]}:").strip}"
         }
 
         result['X-Partner-Key'] = params[:partner_key] if params[:partner_key]

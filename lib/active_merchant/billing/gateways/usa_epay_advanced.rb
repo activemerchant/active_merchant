@@ -1337,7 +1337,7 @@ module ActiveMerchant #:nodoc:
         case
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::CreditCard)
           build_tag soap, :string, 'CardNumber', payment_method[:method].number
-          build_tag soap, :string, 'CardExpiration', "#{'%02d' % payment_method[:method].month}#{payment_method[:method].year.to_s[-2..-1]}"
+          build_tag soap, :string, 'CardExpiration', "#{'%02d' % payment_method[:method].month}#{payment_method[:method].year.to_s[-2..]}"
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
             build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
@@ -1433,7 +1433,7 @@ module ActiveMerchant #:nodoc:
       def build_card_expiration(options)
         month = options[:payment_method].month
         year  = options[:payment_method].year
-        "#{'%02d' % month}#{year.to_s[-2..-1]}" unless month.nil? || year.nil?
+        "#{'%02d' % month}#{year.to_s[-2..]}" unless month.nil? || year.nil?
       end
 
       def build_check_data(soap, options)

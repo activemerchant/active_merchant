@@ -37,10 +37,11 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment_method, options = {})
         MultiResponse.run do |r|
-          if payment_method.is_a?(CreditCard)
+          case payment_method
+          when CreditCard
             response = r.process { tokenize(payment_method, options) }
             card_token = response.params['token']
-          elsif payment_method.is_a?(String)
+          when String
             _transaction_ref, card_token, payment_product = payment_method.split('|')
           end
 

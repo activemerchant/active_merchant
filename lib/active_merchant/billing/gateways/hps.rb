@@ -289,9 +289,10 @@ module ActiveMerchant #:nodoc:
         return unless options[:stored_credential]
 
         xml.hps :CardOnFileData do
-          if options[:stored_credential][:initiator] == 'customer'
+          case options[:stored_credential][:initiator]
+          when 'customer'
             xml.hps :CardOnFile, 'C'
-          elsif options[:stored_credential][:initiator] == 'merchant'
+          when 'merchant'
             xml.hps :CardOnFile, 'M'
           else
             return

@@ -23,14 +23,14 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_request_url_live
     gateway = UsaEpayTransactionGateway.new(login: 'LOGIN', test: false)
     gateway.expects(:ssl_post).
-      with('https://www.usaepay.com/gate', regexp_matches(Regexp.new('^' + Regexp.escape(purchase_request)))).
+      with('https://www.usaepay.com/gate', regexp_matches(Regexp.new("^#{Regexp.escape(purchase_request)}"))).
       returns(successful_purchase_response)
     gateway.purchase(@amount, @credit_card, @options)
   end
 
   def test_request_url_test
     @gateway.expects(:ssl_post).
-      with('https://sandbox.usaepay.com/gate', regexp_matches(Regexp.new('^' + Regexp.escape(purchase_request)))).
+      with('https://sandbox.usaepay.com/gate', regexp_matches(Regexp.new("^#{Regexp.escape(purchase_request)}"))).
       returns(successful_purchase_response)
     @gateway.purchase(@amount, @credit_card, @options)
   end
@@ -576,7 +576,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def purchase_request
-    "UMamount=1.00&UMinvoice=&UMorderid=&UMdescription=&UMcard=4242424242424242&UMcvv2=123&UMexpir=09#{@credit_card.year.to_s[-2..-1]}&UMname=Longbob+Longsen&UMbillfname=Jim&UMbilllname=Smith&UMbillcompany=Widgets+Inc&UMbillstreet=456+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=ON&UMbillzip=K1C2N6&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Jim&UMshiplname=Smith&UMshipcompany=Widgets+Inc&UMshipstreet=456+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=456+My+Street&UMzip=K1C2N6&UMcommand=cc%3Asale&UMkey=LOGIN&UMsoftware=Active+Merchant&UMtestmode=0"
+    "UMamount=1.00&UMinvoice=&UMorderid=&UMdescription=&UMcard=4242424242424242&UMcvv2=123&UMexpir=09#{@credit_card.year.to_s[-2..]}&UMname=Longbob+Longsen&UMbillfname=Jim&UMbilllname=Smith&UMbillcompany=Widgets+Inc&UMbillstreet=456+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=ON&UMbillzip=K1C2N6&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Jim&UMshiplname=Smith&UMshipcompany=Widgets+Inc&UMshipstreet=456+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=456+My+Street&UMzip=K1C2N6&UMcommand=cc%3Asale&UMkey=LOGIN&UMsoftware=Active+Merchant&UMtestmode=0"
   end
 
   def successful_purchase_response

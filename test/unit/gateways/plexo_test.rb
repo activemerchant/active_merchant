@@ -101,7 +101,7 @@ class PlexoTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
-      @options[:metadata].keys.each do |meta_key|
+      @options[:metadata].each_key do |meta_key|
         camel_key = meta_key.to_s.camelize
         assert_equal request['Metadata'][camel_key], @options[:metadata][meta_key]
       end

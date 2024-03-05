@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
         get = {}
         get[:transactionId] = identifier
         get[:tranType] = 'REFUNDREQUEST'
-        commit('/transaction/refundrequest?' + encode(get))
+        commit("/transaction/refundrequest?#{encode(get)}")
       end
 
       private

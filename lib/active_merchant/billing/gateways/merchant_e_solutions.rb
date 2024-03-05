@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, money, parameters)
         url = test? ? self.test_url : self.live_url
-        parameters[:transaction_amount] = amount(money) if !(action == 'V') && money
+        parameters[:transaction_amount] = amount(money) if action != 'V' && money
 
         response =
           begin

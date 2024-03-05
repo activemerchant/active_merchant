@@ -272,7 +272,7 @@ module ActiveMerchant
       def headers
         auth = Base64.strict_encode64(":#{@options[:api_key]}")
         {
-          'Authorization'  => 'Basic ' + auth,
+          'Authorization'  => "Basic #{auth}",
           'User-Agent'     => "Quickpay-v#{API_VERSION} ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Accept'         => 'application/json',
           'Accept-Version' => "v#{API_VERSION}",

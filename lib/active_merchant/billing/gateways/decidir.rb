@@ -133,13 +133,14 @@ module ActiveMerchant #:nodoc:
         if options[:payment_method_id]
           options[:payment_method_id].to_i
         elsif options[:debit]
-          if CreditCard.brand?(credit_card.number) == 'visa'
+          case CreditCard.brand?(credit_card.number)
+          when 'visa'
             31
-          elsif CreditCard.brand?(credit_card.number) == 'master'
+          when 'master'
             105
-          elsif CreditCard.brand?(credit_card.number) == 'maestro'
+          when 'maestro'
             106
-          elsif CreditCard.brand?(credit_card.number) == 'cabal'
+          when 'cabal'
             108
           end
         elsif CreditCard.brand?(credit_card.number) == 'master'
@@ -329,9 +330,10 @@ module ActiveMerchant #:nodoc:
         if error = response.dig('status_details', 'error')
           message = "#{error.dig('reason', 'description')} | #{error['type']}"
         elsif response['error_type']
-          if response['validation_errors'].is_a?(Array)
+          case response['validation_errors']
+          when Array
             message = response['validation_errors'].map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ')
-          elsif response['validation_errors'].is_a?(Hash)
+          when Hash
             errors = response['validation_errors'].map { |k, v| "#{k}: #{v}" }.join(', ')
             message = "#{response['error_type']} - #{errors}"
           end
@@ -366,12 +368,12 @@ module ActiveMerchant #:nodoc:
         elsif response['error_type']
           error_code = response['error_type'] if response['validation_errors']
         elsif response.dig('error', 'validation_errors')
-          error = response.dig('error')
+          error = response['error']
           validation_errors = error.dig('validation_errors', 0)
           code = validation_errors['code'] if validation_errors && validation_errors['code']
           param = validation_errors['param'] if validation_errors && validation_errors['param']
           error_code = "#{error['error_type']} | #{code} | #{param}" if error['error_type']
-        elsif error = response.dig('error')
+        elsif error = response['error']
           code = error.dig('reason', 'id')
           standard_error_code = STANDARD_ERROR_CODE_MAPPING[code]
           error_code = "#{code}, #{standard_error_code}"

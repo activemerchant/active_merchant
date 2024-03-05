@@ -380,7 +380,7 @@ module ActiveMerchant #:nodoc:
           ssl_post(
             test? ? self.test_url : self.live_url, request,
             {
-              'SOAPAction' => 'https://www.thepaymentgateway.net/' + options[:action],
+              'SOAPAction' => "https://www.thepaymentgateway.net/#{options[:action]}",
               'Content-Type' => 'text/xml; charset=utf-8'
             }
           )

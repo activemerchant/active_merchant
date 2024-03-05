@@ -169,12 +169,12 @@ module ActiveMerchant #:nodoc:
       def headers
         {
           'Content-type'  => 'application/json',
-          'Authorization' => 'Bearer ' + @options[:token]
+          'Authorization' => "Bearer #{@options[:token]}"
         }
       end
 
       def url(action)
-        live_url + CGI.escape(@options[:merchant_id]) + '/' + ACTIONS[action] + 'transactions'
+        "#{live_url}#{CGI.escape(@options[:merchant_id])}/#{ACTIONS[action]}transactions"
       end
 
       def parse(body)

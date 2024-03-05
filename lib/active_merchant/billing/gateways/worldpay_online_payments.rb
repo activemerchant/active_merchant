@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, credit_card, options = {})
-        response = create_token(true, credit_card.first_name + ' ' + credit_card.last_name, credit_card.month, credit_card.year, credit_card.number, credit_card.verification_value)
+        response = create_token(true, "#{credit_card.first_name} #{credit_card.last_name}", credit_card.month, credit_card.year, credit_card.number, credit_card.verification_value)
         if response.success?
           options[:authorizeOnly] = true
           post = create_post_for_auth_or_purchase(response.authorization, money, options)
@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, credit_card, options = {})
-        response = create_token(true, credit_card.first_name + ' ' + credit_card.last_name, credit_card.month, credit_card.year, credit_card.number, credit_card.verification_value)
+        response = create_token(true, "#{credit_card.first_name} #{credit_card.last_name}", credit_card.month, credit_card.year, credit_card.number, credit_card.verification_value)
         if response.success?
           post = create_post_for_auth_or_purchase(response.authorization, money, options)
           response = commit(:post, 'orders', post, options, 'purchase')

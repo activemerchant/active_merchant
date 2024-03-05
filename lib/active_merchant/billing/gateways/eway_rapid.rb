@@ -306,7 +306,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(url, params)
         headers = {
-          'Authorization' => ('Basic ' + Base64.strict_encode64(@options[:login].to_s + ':' + @options[:password].to_s).chomp),
+          'Authorization' => "Basic #{Base64.strict_encode64("#{@options[:login]}:#{@options[:password]}").chomp}",
           'Content-Type' => 'application/json'
         }
         request = params.to_json

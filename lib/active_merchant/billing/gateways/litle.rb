@@ -276,9 +276,10 @@ module ActiveMerchant #:nodoc:
       }
 
       def void_type(kind)
-        if kind == 'authorization'
+        case kind
+        when 'authorization'
           :authReversal
-        elsif kind == 'echeckSales'
+        when 'echeckSales'
           :echeckVoid
         else
           :void

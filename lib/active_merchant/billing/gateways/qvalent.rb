@@ -155,15 +155,17 @@ module ActiveMerchant #:nodoc:
         return unless payment_method.brand == 'visa'
 
         stored_credential = options[:stored_credential]
-        if stored_credential[:reason_type] == 'unscheduled'
-          if stored_credential[:initiator] == 'merchant'
+        case stored_credential[:reason_type]
+        when 'unscheduled'
+          case stored_credential[:initiator]
+          when 'merchant'
             post['card.storedCredentialUsage'] = 'UNSCHEDULED_MIT'
-          elsif stored_credential[:initiator] == 'customer'
+          when 'customer'
             post['card.storedCredentialUsage'] = 'UNSCHEDULED_CIT'
           end
-        elsif stored_credential[:reason_type] == 'recurring'
+        when 'recurring'
           post['card.storedCredentialUsage'] = 'RECURRING'
-        elsif stored_credential[:reason_type] == 'installment'
+        when 'installment'
           post['card.storedCredentialUsage'] = 'INSTALLMENT'
         end
       end
@@ -249,7 +251,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(post)
-        post.to_query + '&message.end'
+        "#{post.to_query}&message.end"
       end
 
       def url(action)

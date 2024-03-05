@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[body.split('&').map { |x| x.split('=') }]
+        body.split('&').map { |x| x.split('=') }.to_h
       end
 
       def commit(action, money, parameters)

@@ -509,7 +509,7 @@ module ActiveMerchant #:nodoc:
           'shopperAccountPasswordChangeIndicator' => shopper_account_risk_data[:shopper_account_password_change_indicator],
           'shopperAccountShippingAddressUsageIndicator' => shopper_account_risk_data[:shopper_account_shipping_address_usage_indicator],
           'shopperAccountPaymentAccountIndicator' => shopper_account_risk_data[:shopper_account_payment_account_indicator]
-        }.reject { |_k, v| v.nil? }
+        }.compact
 
         xml.shopperAccountRiskData(data) do
           add_date_element(xml, 'shopperAccountCreationDate', shopper_account_risk_data[:shopper_account_creation_date])
@@ -530,7 +530,7 @@ module ActiveMerchant #:nodoc:
           'reorderingPreviousPurchases' => transaction_risk_data[:reordering_previous_purchases],
           'preOrderPurchase' => transaction_risk_data[:pre_order_purchase],
           'giftCardCount' => transaction_risk_data[:gift_card_count]
-        }.reject { |_k, v| v.nil? }
+        }.compact
 
         xml.transactionRiskData(data) do
           xml.transactionRiskDataGiftCardAmount do

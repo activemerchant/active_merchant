@@ -74,7 +74,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
     assert confirm = @gateway.confirm_intent(create.params['id'], nil, @options.merge(return_url: 'https://example.com/return-to-me', payment_method_types: 'card'))
     assert_equal 'redirect_to_url', confirm.params.dig('next_action', 'type')
-    assert_equal 'card', confirm.params.dig('payment_method_types')[0]
+    assert_equal 'card', confirm.params['payment_method_types'][0]
   end
 
   def test_successful_create_and_capture_intent
@@ -127,7 +127,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert create = @gateway.create_intent(@amount, @visa_token, @options.merge(capture_method: 'manual', confirm: true))
 
     assert cancel = @gateway.void(create.params['id'])
-    assert_equal @amount, cancel.params.dig('charges', 'data')[0].dig('amount_refunded')
+    assert_equal @amount, cancel.params.dig('charges', 'data')[0]['amount_refunded']
     assert_equal 'canceled', cancel.params['status']
   end
 
@@ -215,7 +215,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
     assert create = @gateway.create_intent(@amount, 'pm_card_chargeDeclined', @options.merge(confirm: true))
     assert_equal 'requires_payment_method', create.params.dig('error', 'payment_intent', 'status')
-    assert_equal false, create.params.dig('error', 'payment_intent', 'charges', 'data')[0].dig('captured')
+    assert_equal false, create.params.dig('error', 'payment_intent', 'charges', 'data')[0]['captured']
     assert_equal 'ch_1F2MB6AWOtgoysogAIvNV32Z', create.authorization
   end
 
@@ -912,9 +912,9 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @visa_card, options)
 
     assert_equal 'succeeded', purchase.params['status']
-    assert_equal 'M', purchase.cvv_result.dig('code')
-    assert_equal 'CVV matches', purchase.cvv_result.dig('message')
-    assert_equal 'Y', purchase.avs_result.dig('code')
+    assert_equal 'M', purchase.cvv_result['code']
+    assert_equal 'CVV matches', purchase.cvv_result['message']
+    assert_equal 'Y', purchase.avs_result['code']
   end
 
   private

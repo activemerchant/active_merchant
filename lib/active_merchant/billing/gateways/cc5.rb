@@ -147,7 +147,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(request)
-        raw_response = ssl_post((test? ? self.test_url : self.live_url), 'DATA=' + request)
+        raw_response = ssl_post((test? ? self.test_url : self.live_url), "DATA=#{request}")
 
         response = parse(raw_response)
 

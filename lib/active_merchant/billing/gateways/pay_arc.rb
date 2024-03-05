@@ -308,7 +308,7 @@ module ActiveMerchant #:nodoc:
 
       def headers(api_key)
         {
-          'Authorization' => 'Bearer ' + api_key.strip,
+          'Authorization' => "Bearer #{api_key.strip}",
           'Accept' => 'application/json',
           'User-Agent' => "PayArc ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }

@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         checkout_id = authorization.split('#')[0]
-        commit('checkouts/' + checkout_id, {}, :delete)
+        commit("checkouts/#{checkout_id}", {}, :delete)
       end
 
       def refund(money, authorization, options = {})
@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
         post = money ? { amount: amount(money) } : {}
         add_merchant_data(post, options)
 
-        commit('me/refund/' + transaction_id, post)
+        commit("me/refund/#{transaction_id}", post)
       end
 
       def supports_scrubbing?
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
 
         add_payment(post, payment, options)
 
-        commit('checkouts/' + checkout_id, post, :put)
+        commit("checkouts/#{checkout_id}", post, :put)
       end
 
       def add_customer_data(post, payment, options)

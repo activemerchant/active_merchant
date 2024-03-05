@@ -10,13 +10,13 @@ class GatewaySupport #:nodoc:
   attr_reader :gateways
 
   def initialize
-    Dir[File.expand_path(File.dirname(__FILE__) + '/../active_merchant/billing/gateways/*.rb')].each do |f|
+    Dir[File.expand_path("#{File.dirname(__FILE__)}/../active_merchant/billing/gateways/*.rb")].each do |f|
       filename = File.basename(f, '.rb')
-      gateway_name = filename + '_gateway'
+      gateway_name = "#{filename}_gateway"
       begin
-        ('ActiveMerchant::Billing::' + gateway_name.camelize).constantize
+        "ActiveMerchant::Billing::#{gateway_name.camelize}".constantize
       rescue NameError
-        puts 'Could not load gateway ' + gateway_name.camelize + ' from ' + f + '.'
+        puts "Could not load gateway #{gateway_name.camelize} from #{f}."
       end
     end
     @gateways = Gateway.implementations.sort_by(&:name)

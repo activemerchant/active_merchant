@@ -569,9 +569,10 @@ module ActiveMerchant #:nodoc:
         options = args.extract_options!
 
         # money, transaction_id, options
-        if args.length == 1 # legacy signature
+        case args.length
+        when 1 # legacy signature
           return nil, args[0], options
-        elsif args.length == 2
+        when 2
           return args[0], args[1], options
         else
           raise ArgumentError, "wrong number of arguments (#{args.length} for 2)"

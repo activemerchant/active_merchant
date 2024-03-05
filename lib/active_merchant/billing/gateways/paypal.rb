@@ -56,10 +56,10 @@ module ActiveMerchant #:nodoc:
         currency_code = options[:currency] || currency(money)
 
         xml = Builder::XmlMarkup.new indent: 2
-        xml.tag! transaction_type + 'Req', 'xmlns' => PAYPAL_NAMESPACE do
-          xml.tag! transaction_type + 'Request', 'xmlns:n2' => EBAY_NAMESPACE do
+        xml.tag! "#{transaction_type}Req", 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! "#{transaction_type}Request", 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', api_version(options)
-            xml.tag! 'n2:' + transaction_type + 'RequestDetails' do
+            xml.tag! "n2:#{transaction_type}RequestDetails" do
               xml.tag! 'n2:ReferenceID', reference_id if transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:PaymentAction', action
               add_descriptors(xml, options)

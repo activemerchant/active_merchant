@@ -129,7 +129,7 @@ module ActiveMerchant #:nodoc:
           results[:message] = response_data[2]
         end
 
-        fields[1..-1].each do |pair|
+        fields[1..].each do |pair|
           key, value = pair.split('=')
           results[key] = value
         end

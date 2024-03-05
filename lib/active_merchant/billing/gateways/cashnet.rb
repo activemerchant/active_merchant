@@ -127,7 +127,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if address = (options[:shipping_address] || options[:billing_address] || options[:address])
-          post[:addr_g]       = String(address[:address1]) + ',' + String(address[:address2])
+          post[:addr_g]       = "#{String(address[:address1])},#{String(address[:address2])}"
           post[:city_g]       = address[:city]
           post[:state_g]      = address[:state]
           post[:zip_g]        = address[:zip]
@@ -154,9 +154,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def handle_response(response)
-        if (200...300).cover?(response.code.to_i)
+        case response.code.to_i
+        when 200...300
           return response.body
-        elsif response.code.to_i == 302
+        when 302
           return ssl_get(URI.parse(response['location']))
         end
 

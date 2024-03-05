@@ -1021,7 +1021,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     }
     assert response = @gateway.create_intent(@amount, @visa_card, options)
     assert_success response
-    assert billing_details = response.params.dig('charges', 'data')[0].dig('billing_details')
+    assert billing_details = response.params.dig('charges', 'data')[0]['billing_details']
     assert_equal 'Ottawa', billing_details['address']['city']
     assert_equal 'jim@widgets.inc', billing_details['email']
   end
@@ -1210,7 +1210,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     }
     assert create_response = @gateway.create_intent(@amount, 'pm_card_chargeDeclined', options)
     assert_equal 'requires_payment_method', create_response.params.dig('error', 'payment_intent', 'status')
-    assert_equal false, create_response.params.dig('error', 'payment_intent', 'charges', 'data')[0].dig('captured')
+    assert_equal false, create_response.params.dig('error', 'payment_intent', 'charges', 'data')[0]['captured']
   end
 
   def test_create_a_payment_intent_and_update
@@ -1259,7 +1259,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     intent_id = create_response.params['id']
 
     assert cancel_response = @gateway.void(intent_id, cancellation_reason: 'requested_by_customer')
-    assert_equal @amount, cancel_response.params.dig('charges', 'data')[0].dig('amount_refunded')
+    assert_equal @amount, cancel_response.params.dig('charges', 'data')[0]['amount_refunded']
     assert_equal 'canceled', cancel_response.params['status']
     assert_equal 'requested_by_customer', cancel_response.params['cancellation_reason']
   end
@@ -1553,8 +1553,8 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @visa_card, options)
 
     assert_equal 'succeeded', purchase.params['status']
-    assert_equal 'M', purchase.cvv_result.dig('code')
-    assert_equal 'CVV matches', purchase.cvv_result.dig('message')
+    assert_equal 'M', purchase.cvv_result['code']
+    assert_equal 'CVV matches', purchase.cvv_result['message']
   end
 
   def test_failed_cvc_check
@@ -1562,8 +1562,8 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @cvc_check_fails_credit_card, options)
 
     assert_equal 'succeeded', purchase.params['status']
-    assert_equal 'N', purchase.cvv_result.dig('code')
-    assert_equal 'CVV does not match', purchase.cvv_result.dig('message')
+    assert_equal 'N', purchase.cvv_result['code']
+    assert_equal 'CVV does not match', purchase.cvv_result['message']
   end
 
   def test_failed_avs_check

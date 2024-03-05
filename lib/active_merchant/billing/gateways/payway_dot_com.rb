@@ -231,7 +231,7 @@ module ActiveMerchant #:nodoc:
       def message_from(success, response)
         return '' if response['paywayCode'].nil?
 
-        return response['paywayCode'] + '-' + 'success' if success
+        return "#{response['paywayCode']}-success" if success
 
         response['paywayCode']
       end

@@ -144,9 +144,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment, options)
-        if payment.is_a?(CreditCard)
+        case payment
+        when CreditCard
           add_creditcard(post, payment, options)
-        elsif payment.is_a?(Check)
+        when Check
           add_ach(post, payment, options)
         else
           add_tokens(post, payment, options)
@@ -398,7 +399,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        id = response.dig('data') ? response.dig('data', 'id') : response.dig('status', 'operation_id')
+        id = response['data'] ? response.dig('data', 'id') : response.dig('status', 'operation_id')
 
         "#{id}|#{response.dig('data', 'default_payment_method')}"
       end

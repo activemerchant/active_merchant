@@ -316,7 +316,7 @@ module ActiveMerchant #:nodoc:
       def strip_line_breaks(address)
         return unless address.is_a?(Hash)
 
-        address.map { |k, s| [k, s&.tr("\r\n", ' ')&.strip] }.to_h
+        address.transform_values { |s| s&.tr("\r\n", ' ')&.strip }
       end
 
       def add_invoice(xml, options)
@@ -403,7 +403,7 @@ module ActiveMerchant #:nodoc:
         {
           'x-gge4-date' => sending_time,
           'x-gge4-content-sha1' => content_digest,
-          'Authorization' => 'GGE4_API ' + @options[:key_id].to_s + ':' + encoded,
+          'Authorization' => "GGE4_API #{@options[:key_id]}:#{encoded}",
           'Accepts' => content_type,
           'Content-Type' => content_type
         }

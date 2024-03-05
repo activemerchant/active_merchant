@@ -484,7 +484,7 @@ module ActiveMerchant #:nodoc:
         # The network_transaction_id can be sent in nested under stored credentials OR as its own field (add_ntid handles when it is sent in on its own)
         # If it is sent is as its own field AND under stored credentials, the value sent under its own field is what will send.
         card_options[:mit_exemption][:ds_transaction_id] = stored_credential[:ds_transaction_id] if stored_credential[:ds_transaction_id]
-        card_options[:mit_exemption][:network_transaction_id] = stored_credential[:network_transaction_id] if !(options[:setup_future_usage] == 'off_session') && (stored_credential[:network_transaction_id])
+        card_options[:mit_exemption][:network_transaction_id] = stored_credential[:network_transaction_id] if options[:setup_future_usage] != 'off_session' && (stored_credential[:network_transaction_id])
 
         add_stored_credential_transaction_type(post, options)
       end
@@ -577,7 +577,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_external_three_d_secure_auth_data(post, options = {})
-        return unless options[:three_d_secure]&.is_a?(Hash)
+        return unless options[:three_d_secure].is_a?(Hash)
 
         three_d_secure = options[:three_d_secure]
         post[:payment_method_options] ||= {}

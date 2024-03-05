@@ -229,7 +229,7 @@ module ActiveMerchant #:nodoc:
         if shipping_address = options[:shipping_address]
           address(post, shipping_address, 'shipping')
           if shipping_address[:name]
-            firstname, lastname = shipping_address[:name].split(' ')
+            firstname, lastname = shipping_address[:name].split
             post[:shipping] = { givenName: firstname, surname: lastname }
           end
         end
@@ -356,11 +356,7 @@ module ActiveMerchant #:nodoc:
 
         success_regex = /^(000\.000\.|000\.100\.1|000\.[36])/
 
-        if success_regex.match?(response['result']['code'])
-          true
-        else
-          false
-        end
+        success_regex.match?(response['result']['code'])
       end
 
       def message_from(response)

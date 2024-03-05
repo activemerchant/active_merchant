@@ -280,7 +280,7 @@ module ActiveMerchant
         year  = sprintf('%.4i', creditcard.year)
         month = sprintf('%.2i', creditcard.month)
 
-        "#{month}/#{year[-2..-1]}"
+        "#{month}/#{year[-2..]}"
       end
     end
   end

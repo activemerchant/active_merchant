@@ -385,7 +385,7 @@ module ActiveMerchant #:nodoc:
         response = {}
         pairs.each do |pair|
           key, val = pair.split('=')
-          response[key[3..-1].to_sym] = val ? normalize(val) : nil
+          response[key[3..].to_sym] = val ? normalize(val) : nil
         end
         response
       end

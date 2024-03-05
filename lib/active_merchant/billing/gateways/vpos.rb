@@ -196,11 +196,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response_body = response.dig('confirmation') || response.dig('refund')
+        response_body = response['confirmation'] || response['refund']
         return unless response_body
 
-        authorization_number = response_body.dig('authorization_number') || response_body.dig('authorization_code')
-        shop_process_id = response_body.dig('shop_process_id')
+        authorization_number = response_body['authorization_number'] || response_body['authorization_code']
+        shop_process_id = response_body['shop_process_id']
 
         "#{authorization_number}##{shop_process_id}"
       end
