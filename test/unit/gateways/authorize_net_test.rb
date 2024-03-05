@@ -271,8 +271,8 @@ class AuthorizeNetTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @payment_token)
     end.check_request do |_endpoint, data, _headers|
-      assert_no_match(/<isPaymentToken>true<\/isPaymentToken>/, data)
-      assert_match(/<cardCode>/, data)
+      assert_match(/<isPaymentToken>true<\/isPaymentToken>/, data)
+      assert_no_match(/<cardCode>/, data)
     end.respond_with(successful_authorize_response)
 
     assert response
@@ -283,7 +283,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_apple_pay_purchase
     response = stub_comms do
-      @gateway.purchase(@amount, @payment_token, { turn_on_nt_flow: true })
+      @gateway.purchase(@amount, @payment_token, {})
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<isPaymentToken>true<\/isPaymentToken>/, data)
       assert_no_match(/<cardCode>/, data)

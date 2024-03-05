@@ -426,7 +426,7 @@ module ActiveMerchant
       end
 
       def network_token?(payment_method, options, action)
-        payment_method.class == NetworkTokenizationCreditCard && action != :credit && options[:turn_on_nt_flow]
+        payment_method.class == NetworkTokenizationCreditCard && action != :credit
       end
 
       def camel_case_lower(key)
@@ -507,7 +507,6 @@ module ActiveMerchant
               xml.cardNumber(truncate(credit_card.number, 16))
               xml.expirationDate(format(credit_card.month, :two_digits) + '/' + format(credit_card.year, :four_digits))
               xml.cardCode(credit_card.verification_value) if credit_card.valid_card_verification_value?(credit_card.verification_value, credit_card.brand)
-              xml.cryptogram(credit_card.payment_cryptogram) if credit_card.is_a?(NetworkTokenizationCreditCard) && action != :credit
             end
           end
         end
