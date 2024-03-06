@@ -265,26 +265,21 @@ module ActiveMerchant #:nodoc:
       #   gateway.recurring(tendollar, creditcard, :periodicity => :weekly)
       #
       # You can optionally specify how long you want payments to continue using 'payments'
+      PERIODICITY = {
+        monthly: '1m',
+        bimonthly: '2m',
+        weekly: '1w',
+        biweekly: '2w',
+        yearly: '1y',
+        daily: '1d'
+      }
+
       def recurring(money, creditcard, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
         requires!(options, %i[periodicity bimonthly monthly biweekly weekly yearly daily])
 
-        cycle =
-          case options[:periodicity]
-          when :monthly
-            '1m'
-          when :bimonthly
-            '2m'
-          when :weekly
-            '1w'
-          when :biweekly
-            '2w'
-          when :yearly
-            '1y'
-          when :daily
-            '1d'
-          end
+        cycle = PERIODICITY[options[:periodicity]]
 
         parameters = {
           amount: amount(money),

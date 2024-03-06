@@ -146,13 +146,14 @@ module ActiveMerchant #:nodoc:
               if response.key?('httpStatusCode')
                 success = false
               else
-                if type == 'authorize' && response['paymentStatus'] == 'AUTHORIZED'
-                  success = true
-                elsif type == 'purchase' && response['paymentStatus'] == 'SUCCESS'
-                  success = true
-                elsif type == 'capture' || type == 'refund' || type == 'void'
-                  success = true
-                end
+                success = case type
+                          when 'authorize'
+                            response['paymentStatus'] == 'AUTHORIZED'
+                          when 'purchase'
+                            response['paymentStatus'] == 'SUCCESS'
+                          when 'capture', 'refund', 'void'
+                            true
+                          end
               end
             end
           end

@@ -214,11 +214,14 @@ module ActiveMerchant #:nodoc:
 
       def normalize(field)
         case field
-        when 'true'   then true
-        when 'false'  then false
-        when ''       then nil
-        when 'null'   then nil
-        else field
+        when 'true'
+          true
+        when 'false'
+          false
+        when '', 'null'
+          nil
+        else
+          field
         end
       end
 

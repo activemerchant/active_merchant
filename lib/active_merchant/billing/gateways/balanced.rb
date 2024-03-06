@@ -184,9 +184,9 @@ module ActiveMerchant #:nodoc:
 
       def success_from(entity_name, raw_response)
         entity = (raw_response[entity_name] || []).first
-        if !entity
-          false
-        elsif (entity_name == 'refunds') && entity.include?('status')
+        return false unless entity
+
+        if (entity_name == 'refunds') && entity.include?('status')
           %w(succeeded pending).include?(entity['status'])
         elsif entity.include?('status')
           (entity['status'] == 'succeeded')

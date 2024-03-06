@@ -423,8 +423,6 @@ module ActiveMerchant #:nodoc:
         case action
         when :authorization
           message_from_authorization(response)
-        when :get_status
-          message_from_status(response)
         else
           message_from_status(response)
         end

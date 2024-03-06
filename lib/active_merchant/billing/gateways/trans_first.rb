@@ -192,13 +192,7 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response)
         case response[:status]
-        when 'Authorized'
-          true
-        when 'Voided'
-          true
-        when 'APPROVED'
-          true
-        when 'VOIDED'
+        when 'Authorized', 'Voided', 'APPROVED', 'VOIDED'
           true
         else
           false

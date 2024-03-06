@@ -684,12 +684,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      REASON_TYPE = {
+        'installment' => 'INSTALMENT',
+        'recurring' => 'RECURRING',
+        'unscheduled' => 'UNSCHEDULED'
+      }
+
       def add_stored_credential_using_normalized_fields(xml, options)
-        reason = case options[:stored_credential][:reason_type]
-                 when 'installment' then 'INSTALMENT'
-                 when 'recurring' then 'RECURRING'
-                 when 'unscheduled' then 'UNSCHEDULED'
-                 end
+        reason = REASON_TYPE[options[:stored_credential][:reason_type]]
         is_initial_transaction = options[:stored_credential][:initial_transaction]
         stored_credential_params = generate_stored_credential_params(is_initial_transaction, reason)
 

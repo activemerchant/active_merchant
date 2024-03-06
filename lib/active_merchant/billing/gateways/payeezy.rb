@@ -1,3 +1,4 @@
+require 'pry'
 module ActiveMerchant
   module Billing
     class PayeezyGateway < Gateway
@@ -442,15 +443,11 @@ module ActiveMerchant
       end
 
       def error_code_from(response)
-        error_code = nil
-        if response['bank_resp_code'] == '100'
-          return
-        elsif response['bank_resp_code']
-          error_code = response['bank_resp_code']
+        if bank_code = response['bank_resp_code']
+          bank_code == '100' ? nil : bank_code
         elsif error_code = response['Error'].to_h['messages'].to_a.map { |e| e['code'] }.join(', ')
+          error_code
         end
-
-        error_code
       end
 
       def success_from(response)

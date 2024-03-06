@@ -119,13 +119,15 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      CARD_TYPE = {
+        'visa' => 'Visa',
+        'master' => 'MasterCard',
+        'discover' => 'Discover',
+        'american_express' => 'Amex'
+      }
+
       def credit_card_type(type)
-        case type
-        when 'visa'             then 'Visa'
-        when 'master'           then 'MasterCard'
-        when 'discover'         then 'Discover'
-        when 'american_express' then 'Amex'
-        end
+        CARD_TYPE[type]
       end
 
       def build_response(success, message, response, options = {})

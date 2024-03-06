@@ -332,15 +332,11 @@ module ActiveMerchant #:nodoc:
       def get_url(action)
         base = '/api/v1/'
         case action
-        when 'sale'
-          return "#{base}payments/charge"
-        when 'auth'
+        when 'sale', 'auth'
           return "#{base}payments/charge"
         when 'capture'
           return "#{base}payments/capture"
-        when 'void'
-          return "#{base}payments/refund"
-        when 'refund'
+        when 'void', 'refund'
           return "#{base}payments/refund"
         when 'gettoken'
           return "#{base}vault/token"

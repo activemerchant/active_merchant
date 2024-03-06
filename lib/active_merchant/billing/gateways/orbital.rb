@@ -746,6 +746,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      REASON_TYPE = {
+        'recurring' => 'REC',
+        'installment' => 'INS',
+        'unscheduled' => 'USE'
+      }
+
       def get_msg_type(parameters)
         return parameters[:mit_msg_type] if parameters[:mit_msg_type]
         return 'CSTO' if parameters[:stored_credential][:initial_transaction]
@@ -756,12 +762,7 @@ module ActiveMerchant #:nodoc:
           when 'cardholder', 'customer' then 'C'
           when 'merchant' then 'M'
           end
-        reason =
-          case parameters[:stored_credential][:reason_type]
-          when 'recurring' then 'REC'
-          when 'installment' then 'INS'
-          when 'unscheduled' then 'USE'
-          end
+        reason = REASON_TYPE[parameters.dig(:stored_credential, :reason_type)]
 
         "#{initiator}#{reason}"
       end

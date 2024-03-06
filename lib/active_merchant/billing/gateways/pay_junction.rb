@@ -238,20 +238,18 @@ module ActiveMerchant #:nodoc:
       # The optional parameter :starting_at takes a date or time argument or a string in
       # YYYYMMDD format and can be used to specify when the first charge will be made.
       # If omitted the first charge will be immediate.
+      PERIODICITY = {
+        monthly: 'month',
+        weekly: 'week',
+        daily: 'day'
+      }
+
       def recurring(money, payment_source, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
         requires!(options, %i[periodicity monthly weekly daily], :payments)
 
-        periodic_type =
-          case options[:periodicity]
-          when :monthly
-            'month'
-          when :weekly
-            'week'
-          when :daily
-            'day'
-          end
+        periodic_type = PERIODICITY[options[:periodicity]]
 
         if options[:starting_at].nil?
           start_date = Time.now.strftime('%Y-%m-%d')

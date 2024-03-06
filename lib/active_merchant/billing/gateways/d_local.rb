@@ -255,9 +255,7 @@ module ActiveMerchant #:nodoc:
 
       def endpoint(action, parameters, options)
         case action
-        when 'purchase'
-          'secure_payments'
-        when 'authorize'
+        when 'purchase', 'authorize'
           'secure_payments'
         when 'refund'
           'refunds'

@@ -84,7 +84,6 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_successful_purchase_with_requires_approval_true
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@accepted_amount, @credit_card, @options.merge(requires_approval: true))
-    end.check_request do |_method, _endpoint, _data, _headers|
     end.respond_with(successful_authorize_response, successful_capture_response)
   end
 

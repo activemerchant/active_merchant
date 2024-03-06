@@ -369,11 +369,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, method)
-        method + '|' + (
-          response['result']['sessionId'] ||
-          response['result']['sessionToken'] ||
-          response['result']['pgwTID'] ||
-          response['result']['accountToken']
+        result = response['result']
+
+        "#{method}|" + (
+          result['sessionId'] ||
+          result['sessionToken'] ||
+          result['pgwTID'] ||
+          result['accountToken']
         )
       end
 

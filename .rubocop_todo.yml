@@ -393,6 +393,15 @@ Style/GlobalVars:
     - 'test/unit/gateways/finansbank_test.rb'
     - 'test/unit/gateways/garanti_test.rb'
 
+Lint/MissingSuper:
+ Exclude:
+  - 'lib/active_merchant/billing/gateways/payway.rb'
+  - 'lib/active_merchant/billing/response.rb'
+  - 'lib/active_merchant/billing/gateways/orbital/orbital_soft_descriptors.rb'
+  - 'lib/active_merchant/billing/gateways/orbital.rb'
+  - 'lib/active_merchant/billing/gateways/linkpoint.rb'
+  - 'lib/active_merchant/errors.rb'
+
 # Offense count: 196
 # Configuration parameters: MinBodyLength.
 Style/GuardClause:

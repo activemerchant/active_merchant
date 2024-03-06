@@ -204,11 +204,8 @@ module ActiveMerchant #:nodoc:
         response = {}
         xml = REXML::Document.new(xml)
 
-        if root = REXML::XPath.first(xml, '//types:TransactionResult')
-          parse_elements(response, root)
-        elsif root = REXML::XPath.first(xml, '//soap:Fault')
-          parse_elements(response, root)
-        end
+        root = REXML::XPath.first(xml, '//types:TransactionResult') || REXML::XPath.first(xml, '//soap:Fault')
+        parse_elements(response, root) if root
 
         response.delete_if { |k, _v| SENSITIVE_FIELDS.include?(k) }
       end

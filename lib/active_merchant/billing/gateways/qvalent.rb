@@ -170,22 +170,20 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      REASON_TYPE = {
+        'recurring' => 'REC',
+        'installment' => 'INS',
+        'unscheduled' => 'MTO'
+      }
+
       def eci(options)
-        if options.dig(:stored_credential, :initial_transaction)
+        stored_credential = options[:stored_credential]
+        if stored_credential[:initial_transaction]
           'SSL'
-        elsif options.dig(:stored_credential, :initiator) && options[:stored_credential][:initiator] == 'cardholder'
+        elsif stored_credential[:initiator] == 'cardholder'
           'MTO'
-        elsif options.dig(:stored_credential, :reason_type)
-          case options[:stored_credential][:reason_type]
-          when 'recurring'
-            'REC'
-          when 'installment'
-            'INS'
-          when 'unscheduled'
-            'MTO'
-          end
         else
-          'SSL'
+          REASON_TYPE[stored_credential[:reason_type]] || 'SSL'
         end
       end
 

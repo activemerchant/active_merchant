@@ -179,8 +179,6 @@ module ActiveMerchant #:nodoc:
 
         if options[:debit]
           case options[:card_brand]
-          when 'visa'
-            31
           when 'master'
             105
           when 'maestro'
@@ -192,8 +190,6 @@ module ActiveMerchant #:nodoc:
           end
         else
           case options[:card_brand]
-          when 'visa'
-            1
           when 'master'
             104
           when 'american_express'

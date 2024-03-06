@@ -239,9 +239,7 @@ module ActiveMerchant #:nodoc:
                  arguments
                when 'ProcessPayment'
                  default_payment_fields.merge(arguments)
-               when 'CreateCustomer'
-                 default_customer_fields.merge(arguments)
-               when 'UpdateCustomer'
+               when 'CreateCustomer', 'UpdateCustomer'
                  default_customer_fields.merge(arguments)
                end
 
