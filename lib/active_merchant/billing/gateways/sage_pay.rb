@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :simulator_url
 
-      self.test_url = 'https://test.sagepay.com/gateway/service'
-      self.live_url = 'https://live.sagepay.com/gateway/service'
+      self.test_url = 'https://sandbox.opayo.eu.elavon.com/gateway/service'
+      self.live_url = 'https://live.opayo.eu.elavon.com/gateway/service'
       self.simulator_url = 'https://test.sagepay.com/Simulator'
 
       APPROVED = 'OK'

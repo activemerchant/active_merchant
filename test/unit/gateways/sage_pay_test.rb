@@ -50,11 +50,11 @@ class SagePayTest < Test::Unit::TestCase
   end
 
   def test_purchase_url
-    assert_equal 'https://test.sagepay.com/gateway/service/vspdirect-register.vsp', @gateway.send(:url_for, :purchase)
+    assert_equal 'https://sandbox.opayo.eu.elavon.com/gateway/service/vspdirect-register.vsp', @gateway.send(:url_for, :purchase)
   end
 
   def test_capture_url
-    assert_equal 'https://test.sagepay.com/gateway/service/release.vsp', @gateway.send(:url_for, :capture)
+    assert_equal 'https://sandbox.opayo.eu.elavon.com/gateway/service/release.vsp', @gateway.send(:url_for, :capture)
   end
 
   def test_matched_avs_result

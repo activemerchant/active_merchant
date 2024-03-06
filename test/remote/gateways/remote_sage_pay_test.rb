@@ -74,9 +74,10 @@ class RemoteSagePayTest < Test::Unit::TestCase
     )
 
     @declined_card = CreditCard.new(
-      number: '4111111111111111',
+      number: '4000000000000001',
       month: 9,
       year: next_year,
+      verification_value: 123,
       first_name: 'Tekin',
       last_name: 'Suleyman',
       brand: 'visa'
@@ -516,7 +517,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match(/Card Range not supported/, response.message)
+    assert_match(/5011 : Your card number has failed our validity checks and appears to be incorrect.  Please check and re-enter./, response.message)
   end
 
   def test_transcript_scrubbing
