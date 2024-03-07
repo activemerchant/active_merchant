@@ -14,6 +14,7 @@ class CecabankJsonTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card
+    @amex_card = credit_card('374245455400001', { month: 10, year: Time.now.year + 1, verification_value: '1234' })
     @amount = 100
 
     @options = {
@@ -190,11 +191,31 @@ class CecabankJsonTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_purchase_for_amex_include_correct_verification_value
+    stub_comms do
+      @gateway.purchase(@amount, @amex_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      data = JSON.parse(data)
+      params = JSON.parse(Base64.decode64(data['parametros']))
+      credit_card_data = decrypt_sensitive_fields(@gateway.options, params['encryptedData'])
+      amex_card = JSON.parse(credit_card_data)
+      assert_nil amex_card['cvv2']
+      assert_equal amex_card['csc'], '1234'
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
   private
+
+  def decrypt_sensitive_fields(options, data)
+    cipher = OpenSSL::Cipher.new('AES-256-CBC').decrypt
+    cipher.key = [options[:encryption_key]].pack('H*')
+    cipher.iv = options[:initiator_vector]&.split('')&.map(&:to_i)&.pack('c*')
+    cipher.update([data].pack('H*')) + cipher.final
+  end
 
   def transcript
     <<~RESPONSE

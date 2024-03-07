@@ -164,10 +164,13 @@ module ActiveMerchant
 
         payment_method = {
           pan: creditcard.number,
-          caducidad: strftime_yyyymm(creditcard),
-          cvv2: creditcard.verification_value
+          caducidad: strftime_yyyymm(creditcard)
         }
-        payment_method[:csc] = creditcard.verification_value if CreditCard.brand?(creditcard.number) == 'american_express'
+        if CreditCard.brand?(creditcard.number) == 'american_express'
+          payment_method[:csc] = creditcard.verification_value
+        else
+          payment_method[:cvv2] = creditcard.verification_value
+        end
 
         @options[:encryption_key] ? params[:encryptedData] = payment_method : params.merge!(payment_method)
       end
