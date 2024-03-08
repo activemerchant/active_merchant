@@ -6,6 +6,26 @@ class RemoteFirstPayJsonTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
+    @declined_card = credit_card('5130405452262903')
+
+    @google_pay = network_tokenization_credit_card(
+      '4005550000000019',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :google_pay,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
+    @apple_pay = network_tokenization_credit_card(
+      '4005550000000019',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :apple_pay,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
 
     @options = {
       order_id: SecureRandom.hex(24),
@@ -17,14 +37,28 @@ class RemoteFirstPayJsonTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_match 'Approved', response.message
+    assert_match 'APPROVED', response.message
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(200, @credit_card, @options)
+    response = @gateway.purchase(99999999999, @credit_card, @options)
     assert_failure response
-    assert_equal 'isError', response.error_code
-    assert_match 'Declined', response.message
+    assert_equal 'validationHasFailed', response.error_code
+    assert_match 'Amount exceed numeric limit of 9999999.99', response.message
+  end
+
+  def test_successful_purchase_with_google_pay
+    response = @gateway.purchase(@amount, @google_pay, @options)
+    assert_success response
+    assert_match 'APPROVED', response.message
+    assert_equal 'Visa-GooglePay', response.params['data']['cardType']
+  end
+
+  def test_successful_purchase_with_apple_pay
+    response = @gateway.purchase(@amount, @apple_pay, @options)
+    assert_success response
+    assert_match 'APPROVED', response.message
+    assert_equal 'Visa-ApplePay', response.params['data']['cardType']
   end
 
   def test_failed_purchase_with_no_address
@@ -45,7 +79,7 @@ class RemoteFirstPayJsonTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(200, @credit_card, @options)
+    response = @gateway.authorize(99999999999, @credit_card, @options)
     assert_failure response
   end
 
@@ -91,6 +125,17 @@ class RemoteFirstPayJsonTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_recurring_payment
+    @options.merge!({
+      recurring: 'monthly',
+      recurring_start_date: (DateTime.now + 1.day).strftime('%m/%d/%Y'),
+      recurring_end_date: (DateTime.now + 1.month).strftime('%m/%d/%Y')
+    })
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_match 'APPROVED', response.message
+  end
+
   def test_invalid_login
     gateway = FirstPayGateway.new(
       processor_id: '1234',
@@ -102,14 +147,15 @@ class RemoteFirstPayJsonTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
-    @credit_card.verification_value = 789
+    @google_pay.verification_value = 789
     transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @credit_card, @options)
+      @gateway.purchase(@amount, @google_pay, @options)
     end
     transcript = @gateway.scrub(transcript)
 
-    assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@google_pay.number, transcript)
+    assert_scrubbed(@google_pay.verification_value, transcript)
+    assert_scrubbed(@google_pay.payment_cryptogram, transcript)
     assert_scrubbed(@gateway.options[:processor_id], transcript)
     assert_scrubbed(@gateway.options[:merchant_key], transcript)
   end

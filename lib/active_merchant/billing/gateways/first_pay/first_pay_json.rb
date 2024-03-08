@@ -13,7 +13,13 @@ module ActiveMerchant #:nodoc:
         void: 'Void'
       }.freeze
 
-      self.live_url = 'https://secure.1stpaygateway.net/secure/RestGW/Gateway/Transaction/'
+      WALLET_TYPES = {
+        apple_pay: 'ApplePay',
+        google_pay: 'GooglePay'
+      }.freeze
+
+      self.test_url = 'https://secure-v.1stPaygateway.net/secure/RestGW/Gateway/Transaction/'
+      self.live_url = 'https://secure.1stPaygateway.net/secure/RestGW/Gateway/Transaction/'
 
       # Creates a new FirstPayJsonGateway
       #
@@ -75,6 +81,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r(("processorId\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("merchantKey\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("cardNumber\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("paymentCryptogram\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("cvv\\?"\s*:\s*\\?)[^,]*)i, '\1[FILTERED]')
       end
 
@@ -101,6 +108,19 @@ module ActiveMerchant #:nodoc:
         post[:cardExpMonth] = payment.month
         post[:cardExpYear] = format(payment.year, :two_digits)
         post[:cvv] = payment.verification_value
+        post[:recurring] = options[:recurring] if options[:recurring]
+        post[:recurringStartDate] = options[:recurring_start_date] if options[:recurring_start_date]
+        post[:recurringEndDate] = options[:recurring_end_date] if options[:recurring_end_date]
+
+        case payment
+        when NetworkTokenizationCreditCard
+          post[:walletType] = WALLET_TYPES[payment.source]
+          other_fields = post[:otherFields] = {}
+          other_fields[:paymentCryptogram] = payment.payment_cryptogram
+          other_fields[:eciIndicator] = payment.eci || '07'
+        when CreditCard
+          post[:cvv] = payment.verification_value
+        end
       end
 
       def add_reference(post, authorization)
@@ -108,7 +128,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        response = parse(api_request(live_url + ACTIONS[action], post_data(parameters)))
+        response = parse(api_request(base_url + ACTIONS[action], post_data(parameters)))
 
         Response.new(
           success_from(response),
@@ -118,6 +138,10 @@ module ActiveMerchant #:nodoc:
           error_code: error_code_from(response),
           test: test?
         )
+      end
+
+      def base_url
+        test? ? self.test_url : self.live_url
       end
 
       def api_request(url, data)
