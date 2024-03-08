@@ -65,6 +65,9 @@ Lint/FloatComparison:
     - 'lib/active_merchant/billing/gateways/payu_latam.rb'
 Lint/LambdaWithoutLiteralBlock: # (new in 1.8)
   Enabled: true
+Lint/NonDeterministicRequireOrder:
+  Exclude:
+    - 'script/generate'
 Lint/NoReturnInBeginEndBlocks: # (new in 1.2)
   Enabled: true
   Exclude:
@@ -100,6 +103,9 @@ Style/EndlessMethod: # (new in 1.8)
   Enabled: true
 Style/HashConversion: # (new in 1.10)
   Enabled: true
+  Exclude:
+    - 'lib/active_merchant/billing/gateways/payscout.rb'
+    - 'lib/active_merchant/billing/gateways/pac_net_raven.rb'
 Style/HashExcept: # (new in 1.7)
   Enabled: true
 Style/IfWithBooleanLiteralBranches: # (new in 1.9)
@@ -119,4 +125,4 @@ Naming/VariableNumber:
 Style/OptionalBooleanParameter:
   Enabled: false
 Style/RedundantRegexpEscape:
-  Enabled: false 
+  Enabled: false

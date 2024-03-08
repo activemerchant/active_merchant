@@ -1,4 +1,3 @@
-require 'pry'
 module ActiveMerchant
   module Billing
     class PayeezyGateway < Gateway

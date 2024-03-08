@@ -338,8 +338,9 @@ module ActiveMerchant
       def add_fraud_info(doc, payment_method, options)
         doc.send('transaction-fraud-info') do
           doc.send('shopper-ip-address', options[:ip]) if options[:ip]
-          if fraud_info = options[:transaction_fraud_info] && (fraud_info[:fraud_session_id])
-            doc.send('fraud-session-id', fraud_info[:fraud_session_id])
+          fraud_info = options[:transaction_fraud_info]
+          if fraud_session = fraud_info&.dig(:fraud_session_id)
+            doc.send('fraud-session-id', fraud_session)
           end
           unless payment_method.is_a? String
             doc.send('shipping-contact-info') do

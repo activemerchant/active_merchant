@@ -177,13 +177,14 @@ module ActiveMerchant #:nodoc:
       }
 
       def eci(options)
+        
         stored_credential = options[:stored_credential]
-        if stored_credential[:initial_transaction]
+        if options.dig(:stored_credential, :initial_transaction)
           'SSL'
-        elsif stored_credential[:initiator] == 'cardholder'
+        elsif options.dig(:stored_credential, :initiator) == 'cardholder'
           'MTO'
         else
-          REASON_TYPE[stored_credential[:reason_type]] || 'SSL'
+          REASON_TYPE[options.dig(:stored_credential, :reason_type)] || 'SSL'
         end
       end
 
