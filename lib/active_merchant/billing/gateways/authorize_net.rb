@@ -272,6 +272,7 @@ module ActiveMerchant
           add_market_type_device_type(xml, payment, options)
           add_settings(xml, payment, options)
           add_user_fields(xml, amount, options)
+          add_surcharge_fields(xml, options)
           add_ship_from_address(xml, options)
           add_processing_options(xml, options)
           add_subsequent_auth_information(xml, options)
@@ -288,6 +289,7 @@ module ActiveMerchant
             add_duty_fields(xml, options)
             add_payment_method(xml, payment, options)
             add_invoice(xml, transaction_type, options)
+            add_surcharge_fields(xml, options)
             add_tax_exempt_status(xml, options)
           end
         end
@@ -706,6 +708,16 @@ module ActiveMerchant
             xml.amount(amount(duty[:amount].to_i))
             xml.name(duty[:name])
             xml.description(duty[:description])
+          end
+        end
+      end
+
+      def add_surcharge_fields(xml, options)
+        surcharge = options[:surcharge] if options[:surcharge]
+        if surcharge.is_a?(Hash)
+          xml.surcharge do
+            xml.amount(amount(surcharge[:amount].to_i)) if surcharge[:amount]
+            xml.description(surcharge[:description]) if surcharge[:description]
           end
         end
       end

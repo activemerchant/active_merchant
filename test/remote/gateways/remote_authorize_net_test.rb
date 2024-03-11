@@ -185,6 +185,16 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved', response.message
   end
 
+  def test_successful_purchase_with_surcharge
+    options = @options.merge(surcharge: {
+      amount: 20,
+      description: 'test description'
+    })
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
   def test_successful_purchase_with_customer
     response = @gateway.purchase(@amount, @credit_card, @options.merge(customer: 'abcd_123'))
     assert_success response

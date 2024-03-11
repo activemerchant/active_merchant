@@ -367,6 +367,21 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_passes_surcharge
+    options = @options.merge(surcharge: {
+      amount: 20,
+      description: 'test description'
+    })
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<surcharge>/, data)
+      assert_match(/<amount>0.20<\/amount>/, data)
+      assert_match(/<description>#{options[:surcharge][:description]}<\/description>/, data)
+      assert_match(/<\/surcharge>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_passes_level_3_options
     stub_comms do
       @gateway.purchase(@amount, credit_card, @options.merge(@level_3_options))

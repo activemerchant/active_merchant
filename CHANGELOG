@@ -129,6 +129,7 @@
 * XPay: Update 3DS to support 3 step process [sinourain] #5046
 * SagePay: Update API endpoints [almalee24] #5057
 * Bin Update: Add sodexo bins [yunnydang] #5061
+* Authorize Net: Add the surcharge field [yunnydang] #5062
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
