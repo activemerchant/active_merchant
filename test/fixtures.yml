@@ -1358,11 +1358,11 @@ sum_up:
   access_token: SOMECREDENTIAL
   pay_to_email: SOMECREDENTIAL
 
-sum_up_successful_purchase:
+sum_up_3ds:
   access_token: SOMECREDENTIAL
   pay_to_email: SOMECREDENTIAL
 
-sum_up_3ds:
+sum_up_successful_purchase:
   access_token: SOMECREDENTIAL
   pay_to_email: SOMECREDENTIAL
 
