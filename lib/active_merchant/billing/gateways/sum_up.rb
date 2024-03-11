@@ -29,11 +29,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def void(authorization, options = {})
-        checkout_id = authorization.split('#')[0]
-        commit('checkouts/' + checkout_id, {}, :delete)
-      end
-
       def refund(money, authorization, options = {})
         transaction_id = authorization.split('#').last
         post = money ? { amount: amount(money) } : {}
