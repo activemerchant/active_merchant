@@ -126,6 +126,7 @@
 * Braintree: Add payment details to failed transaction hash [yunnydang] #5050
 * Cecabank: Amex CVV Update [sinourain] #5051
 * FirstPay: Add support for ApplePay and GooglePay [sinourain] #5036
+* XPay: Update 3DS to support 3 step process [sinourain] #5046
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
