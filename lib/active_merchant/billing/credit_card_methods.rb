@@ -24,7 +24,11 @@ module ActiveMerchant #:nodoc:
         },
         'maestro_no_luhn'    => ->(num) { num =~ /^(501080|501081|501082)\d{6,13}$/ },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
-        'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818|505864|505865)\d{10}$/ },
+        'sodexo'             => lambda { |num|
+          num&.size == 16 && (
+            SODEXO_BINS.any? { |bin| num.slice(0, bin.size) == bin }
+          )
+        },
         'alia'               => ->(num) { num =~ /^(504997|505878|601030|601073|505874)\d{10}$/ },
         'vr'                 => ->(num) { num =~ /^(627416|637036)\d{10}$/ },
         'unionpay'           => ->(num) { (16..19).cover?(num&.size) && in_bin_range?(num.slice(0, 8), UNIONPAY_RANGES) },
@@ -73,6 +77,13 @@ module ActiveMerchant #:nodoc:
         (484428..484455),
         (491730..491759),
       ]
+
+      SODEXO_BINS = Set.new(
+        %w[
+          606071 603389 606070 606069 606068 600818 505864 505865
+          60607601 60607607 60894400 60894410 60894420 60607606
+        ]
+      )
 
       CARNET_RANGES = [
         (506199..506499),

@@ -172,8 +172,24 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'forbrugsforeningen', CreditCard.brand?('6007221000000000')
   end
 
-  def test_should_detect_sodexo_card
+  def test_should_detect_sodexo_card_with_six_digits
     assert_equal 'sodexo', CreditCard.brand?('6060694495764400')
+    assert_equal 'sodexo', CreditCard.brand?('6060714495764400')
+    assert_equal 'sodexo', CreditCard.brand?('6033894495764400')
+    assert_equal 'sodexo', CreditCard.brand?('6060704495764400')
+    assert_equal 'sodexo', CreditCard.brand?('6060684495764400')
+    assert_equal 'sodexo', CreditCard.brand?('6008184495764400')
+    assert_equal 'sodexo', CreditCard.brand?('5058644495764400')
+    assert_equal 'sodexo', CreditCard.brand?('5058654495764400')
+  end
+
+  def test_should_detect_sodexo_card_with_eight_digits
+    assert_equal 'sodexo', CreditCard.brand?('6060760195764400')
+    assert_equal 'sodexo', CreditCard.brand?('6060760795764400')
+    assert_equal 'sodexo', CreditCard.brand?('6089440095764400')
+    assert_equal 'sodexo', CreditCard.brand?('6089441095764400')
+    assert_equal 'sodexo', CreditCard.brand?('6089442095764400')
+    assert_equal 'sodexo', CreditCard.brand?('6060760695764400')
   end
 
   def test_should_detect_alia_card
