@@ -276,6 +276,38 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
+  def test_successful_auth_with_single_element_from_other_tax
+    options = @options.merge(vat_tax_rate: '1')
+
+    assert response = @gateway.authorize(@amount, @master_credit_card, options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_single_element_from_other_tax
+    options = @options.merge(national_tax_amount: '0.05')
+
+    assert response = @gateway.purchase(@amount, @master_credit_card, options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_auth_with_gratuity_amount
+    options = @options.merge(gratuity_amount: '7.50')
+
+    assert response = @gateway.authorize(@amount, @master_credit_card, options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_gratuity_amount
+    options = @options.merge(gratuity_amount: '7.50')
+
+    assert response = @gateway.purchase(@amount, @master_credit_card, options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
   def test_successful_authorization_with_sales_slip_number
     options = @options.merge(sales_slip_number: '456')
     assert response = @gateway.authorize(@amount, @credit_card, options)
@@ -768,6 +800,33 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     assert auth = @gateway.purchase(@amount, credit_card, @options)
     assert_successful_response(auth)
+  end
+
+  def test_successful_auth_and_capture_nt_mastercard_with_tax_options_and_no_xml_parsing_errors
+    credit_card = network_tokenization_credit_card('5555555555554444',
+                                                   brand: 'master',
+                                                   eci: '05',
+                                                   payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+
+    options = { ignore_avs: true, order_id: generate_unique_id, vat_tax_rate: 1.01 }
+
+    assert auth = @gateway.authorize(@amount, credit_card, options)
+    assert_successful_response(auth)
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_successful_response(capture)
+  end
+
+  def test_successful_purchase_nt_mastercard_with_tax_options_and_no_xml_parsing_errors
+    credit_card = network_tokenization_credit_card('5555555555554444',
+                                                   brand: 'master',
+                                                   eci: '05',
+                                                   payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+
+    options = { ignore_avs: true, order_id: generate_unique_id, vat_tax_rate: 1.01 }
+
+    assert response = @gateway.purchase(@amount, credit_card, options)
+    assert_successful_response(response)
   end
 
   def test_successful_authorize_with_mdd_fields
