@@ -131,6 +131,7 @@
 * Bin Update: Add sodexo bins [yunnydang] #5061
 * Authorize Net: Add the surcharge field [yunnydang] #5062
 * Paymentez: Update field for reference_id [almalee24] #5065
+* CyberSource: Extend support for `gratuity_amount` and update Mastercard NT field order [rachelkirk] #5063
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

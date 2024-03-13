@@ -326,11 +326,13 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
-        add_other_tax(xml, options)
         add_threeds_2_ucaf_data(xml, creditcard_or_reference, options)
+        add_mastercard_network_tokenization_ucaf_data(xml, creditcard_or_reference, options)
         add_decision_manager_fields(xml, options)
+        add_other_tax(xml, options)
         add_mdd_fields(xml, options)
         add_auth_service(xml, creditcard_or_reference, options)
+        add_capture_service_fields_with_run_false(xml, options)
         add_threeds_services(xml, options)
         add_business_rules_data(xml, creditcard_or_reference, options)
         add_airline_data(xml, options)
@@ -389,9 +391,10 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
-        add_other_tax(xml, options)
         add_threeds_2_ucaf_data(xml, payment_method_or_reference, options)
+        add_mastercard_network_tokenization_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
+        add_other_tax(xml, options)
         add_mdd_fields(xml, options)
         if (!payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check') || reference_is_a_check?(payment_method_or_reference)
           add_check_service(xml)
@@ -701,7 +704,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_other_tax(xml, options)
-        return unless options[:local_tax_amount] || options[:national_tax_amount] || options[:national_tax_indicator]
+        return unless %i[vat_tax_rate local_tax_amount national_tax_amount national_tax_indicator].any? { |gsf| options.include?(gsf) }
 
         xml.tag! 'otherTax' do
           xml.tag! 'vatTaxRate', options[:vat_tax_rate] if options[:vat_tax_rate]
@@ -853,10 +856,6 @@ module ActiveMerchant #:nodoc:
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         when :master
-          xml.tag! 'ucaf' do
-            xml.tag!('authenticationData', payment_method.payment_cryptogram) unless commerce_indicator
-            xml.tag!('collectionIndicator', DEFAULT_COLLECTION_INDICATOR)
-          end
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
             xml.commerceIndicator commerce_indicator.nil? ? ECI_BRAND_MAPPING[brand] : commerce_indicator
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
@@ -871,6 +870,17 @@ module ActiveMerchant #:nodoc:
           end
         else
           raise ArgumentError.new("Payment method #{brand} is not supported, check https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/CreatingOnlineAuth/CreatingAuthReqPNT.html")
+        end
+      end
+
+      def add_mastercard_network_tokenization_ucaf_data(xml, payment_method, options)
+        return unless network_tokenization?(payment_method) && card_brand(payment_method).to_sym == :master
+
+        commerce_indicator = 'internet' if subsequent_nt_apple_pay_auth(payment_method.source, options)
+
+        xml.tag! 'ucaf' do
+          xml.tag!('authenticationData', payment_method.payment_cryptogram) unless commerce_indicator
+          xml.tag!('collectionIndicator', DEFAULT_COLLECTION_INDICATOR)
         end
       end
 
@@ -889,10 +899,19 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_capture_service_fields_with_run_false(xml, options)
+        return unless options[:gratuity_amount]
+
+        xml.tag! 'ccCaptureService', { 'run' => 'false' } do
+          xml.tag! 'gratuityAmount', options[:gratuity_amount]
+        end
+      end
+
       def add_purchase_service(xml, payment_method, options)
         add_auth_service(xml, payment_method, options)
         xml.tag! 'ccCaptureService', { 'run' => 'true' } do
           xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+          xml.tag!('gratuityAmount', options[:gratuity_amount]) if options[:gratuity_amount]
         end
       end
 
