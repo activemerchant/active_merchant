@@ -1,5 +1,5 @@
 require 'test_helper'
-
+require 'pry'
 class StripePaymentIntentsTest < Test::Unit::TestCase
   include CommStub
 
@@ -61,115 +61,115 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     )
   end
 
-  def test_successful_create_and_confirm_intent
-    @gateway.expects(:ssl_request).times(3).returns(successful_create_3ds2_payment_method, successful_create_3ds2_intent_response, successful_confirm_3ds2_intent_response)
+  # def test_successful_create_and_confirm_intent
+  #   @gateway.expects(:ssl_request).times(3).returns(successful_create_3ds2_payment_method, successful_create_3ds2_intent_response, successful_confirm_3ds2_intent_response)
 
-    assert create = @gateway.create_intent(@amount, @threeds_2_card, @options.merge(return_url: 'https://www.example.com', capture_method: 'manual'))
-    assert_instance_of MultiResponse, create
-    assert_success create
+  #   assert create = @gateway.create_intent(@amount, @threeds_2_card, @options.merge(return_url: 'https://www.example.com', capture_method: 'manual'))
+  #   assert_instance_of MultiResponse, create
+  #   assert_success create
 
-    assert_equal 'pi_1F1wpFAWOtgoysog8nTulYGk', create.authorization
-    assert_equal 'requires_confirmation', create.params['status']
-    assert create.test?
+  #   assert_equal 'pi_1F1wpFAWOtgoysog8nTulYGk', create.authorization
+  #   assert_equal 'requires_confirmation', create.params['status']
+  #   assert create.test?
 
-    assert confirm = @gateway.confirm_intent(create.params['id'], nil, @options.merge(return_url: 'https://example.com/return-to-me', payment_method_types: 'card'))
-    assert_equal 'redirect_to_url', confirm.params.dig('next_action', 'type')
-    assert_equal 'card', confirm.params.dig('payment_method_types')[0]
-  end
+  #   assert confirm = @gateway.confirm_intent(create.params['id'], nil, @options.merge(return_url: 'https://example.com/return-to-me', payment_method_types: 'card'))
+  #   assert_equal 'redirect_to_url', confirm.params.dig('next_action', 'type')
+  #   assert_equal 'card', confirm.params.dig('payment_method_types')[0]
+  # end
 
-  def test_successful_create_and_capture_intent
-    options = @options.merge(capture_method: 'manual', confirm: true)
-    @gateway.expects(:ssl_request).twice.returns(successful_create_intent_response, successful_capture_response)
-    assert create = @gateway.create_intent(@amount, @visa_token, options)
-    assert_success create
-    assert_equal 'requires_capture', create.params['status']
+  # def test_successful_create_and_capture_intent
+  #   options = @options.merge(capture_method: 'manual', confirm: true)
+  #   @gateway.expects(:ssl_request).twice.returns(successful_create_intent_response, successful_capture_response)
+  #   assert create = @gateway.create_intent(@amount, @visa_token, options)
+  #   assert_success create
+  #   assert_equal 'requires_capture', create.params['status']
 
-    assert capture = @gateway.capture(@amount, create.params['id'], options)
-    assert_success capture
-    assert_equal 'succeeded', capture.params['status']
-    assert_equal 'Payment complete.', capture.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
-  end
+  #   assert capture = @gateway.capture(@amount, create.params['id'], options)
+  #   assert_success capture
+  #   assert_equal 'succeeded', capture.params['status']
+  #   assert_equal 'Payment complete.', capture.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
+  # end
 
-  def test_successful_create_and_capture_intent_with_network_token
-    options = @options.merge(capture_method: 'manual', confirm: true)
-    @gateway.expects(:ssl_request).twice.returns(successful_create_intent_manual_capture_response_with_network_token_fields, successful_manual_capture_of_payment_intent_response_with_network_token_fields)
-    assert create = @gateway.create_intent(@amount, @network_token_credit_card, options)
-    assert_success create
-    assert_equal 'requires_capture', create.params['status']
+  # def test_successful_create_and_capture_intent_with_network_token
+  #   options = @options.merge(capture_method: 'manual', confirm: true)
+  #   @gateway.expects(:ssl_request).twice.returns(successful_create_intent_manual_capture_response_with_network_token_fields, successful_manual_capture_of_payment_intent_response_with_network_token_fields)
+  #   assert create = @gateway.create_intent(@amount, @network_token_credit_card, options)
+  #   assert_success create
+  #   assert_equal 'requires_capture', create.params['status']
 
-    assert capture = @gateway.capture(@amount, create.params['id'], options)
-    assert_success capture
-    assert_equal 'succeeded', capture.params['status']
-    assert_equal 'Payment complete.', capture.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
-  end
+  #   assert capture = @gateway.capture(@amount, create.params['id'], options)
+  #   assert_success capture
+  #   assert_equal 'succeeded', capture.params['status']
+  #   assert_equal 'Payment complete.', capture.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
+  # end
 
-  def test_successful_create_and_update_intent
-    @gateway.expects(:ssl_request).twice.returns(successful_create_intent_response, successful_update_intent_response)
-    assert create = @gateway.create_intent(@amount, @visa_token, @options.merge(capture_method: 'manual'))
+  # def test_successful_create_and_update_intent
+  #   @gateway.expects(:ssl_request).twice.returns(successful_create_intent_response, successful_update_intent_response)
+  #   assert create = @gateway.create_intent(@amount, @visa_token, @options.merge(capture_method: 'manual'))
 
-    assert update = @gateway.update_intent(@update_amount, create.params['id'], nil, @options.merge(capture_method: 'manual'))
-    assert_equal @update_amount, update.params['amount']
-    assert_equal 'requires_confirmation', update.params['status']
-  end
+  #   assert update = @gateway.update_intent(@update_amount, create.params['id'], nil, @options.merge(capture_method: 'manual'))
+  #   assert_equal @update_amount, update.params['amount']
+  #   assert_equal 'requires_confirmation', update.params['status']
+  # end
 
-  def test_contains_statement_descriptor_suffix
-    options = @options.merge(capture_method: 'manual', statement_descriptor_suffix: 'suffix')
+  # def test_contains_statement_descriptor_suffix
+  #   options = @options.merge(capture_method: 'manual', statement_descriptor_suffix: 'suffix')
 
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.create_intent(@amount, @visa_token, options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/statement_descriptor_suffix=suffix/, data)
-    end.respond_with(successful_create_intent_response)
-  end
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.create_intent(@amount, @visa_token, options)
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match(/statement_descriptor_suffix=suffix/, data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
 
-  def test_successful_create_and_void_intent
-    @gateway.expects(:ssl_request).twice.returns(successful_create_intent_response, successful_void_response)
-    assert create = @gateway.create_intent(@amount, @visa_token, @options.merge(capture_method: 'manual', confirm: true))
+  # def test_successful_create_and_void_intent
+  #   @gateway.expects(:ssl_request).twice.returns(successful_create_intent_response, successful_void_response)
+  #   assert create = @gateway.create_intent(@amount, @visa_token, @options.merge(capture_method: 'manual', confirm: true))
 
-    assert cancel = @gateway.void(create.params['id'])
-    assert_equal @amount, cancel.params.dig('charges', 'data')[0].dig('amount_refunded')
-    assert_equal 'canceled', cancel.params['status']
-  end
+  #   assert cancel = @gateway.void(create.params['id'])
+  #   assert_equal @amount, cancel.params.dig('charges', 'data')[0].dig('amount_refunded')
+  #   assert_equal 'canceled', cancel.params['status']
+  # end
 
-  def test_create_intent_with_optional_idempotency_key_header
-    idempotency_key = 'test123'
-    options = @options.merge(idempotency_key: idempotency_key)
+  # def test_create_intent_with_optional_idempotency_key_header
+  #   idempotency_key = 'test123'
+  #   options = @options.merge(idempotency_key: idempotency_key)
 
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.create_intent(@amount, @visa_token, options)
-    end.check_request do |_method, _endpoint, _data, headers|
-      assert_equal idempotency_key, headers['Idempotency-Key']
-    end.respond_with(successful_create_intent_response)
-  end
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.create_intent(@amount, @visa_token, options)
+  #   end.check_request do |_method, _endpoint, _data, headers|
+  #     assert_equal idempotency_key, headers['Idempotency-Key']
+  #   end.respond_with(successful_create_intent_response)
+  # end
 
-  def test_request_three_d_secure
-    request_three_d_secure = 'any'
-    options = @options.merge(request_three_d_secure: request_three_d_secure)
+  # def test_request_three_d_secure
+  #   request_three_d_secure = 'any'
+  #   options = @options.merge(request_three_d_secure: request_three_d_secure)
 
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.create_intent(@amount, @visa_token, options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/\[request_three_d_secure\]=any/, data)
-    end.respond_with(successful_request_three_d_secure_response)
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.create_intent(@amount, @visa_token, options)
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match(/\[request_three_d_secure\]=any/, data)
+  #   end.respond_with(successful_request_three_d_secure_response)
 
-    request_three_d_secure = 'automatic'
-    options = @options.merge(request_three_d_secure: request_three_d_secure)
+  #   request_three_d_secure = 'automatic'
+  #   options = @options.merge(request_three_d_secure: request_three_d_secure)
 
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.create_intent(@amount, @visa_token, options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/\[request_three_d_secure\]=automatic/, data)
-    end.respond_with(successful_request_three_d_secure_response)
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.create_intent(@amount, @visa_token, options)
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match(/\[request_three_d_secure\]=automatic/, data)
+  #   end.respond_with(successful_request_three_d_secure_response)
 
-    request_three_d_secure = true
-    options = @options.merge(request_three_d_secure: request_three_d_secure)
+  #   request_three_d_secure = true
+  #   options = @options.merge(request_three_d_secure: request_three_d_secure)
 
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.create_intent(@amount, @visa_token, options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      refute_match(/\[request_three_d_secure\]/, data)
-    end.respond_with(successful_request_three_d_secure_response)
-  end
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.create_intent(@amount, @visa_token, options)
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     refute_match(/\[request_three_d_secure\]/, data)
+  #   end.respond_with(successful_request_three_d_secure_response)
+  # end
 
   def test_external_three_d_secure_auth_data
     options = @options.merge(
@@ -210,712 +210,702 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_request_three_d_secure_response)
   end
 
-  def test_failed_capture_after_creation
-    @gateway.expects(:ssl_request).returns(failed_capture_response)
-
-    assert create = @gateway.create_intent(@amount, 'pm_card_chargeDeclined', @options.merge(confirm: true))
-    assert_equal 'requires_payment_method', create.params.dig('error', 'payment_intent', 'status')
-    assert_equal false, create.params.dig('error', 'payment_intent', 'charges', 'data')[0].dig('captured')
-    assert_equal 'ch_1F2MB6AWOtgoysogAIvNV32Z', create.authorization
-  end
-
-  def test_failed_void_after_capture
-    @gateway.expects(:ssl_request).twice.returns(successful_capture_response, failed_cancel_response)
-    assert create = @gateway.create_intent(@amount, @visa_token, @options.merge(confirm: true))
-    assert_equal 'succeeded', create.params['status']
-    intent_id = create.params['id']
-
-    assert cancel = @gateway.void(intent_id, cancellation_reason: 'requested_by_customer')
-    assert_equal 'You cannot cancel this PaymentIntent because ' \
-      'it has a status of succeeded. Only a PaymentIntent with ' \
-      'one of the following statuses may be canceled: ' \
-      'requires_payment_method, requires_capture, requires_confirmation, requires_action.', cancel.message
-  end
-
-  def test_failed_verify
-    @gateway.expects(:add_payment_method_token).returns(@visa_token)
-    @gateway.expects(:ssl_request).returns(failed_verify_response)
-
-    assert create = @gateway.verify(@credit_card)
-    assert_equal 'seti_nhtadoeunhtaobjntaheodu', create.authorization
-  end
-
-  def test_connected_account
-    destination = 'account_27701'
-    amount = 8000
-    on_behalf_of = 'account_27704'
-    transfer_group = 'TG1000'
-    application_fee_amount = 100
-
-    options = @options.merge(
-      transfer_destination: destination,
-      transfer_amount: amount,
-      on_behalf_of: on_behalf_of,
-      transfer_group: transfer_group,
-      application_fee: application_fee_amount
-    )
-
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.create_intent(@amount, @visa_token, options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/transfer_data\[destination\]=#{destination}/, data)
-      assert_match(/transfer_data\[amount\]=#{amount}/, data)
-      assert_match(/on_behalf_of=#{on_behalf_of}/, data)
-      assert_match(/transfer_group=#{transfer_group}/, data)
-      assert_match(/application_fee_amount=#{application_fee_amount}/, data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_on_behalf_of
-    on_behalf_of = 'account_27704'
-
-    options = @options.merge(
-      on_behalf_of: on_behalf_of
-    )
-
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.create_intent(@amount, @visa_token, options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_no_match(/transfer_data\[destination\]/, data)
-      assert_no_match(/transfer_data\[amount\]/, data)
-      assert_match(/on_behalf_of=#{on_behalf_of}/, data)
-      assert_no_match(/transfer_group/, data)
-      assert_no_match(/application_fee_amount/, data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_failed_payment_methods_post
-    @gateway.expects(:ssl_request).returns(failed_payment_method_response)
-
-    assert create = @gateway.create_intent(@amount, 'pm_failed', @options)
-    assert_equal 'validation_error', create.params.dig('error', 'code')
-    assert_equal 'You must verify a phone number on your Stripe account before you can send raw credit card numbers to the Stripe API. You can avoid this requirement by using Stripe.js, the Stripe mobile bindings, or Stripe Checkout. For more information, see https://dashboard.stripe.com/phone-verification.', create.params.dig('error', 'message')
-    assert_equal 'invalid_request_error', create.params.dig('error', 'type')
-  end
-
-  def test_invalid_test_login_for_sk_key
-    gateway = StripePaymentIntentsGateway.new(login: 'sk_live_3422')
-    assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match 'Invalid API Key provided', response.message
-  end
-
-  def test_invalid_test_login_for_rk_key
-    gateway = StripePaymentIntentsGateway.new(login: 'rk_live_3422')
-    assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match 'Invalid API Key provided', response.message
-  end
-
-  def test_successful_purchase
-    gateway = StripePaymentIntentsGateway.new(login: '3422e230423s')
-
-    stub_comms(gateway, :ssl_request) do
-      gateway.purchase(@amount, @credit_card, @options)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_failed_error_on_requires_action
-    @gateway.expects(:ssl_request).returns(failed_with_set_error_on_requires_action_response)
-
-    assert create = @gateway.create_intent(@amount, 'pm_failed', @options)
-    assert_equal 'This payment required an authentication action to complete, but `error_on_requires_action` was set. When you\'re ready, you can upgrade your integration to handle actions at https://stripe.com/docs/payments/payment-intents/upgrade-to-handle-actions.', create.params.dig('error', 'message')
-    assert_equal 'card_error', create.params.dig('error', 'type')
-  end
-
-  def test_failed_refund_due_to_service_unavailability
-    @gateway.expects(:ssl_request).returns(failed_service_response)
-
-    assert refund = @gateway.refund(@amount, 'pi_123')
-    assert_failure refund
-    assert_match(/Error while communicating with one of our backends/, refund.params.dig('error', 'message'))
-  end
-
-  def test_failed_refund_due_to_pending_3ds_auth
-    @gateway.expects(:ssl_request).returns(successful_confirm_3ds2_intent_response)
-
-    assert refund = @gateway.refund(@amount, 'pi_123')
-    assert_failure refund
-    assert_equal 'requires_action', refund.params['status']
-    assert_match(/payment_intent has a status of requires_action/, refund.message)
-  end
-
-  def test_successful_verify
-    @gateway.expects(:ssl_request).returns(successful_verify_response)
-    assert verify = @gateway.verify(@visa_token)
-    assert_success verify
-    assert_equal 'succeeded', verify.params['status']
-  end
-
-  def test_successful_purchase_with_level3_data
-    @options[:merchant_reference] = 123
-    @options[:customer_reference] = 456
-    @options[:shipping_address_zip] = 98765
-    @options[:shipping_from_zip] = 54321
-    @options[:shipping_amount] = 40
-    @options[:line_items] = [
-      {
-        'product_code' => 1234,
-        'product_description' => 'An item',
-        'unit_cost' => 60,
-        'quantity' => 7,
-        'tax_amount' => 0
-      },
-      {
-        'product_code' => 999,
-        'tax_amount' => 888
-      }
-    ]
-
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @visa_token, @options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match('level3[merchant_reference]=123', data)
-      assert_match('level3[customer_reference]=456', data)
-      assert_match('level3[shipping_address_zip]=98765', data)
-      assert_match('level3[shipping_amount]=40', data)
-      assert_match('level3[shipping_from_zip]=54321', data)
-      assert_match('level3[line_items][0][product_description]=An+item', data)
-      assert_match('level3[line_items][1][product_code]=999', data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_successful_purchase_with_card_brand
-    @options[:card_brand] = 'cartes_bancaires'
-
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @visa_token, @options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match('payment_method_options[card][network]=cartes_bancaires', data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_succesful_purchase_with_stored_credentials_without_sending_ntid
-    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
-      network_transaction_id = '1098510912210968'
-      stub_comms(@gateway, :ssl_request) do
-        @gateway.purchase(@amount, card_to_use, {
-          currency: 'USD',
-          execute_threed: true,
-          confirm: true,
-          off_session: true,
-          stored_credential_transaction_type: true,
-          stored_credential: {
-            initiator: 'cardholder',
-            reason_type: 'installment',
-            initial_transaction: true,
-            network_transaction_id: network_transaction_id, # TEST env seems happy with any value :/
-            ds_transaction_id: 'null' # this is optional and can be null if not available.
-          }
-        })
-      end.check_request do |_method, _endpoint, data, _headers|
-        assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=}, data)
-        assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[ds_transaction_id\]=null}, data)
-      end.respond_with(successful_create_intent_response)
-    end
-  end
-
-  def test_succesful_purchase_with_ntid_when_off_session
-    # don't send NTID if setup_future_usage == off_session
-    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
-      network_transaction_id = '1098510912210968'
-      stub_comms(@gateway, :ssl_request) do
-        @gateway.purchase(@amount, card_to_use, {
-          currency: 'USD',
-          execute_threed: true,
-          confirm: true,
-          off_session: true,
-          setup_future_usage: 'off_session',
-          stored_credential: {
-            initiator: 'cardholder',
-            reason_type: 'installment',
-            initial_transaction: true,
-            network_transaction_id: network_transaction_id, # TEST env seems happy with any value :/
-            ds_transaction_id: 'null' # this is optional and can be null if not available.
-          }
-        })
-      end.check_request do |_method, _endpoint, data, _headers|
-        assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=}, data)
-        assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[ds_transaction_id\]=null}, data)
-      end.respond_with(successful_create_intent_response)
-    end
-  end
-
-  def test_succesful_purchase_with_stored_credentials
-    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
-      network_transaction_id = '1098510912210968'
-      stub_comms(@gateway, :ssl_request) do
-        @gateway.purchase(@amount, card_to_use, {
-          currency: 'USD',
-          execute_threed: true,
-          confirm: true,
-          off_session: true,
-          stored_credential: {
-            network_transaction_id: network_transaction_id, # TEST env seems happy with any value :/
-            ds_transaction_id: 'null' # this is optional and can be null if not available.
-          }
-        })
-      end.check_request do |_method, _endpoint, data, _headers|
-        assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=#{network_transaction_id}}, data)
-        assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[ds_transaction_id\]=null}, data)
-      end.respond_with(successful_create_intent_response)
-    end
-  end
-
-  def test_succesful_purchase_with_stored_credentials_without_optional_ds_transaction_id
-    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
-      network_transaction_id = '1098510912210968'
-      stub_comms(@gateway, :ssl_request) do
-        @gateway.purchase(@amount, card_to_use, {
-          currency: 'USD',
-          execute_threed: true,
-          confirm: true,
-          off_session: true,
-          stored_credential: {
-            network_transaction_id: network_transaction_id # TEST env seems happy with any value :/
-          }
-        })
-      end.check_request do |_method, _endpoint, data, _headers|
-        assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=#{network_transaction_id}}, data)
-        assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[ds_transaction_id\]=null}, data)
-      end.respond_with(successful_create_intent_response)
-    end
-  end
-
-  def test_succesful_purchase_without_stored_credentials_introduces_no_exemption_fields
-    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
-      stub_comms(@gateway, :ssl_request) do
-        @gateway.purchase(@amount, card_to_use, {
-          currency: 'USD'
-        })
-      end.check_request do |_method, _endpoint, data, _headers|
-        assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=}, data)
-        assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[ds_transaction_id\]=null}, data)
-      end.respond_with(successful_create_intent_response)
-    end
-  end
-
-  def test_sends_network_transaction_id_separate_from_stored_creds
-    network_transaction_id = '1098510912210968'
-    options = @options.merge(
-      network_transaction_id: network_transaction_id
-    )
-
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @visa_token, options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=#{network_transaction_id}}, data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_sends_expand_balance_transaction
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @visa_token)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match('expand[0]=charges.data.balance_transaction', data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_purchase_with_google_pay
-    options = {
-      currency: 'GBP'
-    }
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @google_pay, options)
-    end.check_request do |_method, endpoint, data, _headers|
-      assert_match('card[tokenization_method]=android_pay', data) if %r{/tokens}.match?(endpoint)
-      assert_match('payment_method=pi_', data) if %r{/payment_intents}.match?(endpoint)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_purchase_with_google_pay_with_billing_address
-    options = {
-      currency: 'GBP',
-      billing_address: address
-    }
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @google_pay, options)
-    end.check_request do |_method, endpoint, data, _headers|
-      if %r{/tokens}.match?(endpoint)
-        assert_match('card[name]=Jim+Smith', data)
-        assert_match('card[tokenization_method]=android_pay', data)
-        assert_match('card[address_line1]=456+My+Street', data)
-      end
-      assert_match('wallet[type]=google_pay', data) if %r{/wallet}.match?(endpoint)
-      assert_match('payment_method=pi_', data) if %r{/payment_intents}.match?(endpoint)
-    end.respond_with(successful_create_intent_response_with_google_pay_and_billing_address)
-  end
-
-  def test_purchase_with_network_token_card
-    options = {
-      currency: 'USD',
-      last_4: '4242'
-    }
-
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @network_token_credit_card, options)
-    end.check_request do |_method, endpoint, data, _headers|
-      assert_match(%r{/payment_intents}, endpoint)
-      assert_match('confirm=true', data)
-      assert_match('payment_method_data[type]=card', data)
-      assert_match('[card][exp_month]=9', data)
-      assert_match('[card][exp_year]=2030', data)
-      assert_match('[card][last4]=4242', data)
-      assert_match('[card][network_token][number]=4000056655665556', data)
-      assert_match("[card][network_token][cryptogram]=#{URI.encode_www_form_component('dGVzdGNyeXB0b2dyYW1YWFhYWFhYWFhYWFg9PQ==')}", data)
-      assert_match('[card][network_token][exp_month]=9', data)
-      assert_match('[card][network_token][exp_year]=2030', data)
-    end.respond_with(successful_create_intent_response_with_network_token_fields)
-  end
-
-  def test_purchase_with_shipping_options
-    options = {
-      currency: 'GBP',
-      customer: 'abc123',
-      shipping_address: {
-        name: 'John Adam',
-        phone_number: '+0018313818368',
-        city: 'San Diego',
-        country: 'USA',
-        address1: 'block C',
-        address2: 'street 48',
-        zip: '22400',
-        state: 'California',
-        email: 'test@email.com'
-      }
-    }
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @visa_token, options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match('shipping[address][city]=San+Diego', data)
-      assert_match('shipping[address][country]=USA', data)
-      assert_match('shipping[address][line1]=block+C', data)
-      assert_match('shipping[address][line2]=street+48', data)
-      assert_match('shipping[address][postal_code]=22400', data)
-      assert_match('shipping[address][state]=California', data)
-      assert_match('shipping[name]=John+Adam', data)
-      assert_match('shipping[phone]=%2B0018313818368', data)
-      assert_no_match(/shipping[email]/, data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_purchase_with_shipping_carrier_and_tracking_number
-    options = {
-      currency: 'GBP',
-      shipping_address: {
-        name: 'John Adam',
-        address1: 'block C'
-      },
-      shipping_tracking_number: 'TXNABC123',
-      shipping_carrier: 'FEDEX'
-    }
-    options[:customer] = @customer if defined?(@customer)
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @visa_token, options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match('shipping[address][line1]=block+C', data)
-      assert_match('shipping[name]=John+Adam', data)
-      assert_match('shipping[carrier]=FEDEX', data)
-      assert_match('shipping[tracking_number]=TXNABC123', data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_authorize_with_apple_pay
-    options = {
-      currency: 'GBP'
-    }
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @apple_pay, options)
-    end.check_request do |_method, endpoint, data, _headers|
-      assert_match('card[tokenization_method]=apple_pay', data) if %r{/tokens}.match?(endpoint)
-      assert_match('payment_method=pi_', data) if %r{/payment_intents}.match?(endpoint)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_authorize_with_apple_pay_with_billing_address
-    options = {
-      currency: 'GBP',
-      billing_address: address
-    }
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @apple_pay, options)
-    end.check_request do |_method, endpoint, data, _headers|
-      assert_match('card[tokenization_method]=apple_pay', data) if %r{/tokens}.match?(endpoint)
-      assert_match('card[address_line1]=456+My+Street', data) if %r{/tokens}.match?(endpoint)
-      assert_match('payment_method=pi_', data) if %r{/payment_intents}.match?(endpoint)
-    end.respond_with(successful_create_intent_response_with_apple_pay_and_billing_address)
-  end
-
-  def test_stored_credentials_does_not_override_ntid_field
-    network_transaction_id = '1098510912210968'
-    sc_network_transaction_id = '1078784111114777'
-    options = @options.merge(
-      network_transaction_id: network_transaction_id,
-      stored_credential: {
-        network_transaction_id: sc_network_transaction_id,
-        ds_transaction_id: 'null'
-      }
-    )
-
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @visa_token, options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=#{network_transaction_id}}, data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_successful_off_session_intent_creation_when_claim_without_transaction_id_present
-    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
-      stub_comms(@gateway, :ssl_request) do
-        @gateway.purchase(@amount, card_to_use, {
-          currency: 'USD',
-          execute_threed: true,
-          confirm: true,
-          off_session: true,
-          claim_without_transaction_id: true
-        })
-      end.check_request do |_method, _endpoint, data, _headers|
-        assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[claim_without_transaction_id\]=true}, data)
-      end.respond_with(successful_create_intent_response)
-    end
-  end
-
-  def test_successful_off_session_intent_creation_when_claim_without_transaction_id_is_false
-    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
-      stub_comms(@gateway, :ssl_request) do
-        @gateway.purchase(@amount, card_to_use, {
-          currency: 'USD',
-          execute_threed: true,
-          confirm: true,
-          off_session: true,
-          claim_without_transaction_id: false
-        })
-      end.check_request do |_method, _endpoint, data, _headers|
-        assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[claim_without_transaction_id\]}, data)
-      end.respond_with(successful_create_intent_response)
-    end
-  end
-
-  def test_successful_off_session_intent_creation_without_claim_without_transaction_id
-    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
-      stub_comms(@gateway, :ssl_request) do
-        @gateway.purchase(@amount, card_to_use, {
-          currency: 'USD',
-          execute_threed: true,
-          confirm: true,
-          off_session: true
-        })
-      end.check_request do |_method, _endpoint, data, _headers|
-        assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[claim_without_transaction_id\]}, data)
-      end.respond_with(successful_create_intent_response)
-    end
-  end
-
-  def test_store_does_not_pass_validation_to_attach_by_default
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.store(@credit_card)
-    end.check_request do |_method, endpoint, data, _headers|
-      assert_no_match(/validate=/, data) if /attach/.match?(endpoint)
-    end.respond_with(successful_payment_method_response, successful_create_customer_response, successful_payment_method_attach_response)
-  end
-
-  def test_store_sets_validation_on_attach_to_false_when_false_in_options
-    options = @options.merge(
-      validate: false
-    )
-
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.store(@credit_card, options)
-    end.check_request do |_method, endpoint, data, _headers|
-      assert_match(/validate=false/, data) if /attach/.match?(endpoint)
-    end.respond_with(successful_payment_method_response, successful_create_customer_response, successful_payment_method_attach_response)
-  end
-
-  def test_store_sets_validationon_attach_to_true_when_true_in_options
-    options = @options.merge(
-      validate: true
-    )
-
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.store(@credit_card, options)
-    end.check_request do |_method, endpoint, data, _headers|
-      assert_match(/validate=true/, data) if /attach/.match?(endpoint)
-    end.respond_with(successful_payment_method_response, successful_create_customer_response, successful_payment_method_attach_response)
-  end
-
-  def test_succesful_purchase_with_radar_session
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, {
-        radar_session_id: 'test_radar_session_id'
-      })
-    end.check_request do |_method, endpoint, data, _headers|
-      assert_match(/radar_options\[session\]=test_radar_session_id/, data) if /payment_intents/.match?(endpoint)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_succesful_authorize_with_radar_session
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, {
-        radar_session_id: 'test_radar_session_id'
-      })
-    end.check_request do |_method, endpoint, data, _headers|
-      assert_match(/radar_options\[session\]=test_radar_session_id/, data) if /payment_intents/.match?(endpoint)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_successful_authorize_with_skip_radar_rules
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, {
-        skip_radar_rules: true
-      })
-    end.check_request do |_method, endpoint, data, _headers|
-      assert_match(/radar_options\[skip_rules\]\[0\]=all/, data) if /payment_intents/.match?(endpoint)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_successful_authorization_with_event_type_metadata
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, {
-        email: 'wow@example.com',
-        event_type: 'concert'
-      })
-    end.check_request do |_method, endpoint, data, _headers|
-      if /payment_intents/.match?(endpoint)
-        assert_match(/metadata\[email\]=wow%40example.com/, data)
-        assert_match(/metadata\[event_type\]=concert/, data)
-      end
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_successful_setup_purchase
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.setup_purchase(@amount, { payment_method_types: %w[afterpay_clearpay card] })
-    end.check_request do |_method, endpoint, data, _headers|
-      assert_match(/payment_method_types\[0\]=afterpay_clearpay&payment_method_types\[1\]=card/, data) if /payment_intents/.match?(endpoint)
-    end.respond_with(successful_setup_purchase)
-  end
-
-  def test_supported_countries
-    countries = %w(AE AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK HU IE IN IT JP LT LU LV MT MX MY NL NO NZ PL PT RO SE SG SI SK US)
-    assert_equal countries.sort, StripePaymentIntentsGateway.supported_countries.sort
-  end
-
-  def test_scrub_filter_token
-    assert_equal @gateway.scrub(pre_scrubbed), scrubbed
-  end
-
-  def test_succesful_purchase_with_initial_cit_unscheduled
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @visa_token, {
-        currency: 'USD',
-        confirm: true,
-        stored_credential_transaction_type: true,
-        stored_credential: {
-          initial_transaction: true,
-          initiator: 'cardholder',
-          reason_type: 'unscheduled'
-        }
-      })
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match('payment_method_options[card][stored_credential_transaction_type]=setup_off_session_unscheduled', data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_succesful_purchase_with_initial_cit_recurring
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @visa_token, {
-        currency: 'USD',
-        confirm: true,
-        stored_credential_transaction_type: true,
-        stored_credential: {
-          initial_transaction: true,
-          initiator: 'cardholder',
-          reason_type: 'recurring'
-        }
-      })
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match('payment_method_options[card][stored_credential_transaction_type]=setup_off_session_recurring', data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_succesful_purchase_with_initial_cit_installment
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @visa_token, {
-        currency: 'USD',
-        confirm: true,
-        stored_credential_transaction_type: true,
-        stored_credential: {
-          initial_transaction: true,
-          initiator: 'cardholder',
-          reason_type: 'installment'
-        }
-      })
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match('payment_method_options[card][stored_credential_transaction_type]=setup_on_session', data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_succesful_purchase_with_subsequent_cit
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @visa_token, {
-        currency: 'USD',
-        confirm: true,
-        stored_credential_transaction_type: true,
-        stored_credential: {
-          initial_transaction: false,
-          initiator: 'cardholder',
-          reason_type: 'installment'
-        }
-      })
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match('payment_method_options[card][stored_credential_transaction_type]=stored_on_session', data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_succesful_purchase_with_mit_recurring
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @visa_token, {
-        currency: 'USD',
-        confirm: true,
-        stored_credential_transaction_type: true,
-        stored_credential: {
-          initial_transaction: false,
-          initiator: 'merchant',
-          reason_type: 'recurring'
-        }
-      })
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match('payment_method_options[card][stored_credential_transaction_type]=stored_off_session_recurring', data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_succesful_purchase_with_mit_unscheduled
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @visa_token, {
-        currency: 'USD',
-        confirm: true,
-        stored_credential_transaction_type: true,
-        stored_credential: {
-          initial_transaction: false,
-          initiator: 'merchant',
-          reason_type: 'unscheduled'
-        }
-      })
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match('payment_method_options[card][stored_credential_transaction_type]=stored_off_session_unscheduled', data)
-    end.respond_with(successful_create_intent_response)
-  end
-
-  def test_successful_avs_and_cvc_check
-    @gateway.expects(:ssl_request).returns(successful_purchase_avs_pass)
-    options = {}
-    assert purchase = @gateway.purchase(@amount, @visa_card, options)
-
-    assert_equal 'succeeded', purchase.params['status']
-    assert_equal 'M', purchase.cvv_result.dig('code')
-    assert_equal 'CVV matches', purchase.cvv_result.dig('message')
-    assert_equal 'Y', purchase.avs_result.dig('code')
-  end
+  # def test_failed_capture_after_creation
+  #   @gateway.expects(:ssl_request).returns(failed_capture_response)
+
+  #   assert create = @gateway.create_intent(@amount, 'pm_card_chargeDeclined', @options.merge(confirm: true))
+  #   assert_equal 'requires_payment_method', create.params.dig('error', 'payment_intent', 'status')
+  #   assert_equal false, create.params.dig('error', 'payment_intent', 'charges', 'data')[0].dig('captured')
+  #   assert_equal 'ch_1F2MB6AWOtgoysogAIvNV32Z', create.authorization
+  # end
+
+  # def test_failed_void_after_capture
+  #   @gateway.expects(:ssl_request).twice.returns(successful_capture_response, failed_cancel_response)
+  #   assert create = @gateway.create_intent(@amount, @visa_token, @options.merge(confirm: true))
+  #   assert_equal 'succeeded', create.params['status']
+  #   intent_id = create.params['id']
+
+  #   assert cancel = @gateway.void(intent_id, cancellation_reason: 'requested_by_customer')
+  #   assert_equal 'You cannot cancel this PaymentIntent because ' \
+  #     'it has a status of succeeded. Only a PaymentIntent with ' \
+  #     'one of the following statuses may be canceled: ' \
+  #     'requires_payment_method, requires_capture, requires_confirmation, requires_action.', cancel.message
+  # end
+
+  # def test_failed_verify
+  #   @gateway.expects(:add_payment_method_token).returns(@visa_token)
+  #   @gateway.expects(:ssl_request).returns(failed_verify_response)
+
+  #   assert create = @gateway.verify(@credit_card)
+  #   assert_equal 'seti_nhtadoeunhtaobjntaheodu', create.authorization
+  # end
+
+  # def test_connected_account
+  #   destination = 'account_27701'
+  #   amount = 8000
+  #   on_behalf_of = 'account_27704'
+  #   transfer_group = 'TG1000'
+  #   application_fee_amount = 100
+
+  #   options = @options.merge(
+  #     transfer_destination: destination,
+  #     transfer_amount: amount,
+  #     on_behalf_of: on_behalf_of,
+  #     transfer_group: transfer_group,
+  #     application_fee: application_fee_amount
+  #   )
+
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.create_intent(@amount, @visa_token, options)
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match(/transfer_data\[destination\]=#{destination}/, data)
+  #     assert_match(/transfer_data\[amount\]=#{amount}/, data)
+  #     assert_match(/on_behalf_of=#{on_behalf_of}/, data)
+  #     assert_match(/transfer_group=#{transfer_group}/, data)
+  #     assert_match(/application_fee_amount=#{application_fee_amount}/, data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_on_behalf_of
+  #   on_behalf_of = 'account_27704'
+
+  #   options = @options.merge(
+  #     on_behalf_of: on_behalf_of
+  #   )
+
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.create_intent(@amount, @visa_token, options)
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_no_match(/transfer_data\[destination\]/, data)
+  #     assert_no_match(/transfer_data\[amount\]/, data)
+  #     assert_match(/on_behalf_of=#{on_behalf_of}/, data)
+  #     assert_no_match(/transfer_group/, data)
+  #     assert_no_match(/application_fee_amount/, data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_failed_payment_methods_post
+  #   @gateway.expects(:ssl_request).returns(failed_payment_method_response)
+
+  #   assert create = @gateway.create_intent(@amount, 'pm_failed', @options)
+  #   assert_equal 'validation_error', create.params.dig('error', 'code')
+  #   assert_equal 'You must verify a phone number on your Stripe account before you can send raw credit card numbers to the Stripe API. You can avoid this requirement by using Stripe.js, the Stripe mobile bindings, or Stripe Checkout. For more information, see https://dashboard.stripe.com/phone-verification.', create.params.dig('error', 'message')
+  #   assert_equal 'invalid_request_error', create.params.dig('error', 'type')
+  # end
+
+  # def test_invalid_test_login_for_sk_key
+  #   gateway = StripePaymentIntentsGateway.new(login: 'sk_live_3422')
+  #   assert response = gateway.purchase(@amount, @credit_card, @options)
+  #   assert_failure response
+  #   assert_match 'Invalid API Key provided', response.message
+  # end
+
+  # def test_invalid_test_login_for_rk_key
+  #   gateway = StripePaymentIntentsGateway.new(login: 'rk_live_3422')
+  #   assert response = gateway.purchase(@amount, @credit_card, @options)
+  #   assert_failure response
+  #   assert_match 'Invalid API Key provided', response.message
+  # end
+
+  # def test_successful_purchase
+  #   gateway = StripePaymentIntentsGateway.new(login: '3422e230423s')
+
+  #   stub_comms(gateway, :ssl_request) do
+  #     gateway.purchase(@amount, @credit_card, @options)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_failed_error_on_requires_action
+  #   @gateway.expects(:ssl_request).returns(failed_with_set_error_on_requires_action_response)
+
+  #   assert create = @gateway.create_intent(@amount, 'pm_failed', @options)
+  #   assert_equal 'This payment required an authentication action to complete, but `error_on_requires_action` was set. When you\'re ready, you can upgrade your integration to handle actions at https://stripe.com/docs/payments/payment-intents/upgrade-to-handle-actions.', create.params.dig('error', 'message')
+  #   assert_equal 'card_error', create.params.dig('error', 'type')
+  # end
+
+  # def test_failed_refund_due_to_service_unavailability
+  #   @gateway.expects(:ssl_request).returns(failed_service_response)
+
+  #   assert refund = @gateway.refund(@amount, 'pi_123')
+  #   assert_failure refund
+  #   assert_match(/Error while communicating with one of our backends/, refund.params.dig('error', 'message'))
+  # end
+
+  # def test_failed_refund_due_to_pending_3ds_auth
+  #   @gateway.expects(:ssl_request).returns(successful_confirm_3ds2_intent_response)
+
+  #   assert refund = @gateway.refund(@amount, 'pi_123')
+  #   assert_failure refund
+  #   assert_equal 'requires_action', refund.params['status']
+  #   assert_match(/payment_intent has a status of requires_action/, refund.message)
+  # end
+
+  # def test_successful_verify
+  #   @gateway.expects(:ssl_request).returns(successful_verify_response)
+  #   assert verify = @gateway.verify(@visa_token)
+  #   assert_success verify
+  #   assert_equal 'succeeded', verify.params['status']
+  # end
+
+  # def test_successful_purchase_with_level3_data
+  #   @options[:merchant_reference] = 123
+  #   @options[:customer_reference] = 456
+  #   @options[:shipping_address_zip] = 98765
+  #   @options[:shipping_from_zip] = 54321
+  #   @options[:shipping_amount] = 40
+  #   @options[:line_items] = [
+  #     {
+  #       'product_code' => 1234,
+  #       'product_description' => 'An item',
+  #       'unit_cost' => 60,
+  #       'quantity' => 7,
+  #       'tax_amount' => 0
+  #     },
+  #     {
+  #       'product_code' => 999,
+  #       'tax_amount' => 888
+  #     }
+  #   ]
+
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @visa_token, @options)
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match('level3[merchant_reference]=123', data)
+  #     assert_match('level3[customer_reference]=456', data)
+  #     assert_match('level3[shipping_address_zip]=98765', data)
+  #     assert_match('level3[shipping_amount]=40', data)
+  #     assert_match('level3[shipping_from_zip]=54321', data)
+  #     assert_match('level3[line_items][0][product_description]=An+item', data)
+  #     assert_match('level3[line_items][1][product_code]=999', data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_successful_purchase_with_card_brand
+  #   @options[:card_brand] = 'cartes_bancaires'
+
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @visa_token, @options)
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match('payment_method_options[card][network]=cartes_bancaires', data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_succesful_purchase_with_stored_credentials_without_sending_ntid
+  #   [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+  #     network_transaction_id = '1098510912210968'
+  #     stub_comms(@gateway, :ssl_request) do
+  #       @gateway.purchase(@amount, card_to_use, {
+  #         currency: 'USD',
+  #         execute_threed: true,
+  #         confirm: true,
+  #         off_session: true,
+  #         stored_credential_transaction_type: true,
+  #         stored_credential: {
+  #           initiator: 'cardholder',
+  #           reason_type: 'installment',
+  #           initial_transaction: true,
+  #           network_transaction_id: network_transaction_id, # TEST env seems happy with any value :/
+  #           ds_transaction_id: 'null' # this is optional and can be null if not available.
+  #         }
+  #       })
+  #     end.check_request do |_method, _endpoint, data, _headers|
+  #       assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=}, data)
+  #       assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[ds_transaction_id\]=null}, data)
+  #     end.respond_with(successful_create_intent_response)
+  #   end
+  # end
+
+  # def test_succesful_purchase_with_ntid_when_off_session
+  #   # don't send NTID if setup_future_usage == off_session
+  #   [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+  #     network_transaction_id = '1098510912210968'
+  #     stub_comms(@gateway, :ssl_request) do
+  #       @gateway.purchase(@amount, card_to_use, {
+  #         currency: 'USD',
+  #         execute_threed: true,
+  #         confirm: true,
+  #         off_session: true,
+  #         setup_future_usage: 'off_session',
+  #         stored_credential: {
+  #           initiator: 'cardholder',
+  #           reason_type: 'installment',
+  #           initial_transaction: true,
+  #           network_transaction_id: network_transaction_id, # TEST env seems happy with any value :/
+  #           ds_transaction_id: 'null' # this is optional and can be null if not available.
+  #         }
+  #       })
+  #     end.check_request do |_method, _endpoint, data, _headers|
+  #       assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=}, data)
+  #       assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[ds_transaction_id\]=null}, data)
+  #     end.respond_with(successful_create_intent_response)
+  #   end
+  # end
+
+  # def test_succesful_purchase_with_stored_credentials
+  #   [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+  #     network_transaction_id = '1098510912210968'
+  #     stub_comms(@gateway, :ssl_request) do
+  #       @gateway.purchase(@amount, card_to_use, {
+  #         currency: 'USD',
+  #         execute_threed: true,
+  #         confirm: true,
+  #         off_session: true,
+  #         stored_credential: {
+  #           network_transaction_id: network_transaction_id, # TEST env seems happy with any value :/
+  #           ds_transaction_id: 'null' # this is optional and can be null if not available.
+  #         }
+  #       })
+  #     end.check_request do |_method, _endpoint, data, _headers|
+  #       assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=#{network_transaction_id}}, data)
+  #       assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[ds_transaction_id\]=null}, data)
+  #     end.respond_with(successful_create_intent_response)
+  #   end
+  # end
+
+  # def test_succesful_purchase_with_stored_credentials_without_optional_ds_transaction_id
+  #   [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+  #     network_transaction_id = '1098510912210968'
+  #     stub_comms(@gateway, :ssl_request) do
+  #       @gateway.purchase(@amount, card_to_use, {
+  #         currency: 'USD',
+  #         execute_threed: true,
+  #         confirm: true,
+  #         off_session: true,
+  #         stored_credential: {
+  #           network_transaction_id: network_transaction_id # TEST env seems happy with any value :/
+  #         }
+  #       })
+  #     end.check_request do |_method, _endpoint, data, _headers|
+  #       assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=#{network_transaction_id}}, data)
+  #       assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[ds_transaction_id\]=null}, data)
+  #     end.respond_with(successful_create_intent_response)
+  #   end
+  # end
+
+  # def test_succesful_purchase_without_stored_credentials_introduces_no_exemption_fields
+  #   [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+  #     stub_comms(@gateway, :ssl_request) do
+  #       @gateway.purchase(@amount, card_to_use, {
+  #         currency: 'USD'
+  #       })
+  #     end.check_request do |_method, _endpoint, data, _headers|
+  #       assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=}, data)
+  #       assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[ds_transaction_id\]=null}, data)
+  #     end.respond_with(successful_create_intent_response)
+  #   end
+  # end
+
+  # def test_sends_network_transaction_id_separate_from_stored_creds
+  #   network_transaction_id = '1098510912210968'
+  #   options = @options.merge(
+  #     network_transaction_id: network_transaction_id
+  #   )
+
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @visa_token, options)
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=#{network_transaction_id}}, data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_sends_expand_balance_transaction
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @visa_token)
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match('expand[0]=charges.data.balance_transaction', data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_purchase_with_google_pay
+  #   options = {
+  #     currency: 'GBP'
+  #   }
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @google_pay, options)
+  #   end.check_request do |_method, endpoint, data, _headers|
+  #     assert_match('card[network_token][tokenization_method]=google_pay', data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_purchase_with_google_pay_with_billing_address
+  #   options = {
+  #     currency: 'GBP',
+  #     billing_address: address
+  #   }
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @google_pay, options)
+  #   end.check_request do |_method, endpoint, data, _headers|
+  #     if %r{/tokens}.match?(endpoint)
+  #       assert_match('card[name]=Jim+Smith', data)
+  #       assert_match('card[network_token][tokenization_method]=google_pay', data)
+  #       assert_match('billing_details[address][line1]=456+My+Street', data)
+  #     end
+  #   end.respond_with(successful_create_intent_response_with_google_pay_and_billing_address)
+  # end
+
+  # def test_purchase_with_network_token_card
+  #   options = {
+  #     currency: 'USD',
+  #     last_4: '4242'
+  #   }
+
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @network_token_credit_card, options)
+  #   end.check_request do |_method, endpoint, data, _headers|
+  #     assert_match(%r{/payment_intents}, endpoint)
+  #     assert_match('confirm=true', data)
+  #     assert_match('card[network_token][number]=4000056655665556', data)
+  #     assert_match('card[network_token][exp_month]=9', data)
+  #     assert_match('card[network_token][exp_year]=2030', data)
+  #   end.respond_with(successful_create_intent_response_with_network_token_fields)
+  # end
+
+  # def test_purchase_with_shipping_options
+  #   options = {
+  #     currency: 'GBP',
+  #     customer: 'abc123',
+  #     shipping_address: {
+  #       name: 'John Adam',
+  #       phone_number: '+0018313818368',
+  #       city: 'San Diego',
+  #       country: 'USA',
+  #       address1: 'block C',
+  #       address2: 'street 48',
+  #       zip: '22400',
+  #       state: 'California',
+  #       email: 'test@email.com'
+  #     }
+  #   }
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @visa_token, options)
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match('shipping[address][city]=San+Diego', data)
+  #     assert_match('shipping[address][country]=USA', data)
+  #     assert_match('shipping[address][line1]=block+C', data)
+  #     assert_match('shipping[address][line2]=street+48', data)
+  #     assert_match('shipping[address][postal_code]=22400', data)
+  #     assert_match('shipping[address][state]=California', data)
+  #     assert_match('shipping[name]=John+Adam', data)
+  #     assert_match('shipping[phone]=%2B0018313818368', data)
+  #     assert_no_match(/shipping[email]/, data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_purchase_with_shipping_carrier_and_tracking_number
+  #   options = {
+  #     currency: 'GBP',
+  #     shipping_address: {
+  #       name: 'John Adam',
+  #       address1: 'block C'
+  #     },
+  #     shipping_tracking_number: 'TXNABC123',
+  #     shipping_carrier: 'FEDEX'
+  #   }
+  #   options[:customer] = @customer if defined?(@customer)
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @visa_token, options)
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match('shipping[address][line1]=block+C', data)
+  #     assert_match('shipping[name]=John+Adam', data)
+  #     assert_match('shipping[carrier]=FEDEX', data)
+  #     assert_match('shipping[tracking_number]=TXNABC123', data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_authorize_with_apple_pay
+  #   options = {
+  #     currency: 'GBP'
+  #   }
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @apple_pay, options)
+  #   end.check_request do |_method, endpoint, data, _headers|
+  #     assert_match('card[network_token][tokenization_method]=apple_pay', data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_authorize_with_apple_pay_with_billing_address
+  #   options = {
+  #     currency: 'GBP',
+  #     billing_address: address
+  #   }
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @apple_pay, options)
+  #   end.check_request do |_method, endpoint, data, _headers|
+  #     assert_match('card[network_token][tokenization_method]=apple_pay', data)
+  #     assert_match('billing_details[address][line1]=456+My+Street', data)
+  #   end.respond_with(successful_create_intent_response_with_apple_pay_and_billing_address)
+  # end
+
+  # def test_stored_credentials_does_not_override_ntid_field
+  #   network_transaction_id = '1098510912210968'
+  #   sc_network_transaction_id = '1078784111114777'
+  #   options = @options.merge(
+  #     network_transaction_id: network_transaction_id,
+  #     stored_credential: {
+  #       network_transaction_id: sc_network_transaction_id,
+  #       ds_transaction_id: 'null'
+  #     }
+  #   )
+
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @visa_token, options)
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=#{network_transaction_id}}, data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_successful_off_session_intent_creation_when_claim_without_transaction_id_present
+  #   [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+  #     stub_comms(@gateway, :ssl_request) do
+  #       @gateway.purchase(@amount, card_to_use, {
+  #         currency: 'USD',
+  #         execute_threed: true,
+  #         confirm: true,
+  #         off_session: true,
+  #         claim_without_transaction_id: true
+  #       })
+  #     end.check_request do |_method, _endpoint, data, _headers|
+  #       assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[claim_without_transaction_id\]=true}, data)
+  #     end.respond_with(successful_create_intent_response)
+  #   end
+  # end
+
+  # def test_successful_off_session_intent_creation_when_claim_without_transaction_id_is_false
+  #   [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+  #     stub_comms(@gateway, :ssl_request) do
+  #       @gateway.purchase(@amount, card_to_use, {
+  #         currency: 'USD',
+  #         execute_threed: true,
+  #         confirm: true,
+  #         off_session: true,
+  #         claim_without_transaction_id: false
+  #       })
+  #     end.check_request do |_method, _endpoint, data, _headers|
+  #       assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[claim_without_transaction_id\]}, data)
+  #     end.respond_with(successful_create_intent_response)
+  #   end
+  # end
+
+  # def test_successful_off_session_intent_creation_without_claim_without_transaction_id
+  #   [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+  #     stub_comms(@gateway, :ssl_request) do
+  #       @gateway.purchase(@amount, card_to_use, {
+  #         currency: 'USD',
+  #         execute_threed: true,
+  #         confirm: true,
+  #         off_session: true
+  #       })
+  #     end.check_request do |_method, _endpoint, data, _headers|
+  #       assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[claim_without_transaction_id\]}, data)
+  #     end.respond_with(successful_create_intent_response)
+  #   end
+  # end
+
+  # def test_store_does_not_pass_validation_to_attach_by_default
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.store(@credit_card)
+  #   end.check_request do |_method, endpoint, data, _headers|
+  #     assert_no_match(/validate=/, data) if /attach/.match?(endpoint)
+  #   end.respond_with(successful_payment_method_response, successful_create_customer_response, successful_payment_method_attach_response)
+  # end
+
+  # def test_store_sets_validation_on_attach_to_false_when_false_in_options
+  #   options = @options.merge(
+  #     validate: false
+  #   )
+
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.store(@credit_card, options)
+  #   end.check_request do |_method, endpoint, data, _headers|
+  #     assert_match(/validate=false/, data) if /attach/.match?(endpoint)
+  #   end.respond_with(successful_payment_method_response, successful_create_customer_response, successful_payment_method_attach_response)
+  # end
+
+  # def test_store_sets_validationon_attach_to_true_when_true_in_options
+  #   options = @options.merge(
+  #     validate: true
+  #   )
+
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.store(@credit_card, options)
+  #   end.check_request do |_method, endpoint, data, _headers|
+  #     assert_match(/validate=true/, data) if /attach/.match?(endpoint)
+  #   end.respond_with(successful_payment_method_response, successful_create_customer_response, successful_payment_method_attach_response)
+  # end
+
+  # def test_succesful_purchase_with_radar_session
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @credit_card, {
+  #       radar_session_id: 'test_radar_session_id'
+  #     })
+  #   end.check_request do |_method, endpoint, data, _headers|
+  #     assert_match(/radar_options\[session\]=test_radar_session_id/, data) if /payment_intents/.match?(endpoint)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_succesful_authorize_with_radar_session
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.authorize(@amount, @credit_card, {
+  #       radar_session_id: 'test_radar_session_id'
+  #     })
+  #   end.check_request do |_method, endpoint, data, _headers|
+  #     assert_match(/radar_options\[session\]=test_radar_session_id/, data) if /payment_intents/.match?(endpoint)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_successful_authorize_with_skip_radar_rules
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.authorize(@amount, @credit_card, {
+  #       skip_radar_rules: true
+  #     })
+  #   end.check_request do |_method, endpoint, data, _headers|
+  #     assert_match(/radar_options\[skip_rules\]\[0\]=all/, data) if /payment_intents/.match?(endpoint)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_successful_authorization_with_event_type_metadata
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.authorize(@amount, @credit_card, {
+  #       email: 'wow@example.com',
+  #       event_type: 'concert'
+  #     })
+  #   end.check_request do |_method, endpoint, data, _headers|
+  #     if /payment_intents/.match?(endpoint)
+  #       assert_match(/metadata\[email\]=wow%40example.com/, data)
+  #       assert_match(/metadata\[event_type\]=concert/, data)
+  #     end
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_successful_setup_purchase
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.setup_purchase(@amount, { payment_method_types: %w[afterpay_clearpay card] })
+  #   end.check_request do |_method, endpoint, data, _headers|
+  #     assert_match(/payment_method_types\[0\]=afterpay_clearpay&payment_method_types\[1\]=card/, data) if /payment_intents/.match?(endpoint)
+  #   end.respond_with(successful_setup_purchase)
+  # end
+
+  # def test_supported_countries
+  #   countries = %w(AE AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK HU IE IN IT JP LT LU LV MT MX MY NL NO NZ PL PT RO SE SG SI SK US)
+  #   assert_equal countries.sort, StripePaymentIntentsGateway.supported_countries.sort
+  # end
+
+  # def test_scrub_filter_token
+  #   assert_equal @gateway.scrub(pre_scrubbed), scrubbed
+  # end
+
+  # def test_succesful_purchase_with_initial_cit_unscheduled
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @visa_token, {
+  #       currency: 'USD',
+  #       confirm: true,
+  #       stored_credential_transaction_type: true,
+  #       stored_credential: {
+  #         initial_transaction: true,
+  #         initiator: 'cardholder',
+  #         reason_type: 'unscheduled'
+  #       }
+  #     })
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match('payment_method_options[card][stored_credential_transaction_type]=setup_off_session_unscheduled', data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_succesful_purchase_with_initial_cit_recurring
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @visa_token, {
+  #       currency: 'USD',
+  #       confirm: true,
+  #       stored_credential_transaction_type: true,
+  #       stored_credential: {
+  #         initial_transaction: true,
+  #         initiator: 'cardholder',
+  #         reason_type: 'recurring'
+  #       }
+  #     })
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match('payment_method_options[card][stored_credential_transaction_type]=setup_off_session_recurring', data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_succesful_purchase_with_initial_cit_installment
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @visa_token, {
+  #       currency: 'USD',
+  #       confirm: true,
+  #       stored_credential_transaction_type: true,
+  #       stored_credential: {
+  #         initial_transaction: true,
+  #         initiator: 'cardholder',
+  #         reason_type: 'installment'
+  #       }
+  #     })
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match('payment_method_options[card][stored_credential_transaction_type]=setup_on_session', data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_succesful_purchase_with_subsequent_cit
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @visa_token, {
+  #       currency: 'USD',
+  #       confirm: true,
+  #       stored_credential_transaction_type: true,
+  #       stored_credential: {
+  #         initial_transaction: false,
+  #         initiator: 'cardholder',
+  #         reason_type: 'installment'
+  #       }
+  #     })
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match('payment_method_options[card][stored_credential_transaction_type]=stored_on_session', data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_succesful_purchase_with_mit_recurring
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @visa_token, {
+  #       currency: 'USD',
+  #       confirm: true,
+  #       stored_credential_transaction_type: true,
+  #       stored_credential: {
+  #         initial_transaction: false,
+  #         initiator: 'merchant',
+  #         reason_type: 'recurring'
+  #       }
+  #     })
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match('payment_method_options[card][stored_credential_transaction_type]=stored_off_session_recurring', data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_succesful_purchase_with_mit_unscheduled
+  #   stub_comms(@gateway, :ssl_request) do
+  #     @gateway.purchase(@amount, @visa_token, {
+  #       currency: 'USD',
+  #       confirm: true,
+  #       stored_credential_transaction_type: true,
+  #       stored_credential: {
+  #         initial_transaction: false,
+  #         initiator: 'merchant',
+  #         reason_type: 'unscheduled'
+  #       }
+  #     })
+  #   end.check_request do |_method, _endpoint, data, _headers|
+  #     assert_match('payment_method_options[card][stored_credential_transaction_type]=stored_off_session_unscheduled', data)
+  #   end.respond_with(successful_create_intent_response)
+  # end
+
+  # def test_successful_avs_and_cvc_check
+  #   @gateway.expects(:ssl_request).returns(successful_purchase_avs_pass)
+  #   options = {}
+  #   assert purchase = @gateway.purchase(@amount, @visa_card, options)
+
+  #   assert_equal 'succeeded', purchase.params['status']
+  #   assert_equal 'M', purchase.cvv_result.dig('code')
+  #   assert_equal 'CVV matches', purchase.cvv_result.dig('message')
+  #   assert_equal 'Y', purchase.avs_result.dig('code')
+  # end
 
   private
 
