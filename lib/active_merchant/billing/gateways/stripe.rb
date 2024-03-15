@@ -294,7 +294,9 @@ module ActiveMerchant #:nodoc:
           gsub(%r(((\[card\]|card)\[number\]=)\d+), '\1[FILTERED]').
           gsub(%r(((\[card\]|card)\[swipe_data\]=)[^&]+(&?)), '\1[FILTERED]\3').
           gsub(%r(((\[bank_account\]|bank_account)\[account_number\]=)\d+), '\1[FILTERED]').
-          gsub(%r(((\[payment_method_data\]|payment_method_data)\[card\]\[token\]=)[^&]+(&?)), '\1[FILTERED]\3')
+          gsub(%r(((\[payment_method_data\]|payment_method_data)\[card\]\[token\]=)[^&]+(&?)), '\1[FILTERED]\3').
+          gsub(%r(((\[payment_method_data\]|payment_method_data)\[card\]\[network_token\]\[number\]=)), '\1[FILTERED]').
+          gsub(%r(((\[payment_method_options\]|payment_method_options)\[card\]\[network_token\]\[cryptogram\]=)), '\1[FILTERED]')
       end
 
       def supports_network_tokenization?
@@ -697,7 +699,6 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, url, parameters = nil, options = {})
         add_expand_parameters(parameters, options) if parameters
-
         return Response.new(false, 'Invalid API Key provided') unless key_valid?(options)
 
         response = api_request(method, url, parameters, options)
@@ -712,7 +713,7 @@ module ActiveMerchant #:nodoc:
           message_from(success, response),
           response,
           test: response_is_test?(response),
-          authorization: authorization_from(success, url, method, response),
+          authorization: authorization_from(success, url, method, response, options),
           avs_result: { code: avs_code },
           cvv_result: cvc_code,
           emv_authorization: emv_authorization_from_response(response),
@@ -732,13 +733,14 @@ module ActiveMerchant #:nodoc:
         true
       end
 
-      def authorization_from(success, url, method, response)
+      def authorization_from(success, url, method, response, options)
         return response.dig('error', 'charge') || response.dig('error', 'setup_intent', 'id') || response['id'] unless success
 
         if url == 'customers'
           [response['id'], response.dig('sources', 'data').first&.dig('id')].join('|')
-        elsif method == :post && (url.match(/customers\/.*\/cards/) || url.match(/payment_methods\/.*\/attach/))
-          [response['customer'], response['id']].join('|')
+        elsif method == :post && (url.match(/customers\/.*\/cards/) || url.match(/payment_methods\/.*\/attach/) || options[:action] == :store)
+          response_id = options[:action] == :store ? response['payment_method'] : response['id']
+          [response['customer'], response_id].join('|')
         else
           response['id']
         end

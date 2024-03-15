@@ -140,6 +140,7 @@
 * MerchantWarrior: Adding support for 3DS Global fields [Heavyblade] #5072
 * FatZebra: Adding third-party 3DS params [Heavyblade] #5066
 * SumUp: Remove Void method [sinourain] #5060
+* StripePI: Add new ApplePay and GooglePay flow [almalee24] #5075
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
