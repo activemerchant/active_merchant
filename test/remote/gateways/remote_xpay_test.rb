@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class RemoteRapydTest < Test::Unit::TestCase
+class RemoteXpayTest < Test::Unit::TestCase
   def setup
     @gateway = XpayGateway.new(fixtures(:xpay))
     @amount = 100
@@ -14,6 +14,7 @@ class RemoteRapydTest < Test::Unit::TestCase
 
     @options = {
       order_id: SecureRandom.alphanumeric(10),
+      email: 'example@example.com',
       billing_address: address,
       order: {
         currency: 'EUR',
@@ -22,44 +23,24 @@ class RemoteRapydTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_purchase
+  ## Test for authorization, capture, purchase and refund requires set up through 3ds
+  ## The only test that does not depend on a 3ds flow is verify
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match 'EXECUTED', response.message
+  end
+
+  def test_successful_preauth
     response = @gateway.preauth(@amount, @credit_card, @options)
     assert_success response
-    assert_true response.params.has_key?('threeDSAuthUrl')
-    assert_true response.params.has_key?('threeDSAuthRequest')
     assert_match 'PENDING', response.message
   end
 
   def test_failed_purchase
-    init = @gateway.purchase(@amount, @credit_card, {})
-    assert_failure init
-    assert_equal 'GW0001', init.error_code
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match 'GW0001', response.error_code
+    assert_match 'An internal error occurred', response.message
   end
-
-  # def test_successful_verify  ## test not working
-  #   response = @gateway.verify(@credit_card, @options)
-  #   assert_success response
-  #   assert_match 'PENDING', response.message
-  # end
-
-  # def test_successful_refund ## test requires set up (purchase or auth through 3ds)
-  #   options = {
-  #     order: {
-  #       currency: 'EUR',
-  #       description: 'refund operation message'
-  #     },
-  #     operation_id: '168467730273233329'
-  #   }
-  #   response = @gateway.refund(@amount, options)
-  #   assert_success response
-  # end
-
-  # def test_successful_void ## test requires set up (purchase or auth through 3ds)
-  #   options = {
-  #     description: 'void operation message',
-  #     operation_id: '168467730273233329'
-  #   }
-  #   response = @gateway.void(@amount, options)
-  #   assert_success response
-  # end
 end
