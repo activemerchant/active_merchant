@@ -11,7 +11,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
     @elo_credit_card = credit_card(
       '6362970000457013',
       month: 10,
-      year: 2022,
+      year: Time.now.year + 1,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
@@ -32,7 +32,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
     @eci = '01'
     @three_ds_v1_version = '1.0.2'
     @three_ds_v2_version = '2.1.0'
-    @three_ds_server_trans_id = 'three-ds-v2-trans-id'
+    @three_ds_server_trans_id = 'ffffffff-9002-51a3-8000-0000000345a2'
     @authentication_response_status = 'Y'
 
     @three_ds_v1_mpi = {

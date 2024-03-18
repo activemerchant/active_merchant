@@ -130,6 +130,7 @@
 * SagePay: Update API endpoints [almalee24] #5057
 * Bin Update: Add sodexo bins [yunnydang] #5061
 * Authorize Net: Add the surcharge field [yunnydang] #5062
+* Paymentez: Update field for reference_id [almalee24] #5065
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

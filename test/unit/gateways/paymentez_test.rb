@@ -32,6 +32,7 @@ class PaymentezTest < Test::Unit::TestCase
     @three_ds_v2_version = '2.1.0'
     @three_ds_server_trans_id = 'three-ds-v2-trans-id'
     @authentication_response_status = 'Y'
+    @directory_server_transaction_id = 'directory_server_transaction_id'
 
     @three_ds_v1_mpi = {
       cavv: @cavv,
@@ -45,7 +46,8 @@ class PaymentezTest < Test::Unit::TestCase
       eci: @eci,
       version: @three_ds_v2_version,
       three_ds_server_trans_id: @three_ds_server_trans_id,
-      authentication_response_status: @authentication_response_status
+      authentication_response_status: @authentication_response_status,
+      ds_transaction_id: @directory_server_transaction_id
     }
   end
 
@@ -191,13 +193,14 @@ class PaymentezTest < Test::Unit::TestCase
   end
 
   def test_authorize_3ds2_mpi_fields
+    @options.merge!(new_reference_id_field: true)
     @options[:three_d_secure] = @three_ds_v2_mpi
 
     expected_auth_data = {
       cavv: @cavv,
       eci: @eci,
       version: @three_ds_v2_version,
-      reference_id: @three_ds_server_trans_id,
+      reference_id: @directory_server_transaction_id,
       status: @authentication_response_status
     }
 
