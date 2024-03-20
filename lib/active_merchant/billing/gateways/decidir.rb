@@ -288,7 +288,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(method, endpoint, parameters, options = {})
-        url = "#{(test? ? test_url : live_url)}/#{endpoint}"
+        url = "#{test? ? test_url : live_url}/#{endpoint}"
 
         begin
           raw_response = ssl_request(method, url, post_data(parameters), headers(options))

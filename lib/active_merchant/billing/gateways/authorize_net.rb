@@ -85,8 +85,8 @@ module ActiveMerchant
       AVS_REASON_CODES = %w(27 45)
 
       TRACKS = {
-        1 => /^%(?<format_code>.)(?<pan>[\d]{1,19}+)\^(?<name>.{2,26})\^(?<expiration>[\d]{0,4}|\^)(?<service_code>[\d]{0,3}|\^)(?<discretionary_data>.*)\?\Z/,
-        2 => /\A;(?<pan>[\d]{1,19}+)=(?<expiration>[\d]{0,4}|=)(?<service_code>[\d]{0,3}|=)(?<discretionary_data>.*)\?\Z/
+        1 => /^%(?<format_code>.)(?<pan>\d{1,19}+)\^(?<name>.{2,26})\^(?<expiration>\d{0,4}|\^)(?<service_code>\d{0,3}|\^)(?<discretionary_data>.*)\?\Z/,
+        2 => /\A;(?<pan>\d{1,19}+)=(?<expiration>\d{0,4}|=)(?<service_code>\d{0,3}|=)(?<discretionary_data>.*)\?\Z/
       }.freeze
 
       PAYMENT_METHOD_NOT_SUPPORTED_ERROR = '155'

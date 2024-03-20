@@ -25,16 +25,16 @@ class RemoteHiPayTest < Test::Unit::TestCase
       callback_url: 'http://www.example.com/callback',
       three_ds_2: {
         browser_info:  {
-          "width": 390,
-          "height": 400,
-          "depth": 24,
-          "timezone": 300,
-          "user_agent": 'Spreedly Agent',
-          "java": false,
-          "javascript": true,
-          "language": 'en-US',
-          "browser_size": '05',
-          "accept_header": 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+          width: 390,
+          height: 400,
+          depth: 24,
+          timezone: 300,
+          user_agent: 'Spreedly Agent',
+          java: false,
+          javascript: true,
+          language: 'en-US',
+          browser_size: '05',
+          accept_header: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
         }
       }
     }
@@ -60,7 +60,7 @@ class RemoteHiPayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @challenge_credit_card, @options.merge(@billing_address).merge(@execute_threed))
     assert_success response
     assert_equal 'Authentication requested', response.message
-    assert_match %r{stage-secure-gateway.hipay-tpp.com\/gateway\/forward\/[\w]+}, response.params['forwardUrl']
+    assert_match %r{stage-secure-gateway.hipay-tpp.com\/gateway\/forward\/\w+}, response.params['forwardUrl']
 
     assert_kind_of MultiResponse, response
     assert_equal 2, response.responses.size

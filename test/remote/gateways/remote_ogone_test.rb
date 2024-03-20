@@ -26,16 +26,16 @@ class RemoteOgoneTest < Test::Unit::TestCase
     @options_browser_info = {
       three_ds_2: {
         browser_info:  {
-          "width": 390,
-          "height": 400,
-          "depth": 24,
-          "timezone": 300,
-          "user_agent": 'Spreedly Agent',
-          "java": false,
-          "javascript": true,
-          "language": 'en-US',
-          "browser_size": '05',
-          "accept_header": 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+          width: 390,
+          height: 400,
+          depth: 24,
+          timezone: 300,
+          user_agent: 'Spreedly Agent',
+          java: false,
+          javascript: true,
+          language: 'en-US',
+          browser_size: '05',
+          accept_header: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
         }
       }
     }

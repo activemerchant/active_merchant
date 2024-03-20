@@ -155,8 +155,7 @@ module ActiveMerchant #:nodoc:
         post[:password]       = @options[:password]
         post[:type]           = action
 
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

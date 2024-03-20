@@ -145,16 +145,16 @@ module ActiveMerchant #:nodoc:
         browser_info_3ds = options[:three_ds_2][:browser_info]
 
         browser_info_hash = {
-          "java_enabled": browser_info_3ds[:java],
-            "javascript_enabled": (browser_info_3ds[:javascript] || false),
-            "ipaddr":  options[:ip],
-            "http_accept": '*\\/*',
-            "http_user_agent": browser_info_3ds[:user_agent],
-            "language": browser_info_3ds[:language],
-            "color_depth": browser_info_3ds[:depth],
-            "screen_height":   browser_info_3ds[:height],
-            "screen_width": browser_info_3ds[:width],
-            "timezone": browser_info_3ds[:timezone]
+          java_enabled: browser_info_3ds[:java],
+            javascript_enabled: (browser_info_3ds[:javascript] || false),
+            ipaddr:  options[:ip],
+            http_accept: '*\\/*',
+            http_user_agent: browser_info_3ds[:user_agent],
+            language: browser_info_3ds[:language],
+            color_depth: browser_info_3ds[:depth],
+            screen_height:   browser_info_3ds[:height],
+            screen_width: browser_info_3ds[:width],
+            timezone: browser_info_3ds[:timezone]
         }
 
         browser_info_hash['device_fingerprint'] = options[:device_fingerprint] if options[:device_fingerprint]
@@ -178,10 +178,10 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, options = {}, method = :post)
         raw_response = begin
-                          ssl_request(method, url(action, options), post_data(post), request_headers)
-                       rescue ResponseError => e
-                         e.response.body
-                        end
+          ssl_request(method, url(action, options), post_data(post), request_headers)
+        rescue ResponseError => e
+          e.response.body
+        end
 
         response = parse(raw_response)
 
@@ -261,12 +261,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def request_headers
-        headers = {
+        {
           'Accept' => 'application/json',
           'Content-Type' => 'application/x-www-form-urlencoded',
           'Authorization' => "Basic #{basic_auth}"
         }
-        headers
       end
 
       def handle_response(response)

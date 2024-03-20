@@ -182,8 +182,7 @@ module ActiveMerchant #:nodoc:
         post['RequestID']     = request_id
         post['Signature']     = signature(action, post, parameters)
 
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def timestamp

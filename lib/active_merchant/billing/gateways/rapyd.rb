@@ -259,9 +259,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, payment, options, action = '')
         phone_number = options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
         post[:phone_number] = phone_number.gsub(/\D/, '') unless phone_number.nil?
-        if payment.is_a?(String) && options[:customer_id].present?
-          post[:receipt_email] = options[:email] unless send_customer_object?(options)
-        end
+        post[:receipt_email] = options[:email] if payment.is_a?(String) && options[:customer_id].present? && !send_customer_object?(options)
 
         return if payment.is_a?(String)
         return add_customer_id(post, options) if options[:customer_id]
@@ -371,8 +369,7 @@ module ActiveMerchant #:nodoc:
 
       def generate_hmac(rel_path, salt, timestamp, payload)
         signature = "#{rel_path}#{salt}#{timestamp}#{@options[:access_key]}#{@options[:secret_key]}#{payload}"
-        hash = Base64.urlsafe_encode64(OpenSSL::HMAC.hexdigest('sha256', @options[:secret_key], signature))
-        hash
+        Base64.urlsafe_encode64(OpenSSL::HMAC.hexdigest('sha256', @options[:secret_key], signature))
       end
 
       def avs_result(response)

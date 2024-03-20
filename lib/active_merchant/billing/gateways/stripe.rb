@@ -725,9 +725,7 @@ module ActiveMerchant #:nodoc:
         return true unless test?
 
         %w(sk rk).each do |k|
-          if key(options).start_with?(k)
-            return false unless key(options).start_with?("#{k}_test")
-          end
+          return false if key(options).start_with?(k) && !key(options).start_with?("#{k}_test")
         end
 
         true
