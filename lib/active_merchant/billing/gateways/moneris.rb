@@ -159,19 +159,11 @@ module ActiveMerchant #:nodoc:
       # temporary vault record to avoid incurring Moneris vault storage fees
       #
       # https://developer.moneris.com/Documentation/NA/E-Commerce%20Solutions/API/Vault#vaulttokenadd
-      def store(credit_card, options = {})
-        post = {}
-        post[:pan] = credit_card.number
-        post[:expdate] = expdate(credit_card)
-        post[:address] = options[:billing_address] || options[:address]
-        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        add_stored_credential(post, options)
-
-        if options[:duration]
-          post[:duration] = options[:duration]
-          commit('res_temp_add', post)
+      def store(credit_card_or_token, options = {})
+        if credit_card_or_token.is_a?(String)
+          add_token(credit_card_or_token, options)
         else
-          commit('res_add_cc', post)
+          store_credit_card(credit_card_or_token, options)
         end
       end
 
@@ -204,6 +196,30 @@ module ActiveMerchant #:nodoc:
       end
 
       private # :nodoc: all
+
+      def add_token(token, options)
+        post = {}
+        post[:data_key] = token
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        add_stored_credential(post, options)
+        commit('res_add_token', post)
+      end
+
+      def store_credit_card(credit_card, options)
+        post = {}
+        post[:pan] = credit_card.number
+        post[:expdate] = expdate(credit_card)
+        post[:address] = options[:billing_address] || options[:address]
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        add_stored_credential(post, options)
+
+        if options[:duration]
+          post[:duration] = options[:duration]
+          commit('res_temp_add', post)
+        else
+          commit('res_add_cc', post)
+        end
+      end
 
       def expdate(creditcard)
         sprintf('%.4i', creditcard.year)[-2..-1] + sprintf('%.2i', creditcard.month)
@@ -364,9 +380,14 @@ module ActiveMerchant #:nodoc:
       def hashify_xml!(xml, response)
         xml = REXML::Document.new(xml)
         return if xml.root.nil?
+        response[:credit_card_details] = {}
 
         xml.elements.each('//receipt/*') do |node|
           response[node.name.underscore.to_sym] = normalize(node.text)
+        end
+
+        xml.elements.each('//receipt/ResolveData/*') do |node|
+          response[:credit_card_details][node.name.underscore.to_s] = normalize(node.text)
         end
       end
 
@@ -486,7 +507,8 @@ module ActiveMerchant #:nodoc:
           'res_update_cc' => %i[data_key pan expdate crypt_type avs_info cof_info],
           'res_purchase_cc' => %i[data_key order_id cust_id amount crypt_type cof_info],
           'res_preauth_cc' => %i[data_key order_id cust_id amount crypt_type cof_info],
-          'res_card_verification_cc' => %i[order_id data_key expdate crypt_type cof_info]
+          'res_card_verification_cc' => %i[order_id data_key expdate crypt_type cof_info],
+          'res_add_token' => %i[data_key crypt_type]
         }
       end
     end
