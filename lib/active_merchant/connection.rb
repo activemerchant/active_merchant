@@ -18,27 +18,13 @@ module ActiveMerchant
     RETRY_SAFE = false
     RUBY_184_POST_HEADERS = { 'Content-Type' => 'application/x-www-form-urlencoded' }
 
-    attr_accessor :endpoint
-    attr_accessor :open_timeout
-    attr_accessor :read_timeout
-    attr_accessor :verify_peer
-    attr_accessor :ssl_version
+    attr_accessor :endpoint, :open_timeout, :read_timeout, :verify_peer, :ssl_version, :ca_file, :ca_path, :pem, :pem_password, :logger, :tag, :ignore_http_status, :max_retries, :proxy_address, :proxy_port
+
     if Net::HTTP.instance_methods.include?(:min_version=)
       attr_accessor :min_version
       attr_accessor :max_version
     end
-    attr_reader :ssl_connection
-    attr_accessor :ca_file
-    attr_accessor :ca_path
-    attr_accessor :pem
-    attr_accessor :pem_password
-    attr_reader :wiredump_device
-    attr_accessor :logger
-    attr_accessor :tag
-    attr_accessor :ignore_http_status
-    attr_accessor :max_retries
-    attr_accessor :proxy_address
-    attr_accessor :proxy_port
+    attr_reader :ssl_connection, :wiredump_device
 
     def initialize(endpoint)
       @endpoint     = endpoint.is_a?(URI) ? endpoint : URI.parse(endpoint)

@@ -316,7 +316,7 @@ module ActiveMerchant #:nodoc:
       def strip_line_breaks(address)
         return unless address.is_a?(Hash)
 
-        Hash[address.map { |k, s| [k, s&.tr("\r\n", ' ')&.strip] }]
+        address.map { |k, s| [k, s&.tr("\r\n", ' ')&.strip] }.to_h
       end
 
       def add_invoice(xml, options)

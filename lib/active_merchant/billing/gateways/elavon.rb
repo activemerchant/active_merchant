@@ -451,8 +451,8 @@ module ActiveMerchant #:nodoc:
         if value.is_a?(String)
           encoded = CGI.escape(value)
           encoded = encoded.tr('+', ' ') # don't encode spaces
-          encoded = encoded.gsub('%26', '%26amp;') # account for Elavon's weird '&' handling
-          encoded
+          encoded.gsub('%26', '%26amp;') # account for Elavon's weird '&' handling
+
         else
           value.to_s
         end

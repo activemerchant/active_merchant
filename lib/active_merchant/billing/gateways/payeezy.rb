@@ -424,8 +424,7 @@ module ActiveMerchant
           @options[:token],
           payload
         ].join('')
-        hash = Base64.strict_encode64(OpenSSL::HMAC.hexdigest('sha256', @options[:apisecret], message))
-        hash
+        Base64.strict_encode64(OpenSSL::HMAC.hexdigest('sha256', @options[:apisecret], message))
       end
 
       def headers(payload)

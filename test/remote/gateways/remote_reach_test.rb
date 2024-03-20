@@ -320,7 +320,6 @@ class RemoteReachTest < Test::Unit::TestCase
   def fingerprint
     raw_response = @gateway.ssl_get @gateway.send(:url, "fingerprint?MerchantId=#{@gateway.options[:merchant_id]}")
 
-    fingerprint = raw_response.match(/(gip_device_fingerprint=')([\w -]+)/)[2]
-    fingerprint
+    raw_response.match(/(gip_device_fingerprint=')([\w -]+)/)[2]
   end
 end

@@ -446,10 +446,10 @@ module ActiveMerchant
       end
 
       def parse_element(parsed, node)
-        if !node.elements.empty?
-          node.elements.each { |e| parse_element(parsed, e) }
-        else
+        if node.elements.empty?
           parsed[node.name.downcase] = node.text
+        else
+          node.elements.each { |e| parse_element(parsed, e) }
         end
       end
 
@@ -459,8 +459,8 @@ module ActiveMerchant
         e.response
       end
 
-      def commit(action, options, verb = :post, payment_method_details = PaymentMethodDetails.new())
-        request = build_xml_request(action, payment_method_details) { |doc| yield(doc) }
+      def commit(action, options, verb = :post, payment_method_details = PaymentMethodDetails.new(), &block)
+        request = build_xml_request(action, payment_method_details, &block)
         response = api_request(action, request, verb, payment_method_details, options)
         parsed = parse(response)
 

@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
         # original message
         full_data = unpacked[0].bytes.slice(16, unpacked[0].bytes.length)
         # Creates the engine
-        engine = OpenSSL::Cipher::AES128.new(:CBC)
+        engine = OpenSSL::Cipher.new('aes-128-cbc')
         # Set engine as decrypt mode
         engine.decrypt
         # Converts the key from hex to bytes
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
 
       def encrypt(val, keyinhex)
         # Creates the engine motor
-        engine = OpenSSL::Cipher::AES128.new(:CBC)
+        engine = OpenSSL::Cipher.new('aes-128-cbc')
         # Set engine as encrypt mode
         engine.encrypt
         # Converts the key from hex to bytes

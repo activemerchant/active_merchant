@@ -29,7 +29,7 @@ module ActiveMerchant
         result = lower_case_and_underscored_word.to_s.dup
         result.gsub!(/_id$/, '')
         result.tr!('_', ' ')
-        result.gsub(/([a-z\d]*)/i, &:downcase).gsub(/^\w/) { $&.upcase }
+        result.gsub(/([a-z\d]*)/i, &:downcase).gsub(/^\w/) { Regexp.last_match(0).upcase }
       end
     end
   end
@@ -90,8 +90,8 @@ module ActiveMerchant
             add(:base, error)
           end
 
-          def each_full
-            full_messages.each { |msg| yield msg }
+          def each_full(&block)
+            full_messages.each(&block)
           end
 
           def full_messages
@@ -113,6 +113,6 @@ module ActiveMerchant
       end
     end
 
-    Compatibility::Model.send(:include, Rails::Model)
+    Compatibility::Model.include Rails::Model
   end
 end

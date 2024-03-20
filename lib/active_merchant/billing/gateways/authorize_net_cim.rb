@@ -695,9 +695,7 @@ module ActiveMerchant #:nodoc:
               add_order(xml, transaction[:order]) if transaction[:order].present?
 
             end
-            if %i[auth_capture auth_only capture_only].include?(transaction[:type])
-              xml.tag!('recurringBilling', transaction[:recurring_billing]) if transaction.has_key?(:recurring_billing)
-            end
+            xml.tag!('recurringBilling', transaction[:recurring_billing]) if %i[auth_capture auth_only capture_only].include?(transaction[:type]) && transaction.has_key?(:recurring_billing)
             tag_unless_blank(xml, 'cardCode', transaction[:card_code]) unless %i[void refund prior_auth_capture].include?(transaction[:type])
           end
         end

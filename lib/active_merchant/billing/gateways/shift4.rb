@@ -131,7 +131,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r(("expirationDate\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("FirstName\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("LastName\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("securityCode\\?":{\\?"[\w]+\\?":[\d]+,\\?"value\\?":\\?")[\d]*)i, '\1[FILTERED]')
+          gsub(%r(("securityCode\\?":{\\?"\w+\\?":\d+,\\?"value\\?":\\?")\d*)i, '\1[FILTERED]')
       end
 
       def setup_access_token
