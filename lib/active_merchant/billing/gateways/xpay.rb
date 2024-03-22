@@ -20,7 +20,6 @@ module ActiveMerchant #:nodoc:
         preauth: 'orders/3steps/init',
         capture: 'operations/%s/captures',
         verify: 'orders/card_verification',
-        void: 'operations/%s/cancels',
         refund: 'operations/%s/refunds'
       }
 
@@ -32,39 +31,30 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def preauth(amount, payment_method, options = {})
-        post = {}
-        payment_request(:preauth, amount, post, payment_method, options)
+      def preauth(amount, credit_card, options = {})
+        order_request(:preauth, amount, {}, credit_card, options)
       end
 
-      def purchase(amount, payment_method, options = {})
-        complete_transaction(:purchase, amount, payment_method, options)
+      def purchase(amount, credit_card, options = {})
+        complete_order_request(:purchase, amount, credit_card, options)
       end
 
-      def authorize(amount, payment_method, options = {})
-        complete_transaction(:authorize, amount, payment_method, options)
+      def authorize(amount, credit_card, options = {})
+        complete_order_request(:authorize, amount, credit_card, options)
       end
 
       def capture(amount, authorization, options = {})
-        post = {}
-        add_refund_capture_params(amount, post, options)
-        commit(:capture, post, options)
-      end
-
-      def void(authorization, options = {})
-        post = { description: options[:description] }
-        commit(:void, post, options)
+        operation_request(:capture, amount, authorization, options)
       end
 
       def refund(amount, authorization, options = {})
-        post = {}
-        add_refund_capture_params(amount, post, options)
-        commit(:refund, post, options)
+        operation_request(:refund, amount, authorization, options)
       end
 
       def verify(credit_card, options = {})
         post = {}
         add_invoice(post, 0, options)
+        add_customer_data(post, credit_card, options)
         add_credit_card(post, credit_card)
         commit(:verify, post, options)
       end
@@ -88,32 +78,28 @@ module ActiveMerchant #:nodoc:
         commit(:validation, post, options)
       end
 
-      def complete_transaction(action, amount, payment_method, options = {})
+      def complete_order_request(action, amount, credit_card, options = {})
         MultiResponse.run do |r|
           r.process { validation(options) }
-          r.process { payment_request(action, amount, {}, payment_method, options.merge!(validation: r.params)) }
+          r.process { order_request(action, amount, { captureType: (action == :authorize ? 'EXPLICIT' : 'IMPLICIT') }, credit_card, options.merge!(validation: r.params)) }
         end
       end
 
-      def payment_request(action, amount, post, payment_method, options = {})
-        add_capture_type(post, options, action)
-        add_auth_purchase_params(post, amount, payment_method, options)
+      def order_request(action, amount, post, credit_card, options = {})
+        add_invoice(post, amount, options)
+        add_credit_card(post, credit_card)
+        add_customer_data(post, credit_card, options)
+        add_address(post, options)
+        add_recurrence(post, options) unless options[:operation_id]
+        add_exemptions(post, options)
+        add_3ds_params(post, options[:validation]) if options[:validation]
+
         commit(action, post, options)
       end
 
-      def add_capture_type(post, options, action)
-        case action
-        when :purchase
-          post[:captureType] = 'IMPLICIT'
-        when :authorize
-          post[:captureType] = 'EXPLICIT'
-        end
-      end
-
-      def add_refund_capture_params(amount, post, options)
-        post[:amount] = amount
-        post[:currency] = options[:order][:currency]
-        post[:description] = options[:order][:description]
+      def operation_request(action, amount, authorization, options)
+        options[:correlation_id], options[:reference] = authorization.split('#')
+        commit(action, { amount: amount, currency: options[:currency] }, options)
       end
 
       def add_invoice(post, amount, options)
@@ -125,21 +111,17 @@ module ActiveMerchant #:nodoc:
         }.compact
       end
 
-      def add_credit_card(post, payment_method)
+      def add_credit_card(post, credit_card)
         post[:card] = {
-          pan: payment_method.number,
-          expiryDate: expdate(payment_method),
-          cvv: payment_method.verification_value
+          pan: credit_card.number,
+          expiryDate: expdate(credit_card),
+          cvv: credit_card.verification_value
         }
       end
 
-      def add_payment_method(post, payment_method)
-        add_credit_card(post, payment_method) if payment_method.is_a?(CreditCard)
-      end
-
-      def add_customer_data(post, payment_method, options)
+      def add_customer_data(post, credit_card, options)
         post[:order][:customerInfo] = {
-          cardHolderName: payment_method.name,
+          cardHolderName: credit_card.name,
           cardHolderEmail: options[:email]
         }.compact
       end
@@ -190,79 +172,66 @@ module ActiveMerchant #:nodoc:
         post[:threeDSAuthResponse] = options[:three_ds_auth_response]
       end
 
-      def add_auth_purchase_params(post, amount, payment_method, options)
-        add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
-        add_customer_data(post, payment_method, options)
-        add_address(post, options)
-        add_recurrence(post, options) unless options[:operation_id]
-        add_exemptions(post, options)
-        add_3ds_params(post, options[:validation]) if options[:validation]
-      end
-
-      def parse(body = {})
+      def parse(body)
         JSON.parse(body)
       end
 
       def commit(action, params, options)
+        options[:correlation_id] ||= SecureRandom.uuid
         transaction_id = transaction_id_from(params, options, action)
-        begin
-          url = build_request_url(action, transaction_id)
-          raw_response = ssl_post(url, params.to_json, request_headers(options, action))
-          response = parse(raw_response)
-        rescue ResponseError => e
-          response = e.response.body
-          response = parse(response)
-        end
+        raw_response =
+          begin
+            url = build_request_url(action, transaction_id)
+            ssl_post(url, params.to_json, request_headers(options, action))
+          rescue ResponseError => e
+            { errors: [ code: e.response.code, description: e.response.body ]}.to_json
+          end
+        response = parse(raw_response)
 
         Response.new(
-          success_from(response),
+          success_from(action, response),
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(options[:correlation_id], response),
           test: test?,
           error_code: error_code_from(response)
         )
       end
 
       def request_headers(options, action = nil)
-        headers = {
-          'X-Api-Key' => @api_key,
-          'Correlation-Id' => options.dig(:order_id) || SecureRandom.uuid,
-          'Content-Type' => 'application/json'
-        }
-        case action
-        when :refund, :capture
-          headers.merge!('Idempotency-Key' => SecureRandom.uuid)
-        end
+        headers = { 'X-Api-Key' => @api_key, 'Content-Type' => 'application/json', 'Correlation-Id' => options[:correlation_id] }
+        headers.merge!('Idempotency-Key' => options[:idempotency_key] || SecureRandom.uuid) if %i[capture refund].include?(action)
         headers
       end
 
       def transaction_id_from(params, options, action = nil)
         case action
-        when :refund, :capture, :void
-          return options[:operation_id]
+        when :refund, :capture
+          return options[:reference]
         else
           return params[:operation_id]
         end
       end
 
       def build_request_url(action, id = nil)
-        base_url = test? ? test_url : live_url
-        endpoint = ENDPOINTS_MAPPING[action.to_sym] % id
-        base_url + endpoint
+        "#{test? ? test_url : live_url}#{ENDPOINTS_MAPPING[action.to_sym] % id}"
       end
 
-      def success_from(response)
-        SUCCESS_MESSAGES.include?(response.dig('operation', 'operationResult'))
+      def success_from(action, response)
+        case action
+        when :capture, :refund
+          response.include?('operationId') && response.include?('operationTime')
+        else
+          SUCCESS_MESSAGES.include?(response.dig('operation', 'operationResult'))
+        end
       end
 
       def message_from(response)
-        response.dig('operation', 'operationResult') || response.dig('errors', 0, 'description')
+        response['operationId'] || response.dig('operation', 'operationResult') || response.dig('errors', 0, 'description')
       end
 
-      def authorization_from(response)
-        response.dig('operation', 'operationId') unless response
+      def authorization_from(correlation_id, response = {})
+        [correlation_id, (response['operationId'] || response.dig('operation', 'operationId'))].join('#')
       end
 
       def error_code_from(response)
