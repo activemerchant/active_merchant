@@ -134,6 +134,7 @@
 * CyberSource: Extend support for `gratuity_amount` and update Mastercard NT field order [rachelkirk] #5063
 * XPay: Refactor basic transactions after implement 3DS 3steps API [sinourain] #5058
 * AuthorizeNet: Remove turn_on_nt flow [almalee24] #5056
+* CheckoutV2: Add processing and recipient fields [yunnydang] #5068
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

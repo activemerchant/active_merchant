@@ -148,6 +148,8 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options, payment_method)
         add_processing_channel(post, options)
         add_marketplace_data(post, options)
+        add_recipient_data(post, options)
+        add_processing_data(post, options)
       end
 
       def add_invoice(post, money, options)
@@ -161,6 +163,35 @@ module ActiveMerchant #:nodoc:
         end
         post[:metadata] = {}
         post[:metadata][:udf5] = application_id || 'ActiveMerchant'
+      end
+
+      def add_recipient_data(post, options)
+        return unless options[:recipient].is_a?(Hash)
+
+        recipient = options[:recipient]
+
+        post[:recipient] = {}
+        post[:recipient][:dob] = recipient[:dob] if recipient[:dob]
+        post[:recipient][:zip] = recipient[:zip] if recipient[:zip]
+        post[:recipient][:account_number] = recipient[:account_number] if recipient[:account_number]
+        post[:recipient][:first_name] = recipient[:first_name] if recipient[:first_name]
+        post[:recipient][:last_name] = recipient[:last_name] if recipient[:last_name]
+
+        if address = recipient[:address]
+          post[:recipient][:address] = {}
+          post[:recipient][:address][:address_line1] = address[:address_line1] if address[:address_line1]
+          post[:recipient][:address][:address_line2] = address[:address_line2] if address[:address_line2]
+          post[:recipient][:address][:city] = address[:city] if address[:city]
+          post[:recipient][:address][:state] = address[:state] if address[:state]
+          post[:recipient][:address][:zip] = address[:zip] if address[:zip]
+          post[:recipient][:address][:country] = address[:country] if address[:country]
+        end
+      end
+
+      def add_processing_data(post, options)
+        return unless options[:processing].is_a?(Hash)
+
+        post[:processing] = options[:processing]
       end
 
       def add_authorization_type(post, options)

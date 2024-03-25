@@ -487,6 +487,92 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_processing_data
+    options = @options.merge(
+      processing: {
+        aft: true,
+        preferred_scheme: 'cartes_bancaires',
+        app_id: 'com.iap.linker_portal',
+        airline_data: [
+          {
+            ticket: {
+              number: '045-21351455613',
+              issue_date: '2023-05-20',
+              issuing_carrier_code: 'AI',
+              travel_package_indicator: 'B',
+              travel_agency_name: 'World Tours',
+              travel_agency_code: '01'
+            },
+            passenger: [
+              {
+                first_name: 'John',
+                last_name: 'White',
+                date_of_birth: '1990-05-26',
+                address: {
+                  country: 'US'
+                }
+              }
+            ],
+            flight_leg_details: [
+              {
+                flight_number: '101',
+                carrier_code: 'BA',
+                class_of_travelling: 'J',
+                departure_airport: 'LHR',
+                departure_date: '2023-06-19',
+                departure_time: '15:30',
+                arrival_airport: 'LAX',
+                stop_over_code: 'x',
+                fare_basis_code: 'SPRSVR'
+              }
+            ]
+          }
+        ],
+        partner_customer_id: '2102209000001106125F8',
+        partner_payment_id: '440644309099499894406',
+        tax_amount: '1000',
+        purchase_country: 'GB',
+        locale: 'en-US',
+        retrieval_reference_number: '909913440644',
+        partner_order_id: 'string',
+        partner_status: 'string',
+        partner_transaction_id: 'string',
+        partner_error_codes: [],
+        partner_error_message: 'string',
+        partner_authorization_code: 'string',
+        partner_authorization_response_code: 'string',
+        fraud_status: 'string'
+      }
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_recipient_data
+    options = @options.merge(
+      recipient: {
+        dob: '1985-05-15',
+        account_number: '5555554444',
+        zip: 'SW1A',
+        first_name: 'john',
+        last_name: 'johnny',
+        address: {
+          address_line1: '123 High St.',
+          address_line2: 'Flat 456',
+          city: 'London',
+          state: 'str',
+          zip: 'SW1A 1AA',
+          country: 'GB'
+        }
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_metadata_via_oauth
     options = @options.merge(
       metadata: {

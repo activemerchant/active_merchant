@@ -184,7 +184,7 @@ module ActiveMerchant #:nodoc:
             url = build_request_url(action, transaction_id)
             ssl_post(url, params.to_json, request_headers(options, action))
           rescue ResponseError => e
-            { errors: [ code: e.response.code, description: e.response.body ]}.to_json
+            { errors: [code: e.response.code, description: e.response.body] }.to_json
           end
         response = parse(raw_response)
 

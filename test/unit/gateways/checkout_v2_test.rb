@@ -297,6 +297,56 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_purchase_with_recipient_fields
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {
+        recipient: {
+          dob: '1985-05-15',
+          account_number: '5555554444',
+          zip: 'SW1A',
+          first_name: 'john',
+          last_name: 'johnny',
+          address: {
+            address_line1: '123 High St.',
+            address_line2: 'Flat 456',
+            city: 'London',
+            state: 'str',
+            zip: 'SW1A 1AA',
+            country: 'GB'
+          }
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"dob":"1985-05-15"}, data)
+      assert_match(%r{"account_number":"5555554444"}, data)
+      assert_match(%r{"zip":"SW1A"}, data)
+      assert_match(%r{"first_name":"john"}, data)
+      assert_match(%r{"last_name":"johnny"}, data)
+      assert_match(%r{"address_line1":"123 High St."}, data)
+      assert_match(%r{"address_line2":"Flat 456"}, data)
+      assert_match(%r{"city":"London"}, data)
+      assert_match(%r{"state":"str"}, data)
+      assert_match(%r{"zip":"SW1A 1AA"}, data)
+      assert_match(%r{"country":"GB"}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_processing_fields
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {
+        processing: {
+          aft: true
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"aft":true}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_passing_metadata_with_mada_card_type
     @credit_card.brand = 'mada'
 
