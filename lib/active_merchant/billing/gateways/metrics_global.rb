@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         fields = split(body)
 
-        results = {
+        {
           response_code: fields[RESPONSE_CODE].to_i,
           response_reason_code: fields[RESPONSE_REASON_CODE],
           response_reason_text: fields[RESPONSE_REASON_TEXT],
@@ -206,7 +206,6 @@ module ActiveMerchant #:nodoc:
           transaction_id: fields[TRANSACTION_ID],
           card_code: fields[CARD_CODE_RESPONSE_CODE]
         }
-        results
       end
 
       def post_data(action, parameters = {})
@@ -222,8 +221,7 @@ module ActiveMerchant #:nodoc:
         post[:encap_char]     = '$'
         post[:solution_ID]    = application_id if application_id
 
-        request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def add_invoice(post, options)

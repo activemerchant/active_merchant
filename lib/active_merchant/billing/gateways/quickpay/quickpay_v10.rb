@@ -255,7 +255,7 @@ module ActiveMerchant
 
         requires!(address, :name, :address1, :city, :zip, :country)
         country = Country.find(address[:country])
-        mapped = {
+        {
           name: address[:name],
           street: address[:address1],
           city: address[:city],
@@ -263,7 +263,6 @@ module ActiveMerchant
           zip_code: address[:zip],
           country_code: country.code(:alpha3).value
         }
-        mapped
       end
 
       def format_order_id(order_id)

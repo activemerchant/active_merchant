@@ -399,9 +399,7 @@ module ActiveMerchant #:nodoc:
       def validate_card_brand_and_number #:nodoc:
         errors = []
 
-        if !empty?(brand)
-          errors << [:brand, 'is invalid'] if !CreditCard.card_companies.include?(brand)
-        end
+        errors << [:brand, 'is invalid'] if !empty?(brand) && !CreditCard.card_companies.include?(brand)
 
         if empty?(number)
           errors << [:number, 'is required']
@@ -409,9 +407,7 @@ module ActiveMerchant #:nodoc:
           errors << [:number, 'is not a valid credit card number']
         end
 
-        if errors.empty?
-          errors << [:brand, 'does not match the card number'] if !CreditCard.matching_brand?(number, brand)
-        end
+        errors << [:brand, 'does not match the card number'] if errors.empty? && !CreditCard.matching_brand?(number, brand)
 
         errors
       end
@@ -429,6 +425,7 @@ module ActiveMerchant #:nodoc:
 
       class ExpiryDate #:nodoc:
         attr_reader :month, :year
+
         def initialize(month, year)
           @month = month.to_i
           @year = year.to_i

@@ -109,7 +109,7 @@ class RemoteVposTest < Test::Unit::TestCase
     transcript = @gateway.scrub(transcript)
 
     # does not contain anything other than '[FILTERED]'
-    assert_no_match(/token\\":\\"[^\[FILTERED\]]/, transcript)
-    assert_no_match(/card_encrypted_data\\":\\"[^\[FILTERED\]]/, transcript)
+    assert_no_match(/token\\":\\"[^\[FILTERD\]]/, transcript)
+    assert_no_match(/card_encrypted_data\\":\\"[^\[FILTERD\]]/, transcript)
   end
 end

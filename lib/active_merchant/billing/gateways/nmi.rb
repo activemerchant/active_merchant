@@ -334,8 +334,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        headers = { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
-        headers
+        { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
       end
 
       def post_data(action, params)
@@ -347,7 +346,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[CGI::parse(body).map { |k, v| [k.intern, v.first] }]
+        CGI::parse(body).map { |k, v| [k.intern, v.first] }.to_h
       end
 
       def success_from(response)

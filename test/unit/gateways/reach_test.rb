@@ -176,7 +176,7 @@ class ReachTest < Test::Unit::TestCase
 
   def test_stored_credential_with_wrong_combination_stored_credential_paramaters
     @options[:stored_credential] = { initiator: 'merchant', initial_transaction: true, reason_type: 'unscheduled' }
-    @gateway.expects(:get_network_payment_reference).returns(stub(message: 'abc123', "success?": true))
+    @gateway.expects(:get_network_payment_reference).returns(stub(message: 'abc123', success?: true))
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -188,7 +188,7 @@ class ReachTest < Test::Unit::TestCase
 
   def test_stored_credential_with_at_lest_one_stored_credential_paramaters_nil
     @options[:stored_credential] = { initiator: 'merchant', initial_transaction: true, reason_type: nil }
-    @gateway.expects(:get_network_payment_reference).returns(stub(message: 'abc123', "success?": true))
+    @gateway.expects(:get_network_payment_reference).returns(stub(message: 'abc123', success?: true))
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)

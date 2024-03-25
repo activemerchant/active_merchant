@@ -41,26 +41,26 @@ class MundipaggTest < Test::Unit::TestCase
 
     @submerchant_options = {
       submerchant: {
-        "merchant_category_code": '44444',
-        "payment_facilitator_code": '5555555',
-        "code": 'code2',
-        "name": 'Sub Tony Stark',
-        "document": '123456789',
-        "type": 'individual',
-        "phone": {
-          "country_code": '55',
-          "number": '000000000',
-          "area_code": '21'
+        merchant_category_code: '44444',
+        payment_facilitator_code: '5555555',
+        code: 'code2',
+        name: 'Sub Tony Stark',
+        document: '123456789',
+        type: 'individual',
+        phone: {
+          country_code: '55',
+          number: '000000000',
+          area_code: '21'
         },
-        "address": {
-          "street": 'Malibu Point',
-          "number": '10880',
-          "complement": 'A',
-          "neighborhood": 'Central Malibu',
-          "city": 'Malibu',
-          "state": 'CA',
-          "country": 'US',
-          "zip_code": '24210-460'
+        address: {
+          street: 'Malibu Point',
+          number: '10880',
+          complement: 'A',
+          neighborhood: 'Central Malibu',
+          city: 'Malibu',
+          state: 'CA',
+          country: 'US',
+          zip_code: '24210-460'
         }
       }
     }

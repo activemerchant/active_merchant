@@ -39,20 +39,20 @@ class RemoteRapydTest < Test::Unit::TestCase
       billing_address: address(name: 'Jim Reynolds')
     }
     @metadata = {
-      'array_of_objects': [
-        { 'name': 'John Doe' },
-        { 'type': 'customer' }
+      array_of_objects: [
+        { name: 'John Doe' },
+        { type: 'customer' }
       ],
-      'array_of_strings': %w[
+      array_of_strings: %w[
         color
         size
       ],
-      'number': 1234567890,
-      'object': {
-        'string': 'person'
+      number: 1234567890,
+      object: {
+        string: 'person'
       },
-      'string': 'preferred',
-      'Boolean': true
+      string: 'preferred',
+      Boolean: true
     }
     @three_d_secure = {
       version: '2.1.0',

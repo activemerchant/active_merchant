@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
         match = body.match(/<cngateway>(.*)<\/cngateway>/)
         return nil unless match
 
-        Hash[CGI::parse(match[1]).map { |k, v| [k.to_sym, v.first] }]
+        CGI::parse(match[1]).map { |k, v| [k.to_sym, v.first] }.to_h
       end
 
       def handle_response(response)
