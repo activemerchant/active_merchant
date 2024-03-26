@@ -166,6 +166,19 @@ class DecidirTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_customer_object
+    options = @options.merge(customer_id: 'John', customer_email: 'decidir@decidir.com')
+
+    response = stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert data =~ /"email":"decidir@decidir.com"/
+      assert data =~ /"id":"John"/
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_failed_purchase
     @gateway_for_purchase.expects(:ssl_request).returns(failed_purchase_response)
 
