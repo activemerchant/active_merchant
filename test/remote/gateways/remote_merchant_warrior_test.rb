@@ -192,4 +192,34 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:api_passphrase], transcript)
     assert_scrubbed(@gateway.options[:api_key], transcript)
   end
+
+  def test_successful_purchase_with_three_ds
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: 'e1E3SN0xF1lDp9js723iASu3wrA=',
+      eci: '05',
+      xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
+
+    assert response = @gateway.purchase(@success_amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+  end
+
+  def test_successful_purchase_with_three_ds_transaction_id
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: 'e1E3SN0xF1lDp9js723iASu3wrA=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
+
+    assert response = @gateway.purchase(@success_amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+  end
 end
