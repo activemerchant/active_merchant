@@ -19,6 +19,14 @@ class MerchantWarriorTest < Test::Unit::TestCase
       address: address,
       transaction_product: 'TestProduct'
     }
+    @three_ds_secure = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
   end
 
   def test_successful_authorize
@@ -297,6 +305,34 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_three_ds_v2_object_construction
+    post = {}
+    @options[:three_d_secure] = @three_ds_secure
+
+    @gateway.send(:add_three_ds, post, @options)
+    ds_options = @options[:three_d_secure]
+
+    assert_equal ds_options[:version], post[:threeDSV2Version]
+    assert_equal ds_options[:cavv], post[:threeDSCavv]
+    assert_equal ds_options[:eci], post[:threeDSEci]
+    assert_equal ds_options[:xid], post[:threeDSXid]
+    assert_equal ds_options[:authentication_response_status], post[:threeDSStatus]
+  end
+
+  def test_purchase_with_three_ds
+    @options[:three_d_secure] = @three_ds_secure
+    stub_comms(@gateway) do
+      @gateway.purchase(@success_amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      params = URI.decode_www_form(data).to_h
+      assert_equal '2.2.0', params['threeDSV2Version']
+      assert_equal '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=', params['threeDSCavv']
+      assert_equal '05', params['threeDSEci']
+      assert_equal 'ODUzNTYzOTcwODU5NzY3Qw==', params['threeDSXid']
+      assert_equal 'Y', params['threeDSStatus']
+    end
   end
 
   private
