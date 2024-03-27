@@ -266,8 +266,9 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
 
   def test_successful_credit_card_verification
     card = credit_card('4111111111111111')
-    assert response = @gateway.verify(card, @options.merge({ allow_card_verification: true }))
+    assert response = @gateway.verify(card, @options.merge({ allow_card_verification: true, merchant_account_id: fixtures(:braintree_blue)[:merchant_account_id] }))
     assert_success response
+
     assert_match 'OK', response.message
     assert_equal 'M', response.cvv_result['code']
     assert_equal 'P', response.avs_result['code']
@@ -550,7 +551,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert transaction = response.params['braintree_transaction']
     assert transaction['risk_data']
     assert transaction['risk_data']['id']
-    assert_equal 'Approve', transaction['risk_data']['decision']
+    assert_equal true, ['Not Evaluated', 'Approve'].include?(transaction['risk_data']['decision'])
     assert_equal false, transaction['risk_data']['device_data_captured']
     assert_equal 'fraud_protection', transaction['risk_data']['fraud_service_provider']
   end

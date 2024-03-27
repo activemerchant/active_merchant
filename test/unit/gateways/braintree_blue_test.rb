@@ -138,7 +138,15 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_zero_dollar_verification_transaction
+    @gateway = BraintreeBlueGateway.new(
+      merchant_id: 'test',
+      merchant_account_id: 'present',
+      public_key: 'test',
+      private_key: 'test'
+    )
+
     Braintree::CreditCardVerificationGateway.any_instance.expects(:create).
+      with(has_entries(options: { merchant_account_id: 'present' })).
       returns(braintree_result(cvv_response_code: 'M', avs_error_response_code: 'P'))
 
     card = credit_card('4111111111111111')

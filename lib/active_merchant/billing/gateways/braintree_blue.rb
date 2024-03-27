@@ -154,6 +154,10 @@ module ActiveMerchant #:nodoc:
               }
             }
           }
+          if merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
+            payload[:options] = { merchant_account_id: merchant_account_id }
+          end
+
           commit do
             result = @braintree_gateway.verification.create(payload)
             response = Response.new(result.success?, message_from_transaction_result(result), response_options(result))
