@@ -401,11 +401,11 @@ class RemoteElavonTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_multi_currency_terminal_setting_disabled
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'USD', multi_currency: true))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'ZAR', multi_currency: true))
 
     assert_failure response
     assert response.test?
-    assert_equal 'Transaction currency is not allowed for this terminal.  Your terminal must be setup with Multi currency', response.message
+    assert_equal 'The transaction currency sent is not supported', response.message
     assert response.authorization
   end
 
@@ -429,7 +429,7 @@ class RemoteElavonTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_level_3_fields
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(level_3_data: @level_3_data))
+    assert response = @gateway.purchase(500, @credit_card, @options.merge(level_3_data: @level_3_data))
 
     assert_success response
     assert_equal 'APPROVAL', response.message
@@ -445,7 +445,7 @@ class RemoteElavonTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_shipping_address_and_l3
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(shipping_address: @shipping_address).merge(level_3_data: @level_3_data))
+    assert response = @gateway.purchase(500, @credit_card, @options.merge(shipping_address: @shipping_address).merge(level_3_data: @level_3_data))
 
     assert_success response
     assert_equal 'APPROVAL', response.message
