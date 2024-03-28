@@ -194,8 +194,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r(("cavv\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("bankLocationId\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("iban\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("bankAccountNumber\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("tokenAuthenticationVerificationValue\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
+          gsub(%r(("bankAccountNumber\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
       end
 
       private
@@ -623,11 +622,9 @@ module ActiveMerchant #:nodoc:
 
         post[:mpiData] = {}
         post[:mpiData][:authenticationResponse] = 'Y'
+        post[:mpiData][:cavv] = payment.payment_cryptogram
         post[:mpiData][:directoryResponse] = 'Y'
         post[:mpiData][:eci] = payment.eci || '07'
-
-        cryptogram_field = payment.source == :network_token ? :tokenAuthenticationVerificationValue : :cavv
-        post[:mpiData][cryptogram_field] = payment.payment_cryptogram
       end
 
       def add_recurring_contract(post, options = {})

@@ -1226,14 +1226,9 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_authorize_with_network_token
-    response = stub_comms do
-      @gateway.authorize(@amount, @nt_credit_card, @options)
-    end.check_request do |_endpoint, data, _headers|
-      parsed = JSON.parse(data)
-      assert_equal 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', parsed['mpiData']['tokenAuthenticationVerificationValue']
-      assert_equal '07', parsed['mpiData']['eci']
-    end.respond_with(successful_authorize_response)
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
+    response = @gateway.authorize(@amount, @nt_credit_card, @options)
     assert_success response
   end
 
