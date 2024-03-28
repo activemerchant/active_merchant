@@ -218,6 +218,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<PC3VATtaxRate>#{@level3[:vat_rate].to_i}</PC3VATtaxRate>}, data
       assert_match %{<PC3AltTaxAmt>#{@level3[:alt_tax].to_i}</PC3AltTaxAmt>}, data
       assert_match %{<PC3AltTaxInd>#{@level3[:alt_ind]}</PC3AltTaxInd>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -269,6 +270,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_schema_for_soft_descriptors_with_network_tokenization_credit_card_data
     options = @options.merge(
+      level_2_data: @level2,
+      level_3_data: @level3,
+      line_items: @line_items,
       soft_descriptors: {
         merchant_name: 'Merch',
         product_description: 'Description',
@@ -278,8 +282,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(50, network_tokenization_credit_card(nil, eci: '5', transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA='), options)
     end.check_request do |_endpoint, data, _headers|
-      # Soft descriptor fields should come before dpan and cryptogram fields
-      assert_match %{<SDMerchantEmail>email@example<\/SDMerchantEmail><DPANInd>Y<\/DPANInd><DigitalTokenCryptogram}, data.gsub(/\s+/, '')
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1386,22 +1389,26 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address)
     end.check_request do |_endpoint, data, _headers|
-      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI83.xsd")
-      doc = Nokogiri::XML(data)
-      xsd = Nokogiri::XML::Schema(schema_file)
-      assert xsd.valid?(doc), 'Request does not adhere to DTD'
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
     assert_success response
+  end
+
+  def assert_xml_valid_to_xsd(data)
+    doc = Nokogiri::XML(data)
+    xsd = Nokogiri::XML::Schema(schema_xsd)
+    assert xsd.valid?(doc), 'Request does not adhere to DTD'
+  end
+
+  def schema_xsd
+    @schema_xsd ||= File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI83.xsd")
   end
 
   def test_german_requests_adhere_to_xml_schema
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address(country: 'DE'))
     end.check_request do |_endpoint, data, _headers|
-      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI83.xsd")
-      doc = Nokogiri::XML(data)
-      xsd = Nokogiri::XML::Schema(schema_file)
-      assert xsd.valid?(doc), 'Request does not adhere to DTD'
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
