@@ -18,6 +18,15 @@ class FatZebraTest < Test::Unit::TestCase
       description: 'Store Purchase',
       extra: { card_on_file: false }
     }
+
+    @three_ds_secure = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
   end
 
   def test_successful_purchase
@@ -210,6 +219,52 @@ class FatZebraTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_three_ds_v2_object_construction
+    post = {}
+    @options[:three_d_secure] = @three_ds_secure
+
+    @gateway.send(:add_three_ds, post, @options)
+
+    assert post[:extra]
+    ds_data = post[:extra]
+    ds_options = @options[:three_d_secure]
+
+    assert_equal ds_options[:version], ds_data[:threeds_version]
+    assert_equal ds_options[:cavv], ds_data[:cavv]
+    assert_equal ds_options[:eci], ds_data[:sli]
+    assert_equal ds_options[:xid], ds_data[:xid]
+    assert_equal ds_options[:ds_transaction_id], ds_data[:ds_transaction_id]
+    assert_equal 'Y', ds_data[:ver]
+    assert_equal ds_options[:authentication_response_status], ds_data[:par]
+  end
+
+  def test_purchase_with_three_ds
+    @options[:three_d_secure] = @three_ds_secure
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      three_ds_params = JSON.parse(data)['extra']
+      assert_equal '2.2.0', three_ds_params['threeds_version']
+      assert_equal '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=', three_ds_params['cavv']
+      assert_equal '05', three_ds_params['sli']
+      assert_equal 'ODUzNTYzOTcwODU5NzY3Qw==', three_ds_params['xid']
+      assert_equal 'Y', three_ds_params['ver']
+      assert_equal 'Y', three_ds_params['par']
+    end
+  end
+
+  def test_formatted_enrollment
+    assert_equal 'Y', @gateway.send('formatted_enrollment', 'Y')
+    assert_equal 'Y', @gateway.send('formatted_enrollment', 'true')
+    assert_equal 'Y', @gateway.send('formatted_enrollment', true)
+
+    assert_equal 'N', @gateway.send('formatted_enrollment', 'N')
+    assert_equal 'N', @gateway.send('formatted_enrollment', 'false')
+    assert_equal 'N', @gateway.send('formatted_enrollment', false)
+
+    assert_equal 'U', @gateway.send('formatted_enrollment', 'U')
   end
 
   private
