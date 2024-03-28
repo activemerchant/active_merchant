@@ -171,6 +171,18 @@ class RemoteDecidirTest < Test::Unit::TestCase
     assert_equal 'approved', response.message
   end
 
+  def test_successful_purchase_with_customer_object
+    customer_options = {
+      customer_id: 'John',
+      customer_email: 'decidir@decidir.com'
+    }
+
+    assert response = @gateway_for_purchase.purchase(@amount, @credit_card, @options.merge(customer_options))
+    assert_success response
+
+    assert_equal 'approved', response.message
+  end
+
   def test_failed_purchase_with_bad_csmdds
     options = {
       fraud_detection: {

@@ -127,6 +127,7 @@ module ActiveMerchant #:nodoc:
         add_payment(post, credit_card, options)
         add_aggregate_data(post, options) if options[:aggregate_data]
         add_sub_payments(post, options)
+        add_customer_data(post, options)
       end
 
       def add_payment_method_id(credit_card, options)
@@ -239,6 +240,14 @@ module ActiveMerchant #:nodoc:
         aggregate_data[:merchant_email] = data[:merchant_email] if data[:merchant_email]
         aggregate_data[:merchant_phone] = data[:merchant_phone] if data[:merchant_phone]
         post[:aggregate_data] = aggregate_data
+      end
+
+      def add_customer_data(post, options = {})
+        return unless options[:customer_email] || options[:customer_id]
+
+        post[:customer] = {}
+        post[:customer][:id] = options[:customer_id] if options[:customer_id]
+        post[:customer][:email] = options[:customer_email] if options[:customer_email]
       end
 
       def add_sub_payments(post, options)

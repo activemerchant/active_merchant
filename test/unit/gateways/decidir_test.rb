@@ -38,6 +38,9 @@ class DecidirTest < Test::Unit::TestCase
         amount: 1500
       }
     ]
+    @customer_options = {
+
+    }
 
     @network_token = network_tokenization_credit_card(
       '4012001037141112',
@@ -161,6 +164,19 @@ class DecidirTest < Test::Unit::TestCase
       assert_equal(@sub_payments, JSON.parse(data, symbolize_names: true)[:sub_payments])
       assert_match(/#{options[:installments]}/, data)
       assert_match(/#{options[:payment_type]}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_customer_object
+    options = @options.merge(customer_id: 'John', customer_email: 'decidir@decidir.com')
+
+    response = stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert data =~ /"email":"decidir@decidir.com"/
+      assert data =~ /"id":"John"/
     end.respond_with(successful_purchase_response)
 
     assert_success response
