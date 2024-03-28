@@ -82,6 +82,11 @@ module ActiveMerchant #:nodoc:
         commit(:put, "charges/#{CGI.escape(token)}/void", {}, options)
       end
 
+      # Verify a previously authorized charge.
+      def verify_3ds(session_token, options = {})
+        commit(:get, "/charges/verify?session_token=#{session_token}", nil, options)
+      end
+
       # Updates the credit card for the customer.
       def update(token, creditcard, options = {})
         post = {}
@@ -183,10 +188,16 @@ module ActiveMerchant #:nodoc:
       def add_3ds(post, options)
         if options[:three_d_secure]
           post[:three_d_secure] = {}
-          post[:three_d_secure][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
-          post[:three_d_secure][:eci] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
-          post[:three_d_secure][:cavv] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
-          post[:three_d_secure][:transaction_id] = options[:three_d_secure][:ds_transaction_id] || options[:three_d_secure][:xid]
+          if options[:three_d_secure][:enabled]
+            post[:three_d_secure][:enabled] = true
+            post[:three_d_secure][:fallback_ok] = options[:three_d_secure][:fallback_ok] unless options[:three_d_secure][:fallback_ok].nil?
+            post[:three_d_secure][:callback_url] = options[:three_d_secure][:callback_url] if options[:three_d_secure][:callback_url]
+          else
+            post[:three_d_secure][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
+            post[:three_d_secure][:eci] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
+            post[:three_d_secure][:cavv] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
+            post[:three_d_secure][:transaction_id] = options[:three_d_secure][:ds_transaction_id] || options[:three_d_secure][:xid]
+          end
         end
       end
 
@@ -271,6 +282,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(parameters = {})
+        return nil unless parameters
+
         parameters.to_json
       end
     end
