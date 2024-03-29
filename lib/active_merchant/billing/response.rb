@@ -100,11 +100,11 @@ module ActiveMerchant #:nodoc:
       end
 
       %w(params message test authorization error_code emv_authorization test? fraud_review?).each do |m|
-        class_eval %(
+        class_eval <<~RUBY, __FILE__, __LINE__ + 1
           def #{m}
             (@responses.empty? ? nil : primary_response.#{m})
           end
-        )
+        RUBY
       end
     end
   end
