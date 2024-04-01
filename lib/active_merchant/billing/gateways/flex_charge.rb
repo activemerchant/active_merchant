@@ -1,0 +1,302 @@
+module ActiveMerchant #:nodoc:
+  module Billing #:nodoc:
+    class FlexChargeGateway < Gateway
+      self.test_url = 'https://api-sandbox.flex-charge.com/v1/'
+      self.live_url = 'https://api.flex-charge.com/v1/'
+
+      self.supported_countries = ['US']
+      self.default_currency = 'USD'
+      self.supported_cardtypes = %i[visa master american_express discover]
+
+      self.homepage_url = 'https://www.flex-charge.com/'
+      self.display_name = 'FlexCharge'
+
+      STANDARD_ERROR_CODE_MAPPING = {}
+
+      ENDPOINTS_MAPPING = {
+        authenticate: 'oauth2/token',
+        purchase: 'evaluate',
+        sync: 'outcome',
+        refund: 'orders/%s/refund',
+        tokenize: 'tokenize'
+      }
+
+      TRANSACTION_TYPES_MAPPING = {
+        authorize: 'Auth',
+        capture: 'Capture',
+        void: 'Void'
+      }
+
+      SUCCESS_MESSAGES = %w(APPROVED CHALLENGE SUBMITTED).freeze
+
+      def initialize(options = {})
+        requires!(options, :app_key, :app_secret, :site_id, :mid)
+        super
+      end
+
+      def purchase(money, credit_card, options = {})
+        evaluate(:purchase, money, credit_card, options)
+      end
+
+      def authorize(money, credit_card, options = {})
+        evaluate(:authorize, money, credit_card, options)
+      end
+
+      def capture(money, authorization, options = {})
+        evaluate(:capture, money, credit_card, options)
+      end
+
+      def refund(money, authorization, options = {})
+        commit(:refund, { amountToRefund: amount(money) }, authorization)
+      end
+
+      def void(authorization, options = {})
+        evaluate(:void, money, credit_card, options)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Bearer )[a-zA-Z0-9._-]+)i, '\1[FILTERED]').
+          gsub(%r(("AppKey\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("AppSecret\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("accessToken\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("mid\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("siteId\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("environment\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("number\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("cardNumber\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("verification_value\\?":\\?")\d+), '\1[FILTERED]')
+      end
+
+      private
+
+      def add_merchant_data(post, options)
+        post[:siteId] = @options[:site_id]
+        post[:mid] = @options[:mid]
+      end
+
+      def add_base_data(post, options)
+        post[:isDeclined] = options[:is_declined]
+        post[:orderId] = options[:order_id]
+        post[:idempotencyKey] = options[:idempotency_key] || options[:order_id]
+      end
+
+      def add_mit_data(post, money, credit_card, options)
+        return unless options[:is_mit]
+
+        post[:isMIT] = options[:is_mit]
+        post[:isRecurring] = options[:is_recurring]
+        post[:expiryDateUtc] = options[:mit_expiry_date_utc]
+
+        post[:isRecurring] && post[:subscription] = {
+          subscriptionId: options[:subscription_id],
+          interval: options[:subscription_interval],
+          price: money,
+          currency: (options[:currency] || currency(money))
+        }.compact
+      end
+
+      def add_customer_data(post, options)
+        post[:payer] = {
+          email: options[:email] || 'NA',
+          phone: phone_from(options)
+        }.compact
+      end
+
+      def add_address(post, payment, address)
+        first_name, last_name = address_names(address[:name], payment)
+
+        post[:billingInformation] = {
+          firstName: first_name,
+          lastName: last_name,
+          country: address[:country],
+          phone: address[:phone],
+          countryCode: address[:country],
+          addressLine1: address[:address1],
+          state: address[:state],
+          city: address[:city],
+          zipCode: address[:zip]
+        }.compact
+      end
+
+      def add_invoice(post, money, options)
+        post[:transaction] = {
+          id: options[:order_id],
+          dynamicDescriptor: options[:description],
+          timezoneUtcOffset: options[:timezone_utc_offset],
+          amount: money,
+          currency: (options[:currency] || currency(money)),
+          responseCode: options[:response_code],
+          responseCodeSource: options[:response_code_source] || 'NA',
+          avsResultCode: options[:avs_result_code],
+          cvvResultCode: options[:cvv_result_code],
+          cavvResultCode: options[:cavv_result_code] || 'NA',
+          cardNotPresent: options[:card_not_present]
+        }.compact
+      end
+
+      def add_transaction_type(post, action)
+        return unless TRANSACTION_TYPES_MAPPING.keys.include?(action)
+
+        post[:transaction] ||= {}
+        post[:transaction][:transactionType] = TRANSACTION_TYPES_MAPPING[action]
+      end
+
+      def add_payment(post, credit_card, address, options)
+        post[:paymentMethod] = {
+          holderName: credit_card.name,
+          cardType: options.dig(:payment_token, :card_type)&.upcase || 'CREDIT',
+          cardBrand: credit_card.brand&.upcase,
+          cardCountry: options.dig(:payment_token, :country) || address[:country],
+          expirationMonth: options.dig(:payment_token, :month) || credit_card.month,
+          expirationYear: options.dig(:payment_token, :year) || credit_card.year,
+          cardBinNumber: options.dig(:payment_token, :first_six_digits) || credit_card.number[0..5],
+          cardLast4Digits: options.dig(:payment_token, :last_four_digits) || credit_card.number[-4..-1],
+          cardNumber: options.dig(:payment_token, :token) || credit_card.number
+        }.compact
+      end
+
+      def add_credit_card(post, credit_card, options)
+        first_name, last_name = split_names(credit_card.name)
+        post[:payment_method] = {
+          sense_key: options[:order_id],
+          credit_card: {
+            first_name: first_name,
+            last_name: last_name,
+            number: credit_card.number,
+            verification_value: credit_card.verification_value,
+            month: credit_card.month,
+            year: credit_card.year
+          }
+        }.compact
+      end
+
+      def add_credentials_for_tokenization(post)
+        post[:mid] = @options[:mid]
+        post[:environment] = @options[:tokenization_key]
+      end
+
+      def evaluate(action, money, credit_card, options)
+        return handle_evaluation(action, money, credit_card, options) unless options[:tokenize]
+
+        MultiResponse.run do |r|
+          r.process { tokenize(credit_card, options) }
+          extra_options = { payment_token: r.params.dig(:transaction, :payment_method) }
+          r.process { handle_evaluation(action, money, credit_card, options.merge(extra_options)) }
+        end
+      end
+
+      def handle_evaluation(action, money, credit_card, options)
+        post = {}
+        address = options[:billing_address] || options[:address]
+        add_merchant_data(post, options)
+        add_base_data(post, options)
+        add_invoice(post, money, options)
+        add_mit_data(post, money, credit_card, options)
+        add_payment(post, credit_card, address, options)
+        add_address(post, credit_card, address)
+        add_customer_data(post, options)
+        add_transaction_type(post, action)
+
+        commit(:purchase, post)
+      end
+
+      def tokenize(credit_card, options)
+        post = {}
+        add_credentials_for_tokenization(post)
+        add_credit_card(post, credit_card, options)
+
+        commit(:tokenize, post, headers)
+      end
+
+      def address_names(address_name, payment_method)
+        names = split_names(address_name)
+        return names if names.any?(&:present?)
+
+        [
+          payment_method&.first_name,
+          payment_method&.last_name
+        ]
+      end
+
+      def phone_from(options)
+        options[:phone] || options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
+      end
+
+      def ensure_access_token_credential(try_again = true)
+        return if @options[:access_token] && @options.fetch(:expires, 0) > DateTime.now.strftime('%Q').to_i
+
+        params = { AppKey: @options[:app_key], AppSecret: @options[:app_secret] }
+        url = build_request_url(:authenticate)
+        response = parse(ssl_post(url, params.to_json, headers))
+        @options[:access_token] = response[:accessToken]
+        @options[:expires] = response[:expires]
+      rescue ResponseError => e
+        @multiresponse = MultiResponse.new
+        @multiresponse.process { Response.new(false, e.response.body.to_s, {}, test: test?) }
+      end
+
+      def build_request_url(action, id = nil)
+        "#{test? ? test_url : live_url}#{ENDPOINTS_MAPPING[action] % id}"
+      end
+
+      def headers
+        { 'Content-Type' => 'application/json' }.tap do |headers|
+          headers['Authorization'] = "Bearer #{@options[:access_token]}" if @options[:access_token]
+        end
+      end
+
+      def parse(body)
+        JSON.parse(body).with_indifferent_access
+      end
+
+      def commit(action, post, authorization = nil)
+        ensure_access_token_credential
+        response =
+          begin
+            url = build_request_url(action, authorization)
+            parse(ssl_post(url, post.to_json, headers))
+          rescue ResponseError => e
+            errors = e.response.body.blank? ? {} : JSON.parse(e.response.body)
+            { errors: errors['message'] || errors }
+          end
+
+        response = Response.new(
+          success_from(response),
+          message_from(response),
+          response.merge(access_token: @options[:access_token], expires: @options[:expires]),
+          authorization: authorization_from(response),
+          test: test?,
+          error_code: error_code_from(response)
+        )
+
+        return response unless @multiresponse.present?
+
+        @multiresponse.process { response }
+
+        @multiresponse
+      end
+
+      def success_from(response)
+        response[:success] && SUCCESS_MESSAGES.include?(response[:status]) ||
+          response.dig(:transaction, :payment_method, :token).present?
+      end
+
+      def message_from(response)
+        response[:errors].present? ? response[:errors].to_s : response[:status]
+      end
+
+      def authorization_from(response)
+        response[:orderSessionKey]
+      end
+
+      def error_code_from(response)
+        response[:status] unless success_from(response)
+      end
+    end
+  end
+end
