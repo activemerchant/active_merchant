@@ -5,6 +5,7 @@ class RemoteRedsysRestTest < Test::Unit::TestCase
     @gateway = RedsysRestGateway.new(fixtures(:redsys_rest))
     @amount = 100
     @credit_card = credit_card('4548812049400004')
+    @credit_card_no_cvv = credit_card('4548812049400004', verification_value: nil)
     @declined_card = credit_card
     @threeds2_credit_card = credit_card('4918019199883839')
 
@@ -104,6 +105,13 @@ class RemoteRedsysRestTest < Test::Unit::TestCase
 
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+
+    assert_equal 'Transaction Approved', response.message
+  end
+
+  def test_successful_verify_without_cvv
+    assert response = @gateway.verify(@credit_card_no_cvv, @options)
     assert_success response
 
     assert_equal 'Transaction Approved', response.message

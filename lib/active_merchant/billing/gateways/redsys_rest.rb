@@ -332,7 +332,7 @@ module ActiveMerchant #:nodoc:
         post['DS_MERCHANT_TITULAR'] = CGI.escape(name)
         post['DS_MERCHANT_PAN'] = card.number
         post['DS_MERCHANT_EXPIRYDATE'] = "#{year[2..3]}#{month}"
-        post['DS_MERCHANT_CVV2'] = card.verification_value
+        post['DS_MERCHANT_CVV2'] = card.verification_value if card.verification_value?
       end
 
       def determine_action(options)
