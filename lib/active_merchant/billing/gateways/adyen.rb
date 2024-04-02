@@ -827,7 +827,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(action, response, options)
-        if %w[RedirectShopper ChallengeShopper].include?(response.dig('resultCode')) && !options[:execute_threed] && !options[:threed_dynamic]
+        if %w[RedirectShopper ChallengeShopper].include?(response.dig('resultCode')) && !options[:execute_threed] && (!options[:threed_dynamic] || options[:ignore_threed_dynamic])
           response['refusalReason'] = 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.'
           return false
         end

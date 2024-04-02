@@ -148,6 +148,7 @@
 * Updates to StripePI scrub and Paymentez success_from [almalee24] #5090
 * Bin Update: Add Routex bin [yunnydang] #5089
 * SumUp: Improve success_from and message_from methods [sinourain] #5087
+* Adyen: Send new ignore_threed_dynamic for success_from [almalee24] #5078
 
 
 == Version 1.135.0 (August 24, 2023)

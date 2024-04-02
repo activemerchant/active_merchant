@@ -180,6 +180,13 @@ class AdyenTest < Test::Unit::TestCase
     assert_match 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.', response.message
   end
 
+  def test_failed_authorize_with_unexpected_3ds_with_flag_ignore_threed_dynamic
+    @gateway.expects(:ssl_post).returns(successful_authorize_with_3ds_response)
+    response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge!(threed_dynamic: true, ignore_threed_dynamic: true))
+    assert_failure response
+    assert_match 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.', response.message
+  end
+
   def test_successful_authorize_with_recurring_contract_type
     stub_comms do
       @gateway.authorize(100, @credit_card, @options.merge({ recurring_contract_type: 'ONECLICK' }))
