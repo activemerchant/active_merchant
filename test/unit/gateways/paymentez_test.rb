@@ -30,7 +30,6 @@ class PaymentezTest < Test::Unit::TestCase
     @eci = '01'
     @three_ds_v1_version = '1.0.2'
     @three_ds_v2_version = '2.1.0'
-    @three_ds_server_trans_id = 'three-ds-v2-trans-id'
     @authentication_response_status = 'Y'
     @directory_server_transaction_id = 'directory_server_transaction_id'
 
@@ -45,7 +44,6 @@ class PaymentezTest < Test::Unit::TestCase
       cavv: @cavv,
       eci: @eci,
       version: @three_ds_v2_version,
-      three_ds_server_trans_id: @three_ds_server_trans_id,
       authentication_response_status: @authentication_response_status,
       ds_transaction_id: @directory_server_transaction_id
     }
@@ -119,7 +117,7 @@ class PaymentezTest < Test::Unit::TestCase
       cavv: @cavv,
       eci: @eci,
       version: @three_ds_v2_version,
-      reference_id: @three_ds_server_trans_id,
+      reference_id: @directory_server_transaction_id,
       status: @authentication_response_status
     }
 

@@ -32,7 +32,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
     @eci = '01'
     @three_ds_v1_version = '1.0.2'
     @three_ds_v2_version = '2.1.0'
-    @three_ds_server_trans_id = 'ffffffff-9002-51a3-8000-0000000345a2'
+    @ds_server_trans_id = 'ffffffff-9002-51a3-8000-0000000345a2'
     @authentication_response_status = 'Y'
 
     @three_ds_v1_mpi = {
@@ -46,7 +46,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
       cavv: @cavv,
       eci: @eci,
       version: @three_ds_v2_version,
-      three_ds_server_trans_id: @three_ds_server_trans_id,
+      ds_transaction_id: @ds_server_trans_id,
       authentication_response_status: @authentication_response_status
     }
   end

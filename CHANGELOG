@@ -152,6 +152,7 @@
 * Plexo: Add flow field to capture, purchase, and auth [yunnydang] #5092
 * PayTrace: Always send name in billing_address [almalee24] #5086
 * StripePI: Update eci format [almalee24] #5097
+* Paymentez: Remove reference_id flag [almalee24] #5081
 
 
 == Version 1.135.0 (August 24, 2023)
