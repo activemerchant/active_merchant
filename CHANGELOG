@@ -136,6 +136,7 @@
 * AuthorizeNet: Remove turn_on_nt flow [almalee24] #5056
 * CheckoutV2: Add processing and recipient fields [yunnydang] #5068
 * RedsysRest: Omit CVV from requests when not present [jcreiff] #5077
+* Bin Update: Add Unionpay bin [yunnydang] #5079
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
