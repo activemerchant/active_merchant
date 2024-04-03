@@ -91,7 +91,6 @@ class PaymentezTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, '123456789012345678901234567890', @options)
     assert_success response
-
     assert_equal 'PR-926', response.authorization
     assert response.test?
   end
@@ -293,7 +292,6 @@ class PaymentezTest < Test::Unit::TestCase
 
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
-
     response = @gateway.void('1234', @options)
     assert_equal 'Invalid Status', response.message
     assert_failure response
@@ -413,6 +411,7 @@ Conn close
       {
         "transaction": {
           "status": "success",
+          "current_status": "APPROVED",
           "payment_date": "2017-12-19T20:29:12.715",
           "amount": 1,
           "authorization_code": "123456",
@@ -440,6 +439,7 @@ Conn close
       {
         "transaction": {
           "status": "success",
+          "current_status": "APPROVED",
           "payment_date": "2019-03-06T16:47:13.430",
           "amount": 1,
           "authorization_code": "TEST00",
@@ -495,6 +495,7 @@ Conn close
       {
         "transaction": {
           "status": "success",
+          "current_status": "APPROVED",
           "payment_date": "2017-12-21T18:04:42",
           "amount": 1,
           "authorization_code": "487897",
@@ -524,6 +525,7 @@ Conn close
       {
         "transaction": {
           "status": "success",
+          "current_status": "APPROVED",
           "payment_date": "2019-03-06T16:53:36.336",
           "amount": 1,
           "authorization_code": "TEST00",
@@ -584,6 +586,7 @@ Conn close
       {
         "transaction": {
           "status": "success",
+          "current_status": "APPROVED",
           "payment_date": "2017-12-21T18:04:42",
           "amount": 1,
           "authorization_code": "487897",
@@ -613,6 +616,7 @@ Conn close
       {
         "transaction": {
           "status": "success",
+          "current_status": "APPROVED",
           "payment_date": "2019-03-06T16:53:36",
           "amount": 1,
           "authorization_code": "TEST00",
@@ -662,7 +666,7 @@ Conn close
   end
 
   def successful_void_response_with_more_info
-    '{"status": "success", "detail": "Completed", "transaction": {"carrier_code": "00", "message": "Reverse by mock"}}'
+    '{"status": "success", "detail": "Completed", "transaction": {"carrier_code": "00", "message": "Reverse by mock", "status_detail":7}}'
   end
 
   alias successful_refund_response successful_void_response

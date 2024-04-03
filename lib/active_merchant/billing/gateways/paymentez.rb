@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         28 => :card_declined
       }.freeze
 
-      SUCCESS_STATUS = ['success', 'pending', 1, 0]
+      SUCCESS_STATUS = ['APPROVED', 'PENDING', 'success', 1, 0]
 
       CARD_MAPPING = {
         'visa' => 'vi',
@@ -263,7 +263,7 @@ module ActiveMerchant #:nodoc:
       def commit_transaction(action, parameters)
         response = commit_raw('transaction', action, parameters)
         Response.new(
-          success_from(response),
+          success_from(response, action),
           message_from(response),
           response,
           authorization: authorization_from(response),
@@ -291,10 +291,12 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def success_from(response)
-        return false if response.include?('error')
-
-        SUCCESS_STATUS.include?(response['status'] || response['transaction']['status'])
+      def success_from(response, action = nil)
+        if action == 'refund'
+          response.dig('transaction', 'status_detail') == 7 || SUCCESS_STATUS.include?(response.dig('transaction', 'current_status') || response['status'])
+        else
+          SUCCESS_STATUS.include?(response.dig('transaction', 'current_status') || response['status'])
+        end
       end
 
       def card_success_from(response)

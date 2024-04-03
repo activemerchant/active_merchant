@@ -142,6 +142,7 @@
 * SumUp: Remove Void method [sinourain] #5060
 * StripePI: Add new ApplePay and GooglePay flow [almalee24] #5075
 * Braintree: Add merchant_account_id to Verify [almalee24] #5070
+* Paymentez: Update success_from [jherrera] #5082
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
