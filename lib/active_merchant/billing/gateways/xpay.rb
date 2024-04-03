@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'XPay Gateway'
       self.homepage_url = 'https://developer.nexi.it/en'
 
-      self.test_url = 'https://stg-ta.nexigroup.com/api/phoenix-0.0/psp/api/v1/'
+      self.test_url = 'https://xpaysandbox.nexigroup.com/api/phoenix-0.0/psp/api/v1/'
       self.live_url = 'https://xpay.nexigroup.com/api/phoenix-0.0/psp/api/v1/'
 
       self.supported_countries = %w(AT BE CY EE FI FR DE GR IE IT LV LT LU MT PT SK SI ES BG HR DK NO PL RO RO SE CH HU)

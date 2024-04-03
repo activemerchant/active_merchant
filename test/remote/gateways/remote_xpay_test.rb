@@ -40,7 +40,7 @@ class RemoteXpayTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match 'GW0001', response.error_code
+    assert_match '400', response.error_code
     assert_match 'An internal error occurred', response.message
   end
 end
