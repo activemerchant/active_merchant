@@ -302,7 +302,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
       request = JSON.parse(data)
       assert_equal 'recurring', request['processingInformation']['commerceIndicator']
       assert_equal 'customer', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
-      assert_equal true, request.dig('processingInformation', 'authorizationOptions', 'initiator', 'merchantInitiatedTransaction', 'storedCredentialUsed')
+      assert_equal true, request.dig('processingInformation', 'authorizationOptions', 'initiator', 'storedCredentialUsed')
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -316,7 +316,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
       request = JSON.parse(data)
       assert_equal 'recurring', request['processingInformation']['commerceIndicator']
       assert_equal 'merchant', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
-      assert_equal true, request.dig('processingInformation', 'authorizationOptions', 'initiator', 'merchantInitiatedTransaction', 'storedCredentialUsed')
+      assert_equal true, request.dig('processingInformation', 'authorizationOptions', 'initiator', 'storedCredentialUsed')
     end.respond_with(successful_purchase_response)
 
     assert_success response

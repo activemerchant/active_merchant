@@ -313,56 +313,43 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_stored_credentials(post, payment, options)
-        return unless stored_credential = options[:stored_credential]
+        return unless options[:stored_credential]
 
-        options = stored_credential_options(stored_credential, options.fetch(:reason_code, ''))
-        post[:processingInformation][:commerceIndicator] = options.fetch(:transaction_type, 'internet')
-        stored_credential[:initial_transaction] ? initial_transaction(post, options) : subsequent_transaction(post, options)
+        post[:processingInformation][:commerceIndicator] = commerce_indicator(options.dig(:stored_credential, :reason_type))
+        add_authorization_options(post, options)
       end
 
-      def stored_credential_options(options, reason_code)
-        transaction_type = options[:reason_type]
-        transaction_type = 'install' if transaction_type == 'installment'
-        initiator = options[:initiator] if  options[:initiator]
-        initiator = 'customer' if initiator == 'cardholder'
-        stored_on_file = options[:reason_type] == 'recurring'
-        options.merge({
-          transaction_type: transaction_type,
-          initiator: initiator,
-          reason_code: reason_code,
-          stored_on_file: stored_on_file
-        })
+      def commerce_indicator(reason_type)
+        case reason_type
+        when 'recurring'
+          'recurring'
+        when 'installment'
+          'install'
+        else
+          'internet'
+        end
       end
 
-      def add_processing_information(initiator, merchant_initiated_transaction_hash = {})
-        {
+      def add_authorization_options(post, options)
+        initiator = options.dig(:stored_credential, :initiator) == 'cardholder' ? 'customer' : 'merchant'
+        authorization_options = {
           authorizationOptions: {
             initiator: {
               type: initiator,
-              merchantInitiatedTransaction: merchant_initiated_transaction_hash,
-              storedCredentialUsed: true
+              storedCredentialUsed: true,
             }
           }
         }.compact
-      end
 
-      def initial_transaction(post, options)
-        processing_information = add_processing_information(options[:initiator], {
-          reason: options[:reason_code]
-        })
-
-        post[:processingInformation].merge!(processing_information)
-      end
-
-      def subsequent_transaction(post, options)
-        network_transaction_id = options[:network_transaction_id] || options.dig(:stored_credential, :network_transaction_id) || ''
-        processing_information = add_processing_information(options[:initiator], {
-          originalAuthorizedAmount: post.dig(:orderInformation, :amountDetails, :totalAmount),
-          previousTransactionID: network_transaction_id,
-          reason: options[:reason_code],
-          storedCredentialUsed: options[:stored_on_file]
-        })
-        post[:processingInformation].merge!(processing_information)
+        authorization_options[:authorizationOptions][:initiator][:credentialStoredOnFile] = true if options.dig(:stored_credential, :initial_transaction)
+        authorization_options[:authorizationOptions][:initiator][:merchantInitiatedTransaction] ||= {}
+        unless options.dig(:stored_credential, :initial_transaction)
+          network_transaction_id = options[:network_transaction_id] || options.dig(:stored_credential, :network_transaction_id) || ''
+          authorization_options[:authorizationOptions][:initiator][:merchantInitiatedTransaction][:previousTransactionID] = network_transaction_id
+          authorization_options[:authorizationOptions][:initiator][:merchantInitiatedTransaction][:originalAuthorizedAmount] = post.dig(:orderInformation, :amountDetails, :totalAmount)
+        end
+        authorization_options[:authorizationOptions][:initiator][:merchantInitiatedTransaction][:reason] = options[:reason_code] if options[:reason_code]
+        post[:processingInformation].merge!(authorization_options)
       end
 
       def network_transaction_id_from(response)
