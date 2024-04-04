@@ -138,6 +138,7 @@
 * RedsysRest: Omit CVV from requests when not present [jcreiff] #5077
 * Bin Update: Add Unionpay bin [yunnydang] #5079
 * MerchantWarrior: Adding support for 3DS Global fields [Heavyblade] #5072
+* FatZebra: Adding third-party 3DS params [Heavyblade] #5066
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
