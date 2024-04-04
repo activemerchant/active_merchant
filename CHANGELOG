@@ -144,6 +144,7 @@
 * Braintree: Add merchant_account_id to Verify [almalee24] #5070
 * Paymentez: Update success_from [jherrera] #5082
 * Update Rubocop to 1.14.0 [almalee24] #5069
+* Adyen: Update error code mapping [dustinhaefele] #5085
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

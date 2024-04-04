@@ -456,6 +456,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'Refused', response.message
+    assert_equal 'Refused', response.error_code
   end
 
   def test_failed_authorize_with_bank_account
