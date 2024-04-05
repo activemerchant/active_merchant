@@ -1301,6 +1301,10 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'credit_card', response.params['braintree_transaction']['payment_instrument_type']
     assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['prepaid']
     assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['debit']
+    assert_equal 'M', response.params.dig('braintree_transaction', 'cvv_response_code')
+    assert_equal 'I', response.params.dig('braintree_transaction', 'avs_response_code')
+    assert_equal 'Call Issuer. Pick Up Card.', response.params.dig('braintree_transaction', 'gateway_message')
+    assert_equal 'Unknown', response.params.dig('braintree_transaction', 'credit_card_details', 'country_of_issuance')
     assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['issuing_bank']
   end
 
