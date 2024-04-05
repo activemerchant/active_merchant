@@ -439,6 +439,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def avs_code_from(transaction)
+        return unless transaction
+
         transaction.avs_error_response_code ||
           avs_mapping["street: #{transaction.avs_street_address_response_code}, zip: #{transaction.avs_postal_code_response_code}"]
       end
@@ -517,7 +519,8 @@ module ActiveMerchant #:nodoc:
             'token'               => result.credit_card_details&.token,
             'debit'               => result.credit_card_details&.debit,
             'prepaid'             => result.credit_card_details&.prepaid,
-            'issuing_bank'        => result.credit_card_details&.issuing_bank
+            'issuing_bank'        => result.credit_card_details&.issuing_bank,
+            'country_of_issuance' => result.credit_card_details&.country_of_issuance
           }
         end
       end
@@ -615,7 +618,10 @@ module ActiveMerchant #:nodoc:
                    'credit_card_details' => credit_card_details(result.transaction),
                    'network_token_details' => network_token_details(result.transaction),
                    'google_pay_details' => google_pay_details(result.transaction),
-                   'apple_pay_details' => apple_pay_details(result.transaction) }
+                   'apple_pay_details' => apple_pay_details(result.transaction),
+                   'avs_response_code' => avs_code_from(result.transaction),
+                   'cvv_response_code' => result.transaction&.cvv_response_code,
+                   'gateway_message' => result.message }
         end
 
         transaction = result.transaction
