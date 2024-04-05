@@ -43,8 +43,9 @@ class PayTraceTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_ach
+    @echeck.name = 'Test Name'
     response = stub_comms(@gateway) do
-      @gateway.purchase(@amount, @echeck, @options)
+      @gateway.purchase(@amount, @echeck, {})
     end.check_request do |endpoint, data, _headers|
       request = JSON.parse(data)
       assert_include endpoint, 'checks/sale/by_account'
@@ -52,11 +53,8 @@ class PayTraceTest < Test::Unit::TestCase
       assert_equal request['check']['account_number'], @echeck.account_number
       assert_equal request['check']['routing_number'], @echeck.routing_number
       assert_equal request['integrator_id'], @gateway.options[:integrator_id]
-      assert_equal request['billing_address']['name'], @options[:billing_address][:name]
-      assert_equal request['billing_address']['street_address'], @options[:billing_address][:address1]
-      assert_equal request['billing_address']['city'], @options[:billing_address][:city]
-      assert_equal request['billing_address']['state'], @options[:billing_address][:state]
-      assert_equal request['billing_address']['zip'], @options[:billing_address][:zip]
+      assert_equal request['billing_address']['name'], @echeck.name
+      assert_equal request.dig('billing_address', 'street_address'), nil
     end.respond_with(successful_ach_processing_response)
 
     assert_success response
