@@ -126,11 +126,10 @@ module ActiveMerchant #:nodoc:
       def commit(action, post, method = :post)
         response = api_request(action, post.compact, method)
         succeeded = success_from(response)
-
         Response.new(
           succeeded,
           message_from(succeeded, response),
-          action.include?('refund') ? { response_code: response.to_s } : response,
+          response,
           authorization: authorization_from(response),
           test: test?,
           error_code: error_code_from(succeeded, response)
@@ -145,7 +144,9 @@ module ActiveMerchant #:nodoc:
             e.response.body
           end
         response = parse(raw_response)
-        response = response.is_a?(Hash) ? response.symbolize_keys : response
+        response = { code: response } if action.include?('refund') && !response.is_a?(Hash)
+
+        response = response.symbolize_keys if response.is_a?(Hash)
 
         return format_errors(response) if raw_response.include?('error_code') && response.is_a?(Array)
 
@@ -157,25 +158,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        return true if (response.is_a?(Hash) && response[:next_step]) || response == 204
-
-        return false unless %w(PENDING EXPIRED PAID).include?(response[:status])
-
-        response[:transactions].each do |transaction|
-          return false unless %w(PENDING CANCELLED SUCCESSFUL).include?(transaction.symbolize_keys[:status])
-        end
-
-        true
+        response[:next_step] ||
+          response[:code] == 204 ||
+          %w(PENDING PAID).include?(response[:status]) ||
+          response[:transactions]&.all? { |transaction| transaction.symbolize_keys[:status] == 'SUCCESSFUL' }
       end
 
       def message_from(succeeded, response)
         if succeeded
-          return 'Succeeded' if (response.is_a?(Hash) && response[:next_step]) || response == 204
+          return 'Succeeded' if response[:next_step] || response[:code] == 204
 
           return response[:status]
         end
 
-        response[:message] || response[:error_message]
+        response[:message] || response[:error_message] || response[:status]
       end
 
       def authorization_from(response)

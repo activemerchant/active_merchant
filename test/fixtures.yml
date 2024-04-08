@@ -1362,10 +1362,6 @@ sum_up_3ds:
   access_token: SOMECREDENTIAL
   pay_to_email: SOMECREDENTIAL
 
-sum_up_successful_purchase:
-  access_token: SOMECREDENTIAL
-  pay_to_email: SOMECREDENTIAL
-
 # Working credentials, no need to replace
 swipe_checkout:
   login: 2077103073D8B5
