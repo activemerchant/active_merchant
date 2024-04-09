@@ -57,6 +57,37 @@ module ActiveMerchant #:nodoc:
         super
         post[:currency]&.upcase!
       end
+
+      def add_creditcard(post, payment_method, options)
+        return super unless payment_method.is_a?(Check)
+
+        post.merge!({
+          paymentMethod: {
+            type: :ach,
+            fraudCheckData: {
+              ipAddress: options[:ip],
+              email: options[:email]
+            }.compact_blank,
+            billing: {
+              name: payment_method.name,
+              address: { country: options.dig(:billing_address, :country) }
+            }.compact_blank,
+            ach: {
+              account: {
+                routingNumber: payment_method.routing_number,
+                accountNumber: payment_method.account_number,
+                accountType: get_account_type(payment_method)
+              },
+              verificationProvider: :external
+            }
+          }
+        })
+      end
+
+      def get_account_type(check)
+        holder = (check.account_holder_type || '').match(/business/i) ? :corporate : :personal
+        "#{holder}_#{check.account_type}"
+      end
     end
   end
 end

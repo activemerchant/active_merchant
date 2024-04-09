@@ -5,6 +5,13 @@ class RemoteShift4V2Test < RemoteSecurionPayTest
   def setup
     super
     @gateway = Shift4V2Gateway.new(fixtures(:shift4_v2))
+
+    @options[:ip] = '127.0.0.1'
+    @bank_account = check(
+      routing_number: '021000021',
+      account_number: '4242424242424242',
+      account_type: 'savings'
+    )
   end
 
   def test_successful_purchase_third_party_token
@@ -103,5 +110,50 @@ class RemoteShift4V2Test < RemoteSecurionPayTest
     unstore = @gateway.unstore(nil, customer_id: customer_id)
     assert_failure unstore
     assert_equal unstore.params['error']['type'], 'invalid_request'
+  end
+
+  def test_successful_purchase_with_a_savings_bank_account
+    @options[:billing_address] = address(country: 'US')
+    response = @gateway.purchase(@amount, @bank_account, @options)
+
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+  end
+
+  def test_successful_purchase_with_a_checking_bank_account
+    @options[:billing_address] = address(country: 'US')
+    @bank_account.account_type = 'checking'
+
+    response = @gateway.purchase(@amount, @bank_account, @options)
+
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+  end
+
+  def test_successful_purchase_with_a_corporate_savings_bank_account
+    @options[:billing_address] = address(country: 'US')
+    @bank_account.account_type = 'checking'
+    @bank_account.account_holder_type = 'business'
+
+    response = @gateway.purchase(@amount, @bank_account, @options)
+
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+  end
+
+  def test_successful_full_refund_with_a_savings_bank_account
+    @options[:billing_address] = address(country: 'US')
+    purchase = @gateway.purchase(@amount, @bank_account, @options)
+    assert_success purchase
+    assert purchase.authorization
+
+    refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+
+    assert_equal 2000, refund.params['refunds'].first['amount']
+    assert_equal 1, refund.params['refunds'].size
+    assert_equal @amount, refund.params['refunds'].map { |r| r['amount'] }.sum
+
+    assert refund.authorization
   end
 end

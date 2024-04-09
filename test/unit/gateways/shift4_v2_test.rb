@@ -9,6 +9,7 @@ class Shift4V2Test < SecurionPayTest
     @gateway = Shift4V2Gateway.new(
       secret_key: 'pr_test_random_key'
     )
+    @check = check
   end
 
   def test_invalid_raw_response
@@ -47,6 +48,21 @@ class Shift4V2Test < SecurionPayTest
     end.respond_with(successful_unstore_response)
     assert response.success?
     assert_equal response.message, 'Transaction approved'
+  end
+
+  def test_purchase_with_bank_account
+    stub_comms do
+      @gateway.purchase(@amount, @check, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      request = CGI.parse(data)
+      assert_equal request['paymentMethod[type]'].first, 'ach'
+      assert_equal request['paymentMethod[billing][name]'].first, 'Jim Smith'
+      assert_equal request['paymentMethod[billing][address][country]'].first, 'CA'
+      assert_equal request['paymentMethod[ach][account][routingNumber]'].first, '244183602'
+      assert_equal request['paymentMethod[ach][account][accountNumber]'].first, '15378535'
+      assert_equal request['paymentMethod[ach][account][accountType]'].first, 'personal_checking'
+      assert_equal request['paymentMethod[ach][verificationProvider]'].first, 'external'
+    end
   end
 
   private
