@@ -146,6 +146,7 @@
 * Update Rubocop to 1.14.0 [almalee24] #5069
 * Adyen: Update error code mapping [dustinhaefele] #5085
 * Updates to StripePI scrub and Paymentez success_from [almalee24] #5090
+* Bin Update: Add Routex bin [yunnydang] #5089
 
 
 == Version 1.135.0 (August 24, 2023)
