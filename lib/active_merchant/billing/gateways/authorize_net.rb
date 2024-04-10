@@ -426,7 +426,7 @@ module ActiveMerchant
       end
 
       def network_token?(payment_method, options, action)
-        payment_method.class == NetworkTokenizationCreditCard && action != :credit
+        payment_method.instance_of?(NetworkTokenizationCreditCard) && action != :credit
       end
 
       def camel_case_lower(key)
