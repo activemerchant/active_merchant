@@ -153,6 +153,7 @@
 * PayTrace: Always send name in billing_address [almalee24] #5086
 * StripePI: Update eci format [almalee24] #5097
 * Paymentez: Remove reference_id flag [almalee24] #5081
+* CheckoutV2: Update NT flow [almalee24] #5091
 
 
 == Version 1.135.0 (August 24, 2023)
