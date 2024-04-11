@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         28 => :card_declined
       }.freeze
 
-      SUCCESS_STATUS = ['APPROVED', 'PENDING', 'success', 1, 0]
+      SUCCESS_STATUS = ['APPROVED', 'PENDING', 'pending', 'success', 1, 0]
 
       CARD_MAPPING = {
         'visa' => 'vi',
