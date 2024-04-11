@@ -57,13 +57,23 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       '4111111111111111',
       brand: 'visa',
       eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      source: :network_token
     )
     @amex_network_token = network_tokenization_credit_card(
       '378282246310005',
       brand: 'american_express',
       eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      source: :network_token
+    )
+
+    @mastercard_network_token = network_tokenization_credit_card(
+      '5555555555554444',
+      brand: 'master',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      source: :network_token
     )
 
     @amount = 100
@@ -741,6 +751,14 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
   def test_network_tokenization_with_amex_cc_and_basic_cryptogram
     assert auth = @gateway.authorize(@amount, @amex_network_token, @options)
+    assert_successful_response(auth)
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_successful_response(capture)
+  end
+
+  def test_network_tokenization_with_mastercard
+    assert auth = @gateway.authorize(@amount, @mastercard_network_token, @options)
     assert_successful_response(auth)
 
     assert capture = @gateway.capture(@amount, auth.authorization)
