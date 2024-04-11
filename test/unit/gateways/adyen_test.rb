@@ -1005,6 +1005,23 @@ class AdyenTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Refused | 05 : Do not honor', response.message
+    assert_equal '05', response.error_code
+  end
+
+  def test_failed_without_refusal_reason_raw
+    @gateway.expects(:ssl_post).returns(failed_without_raw_refusal_reason)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Your money is no good here', response.error_code
+  end
+
+  def test_failed_without_refusal_reason
+    @gateway.expects(:ssl_post).returns(failed_without_refusal_reason)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_nil response.error_code
   end
 
   def test_scrub
@@ -1886,6 +1903,34 @@ class AdyenTest < Test::Unit::TestCase
         "refusalReasonRaw": "01: Refer to card issuer"
        },
        "refusalReason": "Refused",
+       "pspReference":"8514775559925128",
+       "resultCode":"Refused"
+     }
+    RESPONSE
+  end
+
+  def failed_without_raw_refusal_reason
+    <<-RESPONSE
+    {
+      "additionalData":
+      {
+        "refusalReasonRaw": null
+       },
+       "refusalReason": "Your money is no good here",
+       "pspReference":"8514775559925128",
+       "resultCode":"Refused"
+     }
+    RESPONSE
+  end
+
+  def failed_without_refusal_reason
+    <<-RESPONSE
+    {
+      "additionalData":
+      {
+        "refusalReasonRaw": null
+       },
+       "refusalReason": null,
        "pspReference":"8514775559925128",
        "resultCode":"Refused"
      }
