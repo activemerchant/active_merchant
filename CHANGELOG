@@ -149,6 +149,7 @@
 * Bin Update: Add Routex bin [yunnydang] #5089
 * SumUp: Improve success_from and message_from methods [sinourain] #5087
 * Adyen: Send new ignore_threed_dynamic for success_from [almalee24] #5078
+* Plexo: Add flow field to capture, purchase, and auth [yunnydang] #5092
 
 
 == Version 1.135.0 (August 24, 2023)

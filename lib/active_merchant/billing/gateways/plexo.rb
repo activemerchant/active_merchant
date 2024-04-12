@@ -67,6 +67,7 @@ module ActiveMerchant #:nodoc:
       def verify(credit_card, options = {})
         post = {}
         post[:ReferenceId] = options[:reference_id] || generate_unique_id
+        post[:Flow] = 'direct'
         post[:MerchantId] = options[:merchant_id] || @credentials[:merchant_id]
         post[:StatementDescriptor] = options[:statement_descriptor] if options[:statement_descriptor]
         post[:CustomerId] = options[:customer_id] if options[:customer_id]
@@ -106,6 +107,7 @@ module ActiveMerchant #:nodoc:
         post[:Installments] = options[:installments] if options[:installments]
         post[:StatementDescriptor] = options[:statement_descriptor] if options[:statement_descriptor]
         post[:CustomerId] = options[:customer_id] if options[:customer_id]
+        post[:Flow] = 'direct'
 
         add_payment_method(post, payment, options)
         add_items(post, options[:items])

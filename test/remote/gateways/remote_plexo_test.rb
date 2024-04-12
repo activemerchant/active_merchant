@@ -103,9 +103,12 @@ class RemotePlexoTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture(@amount, '123')
+    auth = @gateway.authorize(@amount, @declined_card, @options)
+    assert_failure auth
+
+    response = @gateway.capture(@amount, auth.authorization)
     assert_failure response
-    assert_equal 'An internal error occurred. Contact support.', response.message
+    assert_equal 'The selected payment state is not valid.', response.message
   end
 
   def test_successful_refund
@@ -125,9 +128,12 @@ class RemotePlexoTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.refund(@amount, '123', @cancel_options)
+    auth = @gateway.authorize(@amount, @declined_card, @options)
+    assert_failure auth
+
+    response = @gateway.refund(@amount, auth.authorization, @cancel_options)
     assert_failure response
-    assert_equal 'An internal error occurred. Contact support.', response.message
+    assert_equal 'The selected payment state is not valid.', response.message
   end
 
   def test_successful_void
@@ -139,9 +145,12 @@ class RemotePlexoTest < Test::Unit::TestCase
   end
 
   def test_failed_void
-    response = @gateway.void('123', @cancel_options)
+    auth = @gateway.authorize(@amount, @declined_card, @options)
+    assert_failure auth
+
+    response = @gateway.void(auth.authorization, @cancel_options)
     assert_failure response
-    assert_equal 'An internal error occurred. Contact support.', response.message
+    assert_equal 'The selected payment state is not valid.', response.message
   end
 
   def test_successful_verify
@@ -284,6 +293,6 @@ class RemotePlexoTest < Test::Unit::TestCase
     assert_success purchase
 
     assert void = @gateway.void(purchase.authorization, @cancel_options)
-    assert_success void
+    assert_failure void
   end
 end
