@@ -2,7 +2,7 @@ require 'test_helper'
 
 class RemoteSumUpTest < Test::Unit::TestCase
   def setup
-    @gateway = SumUpGateway.new(fixtures(:sum_up_successful_purchase))
+    @gateway = SumUpGateway.new(fixtures(:sum_up))
 
     @amount = 100
     @credit_card = credit_card('4000100011112224')

@@ -157,15 +157,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        return true if (response.is_a?(Hash) && response[:next_step]) || response == 204
-
-        return false unless %w(PENDING EXPIRED PAID).include?(response[:status])
-
-        response[:transactions].each do |transaction|
-          return false unless %w(PENDING CANCELLED SUCCESSFUL).include?(transaction.symbolize_keys[:status])
-        end
-
-        true
+        (response.is_a?(Hash) && response[:next_step]) ||
+          response == 204 ||
+          %w(PENDING PAID).include?(response[:status]) ||
+          response[:transactions]&.all? { |transaction| transaction.symbolize_keys[:status] == 'SUCCESSFUL' }
       end
 
       def message_from(succeeded, response)
@@ -175,7 +170,7 @@ module ActiveMerchant #:nodoc:
           return response[:status]
         end
 
-        response[:message] || response[:error_message]
+        response[:message] || response[:error_message] || response[:status]
       end
 
       def authorization_from(response)
