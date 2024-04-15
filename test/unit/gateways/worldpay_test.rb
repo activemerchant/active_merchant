@@ -164,7 +164,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_payment_type_returns_network_token_if_the_payment_method_responds_to_source_payment_cryptogram_and_eci
     payment_method = mock
-    payment_method.stubs(source: nil, payment_cryptogram: nil, eci: nil)
+    payment_method.stubs(source: nil, payment_cryptogram: nil, eci: nil, payment_data: nil)
     result = @gateway.send(:payment_details, payment_method)
     assert_equal({ payment_type: :network_token }, result)
   end
@@ -217,6 +217,56 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
     assert_success response
     assert_equal 'R50704213207145707', response.authorization
+  end
+
+  def test_successful_authorize_encrypted_apple_pay
+    apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      source: :apple_pay,
+      payment_data: {
+        version: 'EC_v1',
+        data: 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9',
+        signature: 'signature',
+        header: {
+          ephemeralPublicKey: 'ephemeralPublicKey',
+          publicKeyHash: 'publicKeyHash',
+          transactionId: 'transactionId'
+        }
+      }
+    })
+
+    stub_comms do
+      @gateway.authorize(@amount, apple_pay, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/APPLEPAY-SSL/, data)
+      assert_match(%r(<version>EC_v1</version>), data)
+      assert_match(%r(<transactionId>transactionId</transactionId>), data)
+      assert_match(%r(<data>QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9</data>), data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_successful_authorize_encrypted_google_pay
+    google_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      source: :google_pay,
+      payment_data: {
+        version: 'EC_v1',
+        data: 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9',
+        signature: 'signature',
+        header: {
+          ephemeralPublicKey: 'ephemeralPublicKey',
+          publicKeyHash: 'publicKeyHash',
+          transactionId: 'transactionId'
+        }
+      }
+    })
+
+    stub_comms do
+      @gateway.authorize(@amount, google_pay, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/PAYWITHGOOGLE-SSL/, data)
+      assert_match(%r(<version>EC_v1</version>), data)
+      assert_match(%r(<transactionId>transactionId</transactionId>), data)
+      assert_match(%r(<data>QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9</data>), data)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_successful_authorize_by_reference
