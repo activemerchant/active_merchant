@@ -185,23 +185,12 @@ module ActiveMerchant #:nodoc: ALL
       # * <tt>authorization</tt> -- the gateway trace number obtained from a previous Authorize transaction.
       # * <tt>options</tt> -- options to be passed to the processor
       def capture(amount, authorization, options = {})
-        modify = options[:amount].present?
-
         post = {}
         add_configure_group(post, options)
-        add_request_amount_group(post, options, amount) if modify
+        add_request_amount_group(post, options, amount) if options[:amount].present?
         add_action_group(post, options)
         add_trace_group(post, options, authorization)
-
-        if modify
-          MultiResponse.run do |r|
-            r.process { commit(MODIFY, 'restApi', post) }
-            return r.primary_response unless r.primary_response.success?
-            r.process { commit(CAPTURE, 'restApi', post.except(:MainAmt)) }
-          end.responses.last
-        else
-          commit(CAPTURE, 'restApi', post)
-        end
+        commit(CAPTURE, 'restApi', post)
       end
 
       def refund(amount, authorization, options = {})
