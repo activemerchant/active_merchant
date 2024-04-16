@@ -29,16 +29,16 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
       billing_address: address.merge(name: 'Cure Tester')
     }
 
-    @cit_options = @options.merge({
+    @cit_options = @options.merge(
       is_mit: false,
       phone: '+99.2001a/+99.2001b'
-    })
+    )
 
-    @mit_recurring_options = @options.merge({
+    @mit_recurring_options = @options.merge(
       is_recurring: true,
       subscription_id: SecureRandom.uuid,
       subscription_interval: 'monthly'
-    })
+    )
 
     @tokenize_cit_options = @cit_options.merge(tokenize: true)
 
@@ -122,7 +122,7 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@amount, @credit_card_cit, { billing_address: address })
+    response = @gateway.purchase(@amount, @credit_card_cit, billing_address: address)
     assert_failure response
     assert_equal nil, response.error_code
     assert_match(/TraceId/, response.message)
