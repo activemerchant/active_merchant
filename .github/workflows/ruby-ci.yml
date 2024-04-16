@@ -23,7 +23,7 @@ jobs:
           - gemfiles/Gemfile.rails51
           - gemfiles/Gemfile.rails52
           - gemfiles/Gemfile.rails60
-          - gemfiles/Gemfile.rails_master
+          - gemfiles/Gemfile.rails71
         exclude:
           - version: 2.6
             gemfile: gemfiles/Gemfile.rails_master
