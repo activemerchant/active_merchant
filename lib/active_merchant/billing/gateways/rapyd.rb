@@ -334,7 +334,7 @@ module ActiveMerchant #:nodoc:
         )
       rescue ActiveMerchant::ResponseError => e
         response = e.response.body.present? ? parse(e.response.body) : { 'status' => { 'response_code' => e.response.msg } }
-        message = response['status'].slice('message', 'response_code').values.compact_blank.first || ''
+        message = response['status'].slice('message', 'response_code').values.compact.first || ''
         Response.new(false, message, response, test: test?, error_code: error_code_from(response))
       end
 
