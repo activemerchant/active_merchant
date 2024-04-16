@@ -521,9 +521,13 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
       currency: 'GBP',
       new_ap_gp_route: true
     }
+    @google_pay.eci = '5'
+    assert_match('5', @google_pay.eci)
+
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @google_pay, options)
     end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][network_token][electronic_commerce_indicator]=05', data)
       assert_match('payment_method_data[card][network_token][tokenization_method]=google_pay_dpan', data)
     end.respond_with(successful_create_intent_response)
   end
@@ -534,9 +538,12 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
       billing_address: address,
       new_ap_gp_route: true
     }
+    @google_pay.eci = nil
+
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @google_pay, options)
     end.check_request do |_method, _endpoint, data, _headers|
+      assert_not_match('payment_method_options[card][network_token][electronic_commerce_indicator]', data)
       assert_match('payment_method_data[billing_details][name]=Jim+Smith', data)
       assert_match('payment_method_data[card][network_token][tokenization_method]=google_pay_dpan', data)
     end.respond_with(successful_create_intent_response_with_google_pay_and_billing_address)

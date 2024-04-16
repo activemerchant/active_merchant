@@ -458,8 +458,18 @@ module ActiveMerchant #:nodoc:
         post[:payment_method_options][:card][:network_token] ||= {}
         post[:payment_method_options][:card][:network_token] = {
           cryptogram: payment_method.respond_to?(:payment_cryptogram) ? payment_method.payment_cryptogram : options[:cryptogram],
-          electronic_commerce_indicator: payment_method.respond_to?(:eci) ? payment_method.eci : options[:eci]
+          electronic_commerce_indicator: format_eci(payment_method, options)
         }.compact
+      end
+
+      def format_eci(payment_method, options)
+        eci_value = payment_method.respond_to?(:eci) ? payment_method.eci : options[:eci]
+
+        if eci_value&.length == 1
+          "0#{eci_value}"
+        else
+          eci_value
+        end
       end
 
       def extract_token_from_string_and_maybe_add_customer_id(post, payment_method)

@@ -235,6 +235,8 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       currency: 'GBP',
       new_ap_gp_route: true
     }
+    @google_pay.eci = '5'
+    assert_match('5', @google_pay.eci)
 
     auth = @gateway.authorize(@amount, @google_pay, options)
     assert auth.success?
