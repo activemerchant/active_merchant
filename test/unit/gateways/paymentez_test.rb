@@ -272,6 +272,28 @@ class PaymentezTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_partial_refund_with_pending_status
+    response = stub_comms do
+      @gateway.refund(@amount, '1234', @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"amount":1.0/, data)
+    end.respond_with(pending_refund_response)
+    assert_success response
+    assert_equal 'Waiting gateway confirmation', response.message
+    assert response.test?
+  end
+
+  def test_partial_refund_with_cancelled_status
+    response = stub_comms do
+      @gateway.refund(@amount, '1234', @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"amount":1.0/, data)
+    end.respond_with(cancelled_refund_response)
+    assert_success response
+    assert_equal 'Completed partial refunded with', response.message
+    assert response.test?
+  end
+
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
@@ -655,6 +677,46 @@ Conn close
 
   def failed_capture_response
     '{"error": {"type": "Carrier not supported", "help": "", "description": "{}"}}'
+  end
+
+  def pending_refund_response
+    '{"status": "pending", "detail": "Waiting gateway confirmation"}'
+  end
+
+  def cancelled_refund_response
+    '{
+      "status": "success",
+      "detail": "Completed partial refunded with",
+      "transaction": {
+        "id": "12343",
+        "status": "success",
+        "current_status": "CANCELLED",
+        "status_detail": 34,
+        "payment_data": "2024-04-11T09:00:58",
+        "amount": 1.0,
+        "installments": 1,
+        "carrier_code": "00",
+        "message": "Transaction Successful",
+        "authorization_code": "0011",
+        "dev_reference": "Order_1234_4567",
+        "carrier": "ABCD",
+        "product_description": "TEST transaction",
+        "payment_method_type": "0",
+        "trace_number": 34964,
+        "refund_amount": 1779.0
+      },
+      "card": {
+        "number": "1234",
+        "bin": "12345",
+        "type": "vi",
+        "transaction_reference": "ABCD-123456",
+        "status": "",
+        "token": "",
+        "expiry_year": "2029",
+        "expiry_month": "1",
+        "origin": "Paymentez"
+      }
+    }'
   end
 
   def successful_void_response

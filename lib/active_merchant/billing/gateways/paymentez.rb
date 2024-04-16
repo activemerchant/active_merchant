@@ -292,10 +292,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response, action = nil)
+        successful_transaction = SUCCESS_STATUS.include?(response.dig('transaction', 'current_status') || response['status'])
+
         if action == 'refund'
-          response.dig('transaction', 'status_detail') == 7 || SUCCESS_STATUS.include?(response.dig('transaction', 'current_status') || response['status'])
+          successful_transaction || response.dig('transaction', 'current_status') == 'CANCELLED' && [7, 34].include?(response.dig('transaction', 'status_detail'))
         else
-          SUCCESS_STATUS.include?(response.dig('transaction', 'current_status') || response['status'])
+          successful_transaction
         end
       end
 
