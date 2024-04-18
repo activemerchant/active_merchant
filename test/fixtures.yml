@@ -293,6 +293,10 @@ data_cash:
   login: X
   password: Y
 
+datatrans:
+  merchant_id: MERCHANT_ID_WEB
+  password: MERCHANT_PASSWORD_WEB
+
 # Working credentials, no need to replace
 decidir_authorize:
   api_key: 5a15fbc227224edabdb6f2e8219e8b28
