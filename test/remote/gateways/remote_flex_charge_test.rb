@@ -6,7 +6,7 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     @gateway = FlexChargeGateway.new(fixtures(:flex_charge))
 
     @amount = 100
-    @credit_card_cit = credit_card('4111111111111111', verification_value: '123')
+    @credit_card_cit = credit_card('4111111111111111', verification_value: '999', first_name: 'Cure', last_name: 'Tester')
     @credit_card_mit = credit_card('4000002760003184')
     @declined_card = credit_card('4000300011112220')
 
@@ -18,7 +18,7 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
       is_declined: true,
       order_id: SecureRandom.uuid,
       idempotency_key: SecureRandom.uuid,
-      card_not_present: true,
+      card_not_present: false,
       email: 'test@gmail.com',
       response_code: '100',
       response_code_source: 'nmi',

@@ -159,7 +159,8 @@ module ActiveMerchant #:nodoc:
           expirationYear: credit_card.year,
           cardBinNumber: options.dig(:payment_token, :first_six_digits) || credit_card.number[0..5],
           cardLast4Digits: options.dig(:payment_token, :last_four_digits) || credit_card.number[-4..-1],
-          cardNumber: options.dig(:payment_token, :token) || credit_card.number
+          cardNumber: options.dig(:payment_token, :token) || credit_card.number,
+          isToken: false
         }.compact
       end
 
