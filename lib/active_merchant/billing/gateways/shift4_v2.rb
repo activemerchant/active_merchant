@@ -67,11 +67,11 @@ module ActiveMerchant #:nodoc:
             fraudCheckData: {
               ipAddress: options[:ip],
               email: options[:email]
-            }.compact,
+            }.compact_blank,
             billing: {
               name: payment_method.name,
               address: { country: options.dig(:billing_address, :country) }
-            }.compact,
+            }.compact_blank,
             ach: {
               account: {
                 routingNumber: payment_method.routing_number,
