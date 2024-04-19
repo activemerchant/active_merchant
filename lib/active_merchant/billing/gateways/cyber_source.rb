@@ -141,14 +141,9 @@ module ActiveMerchant #:nodoc:
         r703: 'Export hostname_country/ip_country match'
       }
 
-      @@wallet_payment_solution = {
+      @@payment_solution = {
         apple_pay: '001',
         google_pay: '012'
-      }
-
-      NT_PAYMENT_SOLUTION = {
-        'master' => '014',
-        'visa' => '015'
       }
 
       # These are the options that can be used when creating a new CyberSource
@@ -286,8 +281,6 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<cvNumber>)[^<]*(</cvNumber>))i, '\1[FILTERED]\2').
           gsub(%r((<cavv>)[^<]*(</cavv>))i, '\1[FILTERED]\2').
           gsub(%r((<xid>)[^<]*(</xid>))i, '\1[FILTERED]\2').
-          gsub(%r((<networkTokenCryptogram>)[^<]*(</networkTokenCryptogram>))i, '\1[FILTERED]\2').
-          gsub(%r((<requestorID>)[^<]*(</requestorID>))i, '\1[FILTERED]\2').
           gsub(%r((<authenticationData>)[^<]*(</authenticationData>))i, '\1[FILTERED]\2')
       end
 
@@ -344,8 +337,8 @@ module ActiveMerchant #:nodoc:
         add_business_rules_data(xml, creditcard_or_reference, options)
         add_airline_data(xml, options)
         add_sales_slip_number(xml, options)
-        add_payment_network_token(xml, creditcard_or_reference, options)
-        add_payment_solution(xml, creditcard_or_reference)
+        add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
+        add_payment_solution(xml, creditcard_or_reference.source) if network_tokenization?(creditcard_or_reference)
         add_tax_management_indicator(xml, options)
         add_stored_credential_subsequent_auth(xml, options)
         add_issuer_additional_data(xml, options)
@@ -417,8 +410,8 @@ module ActiveMerchant #:nodoc:
           add_business_rules_data(xml, payment_method_or_reference, options)
           add_airline_data(xml, options)
           add_sales_slip_number(xml, options)
-          add_payment_network_token(xml, payment_method_or_reference, options)
-          add_payment_solution(xml, payment_method_or_reference)
+          add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
+          add_payment_solution(xml, payment_method_or_reference.source) if network_tokenization?(payment_method_or_reference)
           add_tax_management_indicator(xml, options)
           add_stored_credential_subsequent_auth(xml, options)
           add_issuer_additional_data(xml, options)
@@ -506,7 +499,7 @@ module ActiveMerchant #:nodoc:
             add_check_service(xml)
           else
             add_purchase_service(xml, payment_method, options)
-            add_payment_network_token(xml, payment_method, options)
+            add_payment_network_token(xml) if network_tokenization?(payment_method)
           end
         end
         add_subscription_create_service(xml, options)
@@ -696,16 +689,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_payment_solution(xml, payment_method)
-        return unless network_tokenization?(payment_method)
+      def add_payment_solution(xml, source)
+        return unless (payment_solution = @@payment_solution[source])
 
-        case payment_method.source
-        when :network_token
-          payment_solution = NT_PAYMENT_SOLUTION[payment_method.brand]
-          xml.tag! 'paymentSolution', payment_solution if payment_solution
-        when :apple_pay, :google_pay
-          xml.tag! 'paymentSolution', @@wallet_payment_solution[payment_method.source]
-        end
+        xml.tag! 'paymentSolution', payment_solution
       end
 
       def add_issuer_additional_data(xml, options)
@@ -756,11 +743,7 @@ module ActiveMerchant #:nodoc:
 
       def add_auth_service(xml, payment_method, options)
         if network_tokenization?(payment_method)
-          if payment_method.source == :network_token
-            add_auth_network_tokenization(xml, payment_method, options)
-          else
-            add_auth_wallet(xml, payment_method, options)
-          end
+          add_auth_network_tokenization(xml, payment_method, options)
         else
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
             if options[:three_d_secure]
@@ -852,26 +835,14 @@ module ActiveMerchant #:nodoc:
 
       def subsequent_nt_apple_pay_auth(source, options)
         return unless options[:stored_credential] || options[:stored_credential_overrides]
-        return unless @@wallet_payment_solution[source]
+        return unless @@payment_solution[source]
 
         options.dig(:stored_credential_overrides, :subsequent_auth) || options.dig(:stored_credential, :initiator) == 'merchant'
       end
 
       def add_auth_network_tokenization(xml, payment_method, options)
-        brand = card_brand(payment_method).to_sym
-        case brand
-        when :visa, :master, :american_express
-          xml.tag! 'ccAuthService', { 'run' => 'true' } do
-            xml.tag!('networkTokenCryptogram', payment_method.payment_cryptogram)
-            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
-            xml.tag!('commerceIndicator', 'internet')
-          end
-        else
-          raise ArgumentError.new("Payment method #{brand} is not supported, check https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/CreatingOnlineAuth/CreatingAuthReqPNT.html")
-        end
-      end
+        return unless network_tokenization?(payment_method)
 
-      def add_auth_wallet(xml, payment_method, options)
         commerce_indicator = 'internet' if subsequent_nt_apple_pay_auth(payment_method.source, options)
 
         brand = card_brand(payment_method).to_sym
@@ -904,7 +875,6 @@ module ActiveMerchant #:nodoc:
 
       def add_mastercard_network_tokenization_ucaf_data(xml, payment_method, options)
         return unless network_tokenization?(payment_method) && card_brand(payment_method).to_sym == :master
-        return if payment_method.source == :network_token
 
         commerce_indicator = 'internet' if subsequent_nt_apple_pay_auth(payment_method.source, options)
 
@@ -914,13 +884,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_payment_network_token(xml, payment_method, options)
-        return unless network_tokenization?(payment_method)
-
-        transaction_type = payment_method.source == :network_token ? '3' : '1'
+      def add_payment_network_token(xml)
         xml.tag! 'paymentNetworkToken' do
-          xml.tag!('requestorID', options[:trid]) if transaction_type == '3' && options[:trid]
-          xml.tag!('transactionType', transaction_type)
+          xml.tag!('transactionType', '1')
         end
       end
 
