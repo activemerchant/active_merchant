@@ -17,8 +17,7 @@ module ActiveMerchant #:nodoc:
         authenticate: 'oauth2/token',
         purchase: 'evaluate',
         sync: 'outcome',
-        refund: 'orders/%s/refund',
-        tokenize: 'tokenize'
+        refund: 'orders/%s/refund'
       }
 
       TRANSACTION_TYPES_MAPPING = {
@@ -85,28 +84,14 @@ module ActiveMerchant #:nodoc:
         post[:idempotencyKey] = options[:idempotency_key] || options[:order_id]
       end
 
-      def add_mit_data(post, money, credit_card, options)
-        return unless cast_bool(options[:is_mit])
+      def add_mit_data(post, options)
+        return unless options[:is_mit].present?
 
-        post[:isMIT] = options[:is_mit]
-        post[:isRecurring] = options[:is_recurring]
-        post[:expiryDateUtc] = options[:mit_expiry_date_utc]
-
-        if post[:isRecurring]
-          post[:subscription] = {
-            subscriptionId: options[:subscription_id],
-            interval: options[:subscription_interval],
-            price: money,
-            currency: (options[:currency] || currency(money))
-          }.compact
-        end
+        post[:isMIT] = cast_bool(options[:is_mit])
       end
 
       def add_customer_data(post, options)
-        post[:payer] = {
-          email: options[:email] || 'NA',
-          phone: phone_from(options)
-        }.compact
+        post[:payer] = { email: options[:email] || 'NA', phone: phone_from(options) }.compact
       end
 
       def add_address(post, payment, address)
@@ -128,7 +113,6 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post[:transaction] = {
           id: options[:order_id],
-          dynamicDescriptor: options[:description],
           timestamp: Time.now.utc.iso8601, # TODO: Check if this is the correct format
           timezoneUtcOffset: options[:timezone_utc_offset],
           amount: money,
@@ -143,56 +127,27 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_transaction_type(post, action)
-        return unless TRANSACTION_TYPES_MAPPING.keys.include?(action)
-
-        post[:transaction] ||= {}
         post[:transaction][:transactionType] = TRANSACTION_TYPES_MAPPING[action]
       end
 
-      def add_payment(post, credit_card, address, options)
+      def add_payment_method(post, credit_card, address, options)
         post[:paymentMethod] = {
           holderName: credit_card.name,
-          cardType: options.dig(:payment_token, :card_type)&.upcase || 'CREDIT',
+          cardType: 'CREDIT',
           cardBrand: credit_card.brand&.upcase,
-          cardCountry: options.dig(:payment_token, :country) || address[:country],
+          cardCountry: address[:country],
           expirationMonth: credit_card.month,
           expirationYear: credit_card.year,
-          cardBinNumber: options.dig(:payment_token, :first_six_digits) || credit_card.number[0..5],
-          cardLast4Digits: options.dig(:payment_token, :last_four_digits) || credit_card.number[-4..-1],
-          cardNumber: options.dig(:payment_token, :token) || credit_card.number,
-          isToken: false
+          cardBinNumber: credit_card.number[0..5],
+          cardLast4Digits: credit_card.number[-4..-1],
+          cardNumber: credit_card.number,
+          Token: false
         }.compact
-      end
-
-      def add_credit_card(post, credit_card, options)
-        first_name, last_name = split_names(credit_card.name)
-        post[:payment_method] = {
-          sense_key: options[:order_id],
-          credit_card: {
-            first_name: first_name,
-            last_name: last_name,
-            number: credit_card.number,
-            verification_value: credit_card.verification_value,
-            month: credit_card.month,
-            year: credit_card.year
-          }
-        }.compact
-      end
-
-      def add_credentials_for_tokenization(post)
-        post[:mid] = @options[:mid]
-        post[:environment] = @options[:tokenization_key]
       end
 
       def evaluate(action, money, credit_card, options)
         MultiResponse.run do |r|
-          r.process { get_access_token } unless access_token_valid?
-
-          if options[:tokenize]
-            r.process { tokenize(credit_card, options) }
-            options[:payment_token] = r.params.dig(:transaction, :payment_method)
-          end
-
+          r.process { refresh_access_token } unless access_token_valid?
           r.process { peform_evaluation(action, money, credit_card, options) }
         end
       end
@@ -203,21 +158,13 @@ module ActiveMerchant #:nodoc:
         add_merchant_data(post, options)
         add_base_data(post, options)
         add_invoice(post, money, options)
-        add_mit_data(post, money, credit_card, options)
-        add_payment(post, credit_card, address, options)
+        add_mit_data(post, options)
+        add_payment_method(post, credit_card, address, options)
         add_address(post, credit_card, address)
         add_customer_data(post, options)
         add_transaction_type(post, action)
 
         commit(:purchase, post)
-      end
-
-      def tokenize(credit_card, options)
-        post = {}
-        add_credentials_for_tokenization(post)
-        add_credit_card(post, credit_card, options)
-
-        commit(:tokenize, post, headers)
       end
 
       def address_names(address_name, payment_method)
@@ -234,13 +181,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def access_token_valid?
-        @options[:access_token] && @options.fetch(:expires, 0) <= DateTime.now.strftime('%Q').to_i
+        @options[:access_token].present? && @options.fetch(:expires, 0) <= DateTime.now.strftime('%Q').to_i
       end
 
-      def get_access_token
+      def refresh_access_token
         params = { AppKey: @options[:app_key], AppSecret: @options[:app_secret] }
-        url = url(:authenticate)
-        response = parse(ssl_post(url, params.to_json, headers))
+        response = parse(ssl_post(url(:authenticate), params.to_json, headers))
 
         @options[:access_token] = response[:accessToken]
         @options[:expires] = response[:expires]
@@ -253,7 +199,8 @@ module ActiveMerchant #:nodoc:
           error_code: response[:statusCode]
         )
       rescue ResponseError => e
-        Response.new(false, e.response.body.to_s, {}, test: test?)
+        response = parse(e.response.body)
+        Response.new(false, message_from(response), response, test: test?)
       end
 
       def url(action, id = nil)
@@ -268,16 +215,13 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         JSON.parse(body).with_indifferent_access
+      rescue JSON::ParserError
+        { errors: body,
+          status: 'Unable to parse JSON response' }.with_indifferent_access
       end
 
       def commit(action, post, authorization = nil)
-        response =
-          begin
-            parse ssl_post(url(action, authorization), post.to_json, headers)
-          rescue ResponseError => e
-            errors = e.response.body.blank? ? {} : JSON.parse(e.response.body)
-            { errors: errors['message'] || errors }
-          end
+        response = parse ssl_post(url(action, authorization), post.to_json, headers)
 
         Response.new(
           success_from(response),
@@ -287,6 +231,9 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: error_code_from(response)
         )
+      rescue ResponseError => e
+        response = parse(e.response.body)
+        Response.new(false, message_from(response), response, test: test?)
       end
 
       def success_from(response)
@@ -307,7 +254,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def cast_bool(value)
-        ![false, 0, '', '0', 'f', 'F', 'false', 'FALSE', 'off', 'OFF'].include?(value)
+        ![false, 0, '', '0', 'f', 'F', 'false', 'FALSE'].include?(value)
       end
     end
   end
