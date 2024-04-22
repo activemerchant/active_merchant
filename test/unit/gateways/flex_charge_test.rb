@@ -61,13 +61,13 @@ class FlexChargeTest < Test::Unit::TestCase
 
   def test_build_request_url_for_purchase
     action = :purchase
-    assert_equal @gateway.send(:build_request_url, action), "#{@gateway.test_url}evaluate"
+    assert_equal @gateway.send(:url, action), "#{@gateway.test_url}evaluate"
   end
 
   def test_build_request_url_with_id_param
     action = :refund
     id = 123
-    assert_equal @gateway.send(:build_request_url, action, id), "#{@gateway.test_url}orders/123/refund"
+    assert_equal @gateway.send(:url, action, id), "#{@gateway.test_url}orders/123/refund"
   end
 
   def test_invalid_instance
