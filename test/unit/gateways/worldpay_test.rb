@@ -466,15 +466,6 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_authorize_with_network_token_without_eci
-    response = stub_comms do
-      @gateway.authorize(@amount, @nt_credit_card_without_eci, @options)
-    end.check_request do |_endpoint, data, _headers|
-      assert_match %r(<eciIndicator>07</eciIndicator>), data
-    end.respond_with(successful_authorize_response)
-    assert_success response
-  end
-
   def test_successful_purchase_with_elo
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'BRL'))

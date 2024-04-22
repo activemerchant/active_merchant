@@ -38,8 +38,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       source: :network_token,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
     )
-    @nt_credit_card_without_eci = network_tokenization_credit_card(
+    @visa_nt_credit_card_without_eci = network_tokenization_credit_card(
       '4895370015293175',
+      source: :network_token,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
+    @mastercard_nt_credit_card_without_eci = network_tokenization_credit_card(
+      '5555555555554444',
       source: :network_token,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
     )
@@ -175,8 +180,14 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
-  def test_successful_purchase_with_network_token_without_eci
-    assert response = @gateway.purchase(@amount, @nt_credit_card_without_eci, @options)
+  def test_successful_purchase_with_network_token_without_eci_visa
+    assert response = @gateway.purchase(@amount, @visa_nt_credit_card_without_eci, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_network_token_without_eci_mastercard
+    assert response = @gateway.purchase(@amount, @mastercard_nt_credit_card_without_eci, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message
   end

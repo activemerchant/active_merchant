@@ -153,6 +153,10 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def eci_value(payment_method)
+        payment_method.respond_to?(:eci) ? format(payment_method.eci, :two_digits) : ''
+      end
+
       def authorize_request(money, payment_method, options)
         commit('authorize', build_authorization_request(money, payment_method, options), 'AUTHORISED', 'CAPTURED', options)
       end
@@ -604,10 +608,10 @@ module ActiveMerchant #:nodoc:
               )
             end
             name = card_holder_name(payment_method, options)
-            eci = payment_method.respond_to?(:eci) ? format(payment_method.eci, :two_digits) : ''
             xml.cardHolderName name if name.present?
             xml.cryptogram payment_method.payment_cryptogram unless options[:wallet_type] == :google_pay
-            xml.eciIndicator eci.empty? ? '07' : eci
+            eci = eci_value(payment_method)
+            xml.eciIndicator eci if eci.present?
           end
         end
       end
