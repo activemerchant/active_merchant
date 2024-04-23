@@ -6,13 +6,13 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4263982640269299')
-    @cabal_card = credit_card('6271701225979642', month: 3, year: 2024)
-    @naranja_card = credit_card('5895626746595650', month: 11, year: 2024)
-    @declined_card = credit_card('4917484589897107', month: 1, year: 2023)
-    @invalid_card = credit_card('4917484589897106', month: 1, year: 2023)
+    @cabal_card = credit_card('6271701225979642', month: 3, year: Time.now.year + 1)
+    @naranja_card = credit_card('5895626746595650', month: 11, year: Time.now.year + 1)
+    @declined_card = credit_card('4917484589897107', month: 1, year: Time.now.year + 1)
+    @invalid_card = credit_card('4917484589897106', month: 1, year: Time.now.year + 1)
     @three_ds_visa_card = credit_card('4000000000001091', month: 1)
     @three_ds_master_card = credit_card('5200000000001096', month: 1)
-    @invalid_cabal_card = credit_card('5896 5700 0000 0000', month: 1, year: 2023)
+    @invalid_cabal_card = credit_card('5896 5700 0000 0000', month: 1, year: Time.now.year + 1)
 
     # BlueSnap may require support contact to activate fraud checking on sandbox accounts.
     # Specific merchant-configurable thresholds can be set as follows:
@@ -292,7 +292,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_level3_data
-    l_three_visa = credit_card('4111111111111111', month: 2, year: 2023)
+    l_three_visa = credit_card('4111111111111111', month: 2, year: Time.now.year + 1)
     options = @options.merge({
       customer_reference_number: '1234A',
       sales_tax_amount: 0.6,

@@ -44,7 +44,7 @@ class RemoteClearhausTest < Test::Unit::TestCase
     assert gateway.options[:private_key]
     assert auth = gateway.authorize(@amount, @credit_card, @options)
     assert_failure auth
-    assert_equal 'Neither PUB key nor PRIV key: not enough data', auth.message
+    assert_equal 'Neither PUB key nor PRIV key: unsupported', auth.message
 
     credentials = fixtures(:clearhaus_secure)
     credentials[:signing_key] = 'foo'

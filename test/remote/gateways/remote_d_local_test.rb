@@ -4,7 +4,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
   def setup
     @gateway = DLocalGateway.new(fixtures(:d_local))
 
-    @amount = 200
+    @amount = 1000
     @credit_card = credit_card('4111111111111111')
     @credit_card_naranja = credit_card('5895627823453005')
     @cabal_credit_card = credit_card('5896 5700 0000 0004')

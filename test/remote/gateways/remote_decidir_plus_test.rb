@@ -160,7 +160,7 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
   def test_failed_verify
     assert response = @gateway_auth.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'missing: fraud_detection', response.message
+    assert_equal '10734: Fraud Detection Data is required', response.message
   end
 
   def test_successful_store
@@ -217,7 +217,7 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
 
     response = @gateway_purchase.purchase(@amount, payment_reference, options)
     assert_success response
-    assert_equal({ 'status' => nil }, response.params['fraud_detection'])
+    assert_equal({ 'send_to_cs' => false, 'status' => nil }, response.params['fraud_detection'])
   end
 
   def test_successful_purchase_with_card_brand
