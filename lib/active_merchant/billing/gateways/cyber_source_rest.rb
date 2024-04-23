@@ -100,6 +100,30 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def add_three_ds(post, payment_method, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post[:consumerAuthenticationInformation] ||= {}
+        if payment_method.brand == 'master'
+          post[:consumerAuthenticationInformation][:ucafAuthenticationData] = three_d_secure[:cavv]
+          post[:consumerAuthenticationInformation][:ucafCollectionIndicator] = '2'
+        else
+          post[:consumerAuthenticationInformation][:cavv] = three_d_secure[:cavv]
+        end
+        post[:consumerAuthenticationInformation][:cavvAlgorithm] = three_d_secure[:cavv_algorithm] if three_d_secure[:cavv_algorithm]
+        post[:consumerAuthenticationInformation][:paSpecificationVersion] = three_d_secure[:version] if three_d_secure[:version]
+        post[:consumerAuthenticationInformation][:directoryServerTransactionID] = three_d_secure[:ds_transaction_id] if three_d_secure[:ds_transaction_id]
+        post[:consumerAuthenticationInformation][:eciRaw] = three_d_secure[:eci] if three_d_secure[:eci]
+        if three_d_secure[:xid].present?
+          post[:consumerAuthenticationInformation][:xid] = three_d_secure[:xid]
+        else
+          post[:consumerAuthenticationInformation][:xid] = three_d_secure[:cavv]
+        end
+        post[:consumerAuthenticationInformation][:veresEnrolled] = three_d_secure[:enrolled] if three_d_secure[:enrolled]
+        post[:consumerAuthenticationInformation][:paresStatus] = three_d_secure[:authentication_response_status] if three_d_secure[:authentication_response_status]
+        post
+      end
+
       def build_void_request(amount = nil)
         { reversalInformation: { amountDetails: { totalAmount: nil } } }.tap do |post|
           add_reversal_amount(post, amount.to_i) if amount.present?
@@ -118,6 +142,7 @@ module ActiveMerchant #:nodoc:
           add_business_rules_data(post, payment, options)
           add_partner_solution_id(post)
           add_stored_credentials(post, payment, options)
+          add_three_ds(post, payment, options)
         end.compact
       end
 

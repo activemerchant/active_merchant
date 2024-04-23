@@ -16,6 +16,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
       month: 12,
       year: 2031
     )
+    @master_card = credit_card('2222420000001113', brand: 'master')
     @apple_pay = network_tokenization_credit_card(
       '4111111111111111',
       payment_cryptogram: 'AceY+igABPs3jdwNaDg3MAACAAA=',
@@ -378,6 +379,57 @@ class CyberSourceRestTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       json_data = JSON.parse(data)
       assert_equal json_data['orderInformation']['invoiceDetails']['invoiceNumber'], '1234567'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_mastercard_purchase_with_3ds2
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y',
+      cavv_algorithm: '2'
+    }
+    stub_comms do
+      @gateway.purchase(100, @master_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      assert_equal json_data['consumerAuthenticationInformation']['ucafAuthenticationData'], '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
+      assert_equal json_data['consumerAuthenticationInformation']['ucafCollectionIndicator'], '2'
+      assert_equal json_data['consumerAuthenticationInformation']['cavvAlgorithm'], '2'
+      assert_equal json_data['consumerAuthenticationInformation']['paSpecificationVersion'], '2.2.0'
+      assert_equal json_data['consumerAuthenticationInformation']['directoryServerTransactionID'], 'ODUzNTYzOTcwODU5NzY3Qw=='
+      assert_equal json_data['consumerAuthenticationInformation']['eciRaw'], '05'
+      assert_equal json_data['consumerAuthenticationInformation']['xid'], '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
+      assert_equal json_data['consumerAuthenticationInformation']['veresEnrolled'], 'true'
+      assert_equal json_data['consumerAuthenticationInformation']['paresStatus'], 'Y'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_visa_purchase_with_3ds2
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y',
+      cavv_algorithm: '2'
+    }
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      assert_equal json_data['consumerAuthenticationInformation']['cavv'], '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
+      assert_equal json_data['consumerAuthenticationInformation']['cavvAlgorithm'], '2'
+      assert_equal json_data['consumerAuthenticationInformation']['paSpecificationVersion'], '2.2.0'
+      assert_equal json_data['consumerAuthenticationInformation']['directoryServerTransactionID'], 'ODUzNTYzOTcwODU5NzY3Qw=='
+      assert_equal json_data['consumerAuthenticationInformation']['eciRaw'], '05'
+      assert_equal json_data['consumerAuthenticationInformation']['xid'], '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
+      assert_equal json_data['consumerAuthenticationInformation']['veresEnrolled'], 'true'
+      assert_equal json_data['consumerAuthenticationInformation']['paresStatus'], 'Y'
     end.respond_with(successful_purchase_response)
   end
 
