@@ -45,10 +45,6 @@ class FlexChargeTest < Test::Unit::TestCase
       subscription_id: SecureRandom.uuid,
       subscription_interval: 'monthly'
     }.merge(@mit_options)
-
-    @tokenize_cit_options = @cit_options.merge(tokenize: true)
-
-    @tokenize_mit_options = @mit_options.merge(tokenize: true)
   end
 
   def test_supported_countries
@@ -71,9 +67,8 @@ class FlexChargeTest < Test::Unit::TestCase
   end
 
   def test_invalid_instance
-    assert_raise ArgumentError do
-      FlexChargeGateway.new()
-    end
+    error = assert_raises(ArgumentError) { FlexChargeGateway.new }
+    assert_equal 'Missing required parameter: app_key', error.message
   end
 
   def test_successful_purchase
@@ -116,28 +111,12 @@ class FlexChargeTest < Test::Unit::TestCase
   def test_failed_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, _headers|
-      request = JSON.parse(data)
-
-      if /token/.match?(endpoint)
-        assert_equal request['AppKey'], @gateway.options[:app_key]
-        assert_equal request['AppSecret'], @gateway.options[:app_secret]
-      end
     end.respond_with(successful_access_token_response, failed_purchase_response)
 
     assert_failure response
     assert_equal '400', response.error_code
+    assert_equal '400', response.message
   end
-
-  def test_successful_authorize; end
-
-  def test_failed_authorize; end
-
-  def test_successful_capture; end
-
-  def test_failed_capture; end
-
-  def test_successful_refund; end
 
   def test_failed_refund
     response = stub_comms do
@@ -150,22 +129,12 @@ class FlexChargeTest < Test::Unit::TestCase
         assert_equal request['AppSecret'], @gateway.options[:app_secret]
       end
 
-      assert_equal request['amountToRefund'], sprintf('%.2f', @amount.to_f / 100) if /orders\/reference\/refund/.match?(endpoint)
+      assert_equal request['amountToRefund'], (@amount.to_f / 100).round(2) if /orders\/reference\/refund/.match?(endpoint)
     end.respond_with(successful_access_token_response, failed_refund_response)
 
     assert_failure response
     assert response.test?
   end
-
-  def test_successful_void; end
-
-  def test_failed_void; end
-
-  def test_successful_verify; end
-
-  def test_successful_verify_with_failed_void; end
-
-  def test_failed_verify; end
 
   def test_scrub
     assert @gateway.supports_scrubbing?
@@ -394,16 +363,6 @@ class FlexChargeTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_authorize_response; end
-
-  def failed_authorize_response; end
-
-  def successful_capture_response; end
-
-  def failed_capture_response; end
-
-  def successful_refund_response; end
-
   def failed_refund_response
     <<~RESPONSE
       {
@@ -426,8 +385,4 @@ class FlexChargeTest < Test::Unit::TestCase
       }
     RESPONSE
   end
-
-  def successful_void_response; end
-
-  def failed_void_response; end
 end

@@ -20,13 +20,7 @@ module ActiveMerchant #:nodoc:
         refund: 'orders/%s/refund'
       }
 
-      TRANSACTION_TYPES_MAPPING = {
-        authorize: 'Auth',
-        capture: 'Capture',
-        void: 'Void'
-      }
-
-      SUCCESS_MESSAGES = %w(APPROVED CHALLENGE SUBMITTED).freeze
+      SUCCESS_MESSAGES = %w(APPROVED CHALLENGE SUBMITTED SUCCESS).freeze
 
       def initialize(options = {})
         requires!(options, :app_key, :app_secret, :site_id, :mid)
@@ -37,20 +31,8 @@ module ActiveMerchant #:nodoc:
         evaluate(:purchase, money, credit_card, options)
       end
 
-      def authorize(money, credit_card, options = {})
-        evaluate(:authorize, money, credit_card, options)
-      end
-
-      def capture(money, authorization, options = {})
-        evaluate(:capture, money, credit_card, options)
-      end
-
       def refund(money, authorization, options = {})
-        commit(:refund, { amountToRefund: amount(money) }, authorization)
-      end
-
-      def void(authorization, options = {})
-        evaluate(:void, money, credit_card, options)
+        commit(:refund, { amountToRefund: (money.to_f / 100).round(2) }, authorization)
       end
 
       def supports_scrubbing?
@@ -88,6 +70,8 @@ module ActiveMerchant #:nodoc:
         return unless options[:is_mit].present?
 
         post[:isMIT] = cast_bool(options[:is_mit])
+        post[:isRecurring] = cast_bool(options[:is_recurring])
+        post[:expiryDateUtc] = options[:mit_expiry_date_utc]
       end
 
       def add_customer_data(post, options)
@@ -110,10 +94,11 @@ module ActiveMerchant #:nodoc:
         }.compact
       end
 
-      def add_invoice(post, money, options)
+      def add_invoice(post, money, credit_card, options)
         post[:transaction] = {
           id: options[:order_id],
-          timestamp: Time.now.utc.iso8601, # TODO: Check if this is the correct format
+          dynamicDescriptor: options[:description],
+          timestamp: Time.now.utc.iso8601,
           timezoneUtcOffset: options[:timezone_utc_offset],
           amount: money,
           currency: (options[:currency] || currency(money)),
@@ -122,12 +107,8 @@ module ActiveMerchant #:nodoc:
           avsResultCode: options[:avs_result_code],
           cvvResultCode: options[:cvv_result_code],
           cavvResultCode: options[:cavv_result_code],
-          cardNotPresent: options[:card_not_present]
+          cardNotPresent: credit_card.verification_value.present?
         }.compact
-      end
-
-      def add_transaction_type(post, action)
-        post[:transaction][:transactionType] = TRANSACTION_TYPES_MAPPING[action]
       end
 
       def add_payment_method(post, credit_card, address, options)
@@ -157,12 +138,11 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address] || options[:address]
         add_merchant_data(post, options)
         add_base_data(post, options)
-        add_invoice(post, money, options)
+        add_invoice(post, money, credit_card, options)
         add_mit_data(post, options)
         add_payment_method(post, credit_card, address, options)
         add_address(post, credit_card, address)
         add_customer_data(post, options)
-        add_transaction_type(post, action)
 
         commit(:purchase, post)
       end
@@ -181,7 +161,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def access_token_valid?
-        @options[:access_token].present? && @options.fetch(:expires, 0) <= DateTime.now.strftime('%Q').to_i
+        @options[:access_token].present? && @options.fetch(:expires, 0) > DateTime.now.strftime('%Q').to_i
       end
 
       def refresh_access_token
@@ -226,12 +206,13 @@ module ActiveMerchant #:nodoc:
         Response.new(
           success_from(response),
           message_from(response),
-          response.merge(access_token: @options[:access_token], expires: @options[:expires]),
+          response.merge(access_token: @options[:access_token], expires: @options[:expires]), # TODO: Change the flow to add this only on the last one
           authorization: authorization_from(response),
           test: test?,
           error_code: error_code_from(response)
         )
       rescue ResponseError => e
+        # TODO: Retry at least once on a 401 case
         response = parse(e.response.body)
         Response.new(false, message_from(response), response, test: test?)
       end
@@ -242,7 +223,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response[:errors].present? ? response[:errors].to_s : response[:status]
+        response[:title] || response[:responseMessage] || response[:status]
       end
 
       def authorization_from(response)

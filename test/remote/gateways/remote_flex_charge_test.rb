@@ -33,99 +33,61 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
       is_mit: false,
       phone: '+99.2001a/+99.2001b'
     )
-
-    @mit_recurring_options = @options.merge(
-      is_recurring: true,
-      subscription_id: SecureRandom.uuid,
-      subscription_interval: 'monthly'
-    )
-
-    @tokenize_cit_options = @cit_options.merge(tokenize: true)
-
-    @tokenize_mit_options = @options.merge(tokenize: true)
   end
 
-  def test_successful_cit_challenge_purchase
-    response = @gateway.purchase(@amount, @credit_card_cit, @cit_options)
-    assert_success response
-    assert_equal 'CHALLENGE', response.message
-  end
-
-  def test_successful_tokenize_cit_challenge_purchase
-    response = @gateway.purchase(@amount, @credit_card_cit, @tokenize_cit_options)
-    assert_success response
-    assert_kind_of MultiResponse, response
-    assert_equal 'CHALLENGE', response.message
-  end
-
-  def test_successful_mit_submitted_purchase
-    response = @gateway.purchase(@amount, @credit_card_mit, @tokenize_mit_options)
-    assert_success response
-    assert_kind_of MultiResponse, response
-    assert_equal 'SUBMITTED', response.message
-  end
-
-  def test_successful_tokenize_mit_submitted_purchase
-    response = @gateway.purchase(@amount, @credit_card_mit, @tokenize_mit_options)
-    assert_success response
-    assert_equal 'SUBMITTED', response.message
-  end
-
-  def test_successful_mit_recurring_submitted_purchase
-    response = @gateway.purchase(@amount, @credit_card_mit, @mit_recurring_options)
-    assert_success response
-    assert_equal 'SUBMITTED', response.message
-  end
-
-  def test_successful_purchase_with_an_existing_access_token
+  def test_setting_access_token_when_no_present
     assert_nil @gateway.options[:access_token]
-    purchase = @gateway.purchase(@amount, @credit_card_cit, @cit_options)
-    assert_success purchase
 
-    access_token = @gateway.options[:access_token]
+    @gateway.send(:refresh_access_token)
+
+    assert_not_nil @gateway.options[:access_token]
+    assert_not_nil @gateway.options[:expires]
+  end
+
+  def test_successful_access_token_generation_and_use
+    @gateway.send(:refresh_access_token)
 
     second_purchase = @gateway.purchase(@amount, @credit_card_cit, @cit_options)
+
     assert_success second_purchase
-
-    assert_equal @gateway.options[:access_token], access_token
+    assert_kind_of MultiResponse, second_purchase
+    assert_equal 1, second_purchase.responses.size
+    assert_equal @gateway.options[:access_token], second_purchase.params[:access_token]
   end
 
-  def test_successful_purchase_with_an_initial_invalid_access_token
-    initial_access_token = 'SOMECREDENTIAL'
-    gateway = FlexChargeGateway.new(fixtures(:flex_charge).merge(access_token: initial_access_token))
-    assert_equal gateway.options[:access_token], initial_access_token
-    purchase = gateway.purchase(@amount, @credit_card_cit, @cit_options)
-    assert_success purchase
-
-    new_access_token = gateway.options[:access_token]
-
-    assert_not_equal initial_access_token, new_access_token
-  end
-
-  def test_successful_purchase_with_an_initial_expired_access_token
-    purchase = @gateway.purchase(@amount, @credit_card_cit, @cit_options)
-    assert_success purchase
-
-    initial_access_token = @gateway.options[:access_token]
-    initial_expires = @gateway.options[:expires]
+  def test_successful_purchase_with_an_expired_access_token
+    initial_access_token = @gateway.options[:access_token] = SecureRandom.alphanumeric(10)
+    initial_expires = @gateway.options[:expires] = DateTime.now.strftime('%Q').to_i + 5000
 
     Timecop.freeze(DateTime.now + 10.minutes) do
       second_purchase = @gateway.purchase(@amount, @credit_card_cit, @cit_options)
       assert_success second_purchase
 
-      new_access_token = @gateway.options[:access_token]
-      new_expires = @gateway.options[:expires]
-
-      assert_not_equal initial_access_token, new_access_token
-      assert_not_equal initial_expires, new_expires
+      assert_not_equal initial_access_token, @gateway.options[:access_token]
+      assert_not_equal initial_expires, @gateway.options[:expires]
     end
+  end
+
+  def test_successful_purchase_cit_challenge_purchase
+    response = @gateway.purchase(@amount, @credit_card_cit, @cit_options)
+    assert_success response
+    assert_equal 'CHALLENGE', response.message
+  end
+
+  def test_successful_purchase_mit
+    response = @gateway.purchase(@amount, @credit_card_mit, @options)
+    assert_success response
+
+    assert_kind_of MultiResponse, response
+    assert_equal 2, response.responses.size
+    assert_equal 'APPROVED', response.message
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @credit_card_cit, billing_address: address)
     assert_failure response
     assert_equal nil, response.error_code
-    assert_match(/TraceId/, response.message)
+    assert_not_nil response.params['TraceId']
   end
 
   def test_failed_cit_declined_purchase
@@ -134,89 +96,25 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     assert_equal 'DECLINED', response.error_code
   end
 
-  # def test_successful_authorize_and_capture
-  #   @cit_options[:billing_address][:phone] = '+18001234433'
-  #   auth = @gateway.authorize(@amount, @credit_card_mit, @cit_options)
-  #   assert_success auth
-  #   binding.pry
+  def test_successful_refund
+    purchase = @gateway.purchase(@amount, @credit_card_mit, @options)
+    assert_success purchase
 
-  #   assert capture = @gateway.capture(@amount, auth.authorization)
-  #   assert_success capture
-  #   assert_equal 'REPLACE WITH SUCCESS MESSAGE', capture.message
-  # end
-
-  # def test_failed_authorize
-  #   response = @gateway.authorize(@amount, @credit_card_cit, @cit_options)
-  #   assert_failure response
-  #   assert_equal 'DECLINED', response.message
-  # end
-
-  # def test_partial_capture
-  #   auth = @gateway.authorize(@amount, @credit_card_cit, @options)
-  #   assert_success auth
-
-  #   assert capture = @gateway.capture(@amount - 1, auth.authorization)
-  #   assert_success capture
-  # end
-
-  # def test_failed_capture
-  #   response = @gateway.capture(@amount, '')
-  #   assert_failure response
-  #   assert_equal 'REPLACE WITH FAILED CAPTURE MESSAGE', response.message
-  # end
-
-  # def test_successful_refund
-  #   purchase = @gateway.purchase(@amount, @credit_card_cit, @options)
-  #   assert_success purchase
-
-  #   assert refund = @gateway.refund(@amount, purchase.authorization)
-  #   assert_success refund
-  #   assert_equal 'REPLACE WITH SUCCESSFUL REFUND MESSAGE', refund.message
-  # end
-
-  # def test_partial_refund
-  #   purchase = @gateway.purchase(@amount, @credit_card_cit, @options)
-  #   assert_success purchase
-
-  #   assert refund = @gateway.refund(@amount - 1, purchase.authorization)
-  #   assert_success refund
-  # end
-
-  def test_failed_refund
-    response = @gateway.refund(@amount, '')
-    assert_failure response
-    assert_equal 'Not Found', response.message
-    assert_equal nil, response.error_code
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal 'SUCCESS', refund.message
   end
 
-  # def test_successful_void
-  #   auth = @gateway.authorize(@amount, @credit_card_cit, @options)
-  #   assert_success auth
+  def test_partial_refund
+    purchase = @gateway.purchase(100, @credit_card_cit, @options)
+    assert_success purchase
 
-  #   assert void = @gateway.void(auth.authorization)
-  #   assert_success void
-  #   assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', void.message
-  # end
+    assert refund = @gateway.refund(90, purchase.authorization)
+    assert_success refund
+    assert_equal 'SUCCESS', refund.message
+  end
 
-  # def test_failed_void
-  #   response = @gateway.void('')
-  #   assert_failure response
-  #   assert_equal 'REPLACE WITH FAILED VOID MESSAGE', response.message
-  # end
-
-  # def test_successful_verify
-  #   response = @gateway.verify(@credit_card_cit, @options)
-  #   assert_success response
-  #   assert_match %r{REPLACE WITH SUCCESS MESSAGE}, response.message
-  # end
-
-  # def test_failed_verify
-  #   response = @gateway.verify(@declined_card, @options)
-  #   assert_failure response
-  #   assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
-  # end
-
-  def test_invalid_login
+  def test_failed_refresh_access_token
     gateway = FlexChargeGateway.new(
       app_key: 'SOMECREDENTIAL',
       app_secret: 'SOMECREDENTIAL',
@@ -226,7 +124,7 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
 
     assert response = gateway.purchase(@amount, @credit_card_cit, @options)
     assert_failure response
-    assert_match(/400/, response.message)
+    assert_match(/One or more validation errors occurred/, response.message)
   end
 
   def test_transcript_scrubbing
@@ -243,6 +141,5 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:app_secret], transcript)
     assert_scrubbed(@gateway.options[:site_id], transcript)
     assert_scrubbed(@gateway.options[:mid], transcript)
-    assert_scrubbed(@gateway.options[:tokenization_key], transcript)
   end
 end
