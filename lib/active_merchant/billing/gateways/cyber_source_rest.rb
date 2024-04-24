@@ -31,9 +31,14 @@ module ActiveMerchant #:nodoc:
         visa: '001'
       }
 
-      PAYMENT_SOLUTION = {
+      WALLET_PAYMENT_SOLUTION = {
         apple_pay: '001',
         google_pay: '012'
+      }
+
+      NT_PAYMENT_SOLUTION = {
+        'master' => '014',
+        'visa' => '015'
       }
 
       def initialize(options = {})
@@ -216,7 +221,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_tokenization_card(post, payment, options)
-        post[:processingInformation][:paymentSolution] = PAYMENT_SOLUTION[payment.source]
         post[:processingInformation][:commerceIndicator] = 'internet' unless card_brand(payment) == 'jcb'
 
         post[:paymentInformation][:tokenizedCard] = {
@@ -224,17 +228,24 @@ module ActiveMerchant #:nodoc:
           expirationMonth: payment.month,
           expirationYear: payment.year,
           cryptogram: payment.payment_cryptogram,
-          transactionType: '1',
           type:  CREDIT_CARD_CODES[card_brand(payment).to_sym]
         }
 
-        if card_brand(payment) == 'master'
-          post[:consumerAuthenticationInformation] = {
-            ucafAuthenticationData: payment.payment_cryptogram,
-            ucafCollectionIndicator: '2'
-          }
+        if payment.source == :network_token
+          post[:paymentInformation][:tokenizedCard][:transactionType] = '3'
+          post[:processingInformation][:paymentSolution] = NT_PAYMENT_SOLUTION[payment.brand] if NT_PAYMENT_SOLUTION[payment.brand]
         else
-          post[:consumerAuthenticationInformation] = { cavv: payment.payment_cryptogram }
+          # Apple Pay / Google Pay
+          post[:processingInformation][:paymentSolution] = WALLET_PAYMENT_SOLUTION[payment.source] if WALLET_PAYMENT_SOLUTION[payment.source]
+          post[:paymentInformation][:tokenizedCard][:transactionType] = '1'
+          if card_brand(payment) == 'master'
+            post[:consumerAuthenticationInformation] = {
+              ucafAuthenticationData: payment.payment_cryptogram,
+              ucafCollectionIndicator: '2'
+            }
+          else
+            post[:consumerAuthenticationInformation] = { cavv: payment.payment_cryptogram }
+          end
         end
       end
 

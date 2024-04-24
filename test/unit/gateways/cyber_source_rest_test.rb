@@ -17,6 +17,22 @@ class CyberSourceRestTest < Test::Unit::TestCase
       year: 2031
     )
     @master_card = credit_card('2222420000001113', brand: 'master')
+
+    @visa_network_token = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      source: :network_token
+    )
+
+    @mastercard_network_token = network_tokenization_credit_card(
+      '5555555555554444',
+      brand: 'master',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      source: :network_token
+    )
     @apple_pay = network_tokenization_credit_card(
       '4111111111111111',
       payment_cryptogram: 'AceY+igABPs3jdwNaDg3MAACAAA=',
@@ -186,6 +202,34 @@ class CyberSourceRestTest < Test::Unit::TestCase
     assert_equal 'US', address[:country]
     assert_equal 'test@cybs.com', address[:email]
     assert_equal '4158880000', address[:phoneNumber]
+  end
+
+  def test_authorize_network_token_visa
+    stub_comms do
+      @gateway.authorize(100, @visa_network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '001', request['paymentInformation']['tokenizedCard']['type']
+      assert_equal '3', request['paymentInformation']['tokenizedCard']['transactionType']
+      assert_equal 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', request['paymentInformation']['tokenizedCard']['cryptogram']
+      assert_nil request['paymentInformation']['tokenizedCard']['requestorId']
+      assert_equal '015', request['processingInformation']['paymentSolution']
+      assert_equal 'internet', request['processingInformation']['commerceIndicator']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_network_token_mastercard
+    stub_comms do
+      @gateway.authorize(100, @mastercard_network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '002', request['paymentInformation']['tokenizedCard']['type']
+      assert_equal '3', request['paymentInformation']['tokenizedCard']['transactionType']
+      assert_equal 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', request['paymentInformation']['tokenizedCard']['cryptogram']
+      assert_nil request['paymentInformation']['tokenizedCard']['requestorId']
+      assert_equal '014', request['processingInformation']['paymentSolution']
+      assert_equal 'internet', request['processingInformation']['commerceIndicator']
+    end.respond_with(successful_purchase_response)
   end
 
   def test_authorize_apple_pay_visa
