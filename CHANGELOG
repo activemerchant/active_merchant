@@ -155,6 +155,7 @@
 * Paymentez: Remove reference_id flag [almalee24] #5081
 * Cybersource Rest: Add support for normalized three ds [aenand] #5105
 * Braintree: Add additional data to response [aenand] #5084
+* CheckoutV2: Retain and refresh OAuth access token [sinourain] #5098
 
 
 == Version 1.135.0 (August 24, 2023)

@@ -17,15 +17,7 @@ module ActiveMerchant #:nodoc:
       TEST_ACCESS_TOKEN_URL = 'https://access.sandbox.checkout.com/connect/token'
 
       def initialize(options = {})
-        @options = options
-        @access_token = options[:access_token] || nil
-
-        if options.has_key?(:secret_key)
-          requires!(options, :secret_key)
-        else
-          requires!(options, :client_id, :client_secret)
-          @access_token ||= setup_access_token
-        end
+        options.has_key?(:secret_key) ? requires!(options, :secret_key) : requires!(options, :client_id, :client_secret)
 
         super
       end
@@ -103,7 +95,8 @@ module ActiveMerchant #:nodoc:
           gsub(/("cvv\\":\\")\d+/, '\1[FILTERED]').
           gsub(/("cryptogram\\":\\")\w+/, '\1[FILTERED]').
           gsub(/(source\\":\{.*\\"token\\":\\")\d+/, '\1[FILTERED]').
-          gsub(/("token\\":\\")\w+/, '\1[FILTERED]')
+          gsub(/("token\\":\\")\w+/, '\1[FILTERED]').
+          gsub(/("access_token\\?"\s*:\s*\\?")[^"]*\w+/, '\1[FILTERED]')
       end
 
       def store(payment_method, options = {})
@@ -458,30 +451,43 @@ module ActiveMerchant #:nodoc:
         test? ? TEST_ACCESS_TOKEN_URL : LIVE_ACCESS_TOKEN_URL
       end
 
-      def setup_access_token
-        request = 'grant_type=client_credentials'
-        begin
-          raw_response = ssl_post(access_token_url, request, access_token_header)
-        rescue ResponseError => e
-          raise OAuthResponseError.new(e)
-        else
-          response = parse(raw_response)
-
-          if (access_token = response['access_token'])
-            access_token
-          else
-            raise OAuthResponseError.new(response)
-          end
-        end
+      def expires_date_with_extra_range(expires_in)
+        # Two minutes are subtracted from the expires_in time to generate the expires date
+        # in order to prevent any transaction from failing due to using an access_token
+        # that is very close to expiring.
+        # e.g. the access_token has one second left to expire and the lag when the transaction
+        # use an already expired access_token
+        (DateTime.now + (expires_in - 120).seconds).strftime('%Q').to_i
       end
 
-      def commit(action, post, options, authorization = nil, method = :post)
+      def setup_access_token
+        response = parse(ssl_post(access_token_url, 'grant_type=client_credentials', access_token_header))
+        @options[:access_token] = response['access_token']
+        @options[:expires] = expires_date_with_extra_range(response['expires_in']) if response['expires_in'] && response['expires_in'] > 0
+
+        Response.new(
+          access_token_valid?,
+          message_from(access_token_valid?, response, {}),
+          response.merge({ expires: @options[:expires] }),
+          test: test?,
+          error_code: error_code_from(access_token_valid?, response, {})
+        )
+      rescue ResponseError => e
+        raise OAuthResponseError.new(e)
+      end
+
+      def access_token_valid?
+        @options[:access_token].present? && @options[:expires].to_i > DateTime.now.strftime('%Q').to_i
+      end
+
+      def perform_request(action, post, options, authorization = nil, method = :post)
         begin
           raw_response = ssl_request(method, url(action, authorization), post.nil? || post.empty? ? nil : post.to_json, headers(action, options))
           response = parse(raw_response)
           response['id'] = response['_links']['payment']['href'].split('/')[-1] if action == :capture && response.key?('_links')
-          source_id = authorization if action == :unstore
         rescue ResponseError => e
+          @options[:access_token] = '' if e.response.code == '401' && !@options[:secret_key]
+
           raise unless e.response.code.to_s =~ /4\d\d/
 
           response = parse(e.response.body, error: e.response)
@@ -489,7 +495,14 @@ module ActiveMerchant #:nodoc:
 
         succeeded = success_from(action, response)
 
-        response(action, succeeded, response, options, source_id)
+        response(action, succeeded, response, options)
+      end
+
+      def commit(action, post, options, authorization = nil, method = :post)
+        MultiResponse.run do |r|
+          r.process { setup_access_token } unless @options[:secret_key] || access_token_valid?
+          r.process { perform_request(action, post, options, authorization, method) }
+        end
       end
 
       def response(action, succeeded, response, options = {}, source_id = nil)
@@ -508,7 +521,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(action, options)
-        auth_token = @access_token ? "Bearer #{@access_token}" : @options[:secret_key]
+        auth_token = @options[:access_token] ? "Bearer #{@options[:access_token]}" : @options[:secret_key]
         auth_token = @options[:public_key] if action == :tokens
         headers = {
           'Authorization' => auth_token,

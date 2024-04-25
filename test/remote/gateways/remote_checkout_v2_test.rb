@@ -1,3 +1,4 @@
+require 'timecop'
 require 'test_helper'
 
 class RemoteCheckoutV2Test < Test::Unit::TestCase
@@ -167,7 +168,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     end
   end
 
-  def test_failed_purchase_with_failed_access_token
+  def test_failed_purchase_with_failed_oauth_credentials
     error = assert_raises(ActiveMerchant::OAuthResponseError) do
       gateway = CheckoutV2Gateway.new({ client_id: 'YOUR_CLIENT_ID', client_secret: 'YOUR_CLIENT_SECRET' })
       gateway.purchase(@amount, @credit_card, @options)
@@ -197,6 +198,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_scrubbed(declined_card.verification_value, transcript)
     assert_scrubbed(@gateway_oauth.options[:client_id], transcript)
     assert_scrubbed(@gateway_oauth.options[:client_secret], transcript)
+    assert_scrubbed(@gateway_oauth.options[:access_token], transcript)
   end
 
   def test_network_transaction_scrubbing
@@ -229,6 +231,53 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway_oauth.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_via_oauth_with_access_token
+    assert_nil @gateway_oauth.options[:access_token]
+    assert_nil @gateway_oauth.options[:expires]
+    purchase = @gateway_oauth.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    access_token = @gateway_oauth.options[:access_token]
+    expires = @gateway_oauth.options[:expires]
+    response = @gateway_oauth.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal @gateway_oauth.options[:access_token], access_token
+    assert_equal @gateway_oauth.options[:expires], expires
+  end
+
+  def test_failure_purchase_via_oauth_with_invalid_access_token_without_expires
+    @gateway_oauth.options[:access_token] = 'ABC123'
+    @gateway_oauth.options[:expires] = DateTime.now.strftime('%Q').to_i + 3600.seconds
+
+    response = @gateway_oauth.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal '401: Unauthorized', response.message
+    assert_equal @gateway_oauth.options[:access_token], ''
+  end
+
+  def test_successful_purchase_via_oauth_with_invalid_access_token_with_correct_expires
+    @gateway_oauth.options[:access_token] = 'ABC123'
+    response = @gateway_oauth.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_not_equal 'ABC123', @gateway_oauth.options[:access_token]
+  end
+
+  def test_successful_purchase_with_an_expired_access_token
+    initial_access_token = @gateway_oauth.options[:access_token] = SecureRandom.alphanumeric(10)
+    initial_expires = @gateway_oauth.options[:expires] = DateTime.now.strftime('%Q').to_i
+
+    Timecop.freeze(DateTime.now + 1.hour) do
+      purchase = @gateway_oauth.purchase(@amount, @credit_card, @options)
+      assert_success purchase
+
+      assert_equal 2, purchase.responses.size
+      assert_not_equal initial_access_token, @gateway_oauth.options[:access_token]
+      assert_not_equal initial_expires, @gateway.options[:expires]
+
+      assert_not_nil purchase.responses.first.params['access_token']
+      assert_not_nil purchase.responses.first.params['expires']
+    end
   end
 
   def test_successful_purchase_with_vts_network_token
@@ -1005,21 +1054,16 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
-    # this should only be a Response and not a MultiResponse
-    # as we are passing in a 0 amount and there should be
-    # no void call
-    assert_instance_of(Response, response)
-    refute_instance_of(MultiResponse, response)
     assert_success response
     assert_match %r{Succeeded}, response.message
   end
 
   def test_successful_verify_via_oauth
     response = @gateway_oauth.verify(@credit_card, @options)
-    assert_instance_of(Response, response)
-    refute_instance_of(MultiResponse, response)
     assert_success response
     assert_match %r{Succeeded}, response.message
+    assert_not_nil response.responses.first.params['access_token']
+    assert_not_nil response.responses.first.params['expires']
   end
 
   def test_failed_verify

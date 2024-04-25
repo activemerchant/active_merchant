@@ -260,11 +260,16 @@ class CheckoutV2Test < Test::Unit::TestCase
     processing_channel_id = 'abcd123'
     response = stub_comms(@gateway_oauth, :ssl_request) do
       @gateway_oauth.purchase(@amount, @credit_card, { processing_channel_id: processing_channel_id })
-    end.check_request do |_method, _endpoint, data, headers|
-      request = JSON.parse(data)
-      assert_equal headers['Authorization'], 'Bearer 12345678'
-      assert_equal request['processing_channel_id'], processing_channel_id
-    end.respond_with(successful_purchase_response)
+    end.check_request do |_method, endpoint, data, headers|
+      if endpoint.match?(/token/)
+        assert_equal headers['Authorization'], 'Basic YWJjZDoxMjM0'
+        assert_equal data, 'grant_type=client_credentials'
+      else
+        request = JSON.parse(data)
+        assert_equal headers['Authorization'], 'Bearer 12345678'
+        assert_equal request['processing_channel_id'], processing_channel_id
+      end
+    end.respond_with(successful_access_token_response, successful_purchase_response)
     assert_success response
   end
 
@@ -1072,6 +1077,12 @@ class CheckoutV2Test < Test::Unit::TestCase
     %q(
       <- "POST /payments HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: [FILTERED]\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.checkout.com\r\nContent-Length: 346\r\n\r\n"
       <- "{\"capture\":false,\"amount\":\"200\",\"reference\":\"1\",\"currency\":\"USD\",\"source\":{\"type\":\"card\",\"name\":\"Longbob Longsen\",\"number\":\"[FILTERED]\",\"cvv\":\"[FILTERED]\",\"expiry_year\":\"2025\"
+    )
+  end
+
+  def successful_access_token_response
+    %(
+      {"access_token":"12345678","expires_in":3600,"token_type":"Bearer","scope":"disputes:accept disputes:provide-evidence disputes:view files flow:events flow:workflows fx gateway gateway:payment gateway:payment-authorizations gateway:payment-captures gateway:payment-details gateway:payment-refunds gateway:payment-voids middleware middleware:merchants-secret payouts:bank-details risk sessions:app sessions:browser vault:instruments"}
     )
   end
 
