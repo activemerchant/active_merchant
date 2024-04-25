@@ -28,7 +28,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, credit_card, options = {})
-        evaluate(:purchase, money, credit_card, options)
+        post = {}
+        address = options[:billing_address] || options[:address]
+        add_merchant_data(post, options)
+        add_base_data(post, options)
+        add_invoice(post, money, credit_card, options)
+        add_mit_data(post, options)
+        add_payment_method(post, credit_card, address, options)
+        add_address(post, credit_card, address)
+        add_customer_data(post, options)
+
+        commit(:purchase, post)
       end
 
       def refund(money, authorization, options = {})
@@ -126,27 +136,6 @@ module ActiveMerchant #:nodoc:
         }.compact
       end
 
-      def evaluate(action, money, credit_card, options)
-        MultiResponse.run do |r|
-          r.process { refresh_access_token } unless access_token_valid?
-          r.process { peform_evaluation(action, money, credit_card, options) }
-        end
-      end
-
-      def peform_evaluation(action, money, credit_card, options)
-        post = {}
-        address = options[:billing_address] || options[:address]
-        add_merchant_data(post, options)
-        add_base_data(post, options)
-        add_invoice(post, money, credit_card, options)
-        add_mit_data(post, options)
-        add_payment_method(post, credit_card, address, options)
-        add_address(post, credit_card, address)
-        add_customer_data(post, options)
-
-        commit(:purchase, post)
-      end
-
       def address_names(address_name, payment_method)
         names = split_names(address_name)
 
@@ -164,12 +153,13 @@ module ActiveMerchant #:nodoc:
         @options[:access_token].present? && @options.fetch(:expires, 0) > DateTime.now.strftime('%Q').to_i
       end
 
-      def refresh_access_token
+      def fetch_access_token
         params = { AppKey: @options[:app_key], AppSecret: @options[:app_secret] }
         response = parse(ssl_post(url(:authenticate), params.to_json, headers))
 
         @options[:access_token] = response[:accessToken]
         @options[:expires] = response[:expires]
+        @options[:new_credentials] = true
 
         Response.new(
           response[:accessToken].present?,
@@ -179,8 +169,7 @@ module ActiveMerchant #:nodoc:
           error_code: response[:statusCode]
         )
       rescue ResponseError => e
-        response = parse(e.response.body)
-        Response.new(false, message_from(response), response, test: test?)
+        raise OAuthResponseError.new(e)
       end
 
       def url(action, id = nil)
@@ -201,19 +190,31 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, post, authorization = nil)
+        MultiResponse.run do |r|
+          r.process { fetch_access_token } unless access_token_valid?
+
+          r.process do
+            api_request(action, post, authorization).tap do |response|
+              response.params.merge!(@options.slice(:access_token, :expires)) if @options[:new_credentials]
+            end
+          end
+        end
+      end
+
+      def api_request(action, post, authorization = nil)
         response = parse ssl_post(url(action, authorization), post.to_json, headers)
 
         Response.new(
           success_from(response),
           message_from(response),
-          response.merge(access_token: @options[:access_token], expires: @options[:expires]), # TODO: Change the flow to add this only on the last one
+          response,
           authorization: authorization_from(response),
           test: test?,
           error_code: error_code_from(response)
         )
       rescue ResponseError => e
-        # TODO: Retry at least once on a 401 case
         response = parse(e.response.body)
+        response[:access_token] = '' if e.response.code == '401' # if current access token is invalid reset it
         Response.new(false, message_from(response), response, test: test?)
       end
 
