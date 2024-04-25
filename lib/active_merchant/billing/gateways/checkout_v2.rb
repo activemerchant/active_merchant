@@ -580,14 +580,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(action, options)
-        auth_token = @options[:access_token] ? "Bearer #{@options[:access_token]}" : @options[:secret_key]
-        auth_token = @options[:public_key] if action == :tokens
-        headers = {
-          'Authorization' => auth_token,
-          'Content-Type' => 'application/json;charset=UTF-8'
-        }
+        headers = { 'Authorization' => auth_token(action), 'Content-Type' => 'application/json;charset=UTF-8' }
         headers['Cko-Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
+
         headers
+      end
+
+      def auth_token(action)
+        return @options[:public_key] if action == :tokens
+
+        "Bearer #{@options[:access_token] || @options[:secret_key]}"
       end
 
       def tokenize(payment_method, options = {})
