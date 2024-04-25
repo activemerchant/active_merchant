@@ -430,6 +430,12 @@ firstdata_e4_v27:
   key_id: ANINTEGER
   hmac_key: AMAGICALKEY
 
+flex_charge:
+  app_key: 'your app key'
+  app_secret: 'app secret'
+  site_id: 'site id'
+  mid: 'merchant id'
+
 flo2cash:
   username: SOMECREDENTIAL
   password: ANOTHERCREDENTIAL
