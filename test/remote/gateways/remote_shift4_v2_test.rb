@@ -130,6 +130,64 @@ class RemoteShift4V2Test < RemoteSecurionPayTest
     assert_equal 'Transaction approved', response.message
   end
 
+  def test_successful_bank_account_store
+    @options[:billing_address] = address(country: 'US')
+    @bank_account.account_type = 'checking'
+
+    response = @gateway.store(@bank_account, @options)
+
+    assert_success response
+    assert_match(/^pm_/, response.authorization)
+  end
+
+  def test_successful_credit_card_store_with_existent_customer_id
+    @options[:customer_id] = 'cust_gHrIXDZqIq9Jp2t78A1Wp8CT'
+    response = @gateway.store(@credit_card, @options)
+
+    assert_success response
+    assert_match(/^card_/, response.authorization)
+    assert_match(/^card_/, response.params['id'])
+  end
+
+  def test_successful_credit_card_store_without_customer_id
+    response = @gateway.store(@credit_card, @options)
+
+    assert_success response
+    assert_equal 'foo@example.com', response.params['email']
+    assert_match(/^card_/, response.authorization)
+    assert_match(/^cust_/, response.params['id'])
+  end
+
+  def test_successful_purchase_with_an_stored_credit_card
+    @options[:customer_id] = 'cust_gHrIXDZqIq9Jp2t78A1Wp8CT'
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+
+    response = @gateway.purchase(@amount, response.authorization, @options)
+
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+  end
+
+  def test_successful_purchase_with_an_stored_bank_account
+    @options[:billing_address] = address(country: 'US')
+    @bank_account.account_type = 'checking'
+
+    response = @gateway.store(@bank_account, @options)
+    assert_success response
+
+    response = @gateway.purchase(@amount, response.authorization, @options)
+
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+  end
+
+  def test_store_raises_error_on_invalid_payment_method
+    assert_raises(ArgumentError) do
+      @gateway.store('abc123', @options)
+    end
+  end
+
   def test_successful_purchase_with_a_corporate_savings_bank_account
     @options[:billing_address] = address(country: 'US')
     @bank_account.account_type = 'checking'
