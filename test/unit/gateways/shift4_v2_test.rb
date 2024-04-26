@@ -29,9 +29,7 @@ class Shift4V2Test < SecurionPayTest
   end
 
   def test_successful_store_and_unstore
-    @gateway.expects(:ssl_post).returns(successful_authorize_response)
     @gateway.expects(:ssl_post).returns(successful_new_customer_response)
-    @gateway.expects(:ssl_post).returns(successful_void_response)
 
     store = @gateway.store(@credit_card, @options)
     assert_success store
