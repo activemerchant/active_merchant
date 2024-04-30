@@ -15,6 +15,16 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.datatrans.ch/'
       self.display_name = 'Datatrans'
 
+      CREDIT_CARD_SOURCE = {
+        visa: 'VISA',
+        master: 'MASTERCARD'
+      }.with_indifferent_access
+
+      DEVICE_SOURCE = {
+        apple_pay: 'APPLE_PAY',
+        google_pay: 'GOOGLE_PAY'
+      }.with_indifferent_access
+
       def initialize(options = {})
         requires!(options, :merchant_id, :password)
         @merchant_id, @password = options.values_at(:merchant_id, :password)
@@ -26,8 +36,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment, options = {})
-        post = add_payment_method(payment)
-        post[:refno] = options[:order_id].to_s if options[:order_id]
+        post = { refno: options.fetch(:order_id, '') }
+        add_payment_method(post, payment)
         add_currency_amount(post, money, options)
         add_billing_address(post, options)
         post[:autoSettle] = options[:auto_settle] if options[:auto_settle]
@@ -35,23 +45,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        post = { refno: options[:order_id]&.to_s }
-        transaction_id, = authorization.split('|')
+        post = { refno: options.fetch(:order_id, '') }
+        transaction_id = authorization.split('|').first
         add_currency_amount(post, money, options)
-        commit('settle', post, { transaction_id: transaction_id, authorization: authorization })
+        commit('settle', post, { transaction_id: transaction_id })
       end
 
       def refund(money, authorization, options = {})
-        post = { refno: options[:order_id]&.to_s }
-        transaction_id, = authorization.split('|')
+        post = { refno: options.fetch(:order_id, '') }
+        transaction_id = authorization.split('|').first
         add_currency_amount(post, money, options)
         commit('credit', post, { transaction_id: transaction_id })
       end
 
       def void(authorization, options = {})
         post = {}
-        transaction_id, = authorization.split('|')
-        commit('cancel', post, { transaction_id: transaction_id, authorization: authorization })
+        transaction_id = authorization.split('|').first
+        commit('cancel', post, { transaction_id: transaction_id })
       end
 
       def supports_scrubbing?
@@ -67,21 +77,33 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_payment_method(payment_method)
-        {
-          card: {
-            number: payment_method.number,
-            cvv: payment_method.verification_value.to_s,
-            expiryMonth: format(payment_method.month, :two_digits),
-            expiryYear: format(payment_method.year, :two_digits)
+      def add_payment_method(post, payment_method)
+        card = build_card(payment_method)
+        post[:card] = {
+          expiryMonth: format(payment_method.month, :two_digits),
+          expiryYear: format(payment_method.year, :two_digits)
+        }.merge(card)
+      end
+
+      def build_card(payment_method)
+        if payment_method.is_a?(NetworkTokenizationCreditCard)
+          {
+            type: DEVICE_SOURCE[payment_method.source] ? 'DEVICE_TOKEN' : 'NETWORK_TOKEN',
+            tokenType: DEVICE_SOURCE[payment_method.source] || CREDIT_CARD_SOURCE[card_brand(payment_method)],
+            token: payment_method.number,
+            cryptogram: payment_method.payment_cryptogram
           }
-        }
+        else
+          {
+            number: payment_method.number,
+            cvv: payment_method.verification_value.to_s
+          }
+        end
       end
 
       def add_billing_address(post, options)
-        return unless options[:billing_address]
+        return unless billing_address = options[:billing_address]
 
-        billing_address = options[:billing_address]
         post[:billing] = {
           name: billing_address[:name],
           street: billing_address[:address1],
@@ -100,29 +122,32 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, post, options = {})
-        begin
-          raw_response = ssl_post(url(action, options), post.to_json, headers)
-        rescue ResponseError => e
-          raw_response = e.response.body
-        end
-
-        response = parse(raw_response)
-
+        response = parse(ssl_post(url(action, options), post.to_json, headers))
         succeeded = success_from(action, response)
+
         Response.new(
           succeeded,
           message_from(succeeded, response),
           response,
-          authorization: authorization_from(response, action, options),
+          authorization: authorization_from(response),
           test: test?,
           error_code: error_code_from(response)
         )
+      rescue ResponseError => e
+        response = parse(e.response.body)
+        Response.new(false, message_from(false, response), response, test: test?, error_code: error_code_from(response))
       end
 
       def parse(response)
-        return unless response
-
         JSON.parse response
+      rescue JSON::ParserError
+        msg = 'Invalid JSON response received from Datatrans. Please contact them for support if you continue to receive this message.'
+        msg += "  (The raw response returned by the API was #{response.inspect})"
+        {
+          'successful' => false,
+          'response' => {},
+          'errors' => [msg]
+        }
       end
 
       def headers
@@ -144,21 +169,17 @@ module ActiveMerchant #:nodoc:
       def success_from(action, response)
         case action
         when 'authorize', 'credit'
-          return true if response.include?('transactionId') && response.include?('acquirerAuthorizationCode')
+          true if response.include?('transactionId') && response.include?('acquirerAuthorizationCode')
         when 'settle', 'cancel'
-          return true if response.dig('response_code') == 204
+          true if response.dig('response_code') == 204
         else
           false
         end
       end
 
-      def authorization_from(response, action, options = {})
-        case action
-        when 'settle'
-          options[:authorization]
-        else
-          [response['transactionId'], response['acquirerAuthorizationCode']].join('|')
-        end
+      def authorization_from(response)
+        auth = [response['transactionId'], response['acquirerAuthorizationCode']].join('|')
+        return auth unless auth == '|'
       end
 
       def message_from(succeeded, response)

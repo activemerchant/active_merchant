@@ -16,36 +16,45 @@ class RemoteDatatransTest < Test::Unit::TestCase
 
     @billing_address = address
 
-    @execute_threed = {
-      execute_threed: true,
-      redirect_url: 'http://www.example.com/redirect',
-      callback_url: 'http://www.example.com/callback',
-      three_ds_2: {
-        browser_info:  {
-          width: 390,
-          height: 400,
-          depth: 24,
-          timezone: 300,
-          user_agent: 'Spreedly Agent',
-          java: false,
-          javascript: true,
-          language: 'en-US',
-          browser_size: '05',
-          accept_header: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
-        }
-      }
-    }
+    @google_pay_card = network_tokenization_credit_card(
+      '4900000000000094',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '06',
+      year: '2025',
+      source: :google_pay,
+      verification_value: 569
+    )
+
+    @apple_pay_card = network_tokenization_credit_card(
+      '4900000000000094',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '06',
+      year: '2025',
+      source: :apple_pay,
+      verification_value: 569
+    )
+
+    @nt_credit_card = network_tokenization_credit_card(
+      '4111111111111111',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      eci: '07',
+      source: :network_token,
+      verification_value: '737',
+      brand: 'visa'
+    )
   end
 
   def test_successful_authorize
     response = @gateway.authorize(@amount, @credit_card, @options)
 
     assert_success response
+    assert_include response.params, 'transactionId'
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
+    assert_include response.params, 'transactionId'
   end
 
   def test_failed_authorize
@@ -69,7 +78,7 @@ class RemoteDatatransTest < Test::Unit::TestCase
 
     response = @gateway.capture(@amount, authorize_response.authorization, @options)
     assert_success response
-    assert_equal authorize_response.authorization, response.authorization
+    assert_equal response.authorization, nil
   end
 
   def test_successful_refund
@@ -78,6 +87,7 @@ class RemoteDatatransTest < Test::Unit::TestCase
 
     response = @gateway.refund(@amount, purchase_response.authorization, @options)
     assert_success response
+    assert_include response.params, 'transactionId'
   end
 
   def test_successful_capture_with_less_authorized_amount_and_refund
@@ -86,9 +96,8 @@ class RemoteDatatransTest < Test::Unit::TestCase
 
     capture_response = @gateway.capture(@amount - 100, authorize_response.authorization, @options)
     assert_success capture_response
-    assert_equal authorize_response.authorization, capture_response.authorization
 
-    response = @gateway.refund(@amount - 200, capture_response.authorization, @options)
+    response = @gateway.refund(@amount - 200, authorize_response.authorization, @options)
     assert_success response
   end
 
@@ -99,7 +108,7 @@ class RemoteDatatransTest < Test::Unit::TestCase
     capture_response = @gateway.capture(100, authorize_response.authorization, @options)
     assert_success capture_response
 
-    response = @gateway.capture(100, capture_response.authorization, @options)
+    response = @gateway.capture(100, authorize_response.authorization, @options)
     assert_failure response
     assert_equal response.error_code, 'INVALID_TRANSACTION_STATUS'
     assert_equal response.message, 'already settled'
@@ -112,7 +121,7 @@ class RemoteDatatransTest < Test::Unit::TestCase
     capture_response = @gateway.capture(100, authorize_response.authorization, @options)
     assert_success capture_response
 
-    response = @gateway.refund(200, capture_response.authorization, @options)
+    response = @gateway.refund(200, authorize_response.authorization, @options)
     assert_failure response
     assert_equal response.error_code, 'INVALID_PROPERTY'
     assert_equal response.message, 'credit.amount'
@@ -154,6 +163,8 @@ class RemoteDatatransTest < Test::Unit::TestCase
 
     response = @gateway.void(authorize_response.authorization, @options)
     assert_success response
+
+    assert_equal response.authorization, nil
   end
 
   def test_failed_void_because_captured_transaction
@@ -182,6 +193,31 @@ class RemoteDatatransTest < Test::Unit::TestCase
   def test_successful_purchase_with_billing_address
     response = @gateway.purchase(@amount, @credit_card, @options.merge({ billing_address: @billing_address }))
 
+    assert_success response
+  end
+
+  def test_successful_purchase_with_network_token
+    response = @gateway.purchase(@amount, @nt_credit_card, @options)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_apple_pay
+    response = @gateway.purchase(@amount, @apple_pay_card, @options)
+
+    assert_success response
+  end
+
+  def test_successful_authorize_with_google_pay
+    response = @gateway.authorize(@amount, @google_pay_card, @options)
+    assert_success response
+  end
+
+  def test_successful_void_with_google_pay
+    authorize_response = @gateway.authorize(@amount, @google_pay_card, @options)
+    assert_success authorize_response
+
+    response = @gateway.void(authorize_response.authorization, @options)
     assert_success response
   end
 end
