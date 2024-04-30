@@ -232,8 +232,8 @@ module ActiveMerchant #:nodoc:
           transactionType: payment.source == :network_token ? '3' : '1'
         }
 
-        if payment.source == :network_token
-          post[:processingInformation][:paymentSolution] = NT_PAYMENT_SOLUTION[payment.brand] if NT_PAYMENT_SOLUTION[payment.brand]
+        if payment.source == :network_token && NT_PAYMENT_SOLUTION[payment.brand]
+          post[:processingInformation][:paymentSolution] = NT_PAYMENT_SOLUTION[payment.brand]
         else
           # Apple Pay / Google Pay
           post[:processingInformation][:paymentSolution] = WALLET_PAYMENT_SOLUTION[payment.source]
