@@ -221,23 +221,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_tokenization_card(post, payment, options)
-        post[:processingInformation][:commerceIndicator] = 'internet' unless card_brand(payment) == 'jcb'
+        post[:processingInformation][:commerceIndicator] = 'internet' unless options[:stored_credential]
 
         post[:paymentInformation][:tokenizedCard] = {
           number: payment.number,
           expirationMonth: payment.month,
           expirationYear: payment.year,
           cryptogram: payment.payment_cryptogram,
-          type:  CREDIT_CARD_CODES[card_brand(payment).to_sym]
+          type:  CREDIT_CARD_CODES[card_brand(payment).to_sym],
+          transactionType: payment.source == :network_token ? '3' : '1'
         }
 
         if payment.source == :network_token
-          post[:paymentInformation][:tokenizedCard][:transactionType] = '3'
           post[:processingInformation][:paymentSolution] = NT_PAYMENT_SOLUTION[payment.brand] if NT_PAYMENT_SOLUTION[payment.brand]
         else
           # Apple Pay / Google Pay
-          post[:processingInformation][:paymentSolution] = WALLET_PAYMENT_SOLUTION[payment.source] if WALLET_PAYMENT_SOLUTION[payment.source]
-          post[:paymentInformation][:tokenizedCard][:transactionType] = '1'
+          post[:processingInformation][:paymentSolution] = WALLET_PAYMENT_SOLUTION[payment.source]
           if card_brand(payment) == 'master'
             post[:consumerAuthenticationInformation] = {
               ucafAuthenticationData: payment.payment_cryptogram,
