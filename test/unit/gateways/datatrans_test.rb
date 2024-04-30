@@ -221,7 +221,6 @@ class DatatransTest < Test::Unit::TestCase
   def successful_void_response
     successful_capture_response
   end
- 
 
   def pre_scrubbed
     <<~PRE_SCRUBBED

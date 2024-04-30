@@ -158,6 +158,7 @@
 * CheckoutV2: Retain and refresh OAuth access token [sinourain] #5098
 * Worldpay: Remove default ECI value [aenand] #5103
 * CyberSource: Update NT flow [almalee24] #5106
+* Litle: Update enhanced data fields to pass integers [yunnydang] #5113
 
 
 == Version 1.135.0 (August 24, 2023)

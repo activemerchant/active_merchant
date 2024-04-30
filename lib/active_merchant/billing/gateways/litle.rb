@@ -117,8 +117,8 @@ module ActiveMerchant #:nodoc:
             doc.quantity(line_item[:quantity]) if line_item[:quantity]
             doc.unitOfMeasure(line_item[:unit_of_measure]) if line_item[:unit_of_measure]
             doc.taxAmount(line_item[:tax_amount]) if line_item[:tax_amount]
-            doc.itemDiscountAmount(line_item[:discount_per_line_item]) unless line_item[:discount_per_line_item] < 0
-            doc.unitCost(line_item[:unit_cost]) unless line_item[:unit_cost] < 0
+            doc.itemDiscountAmount(line_item[:discount_per_line_item].to_i) unless line_item[:discount_per_line_item].to_i < 0
+            doc.unitCost(line_item[:unit_cost].to_i) unless line_item[:unit_cost].to_i < 0
             doc.detailTax do
               doc.taxIncludedInTotal(line_item[:tax_included_in_total]) if line_item[:tax_included_in_total]
               doc.taxAmount(line_item[:tax_amount]) if line_item[:tax_amount]
