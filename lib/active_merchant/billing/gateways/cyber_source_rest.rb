@@ -335,12 +335,12 @@ module ActiveMerchant #:nodoc:
         authorization_options = {
           authorizationOptions: {
             initiator: {
-              type: initiator,
-              storedCredentialUsed: true,
+              type: initiator
             }
           }
         }.compact
 
+        authorization_options[:authorizationOptions][:initiator][:storedCredentialUsed] = true if initiator == 'merchant'
         authorization_options[:authorizationOptions][:initiator][:credentialStoredOnFile] = true if options.dig(:stored_credential, :initial_transaction)
         authorization_options[:authorizationOptions][:initiator][:merchantInitiatedTransaction] ||= {}
         unless options.dig(:stored_credential, :initial_transaction)
