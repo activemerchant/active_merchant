@@ -75,7 +75,7 @@ class DLocalTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_network_tokens_and_store_credential_type_subscription
-    options = @options.merge!(stored_credential: stored_credential(:merchant, :recurring, ntid: 'abc123'))
+    options = @options.merge!(stored_credential: stored_credential(:merchant, :recurring, network_transaction_id: 'abc123'))
     credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
     stub_comms do
       @gateway.purchase(@amount, credit_card, options)
@@ -87,7 +87,7 @@ class DLocalTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_network_tokens_and_store_credential_type_uneschedule
-    options = @options.merge!(stored_credential: stored_credential(:merchant, :unscheduled, ntid: 'abc123'))
+    options = @options.merge!(stored_credential: stored_credential(:merchant, :unscheduled, network_transaction_id: 'abc123'))
     credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
     stub_comms do
       @gateway.purchase(@amount, credit_card, options)
@@ -111,7 +111,7 @@ class DLocalTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_network_tokens_and_store_credential_type_card_on_file_and_credential_usage_used
-    options = @options.merge!(stored_credential: stored_credential(:cardholder, :unscheduled, ntid: 'abc123'))
+    options = @options.merge!(stored_credential: stored_credential(:cardholder, :unscheduled, network_transaction_id: 'abc123'))
     credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
     stub_comms do
       @gateway.purchase(@amount, credit_card, options)
@@ -124,7 +124,7 @@ class DLocalTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_network_tokens_and_store_credential_usage
-    options = @options.merge!(stored_credential: stored_credential(:cardholder, :recurring, ntid: 'abc123'))
+    options = @options.merge!(stored_credential: stored_credential(:cardholder, :recurring, network_transaction_id: 'abc123'))
     credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
     stub_comms do
       @gateway.purchase(@amount, credit_card, options)
@@ -133,6 +133,22 @@ class DLocalTest < Test::Unit::TestCase
       assert_equal '4242424242424242', JSON.parse(data)['card']['network_token']
       assert_equal 'USED', JSON.parse(data)['card']['stored_credential_usage']
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_ntid_and_store_credential_for_mit
+    options = @options.merge!(stored_credential: stored_credential(:merchant, :recurring, network_transaction_id: 'abc123'))
+    credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    response = stub_comms do
+      @gateway.purchase(@amount, credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      response = JSON.parse(data)
+      assert_equal 'BwABB4JRdgAAAAAAiFF2AAAAAAA=', response['card']['cryptogram']
+      assert_equal '4242424242424242', response['card']['network_token']
+      assert_equal 'USED', response['card']['stored_credential_usage']
+      assert_equal 'abc123', response['card']['network_payment_reference']
+    end.respond_with(successful_purchase_with_network_tx_reference_response)
+
+    assert_equal 'MCC000000355', response.network_transaction_id
   end
 
   def test_successful_purchase_with_additional_data
@@ -567,5 +583,9 @@ class DLocalTest < Test::Unit::TestCase
 
   def failed_void_response
     '{"code":5002,"message":"Invalid transaction status"}'
+  end
+
+  def successful_purchase_with_network_tx_reference_response
+    '{"id":"D-4-80ca7fbd-67ad-444a-aa88-791ca4a0c2b2","amount":120.00,"currency":"BRL","country":"BR","payment_method_id":"VD","payment_method_flow":"DIRECT","payer":{"name":"ThiagoGabriel","email":"thiago@example.com","document":"53033315550","user_reference":"12345","address":{"state":"RiodeJaneiro","city":"VoltaRedonda","zip_code":"27275-595","street":"ServidaoB-1","number":"1106"}},"card":{"holder_name":"ThiagoGabriel","expiration_month":10,"expiration_year":2040,"brand":"VI","network_tx_reference":"MCC000000355"},"order_id":"657434343","status":"PAID","notification_url":"http://merchant.com/notifications"}'
   end
 end
