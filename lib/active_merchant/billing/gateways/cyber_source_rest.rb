@@ -98,6 +98,7 @@ module ActiveMerchant #:nodoc:
           gsub(/(\\?"number\\?":\\?")\d+/, '\1[FILTERED]').
           gsub(/(\\?"routingNumber\\?":\\?")\d+/, '\1[FILTERED]').
           gsub(/(\\?"securityCode\\?":\\?")\d+/, '\1[FILTERED]').
+          gsub(/(\\?"cryptogram\\?":\\?")[^<]+/, '\1[FILTERED]').
           gsub(/(signature=")[^"]*/, '\1[FILTERED]').
           gsub(/(keyid=")[^"]*/, '\1[FILTERED]').
           gsub(/(Digest: SHA-256=)[\w\/\+=]*/, '\1[FILTERED]')
@@ -221,7 +222,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_tokenization_card(post, payment, options)
-        post[:processingInformation][:commerceIndicator] = 'internet' unless options[:stored_credential]
+        post[:processingInformation][:commerceIndicator] = 'internet' unless options[:stored_credential] || card_brand(payment) == 'jcb'
 
         post[:paymentInformation][:tokenizedCard] = {
           number: payment.number,
