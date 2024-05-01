@@ -446,20 +446,39 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
 
   def test_purchase_using_stored_credential_initial_mit
     options = stored_credential_options(:merchant, :internet, :initial)
-    options[:reason_code] = '4'
     assert auth = @gateway.authorize(@amount, @visa_card, options)
     assert_success auth
     assert purchase = @gateway.purchase(@amount, @visa_card, options)
     assert_success purchase
   end
 
+  def test_purchase_using_stored_credential_with_discover
+    options = stored_credential_options(:cardholder, :recurring, :initial)
+    assert auth = @gateway.authorize(@amount, @discover_card, options)
+    assert_success auth
+    used_store_credentials = stored_credential_options(:cardholder, :recurring, ntid: auth.network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @discover_card, used_store_credentials)
+    assert_success purchase
+  end
+
+  def test_purchase_using_stored_credential_recurring_non_us
+    options = stored_credential_options(:cardholder, :recurring, :initial)
+    options[:billing_address][:country] = 'CA'
+    options[:billing_address][:state] = 'ON'
+    options[:billing_address][:city] = 'Ottawa'
+    options[:billing_address][:zip] = 'K1C2N6'
+    assert auth = @gateway.authorize(@amount, @visa_card, options)
+    assert_success auth
+    used_store_credentials = stored_credential_options(:merchant, :recurring, ntid: auth.network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @visa_card, used_store_credentials)
+    assert_success purchase
+  end
+
   def test_purchase_using_stored_credential_recurring_cit
     options = stored_credential_options(:cardholder, :recurring, :initial)
-    # options[:reason_code] = '4'
     assert auth = @gateway.authorize(@amount, @visa_card, options)
     assert_success auth
     used_store_credentials = stored_credential_options(:cardholder, :recurring, ntid: auth.network_transaction_id)
-    # used_store_credentials[:reason_code] = '4'
     assert purchase = @gateway.purchase(@amount, @visa_card, used_store_credentials)
     assert_success purchase
   end

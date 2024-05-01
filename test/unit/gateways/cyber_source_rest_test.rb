@@ -76,6 +76,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
       },
       email: 'test@cybs.com'
     }
+    @discover_card = credit_card('6011111111111117', brand: 'discover')
     @gmt_time = Time.now.httpdate
     @digest = 'SHA-256=gXWufV4Zc7VkN9Wkv9jh/JuAVclqDusx3vkyo3uJFWU='
     @resource = '/pts/v2/payments/'
@@ -316,6 +317,23 @@ class CyberSourceRestTest < Test::Unit::TestCase
       assert_equal 'recurring', request['processingInformation']['commerceIndicator']
       assert_equal 'merchant', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
       assert_equal true, request.dig('processingInformation', 'authorizationOptions', 'initiator', 'storedCredentialUsed')
+      assert_nil request.dig('processingInformation', 'authorizationOptions', 'initiator', 'merchantInitiatedTransaction', 'originalAuthorizedAmount')
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_non_us_mit_with_discover
+    @options[:stored_credential] = stored_credential(:merchant, :recurring, ntid: '123456789619999')
+    @options[:billing_address][:country] = 'CA'
+    response = stub_comms do
+      @gateway.authorize(@amount, @discover_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'recurring_internet', request['processingInformation']['commerceIndicator']
+      assert_equal 'merchant', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
+      assert_equal true, request.dig('processingInformation', 'authorizationOptions', 'initiator', 'storedCredentialUsed')
+      assert_equal '1.00', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'merchantInitiatedTransaction', 'originalAuthorizedAmount')
     end.respond_with(successful_purchase_response)
 
     assert_success response

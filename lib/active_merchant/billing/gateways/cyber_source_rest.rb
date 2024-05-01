@@ -315,14 +315,18 @@ module ActiveMerchant #:nodoc:
       def add_stored_credentials(post, payment, options)
         return unless options[:stored_credential]
 
-        post[:processingInformation][:commerceIndicator] = commerce_indicator(options.dig(:stored_credential, :reason_type))
-        add_authorization_options(post, options)
+        post[:processingInformation][:commerceIndicator] = commerce_indicator(options.dig(:stored_credential, :reason_type), lookup_country_code(options.dig(:billing_address, :country))&.value)
+        add_authorization_options(post, payment, options)
       end
 
-      def commerce_indicator(reason_type)
+      def commerce_indicator(reason_type, country = '')
         case reason_type
         when 'recurring'
-          'recurring'
+          if country == 'US'
+            'recurring'
+          else
+            'recurring'
+          end
         when 'installment'
           'install'
         else
@@ -330,7 +334,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_authorization_options(post, options)
+      def add_authorization_options(post, payment, options)
         initiator = options.dig(:stored_credential, :initiator) == 'cardholder' ? 'customer' : 'merchant'
         authorization_options = {
           authorizationOptions: {
@@ -346,7 +350,7 @@ module ActiveMerchant #:nodoc:
         unless options.dig(:stored_credential, :initial_transaction)
           network_transaction_id = options[:network_transaction_id] || options.dig(:stored_credential, :network_transaction_id) || ''
           authorization_options[:authorizationOptions][:initiator][:merchantInitiatedTransaction][:previousTransactionID] = network_transaction_id
-          authorization_options[:authorizationOptions][:initiator][:merchantInitiatedTransaction][:originalAuthorizedAmount] = post.dig(:orderInformation, :amountDetails, :totalAmount)
+          authorization_options[:authorizationOptions][:initiator][:merchantInitiatedTransaction][:originalAuthorizedAmount] = post.dig(:orderInformation, :amountDetails, :totalAmount) if card_brand(payment) == 'discover'
         end
         authorization_options[:authorizationOptions][:initiator][:merchantInitiatedTransaction][:reason] = options[:reason_code] if options[:reason_code]
         post[:processingInformation].merge!(authorization_options)
