@@ -613,6 +613,7 @@ module ActiveMerchant #:nodoc:
             eci = eci_value(payment_method)
             xml.eciIndicator eci if eci.present?
           end
+          add_stored_credential_options(xml, options)
         end
       end
 
@@ -698,7 +699,7 @@ module ActiveMerchant #:nodoc:
         stored_credential_params = generate_stored_credential_params(is_initial_transaction, reason)
 
         xml.storedCredentials stored_credential_params do
-          xml.schemeTransactionIdentifier options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id] && !is_initial_transaction
+          xml.schemeTransactionIdentifier network_transaction_id(options) if network_transaction_id(options) && !is_initial_transaction
         end
       end
 

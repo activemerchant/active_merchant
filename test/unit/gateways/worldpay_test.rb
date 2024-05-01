@@ -315,6 +315,22 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_prefers_non_normal_ntid
+    stored_credential_params = stored_credential(:used, :recurring, :merchant, network_transaction_id: '3812908490218390214124')
+    options = @options.merge(
+      stored_credential_transaction_id: '000000000000020005060720116005060'
+    )
+
+    options.merge!({ stored_credential: stored_credential_params })
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"RECURRING\"\>/, data)
+      assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_authorize_passes_stored_credential_options
     options = @options.merge(
       stored_credential_usage: 'USED',
