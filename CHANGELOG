@@ -160,6 +160,7 @@
 * CyberSource: Update NT flow [almalee24] #5106
 * Litle: Update enhanced data fields to pass integers [yunnydang] #5113
 * Litle: Update commodity code and line item total fields [yunnydang] #5115
+* Cybersource Rest: Add support for network tokens [aenand] #5107
 
 
 == Version 1.135.0 (August 24, 2023)

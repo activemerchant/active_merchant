@@ -31,9 +31,14 @@ module ActiveMerchant #:nodoc:
         visa: '001'
       }
 
-      PAYMENT_SOLUTION = {
+      WALLET_PAYMENT_SOLUTION = {
         apple_pay: '001',
         google_pay: '012'
+      }
+
+      NT_PAYMENT_SOLUTION = {
+        'master' => '014',
+        'visa' => '015'
       }
 
       def initialize(options = {})
@@ -93,6 +98,7 @@ module ActiveMerchant #:nodoc:
           gsub(/(\\?"number\\?":\\?")\d+/, '\1[FILTERED]').
           gsub(/(\\?"routingNumber\\?":\\?")\d+/, '\1[FILTERED]').
           gsub(/(\\?"securityCode\\?":\\?")\d+/, '\1[FILTERED]').
+          gsub(/(\\?"cryptogram\\?":\\?")[^<]+/, '\1[FILTERED]').
           gsub(/(signature=")[^"]*/, '\1[FILTERED]').
           gsub(/(keyid=")[^"]*/, '\1[FILTERED]').
           gsub(/(Digest: SHA-256=)[\w\/\+=]*/, '\1[FILTERED]')
@@ -216,25 +222,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_tokenization_card(post, payment, options)
-        post[:processingInformation][:paymentSolution] = PAYMENT_SOLUTION[payment.source]
-        post[:processingInformation][:commerceIndicator] = 'internet' unless card_brand(payment) == 'jcb'
+        post[:processingInformation][:commerceIndicator] = 'internet' unless options[:stored_credential] || card_brand(payment) == 'jcb'
 
         post[:paymentInformation][:tokenizedCard] = {
           number: payment.number,
           expirationMonth: payment.month,
           expirationYear: payment.year,
           cryptogram: payment.payment_cryptogram,
-          transactionType: '1',
-          type:  CREDIT_CARD_CODES[card_brand(payment).to_sym]
+          type:  CREDIT_CARD_CODES[card_brand(payment).to_sym],
+          transactionType: payment.source == :network_token ? '3' : '1'
         }
 
-        if card_brand(payment) == 'master'
-          post[:consumerAuthenticationInformation] = {
-            ucafAuthenticationData: payment.payment_cryptogram,
-            ucafCollectionIndicator: '2'
-          }
+        if payment.source == :network_token && NT_PAYMENT_SOLUTION[payment.brand]
+          post[:processingInformation][:paymentSolution] = NT_PAYMENT_SOLUTION[payment.brand]
         else
-          post[:consumerAuthenticationInformation] = { cavv: payment.payment_cryptogram }
+          # Apple Pay / Google Pay
+          post[:processingInformation][:paymentSolution] = WALLET_PAYMENT_SOLUTION[payment.source]
+          if card_brand(payment) == 'master'
+            post[:consumerAuthenticationInformation] = {
+              ucafAuthenticationData: payment.payment_cryptogram,
+              ucafCollectionIndicator: '2'
+            }
+          else
+            post[:consumerAuthenticationInformation] = { cavv: payment.payment_cryptogram }
+          end
         end
       end
 

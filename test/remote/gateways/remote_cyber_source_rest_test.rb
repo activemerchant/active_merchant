@@ -13,6 +13,29 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     @master_card = credit_card('2222420000001113', brand: 'master')
     @discover_card = credit_card('6011111111111117', brand: 'discover')
 
+    @visa_network_token = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      source: :network_token
+    )
+    @amex_network_token = network_tokenization_credit_card(
+      '378282246310005',
+      brand: 'american_express',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      source: :network_token
+    )
+
+    @mastercard_network_token = network_tokenization_credit_card(
+      '5555555555554444',
+      brand: 'master',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      source: :network_token
+    )
+
     @apple_pay = network_tokenization_credit_card(
       '4111111111111111',
       payment_cryptogram: 'AceY+igABPs3jdwNaDg3MAACAAA=',
@@ -299,6 +322,30 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_failure response
     assert_match %r{Decline - Invalid account number}, response.message
     assert_equal 'INVALID_ACCOUNT', response.error_code
+  end
+
+  def test_successful_authorize_with_visa_network_token
+    response = @gateway.authorize(@amount, @visa_network_token, @options)
+
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+    refute_empty response.params['_links']['capture']
+  end
+
+  def test_successful_authorize_with_mastercard_network_token
+    response = @gateway.authorize(@amount, @mastercard_network_token, @options)
+
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+    refute_empty response.params['_links']['capture']
+  end
+
+  def test_successful_authorize_with_amex_network_token
+    response = @gateway.authorize(@amount, @amex_network_token, @options)
+
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+    refute_empty response.params['_links']['capture']
   end
 
   def test_successful_authorize_with_apple_pay
