@@ -106,6 +106,23 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def add_level_2_data(post, options)
+        return unless options[:purchase_order_number]
+
+        post[:orderInformation][:invoiceDetails] ||= {}
+        post[:orderInformation][:invoiceDetails][:purchaseOrderNumber] = options[:purchase_order_number]
+      end
+
+      def add_level_3_data(post, options)
+        return unless options[:line_items]
+
+        post[:orderInformation][:lineItems] = options[:line_items]
+        post[:processingInformation][:purchaseLevel] = '3'
+        post[:orderInformation][:shipping_details] = { shipFromPostalCode: options[:ships_from_postal_code] }
+        post[:orderInformation][:amountDetails] ||= {}
+        post[:orderInformation][:amountDetails][:discountAmount] = options[:discount_amount]
+      end
+
       def add_three_ds(post, payment_method, options)
         return unless three_d_secure = options[:three_d_secure]
 
@@ -149,6 +166,8 @@ module ActiveMerchant #:nodoc:
           add_partner_solution_id(post)
           add_stored_credentials(post, payment, options)
           add_three_ds(post, payment, options)
+          add_level_2_data(post, options)
+          add_level_3_data(post, options)
         end.compact
       end
 
@@ -477,7 +496,8 @@ module ActiveMerchant #:nodoc:
       def add_invoice_number(post, options)
         return unless options[:invoice_number].present?
 
-        post[:orderInformation][:invoiceDetails] = { invoiceNumber: options[:invoice_number] }
+        post[:orderInformation][:invoiceDetails] ||= {}
+        post[:orderInformation][:invoiceDetails][:invoiceNumber] = options[:invoice_number]
       end
 
       def add_partner_solution_id(post)

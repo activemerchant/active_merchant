@@ -491,6 +491,55 @@ class CyberSourceRestTest < Test::Unit::TestCase
     CyberSourceRestGateway.application_id = nil
   end
 
+  def test_purchase_with_level_2_data
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge({ purchase_order_number: '13829012412' }))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '13829012412', request['orderInformation']['invoiceDetails']['purchaseOrderNumber']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_level_3_data
+    options = {
+      purchase_order_number: '6789',
+      discount_amount: '150',
+      ships_from_postal_code: '90210',
+      line_items: [
+        {
+          productName: 'Product Name',
+          kind: 'debit',
+          quantity: 10,
+          unitPrice: '9.5000',
+          totalAmount: '95.00',
+          taxAmount: '5.00',
+          discountAmount: '0.00',
+          productCode: '54321',
+          commodityCode: '98765'
+        },
+        {
+          productName: 'Other Product Name',
+          kind: 'debit',
+          quantity: 1,
+          unitPrice: '2.5000',
+          totalAmount: '90.00',
+          taxAmount: '2.00',
+          discountAmount: '1.00',
+          productCode: '54322',
+          commodityCode: '98766'
+        }
+      ]
+    }
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(options))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '3', request['processingInformation']['purchaseLevel']
+      assert_equal '150', request['orderInformation']['amountDetails']['discountAmount']
+      assert_equal '90210', request['orderInformation']['shipping_details']['shipFromPostalCode']
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def parse_signature(signature)

@@ -585,4 +585,49 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @master_card, @options)
     assert_success auth
   end
+
+  def test_successful_purchase_with_level_2_data
+    response = @gateway.purchase(@amount, @visa_card, @options.merge({ purchase_order_number: '13829012412' }))
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
+  def test_successful_purchase_with_level_2_and_3_data
+    options = {
+      purchase_order_number: '6789',
+      discount_amount: '150',
+      ships_from_postal_code: '90210',
+      line_items: [
+        {
+          productName: 'Product Name',
+          kind: 'debit',
+          quantity: 10,
+          unitPrice: '9.5000',
+          totalAmount: '95.00',
+          taxAmount: '5.00',
+          discountAmount: '0.00',
+          productCode: '54321',
+          commodityCode: '98765'
+        },
+        {
+          productName: 'Other Product Name',
+          kind: 'debit',
+          quantity: 1,
+          unitPrice: '2.5000',
+          totalAmount: '90.00',
+          taxAmount: '2.00',
+          discountAmount: '1.00',
+          productCode: '54322',
+          commodityCode: '98766'
+        }
+      ]
+    }
+    assert response = @gateway.purchase(@amount, @visa_card, @options.merge(options))
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_nil response.params['_links']['capture']
+  end
 end
