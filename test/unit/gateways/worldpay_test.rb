@@ -345,6 +345,17 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_with_nt_passes_standard_stored_credential_options
+    stored_credential_params = stored_credential(:used, :unscheduled, :merchant, network_transaction_id: 20005060720116005060)
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options.merge({stored_credential: stored_credential_params}))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+      assert_match(/<schemeTransactionIdentifier\>20005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_authorize_passes_correct_stored_credential_options_for_first_recurring
     options = @options.merge(
       stored_credential_usage: 'FIRST',
