@@ -260,9 +260,8 @@ module ActiveMerchant #:nodoc:
         xml.invoiceReferenceNumber data[:invoice_reference_number] if data.include?(:invoice_reference_number)
         xml.customerReference data[:customer_reference] if data.include?(:customer_reference)
         xml.cardAcceptorTaxId data[:card_acceptor_tax_id] if data.include?(:card_acceptor_tax_id)
-
         {
-          sales_tax: 'salesTax',
+          tax_amount: 'salesTax',
           discount_amount: 'discountAmount',
           shipping_amount: 'shippingAmount',
           duty_amount: 'dutyAmount'
@@ -270,53 +269,51 @@ module ActiveMerchant #:nodoc:
           next unless data.include?(key)
 
           xml.tag! tag do
-            data_amount = data[key].symbolize_keys
-            add_amount(xml, data_amount[:amount].to_i, data_amount)
+            add_amount(xml, data[key].to_i, data)
           end
         end
 
-        xml.discountName data[:discount_name] if data.include?(:discount_name)
-        xml.discountCode data[:discount_code] if data.include?(:discount_code)
+        # xml.discountName data[:discount_name] if data.include?(:discount_name)
+        # xml.discountCode data[:discount_code] if data.include?(:discount_code)
 
-        add_date_element(xml, 'shippingDate', data[:shipping_date]) if data.include?(:shipping_date)
+        # add_date_element(xml, 'shippingDate', data[:shipping_date]) if data.include?(:shipping_date)
 
-        if data.include?(:shipping_courier)
-          xml.shippingCourier(
-            data[:shipping_courier][:priority],
-            data[:shipping_courier][:tracking_number],
-            data[:shipping_courier][:name]
-          )
-        end
+        # if data.include?(:shipping_courier)
+        #   xml.shippingCourier(
+        #     data[:shipping_courier][:priority],
+        #     data[:shipping_courier][:tracking_number],
+        #     data[:shipping_courier][:name]
+        #   )
+        # end
 
         add_optional_data_level_two_and_three(xml, data)
 
-        if data.include?(:item) && data[:item].kind_of?(Array)
-          data[:item].each { |item| add_items_into_level_three_data(xml, item.symbolize_keys) }
-        elsif data.include?(:item)
-          add_items_into_level_three_data(xml, data[:item].symbolize_keys)
-        end
+        data[:item].each { |item| add_items_into_level_three_data(xml, item.symbolize_keys, data) } if data.include?(:item)
       end
 
-      def add_items_into_level_three_data(xml, item)
+      def add_items_into_level_three_data(xml, item, data)
         xml.item do
           xml.description item[:description] if item[:description]
           xml.productCode item[:product_code] if item[:product_code]
           xml.commodityCode item[:commodity_code] if item[:commodity_code]
           xml.quantity item[:quantity] if item[:quantity]
-
-          {
-            unit_cost: 'unitCost',
-            item_total: 'itemTotal',
-            item_total_with_tax: 'itemTotalWithTax',
-            item_discount_amount: 'itemDiscountAmount',
-            tax_amount: 'taxAmount'
-          }.each do |key, tag|
-            next unless item.include?(key)
-
-            xml.tag! tag do
-              data_amount = item[key].symbolize_keys
-              add_amount(xml, data_amount[:amount].to_i, data_amount)
-            end
+          xml.unitCost do
+            add_amount(xml, item[:unit_cost], data)
+          end
+          xml.unitOfMeasure item[:unit_of_measure] || 'each'
+          xml.itemTotal do
+            sub_total_amount = item[:quantity].to_i * (item[:unit_cost].to_i - item[:discount_amount].to_i)
+            add_amount(xml, sub_total_amount, data)
+          end
+          xml.itemTotalWithTax do
+            total_amount = item[:quantity].to_i * (item[:unit_cost].to_i - item[:discount_amount].to_i + item[:tax_amount].to_i)
+            add_amount(xml, total_amount, data)
+          end
+          xml.itemDiscountAmount do
+            add_amount(xml, item[:discount_amount], data)
+          end
+          xml.taxAmount do
+            add_amount(xml, item[:tax_amount], data)
           end
         end
       end
@@ -326,7 +323,7 @@ module ActiveMerchant #:nodoc:
         xml.destinationPostalCode data[:destination_postal_code] if data.include?(:destination_postal_code)
         xml.destinationCountryCode data[:destination_country_code] if data.include?(:destination_country_code)
         add_date_element(xml, 'orderDate', data[:order_date].symbolize_keys) if data.include?(:order_date)
-        xml.taxExempt data[:tax_exempt] if data.include?(:tax_exempt)
+        xml.taxExempt data[:tax_amount].to_i > 0 ? 'false' : 'true'
       end
 
       def order_tag_attributes(options)
@@ -562,10 +559,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(xml, money, options)
-        currency = options[:currency] || currency(money)
+        currency = options[:currency] || currency(money.to_i)
 
         amount_hash = {
-          :value => localized_amount(money, currency),
+          :value => localized_amount(money.to_i, currency),
           'currencyCode' => currency,
           'exponent' => currency_exponent(currency)
         }
