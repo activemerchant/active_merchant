@@ -38,6 +38,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options = {})
         post = { refno: options.fetch(:order_id, '') }
         add_payment_method(post, payment)
+        add_3ds_data(post, payment, options)
         add_currency_amount(post, money, options)
         add_billing_address(post, options)
         post[:autoSettle] = options[:auto_settle] if options[:auto_settle]
@@ -99,6 +100,28 @@ module ActiveMerchant #:nodoc:
             cvv: payment_method.verification_value.to_s
           }
         end
+      end
+
+      def add_3ds_data(post, payment_method, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        three_ds =
+          {
+            "3D":
+              {
+                eci: three_d_secure[:eci],
+                xid: three_d_secure[:xid],
+                threeDSTransactionId: three_d_secure[:ds_transaction_id],
+                cavv: three_d_secure[:cavv],
+                threeDSVersion: three_d_secure[:version],
+                cavvAlgorithm: three_d_secure[:cavv_algorithm],
+                directoryResponse: three_d_secure[:directory_response_status],
+                authenticationResponse: three_d_secure[:authentication_response_status],
+                transStatusReason: three_d_secure[:trans_status_reason]
+              }.compact
+          }
+
+        post[:card].merge!(three_ds)
       end
 
       def add_billing_address(post, options)
