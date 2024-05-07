@@ -5,13 +5,28 @@ class RemoteDatatransTest < Test::Unit::TestCase
     @gateway = DatatransGateway.new(fixtures(:datatrans))
 
     @amount = 756
-    @credit_card = credit_card('4242424242424242', verification_value: '123', first_name: 'John', last_name: 'Smith', month: 0o6, year: 2025)
+    @credit_card = credit_card('4242424242424242', verification_value: '123', first_name: 'John', last_name: 'Smith', month: 6, year: 2025)
     @bad_amount = 100000 # anything grather than 500 EUR
+    @credit_card_frictionless = credit_card('4000001000000018', verification_value: '123', first_name: 'John', last_name: 'Smith', month: 6, year: 2025)
 
     @options = {
       order_id: SecureRandom.random_number(1000000000).to_s,
       description: 'An authorize',
       email: 'john.smith@test.com'
+    }
+
+    @three_d_secure = {
+      three_d_secure: {
+        eci: '05',
+        cavv: '3q2+78r+ur7erb7vyv66vv8=',
+        cavv_algorithm: '1',
+        xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+        enrolled: 'Y',
+        authentication_response_status: 'Y',
+        directory_response_status: 'Y',
+        version: '2',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+      }
     }
 
     @billing_address = address
@@ -219,5 +234,18 @@ class RemoteDatatransTest < Test::Unit::TestCase
 
     response = @gateway.void(authorize_response.authorization, @options)
     assert_success response
+  end
+
+  def test_successful_purchase_with_3ds
+    response = @gateway.purchase(@amount, @credit_card_frictionless, @options.merge(@three_d_secure))
+    assert_success response
+  end
+
+  def test_failed_purchase_with_3ds
+    @three_d_secure[:three_d_secure][:cavv] = '\/\/\/\/8='
+    response = @gateway.purchase(@amount, @credit_card_frictionless, @options.merge(@three_d_secure))
+    assert_failure response
+    assert_equal response.error_code, 'INVALID_PROPERTY'
+    assert_equal response.message, 'cavv format is invalid. make sure that the value is base64 encoded and has a proper length.'
   end
 end

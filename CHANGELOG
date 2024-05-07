@@ -157,13 +157,16 @@
 * Braintree: Add additional data to response [aenand] #5084
 * CheckoutV2: Retain and refresh OAuth access token [sinourain] #5098
 * Worldpay: Remove default ECI value [aenand] #5103
+* DataTrans: Add Gateway [gasb150] #5108
 * CyberSource: Update NT flow [almalee24] #5106
+* FlexCharge: Add Gateway [Heavyblade] #5108
 * Litle: Update enhanced data fields to pass integers [yunnydang] #5113
 * Litle: Update commodity code and line item total fields [yunnydang] #5115
 * Cybersource Rest: Add support for network tokens [aenand] #5107
 * Decidir: Add support for customer object [rachelkirk] #5071
 * Worldpay: Add support for stored credentials with network tokens [aenand] #5114
 * Paymentez: Update success_from method for refunds [almalee24] #5116
+* DataTrans: Add ThirdParty 3DS params [gasb150] #5118
 
 
 == Version 1.135.0 (August 24, 2023)
