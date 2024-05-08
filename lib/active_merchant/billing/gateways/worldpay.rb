@@ -613,6 +613,7 @@ module ActiveMerchant #:nodoc:
             eci = eci_value(payment_method)
             xml.eciIndicator eci if eci.present?
           end
+          add_stored_credential_options(xml, options)
         end
       end
 
