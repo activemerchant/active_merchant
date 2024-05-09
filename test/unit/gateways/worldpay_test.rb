@@ -117,7 +117,8 @@ class WorldpayTest < Test::Unit::TestCase
           unit_cost: '1500',
           unit_of_measure: 'each',
           item_discount_amount: '200',
-          tax_amount: '500'
+          tax_amount: '500',
+          total_amount: '4000'
         },
                {
                  description: 'Laptop 15',
@@ -127,7 +128,8 @@ class WorldpayTest < Test::Unit::TestCase
                  unit_cost: '1000',
                  unit_of_measure: 'each',
                  item_discount_amount: '200',
-                 tax_amount: '500'
+                 tax_amount: '500',
+                 total_amount: '3000'
                }]
       }
     }

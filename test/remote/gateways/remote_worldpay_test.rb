@@ -80,17 +80,19 @@ class RemoteWorldpayTest < Test::Unit::TestCase
           unit_cost: '1500',
           unit_of_measure: 'each',
           item_discount_amount: '200',
-          tax_amount: '500'
+          tax_amount: '500',
+          total_amount: '3300'
         },
                {
                  description: 'Laptop 15',
-                 product_code: 'LP00125',
-                 commodity_code: 'COM00125',
-                 quantity: '2',
-                 unit_cost: '1500',
-                 unit_of_measure: 'each',
-                 item_discount_amount: '200',
-                 tax_amount: '500'
+                        product_code: 'LP00125',
+                        commodity_code: 'COM00125',
+                        quantity: '2',
+                        unit_cost: '1500',
+                        unit_of_measure: 'each',
+                        item_discount_amount: '200',
+                        tax_amount: '500',
+                        total_amount: '3300'
                }]
       }
     }

@@ -306,8 +306,7 @@ module ActiveMerchant #:nodoc:
             add_amount(xml, sub_total_amount, data)
           end
           xml.itemTotalWithTax do
-            total_amount = item[:quantity].to_i * (item[:unit_cost].to_i - item[:discount_amount].to_i + item[:tax_amount].to_i)
-            add_amount(xml, total_amount, data)
+            add_amount(xml, item[:total_amount], data)
           end
           xml.itemDiscountAmount do
             add_amount(xml, item[:discount_amount], data)
