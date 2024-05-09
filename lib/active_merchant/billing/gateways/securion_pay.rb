@@ -193,7 +193,8 @@ module ActiveMerchant #:nodoc:
           post[:card] = card
           add_address(post, options)
         elsif creditcard.kind_of?(String)
-          post[:card] = creditcard
+          key = creditcard.match(/^pm_/) ? :paymentMethod : :card
+          post[key] = creditcard
         else
           raise ArgumentError.new("Unhandled payment method #{creditcard.class}.")
         end

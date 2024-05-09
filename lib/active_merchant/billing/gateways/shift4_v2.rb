@@ -11,6 +11,28 @@ module ActiveMerchant #:nodoc:
         commit('credits', post, options)
       end
 
+      def store(payment_method, options = {})
+        post = case payment_method
+               when CreditCard
+                 cc = {}.tap { |card| add_creditcard(card, payment_method, options) }[:card]
+                 options[:customer_id].blank? ? { email: options[:email], card: cc } : cc
+               when Check
+                 bank_account_object(payment_method, options)
+               else
+                 raise ArgumentError.new("Unhandled payment method #{payment_method.class}.")
+               end
+
+        commit url_for_store(payment_method, options), post, options
+      end
+
+      def url_for_store(payment_method, options = {})
+        case payment_method
+        when CreditCard
+          options[:customer_id].blank? ? 'customers' : "customers/#{options[:customer_id]}/cards"
+        when Check then 'payment-methods'
+        end
+      end
+
       def unstore(reference, options = {})
         commit("customers/#{options[:customer_id]}/cards/#{reference}", nil, options, :delete)
       end
@@ -61,27 +83,29 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, payment_method, options)
         return super unless payment_method.is_a?(Check)
 
-        post.merge!({
-          paymentMethod: {
-            type: :ach,
-            fraudCheckData: {
-              ipAddress: options[:ip],
-              email: options[:email]
-            }.compact_blank,
-            billing: {
-              name: payment_method.name,
-              address: { country: options.dig(:billing_address, :country) }
-            }.compact_blank,
-            ach: {
-              account: {
-                routingNumber: payment_method.routing_number,
-                accountNumber: payment_method.account_number,
-                accountType: get_account_type(payment_method)
-              },
-              verificationProvider: :external
-            }
+        post[:paymentMethod] = bank_account_object(payment_method, options)
+      end
+
+      def bank_account_object(payment_method, options)
+        {
+          type: :ach,
+          fraudCheckData: {
+            ipAddress: options[:ip],
+            email: options[:email]
+          }.compact,
+          billing: {
+            name: payment_method.name,
+            address: { country: options.dig(:billing_address, :country) }
+          }.compact,
+          ach: {
+            account: {
+              routingNumber: payment_method.routing_number,
+              accountNumber: payment_method.account_number,
+              accountType: get_account_type(payment_method)
+            },
+            verificationProvider: :external
           }
-        })
+        }
       end
 
       def get_account_type(check)

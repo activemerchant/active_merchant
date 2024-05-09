@@ -180,6 +180,14 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_purchase_with_network_token_and_stored_credentials
+    stored_credential_params = stored_credential(:initial, :unscheduled, :merchant)
+
+    assert response = @gateway.purchase(@amount, @nt_credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
   def test_successful_purchase_with_network_token_without_eci_visa
     assert response = @gateway.purchase(@amount, @visa_nt_credit_card_without_eci, @options)
     assert_success response
