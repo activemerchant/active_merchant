@@ -41,11 +41,12 @@ module ActiveMerchant #:nodoc:
             response = r.process { tokenize(payment_method, options) }
             card_token = response.params['token']
           elsif payment_method.is_a?(String)
-            _transaction_ref, card_token, payment_product = payment_method.split('|')
+            _transaction_ref, card_token, payment_product = payment_method.split('|') if payment_method.split('|').size == 3
+            card_token, payment_product = payment_method.split('|') if payment_method.split('|').size == 2
           end
-
+          payment_product = payment_method.is_a?(CreditCard) ? payment_method.brand : payment_product&.downcase
           post = {
-            payment_product: payment_product&.downcase || PAYMENT_PRODUCT[payment_method.brand],
+            payment_product: payment_product,
             operation: options[:operation] || 'Authorization',
             cardtoken: card_token
           }
@@ -66,7 +67,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def unstore(authorization, options = {})
-        _transaction_ref, card_token, _payment_product = authorization.split('|')
+        _transaction_ref, card_token, _payment_product = authorization.split('|') if authorization.split('|').size == 3
+        card_token, _payment_product = authorization.split('|') if authorization.split('|').size == 2
         commit('unstore', { card_token: card_token }, options, :delete)
       end
 
@@ -227,7 +229,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_string(*args)
-        args.join('|')
+        args.flatten.compact.reject(&:empty?).join('|')
       end
 
       def post_data(params)
