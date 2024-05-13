@@ -273,19 +273,6 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        # xml.discountName data[:discount_name] if data.include?(:discount_name)
-        # xml.discountCode data[:discount_code] if data.include?(:discount_code)
-
-        # add_date_element(xml, 'shippingDate', data[:shipping_date]) if data.include?(:shipping_date)
-
-        # if data.include?(:shipping_courier)
-        #   xml.shippingCourier(
-        #     data[:shipping_courier][:priority],
-        #     data[:shipping_courier][:tracking_number],
-        #     data[:shipping_courier][:name]
-        #   )
-        # end
-
         add_optional_data_level_two_and_three(xml, data)
 
         data[:item].each { |item| add_items_into_level_three_data(xml, item.symbolize_keys, data) } if data.include?(:item)
