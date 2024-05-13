@@ -72,28 +72,28 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         discount_amount: '1',
         shipping_amount: '50',
         duty_amount: '20',
-        item: [{
+        line_items: [{
           description: 'Laptop 14',
           product_code: 'LP00125',
           commodity_code: 'COM00125',
           quantity: '2',
           unit_cost: '1500',
           unit_of_measure: 'each',
-          item_discount_amount: '200',
+          discount_amount: '200',
           tax_amount: '500',
           total_amount: '3300'
         },
-               {
-                 description: 'Laptop 15',
-                        product_code: 'LP00125',
-                        commodity_code: 'COM00125',
-                        quantity: '2',
-                        unit_cost: '1500',
-                        unit_of_measure: 'each',
-                        item_discount_amount: '200',
-                        tax_amount: '500',
-                        total_amount: '3300'
-               }]
+                     {
+                       description: 'Laptop 15',
+                              product_code: 'LP00125',
+                              commodity_code: 'COM00125',
+                              quantity: '2',
+                              unit_cost: '1500',
+                              unit_of_measure: 'each',
+                              discount_amount: '200',
+                              tax_amount: '500',
+                              total_amount: '3300'
+                     }]
       }
     }
 
@@ -691,13 +691,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase_level_three_data_without_item_mastercard
-    @level_three_data[:level_3_data][:item] = [{
+    @level_three_data[:level_3_data][:line_items] = [{
     }]
     @credit_card.brand = 'master'
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@level_three_data))
     assert_failure response
     assert_equal response.error_code, '2'
-    assert_equal response.params['error'].gsub(/\"+/, ''), 'The content of element type item must match (description,productCode?,commodityCode?,quantity?,unitCost?,unitOfMeasure?,itemTotal?,itemTotalWithTax?,itemDiscountAmount?,taxAmount?,categories?,pageURL?,imageURL?).'
+    assert_equal response.params['error'].gsub(/\"+/, ''), 'The content of element type item must match (description,productCode?,commodityCode?,quantity?,unitCost?,unitOfMeasure?,itemTotal?,itemTotalWithTax?,itemDiscountAmount?,itemTaxRate?,lineDiscountIndicator?,itemLocalTaxRate?,itemLocalTaxAmount?,taxAmount?,categories?,pageURL?,imageURL?).'
   end
 
   def test_successful_purchase_with_level_two_and_three_fields

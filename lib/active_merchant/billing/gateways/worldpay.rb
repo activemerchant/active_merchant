@@ -275,10 +275,10 @@ module ActiveMerchant #:nodoc:
 
         add_optional_data_level_two_and_three(xml, data)
 
-        data[:item].each { |item| add_items_into_level_three_data(xml, item.symbolize_keys, data) } if data.include?(:item)
+        data[:line_items].each { |item| add_line_items_into_level_three_data(xml, item.symbolize_keys, data) } if data.include?(:line_items)
       end
 
-      def add_items_into_level_three_data(xml, item, data)
+      def add_line_items_into_level_three_data(xml, item, data)
         xml.item do
           xml.description item[:description] if item[:description]
           xml.productCode item[:product_code] if item[:product_code]

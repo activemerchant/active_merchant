@@ -109,7 +109,7 @@ class WorldpayTest < Test::Unit::TestCase
         discount_amount: '1',
         shipping_amount: '50',
         duty_amount: '20',
-        item: [{
+        line_items: [{
           description: 'Laptop 14',
           product_code: 'LP00125',
           commodity_code: 'COM00125',
@@ -117,20 +117,22 @@ class WorldpayTest < Test::Unit::TestCase
           unit_cost: '1500',
           unit_of_measure: 'each',
           item_discount_amount: '200',
+          discount_amount: '0',
           tax_amount: '500',
           total_amount: '4000'
         },
-               {
-                 description: 'Laptop 15',
-                 product_code: 'LP00120',
-                 commodity_code: 'COM00125',
-                 quantity: '2',
-                 unit_cost: '1000',
-                 unit_of_measure: 'each',
-                 item_discount_amount: '200',
-                 tax_amount: '500',
-                 total_amount: '3000'
-               }]
+                     {
+                       description: 'Laptop 15',
+                       product_code: 'LP00120',
+                       commodity_code: 'COM00125',
+                       quantity: '2',
+                       unit_cost: '1000',
+                       unit_of_measure: 'each',
+                       item_discount_amount: '200',
+                       tax_amount: '500',
+                       discount_amount: '0',
+                       total_amount: '3000'
+                     }]
       }
     }
   end
