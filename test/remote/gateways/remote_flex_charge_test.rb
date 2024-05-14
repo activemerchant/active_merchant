@@ -35,6 +35,23 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     )
   end
 
+  def test_successful_purchase_with_three_ds_global
+    @options[:three_d_secure] = {
+      version: '2.1.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      xid: 'MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=',
+      cavv_algorithm: 'AAABCSIIAAAAAAACcwgAEMCoNh=',
+      enrolled: 'Y',
+      authentication_response_status: 'Y'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card_cit, @options)
+    assert_success response
+    assert_match 'SUBMITTED', response.message
+  end
+
   def test_setting_access_token_when_no_present
     assert_nil @gateway.options[:access_token]
 
