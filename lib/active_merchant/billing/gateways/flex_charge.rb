@@ -35,6 +35,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, credit_card, address, options)
         add_address(post, credit_card, address)
         add_customer_data(post, options)
+        add_three_ds(post, options)
 
         commit(:purchase, post)
       end
@@ -62,6 +63,22 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_three_ds(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post[:threeDSecure] = {
+          threeDsVersion: three_d_secure[:version],
+          EcommerceIndicator: three_d_secure[:eci],
+          authenticationValue: three_d_secure[:cavv],
+          directoryServerTransactionId:  three_d_secure[:ds_transaction_id],
+          xid: three_d_secure[:xid],
+          authenticationValueAlgorithm: three_d_secure[:cavv_algorithm],
+          directoryResponseStatus: three_d_secure[:directory_response_status],
+          authenticationResponseStatus: three_d_secure[:authentication_response_status],
+          enrolled: three_d_secure[:enrolled]
+        }
+      end
 
       def add_merchant_data(post, options)
         post[:siteId] = @options[:site_id]

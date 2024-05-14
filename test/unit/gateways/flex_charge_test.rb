@@ -44,6 +44,20 @@ class FlexChargeTest < Test::Unit::TestCase
       subscription_id: SecureRandom.uuid,
       subscription_interval: 'monthly'
     }.merge(@mit_options)
+
+    @three_d_secure_options = {
+      three_d_secure: {
+        eci: '05',
+        cavv: 'AAABCSIIAAAAAAACcwgAEMCoNh=',
+        xid: 'MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=',
+        version: '2.1.0',
+        ds_transaction_id: 'MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=',
+        cavv_algorithm: 'AAABCSIIAAAAAAACcwgAEMCoNh=',
+        directory_response_status: 'Y',
+        authentication_response_status: 'Y',
+        enrolled: 'Y'
+      }
+    }.merge(@options)
   end
 
   def test_supported_countries
@@ -75,7 +89,6 @@ class FlexChargeTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       request = JSON.parse(data)
-
       if /token/.match?(endpoint)
         assert_equal request['AppKey'], @gateway.options[:app_key]
         assert_equal request['AppSecret'], @gateway.options[:app_secret]
@@ -104,6 +117,34 @@ class FlexChargeTest < Test::Unit::TestCase
 
     assert_equal 'ca7bb327-a750-412d-a9c3-050d72b3f0c5', response.authorization
     assert response.test?
+  end
+
+  def test_successful_purchase_three_ds_global
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @three_d_secure_options)
+    end.respond_with(successful_access_token_response, successful_purchase_response)
+    assert_success response
+    assert_equal 'ca7bb327-a750-412d-a9c3-050d72b3f0c5', response.authorization
+    assert response.test?
+  end
+
+  def test_succeful_request_with_three_ds_global
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @three_d_secure_options)
+    end.check_request do |endpoint, data, _headers|
+      if /evaluate/.match?(endpoint)
+        request = JSON.parse(data)
+        assert_equal request['threeDSecure']['EcommerceIndicator'], @three_d_secure_options[:three_d_secure][:eci]
+        assert_equal request['threeDSecure']['authenticationValue'], @three_d_secure_options[:three_d_secure][:cavv]
+        assert_equal request['threeDSecure']['xid'], @three_d_secure_options[:three_d_secure][:xid]
+        assert_equal request['threeDSecure']['threeDsVersion'], @three_d_secure_options[:three_d_secure][:version]
+        assert_equal request['threeDSecure']['directoryServerTransactionId'], @three_d_secure_options[:three_d_secure][:ds_transaction_id]
+        assert_equal request['threeDSecure']['authenticationValueAlgorithm'], @three_d_secure_options[:three_d_secure][:cavv_algorithm]
+        assert_equal request['threeDSecure']['directoryResponseStatus'], @three_d_secure_options[:three_d_secure][:directory_response_status]
+        assert_equal request['threeDSecure']['authenticationResponseStatus'], @three_d_secure_options[:three_d_secure][:authentication_response_status]
+        assert_equal request['threeDSecure']['enrolled'], @three_d_secure_options[:three_d_secure][:enrolled]
+      end
+    end.respond_with(successful_access_token_response, successful_purchase_response)
   end
 
   def test_failed_purchase
