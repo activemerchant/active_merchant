@@ -85,6 +85,14 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       email: 'longbob.longsen@example.com',
       processing_channel_id: 'pc_lxgl7aqahkzubkundd2l546hdm'
     }
+    @options_for_verify = @options.merge({
+      amount_allocations: [
+        {
+          id: 'ent_123',
+          amount: 0
+        }
+      ]
+    })
     @additional_options = @options.merge(
       card_on_file: true,
       transaction_indicator: 2,
@@ -1137,13 +1145,13 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = @gateway.verify(@credit_card, @options)
+    response = @gateway.verify(@credit_card, @options_for_verify)
     assert_success response
     assert_match %r{Succeeded}, response.message
   end
 
   def test_successful_verify_via_oauth
-    response = @gateway_oauth.verify(@credit_card, @options)
+    response = @gateway_oauth.verify(@credit_card, @options_for_verify)
     assert_success response
     assert_match %r{Succeeded}, response.message
     assert_not_nil response.responses.first.params['access_token']
@@ -1151,7 +1159,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_verify
-    response = @gateway.verify(@declined_card, @options)
+    response = @gateway.verify(@declined_card, @options_for_verify)
     assert_failure response
     assert_match %r{request_invalid: card_number_invalid}, response.message
   end
