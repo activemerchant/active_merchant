@@ -577,8 +577,6 @@ module ActiveMerchant #:nodoc:
           add_amount_for_pay_as_order(xml, amount, payment_method, options)
         when :network_token
           add_network_tokenization_card(xml, payment_method, options)
-        when :encrypted_wallet
-          add_encrypted_wallet(xml, payment_method, options)
         else
           add_card_or_token(xml, payment_method, options)
         end
@@ -616,23 +614,6 @@ module ActiveMerchant #:nodoc:
             xml.eciIndicator eci if eci.present?
           end
           add_stored_credential_options(xml, options)
-        end
-      end
-
-      def add_encrypted_wallet(xml, payment_method, options)
-        source = payment_method.source == :apple_pay ? 'APPLEPAY' : 'PAYWITHGOOGLE'
-
-        xml.paymentDetails do
-          xml.tag! "#{source}-SSL" do
-            xml.header do
-              xml.ephemeralPublicKey payment_method.payment_data.dig(:header, :ephemeralPublicKey)
-              xml.publicKeyHash payment_method.payment_data.dig(:header, :publicKeyHash)
-              xml.transactionId payment_method.payment_data.dig(:header, :transactionId)
-            end
-            xml.signature payment_method.payment_data[:signature]
-            xml.version payment_method.payment_data[:version]
-            xml.data payment_method.payment_data[:data]
-          end
         end
       end
 
@@ -1005,11 +986,7 @@ module ActiveMerchant #:nodoc:
         when String
           token_type_and_details(payment_method)
         else
-          type = if network_token?(payment_method)
-                   payment_method.payment_data ? :encrypted_wallet : :network_token
-                 else
-                   options[:wallet_type] == :google_pay ? :network_token : :credit
-                 end
+          type = network_token?(payment_method) || options[:wallet_type] == :google_pay ? :network_token : :credit
 
           { payment_type: type }
         end

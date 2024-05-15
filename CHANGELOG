@@ -163,7 +163,7 @@
 * Cybersource Rest: Add support for network tokens [aenand] #5107
 * Decidir: Add support for customer object [rachelkirk] #5071
 * Worldpay: Add support for stored credentials with network tokens [aenand] #5114
-* Worldpay: Encyrpted ApplePay and GooglePay [almalee24] #5093
+
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
