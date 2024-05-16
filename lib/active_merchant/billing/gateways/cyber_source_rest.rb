@@ -322,11 +322,7 @@ module ActiveMerchant #:nodoc:
       def commerce_indicator(reason_type, country = '')
         case reason_type
         when 'recurring'
-          if country == 'US'
-            'recurring'
-          else
-            'recurring'
-          end
+          'recurring'
         when 'installment'
           'install'
         else

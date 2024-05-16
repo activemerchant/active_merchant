@@ -219,6 +219,51 @@ class CyberSourceRestTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_authorize_network_token_visa_recurring
+    @options[:stored_credential] = stored_credential(:cardholder, :recurring)
+    stub_comms do
+      @gateway.authorize(100, @visa_network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '001', request['paymentInformation']['tokenizedCard']['type']
+      assert_equal '3', request['paymentInformation']['tokenizedCard']['transactionType']
+      assert_equal 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', request['paymentInformation']['tokenizedCard']['cryptogram']
+      assert_nil request['paymentInformation']['tokenizedCard']['requestorId']
+      assert_equal '015', request['processingInformation']['paymentSolution']
+      assert_equal 'recurring', request['processingInformation']['commerceIndicator']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_network_token_visa_installment
+    @options[:stored_credential] = stored_credential(:cardholder, :installment)
+    stub_comms do
+      @gateway.authorize(100, @visa_network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '001', request['paymentInformation']['tokenizedCard']['type']
+      assert_equal '3', request['paymentInformation']['tokenizedCard']['transactionType']
+      assert_equal 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', request['paymentInformation']['tokenizedCard']['cryptogram']
+      assert_nil request['paymentInformation']['tokenizedCard']['requestorId']
+      assert_equal '015', request['processingInformation']['paymentSolution']
+      assert_equal 'install', request['processingInformation']['commerceIndicator']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_network_token_visa_unscheduled
+    @options[:stored_credential] = stored_credential(:cardholder, :unscheduled)
+    stub_comms do
+      @gateway.authorize(100, @visa_network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '001', request['paymentInformation']['tokenizedCard']['type']
+      assert_equal '3', request['paymentInformation']['tokenizedCard']['transactionType']
+      assert_equal 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', request['paymentInformation']['tokenizedCard']['cryptogram']
+      assert_nil request['paymentInformation']['tokenizedCard']['requestorId']
+      assert_equal '015', request['processingInformation']['paymentSolution']
+      assert_equal 'internet', request['processingInformation']['commerceIndicator']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_authorize_network_token_mastercard
     stub_comms do
       @gateway.authorize(100, @mastercard_network_token, @options)
@@ -318,22 +363,6 @@ class CyberSourceRestTest < Test::Unit::TestCase
       assert_equal 'merchant', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
       assert_equal true, request.dig('processingInformation', 'authorizationOptions', 'initiator', 'storedCredentialUsed')
       assert_nil request.dig('processingInformation', 'authorizationOptions', 'initiator', 'merchantInitiatedTransaction', 'originalAuthorizedAmount')
-    end.respond_with(successful_purchase_response)
-
-    assert_success response
-  end
-
-  def test_stored_credential_recurring_non_us_mit_with_discover
-    @options[:stored_credential] = stored_credential(:merchant, :recurring, ntid: '123456789619999')
-    @options[:billing_address][:country] = 'CA'
-    response = stub_comms do
-      @gateway.authorize(@amount, @discover_card, @options)
-    end.check_request do |_endpoint, data, _headers|
-      request = JSON.parse(data)
-      assert_equal 'recurring_internet', request['processingInformation']['commerceIndicator']
-      assert_equal 'merchant', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
-      assert_equal true, request.dig('processingInformation', 'authorizationOptions', 'initiator', 'storedCredentialUsed')
-      assert_equal '1.00', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'merchantInitiatedTransaction', 'originalAuthorizedAmount')
     end.respond_with(successful_purchase_response)
 
     assert_success response
