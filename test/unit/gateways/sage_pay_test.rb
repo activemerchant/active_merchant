@@ -50,11 +50,11 @@ class SagePayTest < Test::Unit::TestCase
   end
 
   def test_purchase_url
-    assert_equal 'https://test.sagepay.com/gateway/service/vspdirect-register.vsp', @gateway.send(:url_for, :purchase)
+    assert_equal 'https://sandbox.opayo.eu.elavon.com/gateway/service/vspdirect-register.vsp', @gateway.send(:url_for, :purchase)
   end
 
   def test_capture_url
-    assert_equal 'https://test.sagepay.com/gateway/service/release.vsp', @gateway.send(:url_for, :capture)
+    assert_equal 'https://sandbox.opayo.eu.elavon.com/gateway/service/release.vsp', @gateway.send(:url_for, :capture)
   end
 
   def test_matched_avs_result
@@ -252,6 +252,15 @@ class SagePayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_override_protocol_via_transaction
+    options = @options.merge(protocol_version: '4.00')
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/VPSProtocol=4.00/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_referrer_id_is_added_to_post_data_parameters
     ActiveMerchant::Billing::SagePayGateway.application_id = '00000000-0000-0000-0000-000000000001'
     stub_comms(@gateway, :ssl_request) do
@@ -336,6 +345,142 @@ class SagePayTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/RelatedVPSTxId=%7B4B98024C-5D40-4F5C-4E19-A8D07EBFC5AD%/, data)
       assert_match(/TxType=REPEAT/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_true_boolean_3ds_fields
+    options = @options.merge({
+      protocol_version: '4.00',
+      three_ds_2: {
+        channel: 'browser',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 48,
+          java: true,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown',
+          browser_size: '05'
+        },
+        notification_url: 'https://example.com/notification'
+      }
+    })
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/BrowserJavascriptEnabled=1/, data)
+      assert_match(/BrowserJavaEnabled=1/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_false_boolean_3ds_fields
+    options = @options.merge({
+      protocol_version: '4.00',
+      three_ds_2: {
+        channel: 'browser',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 48,
+          java: false,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown',
+          browser_size: '05'
+        },
+        notification_url: 'https://example.com/notification'
+      }
+    })
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/BrowserJavascriptEnabled=0/, data)
+      assert_match(/BrowserJavaEnabled=0/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_sending_3ds2_params
+    options = @options.merge({
+      protocol_version: '4.00',
+      three_ds_2: {
+        channel: 'browser',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 48,
+          java: true,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown',
+          browser_size: '05'
+        },
+        notification_url: 'https://example.com/notification'
+      }
+    })
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/VPSProtocol=4.00/, data)
+      assert_match(/BrowserAcceptHeader=unknown/, data)
+      assert_match(/BrowserLanguage=US/, data)
+      assert_match(/BrowserUserAgent=unknown/, data)
+      assert_match(/BrowserColorDepth=48/, data)
+      assert_match(/BrowserScreenHeight=1000/, data)
+      assert_match(/BrowserScreenWidth=500/, data)
+      assert_match(/BrowserTZ=-120/, data)
+      assert_match(/ChallengeWindowSize=05/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_sending_cit_params
+    options = @options.merge!({
+      protocol_version: '4.00',
+      stored_credential: {
+        initial_transaction: true,
+        initiator: 'cardholder',
+        reason_type: 'installment'
+      },
+      recurring_frequency: '30',
+      recurring_expiry: "#{Time.now.year + 1}-04-21",
+      installment_data: 5
+    })
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/COFUsage=FIRST/, data)
+      assert_match(/MITType=INSTALMENT/, data)
+      assert_match(/RecurringFrequency=30/, data)
+      assert_match(/PurchaseInstalData=5/, data)
+      assert_match(/RecurringExpiry=#{Time.now.year + 1}-04-21/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_sending_mit_params
+    options = @options.merge({
+      protocol_version: '4.00',
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'recurring',
+        network_transaction_id: '123'
+      },
+      recurring_frequency: '30',
+      recurring_expiry: "#{Time.now.year + 1}-04-21"
+    })
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/COFUsage=SUBSEQUENT/, data)
+      assert_match(/MITType=RECURRING/, data)
+      assert_match(/RecurringFrequency=30/, data)
+      assert_match(/SchemeTraceID=123/, data)
+      assert_match(/RecurringExpiry=#{Time.now.year + 1}-04-21/, data)
     end.respond_with(successful_purchase_response)
   end
 

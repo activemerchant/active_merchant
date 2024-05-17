@@ -122,6 +122,26 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_and_authorize_with_reference_3
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(reference_3: '123345'))
+    assert_match(/Transaction Normal/, response.message)
+    assert_success response
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(reference_3: '123345'))
+    assert_match(/Transaction Normal/, auth.message)
+    assert_success auth
+  end
+
+  def test_successful_purchase_and_authorize_with_customer_ref_top_level
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(customer_ref: 'abcde'))
+    assert_match(/Transaction Normal/, response.message)
+    assert_success response
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(customer_ref: 'abcde'))
+    assert_match(/Transaction Normal/, auth.message)
+    assert_success auth
+  end
+
   def test_successful_purchase_with_customer_ref
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(level2: { customer_ref: 'An important customer' }))
     assert_match(/Transaction Normal/, response.message)
@@ -441,7 +461,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_match(/Server Error/, response.message) # 42 is 'unable to send trans'
     assert_failure response
-    assert_equal '500', response.error_code
+    assert_equal '500 INTERNAL_SERVER_ERROR', response.error_code
   end
 
   def test_transcript_scrubbing_store

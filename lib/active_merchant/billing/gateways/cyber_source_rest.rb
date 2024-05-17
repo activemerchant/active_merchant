@@ -31,9 +31,14 @@ module ActiveMerchant #:nodoc:
         visa: '001'
       }
 
-      PAYMENT_SOLUTION = {
+      WALLET_PAYMENT_SOLUTION = {
         apple_pay: '001',
         google_pay: '012'
+      }
+
+      NT_PAYMENT_SOLUTION = {
+        'master' => '014',
+        'visa' => '015'
       }
 
       def initialize(options = {})
@@ -93,12 +98,37 @@ module ActiveMerchant #:nodoc:
           gsub(/(\\?"number\\?":\\?")\d+/, '\1[FILTERED]').
           gsub(/(\\?"routingNumber\\?":\\?")\d+/, '\1[FILTERED]').
           gsub(/(\\?"securityCode\\?":\\?")\d+/, '\1[FILTERED]').
+          gsub(/(\\?"cryptogram\\?":\\?")[^<]+/, '\1[FILTERED]').
           gsub(/(signature=")[^"]*/, '\1[FILTERED]').
           gsub(/(keyid=")[^"]*/, '\1[FILTERED]').
           gsub(/(Digest: SHA-256=)[\w\/\+=]*/, '\1[FILTERED]')
       end
 
       private
+
+      def add_three_ds(post, payment_method, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post[:consumerAuthenticationInformation] ||= {}
+        if payment_method.brand == 'master'
+          post[:consumerAuthenticationInformation][:ucafAuthenticationData] = three_d_secure[:cavv]
+          post[:consumerAuthenticationInformation][:ucafCollectionIndicator] = '2'
+        else
+          post[:consumerAuthenticationInformation][:cavv] = three_d_secure[:cavv]
+        end
+        post[:consumerAuthenticationInformation][:cavvAlgorithm] = three_d_secure[:cavv_algorithm] if three_d_secure[:cavv_algorithm]
+        post[:consumerAuthenticationInformation][:paSpecificationVersion] = three_d_secure[:version] if three_d_secure[:version]
+        post[:consumerAuthenticationInformation][:directoryServerTransactionID] = three_d_secure[:ds_transaction_id] if three_d_secure[:ds_transaction_id]
+        post[:consumerAuthenticationInformation][:eciRaw] = three_d_secure[:eci] if three_d_secure[:eci]
+        if three_d_secure[:xid].present?
+          post[:consumerAuthenticationInformation][:xid] = three_d_secure[:xid]
+        else
+          post[:consumerAuthenticationInformation][:xid] = three_d_secure[:cavv]
+        end
+        post[:consumerAuthenticationInformation][:veresEnrolled] = three_d_secure[:enrolled] if three_d_secure[:enrolled]
+        post[:consumerAuthenticationInformation][:paresStatus] = three_d_secure[:authentication_response_status] if three_d_secure[:authentication_response_status]
+        post
+      end
 
       def build_void_request(amount = nil)
         { reversalInformation: { amountDetails: { totalAmount: nil } } }.tap do |post|
@@ -118,6 +148,7 @@ module ActiveMerchant #:nodoc:
           add_business_rules_data(post, payment, options)
           add_partner_solution_id(post)
           add_stored_credentials(post, payment, options)
+          add_three_ds(post, payment, options)
         end.compact
       end
 
@@ -191,25 +222,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_tokenization_card(post, payment, options)
-        post[:processingInformation][:paymentSolution] = PAYMENT_SOLUTION[payment.source]
-        post[:processingInformation][:commerceIndicator] = 'internet' unless card_brand(payment) == 'jcb'
+        post[:processingInformation][:commerceIndicator] = 'internet' unless options[:stored_credential] || card_brand(payment) == 'jcb'
 
         post[:paymentInformation][:tokenizedCard] = {
           number: payment.number,
           expirationMonth: payment.month,
           expirationYear: payment.year,
           cryptogram: payment.payment_cryptogram,
-          transactionType: '1',
-          type:  CREDIT_CARD_CODES[card_brand(payment).to_sym]
+          type:  CREDIT_CARD_CODES[card_brand(payment).to_sym],
+          transactionType: payment.source == :network_token ? '3' : '1'
         }
 
-        if card_brand(payment) == 'master'
-          post[:consumerAuthenticationInformation] = {
-            ucafAuthenticationData: payment.payment_cryptogram,
-            ucafCollectionIndicator: '2'
-          }
+        if payment.source == :network_token && NT_PAYMENT_SOLUTION[payment.brand]
+          post[:processingInformation][:paymentSolution] = NT_PAYMENT_SOLUTION[payment.brand]
         else
-          post[:consumerAuthenticationInformation] = { cavv: payment.payment_cryptogram }
+          # Apple Pay / Google Pay
+          post[:processingInformation][:paymentSolution] = WALLET_PAYMENT_SOLUTION[payment.source]
+          if card_brand(payment) == 'master'
+            post[:consumerAuthenticationInformation] = {
+              ucafAuthenticationData: payment.payment_cryptogram,
+              ucafCollectionIndicator: '2'
+            }
+          else
+            post[:consumerAuthenticationInformation] = { cavv: payment.payment_cryptogram }
+          end
         end
       end
 
@@ -315,7 +351,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action)
-        "#{(test? ? test_url : live_url)}/pts/v2/#{action}"
+        "#{test? ? test_url : live_url}/pts/v2/#{action}"
       end
 
       def host
@@ -378,7 +414,7 @@ module ActiveMerchant #:nodoc:
         string_to_sign = {
           host: host,
           date: gmtdatetime,
-          "(request-target)": "#{http_method} /pts/v2/#{resource}",
+          "request-target": "#{http_method} /pts/v2/#{resource}",
           digest: digest,
           "v-c-merchant-id": @options[:merchant_id]
         }.map { |k, v| "#{k}: #{v}" }.join("\n").force_encoding(Encoding::UTF_8)
@@ -386,7 +422,7 @@ module ActiveMerchant #:nodoc:
         {
           keyid: @options[:public_key],
           algorithm: 'HmacSHA256',
-          headers: "host date (request-target)#{digest.present? ? ' digest' : ''} v-c-merchant-id",
+          headers: "host date request-target#{digest.present? ? ' digest' : ''} v-c-merchant-id",
           signature: sign_payload(string_to_sign)
         }.map { |k, v| %{#{k}="#{v}"} }.join(', ')
       end

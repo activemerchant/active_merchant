@@ -178,7 +178,8 @@ cecabank:
   merchant_id: MERCHANTID
   acquirer_bin: ACQUIRERBIN
   terminal_id: TERMINALID
-  key: KEY
+  signature_key: KEY
+  encryption_key: KEY
 
 cenpos:
   merchant_id: SOMECREDENTIAL
@@ -291,6 +292,10 @@ d_local:
 data_cash:
   login: X
   password: Y
+
+datatrans:
+  merchant_id: MERCHANT_ID_WEB
+  password: MERCHANT_PASSWORD_WEB
 
 # Working credentials, no need to replace
 decidir_authorize:
@@ -410,6 +415,11 @@ first_pay:
   transaction_center_id: 1264
   gateway_id: "a91c38c3-7d7f-4d29-acc7-927b4dca0dbe"
 
+first_pay_rest_json:
+  mode: "rest_json"
+  merchant_key: "a91c38c3-7d7f-4d29-acc7-927b4dca0dbe"
+  processor_id: "15417"
+
 firstdata_e4:
   login: SD8821-67
   password: T6bxSywbcccbJ19eDXNIGaCDOBg1W7T8
@@ -419,6 +429,12 @@ firstdata_e4_v27:
   password: APASSWORD
   key_id: ANINTEGER
   hmac_key: AMAGICALKEY
+
+flex_charge:
+  app_key: 'your app key'
+  app_secret: 'app secret'
+  site_id: 'site id'
+  mid: 'merchant id'
 
 flo2cash:
   username: SOMECREDENTIAL
@@ -461,6 +477,10 @@ hdfc:
   login: LOGIN
   password: PASSWORD
 
+hi_pay:
+  username: "USERNAME"
+  password: "PASSWORD"
+
 # Working credentials, no need to replace
 hps:
   secret_api_key: "skapi_cert_MYl2AQAowiQAbLp5JesGKh7QFkcizOP2jcX9BrEMqQ"
@@ -481,9 +501,15 @@ instapay:
   login: TEST0
   password:
 
-# Working credentials, no need to replace
 ipg:
   store_id: "YOUR STORE ID"
+  user_id: "YOUR USER ID"
+  password: "YOUR PASSWORD"
+  pem_password: "CERTIFICATE PASSWORD"
+  pem: "YOUR CERTIFICATE WITH PRIVATE KEY"
+
+ipg_ma:
+  store_id: "ONE OF YOUR STORE IDs"
   user_id: "YOUR USER ID"
   password: "YOUR PASSWORD"
   pem_password: "CERTIFICATE PASSWORD"
@@ -722,6 +748,11 @@ orbital_gateway:
   merchant_id: MERCHANTID
 
 orbital_tandem_gateway:
+  login: LOGIN
+  password: PASSWORD
+  merchant_id: MERCHANTID
+
+orbital_tpv_gateway:
   login: LOGIN
   password: PASSWORD
   merchant_id: MERCHANTID
@@ -1236,6 +1267,12 @@ redsys:
   login: MERCHANT CODE
   secret_key: SECRET KEY
 
+# https://pagosonline.redsys.es/entornosPruebas.html
+redsys_rest:
+  login: 999008881
+  secret_key: sq7HjrUOBfKmC576ILgskD5srU870gJ7
+  terminal: 001
+
 redsys_sha256:
   login: MERCHANT CODE
   secret_key: SECRET KEY
@@ -1326,6 +1363,14 @@ stripe_destination:
 stripe_verified_bank_account:
   customer_id: "cus_7s22nNueP2Hjj6"
   bank_account_id: "ba_17cHxeAWOtgoysogv3NM8CJ1"
+
+sum_up:
+  access_token: SOMECREDENTIAL
+  pay_to_email: SOMECREDENTIAL
+
+sum_up_3ds:
+  access_token: SOMECREDENTIAL
+  pay_to_email: SOMECREDENTIAL
 
 # Working credentials, no need to replace
 swipe_checkout:
@@ -1474,3 +1519,6 @@ worldpay_us:
   acctid: MPNAB
   subid: SPREE
   merchantpin: "1234567890"
+
+xpay:
+  api_key: 5d952446-9004-4023-9eae-a527a152846b

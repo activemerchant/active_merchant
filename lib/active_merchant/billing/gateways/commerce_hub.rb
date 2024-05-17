@@ -55,6 +55,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_transaction_details(post, options, 'capture')
         add_reference_transaction_details(post, authorization, options, :capture)
+        add_dynamic_descriptors(post, options)
 
         commit('sale', post, options)
       end
@@ -64,6 +65,15 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options) if money
         add_transaction_details(post, options)
         add_reference_transaction_details(post, authorization, options, :refund)
+
+        commit('refund', post, options)
+      end
+
+      def credit(money, payment_method, options = {})
+        post = {}
+        add_invoice(post, money, options)
+        add_transaction_interaction(post, options)
+        add_payment(post, payment_method, options)
 
         commit('refund', post, options)
       end
@@ -108,6 +118,23 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_three_d_secure(post, payment, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post[:additionalData3DS] = {
+          dsTransactionId: three_d_secure[:ds_transaction_id],
+          authenticationStatus: three_d_secure[:authentication_response_status],
+          serviceProviderTransactionId: three_d_secure[:three_ds_server_trans_id],
+          acsTransactionId: three_d_secure[:acs_transaction_id],
+          mpiData: {
+            cavv: three_d_secure[:cavv],
+            eci: three_d_secure[:eci],
+            xid: three_d_secure[:xid]
+          }.compact,
+          versionData: { recommendedVersion: three_d_secure[:version] }
+        }.compact
+      end
 
       def add_transaction_interaction(post, options)
         post[:transactionInteraction] = {}
@@ -187,12 +214,28 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_purchase_and_auth_request(post, money, payment, options)
+        add_three_d_secure(post, payment, options)
         add_invoice(post, money, options)
         add_payment(post, payment, options)
         add_stored_credentials(post, options)
         add_transaction_interaction(post, options)
         add_billing_address(post, payment, options)
         add_shipping_address(post, options)
+        add_dynamic_descriptors(post, options)
+      end
+
+      def add_dynamic_descriptors(post, options)
+        dynamic_descriptors_fields = %i[mcc merchant_name customer_service_number service_entitlement dynamic_descriptors_address]
+        return unless dynamic_descriptors_fields.any? { |key| options.include?(key) }
+
+        dynamic_descriptors = {}
+        dynamic_descriptors[:mcc] = options[:mcc] if options[:mcc]
+        dynamic_descriptors[:merchantName] = options[:merchant_name] if options[:merchant_name]
+        dynamic_descriptors[:customerServiceNumber] = options[:customer_service_number] if options[:customer_service_number]
+        dynamic_descriptors[:serviceEntitlement] = options[:service_entitlement] if options[:service_entitlement]
+        dynamic_descriptors[:address] = options[:dynamic_descriptors_address] if options[:dynamic_descriptors_address]
+
+        post[:dynamicDescriptors] = dynamic_descriptors
       end
 
       def add_reference_transaction_details(post, authorization, options, action = nil)

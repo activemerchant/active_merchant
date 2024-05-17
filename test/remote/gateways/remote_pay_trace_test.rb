@@ -17,11 +17,11 @@ class RemotePayTraceTest < Test::Unit::TestCase
     @gateway = PayTraceGateway.new(fixtures(:pay_trace))
 
     @amount = 100
-    @credit_card = credit_card('4012000098765439')
-    @mastercard = credit_card('5499740000000057')
+    @credit_card = credit_card('4012000098765439', verification_value: '999')
+    @mastercard = credit_card('5499740000000057', verification_value: '998')
     @invalid_card = credit_card('54545454545454', month: '14', year: '1999')
-    @discover = credit_card('6011000993026909')
-    @amex = credit_card('371449635392376')
+    @discover = credit_card('6011000993026909', verification_value: '996')
+    @amex = credit_card('371449635392376', verification_value: '9997')
     @echeck = check(account_number: '123456', routing_number: '325070760')
     @options = {
       billing_address: {
@@ -37,6 +37,15 @@ class RemotePayTraceTest < Test::Unit::TestCase
   def test_acquire_token
     response = @gateway.acquire_access_token
     assert_not_nil response['access_token']
+  end
+
+  def test_failed_access_token
+    error = assert_raises(ActiveMerchant::OAuthResponseError) do
+      gateway = PayTraceGateway.new(username: 'username', password: 'password', integrator_id: 'uniqueintegrator')
+      gateway.send :acquire_access_token
+    end
+
+    assert_equal error.message, 'Failed with  The provided authorization grant is invalid, expired, revoked, does not match the redirection URI used in the authorization request, or was issued to another client.'
   end
 
   def test_successful_purchase
@@ -389,13 +398,6 @@ class RemotePayTraceTest < Test::Unit::TestCase
   # Not including a test_failed_verify since the only way to force a failure on this
   # gateway is with a specific dollar amount. Since verify is auth and void combined,
   # having separate tests for auth and void should suffice.
-
-  def test_invalid_login
-    gateway = PayTraceGateway.new(username: 'username', password: 'password', integrator_id: 'integrator_id')
-
-    response = gateway.acquire_access_token
-    assert_match 'invalid_grant', response
-  end
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do

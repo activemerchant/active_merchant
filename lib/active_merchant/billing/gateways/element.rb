@@ -37,6 +37,7 @@ module ActiveMerchant #:nodoc:
             add_transaction(xml, money, options)
             add_terminal(xml, options)
             add_address(xml, options)
+            add_lodging(xml, options)
           end
         end
 
@@ -51,6 +52,7 @@ module ActiveMerchant #:nodoc:
             add_transaction(xml, money, options)
             add_terminal(xml, options)
             add_address(xml, options)
+            add_lodging(xml, options)
           end
         end
 
@@ -222,16 +224,44 @@ module ActiveMerchant #:nodoc:
         options[:market_code] || 'Default'
       end
 
+      def add_lodging(xml, options)
+        if lodging = options[:lodging]
+          xml.extendedParameters do
+            xml.ExtendedParameters do
+              xml.Key 'Lodging'
+              xml.Value('xsi:type' => 'Lodging') do
+                xml.LodgingAgreementNumber lodging[:agreement_number] if lodging[:agreement_number]
+                xml.LodgingCheckInDate lodging[:check_in_date] if lodging[:check_in_date]
+                xml.LodgingCheckOutDate lodging[:check_out_date] if lodging[:check_out_date]
+                xml.LodgingRoomAmount lodging[:room_amount] if lodging[:room_amount]
+                xml.LodgingRoomTax lodging[:room_tax] if lodging[:room_tax]
+                xml.LodgingNoShowIndicator lodging[:no_show_indicator] if lodging[:no_show_indicator]
+                xml.LodgingDuration lodging[:duration] if lodging[:duration]
+                xml.LodgingCustomerName lodging[:customer_name] if lodging[:customer_name]
+                xml.LodgingClientCode lodging[:client_code] if lodging[:client_code]
+                xml.LodgingExtraChargesDetail lodging[:extra_charges_detail] if lodging[:extra_charges_detail]
+                xml.LodgingExtraChargesAmounts lodging[:extra_charges_amounts] if lodging[:extra_charges_amounts]
+                xml.LodgingPrestigiousPropertyCode lodging[:prestigious_property_code] if lodging[:prestigious_property_code]
+                xml.LodgingSpecialProgramCode lodging[:special_program_code] if lodging[:special_program_code]
+                xml.LodgingChargeType lodging[:charge_type] if lodging[:charge_type]
+              end
+            end
+          end
+        end
+      end
+
       def add_terminal(xml, options)
         xml.terminal do
           xml.TerminalID options[:terminal_id] || '01'
+          xml.TerminalType options[:terminal_type] if options[:terminal_type]
           xml.CardPresentCode options[:card_present_code] || 'UseDefault'
-          xml.CardholderPresentCode 'UseDefault'
-          xml.CardInputCode 'UseDefault'
-          xml.CVVPresenceCode 'UseDefault'
-          xml.TerminalCapabilityCode 'UseDefault'
-          xml.TerminalEnvironmentCode 'UseDefault'
+          xml.CardholderPresentCode options[:card_holder_present_code] || 'UseDefault'
+          xml.CardInputCode options[:card_input_code] || 'UseDefault'
+          xml.CVVPresenceCode options[:cvv_presence_code] || 'UseDefault'
+          xml.TerminalCapabilityCode options[:terminal_capability_code] || 'UseDefault'
+          xml.TerminalEnvironmentCode options[:terminal_environment_code] || 'UseDefault'
           xml.MotoECICode 'NonAuthenticatedSecureECommerceTransaction'
+          xml.PartialApprovedFlag options[:partial_approved_flag] if options[:partial_approved_flag]
         end
       end
 
@@ -240,7 +270,7 @@ module ActiveMerchant #:nodoc:
           xml.CardNumber payment.number
           xml.ExpirationMonth format(payment.month, :two_digits)
           xml.ExpirationYear format(payment.year, :two_digits)
-          xml.CardholderName payment.first_name + ' ' + payment.last_name
+          xml.CardholderName "#{payment.first_name} #{payment.last_name}"
           xml.CVV payment.verification_value
         end
       end

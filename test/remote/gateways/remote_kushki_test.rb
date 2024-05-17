@@ -3,6 +3,7 @@ require 'test_helper'
 class RemoteKushkiTest < Test::Unit::TestCase
   def setup
     @gateway = KushkiGateway.new(fixtures(:kushki))
+    @gateway_partial_refund = KushkiGateway.new(fixtures(:kushki_partial))
     @amount = 100
     @credit_card = credit_card('4000100011112224', verification_value: '777')
     @declined_card = credit_card('4000300011112220')
@@ -47,7 +48,23 @@ class RemoteKushkiTest < Test::Unit::TestCase
       months: 2,
       deferred_grace_months: '05',
       deferred_credit_type: '01',
-      deferred_months: 3
+      deferred_months: 3,
+      product_details: [
+        {
+          id: 'test1',
+          title: 'tester1',
+          price: 10,
+          sku: 'abcde',
+          quantity: 1
+        },
+        {
+          id: 'test2',
+          title: 'tester2',
+          price: 5,
+          sku: 'edcba',
+          quantity: 2
+        }
+      ]
     }
 
     amount = 100 * (
@@ -144,7 +161,7 @@ class RemoteKushkiTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    response = @gateway.authorize(@amount, @credit_card, { currency: 'PEN' })
+    response = @gateway_partial_refund.authorize(@amount, @credit_card, { currency: 'PEN' })
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_match %r(^\d+$), response.authorization
@@ -189,7 +206,22 @@ class RemoteKushkiTest < Test::Unit::TestCase
         eci: '07'
       }
     }
-    response = @gateway.authorize(@amount, @credit_card, options)
+    response = @gateway_partial_refund.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_successful_3ds2_authorize_with_visa_card_with_optional_xid
+    options = {
+      currency: 'PEN',
+      three_d_secure: {
+        version: '2.2.0',
+        cavv: 'AAABBoVBaZKAR3BkdkFpELpWIiE=',
+        eci: '07'
+      }
+    }
+    response = @gateway_partial_refund.authorize(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_match %r(^\d+$), response.authorization
@@ -207,7 +239,7 @@ class RemoteKushkiTest < Test::Unit::TestCase
     }
 
     credit_card = credit_card('5223450000000007', brand: 'master', verification_value: '777')
-    response = @gateway.authorize(@amount, credit_card, options)
+    response = @gateway_partial_refund.authorize(@amount, credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
@@ -239,7 +271,7 @@ class RemoteKushkiTest < Test::Unit::TestCase
         xid: 'NEpab1F1MEdtaWJ2bEY3ckYxQzE='
       }
     }
-    response = @gateway.authorize(@amount, @credit_card, options)
+    response = @gateway_partial_refund.authorize(@amount, @credit_card, options)
     assert_failure response
     assert_equal 'K001', response.responses.last.error_code
   end
@@ -255,7 +287,7 @@ class RemoteKushkiTest < Test::Unit::TestCase
     }
     credit_card = credit_card('6011111111111117', brand: 'discover', verification_value: '777')
     assert_raise ArgumentError do
-      @gateway.authorize(@amount, credit_card, options)
+      @gateway_partial_refund.authorize(@amount, credit_card, options)
     end
   end
 
@@ -299,6 +331,26 @@ class RemoteKushkiTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, nil)
     assert_failure refund
     assert_equal 'Missing Authentication Token', refund.message
+  end
+
+  # partial refunds are only available in Colombia, Chile, Mexico and Peru
+  def test_partial_refund
+    options = {
+      currency: 'PEN',
+      full_response: 'v2'
+    }
+    purchase = @gateway_partial_refund.purchase(500, @credit_card, options)
+    assert_success purchase
+
+    refund_options = {
+      currency: 'PEN',
+      partial_refund: true,
+      full_response: 'v2'
+    }
+
+    assert refund = @gateway_partial_refund.refund(250, purchase.authorization, refund_options)
+    assert_success refund
+    assert_equal 'Succeeded', refund.message
   end
 
   def test_successful_void

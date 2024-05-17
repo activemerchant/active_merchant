@@ -16,6 +16,23 @@ class CyberSourceRestTest < Test::Unit::TestCase
       month: 12,
       year: 2031
     )
+    @master_card = credit_card('2222420000001113', brand: 'master')
+
+    @visa_network_token = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      source: :network_token
+    )
+
+    @mastercard_network_token = network_tokenization_credit_card(
+      '5555555555554444',
+      brand: 'master',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      source: :network_token
+    )
     @apple_pay = network_tokenization_credit_card(
       '4111111111111111',
       payment_cryptogram: 'AceY+igABPs3jdwNaDg3MAACAAA=',
@@ -98,7 +115,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
 
     assert_equal 'def345', parsed['keyid']
     assert_equal 'HmacSHA256', parsed['algorithm']
-    assert_equal 'host date (request-target) digest v-c-merchant-id', parsed['headers']
+    assert_equal 'host date request-target digest v-c-merchant-id', parsed['headers']
     assert_equal %w[algorithm headers keyid signature], signature.split(', ').map { |v| v.split('=').first }.sort
   end
 
@@ -106,7 +123,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
     signature = @gateway.send :get_http_signature, @resource, nil, 'get', @gmt_time
 
     parsed = parse_signature(signature)
-    assert_equal 'host date (request-target) v-c-merchant-id', parsed['headers']
+    assert_equal 'host date request-target v-c-merchant-id', parsed['headers']
   end
 
   def test_scrub
@@ -185,6 +202,34 @@ class CyberSourceRestTest < Test::Unit::TestCase
     assert_equal 'US', address[:country]
     assert_equal 'test@cybs.com', address[:email]
     assert_equal '4158880000', address[:phoneNumber]
+  end
+
+  def test_authorize_network_token_visa
+    stub_comms do
+      @gateway.authorize(100, @visa_network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '001', request['paymentInformation']['tokenizedCard']['type']
+      assert_equal '3', request['paymentInformation']['tokenizedCard']['transactionType']
+      assert_equal 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', request['paymentInformation']['tokenizedCard']['cryptogram']
+      assert_nil request['paymentInformation']['tokenizedCard']['requestorId']
+      assert_equal '015', request['processingInformation']['paymentSolution']
+      assert_equal 'internet', request['processingInformation']['commerceIndicator']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_network_token_mastercard
+    stub_comms do
+      @gateway.authorize(100, @mastercard_network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '002', request['paymentInformation']['tokenizedCard']['type']
+      assert_equal '3', request['paymentInformation']['tokenizedCard']['transactionType']
+      assert_equal 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', request['paymentInformation']['tokenizedCard']['cryptogram']
+      assert_nil request['paymentInformation']['tokenizedCard']['requestorId']
+      assert_equal '014', request['processingInformation']['paymentSolution']
+      assert_equal 'internet', request['processingInformation']['commerceIndicator']
+    end.respond_with(successful_purchase_response)
   end
 
   def test_authorize_apple_pay_visa
@@ -381,6 +426,57 @@ class CyberSourceRestTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_mastercard_purchase_with_3ds2
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y',
+      cavv_algorithm: '2'
+    }
+    stub_comms do
+      @gateway.purchase(100, @master_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      assert_equal json_data['consumerAuthenticationInformation']['ucafAuthenticationData'], '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
+      assert_equal json_data['consumerAuthenticationInformation']['ucafCollectionIndicator'], '2'
+      assert_equal json_data['consumerAuthenticationInformation']['cavvAlgorithm'], '2'
+      assert_equal json_data['consumerAuthenticationInformation']['paSpecificationVersion'], '2.2.0'
+      assert_equal json_data['consumerAuthenticationInformation']['directoryServerTransactionID'], 'ODUzNTYzOTcwODU5NzY3Qw=='
+      assert_equal json_data['consumerAuthenticationInformation']['eciRaw'], '05'
+      assert_equal json_data['consumerAuthenticationInformation']['xid'], '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
+      assert_equal json_data['consumerAuthenticationInformation']['veresEnrolled'], 'true'
+      assert_equal json_data['consumerAuthenticationInformation']['paresStatus'], 'Y'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_visa_purchase_with_3ds2
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y',
+      cavv_algorithm: '2'
+    }
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      assert_equal json_data['consumerAuthenticationInformation']['cavv'], '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
+      assert_equal json_data['consumerAuthenticationInformation']['cavvAlgorithm'], '2'
+      assert_equal json_data['consumerAuthenticationInformation']['paSpecificationVersion'], '2.2.0'
+      assert_equal json_data['consumerAuthenticationInformation']['directoryServerTransactionID'], 'ODUzNTYzOTcwODU5NzY3Qw=='
+      assert_equal json_data['consumerAuthenticationInformation']['eciRaw'], '05'
+      assert_equal json_data['consumerAuthenticationInformation']['xid'], '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
+      assert_equal json_data['consumerAuthenticationInformation']['veresEnrolled'], 'true'
+      assert_equal json_data['consumerAuthenticationInformation']['paresStatus'], 'Y'
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_adds_application_id_as_partner_solution_id
     partner_id = 'partner_id'
     CyberSourceRestGateway.application_id = partner_id
@@ -440,6 +536,48 @@ class CyberSourceRestTest < Test::Unit::TestCase
     -> "\r\n"
     reading 905 bytes...
     -> "{\"_links\":{\"authReversal\":{\"method\":\"POST\",\"href\":\"/pts/v2/payments/6750124114786780104953/reversals\"},\"self\":{\"method\":\"GET\",\"href\":\"/pts/v2/payments/6750124114786780104953\"},\"capture\":{\"method\":\"POST\",\"href\":\"/pts/v2/payments/6750124114786780104953/captures\"}},\"clientReferenceInformation\":{\"code\":\"b8779865d140125036016a0f85db907f\"},\"id\":\"6750124114786780104953\",\"orderInformation\":{\"amountDetails\":{\"authorizedAmount\":\"102.21\",\"currency\":\"USD\"}},\"paymentAccountInformation\":{\"card\":{\"type\":\"001\"}},\"paymentInformation\":{\"tokenizedCard\":{\"type\":\"001\"},\"card\":{\"type\":\"001\"}},\"pointOfSaleInformation\":{\"terminalId\":\"111111\"},\"processorInformation\":{\"approvalCode\":\"888888\",\"networkTransactionId\":\"123456789619999\",\"transactionId\":\"123456789619999\",\"responseCode\":\"100\",\"avs\":{\"code\":\"X\",\"codeRaw\":\"I1\"}},\"reconciliationId\":\"78243988SD9YL291\",\"status\":\"AUTHORIZED\",\"submitTimeUtc\":\"2023-01-29T17:13:31Z\"}"
+    POST
+  end
+
+  def pre_scrubbed_nt
+    <<-PRE
+    <- "POST /pts/v2/payments/ HTTP/1.1\r\nContent-Type: application/json;charset=utf-8\r\nAccept: application/hal+json;charset=utf-8\r\nV-C-Merchant-Id: testrest\r\nDate: Sun, 29 Jan 2023 17:13:30 GMT\r\nHost: apitest.cybersource.com\r\nSignature: keyid=\"08c94330-f618-42a3-b09d-e1e43be5efda\", algorithm=\"HmacSHA256\", headers=\"host date (request-target) digest v-c-merchant-id\", signature=\"DJHeHWceVrsJydd8BCbGowr9dzQ/ry5cGN1FocLakEw=\"\r\nDigest: SHA-256=wuV1cxGzs6KpuUKJmlD7pKV6MZ/5G1wQVoYbf8cRChM=\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nContent-Length: 584\r\n\r\n"
+    <- "{\"clientReferenceInformation\":{\"code\":\"ba20ae354e25edd1a5ab27158c0a2955\"},\"paymentInformation\":{\"tokenizedCard\":{\"number\":\"4111111111111111\",\"expirationMonth\":9,\"expirationYear\":2025,\"cryptogram\":\"EHuWW9PiBkWvqE5juRwDzAUFBAk=\",\"type\":\"001\",\"transactionType\":\"3\"}},\"orderInformation\":{\"amountDetails\":{\"totalAmount\":\"102.21\",\"currency\":\"USD\"},\"billTo\":{\"firstName\":\"John\",\"lastName\":\"Doe\",\"address1\":\"1 Market St\",\"locality\":\"san francisco\",\"administrativeArea\":\"CA\",\"postalCode\":\"94105\",\"country\":\"US\",\"email\":\"test@cybs.com\",\"phoneNumber\":\"4158880000\"}},\"processingInformation\":{\"commerceIndicator\":\"internet\",\"paymentSolution\":\"015\",\"authorizationOptions\":{}}}"
+    -> "HTTP/1.1 201 Created\r\n"
+    -> "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+    -> "Pragma: no-cache\r\n"
+    -> "Expires: -1\r\n"
+    -> "Strict-Transport-Security: max-age=31536000\r\n"
+    -> "Content-Type: application/hal+json\r\n"
+    -> "Content-Length: 905\r\n"
+    -> "x-response-time: 291ms\r\n"
+    -> "X-OPNET-Transaction-Trace: 0b1f2bd7-9545-4939-9478-4b76cf7199b6\r\n"
+    -> "Connection: close\r\n"
+    -> "v-c-correlation-id: 42969bf5-a77d-4035-9d09-58d4ca070e8c\r\n"
+    -> "\r\n"
+    reading 905 bytes...
+    -> "{\"_links\":{\"authReversal\":{\"method\":\"POST\",\"href\":\"/pts/v2/payments/7145981349676498704951/reversals\"},\"self\":{\"method\":\"GET\",\"href\":\"/pts/v2/payments/7145981349676498704951\"},\"capture\":{\"method\":\"POST\",\"href\":\"/pts/v2/payments/7145981349676498704951/captures\"}},\"clientReferenceInformation\":{\"code\":\"ba20ae354e25edd1a5ab27158c0a2955\"},\"id\":\"7145981349676498704951\",\"issuerInformation\":{\"responseRaw\":\"0110322000000E10000200000000000001022105012115353420253130383141564D334B5953323833313030303030000159008000223134573031363135303730333830323039344730363400103232415050524F56414C00065649435243200034544B54523031313132313231323132313231544C3030323636504E30303431313131\"},\"orderInformation\":{\"amountDetails\":{\"authorizedAmount\":\"102.21\",\"currency\":\"USD\"}},\"paymentAccountInformation\":{\"card\":{\"type\":\"001\"}},\"paymentInformation\":{\"tokenizedCard\":{\"requestorId\":\"12121212121\",\"assuranceLevel\":\"66\",\"type\":\"001\"},\"card\":{\"suffix\":\"1111\",\"type\":\"001\"}},\"pointOfSaleInformation\":{\"terminalId\":\"01234567\"},\"processorInformation\":{\"merchantNumber\":\"000123456789012\",\"approvalCode\":\"831000\",\"networkTransactionId\":\"016150703802094\",\"transactionId\":\"016150703802094\",\"responseCode\":\"00\",\"avs\":{\"code\":\"Y\",\"codeRaw\":\"Y\"}},\"reconciliationId\":\"1081AVM3KYS2\",\"status\":\"AUTHORIZED\",\"submitTimeUtc\":\"2024-05-01T21:15:35Z\"}"
+    PRE
+  end
+
+  def post_scrubbed_nt
+    <<-POST
+    <- "POST /pts/v2/payments/ HTTP/1.1\r\nContent-Type: application/json;charset=utf-8\r\nAccept: application/hal+json;charset=utf-8\r\nV-C-Merchant-Id: testrest\r\nDate: Sun, 29 Jan 2023 17:13:30 GMT\r\nHost: apitest.cybersource.com\r\nSignature: keyid=\"[FILTERED]\", algorithm=\"HmacSHA256\", headers=\"host date (request-target) digest v-c-merchant-id\", signature=\"[FILTERED]\"\r\nDigest: SHA-256=[FILTERED]\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nContent-Length: 584\r\n\r\n"
+    <- "{\"clientReferenceInformation\":{\"code\":\"ba20ae354e25edd1a5ab27158c0a2955\"},\"paymentInformation\":{\"tokenizedCard\":{\"number\":\"[FILTERED]\",\"expirationMonth\":9,\"expirationYear\":2025,\"cryptogram\":\"[FILTERED]\",\"type\":\"001\",\"transactionType\":\"3\"}},\"orderInformation\":{\"amountDetails\":{\"totalAmount\":\"102.21\",\"currency\":\"USD\"},\"billTo\":{\"firstName\":\"John\",\"lastName\":\"Doe\",\"address1\":\"1 Market St\",\"locality\":\"san francisco\",\"administrativeArea\":\"CA\",\"postalCode\":\"94105\",\"country\":\"US\",\"email\":\"test@cybs.com\",\"phoneNumber\":\"4158880000\"}},\"processingInformation\":{\"commerceIndicator\":\"internet\",\"paymentSolution\":\"015\",\"authorizationOptions\":{}}}"
+    -> "HTTP/1.1 201 Created\r\n"
+    -> "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+    -> "Pragma: no-cache\r\n"
+    -> "Expires: -1\r\n"
+    -> "Strict-Transport-Security: max-age=31536000\r\n"
+    -> "Content-Type: application/hal+json\r\n"
+    -> "Content-Length: 905\r\n"
+    -> "x-response-time: 291ms\r\n"
+    -> "X-OPNET-Transaction-Trace: 0b1f2bd7-9545-4939-9478-4b76cf7199b6\r\n"
+    -> "Connection: close\r\n"
+    -> "v-c-correlation-id: 42969bf5-a77d-4035-9d09-58d4ca070e8c\r\n"
+    -> "\r\n"
+    reading 905 bytes...
+    -> "{\"_links\":{\"authReversal\":{\"method\":\"POST\",\"href\":\"/pts/v2/payments/7145981349676498704951/reversals\"},\"self\":{\"method\":\"GET\",\"href\":\"/pts/v2/payments/7145981349676498704951\"},\"capture\":{\"method\":\"POST\",\"href\":\"/pts/v2/payments/7145981349676498704951/captures\"}},\"clientReferenceInformation\":{\"code\":\"ba20ae354e25edd1a5ab27158c0a2955\"},\"id\":\"7145981349676498704951\",\"issuerInformation\":{\"responseRaw\":\"0110322000000E10000200000000000001022105012115353420253130383141564D334B5953323833313030303030000159008000223134573031363135303730333830323039344730363400103232415050524F56414C00065649435243200034544B54523031313132313231323132313231544C3030323636504E30303431313131\"},\"orderInformation\":{\"amountDetails\":{\"authorizedAmount\":\"102.21\",\"currency\":\"USD\"}},\"paymentAccountInformation\":{\"card\":{\"type\":\"001\"}},\"paymentInformation\":{\"tokenizedCard\":{\"requestorId\":\"12121212121\",\"assuranceLevel\":\"66\",\"type\":\"001\"},\"card\":{\"suffix\":\"1111\",\"type\":\"001\"}},\"pointOfSaleInformation\":{\"terminalId\":\"01234567\"},\"processorInformation\":{\"merchantNumber\":\"000123456789012\",\"approvalCode\":\"831000\",\"networkTransactionId\":\"016150703802094\",\"transactionId\":\"016150703802094\",\"responseCode\":\"00\",\"avs\":{\"code\":\"Y\",\"codeRaw\":\"Y\"}},\"reconciliationId\":\"1081AVM3KYS2\",\"status\":\"AUTHORIZED\",\"submitTimeUtc\":\"2024-05-01T21:15:35Z\"}"
     POST
   end
 

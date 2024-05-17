@@ -33,6 +33,15 @@ module ActiveMerchant #:nodoc:
         discover: 'pb',
         diners_club: 'pb'
       }.freeze
+      THREEDS_EXEMPTIONS = {
+        authentication_outage: 'authenticationOutageExemptionIndicator',
+        corporate_card: 'secureCorporatePaymentIndicator',
+        delegated_authentication: 'delegatedAuthenticationExemptionIndicator',
+        low_risk: 'riskAnalysisExemptionIndicator',
+        low_value: 'lowValueExemptionIndicator',
+        stored_credential: 'stored_credential',
+        trusted_merchant: 'trustedMerchantExemptionIndicator'
+      }
       DEFAULT_COLLECTION_INDICATOR = 2
 
       self.supported_cardtypes = %i[visa master american_express discover diners_club jcb dankort maestro elo]
@@ -132,9 +141,14 @@ module ActiveMerchant #:nodoc:
         r703: 'Export hostname_country/ip_country match'
       }
 
-      @@payment_solution = {
+      @@wallet_payment_solution = {
         apple_pay: '001',
         google_pay: '012'
+      }
+
+      NT_PAYMENT_SOLUTION = {
+        'master' => '014',
+        'visa' => '015'
       }
 
       # These are the options that can be used when creating a new CyberSource
@@ -161,9 +175,15 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, creditcard_or_reference, options = {})
-        setup_address_hash(options)
-        commit(build_auth_request(money, creditcard_or_reference, options), :authorize, money, options)
+      def authorize(money, payment_method, options = {})
+        if valid_payment_method?(payment_method)
+          setup_address_hash(options)
+          commit(build_auth_request(money, payment_method, options), :authorize, money, options)
+        else
+          # this is for NetworkToken, ApplePay or GooglePay brands that aren't supported at CyberSource
+          payment_type = payment_method.source.to_s.gsub('_', ' ').titleize.gsub(' ', '')
+          Response.new(false, "#{card_brand(payment_method).capitalize} is not supported by #{payment_type} at CyberSource, check https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/CreatingOnlineAuth/CreatingAuthReqPNT.html")
+        end
       end
 
       def capture(money, authorization, options = {})
@@ -171,9 +191,15 @@ module ActiveMerchant #:nodoc:
         commit(build_capture_request(money, authorization, options), :capture, money, options)
       end
 
-      def purchase(money, payment_method_or_reference, options = {})
-        setup_address_hash(options)
-        commit(build_purchase_request(money, payment_method_or_reference, options), :purchase, money, options)
+      def purchase(money, payment_method, options = {})
+        if valid_payment_method?(payment_method)
+          setup_address_hash(options)
+          commit(build_purchase_request(money, payment_method, options), :purchase, money, options)
+        else
+          # this is for NetworkToken, ApplePay or GooglePay brands that aren't supported at CyberSource
+          payment_type = payment_method.source.to_s.gsub('_', ' ').titleize.gsub(' ', '')
+          Response.new(false, "#{card_brand(payment_method).capitalize} is not supported by #{payment_type} at CyberSource, check https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/CreatingOnlineAuth/CreatingAuthReqPNT.html")
+        end
       end
 
       def void(identification, options = {})
@@ -206,8 +232,14 @@ module ActiveMerchant #:nodoc:
       # To charge the card while creating a profile, pass
       # options[:setup_fee] => money
       def store(payment_method, options = {})
-        setup_address_hash(options)
-        commit(build_create_subscription_request(payment_method, options), :store, nil, options)
+        if valid_payment_method?(payment_method)
+          setup_address_hash(options)
+          commit(build_create_subscription_request(payment_method, options), :store, nil, options)
+        else
+          # this is for NetworkToken, ApplePay or GooglePay brands that aren't supported at CyberSource
+          payment_type = payment_method.source.to_s.gsub('_', ' ').titleize.gsub(' ', '')
+          Response.new(false, "#{card_brand(payment_method).capitalize} is not supported by #{payment_type} at CyberSource, check https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/CreatingOnlineAuth/CreatingAuthReqPNT.html")
+        end
       end
 
       # Updates a customer subscription/profile
@@ -272,6 +304,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<cvNumber>)[^<]*(</cvNumber>))i, '\1[FILTERED]\2').
           gsub(%r((<cavv>)[^<]*(</cavv>))i, '\1[FILTERED]\2').
           gsub(%r((<xid>)[^<]*(</xid>))i, '\1[FILTERED]\2').
+          gsub(%r((<networkTokenCryptogram>)[^<]*(</networkTokenCryptogram>))i, '\1[FILTERED]\2').
+          gsub(%r((<requestorID>)[^<]*(</requestorID>))i, '\1[FILTERED]\2').
           gsub(%r((<authenticationData>)[^<]*(</authenticationData>))i, '\1[FILTERED]\2')
       end
 
@@ -285,6 +319,12 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def valid_payment_method?(payment_method)
+        return true unless payment_method.is_a?(NetworkTokenizationCreditCard)
+
+        %w(visa master american_express).include?(card_brand(payment_method))
+      end
 
       # Create all required address hash key value pairs
       # If a value of nil is received, that value will be passed on to the gateway and will not be replaced with a default value
@@ -317,17 +357,19 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
-        add_other_tax(xml, options)
         add_threeds_2_ucaf_data(xml, creditcard_or_reference, options)
+        add_mastercard_network_tokenization_ucaf_data(xml, creditcard_or_reference, options)
         add_decision_manager_fields(xml, options)
+        add_other_tax(xml, options)
         add_mdd_fields(xml, options)
         add_auth_service(xml, creditcard_or_reference, options)
+        add_capture_service_fields_with_run_false(xml, options)
         add_threeds_services(xml, options)
         add_business_rules_data(xml, creditcard_or_reference, options)
         add_airline_data(xml, options)
         add_sales_slip_number(xml, options)
-        add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
-        add_payment_solution(xml, creditcard_or_reference.source) if network_tokenization?(creditcard_or_reference)
+        add_payment_network_token(xml, creditcard_or_reference, options)
+        add_payment_solution(xml, creditcard_or_reference)
         add_tax_management_indicator(xml, options)
         add_stored_credential_subsequent_auth(xml, options)
         add_issuer_additional_data(xml, options)
@@ -380,9 +422,10 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
-        add_other_tax(xml, options)
         add_threeds_2_ucaf_data(xml, payment_method_or_reference, options)
+        add_mastercard_network_tokenization_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
+        add_other_tax(xml, options)
         add_mdd_fields(xml, options)
         if (!payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check') || reference_is_a_check?(payment_method_or_reference)
           add_check_service(xml)
@@ -398,8 +441,8 @@ module ActiveMerchant #:nodoc:
           add_business_rules_data(xml, payment_method_or_reference, options)
           add_airline_data(xml, options)
           add_sales_slip_number(xml, options)
-          add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
-          add_payment_solution(xml, payment_method_or_reference.source) if network_tokenization?(payment_method_or_reference)
+          add_payment_network_token(xml, payment_method_or_reference, options)
+          add_payment_solution(xml, payment_method_or_reference)
           add_tax_management_indicator(xml, options)
           add_stored_credential_subsequent_auth(xml, options)
           add_issuer_additional_data(xml, options)
@@ -487,7 +530,7 @@ module ActiveMerchant #:nodoc:
             add_check_service(xml)
           else
             add_purchase_service(xml, payment_method, options)
-            add_payment_network_token(xml) if network_tokenization?(payment_method)
+            add_payment_network_token(xml, payment_method, options)
           end
         end
         add_subscription_create_service(xml, options)
@@ -677,10 +720,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_payment_solution(xml, source)
-        return unless (payment_solution = @@payment_solution[source])
+      def add_payment_solution(xml, payment_method)
+        return unless network_tokenization?(payment_method)
 
-        xml.tag! 'paymentSolution', payment_solution
+        case payment_method.source
+        when :network_token
+          payment_solution = NT_PAYMENT_SOLUTION[payment_method.brand]
+          xml.tag! 'paymentSolution', payment_solution if payment_solution
+        when :apple_pay, :google_pay
+          xml.tag! 'paymentSolution', @@wallet_payment_solution[payment_method.source]
+        end
       end
 
       def add_issuer_additional_data(xml, options)
@@ -692,7 +741,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_other_tax(xml, options)
-        return unless options[:local_tax_amount] || options[:national_tax_amount] || options[:national_tax_indicator]
+        return unless %i[vat_tax_rate local_tax_amount national_tax_amount national_tax_indicator].any? { |gsf| options.include?(gsf) }
 
         xml.tag! 'otherTax' do
           xml.tag! 'vatTaxRate', options[:vat_tax_rate] if options[:vat_tax_rate]
@@ -731,18 +780,36 @@ module ActiveMerchant #:nodoc:
 
       def add_auth_service(xml, payment_method, options)
         if network_tokenization?(payment_method)
-          add_auth_network_tokenization(xml, payment_method, options)
+          if payment_method.source == :network_token
+            add_auth_network_tokenization(xml, payment_method, options)
+          else
+            add_auth_wallet(xml, payment_method, options)
+          end
         else
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
             if options[:three_d_secure]
               add_normalized_threeds_2_data(xml, payment_method, options)
+              add_threeds_exemption_data(xml, options) if options[:three_ds_exemption_type]
             else
               indicator = options[:commerce_indicator] || stored_credential_commerce_indicator(options)
               xml.tag!('commerceIndicator', indicator) if indicator
             end
+            xml.tag!('aggregatorID', options[:aggregator_id]) if options[:aggregator_id]
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+            xml.tag!('firstRecurringPayment', options[:first_recurring_payment]) if options[:first_recurring_payment]
             xml.tag!('mobileRemotePaymentType', options[:mobile_remote_payment_type]) if options[:mobile_remote_payment_type]
           end
+        end
+      end
+
+      def add_threeds_exemption_data(xml, options)
+        return unless options[:three_ds_exemption_type]
+
+        exemption = options[:three_ds_exemption_type].to_sym
+
+        case exemption
+        when :authentication_outage, :corporate_card, :delegated_authentication, :low_risk, :low_value, :trusted_merchant
+          xml.tag!(THREEDS_EXEMPTIONS[exemption], '1')
         end
       end
 
@@ -809,14 +876,20 @@ module ActiveMerchant #:nodoc:
 
       def subsequent_nt_apple_pay_auth(source, options)
         return unless options[:stored_credential] || options[:stored_credential_overrides]
-        return unless @@payment_solution[source]
+        return unless @@wallet_payment_solution[source]
 
         options.dig(:stored_credential_overrides, :subsequent_auth) || options.dig(:stored_credential, :initiator) == 'merchant'
       end
 
       def add_auth_network_tokenization(xml, payment_method, options)
-        return unless network_tokenization?(payment_method)
+        xml.tag! 'ccAuthService', { 'run' => 'true' } do
+          xml.tag!('networkTokenCryptogram', payment_method.payment_cryptogram)
+          xml.tag!('commerceIndicator', 'internet')
+          xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+        end
+      end
 
+      def add_auth_wallet(xml, payment_method, options)
         commerce_indicator = 'internet' if subsequent_nt_apple_pay_auth(payment_method.source, options)
 
         brand = card_brand(payment_method).to_sym
@@ -830,10 +903,6 @@ module ActiveMerchant #:nodoc:
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         when :master
-          xml.tag! 'ucaf' do
-            xml.tag!('authenticationData', payment_method.payment_cryptogram) unless commerce_indicator
-            xml.tag!('collectionIndicator', DEFAULT_COLLECTION_INDICATOR)
-          end
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
             xml.commerceIndicator commerce_indicator.nil? ? ECI_BRAND_MAPPING[brand] : commerce_indicator
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
@@ -846,14 +915,28 @@ module ActiveMerchant #:nodoc:
             xml.tag!('xid', Base64.encode64(cryptogram[20...40])) if cryptogram.bytes.count > 20
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
-        else
-          raise ArgumentError.new("Payment method #{brand} is not supported, check https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/CreatingOnlineAuth/CreatingAuthReqPNT.html")
         end
       end
 
-      def add_payment_network_token(xml)
+      def add_mastercard_network_tokenization_ucaf_data(xml, payment_method, options)
+        return unless network_tokenization?(payment_method) && card_brand(payment_method).to_sym == :master
+        return if payment_method.source == :network_token
+
+        commerce_indicator = 'internet' if subsequent_nt_apple_pay_auth(payment_method.source, options)
+
+        xml.tag! 'ucaf' do
+          xml.tag!('authenticationData', payment_method.payment_cryptogram) unless commerce_indicator
+          xml.tag!('collectionIndicator', DEFAULT_COLLECTION_INDICATOR)
+        end
+      end
+
+      def add_payment_network_token(xml, payment_method, options)
+        return unless network_tokenization?(payment_method)
+
+        transaction_type = payment_method.source == :network_token ? '3' : '1'
         xml.tag! 'paymentNetworkToken' do
-          xml.tag!('transactionType', '1')
+          xml.tag!('requestorID', options[:trid]) if transaction_type == '3' && options[:trid]
+          xml.tag!('transactionType', transaction_type)
         end
       end
 
@@ -866,10 +949,19 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_capture_service_fields_with_run_false(xml, options)
+        return unless options[:gratuity_amount]
+
+        xml.tag! 'ccCaptureService', { 'run' => 'false' } do
+          xml.tag! 'gratuityAmount', options[:gratuity_amount]
+        end
+      end
+
       def add_purchase_service(xml, payment_method, options)
         add_auth_service(xml, payment_method, options)
         xml.tag! 'ccCaptureService', { 'run' => 'true' } do
           xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+          xml.tag!('gratuityAmount', options[:gratuity_amount]) if options[:gratuity_amount]
         end
       end
 
@@ -1014,7 +1106,7 @@ module ActiveMerchant #:nodoc:
 
         stored_credential_subsequent_auth_first = 'true' if options.dig(:stored_credential, :initial_transaction)
         stored_credential_transaction_id = options.dig(:stored_credential, :network_transaction_id) if options.dig(:stored_credential, :initiator) == 'merchant'
-        stored_credential_subsequent_auth_stored_cred = 'true' if options.dig(:stored_credential, :initiator) == 'cardholder' && !options.dig(:stored_credential, :initial_transaction) || options.dig(:stored_credential, :initiator) == 'merchant' && options.dig(:stored_credential, :reason_type) == 'unscheduled'
+        stored_credential_subsequent_auth_stored_cred = 'true' if subsequent_cardholder_initiated_transaction?(options) || unscheduled_merchant_initiated_transaction?(options) || threeds_stored_credential_exemption?(options)
 
         override_subsequent_auth_first = options.dig(:stored_credential_overrides, :subsequent_auth_first)
         override_subsequent_auth_transaction_id = options.dig(:stored_credential_overrides, :subsequent_auth_transaction_id)
@@ -1023,6 +1115,18 @@ module ActiveMerchant #:nodoc:
         xml.subsequentAuthFirst override_subsequent_auth_first.nil? ? stored_credential_subsequent_auth_first : override_subsequent_auth_first
         xml.subsequentAuthTransactionID override_subsequent_auth_transaction_id.nil? ? stored_credential_transaction_id : override_subsequent_auth_transaction_id
         xml.subsequentAuthStoredCredential override_subsequent_auth_stored_cred.nil? ? stored_credential_subsequent_auth_stored_cred : override_subsequent_auth_stored_cred
+      end
+
+      def subsequent_cardholder_initiated_transaction?(options)
+        options.dig(:stored_credential, :initiator) == 'cardholder' && !options.dig(:stored_credential, :initial_transaction)
+      end
+
+      def unscheduled_merchant_initiated_transaction?(options)
+        options.dig(:stored_credential, :initiator) == 'merchant' && options.dig(:stored_credential, :reason_type) == 'unscheduled'
+      end
+
+      def threeds_stored_credential_exemption?(options)
+        options[:three_ds_exemption_type] == THREEDS_EXEMPTIONS[:stored_credential]
       end
 
       def add_partner_solution_id(xml)
@@ -1128,6 +1232,7 @@ module ActiveMerchant #:nodoc:
             parent += '_' + node.parent.attributes['id'] if node.parent.attributes['id']
             parent += '_'
           end
+          reply[:reconciliationID2] = node.text if node.name == 'reconciliationID' && reply[:reconciliationID]
           reply["#{parent}#{node.name}".to_sym] ||= node.text
         end
         return reply

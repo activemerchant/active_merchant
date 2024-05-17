@@ -19,6 +19,15 @@ class AleloTest < Test::Unit::TestCase
     }
   end
 
+  def test_fetch_access_token_should_rise_an_exception_under_unauthorized
+    error = assert_raises(ActiveMerchant::OAuthResponseError) do
+      @gateway.expects(:raw_ssl_request).returns(Net::HTTPBadRequest.new(1.0, 401, 'Unauthorized'))
+      @gateway.send(:fetch_access_token)
+    end
+
+    assert_match(/Failed with 401 Unauthorized/, error.message)
+  end
+
   def test_required_client_id_and_client_secret
     error = assert_raises ArgumentError do
       AleloGateway.new

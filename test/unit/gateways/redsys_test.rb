@@ -86,7 +86,7 @@ class RedsysTest < Test::Unit::TestCase
         includes(CGI.escape('<DS_MERCHANT_COF_INI>S</DS_MERCHANT_COF_INI>')),
         includes(CGI.escape('<DS_MERCHANT_COF_TYPE>R</DS_MERCHANT_COF_TYPE>')),
         includes(CGI.escape('<DS_MERCHANT_PAN>4242424242424242</DS_MERCHANT_PAN>')),
-        includes(CGI.escape('<DS_MERCHANT_EXPIRYDATE>2409</DS_MERCHANT_EXPIRYDATE>')),
+        includes(CGI.escape("<DS_MERCHANT_EXPIRYDATE>#{1.year.from_now.strftime('%y')}09</DS_MERCHANT_EXPIRYDATE>")),
         includes(CGI.escape('<DS_MERCHANT_CVV2>123</DS_MERCHANT_CVV2>')),
         includes(CGI.escape('<DS_MERCHANT_DIRECTPAYMENT>false</DS_MERCHANT_DIRECTPAYMENT>')),
         Not(includes(CGI.escape('<DS_MERCHANT_EXCEP_SCA>'))),
@@ -116,7 +116,7 @@ class RedsysTest < Test::Unit::TestCase
         includes('<DS_MERCHANT_COF_INI>N</DS_MERCHANT_COF_INI>'),
         includes('<DS_MERCHANT_COF_TYPE>R</DS_MERCHANT_COF_TYPE>'),
         includes('<DS_MERCHANT_PAN>4242424242424242</DS_MERCHANT_PAN>'),
-        includes('<DS_MERCHANT_EXPIRYDATE>2409</DS_MERCHANT_EXPIRYDATE>'),
+        includes("<DS_MERCHANT_EXPIRYDATE>#{1.year.from_now.strftime('%y')}09</DS_MERCHANT_EXPIRYDATE>"),
         includes('<DS_MERCHANT_CVV2>123</DS_MERCHANT_CVV2>'),
         includes('<DS_MERCHANT_DIRECTPAYMENT>true</DS_MERCHANT_DIRECTPAYMENT>'),
         includes('<DS_MERCHANT_EXCEP_SCA>MIT</DS_MERCHANT_EXCEP_SCA>'),
@@ -316,23 +316,33 @@ class RedsysTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response).then.returns(successful_void_response)
-    response = @gateway.verify(credit_card, @options)
-    assert_success response
-  end
+    @gateway.expects(:ssl_post).with(
+      anything,
+      all_of(
+        includes(CGI.escape('<DS_MERCHANT_TRANSACTIONTYPE>0</DS_MERCHANT_TRANSACTIONTYPE>')),
+        includes(CGI.escape('<DS_MERCHANT_AMOUNT>0</DS_MERCHANT_AMOUNT>'))
+      ),
+      anything
+    ).returns(successful_purchase_response)
 
-  def test_successful_verify_with_failed_void
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response).then.returns(failed_void_response)
     response = @gateway.verify(credit_card, @options)
+
     assert_success response
-    assert_equal 'Transaction Approved', response.message
   end
 
   def test_unsuccessful_verify
-    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+    @gateway.expects(:ssl_post).with(
+      anything,
+      all_of(
+        includes(CGI.escape('<DS_MERCHANT_TRANSACTIONTYPE>0</DS_MERCHANT_TRANSACTIONTYPE>')),
+        includes(CGI.escape('<DS_MERCHANT_AMOUNT>0</DS_MERCHANT_AMOUNT>'))
+      ),
+      anything
+    ).returns(failed_purchase_response)
+
     response = @gateway.verify(credit_card, @options)
+
     assert_failure response
-    assert_equal 'SIS0093 ERROR', response.message
   end
 
   def test_unknown_currency

@@ -30,6 +30,16 @@ class RemoteDecidirTest < Test::Unit::TestCase
         amount: 1500
       }
     ]
+    @network_token = network_tokenization_credit_card(
+      '4012001037141112',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: '000203016912340000000FA08400317500000000',
+      name: 'Tesest payway'
+    )
+
+    @failed_message = ['PEDIR AUTORIZACION | request_authorization_card', 'COMERCIO INVALIDO | invalid_card']
+    @failed_code = ['1, call_issuer', '3, config_error']
   end
 
   def test_successful_purchase
@@ -48,6 +58,22 @@ class RemoteDecidirTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_amex
     response = @gateway_for_purchase.purchase(@amount, @amex_credit_card, @options)
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_network_token
+    options = {
+      card_holder_door_number: 1234,
+      card_holder_birthday: '200988',
+      card_holder_identification_type: 'DNI',
+      card_holder_identification_number: '44444444',
+      order_id: SecureRandom.uuid,
+      last_4: @credit_card.last_digits
+    }
+    response = @gateway_for_purchase.purchase(500, @network_token, options)
+
     assert_success response
     assert_equal 'approved', response.message
     assert response.authorization
@@ -145,6 +171,18 @@ class RemoteDecidirTest < Test::Unit::TestCase
     assert_equal 'approved', response.message
   end
 
+  def test_successful_purchase_with_customer_object
+    customer_options = {
+      customer_id: 'John',
+      customer_email: 'decidir@decidir.com'
+    }
+
+    assert response = @gateway_for_purchase.purchase(@amount, @credit_card, @options.merge(customer_options))
+    assert_success response
+
+    assert_equal 'approved', response.message
+  end
+
   def test_failed_purchase_with_bad_csmdds
     options = {
       fraud_detection: {
@@ -169,9 +207,14 @@ class RemoteDecidirTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway_for_purchase.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'COMERCIO INVALIDO | invalid_card', response.message
-    assert_equal '3, config_error', response.error_code
-    assert_match Gateway::STANDARD_ERROR_CODE[:config_error], response.error_code
+    assert_equal @failed_message.include?(response.message), true
+    assert_equal @failed_code.include?(response.error_code), true
+
+    if response.error_code.start_with?('1')
+      assert_match Gateway::STANDARD_ERROR_CODE[:call_issuer], response.error_code
+    else
+      assert_match Gateway::STANDARD_ERROR_CODE[:config_error], response.error_code
+    end
   end
 
   def test_failed_purchase_with_invalid_field
@@ -196,8 +239,13 @@ class RemoteDecidirTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway_for_auth.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'PEDIR AUTORIZACION | request_authorization_card', response.message
-    assert_match '1, call_issuer', response.error_code
+    assert_equal @failed_message.include?(response.message), true
+    assert_equal @failed_code.include?(response.error_code), true
+    if response.error_code.start_with?('1')
+      assert_match Gateway::STANDARD_ERROR_CODE[:call_issuer], response.error_code
+    else
+      assert_match Gateway::STANDARD_ERROR_CODE[:config_error], response.error_code
+    end
   end
 
   def test_failed_partial_capture

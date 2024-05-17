@@ -20,22 +20,6 @@ module ActiveMerchant #:nodoc:
         'add' => 'tokens',
         'verify' => 'cards'
       }
-      STANDARD_ERROR_CODE_MAPPING = {
-        'incorrect_number' => STANDARD_ERROR_CODE[:incorrect_number],
-        'invalid_number' => STANDARD_ERROR_CODE[:invalid_number],
-        'invalid_expiry_month' => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        'invalid_expiry_year' => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        'invalid_cvc' => STANDARD_ERROR_CODE[:invalid_cvc],
-        'expired_card' => STANDARD_ERROR_CODE[:expired_card],
-        'insufficient_funds' => STANDARD_ERROR_CODE[:card_declined],
-        'incorrect_cvc' => STANDARD_ERROR_CODE[:incorrect_cvc],
-        'incorrect_zip' => STANDARD_ERROR_CODE[:incorrect_zip],
-        'card_declined' => STANDARD_ERROR_CODE[:card_declined],
-        'processing_error' => STANDARD_ERROR_CODE[:processing_error],
-        'lost_or_stolen' => STANDARD_ERROR_CODE[:card_declined],
-        'suspected_fraud' => STANDARD_ERROR_CODE[:card_declined],
-        'expired_token' => STANDARD_ERROR_CODE[:card_declined]
-      }
 
       def initialize(options = {})
         requires!(options, :client_guid, :auth_token)
@@ -147,7 +131,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r(("expirationDate\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("FirstName\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("LastName\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("securityCode\\?":{\\?"[\w]+\\?":[\d]+,\\?"value\\?":\\?")[\d]*)i, '\1[FILTERED]')
+          gsub(%r(("securityCode\\?":{\\?"\w+\\?":\d+,\\?"value\\?":\\?")\d*)i, '\1[FILTERED]')
       end
 
       def setup_access_token
@@ -263,6 +247,7 @@ module ActiveMerchant #:nodoc:
           message_from(action, response),
           response,
           authorization: authorization_from(action, response),
+          avs_result: avs_result_from(response),
           test: test?,
           error_code: error_code_from(action, response)
         )
@@ -284,13 +269,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(action, response)
-        success_from(action, response) ? 'Transaction successful' : (error(response)&.dig('longText') || 'Transaction declined')
+        success_from(action, response) ? 'Transaction successful' : (error(response)&.dig('longText') || response['result'].first&.dig('transaction', 'hostResponse', 'reasonDescription') || 'Transaction declined')
       end
 
       def error_code_from(action, response)
-        return unless success_from(action, response)
+        code = response['result'].first&.dig('transaction', 'responseCode')
+        primary_code = response['result'].first['error'].present?
+        return unless code == 'D' || primary_code == true || success_from(action, response)
 
-        STANDARD_ERROR_CODE_MAPPING[response['primaryCode']]
+        if response['result'].first&.dig('transaction', 'hostResponse')
+          response['result'].first&.dig('transaction', 'hostResponse', 'reasonCode')
+        elsif response['result'].first['error']
+          response['result'].first&.dig('error', 'primaryCode')
+        else
+          response['result'].first&.dig('transaction', 'responseCode')
+        end
+      end
+
+      def avs_result_from(response)
+        AVSResult.new(code: response['result'].first&.dig('transaction', 'avs', 'result')) if response['result'].first&.dig('transaction', 'avs')
       end
 
       def authorization_from(action, response)

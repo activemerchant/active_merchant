@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AR']
       self.money_format = :cents
       self.default_currency = 'ARS'
-      self.supported_cardtypes = %i[visa master american_express diners_club naranja cabal]
+      self.supported_cardtypes = %i[visa master american_express diners_club naranja cabal tuya]
 
       self.homepage_url = 'http://www.decidir.com'
       self.display_name = 'Decidir'
@@ -127,6 +127,7 @@ module ActiveMerchant #:nodoc:
         add_payment(post, credit_card, options)
         add_aggregate_data(post, options) if options[:aggregate_data]
         add_sub_payments(post, options)
+        add_customer_data(post, options)
       end
 
       def add_payment_method_id(credit_card, options)
@@ -167,29 +168,55 @@ module ActiveMerchant #:nodoc:
         post[:amount] = localized_amount(money, currency).to_i
       end
 
-      def add_payment(post, credit_card, options)
-        card_data = {}
+      def add_payment(post, payment_method, options)
+        add_common_payment_data(post, payment_method, options)
+
+        case payment_method
+        when NetworkTokenizationCreditCard
+          add_network_token(post, payment_method, options)
+        else
+          add_credit_card(post, payment_method, options)
+        end
+      end
+
+      def add_common_payment_data(post, payment_method, options)
+        post[:card_data] = {}
+
+        data = post[:card_data]
+        data[:card_holder_identification] = {}
+        data[:card_holder_identification][:type] = options[:card_holder_identification_type] if options[:card_holder_identification_type]
+        data[:card_holder_identification][:number] = options[:card_holder_identification_number] if options[:card_holder_identification_number]
+        data[:card_holder_name] = payment_method.name if payment_method.name
+
+        # additional data used for Visa transactions
+        data[:card_holder_door_number] = options[:card_holder_door_number].to_i if options[:card_holder_door_number]
+        data[:card_holder_birthday] = options[:card_holder_birthday] if options[:card_holder_birthday]
+      end
+
+      def add_network_token(post, payment_method, options)
+        post[:is_tokenized_payment] = true
+        post[:fraud_detection] ||= {}
+        post[:fraud_detection][:sent_to_cs] = false
+        post[:card_data][:last_four_digits] = options[:last_4]
+
+        post[:token_card_data] = {
+          token: payment_method.number,
+          eci: payment_method.eci,
+          cryptogram: payment_method.payment_cryptogram
+        }
+      end
+
+      def add_credit_card(post, credit_card, options)
+        card_data = post[:card_data]
         card_data[:card_number] = credit_card.number
         card_data[:card_expiration_month] = format(credit_card.month, :two_digits)
         card_data[:card_expiration_year] = format(credit_card.year, :two_digits)
         card_data[:security_code] = credit_card.verification_value if credit_card.verification_value?
-        card_data[:card_holder_name] = credit_card.name if credit_card.name
 
         # the device_unique_id has to be sent in via the card data (as device_unique_identifier) no other fraud detection fields require this
-        if options[:fraud_detection].present?
-          card_data[:fraud_detection] = {} if (options[:fraud_detection][:device_unique_id]).present?
-          card_data[:fraud_detection][:device_unique_identifier] = (options[:fraud_detection][:device_unique_id]) if (options[:fraud_detection][:device_unique_id]).present?
+        if (device_id = options.dig(:fraud_detection, :device_unique_id))
+          card_data[:fraud_detection] = { device_unique_identifier: device_id }
         end
-
-        # additional data used for Visa transactions
-        card_data[:card_holder_door_number] = options[:card_holder_door_number].to_i if options[:card_holder_door_number]
-        card_data[:card_holder_birthday] = options[:card_holder_birthday] if options[:card_holder_birthday]
-
-        card_data[:card_holder_identification] = {}
-        card_data[:card_holder_identification][:type] = options[:card_holder_identification_type] if options[:card_holder_identification_type]
-        card_data[:card_holder_identification][:number] = options[:card_holder_identification_number] if options[:card_holder_identification_number]
-
-        post[:card_data] = card_data
       end
 
       def add_aggregate_data(post, options)
@@ -213,6 +240,14 @@ module ActiveMerchant #:nodoc:
         aggregate_data[:merchant_email] = data[:merchant_email] if data[:merchant_email]
         aggregate_data[:merchant_phone] = data[:merchant_phone] if data[:merchant_phone]
         post[:aggregate_data] = aggregate_data
+      end
+
+      def add_customer_data(post, options = {})
+        return unless options[:customer_email] || options[:customer_id]
+
+        post[:customer] = {}
+        post[:customer][:id] = options[:customer_id] if options[:customer_id]
+        post[:customer][:email] = options[:customer_email] if options[:customer_email]
       end
 
       def add_sub_payments(post, options)
@@ -262,7 +297,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(method, endpoint, parameters, options = {})
-        url = "#{(test? ? test_url : live_url)}/#{endpoint}"
+        url = "#{test? ? test_url : live_url}/#{endpoint}"
 
         begin
           raw_response = ssl_request(method, url, post_data(parameters), headers(options))

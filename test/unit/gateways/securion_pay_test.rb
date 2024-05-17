@@ -262,7 +262,7 @@ class SecurionPayTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
-    assert_nil response.authorization
+    assert_equal 'char_mApucpvVbCJgo7x09Je4n9gC', response.authorization
     assert response.test?
   end
 
@@ -392,6 +392,15 @@ class SecurionPayTest < Test::Unit::TestCase
 
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
     assert_equal 'char_mApucpvVbCJgo7x09Je4n9gC', response.params['error']['chargeId']
+  end
+
+  def test_amount_currency_gets_downcased
+    @options[:currency] = 'USD'
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'usd', CGI.parse(data)['currency'].first
+    end.respond_with(successful_purchase_response)
   end
 
   private

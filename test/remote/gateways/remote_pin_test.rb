@@ -47,6 +47,20 @@ class RemotePinTest < Test::Unit::TestCase
     assert_equal options_with_metadata[:metadata][:purchase_number], response.params['response']['metadata']['purchase_number']
   end
 
+  def test_successful_purchase_with_platform_adjustment
+    options_with_platform_adjustment = {
+      platform_adjustment: {
+        amount: 30,
+        currency: 'AUD'
+      }
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(options_with_platform_adjustment))
+    assert_success response
+    assert_equal true, response.params['response']['captured']
+    assert_equal options_with_platform_adjustment[:platform_adjustment][:amount], response.params['response']['platform_adjustment']['amount']
+    assert_equal options_with_platform_adjustment[:platform_adjustment][:currency], response.params['response']['platform_adjustment']['currency']
+  end
+
   def test_successful_purchase_with_reference
     response = @gateway.purchase(@amount, @credit_card, @options.merge(reference: 'statement descriptor'))
     assert_success response

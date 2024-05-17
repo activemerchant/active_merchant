@@ -9,6 +9,7 @@ class Shift4V2Test < SecurionPayTest
     @gateway = Shift4V2Gateway.new(
       secret_key: 'pr_test_random_key'
     )
+    @check = check
   end
 
   def test_invalid_raw_response
@@ -19,7 +20,48 @@ class Shift4V2Test < SecurionPayTest
     assert_match(/^Invalid response received from the Shift4 V2 API/, response.message)
   end
 
-  def test_ensure_does_not_respond_to_credit; end
+  def test_amount_gets_upcased_if_needed
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'USD', CGI.parse(data)['currency'].first
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_store_and_unstore
+    @gateway.expects(:ssl_post).returns(successful_new_customer_response)
+
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    @gateway.expects(:ssl_request).returns(successful_unstore_response)
+    unstore = @gateway.unstore('card_YhkJQlyF6NEc9RexV5dlZqTl', customer_id: 'cust_KDDJGACwxCUYkUb3fI76ERB7')
+    assert_success unstore
+  end
+
+  def test_successful_unstore
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.unstore('card_YhkJQlyF6NEc9RexV5dlZqTl', customer_id: 'cust_KDDJGACwxCUYkUb3fI76ERB7')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/cards/, data)
+    end.respond_with(successful_unstore_response)
+    assert response.success?
+    assert_equal response.message, 'Transaction approved'
+  end
+
+  def test_purchase_with_bank_account
+    stub_comms do
+      @gateway.purchase(@amount, @check, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      request = CGI.parse(data)
+      assert_equal request['paymentMethod[type]'].first, 'ach'
+      assert_equal request['paymentMethod[billing][name]'].first, 'Jim Smith'
+      assert_equal request['paymentMethod[billing][address][country]'].first, 'CA'
+      assert_equal request['paymentMethod[ach][account][routingNumber]'].first, '244183602'
+      assert_equal request['paymentMethod[ach][account][accountNumber]'].first, '15378535'
+      assert_equal request['paymentMethod[ach][account][accountType]'].first, 'personal_checking'
+      assert_equal request['paymentMethod[ach][verificationProvider]'].first, 'external'
+    end
+  end
 
   private
 
@@ -81,5 +123,13 @@ class Shift4V2Test < SecurionPayTest
       -> "\r\n"
       Conn close
     POST_SCRUBBED
+  end
+
+  def successful_unstore_response
+    <<-RESPONSE
+      {
+        "id" : "card_G9xcxTDcjErIijO19SEWskN6"
+      }
+    RESPONSE
   end
 end

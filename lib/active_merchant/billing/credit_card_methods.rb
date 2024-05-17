@@ -24,7 +24,11 @@ module ActiveMerchant #:nodoc:
         },
         'maestro_no_luhn'    => ->(num) { num =~ /^(501080|501081|501082)\d{6,13}$/ },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
-        'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818|505864|505865)\d{10}$/ },
+        'sodexo'             => lambda { |num|
+          num&.size == 16 && (
+            SODEXO_BINS.any? { |bin| num.slice(0, bin.size) == bin }
+          )
+        },
         'alia'               => ->(num) { num =~ /^(504997|505878|601030|601073|505874)\d{10}$/ },
         'vr'                 => ->(num) { num =~ /^(627416|637036)\d{10}$/ },
         'unionpay'           => ->(num) { (16..19).cover?(num&.size) && in_bin_range?(num.slice(0, 8), UNIONPAY_RANGES) },
@@ -39,7 +43,7 @@ module ActiveMerchant #:nodoc:
         'creditel' => ->(num) { num =~ /^601933\d{10}$/ },
         'confiable' => ->(num) { num =~ /^560718\d{10}$/ },
         'synchrony' => ->(num) { num =~ /^700600\d{10}$/ },
-        'routex' => ->(num) { num =~ /^(700676|700678)\d{13}$/ },
+        'routex' => ->(num) { num =~ /^(700674|700676|700678)\d{13}$/ },
         'mada' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MADA_RANGES) },
         'bp_plus' => ->(num) { num =~ /^(7050\d\s\d{9}\s\d{3}$|705\d\s\d{8}\s\d{5}$)/ },
         'passcard' => ->(num) { num =~ /^628026\d{10}$/ },
@@ -48,7 +52,8 @@ module ActiveMerchant #:nodoc:
         'tarjeta-d' => ->(num) { num =~ /^601828\d{10}$/ },
         'hipercard' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), HIPERCARD_RANGES) },
         'panal' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), PANAL_RANGES) },
-        'verve' => ->(num) { (16..19).cover?(num&.size) && in_bin_range?(num.slice(0, 6), VERVE_RANGES) }
+        'verve' => ->(num) { (16..19).cover?(num&.size) && in_bin_range?(num.slice(0, 6), VERVE_RANGES) },
+        'tuya' => ->(num) { num =~ /^588800\d{10}$/ }
       }
 
       SODEXO_NO_LUHN = ->(num) { num =~ /^(505864|505865)\d{10}$/ }
@@ -72,6 +77,13 @@ module ActiveMerchant #:nodoc:
         (484428..484455),
         (491730..491759),
       ]
+
+      SODEXO_BINS = Set.new(
+        %w[
+          606071 603389 606070 606069 606068 600818 505864 505865
+          60607601 60607607 60894400 60894410 60894420 60607606
+        ]
+      )
 
       CARNET_RANGES = [
         (506199..506499),
@@ -222,7 +234,8 @@ module ActiveMerchant #:nodoc:
         58965700..58965799,
         60352200..60352299,
         65027200..65027299,
-        65008700..65008700
+        65008700..65008700,
+        65090000..65090099
       ]
 
       MADA_RANGES = [
@@ -237,7 +250,7 @@ module ActiveMerchant #:nodoc:
 
       # https://www.discoverglobalnetwork.com/content/dam/discover/en_us/dgn/pdfs/IPP-VAR-Enabler-Compliance.pdf
       UNIONPAY_RANGES = [
-        62000000..62000000, 62212600..62379699, 62400000..62699999, 62820000..62889999,
+        62000000..62000000, 62178570..62178570, 62212600..62379699, 62400000..62699999, 62820000..62889999,
         81000000..81099999, 81100000..81319999, 81320000..81519999, 81520000..81639999, 81640000..81719999
       ]
 

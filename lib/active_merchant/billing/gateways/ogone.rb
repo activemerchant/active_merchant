@@ -263,7 +263,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_source(post, payment_source, options)
-        add_d3d(post, options) if options[:d3d]
+        add_d3d(post, options) if options[:d3d] || three_d_secure(options)
         if payment_source.is_a?(String)
           add_alias(post, payment_source, options[:alias_operation])
           add_eci(post, options[:eci] || '9')
@@ -460,7 +460,7 @@ module ActiveMerchant #:nodoc:
             raise "Unknown signature algorithm #{algorithm}"
           end
 
-        filtered_params = signed_parameters.compact
+        filtered_params = signed_parameters.reject { |_k, v| v.nil? || v == '' }
         sha_encryptor.hexdigest(
           filtered_params.sort_by { |k, _v| k.upcase }.map { |k, v| "#{k.upcase}=#{v}#{secret}" }.join('')
         ).upcase
@@ -493,6 +493,10 @@ module ActiveMerchant #:nodoc:
           response_hash[key] = value
         end
         response_hash
+      end
+
+      def three_d_secure(options)
+        options[:three_d_secure] ? options[:three_d_secure][:required] : false
       end
     end
 

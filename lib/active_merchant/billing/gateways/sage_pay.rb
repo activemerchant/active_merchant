@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :simulator_url
 
-      self.test_url = 'https://test.sagepay.com/gateway/service'
-      self.live_url = 'https://live.sagepay.com/gateway/service'
+      self.test_url = 'https://sandbox.opayo.eu.elavon.com/gateway/service'
+      self.live_url = 'https://live.opayo.eu.elavon.com/gateway/service'
       self.simulator_url = 'https://test.sagepay.com/Simulator'
 
       APPROVED = 'OK'
@@ -78,6 +78,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login)
+        @protocol_version = options.fetch(:protocol_version, '3.00')
         super
       end
 
@@ -86,6 +87,9 @@ module ActiveMerchant #:nodoc:
 
         post = {}
 
+        add_override_protocol_version(options)
+        add_three_ds_data(post, options)
+        add_stored_credentials_data(post, options)
         add_amount(post, money, options)
         add_invoice(post, options)
         add_payment_method(post, payment_method, options)
@@ -101,6 +105,9 @@ module ActiveMerchant #:nodoc:
 
         post = {}
 
+        add_three_ds_data(post, options)
+        add_stored_credentials_data(post, options)
+        add_override_protocol_version(options)
         add_amount(post, money, options)
         add_invoice(post, options)
         add_payment_method(post, payment_method, options)
@@ -115,6 +122,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, identification, options = {})
         post = {}
 
+        add_override_protocol_version(options)
         add_reference(post, identification)
         add_release_amount(post, money, options)
 
@@ -124,6 +132,7 @@ module ActiveMerchant #:nodoc:
       def void(identification, options = {})
         post = {}
 
+        add_override_protocol_version(options)
         add_reference(post, identification)
         action = abort_or_void_from(identification)
 
@@ -136,6 +145,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
 
+        add_override_protocol_version(options)
         add_related_reference(post, identification)
         add_amount(post, money, options)
         add_invoice(post, options)
@@ -150,6 +160,7 @@ module ActiveMerchant #:nodoc:
 
       def store(credit_card, options = {})
         post = {}
+        add_override_protocol_version(options)
         add_credit_card(post, credit_card)
         add_currency(post, 0, options)
 
@@ -158,6 +169,7 @@ module ActiveMerchant #:nodoc:
 
       def unstore(token, options = {})
         post = {}
+        add_override_protocol_version(options)
         add_token(post, token)
         commit(:unstore, post)
       end
@@ -181,6 +193,58 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_override_protocol_version(options)
+        @protocol_version = options[:protocol_version] if options[:protocol_version]
+      end
+
+      def add_three_ds_data(post, options)
+        return unless @protocol_version == '4.00'
+        return unless three_ds_2_options = options[:three_ds_2]
+
+        add_pair(post, :ThreeDSNotificationURL, three_ds_2_options[:notification_url])
+        return unless three_ds_2_options[:browser_info]
+
+        add_browser_info(post, three_ds_2_options[:browser_info])
+      end
+
+      def add_browser_info(post, browser_info)
+        add_pair(post, :BrowserAcceptHeader, browser_info[:accept_header])
+        add_pair(post, :BrowserColorDepth, browser_info[:depth])
+        add_pair(post, :BrowserJavascriptEnabled, format_boolean(browser_info[:java]))
+        add_pair(post, :BrowserJavaEnabled, format_boolean(browser_info[:java]))
+        add_pair(post, :BrowserLanguage, browser_info[:language])
+        add_pair(post, :BrowserScreenHeight, browser_info[:height])
+        add_pair(post, :BrowserScreenWidth, browser_info[:width])
+        add_pair(post, :BrowserTZ, browser_info[:timezone])
+        add_pair(post, :BrowserUserAgent, browser_info[:user_agent])
+        add_pair(post, :ChallengeWindowSize, browser_info[:browser_size])
+      end
+
+      def add_stored_credentials_data(post, options)
+        return unless @protocol_version == '4.00'
+        return unless stored_credential = options[:stored_credential]
+
+        initiator = stored_credential[:initiator] == 'cardholder' ? 'CIT' : 'MIT'
+        cof_usage = if stored_credential[:initial_transaction] && initiator == 'CIT'
+                      'FIRST'
+                    elsif !stored_credential[:initial_transaction] && initiator == 'MIT'
+                      'SUBSEQUENT'
+                    end
+
+        add_pair(post, :COFUsage, cof_usage) if cof_usage
+        add_pair(post, :InitiatedTYPE, initiator)
+        add_pair(post, :SchemeTraceID, stored_credential[:network_transaction_id]) if stored_credential[:network_transaction_id]
+
+        reasoning = stored_credential[:reason_type] == 'installment' ? 'instalment' : stored_credential[:reason_type]
+        add_pair(post, :MITType, reasoning.upcase)
+
+        if %w(instalment recurring).any?(reasoning)
+          add_pair(post, :RecurringExpiry, options[:recurring_expiry])
+          add_pair(post, :RecurringFrequency, options[:recurring_frequency])
+          add_pair(post, :PurchaseInstalData, options[:installment_data])
+        end
+      end
 
       def truncate(value, max_size)
         return nil unless value
@@ -405,12 +469,18 @@ module ActiveMerchant #:nodoc:
         parameters.update(
           Vendor: @options[:login],
           TxType: TRANSACTIONS[action],
-          VPSProtocol: @options.fetch(:protocol_version, '3.00')
+          VPSProtocol: @protocol_version
         )
 
         parameters.update(ReferrerID: application_id) if application_id && (application_id != Gateway.application_id)
 
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+      end
+
+      def format_boolean(value)
+        return if value.nil?
+
+        value ? '1' : '0'
       end
 
       # SagePay returns data in the following format

@@ -68,6 +68,14 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_not_empty response.params['issuer_id']
   end
 
+  def test_successful_first_purchase_with_cust_id
+    gateway = MonerisGateway.new(fixtures(:moneris))
+    assert response = gateway.purchase(@amount, @credit_card, @options.merge(cust_id: 'test1234'))
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
   def test_successful_purchase_with_cof_enabled_and_no_cof_options
     gateway = MonerisGateway.new(fixtures(:moneris))
     assert response = gateway.purchase(@amount, @credit_card, @options)
@@ -384,8 +392,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
 
     assert_equal(response.avs_result, {
-      'code' => 'M',
-      'message' => 'Street address and postal code match.',
+      'code' => 'Y',
+      'message' => 'Street address and 5-digit postal code match.',
       'street_match' => 'Y',
       'postal_match' => 'Y'
     })

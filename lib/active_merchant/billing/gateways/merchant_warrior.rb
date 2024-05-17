@@ -32,6 +32,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_recurring_flag(post, options)
         add_soft_descriptors(post, options)
+        add_three_ds(post, options)
         commit('processAuth', post)
       end
 
@@ -43,6 +44,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_recurring_flag(post, options)
         add_soft_descriptors(post, options)
+        add_three_ds(post, options)
         commit('processCard', post)
       end
 
@@ -182,6 +184,18 @@ module ActiveMerchant #:nodoc:
             transaction_id
           ).downcase
         )
+      end
+
+      def add_three_ds(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post.merge!({
+          threeDSEci: three_d_secure[:eci],
+          threeDSXid: three_d_secure[:xid] || three_d_secure[:ds_transaction_id],
+          threeDSCavv: three_d_secure[:cavv],
+          threeDSStatus: three_d_secure[:authentication_response_status],
+          threeDSV2Version: three_d_secure[:version]
+        }.compact)
       end
 
       def parse(body)

@@ -155,8 +155,7 @@ module ActiveMerchant #:nodoc:
         post[:acctid] = @options[:login]
         post[:merchantpin] = @options[:password] if @options[:password]
         post[:action] = action
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

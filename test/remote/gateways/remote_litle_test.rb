@@ -86,7 +86,8 @@ class RemoteLitleTest < Test::Unit::TestCase
       name: 'John Smith',
       routing_number: '011075150',
       account_number: '1099999999',
-      account_type: 'checking'
+      account_type: nil,
+      account_holder_type: 'checking'
     )
     @store_check = check(
       routing_number: '011100012',
@@ -308,7 +309,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         card_acceptor_tax_id: '361531321',
         line_items: [{
           item_sequence_number: 1,
-          item_commodity_code: 300,
+          commodity_code: '041235',
           item_description: 'ramdom-object',
           product_code: 'TB123',
           quantity: 2,
@@ -346,6 +347,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         customer_code: 'PO12345',
         card_acceptor_tax_id: '011234567',
         tax_amount: 50,
+        tax_included_in_total: true,
         line_items: [{
           item_description: 'ramdom-object',
           product_code: 'TB123',
@@ -453,6 +455,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         network_transaction_id: network_transaction_id
       }
     )
+
     assert auth = @gateway.authorize(4999, credit_card, used_options)
     assert_success auth
     assert_equal 'Transaction Received: This is sent to acknowledge that the submitted transaction has been received.', auth.message
@@ -632,6 +635,7 @@ class RemoteLitleTest < Test::Unit::TestCase
       }
     )
     assert auth = @gateway.purchase(4000, credit_card, used_options)
+
     assert_success auth
     assert_equal 'Approved', auth.message
   end

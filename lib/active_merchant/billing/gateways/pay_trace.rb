@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayTraceGateway < Gateway
-      self.test_url = 'https://api.paytrace.com'
+      self.test_url = 'https://api.sandbox.paytrace.com'
       self.live_url = 'https://api.paytrace.com'
 
       self.supported_countries = ['US']
@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :username, :password, :integrator_id)
         super
-        acquire_access_token
+        acquire_access_token unless options[:access_token]
       end
 
       def purchase(money, payment_or_customer_id, options = {})
@@ -169,28 +169,35 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Bearer )[a-zA-Z0-9:_]+), '\1[FILTERED]').
           gsub(%r(("credit_card\\?":{\\?"number\\?":\\?")\d+), '\1[FILTERED]').
-          gsub(%r(("cvv\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r(("csc\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("username\\?":\\?")\w+@+\w+.+\w+), '\1[FILTERED]').
+          gsub(%r(("username\\?":\\?")\w+), '\1[FILTERED]').
           gsub(%r(("password\\?":\\?")\w+), '\1[FILTERED]').
           gsub(%r(("integrator_id\\?":\\?")\w+), '\1[FILTERED]')
       end
 
       def acquire_access_token
         post = {}
+        base_url = (test? ? test_url : live_url)
         post[:grant_type] = 'password'
         post[:username] = @options[:username]
         post[:password] = @options[:password]
         data = post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        url = live_url + '/oauth/token'
+        url = base_url + '/oauth/token'
         oauth_headers = {
           'Accept'            => '*/*',
           'Content-Type'      => 'application/x-www-form-urlencoded'
         }
         response = ssl_post(url, data, oauth_headers)
-        json_response = JSON.parse(response)
+        json_response = parse(response)
 
-        @options[:access_token] = json_response['access_token'] if json_response['access_token']
-        response
+        if json_response.include?('error')
+          oauth_response = Response.new(false, json_response['error_description'])
+          raise OAuthResponseError.new(oauth_response)
+        else
+          @options[:access_token] = json_response['access_token'] if json_response['access_token']
+          response
+        end
       end
 
       private
@@ -237,11 +244,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def customer_id?(payment_or_customer_id)
-        payment_or_customer_id.class == String
+        payment_or_customer_id.instance_of?(String)
       end
 
       def string_literal_to_boolean(value)
-        return value unless value.class == String
+        return value unless value.instance_of?(String)
 
         if value.casecmp('true').zero?
           true
@@ -258,15 +265,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, creditcard, options)
-        return unless options[:billing_address] || options[:address]
-
-        address = options[:billing_address] || options[:address]
         post[:billing_address] = {}
+
+        if (address = options[:billing_address] || options[:address])
+          post[:billing_address][:street_address] = address[:address1]
+          post[:billing_address][:city] = address[:city]
+          post[:billing_address][:state] = address[:state]
+          post[:billing_address][:zip] = address[:zip]
+        end
+
         post[:billing_address][:name] = creditcard.name
-        post[:billing_address][:street_address] = address[:address1]
-        post[:billing_address][:city] = address[:city]
-        post[:billing_address][:state] = address[:state]
-        post[:billing_address][:zip] = address[:zip]
       end
 
       def add_amount(post, money, options)
@@ -283,6 +291,7 @@ module ActiveMerchant #:nodoc:
           post[:credit_card][:number] = payment.number
           post[:credit_card][:expiration_month] = payment.month
           post[:credit_card][:expiration_year] = payment.year
+          post[:csc] = payment.verification_value
         end
       end
 
@@ -373,6 +382,12 @@ module ActiveMerchant #:nodoc:
         url = base_url + '/v1/' + action
         raw_response = ssl_post(url, post_data(parameters), headers)
         response = parse(raw_response)
+        handle_final_response(action, response)
+      rescue JSON::ParserError
+        unparsable_response(raw_response)
+      end
+
+      def handle_final_response(action, response)
         success = success_from(response)
 
         Response.new(
@@ -385,8 +400,6 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: success ? nil : error_code_from(response)
         )
-      rescue JSON::ParserError
-        unparsable_response(raw_response)
       end
 
       def unparsable_response(raw_response)

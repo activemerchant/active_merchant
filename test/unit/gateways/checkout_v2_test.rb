@@ -1,15 +1,5 @@
 require 'test_helper'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-    class CheckoutV2Gateway
-      def setup_access_token
-        '12345678'
-      end
-    end
-  end
-end
-
 class CheckoutV2Test < Test::Unit::TestCase
   include CommStub
 
@@ -17,7 +7,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     @gateway = CheckoutV2Gateway.new(
       secret_key: '1111111111111'
     )
-    @gateway_oauth = CheckoutV2Gateway.new({ client_id: 'abcd', client_secret: '1234' })
+    @gateway_oauth = CheckoutV2Gateway.new({ client_id: 'abcd', client_secret: '1234', access_token: '12345678' })
     @gateway_api = CheckoutV2Gateway.new({
       secret_key: '1111111111111',
       public_key: '2222222222222'
@@ -25,6 +15,15 @@ class CheckoutV2Test < Test::Unit::TestCase
     @credit_card = credit_card
     @amount = 100
     @token = '2MPedsuenG2o8yFfrsdOBWmOuEf'
+  end
+
+  def test_setup_access_token_should_rise_an_exception_under_bad_request
+    error = assert_raises(ActiveMerchant::OAuthResponseError) do
+      @gateway.expects(:raw_ssl_request).returns(Net::HTTPBadRequest.new(1.0, 400, 'Bad Request'))
+      @gateway.send(:setup_access_token)
+    end
+
+    assert_match(/Failed with 400 Bad Request/, error.message)
   end
 
   def test_successful_purchase
@@ -261,11 +260,16 @@ class CheckoutV2Test < Test::Unit::TestCase
     processing_channel_id = 'abcd123'
     response = stub_comms(@gateway_oauth, :ssl_request) do
       @gateway_oauth.purchase(@amount, @credit_card, { processing_channel_id: processing_channel_id })
-    end.check_request do |_method, _endpoint, data, headers|
-      request = JSON.parse(data)
-      assert_equal headers['Authorization'], 'Bearer 12345678'
-      assert_equal request['processing_channel_id'], processing_channel_id
-    end.respond_with(successful_purchase_response)
+    end.check_request do |_method, endpoint, data, headers|
+      if endpoint.match?(/token/)
+        assert_equal headers['Authorization'], 'Basic YWJjZDoxMjM0'
+        assert_equal data, 'grant_type=client_credentials'
+      else
+        request = JSON.parse(data)
+        assert_equal headers['Authorization'], 'Bearer 12345678'
+        assert_equal request['processing_channel_id'], processing_channel_id
+      end
+    end.respond_with(successful_access_token_response, successful_purchase_response)
     assert_success response
   end
 
@@ -298,6 +302,56 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_purchase_with_recipient_fields
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {
+        recipient: {
+          dob: '1985-05-15',
+          account_number: '5555554444',
+          zip: 'SW1A',
+          first_name: 'john',
+          last_name: 'johnny',
+          address: {
+            address_line1: '123 High St.',
+            address_line2: 'Flat 456',
+            city: 'London',
+            state: 'str',
+            zip: 'SW1A 1AA',
+            country: 'GB'
+          }
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"dob":"1985-05-15"}, data)
+      assert_match(%r{"account_number":"5555554444"}, data)
+      assert_match(%r{"zip":"SW1A"}, data)
+      assert_match(%r{"first_name":"john"}, data)
+      assert_match(%r{"last_name":"johnny"}, data)
+      assert_match(%r{"address_line1":"123 High St."}, data)
+      assert_match(%r{"address_line2":"Flat 456"}, data)
+      assert_match(%r{"city":"London"}, data)
+      assert_match(%r{"state":"str"}, data)
+      assert_match(%r{"zip":"SW1A 1AA"}, data)
+      assert_match(%r{"country":"GB"}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_processing_fields
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {
+        processing: {
+          aft: true
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"aft":true}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_passing_metadata_with_mada_card_type
     @credit_card.brand = 'mada'
 
@@ -315,6 +369,26 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
     assert_failure response
     assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+  end
+
+  def test_failed_purchase_3ds_with_threeds_response_message
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, { execute_threed: true, exemption: 'no_preference', challenge_indicator: 'trusted_listing', threeds_response_message: true })
+    end.respond_with(failed_purchase_3ds_response)
+
+    assert_failure response
+    assert_equal 'Insufficient Funds', response.message
+    assert_equal nil, response.error_code
+  end
+
+  def test_failed_purchase_3ds_without_threeds_response_message
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, { execute_threed: true, exemption: 'no_preference', challenge_indicator: 'trusted_listing' })
+    end.respond_with(failed_purchase_3ds_response)
+
+    assert_failure response
+    assert_equal 'Declined', response.message
+    assert_equal nil, response.error_code
   end
 
   def test_successful_authorize_and_capture
@@ -362,6 +436,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     initial_response = stub_comms(@gateway, :ssl_request) do
       initial_options = {
         stored_credential: {
+          initiator: 'cardholder',
           initial_transaction: true,
           reason_type: 'installment'
         }
@@ -687,6 +762,113 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_money_transfer_payout_via_credit
+    options = {
+      instruction_purpose: 'leisure',
+      account_holder_type: 'individual',
+      billing_address: address,
+      payout: true,
+      destination: {
+        account_holder: {
+          phone: {
+            number: '9108675309',
+            country_code: '1'
+          },
+          identification: {
+            type: 'passport',
+            number: '1234567890'
+          },
+          email: 'too_many_fields@checkout.com',
+          date_of_birth: '2004-10-27',
+          country_of_birth: 'US'
+        }
+      },
+      sender: {
+        type: 'individual',
+        first_name: 'Jane',
+        middle_name: 'Middle',
+        last_name: 'Doe',
+        reference: '012345',
+        reference_type: 'other',
+        source_of_funds: 'debit',
+        identification: {
+          type: 'passport',
+          number: '0987654321',
+          issuing_country: 'US',
+          date_of_expiry: '2027-07-07'
+        },
+        address: {
+          address1: '205 Main St',
+          address2: 'Apt G',
+          city: 'Winchestertonfieldville',
+          state: 'IA',
+          country: 'US',
+          zip: '12345'
+        },
+        date_of_birth: '2004-10-27',
+        country_of_birth: 'US',
+        nationality: 'US'
+      }
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.credit(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['instruction']['purpose'], 'leisure'
+      assert_equal request['destination']['account_holder']['phone']['number'], '9108675309'
+      assert_equal request['destination']['account_holder']['phone']['country_code'], '1'
+      assert_equal request['destination']['account_holder']['identification']['number'], '1234567890'
+      assert_equal request['destination']['account_holder']['identification']['type'], 'passport'
+      assert_equal request['destination']['account_holder']['email'], 'too_many_fields@checkout.com'
+      assert_equal request['destination']['account_holder']['date_of_birth'], '2004-10-27'
+      assert_equal request['destination']['account_holder']['country_of_birth'], 'US'
+      assert_equal request['sender']['type'], 'individual'
+      assert_equal request['sender']['first_name'], 'Jane'
+      assert_equal request['sender']['middle_name'], 'Middle'
+      assert_equal request['sender']['last_name'], 'Doe'
+      assert_equal request['sender']['reference'], '012345'
+      assert_equal request['sender']['reference_type'], 'other'
+      assert_equal request['sender']['source_of_funds'], 'debit'
+      assert_equal request['sender']['identification']['type'], 'passport'
+      assert_equal request['sender']['identification']['number'], '0987654321'
+      assert_equal request['sender']['identification']['issuing_country'], 'US'
+      assert_equal request['sender']['identification']['date_of_expiry'], '2027-07-07'
+      assert_equal request['sender']['address']['address_line1'], '205 Main St'
+      assert_equal request['sender']['address']['address_line2'], 'Apt G'
+      assert_equal request['sender']['address']['city'], 'Winchestertonfieldville'
+      assert_equal request['sender']['address']['state'], 'IA'
+      assert_equal request['sender']['address']['country'], 'US'
+      assert_equal request['sender']['address']['zip'], '12345'
+      assert_equal request['sender']['date_of_birth'], '2004-10-27'
+      assert_equal request['sender']['nationality'], 'US'
+    end.respond_with(successful_credit_response)
+    assert_success response
+  end
+
+  def test_transaction_successfully_reverts_to_regular_credit_when_payout_is_nil
+    options = {
+      instruction_purpose: 'leisure',
+      account_holder_type: 'individual',
+      billing_address: address,
+      payout: nil,
+      destination: {
+        account_holder: {
+          email: 'too_many_fields@checkout.com'
+        }
+      },
+      sender: {
+        type: 'individual'
+      }
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.credit(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      refute_includes data, 'email'
+      refute_includes data, 'sender'
+    end.respond_with(successful_credit_response)
+    assert_success response
+  end
+
   def test_successful_refund
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card)
@@ -898,6 +1080,12 @@ class CheckoutV2Test < Test::Unit::TestCase
     )
   end
 
+  def successful_access_token_response
+    %(
+      {"access_token":"12345678","expires_in":3600,"token_type":"Bearer","scope":"disputes:accept disputes:provide-evidence disputes:view files flow:events flow:workflows fx gateway gateway:payment gateway:payment-authorizations gateway:payment-captures gateway:payment-details gateway:payment-refunds gateway:payment-voids middleware middleware:merchants-secret payouts:bank-details risk sessions:app sessions:browser vault:instruments"}
+    )
+  end
+
   def successful_purchase_response
     %(
       {"id":"pay_bgv5tmah6fmuzcmcrcro6exe6m","action_id":"act_bgv5tmah6fmuzcmcrcro6exe6m","amount":200,"currency":"USD","approved":true,"status":"Authorized","auth_code":"127172","eci":"05","scheme_id":"096091887499308","response_code":"10000","response_summary":"Approved","risk":{"flagged":false},"source":{"id":"src_fzp3cwkf4ygebbmvrxdhyrwmbm","type":"card","billing_address":{"address_line1":"456 My Street","address_line2":"Apt 1","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"},"expiry_month":6,"expiry_year":2025,"name":"Longbob Longsen","scheme":"Visa","last4":"4242","fingerprint":"9F3BAD2E48C6C8579F2F5DC0710B7C11A8ACD5072C3363A72579A6FB227D64BE","bin":"424242","card_type":"Credit","card_category":"Consumer","issuer":"JPMORGAN CHASE BANK NA","issuer_country":"US","product_id":"A","product_type":"Visa Traditional","avs_check":"S","cvv_check":"Y","payouts":true,"fast_funds":"d"},"customer":{"id":"cus_tz76qzbwr44ezdfyzdvrvlwogy","email":"longbob.longsen@example.com","name":"Longbob Longsen"},"processed_on":"2020-09-11T13:58:32Z","reference":"1","processing":{"acquirer_transaction_id":"9819327011","retrieval_reference_number":"861613285622"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m/actions"},"capture":{"href":"https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m/captures"},"void":{"href":"https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m/voids"}}}
@@ -948,6 +1136,79 @@ class CheckoutV2Test < Test::Unit::TestCase
        }
       }
     )
+  end
+
+  def failed_purchase_3ds_response
+    %({
+        "id": "pay_awjzhfj776gulbp2nuslj4agbu",
+        "requested_on": "2019-08-14T18:13:54Z",
+        "source": {
+          "id": "src_lot2ch4ygk3ehi4fugxmk7r2di",
+          "type": "card",
+          "expiry_month": 12,
+          "expiry_year": 2020,
+          "name": "Jane Doe",
+          "scheme": "Visa",
+          "last4": "0907",
+          "fingerprint": "E4048195442B0059D73FD47F6E1961A02CD085B0B34B7703CE4A93750DB5A0A1",
+          "bin": "457382",
+          "avs_check": "S",
+          "cvv_check": "Y"
+        },
+        "amount": 100,
+        "currency": "USD",
+        "payment_type": "Regular",
+        "reference": "Dvy8EMaEphrMWolKsLVHcUqPsyx",
+        "status": "Declined",
+        "approved": false,
+        "3ds": {
+          "downgraded": false,
+          "enrolled": "Y",
+          "authentication_response": "Y",
+          "cryptogram": "ce49b5c1-5d3c-4864-bd16-2a8c",
+          "xid": "95202312-f034-48b4-b9b2-54254a2b49fb",
+          "version": "2.1.0"
+        },
+        "risk": {
+          "flagged": false
+        },
+        "customer": {
+          "id": "cus_zt5pspdtkypuvifj7g6roy7p6y",
+          "name": "Jane Doe"
+        },
+        "billing_descriptor": {
+          "name": "",
+          "city": "London"
+        },
+        "payment_ip": "127.0.0.1",
+        "metadata": {
+          "Udf5": "ActiveMerchant"
+        },
+        "eci": "05",
+        "scheme_id": "638284745624527",
+        "actions": [
+          {
+            "id": "act_tkvif5mf54eerhd3ysuawfcnt4",
+            "type": "Authorization",
+            "response_code": "20051",
+            "response_summary": "Insufficient Funds"
+          }
+        ],
+        "_links": {
+          "self": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4"
+          },
+          "actions": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4/actions"
+          },
+          "capture": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4/captures"
+          },
+          "void": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4/voids"
+          }
+        }
+      })
   end
 
   def successful_authorize_response

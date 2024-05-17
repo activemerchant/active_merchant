@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def map_3ds(three_d_secure_options)
-        mapped = {
+        {
           eci: three_d_secure_options[:eci],
           cavv: three_d_secure_options[:cavv],
           xid: three_d_secure_options[:xid],
@@ -241,8 +241,6 @@ module ActiveMerchant #:nodoc:
           threeDSecureVersion: three_d_secure_options[:version],
           directoryServerTransactionId: three_d_secure_options[:ds_transaction_id]
         }
-
-        mapped
       end
 
       def parse(body)

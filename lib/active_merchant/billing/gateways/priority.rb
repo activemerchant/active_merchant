@@ -55,7 +55,8 @@ module ActiveMerchant #:nodoc:
 
         add_merchant_id(params)
         add_amount(params, amount, options)
-        add_auth_purchase_params(params, credit_card, options)
+        add_auth_purchase_params(params, options)
+        add_credit_card(params, credit_card, 'purchase', options)
 
         commit('purchase', params: params)
       end
@@ -67,7 +68,8 @@ module ActiveMerchant #:nodoc:
 
         add_merchant_id(params)
         add_amount(params, amount, options)
-        add_auth_purchase_params(params, credit_card, options)
+        add_auth_purchase_params(params, options)
+        add_credit_card(params, credit_card, 'purchase', options)
 
         commit('purchase', params: params)
       end
@@ -100,7 +102,7 @@ module ActiveMerchant #:nodoc:
         add_merchant_id(params)
         add_amount(params, amount, options)
         params['paymentToken'] = payment_token(authorization) || options[:payment_token]
-        params['tenderType'] = options[:tender_type].present? ? options[:tender_type] : 'Card'
+        add_auth_purchase_params(params, options)
 
         commit('capture', params: params)
       end
@@ -150,9 +152,8 @@ module ActiveMerchant #:nodoc:
         params['merchantId'] = @options[:merchant_id]
       end
 
-      def add_auth_purchase_params(params, credit_card, options)
+      def add_auth_purchase_params(params, options)
         add_replay_id(params, options)
-        add_credit_card(params, credit_card, 'purchase', options)
         add_purchases_data(params, options)
         add_shipping_data(params, options)
         add_pos_data(params, options)

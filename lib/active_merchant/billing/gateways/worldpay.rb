@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment_method, options = {})
         requires!(options, :order_id)
-        payment_details = payment_details(payment_method)
+        payment_details = payment_details(payment_method, options)
         authorize_request(money, payment_method, payment_details.merge(options))
       end
 
@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
       #   and other transactions should be performed on a normal eCom-flagged
       #   merchant ID.
       def credit(money, payment_method, options = {})
-        payment_details = payment_details(payment_method)
+        payment_details = payment_details(payment_method, options)
         if options[:fast_fund_credit]
           fast_fund_credit_request(money, payment_method, payment_details.merge(credit: true, **options))
         else
@@ -152,6 +152,10 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def eci_value(payment_method)
+        payment_method.respond_to?(:eci) ? format(payment_method.eci, :two_digits) : ''
+      end
 
       def authorize_request(money, payment_method, options)
         commit('authorize', build_authorization_request(money, payment_method, options), 'AUTHORISED', 'CAPTURED', options)
@@ -443,7 +447,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_additional_3ds_data(xml, options)
-        additional_data = { 'dfReferenceId' => options[:session_id] }
+        additional_data = { 'dfReferenceId' => options[:df_reference_id] }
         additional_data['challengeWindowSize'] = options[:browser_size] if options[:browser_size]
 
         xml.additional3DSData additional_data
@@ -572,7 +576,7 @@ module ActiveMerchant #:nodoc:
         when :pay_as_order
           add_amount_for_pay_as_order(xml, amount, payment_method, options)
         when :network_token
-          add_network_tokenization_card(xml, payment_method)
+          add_network_tokenization_card(xml, payment_method, options)
         else
           add_card_or_token(xml, payment_method, options)
         end
@@ -590,8 +594,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_network_tokenization_card(xml, payment_method)
-        token_type = NETWORK_TOKEN_TYPE.fetch(payment_method.source, 'NETWORKTOKEN')
+      def add_network_tokenization_card(xml, payment_method, options)
+        source = payment_method.respond_to?(:source) ? payment_method.source : options[:wallet_type]
+        token_type = NETWORK_TOKEN_TYPE.fetch(source, 'NETWORKTOKEN')
 
         xml.paymentDetails do
           xml.tag! 'EMVCO_TOKEN-SSL', 'type' => token_type do
@@ -603,11 +608,12 @@ module ActiveMerchant #:nodoc:
               )
             end
             name = card_holder_name(payment_method, options)
-            eci = format(payment_method.eci, :two_digits)
             xml.cardHolderName name if name.present?
-            xml.cryptogram payment_method.payment_cryptogram
-            xml.eciIndicator eci.empty? ? '07' : eci
+            xml.cryptogram payment_method.payment_cryptogram unless options[:wallet_type] == :google_pay
+            eci = eci_value(payment_method)
+            xml.eciIndicator eci if eci.present?
           end
+          add_stored_credential_options(xml, options)
         end
       end
 
@@ -684,30 +690,27 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_stored_credential_using_normalized_fields(xml, options)
-        if options[:stored_credential][:initial_transaction]
-          xml.storedCredentials 'usage' => 'FIRST'
-        else
-          reason = case options[:stored_credential][:reason_type]
-                   when 'installment' then 'INSTALMENT'
-                   when 'recurring' then 'RECURRING'
-                   when 'unscheduled' then 'UNSCHEDULED'
-                   end
+        reason = case options[:stored_credential][:reason_type]
+                 when 'installment' then 'INSTALMENT'
+                 when 'recurring' then 'RECURRING'
+                 when 'unscheduled' then 'UNSCHEDULED'
+                 end
+        is_initial_transaction = options[:stored_credential][:initial_transaction]
+        stored_credential_params = generate_stored_credential_params(is_initial_transaction, reason)
 
-          xml.storedCredentials 'usage' => 'USED', 'merchantInitiatedReason' => reason do
-            xml.schemeTransactionIdentifier options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
-          end
+        xml.storedCredentials stored_credential_params do
+          xml.schemeTransactionIdentifier options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id] && !is_initial_transaction
         end
       end
 
       def add_stored_credential_using_gateway_specific_fields(xml, options)
         return unless options[:stored_credential_usage]
 
-        if options[:stored_credential_initiated_reason]
-          xml.storedCredentials 'usage' => options[:stored_credential_usage], 'merchantInitiatedReason' => options[:stored_credential_initiated_reason] do
-            xml.schemeTransactionIdentifier options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id]
-          end
-        else
-          xml.storedCredentials 'usage' => options[:stored_credential_usage]
+        is_initial_transaction = options[:stored_credential_usage] == 'FIRST'
+        stored_credential_params = generate_stored_credential_params(is_initial_transaction, options[:stored_credential_initiated_reason])
+
+        xml.storedCredentials stored_credential_params do
+          xml.schemeTransactionIdentifier options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id] && !is_initial_transaction
         end
       end
 
@@ -978,12 +981,12 @@ module ActiveMerchant #:nodoc:
         token_details
       end
 
-      def payment_details(payment_method)
+      def payment_details(payment_method, options = {})
         case payment_method
         when String
           token_type_and_details(payment_method)
         else
-          type = network_token?(payment_method) ? :network_token : :credit
+          type = network_token?(payment_method) || options[:wallet_type] == :google_pay ? :network_token : :credit
 
           { payment_type: type }
         end
@@ -1026,6 +1029,15 @@ module ActiveMerchant #:nodoc:
 
       def card_holder_name(payment_method, options)
         test? && options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
+      end
+
+      def generate_stored_credential_params(is_initial_transaction, reason = nil)
+        customer_or_merchant = reason == 'RECURRING' && is_initial_transaction ? 'customerInitiatedReason' : 'merchantInitiatedReason'
+
+        stored_credential_params = {}
+        stored_credential_params['usage'] = is_initial_transaction ? 'FIRST' : 'USED'
+        stored_credential_params[customer_or_merchant] = reason if reason
+        stored_credential_params
       end
     end
   end

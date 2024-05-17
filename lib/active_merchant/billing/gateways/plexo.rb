@@ -67,6 +67,7 @@ module ActiveMerchant #:nodoc:
       def verify(credit_card, options = {})
         post = {}
         post[:ReferenceId] = options[:reference_id] || generate_unique_id
+        post[:Flow] = 'direct'
         post[:MerchantId] = options[:merchant_id] || @credentials[:merchant_id]
         post[:StatementDescriptor] = options[:statement_descriptor] if options[:statement_descriptor]
         post[:CustomerId] = options[:customer_id] if options[:customer_id]
@@ -76,6 +77,7 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options[:metadata])
         add_amount(money, post, options)
         add_browser_details(post, options)
+        add_invoice_number(post, options)
 
         commit('/verify', post, options)
       end
@@ -105,12 +107,14 @@ module ActiveMerchant #:nodoc:
         post[:Installments] = options[:installments] if options[:installments]
         post[:StatementDescriptor] = options[:statement_descriptor] if options[:statement_descriptor]
         post[:CustomerId] = options[:customer_id] if options[:customer_id]
+        post[:Flow] = 'direct'
 
         add_payment_method(post, payment, options)
         add_items(post, options[:items])
         add_metadata(post, options[:metadata])
         add_amount(money, post, options)
         add_browser_details(post, options)
+        add_invoice_number(post, options)
       end
 
       def header(parameters = {})
@@ -184,6 +188,10 @@ module ActiveMerchant #:nodoc:
         post[:BrowserDetails] = {}
         post[:BrowserDetails][:DeviceFingerprint] = browser_details[:finger_print] if browser_details[:finger_print]
         post[:BrowserDetails][:IpAddress] = browser_details[:ip] if browser_details[:ip]
+      end
+
+      def add_invoice_number(post, options)
+        post[:InvoiceNumber] = options[:invoice_number] if options[:invoice_number]
       end
 
       def add_payment_method(post, payment, options)

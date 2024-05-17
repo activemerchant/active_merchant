@@ -123,7 +123,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(50, credit_card, order_id: '1')
     assert_instance_of Response, response
     assert_success response
-    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', response.authorization
   end
 
   def test_successful_purchase_with_echeck
@@ -133,7 +133,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_equal 'Approved', response.message
     assert_success response
-    assert_equal '5F8E8BEE7299FD339A38F70CFF6E5D010EF55498;9baedc697f2cf06457de78', response.authorization
+    assert_equal '5F8E8BEE7299FD339A38F70CFF6E5D010EF55498;9baedc697f2cf06457de78;EC', response.authorization
   end
 
   def test_successful_purchase_with_commercial_echeck
@@ -163,7 +163,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_match 'APPROVAL', response.message
     assert_equal 'Approved and Completed', response.params['status_msg']
-    assert_equal '5F8ED3D950A43BD63369845D5385B6354C3654B4;2930847bc732eb4e8102cf', response.authorization
+    assert_equal '5F8ED3D950A43BD63369845D5385B6354C3654B4;2930847bc732eb4e8102cf;EC', response.authorization
   end
 
   def test_successful_force_capture_with_echeck_prenote
@@ -173,7 +173,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_match 'APPROVAL', response.message
     assert_equal 'Approved and Completed', response.params['status_msg']
-    assert_equal '5F8ED3D950A43BD63369845D5385B6354C3654B4;2930847bc732eb4e8102cf', response.authorization
+    assert_equal '5F8ED3D950A43BD63369845D5385B6354C3654B4;2930847bc732eb4e8102cf;EC', response.authorization
   end
 
   def test_failed_force_capture_with_echeck_prenote
@@ -509,9 +509,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_order_id_format_for_capture
     response = stub_comms do
-      @gateway.capture(101, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1001.1', order_id: '#1001.1')
+      @gateway.capture(101, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI001.1;VI', order_id: '#1001.1')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<OrderID>1001-1<\/OrderID>/, data)
+      assert_match(/<OrderID>1<\/OrderID>/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -524,7 +524,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     )
 
     response = stub_comms(gateway) do
-      gateway.capture(101, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', @options)
+      gateway.capture(101, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantID>700000123456<\/MerchantID>/, data)
     end.respond_with(successful_purchase_response)
@@ -1047,6 +1047,45 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_store_request
+    stub_comms do
+      @gateway.store(credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %{<TokenTxnType>GT</TokenTxnType>}, data
+    end
+  end
+
+  def test_successful_payment_request_with_token_stored
+    stub_comms do
+      @gateway.purchase(50, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;2521002395820006;VI', @options.merge(card_brand: 'VI'))
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %{<CardBrand>VI</CardBrand>}, data
+      assert_match %{<AccountNum>2521002395820006</AccountNum>}, data
+    end
+  end
+
+  def test_successful_store
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+
+    assert response = @gateway.store(@credit_card, @options)
+    assert_instance_of Response, response
+    assert_equal 'Approved', response.message
+    assert_equal '4556761607723886', response.params['safetech_token']
+    assert_equal 'VI', response.params['card_brand']
+  end
+
+  def test_successful_purchase_with_stored_token
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    assert store = @gateway.store(@credit_card, @options)
+    assert_instance_of Response, store
+
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert auth = @gateway.purchase(100, store.authorization, @options)
+    assert_instance_of Response, auth
+
+    assert_equal 'Approved', auth.message
+  end
+
   def test_successful_purchase_with_overridden_normalized_stored_credentials
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(@normalized_mit_stored_credential).merge(@options_stored_credentials))
@@ -1202,7 +1241,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_equal 'Approved', response.message
     assert_success response
-    assert_equal '5F8E8D2B077217F3EF1ACD3B61610E4CD12954A3;2', response.authorization
+    assert_equal '5F8E8D2B077217F3EF1ACD3B61610E4CD12954A3;2;EC', response.authorization
   end
 
   def test_failed_authorize_with_echeck
@@ -1546,7 +1585,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.verify(credit_card, @options)
     end.respond_with(successful_purchase_response, successful_purchase_response)
     assert_success response
-    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', response.authorization
     assert_equal 'Approved', response.message
   end
 
@@ -1574,7 +1613,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_purchase_response)
     assert_success response
-    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', response.authorization
     assert_equal 'Approved', response.message
   end
 
@@ -1593,7 +1632,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_purchase_response, successful_void_response)
     assert_success response
-    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', response.authorization
     assert_equal 'Approved', response.message
   end
 
@@ -1603,7 +1642,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.verify(credit_card, @options)
     end.respond_with(successful_purchase_response, failed_purchase_response)
     assert_success response
-    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', response.authorization
     assert_equal 'Approved', response.message
   end
 
@@ -1612,7 +1651,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.verify(credit_card, @options)
     end.respond_with(successful_purchase_response, failed_purchase_response)
     assert_success response
-    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', response.authorization
     assert_equal 'Approved', response.message
   end
 
@@ -1755,6 +1794,10 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def successful_refund_response
     '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>R</MessageType><MerchantID>253997</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4556761029983886</AccountNum><OrderID>0c1792db5d167e0b96dd9c</OrderID><TxRefNum>60D1E12322FD50E1517A2598593A48EEA9965469</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode>tst743</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>090955</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def successful_store_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>492310</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4556761029983886</AccountNum><OrderID>f9269cbc7eb453d75adb1d</OrderID><TxRefNum>6536A0990C37C45D0000082B0001A64E4156534A</TxRefNum><TxRefIdx>1</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>7 </AVSRespCode><CVV2RespCode>M</CVV2RespCode><AuthCode>tst443</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode>IU</HostAVSRespCode><HostCVV2RespCode>M</HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>123433</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode><CTIPrepaidReloadableCard></CTIPrepaidReloadableCard><SafetechToken>4556761607723886</SafetechToken><PymtBrandAuthResponseCode>00</PymtBrandAuthResponseCode><PymtBrandResponseCodeCategory>A</PymtBrandResponseCodeCategory></NewOrderResp></Response>'
   end
 
   def failed_refund_response

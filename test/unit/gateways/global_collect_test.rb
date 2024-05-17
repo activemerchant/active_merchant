@@ -20,21 +20,10 @@ class GlobalCollectTest < Test::Unit::TestCase
       source: :apple_pay
     )
 
-    @google_pay_network_token = network_tokenization_credit_card(
-      '4444333322221111',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      month: '01',
-      year: Time.new.year + 2,
+    @google_pay_network_token = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :google_pay,
-      transaction_id: '123456789',
-      eci: '05'
-    )
-
-    @google_pay_pan_only = credit_card(
-      '4444333322221111',
-      month: '01',
-      year: Time.new.year + 2
-    )
+      payment_data: "{ 'version': 'EC_v1', 'data': 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9'}"
+    })
 
     @declined_card = credit_card('5424180279791732')
     @accepted_amount = 4005
@@ -86,7 +75,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@accepted_amount, @credit_card)
     end.check_request do |_method, endpoint, _data, _headers|
-      assert_match(/world\.preprod\.api-ingenico\.com\/v1\/#{@gateway.options[:merchant_id]}/, endpoint)
+      assert_match(/api\.preprod\.connect\.worldline-solutions\.com\/v1\/#{@gateway.options[:merchant_id]}/, endpoint)
     end.respond_with(successful_authorize_response)
   end
 
@@ -99,17 +88,23 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response, successful_capture_response)
   end
 
-  def test_purchase_request_with_google_pay
+  def test_purchase_request_with_encrypted_google_pay
+    google_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      source: :google_pay,
+      payment_data: "{ 'version': 'EC_v1', 'data': 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9'}"
+    })
+
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@accepted_amount, @google_pay_network_token)
+      @gateway.purchase(@accepted_amount, google_pay, { use_encrypted_payment_data: true })
     end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
       assert_equal '320', JSON.parse(data)['mobilePaymentMethodSpecificInput']['paymentProductId']
+      assert_equal google_pay.payment_data, JSON.parse(data)['mobilePaymentMethodSpecificInput']['encryptedPaymentData']
     end
   end
 
-  def test_purchase_request_with_google_pay_pan_only
+  def test_purchase_request_with_google_pay
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@accepted_amount, @google_pay_pan_only, @options.merge(customer: 'GP1234ID', google_pay_pan_only: true))
+      @gateway.purchase(@accepted_amount, @google_pay_network_token)
     end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
       assert_equal '320', JSON.parse(data)['mobilePaymentMethodSpecificInput']['paymentProductId']
     end
@@ -136,26 +131,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_includes post.keys.first, 'mobilePaymentMethodSpecificInput'
     assert_equal post['mobilePaymentMethodSpecificInput']['paymentProductId'], '320'
     assert_equal post['mobilePaymentMethodSpecificInput']['authorizationMode'], 'FINAL_AUTHORIZATION'
-    assert_includes post['mobilePaymentMethodSpecificInput'].keys, 'decryptedPaymentData'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['dpan'], '4444333322221111'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['cryptogram'], 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['eci'], '05'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate'], "01#{payment.year.to_s[-2..-1]}"
-    assert_equal 'TOKENIZED_CARD', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['paymentMethod']
-  end
-
-  def test_add_payment_for_google_pay_pan_only
-    post = {}
-    options = { google_pay_pan_only: true }
-    payment = @google_pay_pan_only
-    @gateway.send('add_payment', post, payment, options)
-    assert_includes post.keys.first, 'mobilePaymentMethodSpecificInput'
-    assert_equal post['mobilePaymentMethodSpecificInput']['paymentProductId'], '320'
-    assert_equal post['mobilePaymentMethodSpecificInput']['authorizationMode'], 'FINAL_AUTHORIZATION'
-    assert_includes post['mobilePaymentMethodSpecificInput'].keys, 'decryptedPaymentData'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['pan'], '4444333322221111'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate'], "01#{payment.year.to_s[-2..-1]}"
-    assert_equal 'CARD', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['paymentMethod']
+    assert_equal post['mobilePaymentMethodSpecificInput']['encryptedPaymentData'], @google_pay_network_token.payment_data
   end
 
   def test_add_payment_for_apple_pay
@@ -171,47 +147,6 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['cryptogram'], 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
     assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['eci'], '05'
     assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate'], '1024'
-  end
-
-  def test_add_decrypted_data_google_pay_pan_only
-    post = { 'mobilePaymentMethodSpecificInput' => {} }
-    payment = @google_pay_pan_only
-    options = { google_pay_pan_only: true }
-    expirydate = '0124'
-
-    @gateway.send('add_decrypted_payment_data', post, payment, options, expirydate)
-    assert_includes post['mobilePaymentMethodSpecificInput'].keys, 'decryptedPaymentData'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['pan'], '4444333322221111'
-    assert_equal 'CARD', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['paymentMethod']
-  end
-
-  def test_add_decrypted_data_for_google_pay
-    post = { 'mobilePaymentMethodSpecificInput' => {} }
-    payment = @google_pay_network_token
-    options = {}
-    expirydate = '0124'
-
-    @gateway.send('add_decrypted_payment_data', post, payment, options, expirydate)
-    assert_includes post['mobilePaymentMethodSpecificInput'].keys, 'decryptedPaymentData'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['cryptogram'], 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['eci'], '05'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['dpan'], '4444333322221111'
-    assert_equal 'TOKENIZED_CARD', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['paymentMethod']
-    assert_equal '0124', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate']
-  end
-
-  def test_add_decrypted_data_for_apple_pay
-    post = { 'mobilePaymentMethodSpecificInput' => {} }
-    payment = @google_pay_network_token
-    options = {}
-    expirydate = '0124'
-
-    @gateway.send('add_decrypted_payment_data', post, payment, options, expirydate)
-    assert_includes post['mobilePaymentMethodSpecificInput'].keys, 'decryptedPaymentData'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['cryptogram'], 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['eci'], '05'
-    assert_equal post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['dpan'], '4444333322221111'
-    assert_equal '0124', post['mobilePaymentMethodSpecificInput']['decryptedPaymentData']['expiryDate']
   end
 
   def test_purchase_request_with_apple_pay
@@ -387,7 +322,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@accepted_amount, @credit_card, options)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match %r("fraudFields":{"website":"www.example.com","giftMessage":"Happy Day!","customerIpAddress":"127.0.0.1"}), data
+      assert_match %r("fraudFields":{"website":"www.example.com","giftMessage":"Happy Day!"}), data
       assert_match %r("merchantReference":"123"), data
       assert_match %r("customer":{"personalInformation":{"name":{"firstName":"Longbob","surname":"Longsen"}},"merchantCustomerId":"123987","contactDetails":{"emailAddress":"example@example.com","phoneNumber":"\(555\)555-5555"},"billingAddress":{"street":"My Street","houseNumber":"456","additionalInfo":"Apt 1","zip":"K1C2N6","city":"Ottawa","state":"ON","countryCode":"CA"}}}), data
       assert_match %r("paymentProductId":"123ABC"), data
@@ -429,6 +364,16 @@ class GlobalCollectTest < Test::Unit::TestCase
       assert_not_match(/cavvAlgorithm/, data)
       assert_not_match(/validationResult/, data)
     end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_successful_authorize_with_3ds_exemption
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@accepted_amount, @credit_card, { three_ds_exemption_type: 'moto' })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"transactionChannel\":\"MOTO\"/, data)
+    end.respond_with(successful_authorize_with_3ds2_data_response)
 
     assert_success response
   end

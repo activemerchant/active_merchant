@@ -1,8 +1,13 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class RapydGateway < Gateway
+      class_attribute :payment_redirect_test, :payment_redirect_live
+
       self.test_url = 'https://sandboxapi.rapyd.net/v1/'
       self.live_url = 'https://api.rapyd.net/v1/'
+
+      self.payment_redirect_test = 'https://sandboxpayment-redirect.rapyd.net/v1/'
+      self.payment_redirect_live = 'https://payment-redirect.rapyd.net/v1/'
 
       self.supported_countries = %w(CA CL CO DO SV PE PT VI AU HK IN ID JP MY NZ PH SG KR TW TH VN AD AT BE BA BG HR CY CZ DK EE FI FR GE DE GI GR GL HU IS IE IL IT LV LI LT LU MK MT MD MC ME NL GB NO PL RO RU SM SK SI ZA ES SE CH TR VA)
       self.default_currency = 'USD'
@@ -107,6 +112,11 @@ module ActiveMerchant #:nodoc:
         add_ewallet(post, options)
         add_payment_fields(post, options)
         add_payment_urls(post, options)
+        add_idempotency(options)
+      end
+
+      def add_idempotency(options)
+        @options[:idempotency] = options[:idempotency_key] if options[:idempotency_key]
       end
 
       def add_address(post, creditcard, options)
@@ -128,6 +138,9 @@ module ActiveMerchant #:nodoc:
         post[:amount] = money.zero? ? 0 : amount(money).to_f.to_s
         post[:currency] = (options[:currency] || currency(money))
         post[:merchant_reference_id] = options[:merchant_reference_id] || options[:order_id]
+        post[:requested_currency] = options[:requested_currency] if options[:requested_currency].present?
+        post[:fixed_side] = options[:fixed_side] if options[:fixed_side].present?
+        post[:expiration] = (options[:expiration_days] || 7).to_i.days.from_now.to_i if options[:fixed_side].present?
       end
 
       def add_payment(post, payment, options)
@@ -146,10 +159,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_reference_id(post, options)
-        return unless options[:stored_credential] || options[:network_transaction_id]
+        return unless (options[:stored_credential] && options[:stored_credential][:reason_type] == 'recurring') || options[:network_transaction_id]
 
         network_transaction_id = options[:network_transaction_id] || options[:stored_credential][:network_transaction_id]
-        post[:payment_method][:fields][:network_reference_id] = network_transaction_id if network_transaction_id
+        post[:payment_method][:fields][:network_reference_id] = network_transaction_id unless network_transaction_id&.empty?
       end
 
       def add_initiation_type(post, options)
@@ -166,12 +179,21 @@ module ActiveMerchant #:nodoc:
 
         post[:payment_method][:type] = options[:pm_type]
         pm_fields[:number] = payment.number
-        pm_fields[:expiration_month] = payment.month.to_s
-        pm_fields[:expiration_year] = payment.year.to_s
+        pm_fields[:expiration_month] = format(payment.month, :two_digits).to_s
+        pm_fields[:expiration_year] = format(payment.year, :two_digits).to_s
         pm_fields[:name] = "#{payment.first_name} #{payment.last_name}"
-        pm_fields[:cvv] = payment.verification_value.to_s if payment.verification_value.present?
-
+        pm_fields[:cvv] = payment.verification_value.to_s unless valid_network_transaction_id?(options) || payment.verification_value.blank?
+        pm_fields[:recurrence_type] = options[:recurrence_type] if options[:recurrence_type]
         add_stored_credential(post, options)
+      end
+
+      def send_customer_object?(options)
+        options[:stored_credential] && options[:stored_credential][:reason_type] == 'recurring'
+      end
+
+      def valid_network_transaction_id?(options)
+        network_transaction_id = options[:network_tansaction_id] || options.dig(:stored_credential_options, :network_transaction_id) || options.dig(:stored_credential, :network_transaction_id)
+        return network_transaction_id.present?
       end
 
       def add_ach(post, payment, options)
@@ -192,13 +214,13 @@ module ActiveMerchant #:nodoc:
 
         customer_id, card_id = payment.split('|')
 
-        post[:customer] = customer_id
+        post[:customer] = customer_id unless send_customer_object?(options)
         post[:payment_method] = card_id
       end
 
       def add_3ds(post, payment, options)
         if options[:execute_threed] == true
-          post[:payment_method_options] = { '3d_required' => true }
+          post[:payment_method_options] = { '3d_required' => true } if options[:force_3d_secure].to_s == 'true'
         elsif three_d_secure = options[:three_d_secure]
           post[:payment_method_options] = {}
           post[:payment_method_options]['3d_required'] = three_d_secure[:required]
@@ -237,14 +259,15 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, payment, options, action = '')
         phone_number = options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
         post[:phone_number] = phone_number.gsub(/\D/, '') unless phone_number.nil?
-        post[:email] = options[:email]
+        post[:receipt_email] = options[:email] if payment.is_a?(String) && options[:customer_id].present? && !send_customer_object?(options)
+
         return if payment.is_a?(String)
         return add_customer_id(post, options) if options[:customer_id]
 
         if action == 'store'
           post.merge!(customer_fields(payment, options))
         else
-          post[:customer] = customer_fields(payment, options)
+          post[:customer] = customer_fields(payment, options) unless send_customer_object?(options)
         end
       end
 
@@ -254,6 +277,7 @@ module ActiveMerchant #:nodoc:
         customer_address = address(options)
         customer_data = {}
         customer_data[:name] = "#{payment.first_name} #{payment.last_name}" unless payment.is_a?(String)
+        customer_data[:email] = options[:email] unless payment.is_a?(String) && options[:customer_id].blank?
         customer_data[:addresses] = [customer_address] if customer_address
         customer_data
       end
@@ -282,13 +306,21 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         return {} if body.empty? || body.nil?
 
-        JSON.parse(body)
+        parsed = JSON.parse(body)
+        parsed.is_a?(Hash) ? parsed : { 'status' => { 'status' => parsed } }
+      end
+
+      def url(action, url_override = nil)
+        if url_override.to_s == 'payment_redirect' && action == 'payments'
+          (self.test? ? self.payment_redirect_test : self.payment_redirect_live) + action.to_s
+        else
+          (self.test? ? self.test_url : self.live_url) + action.to_s
+        end
       end
 
       def commit(method, action, parameters)
-        url = (test? ? test_url : live_url) + action.to_s
         rel_path = "#{method}/v1/#{action}"
-        response = api_request(method, url, rel_path, parameters)
+        response = api_request(method, url(action, @options[:url_override]), rel_path, parameters)
 
         Response.new(
           success_from(response),
@@ -300,10 +332,25 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: error_code_from(response)
         )
+      rescue ActiveMerchant::ResponseError => e
+        response = e.response.body.present? ? parse(e.response.body) : { 'status' => { 'response_code' => e.response.msg } }
+        message = response['status'].slice('message', 'response_code').values.compact_blank.first || ''
+        Response.new(false, message, response, test: test?, error_code: error_code_from(response))
+      end
+
+      # We need to revert the work of ActiveSupport JSON encoder to prevent discrepancies
+      # Between the signature and the actual request body
+      def revert_json_html_encoding!(string)
+        {
+          '\\u003e' => '>',
+          '\\u003c' => '<',
+          '\\u0026' => '&'
+        }.each { |k, v| string.gsub! k, v }
       end
 
       def api_request(method, url, rel_path, params)
         params == {} ? body = '' : body = params.to_json
+        revert_json_html_encoding!(body) if defined?(ActiveSupport::JSON::Encoding) && ActiveSupport::JSON::Encoding.escape_html_entities_in_json
         parse(ssl_request(method, url, body, headers(rel_path, body)))
       end
 
@@ -315,14 +362,14 @@ module ActiveMerchant #:nodoc:
           'access_key' => @options[:access_key],
           'salt' => salt,
           'timestamp' => timestamp,
-          'signature' => generate_hmac(rel_path, salt, timestamp, payload)
-        }
+          'signature' => generate_hmac(rel_path, salt, timestamp, payload),
+          'idempotency' => @options[:idempotency]
+        }.delete_if { |_, value| value.nil? }
       end
 
       def generate_hmac(rel_path, salt, timestamp, payload)
         signature = "#{rel_path}#{salt}#{timestamp}#{@options[:access_key]}#{@options[:secret_key]}#{payload}"
-        hash = Base64.urlsafe_encode64(OpenSSL::HMAC.hexdigest('sha256', @options[:secret_key], signature))
-        hash
+        Base64.urlsafe_encode64(OpenSSL::HMAC.hexdigest('sha256', @options[:secret_key], signature))
       end
 
       def avs_result(response)
@@ -357,7 +404,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        response.dig('status', 'error_code') unless success_from(response)
+        response.dig('status', 'error_code') || response.dig('status', 'response_code') || ''
       end
 
       def handle_response(response)

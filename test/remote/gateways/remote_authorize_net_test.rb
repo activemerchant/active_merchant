@@ -175,6 +175,16 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved', response.message
   end
 
+  def test_successful_purchase_with_surcharge
+    options = @options.merge(surcharge: {
+      amount: 20,
+      description: 'test description'
+    })
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
   def test_successful_purchase_with_customer
     response = @gateway.purchase(@amount, @credit_card, @options.merge(customer: 'abcd_123'))
     assert_success response
@@ -903,8 +913,8 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_credit_with_network_tokenization
     credit_card = network_tokenization_credit_card(
-      '4000100011112224',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      '5424000000000015',
+      payment_cryptogram: 'EjRWeJASNFZ4kBI0VniQEjRWeJA=',
       verification_value: nil
     )
 

@@ -25,6 +25,18 @@ class ElementTest < Test::Unit::TestCase
     assert_equal '2005831886|100', response.authorization
   end
 
+  def test_successful_purchase_without_name
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    @credit_card.first_name = nil
+    @credit_card.last_name = nil
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    assert_equal '2005831886|100', response.authorization
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
@@ -151,6 +163,50 @@ class ElementTest < Test::Unit::TestCase
       assert_match '<CardPresentCode>Present</CardPresentCode>', data
     end.respond_with(successful_purchase_response)
 
+    assert_success response
+  end
+
+  def test_successful_purchase_with_lodging_and_other_fields
+    lodging_options = {
+      order_id: '2',
+      billing_address: address.merge(zip: '87654'),
+      description: 'Store Purchase',
+      duplicate_override_flag: 'true',
+      lodging: {
+        agreement_number: 182726718192,
+        check_in_date: 20250910,
+        check_out_date: 20250915,
+        room_amount: 1000,
+        room_tax: 0,
+        no_show_indicator: 0,
+        duration: 5,
+        customer_name: 'francois dubois',
+        client_code: 'Default',
+        extra_charges_detail: '01',
+        extra_charges_amounts: 'Default',
+        prestigious_property_code: 'DollarLimit500',
+        special_program_code: 'Sale',
+        charge_type: 'Restaurant'
+      }
+    }
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, lodging_options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<LodgingAgreementNumber>182726718192</LodgingAgreementNumber>', data
+      assert_match '<LodgingCheckInDate>20250910</LodgingCheckInDate>', data
+      assert_match '<LodgingCheckOutDate>20250915</LodgingCheckOutDate>', data
+      assert_match '<LodgingRoomAmount>1000</LodgingRoomAmount>', data
+      assert_match '<LodgingRoomTax>0</LodgingRoomTax>', data
+      assert_match '<LodgingNoShowIndicator>0</LodgingNoShowIndicator>', data
+      assert_match '<LodgingDuration>5</LodgingDuration>', data
+      assert_match '<LodgingCustomerName>francois dubois</LodgingCustomerName>', data
+      assert_match '<LodgingClientCode>Default</LodgingClientCode>', data
+      assert_match '<LodgingExtraChargesDetail>01</LodgingExtraChargesDetail>', data
+      assert_match '<LodgingExtraChargesAmounts>Default</LodgingExtraChargesAmounts>', data
+      assert_match '<LodgingPrestigiousPropertyCode>DollarLimit500</LodgingPrestigiousPropertyCode>', data
+      assert_match '<LodgingSpecialProgramCode>Sale</LodgingSpecialProgramCode>', data
+      assert_match '<LodgingChargeType>Restaurant</LodgingChargeType>', data
+    end.respond_with(successful_purchase_response)
     assert_success response
   end
 

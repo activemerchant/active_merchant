@@ -281,11 +281,9 @@ module ActiveMerchant
         end
       end
 
-      def build_xml_request
+      def build_xml_request(&block)
         builder = Nokogiri::XML::Builder.new
-        builder.__send__('VancoWS') do |doc|
-          yield(doc)
-        end
+        builder.__send__('VancoWS', &block)
         builder.to_xml
       end
 

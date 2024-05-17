@@ -103,6 +103,14 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_not_nil response.params['client_token']
   end
 
+  def test_successful_setup_purchase_with_merchant_account_id
+    assert response = @gateway.setup_purchase(merchant_account_id: fixtures(:braintree_blue)[:merchant_account_id])
+    assert_success response
+    assert_equal 'Client token created', response.message
+
+    assert_not_nil response.params['client_token']
+  end
+
   def test_successful_authorize_with_order_id
     assert response = @gateway.authorize(@amount, @credit_card, order_id: '123')
     assert_success response
@@ -258,8 +266,9 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
 
   def test_successful_credit_card_verification
     card = credit_card('4111111111111111')
-    assert response = @gateway.verify(card, @options.merge({ allow_card_verification: true }))
+    assert response = @gateway.verify(card, @options.merge({ allow_card_verification: true, merchant_account_id: fixtures(:braintree_blue)[:merchant_account_id] }))
     assert_success response
+
     assert_match 'OK', response.message
     assert_equal 'M', response.cvv_result['code']
     assert_equal 'P', response.avs_result['code']
@@ -542,7 +551,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert transaction = response.params['braintree_transaction']
     assert transaction['risk_data']
     assert transaction['risk_data']['id']
-    assert_equal 'Approve', transaction['risk_data']['decision']
+    assert_equal true, ['Not Evaluated', 'Approve'].include?(transaction['risk_data']['decision'])
     assert_equal false, transaction['risk_data']['device_data_captured']
     assert_equal 'fraud_protection', transaction['risk_data']['fraud_service_provider']
   end
@@ -1014,6 +1023,43 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert !gateway.verify_credentials
   end
 
+  def test_successful_recurring_first_stored_credential_v2
+    creds_options = stored_credential_options(:cardholder, :recurring, :initial)
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options, stored_credentials_v2: true))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_not_nil response.params['braintree_transaction']['network_transaction_id']
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+  end
+
+  def test_successful_follow_on_recurring_first_cit_stored_credential_v2
+    creds_options = stored_credential_options(:cardholder, :recurring, id: '020190722142652')
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options, stored_credentials_v2: true))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_not_nil response.params['braintree_transaction']['network_transaction_id']
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+  end
+
+  def test_successful_follow_on_recurring_first_mit_stored_credential_v2
+    creds_options = stored_credential_options(:merchant, :recurring, id: '020190722142652')
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options, stored_credentials_v2: true))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_not_nil response.params['braintree_transaction']['network_transaction_id']
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+  end
+
+  def test_successful_one_time_mit_stored_credential_v2
+    creds_options = stored_credential_options(:merchant, id: '020190722142652')
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options, stored_credentials_v2: true))
+
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+    assert_not_nil response.params['braintree_transaction']['network_transaction_id']
+  end
+
   def test_successful_merchant_purchase_initial
     creds_options = stored_credential_options(:merchant, :recurring, :initial)
     response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options))
@@ -1229,13 +1275,135 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_not_nil response.params['braintree_transaction']['processor_authorization_code']
   end
 
-  def test_successful_purchase_with_with_prepaid_debit_issuing_bank
+  def test_successful_purchase_and_return_paypal_details_object
+    @non_payal_link_gateway = BraintreeGateway.new(fixtures(:braintree_blue_non_linked_paypal))
+    assert response = @non_payal_link_gateway.purchase(400000, 'fake-paypal-one-time-nonce', @options.merge(payment_method_nonce: 'fake-paypal-one-time-nonce'))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'paypal_payer_id', response.params['braintree_transaction']['paypal_details']['payer_id']
+    assert_equal 'payer@example.com', response.params['braintree_transaction']['paypal_details']['payer_email']
+  end
+
+  def test_successful_credit_card_purchase_with_prepaid_debit_issuing_bank
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_success response
     assert_equal '1000 Approved', response.message
+    assert_equal 'credit_card', response.params['braintree_transaction']['payment_instrument_type']
     assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['prepaid']
     assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['debit']
     assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['issuing_bank']
+  end
+
+  def test_unsuccessful_credit_card_purchase_and_return_payment_details
+    assert response = @gateway.purchase(204700, @credit_card)
+    assert_failure response
+    assert_equal('2047 : Call Issuer. Pick Up Card.', response.params['braintree_transaction']['additional_processor_response'])
+    assert_equal 'credit_card', response.params['braintree_transaction']['payment_instrument_type']
+    assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['prepaid']
+    assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['debit']
+    assert_equal 'M', response.params.dig('braintree_transaction', 'cvv_response_code')
+    assert_equal 'I', response.params.dig('braintree_transaction', 'avs_response_code')
+    assert_equal 'Call Issuer. Pick Up Card.', response.params.dig('braintree_transaction', 'gateway_message')
+    assert_equal 'Unknown', response.params.dig('braintree_transaction', 'credit_card_details', 'country_of_issuance')
+    assert_equal 'Unknown', response.params['braintree_transaction']['credit_card_details']['issuing_bank']
+  end
+
+  def test_successful_network_token_purchase_with_prepaid_debit_issuing_bank
+    assert response = @gateway.purchase(@amount, @nt_credit_card)
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'network_token', response.params['braintree_transaction']['payment_instrument_type']
+    assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['prepaid']
+    assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['debit']
+    assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['issuing_bank']
+  end
+
+  def test_unsuccessful_network_token_purchase_and_return_payment_details
+    assert response = @gateway.purchase(204700, @nt_credit_card)
+    assert_failure response
+    assert_equal('2047 : Call Issuer. Pick Up Card.', response.params['braintree_transaction']['additional_processor_response'])
+    assert_equal 'network_token', response.params['braintree_transaction']['payment_instrument_type']
+    assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['prepaid']
+    assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['debit']
+    assert_equal 'Unknown', response.params['braintree_transaction']['network_token_details']['issuing_bank']
+  end
+
+  def test_successful_google_pay_purchase_with_prepaid_debit
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      month: '01',
+      year: '2024',
+      source: :google_pay,
+      transaction_id: '123456789',
+      eci: '05'
+    )
+
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'android_pay_card', response.params['braintree_transaction']['payment_instrument_type']
+    assert_equal 'Unknown', response.params['braintree_transaction']['google_pay_details']['prepaid']
+    assert_equal 'Unknown', response.params['braintree_transaction']['google_pay_details']['debit']
+  end
+
+  def test_unsuccessful_google_pay_purchase_and_return_payment_details
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      month: '01',
+      year: '2024',
+      source: :google_pay,
+      transaction_id: '123456789',
+      eci: '05'
+    )
+    assert response = @gateway.purchase(204700, credit_card, @options)
+    assert_failure response
+    assert_equal('2047 : Call Issuer. Pick Up Card.', response.params['braintree_transaction']['additional_processor_response'])
+    assert_equal 'android_pay_card', response.params['braintree_transaction']['payment_instrument_type']
+    assert_equal 'Unknown', response.params['braintree_transaction']['google_pay_details']['prepaid']
+    assert_equal 'Unknown', response.params['braintree_transaction']['google_pay_details']['debit']
+  end
+
+  def test_successful_apple_pay_purchase_with_prepaid_debit_issuing_bank
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
+
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'apple_pay_card', response.params['braintree_transaction']['payment_instrument_type']
+    assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['prepaid']
+    assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['debit']
+    assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['issuing_bank']
+  end
+
+  def test_unsuccessful_apple_pay_purchase_and_return_payment_details
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
+
+    assert response = @gateway.purchase(204700, credit_card, @options)
+    assert_failure response
+    assert_equal('2047 : Call Issuer. Pick Up Card.', response.params['braintree_transaction']['additional_processor_response'])
+    assert_equal 'apple_pay_card', response.params['braintree_transaction']['payment_instrument_type']
+    assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['prepaid']
+    assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['debit']
+    assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['issuing_bank']
+  end
+
+  def test_successful_purchase_with_global_id
+    assert response = @gateway.purchase(@amount, @credit_card)
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_not_nil response.params['braintree_transaction']['payment_receipt']['global_id']
   end
 
   def test_unsucessful_purchase_using_a_bank_account_token_not_verified

@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = self.live_url = 'https://secure.networkmerchants.com/api/transact.php'
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_countries = ['US']
+      self.supported_countries = %w[US CA]
       self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://nmi.com/'
       self.display_name = 'NMI'
@@ -334,8 +334,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        headers = { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
-        headers
+        { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
       end
 
       def post_data(action, params)
@@ -347,7 +346,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[CGI::parse(body).map { |k, v| [k.intern, v.first] }]
+        CGI::parse(body).map { |k, v| [k.intern, v.first] }.to_h
       end
 
       def success_from(response)

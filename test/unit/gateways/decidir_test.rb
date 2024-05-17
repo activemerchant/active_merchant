@@ -38,6 +38,13 @@ class DecidirTest < Test::Unit::TestCase
         amount: 1500
       }
     ]
+
+    @network_token = network_tokenization_credit_card(
+      '4012001037141112',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: '000203016912340000000FA08400317500000000'
+    )
   end
 
   def test_successful_purchase
@@ -154,6 +161,19 @@ class DecidirTest < Test::Unit::TestCase
       assert_equal(@sub_payments, JSON.parse(data, symbolize_names: true)[:sub_payments])
       assert_match(/#{options[:installments]}/, data)
       assert_match(/#{options[:payment_type]}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_customer_object
+    options = @options.merge(customer_id: 'John', customer_email: 'decidir@decidir.com')
+
+    response = stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert data =~ /"email":"decidir@decidir.com"/
+      assert data =~ /"id":"John"/
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -378,6 +398,22 @@ class DecidirTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_network_token_payment_method
+    options = {
+      card_holder_name: 'Tesest payway',
+      card_holder_door_number: 1234,
+      card_holder_birthday: '200988',
+      card_holder_identification_type: 'DNI',
+      card_holder_identification_number: '44444444',
+      last_4: @credit_card.last_digits
+    }
+    @gateway_for_auth.expects(:ssl_request).returns(successful_network_token_response)
+    response = @gateway_for_auth.authorize(100, @network_token, options)
+
+    assert_success response
+    assert_equal 49120515, response.authorization
+  end
+
   def test_scrub
     assert @gateway_for_purchase.supports_scrubbing?
     assert_equal @gateway_for_purchase.scrub(pre_scrubbed), post_scrubbed
@@ -546,6 +582,59 @@ class DecidirTest < Test::Unit::TestCase
   def failed_authorize_response
     %(
       {"id":7719358,"site_transaction_id":"ff1c12c1-fb6d-4c1a-bc20-2e77d4322c61","payment_method_id":1,"card_brand":"Visa","amount":100,"currency":"ars","status":"rejected","status_details":{"ticket":"8189","card_authorization_code":"","address_validation_code":null,"error":{"type":"invalid_number","reason":{"id":14,"description":"TARJETA INVALIDA","additional_description":""}}},"date":"2019-06-21T18:07Z","customer":null,"bin":"400030","installments":1,"first_installment_expiration_date":null,"payment_type":"single","sub_payments":[],"site_id":"99999997","fraud_detection":null,"aggregate_data":null,"establishment_name":null,"spv":null,"confirmed":null,"pan":"11b076fbc8fa6a55783b2f5d03f6938d8a","customer_token":null,"card_data":"/tokens/7719358"}
+    )
+  end
+
+  def successful_network_token_response
+    %(
+      {"id": 49120515,
+      "site_transaction_id": "Tx1673372774",
+      "payment_method_id": 1,
+      "card_brand": "Visa",
+      "amount": 1200,
+      "currency": "ars",
+      "status": "approved",
+      "status_details": {
+          "ticket": "88",
+          "card_authorization_code": "B45857",
+          "address_validation_code": "VTE2222",
+          "error": null
+      },
+      "date": "2023-01-10T14:46Z",
+      "customer": null,
+      "bin": "450799",
+      "installments": 1,
+      "first_installment_expiration_date": null,
+      "payment_type": "single",
+      "sub_payments": [],
+      "site_id": "09001000",
+      "fraud_detection": null,
+      "aggregate_data": {
+          "indicator": "1",
+          "identification_number": "30598910045",
+          "bill_to_pay": "Payway_Test",
+          "bill_to_refund": "Payway_Test",
+          "merchant_name": "PAYWAY",
+          "street": "Lavarden",
+          "number": "247",
+          "postal_code": "C1437FBE",
+          "category": "05044",
+          "channel": "005",
+          "geographic_code": "C1437",
+          "city": "Buenos Aires",
+          "merchant_id": "id_Aggregator",
+          "province": "Buenos Aires",
+          "country": "Argentina",
+          "merchant_email": "qa@test.com",
+          "merchant_phone": "+541135211111"
+      },
+      "establishment_name": null,
+      "spv":null,
+      "confirmed":null,
+      "bread":null,
+      "customer_token":null,
+      "card_data":"/tokens/49120515",
+      "token":"b7b6ca89-ed81-44e0-9d1f-3b3cf443cd74"}
     )
   end
 

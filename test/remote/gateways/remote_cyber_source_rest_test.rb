@@ -13,6 +13,29 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     @master_card = credit_card('2222420000001113', brand: 'master')
     @discover_card = credit_card('6011111111111117', brand: 'discover')
 
+    @visa_network_token = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      source: :network_token
+    )
+    @amex_network_token = network_tokenization_credit_card(
+      '378282246310005',
+      brand: 'american_express',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      source: :network_token
+    )
+
+    @mastercard_network_token = network_tokenization_credit_card(
+      '5555555555554444',
+      brand: 'master',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      source: :network_token
+    )
+
     @apple_pay = network_tokenization_credit_card(
       '4111111111111111',
       payment_cryptogram: 'AceY+igABPs3jdwNaDg3MAACAAA=',
@@ -301,6 +324,30 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_equal 'INVALID_ACCOUNT', response.error_code
   end
 
+  def test_successful_authorize_with_visa_network_token
+    response = @gateway.authorize(@amount, @visa_network_token, @options)
+
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+    refute_empty response.params['_links']['capture']
+  end
+
+  def test_successful_authorize_with_mastercard_network_token
+    response = @gateway.authorize(@amount, @mastercard_network_token, @options)
+
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+    refute_empty response.params['_links']['capture']
+  end
+
+  def test_successful_authorize_with_amex_network_token
+    response = @gateway.authorize(@amount, @amex_network_token, @options)
+
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+    refute_empty response.params['_links']['capture']
+  end
+
   def test_successful_authorize_with_apple_pay
     response = @gateway.authorize(@amount, @apple_pay, @options)
 
@@ -511,5 +558,31 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_equal 'AUTHORIZED', response.message
     assert_nil response.params['_links']['capture']
     assert_equal 'AUD', response.params['orderInformation']['amountDetails']['currency']
+  end
+
+  def test_successful_authorize_with_3ds2_visa
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
+    auth = @gateway.authorize(@amount, @visa_card, @options)
+    assert_success auth
+  end
+
+  def test_successful_authorize_with_3ds2_mastercard
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
+    auth = @gateway.authorize(@amount, @master_card, @options)
+    assert_success auth
   end
 end

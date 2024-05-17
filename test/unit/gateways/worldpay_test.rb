@@ -330,6 +330,73 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_with_nt_passes_stored_credential_options
+    options = @options.merge(
+      stored_credential_usage: 'USED',
+      stored_credential_initiated_reason: 'UNSCHEDULED',
+      stored_credential_transaction_id: '000000000000020005060720116005060'
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+      assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_with_nt_passes_standard_stored_credential_options
+    stored_credential_params = stored_credential(:used, :unscheduled, :merchant, network_transaction_id: 20_005_060_720_116_005_060)
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+      assert_match(/<schemeTransactionIdentifier\>20005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_passes_correct_stored_credential_options_for_first_recurring
+    options = @options.merge(
+      stored_credential_usage: 'FIRST',
+      stored_credential_initiated_reason: 'RECURRING'
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"FIRST\" customerInitiatedReason\=\"RECURRING\"\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_passes_correct_stored_credential_options_for_used_recurring
+    options = @options.merge(
+      stored_credential_usage: 'USED',
+      stored_credential_initiated_reason: 'RECURRING',
+      stored_credential_transaction_id: '000000000000020005060720116005061'
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"RECURRING\"\>/, data)
+      assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005061\<\/schemeTransactionIdentifier\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_passes_correct_stored_credentials_for_first_installment
+    options = @options.merge(
+      stored_credential_usage: 'FIRST',
+      stored_credential_initiated_reason: 'INSTALMENT'
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"FIRST\" merchantInitiatedReason\=\"INSTALMENT\"\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_authorize_passes_sub_merchant_data
     options = @options.merge(@sub_merchant_options)
     response = stub_comms do
@@ -421,15 +488,6 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @nt_credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match %r(<eciIndicator>05</eciIndicator>), data
-    end.respond_with(successful_authorize_response)
-    assert_success response
-  end
-
-  def test_successful_authorize_with_network_token_without_eci
-    response = stub_comms do
-      @gateway.authorize(@amount, @nt_credit_card_without_eci, @options)
-    end.check_request do |_endpoint, data, _headers|
-      assert_match %r(<eciIndicator>07</eciIndicator>), data
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -1097,9 +1155,11 @@ class WorldpayTest < Test::Unit::TestCase
   def test_3ds_additional_information
     browser_size = '390x400'
     session_id = '0215ui8ib1'
+    df_reference_id = '1326vj9jc2'
 
     options = @options.merge(
       session_id: session_id,
+      df_reference_id: df_reference_id,
       browser_size: browser_size,
       execute_threed: true,
       three_ds_version: '2.0.1'
@@ -1108,7 +1168,7 @@ class WorldpayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_tag_with_attributes 'additional3DSData', { 'dfReferenceId' => session_id, 'challengeWindowSize' => browser_size }, data
+      assert_tag_with_attributes 'additional3DSData', { 'dfReferenceId' => df_reference_id, 'challengeWindowSize' => browser_size }, data
     end.respond_with(successful_authorize_response)
   end
 
@@ -1415,6 +1475,14 @@ class WorldpayTest < Test::Unit::TestCase
   def test_network_token_type_assignation_when_google_pay
     stub_comms do
       @gateway.authorize(@amount, @google_pay_network_token, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="GOOGLEPAY">), data
+    end
+  end
+
+  def test_network_token_type_assignation_when_google_pay_pan_only
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge!(wallet_type: :google_pay))
     end.check_request(skip_response: true) do |_endpoint, data, _headers|
       assert_match %r(<EMVCO_TOKEN-SSL type="GOOGLEPAY">), data
     end

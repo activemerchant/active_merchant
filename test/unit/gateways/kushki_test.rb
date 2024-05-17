@@ -45,7 +45,23 @@ class KushkiTest < Test::Unit::TestCase
       months: 2,
       deferred_grace_months: '05',
       deferred_credit_type: '01',
-      deferred_months: 3
+      deferred_months: 3,
+      product_details: [
+        {
+          id: 'test1',
+          title: 'tester1',
+          price: 10,
+          sku: 'abcde',
+          quantity: 1
+        },
+        {
+          id: 'test2',
+          title: 'tester2',
+          price: 5,
+          sku: 'edcba',
+          quantity: 2
+        }
+      ]
     }
 
     amount = 100 * (
@@ -63,9 +79,8 @@ class KushkiTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_includes data, 'metadata'
       assert_includes data, 'months'
-      assert_includes data, 'deferred_grace_month'
-      assert_includes data, 'deferred_credit_type'
-      assert_includes data, 'deferred_months'
+      assert_includes data, 'deferred'
+      assert_includes data, 'productDetails'
     end.respond_with(successful_token_response, successful_charge_response)
 
     assert_success response
@@ -278,6 +293,49 @@ class KushkiTest < Test::Unit::TestCase
     assert_failure refund
     assert_equal 'Ticket number inválido', refund.message
     assert_equal 'K010', refund.error_code
+  end
+
+  def test_partial_refund
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+
+    options = { currency: 'PEN' }
+
+    purchase = @gateway.purchase(100, @credit_card, options)
+
+    refund = stub_comms(@gateway, :ssl_request) do
+      refund_options = {
+        currency: 'PEN',
+        partial_refund: true,
+        full_response: true
+      }
+      @gateway.refund(50, purchase.authorization, refund_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['amount']['subtotalIva0'], 0.5
+    end.respond_with(successful_refund_response)
+    assert_success refund
+  end
+
+  def test_full_refund_does_not_have_request_body
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+
+    options = { currency: 'PEN' }
+
+    purchase = @gateway.purchase(@amount, @credit_card, options)
+    assert_success purchase
+
+    refund = stub_comms(@gateway, :ssl_request) do
+      refund_options = {
+        currency: 'PEN',
+        full_response: true
+      }
+      @gateway.refund(@amount, purchase.authorization, refund_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_nil(data)
+    end.respond_with(successful_refund_response)
+    assert_success refund
   end
 
   def test_successful_capture

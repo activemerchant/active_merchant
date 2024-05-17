@@ -98,8 +98,15 @@ class PayeezyGateway < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    @credit_card.first_name = nil
+    @credit_card.last_name = nil
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'Jim Smith', request.dig('credit_card', 'cardholder_name')
+    end.respond_with(successful_purchase_response)
     assert_success response
     assert_equal 'ET114541|55083431|credit_card|1', response.authorization
     assert response.test?
@@ -216,6 +223,28 @@ class PayeezyGateway < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/"level2":{"customer_ref":"An important customer"}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_customer_ref_top_level
+    options = @options.merge(customer_ref: 'abcde')
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"customer_ref":"abcde"/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_reference_3
+    options = @options.merge(reference_3: '12345')
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"reference_3":"12345"/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response

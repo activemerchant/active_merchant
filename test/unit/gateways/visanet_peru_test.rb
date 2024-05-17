@@ -21,10 +21,11 @@ class VisanetPeruTest < Test::Unit::TestCase
   def test_successful_purchase
     @gateway.expects(:ssl_request).with(:post, any_parameters).returns(successful_authorize_response)
     @gateway.expects(:ssl_request).with(:put, any_parameters).returns(successful_capture_response)
-
     response = @gateway.purchase(@amount, @credit_card, @options)
+
     assert_success response
     assert_equal 'OK', response.message
+    assert_not_nil response.params['purchaseNumber']
 
     assert_match %r([0-9]{9}|$), response.authorization
     assert_equal 'de9dc65c094fb4f1defddc562731af81', response.params['externalTransactionId']

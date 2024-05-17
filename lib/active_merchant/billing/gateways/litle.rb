@@ -111,14 +111,15 @@ module ActiveMerchant #:nodoc:
         doc.lineItemData do
           level_3_data[:line_items].each do |line_item|
             doc.itemSequenceNumber(line_item[:item_sequence_number]) if line_item[:item_sequence_number]
-            doc.commodityCode(line_item[:commodity_code]) if line_item[:commodity_code]
             doc.itemDescription(line_item[:item_description]) if line_item[:item_description]
             doc.productCode(line_item[:product_code]) if line_item[:product_code]
             doc.quantity(line_item[:quantity]) if line_item[:quantity]
             doc.unitOfMeasure(line_item[:unit_of_measure]) if line_item[:unit_of_measure]
             doc.taxAmount(line_item[:tax_amount]) if line_item[:tax_amount]
-            doc.itemDiscountAmount(line_item[:discount_per_line_item]) unless line_item[:discount_per_line_item] < 0
-            doc.unitCost(line_item[:unit_cost]) unless line_item[:unit_cost] < 0
+            doc.lineItemTotal(line_item[:line_item_total]) if line_item[:line_item_total]
+            doc.itemDiscountAmount(line_item[:discount_per_line_item].to_i) unless line_item[:discount_per_line_item].to_i < 0
+            doc.commodityCode(line_item[:commodity_code]) if line_item[:commodity_code]
+            doc.unitCost(line_item[:unit_cost].to_i) unless line_item[:unit_cost].to_i < 0
             doc.detailTax do
               doc.taxIncludedInTotal(line_item[:tax_included_in_total]) if line_item[:tax_included_in_total]
               doc.taxAmount(line_item[:tax_amount]) if line_item[:tax_amount]
@@ -310,7 +311,15 @@ module ActiveMerchant #:nodoc:
       def add_auth_purchase_params(doc, money, payment_method, options)
         doc.orderId(truncate(options[:order_id], 24))
         doc.amount(money)
-        add_order_source(doc, payment_method, options)
+
+        if options.dig(:stored_credential, :initial_transaction) == false
+          # orderSource needs to be added at the top of doc and
+          # processingType near the end
+          source_for_subsequent_stored_credential_txns(doc, options)
+        else
+          add_order_source(doc, payment_method, options)
+        end
+
         add_billing_address(doc, payment_method, options)
         add_shipping_address(doc, payment_method, options)
         add_payment_method(doc, payment_method, options)
@@ -382,8 +391,9 @@ module ActiveMerchant #:nodoc:
             doc.track(payment_method.track_data)
           end
         elsif check?(payment_method)
+          account_type = payment_method.account_type || payment_method.account_holder_type
           doc.echeck do
-            doc.accType(payment_method.account_type.capitalize)
+            doc.accType(account_type&.capitalize)
             doc.accNum(payment_method.account_number)
             doc.routingNum(payment_method.routing_number)
             doc.checkNum(payment_method.number) if payment_method.number
@@ -409,16 +419,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_stored_credential_params(doc, options = {})
-        return unless options[:stored_credential]
+        return unless stored_credential = options[:stored_credential]
 
-        if options[:stored_credential][:initial_transaction]
-          add_stored_credential_params_initial(doc, options)
+        if stored_credential[:initial_transaction]
+          add_stored_credential_for_initial_txn(doc, options)
         else
-          add_stored_credential_params_used(doc, options)
+          doc.processingType("#{stored_credential[:initiator]}InitiatedCOF") if stored_credential[:reason_type] == 'unscheduled'
+          doc.originalNetworkTransactionId(stored_credential[:network_transaction_id]) if stored_credential[:initiator] == 'merchant'
         end
       end
 
-      def add_stored_credential_params_initial(doc, options)
+      def add_stored_credential_for_initial_txn(doc, options)
         case options[:stored_credential][:reason_type]
         when 'unscheduled'
           doc.processingType('initialCOF')
@@ -429,15 +440,15 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_stored_credential_params_used(doc, options)
-        if options[:stored_credential][:reason_type] == 'unscheduled'
-          if options[:stored_credential][:initiator] == 'merchant'
-            doc.processingType('merchantInitiatedCOF')
-          else
-            doc.processingType('cardholderInitiatedCOF')
-          end
+      def source_for_subsequent_stored_credential_txns(doc, options)
+        case options[:stored_credential][:reason_type]
+        when 'unscheduled'
+          doc.orderSource('ecommerce')
+        when 'installment'
+          doc.orderSource('installment')
+        when 'recurring'
+          doc.orderSource('recurring')
         end
-        doc.originalNetworkTransactionId(options[:stored_credential][:network_transaction_id])
       end
 
       def add_billing_address(doc, payment_method, options)
@@ -479,8 +490,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_order_source(doc, payment_method, options)
-        order_source = order_source(options)
-        if order_source
+        if order_source = options[:order_source]
           doc.orderSource(order_source)
         elsif payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :apple_pay
           doc.orderSource('applepay')
@@ -491,31 +501,6 @@ module ActiveMerchant #:nodoc:
         else
           doc.orderSource('ecommerce')
         end
-      end
-
-      def order_source(options = {})
-        return options[:order_source] unless options[:stored_credential]
-
-        order_source = nil
-
-        case options[:stored_credential][:reason_type]
-        when 'unscheduled'
-          if options[:stored_credential][:initiator] == 'merchant'
-            # For merchant-initiated, we should always set order source to
-            # 'ecommerce'
-            order_source = 'ecommerce'
-          else
-            # For cardholder-initiated, we rely on #add_order_source's
-            # default logic to set orderSource appropriately
-            order_source = options[:order_source]
-          end
-        when 'installment'
-          order_source = 'installment'
-        when 'recurring'
-          order_source = 'recurring'
-        end
-
-        order_source
       end
 
       def add_pos(doc, payment_method)
@@ -618,11 +603,9 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def build_xml_request
+      def build_xml_request(&block)
         builder = Nokogiri::XML::Builder.new
-        builder.__send__('litleOnlineRequest', root_attributes) do |doc|
-          yield(doc)
-        end
+        builder.__send__('litleOnlineRequest', root_attributes, &block)
         builder.doc.root.to_xml
       end
 

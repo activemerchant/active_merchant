@@ -193,7 +193,8 @@ module ActiveMerchant #:nodoc:
           post[:card] = card
           add_address(post, options)
         elsif creditcard.kind_of?(String)
-          post[:card] = creditcard
+          key = creditcard.match(/^pm_/) ? :paymentMethod : :card
+          post[key] = creditcard
         else
           raise ArgumentError.new("Unhandled payment method #{creditcard.class}.")
         end
@@ -239,7 +240,7 @@ module ActiveMerchant #:nodoc:
         if action == 'customers' && success?(response) && response['cards'].present?
           response['cards'].first['id']
         else
-          success?(response) ? response['id'] : response['error']['charge']
+          success?(response) ? response['id'] : (response.dig('error', 'charge') || response.dig('error', 'chargeId'))
         end
       end
 
@@ -250,11 +251,10 @@ module ActiveMerchant #:nodoc:
       def headers(options = {})
         secret_key = options[:secret_key] || @options[:secret_key]
 
-        headers = {
+        {
           'Authorization' => 'Basic ' + Base64.encode64(secret_key.to_s + ':').strip,
           'User-Agent' => "SecurionPay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
-        headers
       end
 
       def response_error(raw_response)
@@ -312,7 +312,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def test?
-        (@options[:secret_key]&.include?('_test_'))
+        @options[:secret_key]&.include?('_test_')
       end
     end
   end

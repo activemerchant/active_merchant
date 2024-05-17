@@ -5,6 +5,7 @@ class IpgTest < Test::Unit::TestCase
 
   def setup
     @gateway = IpgGateway.new(fixtures(:ipg))
+    @gateway_ma = IpgGateway.new(fixtures(:ipg_ma))
     @credit_card = credit_card
     @amount = 100
 
@@ -19,6 +20,7 @@ class IpgTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       doc = REXML::Document.new(data)
       assert_match('sale', REXML::XPath.first(doc, '//v1:CreditCardTxType//v1:Type').text)
+      assert_match('1.00', REXML::XPath.first(doc, '//v1:Transaction//v1:ChargeTotal').text)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -127,6 +129,31 @@ class IpgTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
+  end
+
+  def test_successful_ma_purchase_with_store_id
+    response = stub_comms(@gateway_ma) do
+      @gateway_ma.purchase(@amount, @credit_card, @options.merge({ store_id: '1234' }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      assert_match('1234', REXML::XPath.first(doc, '//v1:StoreId').text)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_basic_auth_builds_correctly_with_differing_ma_credential_structures
+    user_id_without_ws = fixtures(:ipg_ma)[:user_id].sub(/^WS/, '')
+    gateway_ma2 = IpgGateway.new(fixtures(:ipg_ma).merge({ user_id: user_id_without_ws }))
+
+    assert_equal(@gateway_ma.send(:build_header), gateway_ma2.send(:build_header))
+  end
+
+  def test_basic_auth_builds_correctly_with_differing_credential_structures
+    user_id_without_ws = fixtures(:ipg)[:user_id].sub(/^WS/, '')
+    gateway2 = IpgGateway.new(fixtures(:ipg).merge({ user_id: user_id_without_ws }))
+
+    assert_equal(@gateway.send(:build_header), gateway2.send(:build_header))
   end
 
   def test_successful_purchase_with_payment_token
@@ -332,38 +359,6 @@ class IpgTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
-  def test_store_and_user_id_from_with_complete_credentials
-    test_combined_user_id = 'WS5921102002._.1'
-    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
-
-    assert_equal '5921102002', split_credentials[:store_id]
-    assert_equal '1', split_credentials[:user_id]
-  end
-
-  def test_store_and_user_id_from_missing_store_id_prefix
-    test_combined_user_id = '5921102002._.1'
-    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
-
-    assert_equal '5921102002', split_credentials[:store_id]
-    assert_equal '1', split_credentials[:user_id]
-  end
-
-  def test_store_and_user_id_misplaced_store_id_prefix
-    test_combined_user_id = '5921102002WS._.1'
-    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
-
-    assert_equal '5921102002WS', split_credentials[:store_id]
-    assert_equal '1', split_credentials[:user_id]
-  end
-
-  def test_store_and_user_id_from_missing_delimiter
-    test_combined_user_id = 'WS59211020021'
-    split_credentials = @gateway.send(:store_and_user_id_from, test_combined_user_id)
-
-    assert_equal '59211020021', split_credentials[:store_id]
-    assert_equal nil, split_credentials[:user_id]
-  end
-
   def test_message_from_just_with_transaction_result
     am_response = { TransactionResult: 'success !' }
     assert_equal 'success !', @gateway.send(:message_from, am_response)
@@ -372,6 +367,13 @@ class IpgTest < Test::Unit::TestCase
   def test_message_from_with_an_error
     am_response = { TransactionResult: 'DECLINED', ErrorMessage: 'CODE: this is an error message' }
     assert_equal 'DECLINED, this is an error message', @gateway.send(:message_from, am_response)
+  end
+
+  def test_failed_without_store_id
+    bad_gateway = IpgGateway.new(fixtures(:ipg).merge({ store_id: nil }))
+    assert_raises(ArgumentError) do
+      bad_gateway.purchase(@amount, @credit_card, @options)
+    end
   end
 
   private
@@ -770,7 +772,7 @@ class IpgTest < Test::Unit::TestCase
       starting SSL for test.ipg-online.com:443...
       SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384
       <- "POST /ipgapi/services HTTP/1.1\r\nContent-Type: text/xml; charset=utf-8\r\nAuthorization: Basic [FILTERED]\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: test.ipg-online.com\r\nContent-Length: 850\r\n\r\n"
-      <- "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ipg=\"http://ipg-online.com/ipgapi/schemas/ipgapi\" xmlns:v1=\"http://ipg-online.com/ipgapi/schemas/v1\">\n  <soapenv:Header/>\n  <soapenv:Body>\n    <ipg:IPGApiOrderRequest>\n      <v1:Transaction>\n        <v1:CreditCardTxType>\n          <v1:StoreId>[FILTERED]</v1:StoreId>\n          <v1:Type>sale</v1:Type>\n        </v1:CreditCardTxType>\n<v1:CreditCardData>\n  <v1:CardNumber>[FILTERED]</v1:CardNumber>\n  <v1:ExpMonth>12</v1:ExpMonth>\n  <v1:ExpYear>22</v1:ExpYear>\n  <v1:CardCodeValue>[FILTERED]</v1:CardCodeValue>\n</v1:CreditCardData>\n<v1:Payment>\n  <v1:ChargeTotal>100</v1:ChargeTotal>\n  <v1:Currency>032</v1:Currency>\n</v1:Payment>\n<v1:TransactionDetails>\n</v1:TransactionDetails>\n      </v1:Transaction>\n    </ipg:IPGApiOrderRequest>\n  </soapenv:Body>\n</soapenv:Envelope>\n"
+      <- "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ipg=\"http://ipg-online.com/ipgapi/schemas/ipgapi\" xmlns:v1=\"http://ipg-online.com/ipgapi/schemas/v1\">\n  <soapenv:Header/>\n  <soapenv:Body>\n    <ipg:IPGApiOrderRequest>\n      <v1:Transaction>\n        <v1:CreditCardTxType>\n          <v1:StoreId>5921102002</v1:StoreId>\n          <v1:Type>sale</v1:Type>\n        </v1:CreditCardTxType>\n<v1:CreditCardData>\n  <v1:CardNumber>[FILTERED]</v1:CardNumber>\n  <v1:ExpMonth>12</v1:ExpMonth>\n  <v1:ExpYear>22</v1:ExpYear>\n  <v1:CardCodeValue>[FILTERED]</v1:CardCodeValue>\n</v1:CreditCardData>\n<v1:Payment>\n  <v1:ChargeTotal>100</v1:ChargeTotal>\n  <v1:Currency>032</v1:Currency>\n</v1:Payment>\n<v1:TransactionDetails>\n</v1:TransactionDetails>\n      </v1:Transaction>\n    </ipg:IPGApiOrderRequest>\n  </soapenv:Body>\n</soapenv:Envelope>\n"
       -> "HTTP/1.1 200 \r\n"
       -> "Date: Fri, 29 Oct 2021 19:31:23 GMT\r\n"
       -> "Strict-Transport-Security: max-age=63072000; includeSubdomains\r\n"

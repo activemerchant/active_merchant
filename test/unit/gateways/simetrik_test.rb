@@ -1,15 +1,5 @@
 require 'test_helper'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-    class SimetrikGateway < Gateway
-      def fetch_access_token
-        @access_token[:access_token] = SecureRandom.hex(16)
-      end
-    end
-  end
-end
-
 class SimetrikTest < Test::Unit::TestCase
   def setup
     @token_acquirer = 'ea890fd1-49f3-4a34-a150-192bf9a59205'
@@ -17,7 +7,8 @@ class SimetrikTest < Test::Unit::TestCase
     @gateway = SimetrikGateway.new(
       client_id: 'client_id',
       client_secret: 'client_secret_key',
-      audience: 'audience_url'
+      audience: 'audience_url',
+      access_token: { expires_at: Time.new.to_i }
     )
     @credit_card = CreditCard.new(
       first_name: 'sergiod',
@@ -75,63 +66,63 @@ class SimetrikTest < Test::Unit::TestCase
     }
 
     @authorize_capture_expected_body = {
-      "forward_route": {
-        "trace_id": @trace_id,
-        "psp_extra_fields": {}
+      forward_route: {
+        trace_id: @trace_id,
+        psp_extra_fields: {}
       },
-      "forward_payload": {
-        "user": {
-          "id": '123',
-          "email": 's@example.com'
+      forward_payload: {
+        user: {
+          id: '123',
+          email: 's@example.com'
         },
-        "order": {
-          "id": @order_id,
-          "description": 'a popsicle',
-          "installments": 1,
-          "datetime_local_transaction": @datetime,
-          "amount": {
-            "total_amount": 10.0,
-            "currency": 'USD',
-            "vat": 1.9
+        order: {
+          id: @order_id,
+          description: 'a popsicle',
+          installments: 1,
+          datetime_local_transaction: @datetime,
+          amount: {
+            total_amount: 10.0,
+            currency: 'USD',
+            vat: 1.9
           }
         },
-        "payment_method": {
-          "card": {
-            "number": '4551478422045511',
-            "exp_month": 12,
-            "exp_year": 2029,
-            "security_code": '111',
-            "type": 'visa',
-            "holder_first_name": 'sergiod',
-            "holder_last_name": 'lobob'
+        payment_method: {
+          card: {
+            number: '4551478422045511',
+            exp_month: 12,
+            exp_year: 2029,
+            security_code: '111',
+            type: 'visa',
+            holder_first_name: 'sergiod',
+            holder_last_name: 'lobob'
           }
         },
-        "authentication": {
-          "three_ds_fields": {
-            "version": '2.1.0',
-            "eci": '02',
-            "cavv": 'jJ81HADVRtXfCBATEp01CJUAAAA',
-            "ds_transaction_id": '97267598-FAE6-48F2-8083-C23433990FBC',
-            "acs_transaction_id": '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
-            "xid": '00000000000000000501',
-            "enrolled": 'string',
-            "cavv_algorithm": '1',
-            "directory_response_status": 'Y',
-            "authentication_response_status": 'Y',
-            "three_ds_server_trans_id": '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
+        authentication: {
+          three_ds_fields: {
+            version: '2.1.0',
+            eci: '02',
+            cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
+            ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+            acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
+            xid: '00000000000000000501',
+            enrolled: 'string',
+            cavv_algorithm: '1',
+            directory_response_status: 'Y',
+            authentication_response_status: 'Y',
+            three_ds_server_trans_id: '24f701e3-9a85-4d45-89e9-af67e70d8fg8'
           }
         },
-        "sub_merchant": {
-          "merchant_id": 'string',
-          "extra_params": {},
-          "mcc": 'string',
-          "name": 'string',
-          "address": 'string',
-          "postal_code": 'string',
-          "url": 'string',
-          "phone_number": 'string'
+        sub_merchant: {
+          merchant_id: 'string',
+          extra_params: {},
+          mcc: 'string',
+          name: 'string',
+          address: 'string',
+          postal_code: 'string',
+          url: 'string',
+          phone_number: 'string'
         },
-        "acquire_extra_options": {}
+        acquire_extra_options: {}
       }
     }.to_json.to_s
   end
@@ -168,6 +159,15 @@ class SimetrikTest < Test::Unit::TestCase
     assert_equal response.avs_result['code'], 'G'
     assert_equal response.cvv_result['code'], 'P'
     assert response.test?
+  end
+
+  def test_fetch_access_token_should_rise_an_exception_under_bad_request
+    error = assert_raises(ActiveMerchant::OAuthResponseError) do
+      @gateway.expects(:raw_ssl_request).returns(Net::HTTPBadRequest.new(1.0, 401, 'Unauthorized'))
+      @gateway.send(:fetch_access_token)
+    end
+
+    assert_match(/Failed with 401 Unauthorized/, error.message)
   end
 
   def test_success_purchase_with_shipping_address

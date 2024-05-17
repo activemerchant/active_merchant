@@ -148,6 +148,20 @@ class WompiTest < Test::Unit::TestCase
     assert_equal 'La entidad solicitada no existe', response.message
   end
 
+  def test_successful_purchase_with_tip_in_cents
+    response = stub_comms(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(tip_in_cents: 300))
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['tip_in_cents'], 300
+      assert_match @amount.to_s, data
+    end.respond_with(successful_purchase_response)
+    assert_success response
+
+    assert_equal '113879-1635300853-71494', response.authorization
+    assert response.test?
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
