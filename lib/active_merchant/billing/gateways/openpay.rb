@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
-        post[:capture] = false
+        post[:payment_plan] = options[:payment_plan] if options[:payment_plan].present?
         commit(:post, 'charges', post, options)
       end
 
