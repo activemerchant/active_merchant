@@ -151,12 +151,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
         reference: '012345',
         reference_type: 'other',
         source_of_funds: 'debit',
-          identification: {
-            type: 'passport',
-            number: 'ABC123',
-            issuing_country: 'US',
-            date_of_expiry: '2027-07-07'
-          }
+        identification: {
+          type: 'passport',
+          number: 'ABC123',
+          issuing_country: 'US',
+          date_of_expiry: '2027-07-07'
+        }
       }
     )
   end
@@ -608,8 +608,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
         first_name: 'john',
         last_name: 'johnny',
         address: {
-          address_line1: '123 High St.',
-          address_line2: 'Flat 456',
+          address1: '123 High St.',
+          address2: 'Flat 456',
           city: 'London',
           state: 'str',
           zip: 'SW1A 1AA',
@@ -618,6 +618,34 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       }
     )
     response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_sender_data
+    options = @options.merge(
+      sender: {
+        type: 'individual',
+        dob: '1985-05-15',
+        first_name: 'Jane',
+        last_name: 'Doe',
+        address: {
+          address_line1: '123 High St.',
+          address_line2: 'Flat 456',
+          city: 'London',
+          state: 'str',
+          zip: 'SW1A 1AA',
+          country: 'GB'
+        },
+        reference: '8285282045818',
+        identification: {
+          type: 'passport',
+          number: 'ABC123',
+          issuing_country: 'GB'
+        }
+      }
+    )
+    response = @gateway_oauth.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end

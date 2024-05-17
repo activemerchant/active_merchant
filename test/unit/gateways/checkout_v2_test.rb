@@ -338,6 +338,51 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_purchase_with_sender_fields
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {
+        sender: {
+          type: 'individual',
+          dob: '1985-05-15',
+          first_name: 'Jane',
+          last_name: 'Doe',
+          address: {
+            address1: '123 High St.',
+            address2: 'Flat 456',
+            city: 'London',
+            state: 'str',
+            zip: 'SW1A 1AA',
+            country: 'GB'
+          },
+          reference: '8285282045818',
+          identification: {
+            type: 'passport',
+            number: 'ABC123',
+            issuing_country: 'GB'
+          }
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)['sender']
+      assert_equal request['first_name'], 'Jane'
+      assert_equal request['last_name'], 'Doe'
+      assert_equal request['type'], 'individual'
+      assert_equal request['dob'], '1985-05-15'
+      assert_equal request['reference'], '8285282045818'
+      assert_equal request['address']['address_line1'], '123 High St.'
+      assert_equal request['address']['address_line2'], 'Flat 456'
+      assert_equal request['address']['city'], 'London'
+      assert_equal request['address']['state'], 'str'
+      assert_equal request['address']['zip'], 'SW1A 1AA'
+      assert_equal request['address']['country'], 'GB'
+      assert_equal request['identification']['type'], 'passport'
+      assert_equal request['identification']['number'], 'ABC123'
+      assert_equal request['identification']['issuing_country'], 'GB'
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_purchase_with_processing_fields
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, {

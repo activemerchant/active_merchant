@@ -143,6 +143,7 @@ module ActiveMerchant #:nodoc:
         add_marketplace_data(post, options)
         add_recipient_data(post, options)
         add_processing_data(post, options)
+        add_payment_sender_data(post, options)
       end
 
       def add_invoice(post, money, options)
@@ -171,9 +172,12 @@ module ActiveMerchant #:nodoc:
         post[:recipient][:last_name] = recipient[:last_name] if recipient[:last_name]
 
         if address = recipient[:address]
+          address1 = address[:address1] || address[:address_line1]
+          address2 = address[:address2] || address[:address_line2]
+
           post[:recipient][:address] = {}
-          post[:recipient][:address][:address_line1] = address[:address_line1] if address[:address_line1]
-          post[:recipient][:address][:address_line2] = address[:address_line2] if address[:address_line2]
+          post[:recipient][:address][:address_line1] = address1 if address1
+          post[:recipient][:address][:address_line2] = address2 if address2
           post[:recipient][:address][:city] = address[:city] if address[:city]
           post[:recipient][:address][:state] = address[:state] if address[:state]
           post[:recipient][:address][:zip] = address[:zip] if address[:zip]
@@ -185,6 +189,40 @@ module ActiveMerchant #:nodoc:
         return unless options[:processing].is_a?(Hash)
 
         post[:processing] = options[:processing]
+      end
+
+      def add_payment_sender_data(post, options)
+        return unless options[:sender].is_a?(Hash)
+
+        sender = options[:sender]
+
+        post[:sender] = {}
+        post[:sender][:type] = sender[:type] if sender[:type]
+        post[:sender][:first_name] = sender[:first_name] if sender[:first_name]
+        post[:sender][:last_name] = sender[:last_name] if sender[:last_name]
+        post[:sender][:dob] = sender[:dob] if sender[:dob]
+        post[:sender][:reference] = sender[:reference] if sender[:reference]
+        post[:sender][:company_name] = sender[:company_name] if sender[:company_name]
+
+        if address = sender[:address]
+          address1 = address[:address1] || address[:address_line1]
+          address2 = address[:address2] || address[:address_line2]
+
+          post[:sender][:address] = {}
+          post[:sender][:address][:address_line1] = address1 if address1
+          post[:sender][:address][:address_line2] = address2 if address2
+          post[:sender][:address][:city] = address[:city] if address[:city]
+          post[:sender][:address][:state] = address[:state] if address[:state]
+          post[:sender][:address][:zip] = address[:zip] if address[:zip]
+          post[:sender][:address][:country] = address[:country] if address[:country]
+        end
+
+        if identification = sender[:identification]
+          post[:sender][:identification] = {}
+          post[:sender][:identification][:type] = identification[:type] if identification[:type]
+          post[:sender][:identification][:number] = identification[:number] if identification[:number]
+          post[:sender][:identification][:issuing_country] = identification[:issuing_country] if identification[:issuing_country]
+        end
       end
 
       def add_authorization_type(post, options)

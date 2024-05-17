@@ -169,6 +169,7 @@
 * DataTrans: Add ThirdParty 3DS params [gasb150] #5118
 * FlexCharge: Add ThirdParty 3DS params [javierpedrozaing] #5121
 * FlexCharge: Add support for TPV store [edgarv09] #5120
+* CheckoutV2: Add sender payment fields to purchase and auth [yunnydang] #5124
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
