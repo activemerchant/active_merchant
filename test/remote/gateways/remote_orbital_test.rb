@@ -51,7 +51,15 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       address2: address[:address2],
       city: address[:city],
       state: address[:state],
-      zip: address[:zip]
+      zip: address[:zip],
+      requestor_name: 'ArtVandelay123',
+      total_tax_amount: '75',
+      national_tax: '625',
+      pst_tax_reg_number: '8675309',
+      customer_vat_reg_number: '1234567890',
+      merchant_vat_reg_number: '987654321',
+      commodity_code: 'SUMM',
+      local_tax_rate: '6250'
     }
 
     @level_3_options_visa = {
@@ -61,7 +69,11 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       dest_country: 'USA',
       discount_amount: 1,
       vat_tax: 1,
-      vat_rate: 25
+      vat_rate: 25,
+      invoice_discount_treatment: 1,
+      tax_treatment: 1,
+      ship_vat_rate: 10,
+      unique_vat_invoice_ref: 'ABC123'
     }
 
     @level_2_options_master = {
@@ -1232,7 +1244,13 @@ class TandemOrbitalTests < Test::Unit::TestCase
       tax_indicator: '1',
       tax: '75',
       purchase_order: '123abc',
-      zip: address[:zip]
+      zip: address[:zip],
+      requestor_name: 'ArtVandelay123',
+      total_tax_amount: '75',
+      pst_tax_reg_number: '8675309',
+      customer_vat_reg_number: '1234567890',
+      commodity_code: 'SUMM',
+      local_tax_rate: '6250'
     }
 
     @level_3_options = {
@@ -1242,7 +1260,11 @@ class TandemOrbitalTests < Test::Unit::TestCase
       dest_country: 'USA',
       discount_amount: 1,
       vat_tax: 1,
-      vat_rate: 25
+      vat_rate: 25,
+      invoice_discount_treatment: 1,
+      tax_treatment: 1,
+      ship_vat_rate: 10,
+      unique_vat_invoice_ref: 'ABC123'
     }
 
     @line_items = [
@@ -1296,6 +1318,13 @@ class TandemOrbitalTests < Test::Unit::TestCase
 
   def test_successful_purchase_with_level_2_data
     response = @tandem_gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: @level_2_options))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_2_data_canadian_currency
+    response = @tandem_gateway.purchase(@amount, @credit_card, @options.merge(currency: 'CAD', merchant_vat_reg_number: '987654321', national_tax: '625', level_2_data: @level_2_options))
 
     assert_success response
     assert_equal 'Approved', response.message
