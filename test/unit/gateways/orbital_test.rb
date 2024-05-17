@@ -30,7 +30,15 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       address2: address[:address2],
       city: address[:city],
       state: address[:state],
-      zip: address[:zip]
+      zip: address[:zip],
+      requestor_name: 'ArtVandelay123',
+      total_tax_amount: '75',
+      national_tax: '625',
+      pst_tax_reg_number: '8675309',
+      customer_vat_reg_number: '1234567890',
+      merchant_vat_reg_number: '987654321',
+      commodity_code: 'SUMM',
+      local_tax_rate: '6250'
     }
 
     @level3 = {
@@ -42,7 +50,11 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       vat_tax: '25',
       alt_tax: '30',
       vat_rate: '7',
-      alt_ind: 'Y'
+      alt_ind: 'Y',
+      invoice_discount_treatment: 1,
+      tax_treatment: 1,
+      ship_vat_rate: 10,
+      unique_vat_invoice_ref: 'ABC123'
     }
 
     @line_items =
@@ -143,6 +155,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.purchase(50, commercial_echeck, order_id: '9baedc697f2cf06457de78')
     end.check_request do |_endpoint, data, _headers|
       assert_match %{<BankAccountType>X</BankAccountType>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_with_echeck_response)
   end
 
@@ -202,6 +215,15 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<PCDestAddress2>#{@level2[:address2]}</PCDestAddress2>}, data
       assert_match %{<PCDestCity>#{@level2[:city]}</PCDestCity>}, data
       assert_match %{<PCDestState>#{@level2[:state]}</PCDestState>}, data
+      assert_match %{<PCardRequestorName>#{@level2[:requestor_name]}</PCardRequestorName>}, data
+      assert_match %{<PCardTotalTaxAmount>#{@level2[:total_tax_amount]}</PCardTotalTaxAmount>}, data
+      assert_match %{<PCardNationalTax>#{@level2[:national_tax]}</PCardNationalTax>}, data
+      assert_match %{<PCardPstTaxRegNumber>#{@level2[:pst_tax_reg_number]}</PCardPstTaxRegNumber>}, data
+      assert_match %{<PCardCustomerVatRegNumber>#{@level2[:customer_vat_reg_number]}</PCardCustomerVatRegNumber>}, data
+      assert_match %{<PCardMerchantVatRegNumber>#{@level2[:merchant_vat_reg_number]}</PCardMerchantVatRegNumber>}, data
+      assert_match %{<PCardCommodityCode>#{@level2[:commodity_code]}</PCardCommodityCode>}, data
+      assert_match %{<PCardLocalTaxRate>#{@level2[:local_tax_rate]}</PCardLocalTaxRate>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -218,6 +240,11 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<PC3VATtaxRate>#{@level3[:vat_rate].to_i}</PC3VATtaxRate>}, data
       assert_match %{<PC3AltTaxAmt>#{@level3[:alt_tax].to_i}</PC3AltTaxAmt>}, data
       assert_match %{<PC3AltTaxInd>#{@level3[:alt_ind]}</PC3AltTaxInd>}, data
+      assert_match %{<PC3InvoiceDiscTreatment>#{@level3[:invoice_discount_treatment]}</PC3InvoiceDiscTreatment>}, data
+      assert_match %{<PC3TaxTreatment>#{@level3[:tax_treatment]}</PC3TaxTreatment>}, data
+      assert_match %{<PC3ShipVATRate>#{@level3[:ship_vat_rate]}</PC3ShipVATRate>}, data
+      assert_match %{<PC3UniqueVATInvoiceRefNum>#{@level3[:unique_vat_invoice_ref]}</PC3UniqueVATInvoiceRefNum>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -238,6 +265,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<PC3DtlGrossNet>#{@line_items[1][:gross_net]}</PC3DtlGrossNet>}, data
       assert_match %{<PC3DtlDiscInd>#{@line_items[1][:disc_ind]}</PC3DtlDiscInd>}, data
       assert_match %{<PC3DtlIndex>2</PC3DtlIndex>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -264,11 +292,15 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<DPANInd>Y</DPANInd>}, data
       assert_match %{DigitalTokenCryptogram}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_schema_for_soft_descriptors_with_network_tokenization_credit_card_data
     options = @options.merge(
+      level_2_data: @level2,
+      level_3_data: @level3,
+      line_items: @line_items,
       soft_descriptors: {
         merchant_name: 'Merch',
         product_description: 'Description',
@@ -278,8 +310,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(50, network_tokenization_credit_card(nil, eci: '5', transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA='), options)
     end.check_request do |_endpoint, data, _headers|
-      # Soft descriptor fields should come before dpan and cryptogram fields
-      assert_match %{<SDMerchantEmail>email@example<\/SDMerchantEmail><DPANInd>Y<\/DPANInd><DigitalTokenCryptogram}, data.gsub(/\s+/, '')
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -290,6 +321,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<CAVV>TESTCAVV</CAVV>}, data
       assert_match %{<XID>TESTXID</XID>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -300,6 +332,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<CAVV>TESTCAVV</CAVV>}, data
       assert_match %{<XID>TESTXID</XID>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -312,6 +345,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
       assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
       assert_match %{<UCAFInd>4</UCAFInd>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -324,6 +358,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
       assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
       assert_match %{<UCAFInd>4</UCAFInd>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -348,6 +383,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
       assert_match %{<SCARecurringPayment>Y</SCARecurringPayment>}, data
       assert_match %{<UCAFInd>4</UCAFInd>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -527,6 +563,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       gateway.capture(101, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantID>700000123456<\/MerchantID>/, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -642,6 +679,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match(/Luxury Suite</, data)
       assert_match(/Winnipeg</, data)
       assert_match(/MB</, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
     assert_success response
 
@@ -747,6 +785,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match(/<AVSDestname>Joan Smith/, data)
       assert_match(/<AVSDestphoneNum>1234567890/, data)
       assert_match(/<AVSDestcountryCode>US/, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
     assert_success response
 
@@ -867,6 +906,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_no_match(/<MITMsgType>/, data)
       assert_no_match(/<MITStoredCredentialInd>/, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -877,6 +917,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<MITMsgType>#{@options_stored_credentials[:mit_msg_type]}</MITMsgType>}, data
       assert_match %{<MITStoredCredentialInd>#{@options_stored_credentials[:mit_stored_credential_ind]}</MITStoredCredentialInd>}, data
       assert_match %{<MITSubmittedTransactionID>#{@options_stored_credentials[:mit_submitted_transaction_id]}</MITSubmittedTransactionID>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -901,6 +942,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CSTO</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -914,6 +956,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CREC</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -926,6 +969,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CSTO</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -940,6 +984,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match(/<MITMsgType>MREC</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
       assert_match(/<MITSubmittedTransactionID>abc123</, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -952,6 +997,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CSTO</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -965,6 +1011,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CUSE</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -977,6 +1024,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CSTO</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -991,6 +1039,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match(/<MITMsgType>MUSE</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
       assert_match(/<MITSubmittedTransactionID>abc123</, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -1003,6 +1052,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CSTO</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -1016,6 +1066,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CINS</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -1093,6 +1144,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<MITMsgType>MRSB</MITMsgType>}, data
       assert_match %{<MITStoredCredentialInd>Y</MITStoredCredentialInd>}, data
       assert_match %{<MITSubmittedTransactionID>123456abcdef</MITSubmittedTransactionID>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1108,6 +1160,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match(/<MBOrderIdGenerationMethod>IO/, data)
       assert_match(/<MBRecurringStartDate>10102014/, data)
       assert_match(/<MBRecurringNoEndDateFlag>N/, data)
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_profile_response)
     assert_success response
   end
@@ -1386,10 +1439,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address)
     end.check_request do |_endpoint, data, _headers|
-      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI83.xsd")
-      doc = Nokogiri::XML(data)
-      xsd = Nokogiri::XML::Schema(schema_file)
-      assert xsd.valid?(doc), 'Request does not adhere to DTD'
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -1398,10 +1448,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address(country: 'DE'))
     end.check_request do |_endpoint, data, _headers|
-      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI83.xsd")
-      doc = Nokogiri::XML(data)
-      xsd = Nokogiri::XML::Schema(schema_file)
-      assert xsd.valid?(doc), 'Request does not adhere to DTD'
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -1952,5 +1999,15 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       read 1185 bytes
       Conn close
     REQUEST
+  end
+
+  def assert_xml_valid_to_xsd(data)
+    doc = Nokogiri::XML(data)
+    xsd = Nokogiri::XML::Schema(schema_file)
+    assert xsd.valid?(doc), 'Request does not adhere to DTD'
+  end
+
+  def schema_file
+    @schema_file ||= File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI95.xsd")
   end
 end

@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
     class OrbitalGateway < Gateway
       include Empty
 
-      API_VERSION = '9.0'
+      API_VERSION = '9.5'
 
       POST_HEADERS = {
         'MIME-Version' => '1.1',
@@ -493,6 +493,35 @@ module ActiveMerchant #:nodoc:
               end
             end
           end
+        end
+      end
+
+      def add_level2_card_and_more_tax(xml, options = {})
+        if (level2 = options[:level_2_data])
+          xml.tag! :PCardRequestorName, byte_limit(level2[:requestor_name], 38) if level2[:requestor_name]
+          xml.tag! :PCardLocalTaxRate, byte_limit(level2[:local_tax_rate], 5) if level2[:local_tax_rate]
+          # Canadian Merchants Only
+          xml.tag! :PCardNationalTax, byte_limit(level2[:national_tax], 12) if level2[:national_tax]
+          xml.tag! :PCardPstTaxRegNumber, byte_limit(level2[:pst_tax_reg_number], 15) if level2[:pst_tax_reg_number]
+          xml.tag! :PCardCustomerVatRegNumber, byte_limit(level2[:customer_vat_reg_number], 13) if level2[:customer_vat_reg_number]
+          # Canadian Merchants Only
+          xml.tag! :PCardMerchantVatRegNumber, byte_limit(level2[:merchant_vat_reg_number], 20) if level2[:merchant_vat_reg_number]
+          xml.tag! :PCardTotalTaxAmount, byte_limit(level2[:total_tax_amount], 12) if level2[:total_tax_amount]
+        end
+      end
+
+      def add_card_commodity_code(xml, options = {})
+        if (level2 = options[:level_2_data]) && (level2[:commodity_code])
+          xml.tag! :PCardCommodityCode, byte_limit(level2[:commodity_code], 4)
+        end
+      end
+
+      def add_level3_vat_fields(xml, options = {})
+        if (level3 = options[:level_3_data])
+          xml.tag! :PC3InvoiceDiscTreatment, byte_limit(level3[:invoice_discount_treatment], 1) if level3[:invoice_discount_treatment]
+          xml.tag! :PC3TaxTreatment, byte_limit(level3[:tax_treatment], 1) if level3[:tax_treatment]
+          xml.tag! :PC3UniqueVATInvoiceRefNum, byte_limit(level3[:unique_vat_invoice_ref], 15) if level3[:unique_vat_invoice_ref]
+          xml.tag! :PC3ShipVATRate, byte_limit(level3[:ship_vat_rate], 4) if level3[:ship_vat_rate]
         end
       end
 
@@ -1003,36 +1032,34 @@ module ActiveMerchant #:nodoc:
             xml.tag! :OrderID, format_order_id(parameters[:order_id])
             xml.tag! :Amount, amount(money)
             xml.tag! :Comments, parameters[:comments] if parameters[:comments]
-
             add_level2_tax(xml, parameters)
             add_level2_advice_addendum(xml, parameters)
-
             add_aav(xml, payment_source, three_d_secure)
             # CustomerAni, AVSPhoneType and AVSDestPhoneType could be added here.
-
             add_soft_descriptors(xml, parameters[:soft_descriptors])
-            add_payment_action_ind(xml, parameters[:payment_action_ind])
-            add_dpanind(xml, payment_source, parameters[:industry_type])
-            add_aevv(xml, payment_source, three_d_secure)
-            add_digital_token_cryptogram(xml, payment_source, three_d_secure)
-
-            xml.tag! :ECPSameDayInd, parameters[:same_day] if parameters[:same_day] && payment_source.is_a?(Check)
-
             set_recurring_ind(xml, parameters)
 
             # Append Transaction Reference Number at the end for Refund transactions
             add_tx_ref_num(xml, parameters[:authorization]) if action == REFUND && payment_source.nil?
-
             add_level2_purchase(xml, parameters)
             add_level3_purchase(xml, parameters)
             add_level3_tax(xml, parameters)
             add_line_items(xml, parameters) if parameters[:line_items]
-            add_ecp_details(xml, payment_source, parameters) if payment_source.is_a?(Check)
             add_card_indicators(xml, parameters)
+            add_payment_action_ind(xml, parameters[:payment_action_ind])
+            add_dpanind(xml, payment_source, parameters[:industry_type])
+            add_aevv(xml, payment_source, three_d_secure)
+            add_level2_card_and_more_tax(xml, parameters)
+            add_digital_token_cryptogram(xml, payment_source, three_d_secure)
+            xml.tag! :ECPSameDayInd, parameters[:same_day] if parameters[:same_day] && payment_source.is_a?(Check)
+            add_ecp_details(xml, payment_source, parameters) if payment_source.is_a?(Check)
+
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, payment_source, three_d_secure)
-            add_mastercard_fields(xml, payment_source, parameters, three_d_secure) if mastercard?(payment_source)
             xml.tag! :TokenTxnType, parameters[:token_txn_type] if parameters[:token_txn_type]
+            add_mastercard_fields(xml, payment_source, parameters, three_d_secure) if mastercard?(payment_source)
+            add_card_commodity_code(xml, parameters)
+            add_level3_vat_fields(xml, parameters)
           end
         end
         xml.target!
@@ -1054,6 +1081,9 @@ module ActiveMerchant #:nodoc:
             add_level3_purchase(xml, parameters)
             add_level3_tax(xml, parameters)
             add_line_items(xml, parameters) if parameters[:line_items]
+            add_level2_card_and_more_tax(xml, parameters)
+            add_card_commodity_code(xml, parameters)
+            add_level3_vat_fields(xml, parameters)
           end
         end
         xml.target!
