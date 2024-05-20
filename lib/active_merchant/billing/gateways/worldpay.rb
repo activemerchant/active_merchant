@@ -575,6 +575,8 @@ module ActiveMerchant #:nodoc:
         case options[:payment_type]
         when :pay_as_order
           add_amount_for_pay_as_order(xml, amount, payment_method, options)
+        when :encrypted_wallet
+          add_encrypted_wallet(xml, payment_method)
         when :network_token
           add_network_tokenization_card(xml, payment_method, options)
         else
@@ -615,6 +617,37 @@ module ActiveMerchant #:nodoc:
           end
           add_stored_credential_options(xml, options)
         end
+      end
+
+      def add_encrypted_wallet(xml, payment_method)
+        source = payment_method.source == :apple_pay ? 'APPLEPAY' : 'PAYWITHGOOGLE'
+
+        xml.paymentDetails do
+          xml.tag! "#{source}-SSL" do
+            if source == 'APPLEPAY'
+              add_encrypted_apple_pay(xml, payment_method)
+            else
+              add_encrypted_google_pay(xml, payment_method)
+            end
+          end
+        end
+      end
+
+      def add_encrypted_apple_pay(xml, payment_method)
+        xml.header do
+          xml.ephemeralPublicKey payment_method.payment_data.dig(:header, :ephemeralPublicKey)
+          xml.publicKeyHash payment_method.payment_data.dig(:header, :publicKeyHash)
+          xml.transactionId payment_method.payment_data.dig(:header, :transactionId)
+        end
+        xml.signature payment_method.payment_data[:signature]
+        xml.version payment_method.payment_data[:version]
+        xml.data payment_method.payment_data[:data]
+      end
+
+      def add_encrypted_google_pay(xml, payment_method)
+        xml.protocolVersion payment_method.payment_data[:version]
+        xml.signature payment_method.payment_data[:signature]
+        xml.signedMessage payment_method.payment_data[:signed_message]
       end
 
       def add_card_or_token(xml, payment_method, options)
@@ -986,7 +1019,11 @@ module ActiveMerchant #:nodoc:
         when String
           token_type_and_details(payment_method)
         else
-          type = network_token?(payment_method) || options[:wallet_type] == :google_pay ? :network_token : :credit
+          type = if network_token?(payment_method)
+                   payment_method.payment_data ? :encrypted_wallet : :network_token
+                 else
+                   options[:wallet_type] == :google_pay ? :network_token : :credit
+                 end
 
           { payment_type: type }
         end
