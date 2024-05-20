@@ -75,6 +75,15 @@ class WorldpayTest < Test::Unit::TestCase
       eci: '05'
     )
 
+    @google_pay_network_token_without_eci = network_tokenization_credit_card(
+      '4444333322221111',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      month: '01',
+      year: Time.new.year + 2,
+      source: :google_pay,
+      transaction_id: '123456789'
+    )
+
     @level_two_data = {
       level_2_data: {
         invoice_reference_number: 'INV12233565',
@@ -1477,6 +1486,24 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @google_pay_network_token, @options)
     end.check_request(skip_response: true) do |_endpoint, data, _headers|
       assert_match %r(<EMVCO_TOKEN-SSL type="GOOGLEPAY">), data
+      assert_match %r(<eciIndicator>05</eciIndicator>), data
+    end
+  end
+
+  def test_google_pay_without_eci_value
+    stub_comms do
+      @gateway.authorize(@amount, @google_pay_network_token_without_eci, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="GOOGLEPAY">), data
+    end
+  end
+
+  def test_google_pay_with_use_default_eci_value
+    stub_comms do
+      @gateway.authorize(@amount, @google_pay_network_token_without_eci, @options.merge({ use_default_eci: true }))
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="GOOGLEPAY">), data
+      assert_match %r(<eciIndicator>07</eciIndicator>), data
     end
   end
 

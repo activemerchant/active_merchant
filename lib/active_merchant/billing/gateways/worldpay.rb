@@ -153,8 +153,12 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def eci_value(payment_method)
-        payment_method.respond_to?(:eci) ? format(payment_method.eci, :two_digits) : ''
+      def eci_value(payment_method, options)
+        eci = payment_method.respond_to?(:eci) ? format(payment_method.eci, :two_digits) : ''
+
+        return eci unless eci.empty?
+
+        options[:use_default_eci] ? '07' : eci
       end
 
       def authorize_request(money, payment_method, options)
@@ -610,7 +614,7 @@ module ActiveMerchant #:nodoc:
             name = card_holder_name(payment_method, options)
             xml.cardHolderName name if name.present?
             xml.cryptogram payment_method.payment_cryptogram unless options[:wallet_type] == :google_pay
-            eci = eci_value(payment_method)
+            eci = eci_value(payment_method, options)
             xml.eciIndicator eci if eci.present?
           end
           add_stored_credential_options(xml, options)
