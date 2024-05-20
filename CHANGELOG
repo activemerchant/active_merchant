@@ -2,7 +2,6 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* FlexCharge: Add support for TPV store [edgarv09] #5120
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860
 * TNS: Use the specified order_id in request if available [yunnydang] #4880
 * Cybersource: Support recurring apple pay [aenand] #4874
@@ -164,7 +163,7 @@
 * Cybersource Rest: Add support for network tokens [aenand] #5107
 * Decidir: Add support for customer object [rachelkirk] #5071
 * Worldpay: Add support for stored credentials with network tokens [aenand] #5114
-
+* FlexCharge: Add support for TPV store [edgarv09] #5120
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
