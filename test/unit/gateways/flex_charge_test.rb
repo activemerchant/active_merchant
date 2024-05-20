@@ -208,6 +208,16 @@ class FlexChargeTest < Test::Unit::TestCase
     assert_equal 'd3e10716-6aac-4eb8-a74d-c1a3027f1d96', response.authorization
   end
 
+  def test_successful_inquire_request
+    session_id = 'f8da8dc7-17de-4b5e-858d-4bdc47cd5dbf'
+    stub_comms do
+      @gateway.inquire(session_id, {})
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['orderSessionKey'], session_id if /outcome/.match?(endpoint)
+    end.respond_with(successful_access_token_response, successful_purchase_response)
+  end
+
   private
 
   def pre_scrubbed

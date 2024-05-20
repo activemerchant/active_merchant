@@ -165,11 +165,24 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_token
+    set_credentials!
     store = @gateway.store(@credit_card_cit, {})
     assert_success store
 
     response = @gateway.purchase(@amount, store.authorization, @options)
     assert_success response
+  end
+
+  def test_successful_inquire_request
+    set_credentials!
+    response = @gateway.inquire('f8da8dc7-17de-4b5e-858d-4bdc47cd5dbf', {})
+    assert_success response
+  end
+
+  def test_unsuccessful_inquire_request
+    set_credentials!
+    response = @gateway.inquire(SecureRandom.uuid, {})
+    assert_failure response
   end
 
   def test_transcript_scrubbing

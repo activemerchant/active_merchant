@@ -16,10 +16,11 @@ module ActiveMerchant #:nodoc:
         purchase: 'evaluate',
         sync: 'outcome',
         refund: 'orders/%s/refund',
-        store: 'tokenize'
+        store: 'tokenize',
+        inquire: 'outcome'
       }
 
-      SUCCESS_MESSAGES = %w(APPROVED CHALLENGE SUBMITTED SUCCESS).freeze
+      SUCCESS_MESSAGES = %w(APPROVED CHALLENGE SUBMITTED SUCCESS PROCESSING).freeze
 
       def initialize(options = {})
         requires!(options, :app_key, :app_secret, :site_id, :mid)
@@ -82,6 +83,10 @@ module ActiveMerchant #:nodoc:
           gsub(%r(("verification_value\\?":\\?")\d+), '\1[FILTERED]')
       end
 
+      def inquire(authorization, options = {})
+        commit(:inquire, { orderSessionKey: authorization }, authorization)
+      end
+
       private
 
       def add_three_ds(post, options)
@@ -112,7 +117,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mit_data(post, options)
-        return unless options[:is_mit].present?
+        return if options[:is_mit].nil?
 
         post[:isMIT] = cast_bool(options[:is_mit])
         post[:isRecurring] = cast_bool(options[:is_recurring])
