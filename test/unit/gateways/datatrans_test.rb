@@ -13,6 +13,20 @@ class DatatransTest < Test::Unit::TestCase
       email: 'john.smith@test.com'
     }
 
+    @three_d_secure_options = @options.merge({
+      three_d_secure: {
+        eci: '05',
+        cavv: '3q2+78r+ur7erb7vyv66vv8=',
+        cavv_algorithm: '1',
+        xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+        enrolled: 'Y',
+        authentication_response_status: 'Y',
+        directory_response_status: 'Y',
+        version: '2',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+      }
+    })
+
     @transaction_reference = '240214093712238757|093712'
 
     @billing_address = address
@@ -111,6 +125,31 @@ class DatatransTest < Test::Unit::TestCase
       assert_equal(@apple_pay_card.number, parsed_data['card']['token'])
       assert_equal('DEVICE_TOKEN', parsed_data['card']['type'])
       assert_equal('APPLE_PAY', parsed_data['card']['tokenType'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_3ds
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @three_d_secure_options)
+    end.check_request do |_action, endpoint, data, _headers|
+      three_d_secure = @three_d_secure_options[:three_d_secure]
+      parsed_data = JSON.parse(data)
+      common_assertions_authorize_purchase(endpoint, parsed_data)
+      assert_include(parsed_data, 'card')
+      assert_include(parsed_data['card'], '3D')
+
+      parsed_3d = parsed_data['card']['3D']
+
+      assert_equal('05', parsed_3d['eci'])
+      assert_equal(three_d_secure[:xid], parsed_3d['xid'])
+      assert_equal(three_d_secure[:ds_transaction_id], parsed_3d['threeDSTransactionId'])
+      assert_equal(three_d_secure[:cavv], parsed_3d['cavv'])
+      assert_equal('2', parsed_3d['threeDSVersion'])
+      assert_equal(three_d_secure[:cavv_algorithm], parsed_3d['cavvAlgorithm'])
+      assert_equal(three_d_secure[:authentication_response_status], parsed_3d['authenticationResponse'])
+      assert_equal(three_d_secure[:directory_response_status], parsed_3d['directoryResponse'])
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -269,7 +308,7 @@ class DatatransTest < Test::Unit::TestCase
       SSL established, protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384\n
       <- \"POST /v1/transactions/authorize HTTP/1.1\\r\\n
       Content-Type: application/json; charset=UTF-8\\r\\n
-      Authorization: Basic [FILTERED]\\r\\n
+      Authorization: Basic someDataAuth\\r\\n
       Connection: close\\r\\n
       Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\n
       Accept: */*\\r\\n
