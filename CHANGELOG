@@ -168,7 +168,7 @@
 * Paymentez: Update success_from method for refunds [almalee24] #5116
 * DataTrans: Add ThirdParty 3DS params [gasb150] #5118
 * FlexCharge: Add ThirdParty 3DS params [javierpedrozaing] #5121
-
+* FlexCharge: Add support for TPV store [edgarv09] #5120
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

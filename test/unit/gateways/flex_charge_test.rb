@@ -79,6 +79,11 @@ class FlexChargeTest < Test::Unit::TestCase
     assert_equal @gateway.send(:url, action, id), "#{@gateway.test_url}orders/123/refund"
   end
 
+  def test_build_request_url_for_store
+    action = :store
+    assert_equal @gateway.send(:url, action), "#{@gateway.test_url}tokenize"
+  end
+
   def test_invalid_instance
     error = assert_raises(ArgumentError) { FlexChargeGateway.new }
     assert_equal 'Missing required parameter: app_key', error.message
@@ -192,6 +197,15 @@ class FlexChargeTest < Test::Unit::TestCase
 
     assert_equal 'Longbob', names.first
     assert_equal 'Doe', names.last
+  end
+
+  def test_successful_store
+    response = stub_comms do
+      @gateway.store(@credit_card, @options)
+    end.respond_with(successful_access_token_response, successful_store_response)
+
+    assert_success response
+    assert_equal 'd3e10716-6aac-4eb8-a74d-c1a3027f1d96', response.authorization
   end
 
   private
@@ -394,6 +408,79 @@ class FlexChargeTest < Test::Unit::TestCase
         "statusCode": null,
         "errors": [],
         "customProperties": {}
+      }
+    RESPONSE
+  end
+
+  def successful_store_response
+    <<~RESPONSE
+      {
+        "transaction": {
+          "on_test_gateway": true,
+          "created_at": "2024-05-14T13:44:25.3179186Z",
+          "updated_at": "2024-05-14T13:44:25.3179187Z",
+          "succeeded": true,
+          "state": null,
+          "token": null,
+          "transaction_type": null,
+          "order_id": null,
+          "ip": null,
+          "description": null,
+          "email": null,
+          "merchant_name_descriptor": null,
+          "merchant_location_descriptor": null,
+          "gateway_specific_fields": null,
+          "gateway_specific_response_fields": null,
+          "gateway_transaction_id": null,
+          "gateway_latency_ms": null,
+          "amount": 0,
+          "currency_code": null,
+          "retain_on_success": null,
+          "payment_method_added": false,
+          "message_key": null,
+          "message": null,
+          "response": null,
+          "payment_method": {
+            "token": "d3e10716-6aac-4eb8-a74d-c1a3027f1d96",
+            "created_at": "2024-05-14T13:44:25.3179205Z",
+            "updated_at": "2024-05-14T13:44:25.3179206Z",
+            "email": null,
+            "data": null,
+            "storage_state": null,
+            "test": false,
+            "metadata": null,
+            "last_four_digits": "1111",
+            "first_six_digits": "41111111",
+            "card_type": null,
+            "first_name": "Cure",
+            "last_name": "Tester",
+            "month": 9,
+            "year": 2025,
+            "address1": null,
+            "address2": null,
+            "city": null,
+            "state": null,
+            "zip": null,
+            "country": null,
+            "phone_number": null,
+            "company": null,
+            "full_name": null,
+            "payment_method_type": null,
+            "errors": null,
+            "fingerprint": null,
+            "verification_value": null,
+            "number": null
+          }
+        },
+        "cardBinInfo": null,
+        "success": true,
+        "result": null,
+        "status": null,
+        "statusCode": null,
+        "errors": [],
+        "customProperties": {},
+        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwYmE4NGY2ZS03YTllLTQzZjEtYWU2ZC1jNTA4YjQ2NjQyNGEiLCJ1bmlxdWVfbmFtZSI6IjBiYTg0ZjZlLTdhOWUtNDNmMS1hZTZkLWM1MDhiNDY2NDI0YSIsImp0aSI6IjczZTVkOGZiLWYxMDMtNGVlYy1iYTAzLTM2MmY1YjA5MmNkMCIsImlhdCI6IjE3MTU2OTQyNjQ3MDMiLCJhdWQiOlsicGF5bWVudHMiLCJvcmRlcnMiLCJtZXJjaGFudHMiLCJlbGlnaWJpbGl0eS1zZnRwIiwiZWxpZ2liaWxpdHkiLCJjb250YWN0Il0sImN1c3RvbTptaWQiOiJkOWQwYjVmZC05NDMzLTQ0ZDMtODA1MS02M2ZlZTI4NzY4ZTgiLCJuYmYiOjE3MTU2OTQyNjQsImV4cCI6MTcxNTY5NDg2NCwiaXNzIjoiQXBpLUNsaWVudC1TZXJ2aWNlIn0.oB9xtWGthG6tcDie8Q3fXPc1fED8pBAlv8yZQuoiEkA",
+        "token_expires": 1715694864703
       }
     RESPONSE
   end

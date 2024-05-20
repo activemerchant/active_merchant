@@ -15,7 +15,8 @@ module ActiveMerchant #:nodoc:
         authenticate: 'oauth2/token',
         purchase: 'evaluate',
         sync: 'outcome',
-        refund: 'orders/%s/refund'
+        refund: 'orders/%s/refund',
+        store: 'tokenize'
       }
 
       SUCCESS_MESSAGES = %w(APPROVED CHALLENGE SUBMITTED SUCCESS).freeze
@@ -42,6 +43,25 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options = {})
         commit(:refund, { amountToRefund: (money.to_f / 100).round(2) }, authorization)
+      end
+
+      def store(credit_card, options = {})
+        address = options[:billing_address] || options[:address] || {}
+        first_name, last_name = address_names(address[:name], credit_card)
+
+        post = {
+          payment_method: {
+            credit_card: {
+              first_name: first_name,
+              last_name: last_name,
+              month: credit_card.month,
+              year: credit_card.year,
+              number: credit_card.number,
+              verification_value: credit_card.verification_value
+            }.compact
+          }
+        }
+        commit(:store, post)
       end
 
       def supports_scrubbing?
@@ -132,23 +152,29 @@ module ActiveMerchant #:nodoc:
           avsResultCode: options[:avs_result_code],
           cvvResultCode: options[:cvv_result_code],
           cavvResultCode: options[:cavv_result_code],
-          cardNotPresent: credit_card.verification_value.blank?
+          cardNotPresent: credit_card.is_a?(String) ? false : credit_card.verification_value.blank?
         }.compact
       end
 
       def add_payment_method(post, credit_card, address, options)
-        post[:paymentMethod] = {
-          holderName: credit_card.name,
-          cardType: 'CREDIT',
-          cardBrand: credit_card.brand&.upcase,
-          cardCountry: address[:country],
-          expirationMonth: credit_card.month,
-          expirationYear: credit_card.year,
-          cardBinNumber: credit_card.number[0..5],
-          cardLast4Digits: credit_card.number[-4..-1],
-          cardNumber: credit_card.number,
-          Token: false
-        }.compact
+        payment_method = case credit_card
+                         when String
+                           { Token: true, cardNumber: credit_card }
+                         else
+                           {
+                             holderName: credit_card.name,
+                             cardType: 'CREDIT',
+                             cardBrand: credit_card.brand&.upcase,
+                             cardCountry: address[:country],
+                             expirationMonth: credit_card.month,
+                             expirationYear: credit_card.year,
+                             cardBinNumber: credit_card.number[0..5],
+                             cardLast4Digits: credit_card.number[-4..-1],
+                             cardNumber: credit_card.number,
+                             Token: false
+                           }
+                         end
+        post[:paymentMethod] = payment_method.compact
       end
 
       def address_names(address_name, payment_method)
@@ -222,7 +248,7 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(action, response),
           test: test?,
           error_code: error_code_from(response)
         )
@@ -245,8 +271,8 @@ module ActiveMerchant #:nodoc:
         response[:title] || response[:responseMessage] || response[:status]
       end
 
-      def authorization_from(response)
-        response[:orderSessionKey]
+      def authorization_from(action, response)
+        action == :store ? response.dig(:transaction, :payment_method, :token) : response[:orderSessionKey]
       end
 
       def error_code_from(response)

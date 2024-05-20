@@ -164,6 +164,14 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     assert_match(/400/, error.message)
   end
 
+  def test_successful_purchase_with_token
+    store = @gateway.store(@credit_card_cit, {})
+    assert_success store
+
+    response = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success response
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card_cit, @cit_options)
