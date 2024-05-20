@@ -22,7 +22,7 @@ class GlobalCollectTest < Test::Unit::TestCase
 
     @google_pay_network_token = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :google_pay,
-      payment_data: "{ 'version': 'EC_v1', 'data': 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9'}"
+      payment_data: { 'version' => 'EC_v1', 'data' => 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9' }
     })
 
     @declined_card = credit_card('5424180279791732')
@@ -91,14 +91,14 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_purchase_request_with_encrypted_google_pay
     google_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :google_pay,
-      payment_data: "{ 'version': 'EC_v1', 'data': 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9'}"
+      payment_data: { 'version' => 'EC_v1', 'data' => 'QlzLxRFnNP9/GTaMhBwgmZ2ywntbr9' }
     })
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@accepted_amount, google_pay, { use_encrypted_payment_data: true })
     end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
       assert_equal '320', JSON.parse(data)['mobilePaymentMethodSpecificInput']['paymentProductId']
-      assert_equal google_pay.payment_data, JSON.parse(data)['mobilePaymentMethodSpecificInput']['encryptedPaymentData']
+      assert_equal google_pay.payment_data.to_s&.gsub('=>', ':'), JSON.parse(data)['mobilePaymentMethodSpecificInput']['encryptedPaymentData']
     end
   end
 
@@ -131,7 +131,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_includes post.keys.first, 'mobilePaymentMethodSpecificInput'
     assert_equal post['mobilePaymentMethodSpecificInput']['paymentProductId'], '320'
     assert_equal post['mobilePaymentMethodSpecificInput']['authorizationMode'], 'FINAL_AUTHORIZATION'
-    assert_equal post['mobilePaymentMethodSpecificInput']['encryptedPaymentData'], @google_pay_network_token.payment_data
+    assert_equal post['mobilePaymentMethodSpecificInput']['encryptedPaymentData'], @google_pay_network_token.payment_data.to_s&.gsub('=>', ':')
   end
 
   def test_add_payment_for_apple_pay
