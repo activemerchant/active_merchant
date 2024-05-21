@@ -146,6 +146,28 @@ class HiPayTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
   end
 
+  def test_authorization_string_with_nil_values
+    auth_string_nil_value_first = @gateway.send :authorization_string, [nil, '123456', 'visa']
+    assert_equal '123456|visa', auth_string_nil_value_first
+
+    auth_string_nil_values = @gateway.send :authorization_string, [nil, 'token', nil]
+    assert_equal 'token', auth_string_nil_values
+
+    auth_string_two_nil_values = @gateway.send :authorization_string, [nil, nil, 'visa']
+    assert_equal 'visa', auth_string_two_nil_values
+
+    auth_string_nil_values = @gateway.send :authorization_string, ['reference', nil, nil]
+    assert_equal 'reference', auth_string_nil_values
+
+    auth_string_nil_values = @gateway.send :authorization_string, [nil, nil, nil]
+    assert_equal '', auth_string_nil_values
+  end
+
+  def test_authorization_string_with_full_values
+    complete_auth_string = @gateway.send :authorization_string, %w(86786788 123456 visa)
+    assert_equal '86786788|123456|visa', complete_auth_string
+  end
+
   def test_purhcase_with_credit_card; end
 
   def test_capture
