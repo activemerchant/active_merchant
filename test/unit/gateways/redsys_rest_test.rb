@@ -107,6 +107,52 @@ class RedsysRestTest < Test::Unit::TestCase
     assert_equal post.dig(:DS_MERCHANT_EMV3DS, :browserScreenHeight), execute3ds.dig(:three_ds_2, :height)
   end
 
+  def test_use_of_add_stored_credentials_cit
+    stored_credentials_post = {}
+    options = {
+      stored_credential: {
+        network_transaction_id: nil,
+        initial_transaction: true,
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    }
+    @gateway.send(:add_stored_credentials, stored_credentials_post, options)
+    assert_equal stored_credentials_post[:DS_MERCHANT_IDENTIFIER], 'REQUIRED'
+    assert_equal stored_credentials_post[:DS_MERCHANT_COF_TYPE], 'R'
+    assert_equal stored_credentials_post[:DS_MERCHANT_COF_INI], 'S'
+  end
+
+  def test_use_of_add_stored_credentials_mit
+    stored_credentials_post = {}
+    options = {
+      stored_credential: {
+        network_transaction_id: '9999999999',
+        initial_transaction: false,
+        reason_type: 'recurring',
+        initiator: 'merchant'
+      }
+    }
+    @gateway.send(:add_stored_credentials, stored_credentials_post, options)
+    assert_equal stored_credentials_post[:DS_MERCHANT_COF_TYPE], 'R'
+    assert_equal stored_credentials_post[:DS_MERCHANT_COF_INI], 'N'
+    assert_equal stored_credentials_post[:DS_MERCHANT_COF_TXNID], options[:stored_credential][:network_transaction_id]
+  end
+
+  def test_use_of_three_ds_exemption
+    post = {}
+    options = { three_ds_exemption_type: 'low_value' }
+    @gateway.send(:add_threeds_exemption_data, post, options)
+    assert_equal post[:DS_MERCHANT_EXCEP_SCA], 'LWV'
+  end
+
+  def test_use_of_three_ds_exemption_moto_option
+    post = {}
+    options = { three_ds_exemption_type: 'moto' }
+    @gateway.send(:add_threeds_exemption_data, post, options)
+    assert_equal post[:DS_MERCHANT_DIRECTPAYMENT], 'MOTO'
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
     res = @gateway.purchase(123, credit_card, @options)

@@ -4,7 +4,7 @@ class RemoteRedsysRestTest < Test::Unit::TestCase
   def setup
     @gateway = RedsysRestGateway.new(fixtures(:redsys_rest))
     @amount = 100
-    @credit_card = credit_card('4548812049400004')
+    @credit_card = credit_card('4548810000000011', verification_value: '123', month: '12', year: '34')
     @credit_card_no_cvv = credit_card('4548812049400004', verification_value: nil)
     @declined_card = credit_card
     @threeds2_credit_card = credit_card('4918019199883839')
@@ -183,28 +183,83 @@ class RemoteRedsysRestTest < Test::Unit::TestCase
   # end
 
   # Pending 3DS support
-  # def test_successful_3ds_authorize_with_exemption
-  #   options = @options.merge(execute_threed: true, terminal: 12)
-  #   response = @gateway.authorize(@amount, @credit_card, options.merge(sca_exemption: 'LWV'))
-  #   assert_success response
-  #   assert response.params['ds_emv3ds']
-  #   assert_equal 'NO_3DS_v2', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
-  #   assert_equal 'CardConfiguration', response.message
-  # end
+  def test_successful_3ds_authorize_with_exemption
+    options = @options.merge(execute_threed: true, terminal: 12)
+    response = @gateway.authorize(@amount, @credit_card, options.merge(three_ds_exemption_type: 'low_value'))
+    assert_success response
+    assert response.params['ds_emv3ds']
+    assert_equal '2.2.0', response.params['ds_emv3ds']['protocolVersion']
+    assert_equal 'CardConfiguration', response.message
+  end
 
   # Pending 3DS support
-  # def test_successful_3ds_purchase_with_exemption
-  #   options = @options.merge(execute_threed: true, terminal: 12)
-  #   response = @gateway.purchase(@amount, @credit_card, options.merge(sca_exemption: 'LWV'))
-  #   assert_success response
-  #   assert response.params['ds_emv3ds']
-  #   assert_equal 'NO_3DS_v2', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
-  #   assert_equal 'CardConfiguration', response.message
-  # end
+  def test_successful_3ds_purchase_with_exemption
+    options = @options.merge(execute_threed: true, terminal: 12)
+    response = @gateway.purchase(@amount, @credit_card, options.merge(three_ds_exemption_type: 'low_value'))
+    assert_success response
+    assert response.params['ds_emv3ds']
+    assert_equal '2.2.0', response.params['ds_emv3ds']['protocolVersion']
+    assert_equal 'CardConfiguration', response.message
+  end
+
+  def test_successful_purchase_using_stored_credential_recurring_cit
+    initial_options = stored_credential_options(:cardholder, :recurring, :initial)
+    assert initial_purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_purchase
+    assert network_transaction_id = initial_purchase.params['ds_merchant_cof_txnid']
+    used_options = stored_credential_options(:recurring, :cardholder, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
+  def test_successful_purchase_using_stored_credential_recurring_mit
+    initial_options = stored_credential_options(:merchant, :recurring, :initial)
+    assert initial_purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_purchase
+    assert network_transaction_id = initial_purchase.params['ds_merchant_cof_txnid']
+    used_options = stored_credential_options(:merchant, :recurring, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
+  def test_successful_purchase_using_stored_credential_installment_cit
+    initial_options = stored_credential_options(:cardholder, :installment, :initial)
+    assert initial_purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_purchase
+    assert network_transaction_id = initial_purchase.params['ds_merchant_cof_txnid']
+    used_options = stored_credential_options(:recurring, :cardholder, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
+  def test_successful_purchase_using_stored_credential_installment_mit
+    initial_options = stored_credential_options(:merchant, :installment, :initial)
+    assert initial_purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_purchase
+    assert network_transaction_id = initial_purchase.params['ds_merchant_cof_txnid']
+    used_options = stored_credential_options(:merchant, :recurring, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
+  def test_successful_purchase_using_stored_credential_unscheduled_cit
+    initial_options = stored_credential_options(:cardholder, :unscheduled, :initial)
+    assert initial_purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_purchase
+    assert network_transaction_id = initial_purchase.params['ds_merchant_cof_txnid']
+    used_options = stored_credential_options(:cardholder, :unscheduled, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
 
   private
 
   def generate_order_id
     (Time.now.to_f * 100).to_i.to_s
+  end
+
+  def stored_credential_options(*args, id: nil)
+    @options.merge(order_id: generate_unique_id,
+                   stored_credential: stored_credential(*args, id: id))
   end
 end

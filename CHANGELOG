@@ -12,6 +12,7 @@
 * DLocal: Update the phone and ip fields [yunnydang] #5143
 * CheckoutV2: Add support for risk data fields [yunnydang] #5147
 * Pin Payments: Add new 3DS params mentioned in Pin Payments docs [hudakh] #4720
+* RedsysRest: Add support for stored credentials & 3DS exemptions [jherreraa] #5132
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860
