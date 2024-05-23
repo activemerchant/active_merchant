@@ -248,7 +248,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if (descriptor = options[:descriptors])
-          post[:descriptor] = descriptor[:descriptor]
+          post[:descriptor] = options[:descriptor]
           post[:descriptor_phone] = descriptor[:descriptor_phone]
           post[:descriptor_address] = descriptor[:descriptor_address]
           post[:descriptor_city] = descriptor[:descriptor_city]
