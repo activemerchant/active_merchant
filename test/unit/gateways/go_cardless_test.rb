@@ -33,6 +33,16 @@ class GoCardlessTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_store_ach
+    bank_account = mock_ach_bank_account
+    stub_requests_to_be_successful
+
+    response = @gateway.store(@customer_attributes, bank_account, { type: "ach" })
+
+    assert_instance_of MultiResponse, response
+    assert_success response
+  end
+
   def test_successful_update
     bank_account = mock_bank_account_with_iban
     stub_update_requests_to_be_successful
@@ -40,6 +50,16 @@ class GoCardlessTest < Test::Unit::TestCase
     customer_id = JSON.parse(successful_create_customer_response)["customers"]["id"]
 
     update_response = @gateway.update(customer_id, @customer_attributes, bank_account)
+    assert_success update_response
+  end
+
+  def test_successful_update_ach
+    bank_account = mock_ach_bank_account
+    stub_ach_update_requests_to_be_successful
+
+    customer_id = JSON.parse(successful_create_customer_response)["customers"]["id"]
+
+    update_response = @gateway.update(customer_id, @customer_attributes, bank_account, { type: 'ach' })
     assert_success update_response
   end
 
@@ -120,6 +140,18 @@ class GoCardlessTest < Test::Unit::TestCase
     end
   end
 
+  def mock_ach_bank_account
+    mock.tap do |bank_account_mock|
+      bank_account_mock.expects(:iban).returns(nil)
+      bank_account_mock.expects(:first_name).returns('John')
+      bank_account_mock.expects(:last_name).returns('Doe')
+      bank_account_mock.expects(:account_number).returns('2715500356')
+      bank_account_mock.expects(:routing_number).returns('026073150')
+      bank_account_mock.expects(:branch_code).returns(nil)
+      bank_account_mock.expects(:account_type).returns('checking')
+    end
+  end
+
   def mock_bank_account_with_iban
     mock.tap do |bank_account_mock|
       bank_account_mock.expects(:first_name).returns('John')
@@ -142,7 +174,43 @@ class GoCardlessTest < Test::Unit::TestCase
       .returns(successful_create_mandate_response)
   end
 
+  def stub_ach_requests_to_be_successful
+    @gateway.expects(:ssl_request)
+      .with(:post, 'https://api-sandbox.gocardless.com/bank_details_lookups', anything, anything)
+      .returns(successful_bank_details_lookup_response)
+
+    @gateway.expects(:ssl_request)
+      .with(:post, 'https://api-sandbox.gocardless.com/customers', anything, anything)
+      .returns(successful_create_customer_response)
+
+    @gateway.expects(:ssl_request)
+      .with(:post, 'https://api-sandbox.gocardless.com/customer_bank_accounts', anything, anything)
+      .returns(successful_create_bank_account_response)
+
+    @gateway.expects(:ssl_request)
+      .with(:post, 'https://api-sandbox.gocardless.com/mandates', anything, anything)
+      .returns(successful_create_mandate_response)
+  end
+
   def stub_update_requests_to_be_successful
+    @gateway.expects(:ssl_request)
+      .with(:put, 'https://api-sandbox.gocardless.com/customers/CU0004CKN9T1HZ', anything, anything)
+      .returns(successful_create_customer_response)
+
+    @gateway.expects(:ssl_request)
+      .with(:post, 'https://api-sandbox.gocardless.com/customer_bank_accounts', anything, anything)
+      .returns(successful_create_bank_account_response)
+
+    @gateway.expects(:ssl_request)
+      .with(:post, 'https://api-sandbox.gocardless.com/mandates', anything, anything)
+      .returns(successful_create_mandate_response)
+  end
+
+  def stub_ach_update_requests_to_be_successful
+    @gateway.expects(:ssl_request)
+      .with(:post, 'https://api-sandbox.gocardless.com/bank_details_lookups', anything, anything)
+      .returns(successful_bank_details_lookup_response)
+
     @gateway.expects(:ssl_request)
       .with(:put, 'https://api-sandbox.gocardless.com/customers/CU0004CKN9T1HZ', anything, anything)
       .returns(successful_create_customer_response)
@@ -193,6 +261,18 @@ class GoCardlessTest < Test::Unit::TestCase
       {
         "customers": {
           "id": "CU0004CKN9T1HZ"
+        }
+      }
+    RESPONSE
+  end
+
+  def successful_bank_details_lookup_response
+    <<~RESPONSE
+      {
+        "bank_details_lookups": {
+          "bank_name": "Community Federal Savings Bank",
+          "available_debit_schemes": ["ach"],
+          "bic":null
         }
       }
     RESPONSE

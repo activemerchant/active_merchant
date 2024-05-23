@@ -32,12 +32,21 @@ module ActiveMerchant #:nodoc:
       def store(customer_attributes, bank_account, options = {})
         res = nil
         MultiResponse.run do |r|
-          r.process { res = commit(:post, '/customers', customer_params(customer_attributes, options)) }
+          if ach?(options)
+            r.process { res = lookup(bank_account) }
+
+            if res.success?
+              r.process { res = commit(:post, '/customers', customer_params(customer_attributes, options)) }
+            end
+          else
+            r.process { res = commit(:post, '/customers', customer_params(customer_attributes, options)) }
+          end
+
           if res.success?
             r.process { res = create_bank_account(res.params['customers']['id'], bank_account, options) }
           end
           if res.success?
-            r.process { create_mandate(res.params['customer_bank_accounts']['id']) }
+            r.process { create_mandate(res.params['customer_bank_accounts']['id'], options) }
           end
         end
       end
@@ -45,12 +54,21 @@ module ActiveMerchant #:nodoc:
       def update(customer_id, customer_attributes, bank_account, options = {})
         res = nil
         MultiResponse.run do |r|
-          r.process { res = commit(:put, "/customers/#{customer_id}", customer_params(customer_attributes, options)) }
+          if ach?(options)
+            r.process { res = lookup(bank_account) }
+
+            if res.success?
+              r.process { res = commit(:put, "/customers/#{customer_id}", customer_params(customer_attributes, options)) }
+            end
+          else
+            r.process { res = commit(:put, "/customers/#{customer_id}", customer_params(customer_attributes, options)) }
+          end
+
           if res.success?
             r.process { res = create_bank_account(res.params['customers']['id'], bank_account, options) }
           end
           if res.success?
-            r.process { create_mandate(res.params['customer_bank_accounts']['id']) }
+            r.process { create_mandate(res.params['customer_bank_accounts']['id'], options) }
           end
         end
       end
@@ -126,6 +144,10 @@ module ActiveMerchant #:nodoc:
 
       def parse(response)
         JSON.parse(response || '{}')
+      end
+
+      def ach?(options)
+        options[:type] == "ach"
       end
 
       def commit(method, action, params, options={})
@@ -222,19 +244,50 @@ module ActiveMerchant #:nodoc:
           post[:customer_bank_accounts]['bank_code'] = bank_account.routing_number.presence || nil
           post[:customer_bank_accounts]['branch_code'] = bank_account.branch_code.presence || nil
           post[:customer_bank_accounts]['account_number'] = bank_account.account_number
+          post[:customer_bank_accounts]['account_type'] = bank_account.account_type.presence if ach?(opts)
         end
         commit(:post, '/customer_bank_accounts', post)
       end
 
-      def create_mandate(bank_account_id)
+      def create_mandate(bank_account_id, options)
         post = {
-          "mandates": {
-            "links": {
+          "mandates": {}.tap do |hash|
+            hash[:links] = {
               "customer_bank_account": bank_account_id
             }
+            hash[:payer_ip_address] = options[:device_data][:ip] if options[:device_data]
+          end
+        }
+
+        commit(:post, '/mandates', post)
+      end
+
+      def lookup(bank_account)
+        post = {
+          "bank_details_lookups": {
+            "account_number": bank_account.account_number,
+            "bank_code":  bank_account.routing_number.presence,
+            "country_code": "US",
           }
         }
-        commit(:post, '/mandates', post)
+
+        response = commit(:post, '/bank_details_lookups', post)
+
+        return response unless response.success?
+
+        available_schemes = response.params["bank_details_lookups"]["available_debit_schemes"]
+
+        if available_schemes.empty? || !available_schemes.include?("ach")
+          Response.new(
+            false,
+            "The bank account is closed or invalid.",
+            response.params,
+            authorization: response.authorization,
+            test: response.test
+          )
+        else
+          response
+        end
       end
     end
   end
