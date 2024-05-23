@@ -131,6 +131,14 @@ class HiPayTest < Test::Unit::TestCase
     @gateway.authorize(@amount, @credit_card, @options.merge({ billing_address: @billing_address }))
   end
 
+  def test_successfull_brand_mapping_mastercard
+    stub_comms do
+      @gateway.purchase(@amount, 'authorization_value|card_token|master', @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match(/payment_product=mastercard/, data)
+    end
+  end
+
   def test_purchase_with_stored_pm
     stub_comms do
       @gateway.purchase(@amount, 'authorization_value|card_token|card_brand', @options)

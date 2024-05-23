@@ -44,7 +44,9 @@ module ActiveMerchant #:nodoc:
             _transaction_ref, card_token, payment_product = payment_method.split('|') if payment_method.split('|').size == 3
             card_token, payment_product = payment_method.split('|') if payment_method.split('|').size == 2
           end
-          payment_product = payment_method.is_a?(CreditCard) ? payment_method.brand : payment_product&.downcase
+
+          payment_product = payment_method.is_a?(CreditCard) ? PAYMENT_PRODUCT[payment_method.brand] : PAYMENT_PRODUCT[payment_product&.downcase]
+
           post = {
             payment_product: payment_product,
             operation: options[:operation] || 'Authorization',
