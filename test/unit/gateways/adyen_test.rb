@@ -350,6 +350,16 @@ class AdyenTest < Test::Unit::TestCase
     response = @gateway.send(:commit, 'authorise', {}, {})
 
     assert_equal 'Refused | 01: Refer to card issuer', response.message
+    assert_equal '01', response.error_code
+    assert_failure response
+  end
+
+  def test_failed_fraud_raw_refusal
+    @gateway.expects(:ssl_post).returns(failed_fraud_visa_response)
+
+    response = @gateway.send(:commit, 'authorise', {}, {})
+
+    assert_equal 'N7', response.error_code
     assert_failure response
   end
 
@@ -359,6 +369,7 @@ class AdyenTest < Test::Unit::TestCase
     response = @gateway.send(:commit, 'authorise', {}, {})
 
     assert_equal 'Refused | 01 : New account information available', response.message
+    assert_equal '01', response.error_code
     assert_failure response
   end
 
@@ -1908,6 +1919,20 @@ class AdyenTest < Test::Unit::TestCase
       "additionalData":
       {
         "refusalReasonRaw": "01: Refer to card issuer"
+       },
+       "refusalReason": "Refused",
+       "pspReference":"8514775559925128",
+       "resultCode":"Refused"
+     }
+    RESPONSE
+  end
+
+  def failed_fraud_visa_response
+    <<-RESPONSE
+    {
+      "additionalData":
+      {
+        "refusalReasonRaw": "N7 : FRAUD"
        },
        "refusalReason": "Refused",
        "pspReference":"8514775559925128",
