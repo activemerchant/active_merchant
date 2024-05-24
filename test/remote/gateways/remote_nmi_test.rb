@@ -388,6 +388,18 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_success purchase
   end
 
+  def test_purchase_using_ntid_override_mit
+    initial_options = stored_credential_options(:cardholder, :recurring, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert network_transaction_id = purchase.params['transactionid']
+
+    @options[:network_transaction_id] = network_transaction_id
+    used_options = stored_credential_options(:merchant, :recurring)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
   def test_purchase_using_stored_credential_installment_cit
     initial_options = stored_credential_options(:cardholder, :installment, :initial)
     assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)

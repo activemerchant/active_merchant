@@ -212,7 +212,8 @@ module ActiveMerchant #:nodoc:
         else
           post[:stored_credential_indicator] = 'used'
           # should only send :initial_transaction_id if it is a MIT
-          post[:initial_transaction_id] = stored_credential[:network_transaction_id] if post[:initiated_by] == 'merchant'
+          ntid = options[:network_transaction_id] || stored_credential[:network_transaction_id]
+          post[:initial_transaction_id] = ntid if post[:initiated_by] == 'merchant'
         end
       end
 

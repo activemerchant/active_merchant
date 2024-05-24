@@ -657,6 +657,21 @@ class NmiTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_stored_credential_ntid_override_recurring_mit_used
+    options = stored_credential_options(:merchant, :recurring)
+    options[:network_transaction_id] = 'test123'
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/initiated_by=merchant/, data)
+      assert_match(/stored_credential_indicator=used/, data)
+      assert_match(/billing_method=recurring/, data)
+      assert_match(/initial_transaction_id=test123/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
   def test_stored_credential_installment_cit_initial
     options = stored_credential_options(:cardholder, :installment, :initial)
     response = stub_comms do

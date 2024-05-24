@@ -173,6 +173,7 @@
 * HiPay: Fix parse authorization string [javierpedrozaing] #5119
 * Worldpay: Add support for deafult ECI value [aenand] #5126
 * DLocal: Update stored credentials [sinourain] #5112
+* NMI: Add NTID override [yunnydang] #5134
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
