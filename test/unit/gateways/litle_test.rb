@@ -82,6 +82,26 @@ class LitleTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_prepaid_card_141
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_for_prepaid_cards_141)
+
+    assert_success response
+    assert_equal 'Consumer non-reloadable prepaid card, Approved', response.message
+    assert_equal '141', response.params['response']
+  end
+
+  def test_successful_purchase_prepaid_card_142
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_for_prepaid_cards_142)
+
+    assert_success response
+    assert_equal 'Consumer single-use virtual card number, Approved', response.message
+    assert_equal '142', response.params['response']
+  end
+
   def test_successful_purchase_with_010_response
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
@@ -826,6 +846,48 @@ class LitleTest < Test::Unit::TestCase
           <responseTime>2018-01-09T14:02:20</responseTime>
           <message>Approved</message>
         </echeckSalesResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def successful_purchase_for_prepaid_cards_141
+    %(
+      <litleOnlineResponse version="9.14" xmlns="http://www.litle.com/schema" response="0" message="Valid Format">
+        <saleResponse id="486344231" reportGroup="Report Group" customerId="10000009">
+          <litleTxnId>456342657452</litleTxnId>
+          <orderId>123456</orderId>
+          <response>141</response>
+          <responseTime>2024-04-09T19:50:30</responseTime>
+          <postDate>2024-04-09</postDate>
+          <message>Consumer non-reloadable prepaid card, Approved</message>
+          <authCode>382410</authCode>
+          <fraudResult>
+            <avsResult>01</avsResult>
+            <cardValidationResult>M</cardValidationResult>
+          </fraudResult>
+          <networkTransactionId>MPMMPMPMPMPU</networkTransactionId>
+        </saleResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def successful_purchase_for_prepaid_cards_142
+    %(
+      <litleOnlineResponse version="9.14" xmlns="http://www.litle.com/schema" response="0" message="Valid Format">
+        <saleResponse id="486344231" reportGroup="Report Group" customerId="10000009">
+          <litleTxnId>456342657452</litleTxnId>
+          <orderId>123456</orderId>
+          <response>142</response>
+          <responseTime>2024-04-09T19:50:30</responseTime>
+          <postDate>2024-04-09</postDate>
+          <message>Consumer single-use virtual card number, Approved</message>
+          <authCode>382410</authCode>
+          <fraudResult>
+            <avsResult>01</avsResult>
+            <cardValidationResult>M</cardValidationResult>
+          </fraudResult>
+          <networkTransactionId>MPMMPMPMPMPU</networkTransactionId>
+        </saleResponse>
       </litleOnlineResponse>
     )
   end

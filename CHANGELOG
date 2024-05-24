@@ -181,6 +181,7 @@
 * Cybersource Rest: Support L2/L3 data [aenand] #5117
 * Worldpay: Support L2/L3 data [aenand] #5117
 * Support UATP cardtype [javierpedrozaing] #5137
+* Litle: Add 141 and 142 as successful responses [almalee24] #5135
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827
