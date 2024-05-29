@@ -190,7 +190,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     }
     @options[:commerce_indicator] = 'internet'
 
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert response = @gateway.authorize(@amount, @master_credit_card, @options)
     assert_successful_response(response)
     assert !response.authorization.blank?
   ensure

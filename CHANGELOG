@@ -16,6 +16,7 @@
 * CheckoutV2: Truncate the reference id for amex transactions [yunnydang] #5151
 * CommerceHub: Add billing address name override [yunnydang] #5157
 * StripePI: Add optional ability for 3DS exemption on verify calls [yunnydang] #5160
+* CyberSource: Update stored credentials [sinourain] #5136
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860
