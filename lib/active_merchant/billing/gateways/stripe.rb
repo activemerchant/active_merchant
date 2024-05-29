@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         'unchecked' => 'P'
       }
 
-      DEFAULT_API_VERSION = '2020-08-27'
+      DEFAULT_API_VERSION = '2024-04-10'
       CONNECTED_ACCOUNT_PREFIX = 'acct_'
 
       self.supported_countries = %w(AE AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK HU IE IN IT JP LT LU LV MT MX MY NL NO NZ PL PT RO SE SG SI SK US)

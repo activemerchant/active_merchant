@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       CREATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email save_payment_method]
       CONFIRM_INTENT_ATTRIBUTES = %i[receipt_email return_url save_payment_method setup_future_usage off_session]
       UPDATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email setup_future_usage]
-      DEFAULT_API_VERSION = '2020-08-27'
+      DEFAULT_API_VERSION = '2024-04-10'
 
       def create_intent(money, payment_method, options = {})
         MultiResponse.run do |r|
