@@ -176,6 +176,7 @@
 * NMI: Add NTID override [yunnydang] #5134
 * Cybersource Rest: Support L2/L3 data [aenand] #5117
 * Worldpay: Support L2/L3 data [aenand] #5117
+* Support UATP cardtype [javierpedrozaing] #5137
 
 == Version 1.135.0 (August 24, 2023)
 * PaymentExpress: Correct endpoints [steveh] #4827

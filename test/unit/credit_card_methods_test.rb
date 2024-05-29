@@ -568,6 +568,27 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_false CreditCard.valid_number?('5888_0000_0000_0030')
   end
 
+  def test_should_detect_uatp_card_brand
+    assert_equal 'uatp', CreditCard.brand?('117500000000000')
+    assert_equal 'uatp', CreditCard.brand?('117515279008103')
+    assert_equal 'uatp', CreditCard.brand?('129001000000000')
+  end
+
+  def test_should_validate_uatp_card
+    assert_true CreditCard.valid_number?('117515279008103')
+    assert_true CreditCard.valid_number?('116901000000000')
+    assert_true CreditCard.valid_number?('195724000000000')
+    assert_true CreditCard.valid_number?('192004000000000')
+    assert_true CreditCard.valid_number?('135410014004955')
+  end
+
+  def test_should_detect_invalid_uatp_card
+    assert_false CreditCard.valid_number?('117515279008104')
+    assert_false CreditCard.valid_number?('116901000000001')
+    assert_false CreditCard.valid_number?('195724000000001')
+    assert_false CreditCard.valid_number?('192004000000001')
+  end
+
   def test_credit_card?
     assert credit_card.credit_card?
   end
