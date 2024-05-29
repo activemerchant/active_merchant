@@ -59,11 +59,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         invoice_reference_number: 'INV12233565',
         customer_reference: 'CUST00000101',
         card_acceptor_tax_id: 'VAT1999292',
-        sales_tax: {
-          amount: '20',
-          exponent: '2',
-          currency: 'USD'
-        }
+        tax_amount: '20',
+        ship_from_postal_code:  '43245'
       }
     }
 
@@ -71,58 +68,32 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       level_3_data: {
         customer_reference: 'CUST00000102',
         card_acceptor_tax_id: 'VAT1999285',
-        sales_tax: {
-          amount: '20',
-          exponent: '2',
-          currency: 'USD'
-        },
-        discount_amount: {
-          amount: '1',
-          exponent: '2',
-          currency: 'USD'
-        },
-        shipping_amount: {
-          amount: '50',
-          exponent: '2',
-          currency: 'USD'
-        },
-        duty_amount: {
-          amount: '20',
-          exponent: '2',
-          currency: 'USD'
-        },
-        item: {
+        tax_amount: '20',
+        discount_amount: '1',
+        shipping_amount: '50',
+        duty_amount: '20',
+        line_items: [{
           description: 'Laptop 14',
           product_code: 'LP00125',
           commodity_code: 'COM00125',
           quantity: '2',
-          unit_cost: {
-            amount: '1500',
-            exponent: '2',
-            currency: 'USD'
-          },
+          unit_cost: '1500',
           unit_of_measure: 'each',
-          item_total: {
-            amount: '3000',
-            exponent: '2',
-            currency: 'USD'
-          },
-          item_total_with_tax: {
-            amount: '3500',
-            exponent: '2',
-            currency: 'USD'
-          },
-          item_discount_amount: {
-            amount: '200',
-            exponent: '2',
-            currency: 'USD'
-          },
-          tax_amount: {
-            amount: '500',
-            exponent: '2',
-            currency: 'USD'
-          }
-        }
+          discount_amount: '200',
+          tax_amount: '500',
+          total_amount: '3300'
+        },
+                     {
+                       description: 'Laptop 15',
+                              product_code: 'LP00125',
+                              commodity_code: 'COM00125',
+                              quantity: '2',
+                              unit_cost: '1500',
+                              unit_of_measure: 'each',
+                              discount_amount: '200',
+                              tax_amount: '500',
+                              total_amount: '3300'
+                     }]
       }
     }
 
@@ -705,7 +676,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_level_two_fields_and_sales_tax_zero
-    @level_two_data[:level_2_data][:sales_tax][:amount] = 0
+    @level_two_data[:level_2_data][:tax_amount] = 0
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@level_two_data))
     assert_success response
     assert_equal true, response.params['ok']
@@ -720,12 +691,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase_level_three_data_without_item_mastercard
-    @level_three_data[:level_3_data][:item] = {}
+    @level_three_data[:level_3_data][:line_items] = [{
+    }]
     @credit_card.brand = 'master'
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@level_three_data))
     assert_failure response
     assert_equal response.error_code, '2'
-    assert_equal response.params['error'].gsub(/\"+/, ''), 'The content of element type item is incomplete, it must match (description,productCode?,commodityCode?,quantity?,unitCost?,unitOfMeasure?,itemTotal?,itemTotalWithTax?,itemDiscountAmount?,taxAmount?,categories?,pageURL?,imageURL?).'
+    assert_equal response.params['error'].gsub(/\"+/, ''), 'The content of element type item must match (description,productCode?,commodityCode?,quantity?,unitCost?,unitOfMeasure?,itemTotal?,itemTotalWithTax?,itemDiscountAmount?,itemTaxRate?,lineDiscountIndicator?,itemLocalTaxRate?,itemLocalTaxAmount?,taxAmount?,categories?,pageURL?,imageURL?).'
   end
 
   def test_successful_purchase_with_level_two_and_three_fields
