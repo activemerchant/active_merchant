@@ -906,7 +906,7 @@ module ActiveMerchant #:nodoc:
         # specifically requested. This will be the default behavior in a future release.
         return unless (stored_credential = options[:stored_credential])
 
-        add_external_vault(parameters, stored_credential, options)
+        add_external_vault(parameters, options)
 
         if options[:stored_credentials_v2]
           stored_credentials_v2(parameters, stored_credential)
@@ -949,7 +949,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_external_vault(parameters, stored_credential, options = {})
+      def add_external_vault(parameters, options = {})
+        stored_credential = options[:stored_credential]
         parameters[:external_vault] = {}
         if stored_credential[:initial_transaction]
           parameters[:external_vault][:status] = 'will_vault'
