@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
         sync: 'outcome',
         refund: 'orders/%s/refund',
         store: 'tokenize',
-        inquire: 'outcome'
+        inquire: 'orders/%s'
       }
 
       SUCCESS_MESSAGES = %w(APPROVED CHALLENGE SUBMITTED SUCCESS PROCESSING).freeze
@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def inquire(authorization, options = {})
-        commit(:inquire, { orderSessionKey: authorization }, authorization)
+        commit(:inquire, {}, authorization, :get)
       end
 
       private
@@ -235,27 +235,27 @@ module ActiveMerchant #:nodoc:
         }.with_indifferent_access
       end
 
-      def commit(action, post, authorization = nil)
+      def commit(action, post, authorization = nil, method = :post)
         MultiResponse.run do |r|
           r.process { fetch_access_token } unless access_token_valid?
           r.process do
-            api_request(action, post, authorization).tap do |response|
+            api_request(action, post, authorization, method).tap do |response|
               response.params.merge!(@options.slice(:access_token, :token_expires)) if @options[:new_credentials]
             end
           end
         end
       end
 
-      def api_request(action, post, authorization = nil)
-        response = parse ssl_post(url(action, authorization), post.to_json, headers)
+      def api_request(action, post, authorization = nil, method = :post)
+        response = parse ssl_request(method, url(action, authorization), post.to_json, headers)
 
         Response.new(
-          success_from(response),
+          success_from(action, response),
           message_from(response),
           response,
           authorization: authorization_from(action, response),
           test: test?,
-          error_code: error_code_from(response)
+          error_code: error_code_from(action, response)
         )
       rescue ResponseError => e
         response = parse(e.response.body)
@@ -267,21 +267,25 @@ module ActiveMerchant #:nodoc:
         Response.new(false, message_from(response), response, test: test?)
       end
 
-      def success_from(response)
-        response[:success] && SUCCESS_MESSAGES.include?(response[:status]) ||
-          response.dig(:transaction, :payment_method, :token).present?
+      def success_from(action, response)
+        case action
+        when :store then response.dig(:transaction, :payment_method, :token).present?
+        when :inquire then response[:id].present? && SUCCESS_MESSAGES.include?(response[:statusName])
+        else
+          response[:success] && SUCCESS_MESSAGES.include?(response[:status])
+        end
       end
 
       def message_from(response)
-        response[:title] || response[:responseMessage] || response[:status]
+        response[:title] || response[:responseMessage] || response[:statusName] || response[:status]
       end
 
       def authorization_from(action, response)
-        action == :store ? response.dig(:transaction, :payment_method, :token) : response[:orderSessionKey]
+        action == :store ? response.dig(:transaction, :payment_method, :token) : response[:orderId]
       end
 
-      def error_code_from(response)
-        response[:status] unless success_from(response)
+      def error_code_from(action, response)
+        (response[:statusName] || response[:status]) unless success_from(action, response)
       end
 
       def cast_bool(value)

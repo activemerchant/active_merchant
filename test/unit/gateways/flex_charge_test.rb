@@ -90,9 +90,9 @@ class FlexChargeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_method, endpoint, data, headers|
       request = JSON.parse(data)
       if /token/.match?(endpoint)
         assert_equal request['AppKey'], @gateway.options[:app_key]
@@ -125,7 +125,7 @@ class FlexChargeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_three_ds_global
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @three_d_secure_options)
     end.respond_with(successful_access_token_response, successful_purchase_response)
     assert_success response
@@ -134,9 +134,9 @@ class FlexChargeTest < Test::Unit::TestCase
   end
 
   def test_succeful_request_with_three_ds_global
-    stub_comms do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @three_d_secure_options)
-    end.check_request do |endpoint, data, _headers|
+    end.check_request do |_method, endpoint, data, _headers|
       if /evaluate/.match?(endpoint)
         request = JSON.parse(data)
         assert_equal request['threeDSecure']['EcommerceIndicator'], @three_d_secure_options[:three_d_secure][:eci]
@@ -153,7 +153,7 @@ class FlexChargeTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.respond_with(successful_access_token_response, failed_purchase_response)
 
@@ -163,9 +163,9 @@ class FlexChargeTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.refund(@amount, 'reference', @options)
-    end.check_request do |endpoint, data, _headers|
+    end.check_request do |_method, endpoint, data, _headers|
       request = JSON.parse(data)
 
       if /token/.match?(endpoint)
@@ -200,7 +200,7 @@ class FlexChargeTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.store(@credit_card, @options)
     end.respond_with(successful_access_token_response, successful_store_response)
 
@@ -210,9 +210,9 @@ class FlexChargeTest < Test::Unit::TestCase
 
   def test_successful_inquire_request
     session_id = 'f8da8dc7-17de-4b5e-858d-4bdc47cd5dbf'
-    stub_comms do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.inquire(session_id, {})
-    end.check_request do |endpoint, data, _headers|
+    end.check_request do |_method, endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['orderSessionKey'], session_id if /outcome/.match?(endpoint)
     end.respond_with(successful_access_token_response, successful_purchase_response)
