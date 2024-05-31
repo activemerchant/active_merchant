@@ -111,7 +111,7 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     set_credentials!
     response = @gateway.purchase(@amount, @credit_card_mit, @options)
     assert_success response
-    assert_equal 'APPROVED', response.message
+    assert_equal 'SUBMITTED', response.message
   end
 
   def test_failed_purchase
@@ -175,7 +175,7 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
 
   def test_successful_inquire_request
     set_credentials!
-    response = @gateway.inquire('f8da8dc7-17de-4b5e-858d-4bdc47cd5dbf', {})
+    response = @gateway.inquire('abe573e3-7567-4cc6-a7a4-02766dbd881a', {})
     assert_success response
   end
 
