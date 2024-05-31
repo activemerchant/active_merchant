@@ -315,11 +315,11 @@ module ActiveMerchant #:nodoc:
       def add_stored_credentials(post, payment, options)
         return unless options[:stored_credential]
 
-        post[:processingInformation][:commerceIndicator] = commerce_indicator(options.dig(:stored_credential, :reason_type), lookup_country_code(options.dig(:billing_address, :country))&.value)
+        post[:processingInformation][:commerceIndicator] = commerce_indicator(options.dig(:stored_credential, :reason_type))
         add_authorization_options(post, payment, options)
       end
 
-      def commerce_indicator(reason_type, country = '')
+      def commerce_indicator(reason_type)
         case reason_type
         when 'recurring'
           'recurring'
