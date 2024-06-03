@@ -2,6 +2,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860
 * TNS: Use the specified order_id in request if available [yunnydang] #4880
 * Cybersource: Support recurring apple pay [aenand] #4874
