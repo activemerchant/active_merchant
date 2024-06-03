@@ -2,6 +2,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Bump Ruby version to 3.1 [dustinhaefele] #5104
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860

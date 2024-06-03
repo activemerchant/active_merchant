@@ -60,7 +60,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 
   def test_failed_purchase
     assert purchase = @gateway.purchase(@success_amount, @expired_card, @options)
-    assert_match 'Card has expired', purchase.message
+    assert_match 'Transaction declined', purchase.message
     assert_failure purchase
     assert_not_nil purchase.params['transaction_id']
     assert_equal purchase.params['transaction_id'], purchase.authorization
