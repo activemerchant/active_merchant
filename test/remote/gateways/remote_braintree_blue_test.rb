@@ -271,6 +271,54 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
 
     assert_match 'OK', response.message
     assert_equal 'M', response.cvv_result['code']
+    assert_equal 'M', response.avs_result['code']
+  end
+
+  def test_successful_credit_card_verification_without_billing_address
+    options = {
+      order_ID: '1',
+      description: 'store purchase'
+    }
+    card = credit_card('4111111111111111')
+    assert response = @gateway.verify(card, options.merge({ allow_card_verification: true, merchant_account_id: fixtures(:braintree_blue)[:merchant_account_id] }))
+    assert_success response
+
+    assert_match 'OK', response.message
+    assert_equal 'M', response.cvv_result['code']
+    assert_equal 'I', response.avs_result['code']
+  end
+
+  def test_successful_credit_card_verification_with_only_address
+    options = {
+      order_ID: '1',
+      description: 'store purchase',
+      billing_address: {
+        address1: '456 My Street'
+      }
+    }
+    card = credit_card('4111111111111111')
+    assert response = @gateway.verify(card, options.merge({ allow_card_verification: true, merchant_account_id: fixtures(:braintree_blue)[:merchant_account_id] }))
+    assert_success response
+
+    assert_match 'OK', response.message
+    assert_equal 'M', response.cvv_result['code']
+    assert_equal 'B', response.avs_result['code']
+  end
+
+  def test_successful_credit_card_verification_with_only_zip
+    options = {
+      order_ID: '1',
+      description: 'store purchase',
+      billing_address: {
+        zip: 'K1C2N6'
+      }
+    }
+    card = credit_card('4111111111111111')
+    assert response = @gateway.verify(card, options.merge({ allow_card_verification: true, merchant_account_id: fixtures(:braintree_blue)[:merchant_account_id] }))
+    assert_success response
+
+    assert_match 'OK', response.message
+    assert_equal 'M', response.cvv_result['code']
     assert_equal 'P', response.avs_result['code']
   end
 

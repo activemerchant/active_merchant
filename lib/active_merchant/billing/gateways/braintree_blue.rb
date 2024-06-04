@@ -144,16 +144,21 @@ module ActiveMerchant #:nodoc:
           exp_month = creditcard.month.to_s
           exp_year = creditcard.year.to_s
           expiration = "#{exp_month}/#{exp_year}"
+          zip = options[:billing_address].try(:[], :zip)
+          address1 = options[:billing_address].try(:[], :address1)
           payload = {
             credit_card: {
               number: creditcard.number,
               expiration_date: expiration,
-              cvv: creditcard.verification_value,
-              billing_address: {
-                postal_code: options[:billing_address][:zip]
-              }
+              cvv: creditcard.verification_value
             }
           }
+          if zip || address1
+            payload[:credit_card][:billing_address] = {}
+            payload[:credit_card][:billing_address][:postal_code] = zip if zip
+            payload[:credit_card][:billing_address][:street_address] = address1 if address1
+          end
+
           if merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
             payload[:options] = { merchant_account_id: merchant_account_id }
           end
