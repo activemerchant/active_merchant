@@ -4,6 +4,8 @@
 == HEAD
 * Bump Ruby version to 3.1 [dustinhaefele] #5104
 * FlexCharge: Update inquire method to use the new orders end-point
+* Worldpay: Prefer options for network_transaction_id [aenand] #5129
+* Braintree: Prefer options for network_transaction_id [aenand] #5129
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860

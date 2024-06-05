@@ -1189,6 +1189,22 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.purchase(100, credit_card('41111111111111111111'), { test: true, order_id: '1', stored_credential: stored_credential(:cardholder, :recurring, id: '123ABC') })
   end
 
+  def test_stored_credential_prefers_options_for_ntid
+    Braintree::TransactionGateway.any_instance.expects(:sale).with(
+      standard_purchase_params.merge(
+        {
+          external_vault: {
+            status: 'vaulted',
+            previous_network_transaction_id: '321XYZ'
+          },
+          transaction_source: ''
+        }
+      )
+    ).returns(braintree_result)
+
+    @gateway.purchase(100, credit_card('41111111111111111111'), { test: true, order_id: '1', network_transaction_id: '321XYZ', stored_credential: stored_credential(:cardholder, :recurring, id: '123ABC') })
+  end
+
   def test_stored_credential_recurring_mit_initial
     Braintree::TransactionGateway.any_instance.expects(:sale).with(
       standard_purchase_params.merge(
