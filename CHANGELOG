@@ -7,6 +7,7 @@
 * Worldpay: Prefer options for network_transaction_id [aenand] #5129
 * Braintree: Prefer options for network_transaction_id [aenand] #5129
 * Cybersource Rest: Update support for stored credentials [aenand] #5083
+* Plexo: Add support to NetworkToken payments [euribe09] #5130
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860
