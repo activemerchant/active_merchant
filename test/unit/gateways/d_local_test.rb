@@ -44,6 +44,15 @@ class DLocalTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_purchase_with_ip_and_phone
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(ip: '127.0.0.1'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal '127.0.0.1', JSON.parse(data)['payer']['ip']
+      assert_equal '(555)555-5555', JSON.parse(data)['payer']['phone']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
