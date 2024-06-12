@@ -604,6 +604,22 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_risk_data
+    stub_comms(@gateway, :ssl_request) do
+      options = {
+        risk: {
+          enabled: true,
+          device_session_id: 'dsid_ipsmclhxwq72phhr32iwfvrflm'
+        }
+      }
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['risk']['enabled'], true
+      assert_equal request['risk']['device_session_id'], 'dsid_ipsmclhxwq72phhr32iwfvrflm'
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_purchase_with_metadata
     response = stub_comms(@gateway, :ssl_request) do
       options = {
