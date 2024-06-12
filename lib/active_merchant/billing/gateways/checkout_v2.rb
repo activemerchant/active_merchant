@@ -140,6 +140,7 @@ module ActiveMerchant #:nodoc:
         add_3ds(post, options)
         add_metadata(post, options, payment_method)
         add_processing_channel(post, options)
+        add_amount_allocations_data(post, options)
         add_marketplace_data(post, options)
         add_recipient_data(post, options)
         add_processing_data(post, options)
@@ -475,6 +476,14 @@ module ActiveMerchant #:nodoc:
         if options[:marketplace]
           post[:marketplace] = {}
           post[:marketplace][:sub_entity_id] = options[:marketplace][:sub_entity_id] if options[:marketplace][:sub_entity_id]
+        end
+      end
+
+      def add_amount_allocations_data(post, options)
+        return unless options[:amount_allocations]&.is_a?(Array)
+
+        post[:amount_allocations] = options[:amount_allocations].select do |v|
+          v[:id].present? && v[:amount].present?
         end
       end
 
