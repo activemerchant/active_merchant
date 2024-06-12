@@ -903,7 +903,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        response.dig('additionalData', 'refusalReasonRaw').try(:scan, /^\d+/).try(:first) || STANDARD_ERROR_CODE_MAPPING[response['errorCode']] || response['errorCode'] || response['refusalReason']
+        response.dig('additionalData', 'refusalReasonRaw').try(:match, /^([a-zA-Z0-9 ]{1,5})(?=:)/).try(:[], 1).try(:strip) ||
+          STANDARD_ERROR_CODE_MAPPING[response['errorCode']] ||
+          response['errorCode'] ||
+          response['refusalReason']
       end
 
       def network_transaction_id_from(response)
