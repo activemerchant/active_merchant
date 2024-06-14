@@ -42,6 +42,16 @@ class LitleTest < Test::Unit::TestCase
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
       }
     )
+    @decrypted_network_token = NetworkTokenizationCreditCard.new(
+      {
+        source: :network_token,
+        month: '02',
+        year: '2050',
+        brand: 'master',
+        number:  '5112010000000000',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+      }
+    )
     @amount = 100
     @options = {}
     @check = check(
@@ -361,6 +371,14 @@ class LitleTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @decrypted_google_pay)
     end.check_request do |_endpoint, data, _headers|
       assert_match '<orderSource>androidpay</orderSource>', data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_add_network_token_order_source
+    stub_comms do
+      @gateway.purchase(@amount, @decrypted_network_token)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<orderSource>ecommerce</orderSource>', data
     end.respond_with(successful_purchase_response)
   end
 

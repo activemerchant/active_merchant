@@ -76,6 +76,18 @@ class RemoteLitleTest < Test::Unit::TestCase
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
       }
     )
+
+    @decrypted_network_token = NetworkTokenizationCreditCard.new(
+      {
+        source: :network_token,
+        month: '02',
+        year: '2050',
+        brand: 'master',
+        number:  '5112010000000000',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+      }
+    )
+
     @check = check(
       name: 'Tom Black',
       routing_number:  '011075150',
@@ -256,6 +268,12 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_google_pay
     assert response = @gateway.purchase(10000, @decrypted_google_pay)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_network_token
+    assert response = @gateway.purchase(10100, @decrypted_network_token)
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -597,6 +615,12 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', capture.message
   end
 
+  def test_authorize_with_network_token
+    assert response = @gateway.authorize(10100, @decrypted_network_token)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_purchase_with_stored_credential_cit_card_on_file_non_ecommerce
     credit_card = CreditCard.new(@credit_card_hash.merge(
                                    number: '4457000800000002',
@@ -869,6 +893,17 @@ class RemoteLitleTest < Test::Unit::TestCase
 
     assert_scrubbed(@check.account_number, transcript)
     assert_scrubbed(@check.routing_number, transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_network_token_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(10010, @decrypted_network_token, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@decrypted_network_token.number, transcript)
+    assert_scrubbed(@decrypted_network_token.payment_cryptogram, transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
