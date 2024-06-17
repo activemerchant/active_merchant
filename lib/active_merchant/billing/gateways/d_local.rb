@@ -118,16 +118,18 @@ module ActiveMerchant #:nodoc:
 
       def add_payer(post, card, options)
         address = options[:billing_address] || options[:address]
+        phone_number = address[:phone] || address[:phone_number] if address
+
         post[:payer] = {}
         post[:payer][:name] = card.name
         post[:payer][:email] = options[:email] if options[:email]
         post[:payer][:birth_date] = options[:birth_date] if options[:birth_date]
-        post[:payer][:phone] = address[:phone] if address && address[:phone]
+        post[:payer][:phone] = phone_number if phone_number
         post[:payer][:document] = options[:document] if options[:document]
         post[:payer][:document2] = options[:document2] if options[:document2]
         post[:payer][:user_reference] = options[:user_reference] if options[:user_reference]
         post[:payer][:event_uuid] = options[:device_id] if options[:device_id]
-        post[:payer][:onboarding_ip_address] = options[:ip] if options[:ip]
+        post[:payer][:ip] = options[:ip] if options[:ip]
         post[:payer][:address] = add_address(post, card, options)
       end
 

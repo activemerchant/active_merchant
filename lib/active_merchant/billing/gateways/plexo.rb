@@ -92,7 +92,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r(("Number\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("Cvc\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("InvoiceNumber\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("MerchantId\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
+          gsub(%r(("MerchantId\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("Cryptogram\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
       end
 
       private
@@ -207,6 +208,7 @@ module ActiveMerchant #:nodoc:
 
           add_card_holder(post[:paymentMethod][:Card], payment, options)
         end
+        post[:paymentMethod][:Card][:Cryptogram] = payment.payment_cryptogram if payment&.is_a?(NetworkTokenizationCreditCard)
       end
 
       def add_card_holder(card, payment, options)
