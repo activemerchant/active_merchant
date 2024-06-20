@@ -10,6 +10,7 @@
 * Plexo: Add support to NetworkToken payments [euribe09] #5130
 * Braintree: Update card verfification payload if billing address fields are not present [yunnydang] #5142
 * DLocal: Update the phone and ip fields [yunnydang] #5143
+* CheckoutV2: Add support for risk data fields [yunnydang] #5147
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860

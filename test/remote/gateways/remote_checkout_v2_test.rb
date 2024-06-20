@@ -650,6 +650,38 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_risk_data_true
+    options = @options.merge(
+      risk: {
+        enabled: 'true',
+        device_session_id: '12345-abcd'
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_risk_data_false
+    options = @options.merge(
+      risk: {
+        enabled: 'false'
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_empty_risk_data
+    options = @options.merge(
+      risk: {}
+    )
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_metadata_via_oauth
     options = @options.merge(
       metadata: {

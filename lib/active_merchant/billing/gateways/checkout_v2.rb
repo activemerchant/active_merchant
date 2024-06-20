@@ -144,6 +144,7 @@ module ActiveMerchant #:nodoc:
         add_recipient_data(post, options)
         add_processing_data(post, options)
         add_payment_sender_data(post, options)
+        add_risk_data(post, options)
       end
 
       def add_invoice(post, money, options)
@@ -189,6 +190,20 @@ module ActiveMerchant #:nodoc:
         return unless options[:processing].is_a?(Hash)
 
         post[:processing] = options[:processing]
+      end
+
+      def add_risk_data(post, options)
+        return unless options[:risk].is_a?(Hash)
+
+        risk = options[:risk]
+        post[:risk] = {} unless risk.empty?
+
+        if risk[:enabled].to_s == 'true'
+          post[:risk][:enabled] = true
+          post[:risk][:device_session_id] = risk[:device_session_id] if risk[:device_session_id]
+        elsif risk[:enabled].to_s == 'false'
+          post[:risk][:enabled] = false
+        end
       end
 
       def add_payment_sender_data(post, options)

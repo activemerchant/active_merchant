@@ -86,6 +86,21 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_passing_risk_data
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {
+        risk: {
+          enabled: 'true',
+          device_session_id: '12345-abcd'
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)['risk']
+      assert_equal request['enabled'], true
+      assert_equal request['device_session_id'], '12345-abcd'
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_passing_incremental_authorization
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, { incremental_authorization: 'abcd1234' })
