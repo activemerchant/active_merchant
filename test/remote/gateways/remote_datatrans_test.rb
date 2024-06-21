@@ -195,6 +195,16 @@ class RemoteDatatransTest < Test::Unit::TestCase
     assert_equal 'Action denied : Wrong transaction status', response.message
   end
 
+  def test_successful_verify
+    verify_response = @gateway.verify(@credit_card, @options)
+    assert_success verify_response
+  end
+
+  def test_failed_verify
+    verify_response = @gateway.verify(@credit_card, @options.merge({ currency: 'DKK' }))
+    assert_failure verify_response
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)

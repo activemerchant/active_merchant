@@ -98,6 +98,17 @@ class DatatransTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_verify_with_credit_card
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.check_request do |_action, endpoint, data, _headers|
+      parsed_data = JSON.parse(data)
+      common_assertions_authorize_purchase(endpoint, parsed_data) unless parsed_data.empty?
+    end.respond_with(successful_authorize_response, successful_void_response)
+
+    assert_success response
+  end
+
   def test_purchase_with_network_token
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @nt_credit_card, @options)

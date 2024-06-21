@@ -35,6 +35,13 @@ module ActiveMerchant #:nodoc:
         authorize(money, payment, options.merge(auto_settle: true))
       end
 
+      def verify(payment, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, payment, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       def authorize(money, payment, options = {})
         post = { refno: options.fetch(:order_id, '') }
         add_payment_method(post, payment)
