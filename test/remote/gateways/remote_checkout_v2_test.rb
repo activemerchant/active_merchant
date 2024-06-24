@@ -14,6 +14,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @credit_card_dnh = credit_card('4024007181869214', verification_value: '100', month: '6', year: Time.now.year + 1)
     @expired_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2010')
     @declined_card = credit_card('42424242424242424', verification_value: '234', month: '6', year: Time.now.year + 1)
+    @amex_card = credit_card('341829238058580', brand: 'american_express', verification_value: '1234', month: '6', year: Time.now.year + 1)
     @threeds_card = credit_card('4485040371536584', verification_value: '100', month: '12', year: Time.now.year + 1)
     @mada_card = credit_card('5043000000000000', brand: 'mada')
 
@@ -1143,5 +1144,28 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options.merge(idempotency_key: 'test123'))
     assert_success response
     assert_equal 'Succeeded', response.message
+  end
+
+  # checkout states they provide valid amex cards however, they will fail
+  # a transaction with either CVV mismatch or invalid card error. For
+  # the purpose of this test, it's to simulate the truncation of reference id
+  def test_truncate_id_for_amex_transactions
+    @options[:order_id] = '1111111111111111111111111111112'
+
+    response = @gateway.purchase(@amount, @amex_card, @options)
+    assert_failure response
+    assert_equal '111111111111111111111111111111', response.params['reference']
+    assert_equal 30, response.params['reference'].length
+    assert_equal 'American Express', response.params['source']['scheme']
+  end
+
+  def test_non_truncate_id_for_non_amex_transactions
+    @options[:order_id] = '1111111111111111111111111111112'
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal '1111111111111111111111111111112', response.params['reference']
+    assert_equal 31, response.params['reference'].length
+    assert_equal 'Visa', response.params['source']['scheme']
   end
 end

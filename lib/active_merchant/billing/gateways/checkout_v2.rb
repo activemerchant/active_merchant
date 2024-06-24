@@ -33,6 +33,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:capture] = false
         build_auth_or_purchase(post, amount, payment_method, options)
+
         options[:incremental_authorization] ? commit(:incremental_authorize, post, options, options[:incremental_authorization]) : commit(:authorize, post, options)
       end
 
@@ -145,6 +146,7 @@ module ActiveMerchant #:nodoc:
         add_processing_data(post, options)
         add_payment_sender_data(post, options)
         add_risk_data(post, options)
+        truncate_amex_reference_id(post, options, payment_method)
       end
 
       def add_invoice(post, money, options)
@@ -158,6 +160,10 @@ module ActiveMerchant #:nodoc:
         end
         post[:metadata] = {}
         post[:metadata][:udf5] = application_id || 'ActiveMerchant'
+      end
+
+      def truncate_amex_reference_id(post, options, payment_method)
+        post[:reference] = truncate(options[:order_id], 30) if payment_method.respond_to?(:brand) && payment_method.brand == 'american_express'
       end
 
       def add_recipient_data(post, options)
