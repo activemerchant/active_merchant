@@ -672,13 +672,13 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_default_payment_delivery_with_no_payment_delivery_sent
     transcript = capture_transcript(@echeck_gateway) do
-      @echeck_gateway.authorize(@amount, @echeck, @options.merge(order_id: '4'))
+      response = @echeck_gateway.authorize(@amount, @echeck, @options.merge(order_id: '4'))
+      assert_equal '1', response.params['approval_status']
+      assert_equal '00', response.params['resp_code']
     end
 
     assert_match(/<BankPmtDelv>B/, transcript)
     assert_match(/<MessageType>A/, transcript)
-    assert_match(/<ApprovalStatus>1/, transcript)
-    assert_match(/<RespCode>00/, transcript)
   end
 
   def test_sending_echeck_adds_ecp_details_for_refund
@@ -692,12 +692,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     transcript = capture_transcript(@echeck_gateway) do
       refund = @echeck_gateway.refund(@amount, capture.authorization, @options.merge(payment_method: @echeck, action_code: 'W6', auth_method: 'I'))
       assert_success refund
+      assert_equal '1', refund.params['approval_status']
     end
 
     assert_match(/<ECPActionCode>W6/, transcript)
     assert_match(/<ECPAuthMethod>I/, transcript)
     assert_match(/<MessageType>R/, transcript)
-    assert_match(/<ApprovalStatus>1/, transcript)
   end
 
   def test_sending_credit_card_performs_correct_refund
@@ -714,43 +714,40 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_echeck_purchase_with_address_responds_with_name
     transcript = capture_transcript(@echeck_gateway) do
-      @echeck_gateway.authorize(@amount, @echeck, @options.merge(order_id: '2'))
+      response = @echeck_gateway.authorize(@amount, @echeck, @options.merge(order_id: '2'))
+      assert_equal '00', response.params['resp_code']
+      assert_equal 'Approved', response.params['status_msg']
     end
 
     assert_match(/<AVSname>Jim Smith/, transcript)
-    assert_match(/<RespCode>00/, transcript)
-    assert_match(/atusMsg>Approved</, transcript)
   end
 
   def test_echeck_purchase_with_no_address_responds_with_name
     test_check_no_address = check(name: 'Test McTest')
 
     transcript = capture_transcript(@echeck_gateway) do
-      @echeck_gateway.authorize(@amount, test_check_no_address, @options.merge(order_id: '2', address: nil, billing_address: nil))
+      response = @echeck_gateway.authorize(@amount, test_check_no_address, @options.merge(order_id: '2', address: nil, billing_address: nil))
+      assert_equal '00', response.params['resp_code']
+      assert_equal 'Approved', response.params['status_msg']
     end
 
     assert_match(/<AVSname>Test McTest/, transcript)
-    assert_match(/<RespCode>00/, transcript)
-    assert_match(/atusMsg>Approved</, transcript)
   end
 
   def test_credit_purchase_with_address_responds_with_name
     transcript = capture_transcript(@gateway) do
-      @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2'))
+      response = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2'))
+      assert_equal '00', response.params['resp_code']
+      assert_equal 'Approved', response.params['status_msg']
     end
 
     assert_match(/<AVSname>Longbob Longsen/, transcript)
-    assert_match(/<RespCode>00/, transcript)
-    assert_match(/<StatusMsg>Approved/, transcript)
   end
 
   def test_credit_purchase_with_no_address_responds_with_no_name
-    transcript = capture_transcript(@gateway) do
-      @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2', address: nil, billing_address: nil))
-    end
-
-    assert_match(/<RespCode>00/, transcript)
-    assert_match(/<StatusMsg>Approved/, transcript)
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2', address: nil, billing_address: nil))
+    assert_equal '00', response.params['resp_code']
+    assert_equal 'Approved', response.params['status_msg']
   end
 
   # == Certification Tests
@@ -1586,21 +1583,18 @@ class TandemOrbitalTests < Test::Unit::TestCase
 
   def test_credit_purchase_with_address_responds_with_name
     transcript = capture_transcript(@tandem_gateway) do
-      @tandem_gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2'))
+      response = @tandem_gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2'))
+      assert_equal '00', response.params['resp_code']
+      assert_equal 'Approved', response.params['status_msg']
     end
 
     assert_match(/<AVSname>Longbob Longsen/, transcript)
-    assert_match(/<RespCode>00/, transcript)
-    assert_match(/<StatusMsg>Approved/, transcript)
   end
 
   def test_credit_purchase_with_no_address_responds_with_no_name
-    transcript = capture_transcript(@tandem_gateway) do
-      @tandem_gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2', address: nil, billing_address: nil))
-    end
-
-    assert_match(/<RespCode>00/, transcript)
-    assert_match(/<StatusMsg>Approved/, transcript)
+    response = @tandem_gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2', address: nil, billing_address: nil))
+    assert_equal '00', response.params['resp_code']
+    assert_equal 'Approved', response.params['status_msg']
   end
 
   def test_void_transactions

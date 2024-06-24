@@ -115,6 +115,16 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       }
     }
 
+    @three_d_secure_options_eci_6 = {
+      three_d_secure: {
+        eci: '6',
+        xid: 'TESTXID',
+        cavv: 'TESTCAVV',
+        version: '2.2.0',
+        ds_transaction_id: '97267598FAE648F28083C23433990FBC'
+      }
+    }
+
     @google_pay_card = network_tokenization_credit_card(
       '4777777777777778',
       payment_cryptogram: 'BwAQCFVQdwEAABNZI1B3EGLyGC8=',
@@ -1314,6 +1324,61 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal '1', response.params['approval_status']
+  end
+
+  def test_three_d_secure_data_on_master_purchase_with_custom_ucaf_and_flag_on_if_eci_is_valid
+    options = @options.merge(@three_d_secure_options)
+    options.merge!({ ucaf_collection_indicator: '5', alternate_ucaf_flow: true })
+    assert_equal '6', @three_d_secure_options_eci_6.dig(:three_d_secure, :eci)
+
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'master'), options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_no_match(/\<UCAFInd/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_master_purchase_with_custom_ucaf_and_flag_on
+    options = @options.merge(@three_d_secure_options_eci_6)
+    options.merge!({ ucaf_collection_indicator: '5', alternate_ucaf_flow: true })
+    assert_equal '6', @three_d_secure_options_eci_6.dig(:three_d_secure, :eci)
+
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'master'), options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<UCAFInd>5</UCAFInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_master_purchase_with_flag_on_but_no_custom_ucaf
+    options = @options.merge(@three_d_secure_options_eci_6)
+    options.merge!(alternate_ucaf_flow: true)
+    assert_equal '6', @three_d_secure_options_eci_6.dig(:three_d_secure, :eci)
+
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'master'), options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_no_match(/\<UCAFInd/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_master_purchase_with_flag_off
+    options = @options.merge(@three_d_secure_options)
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'master'), options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<UCAFInd>4</UCAFInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_master_purchase_with_flag_off_and_custom_ucaf
+    options = @options.merge(@three_d_secure_options)
+    options.merge!(ucaf_collection_indicator: '5')
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'master'), options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<UCAFInd>5</UCAFInd>}, data
+    end.respond_with(successful_purchase_response)
   end
 
   def test_failed_refund_with_echeck
