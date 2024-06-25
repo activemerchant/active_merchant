@@ -111,6 +111,8 @@ module ActiveMerchant #:nodoc:
         payment_details = payment_details(payment_method, options)
         if options[:fast_fund_credit]
           fast_fund_credit_request(money, payment_method, payment_details.merge(credit: true, **options))
+        elsif options[:account_funding_transaction]
+          aft_request(money, payment_method, payment_details.merge(**options))
         else
           credit_request(money, payment_method, payment_details.merge(credit: true, **options))
         end
@@ -148,7 +150,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<cardNumber>)\d+(</cardNumber>)), '\1[FILTERED]\2').
           gsub(%r((<cvc>)[^<]+(</cvc>)), '\1[FILTERED]\2').
           gsub(%r((<tokenNumber>)\d+(</tokenNumber>)), '\1[FILTERED]\2').
-          gsub(%r((<cryptogram>)[^<]+(</cryptogram>)), '\1[FILTERED]\2')
+          gsub(%r((<cryptogram>)[^<]+(</cryptogram>)), '\1[FILTERED]\2').
+          gsub(%r((<accountReference accountType="\w+">)\d+(<\/accountReference>)), '\1[FILTERED]\2')
       end
 
       private
@@ -187,6 +190,10 @@ module ActiveMerchant #:nodoc:
 
       def fast_fund_credit_request(money, payment_method, options)
         commit('fast_credit', build_fast_fund_credit_request(money, payment_method, options), :ok, 'PUSH_APPROVED', options)
+      end
+
+      def aft_request(money, payment_method, options)
+        commit('funding_transfer_transaction', build_aft_request(money, payment_method, options), :ok, 'AUTHORISED', options)
       end
 
       def store_request(credit_card, options)
@@ -395,6 +402,66 @@ module ActiveMerchant #:nodoc:
               add_order_content(xml, options)
               add_payment_details_for_ff_credit(xml, payment_method, options)
               add_shopper_id(xml, options)
+            end
+          end
+        end
+      end
+
+      def build_aft_request(money, payment_method, options)
+        build_request do |xml|
+          xml.submit do
+            xml.order order_tag_attributes(options) do
+              xml.description(options[:description].blank? ? 'Account Funding Transaction' : options[:description])
+              add_amount(xml, money, options)
+              add_order_content(xml, options)
+              add_payment_method(xml, money, payment_method, options)
+              add_shopper(xml, options)
+              add_sub_merchant_data(xml, options[:sub_merchant_data]) if options[:sub_merchant_data]
+              add_aft_data(xml, payment_method, options)
+            end
+          end
+        end
+      end
+
+      def add_aft_data(xml, payment_method, options)
+        xml.fundingTransfer 'type' => options[:aft_type], 'category' => 'PULL_FROM_CARD' do
+          xml.paymentPurpose options[:aft_payment_purpose] # Must be included for the recipient for following countries, otherwise optional: Argentina, Bangladesh, Chile, Columbia, Jordan, Mexico, Thailand, UAE, India cross-border
+          xml.fundingParty 'type' => 'sender' do
+            xml.accountReference options[:aft_sender_account_reference], 'accountType' => options[:aft_sender_account_type]
+            xml.fullName do
+              xml.first options.dig(:aft_sender_full_name, :first)
+              xml.middle options.dig(:aft_sender_full_name, :middle)
+              xml.last options.dig(:aft_sender_full_name, :last)
+            end
+            xml.fundingAddress do
+              xml.address1 options.dig(:aft_sender_funding_address, :address1)
+              xml.address2 options.dig(:aft_sender_funding_address, :address2)
+              xml.postalCode options.dig(:aft_sender_funding_address, :postal_code)
+              xml.city options.dig(:aft_sender_funding_address, :city)
+              xml.state options.dig(:aft_sender_funding_address, :state)
+              xml.countryCode options.dig(:aft_sender_funding_address, :country_code)
+            end
+          end
+          xml.fundingParty 'type' => 'recipient' do
+            xml.accountReference options[:aft_recipient_account_reference], 'accountType' => options[:aft_recipient_account_type]
+            xml.fullName do
+              xml.first options.dig(:aft_recipient_full_name, :first)
+              xml.middle options.dig(:aft_recipient_full_name, :middle)
+              xml.last options.dig(:aft_recipient_full_name, :last)
+            end
+            xml.fundingAddress do
+              xml.address1 options.dig(:aft_recipient_funding_address, :address1)
+              xml.address2 options.dig(:aft_recipient_funding_address, :address2)
+              xml.postalCode options.dig(:aft_recipient_funding_address, :postal_code)
+              xml.city options.dig(:aft_recipient_funding_address, :city)
+              xml.state options.dig(:aft_recipient_funding_address, :state)
+              xml.countryCode options.dig(:aft_recipient_funding_address, :country_code)
+            end
+            if options[:aft_recipient_funding_data]
+              xml.fundingData do
+                add_date_element(xml, 'birthDate', options[:aft_recipient_funding_data][:birth_date])
+                xml.telephoneNumber options.dig(:aft_recipient_funding_data, :telephone_number)
+              end
             end
           end
         end

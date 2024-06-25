@@ -135,6 +135,50 @@ class WorldpayTest < Test::Unit::TestCase
                      }]
       }
     }
+
+    @aft_options = {
+      account_funding_transaction: true,
+      aft_type: 'A',
+      aft_payment_purpose: '01',
+      aft_sender_account_type: '02',
+      aft_sender_account_reference: '4111111111111112',
+      aft_sender_full_name: {
+        first: 'First',
+        middle: 'Middle',
+        last: 'Sender'
+      },
+      aft_sender_funding_address: {
+        address1: '123 Sender St',
+        address2: 'Apt 1',
+        postal_code: '12345',
+        city: 'Senderville',
+        state: 'NC',
+        country_code: 'US'
+      },
+      aft_recipient_account_type: '03',
+      aft_recipient_account_reference: '4111111111111111',
+      aft_recipient_full_name: {
+        first: 'First',
+        middle: 'Middle',
+        last: 'Recipient'
+      },
+      aft_recipient_funding_address: {
+        address1: '123 Recipient St',
+        address2: 'Apt 1',
+        postal_code: '12345',
+        city: 'Recipientville',
+        state: 'NC',
+        country_code: 'US'
+      },
+      aft_recipient_funding_data: {
+        telephone_number: '123456789',
+        birth_date: {
+          day_of_month: '01',
+          month: '01',
+          year: '1980'
+        }
+      }
+    }
   end
 
   def test_payment_type_for_network_card
@@ -698,6 +742,16 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal 'f25257d251b81fb1fd9c210973c941ff', response.authorization
   end
 
+  def test_successful_visa_account_funding_transaction
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card, @options.merge(@aft_options))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<fundingTransfer type="A" category="PULL_FROM_CARD">/, data)
+    end.respond_with(successful_visa_credit_response)
+    assert_success response
+    assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
+  end
+
   def test_description
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -1176,6 +1230,10 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_transcript_scrubbing_on_network_token
     assert_equal network_token_transcript_scrubbed, @gateway.scrub(network_token_transcript)
+  end
+
+  def test_transcript_scrubbing_on_aft
+    assert_equal aft_transcript_scrubbed, @gateway.scrub(aft_transcript)
   end
 
   def test_3ds_version_1_request
@@ -2345,6 +2403,148 @@ class WorldpayTest < Test::Unit::TestCase
     TRANSCRIPT
   end
 
+  def aft_transcript
+    <<~TRANSCRIPT
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <submit>
+          <order orderCode="24602b5855e3edf2f7821f6e86694b7f">
+            <description>Account Funding Transaction</description>
+            <amount value="100" currencyCode="GBP" exponent="2"/>
+            <paymentDetails>
+              <CARD-SSL>
+                <cardNumber>4111111111111111</cardNumber>
+                <expiryDate>
+                  <date month="09" year="2025"/>
+                </expiryDate>
+                <cardHolderName>Longbob Longsen</cardHolderName>
+                <cvc>123</cvc>
+              </CARD-SSL>
+            </paymentDetails>
+            <shopper>
+              <shopperEmailAddress>wow@example.com</shopperEmailAddress>
+              <browser>
+                <acceptHeader/>
+                <userAgentHeader/>
+              </browser>
+            </shopper>
+            <fundingTransfer type="A" category="PULL_FROM_CARD">
+              <paymentPurpose>01</paymentPurpose>
+              <fundingParty type="sender">
+                <accountReference accountType="02">4111111111111112</accountReference>
+                <fullName>
+                  <first>First</first>
+                  <middle>Middle</middle>
+                  <last>Sender</last>
+                </fullName>
+                <fundingAddress>
+                  <address1>123 Sender St</address1>
+                  <address2>Apt 1</address2>
+                  <postalCode>12345</postalCode>
+                  <city>Senderville</city>
+                  <state>NC</state>
+                  <countryCode>US</countryCode>
+                </fundingAddress>
+              </fundingParty>
+              <fundingParty type="recipient">
+                <accountReference accountType="03">4111111111111111</accountReference>
+                <fullName>
+                  <first>First</first>
+                  <middle>Middle</middle>
+                  <last>Recipient</last>
+                </fullName>
+                <fundingAddress>
+                  <address1>123 Recipient St</address1>
+                  <address2>Apt 1</address2>
+                  <postalCode>12345</postalCode>
+                  <city>Recipientville</city>
+                  <state>NC</state>
+                  <countryCode>US</countryCode>
+                </fundingAddress>
+                <fundingData>
+                  <birthDate>
+                    <date dayOfMonth="01" month="01" year="1980"/>
+                  </birthDate>
+                  <telephoneNumber>123456789</telephoneNumber>
+                </fundingData>
+              </fundingParty>
+            </fundingTransfer>
+          </order>
+        </submit>
+      </paymentService>
+    TRANSCRIPT
+  end
+
+  def aft_transcript_scrubbed
+    <<~TRANSCRIPT
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <submit>
+          <order orderCode="24602b5855e3edf2f7821f6e86694b7f">
+            <description>Account Funding Transaction</description>
+            <amount value="100" currencyCode="GBP" exponent="2"/>
+            <paymentDetails>
+              <CARD-SSL>
+                <cardNumber>[FILTERED]</cardNumber>
+                <expiryDate>
+                  <date month="09" year="2025"/>
+                </expiryDate>
+                <cardHolderName>Longbob Longsen</cardHolderName>
+                <cvc>[FILTERED]</cvc>
+              </CARD-SSL>
+            </paymentDetails>
+            <shopper>
+              <shopperEmailAddress>wow@example.com</shopperEmailAddress>
+              <browser>
+                <acceptHeader/>
+                <userAgentHeader/>
+              </browser>
+            </shopper>
+            <fundingTransfer type="A" category="PULL_FROM_CARD">
+              <paymentPurpose>01</paymentPurpose>
+              <fundingParty type="sender">
+                <accountReference accountType="02">[FILTERED]</accountReference>
+                <fullName>
+                  <first>First</first>
+                  <middle>Middle</middle>
+                  <last>Sender</last>
+                </fullName>
+                <fundingAddress>
+                  <address1>123 Sender St</address1>
+                  <address2>Apt 1</address2>
+                  <postalCode>12345</postalCode>
+                  <city>Senderville</city>
+                  <state>NC</state>
+                  <countryCode>US</countryCode>
+                </fundingAddress>
+              </fundingParty>
+              <fundingParty type="recipient">
+                <accountReference accountType="03">[FILTERED]</accountReference>
+                <fullName>
+                  <first>First</first>
+                  <middle>Middle</middle>
+                  <last>Recipient</last>
+                </fullName>
+                <fundingAddress>
+                  <address1>123 Recipient St</address1>
+                  <address2>Apt 1</address2>
+                  <postalCode>12345</postalCode>
+                  <city>Recipientville</city>
+                  <state>NC</state>
+                  <countryCode>US</countryCode>
+                </fundingAddress>
+                <fundingData>
+                  <birthDate>
+                    <date dayOfMonth="01" month="01" year="1980"/>
+                  </birthDate>
+                  <telephoneNumber>123456789</telephoneNumber>
+                </fundingData>
+              </fundingParty>
+            </fundingTransfer>
+          </order>
+        </submit>
+      </paymentService>
+    TRANSCRIPT
+  end
+
   def network_token_transcript
     <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
@@ -2468,6 +2668,37 @@ class WorldpayTest < Test::Unit::TestCase
       <paymentService version="1.4" merchantCode="SPREEDLY">
         <reply>
           <error code="2"><![CDATA[authenticatedShopperID cannot start with an underscore]]></error>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def successful_aft_response
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <reply>
+          <orderStatus orderCode="d493bbdf45239ef244316bba986f5196">
+            <payment>
+              <paymentMethod>VISA_CREDIT-SSL</paymentMethod>
+              <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>AUTHORISED</lastEvent>
+              <CVCResultCode description="C"/>
+              <AVSResultCode description="H"/>
+              <cardHolderName><![CDATA[Longbob Longsen]]></cardHolderName>
+              <issuerCountryCode>N/A</issuerCountryCode>
+              <balance accountType="IN_PROCESS_AUTHORISED">
+                <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              </balance>
+              <cardNumber>4111********1111</cardNumber>
+              <riskScore value="1"/>
+              <schemeResponse>
+                <transactionIdentifier>060720116005062</transactionIdentifier>
+              </schemeResponse>
+              <fundingLinkId></fundingLinkId>
+            </payment>
+          </orderStatus>
         </reply>
       </paymentService>
     RESPONSE
