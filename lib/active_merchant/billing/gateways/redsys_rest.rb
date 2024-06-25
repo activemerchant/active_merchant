@@ -397,13 +397,14 @@ module ActiveMerchant #:nodoc:
         post[:DS_MERCHANT_COF_INI] = stored_credential[:initial_transaction] ? 'S' : 'N'
 
         post[:DS_MERCHANT_COF_TYPE] = case stored_credential[:reason_type]
-        when 'recurring'
-          'R'
-        when 'installment'
-          'I'
-        else
-          'C'
-        end
+                                      when 'recurring'
+                                        'R'
+                                      when 'installment'
+                                        'I'
+                                      else
+                                        'C'
+                                      end
+
         post[:DS_MERCHANT_IDENTIFIER] = 'REQUIRED' if stored_credential[:initiator] == 'cardholder'
         post[:DS_MERCHANT_COF_TXNID] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
       end
