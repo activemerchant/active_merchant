@@ -463,7 +463,8 @@ module ActiveMerchant #:nodoc:
         def valid_by_algorithm?(brand, numbers) #:nodoc:
           case brand
           when 'naranja'
-            valid_naranja_algo?(numbers)
+            # For now, PAN is valid if it passes exactly one of the two Naranja checks
+            valid_naranja_algo?(numbers) ^ valid_naranja_algo_2(numbers)
           when 'creditel'
             valid_creditel_algo?(numbers)
           when 'alia', 'confiable', 'maestro_no_luhn', 'anda', 'tarjeta-d', 'hipercard'
@@ -545,7 +546,6 @@ module ActiveMerchant #:nodoc:
           valid_luhn_with_check_digit?(luhn_payload, check_digit)
         end
 
-        # Checks the validity of a card number by use of specific algorithms
         def valid_naranja_algo?(numbers) #:nodoc:
           num_array = numbers.to_s.chars.map(&:to_i)
           multipliers = [4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
@@ -553,6 +553,23 @@ module ActiveMerchant #:nodoc:
           intermediate = 11 - (num_sum % 11)
           final_num = intermediate > 9 ? 0 : intermediate
           final_num == num_array[15]
+        end
+
+        def valid_naranja_algo_2?(numbers) #:nodoc:
+          digits = numbers.to_i.digits.reverse
+          check_digit = digits.pop
+
+          sum = 0
+          digits.each_with_index do |n, i|
+            multiplier = (i + 1).odd? ? 2 : 1
+            v = n * multiplier
+            v -= 9 if v > 9
+            sum += v
+          end
+
+          verify = (sum / 10 + 1) * 10 - sum
+          verify = 0 if verify == 10
+          verify.even? && verify == check_digit
         end
 
         def valid_creditel_algo?(numbers) #:nodoc:

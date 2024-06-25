@@ -449,6 +449,11 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert CreditCard.valid_number?(number)
   end
 
+  def test_matching_valid_naranja_2
+    number = '5895627451682352'
+    assert_equal 'naranja', CreditCard.brand?(number)
+  end
+
   def test_matching_valid_creditel
     number = '6019330047539016'
     assert_equal 'creditel', CreditCard.brand?(number)
