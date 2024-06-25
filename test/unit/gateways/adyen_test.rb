@@ -1250,6 +1250,8 @@ class AdyenTest < Test::Unit::TestCase
       assert_equal 'YwAAAAAABaYcCMX/OhNRQAAAAAA=', parsed['mpiData']['cavv']
       assert_equal '07', parsed['mpiData']['eci']
       assert_equal 'applepay', parsed['additionalData']['paymentdatasource.type']
+      assert_equal 'VISATOKENSERVICE', parsed['recurring']['tokenService']
+      assert_equal 'EXTERNAL', parsed['recurring']['contract']
     end.respond_with(successful_authorize_response)
     assert_success response
   end
