@@ -112,6 +112,7 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: )[a-zA-Z0-9+./=]+), '\1[FILTERED]').
           gsub(%r((Api-Key: )\w+), '\1[FILTERED]').
+          gsub(%r(("apiKey\\?":\\?")\w+), '\1[FILTERED]').
           gsub(%r(("cardData\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("securityCode\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("cavv\\?":\\?")\w+), '\1[FILTERED]')
@@ -171,10 +172,7 @@ module ActiveMerchant #:nodoc:
         return unless billing = options[:billing_address]
 
         billing_address = {}
-        if payment.is_a?(CreditCard)
-          billing_address[:firstName] = payment.first_name if payment.first_name
-          billing_address[:lastName] = payment.last_name if payment.last_name
-        end
+        name_from_address(billing_address, billing) || name_from_payment(billing_address, payment)
         address = {}
         address[:street] = billing[:address1] if billing[:address1]
         address[:houseNumberOrName] = billing[:address2] if billing[:address2]
@@ -190,6 +188,22 @@ module ActiveMerchant #:nodoc:
           billing_address[:phone][:phoneNumber] = billing[:phone_number]
         end
         post[:billingAddress] = billing_address
+      end
+
+      def name_from_payment(billing_address, payment)
+        return unless payment.respond_to?(:first_name) && payment.respond_to?(:last_name)
+
+        billing_address[:firstName] = payment.first_name if payment.first_name
+        billing_address[:lastName] = payment.last_name if payment.last_name
+      end
+
+      def name_from_address(billing_address, billing)
+        return unless address = billing
+
+        first_name, last_name = split_names(address[:name]) if address[:name]
+
+        billing_address[:firstName] = first_name if first_name
+        billing_address[:lastName] = last_name if last_name
       end
 
       def add_shipping_address(post, options)

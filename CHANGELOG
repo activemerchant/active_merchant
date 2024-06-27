@@ -14,6 +14,7 @@
 * Pin Payments: Add new 3DS params mentioned in Pin Payments docs [hudakh] #4720
 * RedsysRest: Add support for stored credentials & 3DS exemptions [jherreraa] #5132
 * CheckoutV2: Truncate the reference id for amex transactions [yunnydang] #5151
+* CommerceHub: Add billing address name override [yunnydang] #5157
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860

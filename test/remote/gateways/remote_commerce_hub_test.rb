@@ -70,6 +70,49 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_payment_name_override
+    billing_address = {
+      address1: 'Infinite Loop',
+      address2: 1,
+      country: 'US',
+      city: 'Cupertino',
+      state: 'CA',
+      zip: '95014'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: billing_address))
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_equal 'John', response.params['billingAddress']['firstName']
+    assert_equal 'Doe', response.params['billingAddress']['lastName']
+  end
+
+  def test_successful_purchase_with_name_override_on_alternative_payment_methods
+    billing_address = {
+      address1: 'Infinite Loop',
+      address2: 1,
+      country: 'US',
+      city: 'Cupertino',
+      state: 'CA',
+      zip: '95014'
+    }
+
+    response = @gateway.purchase(@amount, @google_pay, @options.merge(billing_address: billing_address))
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_equal 'DecryptedWallet', response.params['source']['sourceType']
+    assert_equal 'Longbob', response.params['billingAddress']['firstName']
+    assert_equal 'Longsen', response.params['billingAddress']['lastName']
+  end
+
+  def test_successful_purchase_with_billing_name_override
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: address))
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_equal 'Jim', response.params['billingAddress']['firstName']
+    assert_equal 'Smith', response.params['billingAddress']['lastName']
+  end
+
   def test_successful_3ds_purchase
     @options.merge!(three_d_secure: @three_d_secure)
     response = @gateway.purchase(@amount, @credit_card, @options)
@@ -203,7 +246,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('123', @options)
     assert_failure response
-    assert_equal 'Referenced transaction is invalid or not found', response.message
+    assert_equal 'Invalid primary transaction ID or not found', response.message
   end
 
   def test_successful_verify
@@ -256,7 +299,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(nil, 'abc123|123', @options)
     assert_failure response
-    assert_equal 'Referenced transaction is invalid or not found', response.message
+    assert_equal 'Invalid primary transaction ID or not found', response.message
   end
 
   def test_successful_credit
