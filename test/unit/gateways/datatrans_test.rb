@@ -30,6 +30,7 @@ class DatatransTest < Test::Unit::TestCase
     @transaction_reference = '240214093712238757|093712'
 
     @billing_address = address
+    @no_country_billing_address = address(country: nil)
 
     @nt_credit_card = network_tokenization_credit_card(
       '4111111111111111',
@@ -79,6 +80,19 @@ class DatatransTest < Test::Unit::TestCase
       assert_match(@billing_address[:phone], billing['phoneNumber'])
       assert_match(@billing_address[:zip], billing['zipCode'])
       assert_match(@options[:email], billing['email'])
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_authorize_with_credit_card_and_no_country_billing_address
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ billing_address: @no_country_billing_address }))
+    end.check_request do |_action, endpoint, data, _headers|
+      parsed_data = JSON.parse(data)
+      common_assertions_authorize_purchase(endpoint, parsed_data)
+      billing = parsed_data['billing']
+      assert_nil billing['country']
     end.respond_with(successful_authorize_response)
 
     assert_success response

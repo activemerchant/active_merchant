@@ -30,6 +30,7 @@ class RemoteDatatransTest < Test::Unit::TestCase
     }
 
     @billing_address = address
+    @no_country_billing_address = address(country: nil)
 
     @google_pay_card = network_tokenization_credit_card(
       '4900000000000094',
@@ -217,6 +218,12 @@ class RemoteDatatransTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_billing_address
     response = @gateway.purchase(@amount, @credit_card, @options.merge({ billing_address: @billing_address }))
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_no_country_billing_address
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ billing_address: @no_country_billing_address }))
 
     assert_success response
   end

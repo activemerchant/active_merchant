@@ -131,6 +131,12 @@ module ActiveMerchant #:nodoc:
         post[:card].merge!(three_ds)
       end
 
+      def country_code(country)
+        Country.find(country).code(:alpha3).value if country
+      rescue InvalidCountryCodeError
+        nil
+      end
+
       def add_billing_address(post, options)
         return unless billing_address = options[:billing_address]
 
@@ -139,7 +145,7 @@ module ActiveMerchant #:nodoc:
           street: billing_address[:address1],
           street2: billing_address[:address2],
           city: billing_address[:city],
-          country: Country.find(billing_address[:country]).code(:alpha3).value, # pass country alpha 2 to country alpha 3,
+          country: country_code(billing_address[:country]),
           phoneNumber: billing_address[:phone],
           zipCode: billing_address[:zip],
           email: options[:email]
