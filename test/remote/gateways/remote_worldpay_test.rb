@@ -147,6 +147,50 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       transaction_id: '123456789',
       eci: '05'
     )
+
+    @aft_options = {
+      account_funding_transaction: true,
+      aft_type: 'A',
+      aft_payment_purpose: '01',
+      aft_sender_account_type: '02',
+      aft_sender_account_reference: '4111111111111112',
+      aft_sender_full_name: {
+        first: 'First',
+        middle: 'Middle',
+        last: 'Sender'
+      },
+      aft_sender_funding_address: {
+        address1: '123 Sender St',
+        address2: 'Apt 1',
+        postal_code: '12345',
+        city: 'Senderville',
+        state: 'NC',
+        country_code: 'US'
+      },
+      aft_recipient_account_type: '03',
+      aft_recipient_account_reference: '4111111111111111',
+      aft_recipient_full_name: {
+        first: 'First',
+        middle: 'Middle',
+        last: 'Recipient'
+      },
+      aft_recipient_funding_address: {
+        address1: '123 Recipient St',
+        address2: 'Apt 1',
+        postal_code: '12345',
+        city: 'Recipientville',
+        state: 'NC',
+        country_code: 'US'
+      },
+      aft_recipient_funding_data: {
+        telephone_number: '123456789',
+        birth_date: {
+          day_of_month: '01',
+          month: '01',
+          year: '1980'
+        }
+      }
+    }
   end
 
   def test_successful_purchase
@@ -919,6 +963,34 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     credit = @cftgateway.credit(@amount, cc, @options)
     assert_success credit
     assert_equal 'SUCCESS', credit.message
+  end
+
+  def test_successful_visa_account_funding_transfer
+    credit = @gateway.credit(@amount, @credit_card, @options.merge(@aft_options))
+    assert_success credit
+    assert_equal 'SUCCESS', credit.message
+  end
+
+  def test_successful_visa_account_funding_transfer_via_token
+    assert store = @gateway.store(@credit_card, @store_options)
+    assert_success store
+
+    credit = @gateway.credit(@amount, store.authorization, @options.merge(@aft_options))
+    assert_success credit
+    assert_equal 'SUCCESS', credit.message
+  end
+
+  def test_failed_visa_account_funding_transfer
+    credit = @gateway.credit(@amount, credit_card('4111111111111111', name: 'REFUSED'), @options.merge(@aft_options))
+    assert_failure credit
+    assert_equal 'REFUSED', credit.message
+  end
+
+  def test_failed_visa_account_funding_transfer_acquirer_error
+    credit = @gateway.credit(@amount, credit_card('4111111111111111', name: 'ACQERROR'), @options.merge(@aft_options))
+    assert_failure credit
+    assert_equal 'ACQUIRER ERROR', credit.message
+    assert_equal '20', credit.error_code
   end
 
   # These three fast_fund_credit tests are currently failing with the message: Disbursement transaction not supported
