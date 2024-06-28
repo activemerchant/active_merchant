@@ -33,6 +33,7 @@ module ActiveMerchant #:nodoc:
         add_recurring_flag(post, options)
         add_soft_descriptors(post, options)
         add_three_ds(post, options)
+        post['storeID'] = options[:store_id] if options[:store_id]
         commit('processAuth', post)
       end
 
@@ -45,6 +46,7 @@ module ActiveMerchant #:nodoc:
         add_recurring_flag(post, options)
         add_soft_descriptors(post, options)
         add_three_ds(post, options)
+        post['storeID'] = options[:store_id] if options[:store_id]
         commit('processCard', post)
       end
 
@@ -113,9 +115,9 @@ module ActiveMerchant #:nodoc:
         post['customerCity'] = address[:city]
         post['customerAddress'] = address[:address1]
         post['customerPostCode'] = address[:zip]
-        post['customerIP'] = address[:ip]
-        post['customerPhone'] = address[:phone]
-        post['customerEmail'] = address[:email]
+        post['customerIP'] = address[:ip] || options[:ip]
+        post['customerPhone'] = address[:phone] || address[:phone_number]
+        post['customerEmail'] = address[:email] || options[:email]
       end
 
       def add_order_id(post, options)
