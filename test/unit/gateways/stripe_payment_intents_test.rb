@@ -926,6 +926,16 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal 'Y', purchase.avs_result.dig('code')
   end
 
+  def test_create_setup_intent_with_moto_exemption
+    options = @options.merge(moto: true, confirm: true)
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.create_setup_intent(@visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/\[moto\]=true/, data)
+    end.respond_with(successful_verify_response)
+  end
+
   private
 
   def successful_setup_purchase
