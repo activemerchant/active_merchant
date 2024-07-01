@@ -505,7 +505,7 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/i8=#{eci}%3A#{cavv}%3Anone/, data)
-      assert_match(/3ds_version=2.0/, data)
+      assert_match(/3ds_version=2/, data)
       assert_match(/3ds_dstrxid=#{ds_transaction_id}/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -526,7 +526,7 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/i8=#{eci}%3Anone%3Anone/, data)
-      assert_match(/3ds_version=2.0/, data)
+      assert_match(/3ds_version=2.2.0/, data)
       assert_match(/3ds_dstrxid=#{ds_transaction_id}/, data)
     end.respond_with(successful_purchase_response)
   end
