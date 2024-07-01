@@ -415,7 +415,7 @@ module ActiveMerchant #:nodoc:
           three_d_secure_options[:eci],
           three_d_secure_options[:cavv]
         )
-        post[:'3ds_version'] = three_d_secure_options[:version]&.start_with?('2') ? '2.0' : three_d_secure_options[:version]
+        post[:'3ds_version'] = three_d_secure_options[:version] == '2' ? '2.0' : three_d_secure_options[:version]
         post[:'3ds_dstrxid'] = three_d_secure_options[:ds_transaction_id]
       end
 
