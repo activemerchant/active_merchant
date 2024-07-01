@@ -96,6 +96,10 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       ignore_cvv: 'true',
       commerce_indicator: 'internet',
       user_po: 'ABC123',
+      merchant_descriptor_country: 'US',
+      merchant_descriptor_state: 'NY',
+      merchant_descriptor_city: 'test123',
+      submerchant_id: 'AVSBSGDHJMNGFR',
       taxable: true,
       sales_slip_number: '456',
       airline_agent_code: '7Q',
@@ -129,6 +133,8 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     + '1111111115555555222233101abcdefghijkl7777777777777777777777777promotionCde'
   end
 
+  # Scrubbing is working but may fail at the @credit_card.verification_value assertion
+  # if the the 3 digits are showing up in the Cybersource requestID
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)

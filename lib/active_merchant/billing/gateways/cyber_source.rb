@@ -609,12 +609,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_merchant_descriptor(xml, options)
-        return unless options[:merchant_descriptor] || options[:user_po] || options[:taxable] || options[:reference_data_code] || options[:invoice_number]
+        return unless options[:merchant_descriptor] ||
+                      options[:user_po] ||
+                      options[:taxable] ||
+                      options[:reference_data_code] ||
+                      options[:invoice_number] ||
+                      options[:merchant_descriptor_city] ||
+                      options[:submerchant_id] ||
+                      options[:merchant_descriptor_state] ||
+                      options[:merchant_descriptor_country]
 
         xml.tag! 'invoiceHeader' do
           xml.tag! 'merchantDescriptor', options[:merchant_descriptor] if options[:merchant_descriptor]
+          xml.tag! 'merchantDescriptorCity', options[:merchant_descriptor_city] if options[:merchant_descriptor_city]
+          xml.tag! 'merchantDescriptorState', options[:merchant_descriptor_state] if options[:merchant_descriptor_state]
+          xml.tag! 'merchantDescriptorCountry', options[:merchant_descriptor_country] if options[:merchant_descriptor_country]
           xml.tag! 'userPO', options[:user_po] if options[:user_po]
           xml.tag! 'taxable', options[:taxable] if options[:taxable]
+          xml.tag! 'submerchantID', options[:submerchant_id] if options[:submerchant_id]
           xml.tag! 'referenceDataCode', options[:reference_data_code] if options[:reference_data_code]
           xml.tag! 'invoiceNumber', options[:invoice_number] if options[:invoice_number]
         end

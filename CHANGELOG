@@ -18,6 +18,7 @@
 * StripePI: Add optional ability for 3DS exemption on verify calls [yunnydang] #5160
 * CyberSource: Update stored credentials [sinourain] #5136
 * Orbital: Update to accept UCAF Indicator GSF [almalee24] #5150
+* CyberSource: Add addtional invoiceHeader fields [yunnydang] #5161
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860
