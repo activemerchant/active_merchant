@@ -709,10 +709,14 @@ module ActiveMerchant #:nodoc:
         xml.tag!(:XID, three_d_secure[:xid]) if three_d_secure[:xid]
       end
 
+      PYMT_PROGRAM_CODE_BY_BRAND = {
+        'american_express' => 'ASK',
+        'discover' => 'DPB'
+      }.freeze
       def add_pymt_brand_program_code(xml, credit_card, three_d_secure)
-        return unless three_d_secure && credit_card.brand == 'american_express'
+        return unless three_d_secure && (code = PYMT_PROGRAM_CODE_BY_BRAND[credit_card.brand])
 
-        xml.tag!(:PymtBrandProgramCode, 'ASK')
+        xml.tag!(:PymtBrandProgramCode, code)
       end
 
       def mastercard?(payment_source)
