@@ -248,11 +248,13 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_purchase_includes_invoice_header
     stub_comms do
-      @gateway.purchase(100, @credit_card, merchant_descriptor: 'Spreedly', reference_data_code: '3A', invoice_number: '1234567')
+      @gateway.purchase(100, @credit_card, merchant_descriptor: 'Spreedly', reference_data_code: '3A', invoice_number: '1234567', merchant_descriptor_city: 'test123', submerchant_id: 'AVSBSGDHJMNGFR')
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<merchantDescriptor>Spreedly<\/merchantDescriptor>/, data)
       assert_match(/<referenceDataCode>3A<\/referenceDataCode>/, data)
       assert_match(/<invoiceNumber>1234567<\/invoiceNumber>/, data)
+      assert_match(/<merchantDescriptorCity>test123<\/merchantDescriptorCity>/, data)
+      assert_match(/<submerchantID>AVSBSGDHJMNGFR<\/submerchantID>/, data)
     end.respond_with(successful_purchase_response)
   end
 
