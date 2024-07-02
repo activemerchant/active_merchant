@@ -172,6 +172,7 @@ module ActiveMerchant #:nodoc:
             add_fulfillment_date(post, options)
             request_three_d_secure(post, options)
             add_card_brand(post, options)
+            add_exemption(post, options)
             post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
             post[:usage] = options[:usage] if %w(on_session off_session).include?(options[:usage])
             post[:description] = options[:description] if options[:description]
@@ -531,7 +532,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_exemption(post, options = {})
-        return unless options[:confirm]
+        return unless options[:confirm] && options[:moto]
 
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
