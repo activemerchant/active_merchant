@@ -218,7 +218,7 @@ module ActiveMerchant #:nodoc:
         three_d_secure_options = options[:three_d_secure]
 
         post[:threeds_version] = three_d_secure_options[:version]
-        post[:crypt_type] = three_d_secure_options[:eci]
+        post[:crypt_type] = three_d_secure_options.dig(:eci)&.to_s&.sub!(/^0/, '')
         post[:cavv] = three_d_secure_options[:cavv]
         post[:threeds_server_trans_id] = three_d_secure_options[:three_ds_server_trans_id]
         post[:ds_trans_id] = three_d_secure_options[:ds_transaction_id]

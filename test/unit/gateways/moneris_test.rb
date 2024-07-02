@@ -15,7 +15,7 @@ class MonerisTest < Test::Unit::TestCase
     @credit_card = credit_card('4242424242424242')
 
     # https://developer.moneris.com/livedemo/3ds2/reference/guide/php
-    @fully_authenticated_eci = 5
+    @fully_authenticated_eci = '02'
     @no_liability_shift_eci = 7
 
     @options = { order_id: '1', customer: '1', billing_address: address }
@@ -86,6 +86,7 @@ class MonerisTest < Test::Unit::TestCase
       assert_match(/<ds_trans_id>12345<\/ds_trans_id>/, data)
       assert_match(/<threeds_server_trans_id>d0f461f8-960f-40c9-a323-4e43a4e16aaa<\/threeds_server_trans_id>/, data)
       assert_match(/<threeds_version>2<\/threeds_version>/, data)
+      assert_match(/<crypt_type>2<\/crypt_type>/, data)
     end.respond_with(failed_cavv_purchase_response)
 
     assert_failure response
