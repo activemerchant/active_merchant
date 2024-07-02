@@ -323,7 +323,7 @@ module ActiveMerchant #:nodoc:
       def valid_payment_method?(payment_method)
         return true unless payment_method.is_a?(NetworkTokenizationCreditCard)
 
-        %w(visa master american_express).include?(card_brand(payment_method))
+        %w(visa master american_express discover).include?(card_brand(payment_method))
       end
 
       # Create all required address hash key value pairs
@@ -895,7 +895,7 @@ module ActiveMerchant #:nodoc:
         brand = card_brand(payment_method).to_sym
 
         case brand
-        when :visa
+        when :visa, :discover
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
             xml.tag!('cavv', payment_method.payment_cryptogram) unless commerce_indicator
             xml.commerceIndicator commerce_indicator.nil? ? ECI_BRAND_MAPPING[brand] : commerce_indicator
