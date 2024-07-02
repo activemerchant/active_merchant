@@ -113,6 +113,7 @@ class FlexChargeTest < Test::Unit::TestCase
         assert_equal request['transaction']['avsResultCode'], @options[:avs_result_code]
         assert_equal request['transaction']['cvvResultCode'], @options[:cvv_result_code]
         assert_equal request['transaction']['cavvResultCode'], @options[:cavv_result_code]
+        assert_equal request['transaction']['transactionType'], 'Purchase'
         assert_equal request['payer']['email'], @options[:email]
         assert_equal request['description'], @options[:description]
       end
@@ -120,8 +121,17 @@ class FlexChargeTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal 'ca7bb327-a750-412d-a9c3-050d72b3f0c5', response.authorization
+    assert_equal 'ca7bb327-a750-412d-a9c3-050d72b3f0c5#USD', response.authorization
     assert response.test?
+  end
+
+  def test_successful_authorization
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_method, endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['transaction']['transactionType'], 'Authorization' if /evaluate/.match?(endpoint)
+    end.respond_with(successful_access_token_response, successful_purchase_response)
   end
 
   def test_successful_purchase_three_ds_global
@@ -129,7 +139,7 @@ class FlexChargeTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @three_d_secure_options)
     end.respond_with(successful_access_token_response, successful_purchase_response)
     assert_success response
-    assert_equal 'ca7bb327-a750-412d-a9c3-050d72b3f0c5', response.authorization
+    assert_equal 'ca7bb327-a750-412d-a9c3-050d72b3f0c5#USD', response.authorization
     assert response.test?
   end
 
@@ -186,17 +196,25 @@ class FlexChargeTest < Test::Unit::TestCase
   end
 
   def test_address_names_from_address
-    names = @gateway.send(:address_names, @options[:billing_address][:name], @credit_card)
+    names = @gateway.send(:names_from_address, @options[:billing_address], @credit_card)
 
     assert_equal 'Cure', names.first
     assert_equal 'Tester', names.last
   end
 
   def test_address_names_from_credit_card
-    names = @gateway.send(:address_names, 'Doe', @credit_card)
+    @options.delete(:billing_address)
+    names = @gateway.send(:names_from_address, {}, @credit_card)
 
     assert_equal 'Longbob', names.first
-    assert_equal 'Doe', names.last
+    assert_equal 'Longsen', names.last
+  end
+
+  def test_address_names_when_passing_string_token
+    names = @gateway.send(:names_from_address, @options[:billing_address], SecureRandom.uuid)
+
+    assert_equal 'Cure', names.first
+    assert_equal 'Tester', names.last
   end
 
   def test_successful_store
@@ -216,6 +234,36 @@ class FlexChargeTest < Test::Unit::TestCase
       request = JSON.parse(data)
       assert_equal request['orderSessionKey'], session_id if /outcome/.match?(endpoint)
     end.respond_with(successful_access_token_response, successful_purchase_response)
+  end
+
+  def test_address_when_billing_address_provided
+    address = @gateway.send(:address, @options)
+    assert_equal 'CA', address[:country]
+  end
+
+  def test_address_when_address_is_provided_in_options
+    @options.delete(:billing_address)
+    @options[:address] = { country: 'US' }
+    address = @gateway.send(:address, @options)
+    assert_equal 'US', address[:country]
+  end
+
+  def test_authorization_from_on_store
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options)
+    end.respond_with(successful_access_token_response, successful_store_response)
+
+    assert_success response
+    assert_equal 'd3e10716-6aac-4eb8-a74d-c1a3027f1d96', response.authorization
+  end
+
+  def test_authorization_from_on_purchase
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_access_token_response, successful_purchase_response)
+
+    assert_success response
+    assert_equal 'ca7bb327-a750-412d-a9c3-050d72b3f0c5#USD', response.authorization
   end
 
   private

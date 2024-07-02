@@ -17,10 +17,11 @@ module ActiveMerchant #:nodoc:
         sync: 'outcome',
         refund: 'orders/%s/refund',
         store: 'tokenize',
-        inquire: 'orders/%s'
+        inquire: 'orders/%s',
+        capture: 'capture'
       }
 
-      SUCCESS_MESSAGES = %w(APPROVED CHALLENGE SUBMITTED SUCCESS PROCESSING).freeze
+      SUCCESS_MESSAGES = %w(APPROVED CHALLENGE SUBMITTED SUCCESS PROCESSING CAPTUREREQUIRED).freeze
 
       def initialize(options = {})
         requires!(options, :app_key, :app_secret, :site_id, :mid)
@@ -28,27 +29,50 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, credit_card, options = {})
+        options[:transactionType] ||= 'Purchase'
+
         post = {}
-        address = options[:billing_address] || options[:address]
         add_merchant_data(post, options)
         add_base_data(post, options)
         add_invoice(post, money, credit_card, options)
         add_mit_data(post, options)
-        add_payment_method(post, credit_card, address, options)
-        add_address(post, credit_card, address)
+        add_payment_method(post, credit_card, address(options), options)
+        add_address(post, credit_card, address(options))
         add_customer_data(post, options)
         add_three_ds(post, options)
 
         commit(:purchase, post)
       end
 
+      def authorize(money, credit_card, options = {})
+        options[:transactionType] = 'Authorization'
+        purchase(money, credit_card, options)
+      end
+
+      def capture(money, authorization, options = {})
+        order_id, currency = authorization.split('#')
+        post = {
+          idempotencyKey: options[:idempotency_key] || SecureRandom.uuid,
+          orderId: order_id,
+          amount: money,
+          currency: currency
+        }
+
+        commit(:capture, post, authorization)
+      end
+
       def refund(money, authorization, options = {})
-        commit(:refund, { amountToRefund: (money.to_f / 100).round(2) }, authorization)
+        order_id, _currency = authorization.split('#')
+        self.money_format = :dollars
+        commit(:refund, { amountToRefund: localized_amount(money, 2).to_f }, order_id)
+      end
+
+      def void(money, authorization, options = {})
+        refund(money, authorization, options)
       end
 
       def store(credit_card, options = {})
-        address = options[:billing_address] || options[:address] || {}
-        first_name, last_name = address_names(address[:name], credit_card)
+        first_name, last_name = names_from_address(address(options), credit_card)
 
         post = {
           payment_method: {
@@ -84,10 +108,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def inquire(authorization, options = {})
-        commit(:inquire, {}, authorization, :get)
+        order_id, _currency = authorization.split('#')
+        commit(:inquire, {}, order_id, :get)
       end
 
       private
+
+      def address(options)
+        options[:billing_address] || options[:address] || {}
+      end
 
       def add_three_ds(post, options)
         return unless three_d_secure = options[:three_d_secure]
@@ -129,7 +158,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, payment, address)
-        first_name, last_name = address_names(address[:name], payment)
+        first_name, last_name = names_from_address(address, payment)
 
         post[:billingInformation] = {
           firstName: first_name,
@@ -157,6 +186,7 @@ module ActiveMerchant #:nodoc:
           avsResultCode: options[:avs_result_code],
           cvvResultCode: options[:cvv_result_code],
           cavvResultCode: options[:cavv_result_code],
+          transactionType: options[:transactionType],
           cardNotPresent: credit_card.is_a?(String) ? false : credit_card.verification_value.blank?
         }.compact
       end
@@ -182,10 +212,10 @@ module ActiveMerchant #:nodoc:
         post[:paymentMethod] = payment_method.compact
       end
 
-      def address_names(address_name, payment_method)
-        split_names(address_name).tap do |names|
-          names[0] = payment_method&.first_name unless names[0].present?
-          names[1] = payment_method&.last_name unless names[1].present?
+      def names_from_address(address, payment_method)
+        split_names(address[:name]).tap do |names|
+          names[0] = payment_method&.first_name unless names[0].present? || payment_method.is_a?(String)
+          names[1] = payment_method&.last_name unless names[1].present? || payment_method.is_a?(String)
         end
       end
 
@@ -253,7 +283,7 @@ module ActiveMerchant #:nodoc:
           success_from(action, response),
           message_from(response),
           response,
-          authorization: authorization_from(action, response),
+          authorization: authorization_from(action, response, post),
           test: test?,
           error_code: error_code_from(action, response)
         )
@@ -280,8 +310,12 @@ module ActiveMerchant #:nodoc:
         response[:title] || response[:responseMessage] || response[:statusName] || response[:status]
       end
 
-      def authorization_from(action, response)
-        action == :store ? response.dig(:transaction, :payment_method, :token) : response[:orderId]
+      def authorization_from(action, response, options)
+        if action == :store
+          response.dig(:transaction, :payment_method, :token)
+        elsif success_from(action, response)
+          [response[:orderId], options[:currency] || default_currency].compact.join('#')
+        end
       end
 
       def error_code_from(action, response)

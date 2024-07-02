@@ -111,7 +111,26 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     set_credentials!
     response = @gateway.purchase(@amount, @credit_card_mit, @options)
     assert_success response
-    assert_equal 'SUBMITTED', response.message
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_successful_authorize_cit
+    @cit_options[:phone] = '998888'
+    set_credentials!
+    response = @gateway.authorize(@amount, @credit_card_mit, @cit_options)
+    assert_success response
+    assert_equal 'CAPTUREREQUIRED', response.message
+  end
+
+  def test_successful_authorize_and_capture_cit
+    @cit_options[:phone] = '998888'
+    set_credentials!
+    response = @gateway.authorize(@amount, @credit_card_mit, @cit_options)
+    assert_success response
+    assert_equal 'CAPTUREREQUIRED', response.message
+
+    assert capture = @gateway.capture(@amount, response.authorization)
+    assert_success capture
   end
 
   def test_failed_purchase
@@ -137,6 +156,16 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
     assert_equal 'DECLINED', refund.message
+  end
+
+  def test_successful_void
+    @cit_options[:phone] = '998888'
+    set_credentials!
+    response = @gateway.authorize(@amount, @credit_card_mit, @cit_options)
+    assert_success response
+
+    assert void = @gateway.void(@amount, response.authorization)
+    assert_success void
   end
 
   def test_partial_refund
@@ -174,9 +203,15 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
   end
 
   def test_successful_inquire_request
+    @cit_options[:phone] = '998888'
     set_credentials!
-    response = @gateway.inquire('abe573e3-7567-4cc6-a7a4-02766dbd881a', {})
+
+    response = @gateway.authorize(@amount, @credit_card_mit, @cit_options)
     assert_success response
+
+    response = @gateway.inquire(response.authorization, {})
+    assert_success response
+    assert_equal 'CAPTUREREQUIRED', response.message
   end
 
   def test_unsuccessful_inquire_request
