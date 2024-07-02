@@ -18,7 +18,7 @@ module ActiveMerchant
     RETRY_SAFE = false
     RUBY_184_POST_HEADERS = { 'Content-Type' => 'application/x-www-form-urlencoded' }
 
-    attr_accessor :endpoint, :open_timeout, :read_timeout, :verify_peer, :ssl_version, :ca_file, :ca_path, :pem, :pem_password, :logger, :tag, :ignore_http_status, :max_retries, :proxy_address, :proxy_port
+    attr_accessor :endpoint, :open_timeout, :read_timeout, :verify_peer, :ssl_version, :ca_file, :ca_path, :pem, :pem_password, :logger, :tag, :ignore_http_status, :max_retries, :proxy_address, :proxy_port, :proxy_user, :proxy_password
 
     if Net::HTTP.instance_methods.include?(:min_version=)
       attr_accessor :min_version
@@ -44,6 +44,8 @@ module ActiveMerchant
       @ssl_connection = {}
       @proxy_address = :ENV
       @proxy_port = nil
+      @proxy_user = nil
+      @proxy_password = nil
     end
 
     def wiredump_device=(device)
@@ -111,7 +113,7 @@ module ActiveMerchant
 
     def http
       @http ||= begin
-        http = Net::HTTP.new(endpoint.host, endpoint.port, proxy_address, proxy_port)
+        http = Net::HTTP.new(endpoint.host, endpoint.port, proxy_address, proxy_port, proxy_user, proxy_password)
         configure_debugging(http)
         configure_timeouts(http)
         configure_ssl(http)
