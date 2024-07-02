@@ -134,6 +134,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r((cvv=)\d+), '\1[FILTERED]').
           gsub(%r((checkaba=)\d+), '\1[FILTERED]').
           gsub(%r((checkaccount=)\d+), '\1[FILTERED]').
+          gsub(%r((cavv=)[^&\n]*), '\1[FILTERED]').
           gsub(%r((cryptogram=)[^&]+(&?)), '\1[FILTERED]\2')
       end
 
@@ -166,7 +167,7 @@ module ActiveMerchant #:nodoc:
         elsif payment_method.is_a?(NetworkTokenizationCreditCard)
           post[:ccnumber] = payment_method.number
           post[:ccexp] = exp_date(payment_method)
-          post[:token_cryptogram] = payment_method.payment_cryptogram
+          add_network_token_fields(post, payment_method)
         elsif card_brand(payment_method) == 'check'
           post[:payment] = 'check'
           post[:firstname] = payment_method.first_name
@@ -184,6 +185,17 @@ module ActiveMerchant #:nodoc:
           post[:ccnumber] = payment_method.number
           post[:cvv] = payment_method.verification_value unless empty?(payment_method.verification_value)
           post[:ccexp] = exp_date(payment_method)
+        end
+      end
+
+      def add_network_token_fields(post, payment_method)
+        if payment_method.source == :apple_pay || payment_method.source == :google_pay
+          post[:cavv] = payment_method.payment_cryptogram
+          post[:eci] = payment_method.eci
+          post[:decrypted_applepay_data] = 1
+          post[:decrypted_googlepay_data] = 1
+        else
+          post[:token_cryptogram] = payment_method.payment_cryptogram
         end
       end
 
