@@ -172,6 +172,17 @@ class FlexChargeTest < Test::Unit::TestCase
     assert_equal '400', response.message
   end
 
+  def test_purchase_using_card_with_no_number
+    credit_card_with_no_number = credit_card
+    credit_card_with_no_number.number = nil
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, credit_card_with_no_number, @options)
+    end.respond_with(successful_access_token_response, successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_failed_refund
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.refund(@amount, 'reference', @options)
