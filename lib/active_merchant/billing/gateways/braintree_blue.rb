@@ -1036,7 +1036,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_bank_account_to_customer(payment_method, options)
-        bank_account_nonce, error_message = TokenNonce.new(@braintree_gateway, options).create_token_nonce_for_payment_method payment_method
+        bank_account_nonce, error_message = TokenNonce.new(@braintree_gateway, options).create_token_nonce_for_payment_method(payment_method, options)
         return Response.new(false, error_message) unless bank_account_nonce.present?
 
         result = @braintree_gateway.payment_method.create(

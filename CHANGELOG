@@ -23,6 +23,7 @@
 * Credorax: Update 3DS version mapping [almalee24] #5159
 * Add Maestro card bins [yunnydang] #5172
 * Braintree: Remove stored credential v1 [almalee24] #5175
+* Braintree Blue: Pass overridden mid into client token for GS 3DS [sinourain] #5166
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860

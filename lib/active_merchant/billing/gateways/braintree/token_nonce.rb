@@ -18,10 +18,10 @@ module ActiveMerchant #:nodoc:
         "https://payments#{'.sandbox' if sandbox}.braintree-api.com/graphql"
       end
 
-      def create_token_nonce_for_payment_method(payment_method)
+      def create_token_nonce_for_payment_method(payment_method, options = {})
         headers = {
           'Accept' => 'application/json',
-          'Authorization' => "Bearer #{client_token}",
+          'Authorization' => "Bearer #{client_token(options)['authorizationFingerprint']}",
           'Content-Type' => 'application/json',
           'Braintree-Version' => '2018-05-10'
         }
@@ -34,9 +34,9 @@ module ActiveMerchant #:nodoc:
         return token, message
       end
 
-      def client_token
-        base64_token = @braintree_gateway.client_token.generate
-        JSON.parse(Base64.decode64(base64_token))['authorizationFingerprint']
+      def client_token(options = {})
+        base64_token = @braintree_gateway.client_token.generate({ merchant_account_id: options[:merchant_account_id] || @options[:merchant_account_id] }.compact)
+        JSON.parse(Base64.decode64(base64_token))
       end
 
       private

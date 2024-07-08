@@ -26,8 +26,25 @@ class RemoteBraintreeTokenNonceTest < Test::Unit::TestCase
 
   def test_client_token_generation
     generator = TokenNonce.new(@braintree_backend)
-    token = generator.client_token
-    assert_not_nil token
+    client_token = generator.client_token
+    assert_not_nil client_token
+    assert_not_nil client_token['authorizationFingerprint']
+  end
+
+  def test_client_token_generation_with_mid
+    @options[:merchant_account_id] = '1234'
+    generator = TokenNonce.new(@braintree_backend, @options)
+    client_token = generator.client_token
+    assert_not_nil client_token
+    assert_equal client_token['merchantAccountId'], '1234'
+  end
+
+  def test_client_token_generation_with_a_new_mid
+    @options[:merchant_account_id] = '1234'
+    generator = TokenNonce.new(@braintree_backend, @options)
+    client_token = generator.client_token({ merchant_account_id: '5678' })
+    assert_not_nil client_token
+    assert_equal client_token['merchantAccountId'], '5678'
   end
 
   def test_successfully_create_token_nonce_for_bank_account
