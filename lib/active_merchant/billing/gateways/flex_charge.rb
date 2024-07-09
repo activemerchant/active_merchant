@@ -18,7 +18,8 @@ module ActiveMerchant #:nodoc:
         refund: 'orders/%s/refund',
         store: 'tokenize',
         inquire: 'orders/%s',
-        capture: 'capture'
+        capture: 'capture',
+        void: 'orders/%s/cancel'
       }
 
       SUCCESS_MESSAGES = %w(APPROVED CHALLENGE SUBMITTED SUCCESS PROCESSING CAPTUREREQUIRED).freeze
@@ -68,7 +69,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(money, authorization, options = {})
-        refund(money, authorization, options)
+        order_id, _currency = authorization.split('#')
+        commit(:void, {}, order_id)
       end
 
       def store(credit_card, options = {})
@@ -257,6 +259,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
+        body = '{}' if body.blank?
+
         JSON.parse(body).with_indifferent_access
       rescue JSON::ParserError
         {
@@ -301,6 +305,7 @@ module ActiveMerchant #:nodoc:
         case action
         when :store then response.dig(:transaction, :payment_method, :token).present?
         when :inquire then response[:id].present? && SUCCESS_MESSAGES.include?(response[:statusName])
+        when :void then response.empty?
         else
           response[:success] && SUCCESS_MESSAGES.include?(response[:status])
         end
