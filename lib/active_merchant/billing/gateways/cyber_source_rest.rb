@@ -28,7 +28,8 @@ module ActiveMerchant #:nodoc:
         maestro: '042',
         master: '002',
         unionpay: '062',
-        visa: '001'
+        visa: '001',
+        carnet: '058'
       }
 
       WALLET_PAYMENT_SOLUTION = {

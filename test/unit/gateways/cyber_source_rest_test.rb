@@ -17,6 +17,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
       year: 2031
     )
     @master_card = credit_card('2222420000001113', brand: 'master')
+    @carnet_card = credit_card('5062280000000000', brand: 'carnet')
 
     @visa_network_token = network_tokenization_credit_card(
       '4111111111111111',
@@ -583,6 +584,15 @@ class CyberSourceRestTest < Test::Unit::TestCase
       assert_equal '3', request['processingInformation']['purchaseLevel']
       assert_equal '150', request['orderInformation']['amountDetails']['discountAmount']
       assert_equal '90210', request['orderInformation']['shipping_details']['shipFromPostalCode']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_accurate_card_type_and_code_for_carnet
+    stub_comms do
+      @gateway.purchase(100, @carnet_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '058', request['paymentInformation']['card']['type']
     end.respond_with(successful_purchase_response)
   end
 

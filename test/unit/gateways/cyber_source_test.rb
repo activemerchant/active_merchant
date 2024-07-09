@@ -18,6 +18,7 @@ class CyberSourceTest < Test::Unit::TestCase
     @master_credit_card = credit_card('4111111111111111', brand: 'master')
     @elo_credit_card = credit_card('5067310000000010', brand: 'elo')
     @declined_card = credit_card('801111111111111', brand: 'visa')
+    @carnet_card = credit_card('5062280000000000', brand: 'carnet')
     @network_token = network_tokenization_credit_card('4111111111111111',
                                                       brand: 'visa',
                                                       transaction_id: '123',
@@ -1991,6 +1992,14 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_routing_number_formatting_with_canadian_routing_number_and_padding
     assert_equal @gateway.send(:format_routing_number, '012345678', { currency: 'CAD' }), '12345678'
+  end
+
+  def test_accurate_card_type_and_code_for_carnet
+    stub_comms do
+      @gateway.purchase(100, @carnet_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<cardType>058<\/cardType>/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   private
