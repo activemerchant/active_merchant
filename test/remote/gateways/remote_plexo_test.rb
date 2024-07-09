@@ -24,7 +24,8 @@ class RemotePlexoTest < Test::Unit::TestCase
       },
       identification_type: '1',
       identification_value: '123456',
-      billing_address: address
+      billing_address: address,
+      invoice_number: '12345abcde'
     }
 
     @cancel_options = {
@@ -41,10 +42,22 @@ class RemotePlexoTest < Test::Unit::TestCase
         month: '12',
         year: Time.now.year
     })
+
+    @decrypted_network_token = NetworkTokenizationCreditCard.new(
+      {
+        first_name: 'Joe', last_name: 'Doe',
+        brand: 'visa',
+        payment_cryptogram: 'UnVBR0RlYm42S2UzYWJKeWJBdWQ=',
+        number: '5555555555554444',
+        source: :network_token,
+        month: '12',
+        year: Time.now.year
+      }
+    )
   end
 
   def test_successful_purchase_with_network_token
-    response = @gateway.purchase(@amount, @network_token_credit_card, @options.merge({ invoice_number: '12345abcde' }))
+    response = @gateway.purchase(@amount, @decrypted_network_token, @options.merge({ invoice_number: '12345abcde' }))
     assert_success response
     assert_equal 'You have been mocked.', response.message
   end

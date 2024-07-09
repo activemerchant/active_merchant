@@ -346,9 +346,9 @@ class PlexoTest < Test::Unit::TestCase
       assert_equal request['Amount']['Currency'], 'UYU'
       assert_equal request['Amount']['Details']['TipAmount'], '5'
       assert_equal request['Flow'], 'direct'
-      assert_equal @network_token_credit_card.number, request['paymentMethod']['Card']['Number']
-      assert_equal @network_token_credit_card.payment_cryptogram, request['paymentMethod']['Card']['Cryptogram']
-      assert_equal @network_token_credit_card.first_name, request['paymentMethod']['Card']['Cardholder']['FirstName']
+      assert_equal @network_token_credit_card.number, request['paymentMethod']['NetworkToken']['Number']
+      assert_equal @network_token_credit_card.payment_cryptogram, request['paymentMethod']['NetworkToken']['Cryptogram']
+      assert_equal @network_token_credit_card.first_name, request['paymentMethod']['NetworkToken']['Cardholder']['FirstName']
     end.respond_with(successful_network_token_response)
 
     assert_success purchase

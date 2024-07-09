@@ -196,19 +196,48 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(post, payment, options)
-        post[:paymentMethod] = {}
+        payment_method = build_payment_method(payment)
 
-        if payment&.is_a?(CreditCard)
-          post[:paymentMethod][:type] = 'card'
-          post[:paymentMethod][:Card] = {}
-          post[:paymentMethod][:Card][:Number] = payment.number
-          post[:paymentMethod][:Card][:ExpMonth] = format(payment.month, :two_digits) if payment.month
-          post[:paymentMethod][:Card][:ExpYear] = format(payment.year, :two_digits) if payment.year
-          post[:paymentMethod][:Card][:Cvc] = payment.verification_value if payment.verification_value
-
-          add_card_holder(post[:paymentMethod][:Card], payment, options)
+        if payment_method.present?
+          add_card_holder(payment_method[:NetworkToken] || payment_method[:Card], payment, options)
+          post[:paymentMethod] = payment_method
         end
-        post[:paymentMethod][:Card][:Cryptogram] = payment.payment_cryptogram if payment&.is_a?(NetworkTokenizationCreditCard)
+      end
+
+      def build_payment_method(payment)
+        case payment
+        when NetworkTokenizationCreditCard
+          {
+            source: 'network-token',
+            id: payment.brand,
+            NetworkToken: {
+              Number: payment.number,
+              Bin: get_last_eight_digits(payment.number),
+              Last4: get_last_four_digits(payment.number),
+              ExpMonth: (format(payment.month, :two_digits) if payment.month),
+              ExpYear: (format(payment.year, :two_digits) if payment.year),
+              Cryptogram: payment.payment_cryptogram
+            }
+          }
+        when CreditCard
+          {
+            type: 'card',
+            Card: {
+              Number: payment.number,
+              ExpMonth: (format(payment.month, :two_digits) if payment.month),
+              ExpYear: (format(payment.year, :two_digits) if payment.year),
+              Cvc: payment.verification_value
+            }
+          }
+        end
+      end
+
+      def get_last_eight_digits(number)
+        number[-8..-1]
+      end
+
+      def get_last_four_digits(number)
+        number[-4..-1]
       end
 
       def add_card_holder(card, payment, options)
