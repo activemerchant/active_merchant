@@ -26,6 +26,7 @@ class ElavonTest < Test::Unit::TestCase
 
     @credit_card = credit_card
     @amount = 100
+    @stored_card = '4421912014039990'
 
     @options = {
       order_id: '1',
@@ -45,9 +46,12 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_cvv2cvc2>123<\/ssl_cvv2cvc2>/, data)
+    end.respond_with(successful_purchase_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal '093840;180820AD3-27AEE6EF-8CA7-4811-8D1F-E420C3B5041E', response.authorization
     assert response.test?
@@ -182,13 +186,23 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def test_sends_ssl_token_field
-    response = stub_comms do
+    purchase_response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(ssl_token: '8675309'))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<ssl_token>8675309<\/ssl_token>/, data)
+      refute_match(/<ssl_card_number/, data)
     end.respond_with(successful_purchase_response)
 
-    assert_success response
+    assert_success purchase_response
+
+    authorize_response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(ssl_token: '8675309'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_token>8675309<\/ssl_token>/, data)
+      refute_match(/<ssl_card_number/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success authorize_response
   end
 
   def test_successful_authorization_with_dynamic_dba
@@ -374,7 +388,7 @@ class ElavonTest < Test::Unit::TestCase
     ps2000_data = 'A8181831435010530042VE'
     network_transaction_id = "#{oar_data}|#{ps2000_data}"
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { network_transaction_id: network_transaction_id }))
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: network_transaction_id }))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<ssl_oar_data>#{oar_data}<\/ssl_oar_data>/, data)
       assert_match(/<ssl_ps2000_data>#{ps2000_data}<\/ssl_ps2000_data>/, data)
@@ -386,10 +400,276 @@ class ElavonTest < Test::Unit::TestCase
     ps2000_data = nil
     network_transaction_id = "#{oar_data}|#{ps2000_data}"
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { network_transaction_id: network_transaction_id }))
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: network_transaction_id }))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<ssl_oar_data>#{oar_data}<\/ssl_oar_data>/, data)
-      refute_match(/<ssl_ps2000_data>/, data)
+      refute_match(/<ssl_ps2000_data/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_stored_credential_pass_in_initial_recurring_request
+    recurring_params = {
+      stored_cred_v2: true,
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring',
+        initiator: 'merchant',
+        network_transaction_id: nil
+      }
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(recurring_params))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_cvv2cvc2>123<\/ssl_cvv2cvc2>/, data)
+      assert_match(/<ssl_recurring_flag>1<\/ssl_recurring_flag>/, data)
+      refute_match(/<ssl_ps2000_data/, data)
+      refute_match(/<ssl_oar_data/, data)
+      refute_match(/<ssl_approval_code/, data)
+      refute_match(/<ssl_entry_mode/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_stored_credential_pass_in_recurring_request
+    recurring_params = {
+      stored_cred_v2: true,
+      approval_code: '1234566',
+      stored_credential: {
+        reason_type: 'recurring',
+        initiator: 'merchant',
+        initial_transaction: false,
+        network_transaction_id: '010012130901291622040000047554200000000000155836402916121309|A7540295892588345510A'
+      }
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(recurring_params))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_ps2000_data>A7540295892588345510A<\/ssl_ps2000_data>/, data)
+      assert_match(/<ssl_oar_data>010012130901291622040000047554200000000000155836402916121309<\/ssl_oar_data>/, data)
+      assert_match(/<ssl_approval_code>1234566<\/ssl_approval_code>/, data)
+      assert_match(/<ssl_recurring_flag>1<\/ssl_recurring_flag>/, data)
+      refute_match(/<ssl_entry_mode/, data)
+      refute_match(/<ssl_cvv2cvc2/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_stored_credential_pass_in_installment_request
+    installment_params = {
+      stored_cred_v2: true,
+      installments: '4',
+      payment_number: '2',
+      approval_code: '1234566',
+      stored_credential: {
+        reason_type: 'installment',
+        initiator: 'merchant',
+        initial_transaction: false,
+        network_transaction_id: '010012130901291622040000047554200000000000155836402916121309|A7540295892588345510A'
+      }
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(installment_params))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_ps2000_data>A7540295892588345510A<\/ssl_ps2000_data>/, data)
+      assert_match(/<ssl_oar_data>010012130901291622040000047554200000000000155836402916121309<\/ssl_oar_data>/, data)
+      assert_match(/<ssl_approval_code>1234566<\/ssl_approval_code>/, data)
+      assert_match(/<ssl_recurring_flag>2<\/ssl_recurring_flag>/, data)
+      assert_match(/<ssl_payment_number>2<\/ssl_payment_number>/, data)
+      assert_match(/<ssl_payment_count>4<\/ssl_payment_count>/, data)
+      refute_match(/<ssl_entry_mode/, data)
+      refute_match(/<ssl_cvv2cvc2/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_stored_credential_pass_in_unscheduled_with_additional_data_request
+    unscheduled_params = {
+      stored_cred_v2: true,
+      approval_code: '1234566',
+      par_value: '1234567890',
+      association_token_data: '1',
+      stored_credential: {
+        reason_type: 'unscheduled',
+        initiator: 'merchant',
+        initial_transaction: false,
+        network_transaction_id: '010012130901291622040000047554200000000000155836402916121309|A7540295892588345510A'
+      }
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(unscheduled_params))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_ps2000_data>A7540295892588345510A<\/ssl_ps2000_data>/, data)
+      assert_match(/<ssl_oar_data>010012130901291622040000047554200000000000155836402916121309<\/ssl_oar_data>/, data)
+      assert_match(/<ssl_approval_code>1234566<\/ssl_approval_code>/, data)
+      assert_match(/<ssl_merchant_initiated_unscheduled>Y<\/ssl_merchant_initiated_unscheduled>/, data)
+      assert_match(/<ssl_entry_mode>12<\/ssl_entry_mode>/, data)
+      assert_match(/<ssl_par_value>1234567890<\/ssl_par_value>/, data)
+      assert_match(/<ssl_association_token_data>1<\/ssl_association_token_data>/, data)
+      refute_match(/<ssl_cvv2cvc2/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_stored_credential_tokenized_card_initial_recurring_request
+    recurring_params = {
+      stored_cred_v2: true,
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring',
+        initiator: 'cardholder',
+        network_transaction_id: nil
+      }
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @stored_card, @options.merge(recurring_params))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_recurring_flag>1<\/ssl_recurring_flag>/, data)
+      refute_match(/<ssl_ps2000_data/, data)
+      refute_match(/<ssl_oar_data/, data)
+      refute_match(/<ssl_approval_code/, data)
+      refute_match(/<ssl_entry_mode/, data)
+      refute_match(/<ssl_cvv2cvc2/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_stored_credential_tokenized_card_recurring_request
+    recurring_params = {
+      stored_cred_v2: true,
+      stored_credential: {
+        reason_type: 'recurring',
+        initiator: 'merchant',
+        network_transaction_id: nil
+      }
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @stored_card, @options.merge(recurring_params))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_recurring_flag>1<\/ssl_recurring_flag>/, data)
+      refute_match(/<ssl_ps2000_data/, data)
+      refute_match(/<ssl_oar_data/, data)
+      refute_match(/<ssl_approval_code/, data)
+      refute_match(/<ssl_entry_mode/, data)
+      refute_match(/<ssl_cvv2cvc2/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_stored_credential_tokenized_card_installment_request
+    installment_params = {
+      stored_cred_v2: true,
+      installments: '4',
+      payment_number: '2',
+      stored_credential: {
+        reason_type: 'installment',
+        initiator: 'merchant',
+        network_transaction_id: nil
+      }
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @stored_card, @options.merge(installment_params))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_recurring_flag>2<\/ssl_recurring_flag>/, data)
+      assert_match(/<ssl_payment_number>2<\/ssl_payment_number>/, data)
+      assert_match(/<ssl_payment_count>4<\/ssl_payment_count>/, data)
+      refute_match(/<ssl_ps2000_data/, data)
+      refute_match(/<ssl_oar_data/, data)
+      refute_match(/<ssl_approval_code/, data)
+      refute_match(/<ssl_entry_mode/, data)
+      refute_match(/<ssl_cvv2cvc2/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_stored_credential_tokenized_card_unscheduled_with_additional_data_request
+    unscheduled_params = {
+      stored_cred_v2: true,
+      par_value: '1234567890',
+      association_token_data: '1',
+      stored_credential: {
+        reason_type: 'unscheduled',
+        initiator: 'merchant',
+        network_transaction_id: nil
+      }
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @stored_card, @options.merge(unscheduled_params))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_merchant_initiated_unscheduled>Y<\/ssl_merchant_initiated_unscheduled>/, data)
+      assert_match(/<ssl_par_value>1234567890<\/ssl_par_value>/, data)
+      assert_match(/<ssl_association_token_data>1<\/ssl_association_token_data>/, data)
+      refute_match(/<ssl_ps2000_data/, data)
+      refute_match(/<ssl_oar_data/, data)
+      refute_match(/<ssl_approval_code/, data)
+      refute_match(/<ssl_entry_mode/, data)
+      refute_match(/<ssl_cvv2cvc2/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_stored_credential_manual_token_recurring_request
+    recurring_params = {
+      stored_cred_v2: true,
+      ssl_token: '4421912014039990',
+      stored_credential: {
+        reason_type: 'recurring',
+        initiator: 'merchant',
+        network_transaction_id: nil
+      }
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(recurring_params))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_recurring_flag>1<\/ssl_recurring_flag>/, data)
+      refute_match(/<ssl_ps2000_data/, data)
+      refute_match(/<ssl_oar_data/, data)
+      refute_match(/<ssl_approval_code/, data)
+      refute_match(/<ssl_entry_mode/, data)
+      refute_match(/<ssl_cvv2cvc2/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_stored_credential_manual_token_installment_request
+    installment_params = {
+      stored_cred_v2: true,
+      ssl_token: '4421912014039990',
+      installments: '4',
+      payment_number: '2',
+      stored_credential: {
+        reason_type: 'installment',
+        initiator: 'merchant',
+        network_transaction_id: nil
+      }
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(installment_params))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_recurring_flag>2<\/ssl_recurring_flag>/, data)
+      assert_match(/<ssl_payment_number>2<\/ssl_payment_number>/, data)
+      assert_match(/<ssl_payment_count>4<\/ssl_payment_count>/, data)
+      refute_match(/<ssl_ps2000_data/, data)
+      refute_match(/<ssl_oar_data/, data)
+      refute_match(/<ssl_approval_code/, data)
+      refute_match(/<ssl_entry_mode/, data)
+      refute_match(/<ssl_cvv2cvc2/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_stored_credential_manual_token_unscheduled_with_additional_data_request
+    unscheduled_params = {
+      stored_cred_v2: true,
+      ssl_token: '4421912014039990',
+      par_value: '1234567890',
+      association_token_data: '1',
+      stored_credential: {
+        reason_type: 'unscheduled',
+        initiator: 'merchant',
+        network_transaction_id: nil
+      }
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(unscheduled_params))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_merchant_initiated_unscheduled>Y<\/ssl_merchant_initiated_unscheduled>/, data)
+      assert_match(/<ssl_par_value>1234567890<\/ssl_par_value>/, data)
+      assert_match(/<ssl_association_token_data>1<\/ssl_association_token_data>/, data)
+      refute_match(/<ssl_ps2000_data/, data)
+      refute_match(/<ssl_oar_data/, data)
+      refute_match(/<ssl_approval_code/, data)
+      refute_match(/<ssl_entry_mode/, data)
+      refute_match(/<ssl_cvv2cvc2/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -398,9 +678,9 @@ class ElavonTest < Test::Unit::TestCase
     ps2000_data = 'A8181831435010530042VE'
     network_transaction_id = "#{oar_data}|#{ps2000_data}"
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { network_transaction_id: network_transaction_id }))
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: network_transaction_id }))
     end.check_request do |_endpoint, data, _headers|
-      refute_match(/<ssl_oar_data>/, data)
+      refute_match(/<ssl_oar_data/, data)
       assert_match(/<ssl_ps2000_data>#{ps2000_data}<\/ssl_ps2000_data>/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -408,19 +688,19 @@ class ElavonTest < Test::Unit::TestCase
   def test_oar_transaction_id_without_pipe
     oar_data = '010012318808182231420000047554200000000000093840023122123188'
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { network_transaction_id: oar_data }))
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: oar_data }))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<ssl_oar_data>#{oar_data}<\/ssl_oar_data>/, data)
-      refute_match(/<ssl_ps2000_data>/, data)
+      refute_match(/<ssl_ps2000_data/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_ps2000_transaction_id_without_pipe
     ps2000_data = 'A8181831435010530042VE'
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { network_transaction_id: ps2000_data }))
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: ps2000_data }))
     end.check_request do |_endpoint, data, _headers|
-      refute_match(/<ssl_oar_data>/, data)
+      refute_match(/<ssl_oar_data/, data)
       assert_match(/<ssl_ps2000_data>#{ps2000_data}<\/ssl_ps2000_data>/, data)
     end.respond_with(successful_purchase_response)
   end
