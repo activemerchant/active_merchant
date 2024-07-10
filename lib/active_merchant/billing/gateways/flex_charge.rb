@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
         commit(:refund, { amountToRefund: localized_amount(money, 2).to_f }, order_id)
       end
 
-      def void(money, authorization, options = {})
+      def void(authorization, options = {})
         order_id, _currency = authorization.split('#')
         commit(:void, {}, order_id)
       end
@@ -145,6 +145,7 @@ module ActiveMerchant #:nodoc:
         post[:isDeclined] = cast_bool(options[:is_declined])
         post[:orderId] = options[:order_id]
         post[:idempotencyKey] = options[:idempotency_key] || options[:order_id]
+        post[:senseKey] = options[:sense_key]
       end
 
       def add_mit_data(post, options)
