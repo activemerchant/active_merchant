@@ -24,7 +24,8 @@ class FlexChargeTest < Test::Unit::TestCase
       cvv_result_code: '111',
       cavv_result_code: '111',
       timezone_utc_offset: '-5',
-      billing_address: address.merge(name: 'Cure Tester')
+      billing_address: address.merge(name: 'Cure Tester'),
+      sense_key: 'abc123'
     }
 
     @cit_options = {
@@ -106,6 +107,7 @@ class FlexChargeTest < Test::Unit::TestCase
         assert_equal request['isDeclined'], @options[:is_declined]
         assert_equal request['orderId'], @options[:order_id]
         assert_equal request['idempotencyKey'], @options[:idempotency_key]
+        assert_equal request['senseKey'], 'abc123'
         assert_equal request['transaction']['timezoneUtcOffset'], @options[:timezone_utc_offset]
         assert_equal request['transaction']['amount'], @amount
         assert_equal request['transaction']['responseCode'], @options[:response_code]

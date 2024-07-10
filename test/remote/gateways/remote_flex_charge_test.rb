@@ -164,7 +164,7 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card_mit, @cit_options)
     assert_success response
 
-    assert void = @gateway.void(@amount, response.authorization)
+    assert void = @gateway.void(response.authorization)
     assert_success void
   end
 
