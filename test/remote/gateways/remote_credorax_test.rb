@@ -9,11 +9,21 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     @credit_card = credit_card('4176661000001015', verification_value: '281', month: '12')
     @fully_auth_card = credit_card('5223450000000007', brand: 'mastercard', verification_value: '090', month: '12')
     @declined_card = credit_card('4176661000001111', verification_value: '681', month: '12')
-    @three_ds_card = credit_card('4761739000060016', verification_value: '212', month: '12')
+    @three_ds_card = credit_card('5455330200000016', verification_value: '737', month: '10', year: Time.now.year + 2)
+    @address = {
+      name:     'Jon Smith',
+      address1: '123 Your Street',
+      address2: 'Apt 2',
+      city:     'Toronto',
+      state:    'ON',
+      zip:      'K2C3N7',
+      country:  'CA',
+      phone_number: '(123)456-7890'
+    }
     @options = {
       order_id: '1',
       currency: 'EUR',
-      billing_address: address,
+      billing_address: @address,
       description: 'Store Purchase'
     }
     @normalized_3ds_2_options = {
@@ -21,8 +31,8 @@ class RemoteCredoraxTest < Test::Unit::TestCase
       shopper_email: 'john.smith@test.com',
       shopper_ip: '77.110.174.153',
       shopper_reference: 'John Smith',
-      billing_address: address(),
-      shipping_address: address(),
+      billing_address: @address,
+      shipping_address: @address,
       order_id: '123',
       execute_threed: true,
       three_ds_version: '2',
@@ -348,7 +358,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
 
     capture = @gateway.capture(0, auth.authorization)
     assert_failure capture
-    assert_equal 'Invalid amount', capture.message
+    assert_equal 'System malfunction', capture.message
   end
 
   def test_successful_purchase_and_void
@@ -482,7 +492,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
   def test_failed_credit_with_zero_amount
     response = @gateway.credit(0, @declined_card, @options)
     assert_failure response
-    assert_equal 'Invalid amount', response.message
+    assert_equal 'Transaction not allowed for cardholder', response.message
   end
 
   def test_successful_verify
