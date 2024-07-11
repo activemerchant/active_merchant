@@ -194,6 +194,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(post, credit_card, address, options)
+        return unless credit_card.number.present?
+
         payment_method = case credit_card
                          when String
                            { Token: true, cardNumber: credit_card }
