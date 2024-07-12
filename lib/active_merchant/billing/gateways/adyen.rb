@@ -755,10 +755,20 @@ module ActiveMerchant #:nodoc:
         post[:metadata].merge!(options[:metadata]) if options[:metadata]
       end
 
-      def parse(body)
+      def parse(response)
+        body = response.body
         return {} if body.blank?
 
-        JSON.parse(body)
+        JSON.parse(body).merge(response.each_header.to_h)
+      end
+
+      def handle_response(response)
+        case response.code.to_i
+        when 200...300
+          response
+        else
+          raise ResponseError.new(response)
+        end
       end
 
       def commit(action, parameters, options)
@@ -766,7 +776,7 @@ module ActiveMerchant #:nodoc:
           raw_response = ssl_post(url(action), post_data(action, parameters), request_headers(options))
           response = parse(raw_response)
         rescue ResponseError => e
-          raw_response = e.response.body
+          raw_response = e.response
           response = parse(raw_response)
         end
 

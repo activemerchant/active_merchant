@@ -192,6 +192,13 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Authorised', response.message
   end
 
+  def test_headers_in_response
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+    refute response.params['content-type'].blank?
+  end
+
   def test_successful_authorize_with_bank_account
     response = @gateway.authorize(@amount, @bank_account, @options)
     assert_success response
