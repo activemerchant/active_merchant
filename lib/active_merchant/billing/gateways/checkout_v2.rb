@@ -661,12 +661,7 @@ module ActiveMerchant #:nodoc:
         elsif response['error_type']
           response['error_type'] + ': ' + response['error_codes'].first
         else
-          response_summary = if options[:threeds_response_message]
-                               response['response_summary'] || response.dig('actions', 0, 'response_summary')
-                             else
-                               response['response_summary']
-                             end
-
+          response_summary = response['response_summary'] || response.dig('actions', 0, 'response_summary')
           response_summary || response['response_code'] || response['status'] || response['message'] || 'Unable to read error message'
         end
       end
@@ -696,11 +691,7 @@ module ActiveMerchant #:nodoc:
         elsif response['error_type']
           response['error_type']
         else
-          response_code = if options[:threeds_response_message]
-                            response['response_code'] || response.dig('actions', 0, 'response_code')
-                          else
-                            response['response_code']
-                          end
+          response_code = response['response_code'] || response.dig('actions', 0, 'response_code')
 
           STANDARD_ERROR_CODE_MAPPING[response_code]
         end
