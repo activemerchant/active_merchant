@@ -912,18 +912,10 @@ module ActiveMerchant #:nodoc:
         return unless (stored_credential = options[:stored_credential])
 
         add_external_vault(parameters, options)
-
-        if options[:stored_credentials_v2]
-          stored_credentials_v2(parameters, stored_credential)
-        else
-          stored_credentials_v1(parameters, stored_credential)
-        end
+        stored_credentials(parameters, stored_credential)
       end
 
-      def stored_credentials_v2(parameters, stored_credential)
-        # Differences between v1 and v2 are
-        # initial_transaction + recurring/installment should be labeled {{reason_type}}_first
-        # unscheduled in AM should map to '' at BT because unscheduled here means not on a fixed timeline or fixed amount
+      def stored_credentials(parameters, stored_credential)
         case stored_credential[:reason_type]
         when 'recurring', 'installment'
           if stored_credential[:initial_transaction]
@@ -935,20 +927,6 @@ module ActiveMerchant #:nodoc:
           parameters[:transaction_source] = stored_credential[:reason_type]
         when 'unscheduled'
           parameters[:transaction_source] = stored_credential[:initiator] == 'merchant' ? stored_credential[:reason_type] : ''
-        else
-          parameters[:transaction_source] = ''
-        end
-      end
-
-      def stored_credentials_v1(parameters, stored_credential)
-        if stored_credential[:initiator] == 'merchant'
-          if stored_credential[:reason_type] == 'installment'
-            parameters[:transaction_source] = 'recurring'
-          else
-            parameters[:transaction_source] = stored_credential[:reason_type]
-          end
-        elsif %w(recurring_first moto).include?(stored_credential[:reason_type])
-          parameters[:transaction_source] = stored_credential[:reason_type]
         else
           parameters[:transaction_source] = ''
         end
