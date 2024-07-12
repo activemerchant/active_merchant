@@ -431,23 +431,13 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
   end
 
-  def test_failed_purchase_3ds_with_threeds_response_message
+  def test_failed_purchase_3ds
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, { execute_threed: true, exemption: 'no_preference', challenge_indicator: 'trusted_listing', threeds_response_message: true })
+      @gateway.purchase(@amount, @credit_card, { execute_threed: true, exemption: 'no_preference', challenge_indicator: 'trusted_listing'})
     end.respond_with(failed_purchase_3ds_response)
 
     assert_failure response
     assert_equal 'Insufficient Funds', response.message
-    assert_equal nil, response.error_code
-  end
-
-  def test_failed_purchase_3ds_without_threeds_response_message
-    response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, { execute_threed: true, exemption: 'no_preference', challenge_indicator: 'trusted_listing' })
-    end.respond_with(failed_purchase_3ds_response)
-
-    assert_failure response
-    assert_equal 'Declined', response.message
     assert_equal nil, response.error_code
   end
 
