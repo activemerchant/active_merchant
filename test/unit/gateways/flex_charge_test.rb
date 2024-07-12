@@ -185,6 +185,16 @@ class FlexChargeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_token
+    payment = 'bb114473-43fc-46c4-9082-ea3dfb490509'
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, payment, @options)
+    end.respond_with(successful_access_token_response, successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_failed_refund
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.refund(@amount, 'reference', @options)

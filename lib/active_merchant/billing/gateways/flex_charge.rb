@@ -195,24 +195,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(post, credit_card, address, options)
-        return unless credit_card.number.present?
-
         payment_method = case credit_card
                          when String
                            { Token: true, cardNumber: credit_card }
-                         else
-                           {
-                             holderName: credit_card.name,
-                             cardType: 'CREDIT',
-                             cardBrand: credit_card.brand&.upcase,
-                             cardCountry: address[:country],
-                             expirationMonth: credit_card.month,
-                             expirationYear: credit_card.year,
-                             cardBinNumber: credit_card.number[0..5],
-                             cardLast4Digits: credit_card.number[-4..-1],
-                             cardNumber: credit_card.number,
-                             Token: false
-                           }
+                         when CreditCard
+                           if credit_card.number
+                             {
+                               holderName: credit_card.name,
+                               cardType: 'CREDIT',
+                               cardBrand: credit_card.brand&.upcase,
+                               cardCountry: address[:country],
+                               expirationMonth: credit_card.month,
+                               expirationYear: credit_card.year,
+                               cardBinNumber: credit_card.number[0..5],
+                               cardLast4Digits: credit_card.number[-4..-1],
+                               cardNumber: credit_card.number,
+                               Token: false
+                             }
+                           else
+                             {}
+                           end
                          end
         post[:paymentMethod] = payment_method.compact
       end
