@@ -41,6 +41,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, credit_card, address(options))
         add_customer_data(post, options)
         add_three_ds(post, options)
+        add_metadata(post, options)
 
         commit(:purchase, post)
       end
@@ -112,6 +113,11 @@ module ActiveMerchant #:nodoc:
       def inquire(authorization, options = {})
         order_id, _currency = authorization.split('#')
         commit(:inquire, {}, order_id, :get)
+      end
+
+      def add_metadata(post, options)
+        post[:Source] = 'Spreedly'
+        post[:ExtraData] = options[:extra_data] if options[:extra_data].present?
       end
 
       private
