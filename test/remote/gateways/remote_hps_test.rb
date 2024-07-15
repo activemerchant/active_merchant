@@ -362,7 +362,6 @@ class RemoteHpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card(
       '4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      verification_value: nil,
       eci: '05',
       source: :apple_pay
     )
@@ -429,56 +428,6 @@ class RemoteHpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       source: :apple_pay
-    )
-    assert response = @gateway.authorize(@amount, credit_card, @options)
-    assert_success response
-    assert_equal 'Success', response.message
-  end
-
-  def test_successful_purchase_with_android_pay_raw_cryptogram_with_eci
-    credit_card = network_tokenization_credit_card(
-      '4242424242424242',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      verification_value: nil,
-      eci: '05',
-      source: :android_pay
-    )
-    assert response = @gateway.purchase(@amount, credit_card, @options)
-    assert_success response
-    assert_equal 'Success', response.message
-  end
-
-  def test_successful_purchase_with_android_pay_raw_cryptogram_without_eci
-    credit_card = network_tokenization_credit_card(
-      '4242424242424242',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      verification_value: nil,
-      source: :android_pay
-    )
-    assert response = @gateway.purchase(@amount, credit_card, @options)
-    assert_success response
-    assert_equal 'Success', response.message
-  end
-
-  def test_successful_auth_with_android_pay_raw_cryptogram_with_eci
-    credit_card = network_tokenization_credit_card(
-      '4242424242424242',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      verification_value: nil,
-      eci: '05',
-      source: :android_pay
-    )
-    assert response = @gateway.authorize(@amount, credit_card, @options)
-    assert_success response
-    assert_equal 'Success', response.message
-  end
-
-  def test_successful_auth_with_android_pay_raw_cryptogram_without_eci
-    credit_card = network_tokenization_credit_card(
-      '4242424242424242',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      verification_value: nil,
-      source: :android_pay
     )
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
