@@ -617,8 +617,21 @@ module ActiveMerchant #:nodoc:
         post[:radar_options] = radar_options unless radar_options.empty?
       end
 
+      def add_header_fields(response)
+        return unless @response_headers.present?
+
+        headers = {}
+        headers['response_headers'] = {}
+        headers['response_headers']['idempotent_replayed'] = @response_headers['idempotent-replayed'] if @response_headers['idempotent-replayed']
+        headers['response_headers']['stripe_should_retry'] = @response_headers['stripe-should-retry'] if @response_headers['stripe-should-retry']
+
+        response.merge!(headers)
+      end
+
       def parse(body)
-        JSON.parse(body)
+        response = JSON.parse(body)
+        add_header_fields(response)
+        response
       end
 
       def post_data(params)
@@ -750,6 +763,18 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response, options)
         !response.key?('error') && response['status'] != 'failed'
+      end
+
+      # Override the regular handle response so we can access the headers
+      # set header fields and values so we can add them to the response body
+      def handle_response(response)
+        @response_headers = response.each_header.to_h if response.respond_to?(:header)
+        case response.code.to_i
+        when 200...300
+          response.body
+        else
+          raise ResponseError.new(response)
+        end
       end
 
       def response_error(raw_response)

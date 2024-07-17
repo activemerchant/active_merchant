@@ -380,6 +380,17 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     refute purchase.params.dig('error', 'payment_intent', 'charges', 'data')[0]['captured']
   end
 
+  def test_unsuccessful_purchase_returns_header_response
+    options = {
+      currency: 'GBP',
+      customer: @customer
+    }
+    assert purchase = @gateway.purchase(@amount, @declined_payment_method, options)
+
+    assert_equal 'Your card was declined.', purchase.message
+    assert_not_nil purchase.params['response_headers']['stripe_should_retry']
+  end
+
   def test_successful_purchase_with_external_auth_data_3ds_1
     options = {
       currency: 'GBP',

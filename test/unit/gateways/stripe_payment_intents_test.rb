@@ -315,6 +315,15 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response)
   end
 
+  def test_failed_authorize_with_idempotent_replayed
+    @gateway.instance_variable_set(:@response_headers, { 'idempotent-replayed' => 'true' })
+    @gateway.expects(:ssl_request).returns(failed_payment_method_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert response.params['response_headers']['idempotent_replayed'], 'true'
+  end
+
   def test_failed_error_on_requires_action
     @gateway.expects(:ssl_request).returns(failed_with_set_error_on_requires_action_response)
 

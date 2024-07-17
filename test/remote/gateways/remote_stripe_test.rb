@@ -207,6 +207,14 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_match(/ch_[a-zA-Z\d]+/, response.authorization)
   end
 
+  def test_unsuccessful_purchase_returns_response_headers
+    assert response = @gateway.purchase(@amount, @declined_card, @options)
+    assert_failure response
+    assert_match %r{Your card was declined}, response.message
+    assert_match Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    assert_not_nil response.params['response_headers']['stripe_should_retry']
+  end
+
   def test_unsuccessful_purchase_with_destination_and_amount
     destination = fixtures(:stripe_destination)[:stripe_user_id]
     custom_options = @options.merge(destination: destination, destination_amount: @amount + 20)
