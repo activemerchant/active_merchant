@@ -29,6 +29,52 @@ class NmiTest < Test::Unit::TestCase
       descriptor_merchant_id: '120',
       descriptor_url: 'url'
     }
+
+    @google_pay = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :google_pay,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      transaction_id: '13456789'
+    )
+
+    @apple_pay = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :apple_pay,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      transaction_id: '13456789'
+    )
+  end
+
+  def test_successful_apple_pay_purchase
+    stub_comms do
+      @gateway.purchase(@amount, @apple_pay)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/type=sale/, data)
+      assert_match(/ccnumber=4111111111111111/, data)
+      assert_match(/ccexp=#{sprintf("%.2i", @apple_pay.month)}#{@apple_pay.year.to_s[-2..-1]}/, data)
+      assert_match(/cavv=EHuWW9PiBkWvqE5juRwDzAUFBAk%3D/, data)
+      assert_match(/eci=05/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_google_pay_purchase
+    stub_comms do
+      @gateway.purchase(@amount, @google_pay)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/type=sale/, data)
+      assert_match(/ccnumber=4111111111111111/, data)
+      assert_match(/ccexp=#{sprintf("%.2i", @google_pay.month)}#{@google_pay.year.to_s[-2..-1]}/, data)
+      assert_match(/cavv=EHuWW9PiBkWvqE5juRwDzAUFBAk%3D/, data)
+      assert_match(/eci=05/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_authorize_and_capture_using_security_key
