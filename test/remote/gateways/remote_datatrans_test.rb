@@ -5,7 +5,7 @@ class RemoteDatatransTest < Test::Unit::TestCase
     @gateway = DatatransGateway.new(fixtures(:datatrans))
 
     @amount = 756
-    @credit_card = credit_card('4242424242424242', verification_value: '123', first_name: 'John', last_name: 'Smith', month: 6, year: 2025)
+    @credit_card = credit_card('4242424242424242', verification_value: '123', first_name: 'John', last_name: 'Smith', month: 6, year: Time.now.year + 1)
     @bad_amount = 100000 # anything grather than 500 EUR
     @credit_card_frictionless = credit_card('4000001000000018', verification_value: '123', first_name: 'John', last_name: 'Smith', month: 6, year: 2025)
 
@@ -181,6 +181,48 @@ class RemoteDatatransTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal response.authorization, nil
+  end
+
+  def test_succesful_store_transaction
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert_include store.params, 'overview'
+    assert_equal store.params['overview'], { 'total' => 1, 'successful' => 1, 'failed' => 0 }
+    assert store.params['responses'].is_a?(Array)
+    assert_include store.params['responses'][0], 'alias'
+    assert_equal store.params['responses'][0]['maskedCC'], '424242xxxxxx4242'
+    assert_include store.params['responses'][0], 'fingerprint'
+  end
+
+  def test_successful_unstore
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    unstore = @gateway.unstore(store.authorization, @options)
+    assert_success unstore
+    assert_equal unstore.params['response_code'], 204
+  end
+
+  def test_successful_store_purchase_unstore_flow
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+    assert_include purchase.params, 'transactionId'
+
+    # second purchase to validate multiple use token
+    second_purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success second_purchase
+
+    unstore = @gateway.unstore(store.authorization, @options)
+    assert_success unstore
+
+    # purchase after unstore to validate deletion
+    response = @gateway.purchase(@amount, store.authorization, @options)
+    assert_failure response
+    assert_equal response.error_code, 'INVALID_ALIAS'
+    assert_equal response.message, 'authorize.card.alias'
   end
 
   def test_failed_void_because_captured_transaction
