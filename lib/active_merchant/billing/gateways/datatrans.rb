@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class DatatransGateway < Gateway
-      self.test_url = 'https://api.sandbox.datatrans.com/v1/transactions/'
-      self.live_url = 'https://api.datatrans.com/v1/transactions/'
+      self.test_url = 'https://api.sandbox.datatrans.com/v1/'
+      self.live_url = 'https://api.datatrans.com/v1/'
 
       self.supported_countries = %w(CH GR US) # to confirm the countries supported.
       self.default_currency = 'CHF'
@@ -72,6 +72,28 @@ module ActiveMerchant #:nodoc:
         commit('cancel', post, { transaction_id: transaction_id })
       end
 
+      def store(payment_method, options = {})
+        exp_year = format(payment_method.year, :two_digits)
+        exp_month = format(payment_method.month, :two_digits)
+
+        post = {
+          requests: [
+            {
+              type: 'CARD',
+              pan: payment_method.number,
+              expiryMonth: exp_month,
+              expiryYear: exp_year
+            }
+          ]
+        }
+        commit('tokenize', post, { expiry_month: exp_month, expiry_year: exp_year })
+      end
+
+      def unstore(authorization, options = {})
+        data_alias = authorization.split('|')[2].split('-')[0]
+        commit('delete_alias', {}, { alias_id: data_alias }, :delete)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -86,27 +108,33 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_payment_method(post, payment_method)
-        card = build_card(payment_method)
-        post[:card] = {
-          expiryMonth: format(payment_method.month, :two_digits),
-          expiryYear: format(payment_method.year, :two_digits)
-        }.merge(card)
-      end
-
-      def build_card(payment_method)
-        if payment_method.is_a?(NetworkTokenizationCreditCard)
-          {
+        case payment_method
+        when String
+          token, exp_month, exp_year = payment_method.split('|')[2].split('-')
+          card = {
+            type: 'ALIAS',
+            alias: token,
+            expiryMonth: exp_month,
+            expiryYear: exp_year
+          }
+        when NetworkTokenizationCreditCard
+          card = {
             type: DEVICE_SOURCE[payment_method.source] ? 'DEVICE_TOKEN' : 'NETWORK_TOKEN',
             tokenType: DEVICE_SOURCE[payment_method.source] || CREDIT_CARD_SOURCE[card_brand(payment_method)],
             token: payment_method.number,
-            cryptogram: payment_method.payment_cryptogram
+            cryptogram: payment_method.payment_cryptogram,
+            expiryMonth: format(payment_method.month, :two_digits),
+            expiryYear: format(payment_method.year, :two_digits)
           }
-        else
-          {
+        when CreditCard
+          card = {
             number: payment_method.number,
-            cvv: payment_method.verification_value.to_s
+            cvv: payment_method.verification_value.to_s,
+            expiryMonth: format(payment_method.month, :two_digits),
+            expiryYear: format(payment_method.year, :two_digits)
           }
         end
+        post[:card] = card
       end
 
       def add_3ds_data(post, payment_method, options)
@@ -157,15 +185,15 @@ module ActiveMerchant #:nodoc:
         post[:amount] = amount(money)
       end
 
-      def commit(action, post, options = {})
-        response = parse(ssl_post(url(action, options), post.to_json, headers))
+      def commit(action, post, options = {}, method = :post)
+        response = parse(ssl_request(method, url(action, options), post.to_json, headers))
         succeeded = success_from(action, response)
 
         Response.new(
           succeeded,
           message_from(succeeded, response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(response, action, options),
           test: test?,
           error_code: error_code_from(response)
         )
@@ -196,26 +224,36 @@ module ActiveMerchant #:nodoc:
       def url(endpoint, options = {})
         case endpoint
         when 'settle', 'credit', 'cancel'
-          "#{test? ? test_url : live_url}#{options[:transaction_id]}/#{endpoint}"
+          "#{test? ? test_url : live_url}transactions/#{options[:transaction_id]}/#{endpoint}"
+        when 'tokenize'
+          "#{test? ? test_url : live_url}aliases/#{endpoint}"
+        when 'delete_alias'
+          "#{test? ? test_url : live_url}aliases/#{options[:alias_id]}"
         else
-          "#{test? ? test_url : live_url}#{endpoint}"
+          "#{test? ? test_url : live_url}transactions/#{endpoint}"
         end
       end
 
       def success_from(action, response)
         case action
         when 'authorize', 'credit'
-          true if response.include?('transactionId') && response.include?('acquirerAuthorizationCode')
+          response.include?('transactionId') && response.include?('acquirerAuthorizationCode')
         when 'settle', 'cancel'
-          true if response.dig('response_code') == 204
+          response.dig('response_code') == 204
+        when 'tokenize'
+          response.dig('responses', 0, 'alias') && response.dig('overview', 'failed') == 0
+        when 'delete_alias'
+          response.dig('response_code') == 204
         else
           false
         end
       end
 
-      def authorization_from(response)
-        auth = [response['transactionId'], response['acquirerAuthorizationCode']].join('|')
-        return auth unless auth == '|'
+      def authorization_from(response, action, options)
+        string = [response.dig('responses', 0, 'alias'), options[:expiry_month], options[:expiry_year]].join('-') if action == 'tokenize'
+
+        auth = [response['transactionId'], response['acquirerAuthorizationCode'], string].join('|')
+        return auth unless auth == '||'
       end
 
       def message_from(succeeded, response)
