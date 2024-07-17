@@ -262,6 +262,16 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_failure_authorize_with_transient_error
+    @gateway.instance_variable_set(:@response_headers, { 'transient-error' => 'error_will_robinson' })
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert response.params['response_headers']['transient_error'], 'error_will_robinson'
+    assert response.test?
+  end
+
   def test_standard_error_code_mapping
     @gateway.expects(:ssl_post).returns(failed_billing_field_response)
 

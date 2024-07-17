@@ -755,10 +755,34 @@ module ActiveMerchant #:nodoc:
         post[:metadata].merge!(options[:metadata]) if options[:metadata]
       end
 
+      def add_header_fields(response)
+        return unless @response_headers.present?
+
+        headers = {}
+        headers['response_headers'] = {}
+        headers['response_headers']['transient_error'] = @response_headers['transient-error'] if @response_headers['transient-error']
+
+        response.merge!(headers)
+      end
+
       def parse(body)
         return {} if body.blank?
 
-        JSON.parse(body)
+        response = JSON.parse(body)
+        add_header_fields(response)
+        response
+      end
+
+      # Override the regular handle response so we can access the headers
+      # set header fields and values so we can add them to the response body
+      def handle_response(response)
+        @response_headers = response.each_header.to_h if response.respond_to?(:header)
+        case response.code.to_i
+        when 200...300
+          response.body
+        else
+          raise ResponseError.new(response)
+        end
       end
 
       def commit(action, parameters, options)
