@@ -12,7 +12,7 @@ class RemoteNuveiTest < Test::Unit::TestCase
     @options = {
       email: 'test@gmail.com',
       billing_address: address.merge(name: 'Cure Tester'),
-      ip_address: '127.0.0.1'
+      ip: '127.0.0.1'
     }
 
     @post = {
@@ -62,22 +62,21 @@ class RemoteNuveiTest < Test::Unit::TestCase
     @gateway.options[:merchant_site_id] = 123
     response = @gateway.send(:fetch_session_token, {})
     assert_failure response
-    assert_match 'ERROR', response.message
-    assert_match 'Invalid merchant site id', response.params['reason']
+    assert_match 'Invalid merchant site id', response.message
   end
 
   def test_successful_authorize
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_not_nil response.params[:transactionId]
-    assert_match 'SUCCESS', response.message
-    assert_match 'APPROVED', response.params['transactionStatus']
+    assert_match 'APPROVED', response.message
   end
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
     assert_match 'DECLINED', response.params['transactionStatus']
+    assert_match 'External Error in Processing', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -87,14 +86,89 @@ class RemoteNuveiTest < Test::Unit::TestCase
     capture_response = @gateway.capture(@amount, response.authorization)
 
     assert_success capture_response
-    assert_match 'SUCCESS', capture_response.message
-    assert_match 'APPROVED', capture_response.params['transactionStatus']
+    assert_match 'APPROVED', capture_response.message
   end
 
   def test_successful_zero_auth
     response = @gateway.authorize(0, @credit_card, @options)
     assert_success response
-    assert_match 'SUCCESS', response.message
-    assert_match 'APPROVED', response.params['transactionStatus']
+    assert_match 'APPROVED', response.message
+  end
+
+  def test_successful_purchase
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_not_nil response.params[:transactionId]
+    assert_match 'APPROVED', response.message
+  end
+
+  def test_failed_purchase
+    response = @gateway.purchase(@amount, @declined_card, @options)
+    assert_failure response
+    assert_match 'DECLINED', response.params['transactionStatus']
+    assert_match 'External Error in Processing', response.message
+  end
+
+  def test_failed_purchase_with_invalid_cvv
+    @credit_card.verification_value = nil
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match 'ERROR', response.params['transactionStatus']
+    assert_match 'Invalid CVV2', response.message
+  end
+
+  def test_failed_capture_invalid_transaction_id
+    response = @gateway.capture(@amount, '123')
+    assert_failure response
+    assert_match 'ERROR', response.params['status']
+    assert_match 'Invalid relatedTransactionId', response.message
+  end
+
+  def test_successful_void
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+
+    void_response = @gateway.void(response.authorization)
+    assert_success void_response
+    assert_match 'SUCCESS', void_response.params['status']
+    assert_match 'APPROVED', void_response.message
+  end
+
+  def test_failed_void_invalid_transaction_id
+    response = @gateway.void('123')
+    assert_failure response
+    assert_match 'ERROR', response.params['status']
+    assert_match 'Invalid relatedTransactionId', response.message
+  end
+
+  def test_successful_refund
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    refund_response = @gateway.refund(@amount, response.authorization)
+    assert_success refund_response
+    assert_match 'SUCCESS', refund_response.params['status']
+    assert_match 'APPROVED', refund_response.message
+  end
+
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match 'SUCCESS', response.params['status']
+    assert_match 'APPROVED', response.message
+  end
+
+  def test_successful_general_credit
+    credit_response = @gateway.credit(@amount, @credit_card, @options.merge!(user_token_id: '123'))
+    assert_success credit_response
+    assert_match 'SUCCESS', credit_response.params['status']
+    assert_match 'APPROVED', credit_response.message
+  end
+
+  def test_failed_general_credit
+    credit_response = @gateway.credit(@amount, @declined_card, @options)
+    assert_failure credit_response
+    assert_match 'ERROR', credit_response.params['status']
+    assert_match 'Invalid user token', credit_response.message
   end
 end

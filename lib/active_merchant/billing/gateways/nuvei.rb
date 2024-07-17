@@ -27,34 +27,75 @@ module ActiveMerchant
         fetch_session_token unless session_token_valid?
       end
 
-      def authorize(money, payment, options = {})
-        post = { transactionType: 'Auth' }
+      def initialize_post(transaction_type = 'Sale')
+        post = {}
+        post[:transactionType] = transaction_type if transaction_type
+        post
+      end
 
-        build_post_data(post, :authorize)
-        add_amount(post, money, options)
-        add_payment_method(post, payment)
+      def authorize(money, payment, options = {})
+        post = initialize_post('Auth')
+        build_authorize_and_purchase_params(money, payment, options, post)
+      end
+
+      def purchase(money, payment, options = {})
+        build_authorize_and_purchase_params(money, payment, options)
+      end
+
+      def build_authorize_and_purchase_params(money, payment, options = {}, post = {})
+        post ||= {}
+        build_post_data(post)
+        add_invoice(post, money, options)
+        add_payment(post, payment)
         add_address(post, payment, options)
         add_customer_ip(post, options)
 
         commit(:purchase, post)
       end
 
-      def purchase(money, payment, options = {}); end
-
       def capture(money, authorization, options = {})
         post = { relatedTransactionId: authorization }
 
-        build_post_data(post, :capture)
+        build_post_data(post)
         add_amount(post, money, options)
 
         commit(:capture, post)
       end
 
-      def refund(money, authorization, options = {}); end
+      def refund(money, authorization, options = {})
+        post = {}
+        post[:relatedTransactionId] = authorization
+        build_post_data(post)
+        add_invoice(post, money, options)
 
-      def void(authorization, options = {}); end
+        commit(:refund, post)
+      end
 
-      def credit(money, payment, options = {}); end
+      def void(authorization, options = {})
+        post = {}
+        post[:relatedTransactionId] = authorization
+        build_post_data(post)
+
+        commit(:void, post)
+      end
+
+      def verify(credit_card, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(0, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
+      def credit(money, payment, options = {})
+        post = {}
+        post[:userTokenId] = options[:user_token_id] if options[:user_token_id]
+        build_post_data(post)
+        add_invoice(post, money, options)
+        add_payment(post, payment, :cardData)
+        add_address(post, payment, options)
+        add_customer_ip(post, options)
+        commit(:general_credit, post)
+      end
 
       def supports_scrubbing?
         true
@@ -83,6 +124,11 @@ module ActiveMerchant
         post[:currency] = (options[:currency] || currency(money))
       end
 
+      def add_invoice(post, money, options)
+        post[:amount] = amount(money)
+        post[:currency] = (options[:currency] || currency(money))
+      end
+
       def credit_card_hash(payment)
         {
           cardNumber: payment.number,
@@ -93,11 +139,13 @@ module ActiveMerchant
         }
       end
 
-      def add_payment_method(post, payment)
-        if payment.is_a?(CreditCard)
-          post[:paymentOption] = { card: credit_card_hash(payment) }
+      def add_payment(post, payment, key = :paymentOption)
+        payment_data = payment.is_a?(CreditCard) ? credit_card_hash(payment) : { cardToken: payment }
+
+        if key == :cardData
+          post[key] = payment_data
         else
-          post[:paymentOption] = { card: { cardToken: payment } }
+          post[key] = { card: payment_data }
         end
       end
 
@@ -126,7 +174,7 @@ module ActiveMerchant
         Time.now.utc.strftime('%Y%m%d%H%M%S')
       end
 
-      def build_post_data(post, action)
+      def build_post_data(post)
         post[:merchantId] = @options[:merchant_id]
         post[:merchantSiteId] = @options[:merchant_site_id]
         post[:timeStamp] = current_timestamp.to_i
@@ -139,7 +187,7 @@ module ActiveMerchant
         keys = case action
                when :authenticate
                  [:timeStamp]
-               when :capture
+               when :capture, :refund, :void
                  %i[clientUniqueId amount currency relatedTransactionId timeStamp]
                else
                  %i[amount currency timeStamp]
@@ -166,7 +214,7 @@ module ActiveMerchant
       end
 
       def fetch_session_token(post = {})
-        build_post_data(post, :authenticate)
+        build_post_data(post)
         send_session_request(post)
       end
 
@@ -177,7 +225,7 @@ module ActiveMerchant
       end
 
       def commit(action, post, authorization = nil, method = :post)
-        post[:sessionToken] = @options[:session_token] unless action == :capture
+        post[:sessionToken] = @options[:session_token] unless %i(capture refund).include?(action)
         post[:checksum] = calculate_checksum(post, action)
 
         response = parse(ssl_request(method, url(action, authorization), post.to_json, headers))
@@ -188,7 +236,7 @@ module ActiveMerchant
           response,
           authorization: authorization_from(action, response, post),
           test: test?,
-          error_code: error_code_from(action, response)
+          error_code: error_code_from(response)
         )
       rescue ResponseError => e
         response = parse(e.response.body)
@@ -201,8 +249,8 @@ module ActiveMerchant
         "#{test? ? test_url : live_url}#{ENDPOINTS_MAPPING[action] % id}"
       end
 
-      def error_code_from(action, response)
-        (response[:statusName] || response[:status]) unless success_from(response)
+      def error_code_from(response)
+        response[:errCode] == 0 ? response[:gwErrorCode] : response[:errCode]
       end
 
       def headers
@@ -231,7 +279,8 @@ module ActiveMerchant
       end
 
       def message_from(response)
-        response[:status]
+        reason = response[:reason]&.present? ? response[:reason] : nil
+        response[:gwErrorReason] || reason || response[:transactionStatus]
       end
     end
   end
