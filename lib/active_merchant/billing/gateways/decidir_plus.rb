@@ -94,24 +94,51 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment, options = {})
-        if payment.is_a?(String)
+        return unless payment
+
+        case payment
+        when NetworkTokenizationCreditCard
+          add_common_payment_data(post, payment, options)
+          add_network_token(post, payment, options)
+        when String
           token, bin = payment.split('|')
-          post[:token] = token
-          post[:bin] = bin
+          post[:token] = token || ''
+          post[:bin] = bin || ''
         else
+          add_common_payment_data(post, payment, options)
           post[:card_number] = payment.number
           post[:card_expiration_month] = format(payment.month, :two_digits)
           post[:card_expiration_year] = format(payment.year, :two_digits)
           post[:security_code] = payment.verification_value.to_s
-          post[:card_holder_name] = payment.name.empty? ? options[:name_override] : payment.name
-          post[:card_holder_identification] = {}
-          post[:card_holder_identification][:type] = options[:card_holder_identification_type] if options[:card_holder_identification_type]
-          post[:card_holder_identification][:number] = options[:card_holder_identification_number] if options[:card_holder_identification_number]
-
-          # additional data used for Visa transactions
-          post[:card_holder_door_number] = options[:card_holder_door_number].to_i if options[:card_holder_door_number]
-          post[:card_holder_birthday] = options[:card_holder_birthday] if options[:card_holder_birthday]
         end
+      end
+
+      def add_common_payment_data(post, payment, options)
+        card_data = payment.is_a?(NetworkTokenizationCreditCard) ? (post[:card_data] = {}) : post
+        card_data[:card_holder_name] = payment.name.empty? ? options[:name_override] : payment.name
+        card_data[:card_holder_identification] = {}
+        card_data[:card_holder_identification][:type] = options[:card_holder_identification_type] if options[:card_holder_identification_type]
+        card_data[:card_holder_identification][:number] = options[:card_holder_identification_number] if options[:card_holder_identification_number]
+
+        # additional data used for Visa transactions
+        card_data[:card_holder_door_number] = options[:card_holder_door_number].to_i if options[:card_holder_door_number]
+        card_data[:card_holder_birthday] = options[:card_holder_birthday] if options[:card_holder_birthday]
+      end
+
+      def add_network_token(post, payment, options)
+        post[:is_tokenized_payment] = 'true'
+        post[:fraud_detection] ||= {}
+        post[:fraud_detection][:sent_to_cs] = 'false'
+        post[:card_data] ||= {}
+        post[:card_data][:last_four_digits] = options[:last_4]
+        post[:bin] = payment.number[0..5]
+
+        post[:token_card_data] = {
+          token: payment.number,
+          eci: payment.eci,
+          cryptogram: payment.payment_cryptogram,
+          device_type: options[:device_type]&.to_s
+        }.compact!
       end
 
       def add_customer_data(post, options = {})

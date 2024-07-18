@@ -6,8 +6,16 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     @gateway_purchase = DecidirPlusGateway.new(fixtures(:decidir_plus))
     @gateway_auth = DecidirPlusGateway.new(fixtures(:decidir_plus_preauth))
 
-    @amount = 100
-    @credit_card = credit_card('4484590159923090')
+    @amount = 5000
+    @network_token = network_tokenization_credit_card(
+      '5424000000000015',
+      payment_cryptogram: 'EjRWeJASNFZ4kBI0VniQEjRWeJA=',
+      brand: 'master',
+      eci: '02',
+      name: 'Tesest payway'
+    )
+    @credit_card = credit_card('4970110000001029')
+    @visa_credit_card = credit_card('4484590159923090')
     @american_express = credit_card('376414000000009')
     @cabal = credit_card('5896570000000008')
     @visa_debit = credit_card('4517721004856075')
@@ -15,7 +23,18 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     @options = {
       billing_address: address,
       description: 'Store Purchase',
-      card_brand: 'visa'
+      card_brand: 'visa',
+      fraud_detection: {
+        send_to_cs: 'false',
+        channel: 'Web',
+        dispatch_method: 'Store Pick Up',
+        csmdds: [
+          {
+            code: '17',
+            description: 'Campo MDD17'
+          }
+        ]
+      }
     }
     @sub_payments = [
       {
@@ -29,17 +48,6 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
         amount: '1500'
       }
     ]
-    @fraud_detection = {
-      send_to_cs: 'false',
-      channel: 'Web',
-      dispatch_method: 'Store Pick Up',
-      csmdds: [
-        {
-          code: '17',
-          description: 'Campo MDD17'
-        }
-      ]
-    }
     @aggregate_data = {
       indicator: '1',
       identification_number: '308103480',
@@ -61,6 +69,24 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     }
   end
 
+  def test_successful_purchase_with_network_token
+    options = @options.except(:fraud_detection).merge({
+      card_brand: 'master',
+      card_holder_door_number: 1234,
+      card_holder_birthday: '200988',
+      card_holder_identification_type: 'DNI',
+      card_holder_identification_number: '44444444',
+      order_id: SecureRandom.uuid,
+      last_4: @network_token.last_digits,
+      device_type: 3
+    })
+    response = @gateway_purchase.purchase(5000, @network_token, options)
+
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+  end
+
   def test_successful_purchase
     assert response = @gateway_purchase.store(@credit_card)
     payment_reference = response.authorization
@@ -79,25 +105,21 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture
-    options = @options.merge(fraud_detection: @fraud_detection)
-
-    assert response = @gateway_auth.store(@credit_card, options)
+    assert response = @gateway_auth.store(@credit_card, @options)
     payment_reference = response.authorization
 
-    response = @gateway_auth.authorize(@amount, payment_reference, options)
+    response = @gateway_auth.authorize(@amount, payment_reference, @options)
     assert_success response
 
-    assert capture_response = @gateway_auth.capture(@amount, response.authorization, options)
+    assert capture_response = @gateway_auth.capture(@amount, response.authorization, @options)
     assert_success capture_response
   end
 
   def test_failed_authorize
-    options = @options.merge(fraud_detection: @fraud_detection)
-
-    assert response = @gateway_auth.store(@declined_card, options)
+    assert response = @gateway_auth.store(@declined_card, @options)
     payment_reference = response.authorization
 
-    response = @gateway_auth.authorize(@amount, payment_reference, options)
+    response = @gateway_auth.authorize(@amount, payment_reference, @options)
     assert_failure response
     assert_equal response.error_code, 3
   end
@@ -114,7 +136,7 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     assert_equal 'approved', refund.message
   end
 
-  def test_partial_refund
+  def test_successful_partial_refund
     assert response = @gateway_purchase.store(@credit_card)
 
     purchase = @gateway_purchase.purchase(@amount, response.authorization, @options)
@@ -131,12 +153,10 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    options = @options.merge(fraud_detection: @fraud_detection)
-
-    assert response = @gateway_auth.store(@credit_card, options)
+    assert response = @gateway_auth.store(@credit_card, @options)
     payment_reference = response.authorization
 
-    response = @gateway_auth.authorize(@amount, payment_reference, options)
+    response = @gateway_auth.authorize(@amount, payment_reference, @options)
     assert_success response
     assert_equal 'pre_approved', response.message
     authorization = response.authorization
@@ -152,13 +172,13 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    assert response = @gateway_auth.verify(@credit_card, @options.merge(fraud_detection: @fraud_detection))
+    assert response = @gateway_auth.verify(@credit_card, @options)
     assert_success response
     assert_equal 'active', response.message
   end
 
   def test_failed_verify
-    assert response = @gateway_auth.verify(@declined_card, @options)
+    assert response = @gateway_auth.verify(@declined_card, @options.except(:fraud_detection))
     assert_failure response
     assert_equal '10734: Fraud Detection Data is required', response.message
   end
@@ -210,14 +230,12 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_fraud_detection
-    options = @options.merge(fraud_detection: @fraud_detection)
-
     assert response = @gateway_purchase.store(@credit_card)
     payment_reference = response.authorization
 
-    response = @gateway_purchase.purchase(@amount, payment_reference, options)
+    response = @gateway_purchase.purchase(@amount, payment_reference, @options)
     assert_success response
-    assert_equal({ 'send_to_cs' => false, 'status' => nil }, response.params['fraud_detection'])
+    assert_equal({ 'status' => nil }, response.params['fraud_detection'])
   end
 
   def test_successful_purchase_with_card_brand
@@ -304,9 +322,8 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
   def test_failed_purchase_with_debit
     options = @options.merge(debit: 'true', card_brand: 'visa')
 
-    assert response = @gateway_purchase.store(@credit_card)
+    assert response = @gateway_purchase.store(@visa_credit_card)
     payment_reference = response.authorization
-
     response = @gateway_purchase.purchase(@amount, payment_reference, options)
     assert_failure response
     assert_equal 'invalid_param: bin', response.message
