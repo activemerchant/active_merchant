@@ -1312,7 +1312,7 @@ class PaypalTest < Test::Unit::TestCase
           </CreateRecurringPaymentsProfileResponseDetails>
         </CreateRecurringPaymentsProfileResponse>
         </SOAP-ENV:Body>
-      </SOAP-ENV:Envelope>"
+      </SOAP-ENV:Envelope>
     RESPONSE
   end
 
