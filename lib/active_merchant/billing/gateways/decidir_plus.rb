@@ -321,8 +321,11 @@ module ActiveMerchant #:nodoc:
         return error_code_from(response) unless validation_errors = response.dig('validation_errors')
 
         validation_errors = validation_errors[0]
+        message = "#{validation_errors&.dig('code')}: #{validation_errors&.dig('param')}"
+        return message unless message == ': '
 
-        "#{validation_errors.dig('code')}: #{validation_errors.dig('param')}"
+        errors = response['validation_errors'].map { |k, v| "#{k}: #{v}" }.join(', ')
+        "#{response['error_type']} - #{errors}"
       end
 
       def rejected?(response)
