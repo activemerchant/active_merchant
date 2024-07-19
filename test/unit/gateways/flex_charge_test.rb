@@ -25,6 +25,7 @@ class FlexChargeTest < Test::Unit::TestCase
       cavv_result_code: '111',
       timezone_utc_offset: '-5',
       billing_address: address.merge(name: 'Cure Tester'),
+      shipping_address: address.merge(name: 'Jhon Doe', country: 'US'),
       sense_key: 'abc123',
       extra_data: { hello: 'world' }.to_json
     }
@@ -121,6 +122,11 @@ class FlexChargeTest < Test::Unit::TestCase
         assert_equal request['transaction']['transactionType'], 'Purchase'
         assert_equal request['payer']['email'], @options[:email]
         assert_equal request['description'], @options[:description]
+
+        assert_equal request['billingInformation']['firstName'], 'Cure'
+        assert_equal request['billingInformation']['country'], 'CA'
+        assert_equal request['shippingInformation']['firstName'], 'Jhon'
+        assert_equal request['shippingInformation']['country'], 'US'
       end
     end.respond_with(successful_access_token_response, successful_purchase_response)
 
@@ -290,6 +296,14 @@ class FlexChargeTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'ca7bb327-a750-412d-a9c3-050d72b3f0c5#USD', response.authorization
+  end
+
+  def test_add_base_data_without_idempotency_key
+    @options.delete(:idempotency_key)
+    post = {}
+    @gateway.send(:add_base_data, post, @options)
+
+    assert_equal 5, post[:idempotencyKey].split('-').size
   end
 
   private

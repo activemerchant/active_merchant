@@ -115,6 +115,14 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     assert_equal 'APPROVED', response.message
   end
 
+  def test_successful_purchase_mit_with_billing_address
+    set_credentials!
+    @options[:billing_address] = address.merge(name: 'Jhon Doe', country: 'US')
+    response = @gateway.purchase(@amount, @credit_card_mit, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+  end
+
   def test_successful_authorize_cit
     @cit_options[:phone] = '998888'
     set_credentials!
