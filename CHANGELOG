@@ -5,6 +5,7 @@
 * Mercury, TransFirst: Repair gateways following updates to `rexml` [aenand] #5206
 * NMI: Fix Decrypted indicator for Google/Apple pay [javierpedrozaing] #5196
 * FlexCharge: add more descriptives error messages [gasb150] #5199
+* Braintree: Updates to Paypal Integration [almalee24] #5190
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
