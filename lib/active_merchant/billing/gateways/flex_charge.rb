@@ -38,7 +38,8 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, credit_card, options)
         add_mit_data(post, options)
         add_payment_method(post, credit_card, address(options), options)
-        add_address(post, credit_card, address(options))
+        add_address(post, credit_card, address(options), :billingInformation)
+        add_address(post, credit_card, options[:shipping_address], :shippingInformation)
         add_customer_data(post, options)
         add_three_ds(post, options)
         add_metadata(post, options)
@@ -150,7 +151,7 @@ module ActiveMerchant #:nodoc:
       def add_base_data(post, options)
         post[:isDeclined] = cast_bool(options[:is_declined])
         post[:orderId] = options[:order_id]
-        post[:idempotencyKey] = options[:idempotency_key] || options[:order_id]
+        post[:idempotencyKey] = options[:idempotency_key] || SecureRandom.uuid
         post[:senseKey] = options[:sense_key]
       end
 
@@ -166,10 +167,12 @@ module ActiveMerchant #:nodoc:
         post[:payer] = { email: options[:email] || 'NA', phone: phone_from(options) }.compact
       end
 
-      def add_address(post, payment, address)
+      def add_address(post, payment, address, address_type)
+        return unless address.present?
+
         first_name, last_name = names_from_address(address, payment)
 
-        post[:billingInformation] = {
+        post[address_type] = {
           firstName: first_name,
           lastName: last_name,
           country: address[:country],
