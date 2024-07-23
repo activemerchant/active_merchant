@@ -30,9 +30,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, credit_card, options = {})
-        options[:transactionType] ||= 'Purchase'
+        post = { transactionType: options.fetch(:transactionType, 'Purchase') }
 
-        post = {}
         add_merchant_data(post, options)
         add_base_data(post, options)
         add_invoice(post, money, credit_card, options)
@@ -198,7 +197,6 @@ module ActiveMerchant #:nodoc:
           avsResultCode: options[:avs_result_code],
           cvvResultCode: options[:cvv_result_code],
           cavvResultCode: options[:cavv_result_code],
-          transactionType: options[:transactionType],
           cardNotPresent: credit_card.is_a?(String) ? false : credit_card.verification_value.blank?
         }.compact
       end

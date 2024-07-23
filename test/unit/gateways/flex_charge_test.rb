@@ -119,7 +119,7 @@ class FlexChargeTest < Test::Unit::TestCase
         assert_equal request['transaction']['avsResultCode'], @options[:avs_result_code]
         assert_equal request['transaction']['cvvResultCode'], @options[:cvv_result_code]
         assert_equal request['transaction']['cavvResultCode'], @options[:cavv_result_code]
-        assert_equal request['transaction']['transactionType'], 'Purchase'
+        assert_equal request['transactionType'], 'Purchase'
         assert_equal request['payer']['email'], @options[:email]
         assert_equal request['description'], @options[:description]
 
@@ -141,7 +141,7 @@ class FlexChargeTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_method, endpoint, data, _headers|
       request = JSON.parse(data)
-      assert_equal request['transaction']['transactionType'], 'Authorization' if /evaluate/.match?(endpoint)
+      assert_equal request['transactionType'], 'Authorization' if /evaluate/.match?(endpoint)
     end.respond_with(successful_access_token_response, successful_purchase_response)
   end
 
