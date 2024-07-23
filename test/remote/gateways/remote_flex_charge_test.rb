@@ -27,7 +27,7 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
       cavv_result_code: '111',
       timezone_utc_offset: '-5',
       billing_address: address.merge(name: 'Cure Tester'),
-      extra_data: { hello: 'world' }.to_json
+      extra_data: ''
     }
 
     @cit_options = @options.merge(
