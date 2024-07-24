@@ -243,6 +243,7 @@ module ActiveMerchant #:nodoc:
       def add_payment_fields(post, options)
         post[:description] = options[:description] if options[:description]
         post[:statement_descriptor] = options[:statement_descriptor] if options[:statement_descriptor]
+        post[:save_payment_method] = options[:save_payment_method] if options[:save_payment_method]
       end
 
       def add_payment_urls(post, options, action = '')

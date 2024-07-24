@@ -182,6 +182,16 @@ class RapydTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_save_payment_method
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ save_payment_method: true }))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"save_payment_method":true/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_3ds_global
     @options[:three_d_secure] = {
       required: true,
