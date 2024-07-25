@@ -465,9 +465,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shopper_interaction(post, payment, options = {})
-        if  (options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'cardholder') ||
-            (payment.respond_to?(:verification_value) && payment.verification_value && options.dig(:stored_credential, :initial_transaction).nil?) ||
-            payment.is_a?(NetworkTokenizationCreditCard)
+        if ecommerce_shopper_interaction?(payment, options)
           shopper_interaction = 'Ecommerce'
         else
           shopper_interaction = 'ContAuth'
@@ -618,11 +616,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mpi_data_for_network_tokenization_card(post, payment, options)
-        return if options[:skip_mpi_data] == 'Y'
+        return if skip_mpi_data?(options)
 
         post[:mpiData] = {}
         post[:mpiData][:authenticationResponse] = 'Y'
-        if NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s].nil? && options[:switch_cryptogram_mapping_nt]
+        if payment.try(:network_token?) && options[:switch_cryptogram_mapping_nt]
           post[:mpiData][:tokenAuthenticationVerificationValue] = payment.payment_cryptogram
         else
           post[:mpiData][:cavv] = payment.payment_cryptogram
@@ -632,7 +630,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_recurring_contract(post, options = {}, payment = nil)
-        return unless options[:recurring_contract_type] || (payment.try(:source) == :network_token && options[:switch_cryptogram_mapping_nt])
+        return unless options[:recurring_contract_type] || (payment.try(:network_token?) && options[:switch_cryptogram_mapping_nt])
 
         post[:recurring] ||= {}
         post[:recurring][:contract] = options[:recurring_contract_type] if options[:recurring_contract_type]
@@ -640,7 +638,8 @@ module ActiveMerchant #:nodoc:
         post[:recurring][:recurringExpiry] = options[:recurring_expiry] if options[:recurring_expiry]
         post[:recurring][:recurringFrequency] = options[:recurring_frequency] if options[:recurring_frequency]
         post[:recurring][:tokenService] = options[:token_service] if options[:token_service]
-        if payment.try(:source) == :network_token && options[:switch_cryptogram_mapping_nt]
+
+        if payment.try(:network_token?) && options[:switch_cryptogram_mapping_nt]
           post[:recurring][:contract] = 'EXTERNAL'
           post[:recurring][:tokenService] = case payment.brand
                                             when 'visa' then 'VISATOKENSERVICE'
@@ -978,6 +977,17 @@ module ActiveMerchant #:nodoc:
 
       def card_not_stored?(response)
         response.authorization ? response.authorization.split('#')[2].nil? : true
+      end
+
+      def skip_mpi_data?(options = {})
+        # Skips adding the NT mpi data if it is explicitly skipped in options, or if it is MIT and not the initial transaction.
+        options[:skip_mpi_data] == 'Y' || (!options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'merchant' && options[:switch_cryptogram_mapping_nt])
+      end
+
+      def ecommerce_shopper_interaction?(payment, options)
+        (options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'cardholder') ||
+          (payment.respond_to?(:verification_value) && payment.verification_value && options.dig(:stored_credential, :initial_transaction)) ||
+          (payment.is_a?(NetworkTokenizationCreditCard) && !options[:switch_cryptogram_mapping_nt])
       end
     end
   end

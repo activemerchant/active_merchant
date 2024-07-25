@@ -668,7 +668,7 @@ class AdyenTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"shopperInteraction":"Ecommerce"/, data)
       assert_match(/"recurringProcessingModel":"Subscription"/, data)
     end.respond_with(successful_authorize_response)
 
@@ -718,7 +718,7 @@ class AdyenTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"shopperInteraction":"Ecommerce"/, data)
       assert_match(/"recurringProcessingModel":"UnscheduledCardOnFile"/, data)
     end.respond_with(successful_authorize_response)
 
@@ -1250,8 +1250,7 @@ class AdyenTest < Test::Unit::TestCase
       assert_equal 'YwAAAAAABaYcCMX/OhNRQAAAAAA=', parsed['mpiData']['cavv']
       assert_equal '07', parsed['mpiData']['eci']
       assert_equal 'applepay', parsed['additionalData']['paymentdatasource.type']
-      assert_equal 'VISATOKENSERVICE', parsed['recurring']['tokenService']
-      assert_equal 'EXTERNAL', parsed['recurring']['contract']
+      assert_nil parsed['recurring']
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -1266,6 +1265,18 @@ class AdyenTest < Test::Unit::TestCase
       assert_nil parsed['additionalData']['paymentdatasource.type']
       assert_equal 'VISATOKENSERVICE', parsed['recurring']['tokenService']
       assert_equal 'EXTERNAL', parsed['recurring']['contract']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_with_network_tokenization_credit_card_and_stored_credentials
+    stored_credential = stored_credential(:merchant, :recurring)
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options.merge(switch_cryptogram_mapping_nt: true, stored_credential: stored_credential))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      assert_equal 'ContAuth', parsed['shopperInteraction']
+      assert_nil parsed['mpiData']
     end.respond_with(successful_authorize_response)
     assert_success response
   end
