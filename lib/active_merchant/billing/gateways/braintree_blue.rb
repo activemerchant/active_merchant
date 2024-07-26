@@ -815,7 +815,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_channel(parameters, options)
-        channel = @options[:channel] || application_id
+        channel = options[:override_application_id] || @options[:channel] || application_id
         parameters[:channel] = channel if channel
       end
 
