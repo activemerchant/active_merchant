@@ -6,16 +6,16 @@ module ActiveMerchant #:nodoc:
       # Set ActiveMerchant gateways in test mode.
       #
       #   ActiveMerchant::Billing::Base.mode = :test
-      mattr_accessor :mode
+      thread_mattr_accessor :mode
 
       def self.gateway_mode=(mode)
         ActiveMerchant.deprecated(GATEWAY_MODE_DEPRECATION_MESSAGE)
-        @@mode = mode
+        self.mode = mode
       end
 
       def self.gateway_mode
         ActiveMerchant.deprecated(GATEWAY_MODE_DEPRECATION_MESSAGE)
-        @@mode
+        self.mode
       end
 
       self.mode = :production
