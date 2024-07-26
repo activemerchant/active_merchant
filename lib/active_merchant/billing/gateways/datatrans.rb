@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def unstore(authorization, options = {})
-        data_alias = authorization.split('|')[2].split('-')[0]
+        data_alias = authorization.split('|')[2]
         commit('delete_alias', {}, { alias_id: data_alias }, :delete)
       end
 
@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
       def add_payment_method(post, payment_method)
         case payment_method
         when String
-          token, exp_month, exp_year = payment_method.split('|')[2].split('-')
+          token, exp_month, exp_year = payment_method.split('|')[2..4]
           card = {
             type: 'ALIAS',
             alias: token,
@@ -250,9 +250,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, action, options)
-        string = [response.dig('responses', 0, 'alias'), options[:expiry_month], options[:expiry_year]].join('-') if action == 'tokenize'
+        token_array = [response.dig('responses', 0, 'alias'), options[:expiry_month], options[:expiry_year]].join('|') if action == 'tokenize'
 
-        auth = [response['transactionId'], response['acquirerAuthorizationCode'], string].join('|')
+        auth = [response['transactionId'], response['acquirerAuthorizationCode'], token_array].join('|')
         return auth unless auth == '||'
       end
 

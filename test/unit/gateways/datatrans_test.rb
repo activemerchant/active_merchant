@@ -325,9 +325,9 @@ class DatatransTest < Test::Unit::TestCase
     assert_equal '|9248|', @gateway.send(:authorization_from, { 'acquirerAuthorizationCode' => '9248' }, '', {})
     assert_equal nil, @gateway.send(:authorization_from, {}, '', {})
     # tes for store
-    assert_equal '||any_alias-any_month-any_year', @gateway.send(:authorization_from, { 'responses' => [{ 'alias' => 'any_alias' }] }, 'tokenize', { expiry_month: 'any_month', expiry_year: 'any_year' })
+    assert_equal '||any_alias|any_month|any_year', @gateway.send(:authorization_from, { 'responses' => [{ 'alias' => 'any_alias' }] }, 'tokenize', { expiry_month: 'any_month', expiry_year: 'any_year' })
     # handle nil responses or missing keys
-    assert_equal '||-any_month-any_year', @gateway.send(:authorization_from, {}, 'tokenize', { expiry_month: 'any_month', expiry_year: 'any_year' })
+    assert_equal '|||any_month|any_year', @gateway.send(:authorization_from, {}, 'tokenize', { expiry_month: 'any_month', expiry_year: 'any_year' })
   end
 
   def test_parse
