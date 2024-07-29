@@ -26,6 +26,7 @@
 * Braintree Blue: Pass overridden mid into client token for GS 3DS [sinourain] #5166
 * Moneris: Update crypt_type for 3DS [almalee24] #5162
 * CheckoutV2: Update 3DS message & error code [almalee24] #5177
+* CheckoutV2: Update Authorization from Basic to Bearer [sinourain] #5109
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860
