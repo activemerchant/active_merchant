@@ -62,6 +62,8 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/ccexp=#{sprintf("%.2i", @apple_pay.month)}#{@apple_pay.year.to_s[-2..-1]}/, data)
       assert_match(/cavv=EHuWW9PiBkWvqE5juRwDzAUFBAk%3D/, data)
       assert_match(/eci=05/, data)
+      assert_match(/decrypted_applepay_data/, data)
+      assert_nil data['decrypted_googlepay_data']
     end.respond_with(successful_purchase_response)
   end
 
@@ -74,6 +76,8 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/ccexp=#{sprintf("%.2i", @google_pay.month)}#{@google_pay.year.to_s[-2..-1]}/, data)
       assert_match(/cavv=EHuWW9PiBkWvqE5juRwDzAUFBAk%3D/, data)
       assert_match(/eci=05/, data)
+      assert_match(/decrypted_googlepay_data/, data)
+      assert_nil data['decrypted_applepay_data']
     end.respond_with(successful_purchase_response)
   end
 

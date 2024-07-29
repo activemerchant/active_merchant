@@ -159,6 +159,28 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_google_pay_without_billing_address
+    assert @gateway_secure.supports_network_tokenization?
+    @options.delete(:billing_address)
+
+    assert response = @gateway_secure.purchase(@amount, @google_pay, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_apple_pay_without_billing_address
+    assert @gateway_secure.supports_network_tokenization?
+    @options.delete(:billing_address)
+
+    assert response = @gateway_secure.purchase(@amount, @apple_pay, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
   def test_failed_purchase_with_apple_pay
     assert response = @gateway_secure.purchase(1, @apple_pay, @options)
     assert_failure response

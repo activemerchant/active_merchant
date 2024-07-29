@@ -2,10 +2,10 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* Mercury, TransFirst: Repair gateways following updates to `rexml` [aenand] #5206.
+* Mercury, TransFirst: Repair gateways following updates to `rexml` [aenand] #5206
+* NMI: Fix Decrypted indicator for Google/Apple pay [javierpedrozaing] #5196
 
-= Version 1.137.0 (August 2, 2024)
-
+== Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
 * Bump Ruby version to 3.1 [dustinhaefele] #5104
 * FlexCharge: Update inquire method to use the new orders end-point
