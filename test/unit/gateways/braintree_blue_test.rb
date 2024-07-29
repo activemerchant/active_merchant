@@ -955,8 +955,6 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'), {})[:channel], 'overidden-channel'
 
     assert_equal gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'), { override_application_id: 'override-application-id' })[:channel], 'override-application-id'
-  ensure
-    ActiveMerchant::Billing::BraintreeBlueGateway.application_id = nil
   end
 
   def test_successful_purchase_with_descriptor
