@@ -233,7 +233,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
       version: '2.0',
       cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
       eci: '05',
-      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      ds_transaction_id: 'f25084f0-5b16-4c0a-ae5d-b24808a95e4b',
       enrolled: 'true',
       authentication_response_status: 'Y'
     }

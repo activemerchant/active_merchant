@@ -25,6 +25,7 @@ class FatZebraTest < Test::Unit::TestCase
       eci: '05',
       xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
       enrolled: 'true',
+      ds_transaction_id: 'f25084f0-5b16-4c0a-ae5d-b24808a95e4b',
       authentication_response_status: 'Y'
     }
   end
@@ -235,7 +236,7 @@ class FatZebraTest < Test::Unit::TestCase
     assert_equal ds_options[:cavv], ds_data[:cavv]
     assert_equal ds_options[:eci], ds_data[:sli]
     assert_equal ds_options[:xid], ds_data[:xid]
-    assert_equal ds_options[:ds_transaction_id], ds_data[:ds_transaction_id]
+    assert_equal ds_options[:ds_transaction_id], ds_data[:directory_server_txn_id]
     assert_equal 'Y', ds_data[:ver]
     assert_equal ds_options[:authentication_response_status], ds_data[:par]
   end
