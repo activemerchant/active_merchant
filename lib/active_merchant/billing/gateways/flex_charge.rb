@@ -24,6 +24,8 @@ module ActiveMerchant #:nodoc:
 
       SUCCESS_MESSAGES = %w(APPROVED CHALLENGE SUBMITTED SUCCESS PROCESSING CAPTUREREQUIRED).freeze
 
+      NO_ERROR_KEYS = %w(TraceId access_token token_expires).freeze
+
       def initialize(options = {})
         requires!(options, :app_key, :app_secret, :site_id, :mid)
         super
@@ -248,10 +250,10 @@ module ActiveMerchant #:nodoc:
         @options[:access_token] = response[:accessToken]
         @options[:token_expires] = response[:expires]
         @options[:new_credentials] = true
-
+        success = response[:accessToken].present?
         Response.new(
-          response[:accessToken].present?,
-          message_from(response),
+          success,
+          message_from(response, success),
           response,
           test: test?,
           error_code: response[:statusCode]
@@ -294,14 +296,14 @@ module ActiveMerchant #:nodoc:
 
       def api_request(action, post, authorization = nil, method = :post)
         response = parse ssl_request(method, url(action, authorization), post.to_json, headers)
-
+        success = success_from(action, response)
         Response.new(
-          success_from(action, response),
-          message_from(response),
+          success,
+          message_from(response, success),
           response,
           authorization: authorization_from(action, response, post),
           test: test?,
-          error_code: error_code_from(action, response)
+          error_code: error_code_from(success, response)
         )
       rescue ResponseError => e
         response = parse(e.response.body)
@@ -310,7 +312,7 @@ module ActiveMerchant #:nodoc:
           @options[:access_token] = ''
           @options[:new_credentials] = true
         end
-        Response.new(false, message_from(response), response, test: test?)
+        Response.new(false, message_from(response, false), response, test: test?)
       end
 
       def success_from(action, response)
@@ -323,7 +325,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def message_from(response)
+      def message_from(response, success_status)
+        return extract_error(response) unless success_status || response['TraceId'].nil?
+
         response[:title] || response[:responseMessage] || response[:statusName] || response[:status]
       end
 
@@ -335,12 +339,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def error_code_from(action, response)
-        (response[:statusName] || response[:status]) unless success_from(action, response)
+      def error_code_from(success, response)
+        (response[:statusName] || response[:status]) unless success
       end
 
       def cast_bool(value)
         ![false, 0, '', '0', 'f', 'F', 'false', 'FALSE'].include?(value)
+      end
+
+      def extract_error(response)
+        response.except(*NO_ERROR_KEYS).to_json
       end
     end
   end

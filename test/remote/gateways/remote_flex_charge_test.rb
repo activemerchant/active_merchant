@@ -142,12 +142,30 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_failed_purchase
+  def test_failed_purchase_invalid_time
+    set_credentials!
+    response = @gateway.purchase(@amount, @credit_card_cit, @options.merge({ mit_expiry_date_utc: '' }))
+    assert_failure response
+    assert_equal nil, response.error_code
+    assert_not_nil response.params['TraceId']
+    assert_equal response.message, '{"ExpiryDateUtc":["The field ExpiryDateUtc is invalid."]}'
+  end
+
+  def test_failed_purchase_required_fields
     set_credentials!
     response = @gateway.purchase(@amount, @credit_card_cit, billing_address: address)
     assert_failure response
     assert_equal nil, response.error_code
     assert_not_nil response.params['TraceId']
+    error_list = JSON.parse response.message
+    assert_equal error_list.length, 7
+    assert_equal error_list['OrderId'], ["Merchant's orderId is required"]
+    assert_equal error_list['Transaction.Id'], ['The Id field is required.']
+    assert_equal error_list['Transaction.ResponseCode'], ['The ResponseCode field is required.']
+    assert_equal error_list['Transaction.AvsResultCode'], ['The AvsResultCode field is required.']
+    assert_equal error_list['Transaction.CvvResultCode'], ['The CvvResultCode field is required.']
+    assert_equal error_list['Transaction.CavvResultCode'], ['The CavvResultCode field is required.']
+    assert_equal error_list['Transaction.ResponseCodeSource'], ['The ResponseCodeSource field is required.']
   end
 
   def test_failed_cit_declined_purchase

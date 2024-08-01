@@ -222,6 +222,26 @@ class FlexChargeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_failed_purchase_idempotency_key
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_access_token_response, missed_idempotency_key_field)
+
+    assert_failure response
+    assert_nil response.error_code
+    assert_equal '{"IdempotencyKey":["The IdempotencyKey field is required."]}', response.message
+  end
+
+  def test_failed_purchase_expiry_date
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_access_token_response, invalid_expiry_date_utc)
+
+    assert_failure response
+    assert_nil response.error_code
+    assert_equal '{"ExpiryDateUtc":["The field ExpiryDateUtc is invalid."]}', response.message
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -620,6 +640,28 @@ class FlexChargeTest < Test::Unit::TestCase
           }
         ],
         "customProperties": {}
+      }
+    RESPONSE
+  end
+
+  def missed_idempotency_key_field
+    <<~RESPONSE
+      {
+        "TraceId": ["00-bf5a1XXXTRACEXXX174b8a-f58XXXIDXXX32-01"],
+        "IdempotencyKey": ["The IdempotencyKey field is required."],
+        "access_token": "SomeAccessTokenXXXX1ZWE5ZmY0LTM4MjUtNDc0ZC04ZDhhLTk2OGZjM2NlYTA5ZCIsImlhdCI6IjE3MjI1Mjc1ODI1MjIiLCJhdWQiOlsicGF5bWVudHMiLCJvcmRlcnMiLCJtZXJjaGFudHMiLCJlbGlnaWJpbGl0eS1zZnRwIiwiZWxpZ2liaWxpdHkiLCJjb250YWN0Il0sImN1c3RvbTptaWQiOiJkOWQwYjVmZC05NDMzLTQ0ZDMtODA1MS02M2ZlZTI4NzY4ZTgiLCJuYmYiOjE3MjI1Mjc1ODIsImV4cCI6MTcyMjUyODE4MiwiaXNzIjoiQXBpLUNsaWVudC1TZXJ2aWNlIn0.Q7b5CViX4x3Qmna-JmLS2pQD8kWbrI5-GLLT1Ki9t3o",
+        "token_expires": 1722528182522
+      }
+    RESPONSE
+  end
+
+  def invalid_expiry_date_utc
+    <<~RESPONSE
+      {
+        "TraceId": ["00-bf5a1XXXTRACEXXX174b8a-f58XXXIDXXX32-01"],
+        "ExpiryDateUtc":["The field ExpiryDateUtc is invalid."],
+        "access_token": "SomeAccessTokenXXXX1ZWE5ZmY0LTM4MjUtNDc0ZC04ZDhhLTk2OGZjM2NlYTA5ZCIsImlhdCI6IjE3MjI1Mjc1ODI1MjIiLCJhdWQiOlsicGF5bWVudHMiLCJvcmRlcnMiLCJtZXJjaGFudHMiLCJlbGlnaWJpbGl0eS1zZnRwIiwiZWxpZ2liaWxpdHkiLCJjb250YWN0Il0sImN1c3RvbTptaWQiOiJkOWQwYjVmZC05NDMzLTQ0ZDMtODA1MS02M2ZlZTI4NzY4ZTgiLCJuYmYiOjE3MjI1Mjc1ODIsImV4cCI6MTcyMjUyODE4MiwiaXNzIjoiQXBpLUNsaWVudC1TZXJ2aWNlIn0.Q7b5CViX4x3Qmna-JmLS2pQD8kWbrI5-GLLT1Ki9t3o",
+        "token_expires": 1722528182522
       }
     RESPONSE
   end
