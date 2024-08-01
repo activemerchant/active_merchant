@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
           par: three_d_secure[:authentication_response_status],
           ver: formatted_enrollment(three_d_secure[:enrolled]),
           threeds_version: three_d_secure[:version],
-          ds_transaction_id: three_d_secure[:ds_transaction_id]
+          directory_server_txn_id: three_d_secure[:ds_transaction_id]
         }.compact
       end
 
