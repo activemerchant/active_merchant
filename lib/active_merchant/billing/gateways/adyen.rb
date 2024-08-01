@@ -904,18 +904,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize_message_from(response, options = {})
-        return raw_authorize_error_message(response) if options[:raw_error_message]
-
         if response['refusalReason'] && response['additionalData'] && (response['additionalData']['merchantAdviceCode'] || response['additionalData']['refusalReasonRaw'])
           "#{response['refusalReason']} | #{response['additionalData']['merchantAdviceCode'] || response['additionalData']['refusalReasonRaw']}"
-        else
-          response['refusalReason'] || response['resultCode'] || response['message'] || response['result']
-        end
-      end
-
-      def raw_authorize_error_message(response)
-        if response['refusalReason'] && response['additionalData'] && response['additionalData']['refusalReasonRaw']
-          "#{response['refusalReason']} | #{response['additionalData']['refusalReasonRaw']}"
         else
           response['refusalReason'] || response['resultCode'] || response['message'] || response['result']
         end
