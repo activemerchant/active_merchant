@@ -105,7 +105,8 @@ module ActiveMerchant #:nodoc:
         add_net_amount(post, options)
         add_taxes(post, options)
         add_notification_url(post, options)
-        post[:binary_mode] = (options[:binary_mode].nil? ? true : options[:binary_mode])
+        add_3ds(post, options)
+        post[:binary_mode] = options.fetch(:binary_mode, true) unless options[:execute_threed]
         post
       end
 
@@ -287,7 +288,7 @@ module ActiveMerchant #:nodoc:
         if action == 'refund'
           response['status'] != 404 && response['error'].nil?
         else
-          %w[active approved authorized cancelled in_process].include?(response['status'])
+          %w[active approved authorized cancelled in_process pending].include?(response['status'])
         end
       end
 
@@ -320,6 +321,13 @@ module ActiveMerchant #:nodoc:
             response['status']
           end
         end
+      end
+
+      def add_3ds(post, options)
+        return unless options[:execute_threed]
+
+        post[:three_d_secure_mode] = options[:three_ds_mode] == 'mandatory' ? 'mandatory' : 'optional'
+        post[:notification_url] = options[:notification_url] if options[:notification_url]
       end
 
       def url(action)
