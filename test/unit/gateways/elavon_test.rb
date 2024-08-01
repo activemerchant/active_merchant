@@ -47,7 +47,7 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options)
+      @gateway.purchase(@amount, @credit_card, @options.merge!(stored_cred_v2: true))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<ssl_cvv2cvc2>123<\/ssl_cvv2cvc2>/, data)
     end.respond_with(successful_purchase_response)

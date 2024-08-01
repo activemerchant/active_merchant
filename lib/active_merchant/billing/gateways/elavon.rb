@@ -247,7 +247,7 @@ module ActiveMerchant #:nodoc:
       def add_verification_value(xml, credit_card, options)
         return unless credit_card.verification_value?
         # Don't add cvv if this is a non-initial stored credential transaction
-        return if !options.dig(:stored_credential, :initial_transaction) && options[:stored_cred_v2]
+        return if options[:stored_credential] && !options.dig(:stored_credential, :initial_transaction) && options[:stored_cred_v2]
 
         xml.ssl_cvv2cvc2            credit_card.verification_value
         xml.ssl_cvv2cvc2_indicator  1
