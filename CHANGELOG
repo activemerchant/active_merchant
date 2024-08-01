@@ -16,6 +16,7 @@
 * Decidir: Pass CVV for NT [almalee24] #5205
 * NMI: Add customer vault fields [yunnydang] #5215
 * CheckoutV2: Add inquire method [almalee24] #5209
+* Iveri: Add AuthReversal for Authorizations [almalee24] #5201
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
