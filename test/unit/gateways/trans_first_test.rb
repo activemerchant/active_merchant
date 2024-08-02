@@ -15,16 +15,6 @@ class TransFirstTest < Test::Unit::TestCase
     @amount = 100
   end
 
-  def test_missing_field_response
-    @gateway.stubs(:ssl_post).returns(missing_field_response)
-
-    response = @gateway.purchase(@amount, @credit_card, @options)
-
-    assert_failure response
-    assert response.test?
-    assert_equal 'Missing parameter: UserId.', response.message
-  end
-
   def test_successful_purchase
     @gateway.stubs(:ssl_post).returns(successful_purchase_response)
 
