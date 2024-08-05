@@ -334,10 +334,18 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success response
     assert response.authorization
 
-    assert void = @gateway.void(response.authorization, metadata: { test_metadata: 123 })
+    void_options = {
+      metadata: {
+        test_metadata: 123
+      },
+      order_id: '123445abcde'
+    }
+
+    assert void = @gateway.void(response.authorization, void_options)
     assert void.test?
     assert_success void
     assert_equal '123', void.params['metadata']['test_metadata']
+    assert_equal '123445abcde', void.params['metadata']['order_id']
   end
 
   def test_successful_void_with_reason
@@ -392,6 +400,27 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal refund.authorization, refund_id
     assert_success refund
     assert_equal 'fraudulent', refund.params['reason']
+  end
+
+  def test_successful_refund_with_metada_and_order_id
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
+
+    refund_options = {
+      metadata: {
+        test_metadata: 123
+      },
+      order_id: '123445abcde'
+    }
+
+    assert refund = @gateway.refund(@amount - 20, response.authorization, refund_options)
+    assert refund.test?
+    refund_id = refund.params['id']
+    assert_equal refund.authorization, refund_id
+    assert_success refund
+    assert_equal '123445abcde', refund.params['metadata']['order_id']
+    assert_equal '123', refund.params['metadata']['test_metadata']
   end
 
   def test_successful_refund_on_verified_bank_account
