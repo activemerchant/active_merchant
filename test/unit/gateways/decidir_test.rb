@@ -43,7 +43,8 @@ class DecidirTest < Test::Unit::TestCase
       '4012001037141112',
       brand: 'visa',
       eci: '05',
-      payment_cryptogram: '000203016912340000000FA08400317500000000'
+      payment_cryptogram: '000203016912340000000FA08400317500000000',
+      verification_value: '123'
     )
   end
 
@@ -407,8 +408,34 @@ class DecidirTest < Test::Unit::TestCase
       card_holder_identification_number: '44444444',
       last_4: @credit_card.last_digits
     }
-    @gateway_for_auth.expects(:ssl_request).returns(successful_network_token_response)
-    response = @gateway_for_auth.authorize(100, @network_token, options)
+
+    response = stub_comms(@gateway_for_auth, :ssl_request) do
+      @gateway_for_auth.authorize(100, @network_token, options.merge(pass_cvv_for_nt: true))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"cryptogram\":\"#{@network_token.payment_cryptogram}\"/, data)
+      assert_match(/"security_code\":\"#{@network_token.verification_value}\"/, data)
+    end.respond_with(successful_network_token_response)
+
+    assert_success response
+    assert_equal 49120515, response.authorization
+  end
+
+  def test_network_token_payment_method_without_cvv
+    options = {
+      card_holder_name: 'Tesest payway',
+      card_holder_door_number: 1234,
+      card_holder_birthday: '200988',
+      card_holder_identification_type: 'DNI',
+      card_holder_identification_number: '44444444',
+      last_4: @credit_card.last_digits
+    }
+
+    response = stub_comms(@gateway_for_auth, :ssl_request) do
+      @gateway_for_auth.authorize(100, @network_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"cryptogram\":\"#{@network_token.payment_cryptogram}\"/, data)
+      assert_not_match(/"security_code\":\"#{@network_token.verification_value}\"/, data)
+    end.respond_with(successful_network_token_response)
 
     assert_success response
     assert_equal 49120515, response.authorization
