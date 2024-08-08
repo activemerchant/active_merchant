@@ -177,7 +177,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment_method, options = {})
-        if valid_payment_method?(payment_method)
+        if valid_payment_method?(payment_method, options)
           setup_address_hash(options)
           commit(build_auth_request(money, payment_method, options), :authorize, money, options)
         else
@@ -193,7 +193,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options = {})
-        if valid_payment_method?(payment_method)
+        if valid_payment_method?(payment_method, options)
           setup_address_hash(options)
           commit(build_purchase_request(money, payment_method, options), :purchase, money, options)
         else
@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
       # To charge the card while creating a profile, pass
       # options[:setup_fee] => money
       def store(payment_method, options = {})
-        if valid_payment_method?(payment_method)
+        if valid_payment_method?(payment_method, options)
           setup_address_hash(options)
           commit(build_create_subscription_request(payment_method, options), :store, nil, options)
         else
@@ -321,10 +321,12 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def valid_payment_method?(payment_method)
+      def valid_payment_method?(payment_method, options)
         return true unless payment_method.is_a?(NetworkTokenizationCreditCard)
 
-        %w(visa master american_express).include?(card_brand(payment_method))
+        brands = %w(visa master american_express)
+        brands << 'discover' if options[:enable_cybs_discover_apple_pay]
+        brands.include?(card_brand(payment_method))
       end
 
       # Create all required address hash key value pairs
@@ -930,6 +932,13 @@ module ActiveMerchant #:nodoc:
             xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
             xml.tag!('xid', Base64.encode64(cryptogram[20...40])) if cryptogram.bytes.count > 20
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+          end
+        when :discover
+          return unless options[:enable_cybs_discover_apple_pay]
+
+          xml.tag! 'ccAuthService', { 'run' => 'true' } do
+            xml.tag!('cavv', payment_method.payment_cryptogram) unless commerce_indicator
+            xml.commerceIndicator commerce_indicator.nil? ? ECI_BRAND_MAPPING[brand] : commerce_indicator
           end
         end
       end
