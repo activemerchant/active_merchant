@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         if visa_or_mastercard?(options)
-          MultiResponse.run do |r|
+          MultiResponse.run(:use_first_response) do |r|
             r.process { commit(ENDPOINTS[:capture], build_capture_request(money, authorization, options)) }
             r.process { commit(ENDPOINTS[:"level_3_#{options[:visa_or_mastercard]}"], send_level_3_data(r, options)) }
           end

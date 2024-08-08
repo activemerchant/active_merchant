@@ -263,7 +263,8 @@ class RemotePayTraceTest < Test::Unit::TestCase
     assert_success capture
 
     transaction_id = auth.authorization
-    assert_equal "Visa/MasterCard enhanced data was successfully added to Transaction ID #{transaction_id}. 2 line item records were created.", capture.message
+    assert_equal capture.authorization, transaction_id
+    assert_equal 'Your transaction was successfully captured.', capture.message
   end
 
   def test_failed_authorize
