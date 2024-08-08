@@ -18,7 +18,10 @@ module ActiveMerchant
         capture: '/settleTransaction',
         refund: '/refundTransaction',
         void: '/voidTransaction',
-        general_credit: '/payout'
+        general_credit: '/payout',
+        # for 3DS
+        init_payment: '/initPayment',
+        authorize_3d: '/authorize3d'
       }
 
       def initialize(options = {})
@@ -35,22 +38,48 @@ module ActiveMerchant
       def authorize(money, payment, options = {})
         post = initialize_post('Auth')
         build_authorize_and_purchase_params(money, payment, options, post)
+        commit(:purchase, post)
       end
 
       def purchase(money, payment, options = {})
-        build_authorize_and_purchase_params(money, payment, options)
+        if options[:execute_threed]
+          MultiResponse.run do |r|
+            post = {}
+            build_authorize_and_purchase_params(money, payment, options, post)
+            r.process { commit(:init_payment, post) }
+            r.process do
+              post = { relatedTransactionId: r.authorization }
+              build_authorize_and_purchase_params(money, payment, options, post)
+              add_3ds_data(post, options)
+              commit(:authorize_3d, post)
+            end
+          end
+        else
+          build_authorize_and_purchase_params(money, payment, options)
+          commit(:purchase, post)
+        end
       end
 
       def build_authorize_and_purchase_params(money, payment, options = {}, post = {})
-        post ||= {}
+        # post ||= {}
         build_post_data(post)
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_address(post, payment, options)
         add_customer_ip(post, options)
-
-        commit(:purchase, post)
       end
+
+      # def complete_3ds_flow(payment, authorization, options)
+      #   # para hacerlo en core
+        
+      #   add_address(n_post, payment, options)
+      #   add_payment(n_post, payment)
+      #   add_3ds_data((n_post.dig(:paymentOption, :card) || {}), options)
+      #   require 'pry'
+      #   binding.pry
+      #   commit(:authorize_3d, n_post)
+      #   # hasta aqui
+      # end
 
       def capture(money, authorization, options = {})
         post = {}
@@ -186,6 +215,42 @@ module ActiveMerchant
         }.compact
       end
 
+      def add_3ds_data(post, options = {})
+        return unless options[:execute_threed]
+
+        three_d_secure = options[:three_ds_2]
+        browser_info_3ds = three_d_secure[:browser_info]
+        payment_options = post[:paymentOption] ||= {}
+        card = payment_options[:card] ||= {}
+        card[:threeD] = {
+          v2AdditionalParams: {
+            challengeWindowSize: (options[:browser_size]),
+            # rebillExpiry: options, # Recurring Expiry in the format: YYYYMMDD. REQUIRED if isRebilling = 0. We recommend setting rebillExpiry to a value of no more than 5 years from the date of the initial transaction processing date.
+            # rebillFrequency: options, # Recurring Frequency in days. REQUIRED if isRebilling = 0.
+            challengePreference: '03',
+            # deliveryEmailString: options[:delivery]
+          },
+          browserDetails: {
+            acceptHeader: '*\\/*',
+            ip: options[:ip],
+            javaEnabled: browser_info_3ds[:java],
+            javaScriptEnabled: browser_info_3ds[:javascript] || false,
+            language: browser_info_3ds[:language],
+            colorDepth: browser_info_3ds[:depth], # Possible values: 1, 4, 8, 15, 16, 24, 32, 48
+            screenHeight: browser_info_3ds[:height],
+            screenWidth: browser_info_3ds[:width],
+            timeZone: browser_info_3ds[:timezone],
+            userAgent: browser_info_3ds[:user_agent]
+          },
+          notificationURL: (options[:notification_url] || options[:callback_url]) ,
+          merchantURL: (options[:merchant_url]),  # The URL of the merchant's fully qualified website.
+
+          version: '', # returned from initPayment
+          methodCompletionInd: 'U', # Indicates whether the 3D-Secure v2 fingerprint challenge was successfully completed. provided in the initPayment response.
+          platformType: '02' # browser instead of app-based (app-based is only for SDK implementation)
+        }
+      end
+
       def current_timestamp
         Time.now.utc.strftime('%Y%m%d%H%M%S')
       end
@@ -303,7 +368,7 @@ module ActiveMerchant
       end
 
       def success_from(response)
-        response[:status] == 'SUCCESS' && response[:transactionStatus] == 'APPROVED'
+        response[:status] == 'SUCCESS' && %w[APPROVED REDIRECT].include?(response[:transactionStatus])
       end
 
       def authorization_from(action, response, post)
