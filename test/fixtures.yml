@@ -609,7 +609,7 @@ merchant_warrior:
 
 # Working credentials, no need to replace
 mercury:
-  login: '089716741701445'
+  login: '62589006=TEST'
   password: 'xyz'
 
 mercury_no_tokenization:

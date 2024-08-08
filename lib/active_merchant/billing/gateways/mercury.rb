@@ -349,7 +349,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def unescape_xml(escaped_xml)
-        xml = escaped_xml.gsub(/\&gt;/, '>')
+        xml = escaped_xml.gsub(/\&gt;/, '>').gsub(/\r/, '').gsub(/\n/, '').gsub(/\t/, '').gsub('&lt;', '<')
         xml.slice! "<?xml version=\"1.0\"?>" # rubocop:disable Style/StringLiterals
         xml
       end
