@@ -167,6 +167,9 @@ module ActiveMerchant #:nodoc:
         end
 
         response
+      rescue StandardError
+        response[:message] = data&.to_s&.strip
+        response
       end
 
       def commit(action, params)
