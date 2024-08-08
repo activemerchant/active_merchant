@@ -2,6 +2,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Mercury, TransFirst: Repair gateways following updates to `rexml` [aenand] #5206.
 
 = Version 1.137.0 (August 2, 2024)
 
