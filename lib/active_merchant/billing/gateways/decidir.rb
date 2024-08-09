@@ -174,6 +174,7 @@ module ActiveMerchant #:nodoc:
         case payment_method
         when NetworkTokenizationCreditCard
           add_network_token(post, payment_method, options)
+          add_credit_card(post, payment_method, options) if options[:pass_cvv_for_nt]
         else
           add_credit_card(post, payment_method, options)
         end
