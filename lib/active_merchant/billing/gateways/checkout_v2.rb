@@ -81,6 +81,10 @@ module ActiveMerchant #:nodoc:
         authorize(0, credit_card, options)
       end
 
+      def inquire(authorization, options = {})
+        verify_payment(authorization, {})
+      end
+
       def verify_payment(authorization, options = {})
         commit(:verify_payment, nil, options, authorization, :get)
       end

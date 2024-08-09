@@ -228,6 +228,22 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_inquire
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+
+    response = @gateway.inquire(response.authorization, {})
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_unsuccessful_inquire
+    response = @gateway.inquire('123EDSE', {})
+    assert_failure response
+    assert_equal '404: Not Found', response.message
+  end
+
   def test_successful_purchase_via_oauth
     response = @gateway_oauth.purchase(@amount, @credit_card, @options)
     assert_success response
