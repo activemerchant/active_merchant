@@ -585,6 +585,30 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_successful_purchase_with_google_pay_without_billing_address_and_address_override
+    options = {
+      reference: '345123',
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: {
+        address1: '',
+        address2: '',
+        country: 'US',
+        city: 'Beverly Hills',
+        state: 'CA',
+        zip: '90210'
+      },
+      order_id: '123',
+      stored_credential: { reason_type: 'unscheduled' },
+      address_override: true
+    }
+
+    response = @gateway.purchase(@amount, @google_pay_card, options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   def test_successful_purchase_with_google_pay_and_truncate_order_id
     response = @gateway.purchase(@amount, @google_pay_card, @options.merge(order_id: @long_order_id))
     assert_success response

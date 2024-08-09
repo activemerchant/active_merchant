@@ -39,6 +39,7 @@
 * Adyen: Add header fields to response body [yunnydang] #5184
 * Stripe and Stripe PI: Add header fields to response body [yunnydang] #5185
 * Stripe and Stripe PI: Add metadata and order_id for refund and void [yunnydang] #5204
+* Adyen: Fix billing address empty string error [yunnydang] #5208
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860
