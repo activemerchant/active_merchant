@@ -40,9 +40,13 @@ class MercadoPagoTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).at_most(2).returns(successful_purchase_response)
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal true, request['binary_mode'] if /payments/.match?(endpoint)
+    end.respond_with(successful_purchase_response)
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
     assert_equal '4141491|1.0', response.authorization
@@ -497,6 +501,15 @@ class MercadoPagoTest < Test::Unit::TestCase
         @gateway.purchase(@amount, @credit_card, @options.merge(taxes: [{ amount: 500, type: 'IVA' }]))
       end.respond_with(successful_purchase_response)
     end
+  end
+
+  def test_set_binary_mode_to_nil_when_request_is_3ds
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(execute_threed: true))
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_nil request['binary_mode'] if /payments/.match?(endpoint)
+    end.respond_with(successful_authorize_response)
   end
 
   private

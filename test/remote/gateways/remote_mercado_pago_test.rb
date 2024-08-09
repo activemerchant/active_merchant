@@ -38,7 +38,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     @options = {
       billing_address: address,
       shipping_address: address,
-      email: 'user+br@example.com',
+      email: 'test_user_1390220683@testuser.com',
       description: 'Store Purchase'
     }
     @processing_options = {
@@ -362,5 +362,18 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:access_token], transcript)
+  end
+
+  def test_successful_purchase_with_3ds
+    three_ds_cc = credit_card('5483928164574623', verification_value: '123', month: 11, year: 2025)
+    @options[:execute_threed] = true
+
+    response = @gateway.purchase(290, three_ds_cc, @options)
+
+    assert_success response
+    assert_equal 'pending_challenge', response.message
+    assert_include response.params, 'three_ds_info'
+    assert_equal response.params['three_ds_info']['external_resource_url'], 'https://api.mercadopago.com/cardholder_authenticator/v2/prod/browser-challenges'
+    assert_include response.params['three_ds_info'], 'creq'
   end
 end
