@@ -192,8 +192,8 @@ module ActiveMerchant #:nodoc:
         if payment_method.source == :apple_pay || payment_method.source == :google_pay
           post[:cavv] = payment_method.payment_cryptogram
           post[:eci] = payment_method.eci
-          post[:decrypted_applepay_data] = 1
-          post[:decrypted_googlepay_data] = 1
+          post[:decrypted_applepay_data] = 1 if payment_method.source == :apple_pay
+          post[:decrypted_googlepay_data] = 1 if payment_method.source == :google_pay
         else
           post[:token_cryptogram] = payment_method.payment_cryptogram
         end
