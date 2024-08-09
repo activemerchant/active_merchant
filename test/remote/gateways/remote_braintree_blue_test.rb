@@ -1330,6 +1330,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal '1000 Approved', response.message
     assert_equal 'paypal_payer_id', response.params['braintree_transaction']['paypal_details']['payer_id']
     assert_equal 'payer@example.com', response.params['braintree_transaction']['paypal_details']['payer_email']
+    assert_equal nil, response.params['braintree_transaction']['paypal_details']['paypal_payment_token']
   end
 
   def test_successful_credit_card_purchase_with_prepaid_debit_issuing_bank

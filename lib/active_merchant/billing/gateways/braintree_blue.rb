@@ -563,14 +563,17 @@ module ActiveMerchant #:nodoc:
         transaction_params = create_transaction_parameters(money, credit_card_or_vault_id, options)
         commit do
           result = @braintree_gateway.transaction.send(transaction_type, transaction_params)
-          make_default_payment_method_token(result) if options.dig(:paypal, :paypal_flow_type) == 'checkout_with_vault' && result.success?
+          make_default_payment_method_token(result, options)
           response = Response.new(result.success?, message_from_transaction_result(result), response_params(result), response_options(result))
           response.cvv_result['message'] = ''
           response
         end
       end
 
-      def make_default_payment_method_token(result)
+      def make_default_payment_method_token(result, options)
+        return if options[:prevent_default_payment_method]
+        return unless options.dig(:paypal, :paypal_flow_type) == 'checkout_with_vault' && result.success?
+
         @braintree_gateway.customer.update(
           result.transaction.customer_details.id,
           default_payment_method_token: result.transaction.paypal_details.implicitly_vaulted_payment_method_token
@@ -678,7 +681,8 @@ module ActiveMerchant #:nodoc:
 
         paypal_details = {
           'payer_id'            => transaction.paypal_details.payer_id,
-          'payer_email'         => transaction.paypal_details.payer_email
+          'payer_email'         => transaction.paypal_details.payer_email,
+          'paypal_payment_token' => transaction.paypal_details.implicitly_vaulted_payment_method_token || transaction.paypal_details.token
         }
 
         if transaction.risk_data
