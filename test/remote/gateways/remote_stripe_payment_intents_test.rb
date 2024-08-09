@@ -1276,10 +1276,15 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       capture_method: 'manual',
       confirm: true
     }
+
+    void_options = {
+      cancellation_reason: 'requested_by_customer',
+      order_id: '123445abcde'
+    }
     assert create_response = @gateway.create_intent(@amount, @visa_payment_method, options)
     intent_id = create_response.params['id']
 
-    assert cancel_response = @gateway.void(intent_id, cancellation_reason: 'requested_by_customer')
+    assert cancel_response = @gateway.void(intent_id, void_options)
     assert_equal @amount, cancel_response.params.dig('charges', 'data')[0].dig('amount_refunded')
     assert_equal 'canceled', cancel_response.params['status']
     assert_equal 'requested_by_customer', cancel_response.params['cancellation_reason']
@@ -1336,14 +1341,20 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       capture_method: 'manual',
       confirm: true
     }
+
+    refund_options = {
+      order_id: '123445abcde'
+    }
+
     assert create_response = @gateway.create_intent(@amount, @visa_payment_method, options)
     intent_id = create_response.params['id']
 
     assert @gateway.capture(@amount, intent_id, options)
 
-    assert refund = @gateway.refund(@amount - 20, intent_id)
+    assert refund = @gateway.refund(@amount - 20, intent_id, refund_options)
     assert_equal @amount - 20, refund.params['charge']['amount_refunded']
     assert_equal true, refund.params['charge']['captured']
+    assert_equal '123445abcde', refund.params['metadata']['order_id']
     refund_id = refund.params['id']
     assert_equal refund.authorization, refund_id
   end
