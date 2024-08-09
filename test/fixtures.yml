@@ -716,6 +716,11 @@ nmi:
 nmi_secure:
   security_key: '6457Thfj624V5r7WUwc5v6a68Zsd6YEm'
 
+nuvei:
+  merchant_id: 'merchantId'
+  merchant_site_id: 'siteId'
+  secret_key: 'secretKey'
+
 ogone:
   login: LOGIN
   user: USER
