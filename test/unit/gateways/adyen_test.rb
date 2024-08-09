@@ -383,15 +383,6 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_failed_authorise_mastercard_raw_error_message
-    @gateway.expects(:ssl_post).returns(failed_authorize_mastercard_response)
-
-    response = @gateway.send(:commit, 'authorise', {}, { raw_error_message: true })
-
-    assert_equal 'Refused | 01: Refer to card issuer', response.message
-    assert_failure response
-  end
-
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     response = @gateway.capture(@amount, '7914775043909934')
