@@ -1232,12 +1232,38 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_authorize_with_network_tokenization_credit_card
     response = stub_comms do
-      @gateway.authorize(@amount, @apple_pay_card, @options)
+      @gateway.authorize(@amount, @apple_pay_card, @options.merge(switch_cryptogram_mapping_nt: false))
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert_equal 'YwAAAAAABaYcCMX/OhNRQAAAAAA=', parsed['mpiData']['cavv']
       assert_equal '07', parsed['mpiData']['eci']
       assert_equal 'applepay', parsed['additionalData']['paymentdatasource.type']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_with_network_tokenization_credit_card_using_ld_option
+    response = stub_comms do
+      @gateway.authorize(@amount, @apple_pay_card, @options.merge(switch_cryptogram_mapping_nt: true))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      assert_equal 'YwAAAAAABaYcCMX/OhNRQAAAAAA=', parsed['mpiData']['cavv']
+      assert_equal '07', parsed['mpiData']['eci']
+      assert_equal 'applepay', parsed['additionalData']['paymentdatasource.type']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_with_network_tokenization_credit_card_no_apple_no_google
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options.merge(switch_cryptogram_mapping_nt: true))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      assert_equal 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', parsed['mpiData']['tokenAuthenticationVerificationValue']
+      assert_equal '07', parsed['mpiData']['eci']
+      assert_nil parsed['additionalData']['paymentdatasource.type']
+      assert_equal 'VISATOKENSERVICE', parsed['recurring']['tokenService']
+      assert_equal 'EXTERNAL', parsed['recurring']['contract']
     end.respond_with(successful_authorize_response)
     assert_success response
   end

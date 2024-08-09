@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         add_3ds(post, options)
         add_3ds_authenticated_data(post, options)
         add_splits(post, options)
-        add_recurring_contract(post, options)
+        add_recurring_contract(post, options, payment)
         add_network_transaction_reference(post, options)
         add_application_info(post, options)
         add_level_2_data(post, options)
@@ -622,20 +622,31 @@ module ActiveMerchant #:nodoc:
 
         post[:mpiData] = {}
         post[:mpiData][:authenticationResponse] = 'Y'
-        post[:mpiData][:cavv] = payment.payment_cryptogram
+        if NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s].nil? && options[:switch_cryptogram_mapping_nt]
+          post[:mpiData][:tokenAuthenticationVerificationValue] = payment.payment_cryptogram
+        else
+          post[:mpiData][:cavv] = payment.payment_cryptogram
+        end
         post[:mpiData][:directoryResponse] = 'Y'
         post[:mpiData][:eci] = payment.eci || '07'
       end
 
-      def add_recurring_contract(post, options = {})
-        return unless options[:recurring_contract_type]
+      def add_recurring_contract(post, options = {}, payment = nil)
+        return unless options[:recurring_contract_type] || (payment.try(:source) == :network_token && options[:switch_cryptogram_mapping_nt])
 
-        post[:recurring] = {}
-        post[:recurring][:contract] = options[:recurring_contract_type]
+        post[:recurring] ||= {}
+        post[:recurring][:contract] = options[:recurring_contract_type] if options[:recurring_contract_type]
         post[:recurring][:recurringDetailName] = options[:recurring_detail_name] if options[:recurring_detail_name]
         post[:recurring][:recurringExpiry] = options[:recurring_expiry] if options[:recurring_expiry]
         post[:recurring][:recurringFrequency] = options[:recurring_frequency] if options[:recurring_frequency]
         post[:recurring][:tokenService] = options[:token_service] if options[:token_service]
+        if payment.try(:source) == :network_token && options[:switch_cryptogram_mapping_nt]
+          post[:recurring][:contract] = 'EXTERNAL'
+          post[:recurring][:tokenService] = case payment.brand
+                                            when 'visa' then 'VISATOKENSERVICE'
+                                            else 'MCTOKENSERVICE'
+                                            end
+        end
       end
 
       def add_application_info(post, options)
