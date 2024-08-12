@@ -448,7 +448,7 @@ class ElavonTest < Test::Unit::TestCase
       assert_match(/<ssl_approval_code>1234566<\/ssl_approval_code>/, data)
       assert_match(/<ssl_recurring_flag>1<\/ssl_recurring_flag>/, data)
       refute_match(/<ssl_entry_mode/, data)
-      refute_match(/<ssl_cvv2cvc2/, data)
+      assert_match(/<ssl_cvv2cvc2/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -475,7 +475,7 @@ class ElavonTest < Test::Unit::TestCase
       assert_match(/<ssl_payment_number>2<\/ssl_payment_number>/, data)
       assert_match(/<ssl_payment_count>4<\/ssl_payment_count>/, data)
       refute_match(/<ssl_entry_mode/, data)
-      refute_match(/<ssl_cvv2cvc2/, data)
+      assert_match(/<ssl_cvv2cvc2/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -502,7 +502,7 @@ class ElavonTest < Test::Unit::TestCase
       assert_match(/<ssl_entry_mode>12<\/ssl_entry_mode>/, data)
       assert_match(/<ssl_par_value>1234567890<\/ssl_par_value>/, data)
       assert_match(/<ssl_association_token_data>1<\/ssl_association_token_data>/, data)
-      refute_match(/<ssl_cvv2cvc2/, data)
+      assert_match(/<ssl_cvv2cvc2/, data)
     end.respond_with(successful_purchase_response)
   end
 

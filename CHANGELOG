@@ -7,6 +7,7 @@
 * FlexCharge: add more descriptives error messages [gasb150] #5199
 * Braintree: Updates to Paypal Integration [almalee24] #5190
 * CommerceHub: Update test url [DustinHaefele] #5211
+* Elavon: Update sending CVV for MIT transactions  [almalee24] #5210
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
