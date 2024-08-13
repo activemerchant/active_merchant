@@ -223,7 +223,6 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:email] = options[:email]
         post[:ipaddress] = options[:ip]
-        post[:customer_id] = options[:customer_id] || options[:customer]
 
         if (billing_address = options[:billing_address] || options[:address])
           post[:company] = billing_address[:company]
