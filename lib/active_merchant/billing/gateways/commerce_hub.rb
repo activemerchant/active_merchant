@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CommerceHubGateway < Gateway
-      self.test_url = 'https://cert.api.fiservapps.com/ch'
+      self.test_url = 'https://connect-cert.fiservapps.com/ch'
       self.live_url = 'https://prod.api.fiservapps.com/ch'
 
       self.supported_countries = ['US']
