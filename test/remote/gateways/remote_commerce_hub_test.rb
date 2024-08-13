@@ -246,7 +246,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('123', @options)
     assert_failure response
-    assert_equal 'Invalid primary transaction ID or not found', response.message
+    assert_equal 'Referenced transaction is invalid or not found', response.message
   end
 
   def test_successful_verify
@@ -299,7 +299,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(nil, 'abc123|123', @options)
     assert_failure response
-    assert_equal 'Invalid primary transaction ID or not found', response.message
+    assert_equal 'Referenced transaction is invalid or not found', response.message
   end
 
   def test_successful_credit
