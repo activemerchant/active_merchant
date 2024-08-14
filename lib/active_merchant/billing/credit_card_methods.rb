@@ -464,7 +464,7 @@ module ActiveMerchant #:nodoc:
         def valid_by_algorithm?(brand, numbers) #:nodoc:
           case brand
           when 'naranja'
-            valid_naranja_algo?(numbers)
+            valid_naranja_algo?(numbers) || valid_luhn?(numbers)
           when 'creditel'
             valid_creditel_algo?(numbers)
           when 'alia', 'confiable', 'maestro_no_luhn', 'anda', 'tarjeta-d', 'hipercard'
