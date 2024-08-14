@@ -110,6 +110,34 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_customer_vault_data
+    vault_id = SecureRandom.hex(16)
+
+    options = {
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: 'Store purchase',
+      customer_vault: 'add_customer'
+    }
+
+    assert response = @gateway.purchase(@amount, @credit_card, options.merge(customer_vault_id: vault_id))
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert_equal vault_id, response.params['customer_vault_id']
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_customer_vault_and_auto_generate_customer_vault_id
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(customer_vault: 'add_customer'))
+    assert_success response
+    assert response.test?
+
+    assert_equal 'Succeeded', response.message
+    assert response.params.include?('customer_vault_id')
+    assert response.authorization
+  end
+
   def test_successful_purchase_sans_cvv
     @credit_card.verification_value = nil
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -351,6 +379,34 @@ class RemoteNmiTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, options)
     assert_success response
     assert_match 'Succeeded', response.message
+  end
+
+  def test_successful_verify_with_customer_vault_data
+    vault_id = SecureRandom.hex(16)
+
+    options = {
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: 'Store purchase',
+      customer_vault: 'add_customer'
+    }
+
+    assert response = @gateway.verify(@credit_card, options.merge(customer_vault_id: vault_id))
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert_equal vault_id, response.params['customer_vault_id']
+    assert response.authorization
+  end
+
+  def test_successful_verify_with_customer_vault_and_auto_generate_customer_vault_id
+    assert response = @gateway.verify(@credit_card, @options.merge(customer_vault: 'add_customer'))
+    assert_success response
+    assert response.test?
+
+    assert_equal 'Succeeded', response.message
+    assert response.params.include?('customer_vault_id')
+    assert response.authorization
   end
 
   def test_failed_verify

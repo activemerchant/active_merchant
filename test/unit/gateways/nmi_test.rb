@@ -210,6 +210,23 @@ class NmiTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_purchase_with_customer_vault_options
+    options = {
+      description: 'Store purchase',
+      customer_vault: 'add_customer',
+      customer_vault_id: '12345abcde'
+    }
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/customer_vault=add_customer/, data)
+      assert_match(/customer_vault_id=12345abcde/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_purchase_with_shipping_fields_omits_blank_name
     options = @transaction_options.merge({ shipping_address: shipping_address(name: nil) })
 

@@ -6,12 +6,15 @@
 * NMI: Fix Decrypted indicator for Google/Apple pay [javierpedrozaing] #5196
 * FlexCharge: add more descriptives error messages [gasb150] #5199
 * Braintree: Updates to Paypal Integration [almalee24] #5190
+* Stripe and Stripe PI: Add metadata and order_id for refund and void [yunnydang] #5204
 * CommerceHub: Update test url [DustinHaefele] #5211
+* Adyen: Fix billing address empty string error [yunnydang] #5208
 * Elavon: Update sending CVV for MIT transactions  [almalee24] #5210
 * Adyen: Fix NT integration [jherreraa] #5155
 * HPS: Update NetworkTokenizationCreditCard flow [almalee24] #5178
 * Braintree: Support override_application_id [aenand] #5194
 * Decidir: Pass CVV for NT [almalee24] #5205
+* NMI: Add customer vault fields [yunnydang] #5215
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
@@ -43,8 +46,6 @@
 * Elavon: Add updated stored credential version [almalee24] #5170
 * Adyen: Add header fields to response body [yunnydang] #5184
 * Stripe and Stripe PI: Add header fields to response body [yunnydang] #5185
-* Stripe and Stripe PI: Add metadata and order_id for refund and void [yunnydang] #5204
-* Adyen: Fix billing address empty string error [yunnydang] #5208
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860
