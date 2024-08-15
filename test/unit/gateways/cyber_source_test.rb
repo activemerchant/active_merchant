@@ -572,7 +572,7 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_apple_pay_purchase_subsequent_auth_discover
     @gateway.expects(:ssl_post).with do |_host, request_body|
       assert_match %r'<cavv>', request_body
-      assert_match %r'<commerceIndicator>pb</commerceIndicator>', request_body
+      assert_match %r'<commerceIndicator>internet</commerceIndicator>', request_body
       true
     end.returns(successful_purchase_response)
 
