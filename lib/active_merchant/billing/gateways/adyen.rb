@@ -435,16 +435,17 @@ module ActiveMerchant #:nodoc:
 
         splits = []
         split_data.each do |split|
-          amount = {
-            value: split['amount']['value']
-          }
-          amount[:currency] = split['amount']['currency'] if split['amount']['currency']
+          if split['amount']
+            amount = {}
+            amount[:value] = split['amount']['value'] if split['amount']['value']
+            amount[:currency] = split['amount']['currency'] if split['amount']['currency']
+          end
 
           split_hash = {
-            amount: amount,
             type: split['type'],
             reference: split['reference']
           }
+          split_hash[:amount] = amount unless amount.nil?
           split_hash['account'] = split['account'] if split['account']
           splits.push(split_hash)
         end
