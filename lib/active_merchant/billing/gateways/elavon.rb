@@ -314,12 +314,8 @@ module ActiveMerchant #:nodoc:
         xml.ssl_customer_number                 options[:customer_number] if options.has_key?(:customer_number)
         xml.ssl_entry_mode                      entry_mode(payment_method, options) if entry_mode(payment_method, options)
         add_custom_fields(xml, options) if options[:custom_fields]
-        if options[:stored_cred_v2]
-          add_stored_credential_v2(xml, payment_method, options)
-          add_installment_fields(xml, options)
-        else
-          add_stored_credential(xml, options)
-        end
+        add_stored_credential(xml, payment_method, options)
+        add_installment_fields(xml, options)
       end
 
       def add_custom_fields(xml, options)
@@ -368,25 +364,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_stored_credential(xml, options)
-        return unless options[:stored_credential]
-
-        network_transaction_id = options.dig(:stored_credential, :network_transaction_id)
-        case
-        when network_transaction_id.nil?
-          return
-        when network_transaction_id.to_s.include?('|')
-          oar_data, ps2000_data = options[:stored_credential][:network_transaction_id].split('|')
-          xml.ssl_oar_data oar_data unless oar_data.nil? || oar_data.empty?
-          xml.ssl_ps2000_data ps2000_data unless ps2000_data.nil? || ps2000_data.empty?
-        when network_transaction_id.to_s.length > 22
-          xml.ssl_oar_data options.dig(:stored_credential, :network_transaction_id)
-        else
-          xml.ssl_ps2000_data options.dig(:stored_credential, :network_transaction_id)
-        end
-      end
-
-      def add_stored_credential_v2(xml, payment_method, options)
+      def add_stored_credential(xml, payment_method, options)
         return unless options[:stored_credential]
 
         network_transaction_id = options.dig(:stored_credential, :network_transaction_id)
@@ -416,15 +394,7 @@ module ActiveMerchant #:nodoc:
 
       def merchant_initiated_unscheduled(options)
         return options[:merchant_initiated_unscheduled] if options[:merchant_initiated_unscheduled]
-        return 'Y' if options.dig(:stored_credential, :initiator) == 'merchant' && merchant_reason_type(options)
-      end
-
-      def merchant_reason_type(options)
-        if options[:stored_cred_v2]
-          options.dig(:stored_credential, :reason_type) == 'unscheduled'
-        else
-          options.dig(:stored_credential, :reason_type) == 'unscheduled' || options.dig(:stored_credential, :reason_type) == 'recurring'
-        end
+        return 'Y' if options.dig(:stored_credential, :initiator) == 'merchant' && %w(unscheduled recurring).include?(options.dig(:stored_credential, :reason_type))
       end
 
       def add_installment_fields(xml, options)
@@ -436,8 +406,6 @@ module ActiveMerchant #:nodoc:
 
       def entry_mode(payment_method, options)
         return options[:entry_mode] if options[:entry_mode]
-        return 12 if options[:stored_credential] && options[:stored_cred_v2] != true
-
         return if payment_method.is_a?(String) || options[:ssl_token]
         return 12 if options.dig(:stored_credential, :reason_type) == 'unscheduled'
       end

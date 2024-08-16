@@ -47,7 +47,7 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge!(stored_cred_v2: true))
+      @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<ssl_cvv2cvc2>123<\/ssl_cvv2cvc2>/, data)
     end.respond_with(successful_purchase_response)
@@ -409,7 +409,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_pass_in_initial_recurring_request
     recurring_params = {
-      stored_cred_v2: true,
       stored_credential: {
         initial_transaction: true,
         reason_type: 'recurring',
@@ -431,7 +430,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_pass_in_recurring_request
     recurring_params = {
-      stored_cred_v2: true,
       approval_code: '1234566',
       stored_credential: {
         reason_type: 'recurring',
@@ -454,7 +452,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_pass_in_installment_request
     installment_params = {
-      stored_cred_v2: true,
       installments: '4',
       payment_number: '2',
       approval_code: '1234566',
@@ -481,7 +478,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_pass_in_unscheduled_with_additional_data_request
     unscheduled_params = {
-      stored_cred_v2: true,
       approval_code: '1234566',
       par_value: '1234567890',
       association_token_data: '1',
@@ -508,7 +504,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_tokenized_card_initial_recurring_request
     recurring_params = {
-      stored_cred_v2: true,
       stored_credential: {
         initial_transaction: true,
         reason_type: 'recurring',
@@ -530,7 +525,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_tokenized_card_recurring_request
     recurring_params = {
-      stored_cred_v2: true,
       stored_credential: {
         reason_type: 'recurring',
         initiator: 'merchant',
@@ -551,7 +545,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_tokenized_card_installment_request
     installment_params = {
-      stored_cred_v2: true,
       installments: '4',
       payment_number: '2',
       stored_credential: {
@@ -576,7 +569,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_tokenized_card_unscheduled_with_additional_data_request
     unscheduled_params = {
-      stored_cred_v2: true,
       par_value: '1234567890',
       association_token_data: '1',
       stored_credential: {
@@ -601,7 +593,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_manual_token_recurring_request
     recurring_params = {
-      stored_cred_v2: true,
       ssl_token: '4421912014039990',
       stored_credential: {
         reason_type: 'recurring',
@@ -623,7 +614,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_manual_token_installment_request
     installment_params = {
-      stored_cred_v2: true,
       ssl_token: '4421912014039990',
       installments: '4',
       payment_number: '2',
@@ -649,7 +639,6 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_stored_credential_manual_token_unscheduled_with_additional_data_request
     unscheduled_params = {
-      stored_cred_v2: true,
       ssl_token: '4421912014039990',
       par_value: '1234567890',
       association_token_data: '1',

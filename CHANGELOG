@@ -22,6 +22,7 @@
 * MercadoPago: Add idempotency key field [yunnydang] #5229
 * Adyen: Update split refund method [yunnydang] #5218
 * Adyen: Remove raw_error_message [almalee24] #5202
+* Elavon: Remove old Stored Credential method [almalee24] #5219
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
