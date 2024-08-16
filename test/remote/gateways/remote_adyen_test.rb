@@ -591,6 +591,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_successful_purchase_with_google_pay_pan_only
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(wallet_type: :google_pay))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   def test_successful_purchase_with_google_pay_without_billing_address_and_address_override
     options = {
       reference: '345123',

@@ -63,6 +63,15 @@ class AdyenTest < Test::Unit::TestCase
       verification_value: nil
     )
 
+    @google_pay_card = network_tokenization_credit_card(
+      '4761209980011439',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '11',
+      year: '2022',
+      source: :google_pay,
+      verification_value: nil
+    )
+
     @nt_credit_card = network_tokenization_credit_card(
       '4895370015293175',
       brand: 'visa',
@@ -1247,6 +1256,32 @@ class AdyenTest < Test::Unit::TestCase
       assert_equal 'YwAAAAAABaYcCMX/OhNRQAAAAAA=', parsed['mpiData']['cavv']
       assert_equal '07', parsed['mpiData']['eci']
       assert_equal 'applepay', parsed['additionalData']['paymentdatasource.type']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_with_google_pay
+    response = stub_comms do
+      @gateway.authorize(@amount, @google_pay_card, @options.merge(selected_brand: 'visa'))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      assert_equal @google_pay_card.payment_cryptogram, parsed['mpiData']['cavv']
+      assert_equal '07', parsed['mpiData']['eci']
+      assert_equal 'googlepay', parsed['additionalData']['paymentdatasource.type']
+      assert_equal 'googlepay', parsed['selectedBrand']
+      assert_equal 'true', parsed['additionalData']['paymentdatasource.tokenized']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_with_google_pay_pan_only
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(wallet_type: :google_pay))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      assert_equal 'googlepay', parsed['additionalData']['paymentdatasource.type']
+      assert_equal 'googlepay', parsed['selectedBrand']
+      assert_equal 'false', parsed['additionalData']['paymentdatasource.tokenized']
     end.respond_with(successful_authorize_response)
     assert_success response
   end

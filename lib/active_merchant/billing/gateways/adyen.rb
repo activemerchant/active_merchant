@@ -247,8 +247,7 @@ module ActiveMerchant #:nodoc:
 
       def add_extra_data(post, payment, options)
         post[:telephoneNumber] = (options[:billing_address][:phone_number] if options.dig(:billing_address, :phone_number)) || (options[:billing_address][:phone] if options.dig(:billing_address, :phone)) || ''
-        post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
-        post[:selectedBrand] ||= NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
+        post[:selectedBrand] = options[:selected_brand] if options[:selected_brand] && !post[:selectedBrand]
         post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
         post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
         post[:captureDelayHours] = options[:capture_delay_hours] if options[:capture_delay_hours]
@@ -274,7 +273,6 @@ module ActiveMerchant #:nodoc:
         post[:additionalData] ||= {}
         post[:additionalData][:overwriteBrand] = normalize(options[:overwrite_brand]) if options[:overwrite_brand]
         post[:additionalData][:customRoutingFlag] = options[:custom_routing_flag] if options[:custom_routing_flag]
-        post[:additionalData]['paymentdatasource.type'] = NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
         post[:additionalData][:authorisationType] = options[:authorisation_type] if options[:authorisation_type]
         post[:additionalData][:adjustAuthorisationData] = options[:adjust_authorisation_data] if options[:adjust_authorisation_data]
         post[:additionalData][:industryUsage] = options[:industry_usage] if options[:industry_usage]
@@ -559,7 +557,7 @@ module ActiveMerchant #:nodoc:
         elsif payment.is_a?(Check)
           add_bank_account(post, payment, options, action)
         else
-          add_mpi_data_for_network_tokenization_card(post, payment, options) if payment.is_a?(NetworkTokenizationCreditCard)
+          add_network_tokenization_card(post, payment, options) if payment.is_a?(NetworkTokenizationCreditCard) || options[:wallet_type] == :google_pay
           add_card(post, payment)
         end
       end
@@ -621,18 +619,27 @@ module ActiveMerchant #:nodoc:
         post[:originalReference] = original_reference
       end
 
-      def add_mpi_data_for_network_tokenization_card(post, payment, options)
-        return if options[:skip_mpi_data] == 'Y'
+      def add_network_tokenization_card(post, payment, options)
+        selected_brand = NETWORK_TOKENIZATION_CARD_SOURCE[options[:wallet_type]&.to_s || payment.source.to_s]
+        if selected_brand
+          post[:selectedBrand] = selected_brand
+          post[:additionalData] = {} unless post[:additionalData]
+          post[:additionalData]['paymentdatasource.type'] = selected_brand
+          post[:additionalData]['paymentdatasource.tokenized'] = options[:wallet_type] ? 'false' : 'true' if selected_brand == 'googlepay'
+        end
 
-        post[:mpiData] = {}
-        post[:mpiData][:authenticationResponse] = 'Y'
+        return if options[:skip_mpi_data] == 'Y' || options[:wallet_type]
+
+        post[:mpiData] = {
+          authenticationResponse: 'Y',
+          directoryResponse: 'Y',
+          eci: payment.eci || '07'
+        }
         if NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s].nil? && options[:switch_cryptogram_mapping_nt]
           post[:mpiData][:tokenAuthenticationVerificationValue] = payment.payment_cryptogram
         else
           post[:mpiData][:cavv] = payment.payment_cryptogram
         end
-        post[:mpiData][:directoryResponse] = 'Y'
-        post[:mpiData][:eci] = payment.eci || '07'
       end
 
       def add_recurring_contract(post, options = {}, payment = nil)
