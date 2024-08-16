@@ -360,4 +360,14 @@ class RemoteDecidirTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway_for_purchase.options[:api_key], transcript)
   end
+
+  def test_transcript_scrubbing_network_token
+    transcript = capture_transcript(@gateway_for_purchase) do
+      @gateway_for_purchase.purchase(@amount, @network_token, @options)
+    end
+    transcript = @gateway_for_purchase.scrub(transcript)
+
+    assert_scrubbed(@network_token.payment_cryptogram, transcript)
+    assert_scrubbed(@network_token.number, transcript)
+  end
 end
