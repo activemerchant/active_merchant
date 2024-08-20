@@ -5,6 +5,10 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     include ActiveMerchant::Billing::CreditCardMethods
     attr_accessor :number, :month, :year, :first_name, :last_name, :verification_value, :brand
 
+    def initialize(params)
+      params.each { |k,v| instance_variable_set("@#{k.to_s}".to_sym,v) }
+    end
+
     def verification_value?
       !@verification_value.blank?
     end
@@ -17,7 +21,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     @credit_card = credit_card('4242424242424242', { month: 9, year: 15 })
 
     @options = {
-      order_id: '2',
+      order_id: 'order123',
       billing_address: address,
       description: 'Store Purchase'
     }
@@ -94,10 +98,11 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
 
     assert response = @gateway.refund(@amount + 1, authorization)
     assert_failure response
-    assert_equal 'Only $1.0 available for refund', response.message
+    assert_equal 'Only 1.00 AUD available for refund', response.message
   end
 
   def test_successful_void
+    omit("It appears that SecurePayAU no longer supports void")
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
 
@@ -110,6 +115,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
   end
 
   def test_failed_void
+    omit("It appears that SecurePayAU no longer supports void")
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     authorization = response.authorization
@@ -160,6 +166,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     assert response = @gateway.purchase(12300, 'test1234', @options)
     assert_success response
     assert_equal response.params['amount'], '12300'
+    assert_equal response.params['ponum'], 'order123'
 
     assert_equal 'Approved', response.message
   end

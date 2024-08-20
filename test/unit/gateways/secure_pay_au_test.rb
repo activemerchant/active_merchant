@@ -13,7 +13,7 @@ class SecurePayAuTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      order_id: '1',
+      order_id: 'order123',
       billing_address: address,
       description: 'Store Purchase'
     }
@@ -77,6 +77,14 @@ class SecurePayAuTest < Test::Unit::TestCase
     @gateway.expects(:commit_periodic)
 
     @gateway.purchase(@amount, '123', @options)
+  end
+
+  def test_periodic_payment_submits_order_id
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, '123', @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<transactionReference>order123<\/transactionReference>/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_purchase_with_creditcard_calls_commit_with_purchase
