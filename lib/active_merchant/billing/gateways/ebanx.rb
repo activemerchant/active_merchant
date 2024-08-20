@@ -50,6 +50,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_customer_responsible_person(post, payment, options)
         add_additional_data(post, options)
+        add_stored_credentials(post, options)
 
         commit(:purchase, post)
       end
@@ -64,6 +65,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_customer_responsible_person(post, payment, options)
         add_additional_data(post, options)
+        add_stored_credentials(post, options)
         post[:payment][:creditcard][:auto_capture] = false
 
         commit(:authorize, post)
@@ -165,6 +167,28 @@ module ActiveMerchant #:nodoc:
           post[:payment][:responsible][:name] = options[:responsible_name] if options[:responsible_name]
           post[:payment][:responsible][:document] = options[:responsible_document] if options[:responsible_document]
           post[:payment][:responsible][:birth_date] = options[:responsible_birth_date] if options[:responsible_birth_date]
+        end
+      end
+
+      def add_stored_credentials(post, options)
+        return unless (stored_creds = options[:stored_credential])
+
+        post[:cof_info] = {
+          cof_type: stored_creds[:initial_transaction] ? 'initial' : 'stored',
+          initiator: stored_creds[:initiator] == 'cardholder' ? 'CIT' : 'MIT',
+          trans_type: add_trans_type(stored_creds),
+          mandate_id: stored_creds[:network_transaction_id]
+        }.compact
+      end
+
+      def add_trans_type(options)
+        case options[:reason_type]
+        when 'recurring'
+          'SCHEDULED_RECURRING'
+        when 'installment'
+          'INSTALLMENT'
+        else
+          options[:initiator] == 'cardholder' ? 'CUSTOMER_COF' : 'MERCHANT_COF'
         end
       end
 

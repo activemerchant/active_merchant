@@ -46,6 +46,153 @@ class EbanxTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_stored_credentials_cardholder_recurring
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: true,
+        initiator: 'cardholder',
+        reason_type: 'recurring',
+        network_transaction_id: nil
+      }
+    })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"cof_type\":\"initial\"}, data
+      assert_match %r{"initiator\":\"CIT\"}, data
+      assert_match %r{"trans_type\":\"SCHEDULED_RECURRING\"}, data
+      assert_not_match %r{"mandate_id\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials_cardholder_unscheduled
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: true,
+        initiator: 'cardholder',
+        reason_type: 'unscheduled',
+        network_transaction_id: nil
+      }
+    })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"cof_type\":\"initial\"}, data
+      assert_match %r{"initiator\":\"CIT\"}, data
+      assert_match %r{"trans_type\":\"CUSTOMER_COF\"}, data
+      assert_not_match %r{"mandate_id\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials_cardholder_installment
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: true,
+        initiator: 'cardholder',
+        reason_type: 'installment',
+        network_transaction_id: nil
+      }
+    })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"cof_type\":\"initial\"}, data
+      assert_match %r{"initiator\":\"CIT\"}, data
+      assert_match %r{"trans_type\":\"INSTALLMENT\"}, data
+      assert_not_match %r{"mandate_id\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials_merchant_installment
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'installment',
+        network_transaction_id: '1234'
+      }
+    })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"cof_type\":\"stored\"}, data
+      assert_match %r{"initiator\":\"MIT\"}, data
+      assert_match %r{"trans_type\":\"INSTALLMENT\"}, data
+      assert_match %r{"mandate_id\":\"1234\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials_merchant_unscheduled
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'unscheduled',
+        network_transaction_id: '1234'
+      }
+    })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"cof_type\":\"stored\"}, data
+      assert_match %r{"initiator\":\"MIT\"}, data
+      assert_match %r{"trans_type\":\"MERCHANT_COF\"}, data
+      assert_match %r{"mandate_id\":\"1234\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials_merchant_recurring
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'recurring',
+        network_transaction_id: '1234'
+      }
+    })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"cof_type\":\"stored\"}, data
+      assert_match %r{"initiator\":\"MIT\"}, data
+      assert_match %r{"trans_type\":\"SCHEDULED_RECURRING\"}, data
+      assert_match %r{"mandate_id\":\"1234\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials_cardholder_not_initial
+    options = @options.merge!({
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'cardholder',
+        reason_type: 'unscheduled',
+        network_transaction_id: '1234'
+      }
+    })
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"cof_type\":\"stored\"}, data
+      assert_match %r{"initiator\":\"CIT\"}, data
+      assert_match %r{"trans_type\":\"CUSTOMER_COF\"}, data
+      assert_match %r{"mandate_id\":\"1234\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
 
