@@ -446,6 +446,10 @@ class DecidirTest < Test::Unit::TestCase
     assert_equal @gateway_for_purchase.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_transcript_scrubbing_network_token
+    assert_equal @gateway_for_purchase.scrub(pre_scrubbed_network_token), post_scrubbed_network_token
+  end
+
   def test_payment_method_id_with_visa
     post = {}
     @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, @credit_card, @options)
@@ -579,6 +583,64 @@ class DecidirTest < Test::Unit::TestCase
       reading 659 bytes...
       -> "{\"id\":7721017,\"site_transaction_id\":\"d5972b68-87d5-46fd-8d3d-b2512902b9af\",\"payment_method_id\":1,\"card_brand\":\"Visa\",\"amount\":100,\"currency\":\"ars\",\"status\":\"approved\",\"status_details\":{\"ticket\":\"7297\",\"card_authorization_code\":\"153842\",\"address_validation_code\":\"VTE0011\",\"error\":null},\"date\":\"2019-06-24T15:38Z\",\"customer\":null,\"bin\":\"450799\",\"installments\":1,\"first_installment_expiration_date\":null,\"payment_type\":\"single\",\"sub_payments\":[],\"site_id\":\"99999999\",\"fraud_detection\":{\"status\":null},\"aggregate_data\":null,\"establishment_name\":\"Heavenly Buffaloes\",\"spv\":null,\"confirmed\":null,\"pan\":\"345425f15b2c7c4584e0044357b6394d7e\",\"customer_token\":null,\"card_data\":\"/tokens/7721017\"}"
       read 659 bytes
+      Conn close
+    )
+  end
+
+  def pre_scrubbed_network_token
+    %(
+      opening connection to developers.decidir.com:443...
+      opened
+      starting SSL for developers.decidir.com:443...
+      SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384
+      <- "POST /api/v2/payments HTTP/1.1\\r\\nContent-Type: application/json\\r\\nApikey: 5df6b5764c3f4822aecdc82d56f26b9d\\r\\nCache-Control: no-cache\\r\\nConnection: close\\r\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\nAccept: */*\\r\\nUser-Agent: Ruby\\r\\nHost: developers.decidir.com\\r\\nContent-Length: 505\\r\\n\\r\\n\"
+      <- "{\\\"payment_method_id\\\":1,\\\"site_transaction_id\\\":\\\"59239287-c211-4d72-97b0-70fd701126a6\\\",\\\"bin\\\":\\\"401200\\\",\\\"payment_type\\\":\\\"single\\\",\\\"installments\\\":1,\\\"description\\\":\\\"Store Purchase\\\",\\\"amount\\\":100,\\\"currency\\\":\\\"ARS\\\",\\\"card_data\\\":{\\\"card_holder_identification\\\":{},\\\"card_holder_name\\\":\\\"Tesest payway\\\",\\\"last_four_digits\\\":null},\\\"is_tokenized_payment\\\":true,\\\"fraud_detection\\\":{\\\"sent_to_cs\\\":false},\\\"token_card_data\\\":{\\\"token\\\":\\\"4012001037141112\\\",\\\"eci\\\":\\\"05\\\",\\\"cryptogram\\\":\\\"/wBBBBBCd4HzpGYAmbmgguoBBBB="},\\\"sub_payments\\\":[]}\"
+      -> "HTTP/1.1 402 Payment Required\\r\\n\"
+      -> "Content-Type: application/json; charset=utf-8\\r\\n\"
+      -> "Content-Length: 826\\r\\n\"
+      -> "Connection: close\\r\\n\"
+      -> "date: Wed, 21 Aug 2024 16:35:34 GMT\\r\\n\"
+      -> "ETag: W/\\\"33a-JHilnlQgDvDXNEdqUzzsVialMcw\\\"\\r\\n\"
+      -> "vary: Origin\\r\\n\"
+      -> "Access-Control-Allow-Origin: *\\r\\n\"
+      -> "Access-Control-Expose-Headers: Accept,Accept-Version,Content-Length,Content-MD5,Content-Type,Date,X-Auth-Token,Access-Control-Allow-Origin,apikey,Set-Cookie,x-consumer-username\\r\\n\"
+      -> "X-Kong-Upstream-Latency: 325\\r\\n\"
+      -> "X-Kong-Proxy-Latency: 1\\r\\n\"
+      -> "Via: kong/2.0.5\\r\\n\"
+      -> "Strict-Transport-Security: max-age=16070400; includeSubDomains\\r\\n\"
+      -> "Set-Cookie: TS017a11a6=012e46d8ee27033640500a291b59a9176ef91d5ef14fa722c67ee9909e85848e261382cc63bbfa0cb5d092944db41533293bbb0e26; Path=/; Domain=.developers.decidir.com\\r\\n\"
+      -> "\\r\\n\"\nreading 826 bytes...
+      -> "{\\\"id\\\":1945684101,\\\"site_transaction_id\\\":\\\"59239287-c211-4d72-97b0-70fd701126a6\\\",\\\"payment_method_id\\\":1,\\\"card_brand\\\":\\\"Visa\\\",\\\"amount\\\":100,\\\"currency\\\":\\\"ars\\\",\\\"status\\\":\\\"rejected\\\",\\\"status_details\\\":{\\\"ticket\\\":\\\"4922\\\",\\\"card_authorization_code\\\":\\\"\\\",\\\"address_validation_code\\\":\\\"VTE2222\\\",\\\"error\\\":{\\\"type\\\":\\\"insufficient_amount\\\",\\\"reason\\\":{\\\"id\\\":13,\\\"description\\\":\\\"MONTO INVALIDO\\\",\\\"additional_description\\\":\\\"\\\"}}},\\\"date\\\":\\\"2024-08-21T13:35Z\\\",\\\"payment_mode\\\":null,\\\"customer\\\":null,\\\"bin\\\":\\\"401200\\\",\\\"installments\\\":1,\\\"first_installment_expiration_date\\\":null,\\\"payment_type\\\":\\\"single\\\",\\\"sub_payments\\\":[],\\\"site_id\\\":\\\"99999999\\\",\\\"fraud_detection\\\":null,\\\"aggregate_data\\\":null,\\\"establishment_name\\\":null,\\\"spv\\\":null,\\\"confirmed\\\":null,\\\"pan\\\":null,\\\"customer_token\\\":null,\\\"card_data\\\":\\\"/tokens/1945684101\\\",\\\"token\\\":\\\"4a08b19a-fbe2-45b2-8ef6-f3f12d4aa6ed\\\",\\\"authenticated_token\\\":false}\"
+      read 826 bytes
+      Conn close
+    )
+  end
+
+  def post_scrubbed_network_token
+    %(
+      opening connection to developers.decidir.com:443...
+      opened
+      starting SSL for developers.decidir.com:443...
+      SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384
+      <- "POST /api/v2/payments HTTP/1.1\\r\\nContent-Type: application/json\\r\\nApikey: [FILTERED]\\r\\nCache-Control: no-cache\\r\\nConnection: close\\r\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\nAccept: */*\\r\\nUser-Agent: Ruby\\r\\nHost: developers.decidir.com\\r\\nContent-Length: 505\\r\\n\\r\\n\"
+      <- "{\\\"payment_method_id\\\":1,\\\"site_transaction_id\\\":\\\"59239287-c211-4d72-97b0-70fd701126a6\\\",\\\"bin\\\":\\\"401200\\\",\\\"payment_type\\\":\\\"single\\\",\\\"installments\\\":1,\\\"description\\\":\\\"Store Purchase\\\",\\\"amount\\\":100,\\\"currency\\\":\\\"ARS\\\",\\\"card_data\\\":{\\\"card_holder_identification\\\":{},\\\"card_holder_name\\\":\\\"Tesest payway\\\",\\\"last_four_digits\\\":null},\\\"is_tokenized_payment\\\":true,\\\"fraud_detection\\\":{\\\"sent_to_cs\\\":false},\\\"token_card_data\\\":{\\\"token\\\":\\\"[FILTERED]\\\",\\\"eci\\\":\\\"05\\\",\\\"cryptogram\\\":\\\"/[FILTERED]="},\\\"sub_payments\\\":[]}\"
+      -> "HTTP/1.1 402 Payment Required\\r\\n\"
+      -> "Content-Type: application/json; charset=utf-8\\r\\n\"
+      -> "Content-Length: 826\\r\\n\"
+      -> "Connection: close\\r\\n\"
+      -> "date: Wed, 21 Aug 2024 16:35:34 GMT\\r\\n\"
+      -> "ETag: W/\\\"33a-JHilnlQgDvDXNEdqUzzsVialMcw\\\"\\r\\n\"
+      -> "vary: Origin\\r\\n\"
+      -> "Access-Control-Allow-Origin: *\\r\\n\"
+      -> "Access-Control-Expose-Headers: Accept,Accept-Version,Content-Length,Content-MD5,Content-Type,Date,X-Auth-Token,Access-Control-Allow-Origin,apikey,Set-Cookie,x-consumer-username\\r\\n\"
+      -> "X-Kong-Upstream-Latency: 325\\r\\n\"
+      -> "X-Kong-Proxy-Latency: 1\\r\\n\"
+      -> "Via: kong/2.0.5\\r\\n\"
+      -> "Strict-Transport-Security: max-age=16070400; includeSubDomains\\r\\n\"
+      -> "Set-Cookie: TS017a11a6=012e46d8ee27033640500a291b59a9176ef91d5ef14fa722c67ee9909e85848e261382cc63bbfa0cb5d092944db41533293bbb0e26; Path=/; Domain=.developers.decidir.com\\r\\n\"
+      -> "\\r\\n\"\nreading 826 bytes...
+      -> "{\\\"id\\\":1945684101,\\\"site_transaction_id\\\":\\\"59239287-c211-4d72-97b0-70fd701126a6\\\",\\\"payment_method_id\\\":1,\\\"card_brand\\\":\\\"Visa\\\",\\\"amount\\\":100,\\\"currency\\\":\\\"ars\\\",\\\"status\\\":\\\"rejected\\\",\\\"status_details\\\":{\\\"ticket\\\":\\\"4922\\\",\\\"card_authorization_code\\\":\\\"\\\",\\\"address_validation_code\\\":\\\"VTE2222\\\",\\\"error\\\":{\\\"type\\\":\\\"insufficient_amount\\\",\\\"reason\\\":{\\\"id\\\":13,\\\"description\\\":\\\"MONTO INVALIDO\\\",\\\"additional_description\\\":\\\"\\\"}}},\\\"date\\\":\\\"2024-08-21T13:35Z\\\",\\\"payment_mode\\\":null,\\\"customer\\\":null,\\\"bin\\\":\\\"401200\\\",\\\"installments\\\":1,\\\"first_installment_expiration_date\\\":null,\\\"payment_type\\\":\\\"single\\\",\\\"sub_payments\\\":[],\\\"site_id\\\":\\\"99999999\\\",\\\"fraud_detection\\\":null,\\\"aggregate_data\\\":null,\\\"establishment_name\\\":null,\\\"spv\\\":null,\\\"confirmed\\\":null,\\\"pan\\\":null,\\\"customer_token\\\":null,\\\"card_data\\\":\\\"/tokens/1945684101\\\",\\\"token\\\":\\\"4a08b19a-fbe2-45b2-8ef6-f3f12d4aa6ed\\\",\\\"authenticated_token\\\":false}\"
+      read 826 bytes
       Conn close
     )
   end
