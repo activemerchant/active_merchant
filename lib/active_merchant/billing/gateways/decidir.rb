@@ -200,7 +200,7 @@ module ActiveMerchant #:nodoc:
         post[:fraud_detection] ||= {}
         post[:fraud_detection][:sent_to_cs] = false
         post[:card_data][:last_four_digits] = options[:last_4]
-        post[:card_data][:security_code] = payment_method.verification_value if payment_method.verification_value? && options[:pass_cvv_for_nt]
+        post[:card_data][:security_code] = payment_method.verification_value if payment_method.verification_value?
 
         post[:token_card_data] = {
           expiration_month: format(payment_method.month, :two_digits),

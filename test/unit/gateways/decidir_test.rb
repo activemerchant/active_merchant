@@ -411,7 +411,7 @@ class DecidirTest < Test::Unit::TestCase
     }
 
     response = stub_comms(@gateway_for_auth, :ssl_request) do
-      @gateway_for_auth.authorize(100, @network_token, options.merge(pass_cvv_for_nt: true))
+      @gateway_for_auth.authorize(100, @network_token, options)
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"cryptogram\":\"#{@network_token.payment_cryptogram}\"/, data)
       assert_match(/"security_code\":\"#{@network_token.verification_value}\"/, data)
@@ -432,7 +432,7 @@ class DecidirTest < Test::Unit::TestCase
       card_holder_identification_number: '44444444',
       last_4: @credit_card.last_digits
     }
-
+    @network_token.verification_value = nil
     response = stub_comms(@gateway_for_auth, :ssl_request) do
       @gateway_for_auth.authorize(100, @network_token, options)
     end.check_request do |_method, _endpoint, data, _headers|

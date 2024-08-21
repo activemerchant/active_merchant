@@ -33,9 +33,12 @@ class RemoteDecidirTest < Test::Unit::TestCase
     @network_token = network_tokenization_credit_card(
       '4012001037141112',
       brand: 'visa',
-      eci: '05',
-      payment_cryptogram: '000203016912340000000FA08400317500000000',
-      name: 'Tesest payway'
+      eci: '07',
+      payment_cryptogram: '060103078512340000000FA08400317400000000',
+      name: 'Tesest payway',
+      verification_value: '840',
+      month: '12',
+      year: '2027'
     )
 
     @failed_message = ['PEDIR AUTORIZACION | request_authorization_card', 'COMERCIO INVALIDO | invalid_card']
@@ -63,7 +66,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
     assert response.authorization
   end
 
-  def test_successful_purchase_with_network_token
+  def test_successful_purchase_with_network_token_visa
     options = {
       card_holder_door_number: 1234,
       card_holder_birthday: '200988',
