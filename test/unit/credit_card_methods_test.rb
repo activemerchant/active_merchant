@@ -362,6 +362,8 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'naranja', CreditCard.brand?('5895627823453005')
     assert_equal 'naranja', CreditCard.brand?('5895620000000002')
     assert_equal 'naranja', CreditCard.brand?('5895626746595650')
+    assert_equal 'naranja', CreditCard.brand?('5895628637412581')
+    assert_equal 'naranja', CreditCard.brand?('5895627087232438')
   end
 
   # Alelo BINs beginning with the digit 4 overlap with Visa's range of valid card numbers.
@@ -445,9 +447,10 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_matching_valid_naranja
-    number = '5895627823453005'
-    assert_equal 'naranja', CreditCard.brand?(number)
-    assert CreditCard.valid_number?(number)
+    %w[5895627823453005 5895627087232438 5895628637412581].each do |number|
+      assert_equal 'naranja', CreditCard.brand?(number)
+      assert CreditCard.valid_number?(number)
+    end
   end
 
   def test_matching_valid_creditel
