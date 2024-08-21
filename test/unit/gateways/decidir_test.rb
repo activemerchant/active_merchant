@@ -2,6 +2,7 @@ require 'test_helper'
 
 class DecidirTest < Test::Unit::TestCase
   include CommStub
+  include ActiveMerchant::Billing::CreditCardFormatting
 
   def setup
     @gateway_for_purchase = DecidirGateway.new(api_key: 'api_key')
@@ -414,6 +415,8 @@ class DecidirTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"cryptogram\":\"#{@network_token.payment_cryptogram}\"/, data)
       assert_match(/"security_code\":\"#{@network_token.verification_value}\"/, data)
+      assert_match(/"expiration_month\":\"#{format(@network_token.month, :two_digits)}\"/, data)
+      assert_match(/"expiration_year\":\"#{format(@network_token.year, :two_digits)}\"/, data)
     end.respond_with(successful_network_token_response)
 
     assert_success response

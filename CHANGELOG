@@ -25,6 +25,7 @@
 * Elavon: Remove old Stored Credential method [almalee24] #5219
 * PayTrace: Update MultiResponse for Capture [almalee24] #5203
 * Adyen: Add support for Pan Only GooglePay [almalee24] #5221
+* Decidir: Send extra fields for tokenized NT transactions [sinourain] #5224
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
