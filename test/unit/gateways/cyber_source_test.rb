@@ -42,6 +42,12 @@ class CyberSourceTest < Test::Unit::TestCase
                                                   eci: '05',
                                                   payment_cryptogram: '111111111100cryptogram',
                                                   source: :apple_pay)
+    @apple_pay_discover = network_tokenization_credit_card('6011111111111117',
+                                                           brand: 'discover',
+                                                           transaction_id: '123',
+                                                           eci: '05',
+                                                           payment_cryptogram: '111111111100cryptogram',
+                                                           source: :apple_pay)
     @google_pay = network_tokenization_credit_card('4242424242424242', source: :google_pay)
     @check = check()
 
@@ -560,6 +566,19 @@ class CyberSourceTest < Test::Unit::TestCase
       }
     })
     assert response = @gateway.purchase(@amount, credit_card, options)
+    assert_success response
+  end
+
+  def test_successful_apple_pay_purchase_subsequent_auth_discover
+    @gateway.expects(:ssl_post).with do |_host, request_body|
+      assert_match %r'<cavv>', request_body
+      assert_match %r'<commerceIndicator>internet</commerceIndicator>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    options = @options.merge(enable_cybs_discover_apple_pay: true)
+
+    assert response = @gateway.purchase(@amount, @apple_pay_discover, options)
     assert_success response
   end
 
