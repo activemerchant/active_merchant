@@ -125,6 +125,12 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_equal 'https://www.spreedly.com/', response.params['notification_url']
   end
 
+  def test_successful_purchase_with_idempotency_key
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(idempotency_key: '0d5020ed-1af6-469c-ae06-c3bec19954bb'))
+    assert_success response
+    assert_equal 'accredited', response.message
+  end
+
   def test_successful_purchase_with_payer
     response = @gateway.purchase(@amount, @credit_card, @options.merge({ payer: @payer }))
     assert_success response
@@ -155,6 +161,12 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
     assert_equal 'accredited', capture.message
+  end
+
+  def test_successful_authorize_with_idempotency_key
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(idempotency_key: '0d5020ed-1af6-469c-ae06-c3bec19954bb'))
+    assert_success response
+    assert_equal 'accredited', response.message
   end
 
   def test_successful_authorize_and_capture_with_elo
@@ -308,6 +320,12 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match %r{pending_capture}, response.message
+  end
+
+  def test_successful_verify_with_idempotency_key
+    response = @gateway.verify(@credit_card, @options.merge(idempotency_key: '0d5020ed-1af6-469c-ae06-c3bec19954bb'))
     assert_success response
     assert_match %r{pending_capture}, response.message
   end

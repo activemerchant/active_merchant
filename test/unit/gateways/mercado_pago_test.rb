@@ -366,6 +366,23 @@ class MercadoPagoTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_includes_idempotency_key_header
+    @options[:idempotency_key] = '12345'
+    @gateway.expects(:ssl_post).with(anything, anything, { 'Content-Type' => 'application/json' }).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, anything, { 'Content-Type' => 'application/json', 'X-Idempotency-Key' => '12345' }).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_includes_idempotency_key_header_for_refund
+    @options[:idempotency_key] = '12345'
+    @gateway.expects(:ssl_post).with(anything, anything, { 'Content-Type' => 'application/json', 'X-Idempotency-Key' => '12345' }).returns(successful_refund_response)
+
+    response = @gateway.refund(@amount, 'authorization|1.0', @options)
+    assert_success response
+  end
+
   def test_includes_additional_data
     @options[:additional_info] = { 'foo' => 'bar', 'baz' => 'quux' }
     response = stub_comms do
