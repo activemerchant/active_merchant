@@ -55,8 +55,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options = {})
-        txn_type = options[:reference_type] == :authorize ? 'AuthReversal' : 'Void'
-        post = build_vxml_request(txn_type, options) do |xml|
+        post = build_vxml_request('Void', options) do |xml|
           add_authorization(xml, authorization, options)
         end
 
@@ -66,7 +65,7 @@ module ActiveMerchant #:nodoc:
       def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options.merge(reference_type: :authorize)) }
+          r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
 
