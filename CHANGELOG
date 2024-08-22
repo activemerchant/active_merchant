@@ -16,7 +16,6 @@
 * Decidir: Pass CVV for NT [almalee24] #5205
 * NMI: Add customer vault fields [yunnydang] #5215
 * CheckoutV2: Add inquire method [almalee24] #5209
-* Iveri: Add AuthReversal for Authorizations [almalee24] #5201
 * Decidir & Braintree: Scrub cryptogram and card number [almalee24] #5220
 * Naranja: Update valid number check to include luhn10 [DustinHaefele] #5217
 * Cybersource: Add apple_pay with discover. [DustinHaefele] #5213
