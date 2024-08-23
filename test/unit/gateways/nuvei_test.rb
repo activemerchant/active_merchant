@@ -77,6 +77,44 @@ class NuveiTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_successful_purchase
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, endpoint, data, _headers|
+      if /payment/.match?(endpoint)
+        json_data = JSON.parse(data)
+        assert_match(/#{@amount}/, json_data['amount'])
+        assert_match(/#{@credit_card.number}/, json_data['paymentOption']['card']['cardNumber'])
+        assert_match(/#{@credit_card.verification_value}/, json_data['paymentOption']['card']['CVV'])
+        assert_match(%r(/payment), endpoint)
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_refund
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.refund(@amount, '123456', @options)
+    end.check_request(skip_response: true) do |_method, endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      if /refundTransaction/.match?(endpoint)
+        assert_match(/123456/, json_data['relatedTransactionId'])
+        assert_match(/#{@amount}/, json_data['amount'])
+      end
+    end
+  end
+
+  def test_successful_credit
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.credit(@amount, @credit_card, @options)
+    end.check_request do |_method, endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      if /payout/.match?(endpoint)
+        assert_match(/#{@amount}/, json_data['amount'])
+        assert_match(/#{@credit_card.number}/, json_data['cardData']['cardNumber'])
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def pre_scrubbed
@@ -138,6 +176,12 @@ class NuveiTest < Test::Unit::TestCase
   def successful_authorize_response
     <<~RESPONSE
       {"internalRequestId":1171104468,"status":"SUCCESS","errCode":0,"reason":"","merchantId":"3755516963854600967","merchantSiteId":"255388","version":"1.0","clientRequestId":"02ba666c-e3e5-4ec9-ae30-3f8500b18c96","sessionToken":"29226538-82c7-4a3c-b363-cb6829b8c32a","clientUniqueId":"c00ed73a7d682bf478295d57bdae3028","orderId":"471361708","paymentOption":{"userPaymentOptionId":"","card":{"ccCardNumber":"4****1390","bin":"476134","last4Digits":"1390","ccExpMonth":"09","ccExpYear":"25","acquirerId":"19","cvv2Reply":"","avsCode":"","cardType":"Debit","cardBrand":"VISA","issuerBankName":"INTL HDQTRS-CENTER OWNED","issuerCountry":"SG","isPrepaid":"false","threeD":{},"processedBrand":"VISA"},"paymentAccountReference":"f4iK2pnudYKvTALGdcwEzqj9p4"},"transactionStatus":"APPROVED","gwErrorCode":0,"gwExtendedErrorCode":0,"issuerDeclineCode":"","issuerDeclineReason":"","transactionType":"Auth","transactionId":"7110000000001908486","externalTransactionId":"","authCode":"111397","customData":"","fraudDetails":{"finalDecision":"Accept","score":"0"},"externalSchemeTransactionId":"","merchantAdviceCode":""}
+    RESPONSE
+  end
+
+  def successful_purchase_response
+    <<~RESPONSE
+      {"internalRequestId":1172848838, "status":"SUCCESS", "errCode":0, "reason":"", "merchantId":"3755516963854600967", "merchantSiteId":"255388", "version":"1.0", "clientRequestId":"a114381a-0f88-46d0-920c-7b5614f29e5b", "sessionToken":"d3424c9c-dd6d-40dc-85da-a2b92107cbe3", "clientUniqueId":"3ba2a81c46d78837ea819d9f3fe644e7", "orderId":"471833818", "paymentOption":{"userPaymentOptionId":"", "card":{"ccCardNumber":"4****1390", "bin":"476134", "last4Digits":"1390", "ccExpMonth":"09", "ccExpYear":"25", "acquirerId":"19", "cvv2Reply":"", "avsCode":"", "cardType":"Debit", "cardBrand":"VISA", "issuerBankName":"INTL HDQTRS-CENTER OWNED", "issuerCountry":"SG", "isPrepaid":"false", "threeD":{}, "processedBrand":"VISA"}, "paymentAccountReference":"f4iK2pnudYKvTALGdcwEzqj9p4"}, "transactionStatus":"APPROVED", "gwErrorCode":0, "gwExtendedErrorCode":0, "issuerDeclineCode":"", "issuerDeclineReason":"", "transactionType":"Sale", "transactionId":"7110000000001990927", "externalTransactionId":"", "authCode":"111711", "customData":"", "fraudDetails":{"finalDecision":"Accept", "score":"0"}, "externalSchemeTransactionId":"", "merchantAdviceCode":""}
     RESPONSE
   end
 end
