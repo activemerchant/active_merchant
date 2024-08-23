@@ -115,6 +115,40 @@ class NuveiTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_store
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options)
+    end.check_request do |_method, endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      if /payment/.match?(endpoint)
+        assert_match(/#{@credit_card.number}/, json_data['paymentOption']['card']['cardNumber'])
+        assert_equal '0', json_data['amount']
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_stored_credentials_cardholder_unscheduled
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: stored_credential(:cardholder, :unscheduled, :initial)))
+    end.check_request do |_method, endpoint, data, _headers|
+      if /payment/.match?(endpoint)
+        json_data = JSON.parse(data)
+        assert_match(/ADDCARD/, json_data['authenticationOnlyType'])
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_stored_credentials_merchant_recurring
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: stored_credential(:merchant, :recurring, id: 'abc123')))
+    end.check_request do |_method, endpoint, data, _headers|
+      if /payment/.match?(endpoint)
+        json_data = JSON.parse(data)
+        assert_match(/RECURRING/, json_data['authenticationOnlyType'])
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def pre_scrubbed

@@ -28,18 +28,21 @@ module ActiveMerchant
       end
 
       def authorize(money, payment, options = {}, transaction_type = 'Auth')
-        post = { transactionType: transaction_type }
+        post = { transactionType: transaction_type, savePM: false }
 
         build_post_data(post)
         add_amount(post, money, options)
-        add_payment_method(post, payment)
+        add_payment_method(post, payment, :paymentOption, options)
         add_address(post, payment, options)
         add_customer_ip(post, options)
+        add_stored_credentials(post, payment, options)
+        post[:userTokenId] = options[:user_token_id] if options[:user_token_id]
 
         commit(:purchase, post)
       end
 
       def purchase(money, payment, options = {})
+        fetch_session_token if payment.is_a?(String)
         authorize(money, payment, options, 'Sale')
       end
 
@@ -75,6 +78,10 @@ module ActiveMerchant
         end
       end
 
+      def store(credit_card, options = {})
+        authorize(0, credit_card, options)
+      end
+
       def credit(money, payment, options = {})
         post = { userTokenId: options[:user_token_id] }
 
@@ -85,6 +92,44 @@ module ActiveMerchant
         add_customer_ip(post, options)
 
         commit(:general_credit, post.compact)
+      end
+
+      def add_stored_credentials(post, payment, options = {})
+        return unless options[:stored_credential]
+
+        post[:savePM] = options[:save_payment_method] || true
+        set_initiator_type(post, payment, options)
+        set_reason_type(post, options)
+      end
+
+      def set_initiator_type(post, payment, options)
+        is_initial_transaction = options[:stored_credential][:initial_transaction]
+        stored_credentials_mode = is_initial_transaction ? '0' : '1'
+
+        post[:storedCredentials] = {
+          storedCredentialsMode: stored_credentials_mode
+        }
+        post[:isRebilling] = stored_credentials_mode
+      end
+
+      def set_reason_type(post, options)
+        reason_type = options[:stored_credential][:reason_type]
+
+        case reason_type
+        when 'recurring'
+          reason_type = 'RECURRING'
+        when 'installment'
+          reason_type = 'INSTALLMENTS'
+        when 'unscheduled'
+          reason_type = 'ADDCARD'
+        end
+
+        unless reason_type == 'ADDCARD'
+          fetch_session_token
+          post[:relatedTransactionId] = options[:related_transaction_id]
+        end
+
+        post[:authenticationOnlyType] = reason_type
       end
 
       def supports_scrubbing?
@@ -103,6 +148,10 @@ module ActiveMerchant
 
       private
 
+      def network_transaction_id_from(response)
+        response.dig('paymentOption', 'paymentAccountReference')
+      end
+
       def add_customer_ip(post, options)
         return unless options[:ip]
 
@@ -120,13 +169,27 @@ module ActiveMerchant
           cardHolderName: payment.name,
           expirationMonth: format(payment.month, :two_digits),
           expirationYear: format(payment.year, :four_digits),
-          CVV: payment.verification_value
+          CVV: payment.verification_value,
+          last4Digits: get_last_four_digits(payment.number),
+          selectedBrand: payment.brand
         }
       end
 
-      def add_payment_method(post, payment, key = :paymentOption)
-        payment_data = payment.is_a?(CreditCard) ? credit_card_hash(payment) : { cardToken: payment }
-        post[key] = key == :cardData ? payment_data : { card: payment_data }
+      def add_payment_method(post, payment, key, options = {})
+        payment_data = payment.is_a?(CreditCard) ? credit_card_hash(payment) : payment
+
+        if payment.is_a?(CreditCard)
+          post[key] = key == :paymentOption ? { card: payment_data } : payment_data
+        else
+          post[key] = {
+            userPaymentOptionId: payment_data,
+            card: { CVV: options[:cvv_code] }
+          }
+        end
+      end
+
+      def get_last_four_digits(number)
+        number[-4..-1]
       end
 
       def add_customer_names(full_name, payment_method)
@@ -205,7 +268,7 @@ module ActiveMerchant
       end
 
       def commit(action, post, authorization = nil, method = :post)
-        post[:sessionToken] = @options[:session_token] unless action == :capture
+        post[:sessionToken] = @options[:session_token] unless %i(capture refund).include?(action)
         post[:checksum] = calculate_checksum(post, action)
 
         response = parse(ssl_request(method, url(action, authorization), post.to_json, headers))
@@ -215,6 +278,7 @@ module ActiveMerchant
           message_from(response),
           response,
           authorization: authorization_from(action, response, post),
+          network_transaction_id: network_transaction_id_from(response),
           test: test?,
           error_code: error_code_from(response)
         )

@@ -64,6 +64,7 @@
 * Elavon: Add updated stored credential version [almalee24] #5170
 * Adyen: Add header fields to response body [yunnydang] #5184
 * Stripe and Stripe PI: Add header fields to response body [yunnydang] #5185
+* Nuvei: Add support for Stored Credentials [javierpedrozaing] #5186
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860
