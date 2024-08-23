@@ -27,10 +27,10 @@ module ActiveMerchant
         fetch_session_token unless session_token_valid?
       end
 
-      def authorize(money, payment, options = {})
-        post = { transactionType: 'Auth' }
+      def authorize(money, payment, options = {}, transaction_type = 'Auth')
+        post = { transactionType: transaction_type }
 
-        build_post_data(post, :authorize)
+        build_post_data(post)
         add_amount(post, money, options)
         add_payment_method(post, payment)
         add_address(post, payment, options)
@@ -39,22 +39,53 @@ module ActiveMerchant
         commit(:purchase, post)
       end
 
-      def purchase(money, payment, options = {}); end
+      def purchase(money, payment, options = {})
+        authorize(money, payment, options, 'Sale')
+      end
 
       def capture(money, authorization, options = {})
         post = { relatedTransactionId: authorization }
 
-        build_post_data(post, :capture)
+        build_post_data(post)
         add_amount(post, money, options)
 
         commit(:capture, post)
       end
 
-      def refund(money, authorization, options = {}); end
+      def refund(money, authorization, options = {})
+        post = { relatedTransactionId: authorization }
 
-      def void(authorization, options = {}); end
+        build_post_data(post)
+        add_amount(post, money, options)
 
-      def credit(money, payment, options = {}); end
+        commit(:refund, post)
+      end
+
+      def void(authorization, options = {})
+        post = { relatedTransactionId: authorization }
+        build_post_data(post)
+
+        commit(:void, post)
+      end
+
+      def verify(credit_card, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(0, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
+      def credit(money, payment, options = {})
+        post = { userTokenId: options[:user_token_id] }
+
+        build_post_data(post)
+        add_amount(post, money, options)
+        add_payment_method(post, payment, :cardData)
+        add_address(post, payment, options)
+        add_customer_ip(post, options)
+
+        commit(:general_credit, post.compact)
+      end
 
       def supports_scrubbing?
         true
@@ -93,12 +124,9 @@ module ActiveMerchant
         }
       end
 
-      def add_payment_method(post, payment)
-        if payment.is_a?(CreditCard)
-          post[:paymentOption] = { card: credit_card_hash(payment) }
-        else
-          post[:paymentOption] = { card: { cardToken: payment } }
-        end
+      def add_payment_method(post, payment, key = :paymentOption)
+        payment_data = payment.is_a?(CreditCard) ? credit_card_hash(payment) : { cardToken: payment }
+        post[key] = key == :cardData ? payment_data : { card: payment_data }
       end
 
       def add_customer_names(full_name, payment_method)
@@ -126,7 +154,7 @@ module ActiveMerchant
         Time.now.utc.strftime('%Y%m%d%H%M%S')
       end
 
-      def build_post_data(post, action)
+      def build_post_data(post)
         post[:merchantId] = @options[:merchant_id]
         post[:merchantSiteId] = @options[:merchant_site_id]
         post[:timeStamp] = current_timestamp.to_i
@@ -139,7 +167,7 @@ module ActiveMerchant
         keys = case action
                when :authenticate
                  [:timeStamp]
-               when :capture
+               when :capture, :refund, :void
                  %i[clientUniqueId amount currency relatedTransactionId timeStamp]
                else
                  %i[amount currency timeStamp]
@@ -161,12 +189,12 @@ module ActiveMerchant
           message_from(response),
           response,
           test: test?,
-          error_code: response[:errCode]
+          error_code: error_code_from(response)
         )
       end
 
       def fetch_session_token(post = {})
-        build_post_data(post, :authenticate)
+        build_post_data(post)
         send_session_request(post)
       end
 
@@ -188,7 +216,7 @@ module ActiveMerchant
           response,
           authorization: authorization_from(action, response, post),
           test: test?,
-          error_code: error_code_from(action, response)
+          error_code: error_code_from(response)
         )
       rescue ResponseError => e
         response = parse(e.response.body)
@@ -201,8 +229,8 @@ module ActiveMerchant
         "#{test? ? test_url : live_url}#{ENDPOINTS_MAPPING[action] % id}"
       end
 
-      def error_code_from(action, response)
-        (response[:statusName] || response[:status]) unless success_from(response)
+      def error_code_from(response)
+        response[:errCode] == 0 ? response[:gwErrorCode] : response[:errCode]
       end
 
       def headers
@@ -231,7 +259,8 @@ module ActiveMerchant
       end
 
       def message_from(response)
-        response[:status]
+        reason = response[:reason]&.present? ? response[:reason] : nil
+        response[:gwErrorReason] || reason || response[:transactionStatus]
       end
     end
   end
