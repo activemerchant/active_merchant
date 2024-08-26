@@ -179,6 +179,11 @@ module ActiveMerchant #:nodoc:
       #     . (period)
       #     {space}
       #
+
+      def inquire(authorization, options = {})
+        transaction_details(authorization)
+      end
+
       def reference_transaction(money, options = {})
         requires!(options, :reference_id)
         commit 'DoReferenceTransaction', build_reference_transaction_request(money, options)
