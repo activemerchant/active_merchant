@@ -28,6 +28,7 @@
 * Decidir: Send extra fields for tokenized NT transactions [sinourain] #5224
 * StripePI: Skip add_network_token_cryptogram_and_eci method to accept ApplePay recurring payments [sinourain] #5212
 * Decidir: Fix scrub method after update NT fields [sinourain] #5241
+* Cybersource and Cybersource Rest: Update card type code for Carnet cards [rachelkirk] #5235
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
