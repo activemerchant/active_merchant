@@ -913,11 +913,13 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
         stored_credential: {
           initial_transaction: false,
           initiator: 'cardholder',
-          reason_type: 'installment'
+          reason_type: 'installment',
+          network_transaction_id: '1098510912210968'
         }
       })
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match('payment_method_options[card][stored_credential_transaction_type]=stored_on_session', data)
+      assert_not_match('payment_method_options[card][mit_exemption][network_transaction_id]=1098510912210968', data)
     end.respond_with(successful_create_intent_response)
   end
 
@@ -930,11 +932,13 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
         stored_credential: {
           initial_transaction: false,
           initiator: 'merchant',
-          reason_type: 'recurring'
+          reason_type: 'recurring',
+          network_transaction_id: '1098510912210968'
         }
       })
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match('payment_method_options[card][stored_credential_transaction_type]=stored_off_session_recurring', data)
+      assert_match('payment_method_options[card][mit_exemption][network_transaction_id]=1098510912210968', data)
     end.respond_with(successful_create_intent_response)
   end
 

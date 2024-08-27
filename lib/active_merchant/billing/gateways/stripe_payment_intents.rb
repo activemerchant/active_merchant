@@ -586,7 +586,7 @@ module ActiveMerchant #:nodoc:
 
         card_options = post[:payment_method_options][:card]
         card_options[:stored_credential_transaction_type] = stored_credential_type
-        card_options[:mit_exemption].delete(:network_transaction_id) if stored_credential_type == 'setup_on_session'
+        card_options[:mit_exemption].delete(:network_transaction_id) if %w(setup_on_session stored_on_session).include?(stored_credential_type)
       end
 
       def initial_transaction_stored_credential(post, stored_credential)

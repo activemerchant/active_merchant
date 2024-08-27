@@ -980,6 +980,25 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'requires_action', purchase.params['status']
   end
 
+  def test_succeeds_with_subsequent_cit_3ds_required
+    assert purchase = @gateway.purchase(@amount, @visa_card, {
+      currency: 'USD',
+      execute_threed: true,
+      confirm: true,
+      stored_credential_transaction_type: true,
+      stored_credential: {
+        initiator: 'cardholder',
+        reason_type: 'recurring',
+        initial_transaction: false,
+        network_transaction_id: '1098510912210968'
+      }
+    })
+    assert_success purchase
+    assert_equal 'succeeded', purchase.params['status']
+    assert purchase.params.dig('charges', 'data')[0]['captured']
+    assert purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['network_transaction_id']
+  end
+
   def test_succeeds_with_mit
     assert purchase = @gateway.purchase(@amount, @visa_card, {
       currency: 'USD',
