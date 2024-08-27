@@ -592,7 +592,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
       @gateway.purchase(100, @carnet_card, @options)
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
-      assert_equal '058', request['paymentInformation']['card']['type']
+      assert_equal '002', request['paymentInformation']['card']['type']
     end.respond_with(successful_purchase_response)
   end
 

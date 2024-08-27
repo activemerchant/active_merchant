@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         dankort: '034',
         maestro: '042',
         elo: '054',
-        carnet: '058'
+        carnet: '002'
       }
 
       @@decision_codes = {
