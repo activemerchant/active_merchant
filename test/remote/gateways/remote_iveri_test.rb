@@ -133,17 +133,21 @@ class RemoteIveriTest < Test::Unit::TestCase
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
+    # authorization portion is successful since we use that as the main response
     assert_success response
     assert_equal 'Authorisation', response.responses[0].params['transaction_command']
     assert_equal '0', response.responses[0].params['result_status']
-    assert_equal 'Void', response.responses[1].params['transaction_command']
+    # authorizationreversal portion is successful
+    assert_success response.responses.last
+    assert_equal 'AuthorisationReversal', response.responses[1].params['transaction_command']
     assert_equal '0', response.responses[1].params['result_status']
     assert_equal 'Succeeded', response.message
   end
 
   def test_failed_verify
     response = @gateway.verify(@bad_card, @options)
-    assert_failure response
+    assert_failure response # assert failure of authorization portion
+    assert_failure response.responses.last # assert failure of authorisationvoid portion
     assert_includes ['Denied', 'Hot card', 'Please call'], response.message
   end
 
