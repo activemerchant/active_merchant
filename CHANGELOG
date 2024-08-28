@@ -24,7 +24,6 @@
 * Adyen: Remove raw_error_message [almalee24] #5202
 * Elavon: Remove old Stored Credential method [almalee24] #5219
 * PayTrace: Update MultiResponse for Capture [almalee24] #5203
-* Ebanx: Add support for Stored Credentials [almalee24] #5223
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
