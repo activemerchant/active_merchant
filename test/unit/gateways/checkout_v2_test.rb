@@ -1,5 +1,4 @@
 require 'test_helper'
-
 class CheckoutV2Test < Test::Unit::TestCase
   include CommStub
 
@@ -493,7 +492,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       }
       @gateway.purchase(@amount, @credit_card, initial_options)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(%r{"payment_type":"Recurring"}, data)
+      assert_match(%r{"payment_type":"Installment"}, data)
       assert_match(%r{"merchant_initiated":false}, data)
     end.respond_with(successful_purchase_initial_stored_credential_response)
 

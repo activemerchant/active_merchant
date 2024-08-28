@@ -36,6 +36,7 @@
 * SafeCharge: Add card holder verification fields [yunnydang] #5252
 * Iveri: Add AuthorisationReversal for Auth Void [almalee24] #5233
 * Stripe PI: Update Stored Credentials [almalee24] #5236
+* Checkout V2: Update stored credential options function [jherreraa] #5239
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

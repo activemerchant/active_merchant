@@ -369,6 +369,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def merchant_initiated_override(post, options)
+        post[:payment_type] ||= 'Regular'
         post[:merchant_initiated] = true
         post[:source][:stored] = true
         post[:previous_payment_id] = options[:merchant_initiated_transaction_id]
@@ -387,7 +388,7 @@ module ActiveMerchant #:nodoc:
       def add_stored_credential_options(post, options = {})
         return unless options[:stored_credential]
 
-        post[:payment_type] = 'Recurring' if %w(recurring installment).include? options[:stored_credential][:reason_type]
+        post[:payment_type] = options[:stored_credential][:reason_type]&.capitalize
 
         if options[:merchant_initiated_transaction_id]
           merchant_initiated_override(post, options)
