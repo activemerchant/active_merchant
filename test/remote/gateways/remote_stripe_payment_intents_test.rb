@@ -1583,6 +1583,13 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'requires_action', purchase.params['status']
 
     options = {
+      currency: 'GBP',
+      request_three_d_secure: 'challenge'
+    }
+    assert purchase = @gateway.purchase(@amount, @three_ds_not_required_card, options)
+    assert_equal 'requires_action', purchase.params['status']
+
+    options = {
       currency: 'GBP'
     }
     assert purchase = @gateway.purchase(@amount, @three_ds_not_required_card, options)

@@ -163,6 +163,15 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
       assert_match(/\[request_three_d_secure\]=automatic/, data)
     end.respond_with(successful_request_three_d_secure_response)
 
+    request_three_d_secure = 'challenge'
+    options = @options.merge(request_three_d_secure: request_three_d_secure)
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.create_intent(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/\[request_three_d_secure\]=challenge/, data)
+    end.respond_with(successful_request_three_d_secure_response)
+
     request_three_d_secure = true
     options = @options.merge(request_three_d_secure: request_three_d_secure)
 

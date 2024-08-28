@@ -645,7 +645,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def request_three_d_secure(post, options = {})
-        return unless options[:request_three_d_secure] && %w(any automatic).include?(options[:request_three_d_secure])
+        return unless options[:request_three_d_secure] && %w(any automatic challenge).include?(options[:request_three_d_secure])
 
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
