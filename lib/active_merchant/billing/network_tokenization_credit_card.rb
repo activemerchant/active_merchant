@@ -31,6 +31,14 @@ module ActiveMerchant #:nodoc:
         true
       end
 
+      def network_token?
+        source == :network_token
+      end
+
+      def mobile_wallet?
+        %i[apple_pay android_pay google_pay].include?(source)
+      end
+
       def type
         'network_tokenization'
       end
