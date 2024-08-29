@@ -126,6 +126,15 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert purchase.params.dig('charges', 'data')[0]['balance_transaction']
   end
 
+  def test_successful_purchase_google_pay_fpan
+    options = {
+      currency: 'GBP',
+      customer: @customer
+    }
+    assert purchase = @gateway.purchase(@amount, @visa_payment_method, options.merge(wallet_type: :non_tokenized_google_pay))
+    assert_equal 'succeeded', purchase.params['status']
+  end
+
   def test_successful_purchase_with_card_brand
     options = {
       currency: 'USD',

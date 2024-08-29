@@ -367,6 +367,25 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal 'succeeded', verify.params['status']
   end
 
+  def test_successful_verify_google_pay
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@google_pay, @options.merge(new_ap_gp_route: true))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_data[card][network_token][tokenization_method]=google_pay_dpan', data)
+      assert_match("payment_method_data[card][network_token][number]=#{@google_pay.number}", data)
+      assert_match('payment_method_options[card][network_token][cryptogram]', data)
+      assert_match("payment_method_options[card][network_token][electronic_commerce_indicator]=#{@google_pay.eci}", data)
+    end.respond_with(successful_verify_response)
+  end
+
+  def test_successful_verify_non_tokenized_google_pay
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options.merge!(wallet_type: :non_tokenized_google_pay))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('metadata[input_method]=GooglePay', data)
+    end.respond_with(successful_verify_response)
+  end
+
   def test_successful_purchase_with_level3_data
     @options[:merchant_reference] = 123
     @options[:customer_reference] = 456
@@ -540,8 +559,17 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @google_pay, options)
     end.check_request do |_method, _endpoint, data, _headers|
+      assert_match("payment_method_data[card][network_token][number]=#{@google_pay.number}", data)
       assert_match('payment_method_options[card][network_token][electronic_commerce_indicator]=05', data)
       assert_match('payment_method_data[card][network_token][tokenization_method]=google_pay_dpan', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_purchase_with_google_pay_non_tokenized
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(wallet_type: :non_tokenized_google_pay))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('metadata[input_method]=GooglePay', data)
     end.respond_with(successful_create_intent_response)
   end
 

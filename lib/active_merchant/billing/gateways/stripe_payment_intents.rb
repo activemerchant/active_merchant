@@ -13,8 +13,7 @@ module ActiveMerchant #:nodoc:
       DEFAULT_API_VERSION = '2020-08-27'
       DIGITAL_WALLETS = {
         apple_pay: 'apple_pay',
-        google_pay: 'google_pay_dpan',
-        untokenized_google_pay: 'google_pay_ecommerce_token'
+        google_pay: 'google_pay_dpan'
       }
 
       def create_intent(money, payment_method, options = {})
@@ -38,7 +37,7 @@ module ActiveMerchant #:nodoc:
               return result if result.is_a?(ActiveMerchant::Billing::Response)
             end
 
-            add_network_token_cryptogram_and_eci(post, payment_method, options)
+            add_network_token_info(post, payment_method, options)
             add_external_three_d_secure_auth_data(post, options)
             add_metadata(post, options)
             add_return_url(post, options)
@@ -83,6 +82,7 @@ module ActiveMerchant #:nodoc:
           return result if result.is_a?(ActiveMerchant::Billing::Response)
         end
 
+        add_network_token_info(post, payment_method, options)
         add_payment_method_types(post, options)
         CONFIRM_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
@@ -117,6 +117,11 @@ module ActiveMerchant #:nodoc:
           post[:billing_details] = add_address(billing, options)
         end
 
+        # wallet_type is only passed for non-tokenized GooglePay which acts as a CreditCard
+        if options[:wallet_type]
+          post[:metadata] ||= {}
+          post[:metadata][:input_method] = 'GooglePay'
+        end
         add_name_only(post, payment_method) if post[:billing_details].nil?
         add_network_token_data(post, payment_method, options)
         post
@@ -140,6 +145,7 @@ module ActiveMerchant #:nodoc:
           return result if result.is_a?(ActiveMerchant::Billing::Response)
         end
 
+        add_network_token_info(post, payment_method, options)
         add_payment_method_types(post, options)
         add_customer(post, options)
         add_metadata(post, options)
@@ -167,6 +173,7 @@ module ActiveMerchant #:nodoc:
               return result if result.is_a?(ActiveMerchant::Billing::Response)
             end
 
+            add_network_token_info(post, payment_method, options)
             add_metadata(post, options)
             add_return_url(post, options)
             add_fulfillment_date(post, options)
@@ -423,7 +430,13 @@ module ActiveMerchant #:nodoc:
         post_data
       end
 
-      def add_network_token_cryptogram_and_eci(post, payment_method, options)
+      def add_network_token_info(post, payment_method, options)
+        # wallet_type is only passed for non-tokenized GooglePay which acts as a CreditCard
+        if options[:wallet_type]
+          post[:metadata] ||= {}
+          post[:metadata][:input_method] = 'GooglePay'
+        end
+
         return unless payment_method.is_a?(NetworkTokenizationCreditCard) && options.dig(:stored_credential, :initiator) != 'merchant'
         return if digital_wallet_payment_method?(payment_method) && options[:new_ap_gp_route] != true
 
@@ -437,8 +450,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_digital_wallet(post, payment_method, options)
-        source = payment_method.respond_to?(:source) ? payment_method.source : options[:wallet_type]
-
         post[:payment_method_data] = {
           type: 'card',
           card: {
@@ -449,7 +460,7 @@ module ActiveMerchant #:nodoc:
               number: payment_method.number,
               exp_month: payment_method.month,
               exp_year: payment_method.year,
-              tokenization_method: DIGITAL_WALLETS[source]
+              tokenization_method: DIGITAL_WALLETS[payment_method.source]
             }
           }
         }
