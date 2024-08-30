@@ -529,6 +529,28 @@ class MercadoPagoTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_should_not_include_sponsor_id_when_test_mode_is_enabled
+    @options[:sponsor_id] = '1234'
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      assert_not_match(%r("sponsor_id":), data) if /payments/.match?(endpoint)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_should_include_sponsor_id_when_test_mode_is_disabled
+    @gateway.stubs(test?: false)
+    @options[:sponsor_id] = '1234'
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '1234', request['sponsor_id'] if /payments/.match?(endpoint)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def pre_scrubbed

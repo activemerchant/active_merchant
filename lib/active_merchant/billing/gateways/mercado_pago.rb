@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_additional_data(post, options)
-        post[:sponsor_id] = options[:sponsor_id]
+        post[:sponsor_id] = options[:sponsor_id] unless test?
         post[:metadata] = options[:metadata] if options[:metadata]
         post[:device_id] = options[:device_id] if options[:device_id]
         post[:additional_info] = {

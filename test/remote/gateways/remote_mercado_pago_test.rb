@@ -394,4 +394,18 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_equal response.params['three_ds_info']['external_resource_url'], 'https://api.mercadopago.com/cardholder_authenticator/v2/prod/browser-challenges'
     assert_include response.params['three_ds_info'], 'creq'
   end
+
+  def test_successful_purchase_with_3ds_mandatory
+    three_ds_cc = credit_card('5031755734530604', verification_value: '123', month: 11, year: 2025)
+    @options[:execute_threed] = true
+    @options[:three_ds_mode] = 'mandatory'
+
+    response = @gateway.purchase(290, three_ds_cc, @options)
+
+    assert_success response
+    assert_equal 'pending_challenge', response.message
+    assert_include response.params, 'three_ds_info'
+    assert_equal response.params['three_ds_info']['external_resource_url'], 'https://api.mercadopago.com/cardholder_authenticator/v2/prod/browser-challenges'
+    assert_include response.params['three_ds_info'], 'creq'
+  end
 end
