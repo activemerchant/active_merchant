@@ -182,6 +182,9 @@ class RemotePlexoTest < Test::Unit::TestCase
     assert_equal 'The selected payment state is not valid.', response.message
   end
 
+  # for verify tests: sometimes those fails but re-running after
+  # few seconds they can works
+
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response

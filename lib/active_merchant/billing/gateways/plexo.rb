@@ -212,8 +212,6 @@ module ActiveMerchant #:nodoc:
             id: payment.brand,
             NetworkToken: {
               Number: payment.number,
-              Bin: get_last_eight_digits(payment.number),
-              Last4: get_last_four_digits(payment.number),
               ExpMonth: (format(payment.month, :two_digits) if payment.month),
               ExpYear: (format(payment.year, :two_digits) if payment.year),
               Cryptogram: payment.payment_cryptogram
@@ -230,14 +228,6 @@ module ActiveMerchant #:nodoc:
             }
           }
         end
-      end
-
-      def get_last_eight_digits(number)
-        number[-8..-1]
-      end
-
-      def get_last_four_digits(number)
-        number[-4..-1]
       end
 
       def add_card_holder(card, payment, options)
