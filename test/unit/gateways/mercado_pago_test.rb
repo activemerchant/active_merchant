@@ -366,6 +366,23 @@ class MercadoPagoTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_includes_idempotency_key_header
+    @options[:idempotency_key] = '12345'
+    @gateway.expects(:ssl_post).with(anything, anything, { 'Content-Type' => 'application/json' }).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, anything, { 'Content-Type' => 'application/json', 'X-Idempotency-Key' => '12345' }).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_includes_idempotency_key_header_for_refund
+    @options[:idempotency_key] = '12345'
+    @gateway.expects(:ssl_post).with(anything, anything, { 'Content-Type' => 'application/json', 'X-Idempotency-Key' => '12345' }).returns(successful_refund_response)
+
+    response = @gateway.refund(@amount, 'authorization|1.0', @options)
+    assert_success response
+  end
+
   def test_includes_additional_data
     @options[:additional_info] = { 'foo' => 'bar', 'baz' => 'quux' }
     response = stub_comms do
@@ -510,6 +527,28 @@ class MercadoPagoTest < Test::Unit::TestCase
       request = JSON.parse(data)
       assert_nil request['binary_mode'] if /payments/.match?(endpoint)
     end.respond_with(successful_authorize_response)
+  end
+
+  def test_should_not_include_sponsor_id_when_test_mode_is_enabled
+    @options[:sponsor_id] = '1234'
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      assert_not_match(%r("sponsor_id":), data) if /payments/.match?(endpoint)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_should_include_sponsor_id_when_test_mode_is_disabled
+    @gateway.stubs(test?: false)
+    @options[:sponsor_id] = '1234'
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal '1234', request['sponsor_id'] if /payments/.match?(endpoint)
+    end.respond_with(successful_purchase_response)
   end
 
   private

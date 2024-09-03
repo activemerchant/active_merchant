@@ -2017,7 +2017,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(100, @carnet_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<cardType>058<\/cardType>/, data)
+      assert_match(/<cardType>002<\/cardType>/, data)
     end.respond_with(successful_purchase_response)
   end
 

@@ -210,7 +210,6 @@ class RemoteElavonTest < Test::Unit::TestCase
   def test_stored_credentials_with_pass_in_card
     # Initial CIT authorize
     initial_params = {
-      stored_cred_v2: true,
       stored_credential: {
         initial_transaction: true,
         reason_type: 'recurring',
@@ -275,7 +274,6 @@ class RemoteElavonTest < Test::Unit::TestCase
 
     # Initial CIT authorize
     initial_params = {
-      stored_cred_v2: true,
       stored_credential: {
         initial_transaction: true,
         reason_type: 'recurring',
@@ -330,7 +328,6 @@ class RemoteElavonTest < Test::Unit::TestCase
   def test_stored_credentials_with_manual_token
     # Initial CIT get token request
     get_token_params = {
-      stored_cred_v2: true,
       add_recurring_token: 'Y',
       stored_credential: {
         initial_transaction: true,

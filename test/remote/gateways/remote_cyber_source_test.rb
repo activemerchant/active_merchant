@@ -76,6 +76,14 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       source: :network_token
     )
 
+    @carnet_credit_card = credit_card(
+      '5062280000000002',
+      verification_value: '321',
+      month: '12',
+      year: (Time.now.year + 2).to_s,
+      brand: :carnet
+    )
+
     @amount = 100
 
     @options = {
@@ -439,6 +447,12 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_successful_response(response)
+  end
+
+  def test_successful_purchase_with_carnet_card
+    assert response = @gateway.purchase(@amount, @carnet_credit_card, @options)
+    assert_successful_response(response)
+    assert_equal '002', response.params['cardType']
   end
 
   def test_successful_purchase_with_bank_account

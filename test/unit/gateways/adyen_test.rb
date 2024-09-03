@@ -63,6 +63,15 @@ class AdyenTest < Test::Unit::TestCase
       verification_value: nil
     )
 
+    @google_pay_card = network_tokenization_credit_card(
+      '4761209980011439',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '11',
+      year: '2022',
+      source: :google_pay,
+      verification_value: nil
+    )
+
     @nt_credit_card = network_tokenization_credit_card(
       '4895370015293175',
       brand: 'visa',
@@ -383,15 +392,6 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_failed_authorise_mastercard_raw_error_message
-    @gateway.expects(:ssl_post).returns(failed_authorize_mastercard_response)
-
-    response = @gateway.send(:commit, 'authorise', {}, { raw_error_message: true })
-
-    assert_equal 'Refused | 01: Refer to card issuer', response.message
-    assert_failure response
-  end
-
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     response = @gateway.capture(@amount, '7914775043909934')
@@ -542,6 +542,24 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_splits_sent_without_amount
+    split_data = [{
+      'type' => 'MarketPlace',
+      'account' => '163298747',
+      'reference' => 'QXhlbFN0b2x0ZW5iZXJnCg'
+    }, {
+      'type' => 'Commission',
+      'reference' => 'THVjYXNCbGVkc29lCg'
+    }]
+
+    options = @options.merge({ splits: split_data })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal split_data, JSON.parse(data)['splits']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_execute_threed_false_with_additional_data
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge({ execute_threed: false, overwrite_brand: true, selected_brand: 'maestro' }))
@@ -668,7 +686,7 @@ class AdyenTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"shopperInteraction":"Ecommerce"/, data)
       assert_match(/"recurringProcessingModel":"Subscription"/, data)
     end.respond_with(successful_authorize_response)
 
@@ -718,7 +736,7 @@ class AdyenTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"shopperInteraction":"Ecommerce"/, data)
       assert_match(/"recurringProcessingModel":"UnscheduledCardOnFile"/, data)
     end.respond_with(successful_authorize_response)
 
@@ -1242,6 +1260,32 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_with_google_pay
+    response = stub_comms do
+      @gateway.authorize(@amount, @google_pay_card, @options.merge(selected_brand: 'visa'))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      assert_equal @google_pay_card.payment_cryptogram, parsed['mpiData']['cavv']
+      assert_equal '07', parsed['mpiData']['eci']
+      assert_equal 'googlepay', parsed['additionalData']['paymentdatasource.type']
+      assert_equal 'googlepay', parsed['selectedBrand']
+      assert_equal 'true', parsed['additionalData']['paymentdatasource.tokenized']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_with_google_pay_pan_only
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(wallet_type: :google_pay))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      assert_equal 'googlepay', parsed['additionalData']['paymentdatasource.type']
+      assert_equal 'googlepay', parsed['selectedBrand']
+      assert_equal 'false', parsed['additionalData']['paymentdatasource.tokenized']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_authorize_with_network_tokenization_credit_card_using_ld_option
     response = stub_comms do
       @gateway.authorize(@amount, @apple_pay_card, @options.merge(switch_cryptogram_mapping_nt: true))
@@ -1264,6 +1308,18 @@ class AdyenTest < Test::Unit::TestCase
       assert_nil parsed['additionalData']['paymentdatasource.type']
       assert_equal 'VISATOKENSERVICE', parsed['recurring']['tokenService']
       assert_equal 'EXTERNAL', parsed['recurring']['contract']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_with_network_tokenization_credit_card_and_stored_credentials
+    stored_credential = stored_credential(:merchant, :recurring)
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options.merge(switch_cryptogram_mapping_nt: true, stored_credential: stored_credential))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      assert_equal 'ContAuth', parsed['shopperInteraction']
+      assert_nil parsed['mpiData']
     end.respond_with(successful_authorize_response)
     assert_success response
   end

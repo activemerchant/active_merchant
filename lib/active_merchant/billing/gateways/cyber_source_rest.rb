@@ -29,7 +29,7 @@ module ActiveMerchant #:nodoc:
         master: '002',
         unionpay: '062',
         visa: '001',
-        carnet: '058'
+        carnet: '002'
       }
 
       WALLET_PAYMENT_SOLUTION = {

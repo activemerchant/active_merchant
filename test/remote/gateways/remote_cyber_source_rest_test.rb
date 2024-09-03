@@ -12,6 +12,7 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
 
     @master_card = credit_card('2222420000001113', brand: 'master')
     @discover_card = credit_card('6011111111111117', brand: 'discover')
+    @carnet_card = credit_card('5062280000000002', brand: 'carnet')
 
     @visa_network_token = network_tokenization_credit_card(
       '4111111111111111',
@@ -151,6 +152,15 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_failure response
     assert_match %r{Invalid account}, response.message
     assert_equal 'INVALID_ACCOUNT', response.error_code
+  end
+
+  def test_successful_authorize_with_carnet_card
+    response = @gateway.authorize(@amount, @carnet_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_equal '002', response.params['paymentInformation']['card']['type']
+    refute_empty response.params['_links']['capture']
   end
 
   def test_successful_capture

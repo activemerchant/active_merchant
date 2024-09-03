@@ -43,6 +43,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         authorization, original_amount = authorization.split('|')
         post[:amount] = amount(money).to_f if original_amount && original_amount.to_f > amount(money).to_f
+        add_idempotency_key(post, options)
         commit('refund', "payments/#{authorization}/refunds", post)
       end
 
@@ -105,6 +106,7 @@ module ActiveMerchant #:nodoc:
         add_net_amount(post, options)
         add_taxes(post, options)
         add_notification_url(post, options)
+        add_idempotency_key(post, options)
         add_3ds(post, options)
         post[:binary_mode] = options.fetch(:binary_mode, true) unless options[:execute_threed]
         post
@@ -135,7 +137,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_additional_data(post, options)
-        post[:sponsor_id] = options[:sponsor_id]
+        post[:sponsor_id] = options[:sponsor_id] unless test?
         post[:metadata] = options[:metadata] if options[:metadata]
         post[:device_id] = options[:device_id] if options[:device_id]
         post[:additional_info] = {
@@ -210,6 +212,10 @@ module ActiveMerchant #:nodoc:
 
       def add_net_amount(post, options)
         post[:net_amount] = Float(options[:net_amount]) if options[:net_amount]
+      end
+
+      def add_idempotency_key(post, options)
+        post[:idempotency_key] = options[:idempotency_key] if options[:idempotency_key]
       end
 
       def add_notification_url(post, options)
@@ -301,7 +307,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(parameters = {})
-        parameters.clone.tap { |p| p.delete(:device_id) }.to_json
+        params = parameters.clone.tap do |p|
+          p.delete(:device_id)
+          p.delete(:idempotency_key)
+        end
+        params.to_json
       end
 
       def inquire_path(authorization, options)
@@ -340,6 +350,7 @@ module ActiveMerchant #:nodoc:
           'Content-Type' => 'application/json'
         }
         headers['X-meli-session-id'] = options[:device_id] if options[:device_id]
+        headers['X-Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
         headers
       end
 

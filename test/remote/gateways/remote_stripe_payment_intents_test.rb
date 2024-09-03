@@ -305,6 +305,57 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_match('apple_pay', purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['wallet']['type'])
   end
 
+  def test_successful_purchase_with_apple_pay_and_cit
+    options = {
+      currency: 'GBP',
+      new_ap_gp_route: true,
+      stored_credential_transaction_type: true,
+      stored_credential: {
+        initiator: 'cardholder',
+        reason_type: 'unscheduled',
+        initial_transaction: true
+      }
+    }
+
+    purchase = @gateway.purchase(@amount, @apple_pay, options)
+    assert purchase.success?
+    assert_match('apple_pay', purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['wallet']['type'])
+  end
+
+  def test_succeeds_apple_pay_ntid_and_passes_it_to_mit
+    options = {
+      currency: 'GBP',
+      new_ap_gp_route: true,
+      stored_credential_transaction_type: true,
+      stored_credential: {
+        initiator: 'cardholder',
+        reason_type: 'unscheduled',
+        initial_transaction: true
+      }
+    }
+
+    cit_purchase = @gateway.purchase(@amount, @apple_pay, options)
+    assert cit_purchase.success?
+
+    assert purchase = @gateway.purchase(@amount, @apple_pay, {
+      currency: 'USD',
+      execute_threed: true,
+      confirm: true,
+      stored_credential_transaction_type: true,
+      stored_credential: {
+        initiator: 'merchant',
+        reason_type: 'recurring',
+        initial_transaction: false,
+        network_transaction_id: cit_purchase.params.dig('charges', 'data', 0, 'payment_method_details', 'card', 'network_transaction_id'),
+        off_session: 'true'
+      }
+    })
+    assert_success purchase
+    assert_equal 'succeeded', purchase.params['status']
+    assert purchase.params.dig('charges', 'data')[0]['captured']
+    assert purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['network_transaction_id']
+  end
+
   def test_purchases_with_same_idempotency_key
     options = {
       currency: 'GBP',
@@ -1527,6 +1578,13 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     options = {
       currency: 'GBP',
       request_three_d_secure: 'any'
+    }
+    assert purchase = @gateway.purchase(@amount, @three_ds_not_required_card, options)
+    assert_equal 'requires_action', purchase.params['status']
+
+    options = {
+      currency: 'GBP',
+      request_three_d_secure: 'challenge'
     }
     assert purchase = @gateway.purchase(@amount, @three_ds_not_required_card, options)
     assert_equal 'requires_action', purchase.params['status']

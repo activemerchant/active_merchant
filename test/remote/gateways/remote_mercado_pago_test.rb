@@ -125,6 +125,12 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_equal 'https://www.spreedly.com/', response.params['notification_url']
   end
 
+  def test_successful_purchase_with_idempotency_key
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(idempotency_key: '0d5020ed-1af6-469c-ae06-c3bec19954bb'))
+    assert_success response
+    assert_equal 'accredited', response.message
+  end
+
   def test_successful_purchase_with_payer
     response = @gateway.purchase(@amount, @credit_card, @options.merge({ payer: @payer }))
     assert_success response
@@ -155,6 +161,12 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
     assert_equal 'accredited', capture.message
+  end
+
+  def test_successful_authorize_with_idempotency_key
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(idempotency_key: '0d5020ed-1af6-469c-ae06-c3bec19954bb'))
+    assert_success response
+    assert_equal 'accredited', response.message
   end
 
   def test_successful_authorize_and_capture_with_elo
@@ -312,6 +324,12 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_match %r{pending_capture}, response.message
   end
 
+  def test_successful_verify_with_idempotency_key
+    response = @gateway.verify(@credit_card, @options.merge(idempotency_key: '0d5020ed-1af6-469c-ae06-c3bec19954bb'))
+    assert_success response
+    assert_match %r{pending_capture}, response.message
+  end
+
   def test_successful_verify_with_amount
     @options[:amount] = 200
     response = @gateway.verify(@credit_card, @options)
@@ -367,6 +385,20 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   def test_successful_purchase_with_3ds
     three_ds_cc = credit_card('5483928164574623', verification_value: '123', month: 11, year: 2025)
     @options[:execute_threed] = true
+
+    response = @gateway.purchase(290, three_ds_cc, @options)
+
+    assert_success response
+    assert_equal 'pending_challenge', response.message
+    assert_include response.params, 'three_ds_info'
+    assert_equal response.params['three_ds_info']['external_resource_url'], 'https://api.mercadopago.com/cardholder_authenticator/v2/prod/browser-challenges'
+    assert_include response.params['three_ds_info'], 'creq'
+  end
+
+  def test_successful_purchase_with_3ds_mandatory
+    three_ds_cc = credit_card('5031755734530604', verification_value: '123', month: 11, year: 2025)
+    @options[:execute_threed] = true
+    @options[:three_ds_mode] = 'mandatory'
 
     response = @gateway.purchase(290, three_ds_cc, @options)
 

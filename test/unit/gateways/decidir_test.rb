@@ -2,6 +2,7 @@ require 'test_helper'
 
 class DecidirTest < Test::Unit::TestCase
   include CommStub
+  include ActiveMerchant::Billing::CreditCardFormatting
 
   def setup
     @gateway_for_purchase = DecidirGateway.new(api_key: 'api_key')
@@ -414,6 +415,8 @@ class DecidirTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"cryptogram\":\"#{@network_token.payment_cryptogram}\"/, data)
       assert_match(/"security_code\":\"#{@network_token.verification_value}\"/, data)
+      assert_match(/"expiration_month\":\"#{format(@network_token.month, :two_digits)}\"/, data)
+      assert_match(/"expiration_year\":\"#{format(@network_token.year, :two_digits)}\"/, data)
     end.respond_with(successful_network_token_response)
 
     assert_success response
@@ -594,7 +597,7 @@ class DecidirTest < Test::Unit::TestCase
       starting SSL for developers.decidir.com:443...
       SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384
       <- "POST /api/v2/payments HTTP/1.1\\r\\nContent-Type: application/json\\r\\nApikey: 5df6b5764c3f4822aecdc82d56f26b9d\\r\\nCache-Control: no-cache\\r\\nConnection: close\\r\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\nAccept: */*\\r\\nUser-Agent: Ruby\\r\\nHost: developers.decidir.com\\r\\nContent-Length: 505\\r\\n\\r\\n\"
-      <- "{\\\"payment_method_id\\\":1,\\\"site_transaction_id\\\":\\\"59239287-c211-4d72-97b0-70fd701126a6\\\",\\\"bin\\\":\\\"401200\\\",\\\"payment_type\\\":\\\"single\\\",\\\"installments\\\":1,\\\"description\\\":\\\"Store Purchase\\\",\\\"amount\\\":100,\\\"currency\\\":\\\"ARS\\\",\\\"card_data\\\":{\\\"card_holder_identification\\\":{},\\\"card_holder_name\\\":\\\"Tesest payway\\\",\\\"last_four_digits\\\":null},\\\"is_tokenized_payment\\\":true,\\\"fraud_detection\\\":{\\\"sent_to_cs\\\":false},\\\"token_card_data\\\":{\\\"token\\\":\\\"4012001037141112\\\",\\\"eci\\\":\\\"05\\\",\\\"cryptogram\\\":\\\"/wBBBBBCd4HzpGYAmbmgguoBBBB="},\\\"sub_payments\\\":[]}\"
+      <- "{\\\"payment_method_id\\\":1,\\\"site_transaction_id\\\":\\\"59239287-c211-4d72-97b0-70fd701126a6\\\",\\\"bin\\\":\\\"401200\\\",\\\"payment_type\\\":\\\"single\\\",\\\"installments\\\":1,\\\"description\\\":\\\"Store Purchase\\\",\\\"amount\\\":100,\\\"currency\\\":\\\"ARS\\\",\\\"card_data\\\":{\\\"card_holder_identification\\\":{},\\\"card_holder_name\\\":\\\"Tesest payway\\\",\\\"last_four_digits\\\":null},\\\"is_tokenized_payment\\\":true,\\\"fraud_detection\\\":{\\\"sent_to_cs\\\":false},\\\"token_card_data\\\":{\\\"expiration_month\\\":\\\"09\\\",\\\"expiration_year\\\":\\\"25\\\",\\\"token\\\":\\\"4012001037141112\\\",\\\"eci\\\":\\\"05\\\",\\\"cryptogram\\\":\\\"/wBBBBBCd4HzpGYAmbmgguoBBBB=\\\"},\\\"sub_payments\\\":[]}\"
       -> "HTTP/1.1 402 Payment Required\\r\\n\"
       -> "Content-Type: application/json; charset=utf-8\\r\\n\"
       -> "Content-Length: 826\\r\\n\"
@@ -623,7 +626,7 @@ class DecidirTest < Test::Unit::TestCase
       starting SSL for developers.decidir.com:443...
       SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384
       <- "POST /api/v2/payments HTTP/1.1\\r\\nContent-Type: application/json\\r\\nApikey: [FILTERED]\\r\\nCache-Control: no-cache\\r\\nConnection: close\\r\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\nAccept: */*\\r\\nUser-Agent: Ruby\\r\\nHost: developers.decidir.com\\r\\nContent-Length: 505\\r\\n\\r\\n\"
-      <- "{\\\"payment_method_id\\\":1,\\\"site_transaction_id\\\":\\\"59239287-c211-4d72-97b0-70fd701126a6\\\",\\\"bin\\\":\\\"401200\\\",\\\"payment_type\\\":\\\"single\\\",\\\"installments\\\":1,\\\"description\\\":\\\"Store Purchase\\\",\\\"amount\\\":100,\\\"currency\\\":\\\"ARS\\\",\\\"card_data\\\":{\\\"card_holder_identification\\\":{},\\\"card_holder_name\\\":\\\"Tesest payway\\\",\\\"last_four_digits\\\":null},\\\"is_tokenized_payment\\\":true,\\\"fraud_detection\\\":{\\\"sent_to_cs\\\":false},\\\"token_card_data\\\":{\\\"token\\\":\\\"[FILTERED]\\\",\\\"eci\\\":\\\"05\\\",\\\"cryptogram\\\":\\\"/[FILTERED]="},\\\"sub_payments\\\":[]}\"
+      <- "{\\\"payment_method_id\\\":1,\\\"site_transaction_id\\\":\\\"59239287-c211-4d72-97b0-70fd701126a6\\\",\\\"bin\\\":\\\"401200\\\",\\\"payment_type\\\":\\\"single\\\",\\\"installments\\\":1,\\\"description\\\":\\\"Store Purchase\\\",\\\"amount\\\":100,\\\"currency\\\":\\\"ARS\\\",\\\"card_data\\\":{\\\"card_holder_identification\\\":{},\\\"card_holder_name\\\":\\\"Tesest payway\\\",\\\"last_four_digits\\\":null},\\\"is_tokenized_payment\\\":true,\\\"fraud_detection\\\":{\\\"sent_to_cs\\\":false},\\\"token_card_data\\\":{\\\"expiration_month\\\":\\\"09\\\",\\\"expiration_year\\\":\\\"25\\\",\\\"token\\\":\\\"[FILTERED]\\\",\\\"eci\\\":\\\"05\\\",\\\"cryptogram\\\":\\\"/[FILTERED]=\\\"},\\\"sub_payments\\\":[]}\"
       -> "HTTP/1.1 402 Payment Required\\r\\n\"
       -> "Content-Type: application/json; charset=utf-8\\r\\n\"
       -> "Content-Length: 826\\r\\n\"

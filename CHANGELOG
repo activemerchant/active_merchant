@@ -16,10 +16,20 @@
 * Decidir: Pass CVV for NT [almalee24] #5205
 * NMI: Add customer vault fields [yunnydang] #5215
 * CheckoutV2: Add inquire method [almalee24] #5209
-* Iveri: Add AuthReversal for Authorizations [almalee24] #5201
 * Decidir & Braintree: Scrub cryptogram and card number [almalee24] #5220
 * Naranja: Update valid number check to include luhn10 [DustinHaefele] #5217
 * Cybersource: Add apple_pay with discover. [DustinHaefele] #5213
+* MercadoPago: Add idempotency key field [yunnydang] #5229
+* Adyen: Update split refund method [yunnydang] #5218
+* Adyen: Remove raw_error_message [almalee24] #5202
+* Elavon: Remove old Stored Credential method [almalee24] #5219
+* PayTrace: Update MultiResponse for Capture [almalee24] #5203
+* Adyen: Add support for Pan Only GooglePay [almalee24] #5221
+* Decidir: Send extra fields for tokenized NT transactions [sinourain] #5224
+* StripePI: Skip add_network_token_cryptogram_and_eci method to accept ApplePay recurring payments [sinourain] #5212
+* Decidir: Fix scrub method after update NT fields [sinourain] #5241
+* Cybersource and Cybersource Rest: Update card type code for Carnet cards [rachelkirk] #5235
+* Stripe PI: Add challenge as valid value for request_three_d_secure [jcreiff] #5238
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
