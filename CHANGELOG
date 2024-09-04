@@ -62,6 +62,7 @@
 * DLocal: Add X-Dlocal-Payment-Source to header [almalee24] #5281
 * StripePI: Update to retrieve_setup_intent and headers [almalee24] #5283
 * Upgrade rexml to 3.3.8 [raymzag] #5245
+* Nuvei: Add partial approval feature [javierpedrozaing] #5250
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
