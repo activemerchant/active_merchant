@@ -167,6 +167,9 @@ module ActiveMerchant #:nodoc:
         end
 
         response
+      rescue StandardError
+        response[:message] = data&.to_s&.strip
+        response
       end
 
       def commit(action, params)
@@ -219,8 +222,7 @@ module ActiveMerchant #:nodoc:
         params[:MerchantID] = @options[:login]
         params[:RegKey] = @options[:password]
 
-        request = params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def add_pair(post, key, value, options = {})

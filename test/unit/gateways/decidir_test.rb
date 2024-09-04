@@ -2,6 +2,7 @@ require 'test_helper'
 
 class DecidirTest < Test::Unit::TestCase
   include CommStub
+  include ActiveMerchant::Billing::CreditCardFormatting
 
   def setup
     @gateway_for_purchase = DecidirGateway.new(api_key: 'api_key')
@@ -14,6 +15,38 @@ class DecidirTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @fraud_detection = {
+      send_to_cs: false,
+      channel: 'Web',
+      dispatch_method: 'Store Pick Up',
+      csmdds: [
+        {
+          code: 17,
+          description: 'Campo MDD17'
+        }
+      ],
+      device_unique_id: '111'
+    }
+    @sub_payments = [
+      {
+        site_id: '04052018',
+        installments: 1,
+        amount: 1500
+      },
+      {
+        site_id: '04052018',
+        installments: 1,
+        amount: 1500
+      }
+    ]
+
+    @network_token = network_tokenization_credit_card(
+      '4012001037141112',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: '000203016912340000000FA08400317500000000',
+      verification_value: '123'
+    )
   end
 
   def test_successful_purchase
@@ -36,17 +69,6 @@ class DecidirTest < Test::Unit::TestCase
       card_holder_identification_type: 'dni',
       card_holder_identification_number: '123456',
       establishment_name: 'Heavenly Buffaloes',
-      fraud_detection: {
-        send_to_cs: false,
-        channel: 'Web',
-        dispatch_method: 'Store Pick Up',
-        csmdds: [
-          {
-            code: 17,
-            description: 'Campo MDD17'
-          }
-        ]
-      },
       installments: 12,
       site_id: '99999999'
     }
@@ -60,7 +82,6 @@ class DecidirTest < Test::Unit::TestCase
       assert data =~ /"number":"123456"/
       assert data =~ /"establishment_name":"Heavenly Buffaloes"/
       assert data =~ /"site_id":"99999999"/
-      assert data =~ /"fraud_detection":{"send_to_cs":false,"channel":"Web","dispatch_method":"Store Pick Up","csmdds":\[{"code":17,"description":"Campo MDD17"}\]}/
     end.respond_with(successful_purchase_response)
 
     assert_equal 7719132, response.authorization
@@ -118,6 +139,48 @@ class DecidirTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_fraud_detection
+    options = @options.merge(fraud_detection: @fraud_detection)
+
+    response = stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_equal(@fraud_detection, JSON.parse(data, symbolize_names: true)[:fraud_detection])
+      assert_match(/device_unique_identifier/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_sub_payments
+    options = @options.merge(sub_payments: @sub_payments)
+    options[:installments] = 4
+    options[:payment_type] = 'distributed'
+
+    response = stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_equal(@sub_payments, JSON.parse(data, symbolize_names: true)[:sub_payments])
+      assert_match(/#{options[:installments]}/, data)
+      assert_match(/#{options[:payment_type]}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_customer_object
+    options = @options.merge(customer_id: 'John', customer_email: 'decidir@decidir.com')
+
+    response = stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert data =~ /"email":"decidir@decidir.com"/
+      assert data =~ /"id":"John"/
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_failed_purchase
     @gateway_for_purchase.expects(:ssl_request).returns(failed_purchase_response)
 
@@ -143,11 +206,19 @@ class DecidirTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_error_response
-    @gateway_for_purchase.expects(:ssl_request).returns(unique_error_response)
+    @gateway_for_purchase.expects(:ssl_request).returns(unique_purchase_error_response)
 
     response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_match 'invalid_request_error | invalid_param | payment_type', response.error_code
+  end
+
+  def test_failed_purchase_error_response_with_error_code
+    @gateway_for_purchase.expects(:ssl_request).returns(error_response_with_error_code)
+
+    response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match '14, invalid_number', response.error_code
   end
 
   def test_successful_authorize
@@ -293,6 +364,16 @@ class DecidirTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_verify_with_failed_void_unique_error_message
+    @gateway_for_auth.expects(:ssl_request).at_most(3).returns(unique_void_error_response)
+
+    response = @gateway_for_auth.verify(@credit_card, @options)
+    assert_failure response
+
+    assert_equal 'invalid_status_error - status: refunded', response.message
+    assert response.test?
+  end
+
   def test_failed_verify
     @gateway_for_auth.expects(:ssl_request).at_most(2).returns(failed_authorize_response)
 
@@ -309,9 +390,67 @@ class DecidirTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_inquire_with_authorization
+    @gateway_for_purchase.expects(:ssl_request).returns(successful_inquire_response)
+    response = @gateway_for_purchase.inquire('818423490')
+    assert_success response
+
+    assert_equal 544453, response.authorization
+    assert_equal 'rejected', response.message
+    assert response.test?
+  end
+
+  def test_network_token_payment_method
+    options = {
+      card_holder_name: 'Tesest payway',
+      card_holder_door_number: 1234,
+      card_holder_birthday: '200988',
+      card_holder_identification_type: 'DNI',
+      card_holder_identification_number: '44444444',
+      last_4: @credit_card.last_digits
+    }
+
+    response = stub_comms(@gateway_for_auth, :ssl_request) do
+      @gateway_for_auth.authorize(100, @network_token, options.merge(pass_cvv_for_nt: true))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"cryptogram\":\"#{@network_token.payment_cryptogram}\"/, data)
+      assert_match(/"security_code\":\"#{@network_token.verification_value}\"/, data)
+      assert_match(/"expiration_month\":\"#{format(@network_token.month, :two_digits)}\"/, data)
+      assert_match(/"expiration_year\":\"#{format(@network_token.year, :two_digits)}\"/, data)
+    end.respond_with(successful_network_token_response)
+
+    assert_success response
+    assert_equal 49120515, response.authorization
+  end
+
+  def test_network_token_payment_method_without_cvv
+    options = {
+      card_holder_name: 'Tesest payway',
+      card_holder_door_number: 1234,
+      card_holder_birthday: '200988',
+      card_holder_identification_type: 'DNI',
+      card_holder_identification_number: '44444444',
+      last_4: @credit_card.last_digits
+    }
+
+    response = stub_comms(@gateway_for_auth, :ssl_request) do
+      @gateway_for_auth.authorize(100, @network_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"cryptogram\":\"#{@network_token.payment_cryptogram}\"/, data)
+      assert_not_match(/"security_code\":\"#{@network_token.verification_value}\"/, data)
+    end.respond_with(successful_network_token_response)
+
+    assert_success response
+    assert_equal 49120515, response.authorization
+  end
+
   def test_scrub
     assert @gateway_for_purchase.supports_scrubbing?
     assert_equal @gateway_for_purchase.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_transcript_scrubbing_network_token
+    assert_equal @gateway_for_purchase.scrub(pre_scrubbed_network_token), post_scrubbed_network_token
   end
 
   def test_payment_method_id_with_visa
@@ -451,6 +590,64 @@ class DecidirTest < Test::Unit::TestCase
     )
   end
 
+  def pre_scrubbed_network_token
+    %(
+      opening connection to developers.decidir.com:443...
+      opened
+      starting SSL for developers.decidir.com:443...
+      SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384
+      <- "POST /api/v2/payments HTTP/1.1\\r\\nContent-Type: application/json\\r\\nApikey: 5df6b5764c3f4822aecdc82d56f26b9d\\r\\nCache-Control: no-cache\\r\\nConnection: close\\r\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\nAccept: */*\\r\\nUser-Agent: Ruby\\r\\nHost: developers.decidir.com\\r\\nContent-Length: 505\\r\\n\\r\\n\"
+      <- "{\\\"payment_method_id\\\":1,\\\"site_transaction_id\\\":\\\"59239287-c211-4d72-97b0-70fd701126a6\\\",\\\"bin\\\":\\\"401200\\\",\\\"payment_type\\\":\\\"single\\\",\\\"installments\\\":1,\\\"description\\\":\\\"Store Purchase\\\",\\\"amount\\\":100,\\\"currency\\\":\\\"ARS\\\",\\\"card_data\\\":{\\\"card_holder_identification\\\":{},\\\"card_holder_name\\\":\\\"Tesest payway\\\",\\\"last_four_digits\\\":null},\\\"is_tokenized_payment\\\":true,\\\"fraud_detection\\\":{\\\"sent_to_cs\\\":false},\\\"token_card_data\\\":{\\\"expiration_month\\\":\\\"09\\\",\\\"expiration_year\\\":\\\"25\\\",\\\"token\\\":\\\"4012001037141112\\\",\\\"eci\\\":\\\"05\\\",\\\"cryptogram\\\":\\\"/wBBBBBCd4HzpGYAmbmgguoBBBB=\\\"},\\\"sub_payments\\\":[]}\"
+      -> "HTTP/1.1 402 Payment Required\\r\\n\"
+      -> "Content-Type: application/json; charset=utf-8\\r\\n\"
+      -> "Content-Length: 826\\r\\n\"
+      -> "Connection: close\\r\\n\"
+      -> "date: Wed, 21 Aug 2024 16:35:34 GMT\\r\\n\"
+      -> "ETag: W/\\\"33a-JHilnlQgDvDXNEdqUzzsVialMcw\\\"\\r\\n\"
+      -> "vary: Origin\\r\\n\"
+      -> "Access-Control-Allow-Origin: *\\r\\n\"
+      -> "Access-Control-Expose-Headers: Accept,Accept-Version,Content-Length,Content-MD5,Content-Type,Date,X-Auth-Token,Access-Control-Allow-Origin,apikey,Set-Cookie,x-consumer-username\\r\\n\"
+      -> "X-Kong-Upstream-Latency: 325\\r\\n\"
+      -> "X-Kong-Proxy-Latency: 1\\r\\n\"
+      -> "Via: kong/2.0.5\\r\\n\"
+      -> "Strict-Transport-Security: max-age=16070400; includeSubDomains\\r\\n\"
+      -> "Set-Cookie: TS017a11a6=012e46d8ee27033640500a291b59a9176ef91d5ef14fa722c67ee9909e85848e261382cc63bbfa0cb5d092944db41533293bbb0e26; Path=/; Domain=.developers.decidir.com\\r\\n\"
+      -> "\\r\\n\"\nreading 826 bytes...
+      -> "{\\\"id\\\":1945684101,\\\"site_transaction_id\\\":\\\"59239287-c211-4d72-97b0-70fd701126a6\\\",\\\"payment_method_id\\\":1,\\\"card_brand\\\":\\\"Visa\\\",\\\"amount\\\":100,\\\"currency\\\":\\\"ars\\\",\\\"status\\\":\\\"rejected\\\",\\\"status_details\\\":{\\\"ticket\\\":\\\"4922\\\",\\\"card_authorization_code\\\":\\\"\\\",\\\"address_validation_code\\\":\\\"VTE2222\\\",\\\"error\\\":{\\\"type\\\":\\\"insufficient_amount\\\",\\\"reason\\\":{\\\"id\\\":13,\\\"description\\\":\\\"MONTO INVALIDO\\\",\\\"additional_description\\\":\\\"\\\"}}},\\\"date\\\":\\\"2024-08-21T13:35Z\\\",\\\"payment_mode\\\":null,\\\"customer\\\":null,\\\"bin\\\":\\\"401200\\\",\\\"installments\\\":1,\\\"first_installment_expiration_date\\\":null,\\\"payment_type\\\":\\\"single\\\",\\\"sub_payments\\\":[],\\\"site_id\\\":\\\"99999999\\\",\\\"fraud_detection\\\":null,\\\"aggregate_data\\\":null,\\\"establishment_name\\\":null,\\\"spv\\\":null,\\\"confirmed\\\":null,\\\"pan\\\":null,\\\"customer_token\\\":null,\\\"card_data\\\":\\\"/tokens/1945684101\\\",\\\"token\\\":\\\"4a08b19a-fbe2-45b2-8ef6-f3f12d4aa6ed\\\",\\\"authenticated_token\\\":false}\"
+      read 826 bytes
+      Conn close
+    )
+  end
+
+  def post_scrubbed_network_token
+    %(
+      opening connection to developers.decidir.com:443...
+      opened
+      starting SSL for developers.decidir.com:443...
+      SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384
+      <- "POST /api/v2/payments HTTP/1.1\\r\\nContent-Type: application/json\\r\\nApikey: [FILTERED]\\r\\nCache-Control: no-cache\\r\\nConnection: close\\r\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\nAccept: */*\\r\\nUser-Agent: Ruby\\r\\nHost: developers.decidir.com\\r\\nContent-Length: 505\\r\\n\\r\\n\"
+      <- "{\\\"payment_method_id\\\":1,\\\"site_transaction_id\\\":\\\"59239287-c211-4d72-97b0-70fd701126a6\\\",\\\"bin\\\":\\\"401200\\\",\\\"payment_type\\\":\\\"single\\\",\\\"installments\\\":1,\\\"description\\\":\\\"Store Purchase\\\",\\\"amount\\\":100,\\\"currency\\\":\\\"ARS\\\",\\\"card_data\\\":{\\\"card_holder_identification\\\":{},\\\"card_holder_name\\\":\\\"Tesest payway\\\",\\\"last_four_digits\\\":null},\\\"is_tokenized_payment\\\":true,\\\"fraud_detection\\\":{\\\"sent_to_cs\\\":false},\\\"token_card_data\\\":{\\\"expiration_month\\\":\\\"09\\\",\\\"expiration_year\\\":\\\"25\\\",\\\"token\\\":\\\"[FILTERED]\\\",\\\"eci\\\":\\\"05\\\",\\\"cryptogram\\\":\\\"/[FILTERED]=\\\"},\\\"sub_payments\\\":[]}\"
+      -> "HTTP/1.1 402 Payment Required\\r\\n\"
+      -> "Content-Type: application/json; charset=utf-8\\r\\n\"
+      -> "Content-Length: 826\\r\\n\"
+      -> "Connection: close\\r\\n\"
+      -> "date: Wed, 21 Aug 2024 16:35:34 GMT\\r\\n\"
+      -> "ETag: W/\\\"33a-JHilnlQgDvDXNEdqUzzsVialMcw\\\"\\r\\n\"
+      -> "vary: Origin\\r\\n\"
+      -> "Access-Control-Allow-Origin: *\\r\\n\"
+      -> "Access-Control-Expose-Headers: Accept,Accept-Version,Content-Length,Content-MD5,Content-Type,Date,X-Auth-Token,Access-Control-Allow-Origin,apikey,Set-Cookie,x-consumer-username\\r\\n\"
+      -> "X-Kong-Upstream-Latency: 325\\r\\n\"
+      -> "X-Kong-Proxy-Latency: 1\\r\\n\"
+      -> "Via: kong/2.0.5\\r\\n\"
+      -> "Strict-Transport-Security: max-age=16070400; includeSubDomains\\r\\n\"
+      -> "Set-Cookie: TS017a11a6=012e46d8ee27033640500a291b59a9176ef91d5ef14fa722c67ee9909e85848e261382cc63bbfa0cb5d092944db41533293bbb0e26; Path=/; Domain=.developers.decidir.com\\r\\n\"
+      -> "\\r\\n\"\nreading 826 bytes...
+      -> "{\\\"id\\\":1945684101,\\\"site_transaction_id\\\":\\\"59239287-c211-4d72-97b0-70fd701126a6\\\",\\\"payment_method_id\\\":1,\\\"card_brand\\\":\\\"Visa\\\",\\\"amount\\\":100,\\\"currency\\\":\\\"ars\\\",\\\"status\\\":\\\"rejected\\\",\\\"status_details\\\":{\\\"ticket\\\":\\\"4922\\\",\\\"card_authorization_code\\\":\\\"\\\",\\\"address_validation_code\\\":\\\"VTE2222\\\",\\\"error\\\":{\\\"type\\\":\\\"insufficient_amount\\\",\\\"reason\\\":{\\\"id\\\":13,\\\"description\\\":\\\"MONTO INVALIDO\\\",\\\"additional_description\\\":\\\"\\\"}}},\\\"date\\\":\\\"2024-08-21T13:35Z\\\",\\\"payment_mode\\\":null,\\\"customer\\\":null,\\\"bin\\\":\\\"401200\\\",\\\"installments\\\":1,\\\"first_installment_expiration_date\\\":null,\\\"payment_type\\\":\\\"single\\\",\\\"sub_payments\\\":[],\\\"site_id\\\":\\\"99999999\\\",\\\"fraud_detection\\\":null,\\\"aggregate_data\\\":null,\\\"establishment_name\\\":null,\\\"spv\\\":null,\\\"confirmed\\\":null,\\\"pan\\\":null,\\\"customer_token\\\":null,\\\"card_data\\\":\\\"/tokens/1945684101\\\",\\\"token\\\":\\\"4a08b19a-fbe2-45b2-8ef6-f3f12d4aa6ed\\\",\\\"authenticated_token\\\":false}\"
+      read 826 bytes
+      Conn close
+    )
+  end
+
   def successful_purchase_response
     %(
       {"id":7719132,"site_transaction_id":"ebcb2db7-7aab-4f33-a7d1-6617a5749fce","payment_method_id":1,"card_brand":"Visa","amount":100,"currency":"ars","status":"approved","status_details":{"ticket":"7156","card_authorization_code":"174838","address_validation_code":"VTE0011","error":null},"date":"2019-06-21T17:48Z","customer":null,"bin":"450799","installments":1,"establishment_name":"Heavenly Buffaloes","first_installment_expiration_date":null,"payment_type":"single","sub_payments":[],"site_id":"99999999","fraud_detection":{"status":null},"aggregate_data":null,"establishment_name":null,"spv":null,"confirmed":null,"pan":"345425f15b2c7c4584e0044357b6394d7e","customer_token":null,"card_data":"/tokens/7719132"}
@@ -477,6 +674,59 @@ class DecidirTest < Test::Unit::TestCase
   def failed_authorize_response
     %(
       {"id":7719358,"site_transaction_id":"ff1c12c1-fb6d-4c1a-bc20-2e77d4322c61","payment_method_id":1,"card_brand":"Visa","amount":100,"currency":"ars","status":"rejected","status_details":{"ticket":"8189","card_authorization_code":"","address_validation_code":null,"error":{"type":"invalid_number","reason":{"id":14,"description":"TARJETA INVALIDA","additional_description":""}}},"date":"2019-06-21T18:07Z","customer":null,"bin":"400030","installments":1,"first_installment_expiration_date":null,"payment_type":"single","sub_payments":[],"site_id":"99999997","fraud_detection":null,"aggregate_data":null,"establishment_name":null,"spv":null,"confirmed":null,"pan":"11b076fbc8fa6a55783b2f5d03f6938d8a","customer_token":null,"card_data":"/tokens/7719358"}
+    )
+  end
+
+  def successful_network_token_response
+    %(
+      {"id": 49120515,
+      "site_transaction_id": "Tx1673372774",
+      "payment_method_id": 1,
+      "card_brand": "Visa",
+      "amount": 1200,
+      "currency": "ars",
+      "status": "approved",
+      "status_details": {
+          "ticket": "88",
+          "card_authorization_code": "B45857",
+          "address_validation_code": "VTE2222",
+          "error": null
+      },
+      "date": "2023-01-10T14:46Z",
+      "customer": null,
+      "bin": "450799",
+      "installments": 1,
+      "first_installment_expiration_date": null,
+      "payment_type": "single",
+      "sub_payments": [],
+      "site_id": "09001000",
+      "fraud_detection": null,
+      "aggregate_data": {
+          "indicator": "1",
+          "identification_number": "30598910045",
+          "bill_to_pay": "Payway_Test",
+          "bill_to_refund": "Payway_Test",
+          "merchant_name": "PAYWAY",
+          "street": "Lavarden",
+          "number": "247",
+          "postal_code": "C1437FBE",
+          "category": "05044",
+          "channel": "005",
+          "geographic_code": "C1437",
+          "city": "Buenos Aires",
+          "merchant_id": "id_Aggregator",
+          "province": "Buenos Aires",
+          "country": "Argentina",
+          "merchant_email": "qa@test.com",
+          "merchant_phone": "+541135211111"
+      },
+      "establishment_name": null,
+      "spv":null,
+      "confirmed":null,
+      "bread":null,
+      "customer_token":null,
+      "card_data":"/tokens/49120515",
+      "token":"b7b6ca89-ed81-44e0-9d1f-3b3cf443cd74"}
     )
   end
 
@@ -528,9 +778,27 @@ class DecidirTest < Test::Unit::TestCase
     )
   end
 
-  def unique_error_response
+  def successful_inquire_response
+    %(
+      { "id": 544453,"site_transaction_id": "52139443","token": "ef4504fc-21f1-4608-bb75-3f73aa9b9ede","user_id": null,"card_brand": "visa","bin": "483621","amount": 10,"currency": "ars","installments": 1,"description": "","payment_type": "single","sub_payments": [],"status": "rejected","status_details": null,"date": "2016-12-15T15:12Z","merchant_id": null,"fraud_detection": {}}
+    )
+  end
+
+  def unique_purchase_error_response
     %{
       {\"error\":{\"error_type\":\"invalid_request_error\",\"validation_errors\":[{\"code\":\"invalid_param\",\"param\":\"payment_type\"}]}}
+    }
+  end
+
+  def unique_void_error_response
+    %{
+      {\"error_type\":\"invalid_status_error\",\"validation_errors\":{\"status\":\"refunded\"}}
+    }
+  end
+
+  def error_response_with_error_code
+    %{
+      {\"error\":{\"type\":\"invalid_number\",\"reason\":{\"id\":14,\"description\":\"TARJETA INVALIDA\",\"additional_description\":\"\"}}}
     }
   end
 end

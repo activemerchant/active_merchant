@@ -28,6 +28,7 @@ module ActiveMerchant #:nodoc:
         add_order_id(post, options)
         add_ip(post, options)
         add_metadata(post, options)
+        add_three_ds(post, options)
 
         commit(:post, 'purchases', post)
       end
@@ -41,6 +42,7 @@ module ActiveMerchant #:nodoc:
         add_order_id(post, options)
         add_ip(post, options)
         add_metadata(post, options)
+        add_three_ds(post, options)
 
         post[:capture] = false
 
@@ -125,14 +127,40 @@ module ActiveMerchant #:nodoc:
       def add_extra_options(post, options)
         extra = {}
         extra[:ecm] = '32' if options[:recurring]
-        extra[:cavv] = options[:cavv] || options.dig(:three_d_secure, :cavv) if options[:cavv] || options.dig(:three_d_secure, :cavv)
-        extra[:xid] = options[:xid] || options.dig(:three_d_secure, :xid) if options[:xid] || options.dig(:three_d_secure, :xid)
-        extra[:sli] = options[:sli] || options.dig(:three_d_secure, :eci) if options[:sli] || options.dig(:three_d_secure, :eci)
         extra[:name] = options[:merchant] if options[:merchant]
         extra[:location] = options[:merchant_location] if options[:merchant_location]
         extra[:card_on_file] = options.dig(:extra, :card_on_file) if options.dig(:extra, :card_on_file)
         extra[:auth_reason]  = options.dig(:extra, :auth_reason) if options.dig(:extra, :auth_reason)
+
+        unless options[:three_d_secure].present?
+          extra[:sli] = options[:sli] if options[:sli]
+          extra[:xid] = options[:xid] if options[:xid]
+          extra[:cavv] = options[:cavv] if options[:cavv]
+        end
+
         post[:extra] = extra if extra.any?
+      end
+
+      def add_three_ds(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post[:extra] = {
+          sli: three_d_secure[:eci],
+          xid: three_d_secure[:xid],
+          cavv: three_d_secure[:cavv],
+          par: three_d_secure[:authentication_response_status],
+          ver: formatted_enrollment(three_d_secure[:enrolled]),
+          threeds_version: three_d_secure[:version],
+          directory_server_txn_id: three_d_secure[:ds_transaction_id]
+        }.compact
+      end
+
+      def formatted_enrollment(val)
+        case val
+        when 'Y', 'N', 'U' then val
+        when true, 'true' then 'Y'
+        when false, 'false' then 'N'
+        end
       end
 
       def add_order_id(post, options)

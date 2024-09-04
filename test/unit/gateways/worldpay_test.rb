@@ -12,19 +12,211 @@ class WorldpayTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4242424242424242')
     @token = '|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8'
-    @elo_credit_card = credit_card('4514 1600 0000 0008',
+    @elo_credit_card = credit_card(
+      '4514 1600 0000 0008',
       month: 10,
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo')
+      brand: 'elo'
+    )
+    @nt_credit_card = network_tokenization_credit_card(
+      '4895370015293175',
+      brand: 'visa',
+      eci: 5,
+      source: :network_token,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
+    @nt_credit_card_without_eci = network_tokenization_credit_card(
+      '4895370015293175',
+      source: :network_token,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
+    @credit_card_with_two_digits_year = credit_card(
+      '4514 1600 0000 0008',
+      month: 10,
+      year: 22,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737'
+    )
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
     @options = { order_id: 1 }
     @store_options = {
       customer: '59424549c291397379f30c5c082dbed8',
       email: 'wow@example.com'
     }
+    @sub_merchant_options = {
+      sub_merchant_data: {
+        pf_id: '12345678901',
+        sub_name: 'Example Shop',
+        sub_id: '1234567'
+      }
+    }
+
+    @apple_play_network_token = network_tokenization_credit_card(
+      '4895370015293175',
+      month: 10,
+      year: 24,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      source: :apple_pay
+    )
+
+    @google_pay_network_token = network_tokenization_credit_card(
+      '4444333322221111',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      month: '01',
+      year: Time.new.year + 2,
+      source: :google_pay,
+      transaction_id: '123456789',
+      eci: '05'
+    )
+
+    @google_pay_network_token_without_eci = network_tokenization_credit_card(
+      '4444333322221111',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      month: '01',
+      year: Time.new.year + 2,
+      source: :google_pay,
+      transaction_id: '123456789'
+    )
+
+    @level_two_data = {
+      level_2_data: {
+        invoice_reference_number: 'INV12233565',
+        customer_reference: 'CUST00000101',
+        card_acceptor_tax_id: 'VAT1999292',
+        tax_amount: '20',
+        ship_from_postal_code:  '43245',
+        destination_postal_code: '54545',
+        destination_country_code: 'CO',
+        order_date: {
+          day_of_month: Date.today.day,
+          month: Date.today.month,
+          year: Date.today.year
+        }
+      }
+    }
+
+    @level_three_data = {
+      level_3_data: {
+        customer_reference: 'CUST00000102',
+        card_acceptor_tax_id: 'VAT1999285',
+        tax_amount: '20',
+        discount_amount: '1',
+        shipping_amount: '50',
+        duty_amount: '20',
+        line_items: [{
+          description: 'Laptop 14',
+          product_code: 'LP00125',
+          commodity_code: 'COM00125',
+          quantity: '2',
+          unit_cost: '1500',
+          unit_of_measure: 'each',
+          item_discount_amount: '200',
+          discount_amount: '0',
+          tax_amount: '500',
+          total_amount: '4000'
+        },
+                     {
+                       description: 'Laptop 15',
+                       product_code: 'LP00120',
+                       commodity_code: 'COM00125',
+                       quantity: '2',
+                       unit_cost: '1000',
+                       unit_of_measure: 'each',
+                       item_discount_amount: '200',
+                       tax_amount: '500',
+                       discount_amount: '0',
+                       total_amount: '3000'
+                     }]
+      }
+    }
+
+    @aft_options = {
+      account_funding_transaction: true,
+      aft_type: 'A',
+      aft_payment_purpose: '01',
+      aft_sender_account_type: '02',
+      aft_sender_account_reference: '4111111111111112',
+      aft_sender_full_name: {
+        first: 'First',
+        middle: 'Middle',
+        last: 'Sender'
+      },
+      aft_sender_funding_address: {
+        address1: '123 Sender St',
+        address2: 'Apt 1',
+        postal_code: '12345',
+        city: 'Senderville',
+        state: 'NC',
+        country_code: 'US'
+      },
+      aft_recipient_account_type: '03',
+      aft_recipient_account_reference: '4111111111111111',
+      aft_recipient_full_name: {
+        first: 'First',
+        middle: 'Middle',
+        last: 'Recipient'
+      },
+      aft_recipient_funding_address: {
+        address1: '123 Recipient St',
+        address2: 'Apt 1',
+        postal_code: '12345',
+        city: 'Recipientville',
+        state: 'NC',
+        country_code: 'US'
+      },
+      aft_recipient_funding_data: {
+        telephone_number: '123456789',
+        birth_date: {
+          day_of_month: '01',
+          month: '01',
+          year: '1980'
+        }
+      }
+    }
+  end
+
+  def test_payment_type_for_network_card
+    payment = @gateway.send(:payment_details, @nt_credit_card)[:payment_type]
+    assert_equal payment, :network_token
+  end
+
+  def test_payment_type_returns_network_token_if_the_payment_method_responds_to_source_payment_cryptogram_and_eci
+    payment_method = mock
+    payment_method.stubs(source: nil, payment_cryptogram: nil, eci: nil)
+    result = @gateway.send(:payment_details, payment_method)
+    assert_equal({ payment_type: :network_token }, result)
+  end
+
+  def test_payment_type_returns_credit_if_the_payment_method_does_not_responds_to_source
+    payment_method = mock
+    payment_method.stubs(payment_cryptogram: nil, eci: nil)
+    result = @gateway.send(:payment_details, payment_method)
+    assert_equal({ payment_type: :credit }, result)
+  end
+
+  def test_payment_type_returns_credit_if_the_payment_method_does_not_responds_to_payment_cryptogram
+    payment_method = mock
+    payment_method.stubs(source: nil, eci: nil)
+    result = @gateway.send(:payment_details, payment_method)
+    assert_equal({ payment_type: :credit }, result)
+  end
+
+  def test_payment_type_returns_credit_if_the_payment_method_does_not_responds_to_eci
+    payment_method = mock
+    payment_method.stubs(source: nil, payment_cryptogram: nil)
+    result = @gateway.send(:payment_details, payment_method)
+    assert_equal({ payment_type: :credit }, result)
+  end
+
+  def test_payment_type_for_credit_card
+    payment = @gateway.send(:payment_details, @credit_card)[:payment_type]
+    assert_equal payment, :credit
   end
 
   def test_successful_authorize
@@ -32,6 +224,20 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/4242424242424242/, data)
+      assert_match(/cardHolderName/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+    assert_equal 'R50704213207145707', response.authorization
+  end
+
+  def test_successful_authorize_without_name
+    credit_card = credit_card('4242424242424242', first_name: nil, last_name: nil)
+    response = stub_comms do
+      @gateway.authorize(@amount, credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/4242424242424242/, data)
+      assert_no_match(/cardHolderName/, data)
+      assert_match(/CARD-SSL/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
     assert_equal 'R50704213207145707', response.authorization
@@ -148,6 +354,85 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_with_nt_passes_stored_credential_options
+    options = @options.merge(
+      stored_credential_usage: 'USED',
+      stored_credential_initiated_reason: 'UNSCHEDULED',
+      stored_credential_transaction_id: '000000000000020005060720116005060'
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+      assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_with_nt_passes_standard_stored_credential_options
+    stored_credential_params = stored_credential(:used, :unscheduled, :merchant, network_transaction_id: 20_005_060_720_116_005_060)
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+      assert_match(/<schemeTransactionIdentifier\>20005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_passes_correct_stored_credential_options_for_first_recurring
+    options = @options.merge(
+      stored_credential_usage: 'FIRST',
+      stored_credential_initiated_reason: 'RECURRING'
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"FIRST\" customerInitiatedReason\=\"RECURRING\"\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_passes_correct_stored_credential_options_for_used_recurring
+    options = @options.merge(
+      stored_credential_usage: 'USED',
+      stored_credential_initiated_reason: 'RECURRING',
+      stored_credential_transaction_id: '000000000000020005060720116005061'
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"RECURRING\"\>/, data)
+      assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005061\<\/schemeTransactionIdentifier\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_passes_correct_stored_credentials_for_first_installment
+    options = @options.merge(
+      stored_credential_usage: 'FIRST',
+      stored_credential_initiated_reason: 'INSTALMENT'
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"FIRST\" merchantInitiatedReason\=\"INSTALMENT\"\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_passes_sub_merchant_data
+    options = @options.merge(@sub_merchant_options)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<pfId>12345678901</pfId>), data
+      assert_match %r(<subName>Example Shop</subName>), data
+      assert_match %r(<subId>1234567</subId>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -164,6 +449,91 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_transaction_with_level_two_data
+    options = @options.merge(@level_two_data)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<invoiceReferenceNumber>INV12233565</invoiceReferenceNumber>), data
+      assert_match %r(<customerReference>CUST00000101</customerReference>), data
+      assert_match %r(<cardAcceptorTaxId>VAT1999292</cardAcceptorTaxId>), data
+      assert_match %r(<salesTax><amountvalue="20"currencyCode="GBP"exponent="2"/></salesTax>), data.gsub(/\s+/, '')
+      assert_match %r(<shipFromPostalCode>43245</shipFromPostalCode>), data
+      assert_match %r(<destinationPostalCode>54545</destinationPostalCode>), data
+      assert_match %r(<destinationCountryCode>CO</destinationCountryCode>), data
+      assert_match %r(<taxExempt>false</taxExempt>), data
+      assert_match %r(<orderDate><datedayOfMonth="#{Date.today.day}"month="#{Date.today.month}"year="#{Date.today.year}"/></orderDate>), data.gsub(/\s+/, '')
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_transaction_with_level_two_data_without_tax
+    @level_two_data[:level_2_data][:tax_amount] = 0
+    options = @options.merge(@level_two_data)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<invoiceReferenceNumber>INV12233565</invoiceReferenceNumber>), data
+      assert_match %r(<customerReference>CUST00000101</customerReference>), data
+      assert_match %r(<cardAcceptorTaxId>VAT1999292</cardAcceptorTaxId>), data
+      assert_match %r(<salesTax><amountvalue="0"currencyCode="GBP"exponent="2"/></salesTax>), data.gsub(/\s+/, '')
+      assert_match %r(<shipFromPostalCode>43245</shipFromPostalCode>), data
+      assert_match %r(<destinationPostalCode>54545</destinationPostalCode>), data
+      assert_match %r(<destinationCountryCode>CO</destinationCountryCode>), data
+      assert_match %r(<taxExempt>true</taxExempt>), data
+      assert_match %r(<orderDate><datedayOfMonth="#{Date.today.day}"month="#{Date.today.month}"year="#{Date.today.year}"/></orderDate>), data.gsub(/\s+/, '')
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_transaction_with_level_three_data
+    options = @options.merge(@level_three_data)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<customerReference>CUST00000102</customerReference>), data
+      assert_match %r(<cardAcceptorTaxId>VAT1999285</cardAcceptorTaxId>), data
+      assert_match %r(<salesTax><amountvalue="20"currencyCode="GBP"exponent="2"/></salesTax>), data.gsub(/\s+/, '')
+      assert_match %r(<discountAmount><amountvalue="1"currencyCode="GBP"exponent="2"/></discountAmount>), data.gsub(/\s+/, '')
+      assert_match %r(<shippingAmount><amountvalue="50"currencyCode="GBP"exponent="2"/></shippingAmount>), data.gsub(/\s+/, '')
+      assert_match %r(<dutyAmount><amountvalue="20"currencyCode="GBP"exponent="2"/></dutyAmount>), data.gsub(/\s+/, '')
+      assert_match %r(<item><description>Laptop14</description><productCode>LP00125</productCode><commodityCode>COM00125</commodityCode><quantity>2</quantity><unitCost><amountvalue=\"1500\"currencyCode=\"GBP\"exponent=\"2\"/></unitCost><unitOfMeasure>each</unitOfMeasure><itemTotal><amountvalue=\"3000\"currencyCode=\"GBP\"exponent=\"2\"/></itemTotal><itemTotalWithTax><amountvalue=\"4000\"currencyCode=\"GBP\"exponent=\"2\"/></itemTotalWithTax><itemDiscountAmount><amountvalue=\"0\"currencyCode=\"GBP\"exponent=\"2\"/></itemDiscountAmount><taxAmount><amountvalue=\"500\"currencyCode=\"GBP\"exponent=\"2\"/></taxAmount></item><item><description>Laptop15</description><productCode>LP00120</productCode><commodityCode>COM00125</commodityCode><quantity>2</quantity><unitCost><amountvalue=\"1000\"currencyCode=\"GBP\"exponent=\"2\"/></unitCost><unitOfMeasure>each</unitOfMeasure><itemTotal><amountvalue=\"2000\"currencyCode=\"GBP\"exponent=\"2\"/></itemTotal><itemTotalWithTax><amountvalue=\"3000\"currencyCode=\"GBP\"exponent=\"2\"/></itemTotalWithTax><itemDiscountAmount><amountvalue=\"0\"currencyCode=\"GBP\"exponent=\"2\"/></itemDiscountAmount><taxAmount><amountvalue=\"500\"currencyCode=\"GBP\"exponent=\"2\"/></taxAmount></item>), data.gsub(/\s+/, '')
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_sub_merchant_data
+    options = @options.merge(@sub_merchant_options)
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_skipping_capture
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(skip_capture: true))
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert response.responses.length == 1
+    assert_success response
+  end
+
+  def test_successful_purchase_with_network_token
+    response = stub_comms do
+      @gateway.purchase(@amount, @nt_credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_successful_authorize_with_network_token_with_eci
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<eciIndicator>05</eciIndicator>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_successful_purchase_with_elo
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'BRL'))
@@ -176,6 +546,13 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'CAD'))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/CAD/, data)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_two_digits_year
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card_with_two_digits_year, @options)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end
@@ -205,6 +582,26 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal(%w(authorize capture), response.responses.collect { |e| e.params['action'] })
   end
 
+  def test_failed_purchase_with_issuer_response_code
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(failed_purchase_response_with_issuer_response_code)
+
+    assert_failure response
+    assert_equal('51', response.params['issuer_response_code'])
+    assert_equal('Insufficient funds/over credit limit', response.params['issuer_response_description'])
+  end
+
+  def test_failed_purchase_without_active_merchant_generated_response_message
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(failed_purchase_response_without_useful_error_from_gateway)
+
+    assert_failure response
+    assert_equal('61', response.params['issuer_response_code'])
+    assert_equal('Exceeds withdrawal amount limit', response.message)
+  end
+
   def test_successful_void
     response = stub_comms do
       @gateway.void(@options[:order_id], @options)
@@ -229,6 +626,10 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(failed_void_inquiry_response, successful_void_response)
     assert_failure response
     assert_equal "A transaction status of 'AUTHORISED' is required.", response.message
+  end
+
+  def test_supports_network_tokenization
+    assert_instance_of TrueClass, @gateway.supports_network_tokenization?
   end
 
   def test_void_using_order_id_embedded_with_token
@@ -272,7 +673,7 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.refund(@amount, @options[:order_id], @options)
     end.respond_with(failed_refund_inquiry_response, successful_refund_response)
     assert_failure response
-    assert_equal "A transaction status of 'CAPTURED' or 'SETTLED' or 'SETTLED_BY_MERCHANT' is required.", response.message
+    assert_equal "A transaction status of 'CAPTURED' or 'SETTLED' or 'SETTLED_BY_MERCHANT' or 'SENT_FOR_REFUND' is required.", response.message
   end
 
   def test_full_refund_for_unsettled_payment_forces_void
@@ -341,6 +742,16 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal 'f25257d251b81fb1fd9c210973c941ff', response.authorization
   end
 
+  def test_successful_visa_account_funding_transaction
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card, @options.merge(@aft_options))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<fundingTransfer type="A" category="PULL_FROM_CARD">/, data)
+    end.respond_with(successful_visa_credit_response)
+    assert_success response
+    assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
+  end
+
   def test_description
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -375,9 +786,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       if /capture/.match?(data)
         t = Time.now
-        assert_tag_with_attributes 'date',
-          { 'dayOfMonth' => t.day.to_s, 'month' => t.month.to_s, 'year' => t.year.to_s },
-          data
+        assert_tag_with_attributes 'date', { 'dayOfMonth' => t.day.to_s, 'month' => t.month.to_s, 'year' => t.year.to_s }, data
       end
     end.respond_with(successful_inquiry_response, successful_capture_response)
   end
@@ -386,9 +795,7 @@ class WorldpayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(100, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_tag_with_attributes 'amount',
-        { 'value' => '100', 'exponent' => '2', 'currencyCode' => 'GBP' },
-        data
+      assert_tag_with_attributes 'amount', { 'value' => '100', 'exponent' => '2', 'currencyCode' => 'GBP' }, data
     end.respond_with(successful_authorize_response)
   end
 
@@ -396,17 +803,13 @@ class WorldpayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(10000, @credit_card, @options.merge(currency: :JPY))
     end.check_request do |_endpoint, data, _headers|
-      assert_tag_with_attributes 'amount',
-        { 'value' => '100', 'exponent' => '0', 'currencyCode' => 'JPY' },
-        data
+      assert_tag_with_attributes 'amount', { 'value' => '100', 'exponent' => '0', 'currencyCode' => 'JPY' }, data
     end.respond_with(successful_authorize_response)
 
     stub_comms do
       @gateway.authorize(10000, @credit_card, @options.merge(currency: :OMR))
     end.check_request do |_endpoint, data, _headers|
-      assert_tag_with_attributes 'amount',
-        { 'value' => '10000', 'exponent' => '3', 'currencyCode' => 'OMR' },
-        data
+      assert_tag_with_attributes 'amount', { 'value' => '10000', 'exponent' => '3', 'currencyCode' => 'OMR' }, data
     end.respond_with(successful_authorize_response)
   end
 
@@ -462,7 +865,7 @@ class WorldpayTest < Test::Unit::TestCase
       assert_match %r(<address1>N/A</address1>), data
       assert_match %r(<city>N/A</city>), data
       assert_match %r(<postalCode>0000</postalCode>), data
-      assert_match %r(<state>N/A</state>), data
+      assert_match %r(<state/>), data
       assert_match %r(<countryCode>US</countryCode>), data
       assert_match %r(<telephoneNumber>555-3323</telephoneNumber>), data
     end.respond_with(successful_authorize_response)
@@ -499,7 +902,7 @@ class WorldpayTest < Test::Unit::TestCase
       assert_match %r(<address1>N/A</address1>), data
       assert_match %r(<city>N/A</city>), data
       assert_match %r(<postalCode>0000</postalCode>), data
-      assert_match %r(<state>N/A</state>), data
+      assert_match %r(<state/>), data
       assert_match %r(<countryCode>US</countryCode>), data
       assert_match %r(<telephoneNumber>555-3323</telephoneNumber>), data
     end.respond_with(successful_authorize_response)
@@ -549,6 +952,15 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.authorize(100, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_no_match %r(shopperEmailAddress), data
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_statement_narrative_and_truncation
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(statement_narrative: 'Merchant Statement Narrative The Story Of Your Purchase'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<statementNarrative>Merchant Statement Narrative The Story Of Your Pur</statementNarrative>), data
+      assert_no_match %r(<statementNarrative>Merchant Statement Narrative The Story Of Your Purchase</statementNarrative>), data
     end.respond_with(successful_authorize_response)
   end
 
@@ -649,8 +1061,44 @@ class WorldpayTest < Test::Unit::TestCase
         request_hash = Hash.from_xml(data)
         assert_equal 'credit', request_hash['paymentService']['modify']['orderModification']['refund']['amount']['debitCreditIndicator']
       end
-    end.respond_with(successful_refund_inquiry_response, successful_refund_response)
+    end.respond_with(successful_refund_inquiry_response('CAPTURED'), successful_refund_response)
     assert_success response
+  end
+
+  def test_cancel_or_refund
+    stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options)
+    end.check_request do |_endpoint, data, _headers|
+      next if data =~ /<inquiry>/
+
+      refute_match(/<cancelOrRefund\/>/, data)
+    end.respond_with(successful_refund_inquiry_response, successful_refund_response)
+
+    stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options.merge(cancel_or_refund: true))
+    end.check_request do |_endpoint, data, _headers|
+      next if data =~ /<inquiry>/
+
+      assert_match(/<cancelOrRefund\/>/, data)
+    end.respond_with(successful_refund_inquiry_response('SENT_FOR_REFUND'), successful_cancel_or_refund_response)
+  end
+
+  def test_cancel_or_refund_with_void
+    stub_comms do
+      @gateway.void(@options[:order_id], @options)
+    end.check_request do |_endpoint, data, _headers|
+      next if data =~ /<inquiry>/
+
+      refute_match(/<cancelOrRefund\/>/, data)
+    end.respond_with(successful_refund_inquiry_response, successful_refund_response)
+
+    stub_comms do
+      @gateway.void(@options[:order_id], @options.merge(cancel_or_refund: true))
+    end.check_request do |_endpoint, data, _headers|
+      next if data =~ /<inquiry>/
+
+      assert_match(/<cancelOrRefund\/>/, data)
+    end.respond_with(successful_refund_inquiry_response('SENT_FOR_REFUND'), successful_cancel_or_refund_response)
   end
 
   def test_successful_verify
@@ -658,6 +1106,22 @@ class WorldpayTest < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
+  end
+
+  def test_successful_verify_with_0_auth
+    stub_comms do
+      @gateway.verify(@credit_card, @options.merge(zero_dollar_auth: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/amount value="0"/, data) if /<submit>/.match?(data)
+    end.respond_with(successful_authorize_response, successful_void_response)
+  end
+
+  def test_successful_verify_with_0_auth_and_ineligible_card
+    stub_comms do
+      @gateway.verify(@elo_credit_card, @options.merge(zero_dollar_auth: true))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/amount value="0"/, data)
+    end.respond_with(successful_authorize_response, successful_void_response)
   end
 
   def test_successful_verify_with_elo
@@ -689,7 +1153,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
-  def test_3ds_name_coersion
+  def test_3ds_name_coersion_for_testing
     @options[:execute_threed] = true
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -699,7 +1163,7 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_3ds_name_coersion_based_on_version
+  def test_3ds_name_coersion_based_on_version_for_testing
     @options[:execute_threed] = true
     @options[:three_ds_version] = '2.0'
     response = stub_comms do
@@ -726,8 +1190,50 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_3ds_name_not_coerced_in_production
+    ActiveMerchant::Billing::Base.mode = :production
+
+    @options[:execute_threed] = true
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_not_match %r{<cardHolderName>3D</cardHolderName>}, data
+    end.respond_with(successful_authorize_response, successful_capture_response)
+  ensure
+    ActiveMerchant::Billing::Base.mode = :test
+  end
+
+  def test_3ds_additional_information
+    browser_size = '390x400'
+    session_id = '0215ui8ib1'
+    df_reference_id = '1326vj9jc2'
+
+    options = @options.merge(
+      session_id: session_id,
+      df_reference_id: df_reference_id,
+      browser_size: browser_size,
+      execute_threed: true,
+      three_ds_version: '2.0.1'
+    )
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_tag_with_attributes 'additional3DSData', { 'dfReferenceId' => df_reference_id, 'challengeWindowSize' => browser_size }, data
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
+  def test_transcript_scrubbing_on_network_token
+    assert_equal network_token_transcript_scrubbed, @gateway.scrub(network_token_transcript)
+  end
+
+  def test_transcript_scrubbing_on_aft
+    assert_equal aft_transcript_scrubbed, @gateway.scrub(aft_transcript)
   end
 
   def test_3ds_version_1_request
@@ -788,7 +1294,7 @@ class WorldpayTest < Test::Unit::TestCase
       assert_match %r(4242424242424242), data
       assert_no_match %r(<order>), data
       assert_no_match %r(<paymentDetails>), data
-      assert_no_match %r(<VISA-SSL>), data
+      assert_no_match %r(<CARD-SSL>), data
     end.respond_with(successful_store_response)
 
     assert_success response
@@ -966,6 +1472,142 @@ class WorldpayTest < Test::Unit::TestCase
     assert_match "Unparsable response received from Worldpay. Please contact Worldpay if you continue to receive this message. \(The raw response returned by the API was: \"Temporary Failure, please Retry\"\)", response.message
   end
 
+  def test_successful_authorize_synchronous_response
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/4242424242424242/, data)
+    end.respond_with(successful_authorize_synchronous_response)
+    assert_success response
+    assert_equal 'fbe493442977787ea2fadabfb23c2574', response.authorization
+  end
+
+  def test_successful_capture_synchronous_response
+    response = stub_comms do
+      response = @gateway.authorize(@amount, @credit_card, @options)
+      @gateway.capture(@amount, response.authorization, @options)
+    end.respond_with(successful_authorize_synchronous_response, successful_capture_synchronous_response)
+    assert_success response
+  end
+
+  def test_failed_capture_synchronous_response
+    response = stub_comms do
+      response = @gateway.authorize(@amount, @credit_card, @options)
+      @gateway.capture(@amount, response.authorization, @options)
+    end.respond_with(successful_authorize_synchronous_response, failed_capture_synchronous_response)
+    assert_failure response
+  end
+
+  def test_successful_refund_synchronous_response
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options)
+    end.respond_with(successful_refund_synchronous_response)
+    assert_success response
+  end
+
+  def test_failed_refund_synchronous_response
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options)
+    end.respond_with(failed_refund_synchronous_response)
+    assert_failure response
+  end
+
+  def test_network_token_type_assignation_when_apple_token
+    stub_comms do
+      @gateway.authorize(@amount, @apple_play_network_token, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="APPLEPAY">), data
+    end
+  end
+
+  def test_network_token_type_assignation_when_network_token
+    stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="NETWORKTOKEN">), data
+    end
+  end
+
+  def test_network_token_type_assignation_when_google_pay
+    stub_comms do
+      @gateway.authorize(@amount, @google_pay_network_token, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="GOOGLEPAY">), data
+      assert_match %r(<eciIndicator>05</eciIndicator>), data
+    end
+  end
+
+  def test_google_pay_without_eci_value
+    stub_comms do
+      @gateway.authorize(@amount, @google_pay_network_token_without_eci, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="GOOGLEPAY">), data
+    end
+  end
+
+  def test_google_pay_with_use_default_eci_value
+    stub_comms do
+      @gateway.authorize(@amount, @google_pay_network_token_without_eci, @options.merge({ use_default_eci: true }))
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="GOOGLEPAY">), data
+      assert_match %r(<eciIndicator>07</eciIndicator>), data
+    end
+  end
+
+  def test_network_token_type_assignation_when_google_pay_pan_only
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge!(wallet_type: :google_pay))
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="GOOGLEPAY">), data
+    end
+  end
+
+  def test_order_id_crop_and_clean
+    @options[:order_id] = "abc1234 abc1234 'abc1234' <abc1234> \"abc1234\" | abc1234 abc1234 abc1234 abc1234 abc1234"
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<order orderCode="abc1234abc1234abc1234abc1234abc1234abc1234abc1234abc1234abc1234ab">), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_prefers_options_for_ntid
+    stored_credential_params = stored_credential(:used, :recurring, :merchant, network_transaction_id: '3812908490218390214124')
+    options = @options.merge(
+      stored_credential_transaction_id: '000000000000020005060720116005060'
+    )
+
+    options.merge!({ stored_credential: stored_credential_params })
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"RECURRING\"\>/, data)
+      assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_successful_inquire_with_order_id
+    response = stub_comms do
+      @gateway.inquire(nil, { order_id: @options[:order_id].to_s })
+    end.check_request do |_endpoint, data, _headers|
+      assert_tag_with_attributes('orderInquiry', { 'orderCode' => @options[:order_id].to_s }, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+    assert_equal 'R50704213207145707', response.authorization
+  end
+
+  def test_successful_inquire_with_authorization
+    response = stub_comms do
+      @gateway.inquire(@options[:order_id].to_s, {})
+    end.check_request do |_endpoint, data, _headers|
+      assert_tag_with_attributes('orderInquiry', { 'orderCode' => @options[:order_id].to_s }, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+    assert_equal 'R50704213207145707', response.authorization
+  end
+
   private
 
   def assert_date_element(expected_date_hash, date_element)
@@ -1102,6 +1744,32 @@ class WorldpayTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_authorize_synchronous_response
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
+                                      "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLYCFT">
+        <reply>
+          <orderStatus orderCode="fbe493442977787ea2fadabfb23c2574">
+            <payment>
+              <paymentMethod>VISA_CREDIT-SSL</paymentMethod>
+              <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>AUTHORISED</lastEvent>
+              <CVCResultCode description="NOT SENT TO ACQUIRER"/>
+              <AVSResultCode description="NOT SUPPLIED BY SHOPPER"/>
+              <balance accountType="IN_PROCESS_AUTHORISED">
+                <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              </balance>
+              <cardNumber>4111********1111</cardNumber>
+              <riskScore value="1"/>
+            </payment>
+          </orderStatus>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
   def failed_authorize_response
     <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
@@ -1134,6 +1802,37 @@ class WorldpayTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def failed_purchase_response_with_issuer_response_code
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//Bibit//DTD Bibit PaymentService v1//EN"
+                                      "http://dtd.bibit.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="XXXXXXXXXXXXXXX">
+        <reply>
+          <orderStatus orderCode="R50704213207145707">
+            <payment>
+              <paymentMethod>VISA-SSL</paymentMethod>
+              <amount value="15000" currencyCode="USD" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>REFUSED</lastEvent>
+              <IssuerResponseCode code="51" description="Insufficient funds/over credit limit"/>
+              <CVCResultCode description="C"/>
+              <AVSResultCode description="H"/>
+              <AAVAddressResultCode description="B"/>
+              <AAVPostcodeResultCode description="B"/>
+              <AAVCardholderNameResultCode description="B"/>
+              <AAVTelephoneResultCode description="B"/>
+              <AAVEmailResultCode description="B"/>
+              <cardHolderName><![CDATA[Test McTest]]></cardHolderName>
+              <issuerCountryCode>US</issuerCountryCode>
+              <issuerName>TEST BANK</issuerName>
+              <riskScore value="0"/>
+            </payment>
+          </orderStatus>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
   def successful_capture_response
     <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
@@ -1146,6 +1845,46 @@ class WorldpayTest < Test::Unit::TestCase
               <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
             </captureReceived>
           </ok>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def successful_capture_synchronous_response
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
+                                      "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLYCFT">
+        <reply>
+          <orderStatus orderCode="fbe493442977787ea2fadabfb23c2574">
+            <payment>
+              <paymentMethod>VISA_CREDIT-SSL</paymentMethod>
+              <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>CAPTURED</lastEvent>
+              <CVCResultCode description="NOT SENT TO ACQUIRER"/>
+              <AVSResultCode description="NOT SUPPLIED BY SHOPPER"/>
+              <balance accountType="IN_PROCESS_CAPTURED">
+                <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              </balance>
+              <riskScore value="1"/>
+            </payment>
+          </orderStatus>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def failed_capture_synchronous_response
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
+                                      "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLYCFT">
+        <reply>
+          <orderStatus orderCode="bb2e156f3eb9e210fe11777c1102ea4b">
+            <error code="5"><![CDATA[Requested capture amount (GBP 1.01) exceeds the authorised balance for this payment (GBP 1.00)]]></error>
+          </orderStatus>
         </reply>
       </paymentService>
     RESPONSE
@@ -1328,6 +2067,35 @@ class WorldpayTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def failed_purchase_response_without_useful_error_from_gateway
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <paymentService version="1.4" merchantCode="ACMECORP">
+        <reply>
+          <orderStatus orderCode="2119303">
+            <payment>
+              <paymentMethod>ECMC_DEBIT-SSL</paymentMethod>
+              <amount value="2000" currencyCode="USD" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>REFUSED</lastEvent>
+              <IssuerResponseCode code="61" description="Exceeds withdrawal amount limit"/>
+              <CVCResultCode description="A"/>
+              <AVSResultCode description="H"/>
+              <AAVAddressResultCode description="B"/>
+              <AAVPostcodeResultCode description="B"/>
+              <AAVCardholderNameResultCode description="B"/>
+              <AAVTelephoneResultCode description="B"/>
+              <AAVEmailResultCode description="B"/>
+              <cardHolderName>Snuffy Smith</cardHolderName>
+              <issuerCountryCode>US</issuerCountryCode>
+              <issuerName>PRETEND BANK</issuerName>
+              <riskScore value="95"/>
+            </payment>
+          </orderStatus>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
   def successful_refund_inquiry_response(last_event = 'CAPTURED')
     <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
@@ -1367,6 +2135,68 @@ class WorldpayTest < Test::Unit::TestCase
               <amount value="35" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
             </refundReceived>
           </ok>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def successful_cancel_or_refund_response
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
+                                      "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <reply>
+          <ok>
+            <voidReceived orderCode="afd85a0de932d5b7111b3eda78945544"></voidReceived>
+          </ok>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def successful_refund_synchronous_response
+    <<~RESPONSE
+      <paymentService version="1.4" merchantCode="MERCHANT-CODE">
+        <reply>
+          <orderStatus orderCode="testcentralcell0008">
+            <payment>
+              <paymentMethod>ECMC_CREDIT-SSL</paymentMethod>
+              <amount value="1000" currencyCode="ARS" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>SENT_FOR_REFUND</lastEvent>
+              <AuthorisationId id="999999"/>
+              <CVCResultCode description="C"/>
+              <cardHolderName>
+                <![CDATA[CARDHOLDER_NAME]]>
+              </cardHolderName>
+              <issuerCountryCode>AR</issuerCountryCode>
+              <issuerName>ISSUER-NAME</issuerName>
+              <localAcquirer>WA</localAcquirer>
+              <schemeResponse>
+                <transactionIdentifier>999999999</transactionIdentifier>
+              </schemeResponse>
+            </payment>
+            <orderModification orderCode="testcentralcell0008">
+              <refund>
+                <amount value="1000" currencyCode="ARS" exponent="2" debitCreditIndicator="credit"/>
+              </refund>
+            </orderModification>
+          </orderStatus>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def failed_refund_synchronous_response
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
+                                      "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLYCFT">
+        <reply>
+          <orderStatus orderCode="49a9d4e8a52bccbd3a3a6ac228ae0998">
+            <error code="5"><![CDATA[Refund amount too high]]></error>
+          </orderStatus>
         </reply>
       </paymentService>
     RESPONSE
@@ -1468,7 +2298,7 @@ class WorldpayTest < Test::Unit::TestCase
           <amount value="100" exponent="2" currencyCode="HKD"/>
           <orderContent>Products Products Products</orderContent>
           <paymentDetails>
-            <VISA-SSL>
+            <CARD-SSL>
               <cardNumber>4242424242424242</cardNumber>
               <expiryDate>
                 <date month="09" year="2011"/>
@@ -1488,7 +2318,7 @@ class WorldpayTest < Test::Unit::TestCase
                   <telephoneNumber>(555)555-5555</telephoneNumber>
                 </address>
               </cardAddress>
-            </VISA-SSL>
+            </CARD-SSL>
             <session id="asfasfasfasdgvsdzvxzcvsd" shopperIPAddress="127.0.0.1"/>
           </paymentDetails>
           <shopper>
@@ -1511,7 +2341,7 @@ class WorldpayTest < Test::Unit::TestCase
             <description>Purchase</description>
             <amount value="100" currencyCode="GBP" exponent="2"/>
             <paymentDetails>
-              <VISA-SSL>
+              <CARD-SSL>
                 <cardNumber>4111111111111111</cardNumber>
                 <expiryDate>
                   <date month="09" year="2016"/>
@@ -1527,7 +2357,7 @@ class WorldpayTest < Test::Unit::TestCase
                     <countryCode>US</countryCode>
                   </address>
                 </cardAddress>
-              </VISA-SSL>
+              </CARD-SSL>
             </paymentDetails>
             <shopper>
               <shopperEmailAddress>wow@example.com</shopperEmailAddress>
@@ -1546,7 +2376,7 @@ class WorldpayTest < Test::Unit::TestCase
             <description>Purchase</description>
             <amount value="100" currencyCode="GBP" exponent="2"/>
             <paymentDetails>
-              <VISA-SSL>
+              <CARD-SSL>
                 <cardNumber>[FILTERED]</cardNumber>
                 <expiryDate>
                   <date month="09" year="2016"/>
@@ -1562,7 +2392,7 @@ class WorldpayTest < Test::Unit::TestCase
                     <countryCode>US</countryCode>
                   </address>
                 </cardAddress>
-              </VISA-SSL>
+              </CARD-SSL>
             </paymentDetails>
             <shopper>
               <shopperEmailAddress>wow@example.com</shopperEmailAddress>
@@ -1571,6 +2401,214 @@ class WorldpayTest < Test::Unit::TestCase
         </submit>
       </paymentService>
     TRANSCRIPT
+  end
+
+  def aft_transcript
+    <<~TRANSCRIPT
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <submit>
+          <order orderCode="24602b5855e3edf2f7821f6e86694b7f">
+            <description>Account Funding Transaction</description>
+            <amount value="100" currencyCode="GBP" exponent="2"/>
+            <paymentDetails>
+              <CARD-SSL>
+                <cardNumber>4111111111111111</cardNumber>
+                <expiryDate>
+                  <date month="09" year="2025"/>
+                </expiryDate>
+                <cardHolderName>Longbob Longsen</cardHolderName>
+                <cvc>123</cvc>
+              </CARD-SSL>
+            </paymentDetails>
+            <shopper>
+              <shopperEmailAddress>wow@example.com</shopperEmailAddress>
+              <browser>
+                <acceptHeader/>
+                <userAgentHeader/>
+              </browser>
+            </shopper>
+            <fundingTransfer type="A" category="PULL_FROM_CARD">
+              <paymentPurpose>01</paymentPurpose>
+              <fundingParty type="sender">
+                <accountReference accountType="02">4111111111111112</accountReference>
+                <fullName>
+                  <first>First</first>
+                  <middle>Middle</middle>
+                  <last>Sender</last>
+                </fullName>
+                <fundingAddress>
+                  <address1>123 Sender St</address1>
+                  <address2>Apt 1</address2>
+                  <postalCode>12345</postalCode>
+                  <city>Senderville</city>
+                  <state>NC</state>
+                  <countryCode>US</countryCode>
+                </fundingAddress>
+              </fundingParty>
+              <fundingParty type="recipient">
+                <accountReference accountType="03">4111111111111111</accountReference>
+                <fullName>
+                  <first>First</first>
+                  <middle>Middle</middle>
+                  <last>Recipient</last>
+                </fullName>
+                <fundingAddress>
+                  <address1>123 Recipient St</address1>
+                  <address2>Apt 1</address2>
+                  <postalCode>12345</postalCode>
+                  <city>Recipientville</city>
+                  <state>NC</state>
+                  <countryCode>US</countryCode>
+                </fundingAddress>
+                <fundingData>
+                  <birthDate>
+                    <date dayOfMonth="01" month="01" year="1980"/>
+                  </birthDate>
+                  <telephoneNumber>123456789</telephoneNumber>
+                </fundingData>
+              </fundingParty>
+            </fundingTransfer>
+          </order>
+        </submit>
+      </paymentService>
+    TRANSCRIPT
+  end
+
+  def aft_transcript_scrubbed
+    <<~TRANSCRIPT
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <submit>
+          <order orderCode="24602b5855e3edf2f7821f6e86694b7f">
+            <description>Account Funding Transaction</description>
+            <amount value="100" currencyCode="GBP" exponent="2"/>
+            <paymentDetails>
+              <CARD-SSL>
+                <cardNumber>[FILTERED]</cardNumber>
+                <expiryDate>
+                  <date month="09" year="2025"/>
+                </expiryDate>
+                <cardHolderName>Longbob Longsen</cardHolderName>
+                <cvc>[FILTERED]</cvc>
+              </CARD-SSL>
+            </paymentDetails>
+            <shopper>
+              <shopperEmailAddress>wow@example.com</shopperEmailAddress>
+              <browser>
+                <acceptHeader/>
+                <userAgentHeader/>
+              </browser>
+            </shopper>
+            <fundingTransfer type="A" category="PULL_FROM_CARD">
+              <paymentPurpose>01</paymentPurpose>
+              <fundingParty type="sender">
+                <accountReference accountType="02">[FILTERED]</accountReference>
+                <fullName>
+                  <first>First</first>
+                  <middle>Middle</middle>
+                  <last>Sender</last>
+                </fullName>
+                <fundingAddress>
+                  <address1>123 Sender St</address1>
+                  <address2>Apt 1</address2>
+                  <postalCode>12345</postalCode>
+                  <city>Senderville</city>
+                  <state>NC</state>
+                  <countryCode>US</countryCode>
+                </fundingAddress>
+              </fundingParty>
+              <fundingParty type="recipient">
+                <accountReference accountType="03">[FILTERED]</accountReference>
+                <fullName>
+                  <first>First</first>
+                  <middle>Middle</middle>
+                  <last>Recipient</last>
+                </fullName>
+                <fundingAddress>
+                  <address1>123 Recipient St</address1>
+                  <address2>Apt 1</address2>
+                  <postalCode>12345</postalCode>
+                  <city>Recipientville</city>
+                  <state>NC</state>
+                  <countryCode>US</countryCode>
+                </fundingAddress>
+                <fundingData>
+                  <birthDate>
+                    <date dayOfMonth="01" month="01" year="1980"/>
+                  </birthDate>
+                  <telephoneNumber>123456789</telephoneNumber>
+                </fundingData>
+              </fundingParty>
+            </fundingTransfer>
+          </order>
+        </submit>
+      </paymentService>
+    TRANSCRIPT
+  end
+
+  def network_token_transcript
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+          <submit>
+              <order orderCode="c293b34a70aee391193a1c08168b6c91">
+                  <description>Purchase</description>
+                  <amount value="100" currencyCode="GBP" exponent="2" />
+                  <paymentDetails>
+                      <EMVCO_TOKEN-SSL type="APPLEPAY">
+                          <tokenNumber>4895370015293175</tokenNumber>
+                          <expiryDate>
+                              <date month="10" year="2024" />
+                          </expiryDate>
+                          <cardHolderName>PedroPerez</cardHolderName>
+                          <cryptogram>axxxxxxxxx</cryptogram>
+                          <eciIndicator>07</eciIndicator>
+                      </EMVCO_TOKEN-SSL>
+                  </paymentDetails>
+                  <shopper>
+                      <shopperEmailAddress>wow@ example.com</shopperEmailAddress>
+                      <browser>
+                          <acceptHeader />
+                          <userAgentHeader />
+                      </browser>
+                  </shopper>
+              </order>
+          </submit>
+      </paymentService>
+    RESPONSE
+  end
+
+  def network_token_transcript_scrubbed
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+          <submit>
+              <order orderCode="c293b34a70aee391193a1c08168b6c91">
+                  <description>Purchase</description>
+                  <amount value="100" currencyCode="GBP" exponent="2" />
+                  <paymentDetails>
+                      <EMVCO_TOKEN-SSL type="APPLEPAY">
+                          <tokenNumber>[FILTERED]</tokenNumber>
+                          <expiryDate>
+                              <date month="10" year="2024" />
+                          </expiryDate>
+                          <cardHolderName>PedroPerez</cardHolderName>
+                          <cryptogram>[FILTERED]</cryptogram>
+                          <eciIndicator>07</eciIndicator>
+                      </EMVCO_TOKEN-SSL>
+                  </paymentDetails>
+                  <shopper>
+                      <shopperEmailAddress>wow@ example.com</shopperEmailAddress>
+                      <browser>
+                          <acceptHeader />
+                          <userAgentHeader />
+                      </browser>
+                  </shopper>
+              </order>
+          </submit>
+      </paymentService>
+    RESPONSE
   end
 
   def failed_with_unknown_card_response
@@ -1630,6 +2668,37 @@ class WorldpayTest < Test::Unit::TestCase
       <paymentService version="1.4" merchantCode="SPREEDLY">
         <reply>
           <error code="2"><![CDATA[authenticatedShopperID cannot start with an underscore]]></error>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def successful_aft_response
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <reply>
+          <orderStatus orderCode="d493bbdf45239ef244316bba986f5196">
+            <payment>
+              <paymentMethod>VISA_CREDIT-SSL</paymentMethod>
+              <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>AUTHORISED</lastEvent>
+              <CVCResultCode description="C"/>
+              <AVSResultCode description="H"/>
+              <cardHolderName><![CDATA[Longbob Longsen]]></cardHolderName>
+              <issuerCountryCode>N/A</issuerCountryCode>
+              <balance accountType="IN_PROCESS_AUTHORISED">
+                <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              </balance>
+              <cardNumber>4111********1111</cardNumber>
+              <riskScore value="1"/>
+              <schemeResponse>
+                <transactionIdentifier>060720116005062</transactionIdentifier>
+              </schemeResponse>
+              <fundingLinkId></fundingLinkId>
+            </payment>
+          </orderStatus>
         </reply>
       </paymentService>
     RESPONSE

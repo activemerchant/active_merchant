@@ -235,23 +235,23 @@ module ActiveMerchant
             # a predefined one
             xml.tag! :ExtendedPolicy do
               xml.tag! :cv2_policy,
-                notprovided: POLICY_REJECT,
-                notchecked: POLICY_REJECT,
-                matched: POLICY_ACCEPT,
-                notmatched: POLICY_REJECT,
-                partialmatch: POLICY_REJECT
+                       notprovided: POLICY_REJECT,
+                       notchecked: POLICY_REJECT,
+                       matched: POLICY_ACCEPT,
+                       notmatched: POLICY_REJECT,
+                       partialmatch: POLICY_REJECT
               xml.tag! :postcode_policy,
-                notprovided: POLICY_ACCEPT,
-                notchecked: POLICY_ACCEPT,
-                matched: POLICY_ACCEPT,
-                notmatched: POLICY_REJECT,
-                partialmatch: POLICY_ACCEPT
+                       notprovided: POLICY_ACCEPT,
+                       notchecked: POLICY_ACCEPT,
+                       matched: POLICY_ACCEPT,
+                       notmatched: POLICY_REJECT,
+                       partialmatch: POLICY_ACCEPT
               xml.tag! :address_policy,
-                notprovided: POLICY_ACCEPT,
-                notchecked: POLICY_ACCEPT,
-                matched: POLICY_ACCEPT,
-                notmatched: POLICY_REJECT,
-                partialmatch: POLICY_ACCEPT
+                       notprovided: POLICY_ACCEPT,
+                       notchecked: POLICY_ACCEPT,
+                       matched: POLICY_ACCEPT,
+                       notmatched: POLICY_REJECT,
+                       partialmatch: POLICY_ACCEPT
             end
           end
         end
@@ -260,9 +260,13 @@ module ActiveMerchant
       def commit(request)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request))
 
-        Response.new(response[:status] == '1', response[:reason], response,
+        Response.new(
+          response[:status] == '1',
+          response[:reason],
+          response,
           test: test?,
-          authorization: "#{response[:datacash_reference]};#{response[:authcode]};#{response[:ca_reference]}")
+          authorization: "#{response[:datacash_reference]};#{response[:authcode]};#{response[:ca_reference]}"
+        )
       end
 
       def format_date(month, year)

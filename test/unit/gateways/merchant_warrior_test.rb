@@ -17,7 +17,18 @@ class MerchantWarriorTest < Test::Unit::TestCase
 
     @options = {
       address: address,
-      transaction_product: 'TestProduct'
+      transaction_product: 'TestProduct',
+      email: 'user@aol.com',
+      ip: '1.2.3.4',
+      store_id: 'My Store'
+    }
+    @three_ds_secure = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
     }
   end
 
@@ -29,6 +40,15 @@ class MerchantWarriorTest < Test::Unit::TestCase
     assert_equal 'Transaction approved', response.message
     assert response.test?
     assert_equal '1336-20be3569-b600-11e6-b9c3-005056b209e0', response.authorization
+  end
+
+  def test_failed_authorize
+    @gateway.expects(:ssl_post).returns(nil)
+
+    assert response = @gateway.authorize(@success_amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Invalid gateway response', response.message
+    assert response.test?
   end
 
   def test_successful_purchase
@@ -128,9 +148,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
       state: 'NY',
       country: 'US',
       zip: '11111',
-      phone: '555-1212',
-      email: 'user@aol.com',
-      ip: '1.2.3.4'
+      phone: '555-1212'
     }
 
     stub_comms do
@@ -145,6 +163,40 @@ class MerchantWarriorTest < Test::Unit::TestCase
       assert_match(/customerIP=1.2.3.4/, data)
       assert_match(/customerPhone=555-1212/, data)
       assert_match(/customerEmail=user%40aol.com/, data)
+      assert_match(/storeID=My\+Store/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_address_with_phone_number
+    options = {
+      address: {
+        name: 'Bat Man',
+        address1: '123 Main',
+        city: 'Brooklyn',
+        state: 'NY',
+        country: 'US',
+        zip: '11111',
+        phone_number: '555-1212'
+      },
+      transaction_product: 'TestProduct',
+      email: 'user@aol.com',
+      ip: '1.2.3.4',
+      store_id: 'My Store'
+    }
+
+    stub_comms do
+      @gateway.purchase(@success_amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/customerName=Bat\+Man/, data)
+      assert_match(/customerCountry=US/, data)
+      assert_match(/customerState=NY/, data)
+      assert_match(/customerCity=Brooklyn/, data)
+      assert_match(/customerAddress=123\+Main/, data)
+      assert_match(/customerPostCode=11111/, data)
+      assert_match(/customerIP=1.2.3.4/, data)
+      assert_match(/customerPhone=555-1212/, data)
+      assert_match(/customerEmail=user%40aol.com/, data)
+      assert_match(/storeID=My\+Store/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -288,6 +340,34 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_three_ds_v2_object_construction
+    post = {}
+    @options[:three_d_secure] = @three_ds_secure
+
+    @gateway.send(:add_three_ds, post, @options)
+    ds_options = @options[:three_d_secure]
+
+    assert_equal ds_options[:version], post[:threeDSV2Version]
+    assert_equal ds_options[:cavv], post[:threeDSCavv]
+    assert_equal ds_options[:eci], post[:threeDSEci]
+    assert_equal ds_options[:xid], post[:threeDSXid]
+    assert_equal ds_options[:authentication_response_status], post[:threeDSStatus]
+  end
+
+  def test_purchase_with_three_ds
+    @options[:three_d_secure] = @three_ds_secure
+    stub_comms(@gateway) do
+      @gateway.purchase(@success_amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      params = URI.decode_www_form(data).to_h
+      assert_equal '2.2.0', params['threeDSV2Version']
+      assert_equal '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=', params['threeDSCavv']
+      assert_equal '05', params['threeDSEci']
+      assert_equal 'ODUzNTYzOTcwODU5NzY3Qw==', params['threeDSXid']
+      assert_equal 'Y', params['threeDSStatus']
+    end
   end
 
   private

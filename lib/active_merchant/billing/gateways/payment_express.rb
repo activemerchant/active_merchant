@@ -20,8 +20,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.windcave.com/'
       self.display_name = 'Windcave (formerly PaymentExpress)'
 
-      self.live_url = 'https://sec.paymentexpress.com/pxpost.aspx'
-      self.test_url = 'https://uat.paymentexpress.com/pxpost.aspx'
+      self.live_url = 'https://sec.windcave.com/pxpost.aspx'
+      self.test_url = 'https://uat.windcave.com/pxpost.aspx'
 
       APPROVED = '1'
 
@@ -84,6 +84,11 @@ module ActiveMerchant #:nodoc:
       def credit(money, identification, options = {})
         ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, identification, options)
+      end
+
+      def verify(payment_source, options = {})
+        request = build_purchase_or_authorization_request(100, payment_source, options)
+        commit(:validate, request)
       end
 
       # Token Based Billing
@@ -149,7 +154,7 @@ module ActiveMerchant #:nodoc:
           add_credit_card(result, payment_source)
         end
 
-        add_amount(result, money, options)
+        add_amount(result, money, options) if money
         add_invoice(result, options)
         add_address_verification_data(result, options)
         add_optional_elements(result, options)
@@ -229,8 +234,8 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address] || options[:address]
         return if address.nil?
 
-        xml.add_element('EnableAvsData').text = 1
-        xml.add_element('AvsAction').text = 1
+        xml.add_element('EnableAvsData').text = options[:enable_avs_data] || 1
+        xml.add_element('AvsAction').text = options[:avs_action] || 1
 
         xml.add_element('AvsStreetAddress').text = address[:address1]
         xml.add_element('AvsPostCode').text = address[:zip]
@@ -301,9 +306,13 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, request.to_s))
 
         # Return a response
-        PaymentExpressResponse.new(response[:success] == APPROVED, message_from(response), response,
+        PaymentExpressResponse.new(
+          response[:success] == APPROVED,
+          message_from(response),
+          response,
           test: response[:test_mode] == '1',
-          authorization: authorization_from(action, response))
+          authorization: authorization_from(action, response)
+        )
       end
 
       # Response XML documentation: http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#XMLTxnOutput
@@ -334,7 +343,7 @@ module ActiveMerchant #:nodoc:
       def authorization_from(action, response)
         case action
         when :validate
-          (response[:billing_id] || response[:dps_billing_id])
+          (response[:billing_id] || response[:dps_billing_id] || response[:dps_txn_ref])
         else
           response[:dps_txn_ref]
         end
@@ -361,7 +370,7 @@ module ActiveMerchant #:nodoc:
       # add a method to response so we can easily get the token
       # for Validate transactions
       def token
-        @params['billing_id'] || @params['dps_billing_id']
+        @params['billing_id'] || @params['dps_billing_id'] || @params['dps_txn_ref']
       end
     end
   end

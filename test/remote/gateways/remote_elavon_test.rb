@@ -3,19 +3,19 @@ require 'test_helper'
 class RemoteElavonTest < Test::Unit::TestCase
   def setup
     @gateway = ElavonGateway.new(fixtures(:elavon))
-    @tokenization_gateway = fixtures(:elavon_tokenization) ? ElavonGateway.new(fixtures(:elavon_tokenization)) : ElavonGateway.new(fixtures(:elavon))
+    @tokenization_gateway = all_fixtures[:elavon_tokenization] ? ElavonGateway.new(fixtures(:elavon_tokenization)) : ElavonGateway.new(fixtures(:elavon))
     @bad_creds_gateway = ElavonGateway.new(login: 'foo', password: 'bar', user: 'me')
     @multi_currency_gateway = ElavonGateway.new(fixtures(:elavon_multi_currency))
 
     @credit_card = credit_card('4000000000000002')
+    @mastercard = credit_card('5121212121212124')
     @bad_credit_card = credit_card('invalid')
 
     @options = {
       email: 'paul@domain.com',
       description: 'Test Transaction',
       billing_address: address,
-      ip: '203.0.113.0',
-      merchant_initiated_unscheduled: 'N'
+      ip: '203.0.113.0'
     }
     @shipping_address = {
       address1: '733 Foster St.',
@@ -207,6 +207,221 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_stored_credentials_with_pass_in_card
+    # Initial CIT authorize
+    initial_params = {
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring',
+        initiator: 'cardholder',
+        network_transaction_id: nil
+      }
+    }
+    # X.16 amount invokes par_value and association_token_data in response
+    assert initial = @gateway.authorize(116, @mastercard, @options.merge(initial_params))
+    assert_success initial
+    approval_code = initial.authorization.split(';').first
+    ntid = initial.network_transaction_id
+    par_value = initial.params['par_value']
+    association_token_data = initial.params['association_token_data']
+
+    # Subsequent unscheduled MIT purchase, with additional data
+    unscheduled_params = {
+      approval_code: approval_code,
+      par_value: par_value,
+      association_token_data: association_token_data,
+      stored_credential: {
+        reason_type: 'unscheduled',
+        initiator: 'merchant',
+        network_transaction_id: ntid
+      }
+    }
+    assert unscheduled = @gateway.purchase(@amount, @mastercard, @options.merge(unscheduled_params))
+    assert_success unscheduled
+
+    # Subsequent recurring MIT purchase
+    recurring_params = {
+      approval_code: approval_code,
+      stored_credential: {
+        reason_type: 'recurring',
+        initiator: 'merchant',
+        network_transaction_id: ntid
+      }
+    }
+    assert recurring = @gateway.purchase(@amount, @mastercard, @options.merge(recurring_params))
+    assert_success recurring
+
+    # Subsequent installment MIT purchase
+    installment_params = {
+      installments: '4',
+      payment_number: '2',
+      approval_code: approval_code,
+      stored_credential: {
+        reason_type: 'installment',
+        initiator: 'merchant',
+        network_transaction_id: ntid
+      }
+    }
+    assert installment = @gateway.purchase(@amount, @mastercard, @options.merge(installment_params))
+    assert_success installment
+  end
+
+  def test_stored_credentials_with_tokenized_card
+    # Store card
+    assert store = @tokenization_gateway.store(@mastercard, @options)
+    assert_success store
+    stored_card = store.authorization
+
+    # Initial CIT authorize
+    initial_params = {
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring',
+        initiator: 'cardholder',
+        network_transaction_id: nil
+      }
+    }
+    assert initial = @tokenization_gateway.authorize(116, stored_card, @options.merge(initial_params))
+    assert_success initial
+    ntid = initial.network_transaction_id
+    par_value = initial.params['par_value']
+    association_token_data = initial.params['association_token_data']
+
+    # Subsequent unscheduled MIT purchase, with additional data
+    unscheduled_params = {
+      par_value: par_value,
+      association_token_data: association_token_data,
+      stored_credential: {
+        reason_type: 'unscheduled',
+        initiator: 'merchant',
+        network_transaction_id: ntid
+      }
+    }
+    assert unscheduled = @tokenization_gateway.purchase(@amount, stored_card, @options.merge(unscheduled_params))
+    assert_success unscheduled
+
+    # Subsequent recurring MIT purchase
+    recurring_params = {
+      stored_credential: {
+        reason_type: 'recurring',
+        initiator: 'merchant',
+        network_transaction_id: ntid
+      }
+    }
+    assert recurring = @tokenization_gateway.purchase(@amount, stored_card, @options.merge(recurring_params))
+    assert_success recurring
+
+    # Subsequent installment MIT purchase
+    installment_params = {
+      installments: '4',
+      payment_number: '2',
+      stored_credential: {
+        reason_type: 'installment',
+        initiator: 'merchant',
+        network_transaction_id: ntid
+      }
+    }
+    assert installment = @tokenization_gateway.purchase(@amount, stored_card, @options.merge(installment_params))
+    assert_success installment
+  end
+
+  def test_stored_credentials_with_manual_token
+    # Initial CIT get token request
+    get_token_params = {
+      add_recurring_token: 'Y',
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring',
+        initiator: 'cardholder',
+        network_transaction_id: nil
+      }
+    }
+    assert get_token = @tokenization_gateway.authorize(116, @mastercard, @options.merge(get_token_params))
+    assert_success get_token
+    ntid = get_token.network_transaction_id
+    token = get_token.params['token']
+    par_value = get_token.params['par_value']
+    association_token_data = get_token.params['association_token_data']
+
+    # Subsequent unscheduled MIT purchase, with additional data
+    unscheduled_params = {
+      ssl_token: token,
+      par_value: par_value,
+      association_token_data: association_token_data,
+      stored_credential: {
+        reason_type: 'unscheduled',
+        initiator: 'merchant',
+        network_transaction_id: ntid
+      }
+    }
+    assert unscheduled = @tokenization_gateway.purchase(@amount, @credit_card, @options.merge(unscheduled_params))
+    assert_success unscheduled
+
+    # Subsequent recurring MIT purchase
+    recurring_params = {
+      ssl_token: token,
+      stored_credential: {
+        reason_type: 'recurring',
+        initiator: 'merchant',
+        network_transaction_id: ntid
+      }
+    }
+    assert recurring = @tokenization_gateway.purchase(@amount, @credit_card, @options.merge(recurring_params))
+    assert_success recurring
+
+    # Subsequent installment MIT purchase
+    installment_params = {
+      ssl_token: token,
+      installments: '4',
+      payment_number: '2',
+      stored_credential: {
+        reason_type: 'installment',
+        initiator: 'merchant',
+        network_transaction_id: ntid
+      }
+    }
+    assert installment = @tokenization_gateway.purchase(@amount, @credit_card, @options.merge(installment_params))
+    assert_success installment
+  end
+
+  def test_successful_purchase_with_recurring_token
+    options = {
+      email: 'human@domain.com',
+      description: 'Test Transaction',
+      billing_address: address,
+      ip: '203.0.113.0',
+      merchant_initiated_unscheduled: 'Y',
+      add_recurring_token: 'Y'
+    }
+
+    purchase = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success purchase
+    assert_equal 'APPROVAL', purchase.message
+  end
+
+  # This test is essentially replicating a test on line 373 in order to get it passing.
+  # This test was part of the work to enable recurring transactions for Elavon. Recurring
+  # transactions aren't possible with Elavon unless cards are stored there as well. This work
+  # will be removed in a later cleanup ticket.
+  def test_successful_purchase_with_ssl_token
+    store_response = @tokenization_gateway.store(@credit_card, @options)
+    token = store_response.params['token']
+    options = {
+      email: 'paul@domain.com',
+      description: 'Test Transaction',
+      billing_address: address,
+      ip: '203.0.113.0',
+      merchant_initiated_unscheduled: 'Y',
+      ssl_token: token
+    }
+
+    purchase = @tokenization_gateway.purchase(@amount, token, options)
+
+    assert_success purchase
+    assert_equal 'APPROVAL', purchase.message
+  end
+
   def test_successful_store_without_verify
     assert response = @tokenization_gateway.store(@credit_card, @options)
     assert_success response
@@ -257,6 +472,7 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert response = @tokenization_gateway.purchase(@amount, token, @options)
     assert_success response
     assert response.test?
+    assert_not_empty response.params['token']
     assert_equal 'APPROVAL', response.message
   end
 
@@ -265,6 +481,16 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
     assert_match %r{invalid}i, response.message
+  end
+
+  def test_successful_authorize_with_token
+    store_response = @tokenization_gateway.store(@credit_card, @options)
+    token = store_response.params['token']
+    assert response = @tokenization_gateway.authorize(@amount, token, @options)
+    assert_success response
+    assert response.test?
+    assert_not_empty response.params['token']
+    assert_equal 'APPROVAL', response.message
   end
 
   def test_successful_purchase_with_custom_fields
@@ -278,11 +504,11 @@ class RemoteElavonTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_multi_currency_terminal_setting_disabled
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'USD', multi_currency: true))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'ZAR', multi_currency: true))
 
     assert_failure response
     assert response.test?
-    assert_equal 'Transaction currency is not allowed for this terminal.  Your terminal must be setup with Multi currency', response.message
+    assert_equal 'The transaction currency sent is not supported', response.message
     assert response.authorization
   end
 
@@ -306,7 +532,7 @@ class RemoteElavonTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_level_3_fields
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(level_3_data: @level_3_data))
+    assert response = @gateway.purchase(500, @credit_card, @options.merge(level_3_data: @level_3_data))
 
     assert_success response
     assert_equal 'APPROVAL', response.message
@@ -322,11 +548,46 @@ class RemoteElavonTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_shipping_address_and_l3
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(shipping_address: @shipping_address).merge(level_3_data: @level_3_data))
+    assert response = @gateway.purchase(500, @credit_card, @options.merge(shipping_address: @shipping_address).merge(level_3_data: @level_3_data))
 
     assert_success response
     assert_equal 'APPROVAL', response.message
     assert response.authorization
+  end
+
+  def test_successful_purchase_with_truncated_data
+    credit_card = @credit_card
+    credit_card.first_name = 'Rick & ™ \" < > Martínez įncogníto'
+    credit_card.last_name = 'Lesly Andrea Mart™nez estrada the last name'
+    @options[:billing_address][:city] = 'Saint-François-Xavier-de-Brompton'
+    @options[:billing_address][:address1] = 'Bats & Cats'
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_special_character_encoding_truncation
+    special_card = credit_card('4000000000000002')
+    special_card.first_name = 'CÃ©saire'
+    special_card.last_name = 'Castañeda&%'
+
+    response = @gateway.purchase(@amount, special_card, @options)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'APPROVAL', response.message
+    assert_equal 'CÃ©saire', response.params['first_name']
+    assert_equal 'Castañeda&%', response.params['last_name']
+    assert response.authorization
+  end
+
+  def test_invalid_byte_sequence
+    special_card = credit_card('4000000000000002')
+    special_card.last_name = "Castaneda \255" # add invalid utf-8 byte
+
+    response = @gateway.purchase(@amount, special_card, @options)
+    assert_success response
+    assert response.test?
   end
 
   def test_transcript_scrubbing

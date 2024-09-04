@@ -4,9 +4,7 @@ class RemoteSecurePayTest < Test::Unit::TestCase
   def setup
     @gateway = SecurePayGateway.new(fixtures(:secure_pay))
 
-    @credit_card = credit_card('4111111111111111',
-      month: '7',
-      year: '2014')
+    @credit_card = credit_card('4111111111111111', month: '7', year: '2014')
 
     @options = {
       order_id: generate_unique_id,

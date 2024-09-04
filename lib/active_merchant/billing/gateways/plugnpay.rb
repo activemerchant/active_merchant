@@ -178,11 +178,15 @@ module ActiveMerchant
         success = SUCCESS_CODES.include?(response[:finalstatus])
         message = success ? 'Success' : message_from(response)
 
-        Response.new(success, message, response,
+        Response.new(
+          success,
+          message,
+          response,
           test: test?,
           authorization: response[:orderid],
           avs_result: { code: response[:avs_code] },
-          cvv_result: response[:cvvresp])
+          cvv_result: response[:cvvresp]
+        )
       end
 
       def parse(body)

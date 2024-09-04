@@ -60,7 +60,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 
   def test_failed_purchase
     assert purchase = @gateway.purchase(@success_amount, @expired_card, @options)
-    assert_match 'Card has expired', purchase.message
+    assert_match 'Transaction declined', purchase.message
     assert_failure purchase
     assert_not_nil purchase.params['transaction_id']
     assert_equal purchase.params['transaction_id'], purchase.authorization
@@ -76,7 +76,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 
   def test_failed_refund
     assert refund = @gateway.refund(@success_amount, 'invalid-transaction-id')
-    assert_match %r{'transactionID' not found}, refund.message
+    assert_match %r{MW - 011:Invalid transactionID}, refund.message
     assert_failure refund
   end
 
@@ -91,7 +91,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 
   def test_failed_void
     assert void = @gateway.void('invalid-transaction-id', amount: @success_amount)
-    assert_match %r{'transactionID' not found}, void.message
+    assert_match %r{MW - 011:Invalid transactionID}, void.message
     assert_failure void
   end
 
@@ -191,5 +191,35 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:api_passphrase], transcript)
     assert_scrubbed(@gateway.options[:api_key], transcript)
+  end
+
+  def test_successful_purchase_with_three_ds
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: 'e1E3SN0xF1lDp9js723iASu3wrA=',
+      eci: '05',
+      xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
+
+    assert response = @gateway.purchase(@success_amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+  end
+
+  def test_successful_purchase_with_three_ds_transaction_id
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: 'e1E3SN0xF1lDp9js723iASu3wrA=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
+
+    assert response = @gateway.purchase(@success_amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
   end
 end

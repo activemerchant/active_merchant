@@ -295,14 +295,16 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, request))
 
         success = success?(response)
-        Response.new(success,
+        Response.new(
+          success,
           success ? 'APPROVED' : message_from(response),
           response,
           test: test?,
           authorization: authorization_from(response, money, token),
           avs_result: AVSResult.new(code: response[:avs]),
           cvv_result: CVVResult.new(response[:cvv2]),
-          error_code: success ? nil : error_code_from(response))
+          error_code: success ? nil : error_code_from(response)
+        )
       end
 
       def url

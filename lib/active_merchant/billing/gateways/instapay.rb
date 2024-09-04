@@ -140,10 +140,14 @@ module ActiveMerchant #:nodoc:
         data = ssl_post self.live_url, post_data(action, parameters)
         response = parse(data)
 
-        Response.new(response[:success], response[:message], response,
+        Response.new(
+          response[:success],
+          response[:message],
+          response,
           authorization: response[:transaction_id],
           avs_result: { code: response[:avs_result] },
-          cvv_result: response[:cvv_result])
+          cvv_result: response[:cvv_result]
+        )
       end
 
       def post_data(action, parameters = {})
@@ -151,8 +155,7 @@ module ActiveMerchant #:nodoc:
         post[:acctid] = @options[:login]
         post[:merchantpin] = @options[:password] if @options[:password]
         post[:action] = action
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

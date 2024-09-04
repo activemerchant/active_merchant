@@ -23,18 +23,34 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options = {})
         post = {}
-        post[:TransType] = '1'
+        action = ''
+        if options[:apply_3d_secure] == '1'
+          add_3ds_preauth_fields(post, options)
+          action = '3ds_preauth'
+        else
+          post[:TransType] = '1'
+          add_3ds_fields(post, options)
+          action = 'sale'
+        end
         add_invoice(post, money, options)
         add_payment_method(post, payment)
-        commit('sale', post)
+        commit(action, post, options)
       end
 
       def authorize(money, payment, options = {})
         post = {}
-        post[:TransType] = '5'
+        action = ''
+        if options[:apply_3d_secure] == '1'
+          add_3ds_preauth_fields(post, options)
+          action = '3ds_preauth'
+        else
+          post[:TransType] = '5'
+          add_3ds_fields(post, options)
+          action = 'authonly'
+        end
         add_invoice(post, money, options)
         add_payment_method(post, payment)
-        commit('authonly', post, options)
+        commit(action, post, options)
       end
 
       def capture(money, authorization, options = {})
@@ -80,10 +96,28 @@ module ActiveMerchant #:nodoc:
       CURRENCY_CODES['ISK'] = '352'
       CURRENCY_CODES['EUR'] = '978'
       CURRENCY_CODES['USD'] = '840'
+      CURRENCY_CODES['GBP'] = '826'
+
+      def add_3ds_fields(post, options)
+        post[:ThreeDSMessageId] = options[:three_ds_message_id] if options[:three_ds_message_id]
+        post[:ThreeDS_PARes] = options[:three_ds_pares] if options[:three_ds_pares]
+        post[:ThreeDS_CRes] = options[:three_ds_cres] if options[:three_ds_cres]
+      end
+
+      def add_3ds_preauth_fields(post, options)
+        post[:SaleDescription] = options[:sale_description] || ''
+        post[:MerchantReturnURL] = options[:redirect_url] if options[:redirect_url]
+      end
 
       def add_invoice(post, money, options)
         post[:TrAmount] = amount(money)
         post[:TrCurrency] = CURRENCY_CODES[options[:currency] || currency(money)]
+        # The ISK currency must have a currency exponent of 2 on the 3DS request but not on the auth request
+        if post[:TrCurrency] == '352' && options[:apply_3d_secure] != '1'
+          post[:TrCurrencyExponent] = 0
+        else
+          post[:TrCurrencyExponent] = 2
+        end
         post[:TerminalID] = options[:terminal_id] || '1'
       end
 
@@ -103,11 +137,11 @@ module ActiveMerchant #:nodoc:
         post[:AuthCode] = authcode
       end
 
-      def parse(xml)
+      def parse(xml, options = nil)
         response = {}
 
         doc = Nokogiri::XML(CGI.unescapeHTML(xml))
-        body = doc.xpath('//getAuthorizationReply')
+        body = options[:apply_3d_secure] == '1' ? doc.xpath('//get3DSAuthenticationReply') : doc.xpath('//getAuthorizationReply')
         body = doc.xpath('//cancelAuthorizationReply') if body.length == 0
         body.children.each do |node|
           if node.text?
@@ -121,7 +155,6 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-
         response
       end
 
@@ -132,32 +165,32 @@ module ActiveMerchant #:nodoc:
 
         request = build_request(action, post, options)
         raw = ssl_post(url(action), request, headers)
-        pairs = parse(raw)
+        pairs = parse(raw, options)
         success = success_from(pairs)
 
         Response.new(
           success,
           message_from(success, pairs),
           pairs,
-          authorization: authorization_from(pairs),
+          authorization: authorization_from(pairs, options),
           test: test?
         )
       end
 
       def success_from(response)
-        (response[:actioncode] == '000')
+        (response[:actioncode] == '000') || (response[:status_resultcode] == '0')
       end
 
       def message_from(succeeded, response)
         if succeeded
           'Succeeded'
         else
-          response[:message] || "Error with ActionCode=#{response[:actioncode]}"
+          response[:message] || response[:status_errormessage] || "Error with ActionCode=#{response[:actioncode]}"
         end
       end
 
-      def authorization_from(response)
-        [
+      def authorization_from(response, options)
+        authorization = [
           response[:dateandtime],
           response[:batch],
           response[:transaction],
@@ -167,6 +200,8 @@ module ActiveMerchant #:nodoc:
           response[:tramount],
           response[:trcurrency]
         ].join('|')
+
+        authorization == '|||||||' ? nil : authorization
       end
 
       def split_authorization(authorization)
@@ -182,16 +217,17 @@ module ActiveMerchant #:nodoc:
 
       def build_request(action, post, options = {})
         mode = action == 'void' ? 'cancel' : 'get'
+        transaction_type = action == '3ds_preauth' ? '3DSAuthentication' : 'Authorization'
         xml = Builder::XmlMarkup.new indent: 18
         xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
-        xml.tag!("#{mode}Authorization") do
+        xml.tag!("#{mode}#{transaction_type}") do
           post.each do |field, value|
             xml.tag!(field, value)
           end
           build_airline_xml(xml, options[:passenger_itinerary_data]) if options[:passenger_itinerary_data]
         end
         inner = CGI.escapeHTML(xml.target!)
-        envelope(mode).sub(/{{ :body }}/, inner)
+        envelope(mode, action).sub(/{{ :body }}/, inner)
       end
 
       def build_airline_xml(xml, airline_data)
@@ -204,16 +240,23 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def envelope(mode)
+      def envelope(mode, action)
+        if action == '3ds_preauth'
+          transaction_action = "#{mode}3DSAuthentication"
+          request_action = "#{mode}Auth3DSReqXml"
+        else
+          transaction_action = "#{mode}AuthorizationInput"
+          request_action = "#{mode}AuthReqXml"
+        end
         <<-XML
           <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:aut="http://Borgun/Heimir/pub/ws/Authorization">
             <soapenv:Header/>
             <soapenv:Body>
-              <aut:#{mode}AuthorizationInput>
-                <#{mode}AuthReqXml>
+              <aut:#{transaction_action}>
+                <#{request_action}>
                 {{ :body }}
-                </#{mode}AuthReqXml>
-              </aut:#{mode}AuthorizationInput>
+                </#{request_action}>
+              </aut:#{transaction_action}>
             </soapenv:Body>
           </soapenv:Envelope>
         XML

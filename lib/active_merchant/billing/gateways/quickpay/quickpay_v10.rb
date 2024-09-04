@@ -153,9 +153,13 @@ module ActiveMerchant
           response = json_error(response)
         end
 
-        Response.new(success, message_from(success, response), response,
+        Response.new(
+          success,
+          message_from(success, response),
+          response,
           test: test?,
-          authorization: authorization_from(response))
+          authorization: authorization_from(response)
+        )
       end
 
       def authorization_from(response)
@@ -251,7 +255,7 @@ module ActiveMerchant
 
         requires!(address, :name, :address1, :city, :zip, :country)
         country = Country.find(address[:country])
-        mapped = {
+        {
           name: address[:name],
           street: address[:address1],
           city: address[:city],
@@ -259,7 +263,6 @@ module ActiveMerchant
           zip_code: address[:zip],
           country_code: country.code(:alpha3).value
         }
-        mapped
       end
 
       def format_order_id(order_id)

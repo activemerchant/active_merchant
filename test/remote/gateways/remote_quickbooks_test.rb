@@ -16,6 +16,12 @@ class RemoteTest < Test::Unit::TestCase
                                  state: 'CA' }),
       description: 'Store Purchase'
     }
+
+    @amex = credit_card(
+      '378282246310005',
+      verification_value: '1234',
+      brand: 'american_express'
+    )
   end
 
   def test_successful_purchase
@@ -124,6 +130,18 @@ class RemoteTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:access_token], transcript)
+    assert_scrubbed(@gateway.options[:refresh_token], transcript)
+  end
+
+  def test_transcript_scrubbing_for_amex
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @amex, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@amex.number, transcript)
+    assert_scrubbed(@amex.verification_value, transcript)
     assert_scrubbed(@gateway.options[:access_token], transcript)
     assert_scrubbed(@gateway.options[:refresh_token], transcript)
   end

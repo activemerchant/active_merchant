@@ -174,17 +174,21 @@ module ActiveMerchant #:nodoc:
         response = send("do_#{action}", params)
 
         if action == :authorize
-          Response.new response['accept'].to_i == 1,
+          Response.new(
+            response['accept'].to_i == 1,
             response['errortext'],
             response,
             test: test?,
             authorization: response['tid']
+          )
         else
-          Response.new response['result'] == 'true',
+          Response.new(
+            response['result'] == 'true',
             messages(response['epay'], response['pbs']),
             response,
             test: test?,
             authorization: params[:transaction]
+          )
         end
       end
 

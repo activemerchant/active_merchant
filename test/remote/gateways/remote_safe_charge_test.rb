@@ -16,9 +16,18 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
 
     @three_ds_options = @options.merge(three_d_secure: true)
     @three_ds_gateway = SafeChargeGateway.new(fixtures(:safe_charge_three_ds))
-    @three_ds_enrolled_card = credit_card('4012 0010 3749 0014')
+    @three_ds_enrolled_card = credit_card('4407 1064 3967 1112')
     @three_ds_non_enrolled_card = credit_card('5333 3062 3122 6927')
     @three_ds_invalid_pa_res_card = credit_card('4012 0010 3749 0006')
+
+    @network_token_credit_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      brand: 'Visa',
+      payment_cryptogram: 'UnVBR0RlYm42S2UzYWJKeWJBdWQ=',
+      number: '4012001037490014',
+      source: :network_token,
+      month: '12',
+      year: 2020
+    })
   end
 
   def test_successful_3ds_purchase
@@ -43,15 +52,106 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
   def test_successful_regular_purchase_through_3ds_flow_with_invalid_pa_res
     response = @three_ds_gateway.purchase(@amount, @three_ds_invalid_pa_res_card, @three_ds_options)
     assert_success response
-    assert !response.params['acsurl'].blank?
-    assert !response.params['pareq'].blank?
-    assert !response.params['xid'].blank?
+    assert_equal 'Attempted But Card Not Enrolled', response.params['threedreason']
     assert response.params['threedflow'] = 1
     assert_equal 'Success', response.message
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_token
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+
+    subsequent_response = @gateway.purchase(@amount, response.authorization, @options)
+    assert_success subsequent_response
+    assert_equal 'Success', subsequent_response.message
+  end
+
+  def test_successful_purchase_with_non_fractional_currency
+    options = @options.merge(currency: 'CLP')
+    response = @gateway.purchase(127999, @credit_card, options)
+
+    assert_success response
+    assert_equal 'Success', response.message
+    assert_equal '1279', response.params['requestedamount']
+  end
+
+  def test_successful_purchase_with_mpi_options_3ds_1
+    options = @options.merge({
+      three_d_secure: {
+        xid: '00000000000000000501',
+        eci: '05',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA='
+      }
+    })
+
+    response = @gateway.purchase(@amount, @three_ds_enrolled_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_mpi_options_3ds_2
+    options = @options.merge({
+      three_d_secure: {
+        version: '2.1.0',
+        ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
+        eci: '05',
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
+        challenge_preference: 'NoPreference'
+      }
+    })
+
+    response = @gateway.purchase(@amount, @three_ds_enrolled_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_network_tokenization_request
+    options = @options.merge({
+      three_d_secure: {
+        eci: '05'
+      }
+    })
+
+    response = @gateway.purchase(@amount, @network_token_credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_purchase_with_mpi_options_3ds_2
+    options = @options.merge({
+      three_d_secure: {
+        version: '2.1.0',
+        ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
+        eci: '05',
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
+        challenge_preference: 'NoPreference'
+      }
+    })
+
+    response = @gateway.purchase(@amount, @declined_card, options)
+    assert_failure response
+    assert_equal 'Decline', response.message
+  end
+
+  def test_successful_authorize_with_mpi_options_3ds_2
+    options = @options.merge({
+      three_d_secure: {
+        version: '2.1.0',
+        ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
+        eci: '05',
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
+        challenge_preference: 'NoPreference'
+      }
+    })
+
+    response = @gateway.authorize(@amount, @three_ds_enrolled_card, options)
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -67,7 +167,8 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       merchant_descriptor: 'Test Descriptor',
       merchant_phone_number: '(555)555-5555',
       merchant_name: 'Test Merchant',
-      stored_credential_mode: true
+      stored_credential_mode: true,
+      product_id: 'Test Product'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -101,9 +202,20 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       merchant_descriptor: 'Test Descriptor',
       merchant_phone_number: '(555)555-5555',
       merchant_name: 'Test Merchant',
-      stored_credential_mode: true
+      stored_credential_mode: true,
+      product_id: 'Test Product'
     }
     auth = @gateway.authorize(@amount, @credit_card, extra)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization, extra)
+    assert_success capture
+    assert_equal 'Success', capture.message
+  end
+
+  def test_successful_authorize_and_capture_with_not_use_cvv
+    @credit_card.verification_value = nil
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge!({ not_use_cvv: true }))
     assert_success auth
 
     assert capture = @gateway.capture(@amount, auth.authorization)
@@ -154,6 +266,28 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     assert_equal 'Transaction must contain a Card/Token/Account', response.message
   end
 
+  def test_successful_unreferenced_refund
+    option = {
+      unreferenced_refund: true
+    }
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, option)
+    assert_success refund
+    assert_equal 'Success', refund.message
+  end
+
+  def test_successful_unreferenced_refund_with_credit
+    option = {
+      unreferenced_refund: true
+    }
+
+    assert general_credit = @gateway.credit(@amount, @credit_card, option)
+    assert_success general_credit
+    assert_equal 'Success', general_credit.message
+  end
+
   def test_successful_credit
     response = @gateway.credit(@amount, credit_card('4444436501403986'), @options)
     assert_success response
@@ -171,10 +305,17 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       merchant_descriptor: 'Test Descriptor',
       merchant_phone_number: '(555)555-5555',
       merchant_name: 'Test Merchant',
-      stored_credential_mode: true
+      stored_credential_mode: true,
+      product_id: 'Test Product'
     }
 
     response = @gateway.credit(@amount, credit_card('4444436501403986'), extra)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_credit_with_customer_details
+    response = @gateway.credit(@amount, credit_card('4444436501403986'), @options.merge(email: 'test@example.com'))
     assert_success response
     assert_equal 'Success', response.message
   end

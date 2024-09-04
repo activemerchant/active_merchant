@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # ==== Customer Information Manager (CIM)
@@ -578,6 +579,8 @@ module ActiveMerchant #:nodoc:
 
       def build_get_customer_profile_request(xml, options)
         xml.tag!('customerProfileId', options[:customer_profile_id])
+        xml.tag!('unmaskExpirationDate', options[:unmask_expiration_date]) if options[:unmask_expiration_date]
+        xml.tag!('includeIssuerInfo', options[:include_issuer_info]) if options[:include_issuer_info]
         xml.target!
       end
 
@@ -589,6 +592,7 @@ module ActiveMerchant #:nodoc:
         xml.tag!('customerProfileId', options[:customer_profile_id])
         xml.tag!('customerPaymentProfileId', options[:customer_payment_profile_id])
         xml.tag!('unmaskExpirationDate', options[:unmask_expiration_date]) if options[:unmask_expiration_date]
+        xml.tag!('includeIssuerInfo', options[:include_issuer_info]) if options[:include_issuer_info]
         xml.target!
       end
 
@@ -712,9 +716,7 @@ module ActiveMerchant #:nodoc:
               add_order(xml, transaction[:order]) if transaction[:order].present?
 
             end
-            if %i[auth_capture auth_only capture_only].include?(transaction[:type])
-              xml.tag!('recurringBilling', transaction[:recurring_billing]) if transaction.has_key?(:recurring_billing)
-            end
+            xml.tag!('recurringBilling', transaction[:recurring_billing]) if %i[auth_capture auth_only capture_only].include?(transaction[:type]) && transaction.has_key?(:recurring_billing)
             tag_unless_blank(xml, 'cardCode', transaction[:card_code]) unless %i[void refund prior_auth_capture].include?(transaction[:type])
           end
         end

@@ -2,6 +2,7 @@ require 'test_helper'
 
 class RemoteMercadoPagoTest < Test::Unit::TestCase
   def setup
+    exp_year = Time.now.year + 1
     @gateway = MercadoPagoGateway.new(fixtures(:mercado_pago))
     @argentina_gateway = MercadoPagoGateway.new(fixtures(:mercado_pago_argentina))
     @colombian_gateway = MercadoPagoGateway.new(fixtures(:mercado_pago_colombia))
@@ -9,30 +10,35 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     @amount = 500
     @credit_card = credit_card('5031433215406351')
     @colombian_card = credit_card('4013540682746260')
-    @elo_credit_card = credit_card('5067268650517446',
+    @elo_credit_card = credit_card(
+      '5067268650517446',
       month: 10,
-      year: 2020,
+      year: exp_year,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '737')
-    @cabal_credit_card = credit_card('6042012045809847',
+      verification_value: '737'
+    )
+    @cabal_credit_card = credit_card(
+      '6035227716427021',
       month: 10,
-      year: 2020,
+      year: exp_year,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '737')
-    @naranja_credit_card = credit_card('5895627823453005',
+      verification_value: '737'
+    )
+    @naranja_credit_card = credit_card(
+      '5895627823453005',
       month: 10,
-      year: 2020,
+      year: exp_year,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '123')
-    @declined_card = credit_card('5031433215406351',
-      first_name: 'OTHE')
+      verification_value: '123'
+    )
+    @declined_card = credit_card('5031433215406351', first_name: 'OTHE')
     @options = {
       billing_address: address,
       shipping_address: address,
-      email: 'user+br@example.com',
+      email: 'test_user_1390220683@testuser.com',
       description: 'Store Purchase'
     }
     @processing_options = {
@@ -42,6 +48,13 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
       fraud_scoring: true,
       fraud_manual_review: true,
       payment_method_option_id: '123abc'
+    }
+    @payer = {
+      entity_type: 'individual',
+      type: 'customer',
+      identification: {},
+      first_name: 'Longbob',
+      last_name: 'Longsen'
     }
   end
 
@@ -112,6 +125,27 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_equal 'https://www.spreedly.com/', response.params['notification_url']
   end
 
+  def test_successful_purchase_with_idempotency_key
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(idempotency_key: '0d5020ed-1af6-469c-ae06-c3bec19954bb'))
+    assert_success response
+    assert_equal 'accredited', response.message
+  end
+
+  def test_successful_purchase_with_payer
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ payer: @payer }))
+    assert_success response
+    assert_equal 'accredited', response.message
+  end
+
+  def test_successful_purchase_with_metadata_passthrough
+    metadata = { 'key_1' => 'value_1',
+      'key_2' => 'value_2',
+      'key_3' => { 'nested_key_1' => 'value_3' } }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ metadata: metadata }))
+    assert_success response
+    assert_equal metadata, response.params['metadata']
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -127,6 +161,12 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
     assert_equal 'accredited', capture.message
+  end
+
+  def test_successful_authorize_with_idempotency_key
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(idempotency_key: '0d5020ed-1af6-469c-ae06-c3bec19954bb'))
+    assert_success response
+    assert_equal 'accredited', response.message
   end
 
   def test_successful_authorize_and_capture_with_elo
@@ -157,6 +197,12 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert capture = @argentina_gateway.capture(@amount, auth.authorization)
     assert_success capture
     assert_equal 'accredited', capture.message
+  end
+
+  def test_successful_authorize_with_capture_option
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(capture: true))
+    assert_success auth
+    assert_equal 'accredited', auth.message
   end
 
   def test_failed_authorize
@@ -278,10 +324,43 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_match %r{pending_capture}, response.message
   end
 
+  def test_successful_verify_with_idempotency_key
+    response = @gateway.verify(@credit_card, @options.merge(idempotency_key: '0d5020ed-1af6-469c-ae06-c3bec19954bb'))
+    assert_success response
+    assert_match %r{pending_capture}, response.message
+  end
+
+  def test_successful_verify_with_amount
+    @options[:amount] = 200
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match %r{pending_capture}, response.message
+  end
+
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_match %r{cc_rejected_other_reason}, response.message
+  end
+
+  def test_successful_inquire_with_id
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'pending_capture', auth.message
+
+    assert inquire = @gateway.inquire(auth.authorization)
+    assert_success inquire
+    assert_equal auth.message, inquire.message
+  end
+
+  def test_successful_inquire_with_external_reference
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: 'abcd1234'))
+    assert_success auth
+    assert auth.params['external_reference'] = 'abcd1234'
+
+    assert inquire = @gateway.inquire(nil, { external_reference: 'abcd1234' })
+    assert_success inquire
+    assert_equal auth.authorization, inquire.authorization
   end
 
   def test_invalid_login
@@ -301,5 +380,32 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:access_token], transcript)
+  end
+
+  def test_successful_purchase_with_3ds
+    three_ds_cc = credit_card('5483928164574623', verification_value: '123', month: 11, year: 2025)
+    @options[:execute_threed] = true
+
+    response = @gateway.purchase(290, three_ds_cc, @options)
+
+    assert_success response
+    assert_equal 'pending_challenge', response.message
+    assert_include response.params, 'three_ds_info'
+    assert_equal response.params['three_ds_info']['external_resource_url'], 'https://api.mercadopago.com/cardholder_authenticator/v2/prod/browser-challenges'
+    assert_include response.params['three_ds_info'], 'creq'
+  end
+
+  def test_successful_purchase_with_3ds_mandatory
+    three_ds_cc = credit_card('5031755734530604', verification_value: '123', month: 11, year: 2025)
+    @options[:execute_threed] = true
+    @options[:three_ds_mode] = 'mandatory'
+
+    response = @gateway.purchase(290, three_ds_cc, @options)
+
+    assert_success response
+    assert_equal 'pending_challenge', response.message
+    assert_include response.params, 'three_ds_info'
+    assert_equal response.params['three_ds_info']['external_resource_url'], 'https://api.mercadopago.com/cardholder_authenticator/v2/prod/browser-challenges'
+    assert_include response.params['three_ds_info'], 'creq'
   end
 end

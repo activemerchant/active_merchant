@@ -51,7 +51,20 @@ class FirstdataE4V27Test < Test::Unit::TestCase
 
   def test_successful_purchase_with_wallet
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge!({ wallet_provider_id: 4 }))
+      @gateway.purchase(@amount, @credit_card, @options.merge!({ wallet_provider_id: 3 }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/WalletProviderID>3</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_wallet_provider_id_for_apple_pay
+    response = stub_comms do
+      credit_card = network_tokenization_credit_card
+
+      credit_card.source = :apple_pay
+      @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/WalletProviderID>4</, data)
     end.respond_with(successful_purchase_response)
@@ -255,13 +268,13 @@ class FirstdataE4V27Test < Test::Unit::TestCase
         '6011111111111117',
         brand: 'discover',
         transaction_id: '123',
-        eci: '05',
+        eci: '04',
         payment_cryptogram: 'whatever_the_cryptogram_is'
       )
 
       @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |_, data, _|
-      assert_match '<Ecommerce_Flag>04</Ecommerce_Flag>', data
+      assert_match '<Ecommerce_Flag>05</Ecommerce_Flag>', data
       assert_match '<XID>123</XID>', data
       assert_match '<CAVV>whatever_the_cryptogram_is</CAVV>', data
       assert_xml_valid_to_wsdl(data)
@@ -988,7 +1001,7 @@ class FirstdataE4V27Test < Test::Unit::TestCase
         read: true
         socket:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
+    YAML.safe_load(yamlexcep, permitted_classes: ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def bad_credentials_response
@@ -1025,7 +1038,7 @@ class FirstdataE4V27Test < Test::Unit::TestCase
         http_version: '1.1'
         socket:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
+    YAML.safe_load(yamlexcep, permitted_classes: ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
   end
 
   def successful_void_response

@@ -34,60 +34,78 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
 
   def test_setup_request_invalid_requests
     assert_raise ArgumentError do
-      @gateway.setup_purchase(100,
+      @gateway.setup_purchase(
+        100,
         ip: '127.0.0.1',
         description: 'Test Title',
         return_url: 'http://return.url',
-        cancel_return_url: 'http://cancel.url')
+        cancel_return_url: 'http://cancel.url'
+      )
     end
 
     assert_raise ArgumentError do
-      @gateway.setup_purchase(100,
+      @gateway.setup_purchase(
+        100,
         ip: '127.0.0.1',
         description: 'Test Title',
         return_url: 'http://return.url',
         cancel_return_url: 'http://cancel.url',
-        items: [])
+        items: []
+      )
     end
 
     assert_raise ArgumentError do
-      @gateway.setup_purchase(100,
+      @gateway.setup_purchase(
+        100,
         ip: '127.0.0.1',
         description: 'Test Title',
         return_url: 'http://return.url',
         cancel_return_url: 'http://cancel.url',
-        items: [Hash.new])
+        items: [Hash.new]
+      )
     end
 
     assert_raise ArgumentError do
-      @gateway.setup_purchase(100,
+      @gateway.setup_purchase(
+        100,
         ip: '127.0.0.1',
         description: 'Test Title',
         return_url: 'http://return.url',
         cancel_return_url: 'http://cancel.url',
-        items: [{ name: 'Charge',
-                  number: '1',
-                  quantity: '1',
-                  amount: 100,
-                  description: 'Description',
-                  category: 'Physical' }])
+        items: [
+          {
+            name: 'Charge',
+            number: '1',
+            quantity: '1',
+            amount: 100,
+            description: 'Description',
+            category: 'Physical'
+          }
+        ]
+      )
     end
   end
 
   def test_build_setup_request_valid
     @gateway.expects(:ssl_post).returns(successful_setup_response)
 
-    @gateway.setup_purchase(100,
+    @gateway.setup_purchase(
+      100,
       ip: '127.0.0.1',
       description: 'Test Title',
       return_url: 'http://return.url',
       cancel_return_url: 'http://cancel.url',
-      items: [{ name: 'Charge',
-                number: '1',
-                quantity: '1',
-                amount: 100,
-                description: 'Description',
-                category: 'Digital' }])
+      items: [
+        {
+          name: 'Charge',
+          number: '1',
+          quantity: '1',
+          amount: 100,
+          description: 'Description',
+          category: 'Digital'
+        }
+      ]
+    )
   end
 
   private

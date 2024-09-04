@@ -222,9 +222,13 @@ module ActiveMerchant #:nodoc:
           end
         response = parse(raw)
 
-        EwayResponse.new(response[:success], response[:message], response,
+        EwayResponse.new(
+          response[:success],
+          response[:message],
+          response,
           test: test?,
-          authorization: response[:auth_code])
+          authorization: response[:auth_code]
+        )
       end
 
       # Where we build the full SOAP 1.2 request using builder

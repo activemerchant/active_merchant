@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://api.mercadopago.com/v1'
 
       self.supported_countries = %w[AR BR CL CO MX PE UY]
-      self.supported_cardtypes = %i[visa master american_express elo cabal naranja]
+      self.supported_cardtypes = %i[visa master american_express elo cabal naranja creditel]
 
       self.homepage_url = 'https://www.mercadopago.com/'
       self.display_name = 'Mercado Pago'
@@ -43,6 +43,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         authorization, original_amount = authorization.split('|')
         post[:amount] = amount(money).to_f if original_amount && original_amount.to_f > amount(money).to_f
+        add_idempotency_key(post, options)
         commit('refund', "payments/#{authorization}/refunds", post)
       end
 
@@ -53,10 +54,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
+        verify_amount = 100
+        verify_amount = options[:amount].to_i if options[:amount]
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(verify_amount, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
+      end
+
+      def inquire(authorization, options = {})
+        commit('inquire', inquire_path(authorization, options), {})
       end
 
       def supports_scrubbing?
@@ -99,13 +106,15 @@ module ActiveMerchant #:nodoc:
         add_net_amount(post, options)
         add_taxes(post, options)
         add_notification_url(post, options)
-        post[:binary_mode] = (options[:binary_mode].nil? ? true : options[:binary_mode])
+        add_idempotency_key(post, options)
+        add_3ds(post, options)
+        post[:binary_mode] = options.fetch(:binary_mode, true) unless options[:execute_threed]
         post
       end
 
       def authorize_request(money, payment, options = {})
         post = purchase_request(money, payment, options)
-        post[:capture] = false
+        post[:capture] = options[:capture] || false
         post
       end
 
@@ -128,7 +137,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_additional_data(post, options)
-        post[:sponsor_id] = options[:sponsor_id]
+        post[:sponsor_id] = options[:sponsor_id] unless test?
+        post[:metadata] = options[:metadata] if options[:metadata]
         post[:device_id] = options[:device_id] if options[:device_id]
         post[:additional_info] = {
           ip_address: options[:ip_address]
@@ -143,7 +153,7 @@ module ActiveMerchant #:nodoc:
           email: options[:email],
           first_name: payment.first_name,
           last_name: payment.last_name
-        }
+        }.merge(options[:payer] || {})
       end
 
       def add_address(post, options)
@@ -191,7 +201,7 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         post[:installments] = options[:installments] ? options[:installments].to_i : 1
         post[:statement_descriptor] = options[:statement_descriptor] if options[:statement_descriptor]
-        post[:external_reference] = options[:order_id] || SecureRandom.hex(16)
+        post[:external_reference] = options[:order_id] || options[:external_reference] || SecureRandom.hex(16)
       end
 
       def add_payment(post, options)
@@ -202,6 +212,10 @@ module ActiveMerchant #:nodoc:
 
       def add_net_amount(post, options)
         post[:net_amount] = Float(options[:net_amount]) if options[:net_amount]
+      end
+
+      def add_idempotency_key(post, options)
+        post[:idempotency_key] = options[:idempotency_key] if options[:idempotency_key]
       end
 
       def add_notification_url(post, options)
@@ -258,6 +272,10 @@ module ActiveMerchant #:nodoc:
       def commit(action, path, parameters)
         if %w[capture void].include?(action)
           response = parse(ssl_request(:put, url(path), post_data(parameters), headers))
+        elsif action == 'inquire'
+          response = parse(ssl_get(url(path), headers))
+
+          response = response[0]['results'][0] if response.is_a?(Array)
         else
           response = parse(ssl_post(url(path), post_data(parameters), headers(parameters)))
         end
@@ -276,7 +294,7 @@ module ActiveMerchant #:nodoc:
         if action == 'refund'
           response['status'] != 404 && response['error'].nil?
         else
-          %w[active approved authorized cancelled in_process].include?(response['status'])
+          %w[active approved authorized cancelled in_process pending].include?(response['status'])
         end
       end
 
@@ -289,7 +307,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(parameters = {})
-        parameters.clone.tap { |p| p.delete(:device_id) }.to_json
+        params = parameters.clone.tap do |p|
+          p.delete(:device_id)
+          p.delete(:idempotency_key)
+        end
+        params.to_json
+      end
+
+      def inquire_path(authorization, options)
+        if authorization
+          authorization, = authorization.split('|')
+          "payments/#{authorization}"
+        else
+          "payments/search?external_reference=#{options[:order_id] || options[:external_reference]}"
+        end
       end
 
       def error_code_from(action, response)
@@ -302,6 +333,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_3ds(post, options)
+        return unless options[:execute_threed]
+
+        post[:three_d_secure_mode] = options[:three_ds_mode] == 'mandatory' ? 'mandatory' : 'optional'
+        post[:notification_url] = options[:notification_url] if options[:notification_url]
+      end
+
       def url(action)
         full_url = (test? ? test_url : live_url)
         full_url + "/#{action}?access_token=#{CGI.escape(@options[:access_token])}"
@@ -312,6 +350,7 @@ module ActiveMerchant #:nodoc:
           'Content-Type' => 'application/json'
         }
         headers['X-meli-session-id'] = options[:device_id] if options[:device_id]
+        headers['X-Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
         headers
       end
 

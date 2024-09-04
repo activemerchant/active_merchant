@@ -3,19 +3,33 @@ require 'test_helper'
 class RemoteNmiTest < Test::Unit::TestCase
   def setup
     @gateway = NmiGateway.new(fixtures(:nmi))
+    @gateway_secure = NmiGateway.new(fixtures(:nmi_secure))
     @amount = Random.rand(100...1000)
     @credit_card = credit_card('4111111111111111', verification_value: 917)
     @check = check(
       routing_number: '123123123',
       account_number: '123123123'
     )
-    @apple_pay_card = network_tokenization_credit_card('4111111111111111',
+    @apple_pay = network_tokenization_credit_card(
+      '4111111111111111',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       month: '01',
-      year: '2024',
+      year: Time.new.year + 2,
       source: :apple_pay,
       eci: '5',
-      transaction_id: '123456789')
+      transaction_id: '123456789'
+    )
+
+    @google_pay = network_tokenization_credit_card(
+      '4111111111111111',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      month: '01',
+      year: Time.new.year + 2,
+      source: :google_pay,
+      transaction_id: '123456789',
+      eci: '05'
+    )
+
     @options = {
       order_id: generate_unique_id,
       billing_address: address,
@@ -23,6 +37,18 @@ class RemoteNmiTest < Test::Unit::TestCase
     }
     @level3_options = {
       tax: 5.25, shipping: 10.51, ponumber: 1002
+    }
+    @descriptor_options = {
+      descriptor: 'test',
+      descriptor_phone: '123',
+      descriptor_address: 'address',
+      descriptor_city: 'city',
+      descriptor_state: 'state',
+      descriptor_postal: 'postal',
+      descriptor_country: 'country',
+      descriptor_mcc: 'mcc',
+      descriptor_merchant_id: '120',
+      descriptor_url: 'url'
     }
   end
 
@@ -33,13 +59,82 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_equal 'Authentication Failed', response.message
   end
 
+  def test_invalid_login_security_key_empty
+    gateway_secure = NmiGateway.new(security_key: '')
+    assert response = gateway_secure.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Authentication Failed', response.message
+  end
+
+  def test_valid_login_username_password
+    @gateway = NmiGateway.new(login: 'demo', password: 'password')
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_valid_login_security_key
+    gateway_secure = NmiGateway.new(fixtures(:nmi_secure))
+    assert response = gateway_secure.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_authorization_security_key
+    assert response = @gateway_secure.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_using_security_key
+    assert response = @gateway_secure.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_transcript_scrubbing_using_security_key
+    transcript = capture_transcript(@gateway_secure) do
+      @gateway_secure.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway_secure.scrub(transcript)
+    assert_scrubbed(@gateway_secure.options[:security_key], transcript)
+  end
+
   def test_successful_purchase
     options = @options.merge(@level3_options)
-
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert response.test?
     assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_customer_vault_data
+    vault_id = SecureRandom.hex(16)
+
+    options = {
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: 'Store purchase',
+      customer_vault: 'add_customer'
+    }
+
+    assert response = @gateway.purchase(@amount, @credit_card, options.merge(customer_vault_id: vault_id))
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert_equal vault_id, response.params['customer_vault_id']
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_customer_vault_and_auto_generate_customer_vault_id
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(customer_vault: 'add_customer'))
+    assert_success response
+    assert response.test?
+
+    assert_equal 'Succeeded', response.message
+    assert response.params.include?('customer_vault_id')
     assert response.authorization
   end
 
@@ -74,17 +169,55 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_equal 'FAILED', response.message
   end
 
-  def test_successful_purchase_with_apple_pay_card
-    assert @gateway.supports_network_tokenization?
-    assert response = @gateway.purchase(@amount, @apple_pay_card, @options)
+  def test_successful_purchase_with_apple_pay
+    assert @gateway_secure.supports_network_tokenization?
+    assert response = @gateway_secure.purchase(@amount, @apple_pay, @options)
     assert_success response
     assert response.test?
     assert_equal 'Succeeded', response.message
     assert response.authorization
   end
 
-  def test_failed_purchase_with_apple_pay_card
-    assert response = @gateway.purchase(99, @apple_pay_card, @options)
+  def test_successful_purchase_with_google_pay
+    assert @gateway_secure.supports_network_tokenization?
+    assert response = @gateway_secure.purchase(@amount, @google_pay, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_google_pay_without_billing_address
+    assert @gateway_secure.supports_network_tokenization?
+    @options.delete(:billing_address)
+
+    assert response = @gateway_secure.purchase(@amount, @google_pay, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_apple_pay_without_billing_address
+    assert @gateway_secure.supports_network_tokenization?
+    @options.delete(:billing_address)
+
+    assert response = @gateway_secure.purchase(@amount, @apple_pay, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_failed_purchase_with_apple_pay
+    assert response = @gateway_secure.purchase(1, @apple_pay, @options)
+    assert_failure response
+    assert response.test?
+    assert_equal 'DECLINE', response.message
+  end
+
+  def test_failed_purchase_with_google_pay
+    assert response = @gateway_secure.purchase(1, @google_pay, @options)
     assert_failure response
     assert response.test?
     assert_equal 'DECLINE', response.message
@@ -107,7 +240,7 @@ class RemoteNmiTest < Test::Unit::TestCase
     three_d_secure_options = @options.merge({
       three_d_secure: {
         version: '2.1.0',
-        eci: '02',
+        authentication_response_status: 'Y',
         cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
         ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
       }
@@ -125,6 +258,36 @@ class RemoteNmiTest < Test::Unit::TestCase
 
     assert response = @gateway.authorize(@amount, @credit_card, options)
     assert_success response
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_descriptors
+    options = @options.merge({ descriptors: @descriptor_options })
+
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_shipping_fields
+    options = @options.merge({ shipping_address: shipping_address, shipping_email: 'test@example.com' })
+
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_surcharge
+    options = @options.merge({ surcharge: '1.00' })
+
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert response.test?
     assert_equal 'Succeeded', response.message
     assert response.authorization
   end
@@ -218,6 +381,34 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_match 'Succeeded', response.message
   end
 
+  def test_successful_verify_with_customer_vault_data
+    vault_id = SecureRandom.hex(16)
+
+    options = {
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: 'Store purchase',
+      customer_vault: 'add_customer'
+    }
+
+    assert response = @gateway.verify(@credit_card, options.merge(customer_vault_id: vault_id))
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert_equal vault_id, response.params['customer_vault_id']
+    assert response.authorization
+  end
+
+  def test_successful_verify_with_customer_vault_and_auto_generate_customer_vault_id
+    assert response = @gateway.verify(@credit_card, @options.merge(customer_vault: 'add_customer'))
+    assert_success response
+    assert response.test?
+
+    assert_equal 'Succeeded', response.message
+    assert response.params.include?('customer_vault_id')
+    assert response.authorization
+  end
+
   def test_failed_verify
     card = credit_card(year: 2010)
     response = @gateway.verify(card, @options)
@@ -302,6 +493,18 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_success purchase
   end
 
+  def test_purchase_using_ntid_override_mit
+    initial_options = stored_credential_options(:cardholder, :recurring, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert network_transaction_id = purchase.params['transactionid']
+
+    @options[:network_transaction_id] = network_transaction_id
+    used_options = stored_credential_options(:merchant, :recurring)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
   def test_purchase_using_stored_credential_installment_cit
     initial_options = stored_credential_options(:cardholder, :installment, :initial)
     assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
@@ -366,7 +569,6 @@ class RemoteNmiTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
-
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_cvv_scrubbed(clean_transcript)
     assert_password_scrubbed(clean_transcript)
@@ -385,12 +587,23 @@ class RemoteNmiTest < Test::Unit::TestCase
 
   def test_network_tokenization_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @apple_pay_card, @options)
+      @gateway.purchase(@amount, @apple_pay, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
 
-    assert_scrubbed(@apple_pay_card.number, clean_transcript)
-    assert_scrubbed(@apple_pay_card.payment_cryptogram, clean_transcript)
+    assert_scrubbed(@apple_pay.number, clean_transcript)
+    assert_scrubbed(@apple_pay.payment_cryptogram, clean_transcript)
+    assert_password_scrubbed(clean_transcript)
+  end
+
+  def test_transcript_scrubbing_with_google_pay
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @google_pay, @options)
+    end
+
+    clean_transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@apple_pay.number, clean_transcript)
+    assert_scrubbed(@apple_pay.payment_cryptogram, clean_transcript)
     assert_password_scrubbed(clean_transcript)
   end
 

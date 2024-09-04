@@ -22,6 +22,22 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://processing.paysafe.com/'
       self.display_name = 'Netbanx by PaySafe'
 
+      AVS_CODE_CONVERTER = {
+        'MATCH' => 'X',
+        'MATCH_ADDRESS_ONLY' => 'A',
+        'MATCH_ZIP_ONLY' => 'Z',
+        'NO_MATCH' => 'N',
+        'NOT_PROCESSED' => 'U',
+        'UNKNOWN' => 'Q'
+      }
+
+      CVV_CODE_CONVERTER = {
+        'MATCH' => 'M',
+        'NO_MATCH' => 'N',
+        'NOT_PROCESSED' => 'P',
+        'UNKNOWN' => 'U'
+      }
+
       def initialize(options = {})
         requires!(options, :account_number, :api_key)
         super
@@ -36,6 +52,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_settle_with_auth(post)
         add_payment(post, payment, options)
+        add_customer_detail_data(post, options)
 
         commit(:post, 'auths', post)
       end
@@ -48,6 +65,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment, options)
+        add_customer_detail_data(post, options)
 
         commit(:post, 'auths', post)
       end
@@ -147,6 +165,15 @@ module ActiveMerchant #:nodoc:
         post[:locale] = options[:locale]
       end
 
+      def add_customer_detail_data(post, options)
+        post[:profile] ||= {}
+        post[:profile][:email] = options[:email] if options[:email]
+        post[:customerIp] = options[:ip] if options[:ip]
+        if (billing_address = options[:billing_address])
+          post[:profile][:firstName], post[:profile][:lastName] = split_names(billing_address[:name])
+        end
+      end
+
       def add_credit_card(post, credit_card, options = {})
         post[:card] ||= {}
         post[:card][:cardNum]    = credit_card.number
@@ -206,7 +233,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def map_3ds(three_d_secure_options)
-        mapped = {
+        {
           eci: three_d_secure_options[:eci],
           cavv: three_d_secure_options[:cavv],
           xid: three_d_secure_options[:xid],
@@ -214,8 +241,6 @@ module ActiveMerchant #:nodoc:
           threeDSecureVersion: three_d_secure_options[:version],
           directoryServerTransactionId: three_d_secure_options[:ds_transaction_id]
         }
-
-        mapped
       end
 
       def parse(body)
@@ -245,9 +270,17 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: error_code_from(response),
           authorization: authorization_from(success, get_url(uri), method, response),
-          avs_result: AVSResult.new(code: response['avsResponse']),
-          cvv_result: CVVResult.new(response['cvvVerification'])
+          avs_result: avs_result(response),
+          cvv_result: cvv_result(response)
         )
+      end
+
+      def avs_result(response)
+        AVSResult.new(code: AVS_CODE_CONVERTER[response['avsResponse']])
+      end
+
+      def cvv_result(response)
+        CVVResult.new(CVV_CODE_CONVERTER[response['cvvVerification']])
       end
 
       def get_url(uri)

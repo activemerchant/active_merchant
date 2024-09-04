@@ -208,9 +208,9 @@ module ActiveMerchant #:nodoc:
           # The amount to be billed to the customer
           # for each payment in the subscription
           xml.tag!('amount', amount(options[:amount])) if options[:amount]
-          if trial = options[:trial]
+          if trial = options[:trial] && (trial[:amount])
             # The amount to be charged for each payment during a trial period (conditional)
-            xml.tag!('trialAmount', amount(trial[:amount])) if trial[:amount]
+            xml.tag!('trialAmount', amount(trial[:amount]))
           end
           # Contains either the customer’s credit card
           # or bank account payment information
@@ -260,9 +260,9 @@ module ActiveMerchant #:nodoc:
           # Contains information about the interval of time between payments
           add_interval(xml, options)
           add_duration(xml, options)
-          if trial = options[:trial]
+          if trial = options[:trial] && (trial[:occurrences])
             # Number of billing occurrences or payments in the trial period (optional)
-            xml.tag!('trialOccurrences', trial[:occurrences]) if trial[:occurrences]
+            xml.tag!('trialOccurrences', trial[:occurrences])
           end
         end
       end
@@ -393,9 +393,13 @@ module ActiveMerchant #:nodoc:
         test_mode = test? || message =~ /Test Mode/
         success = response[:result_code] == 'Ok'
 
-        Response.new(success, message, response,
+        Response.new(
+          success,
+          message,
+          response,
           test: test_mode,
-          authorization: response[:subscription_id])
+          authorization: response[:subscription_id]
+        )
       end
 
       def recurring_parse(action, xml)

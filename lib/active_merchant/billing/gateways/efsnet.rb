@@ -145,11 +145,15 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(action, parameters), 'Content-Type' => 'text/xml'))
 
-        Response.new(success?(response), message_from(response[:result_message]), response,
+        Response.new(
+          success?(response),
+          message_from(response[:result_message]),
+          response,
           test: test?,
           authorization: authorization_from(response, parameters),
           avs_result: { code: response[:avs_response_code] },
-          cvv_result: response[:cvv_response_code])
+          cvv_result: response[:cvv_response_code]
+        )
       end
 
       def success?(response)

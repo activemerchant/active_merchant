@@ -28,7 +28,40 @@ class KushkiTest < Test::Unit::TestCase
         subtotal_iva: '10',
         iva: '1.54',
         ice: '3.50'
-      }
+      },
+      contact_details: {
+        document_type: 'CC',
+        document_number: '123456',
+        email: 'who_dis@monkeys.tv',
+        first_name: 'Who',
+        last_name: 'Dis',
+        second_last_name: 'Buscemi',
+        phone_number: '+13125556789'
+      },
+      metadata: {
+        productos: 'bananas',
+        nombre_apellido: 'Kirk'
+      },
+      months: 2,
+      deferred_grace_months: '05',
+      deferred_credit_type: '01',
+      deferred_months: 3,
+      product_details: [
+        {
+          id: 'test1',
+          title: 'tester1',
+          price: 10,
+          sku: 'abcde',
+          quantity: 1
+        },
+        {
+          id: 'test2',
+          title: 'tester2',
+          price: 5,
+          sku: 'edcba',
+          quantity: 2
+        }
+      ]
     }
 
     amount = 100 * (
@@ -41,7 +74,15 @@ class KushkiTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_charge_response)
     @gateway.expects(:ssl_post).returns(successful_token_response)
 
-    response = @gateway.purchase(amount, @credit_card, options)
+    response = stub_comms do
+      @gateway.purchase(amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_includes data, 'metadata'
+      assert_includes data, 'months'
+      assert_includes data, 'deferred'
+      assert_includes data, 'productDetails'
+    end.respond_with(successful_token_response, successful_charge_response)
+
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_match %r(^\d+$), response.authorization
@@ -110,9 +151,45 @@ class KushkiTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_taxes_are_included_when_provided
+  def test_cop_taxes_are_included_when_provided
     options = {
       currency: 'COP',
+      amount: {
+        subtotal_iva_0: '4.95',
+        subtotal_iva: '10',
+        iva: '1.54',
+        ice: '3.50',
+        extra_taxes: {
+          propina: 0.1,
+          tasa_aeroportuaria: 0.2,
+          agencia_de_viaje: 0.3,
+          iac: 0.4
+        }
+      }
+    }
+
+    amount = 100 * (
+      options[:amount][:subtotal_iva_0].to_f +
+      options[:amount][:subtotal_iva].to_f +
+      options[:amount][:iva].to_f +
+      options[:amount][:ice].to_f
+    )
+
+    response = stub_comms do
+      @gateway.purchase(amount, @credit_card, options)
+    end.check_request do |endpoint, data, _headers|
+      if /charges/.match?(endpoint)
+        assert_match %r{extraTaxes}, data
+        assert_match %r{propina}, data
+      end
+    end.respond_with(successful_charge_response, successful_token_response)
+
+    assert_success response
+  end
+
+  def test_usd_taxes_are_included_when_provided
+    options = {
+      currency: 'USD',
       amount: {
         subtotal_iva_0: '4.95',
         subtotal_iva: '10',
@@ -218,6 +295,49 @@ class KushkiTest < Test::Unit::TestCase
     assert_equal 'K010', refund.error_code
   end
 
+  def test_partial_refund
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+
+    options = { currency: 'PEN' }
+
+    purchase = @gateway.purchase(100, @credit_card, options)
+
+    refund = stub_comms(@gateway, :ssl_request) do
+      refund_options = {
+        currency: 'PEN',
+        partial_refund: true,
+        full_response: true
+      }
+      @gateway.refund(50, purchase.authorization, refund_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['amount']['subtotalIva0'], 0.5
+    end.respond_with(successful_refund_response)
+    assert_success refund
+  end
+
+  def test_full_refund_does_not_have_request_body
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+
+    options = { currency: 'PEN' }
+
+    purchase = @gateway.purchase(@amount, @credit_card, options)
+    assert_success purchase
+
+    refund = stub_comms(@gateway, :ssl_request) do
+      refund_options = {
+        currency: 'PEN',
+        full_response: true
+      }
+      @gateway.refund(@amount, purchase.authorization, refund_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_nil(data)
+    end.respond_with(successful_refund_response)
+    assert_success refund
+  end
+
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
     @gateway.expects(:ssl_post).returns(successful_token_response)
@@ -268,6 +388,23 @@ class KushkiTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Tipo de moneda no válida', response.message
     assert_equal '205', response.error_code
+  end
+
+  def test_successful_purchase_with_full_response_flag
+    options = {
+      full_response: 'true'
+    }
+
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_includes data, 'fullResponse'
+    end.respond_with(successful_token_response, successful_charge_response)
+
+    assert_success response
   end
 
   def test_scrub

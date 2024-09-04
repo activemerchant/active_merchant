@@ -22,12 +22,36 @@ class RemoteEbanxTest < Test::Unit::TestCase
       metadata: {
         metadata_1: 'test',
         metadata_2: 'test2'
-      }
+      },
+      tags: EbanxGateway::TAGS,
+      soft_descriptor: 'ActiveMerchant',
+      email: 'neymar@test.com'
     }
+
+    @hiper_card = credit_card('6062825624254001')
+    @elo_card = credit_card('6362970000457013')
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_successful_purchase_hipercard
+    response = @gateway.purchase(@amount, @hiper_card, @options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_successful_purchase_elocard
+    response = @gateway.purchase(@amount, @elo_card, @options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_successful_store_elocard
+    response = @gateway.purchase(@amount, @elo_card, @options)
     assert_success response
     assert_equal 'Accepted', response.message
   end
@@ -42,6 +66,13 @@ class RemoteEbanxTest < Test::Unit::TestCase
     })
 
     response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_successful_purchase_passing_processing_type_in_header
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ processing_type: 'local' }))
+
     assert_success response
     assert_equal 'Accepted', response.message
   end
@@ -101,6 +132,13 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Invalid card or card type', response.message
     assert_equal 'NOK', response.error_code
+  end
+
+  def test_failed_authorize_no_email
+    response = @gateway.authorize(@amount, @declined_card, @options.except(:email))
+    assert_failure response
+    assert_equal 'Field payment.email is required', response.message
+    assert_equal 'BP-DR-15', response.error_code
   end
 
   def test_successful_partial_capture_when_include_capture_amount_is_not_passed
@@ -185,6 +223,23 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
     store = @gateway.store(@credit_card, options)
     assert_success store
+    assert_equal store.authorization.split('|')[1], 'visa'
+
+    assert purchase = @gateway.purchase(@amount, store.authorization, options)
+    assert_success purchase
+    assert_equal 'Accepted', purchase.message
+  end
+
+  def test_successful_store_and_purchase_as_brazil_business_with_hipercard
+    options = @options.update(document: '32593371000110',
+                              person_type: 'business',
+                              responsible_name: 'Business Person',
+                              responsible_document: '32593371000111',
+                              responsible_birth_date: '1/11/1975')
+
+    store = @gateway.store(@hiper_card, options)
+    assert_success store
+    assert_equal store.authorization.split('|')[1], 'hipercard'
 
     assert purchase = @gateway.purchase(@amount, store.authorization, options)
     assert_success purchase
@@ -226,10 +281,41 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_match %r{Accepted}, response.message
   end
 
+  def test_successful_verify_for_mexico
+    options = @options.merge({
+      order_id: generate_unique_id,
+      ip: '127.0.0.1',
+      email: 'joao@example.com.mx',
+      birth_date: '10/11/1980',
+      billing_address: address({
+        address1: '1040 Rua E',
+        city: 'Toluca de Lerdo',
+        state: 'MX',
+        zip: '29269',
+        country: 'MX',
+        phone_number: '8522847035'
+      })
+    })
+    response = @gateway.verify(@credit_card, options)
+    assert_success response
+    assert_match %r{Accepted}, response.message
+  end
+
   def test_failed_verify
-    response = @gateway.verify(@declined_card, @options)
+    declined_card = credit_card('6011088896715918')
+    response = @gateway.verify(declined_card, @options)
     assert_failure response
-    assert_match %r{Invalid card or card type}, response.message
+    assert_match %r{Not accepted}, response.message
+  end
+
+  def test_successful_inquire
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    inquire = @gateway.inquire(purchase.authorization)
+    assert_success inquire
+
+    assert_equal 'Accepted', purchase.message
   end
 
   def test_invalid_login

@@ -254,19 +254,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def childnode_to_response(response, node, childnode)
-        name = "#{node.name.downcase}_#{childnode.name.downcase}"
-        if name == 'payment_method_data' && !childnode.elements.empty?
-          response[name.to_sym] = Hash.from_xml(childnode.to_s).values.first
+        node_name = node.name.downcase
+        childnode_name = childnode.name.downcase
+        composed_name = "#{node_name}_#{childnode_name}"
+
+        childnodes_present = !childnode.elements.empty?
+
+        if childnodes_present && composed_name == 'payment_method_data'
+          response[composed_name.to_sym] = Hash.from_xml(childnode.to_s).values.first
+        elsif childnodes_present && node_name == 'gateway_specific_response_fields'
+          response[node_name.to_sym] = {
+            childnode_name => Hash.from_xml(childnode.to_s).values.first
+          }
         else
-          response[name.to_sym] = childnode.text
+          response[composed_name.to_sym] = childnode.text
         end
       end
 
-      def build_xml_request(root)
+      def build_xml_request(root, &block)
         builder = Nokogiri::XML::Builder.new
-        builder.__send__(root) do |doc|
-          yield(doc)
-        end
+        builder.__send__(root, &block)
         builder.to_xml
       end
 

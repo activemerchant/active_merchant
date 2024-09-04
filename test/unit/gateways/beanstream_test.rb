@@ -302,6 +302,19 @@ class BeanstreamTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_sends_alternate_phone_number_value
+    @options[:billing_address][:phone] = nil
+    @options[:billing_address][:phone_number] = '9191234567'
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/ordPhoneNumber=9191234567/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end

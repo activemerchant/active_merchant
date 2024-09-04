@@ -263,11 +263,15 @@ module ActiveMerchant #:nodoc:
       def commit(money, creditcard, options = {})
         response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(money, creditcard, options)))
 
-        Response.new(successful?(response), response[:message], response,
+        Response.new(
+          successful?(response),
+          response[:message],
+          response,
           test: test?,
           authorization: response[:ordernum],
           avs_result: { code: response[:avs].to_s[2, 1] },
-          cvv_result: response[:avs].to_s[3, 1])
+          cvv_result: response[:avs].to_s[3, 1]
+        )
       end
 
       def successful?(response)

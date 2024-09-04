@@ -16,6 +16,12 @@ class QvalentTest < Test::Unit::TestCase
     @amount = 100
   end
 
+  def test_successful_gateway_creation_without_pem_password
+    gateway = QvalentGateway.new(username: 'username', password: 'password', merchant: 'merchant', pem: 'pem')
+
+    assert_instance_of QvalentGateway, gateway
+  end
+
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
@@ -192,7 +198,7 @@ class QvalentTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, { stored_credential: { initial_transaction: true, reason_type: 'unscheduled', initiator: 'merchant' } })
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/posEntryMode=MANUAL/, data)
-      assert_match(/storedCredentialUsage=INITIAL_STORAGE/, data)
+      assert_match(/storedCredentialUsage=UNSCHEDULED_MIT/, data)
       assert_match(/ECI=SSL/, data)
     end.respond_with(successful_purchase_response)
 
@@ -263,6 +269,37 @@ class QvalentTest < Test::Unit::TestCase
 
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
+  def test_default_add_card_reference_number
+    post = {}
+    options = {}
+    options[:order_id] = 1234534
+    @gateway.send(:add_card_reference, post, options)
+    assert_equal post['customer.customerReferenceNumber'], 1234534
+  end
+
+  def test_add_card_reference_number
+    post = {}
+    options = {}
+    options[:order_id] = 1234
+    options[:customer_reference_number] = 4321
+    @gateway.send(:add_card_reference, post, options)
+    assert_equal post['customer.customerReferenceNumber'], 4321
+  end
+
+  def test_default_add_customer_reference_number
+    post = {}
+    @gateway.send(:add_customer_reference, post, {})
+    assert_nil post['customer.customerReferenceNumber']
+  end
+
+  def test_add_customer_reference_number
+    post = {}
+    options = {}
+    options[:customer_reference_number] = 4321
+    @gateway.send(:add_customer_reference, post, options)
+    assert_equal post['customer.customerReferenceNumber'], 4321
   end
 
   private

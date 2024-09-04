@@ -226,11 +226,15 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         parameters[:amount] = localized_amount(money, parameters[:currency] || default_currency) if money
         response = parse(ssl_post(self.live_url, post_data(action, parameters)))
-        Response.new(response['response'] == '1', message_from(response), response,
+        Response.new(
+          response['response'] == '1',
+          message_from(response),
+          response,
           authorization: (response['transactionid'] || response['customer_vault_id']),
           test: test?,
           cvv_result: response['cvvresponse'],
-          avs_result: { code: response['avsresponse'] })
+          avs_result: { code: response['avsresponse'] }
+        )
       end
 
       def expdate(creditcard)
@@ -257,8 +261,7 @@ module ActiveMerchant #:nodoc:
         post[:password]   = @options[:password]
         post[:type]       = action if action
 
-        request = post.merge(parameters).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def determine_funding_source(source)

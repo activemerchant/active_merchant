@@ -317,7 +317,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<[^>]+pan>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<[^>]+sec>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<[^>]+id>)[^<]+(<))i, '\1[FILTERED]\2').
-          gsub(%r((<[^>]+regKey>)[^<]+(<))i, '\1[FILTERED]\2')
+          gsub(%r((<[^>]+regKey>)[^<]+(<))i, '\1[FILTERED]\2').
+          gsub(%r((<[^>]+acctNr>)[^<]+(<))i, '\1[FILTERED]\2')
       end
 
       private
@@ -437,29 +438,21 @@ module ActiveMerchant #:nodoc:
       end
 
       # -- request methods ---------------------------------------------------
-      def build_xml_transaction_request
-        build_xml_request('SendTranRequest') do |doc|
-          yield doc
-        end
+      def build_xml_transaction_request(&block)
+        build_xml_request('SendTranRequest', &block)
       end
 
-      def build_xml_payment_storage_request
-        build_xml_request('UpdtRecurrProfRequest') do |doc|
-          yield doc
-        end
+      def build_xml_payment_storage_request(&block)
+        build_xml_request('UpdtRecurrProfRequest', &block)
       end
 
-      def build_xml_payment_update_request
+      def build_xml_payment_update_request(&block)
         merchant_product_type = 5 # credit card
-        build_xml_request('UpdtRecurrProfRequest', merchant_product_type) do |doc|
-          yield doc
-        end
+        build_xml_request('UpdtRecurrProfRequest', merchant_product_type, &block)
       end
 
-      def build_xml_payment_search_request
-        build_xml_request('FndRecurrProfRequest') do |doc|
-          yield doc
-        end
+      def build_xml_payment_search_request(&block)
+        build_xml_request('FndRecurrProfRequest', &block)
       end
 
       def build_xml_request(wrapper, merchant_product_type = nil)
@@ -481,7 +474,7 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML::Document.parse(request)
         merc_nodeset = doc.xpath('//v1:merc', 'v1' => V1_NAMESPACE)
-        merc_nodeset.after "<tranCode>#{TRANSACTION_CODES[action]}</tranCode>"
+        merc_nodeset.after "<v1:tranCode>#{TRANSACTION_CODES[action]}</v1:tranCode>"
         doc.root.to_xml
       end
 

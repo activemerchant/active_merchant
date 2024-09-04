@@ -41,11 +41,11 @@ class RemoteCecabankTest < Test::Unit::TestCase
 
     assert response = @gateway.refund(@amount, purchase.authorization, @options.merge(currency: 'USD'))
     assert_failure response
-    assert_match 'ERROR', response.message
+    assert_match 'Error', response.message
   end
 
   def test_invalid_login
-    gateway = CecabankGateway.new(fixtures(:cecabank).merge(key: 'invalid'))
+    gateway = CecabankGateway.new(fixtures(:cecabank).merge(signature_key: 'invalid'))
 
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
           end
           xml.tag! 'RequestAuth' do
             xml.tag! 'UserPass' do
-              xml.tag! 'User', !@options[:user].blank? ? @options[:user] : @options[:login]
+              xml.tag! 'User', @options[:user].blank? ? @options[:login] : @options[:user]
               xml.tag! 'Password', @options[:password]
             end
           end
@@ -118,6 +118,7 @@ module ActiveMerchant #:nodoc:
               xml.tag!('Description', options[:description]) unless options[:description].blank?
               xml.tag!('Comment', options[:comment]) unless options[:comment].blank?
               xml.tag!('ExtData', 'Name' => 'COMMENT2', 'Value' => options[:comment2]) unless options[:comment2].blank?
+              xml.tag!('MerchDescr', options[:merch_descr]) unless options[:merch_descr].blank?
               xml.tag!(
                 'ExtData',
                 'Name' => 'CAPTURECOMPLETE',

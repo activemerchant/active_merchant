@@ -41,6 +41,10 @@ class OgoneTest < Test::Unit::TestCase
     Base.mode = :test
   end
 
+  def test_should_have_homepage_url
+    assert_equal 'https://www.ingenico.com/login/ogone/', OgoneGateway.homepage_url
+  end
+
   def test_successful_purchase
     @gateway.expects(:add_pair).at_least(1)
     @gateway.expects(:add_pair).with(anything, 'ECI', '7')
@@ -447,6 +451,27 @@ class OgoneTest < Test::Unit::TestCase
   def test_transcript_scrubbing
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrub), post_scrub
+  end
+
+  def test_signatire_calculation_with_with_space
+    payload = {
+      orderID: 'abc123',
+      currency: 'EUR',
+      amount: '100',
+      PM: 'CreditCard',
+      ACCEPTANCE: 'test123',
+      STATUS: '9',
+      CARDNO: 'XXXXXXXXXXXX3310',
+      ED: '1029',
+      DCC_INDICATOR: '0',
+      DCC_EXCHRATE: ''
+    }
+
+    signature_with = @gateway.send(:calculate_signature, payload, 'sha512', 'ABC123')
+    payload.delete(:DCC_EXCHRATE)
+    signature_without = @gateway.send(:calculate_signature, payload, 'sha512', 'ABC123')
+
+    assert_equal signature_without, signature_with
   end
 
   private

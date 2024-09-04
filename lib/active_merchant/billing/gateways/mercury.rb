@@ -302,12 +302,16 @@ module ActiveMerchant #:nodoc:
         success = SUCCESS_CODES.include?(response[:cmd_status])
         message = success ? 'Success' : message_from(response)
 
-        Response.new(success, message, response,
+        Response.new(
+          success,
+          message,
+          response,
           test: test?,
           authorization: authorization_from(response),
           avs_result: { code: response[:avs_result] },
           cvv_result: response[:cvv_result],
-          error_code: success ? nil : STANDARD_ERROR_CODE_MAPPING[response[:dsix_return_code]])
+          error_code: success ? nil : STANDARD_ERROR_CODE_MAPPING[response[:dsix_return_code]]
+        )
       end
 
       def message_from(response)
@@ -345,7 +349,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def unescape_xml(escaped_xml)
-        escaped_xml.gsub(/\&gt;/, '>').gsub(/\&lt;/, '<')
+        xml = escaped_xml.gsub(/\&gt;/, '>').gsub(/\r/, '').gsub(/\n/, '').gsub(/\t/, '').gsub('&lt;', '<')
+        xml.slice! "<?xml version=\"1.0\"?>" # rubocop:disable Style/StringLiterals
+        xml
       end
     end
   end

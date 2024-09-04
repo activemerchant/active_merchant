@@ -53,6 +53,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(params, amount, options)
         add_customer_data(params, options, payment_method)
         add_credit_card(params, payment_method, options)
+        add_3ds_authenticated_data(params, options) if options[:three_d_secure]
         params['Method'] = payment_method.respond_to?(:number) ? 'ProcessPayment' : 'TokenPayment'
         commit(url_for('Transaction'), params)
       end
@@ -195,6 +196,18 @@ module ActiveMerchant #:nodoc:
           params['PartnerID'] = truncate(partner, 50)
         end
         params
+      end
+
+      def add_3ds_authenticated_data(params, options)
+        three_d_secure_options = options[:three_d_secure]
+        params['PaymentInstrument'] ||= {} if params['PaymentInstrument'].nil?
+        threed_secure_auth = params['PaymentInstrument']['ThreeDSecureAuth'] = {}
+        threed_secure_auth['Cryptogram'] = three_d_secure_options[:cavv]
+        threed_secure_auth['ECI'] = three_d_secure_options[:eci]
+        threed_secure_auth['XID'] = three_d_secure_options[:xid]
+        threed_secure_auth['AuthStatus'] = three_d_secure_options[:authentication_response_status]
+        threed_secure_auth['dsTransactionId'] = three_d_secure_options[:ds_transaction_id]
+        threed_secure_auth['Version'] = three_d_secure_options[:version]
       end
 
       def add_invoice(params, money, options, key = 'Payment')

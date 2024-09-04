@@ -87,13 +87,6 @@ class ConnectionTest < Test::Unit::TestCase
     assert_equal 'success', response.body
   end
 
-  def test_get_raises_argument_error_if_passed_data
-    assert_raises(ArgumentError) do
-      Net::HTTP.any_instance.expects(:start).returns(true)
-      @connection.request(:get, 'data', {})
-    end
-  end
-
   def test_request_raises_when_request_method_not_supported
     assert_raises(ArgumentError) do
       Net::HTTP.any_instance.expects(:start).returns(true)

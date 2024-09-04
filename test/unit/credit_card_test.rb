@@ -5,6 +5,7 @@ class CreditCardTest < Test::Unit::TestCase
     CreditCard.require_verification_value = false
     @visa = credit_card('4779139500118580', brand: 'visa')
     @maestro = credit_card('676700000000000000', brand: 'maestro', verification_value: '')
+    @bp_plus = credit_card('70501 501021600 378', brand: 'bp_plus')
   end
 
   def teardown
@@ -173,7 +174,7 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_identify_wrong_card_brand
-    c = credit_card(brand: 'master')
+    c = credit_card('4779139500118580', brand: 'master')
     assert_not_valid c
   end
 
@@ -437,5 +438,12 @@ class CreditCardTest < Test::Unit::TestCase
 
   def test_should_not_report_as_emv_if_icc_data_not_present
     refute CreditCard.new.emv?
+  end
+
+  def test_bp_plus_number_validation
+    assert_valid @bp_plus
+    assert_include @bp_plus.number, ' '
+    assert_equal @bp_plus.brand, 'bp_plus'
+    assert @bp_plus.allow_spaces_in_card?
   end
 end

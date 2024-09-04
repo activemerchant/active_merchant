@@ -25,6 +25,18 @@ class ElementTest < Test::Unit::TestCase
     assert_equal '2005831886|100', response.authorization
   end
 
+  def test_successful_purchase_without_name
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    @credit_card.first_name = nil
+    @credit_card.last_name = nil
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    assert_equal '2005831886|100', response.authorization
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
@@ -154,6 +166,50 @@ class ElementTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_lodging_and_other_fields
+    lodging_options = {
+      order_id: '2',
+      billing_address: address.merge(zip: '87654'),
+      description: 'Store Purchase',
+      duplicate_override_flag: 'true',
+      lodging: {
+        agreement_number: 182726718192,
+        check_in_date: 20250910,
+        check_out_date: 20250915,
+        room_amount: 1000,
+        room_tax: 0,
+        no_show_indicator: 0,
+        duration: 5,
+        customer_name: 'francois dubois',
+        client_code: 'Default',
+        extra_charges_detail: '01',
+        extra_charges_amounts: 'Default',
+        prestigious_property_code: 'DollarLimit500',
+        special_program_code: 'Sale',
+        charge_type: 'Restaurant'
+      }
+    }
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, lodging_options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<LodgingAgreementNumber>182726718192</LodgingAgreementNumber>', data
+      assert_match '<LodgingCheckInDate>20250910</LodgingCheckInDate>', data
+      assert_match '<LodgingCheckOutDate>20250915</LodgingCheckOutDate>', data
+      assert_match '<LodgingRoomAmount>1000</LodgingRoomAmount>', data
+      assert_match '<LodgingRoomTax>0</LodgingRoomTax>', data
+      assert_match '<LodgingNoShowIndicator>0</LodgingNoShowIndicator>', data
+      assert_match '<LodgingDuration>5</LodgingDuration>', data
+      assert_match '<LodgingCustomerName>francois dubois</LodgingCustomerName>', data
+      assert_match '<LodgingClientCode>Default</LodgingClientCode>', data
+      assert_match '<LodgingExtraChargesDetail>01</LodgingExtraChargesDetail>', data
+      assert_match '<LodgingExtraChargesAmounts>Default</LodgingExtraChargesAmounts>', data
+      assert_match '<LodgingPrestigiousPropertyCode>DollarLimit500</LodgingPrestigiousPropertyCode>', data
+      assert_match '<LodgingSpecialProgramCode>Sale</LodgingSpecialProgramCode>', data
+      assert_match '<LodgingChargeType>Restaurant</LodgingChargeType>', data
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_successful_purchase_with_payment_type
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(payment_type: 'NotUsed'))
@@ -225,6 +281,57 @@ class ElementTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_duplicate_override_flag
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>True</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'true'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>True</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: false))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>False</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'xxx'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>False</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'False'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>False</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    # when duplicate_override_flag is NOT passed, should not be in XML at all
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      assert_no_match %r(<DuplicateOverrideFlag>False</DuplicateOverrideFlag>), data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_terminal_id
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(terminal_id: '02'))
@@ -233,6 +340,38 @@ class ElementTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
+  end
+
+  def test_successful_purchase_with_merchant_descriptor
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(merchant_descriptor: 'Flowerpot Florists'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<MerchantDescriptor>Flowerpot Florists</MerchantDescriptor>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_billing_email
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(email: 'test@example.com'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<BillingEmail>test@example.com</BillingEmail>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_credit_with_extra_fields
+    credit_options = @options.merge({ ticket_number: '1', market_code: 'FoodRestaurant', merchant_supplied_transaction_id: '123' })
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, credit_options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<CreditCardCredit', data
+      assert_match '<TicketNumber>1</TicketNumber', data
+      assert_match '<MarketCode>FoodRestaurant</MarketCode>', data
+      assert_match '<MerchantSuppliedTransactionId>123</MerchantSuppliedTransactionId>', data
+    end.respond_with(successful_credit_response)
   end
 
   def test_scrub
@@ -275,6 +414,12 @@ class ElementTest < Test::Unit::TestCase
   def successful_purchase_with_payment_account_token_response
     <<~XML
       <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><CreditCardSaleResponse xmlns="https://transaction.elementexpress.com"><response><ExpressResponseCode>0</ExpressResponseCode><ExpressResponseMessage>Approved</ExpressResponseMessage><ExpressTransactionDate>20151202</ExpressTransactionDate><ExpressTransactionTime>090144</ExpressTransactionTime><ExpressTransactionTimezone>UTC-05:00</ExpressTransactionTimezone><HostResponseCode>000</HostResponseCode><HostResponseMessage>AP</HostResponseMessage><Credentials /><Batch><BatchCloseType>Regular</BatchCloseType><BatchQueryType>Totals</BatchQueryType><HostBatchID>1</HostBatchID><HostItemID>155</HostItemID><HostBatchAmount>2995.00</HostBatchAmount><BatchGroupingCode>FullBatch</BatchGroupingCode><BatchIndexCode>Current</BatchIndexCode></Batch><Card><EncryptedFormat>Default</EncryptedFormat><AVSResponseCode>N</AVSResponseCode><CardLogo>Visa</CardLogo></Card><Transaction><TransactionID>2005838405</TransactionID><ApprovalNumber>000001</ApprovalNumber><ReferenceNumber>c0d498aa3c2c07169d13a989a7af91af5bc4e6a0</ReferenceNumber><ReversalType>System</ReversalType><MarketCode>Default</MarketCode><AcquirerData>aVb001234567810425c0425d5e00</AcquirerData><BillPaymentFlag>False</BillPaymentFlag><DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag><DuplicateOverrideFlag>False</DuplicateOverrideFlag><RecurringFlag>False</RecurringFlag><ProcessorName>NULL_PROCESSOR_TEST</ProcessorName><TransactionStatus>Approved</TransactionStatus><TransactionStatusCode>1</TransactionStatusCode><PartialApprovedFlag>False</PartialApprovedFlag><ApprovedAmount>1.00</ApprovedAmount><EMVEncryptionFormat>Default</EMVEncryptionFormat><ReversalReason>Unknown</ReversalReason></Transaction><PaymentAccount><PaymentAccountID>C875D86C-5913-487D-822E-76B27E2C2A4E</PaymentAccountID><PaymentAccountType>CreditCard</PaymentAccountType><PaymentAccountReferenceNumber>147b0b90f74faac13afb618fdabee3a4e75bf03b</PaymentAccountReferenceNumber><PASSUpdaterBatchStatus>Null</PASSUpdaterBatchStatus><PASSUpdaterOption>Null</PASSUpdaterOption></PaymentAccount><Address><BillingAddress1>456 My Street</BillingAddress1><BillingZipcode>K1C2N6</BillingZipcode></Address><ScheduledTask><RunFrequency>OneTimeFuture</RunFrequency><RunUntilCancelFlag>False</RunUntilCancelFlag><ScheduledTaskStatus>Active</ScheduledTaskStatus></ScheduledTask><DemandDepositAccount><DDAAccountType>Checking</DDAAccountType><CheckType>Personal</CheckType></DemandDepositAccount><TransactionSetup><TransactionSetupMethod>Null</TransactionSetupMethod><Device>Null</Device><Embedded>False</Embedded><CVVRequired>False</CVVRequired><AutoReturn>False</AutoReturn><DeviceInputCode>NotUsed</DeviceInputCode></TransactionSetup><Terminal><TerminalType>Unknown</TerminalType><CardPresentCode>UseDefault</CardPresentCode><CardholderPresentCode>UseDefault</CardholderPresentCode><CardInputCode>UseDefault</CardInputCode><CVVPresenceCode>UseDefault</CVVPresenceCode><TerminalCapabilityCode>UseDefault</TerminalCapabilityCode><TerminalEnvironmentCode>UseDefault</TerminalEnvironmentCode><MotoECICode>UseDefault</MotoECICode><CVVResponseType>Regular</CVVResponseType><ConsentCode>NotUsed</ConsentCode><TerminalEncryptionFormat>Default</TerminalEncryptionFormat></Terminal><AutoRental><AutoRentalVehicleClassCode>Unused</AutoRentalVehicleClassCode><AutoRentalDistanceUnit>Unused</AutoRentalDistanceUnit><AutoRentalAuditAdjustmentCode>NoAdjustments</AutoRentalAuditAdjustmentCode></AutoRental><Healthcare><HealthcareFlag>False</HealthcareFlag><HealthcareFirstAccountType>NotSpecified</HealthcareFirstAccountType><HealthcareFirstAmountType>LedgerBalance</HealthcareFirstAmountType><HealthcareFirstAmountSign>Positive</HealthcareFirstAmountSign><HealthcareSecondAccountType>NotSpecified</HealthcareSecondAccountType><HealthcareSecondAmountType>LedgerBalance</HealthcareSecondAmountType><HealthcareSecondAmountSign>Positive</HealthcareSecondAmountSign><HealthcareThirdAccountType>NotSpecified</HealthcareThirdAccountType><HealthcareThirdAmountType>LedgerBalance</HealthcareThirdAmountType><HealthcareThirdAmountSign>Positive</HealthcareThirdAmountSign><HealthcareFourthAccountType>NotSpecified</HealthcareFourthAccountType><HealthcareFourthAmountType>LedgerBalance</HealthcareFourthAmountType><HealthcareFourthAmountSign>Positive</HealthcareFourthAmountSign></Healthcare><Lodging><LodgingPrestigiousPropertyCode>NonParticipant</LodgingPrestigiousPropertyCode><LodgingSpecialProgramCode>Default</LodgingSpecialProgramCode><LodgingChargeType>Default</LodgingChargeType></Lodging><BIN /><EnhancedBIN /><Token><TokenProvider>Null</TokenProvider></Token></response></CreditCardSaleResponse></soap:Body></soap:Envelope>
+    XML
+  end
+
+  def successful_credit_response
+    <<~XML
+      <?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><CreditCardCreditResponse xmlns=\"https://transaction.elementexpress.com\"><response><ExpressResponseCode>0</ExpressResponseCode><ExpressResponseMessage>Approved</ExpressResponseMessage><ExpressTransactionDate>20211122</ExpressTransactionDate><ExpressTransactionTime>174635</ExpressTransactionTime><ExpressTransactionTimezone>UTC-06:00</ExpressTransactionTimezone><HostResponseCode>000</HostResponseCode><HostResponseMessage>AP</HostResponseMessage><Credentials /><Batch><BatchCloseType>Regular</BatchCloseType><BatchQueryType>Totals</BatchQueryType><HostBatchID>1</HostBatchID><HostItemID>102</HostItemID><HostBatchAmount>103.00</HostBatchAmount><BatchGroupingCode>FullBatch</BatchGroupingCode><BatchIndexCode>Current</BatchIndexCode></Batch><Card><CardLogo>Visa</CardLogo><BIN>400010</BIN></Card><Transaction><TransactionID>122816253</TransactionID><ApprovalNumber>000046</ApprovalNumber><ReferenceNumber>1</ReferenceNumber><ReversalType>System</ReversalType><MarketCode>Default</MarketCode><BillPaymentFlag>False</BillPaymentFlag><DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag><DuplicateOverrideFlag>False</DuplicateOverrideFlag><RecurringFlag>False</RecurringFlag><ProcessorName>NULL_PROCESSOR_TEST</ProcessorName><TransactionStatus>Approved</TransactionStatus><TransactionStatusCode>1</TransactionStatusCode><PartialApprovedFlag>False</PartialApprovedFlag><EMVEncryptionFormat>Default</EMVEncryptionFormat><ReversalReason>Unknown</ReversalReason><PaymentType>NotUsed</PaymentType><SubmissionType>NotUsed</SubmissionType></Transaction><PaymentAccount><PaymentAccountType>CreditCard</PaymentAccountType><PASSUpdaterBatchStatus>Null</PASSUpdaterBatchStatus><PASSUpdaterOption>Null</PASSUpdaterOption></PaymentAccount><Address /><ScheduledTask><RunFrequency>OneTimeFuture</RunFrequency><RunUntilCancelFlag>False</RunUntilCancelFlag><ScheduledTaskStatus>Active</ScheduledTaskStatus></ScheduledTask><DemandDepositAccount><CheckType>Personal</CheckType></DemandDepositAccount><TransactionSetup><TransactionSetupMethod>Null</TransactionSetupMethod><Device>Null</Device><Embedded>False</Embedded><CVVRequired>False</CVVRequired><AutoReturn>False</AutoReturn><DeviceInputCode>NotUsed</DeviceInputCode></TransactionSetup><Terminal><TerminalType>Unknown</TerminalType><CardPresentCode>UseDefault</CardPresentCode><CardholderPresentCode>UseDefault</CardholderPresentCode><CardInputCode>UseDefault</CardInputCode><CVVPresenceCode>UseDefault</CVVPresenceCode><TerminalCapabilityCode>UseDefault</TerminalCapabilityCode><TerminalEnvironmentCode>UseDefault</TerminalEnvironmentCode><MotoECICode>UseDefault</MotoECICode><CVVResponseType>Regular</CVVResponseType><ConsentCode>NotUsed</ConsentCode><TerminalEncryptionFormat>Default</TerminalEncryptionFormat></Terminal><AutoRental><AutoRentalVehicleClassCode>Unused</AutoRentalVehicleClassCode><AutoRentalDistanceUnit>Unused</AutoRentalDistanceUnit><AutoRentalAuditAdjustmentCode>NoAdjustments</AutoRentalAuditAdjustmentCode></AutoRental><Healthcare><HealthcareFlag>False</HealthcareFlag><HealthcareFirstAccountType>NotSpecified</HealthcareFirstAccountType><HealthcareFirstAmountType>LedgerBalance</HealthcareFirstAmountType><HealthcareFirstAmountSign>Positive</HealthcareFirstAmountSign><HealthcareSecondAccountType>NotSpecified</HealthcareSecondAccountType><HealthcareSecondAmountType>LedgerBalance</HealthcareSecondAmountType><HealthcareSecondAmountSign>Positive</HealthcareSecondAmountSign><HealthcareThirdAccountType>NotSpecified</HealthcareThirdAccountType><HealthcareThirdAmountType>LedgerBalance</HealthcareThirdAmountType><HealthcareThirdAmountSign>Positive</HealthcareThirdAmountSign><HealthcareFourthAccountType>NotSpecified</HealthcareFourthAccountType><HealthcareFourthAmountType>LedgerBalance</HealthcareFourthAmountType><HealthcareFourthAmountSign>Positive</HealthcareFourthAmountSign></Healthcare><Lodging><LodgingPrestigiousPropertyCode>NonParticipant</LodgingPrestigiousPropertyCode><LodgingSpecialProgramCode>Default</LodgingSpecialProgramCode><LodgingChargeType>Default</LodgingChargeType></Lodging><BIN /><EnhancedBIN /><Token /></response></CreditCardCreditResponse></soap:Body></soap:Envelope>
     XML
   end
 

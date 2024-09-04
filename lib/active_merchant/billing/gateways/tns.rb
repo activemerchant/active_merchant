@@ -8,13 +8,10 @@ module ActiveMerchant
       VERSION = '52'
 
       self.live_na_url = "https://secure.na.tnspayments.com/api/rest/version/#{VERSION}/"
-      self.test_na_url = "https://secure.na.tnspayments.com/api/rest/version/#{VERSION}/"
-
       self.live_ap_url = "https://secure.ap.tnspayments.com/api/rest/version/#{VERSION}/"
-      self.test_ap_url = "https://secure.ap.tnspayments.com/api/rest/version/#{VERSION}/"
-
       self.live_eu_url = "https://secure.eu.tnspayments.com/api/rest/version/#{VERSION}/"
-      self.test_eu_url = "https://secure.eu.tnspayments.com/api/rest/version/#{VERSION}/"
+
+      self.test_url = "https://secure.uat.tnspayments.com/api/rest/version/#{VERSION}/"
 
       self.display_name = 'TNS'
       self.homepage_url = 'http://www.tnsi.com/'

@@ -12,7 +12,7 @@
 # SupportedHashRocketStyles: key, separator, table
 # SupportedColonStyles: key, separator, table
 # SupportedLastArgumentHashStyles: always_inspect, always_ignore, ignore_implicit, ignore_explicit
-Layout/AlignHash:
+Layout/HashAlignment:
   Enabled: false
 
 # Offense count: 150
@@ -26,7 +26,7 @@ Lint/FormatParameterMismatch:
     - 'test/unit/credit_card_formatting_test.rb'
 
 # Offense count: 2
-Lint/HandleExceptions:
+Lint/SuppressedException:
   Exclude:
     - 'lib/active_merchant/billing/gateways/mastercard.rb'
     - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
@@ -65,6 +65,8 @@ Metrics/CyclomaticComplexity:
 # Configuration parameters: CountComments, ExcludedMethods.
 Metrics/MethodLength:
   Max: 163
+  IgnoredMethods: 
+    - 'setup'
 
 # Offense count: 2
 # Configuration parameters: CountKeywordArgs.
@@ -99,7 +101,7 @@ Naming/MethodName:
 # Offense count: 14
 # Configuration parameters: MinNameLength, AllowNamesEndingInNumbers, AllowedNames, ForbiddenNames.
 # AllowedNames: io, id, to, by, on, in, at, ip, db
-Naming/UncommunicativeMethodParamName:
+Naming/MethodParameterName:
   Exclude:
     - 'lib/active_merchant/billing/gateways/blue_snap.rb'
     - 'lib/active_merchant/billing/gateways/cyber_source.rb'
@@ -173,13 +175,6 @@ Style/BarePercentLiterals:
 Style/BlockDelimiters:
   Enabled: false
 
-# Offense count: 440
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: braces, no_braces, context_dependent
-Style/BracesAroundHashParameters:
-  Enabled: false
-
 # Offense count: 2
 Style/CaseEquality:
   Exclude:
@@ -231,10 +226,34 @@ Style/ColonMethodCall:
 # Configuration parameters: Keywords.
 # Keywords: TODO, FIXME, OPTIMIZE, HACK, REVIEW
 Style/CommentAnnotation:
-  Exclude:
-    - 'test/remote/gateways/remote_usa_epay_advanced_test.rb'
-    - 'test/unit/gateways/authorize_net_cim_test.rb'
-    - 'test/unit/gateways/usa_epay_advanced_test.rb'
+  Enabled: false # update later in next Update Rubocop PR
+
+Style/StringConcatenation:
+  Enabled: false # update later in next Update Rubocop PR
+Style/SingleArgumentDig:
+  Enabled: false # update later in next Update Rubocop PR
+Style/SlicingWithRange:
+  Enabled: false # update later in next Update Rubocop PR
+Style/HashEachMethods:
+  Enabled: false # update later in next Update Rubocop PR
+Style/CaseLikeIf:
+  Enabled: false # update later in next Update Rubocop PR
+Style/HashLikeCase:
+  Enabled: false # update later in next Update Rubocop PR
+Style/GlobalStdStream:
+  Enabled: false # update later in next Update Rubocop PR
+Style/HashTransformKeys:
+  Enabled: false # update later in next Update Rubocop PR
+Style/HashTransformValues:
+  Enabled: false # update later in next Update Rubocop PR
+Lint/RedundantSafeNavigation:
+  Enabled: false # update later in next Update Rubocop PR
+Lint/EmptyConditionalBody:
+  Enabled: false # update later in next Update Rubocop PR
+Style/SoleNestedConditional:
+  Exclude: # update later in next Update Rubocop PR
+    - 'lib/active_merchant/billing/gateways/card_connect.rb'
+    - 'lib/active_merchant/billing/gateways/blue_snap.rb'
 
 # Offense count: 8
 Style/CommentedKeyword:
@@ -381,17 +400,7 @@ Style/FormatString:
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: annotated, template, unannotated
 Style/FormatStringToken:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/redsys.rb'
-    - 'lib/active_merchant/connection.rb'
-    - 'lib/active_merchant/network_connection_retries.rb'
-    - 'test/remote/gateways/remote_balanced_test.rb'
-    - 'test/remote/gateways/remote_openpay_test.rb'
-    - 'test/unit/gateways/balanced_test.rb'
-    - 'test/unit/gateways/elavon_test.rb'
-    - 'test/unit/gateways/exact_test.rb'
-    - 'test/unit/gateways/firstdata_e4_test.rb'
-    - 'test/unit/gateways/safe_charge_test.rb'
+  Enabled: false
 
 # Offense count: 679
 # Cop supports --auto-correct.
@@ -409,6 +418,15 @@ Style/GlobalVars:
     - 'test/remote/gateways/remote_secure_pay_tech_test.rb'
     - 'test/unit/gateways/finansbank_test.rb'
     - 'test/unit/gateways/garanti_test.rb'
+
+Lint/MissingSuper:
+ Exclude:
+  - 'lib/active_merchant/billing/gateways/payway.rb'
+  - 'lib/active_merchant/billing/response.rb'
+  - 'lib/active_merchant/billing/gateways/orbital/orbital_soft_descriptors.rb'
+  - 'lib/active_merchant/billing/gateways/orbital.rb'
+  - 'lib/active_merchant/billing/gateways/linkpoint.rb'
+  - 'lib/active_merchant/errors.rb'
 
 # Offense count: 196
 # Configuration parameters: MinBodyLength.
@@ -448,6 +466,7 @@ Style/InverseMethods:
   Exclude:
     - 'lib/active_merchant/billing/gateways/ogone.rb'
     - 'lib/active_merchant/billing/gateways/worldpay.rb'
+  Enabled: false # update later in next Update Rubocop PR
 
 # Offense count: 32
 # Cop supports --auto-correct.
@@ -733,6 +752,6 @@ Style/ZeroLengthPredicate:
 # Offense count: 9321
 # Configuration parameters: AllowHeredoc, AllowURI, URISchemes, IgnoreCopDirectives, IgnoredPatterns.
 # URISchemes: http, https
-Metrics/LineLength:
+Layout/LineLength:
   Max: 2602
 

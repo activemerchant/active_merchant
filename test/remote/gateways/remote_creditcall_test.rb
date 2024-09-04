@@ -147,7 +147,7 @@ class RemoteCreditcallTest < Test::Unit::TestCase
     @declined_card.number = ''
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{PAN Must be >= 13 Digits}, response.message
+    assert_match %r{PAN Must be >= 12 Digits}, response.message
   end
 
   def test_invalid_login
@@ -155,7 +155,7 @@ class RemoteCreditcallTest < Test::Unit::TestCase
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match %r{Invalid TerminalID - Must be 8 digit number}, response.message
+    assert_match %r{Invalid terminal details}, response.message
   end
 
   def test_transcript_scrubbing

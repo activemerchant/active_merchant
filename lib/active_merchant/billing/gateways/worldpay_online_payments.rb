@@ -34,14 +34,16 @@ module ActiveMerchant #:nodoc:
         if authorization
           commit(:post, "orders/#{CGI.escape(authorization)}/capture", { 'captureAmount' => money }, options, 'capture')
         else
-          Response.new(false,
+          Response.new(
+            false,
             'FAILED',
             'FAILED',
             test: test?,
             authorization: false,
             avs_result: {},
             cvv_result: {},
-            error_code: false)
+            error_code: false
+          )
         end
       end
 
@@ -84,8 +86,7 @@ module ActiveMerchant #:nodoc:
           },
           'clientKey' => @client_key
         }
-        token_response = commit(:post, 'tokens', obj, { 'Authorization' => @service_key }, 'token')
-        token_response
+        commit(:post, 'tokens', obj, { 'Authorization' => @service_key }, 'token')
       end
 
       def create_post_for_auth_or_purchase(token, money, options)
@@ -134,7 +135,10 @@ module ActiveMerchant #:nodoc:
 
           raw_response = ssl_request(method, self.live_url + url, json, headers(options))
 
-          if raw_response != ''
+          if raw_response == ''
+            success = true
+            response = {}
+          else
             response = parse(raw_response)
             if type == 'token'
               success = response.key?('token')
@@ -151,9 +155,6 @@ module ActiveMerchant #:nodoc:
                 end
               end
             end
-          else
-            success = true
-            response = {}
           end
         rescue ResponseError => e
           raw_response = e.response.body
@@ -170,14 +171,16 @@ module ActiveMerchant #:nodoc:
           authorization = response['message']
         end
 
-        Response.new(success,
+        Response.new(
+          success,
           success ? 'SUCCESS' : response['message'],
           response,
           test: test?,
           authorization: authorization,
           avs_result: {},
           cvv_result: {},
-          error_code: success ? nil : response['customCode'])
+          error_code: success ? nil : response['customCode']
+        )
       end
 
       def test?

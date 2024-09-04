@@ -115,12 +115,16 @@ module ActiveMerchant #:nodoc:
 
         message = message_from(response)
         test_mode = (test? || message =~ /TESTMODE/)
-        Response.new(success?(response), message, response,
+        Response.new(
+          success?(response),
+          message,
+          response,
           test: test_mode,
           authorization: response['transactionid'],
           fraud_review: fraud_review?(response),
           avs_result: { code: response['avsresponse'] },
-          cvv_result: response['cvvresponse'])
+          cvv_result: response['cvvresponse']
+        )
       end
 
       def message_from(response)
@@ -151,8 +155,7 @@ module ActiveMerchant #:nodoc:
         post[:password]       = @options[:password]
         post[:type]           = action
 
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end
