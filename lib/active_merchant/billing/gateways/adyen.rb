@@ -360,6 +360,26 @@ module ActiveMerchant #:nodoc:
           post[:additionalData].merge!(extract_and_transform(leg_data, options[:additional_data_airline][:leg]))
         end
 
+        # temporary duplication with minor modification (:legs array with nested hashes instead of a single :leg hash)
+        # this should preserve backward-compatibility with :leg logic above until it is deprecated/removed
+        if options[:additional_data_airline][:legs].present?
+          options[:additional_data_airline][:legs].each_with_index do |leg, number|
+            leg_data = %w[
+              carrier_code
+              class_of_travel
+              date_of_travel
+              depart_airport
+              depart_tax
+              destination_code
+              fare_base_code
+              flight_number
+              stop_over_code
+            ].each_with_object({}) { |value, hash| hash["airline.leg#{number + 1}.#{value}"] = value }
+
+            post[:additionalData].merge!(extract_and_transform(leg_data, leg))
+          end
+        end
+
         if options[:additional_data_airline][:passenger].present?
           passenger_data = %w[
             date_of_birth

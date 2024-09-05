@@ -1599,6 +1599,62 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_succesful_additional_airline_data_with_legs
+    airline_data = {
+      agency_invoice_number: 'BAC123',
+      agency_plan_name: 'plan name',
+      airline_code: '434234',
+      airline_designator_code: '1234',
+      boarding_fee: '100',
+      computerized_reservation_system: 'abcd',
+      customer_reference_number: 'asdf1234',
+      document_type: 'cc',
+      legs: [
+        {
+          carrier_code: 'KL',
+          date_of_travel: '2024-10-10'
+        },
+        {
+          carrier_code: 'KL',
+          date_of_travel: '2024-10-11'
+        }
+      ],
+      passenger: {
+        first_name: 'Joe',
+        last_name: 'Doe'
+      }
+    }
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(additional_data_airline: airline_data))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      additional_data = parsed['additionalData']
+      assert_equal additional_data['airline.agency_invoice_number'], airline_data[:agency_invoice_number]
+      assert_equal additional_data['airline.agency_plan_name'], airline_data[:agency_plan_name]
+      assert_equal additional_data['airline.airline_code'], airline_data[:airline_code]
+      assert_equal additional_data['airline.airline_designator_code'], airline_data[:airline_designator_code]
+      assert_equal additional_data['airline.boarding_fee'], airline_data[:boarding_fee]
+      assert_equal additional_data['airline.computerized_reservation_system'], airline_data[:computerized_reservation_system]
+      assert_equal additional_data['airline.customer_reference_number'], airline_data[:customer_reference_number]
+      assert_equal additional_data['airline.document_type'], airline_data[:document_type]
+      assert_equal additional_data['airline.flight_date'], airline_data[:flight_date]
+      assert_equal additional_data['airline.ticket_issue_address'], airline_data[:abcqwer]
+      assert_equal additional_data['airline.ticket_number'], airline_data[:ticket_number]
+      assert_equal additional_data['airline.travel_agency_code'], airline_data[:travel_agency_code]
+      assert_equal additional_data['airline.travel_agency_name'], airline_data[:travel_agency_name]
+      assert_equal additional_data['airline.passenger_name'], airline_data[:passenger_name]
+      assert_equal additional_data['airline.leg1.carrier_code'], airline_data[:legs][0][:carrier_code]
+      assert_equal additional_data['airline.leg1.date_of_travel'], airline_data[:legs][0][:date_of_travel]
+      assert_equal additional_data['airline.leg2.carrier_code'], airline_data[:legs][1][:carrier_code]
+      assert_equal additional_data['airline.leg2.date_of_travel'], airline_data[:legs][1][:date_of_travel]
+      assert_equal additional_data['airline.passenger.first_name'], airline_data[:passenger][:first_name]
+      assert_equal additional_data['airline.passenger.last_name'], airline_data[:passenger][:last_name]
+      assert_equal additional_data['airline.passenger.telephone_number'], airline_data[:passenger][:telephone_number]
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_additional_data_lodging
     lodging_data = {
       check_in_date: '20230822',

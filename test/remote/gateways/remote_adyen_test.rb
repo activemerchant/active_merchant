@@ -1684,6 +1684,38 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_succesful_purchase_with_airline_data_with_legs
+    airline_data = {
+      agency_invoice_number: 'BAC123',
+      agency_plan_name: 'plan name',
+      airline_code: '434234',
+      airline_designator_code: '1234',
+      boarding_fee: '100',
+      computerized_reservation_system: 'abcd',
+      customer_reference_number: 'asdf1234',
+      document_type: 'cc',
+      flight_date: '2023-09-08',
+      ticket_issue_address: 'abcqwer',
+      ticket_number: 'ABCASDF',
+      travel_agency_code: 'ASDF',
+      travel_agency_name: 'hopper',
+      passenger_name: 'Joe Doe',
+      legs: [{
+        carrier_code: 'KL',
+        class_of_travel: 'F'
+      }],
+      passenger: {
+        first_name: 'Joe',
+        last_name: 'Doe',
+        telephone_number: '432211111'
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(additional_data_airline: airline_data))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   def test_succesful_purchase_with_lodging_data
     lodging_data = {
       check_in_date: '20230822',

@@ -32,6 +32,7 @@
 * Stripe PI: Add challenge as valid value for request_three_d_secure [jcreiff] #5238
 * StripePI: Add metadata for GooglePay FPAN [almalee24] #5242
 * Paypal: Add inquire method [almalee24] #5231
+* Adyen: Enable multiple legs within airline data [jcreiff] #5249
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
