@@ -484,7 +484,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
       cavv_algorithm: '2'
     }
     stub_comms do
-      @gateway.purchase(100, @master_card, @options)
+      @gateway.purchase(100, @master_card, @options.merge(mcc: '1234'))
     end.check_request do |_endpoint, data, _headers|
       json_data = JSON.parse(data)
       assert_equal json_data['consumerAuthenticationInformation']['ucafAuthenticationData'], '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
@@ -496,6 +496,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
       assert_equal json_data['consumerAuthenticationInformation']['xid'], '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
       assert_equal json_data['consumerAuthenticationInformation']['veresEnrolled'], 'true'
       assert_equal json_data['consumerAuthenticationInformation']['paresStatus'], 'Y'
+      assert_equal json_data['consumerAuthenticationInformation']['mcc'], '1234'
     end.respond_with(successful_purchase_response)
   end
 

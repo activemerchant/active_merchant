@@ -138,6 +138,7 @@ module ActiveMerchant #:nodoc:
         post[:consumerAuthenticationInformation][:paSpecificationVersion] = three_d_secure[:version] if three_d_secure[:version]
         post[:consumerAuthenticationInformation][:directoryServerTransactionID] = three_d_secure[:ds_transaction_id] if three_d_secure[:ds_transaction_id]
         post[:consumerAuthenticationInformation][:eciRaw] = three_d_secure[:eci] if three_d_secure[:eci]
+        post[:consumerAuthenticationInformation][:mcc] = options[:mcc] if options[:mcc]
         if three_d_secure[:xid].present?
           post[:consumerAuthenticationInformation][:xid] = three_d_secure[:xid]
         else

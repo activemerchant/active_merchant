@@ -1473,11 +1473,12 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_3ds_enroll_response
+  def test_3ds_enroll_and_mcc_response
     purchase = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(payer_auth_enroll_service: true))
+      @gateway.purchase(@amount, @credit_card, @options.merge(payer_auth_enroll_service: true, mcc: '1234'))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\<payerAuthEnrollService run=\"true\"\/\>/, data)
+      assert_match(/\<payerAuthEnrollService run=\"true\"\>/, data)
+      assert_match(/\<MCC\>1234\<\/MCC\>/, data)
     end.respond_with(threedeesecure_purchase_response)
 
     assert_failure purchase

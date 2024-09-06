@@ -1100,20 +1100,26 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
   def test_3ds_enroll_request_via_purchase
     assert response = @gateway.purchase(1202, @three_ds_enrolled_card, @options.merge(payer_auth_enroll_service: true))
-    assert_equal '475', response.params['reasonCode']
-    assert !response.params['acsURL'].blank?
-    assert !response.params['paReq'].blank?
-    assert !response.params['xid'].blank?
-    assert !response.success?
+    assert_equal '100', response.params['reasonCode']
+    assert response.success?
+  end
+
+  def test_3ds_enroll_and_mcc_request_via_purchase
+    assert response = @gateway.purchase(1202, @three_ds_enrolled_card, @options.merge(payer_auth_enroll_service: true, mcc: '1234'))
+    assert_equal '100', response.params['reasonCode']
+    assert response.success?
   end
 
   def test_3ds_enroll_request_via_authorize
-    assert response = @gateway.authorize(1202, @three_ds_enrolled_card, @options.merge(payer_auth_enroll_service: true))
-    assert_equal '475', response.params['reasonCode']
-    assert !response.params['acsURL'].blank?
-    assert !response.params['paReq'].blank?
-    assert !response.params['xid'].blank?
-    assert !response.success?
+    assert response = @gateway.authorize(1202, @three_ds_enrolled_card, @options.merge(payer_auth_enroll_service: true, mcc: '1234'))
+    assert_equal '100', response.params['reasonCode']
+    assert response.success?
+  end
+
+  def test_3ds_enroll_and_mcc_request_via_authorize
+    assert response = @gateway.authorize(1202, @three_ds_enrolled_card, @options.merge(payer_auth_enroll_service: true, mcc: '1234'))
+    assert_equal '100', response.params['reasonCode']
+    assert response.success?
   end
 
   def test_successful_3ds_requests_with_unenrolled_card

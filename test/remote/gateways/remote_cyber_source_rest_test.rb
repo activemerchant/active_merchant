@@ -569,6 +569,19 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_success auth
   end
 
+  def test_successful_authorize_with_3ds2_mcc
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
+    auth = @gateway.authorize(@amount, @visa_card, @options.merge(mcc: '1234'))
+    assert_success auth
+  end
+
   def test_successful_authorize_with_3ds2_mastercard
     @options[:three_d_secure] = {
       version: '2.2.0',
