@@ -195,6 +195,8 @@ module ActiveMerchant #:nodoc:
           post[:sg_Zip] = address[:zip] if address[:zip]
           post[:sg_Country] = address[:country] if address[:country]
           post[:sg_Phone] = address[:phone] if address[:phone]
+          post[:sg_middleName] = options[:middle_name] if options[:middle_name]
+          post[:sg_doCardHolderNameVerification] = options[:card_holder_verification] if options[:card_holder_verification]
         end
 
         post[:sg_Email] = options[:email]
