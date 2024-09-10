@@ -57,6 +57,7 @@
 * DLocal: Add the description field for refund [yunnydang] #5296
 * Worldpay: Add support for Worldpay decrypted apple pay and google pay [dustinhaefele] #5271
 * Orbital: Update alternate_ucaf_flow [almalee24] #5282
+* Cecabank: Include Apple Pay and Google Pay for recurring payments [gasn150] #5295
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
