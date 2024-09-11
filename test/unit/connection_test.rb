@@ -27,7 +27,7 @@ class ConnectionTest < Test::Unit::TestCase
 
   def test_connection_passes_env_proxy_by_default
     spy = Net::HTTP.new('example.com', 443)
-    Net::HTTP.expects(:new).with('example.com', 443, :ENV, nil).returns(spy)
+    Net::HTTP.expects(:new).with('example.com', 443, :ENV, nil, nil, nil).returns(spy)
     spy.expects(:start).returns(true)
     spy.expects(:get).with('/tx.php', { 'connection' => 'close' }).returns(@ok)
     @connection.request(:get, nil, {})
@@ -36,8 +36,10 @@ class ConnectionTest < Test::Unit::TestCase
   def test_connection_does_pass_requested_proxy
     @connection.proxy_address = 'proxy.example.com'
     @connection.proxy_port = 8080
+    @connection.proxy_user = 'user'
+    @connection.proxy_password = 'password'
     spy = Net::HTTP.new('example.com', 443)
-    Net::HTTP.expects(:new).with('example.com', 443, 'proxy.example.com', 8080).returns(spy)
+    Net::HTTP.expects(:new).with('example.com', 443, 'proxy.example.com', 8080, 'user', 'password').returns(spy)
     spy.expects(:start).returns(true)
     spy.expects(:get).with('/tx.php', { 'connection' => 'close' }).returns(@ok)
     @connection.request(:get, nil, {})
