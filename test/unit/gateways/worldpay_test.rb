@@ -534,6 +534,16 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_authorize_with_network_token_with_shopper_ip_address
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options.merge(ip: '127.0.0.1', email: 'wow@example.com'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<session shopperIPAddress=\"127.0.0.1\"\/>/, data)
+      #assert_match %r(<eciIndicator>05</eciIndicator>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_successful_purchase_with_elo
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'BRL'))

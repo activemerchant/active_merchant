@@ -700,9 +700,13 @@ module ActiveMerchant #:nodoc:
         if options[:ip] && options[:session_id]
           xml.session 'shopperIPAddress' => options[:ip], 'id' => options[:session_id]
         else
-          xml.session 'shopperIPAddress' => options[:ip] if options[:ip]
+          add_shopper_ip_address(xml, options)
           xml.session 'id' => options[:session_id] if options[:session_id]
         end
+      end
+
+      def add_shopper_ip_address(xml, options)
+        xml.session 'shopperIPAddress' => options[:ip] if options[:ip]
       end
 
       def add_three_d_secure(xml, options)
@@ -778,6 +782,7 @@ module ActiveMerchant #:nodoc:
             xml.acceptHeader options[:accept_header]
             xml.userAgentHeader options[:user_agent]
           end
+          add_shopper_ip_address(xml, options)
         end
       end
 
