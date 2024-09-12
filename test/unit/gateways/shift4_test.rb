@@ -249,6 +249,7 @@ class Shift4Test < Test::Unit::TestCase
 
     assert_failure response
     assert_equal response.message, 'Transaction declined'
+    assert_equal 'D', response.error_code
     assert_equal 'A', response.avs_result['code']
     assert_equal 'Street address matches, but postal code does not match.', response.avs_result['message']
     assert_nil response.authorization
@@ -260,6 +261,8 @@ class Shift4Test < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_nil response.authorization
+    assert_equal 'GTV Msg: ERROR{0} 20018: no default category found, UC, Mod10=N TOKEN01CE ENGINE29CE', response.message
+    assert_equal 9100, response.error_code
     assert response.test?
   end
 
@@ -270,6 +273,18 @@ class Shift4Test < Test::Unit::TestCase
 
     assert_failure response
     assert_equal 'CVV value N not accepted.', response.message
+    assert_equal 'N7', response.error_code
+    assert response.test?
+  end
+
+  def test_failed_authorize_with_alternate_host_response
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(failed_authorize_with_alternate_host_response)
+
+    assert_failure response
+    assert_equal 'Invalid Merchant', response.message
+    assert_equal '03', response.error_code
     assert response.test?
   end
 
@@ -290,6 +305,8 @@ class Shift4Test < Test::Unit::TestCase
     response = @gateway.capture(@amount, 'abc', @options)
     assert_failure response
     assert_nil response.authorization
+    assert_equal 'INTERNET FAILURE:  Timeout waiting for response across the Internet UTGAPI05CE', response.message
+    assert_equal 9961, response.error_code
     assert response.test?
   end
 
@@ -309,6 +326,8 @@ class Shift4Test < Test::Unit::TestCase
     response = @gateway.void('', @options)
     assert_failure response
     assert_nil response.authorization
+    assert_equal 'Invoice Not Found 00000000kl 0008628968  ENGINE29CE', response.message
+    assert_equal 9815, response.error_code
     assert response.test?
   end
 
@@ -1275,6 +1294,103 @@ class Shift4Test < Test::Unit::TestCase
         }
       ]
      }
+    RESPONSE
+  end
+
+  def failed_authorize_with_alternate_host_response
+    <<~RESPONSE
+      {
+        "result": [
+          {
+            "dateTime": "2024-09-06T12:46:05.000-07:00",
+            "receiptColumns": 30,
+            "correlationId": "A6D33AD9-29BE-44A3-B6B4-8FC6354A0514",
+            "amount": {
+              "total": 2118.37
+            },
+            "card": {
+              "type": "VS",
+              "entryMode": "M",
+              "number": "[FILTERED]",
+              "present": "N",
+              "token": {
+                "value": "657492f6d9cx5qmf"
+              }
+            },
+            "clerk": {
+              "numericId": 1
+            },
+            "customer": {
+              "addressLine1": "13238 N 101st Pl",
+              "emailAddress": "howardholleb@everonsolutions.com",
+              "firstName": "[FILTERED]",
+              "lastName": "[FILTERED]",
+              "postalCode": "85260"
+            },
+            "device": {
+              "capability": {
+                "magstripe": "Y",
+                "manualEntry": "Y"
+              }
+            },
+            "merchant": {
+              "mid": 8723645,
+              "name": "NEW CARDINALS STADIUM"
+            },
+            "receipt": [
+              {
+                "key": "MaskedPAN",
+                "printValue": "XXXXXXXXXXXX6574"
+              },
+              {
+                "key": "CardEntryMode",
+                "printName": "ENTRY METHOD",
+                "printValue": "KEYED"
+              },
+              {
+                "key": "SignatureRequired",
+                "printValue": "N"
+              },
+              {
+                "key": "TerminalID",
+                "printName": "TID",
+                "printValue": "78084447"
+              }
+            ],
+            "server": {
+              "name": "UTGAPI04S7"
+            },
+            "transaction": {
+              "authSource": "E",
+              "HEY": "WHOA",
+              "avs": {
+                "postalCodeVerified": "Y",
+                "result": "Y",
+                "streetVerified": "Y",
+                "valid": "Y"
+              },
+              "cardOnFile": {
+                "indicator": "01",
+                "scheduledIndicator": "02",
+                "usageIndicator": "01"
+              },
+              "invoice": "0725417280",
+              "hostresponse": {
+                "reasonCode": "03",
+                "reattemptPermission": "Reattempt permitted 15 times in 30 days",
+                "reasonDescription": "Invalid Merchant"
+              },
+              "responseCode": "D",
+              "retrievalReference": "425019365998",
+              "saleFlag": "S",
+              "vendorReference": "19026022674001"
+            },
+            "universalToken": {
+              "value": "480709-62ADAB16-000B58-00004E9E-191C7407826"
+            }
+          }
+        ]
+      }
     RESPONSE
   end
 end

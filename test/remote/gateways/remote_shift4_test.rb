@@ -194,7 +194,7 @@ class RemoteShift4Test < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_include response.message, 'Card  for Merchant Id 0008628968 not found'
+    assert_include response.message, 'Unable to determine card type. Please check the number and re-enter.'
   end
 
   def test_failed_authorize_with_failure_amount
@@ -214,7 +214,7 @@ class RemoteShift4Test < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '', @options)
     assert_failure response
-    assert_include response.message, 'Card  for Merchant Id 0008628968 not found'
+    assert_include response.message, 'Unable to determine card type. Please check the number and re-enter.'
   end
 
   def test_failed_refund

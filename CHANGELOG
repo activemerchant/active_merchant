@@ -38,6 +38,7 @@
 * Stripe PI: Update Stored Credentials [almalee24] #5236
 * Checkout V2: Update stored credential options function [jherreraa] #5239
 * Ebanx: Add support for Stored Credentials [almalee24] #5243
+* Shift4: Update response parsing to account for hostresponse [jcreiff] #5261
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

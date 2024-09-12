@@ -269,7 +269,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(action, response)
-        success_from(action, response) ? 'Transaction successful' : (error(response)&.dig('longText') || response['result'].first&.dig('transaction', 'hostResponse', 'reasonDescription') || 'Transaction declined')
+        if success_from(action, response)
+          'Transaction successful'
+        else
+          error(response)&.dig('longText') ||
+            response['result'].first&.dig('transaction', 'hostresponse', 'reasonDescription') ||
+            response['result'].first&.dig('transaction', 'hostResponse', 'reasonDescription') ||
+            'Transaction declined'
+        end
       end
 
       def error_code_from(action, response)
@@ -277,7 +284,9 @@ module ActiveMerchant #:nodoc:
         primary_code = response['result'].first['error'].present?
         return unless code == 'D' || primary_code == true || success_from(action, response)
 
-        if response['result'].first&.dig('transaction', 'hostResponse')
+        if response['result'].first&.dig('transaction', 'hostresponse')
+          response['result'].first&.dig('transaction', 'hostresponse', 'reasonCode')
+        elsif response['result'].first&.dig('transaction', 'hostResponse')
           response['result'].first&.dig('transaction', 'hostResponse', 'reasonCode')
         elsif response['result'].first['error']
           response['result'].first&.dig('error', 'primaryCode')
