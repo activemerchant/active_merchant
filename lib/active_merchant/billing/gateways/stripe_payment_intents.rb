@@ -319,6 +319,14 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def error_id(response, url)
+        if url.end_with?('payment_intents')
+          response.dig('error', 'payment_intent', 'id') || super
+        else
+          super
+        end
+      end
+
       def digital_wallet_payment_method?(payment_method)
         payment_method.source == :google_pay || payment_method.source == :apple_pay
       end

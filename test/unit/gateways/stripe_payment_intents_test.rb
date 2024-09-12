@@ -227,7 +227,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert create = @gateway.create_intent(@amount, 'pm_card_chargeDeclined', @options.merge(confirm: true))
     assert_equal 'requires_payment_method', create.params.dig('error', 'payment_intent', 'status')
     assert_equal false, create.params.dig('error', 'payment_intent', 'charges', 'data')[0].dig('captured')
-    assert_equal 'ch_1F2MB6AWOtgoysogAIvNV32Z', create.authorization
+    assert_equal 'pi_1F2MB5AWOtgoysogCMt8BaxR', create.authorization
   end
 
   def test_failed_void_after_capture
