@@ -667,6 +667,7 @@ module ActiveMerchant #:nodoc:
             eci = eci_value(payment_method, options)
             xml.eciIndicator eci if eci.present?
           end
+          add_shopper_id(xml, options, false)
           add_stored_credential_options(xml, options)
         end
       end
@@ -696,13 +697,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_shopper_id(xml, options)
-        if options[:ip] && options[:session_id]
-          xml.session 'shopperIPAddress' => options[:ip], 'id' => options[:session_id]
-        else
-          xml.session 'shopperIPAddress' => options[:ip] if options[:ip]
-          xml.session 'id' => options[:session_id] if options[:session_id]
-        end
+      def add_shopper_id(xml, options, with_session_id = true)
+        session_params = {
+          'shopperIPAddress' => options[:ip],
+          'id' => with_session_id ? options[:session_id] : nil
+        }.compact
+
+        xml.session session_params if session_params.present?
       end
 
       def add_three_d_secure(xml, options)
