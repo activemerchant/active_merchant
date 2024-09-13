@@ -128,6 +128,10 @@ module ActiveMerchant #:nodoc:
         commit(:inquire, post)
       end
 
+      def supports_network_tokenization?
+        true
+      end
+
       def supports_scrubbing?
         true
       end
@@ -136,7 +140,9 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(/(integration_key\\?":\\?")(\w*)/, '\1[FILTERED]').
           gsub(/(card_number\\?":\\?")(\d*)/, '\1[FILTERED]').
-          gsub(/(card_cvv\\?":\\?")(\d*)/, '\1[FILTERED]')
+          gsub(/(card_cvv\\?":\\?")(\d*)/, '\1[FILTERED]').
+          gsub(/(network_token_pan\\?":\\?")(\d*)/, '\1[FILTERED]').
+          gsub(/(network_token_cryptogram\\?":\\?")([\w+=\/]*)/, '\1[FILTERED]')
       end
 
       private
@@ -224,7 +230,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def payment_details(payment)
-        if payment.is_a?(String)
+        case payment
+        when NetworkTokenizationCreditCard
+          {
+            network_token_pan: payment.number,
+            network_token_expire_date: "#{payment.month}/#{payment.year}",
+            network_token_cryptogram: payment.payment_cryptogram
+          }
+        when String
           { token: payment }
         else
           {

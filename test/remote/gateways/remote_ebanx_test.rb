@@ -30,6 +30,14 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
     @hiper_card = credit_card('6062825624254001')
     @elo_card = credit_card('6362970000457013')
+
+    @network_token = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      payment_cryptogram: 'network_token_example_cryptogram',
+      month: 12,
+      year: 2030
+    )
   end
 
   def test_successful_purchase
@@ -187,7 +195,8 @@ class RemoteEbanxTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_match('Parameter hash not informed', response.message)
+    assert_equal 'Parameters hash or merchant_payment_code not informed', response.message
+    assert_equal 'BP-REF-1', response.error_code
   end
 
   def test_successful_void
@@ -435,5 +444,37 @@ class RemoteEbanxTest < Test::Unit::TestCase
     })
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
+  end
+
+  def test_successful_purchase_with_network_token
+    response = @gateway.purchase(@amount, @network_token, @options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_failed_purchase_with_invalid_network_token
+    @network_token.number = '5102026827345142'
+    response = @gateway.purchase(@amount, @network_token, @options)
+    assert_failure response
+    assert_equal 'Invalid card or card type', response.message
+    assert_equal 'NOK', response.error_code
+  end
+
+  def test_failed_purchase_with_invalid_network_token_expire_date
+    @network_token.year = nil
+    response = @gateway.purchase(@amount, @network_token, @options)
+    assert_failure response
+    assert_equal 'Field network_token_expire_date is invalid', response.message
+    assert_equal 'BP-DR-136', response.error_code
+  end
+
+  def test_network_token_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @network_token, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@network_token.number, transcript)
+    assert_scrubbed(@network_token.payment_cryptogram, transcript)
   end
 end
