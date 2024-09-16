@@ -638,6 +638,16 @@ class NmiTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_includes_industry_field
+    @transaction_options[:industry_indicator] = 'ecommerce'
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @transaction_options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r{ecommerce}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_blank_cvv_not_sent
     @credit_card.verification_value = nil
     stub_comms do
