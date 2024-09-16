@@ -178,6 +178,15 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_apple_pay_and_industry_field
+    assert @gateway_secure.supports_network_tokenization?
+    assert response = @gateway_secure.purchase(@amount, @apple_pay, @options.merge(industry_indicator: 'ecommerce'))
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
   def test_successful_purchase_with_google_pay
     assert @gateway_secure.supports_network_tokenization?
     assert response = @gateway_secure.purchase(@amount, @google_pay, @options)
