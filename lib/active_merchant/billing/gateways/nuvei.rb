@@ -34,6 +34,7 @@ module ActiveMerchant
         build_post_data(post)
         add_amount(post, money, options)
         add_payment_method(post, payment, :paymentOption, options)
+        add_3ds_global(post, options)
         add_address(post, payment, options)
         add_customer_ip(post, options)
         add_stored_credentials(post, payment, options)
@@ -225,6 +226,28 @@ module ActiveMerchant
           names[0] = payment_method&.first_name unless names[0].present? || payment_method.is_a?(String)
           names[1] = payment_method&.last_name unless names[1].present? || payment_method.is_a?(String)
         end
+      end
+
+      def add_3ds_global(post, options)
+        return unless (three_d_secure_options = options[:three_d_secure])
+
+        card_options = post[:paymentOption][:card] ||= {}
+        card_options[:threeD] = build_three_d_secure_options(three_d_secure_options, options)
+      end
+
+      def build_three_d_secure_options(three_d_secure_options, options)
+        three_d_secure_data = {
+          externalMpi: {
+            eci: three_d_secure_options[:eci],
+            cavv: three_d_secure_options[:cavv],
+            dsTransID: three_d_secure_options[:ds_transaction_id],
+            challenge_preference: options[:challenge_preference]
+          }
+        }.compact
+
+        three_d_secure_data[:externalMpi][:exemptionRequestReason] = options[:exemption_request_reason] if options[:challenge_preference] == 'ExemptionRequest'
+
+        three_d_secure_data
       end
 
       def add_address(post, payment, options)
