@@ -8,12 +8,21 @@ class RemoteNuveiTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4761344136141390', verification_value: '999', first_name: 'Cure', last_name: 'Tester')
     @declined_card = credit_card('4000128449498204')
+    @credit_card_3ds = credit_card('4000020951595032')
 
     @options = {
       email: 'test@gmail.com',
       billing_address: address.merge(name: 'Cure Tester'),
       ip: '127.0.0.1'
     }
+
+    @three_d_secure_options = @options.merge({
+      three_d_secure: {
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        eci: '05'
+      }
+    })
   end
 
   def test_transcript_scrubbing
@@ -141,5 +150,19 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_failure credit_response
     assert_match 'ERROR', credit_response.params['status']
     assert_match 'Invalid user token', credit_response.message
+  end
+
+  def test_successful_purchase_with_three_d_secure
+    assert response = @gateway.purchase(@amount, @credit_card_3ds, @three_d_secure_options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_capture_3ds_global_request
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @three_d_secure_options)
+    end
+    puts transcript
   end
 end

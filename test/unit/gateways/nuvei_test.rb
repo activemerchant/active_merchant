@@ -20,6 +20,14 @@ class NuveiTest < Test::Unit::TestCase
       ip_address: '127.0.0.1'
     }
 
+    @three_d_secure_options = @options.merge({
+      three_d_secure: {
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        eci: '05'
+      }
+    })
+
     @post = {
       merchantId: 'test_merchant_id',
       merchantSiteId: 'test_merchant_site_id',
@@ -113,6 +121,16 @@ class NuveiTest < Test::Unit::TestCase
         assert_match(/#{@credit_card.number}/, json_data['cardData']['cardNumber'])
       end
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_add_3ds_global_params
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @three_d_secure_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_equal 'jJ81HADVRtXfCBATEp01CJUAAAA', JSON.parse(data)['threeD']['cavv']
+      assert_equal '97267598-FAE6-48F2-8083-C23433990FBC', JSON.parse(data)['threeD']['dsTransactionId']
+      assert_equal '05', JSON.parse(data)['threeD']['eci']
+    end.respond_with(successful_authorize_response)
   end
 
   private
