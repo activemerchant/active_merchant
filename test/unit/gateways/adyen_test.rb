@@ -145,6 +145,10 @@ class AdyenTest < Test::Unit::TestCase
   #   assert_success response
   # end
 
+  def test_supported_card_types
+    assert_equal AdyenGateway.supported_cardtypes, %i[visa master american_express diners_club jcb dankort maestro discover elo naranja cabal unionpay patagonia_365]
+  end
+
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 

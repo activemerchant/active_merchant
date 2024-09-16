@@ -360,7 +360,7 @@ class RedsysTest < Test::Unit::TestCase
   end
 
   def test_supported_cardtypes
-    assert_equal %i[visa master american_express jcb diners_club unionpay], RedsysGateway.supported_cardtypes
+    assert_equal %i[visa master american_express jcb diners_club unionpay patagonia_365], RedsysGateway.supported_cardtypes
   end
 
   def test_using_test_mode

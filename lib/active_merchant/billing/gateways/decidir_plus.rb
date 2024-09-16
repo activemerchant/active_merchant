@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AR']
       self.default_currency = 'ARS'
-      self.supported_cardtypes = %i[visa master american_express discover diners_club naranja cabal]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club naranja cabal patagonia_365]
 
       self.homepage_url = 'http://decidir.com.ar/home'
       self.display_name = 'Decidir Plus'

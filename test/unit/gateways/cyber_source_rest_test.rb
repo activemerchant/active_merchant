@@ -89,7 +89,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal CyberSourceRestGateway.supported_cardtypes, %i[visa master american_express discover diners_club jcb maestro elo union_pay cartes_bancaires mada]
+    assert_equal CyberSourceRestGateway.supported_cardtypes, %i[visa master american_express discover diners_club jcb maestro elo union_pay cartes_bancaires mada patagonia_365]
   end
 
   def test_properly_format_on_zero_decilmal

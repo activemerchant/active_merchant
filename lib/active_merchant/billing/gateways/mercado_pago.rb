@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://api.mercadopago.com/v1'
 
       self.supported_countries = %w[AR BR CL CO MX PE UY]
-      self.supported_cardtypes = %i[visa master american_express elo cabal naranja creditel]
+      self.supported_cardtypes = %i[visa master american_express elo cabal naranja creditel patagonia_365]
 
       self.homepage_url = 'https://www.mercadopago.com/'
       self.display_name = 'Mercado Pago'
