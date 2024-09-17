@@ -751,7 +751,7 @@ module ActiveMerchant #:nodoc:
                  when 'unscheduled' then 'UNSCHEDULED'
                  end
         is_initial_transaction = options[:stored_credential][:initial_transaction]
-        stored_credential_params = generate_stored_credential_params(is_initial_transaction, reason)
+        stored_credential_params = generate_stored_credential_params(is_initial_transaction, reason, options[:stored_credential][:initiator])
 
         xml.storedCredentials stored_credential_params do
           xml.schemeTransactionIdentifier network_transaction_id(options) if network_transaction_id(options) && !is_initial_transaction
@@ -1086,8 +1086,8 @@ module ActiveMerchant #:nodoc:
         test? && options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
       end
 
-      def generate_stored_credential_params(is_initial_transaction, reason = nil)
-        customer_or_merchant = reason == 'RECURRING' && is_initial_transaction ? 'customerInitiatedReason' : 'merchantInitiatedReason'
+      def generate_stored_credential_params(is_initial_transaction, reason = nil, initiator = nil)
+        customer_or_merchant = initiator == 'cardholder' ? 'customerInitiatedReason' : 'merchantInitiatedReason'
 
         stored_credential_params = {}
         stored_credential_params['usage'] = is_initial_transaction ? 'FIRST' : 'USED'

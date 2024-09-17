@@ -388,7 +388,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"FIRST\" customerInitiatedReason\=\"RECURRING\"\>/, data)
+      assert_match(/<storedCredentials usage\=\"FIRST\" merchantInitiatedReason\=\"RECURRING\"\>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end
