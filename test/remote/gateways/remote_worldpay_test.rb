@@ -115,6 +115,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         sub_tax_id: '987-65-4321'
       }
     }
+
     @apple_pay_network_token = network_tokenization_credit_card(
       '4895370015293175',
       month: 10,
@@ -667,6 +668,29 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       stored_credential_transaction_id: auth.params['transaction_identifier']
     )
     assert next_auth = @gateway.authorize(@amount, @credit_card, options)
+    assert next_auth.authorization
+    assert next_auth.params['scheme_response']
+    assert next_auth.params['transaction_identifier']
+
+    assert capture = @gateway.capture(@amount, next_auth.authorization, authorization_validated: true)
+    assert_success capture
+  end
+
+  def test_successful_recurring_purchase_with_apple_pay_credentials
+    stored_credential_params = stored_credential(:initial, :recurring, :merchant)
+    assert auth = @gateway.authorize(@amount, @apple_pay_network_token, @options.merge({ stored_credential: stored_credential_params }))
+    assert_success auth
+    assert auth.authorization
+    assert auth.params['scheme_response']
+    assert auth.params['transaction_identifier']
+
+    assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
+    assert_success capture
+
+    @options[:order_id] = generate_unique_id
+    @options[:stored_credential] = stored_credential(:used, :recurring, :merchant, network_transaction_id: auth.params['transaction_identifier'])
+
+    assert next_auth = @gateway.authorize(@amount, @apple_pay_network_token, @options)
     assert next_auth.authorization
     assert next_auth.params['scheme_response']
     assert next_auth.params['transaction_identifier']
