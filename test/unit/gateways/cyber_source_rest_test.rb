@@ -294,6 +294,23 @@ class CyberSourceRestTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_authorize_apple_pay_recurring
+    auth = @gateway.authorize(@amount, @apple_pay, @options)
+    @options[:stored_credential] = stored_credential(:merchant, :recurring, ntid: auth.network_transaction_id)
+    response = stub_comms do
+      @gateway.authorize(@amount, @apple_pay, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'recurring', request['processingInformation']['commerceIndicator']
+      assert_equal 'merchant', request.dig('processingInformation', 'authorizationOptions', 'initiator', 'type')
+      assert_equal true, request.dig('processingInformation', 'authorizationOptions', 'initiator', 'storedCredentialUsed')
+      assert_nil request.dig('processingInformation', 'authorizationOptions', 'initiator', 'merchantInitiatedTransaction', 'originalAuthorizedAmount')
+      assert_nil request['paymentInformation']['tokenizedCard']['cryptogram']
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_authorize_google_pay_master_card
     stub_comms do
       @gateway.authorize(100, @google_pay_mc, @options.merge(merchant_id: 'MerchantId'))
