@@ -18,7 +18,8 @@ module ActiveMerchant
         capture: '/settleTransaction',
         refund: '/refundTransaction',
         void: '/voidTransaction',
-        general_credit: '/payout'
+        general_credit: '/payout',
+        init_payment: '/initPayment'
       }
 
       def initialize(options = {})
@@ -38,7 +39,11 @@ module ActiveMerchant
         add_stored_credentials(post, payment, options)
         post[:userTokenId] = options[:user_token_id] if options[:user_token_id]
 
-        commit(:purchase, post)
+        if options[:execute_threed]
+          execute_3ds_flow(post, money, payment, transaction_type, options)
+        else
+          commit(:purchase, post)
+        end
       end
 
       def purchase(money, payment, options = {})
@@ -213,6 +218,65 @@ module ActiveMerchant
         }.compact
       end
 
+      def execute_3ds_flow(post, money, payment, transaction_type, options = {})
+        post_3ds = post.dup
+
+        MultiResponse.run do |r|
+          r.process { commit(:init_payment, post) }
+          r.process do
+            three_d_params = r.params.dig('paymentOption', 'card', 'threeD')
+            three_d_supported = three_d_params['v2supported'] == 'true'
+
+            [true, 'true'].include?(options[:force_3d_secure])
+
+            next r.process { Response.new(false, '3D Secure is required but not supported') } if !three_d_supported && [true, 'true'].include?(options[:force_3d_secure])
+
+            if three_d_supported
+              add_3ds_data(post_3ds, options.merge(version: three_d_params['version']))
+              post_3ds[:relatedTransactionId] = r.authorization
+            end
+
+            commit(:purchase, post_3ds)
+          end
+        end
+      end
+
+      def add_3ds_data(post, options = {})
+        three_d_secure = options[:three_ds_2]
+        # 01 => Challenge requested, 02 => Exemption requested, 03 or not sending parameter => No preference
+        challenge_preference = if [true, 'true'].include?(options[:force_3d_secure])
+                                 '01'
+                               elsif [false, 'false'].include?(options[:force_3d_secure])
+                                 '02'
+                               end
+        browser_info_3ds = three_d_secure[:browser_info]
+        payment_options = post[:paymentOption] ||= {}
+        card = payment_options[:card] ||= {}
+        card[:threeD] = {
+          v2AdditionalParams: {
+            challengeWindowSize: options[:browser_size],
+            challengePreference: challenge_preference
+          }.compact,
+        browserDetails: {
+          acceptHeader: browser_info_3ds[:accept_header],
+          ip: options[:ip],
+          javaEnabled: browser_info_3ds[:java],
+          javaScriptEnabled: browser_info_3ds[:javascript] || false,
+          language: browser_info_3ds[:language],
+          colorDepth: browser_info_3ds[:depth], # Possible values: 1, 4, 8, 15, 16, 24, 32, 48
+          screenHeight: browser_info_3ds[:height],
+          screenWidth: browser_info_3ds[:width],
+          timeZone: browser_info_3ds[:timezone],
+          userAgent: browser_info_3ds[:user_agent]
+        }.compact,
+        notificationURL: (options[:notification_url] || options[:callback_url]),
+        merchantURL: options[:merchant_url], # The URL of the merchant's fully qualified website.
+        version: options[:version], # returned from initPayment
+        methodCompletionInd: 'U', # to indicate "unavailable".
+        platformType: '02' # browser instead of app-based (app-based is only for SDK implementation)
+        }.compact
+      end
+
       def current_timestamp
         Time.now.utc.strftime('%Y%m%d%H%M%S')
       end
@@ -315,7 +379,7 @@ module ActiveMerchant
       end
 
       def success_from(response)
-        response[:status] == 'SUCCESS' && response[:transactionStatus] == 'APPROVED'
+        response[:status] == 'SUCCESS' && %w[APPROVED REDIRECT].include?(response[:transactionStatus])
       end
 
       def authorization_from(action, response, post)
