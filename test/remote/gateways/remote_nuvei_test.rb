@@ -8,12 +8,35 @@ class RemoteNuveiTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4761344136141390', verification_value: '999', first_name: 'Cure', last_name: 'Tester')
     @declined_card = credit_card('4000128449498204')
+    @challenge_credit_card = credit_card('2221008123677736', first_name: 'CL-BRW2', last_name: '')
+    @three_ds_amount = 151 # for challenge = 151, for frictionless >= 150
+    @frictionless_credit_card = credit_card('4000020951595032', first_name: 'FL-BRW2', last_name: '')
 
     @options = {
       email: 'test@gmail.com',
       billing_address: address.merge(name: 'Cure Tester'),
       ip: '127.0.0.1',
       user_token_id: '123456'
+    }
+
+    @three_ds_options = {
+      execute_threed: true,
+      redirect_url: 'http://www.example.com/redirect',
+      callback_url: 'http://www.example.com/callback',
+      three_ds_2: {
+        browser_info:  {
+          width: 390,
+          height: 400,
+          depth: 24,
+          timezone: 300,
+          user_agent: 'Spreedly Agent',
+          java: false,
+          javascript: true,
+          language: 'en-US',
+          browser_size: '05',
+          accept_header: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+        }
+      }
     }
   end
 
@@ -73,6 +96,44 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_not_nil response.params[:transactionId]
     assert_match 'APPROVED', response.message
     assert_match 'SUCCESS', response.params['status']
+  end
+
+  def test_successful_purchase_with_3ds_frictionless
+    response = @gateway.purchase(@three_ds_amount, @frictionless_credit_card, @options.merge(@three_ds_options))
+    assert_success response
+    assert_not_nil response.params[:transactionId]
+    assert_match 'SUCCESS', response.params['status']
+    assert_match 'APPROVED', response.message
+  end
+
+  def test_successful_purchase_with_3ds_challenge
+    response = @gateway.purchase(@three_ds_amount, @challenge_credit_card, @options.merge(@three_ds_options))
+    assert_success response
+    assert_not_nil response.params[:transactionId]
+    assert_match 'SUCCESS', response.params['status']
+    assert_match 'REDIRECT', response.message
+  end
+
+  def test_successful_purchase_with_not_enrolled_card
+    response = @gateway.purchase(@three_ds_amount, @credit_card, @options.merge(@three_ds_options))
+    assert_success response
+    assert_not_nil response.params[:transactionId]
+    assert_match 'SUCCESS', response.params['status']
+    assert_match 'APPROVED', response.message
+  end
+
+  def test_successful_purchase_with_3ds_frictionless_and_forced_3ds
+    response = @gateway.purchase(@three_ds_amount, @frictionless_credit_card, @options.merge(@three_ds_options.merge({ force_3d_secure: true })))
+    assert_success response
+    assert_not_nil response.params[:transactionId]
+    assert_match 'SUCCESS', response.params['status']
+    assert_match 'APPROVED', response.message
+  end
+
+  def test_successful_purchase_with_not_enrolled_card_and_forced_3ds
+    response = @gateway.purchase(@three_ds_amount, @credit_card, @options.merge(@three_ds_options.merge({ force_3d_secure: true })))
+    assert_failure response
+    assert_equal response.message, '3D Secure is required but not supported'
   end
 
   def test_failed_purchase
