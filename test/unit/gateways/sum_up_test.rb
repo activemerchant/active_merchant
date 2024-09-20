@@ -43,6 +43,18 @@ class SumUpTest < Test::Unit::TestCase
     end.respond_with(successful_create_checkout_response)
   end
 
+  def test_successful_purchase_without_partner_id
+    @options.delete(:partner_id)
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      if checkout_ref = json_data['checkout_reference']
+        assert_match /#{@options[:order_id]}/, checkout_ref
+      end
+    end.respond_with(successful_create_checkout_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_request).returns(failed_complete_checkout_array_response)
     response = @gateway.purchase(@amount, @credit_card, @options)

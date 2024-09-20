@@ -58,6 +58,7 @@ class RemoteSumUpTest < Test::Unit::TestCase
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
     assert_equal "#{options[:partner_id]}-#{options[:order_id]}", response.params['checkout_reference']
   end
 
