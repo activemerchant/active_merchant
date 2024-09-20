@@ -13,6 +13,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Decidir'
 
       STANDARD_ERROR_CODE_MAPPING = {
+        -1 => STANDARD_ERROR_CODE[:processing_error],
         1 => STANDARD_ERROR_CODE[:call_issuer],
         2 => STANDARD_ERROR_CODE[:call_issuer],
         3 => STANDARD_ERROR_CODE[:config_error],
