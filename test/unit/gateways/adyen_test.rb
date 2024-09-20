@@ -205,6 +205,14 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_successful_authorize_with_shopper_interaction_ecommerce
+    stub_comms do
+      @gateway.authorize(100, @credit_card, { order_id: '345123' })
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'Ecommerce', JSON.parse(data)['shopperInteraction']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_adds_3ds1_standalone_fields
     eci = '05'
     cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='

@@ -44,6 +44,7 @@
 * Rapyd: Add idempotency for all endpoints [almalee24] #5255
 * Decidir: Map error code -1 to processing_error [Buitragox] #5257
 * SumUp: Append partner_id to checkout_reference [naashton] #5272
+* Adyen: Update shopperInteraction [almalee24] #5273
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

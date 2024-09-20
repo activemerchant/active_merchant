@@ -1006,9 +1006,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def ecommerce_shopper_interaction?(payment, options)
-        (options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'cardholder') ||
-          (payment.respond_to?(:verification_value) && payment.verification_value && options.dig(:stored_credential, :initial_transaction)) ||
-          (payment.is_a?(NetworkTokenizationCreditCard) && !options[:switch_cryptogram_mapping_nt])
+        return true if payment.is_a?(NetworkTokenizationCreditCard) && !options[:switch_cryptogram_mapping_nt]
+        return true unless (stored_credential = options[:stored_credential])
+
+        (stored_credential[:initial_transaction] && stored_credential[:initiator] == 'cardholder') ||
+          (payment.respond_to?(:verification_value) && payment.verification_value && stored_credential[:initial_transaction])
       end
     end
   end
