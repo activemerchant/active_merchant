@@ -51,6 +51,16 @@ class RemoteSumUpTest < Test::Unit::TestCase
     assert_equal 'PAID', response.message
   end
 
+  def test_successful_purchase_with_partner_id
+    options = {
+      partner_id: 'PartnerId',
+      order_id: SecureRandom.uuid
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_equal "#{options[:partner_id]}-#{options[:order_id]}", response.params['checkout_reference']
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response

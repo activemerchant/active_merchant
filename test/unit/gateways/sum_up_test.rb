@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class SumUpTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = SumUpGateway.new(
       access_token: 'sup_sk_ABC123',
@@ -12,7 +14,9 @@ class SumUpTest < Test::Unit::TestCase
     @options = {
       payment_type: 'card',
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      partner_id: 'PartnerId',
+      order_id: SecureRandom.uuid
     }
   end
 
@@ -26,6 +30,17 @@ class SumUpTest < Test::Unit::TestCase
     assert_equal 'PENDING', response.message
     refute_empty response.params
     assert response.test?
+  end
+
+  def test_successful_purchase_with_options
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      if checkout_ref = json_data['checkout_reference']
+        assert_match /#{@options[:partner_id]}-#{@options[:order_id]}/, checkout_ref
+      end
+    end.respond_with(successful_create_checkout_response)
   end
 
   def test_failed_purchase
