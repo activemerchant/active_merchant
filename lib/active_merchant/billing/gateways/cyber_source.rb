@@ -938,7 +938,7 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'ccAuthService', { 'run' => 'true' } do
             xml.tag!('cavv', payment_method.payment_cryptogram) unless commerce_indicator
-            xml.tag!('commerceIndicator', 'internet')
+            xml.tag!('commerceIndicator', 'dipb')
           end
         end
       end
