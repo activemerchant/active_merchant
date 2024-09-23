@@ -415,21 +415,18 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         return response['status'] if success_from(response)
 
-        response['errorInformation']['message'] || response['message']
+        response.dig('errorInformation', 'message') || response['message']
       end
 
       def authorization_from(response)
         id = response['id']
-        has_amount = response['orderInformation'] && response['orderInformation']['amountDetails'] && response['orderInformation']['amountDetails']['authorizedAmount']
-        amount = response['orderInformation']['amountDetails']['authorizedAmount'].delete('.') if has_amount
+        amount = response.dig('orderInformation', 'amountDetails', 'authorizedAmount')&.delete('.')
 
-        return id if amount.blank?
-
-        [id, amount].join('|')
+        amount.present? ? [id, amount].join('|') : id
       end
 
       def error_code_from(response)
-        response['errorInformation']['reason'] unless success_from(response)
+        response.dig('errorInformation', 'reason') unless success_from(response)
       end
 
       # This implementation follows the Cybersource guide on how create the request signature, see:

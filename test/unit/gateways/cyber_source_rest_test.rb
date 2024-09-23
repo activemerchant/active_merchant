@@ -613,6 +613,18 @@ class CyberSourceRestTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_failed_void
+    purchase = '1000|1842651133440156177166|AP4JY+Or4xRonEAOERAyMzQzOTEzMEM0MFZaNUZCBgDH3fgJ8AEGAMfd+AnwAwzRpAAA7RT/|purchase|100|USD|'
+
+    response = stub_comms do
+      @gateway.void(purchase, @options)
+    end.respond_with(successful_void_response)
+
+    assert_failure response
+    assert_equal nil, response.message
+    assert_equal nil, response.error_code
+  end
+
   private
 
   def parse_signature(signature)
@@ -840,6 +852,98 @@ class CyberSourceRestTest < Test::Unit::TestCase
       "status": "PENDING",
       "submitTimeUtc": "2023-03-27T20:45:09Z"
     }
+    RESPONSE
+  end
+
+  def successful_void_response
+    <<-RESPONSE
+      {
+        "_links":{
+          "void":{
+            "method": "POST",
+            "href": "/pts/v2/payments/123/voids"
+          },
+          "self":{
+            "method": "GET",
+            "href": "/pts/v2/payments/123"
+          }
+        },
+        "clientReferenceInformation":{
+          "code": "abcdefg",
+          "partner":  {
+            "solutionId": "HIJKLMN"
+          }
+        },
+        "consumerAuthenticationInformation": {
+          "token":  "token123"
+        },
+        "id": "64234623421",
+        "orderInformation": {
+          "amountDetails": {
+            "totalAmount":  "6.400",
+            "authorizedAmount": "6.400",
+            "currency": "JOD"
+          }
+        },
+        "paymentAccountInformation":{
+          "card": {
+            "type": "001"
+          }
+        },
+        "paymentInformation": {
+          "accountFeatures":  {
+            "group": "0"
+          },
+          "tokenizedCard":{
+            "type": "001"
+          },
+          "scheme": "VISA DEBIT",
+          "bin": "411111",
+          "accountType": "Visa Classic",
+          "issuer": "CONOTOXIA SP. Z O.O",
+          "card": {
+            "type": "001"
+          },
+          "binCountry": "PL"
+        },
+        "processorInformation": {
+          "systemTraceAuditNumber": "77788844",
+          "approvalCode": "7883243",
+          "networkTransactionId": "0972342342342353",
+          "retrievalReferenceNumber":"785652341",
+          "transactionId": "00012321324232",
+          "responseCode": "00",
+          "avs": {
+            "code": "Z",
+            "codeRaw": "Z"
+          }
+        },
+        "promotionInformation":{
+          "code": "ABC12345",
+          "description":  "percent discount",
+          "receiptData": "You have received a Visa Offer and saved 20% off your total (max discount for this offer is $20.00).",
+          "type": "V1"
+        },
+        "reconciliationId": "987552323786342334",
+        "riskInformation":  {
+          "localTime": "11:24:09",
+          "score": {
+            "result":"55",
+            "factorCodes":["B"],
+            "modelUsed":"default_uk"
+          },
+          "infoCodes": {
+            "address":["TOR-TA","TM-TTN"],
+            "velocity":["TTEL-T6","TTEL-T7"]
+          },
+          "profile": {
+            "earlyDecision": "ACCEPT"
+          },
+          "casePriority":"3"
+        },
+        "status": "ACCEPTED",
+        "submitTimeUtc": "2024-09-10T10:24:10Z"
+      }
     RESPONSE
   end
 end
