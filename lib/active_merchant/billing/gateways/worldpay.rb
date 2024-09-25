@@ -663,13 +663,23 @@ module ActiveMerchant #:nodoc:
             end
             name = card_holder_name(payment_method, options)
             xml.cardHolderName name if name.present?
-            xml.cryptogram payment_method.payment_cryptogram unless options[:wallet_type] == :google_pay
+            xml.cryptogram payment_method.payment_cryptogram unless should_send_payment_cryptogram?(options, payment_method)
             eci = eci_value(payment_method, options)
             xml.eciIndicator eci if eci.present?
           end
           add_shopper_id(xml, options, false)
           add_stored_credential_options(xml, options)
         end
+      end
+
+      def should_send_payment_cryptogram?(options, payment_method)
+        wallet_type_google_pay?(options) ||
+          payment_method_apple_pay?(payment_method) &&
+            merchant_initiated?(options)
+      end
+
+      def merchant_initiated?(options)
+        options.dig(:stored_credential, :initiator) == 'merchant'
       end
 
       def add_card_or_token(xml, payment_method, options)
@@ -1041,7 +1051,7 @@ module ActiveMerchant #:nodoc:
         when String
           token_type_and_details(payment_method)
         else
-          type = network_token?(payment_method) || options[:wallet_type] == :google_pay ? :network_token : :credit
+          type = network_token?(payment_method) || wallet_type_google_pay?(options) || payment_method_apple_pay?(payment_method) ? :network_token : :credit
 
           { payment_type: type }
         end
@@ -1051,6 +1061,16 @@ module ActiveMerchant #:nodoc:
         payment_method.respond_to?(:source) &&
           payment_method.respond_to?(:payment_cryptogram) &&
           payment_method.respond_to?(:eci)
+      end
+
+      def payment_method_apple_pay?(payment_method)
+        return false unless payment_method.is_a?(NetworkTokenizationCreditCard)
+
+        payment_method.source == :apple_pay
+      end
+
+      def wallet_type_google_pay?(options)
+        options[:wallet_type] == :google_pay
       end
 
       def token_type_and_details(token)

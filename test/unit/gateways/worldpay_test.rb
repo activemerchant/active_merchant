@@ -1597,6 +1597,23 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_recurring_apple_pay_with_ntid
+    stored_credential_params = stored_credential(:used, :recurring, :merchant, network_transaction_id: '3812908490218390214124')
+
+    @options.merge({
+      stored_credential: stored_credential_params,
+      stored_credential_transaction_id: '000000000000020005060720116005060',
+      wallet_type: :apple_pay
+    })
+    response = stub_comms do
+      @gateway.authorize(@amount, @apple_play_network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="APPLEPAY">), data
+      refute_match %r(<cryptogram>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_successful_inquire_with_order_id
     response = stub_comms do
       @gateway.inquire(nil, { order_id: @options[:order_id].to_s })
