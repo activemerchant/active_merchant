@@ -366,6 +366,15 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     refute_empty response.params['_links']['capture']
   end
 
+  def test_successful_authorize_with_apple_pay_recurring
+    auth = @gateway.authorize(@amount, @apple_pay, @options)
+    response = @gateway.authorize(@amount, @apple_pay, @options.merge(stored_credential: stored_credential_options(:merchant, :recurring, ntid: auth.network_transaction_id)))
+
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+    refute_empty response.params['_links']['capture']
+  end
+
   def test_successful_authorize_with_google_pay
     response = @gateway.authorize(@amount, @apple_pay, @options)
 
