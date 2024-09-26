@@ -277,6 +277,20 @@ class NuveiTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_verify
+    @options.merge!(authentication_only_type: 'ACCOUNTVERIFICATION')
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_method, endpoint, data, _headers|
+      if /payment/.match?(endpoint)
+        json_data = JSON.parse(data)
+        assert_match(/Auth/, json_data['transactionType'])
+        assert_match(/ACCOUNTVERIFICATION/, json_data['authenticationOnlyType'])
+        assert_equal '0', json_data['amount']
+      end
+    end
+  end
+
   private
 
   def three_ds_assertions(payment_option_card)
