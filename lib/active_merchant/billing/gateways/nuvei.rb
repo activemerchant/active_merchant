@@ -38,7 +38,7 @@ module ActiveMerchant
         add_customer_ip(post, options)
         add_stored_credentials(post, payment, options)
         post[:userTokenId] = options[:user_token_id] if options[:user_token_id]
-
+        post[:authenticationOnlyType] = options[:authentication_only_type] if options[:authentication_only_type]
         if options[:execute_threed]
           execute_3ds_flow(post, money, payment, transaction_type, options)
         else
