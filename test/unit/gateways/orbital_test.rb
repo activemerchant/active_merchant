@@ -354,7 +354,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<AAV>TESTCAVV</AAV>}, data
       assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
       assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
-      assert_match %{<UCAFInd>4</UCAFInd>}, data
+      assert_not_match %{<UCAFInd>4</UCAFInd>}, data
       assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
@@ -367,7 +367,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<AAV>TESTCAVV</AAV>}, data
       assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
       assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
-      assert_match %{<UCAFInd>4</UCAFInd>}, data
+      assert_not_match %{<UCAFInd>4</UCAFInd>}, data
       assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
@@ -392,7 +392,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
       assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
       assert_match %{<SCARecurringPayment>Y</SCARecurringPayment>}, data
-      assert_match %{<UCAFInd>4</UCAFInd>}, data
+      assert_not_match %{<UCAFInd>4</UCAFInd>}, data
       assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
@@ -417,7 +417,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
       assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
       assert_match %{<SCAMerchantInitiatedTransaction>Y</SCAMerchantInitiatedTransaction>}, data
-      assert_match %{<UCAFInd>4</UCAFInd>}, data
+      assert_not_match %{<UCAFInd>4</UCAFInd>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -440,7 +440,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<AAV>AAAEEEDDDSSSAAA2243234</AAV>}, data
       assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
       assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
-      assert_match %{<UCAFInd>4</UCAFInd>}, data
+      assert_not_match %{<UCAFInd>4</UCAFInd>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -1328,21 +1328,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '1', response.params['approval_status']
   end
 
-  def test_three_d_secure_data_on_master_purchase_with_custom_ucaf_and_flag_on_if_eci_is_valid
-    options = @options.merge(@three_d_secure_options)
-    options.merge!({ ucaf_collection_indicator: '5', alternate_ucaf_flow: true })
-    assert_equal '6', @three_d_secure_options_eci_6.dig(:three_d_secure, :eci)
-
-    stub_comms do
-      @gateway.purchase(50, credit_card(nil, brand: 'master'), options)
-    end.check_request do |_endpoint, data, _headers|
-      assert_no_match(/\<UCAFInd/, data)
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_three_d_secure_data_on_master_purchase_with_custom_ucaf_and_flag_on
+  def test_three_d_secure_data_on_master_purchase_eci_5
     options = @options.merge(@three_d_secure_options_eci_6)
-    options.merge!({ ucaf_collection_indicator: '5', alternate_ucaf_flow: true })
+    options.merge!({ ucaf_collection_indicator: '5' })
     assert_equal '6', @three_d_secure_options_eci_6.dig(:three_d_secure, :eci)
 
     stub_comms do
@@ -1352,24 +1340,11 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_three_d_secure_data_on_master_purchase_with_flag_on_but_no_custom_ucaf
-    options = @options.merge(@three_d_secure_options_eci_6)
-    options.merge!(alternate_ucaf_flow: true)
-    assert_equal '6', @three_d_secure_options_eci_6.dig(:three_d_secure, :eci)
-
+  def test_three_d_secure_data_on_master_with_invalid_ucaf
     stub_comms do
-      @gateway.purchase(50, credit_card(nil, brand: 'master'), options)
+      @gateway.purchase(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_options))
     end.check_request do |_endpoint, data, _headers|
-      assert_no_match(/\<UCAFInd/, data)
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_three_d_secure_data_on_master_purchase_with_flag_off
-    options = @options.merge(@three_d_secure_options)
-    stub_comms do
-      @gateway.purchase(50, credit_card(nil, brand: 'master'), options)
-    end.check_request do |_endpoint, data, _headers|
-      assert_match %{<UCAFInd>4</UCAFInd>}, data
+      assert_not_match %{<UCAFInd>4</UCAFInd>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -1379,7 +1354,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(50, credit_card(nil, brand: 'master'), options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match %{<UCAFInd>5</UCAFInd>}, data
+      assert_not_match %{<UCAFInd>5</UCAFInd>}, data
     end.respond_with(successful_purchase_response)
   end
 
