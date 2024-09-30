@@ -758,15 +758,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mc_ucafind(xml, credit_card, three_d_secure, options)
-        return unless three_d_secure
+        return unless three_d_secure && %w(4 6 7).include?(three_d_secure&.dig(:eci))
 
-        if options[:alternate_ucaf_flow]
-          return unless %w(4 6 7).include?(three_d_secure[:eci])
-
-          xml.tag! :UCAFInd, options[:ucaf_collection_indicator] if options[:ucaf_collection_indicator]
-        else
-          xml.tag! :UCAFInd, options[:ucaf_collection_indicator] || '4'
-        end
+        xml.tag! :UCAFInd, options[:ucaf_collection_indicator] if options[:ucaf_collection_indicator]
       end
 
       #=====SCA (STORED CREDENTIAL) FIELDS=====
