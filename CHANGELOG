@@ -68,6 +68,7 @@
 * Nuvei: Add Google and Apple pay [javierpedrozaing] #5289
 * Cybersource and Cybersource Rest: Add the MCC field [yunnydang] #5301
 * Adyen: Add the manual_capture field [yunnydang] #5310
+* Versapay: First Implementation [gasb150] #5288
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
