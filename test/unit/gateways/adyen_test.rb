@@ -1326,7 +1326,7 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @nt_credit_card, @options.merge(switch_cryptogram_mapping_nt: true, stored_credential: stored_credential))
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
-      assert_equal 'ContAuth', parsed['shopperInteraction']
+      assert_equal 'Ecommerce', parsed['shopperInteraction']
       assert_nil parsed['mpiData']
     end.respond_with(successful_authorize_response)
     assert_success response
