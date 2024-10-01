@@ -137,10 +137,16 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     idempotency_key = 'test123'
     options = @options.merge(idempotency_key: idempotency_key)
 
-    stub_comms(@gateway, :ssl_request) do
+    create_intent = stub_comms(@gateway, :ssl_request) do
       @gateway.create_intent(@amount, @visa_token, options)
     end.check_request do |_method, _endpoint, _data, headers|
       assert_equal idempotency_key, headers['Idempotency-Key']
+    end.respond_with(successful_create_intent_response)
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.show_intent(create_intent.authorization, options)
+    end.check_request do |_method, _endpoint, _data, headers|
+      assert_not_equal idempotency_key, headers['Idempotency-Key']
     end.respond_with(successful_create_intent_response)
   end
 
@@ -971,12 +977,20 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
   end
 
   def test_create_setup_intent_with_moto_exemption
-    options = @options.merge(moto: true, confirm: true)
+    idempotency_key = 'test123'
+    options = @options.merge(moto: true, confirm: true, idempotency_key: idempotency_key)
+
+    create_intent = stub_comms(@gateway, :ssl_request) do
+      @gateway.create_setup_intent(@visa_token, options)
+    end.check_request do |_method, _endpoint, data, headers|
+      assert_equal(idempotency_key, headers['Idempotency-Key'])
+      assert_match(/\[moto\]=true/, data)
+    end.respond_with(successful_verify_response)
 
     stub_comms(@gateway, :ssl_request) do
-      @gateway.create_setup_intent(@visa_token, options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/\[moto\]=true/, data)
+      @gateway.retrieve_setup_intent(create_intent.authorization, options)
+    end.check_request do |_method, _endpoint, _data, headers|
+      assert_not_equal(idempotency_key, headers['Idempotency-Key'])
     end.respond_with(successful_verify_response)
   end
 

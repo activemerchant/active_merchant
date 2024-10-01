@@ -673,7 +673,7 @@ module ActiveMerchant #:nodoc:
         options[:key] || @api_key
       end
 
-      def headers(options = {})
+      def headers(method = :post, options = {})
         headers = {
           'Authorization' => 'Basic ' + Base64.strict_encode64(key(options).to_s + ':').strip,
           'User-Agent' => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
@@ -681,7 +681,7 @@ module ActiveMerchant #:nodoc:
           'X-Stripe-Client-User-Agent' => stripe_client_user_agent(options),
           'X-Stripe-Client-User-Metadata' => { ip: options[:ip] }.to_json
         }
-        headers['Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
+        headers['Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key] && method != :get
         headers['Stripe-Account'] = options[:stripe_account] if options[:stripe_account]
         headers
       end
@@ -699,7 +699,7 @@ module ActiveMerchant #:nodoc:
       def api_request(method, endpoint, parameters = nil, options = {})
         raw_response = response = nil
         begin
-          raw_response = ssl_request(method, self.live_url + endpoint, post_data(parameters), headers(options))
+          raw_response = ssl_request(method, self.live_url + endpoint, post_data(parameters), headers(method, options))
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
