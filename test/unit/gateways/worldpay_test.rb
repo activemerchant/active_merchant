@@ -502,6 +502,19 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_custom_string_fields
+    options = @options.merge(custom_string_fields: { custom_string_field_1: 'testvalue1', custom_string_field_2: 'testvalue2' })
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<FraudSightData>\n), data
+      assert_match %r(<customStringFields>\n), data
+      assert_match %r(<customStringField1>testvalue1</customStringField1>), data
+      assert_match %r(<customStringField2>testvalue2</customStringField2>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_successful_purchase_with_sub_merchant_data
     options = @options.merge(@sub_merchant_options)
     response = stub_comms do

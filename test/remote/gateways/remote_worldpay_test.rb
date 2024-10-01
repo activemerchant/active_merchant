@@ -781,6 +781,20 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_purchase_with_custom_string_fields
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_string_fields: { custom_string_field_1: 'testvalue1', custom_string_field_2: 'testvalue2' }))
+    assert_success response
+    assert_equal true, response.params['ok']
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_failed_purchase_with_blank_custom_string_field
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_string_fields: { custom_string_field_1: '' }))
+    assert_failure response
+
+    assert_equal "The tag 'customStringField1' cannot be empty", response.message
+  end
+
   # Fails currently because the sandbox doesn't actually validate the stored_credential options
   # def test_failed_authorize_with_bad_stored_cred_options
   #   assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential_usage: 'FIRST'))

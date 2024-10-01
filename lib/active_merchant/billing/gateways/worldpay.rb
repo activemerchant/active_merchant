@@ -237,6 +237,7 @@ module ActiveMerchant #:nodoc:
               add_order_content(xml, options)
               add_payment_method(xml, money, payment_method, options)
               add_shopper(xml, options)
+              add_fraud_sight_data(xml, options)
               add_statement_narrative(xml, options)
               add_risk_data(xml, options[:risk_data]) if options[:risk_data]
               add_sub_merchant_data(xml, options[:sub_merchant_data]) if options[:sub_merchant_data]
@@ -788,6 +789,20 @@ module ActiveMerchant #:nodoc:
           xml.browser do
             xml.acceptHeader options[:accept_header]
             xml.userAgentHeader options[:user_agent]
+          end
+        end
+      end
+
+      def add_fraud_sight_data(xml, options)
+        return unless options[:custom_string_fields].is_a?(Hash)
+
+        xml.tag! 'FraudSightData' do
+          xml.tag! 'customStringFields' do
+            options[:custom_string_fields].each do |key, value|
+              # transform custom_string_field_1 into customStringField1, etc.
+              formatted_key = key.to_s.camelize(:lower).to_sym
+              xml.tag! formatted_key, value
+            end
           end
         end
       end
