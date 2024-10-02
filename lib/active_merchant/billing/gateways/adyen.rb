@@ -568,16 +568,28 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment, options, action = nil)
-        if payment.is_a?(String)
+        recurring_detail_reference = options[:recurring_detail_reference]
+
+        case payment
+        when String
           _, _, recurring_detail_reference = payment.split('#')
-          post[:selectedRecurringDetailReference] = recurring_detail_reference
           options[:recurring_contract_type] ||= 'RECURRING'
-        elsif payment.is_a?(Check)
+        when Check
           add_bank_account(post, payment, options, action)
         else
-          add_network_tokenization_card(post, payment, options) if payment.is_a?(NetworkTokenizationCreditCard) || options[:wallet_type] == :google_pay
+          add_network_tokenization_card(post, payment, options) if network_tokenization_payment?(payment, options)
           add_card(post, payment)
         end
+
+        add_recurring_detail_reference(post, recurring_detail_reference)
+      end
+
+      def network_tokenization_payment?(payment, options)
+        payment.is_a?(NetworkTokenizationCreditCard) || options[:wallet_type] == :google_pay
+      end
+
+      def add_recurring_detail_reference(post, recurring_detail_reference)
+        post[:selectedRecurringDetailReference] = recurring_detail_reference
       end
 
       def add_bank_account(post, bank_account, options, action)
