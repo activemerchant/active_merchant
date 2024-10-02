@@ -213,6 +213,15 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_successful_authorize_with_recurring_detail_reference
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(recurring_detail_reference: '12345'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'john.smith@test.com', JSON.parse(data)['shopperEmail']
+      assert_equal '12345', JSON.parse(data)['selectedRecurringDetailReference']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_adds_3ds1_standalone_fields
     eci = '05'
     cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
@@ -1378,6 +1387,13 @@ class AdyenTest < Test::Unit::TestCase
   def test_successful_purchase_with_network_token
     response = stub_comms do
       @gateway.purchase(@amount, @nt_credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_recurring_detail_reference
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(recurring_detail_reference: '12345'))
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end
