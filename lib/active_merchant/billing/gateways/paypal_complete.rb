@@ -104,20 +104,49 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_source(post, vault_id, options)
         post[:payment_source] ||= {}
-        payment_source = options[:payment_type] == "paypal_account" ? :paypal : :card
-        post[:payment_source][payment_source] = {
-          vault_id: vault_id,
-          experience_context: {
-            payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
-            brand_name: "Maxio",
-            locale: "en-US",
-            landing_page: "LOGIN",
-            shipping_preference: physical_retail?(options) ? "SET_PROVIDED_ADDRESS" : "NO_SHIPPING",
-            user_action: "PAY_NOW",
-            # Placeholder values
-            return_url: "https://example.com/returnUrl",
-            cancel_url: "https://example.com/cancelUrl"
+        post[:payment_source] = create_payment_source_body(options, vault_id)
+      end
+
+      def create_payment_source_body(options, vault_id)
+        payment_source_in_use = options[:payment_type] == "paypal_account" ? :paypal : :card
+        if payment_source_in_use == :card
+          {
+            "token": {
+              id: vault_id,
+              type: 'PAYMENT_METHOD_TOKEN'
+            },
+            stored_credential: sca_indicators, # this hash corresponds to the SCA payment indicators, which are needed to trigger RTAU
+            experience_context: experience_context_body(options)
           }
+        else
+          {
+            payment_source: {
+              vault_id: vault_id,
+              experience_context: experience_context_body(options)
+            }
+          }
+        end
+      end
+
+      def sca_indicators
+        {
+          payment_initiator: 'MERCHANT',
+          payment_type: 'RECURRING',
+          usage: 'SUBSEQUENT'
+        }
+      end
+
+      def experience_context_body(options)
+        {
+          payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
+          brand_name: "Maxio",
+          locale: "en-US",
+          landing_page: "LOGIN",
+          shipping_preference: physical_retail?(options) ? "SET_PROVIDED_ADDRESS" : "NO_SHIPPING",
+          user_action: "PAY_NOW",
+          # Placeholder values
+          return_url: "https://example.com/returnUrl",
+          cancel_url: "https://example.com/cancelUrl"
         }
       end
 
