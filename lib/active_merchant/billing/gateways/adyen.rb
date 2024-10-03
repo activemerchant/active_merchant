@@ -1006,7 +1006,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def ecommerce_shopper_interaction?(payment, options)
-        return true if payment.is_a?(NetworkTokenizationCreditCard) && !options[:switch_cryptogram_mapping_nt]
+        return true if payment.is_a?(NetworkTokenizationCreditCard)
         return true unless (stored_credential = options[:stored_credential])
 
         (stored_credential[:initial_transaction] && stored_credential[:initiator] == 'cardholder') ||
