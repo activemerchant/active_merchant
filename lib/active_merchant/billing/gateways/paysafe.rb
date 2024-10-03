@@ -58,6 +58,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
+        add_customer_data(post, payment, options) unless payment.is_a?(String)
+        add_merchant_details(post, options)
+        add_billing_address(post, options)
 
         commit(:post, 'standalonecredits', post, options)
       end
@@ -117,6 +120,7 @@ module ActiveMerchant #:nodoc:
         post[:profile][:firstName] = creditcard.first_name
         post[:profile][:lastName] = creditcard.last_name
         post[:profile][:email] = options[:email] if options[:email]
+        post[:profile][:merchantCustomerId] = options[:customer_id] if options[:customer_id]
         post[:customerIp] = options[:ip] if options[:ip]
       end
 
@@ -152,9 +156,9 @@ module ActiveMerchant #:nodoc:
         post[:firstName] = payment.first_name
         post[:lastName] = payment.last_name
         post[:dateOfBirth] = {}
-        post[:dateOfBirth][:year] = options[:date_of_birth][:year]
-        post[:dateOfBirth][:month] = options[:date_of_birth][:month]
-        post[:dateOfBirth][:day] = options[:date_of_birth][:day]
+        post[:dateOfBirth][:year] = options.dig(:date_of_birth, :year)
+        post[:dateOfBirth][:month] = options.dig(:date_of_birth, :month)
+        post[:dateOfBirth][:day] = options.dig(:date_of_birth, :day)
         post[:email] = options[:email] if options[:email]
         post[:ip] = options[:ip] if options[:ip]
 
