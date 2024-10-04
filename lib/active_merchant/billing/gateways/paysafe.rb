@@ -321,6 +321,7 @@ module ActiveMerchant #:nodoc:
         end
 
         post[:storedCredential][:initialTransactionId] = options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
+        post[:storedCredential][:externalInitialTransactionId] = options[:external_initial_transaction_id] if options[:external_initial_transaction_id]
       end
 
       def mastercard?(payment)

@@ -230,6 +230,32 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert_equal 'COMPLETED', response.message
   end
 
+  def test_successful_purchase_with_external_initial_transaction_id
+    initial_options = @options.merge(
+      external_initial_transaction_id: 'abc123',
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled'
+      }
+    )
+
+    initial_response = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_response
+    assert_not_nil initial_response.params['storedCredential']
+    network_transaction_id = initial_response.params['id']
+
+    stored_options = @options.merge(
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled',
+        network_transaction_id: network_transaction_id
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, stored_options)
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+  end
+
   # Merchant account must be setup to support funding transaction, and funding transaction type must be correct for the MCC
   def test_successful_purchase_with_correct_funding_transaction_type
     response = @gateway.purchase(@amount, @credit_card, @options.merge({ funding_transaction: 'SDW_WALLET_TRANSFER' }))
@@ -358,7 +384,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_equal "Error(s)- code:5023, message:Request method 'POST' not supported", response.message
+    assert_equal "Error(s)- code:5023, message:Request method 'POST' is not supported", response.message
   end
 
   def test_successful_verify
