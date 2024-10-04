@@ -115,6 +115,26 @@ class PaysafeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_external_initial_transaction_id
+    stored_credential_options = {
+      external_initial_transaction_id: 'abc123',
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled',
+        initiator: 'merchant'
+      }
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential_options))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"type":"TOPUP"}, data)
+      assert_match(%r{"occurrence":"SUBSEQUENT"}, data)
+      assert_match(%r{"externalInitialTransactionId":"abc123"}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_funding_transaction
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge({ funding_transaction: 'SDW_WALLET_TRANSFER' }))
