@@ -326,7 +326,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_descriptor(post, options)
-        post[:descriptor] = options[:description] if options[:description]
+        post[:descriptor] = truncate(options[:description], 32) if options[:description]
       end
 
       def parse(body)

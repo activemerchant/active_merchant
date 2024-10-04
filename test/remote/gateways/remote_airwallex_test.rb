@@ -146,6 +146,12 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     assert_match %r{Invalid card number}, response.message
   end
 
+  def test_descriptor_is_truncated_to_max_length
+    response = @gateway.verify(@credit_card, @options.merge(description: 'This description is longer than 32 characters.'))
+    assert_success response
+    assert_match %r{AUTHORIZED}, response.message
+  end
+
   def test_successful_cit_with_recurring_stored_credential
     auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential: @stored_credential_cit_options))
     assert_success auth

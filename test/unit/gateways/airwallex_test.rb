@@ -316,6 +316,15 @@ class AirwallexTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_purchase_truncates_descriptor
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(description: 'This description is longer than 32 characters.'))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/This description is longer than 32 characters./, data)
+      assert_match(/This description is longer than /, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_invalid_login
     assert_raise ArgumentError do
       AirwallexGateway.new(login: '', password: '')
