@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options = {})
         post = {}
+        add_description(post, options)
         post[:payment_id] = authorization
         post[:notification_url] = options[:notification_url]
         add_invoice(post, money, options) if money
@@ -90,14 +91,18 @@ module ActiveMerchant #:nodoc:
         add_payer(post, card, options)
         add_card(post, card, action, options)
         add_additional_data(post, options)
+        add_description(post, options)
         post[:order_id] = options[:order_id] || generate_unique_id
         post[:original_order_id] = options[:original_order_id] if options[:original_order_id]
-        post[:description] = options[:description] if options[:description]
       end
 
       def add_invoice(post, money, options)
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money))
+      end
+
+      def add_description(post, options)
+        post[:description] = options[:description] if options[:description]
       end
 
       def add_additional_data(post, options)

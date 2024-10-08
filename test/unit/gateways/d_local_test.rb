@@ -320,6 +320,14 @@ class DLocalTest < Test::Unit::TestCase
     assert_equal '5007', response.error_code
   end
 
+  def test_successful_refund_with_description
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.refund(@amount, @credit_card, @options.merge(description: 'test'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"description\":\"test\"/, data)
+    end.respond_with(successful_refund_response)
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 

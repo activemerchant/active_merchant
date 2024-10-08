@@ -297,6 +297,16 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_match 'Amount exceeded', response.message
   end
 
+  def test_successful_refund_with_description
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, @options.merge(notification_url: 'http://example.com', description: 'test'))
+    assert_success refund
+    assert_match 'The refund was paid', refund.message
+    assert_match 'test', refund.params['description']
+  end
+
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
