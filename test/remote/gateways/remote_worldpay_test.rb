@@ -115,6 +115,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         sub_tax_id: '987-65-4321'
       }
     }
+
     @apple_pay_network_token = network_tokenization_credit_card(
       '4895370015293175',
       month: 10,
@@ -201,6 +202,12 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_network_token
     assert response = @gateway.purchase(@amount, @nt_credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_network_token_with_shopper_ip_address
+    assert response = @gateway.purchase(@amount, @nt_credit_card, @options.merge(ip: '127.0.0.1'))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
@@ -669,6 +676,29 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_recurring_purchase_with_apple_pay_credentials
+    stored_credential_params = stored_credential(:initial, :recurring, :merchant)
+    assert auth = @gateway.authorize(@amount, @apple_pay_network_token, @options.merge({ stored_credential: stored_credential_params }))
+    assert_success auth
+    assert auth.authorization
+    assert auth.params['scheme_response']
+    assert auth.params['transaction_identifier']
+
+    assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
+    assert_success capture
+
+    @options[:order_id] = generate_unique_id
+    @options[:stored_credential] = stored_credential(:used, :recurring, :merchant, network_transaction_id: auth.params['transaction_identifier'])
+
+    assert next_auth = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+    assert next_auth.authorization
+    assert next_auth.params['scheme_response']
+    assert next_auth.params['transaction_identifier']
+
+    assert capture = @gateway.capture(@amount, next_auth.authorization, authorization_validated: true)
+    assert_success capture
+  end
+
   def test_successful_authorize_with_3ds_with_normalized_stored_credentials
     session_id = generate_unique_id
     stored_credential_params = stored_credential(:initial, :unscheduled, :merchant)
@@ -749,6 +779,20 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success response
     assert_equal true, response.params['ok']
     assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_custom_string_fields
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_string_fields: { custom_string_field_1: 'testvalue1', custom_string_field_2: 'testvalue2' }))
+    assert_success response
+    assert_equal true, response.params['ok']
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_failed_purchase_with_blank_custom_string_field
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_string_fields: { custom_string_field_1: '' }))
+    assert_failure response
+
+    assert_equal "The tag 'customStringField1' cannot be empty", response.message
   end
 
   # Fails currently because the sandbox doesn't actually validate the stored_credential options

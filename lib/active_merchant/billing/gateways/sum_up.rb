@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, money, options)
-        post[:checkout_reference] = options[:order_id]
+        post[:checkout_reference] = options[:partner_id] && options[:order_id] ? "#{options[:partner_id]}-#{options[:order_id]}" : options[:order_id]
         post[:amount]             = amount(money)
         post[:currency]           = options[:currency] || currency(money)
         post[:description]        = options[:description]

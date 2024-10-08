@@ -745,7 +745,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(success, url, method, response, options)
-        return response.dig('error', 'charge') || response.dig('error', 'setup_intent', 'id') || response['id'] unless success
+        return error_id(response, url) unless success
 
         if url == 'customers'
           [response['id'], response.dig('sources', 'data').first&.dig('id')].join('|')
@@ -755,6 +755,10 @@ module ActiveMerchant #:nodoc:
         else
           response['id']
         end
+      end
+
+      def error_id(response, url)
+        response.dig('error', 'charge') || response.dig('error', 'setup_intent', 'id') || response['id']
       end
 
       def message_from(success, response)

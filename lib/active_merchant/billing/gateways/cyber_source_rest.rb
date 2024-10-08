@@ -242,30 +242,47 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_tokenization_card(post, payment, options)
+        if options.dig(:stored_credential, :initiator) == 'merchant'
+          post[:paymentInformation][:tokenizedCard] = {
+            number: payment.number,
+            expirationMonth: payment.month,
+            expirationYear: payment.year,
+            type:  CREDIT_CARD_CODES[card_brand(payment).to_sym],
+            transactionType: payment.source == :network_token ? '3' : '1'
+          }
+        else
+          post[:paymentInformation][:tokenizedCard] = {
+            number: payment.number,
+            expirationMonth: payment.month,
+            expirationYear: payment.year,
+            cryptogram: payment.payment_cryptogram,
+            type:  CREDIT_CARD_CODES[card_brand(payment).to_sym],
+            transactionType: payment.source == :network_token ? '3' : '1'
+          }
+          add_apple_pay_google_pay_cryptogram(post, payment) unless payment.source == :network_token
+        end
+
         post[:processingInformation][:commerceIndicator] = 'internet' unless options[:stored_credential] || card_brand(payment) == 'jcb'
 
-        post[:paymentInformation][:tokenizedCard] = {
-          number: payment.number,
-          expirationMonth: payment.month,
-          expirationYear: payment.year,
-          cryptogram: payment.payment_cryptogram,
-          type:  CREDIT_CARD_CODES[card_brand(payment).to_sym],
-          transactionType: payment.source == :network_token ? '3' : '1'
-        }
+        add_payment_solution(post, payment)
+      end
 
+      def add_payment_solution(post, payment)
         if payment.source == :network_token && NT_PAYMENT_SOLUTION[payment.brand]
           post[:processingInformation][:paymentSolution] = NT_PAYMENT_SOLUTION[payment.brand]
         else
-          # Apple Pay / Google Pay
           post[:processingInformation][:paymentSolution] = WALLET_PAYMENT_SOLUTION[payment.source]
-          if card_brand(payment) == 'master'
-            post[:consumerAuthenticationInformation] = {
-              ucafAuthenticationData: payment.payment_cryptogram,
-              ucafCollectionIndicator: '2'
-            }
-          else
-            post[:consumerAuthenticationInformation] = { cavv: payment.payment_cryptogram }
-          end
+        end
+      end
+
+      def add_apple_pay_google_pay_cryptogram(post, payment)
+        if card_brand(payment) == 'master'
+          post[:consumerAuthenticationInformation] = {
+            ucafAuthenticationData: payment.payment_cryptogram,
+            ucafCollectionIndicator: '2'
+          }
+        else
+          post[:consumerAuthenticationInformation] = { cavv: payment.payment_cryptogram }
         end
       end
 
@@ -398,21 +415,18 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         return response['status'] if success_from(response)
 
-        response['errorInformation']['message'] || response['message']
+        response.dig('errorInformation', 'message') || response['message']
       end
 
       def authorization_from(response)
         id = response['id']
-        has_amount = response['orderInformation'] && response['orderInformation']['amountDetails'] && response['orderInformation']['amountDetails']['authorizedAmount']
-        amount = response['orderInformation']['amountDetails']['authorizedAmount'].delete('.') if has_amount
+        amount = response.dig('orderInformation', 'amountDetails', 'authorizedAmount')&.delete('.')
 
-        return id if amount.blank?
-
-        [id, amount].join('|')
+        amount.present? ? [id, amount].join('|') : id
       end
 
       def error_code_from(response)
-        response['errorInformation']['reason'] unless success_from(response)
+        response.dig('errorInformation', 'reason') unless success_from(response)
       end
 
       # This implementation follows the Cybersource guide on how create the request signature, see:

@@ -237,6 +237,7 @@ module ActiveMerchant #:nodoc:
               add_order_content(xml, options)
               add_payment_method(xml, money, payment_method, options)
               add_shopper(xml, options)
+              add_fraud_sight_data(xml, options)
               add_statement_narrative(xml, options)
               add_risk_data(xml, options[:risk_data]) if options[:risk_data]
               add_sub_merchant_data(xml, options[:sub_merchant_data]) if options[:sub_merchant_data]
@@ -663,12 +664,23 @@ module ActiveMerchant #:nodoc:
             end
             name = card_holder_name(payment_method, options)
             xml.cardHolderName name if name.present?
-            xml.cryptogram payment_method.payment_cryptogram unless options[:wallet_type] == :google_pay
+            xml.cryptogram payment_method.payment_cryptogram unless should_send_payment_cryptogram?(options, payment_method)
             eci = eci_value(payment_method, options)
             xml.eciIndicator eci if eci.present?
           end
+          add_shopper_id(xml, options, false)
           add_stored_credential_options(xml, options)
         end
+      end
+
+      def should_send_payment_cryptogram?(options, payment_method)
+        wallet_type_google_pay?(options) ||
+          payment_method_apple_pay?(payment_method) &&
+            merchant_initiated?(options)
+      end
+
+      def merchant_initiated?(options)
+        options.dig(:stored_credential, :initiator) == 'merchant'
       end
 
       def add_card_or_token(xml, payment_method, options)
@@ -696,13 +708,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_shopper_id(xml, options)
-        if options[:ip] && options[:session_id]
-          xml.session 'shopperIPAddress' => options[:ip], 'id' => options[:session_id]
-        else
-          xml.session 'shopperIPAddress' => options[:ip] if options[:ip]
-          xml.session 'id' => options[:session_id] if options[:session_id]
-        end
+      def add_shopper_id(xml, options, with_session_id = true)
+        session_params = {
+          'shopperIPAddress' => options[:ip],
+          'id' => with_session_id ? options[:session_id] : nil
+        }.compact
+
+        xml.session session_params if session_params.present?
       end
 
       def add_three_d_secure(xml, options)
@@ -750,7 +762,7 @@ module ActiveMerchant #:nodoc:
                  when 'unscheduled' then 'UNSCHEDULED'
                  end
         is_initial_transaction = options[:stored_credential][:initial_transaction]
-        stored_credential_params = generate_stored_credential_params(is_initial_transaction, reason)
+        stored_credential_params = generate_stored_credential_params(is_initial_transaction, reason, options[:stored_credential][:initiator])
 
         xml.storedCredentials stored_credential_params do
           xml.schemeTransactionIdentifier network_transaction_id(options) if network_transaction_id(options) && !is_initial_transaction
@@ -777,6 +789,20 @@ module ActiveMerchant #:nodoc:
           xml.browser do
             xml.acceptHeader options[:accept_header]
             xml.userAgentHeader options[:user_agent]
+          end
+        end
+      end
+
+      def add_fraud_sight_data(xml, options)
+        return unless options[:custom_string_fields].is_a?(Hash)
+
+        xml.tag! 'FraudSightData' do
+          xml.tag! 'customStringFields' do
+            options[:custom_string_fields].each do |key, value|
+              # transform custom_string_field_1 into customStringField1, etc.
+              formatted_key = key.to_s.camelize(:lower).to_sym
+              xml.tag! formatted_key, value
+            end
           end
         end
       end
@@ -1040,7 +1066,7 @@ module ActiveMerchant #:nodoc:
         when String
           token_type_and_details(payment_method)
         else
-          type = network_token?(payment_method) || options[:wallet_type] == :google_pay ? :network_token : :credit
+          type = network_token?(payment_method) || wallet_type_google_pay?(options) || payment_method_apple_pay?(payment_method) ? :network_token : :credit
 
           { payment_type: type }
         end
@@ -1050,6 +1076,16 @@ module ActiveMerchant #:nodoc:
         payment_method.respond_to?(:source) &&
           payment_method.respond_to?(:payment_cryptogram) &&
           payment_method.respond_to?(:eci)
+      end
+
+      def payment_method_apple_pay?(payment_method)
+        return false unless payment_method.is_a?(NetworkTokenizationCreditCard)
+
+        payment_method.source == :apple_pay
+      end
+
+      def wallet_type_google_pay?(options)
+        options[:wallet_type] == :google_pay
       end
 
       def token_type_and_details(token)
@@ -1085,8 +1121,8 @@ module ActiveMerchant #:nodoc:
         test? && options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
       end
 
-      def generate_stored_credential_params(is_initial_transaction, reason = nil)
-        customer_or_merchant = reason == 'RECURRING' && is_initial_transaction ? 'customerInitiatedReason' : 'merchantInitiatedReason'
+      def generate_stored_credential_params(is_initial_transaction, reason = nil, initiator = nil)
+        customer_or_merchant = initiator == 'cardholder' ? 'customerInitiatedReason' : 'merchantInitiatedReason'
 
         stored_credential_params = {}
         stored_credential_params['usage'] = is_initial_transaction ? 'FIRST' : 'USED'

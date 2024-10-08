@@ -43,6 +43,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         post = {}
+        add_idempotency(options)
         commit(:post, "payments/#{add_reference(authorization)}/capture", post)
       end
 
@@ -52,12 +53,14 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_metadata(post, options)
         add_ewallet(post, options)
+        add_idempotency(options)
 
         commit(:post, 'refunds', post)
       end
 
       def void(authorization, options = {})
         post = {}
+        add_idempotency(options)
         commit(:delete, "payments/#{add_reference(authorization)}", post)
       end
 
@@ -74,6 +77,7 @@ module ActiveMerchant #:nodoc:
         add_payment_fields(post, options)
         add_payment_urls(post, options, 'store')
         add_address(post, payment, options)
+        add_idempotency(options)
         commit(:post, 'customers', post)
       end
 

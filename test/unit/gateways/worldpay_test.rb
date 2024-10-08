@@ -388,7 +388,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"FIRST\" customerInitiatedReason\=\"RECURRING\"\>/, data)
+      assert_match(/<storedCredentials usage\=\"FIRST\" merchantInitiatedReason\=\"RECURRING\"\>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -502,6 +502,19 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_custom_string_fields
+    options = @options.merge(custom_string_fields: { custom_string_field_1: 'testvalue1', custom_string_field_2: 'testvalue2' })
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<FraudSightData>\n), data
+      assert_match %r(<customStringFields>\n), data
+      assert_match %r(<customStringField1>testvalue1</customStringField1>), data
+      assert_match %r(<customStringField2>testvalue2</customStringField2>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_successful_purchase_with_sub_merchant_data
     options = @options.merge(@sub_merchant_options)
     response = stub_comms do
@@ -530,6 +543,15 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @nt_credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match %r(<eciIndicator>05</eciIndicator>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_successful_authorize_with_network_token_with_shopper_ip_address
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options.merge(ip: '127.0.0.1', email: 'wow@example.com'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<session shopperIPAddress=\"127.0.0.1\"\/>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -1584,6 +1606,23 @@ class WorldpayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"RECURRING\"\>/, data)
       assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_recurring_apple_pay_with_ntid
+    stored_credential_params = stored_credential(:used, :recurring, :merchant, network_transaction_id: '3812908490218390214124')
+
+    @options.merge({
+      stored_credential: stored_credential_params,
+      stored_credential_transaction_id: '000000000000020005060720116005060',
+      wallet_type: :apple_pay
+    })
+    response = stub_comms do
+      @gateway.authorize(@amount, @apple_play_network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<EMVCO_TOKEN-SSL type="APPLEPAY">), data
+      refute_match %r(<cryptogram>), data
     end.respond_with(successful_authorize_response)
     assert_success response
   end

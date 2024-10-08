@@ -221,6 +221,15 @@ class DecidirTest < Test::Unit::TestCase
     assert_match '14, invalid_number', response.error_code
   end
 
+  def test_failed_purchase_with_unexpected_error_code
+    @gateway_for_purchase.expects(:ssl_request).returns(failed_purchase_response_with_unexpected_error)
+
+    response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal ' | processing_error', response.message
+    assert_match Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
+  end
+
   def test_successful_authorize
     @gateway_for_auth.expects(:ssl_request).returns(successful_authorize_response)
 
@@ -663,6 +672,12 @@ class DecidirTest < Test::Unit::TestCase
   def failed_purchase_with_invalid_field_response
     %(
       {\"error_type\":\"invalid_request_error\",\"validation_errors\":[{\"code\":\"invalid_param\",\"param\":\"installments\"}]}    )
+  end
+
+  def failed_purchase_response_with_unexpected_error
+    %(
+      {"id":7719351,"site_transaction_id":"73e3ed66-37b1-4c97-8f69-f9cb96422383","payment_method_id":1,"card_brand":"Visa","amount":100,"currency":"ars","status":"rejected","status_details":{"ticket":"7162","card_authorization_code":"","address_validation_code":null,"error":{"type":"processing_error","reason":{"id":-1,"description":"","additional_description":""}}},"date":"2019-06-21T17:57Z","customer":null,"bin":"400030","installments":1,"first_installment_expiration_date":null,"payment_type":"single","sub_payments":[],"site_id":"99999999","fraud_detection":null,"aggregate_data":null,"establishment_name":null,"spv":null,"confirmed":null,"pan":"11b076fbc8fa6a55783b2f5d03f6938d8a","customer_token":null,"card_data":"/tokens/7719351"}
+    )
   end
 
   def successful_authorize_response

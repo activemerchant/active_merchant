@@ -361,7 +361,12 @@ module ActiveMerchant #:nodoc:
         payload = raw_response['Ds_MerchantParameters']
         return Response.new(false, "#{raw_response['errorCode']} ERROR") unless payload
 
-        response = JSON.parse(Base64.decode64(payload)).transform_keys!(&:downcase).with_indifferent_access
+        begin
+          response = JSON.parse(Base64.decode64(payload)).transform_keys!(&:downcase).with_indifferent_access
+        rescue JSON::ParserError
+          response = JSON.parse(Base64.urlsafe_decode64(payload)).transform_keys!(&:downcase).with_indifferent_access
+        end
+
         return Response.new(false, 'Unable to verify response') unless validate_signature(payload, raw_response['Ds_Signature'], response[:ds_order])
 
         succeeded = success_from(response, options)
