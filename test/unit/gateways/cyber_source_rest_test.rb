@@ -463,6 +463,15 @@ class CyberSourceRestTest < Test::Unit::TestCase
     end.respond_with(successful_credit_response)
   end
 
+  def test_successful_credit_with_merchant_category_code
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, @options.merge(merchant_category_code: '1111'))
+    end.check_request do |_endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      assert_equal json_data['merchantInformation']['categoryCode'], '1111'
+    end.respond_with(successful_credit_response)
+  end
+
   def test_authorize_includes_reconciliation_id
     stub_comms do
       @gateway.authorize(100, @credit_card, order_id: '1', reconciliation_id: '181537')
@@ -487,6 +496,15 @@ class CyberSourceRestTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       json_data = JSON.parse(data)
       assert_equal json_data['orderInformation']['invoiceDetails']['invoiceNumber'], '1234567'
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_merchant_category_code
+    stub_comms do
+      @gateway.purchase(100, @credit_card, @options.merge(merchant_category_code: '1111'))
+    end.check_request do |_endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      assert_equal json_data['merchantInformation']['categoryCode'], '1111'
     end.respond_with(successful_purchase_response)
   end
 
