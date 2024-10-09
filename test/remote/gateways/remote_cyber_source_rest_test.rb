@@ -242,6 +242,17 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert response.params['_links']['void'].present?
   end
 
+  def test_successful_refund_with_merchant_category_code
+    purchase = @gateway.purchase(@amount, @visa_card, @options)
+    response = @gateway.refund(@amount, purchase.authorization, @options.merge(merchant_category_code: '1111'))
+
+    assert_success response
+    assert response.test?
+    assert_equal 'PENDING', response.message
+    assert response.params['id'].present?
+    assert response.params['_links']['void'].present?
+  end
+
   def test_failure_refund
     purchase = @gateway.purchase(@amount, @card_without_funds, @options)
     response = @gateway.refund(@amount, purchase.authorization, @options)
@@ -293,6 +304,16 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_nil response.params['_links']['capture']
   end
 
+  def test_successful_credit_with_merchant_category_code
+    response = @gateway.credit(@amount, @visa_card, @options.merge(merchant_category_code: '1111'))
+
+    assert_success response
+    assert response.test?
+    assert_equal 'PENDING', response.message
+    assert response.params['id'].present?
+    assert_nil response.params['_links']['capture']
+  end
+
   def test_failure_credit
     response = @gateway.credit(@amount, @card_without_funds, @options)
 
@@ -305,6 +326,15 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
   def test_successful_void
     authorize = @gateway.authorize(@amount, @visa_card, @options)
     response = @gateway.void(authorize.authorization, @options)
+    assert_success response
+    assert response.params['id'].present?
+    assert_equal 'REVERSED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
+  def test_successful_void_with_merchant_category_code
+    authorize = @gateway.authorize(@amount, @visa_card, @options)
+    response = @gateway.void(authorize.authorization, @options.merge(merchant_category_code: '1111'))
     assert_success response
     assert response.params['id'].present?
     assert_equal 'REVERSED', response.message
@@ -593,6 +623,14 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_level_2_data
     response = @gateway.purchase(@amount, @visa_card, @options.merge({ purchase_order_number: '13829012412' }))
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
+  def test_successful_purchase_with_merchant_catefory_code
+    response = @gateway.purchase(@amount, @visa_card, @options.merge(merchant_category_code: '1111'))
     assert_success response
     assert response.test?
     assert_equal 'AUTHORIZED', response.message

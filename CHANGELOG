@@ -66,6 +66,7 @@
 * Nuvei: Add ACH support [javierpedrozaing] #5269
 * Nuvei: Add GSF for verify method [javierpedrozaing] #5278
 * Nuvei: Add Google and Apple pay [javierpedrozaing] #5289
+* Cybersource and Cybersource Rest: Add the MCC field [yunnydang] #5301
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
