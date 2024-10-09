@@ -263,6 +263,18 @@ class PaysafeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_credit
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.credit(100, @credit_card, @options.merge({ email: 'profile@memail.com', customer_id: SecureRandom.hex(16) }))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r("profile":{.+"merchantCustomerId"), data)
+      assert_match(%r("profile":{.+"email"), data)
+      assert_match(%r("profile":{"firstName":"Longbob".+}), data)
+      assert_match(%r("profile":{.+"lastName"), data)
+      assert_match(%r("merchantDescriptor":{"dynamicDescriptor"), data)
+    end.respond_with(successful_credit_response)
+  end
+
   def test_merchant_ref_num_and_order_id
     options = @options.merge({ order_id: '12345678' })
     response = stub_comms(@gateway, :ssl_request) do
@@ -401,5 +413,9 @@ class PaysafeTest < Test::Unit::TestCase
 
   def successful_store_response
     '{"id":"bd4e8c66-b023-4b38-b499-bc6d447d1466","status":"ACTIVE","merchantCustomerId":"965d3aff71fb93343ee48513","locale":"en_US","firstName":"Longbob","lastName":"Longsen","dateOfBirth":{"year":1979,"month":1,"day":1},"paymentToken":"PnCQ1xyGCB4sOEq","phone":"111-222-3456","email":"profile@memail.com","addresses":[],"cards":[{"status":"ACTIVE","id":"77685b40-e953-4999-a161-d13b46a8232a","cardBin":"411111","lastDigits":"1111","cardExpiry":{"year":2022,"month":9},"holderName":"Longbob Longsen","cardType":"VI","cardCategory":"CREDIT","paymentToken":"Ct0RrnyIs4lizeH","defaultCardIndicator":true}]}'
+  end
+
+  def successful_credit_response
+    '{"id":"b40c327e-92d7-4026-a043-be1f1b03c08a","merchantRefNum":"b0ca10f1ab6b782e6bf8a43e17ff41f8","txnTime":"2024-10-02T19:00:27Z","status":"PENDING","gatewayReconciliationId":"2309329680","amount":100,"card":{"type":"VI", "lastDigits":"0000", "cardExpiry":{"month":9, "year":2025}, "issuingCountry":"US"},"profile":{"firstName":"Longbob", "lastName":"Longsen", "email":"profile@memail.com"},"billingDetails":{"street":"456 My Street","street2":"Apt 1","city":"Ottawa","state":"ON","country":"CA","zip":"K1C2N6","phone":"(555)555-5555"},"currencyCode":"USD","merchantDescriptor":{"dynamicDescriptor":"Store Purchase"},"links":[{"rel":"self","href":"https://api.test.paysafe.com/cardpayments/v1/accounts/1002179730/standalonecredits/b40c327e-92d7-4026-a043-be1f1b03c08a"}]}'
   end
 end
