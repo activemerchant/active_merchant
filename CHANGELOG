@@ -55,7 +55,6 @@
 * Worldpay: Add customStringFields [jcreiff] #5284
 * Airwallex: truncate descriptor field to 32 characters [jcreiff] #5292
 * DLocal: Add the description field for refund [yunnydang] #5296
-* Cybersource: Update order of XML fields [almalee24] #5266
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
