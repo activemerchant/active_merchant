@@ -196,9 +196,7 @@ module ActiveMerchant #:nodoc:
         # eg (latest_attempt -> payment_method_details -> card -> network_transaction_id)
         #
         # Being able to retrieve these fields enables payment flows that rely on MIT exemptions, e.g: off_session
-        commit(:post, "setup_intents/#{setup_intent_id}", {
-          'expand[]': 'latest_attempt'
-        }, options)
+        commit(:get, "setup_intents/#{setup_intent_id}?expand[]=latest_attempt", nil, options)
       end
 
       def authorize(money, payment_method, options = {})
