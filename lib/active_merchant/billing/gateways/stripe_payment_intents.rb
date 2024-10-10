@@ -256,7 +256,7 @@ module ActiveMerchant #:nodoc:
         if new_apple_google_pay_flow(payment_method, options)
           options[:customer] = customer(payment_method, options).params['id'] unless options[:customer]
           verify(payment_method, options.merge!(action: :store))
-        elsif payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
+        elsif payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
           result = add_payment_method_token(params, payment_method, options)
           return result if result.is_a?(ActiveMerchant::Billing::Response)
 
@@ -403,14 +403,6 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method_token(post, payment_method, options, responses = [])
         case payment_method
-        when StripePaymentToken
-          post[:payment_method_data] = {
-            type: 'card',
-            card: {
-              token: payment_method.payment_data['id'] || payment_method.payment_data
-            }
-          }
-          post[:payment_method] = payment_method.payment_data['id'] || payment_method.payment_data
         when String
           extract_token_from_string_and_maybe_add_customer_id(post, payment_method)
         when ActiveMerchant::Billing::CreditCard
@@ -691,7 +683,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_address(post, payment_method, options = {})
-        return if payment_method.nil? || payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(String)
+        return if payment_method.nil? || payment_method.is_a?(String)
 
         post[:payment_method_data] ||= {}
         if billing = options[:billing_address] || options[:address]

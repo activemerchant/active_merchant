@@ -88,18 +88,10 @@ module ActiveMerchant #:nodoc:
           return Response.new(false, direct_bank_error)
         end
 
-        MultiResponse.run do |r|
-          if payment.is_a?(ApplePayPaymentToken)
-            r.process { tokenize_apple_pay_token(payment) }
-            payment = StripePaymentToken.new(r.params['token']) if r.success?
-          end
-          r.process do
-            post = create_post_for_auth_or_purchase(money, payment, options)
-            add_application_fee(post, options) if emv_payment?(payment)
-            post[:capture] = 'false'
-            commit(:post, 'charges', post, options)
-          end
-        end.responses.last
+        post = create_post_for_auth_or_purchase(money, payment, options)
+        add_application_fee(post, options) if emv_payment?(payment)
+        post[:capture] = 'false'
+        commit(:post, 'charges', post, options)
       end
 
       # To create a charge on a card or a token, call
@@ -115,17 +107,9 @@ module ActiveMerchant #:nodoc:
           return Response.new(false, direct_bank_error)
         end
 
-        MultiResponse.run do |r|
-          if payment.is_a?(ApplePayPaymentToken)
-            r.process { tokenize_apple_pay_token(payment) }
-            payment = StripePaymentToken.new(r.params['token']) if r.success?
-          end
-          r.process do
-            post = create_post_for_auth_or_purchase(money, payment, options)
-            post[:card][:processing_method] = 'quick_chip' if quickchip_payment?(payment)
-            commit(:post, 'charges', post, options)
-          end
-        end.responses.last
+        post = create_post_for_auth_or_purchase(money, payment, options)
+        post[:card][:processing_method] = 'quick_chip' if quickchip_payment?(payment)
+        commit(:post, 'charges', post, options)
       end
 
       def capture(money, authorization, options = {})
@@ -199,12 +183,7 @@ module ActiveMerchant #:nodoc:
         params = {}
         post = {}
 
-        if payment.is_a?(ApplePayPaymentToken)
-          token_exchange_response = tokenize_apple_pay_token(payment)
-          params = { card: token_exchange_response.params['token']['id'] } if token_exchange_response.success?
-        elsif payment.is_a?(StripePaymentToken)
-          add_payment_token(params, payment, options)
-        elsif payment.is_a?(Check)
+        if payment.is_a?(Check)
           bank_token_response = tokenize_bank_account(payment)
           return bank_token_response unless bank_token_response.success?
 
@@ -253,17 +232,6 @@ module ActiveMerchant #:nodoc:
         end
 
         commit(:delete, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", nil, options)
-      end
-
-      def tokenize_apple_pay_token(apple_pay_payment_token, options = {})
-        token_response = api_request(:post, "tokens?pk_token=#{CGI.escape(apple_pay_payment_token.payment_data.to_json)}")
-        success = !token_response.key?('error')
-
-        if success && token_response.key?('id')
-          Response.new(success, nil, token: token_response)
-        else
-          Response.new(success, token_response['error']['message'])
-        end
       end
 
       def verify_credentials
@@ -368,12 +336,7 @@ module ActiveMerchant #:nodoc:
       def create_post_for_auth_or_purchase(money, payment, options)
         post = {}
 
-        if payment.is_a?(StripePaymentToken)
-          add_payment_token(post, payment, options)
-        else
-          add_creditcard(post, payment, options)
-        end
-
+        add_creditcard(post, payment, options)
         add_charge_details(post, money, payment, options)
         post
       end
@@ -535,10 +498,6 @@ module ActiveMerchant #:nodoc:
 
       def add_emv_creditcard(post, icc_data, options = {})
         post[:card] = { emv_auth_data: icc_data }
-      end
-
-      def add_payment_token(post, token, options = {})
-        post[:card] = token.payment_data['id']
       end
 
       def add_customer(post, payment, options)

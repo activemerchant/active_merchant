@@ -83,6 +83,7 @@
 * DLocal: Add the optional country field override [yunnydang] #5326
 * Nuvei: Adding account founding transaction  [javierpedrozaing] #5307
 * Nuvei: Add card holder name verification params [javierpedrozaing] #5312
+* Stripe: Remove StripePaymenToken & ApplePayPaymentToken [almalee24] #5304
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
