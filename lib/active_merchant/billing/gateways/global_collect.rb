@@ -297,7 +297,7 @@ module ActiveMerchant #:nodoc:
         post['mobilePaymentMethodSpecificInput'] = specifics_inputs
 
         if options[:use_encrypted_payment_data]
-          post['mobilePaymentMethodSpecificInput']['encryptedPaymentData'] = payment.payment_data
+          post['mobilePaymentMethodSpecificInput']['encryptedPaymentData'] = payment.payment_data.to_s&.gsub('=>', ':')
         else
           add_decrypted_payment_data(post, payment, options, expirydate)
         end
@@ -315,7 +315,7 @@ module ActiveMerchant #:nodoc:
                    'dpan' => payment.number
                  }
                when :google_pay
-                 payment.payment_data
+                 payment.payment_data.to_s&.gsub('=>', ':')
                end
 
         post['mobilePaymentMethodSpecificInput']["#{data_type}PaymentData"] = data if data

@@ -630,6 +630,8 @@ module ActiveMerchant #:nodoc:
         case options[:payment_type]
         when :pay_as_order
           add_amount_for_pay_as_order(xml, amount, payment_method, options)
+        when :encrypted_wallet
+          add_encrypted_wallet(xml, payment_method)
         when :network_token
           add_network_tokenization_card(xml, payment_method, options)
         else
@@ -681,6 +683,37 @@ module ActiveMerchant #:nodoc:
 
       def merchant_initiated?(options)
         options.dig(:stored_credential, :initiator) == 'merchant'
+      end
+
+      def add_encrypted_wallet(xml, payment_method)
+        source = encrypted_wallet_source(payment_method.source)
+
+        xml.paymentDetails do
+          xml.tag! "#{source}-SSL" do
+            if source == 'APPLEPAY'
+              add_encrypted_apple_pay(xml, payment_method)
+            else
+              add_encrypted_google_pay(xml, payment_method)
+            end
+          end
+        end
+      end
+
+      def add_encrypted_apple_pay(xml, payment_method)
+        xml.header do
+          xml.ephemeralPublicKey payment_method.payment_data.dig(:header, :ephemeralPublicKey)
+          xml.publicKeyHash payment_method.payment_data.dig(:header, :publicKeyHash)
+          xml.transactionId payment_method.payment_data.dig(:header, :transactionId)
+        end
+        xml.signature payment_method.payment_data[:signature]
+        xml.version payment_method.payment_data[:version]
+        xml.data payment_method.payment_data[:data]
+      end
+
+      def add_encrypted_google_pay(xml, payment_method)
+        xml.protocolVersion payment_method.payment_data[:version]
+        xml.signature payment_method.payment_data[:signature]
+        xml.signedMessage payment_method.payment_data[:signed_message]
       end
 
       def add_card_or_token(xml, payment_method, options)
@@ -1066,16 +1099,17 @@ module ActiveMerchant #:nodoc:
         when String
           token_type_and_details(payment_method)
         else
-          type = network_token?(payment_method) || wallet_type_google_pay?(options) || payment_method_apple_pay?(payment_method) ? :network_token : :credit
-
-          { payment_type: type }
+          payment_method_type(payment_method, options)
         end
       end
 
-      def network_token?(payment_method)
-        payment_method.respond_to?(:source) &&
-          payment_method.respond_to?(:payment_cryptogram) &&
-          payment_method.respond_to?(:eci)
+      def payment_method_type(payment_method, options)
+        type = if payment_method.is_a?(NetworkTokenizationCreditCard)
+                 payment_method.encrypted_wallet? ? :encrypted_wallet : :network_token
+               else
+                 wallet_type_google_pay?(options) ? :network_token : :credit
+               end
+        { payment_type: type }
       end
 
       def payment_method_apple_pay?(payment_method)
@@ -1128,6 +1162,17 @@ module ActiveMerchant #:nodoc:
         stored_credential_params['usage'] = is_initial_transaction ? 'FIRST' : 'USED'
         stored_credential_params[customer_or_merchant] = reason if reason
         stored_credential_params
+      end
+
+      def encrypted_wallet_source(source)
+        case source
+        when :apple_pay
+          'APPLEPAY'
+        when :google_pay
+          'PAYWITHGOOGLE'
+        else
+          raise ArgumentError, 'Invalid encrypted wallet source'
+        end
       end
     end
   end

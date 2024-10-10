@@ -363,6 +363,18 @@ module ActiveMerchant #:nodoc:
         BRANDS_WITH_SPACES_IN_NUMBER.include?(self.class.brand?(self.number || number))
       end
 
+      def network_token?
+        false
+      end
+
+      def mobile_wallet?
+        false
+      end
+
+      def encrypted_wallet?
+        false
+      end
+
       private
 
       def filter_number(value)

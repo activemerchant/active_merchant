@@ -218,7 +218,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_token(xml, payment_method)
-        payment = payment_method.payment_data&.gsub('=>', ':')
+        payment = payment_method.payment_data.to_s&.gsub('=>', ':')
         case payment_method.source
         when :apple_pay
           xml.ssl_applepay_web url_encode(payment)

@@ -39,6 +39,10 @@ module ActiveMerchant #:nodoc:
         %i[apple_pay android_pay google_pay].include?(source)
       end
 
+      def encrypted_wallet?
+        payment_data.present?
+      end
+
       def type
         'network_tokenization'
       end
