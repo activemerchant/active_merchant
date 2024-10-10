@@ -803,11 +803,11 @@ module ActiveMerchant
       end
 
       def names_from(payment_source, address, options)
-        if payment_source && !payment_source.is_a?(PaymentToken) && !payment_source.is_a?(String)
+        if payment_source.is_a?(String)
+          [options[:first_name], options[:last_name]]
+        else
           first_name, last_name = split_names(address[:name])
           [(payment_source.first_name || first_name), (payment_source.last_name || last_name)]
-        else
-          [options[:first_name], options[:last_name]]
         end
       end
 
