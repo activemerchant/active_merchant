@@ -1,5 +1,5 @@
 require 'test_helper'
-
+ActiveMerchant::Billing::DLocalGateway.application_id = 'ActiveMerchant'
 class RemoteDLocalTest < Test::Unit::TestCase
   def setup
     @gateway = DLocalGateway.new(fixtures(:d_local))

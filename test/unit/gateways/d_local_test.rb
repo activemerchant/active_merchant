@@ -37,10 +37,12 @@ class DLocalTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_save
+    DLocalGateway.application_id = 'ActiveMerchant'
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(save: true))
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_endpoint, data, headers|
       assert_equal true, JSON.parse(data)['card']['save']
+      assert_equal 'ActiveMerchant', headers['X-Dlocal-Payment-Source']
     end.respond_with(successful_purchase_response)
   end
 

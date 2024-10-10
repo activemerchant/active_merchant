@@ -299,6 +299,7 @@ module ActiveMerchant #:nodoc:
           'Authorization' => signature(post, timestamp)
         }
         headers['X-Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
+        headers['X-Dlocal-Payment-Source'] = application_id if application_id
         headers
       end
 
