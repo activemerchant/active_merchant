@@ -171,6 +171,13 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_authorization_with_merchant_catefory_code
+    options = @options.merge(merchant_category_code: '1111')
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
   def test_successful_authorization_with_reconciliation_id
     options = @options.merge(reconciliation_id: '1936831')
     assert response = @gateway.authorize(@amount, @credit_card, options)
@@ -316,6 +323,13 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_purchase_with_merchant_catefory_code
+    options = @options.merge(merchant_category_code: '1111')
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
   def test_successful_auth_with_gratuity_amount
     options = @options.merge(gratuity_amount: '7.50')
 
@@ -368,6 +382,15 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_successful_response(purchase)
     assert void = @gateway.void(purchase.authorization, @options)
+    assert_successful_response(void)
+  end
+
+  def test_purchase_and_void_with_merchant_category_code
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(purchase)
+
+    void_options = @options.merge(merchant_category_code: '1111')
+    assert void = @gateway.void(purchase.authorization, void_options)
     assert_successful_response(void)
   end
 
@@ -694,6 +717,16 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_capture_with_merchant_category_code
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+
+    capture_options = @options.merge(merchant_category_code: '1111')
+    assert response = @gateway.capture(@amount, auth.authorization, capture_options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
   def test_successful_capture_with_solution_id
     ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
@@ -750,6 +783,15 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(refund)
   ensure
     ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_refund_with_merchant_category_code
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(response)
+
+    refund_options = @options.merge(merchant_category_code: '1111')
+    assert response = @gateway.refund(@amount, response.authorization, refund_options)
+    assert_successful_response(response)
   end
 
   def test_successful_refund_with_bank_account_follow_on
