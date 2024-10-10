@@ -1258,7 +1258,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_authorize_with_network_tokenization_credit_card
     response = stub_comms do
-      @gateway.authorize(@amount, @apple_pay_card, @options.merge(switch_cryptogram_mapping_nt: false))
+      @gateway.authorize(@amount, @apple_pay_card, @options)
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert_equal 'YwAAAAAABaYcCMX/OhNRQAAAAAA=', parsed['mpiData']['cavv']
@@ -1296,7 +1296,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_authorize_with_network_tokenization_credit_card_using_ld_option
     response = stub_comms do
-      @gateway.authorize(@amount, @apple_pay_card, @options.merge(switch_cryptogram_mapping_nt: true))
+      @gateway.authorize(@amount, @apple_pay_card, @options)
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert_equal 'YwAAAAAABaYcCMX/OhNRQAAAAAA=', parsed['mpiData']['cavv']
@@ -1308,7 +1308,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_authorize_with_network_tokenization_credit_card_no_apple_no_google
     response = stub_comms do
-      @gateway.authorize(@amount, @nt_credit_card, @options.merge(switch_cryptogram_mapping_nt: true))
+      @gateway.authorize(@amount, @nt_credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert_equal 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', parsed['mpiData']['tokenAuthenticationVerificationValue']
@@ -1323,7 +1323,7 @@ class AdyenTest < Test::Unit::TestCase
   def test_authorize_with_network_tokenization_credit_card_and_stored_credentials
     stored_credential = stored_credential(:merchant, :recurring)
     response = stub_comms do
-      @gateway.authorize(@amount, @nt_credit_card, @options.merge(switch_cryptogram_mapping_nt: true, stored_credential: stored_credential))
+      @gateway.authorize(@amount, @nt_credit_card, @options.merge(stored_credential: stored_credential))
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert_equal 'Ecommerce', parsed['shopperInteraction']

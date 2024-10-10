@@ -653,15 +653,13 @@ module ActiveMerchant #:nodoc:
           directoryResponse: 'Y',
           eci: payment.eci || '07'
         }
-        if payment.try(:network_token?) && options[:switch_cryptogram_mapping_nt]
-          post[:mpiData][:tokenAuthenticationVerificationValue] = payment.payment_cryptogram
-        else
-          post[:mpiData][:cavv] = payment.payment_cryptogram
-        end
+
+        cryptogram_field = payment.try(:network_token?) ? :tokenAuthenticationVerificationValue : :cavv
+        post[:mpiData][cryptogram_field] = payment.payment_cryptogram
       end
 
       def add_recurring_contract(post, options = {}, payment = nil)
-        return unless options[:recurring_contract_type] || (payment.try(:network_token?) && options[:switch_cryptogram_mapping_nt])
+        return unless options[:recurring_contract_type] || payment.try(:network_token?)
 
         post[:recurring] ||= {}
         post[:recurring][:contract] = options[:recurring_contract_type] if options[:recurring_contract_type]
@@ -670,7 +668,7 @@ module ActiveMerchant #:nodoc:
         post[:recurring][:recurringFrequency] = options[:recurring_frequency] if options[:recurring_frequency]
         post[:recurring][:tokenService] = options[:token_service] if options[:token_service]
 
-        if payment.try(:network_token?) && options[:switch_cryptogram_mapping_nt]
+        if payment.try(:network_token?)
           post[:recurring][:contract] = 'EXTERNAL'
           post[:recurring][:tokenService] = case payment.brand
                                             when 'visa' then 'VISATOKENSERVICE'
@@ -1002,7 +1000,7 @@ module ActiveMerchant #:nodoc:
 
       def skip_mpi_data?(options = {})
         # Skips adding the NT mpi data if it is explicitly skipped in options, or if it is MIT and not the initial transaction.
-        options[:skip_mpi_data] == 'Y' || options[:wallet_type] || (!options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'merchant' && options[:switch_cryptogram_mapping_nt])
+        options[:skip_mpi_data] == 'Y' || options[:wallet_type] || (!options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'merchant')
       end
 
       def ecommerce_shopper_interaction?(payment, options)
