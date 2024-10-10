@@ -1812,7 +1812,7 @@ class CyberSourceTest < Test::Unit::TestCase
     }
 
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(options_with_normalized_3ds, three_ds_exemption_type: CyberSourceGateway::THREEDS_EXEMPTIONS[:stored_credential], merchant_id: 'test', billing_address: {
+      @gateway.purchase(@amount, @credit_card, @options.merge(options_with_normalized_3ds, three_ds_exemption_type: 'stored_credential', merchant_id: 'test', billing_address: {
         'address1' => '221B Baker Street',
         'city' => 'London',
         'zip' => 'NW16XE',
