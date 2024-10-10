@@ -38,6 +38,25 @@ class RemoteNuveiTest < Test::Unit::TestCase
         }
       }
     }
+
+    @apple_pay_card = network_tokenization_credit_card(
+      '5204245250460049',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      month: '12',
+      year: Time.new.year + 2,
+      source: :apple_pay,
+      verification_value: 111,
+      eci: '5'
+    )
+
+    @google_pay_card = network_tokenization_credit_card(
+      '4761344136141390',
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '12',
+      year: Time.new.year + 2,
+      source: :google_pay,
+      eci: '5'
+    )
   end
 
   def test_transcript_scrubbing
@@ -268,5 +287,19 @@ class RemoteNuveiTest < Test::Unit::TestCase
     recurring_response = @gateway.purchase(@amount, @credit_card, stored_credential_options)
     assert_success recurring_response
     assert_match 'SUCCESS', recurring_response.params['status']
+  end
+
+  def test_successful_purchase_with_apple_pay
+    response = @gateway.purchase(@amount, @apple_pay_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert_not_nil response.params[:paymentOption][:userPaymentOptionId]
+  end
+
+  def test_successful_purchase_with_google_pay
+    response = @gateway.purchase(@amount, @google_pay_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert_not_nil response.params[:paymentOption][:userPaymentOptionId]
   end
 end
