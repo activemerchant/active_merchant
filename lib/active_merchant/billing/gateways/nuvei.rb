@@ -38,6 +38,7 @@ module ActiveMerchant
         add_customer_ip(post, options)
         add_stored_credentials(post, payment, options)
         post[:userTokenId] = options[:user_token_id] if options[:user_token_id]
+        post[:isPartialApproval] = options[:is_partial_approval] ? 1 : 0
 
         if options[:execute_threed]
           execute_3ds_flow(post, money, payment, transaction_type, options)
