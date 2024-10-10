@@ -1475,7 +1475,6 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     used_options = options.merge(
       order_id: generate_unique_id,
-      skip_mpi_data: 'Y',
       shopper_interaction: 'ContAuth',
       recurring_processing_model: 'Subscription',
       network_transaction_id: auth.network_transaction_id

@@ -805,6 +805,25 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_passing_shopper_interaction_moto
+    options = {
+      stored_credential: {
+        initiator: 'merchant',
+        recurring_type: 'unscheduled',
+        initial_transaction: true
+      },
+      shopper_interaction: 'Moto',
+      recurring_processing_model: nil,
+      order_id: '345123'
+    }
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"shopperInteraction":"Moto"/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_nonfractional_currency_handling
     stub_comms do
       @gateway.authorize(200, @credit_card, @options.merge(currency: 'JPY'))
@@ -1343,7 +1362,7 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @nt_credit_card, @options.merge(stored_credential: stored_credential))
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
-      assert_equal 'Ecommerce', parsed['shopperInteraction']
+      assert_equal 'ContAuth', parsed['shopperInteraction']
       assert_nil parsed['mpiData']
     end.respond_with(successful_authorize_response)
     assert_success response

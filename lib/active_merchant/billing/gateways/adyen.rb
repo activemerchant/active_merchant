@@ -658,7 +658,7 @@ module ActiveMerchant #:nodoc:
           post[:additionalData]['paymentdatasource.tokenized'] = options[:wallet_type] ? 'false' : 'true' if selected_brand == 'googlepay'
         end
 
-        return if skip_mpi_data?(options)
+        return if skip_mpi_data?(payment, options)
 
         post[:mpiData] = {
           authenticationResponse: 'Y',
@@ -1010,13 +1010,16 @@ module ActiveMerchant #:nodoc:
         response.authorization ? response.authorization.split('#')[2].nil? : true
       end
 
-      def skip_mpi_data?(options = {})
+      def skip_mpi_data?(payment, options = {})
+        return true if options[:shopper_interaction] == 'ContAuth' && options[:recurring_processing_model] == 'Subscription'
+        return true if options.dig(:stored_credential, :initiator) == 'merchant' && payment.is_a?(NetworkTokenizationCreditCard)
+
         # Skips adding the NT mpi data if it is explicitly skipped in options, or if it is MIT and not the initial transaction.
-        options[:skip_mpi_data] == 'Y' || options[:wallet_type] || (!options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'merchant')
+        options[:wallet_type] || (!options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'merchant')
       end
 
       def ecommerce_shopper_interaction?(payment, options)
-        return true if payment.is_a?(NetworkTokenizationCreditCard)
+        return true if payment.is_a?(NetworkTokenizationCreditCard) && options.dig(:stored_credential, :initiator) != 'merchant'
         return true unless (stored_credential = options[:stored_credential])
 
         (stored_credential[:initial_transaction] && stored_credential[:initiator] == 'cardholder') ||
