@@ -20,6 +20,13 @@ class NuveiTest < Test::Unit::TestCase
       ip_address: '127.0.0.1'
     }
 
+    @aft_options = {
+      is_aft: true,
+      aft_first_name: 'John',
+      aft_last_name: 'Doe',
+      aft_country: 'US'
+    }
+
     @three_ds_options = {
       execute_threed: true,
       redirect_url: 'http://www.example.com/redirect',
@@ -247,6 +254,32 @@ class NuveiTest < Test::Unit::TestCase
       if /payment/.match?(endpoint)
         json_data = JSON.parse(data)
         assert_match(/RECURRING/, json_data['authenticationOnlyType'])
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_account_funding_transactions_gsf
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(@aft_options))
+    end.check_request do |_method, endpoint, data, _headers|
+      if /payment/.match?(endpoint)
+        json_data = JSON.parse(data)
+        assert_match(@aft_options[:aft_first_name], json_data['recipientDetails']['firstName'])
+        assert_match(@aft_options[:aft_last_name], json_data['recipientDetails']['lastName'])
+        assert_match(@aft_options[:aft_country], json_data['recipientDetails']['country'])
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_account_funding_transactions
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(is_aft: true))
+    end.check_request do |_method, endpoint, data, _headers|
+      if /payment/.match?(endpoint)
+        json_data = JSON.parse(data)
+        assert_match(@credit_card.first_name, json_data['recipientDetails']['firstName'])
+        assert_match(@credit_card.last_name, json_data['recipientDetails']['lastName'])
+        assert_match(@options[:billing_address][:country], json_data['recipientDetails']['country'])
       end
     end.respond_with(successful_purchase_response)
   end
