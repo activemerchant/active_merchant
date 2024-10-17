@@ -205,6 +205,17 @@ class NuveiTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_partial_approval
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(55, @credit_card, @options.merge(is_partial_approval: true))
+    end.check_request(skip_response: true) do |_method, endpoint, data, _headers|
+      if /payment/.match?(endpoint)
+        json_data = JSON.parse(data)
+        assert_equal 1, json_data['isPartialApproval']
+      end
+    end
+  end
+
   def test_successful_credit
     stub_comms(@gateway, :ssl_request) do
       @gateway.credit(@amount, @credit_card, @options)

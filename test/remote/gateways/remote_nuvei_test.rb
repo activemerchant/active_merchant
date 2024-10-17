@@ -269,4 +269,12 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_success recurring_response
     assert_match 'SUCCESS', recurring_response.params['status']
   end
+
+  def test_successful_partial_approval
+    response = @gateway.authorize(55, @credit_card, @options.merge(is_partial_approval: true))
+    assert_success response
+    assert_equal '55', response.params['partialApproval']['requestedAmount']
+    assert_equal '55', response.params['partialApproval']['processedAmount']
+    assert_match 'APPROVED', response.message
+  end
 end
