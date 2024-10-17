@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         payment, amount = authorization.split('|')
-        post = build_void_request(amount)
+        post = build_void_request(options, amount)
         commit("payments/#{payment}/reversals", post)
       end
 
@@ -148,9 +148,10 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def build_void_request(amount = nil)
+      def build_void_request(options, amount = nil)
         { reversalInformation: { amountDetails: { totalAmount: nil } } }.tap do |post|
           add_reversal_amount(post, amount.to_i) if amount.present?
+          add_merchant_category_code(post, options)
         end.compact
       end
 
@@ -164,6 +165,7 @@ module ActiveMerchant #:nodoc:
           add_address(post, payment, options[:billing_address], options, :billTo)
           add_address(post, payment, options[:shipping_address], options, :shipTo)
           add_business_rules_data(post, payment, options)
+          add_merchant_category_code(post, options)
           add_partner_solution_id(post)
           add_stored_credentials(post, payment, options)
           add_three_ds(post, payment, options)
@@ -177,6 +179,7 @@ module ActiveMerchant #:nodoc:
           add_code(post, options)
           add_mdd_fields(post, options)
           add_amount(post, amount, options)
+          add_merchant_category_code(post, options)
           add_partner_solution_id(post)
         end.compact
       end
@@ -187,6 +190,7 @@ module ActiveMerchant #:nodoc:
           add_credit_card(post, payment)
           add_mdd_fields(post, options)
           add_amount(post, amount, options)
+          add_merchant_category_code(post, options)
           add_address(post, payment, options[:billing_address], options, :billTo)
           add_merchant_description(post, options)
         end.compact
@@ -328,6 +332,13 @@ module ActiveMerchant #:nodoc:
         merchant[:name] = options[:merchant_descriptor_name] if options[:merchant_descriptor_name]
         merchant[:address1] = options[:merchant_descriptor_address1] if options[:merchant_descriptor_address1]
         merchant[:locality] = options[:merchant_descriptor_locality] if options[:merchant_descriptor_locality]
+      end
+
+      def add_merchant_category_code(post, options)
+        return unless options[:merchant_category_code]
+
+        post[:merchantInformation] ||= {}
+        post[:merchantInformation][:categoryCode] = options[:merchant_category_code] if options[:merchant_category_code]
       end
 
       def add_stored_credentials(post, payment, options)
