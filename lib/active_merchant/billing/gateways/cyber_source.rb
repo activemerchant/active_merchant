@@ -370,6 +370,7 @@ module ActiveMerchant #:nodoc:
         add_threeds_services(xml, options)
         add_business_rules_data(xml, creditcard_or_reference, options)
         add_airline_data(xml, options)
+        add_merchant_category_code(xml, options)
         add_sales_slip_number(xml, options)
         add_payment_network_token(xml, creditcard_or_reference, options)
         add_payment_solution(xml, creditcard_or_reference)
@@ -413,6 +414,7 @@ module ActiveMerchant #:nodoc:
         add_mdd_fields(xml, options)
         add_capture_service(xml, request_id, request_token, options)
         add_business_rules_data(xml, authorization, options)
+        add_merchant_category_code(xml, options)
         add_tax_management_indicator(xml, options)
         add_issuer_additional_data(xml, options)
         add_merchant_description(xml, options)
@@ -433,6 +435,7 @@ module ActiveMerchant #:nodoc:
         if (!payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check') || reference_is_a_check?(payment_method_or_reference)
           add_check_service(xml)
           add_airline_data(xml, options)
+          add_merchant_category_code(xml, options)
           add_sales_slip_number(xml, options)
           add_tax_management_indicator(xml, options)
           add_issuer_additional_data(xml, options)
@@ -443,6 +446,7 @@ module ActiveMerchant #:nodoc:
           add_threeds_services(xml, options)
           add_business_rules_data(xml, payment_method_or_reference, options)
           add_airline_data(xml, options)
+          add_merchant_category_code(xml, options)
           add_sales_slip_number(xml, options)
           add_payment_network_token(xml, payment_method_or_reference, options)
           add_payment_solution(xml, payment_method_or_reference)
@@ -477,6 +481,7 @@ module ActiveMerchant #:nodoc:
           add_mdd_fields(xml, options)
           add_auth_reversal_service(xml, request_id, request_token)
         end
+        add_merchant_category_code(xml, options)
         add_issuer_additional_data(xml, options)
         add_partner_solution_id(xml)
 
@@ -492,6 +497,7 @@ module ActiveMerchant #:nodoc:
         add_credit_service(xml, request_id: request_id,
                                 request_token: request_token,
                                 use_check_service: reference_is_a_check?(identification))
+        add_merchant_category_code(xml, options)
         add_partner_solution_id(xml)
 
         xml.target!
@@ -1033,6 +1039,10 @@ module ActiveMerchant #:nodoc:
 
       def add_subscription_retrieve_service(xml, options)
         xml.tag! 'paySubscriptionRetrieveService', { 'run' => 'true' }
+      end
+
+      def add_merchant_category_code(xml, options)
+        xml.tag! 'merchantCategoryCode', options[:merchant_category_code] if options[:merchant_category_code]
       end
 
       def add_subscription(xml, options, reference = nil)
