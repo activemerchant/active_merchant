@@ -38,6 +38,8 @@ class RemoteNuveiTest < Test::Unit::TestCase
         }
       }
     }
+
+    @bank_account = check(account_number: '111111111', routing_number: '999999992')
   end
 
   def test_transcript_scrubbing
@@ -276,5 +278,12 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_equal '55', response.params['partialApproval']['requestedAmount']
     assert_equal '55', response.params['partialApproval']['processedAmount']
     assert_match 'APPROVED', response.message
+  end
+
+  def test_successful_authorize_with_bank_account
+    @options.update(billing_address: address.merge(country: 'US', state: 'MA'))
+    response = @gateway.authorize(1.25, @bank_account, @options)
+    assert_success response
+    assert_match 'PENDING', response.message
   end
 end

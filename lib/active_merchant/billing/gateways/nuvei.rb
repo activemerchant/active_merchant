@@ -93,7 +93,7 @@ module ActiveMerchant
 
         build_post_data(post)
         add_amount(post, money, options)
-        add_payment_method(post, payment, :cardData)
+        add_payment_method(post, payment, :cardData, options)
         add_address(post, payment, options)
         add_customer_ip(post, options)
 
@@ -149,7 +149,8 @@ module ActiveMerchant
           gsub(%r(("cardCvv\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("merchantId\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("merchantSiteId\\?":\\?")\d+), '\1[FILTERED]').
-          gsub(%r(("merchantKey\\?":\\?")\d+), '\1[FILTERED]')
+          gsub(%r(("merchantKey\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r(("accountNumber\\?":\\?")\d+), '\1[FILTERED]')
       end
 
       private
@@ -162,6 +163,12 @@ module ActiveMerchant
         return unless options[:ip]
 
         post[:deviceDetails] = { ipAddress: options[:ip] }
+      end
+
+      def url_details(post, options)
+        return unless options[:notification_url]
+
+        post[:urlDetails] = { notificationUrl: options[:notification_url] }
       end
 
       def add_amount(post, money, options)
@@ -181,21 +188,36 @@ module ActiveMerchant
         }
       end
 
-      def add_payment_method(post, payment, key, options = {})
+      def get_last_four_digits(number)
+        number[-4..-1]
+      end
+
+      def add_bank_account(post, payment, options)
+        post[:paymentOption] = {
+          alternativePaymentMethod: {
+            paymentMethod: 'apmgw_ACH',
+            AccountNumber: payment.account_number,
+            RoutingNumber: payment.routing_number,
+            classic_ach_account_type: options[:account_type]
+          }
+        }
+      end
+
+      def add_payment_method(post, payment, key = :paymentOption, options = {})
         payment_data = payment.is_a?(CreditCard) ? credit_card_hash(payment) : payment
 
         if payment.is_a?(CreditCard)
           post[key] = key == :paymentOption ? { card: payment_data } : payment_data
+        elsif payment.is_a?(Check)
+          post[:userTokenId] = options[:user_token_id]
+          add_bank_account(post, payment, options)
+          url_details(post, options)
         else
           post[key] = {
             userPaymentOptionId: payment_data,
             card: { CVV: options[:cvv_code] }
           }
         end
-      end
-
-      def get_last_four_digits(number)
-        number[-4..-1]
       end
 
       def add_customer_names(full_name, payment_method)
@@ -380,7 +402,7 @@ module ActiveMerchant
       end
 
       def success_from(response)
-        response[:status] == 'SUCCESS' && %w[APPROVED REDIRECT].include?(response[:transactionStatus])
+        response[:status] == 'SUCCESS' && %w[APPROVED REDIRECT PENDING].include?(response[:transactionStatus])
       end
 
       def authorization_from(action, response, post)
