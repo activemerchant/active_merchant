@@ -37,6 +37,7 @@ module ActiveMerchant
         add_address(post, payment, options)
         add_customer_ip(post, options)
         add_stored_credentials(post, payment, options)
+        add_account_funding_transaction(post, payment, options)
         post[:userTokenId] = options[:user_token_id] if options[:user_token_id]
 
         if options[:execute_threed]
@@ -64,6 +65,7 @@ module ActiveMerchant
         post = { relatedTransactionId: authorization }
 
         build_post_data(post)
+        add_account_funding_transaction(post, {}, options)
         add_amount(post, money, options)
 
         commit(:refund, post)
@@ -115,6 +117,18 @@ module ActiveMerchant
           storedCredentialsMode: stored_credentials_mode
         }
         post[:isRebilling] = stored_credentials_mode
+      end
+
+      def add_account_funding_transaction(post, payment = {}, options = {})
+        return unless options[:is_aft]
+
+        recipient_details = {
+          firstName: options[:aft_first_name] || payment.first_name,
+          lastName: options[:aft_last_name] || payment.last_name,
+          country: options.dig(:aft_country) || options.dig(:billing_address, :country)
+        }.compact
+
+        post[:recipientDetails] = recipient_details unless recipient_details.empty?
       end
 
       def set_reason_type(post, options)
