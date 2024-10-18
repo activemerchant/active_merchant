@@ -40,6 +40,14 @@ class NuveiTest < Test::Unit::TestCase
       }
     }
 
+    @three_d_secure_options = @options.merge({
+      three_d_secure: {
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        eci: '05'
+      }
+    })
+
     @post = {
       merchantId: 'test_merchant_id',
       merchantSiteId: 'test_merchant_site_id',
@@ -288,6 +296,30 @@ class NuveiTest < Test::Unit::TestCase
         assert_match(/ACCOUNTVERIFICATION/, json_data['authenticationOnlyType'])
         assert_equal '0', json_data['amount']
       end
+    end
+  end
+
+  def test_add_3ds_global_params
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @three_d_secure_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_equal 'jJ81HADVRtXfCBATEp01CJUAAAA', JSON.parse(data)['threeD']['cavv']
+      assert_equal '97267598-FAE6-48F2-8083-C23433990FBC', JSON.parse(data)['threeD']['dsTransactionId']
+      assert_equal '05', JSON.parse(data)['threeD']['eci']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_add_3ds_global_params_with_challenge_preference
+    chellange_preference_params = {
+      challenge_preference: 'ExemptionRequest',
+      exemption_request_reason: 'AccountVerification'
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @three_d_secure_options.merge(chellange_preference_params))
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      assert_equal 'ExemptionRequest', JSON.parse(data)['threeD']['externalMpi']['challenge_preference']
+      assert_equal 'AccountVerification', JSON.parse(data)['threeD']['externalMpi']['exemptionRequestReason']
     end
   end
 
