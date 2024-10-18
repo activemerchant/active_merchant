@@ -150,8 +150,7 @@ module ActiveMerchant
           gsub(%r(("merchantId\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("merchantSiteId\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("merchantKey\\?":\\?")\d+), '\1[FILTERED]').
-          gsub(%r(("accountNumber\\?":\\?")\d+), '\1[FILTERED]').
-          gsub(%r(("routingNumber\\?":\\?")\d+), '\1[FILTERED]')
+          gsub(%r(("accountNumber\\?":\\?")\d+), '\1[FILTERED]')
       end
 
       private
