@@ -41,7 +41,9 @@ module ActiveMerchant #:nodoc:
         add_fraud_fields(post, options)
         add_external_cardholder_authentication_data(post, options)
         add_threeds_exemption_data(post, options)
-        commit(:post, :authorize, post, options: options)
+        action = options[:action] || :authorize
+
+        commit(:post, action, post, options: options)
       end
 
       def capture(money, authorization, options = {})
@@ -67,9 +69,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(payment, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, payment, options) }
-          r.process { void(r.authorization, options) }
+        if ogone_direct?
+          MultiResponse.run(:use_first_response) do |r|
+            r.process { authorize(100, payment, options) }
+            r.process { void(r.authorization, options) }
+          end
+        else
+          authorize(0, payment, options.merge(action: :verify))
         end
       end
 
@@ -440,7 +446,7 @@ module ActiveMerchant #:nodoc:
         version = ogone_direct? ? 'v2' : 'v1'
         uri = "/#{version}/#{@options[:merchant_id]}/"
         case action
-        when :authorize
+        when :authorize, :verify
           uri + 'payments'
         when :capture
           capture_name = ogone_direct? ? 'capture' : 'approve'
@@ -534,6 +540,8 @@ module ActiveMerchant #:nodoc:
         when :refund
           refund_status = response.dig('status') || response.dig('payment', 'status')
           %w(REFUNDED REFUND_REQUESTED).include?(refund_status)
+        when :verify
+          response.dig('payment', 'statusOutput', 'statusCategory') == 'ACCOUNT_VERIFIED'
         else
           response['status'] != 'REJECTED'
         end
