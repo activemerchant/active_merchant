@@ -193,6 +193,12 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_match 'APPROVED', response.message
   end
 
+  def test_successful_verify_with_authentication_only_type
+    response = @gateway.verify(@credit_card, @options.merge({ authentication_only_type: 'MAINTAINCARD' }))
+    assert_match 'SUCCESS', response.params['status']
+    assert_match 'APPROVED', response.message
+  end
+
   def test_successful_general_credit
     credit_response = @gateway.credit(@amount, @credit_card, @options)
     assert_success credit_response
