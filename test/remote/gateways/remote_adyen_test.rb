@@ -567,6 +567,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_succesful_authorize_with_manual_capture
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(manual_capture: 'true'))
+    assert_success response
+    assert_equal 'Authorised', response.message
+  end
+
   def test_succesful_purchase_with_brand_override
     response = @gateway.purchase(@amount, @improperly_branded_maestro, @options.merge({ overwrite_brand: true, selected_brand: 'maestro' }))
     assert_success response

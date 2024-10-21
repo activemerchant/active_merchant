@@ -648,6 +648,14 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_manual_capture_sent
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(manual_capture: 'true'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'true', JSON.parse(data)['additionalData']['manualCapture']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_risk_data_complex_data
     stub_comms do
       risk_data = {

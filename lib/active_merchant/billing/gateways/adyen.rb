@@ -278,6 +278,7 @@ module ActiveMerchant #:nodoc:
         post[:additionalData][:industryUsage] = options[:industry_usage] if options[:industry_usage]
         post[:additionalData][:RequestedTestAcquirerResponseCode] = options[:requested_test_acquirer_response_code] if options[:requested_test_acquirer_response_code] && test?
         post[:additionalData][:updateShopperStatement] = options[:update_shopper_statement] if options[:update_shopper_statement]
+        post[:additionalData][:manualCapture] = options[:manual_capture] if options[:manual_capture]
       end
 
       def extract_and_transform(mapper, from)
