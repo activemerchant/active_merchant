@@ -58,7 +58,7 @@
 * Worldpay: Add support for Worldpay decrypted apple pay and google pay [dustinhaefele] #5271
 * Orbital: Update alternate_ucaf_flow [almalee24] #5282
 * Adyen: Remove cryptogram flag [almalee24] #5300
-* Cecabank: Include Apple Pay and Google Pay for recurring payments [gasn150] #5295
+* Cecabank: Include Apple Pay and Google Pay for recurring payments [gasb150] #5295
 * DLocal: Add X-Dlocal-Payment-Source to header [almalee24] #5281
 * StripePI: Update to retrieve_setup_intent and headers [almalee24] #5283
 * Upgrade rexml to 3.3.8 [raymzag] #5245
