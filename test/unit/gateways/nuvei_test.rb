@@ -380,6 +380,23 @@ class NuveiTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_authorize_cardholder_name_verification
+    @options.merge!(perform_name_verification: true)
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_method, endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      if /payment/.match?(endpoint)
+        assert_match(%r(/payment), endpoint)
+        assert_match(/Auth/, json_data['transactionType'])
+        assert_equal 'true', json_data['cardHolderNameVerification']['performNameVerification']
+        assert_equal 'Longbob', @credit_card.first_name
+        assert_equal 'Longsen', @credit_card.last_name
+      end
+    end.respond_with(successful_authorize_response)
+  end
+
   private
 
   def three_ds_assertions(payment_option_card)
