@@ -101,7 +101,8 @@
 * Decidir and DecicirPlus: Add the wallet_id field [yunnydang] #5354
 * Worldpay: Update where to pass shopperIPAddress [almalee24] #5348
 * Braintree: Account for BraintreeError [almalee24] #5346
-* Worldpay: Fix stored credentials unscheduled reason type [Buitragox] #5352 
+* Worldpay: Fix stored credentials unscheduled reason type [Buitragox] #5352
+* StripePI: Update version to 2022-11-15 [almalee24] #5314
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

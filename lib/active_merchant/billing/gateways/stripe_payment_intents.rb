@@ -10,7 +10,7 @@ module ActiveMerchant # :nodoc:
       CREATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email save_payment_method]
       CONFIRM_INTENT_ATTRIBUTES = %i[receipt_email return_url save_payment_method setup_future_usage off_session]
       UPDATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email setup_future_usage]
-      DEFAULT_API_VERSION = '2020-08-27'
+      DEFAULT_API_VERSION = '2022-11-15'
       DIGITAL_WALLETS = {
         apple_pay: 'apple_pay',
         google_pay: 'google_pay_dpan'
@@ -54,7 +54,6 @@ module ActiveMerchant # :nodoc:
             request_three_d_secure(post, options)
             add_level_three(post, options)
             add_card_brand(post, options)
-            post[:expand] = ['charges.data.balance_transaction']
 
             CREATE_INTENT_ATTRIBUTES.each do |attribute|
               add_whitelisted_attribute(post, options, attribute)
@@ -65,7 +64,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def show_intent(intent_id, options)
-        commit(:get, "payment_intents/#{intent_id}", nil, options)
+        commit(:get, "payment_intents/#{intent_id}?expand[]=latest_charge.balance_transaction", nil, options)
       end
 
       def create_test_customer
@@ -183,7 +182,6 @@ module ActiveMerchant # :nodoc:
             post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
             post[:usage] = options[:usage] if %w(on_session off_session).include?(options[:usage])
             post[:description] = options[:description] if options[:description]
-            post[:expand] = ['latest_attempt']
 
             commit(:post, 'setup_intents', post, options)
           end
@@ -228,11 +226,11 @@ module ActiveMerchant # :nodoc:
 
       def refund(money, intent_id, options = {})
         if intent_id.include?('pi_')
-          intent = api_request(:get, "payment_intents/#{intent_id}", nil, options)
+          intent = api_request(:get, "payment_intents/#{intent_id}?expand[]=latest_charge", nil, options)
 
           return Response.new(false, intent['error']['message'], intent) if intent['error']
 
-          charge_id = intent.try(:[], 'charges').try(:[], 'data').try(:[], 0).try(:[], 'id')
+          charge_id = intent.try(:[], 'latest_charge').try(:[], 'id')
 
           if charge_id.nil?
             error_message = "No associated charge for #{intent['id']}"
@@ -316,6 +314,30 @@ module ActiveMerchant # :nodoc:
       end
 
       private
+
+      def card_from_response(response)
+        extract_payment_intent_details(response) ||
+          response.dig('latest_attempt', 'payment_method_details', 'card', 'checks') || super
+      end
+
+      def extract_payment_intent_details(response)
+        return nil if response['latest_charge'].nil? || response['latest_charge']&.is_a?(String)
+
+        response.dig('latest_charge', 'payment_method_details', 'card', 'checks')
+      end
+
+      def add_expand_parameters(method, url, post, options)
+        post[:expand] ||= []
+        post[:expand].concat(Array.wrap(options[:expand]).map(&:to_sym)).uniq!
+
+        return if method == :get
+
+        if url.include?('payment_intents')
+          post[:expand].concat(['latest_charge', 'latest_charge.balance_transaction'])
+        elsif url.include?('setup_intents')
+          post[:expand] << 'latest_attempt'
+        end
+      end
 
       def error_id(response, url)
         if url.end_with?('payment_intents')
