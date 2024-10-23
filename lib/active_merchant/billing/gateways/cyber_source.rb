@@ -39,6 +39,7 @@ module ActiveMerchant #:nodoc:
         delegated_authentication: 'delegatedAuthenticationExemptionIndicator',
         low_risk: 'riskAnalysisExemptionIndicator',
         low_value: 'lowValueExemptionIndicator',
+        stored_credential: 'stored_credential',
         trusted_merchant: 'trustedMerchantExemptionIndicator'
       }
       DEFAULT_COLLECTION_INDICATOR = 2
@@ -743,8 +744,13 @@ module ActiveMerchant #:nodoc:
       def add_payment_solution(xml, payment_method)
         return unless network_tokenization?(payment_method)
 
-        payment_solution = payment_method.network_token? ? NT_PAYMENT_SOLUTION[payment_method.brand] : @@wallet_payment_solution[payment_method.source]
-        xml.tag! 'paymentSolution', payment_solution if payment_solution
+        case payment_method.source
+        when :network_token
+          payment_solution = NT_PAYMENT_SOLUTION[payment_method.brand]
+          xml.tag! 'paymentSolution', payment_solution if payment_solution
+        when :apple_pay, :google_pay
+          xml.tag! 'paymentSolution', @@wallet_payment_solution[payment_method.source]
+        end
       end
 
       def add_issuer_additional_data(xml, options)
@@ -794,37 +800,38 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_auth_service(xml, payment_method, options)
-        xml.tag! 'ccAuthService', { 'run' => 'true' } do
-          if network_tokenization?(payment_method)
+        if network_tokenization?(payment_method)
+          if payment_method.source == :network_token
             add_auth_network_tokenization(xml, payment_method, options)
-          elsif options[:three_d_secure]
-            add_normalized_threeds_2_data(xml, payment_method, options)
-            add_threeds_exemption_data(xml, options)
-          elsif (indicator = options[:commerce_indicator] || stored_credential_commerce_indicator(options))
-            xml.tag!('commerceIndicator', indicator)
+          else
+            add_auth_wallet(xml, payment_method, options)
           end
-
-          unless options[:three_d_secure]
-            add_reconciliation_and_aggregator_id(xml, options)
-            add_optional_fields(xml, options)
+        else
+          xml.tag! 'ccAuthService', { 'run' => 'true' } do
+            if options[:three_d_secure]
+              add_normalized_threeds_2_data(xml, payment_method, options)
+              add_threeds_exemption_data(xml, options) if options[:three_ds_exemption_type]
+            else
+              indicator = options[:commerce_indicator] || stored_credential_commerce_indicator(options)
+              xml.tag!('commerceIndicator', indicator) if indicator
+            end
+            xml.tag!('aggregatorID', options[:aggregator_id]) if options[:aggregator_id]
+            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+            xml.tag!('firstRecurringPayment', options[:first_recurring_payment]) if options[:first_recurring_payment]
+            xml.tag!('mobileRemotePaymentType', options[:mobile_remote_payment_type]) if options[:mobile_remote_payment_type]
           end
         end
       end
 
-      def add_reconciliation_and_aggregator_id(xml, options)
-        xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
-        xml.tag!('aggregatorID', options[:aggregator_id]) if options[:aggregator_id]
-      end
-
-      def add_optional_fields(xml, options)
-        xml.tag!('firstRecurringPayment', options[:first_recurring_payment]) if options[:first_recurring_payment]
-        xml.tag!('mobileRemotePaymentType', options[:mobile_remote_payment_type]) if options[:mobile_remote_payment_type]
-      end
-
       def add_threeds_exemption_data(xml, options)
-        return unless (exemption = THREEDS_EXEMPTIONS[options[:three_ds_exemption_type]&.to_sym])
+        return unless options[:three_ds_exemption_type]
 
-        xml.tag!(exemption, '1')
+        exemption = options[:three_ds_exemption_type].to_sym
+
+        case exemption
+        when :authentication_outage, :corporate_card, :delegated_authentication, :low_risk, :low_value, :trusted_merchant
+          xml.tag!(THREEDS_EXEMPTIONS[exemption], '1')
+        end
       end
 
       def add_incremental_auth_service(xml, authorization, options)
@@ -836,28 +843,28 @@ module ActiveMerchant #:nodoc:
 
       def add_normalized_threeds_2_data(xml, payment_method, options)
         threeds_2_options = options[:three_d_secure]
-        cavv = threeds_2_options[:cavv]
         cc_brand = card_brand(payment_method).to_sym
 
-        return if cavv.blank? && infer_commerce_indicator?(options, cc_brand)
+        return if threeds_2_options[:cavv].blank? && infer_commerce_indicator?(options, cc_brand)
 
-        xml.tag!('cavv', cavv) if cavv && cc_brand != :master
+        xid = threeds_2_options[:xid]
+
+        xml.tag!('cavv', threeds_2_options[:cavv]) if threeds_2_options[:cavv] && cc_brand != :master
         xml.tag!('cavvAlgorithm', threeds_2_options[:cavv_algorithm]) if threeds_2_options[:cavv_algorithm]
         xml.tag!('paSpecificationVersion', threeds_2_options[:version]) if threeds_2_options[:version]
         xml.tag!('directoryServerTransactionID', threeds_2_options[:ds_transaction_id]) if threeds_2_options[:ds_transaction_id]
         xml.tag!('commerceIndicator', options[:commerce_indicator] || ECI_BRAND_MAPPING[cc_brand])
         xml.tag!('eciRaw', threeds_2_options[:eci]) if threeds_2_options[:eci]
 
-        if (xid = threeds_2_options[:xid])
+        if xid.present?
           xml.tag!('xid', xid)
-        elsif threeds_2_options[:version]&.start_with?('2') && cc_brand != :master && cavv
-          xml.tag!('xid', cavv)
+        elsif threeds_2_options[:version]&.start_with?('2') && cc_brand != :master
+          cavv = threeds_2_options[:cavv]
+          xml.tag!('xid', cavv) if cavv.present?
         end
 
-        add_reconciliation_and_aggregator_id(xml, options)
         xml.tag!('veresEnrolled', threeds_2_options[:enrolled]) if threeds_2_options[:enrolled]
         xml.tag!('paresStatus', threeds_2_options[:authentication_response_status]) if threeds_2_options[:authentication_response_status]
-        add_optional_fields(xml, options)
       end
 
       def infer_commerce_indicator?(options, cc_brand)
@@ -890,28 +897,54 @@ module ActiveMerchant #:nodoc:
         payment_method.is_a?(NetworkTokenizationCreditCard)
       end
 
-      def subsequent_wallet_auth(payment_method, options)
+      def subsequent_nt_apple_pay_auth(source, options)
         return unless options[:stored_credential] || options[:stored_credential_overrides]
-        return unless @@wallet_payment_solution[payment_method.source]
+        return unless @@wallet_payment_solution[source]
 
         options.dig(:stored_credential_overrides, :subsequent_auth) || options.dig(:stored_credential, :initiator) == 'merchant'
       end
 
       def add_auth_network_tokenization(xml, payment_method, options)
-        brand = card_brand(payment_method)
-
-        case payment_method.source
-        when :network_token
+        commerce_indicator = stored_credential_commerce_indicator(options) || 'internet'
+        xml.tag! 'ccAuthService', { 'run' => 'true' } do
           xml.tag!('networkTokenCryptogram', payment_method.payment_cryptogram)
-          xml.tag!('commerceIndicator', stored_credential_commerce_indicator(options) || 'internet')
-        else
-          return if brand == 'discover' && !options[:enable_cybs_discover_apple_pay]
+          xml.tag!('commerceIndicator', commerce_indicator)
+          xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+        end
+      end
 
-          if subsequent_wallet_auth(payment_method, options) && brand != 'american_express'
-            commerce_indicator = brand == 'discover' ? 'dipb' : 'internet'
-            xml.commerceIndicator(commerce_indicator)
-          else
-            default_wallet_values(xml, payment_method)
+      def add_auth_wallet(xml, payment_method, options)
+        commerce_indicator = 'internet' if subsequent_nt_apple_pay_auth(payment_method.source, options)
+
+        brand = card_brand(payment_method).to_sym
+
+        case brand
+        when :visa
+          xml.tag! 'ccAuthService', { 'run' => 'true' } do
+            xml.tag!('cavv', payment_method.payment_cryptogram) unless commerce_indicator
+            xml.commerceIndicator commerce_indicator.nil? ? ECI_BRAND_MAPPING[brand] : commerce_indicator
+            xml.tag!('xid', payment_method.payment_cryptogram) unless commerce_indicator
+            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+          end
+        when :master
+          xml.tag! 'ccAuthService', { 'run' => 'true' } do
+            xml.commerceIndicator commerce_indicator.nil? ? ECI_BRAND_MAPPING[brand] : commerce_indicator
+            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+          end
+        when :american_express
+          cryptogram = Base64.decode64(payment_method.payment_cryptogram)
+          xml.tag! 'ccAuthService', { 'run' => 'true' } do
+            xml.tag!('cavv', Base64.encode64(cryptogram[0...20]))
+            xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
+            xml.tag!('xid', Base64.encode64(cryptogram[20...40])) if cryptogram.bytes.count > 20
+            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+          end
+        when :discover
+          return unless options[:enable_cybs_discover_apple_pay]
+
+          xml.tag! 'ccAuthService', { 'run' => 'true' } do
+            xml.tag!('cavv', payment_method.payment_cryptogram) unless commerce_indicator
+            xml.tag!('commerceIndicator', 'dipb')
           end
         end
       end
@@ -920,7 +953,7 @@ module ActiveMerchant #:nodoc:
         return unless network_tokenization?(payment_method) && card_brand(payment_method).to_sym == :master
         return if payment_method.source == :network_token
 
-        commerce_indicator = 'internet' if subsequent_wallet_auth(payment_method, options)
+        commerce_indicator = 'internet' if subsequent_nt_apple_pay_auth(payment_method.source, options)
 
         xml.tag! 'ucaf' do
           xml.tag!('authenticationData', payment_method.payment_cryptogram) unless commerce_indicator
@@ -928,26 +961,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def default_wallet_values(xml, payment_method)
-        brand = card_brand(payment_method)
-        commerce_indicator = brand == 'discover' ? 'dipb' : ECI_BRAND_MAPPING[brand]
-        cryptogram = brand == 'american_express' ? Base64.decode64(payment_method.payment_cryptogram) : payment_method.payment_cryptogram
-        cavv = xid = cryptogram
-
-        if brand == 'american_express'
-          cavv = Base64.encode64(cryptogram[0...20])
-          xid = cryptogram.bytes.count > 20 ? Base64.encode64(cryptogram[20...40]) : nil
-        end
-
-        xml.tag! 'cavv', cavv
-        xml.tag! 'commerceIndicator', commerce_indicator
-        xml.tag! 'xid', xid if xid
-      end
-
       def add_payment_network_token(xml, payment_method, options)
         return unless network_tokenization?(payment_method)
 
-        transaction_type = payment_method.network_token? ? '3' : '1'
+        transaction_type = payment_method.source == :network_token ? '3' : '1'
         xml.tag! 'paymentNetworkToken' do
           xml.tag!('requestorID', options[:trid]) if transaction_type == '3' && options[:trid]
           xml.tag!('transactionType', transaction_type)
@@ -957,9 +974,9 @@ module ActiveMerchant #:nodoc:
       def add_capture_service(xml, request_id, request_token, options)
         xml.tag! 'ccCaptureService', { 'run' => 'true' } do
           xml.tag! 'authRequestID', request_id
-          xml.tag! 'reconciliationID', options[:reconciliation_id] if options[:reconciliation_id]
           xml.tag! 'authRequestToken', request_token
           xml.tag! 'gratuityAmount', options[:gratuity_amount] if options[:gratuity_amount]
+          xml.tag! 'reconciliationID', options[:reconciliation_id] if options[:reconciliation_id]
         end
       end
 
@@ -1148,7 +1165,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def threeds_stored_credential_exemption?(options)
-        options[:three_ds_exemption_type] == 'stored_credential'
+        options[:three_ds_exemption_type] == THREEDS_EXEMPTIONS[:stored_credential]
       end
 
       def add_partner_solution_id(xml)
