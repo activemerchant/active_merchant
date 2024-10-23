@@ -930,7 +930,7 @@ module ActiveMerchant #:nodoc:
 
       def default_wallet_values(xml, payment_method)
         brand = card_brand(payment_method)
-        commerce_indicator = brand == 'discover' ? 'dipb' : ECI_BRAND_MAPPING[brand.to_sym]
+        commerce_indicator = brand == 'discover' ? 'dipb' : ECI_BRAND_MAPPING[brand]
         cryptogram = brand == 'american_express' ? Base64.decode64(payment_method.payment_cryptogram) : payment_method.payment_cryptogram
         cavv = xid = cryptogram
 
