@@ -118,7 +118,9 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       invoice_number: '123',
       first_recurring_payment: true,
       mobile_remote_payment_type: 'A1',
-      vat_tax_rate: '1'
+      vat_tax_rate: '1',
+      reconciliation_id: '1936831',
+      aggregator_id: 'ABCDE'
     }
 
     @capture_options = {
@@ -835,7 +837,8 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       '378282246310005',
       brand: 'american_express',
       eci: '05',
-      payment_cryptogram: long_cryptogram
+      payment_cryptogram: long_cryptogram,
+      source: :network_token
     )
 
     assert auth = @gateway.authorize(@amount, credit_card, @options)
@@ -886,6 +889,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('5555555555554444',
                                                    brand: 'master',
                                                    eci: '05',
+                                                   source: :network_token,
                                                    payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
 
     options = { ignore_avs: true, order_id: generate_unique_id, vat_tax_rate: 1.01 }
@@ -901,6 +905,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('5555555555554444',
                                                    brand: 'master',
                                                    eci: '05',
+                                                   source: :network_token,
                                                    payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
 
     options = { ignore_avs: true, order_id: generate_unique_id, vat_tax_rate: 1.01 }
@@ -1352,7 +1357,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
     }
 
-    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(three_ds_exemption_type: 'moto'))
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(three_ds_exemption_type: 'authentication_outage'))
     assert_successful_response(response)
   end
 
