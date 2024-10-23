@@ -3,8 +3,8 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class HpsGateway < Gateway
-      self.live_url = 'https://posgateway.secureexchange.net/Hps.Exchange.PosGateway/PosGatewayService.asmx?wsdl'
-      self.test_url = 'https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway/PosGatewayService.asmx?wsdl'
+      self.live_url = 'https://api2.heartlandportico.com/hps.exchange.posgateway/posgatewayservice.asmx'
+      self.test_url = 'https://cert.api2.heartlandportico.com/Hps.Exchange.PosGateway/PosGatewayService.asmx'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
