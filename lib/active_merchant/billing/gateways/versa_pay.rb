@@ -39,6 +39,22 @@ module ActiveMerchant #:nodoc:
         transact(0, credit_card, options, 'verify')
       end
 
+      def void(authorization, options = {})
+        commit('void', { transaction: authorization })
+      end
+
+      def refund(money, authorization, options = {})
+        post = {
+          amount_cents: money,
+          transaction: authorization
+        }
+        commit('refund', post)
+      end
+
+      def credit(money, payment_method, options = {})
+        transact(money, payment_method, options, 'credit')
+      end
+
       def supports_scrubbing?
         true
       end
@@ -253,7 +269,7 @@ module ActiveMerchant #:nodoc:
         when 200..412
           response.body
         else
-          raise ResponseError.new(response)
+          response.body || raise(ResponseError.new(response)) # some errors 500 has the error message
         end
       end
     end

@@ -74,7 +74,7 @@ class VersaPayTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, _headers|
       assert_match 'auth', endpoint
-      auth_purchase_assertions(data)
+      auth_purchase_credit_assertions(data)
     end.respond_with(successful_authorize_response)
     @gateway.authorize(@amount, @credit_card, @options)
   end
@@ -84,7 +84,7 @@ class VersaPayTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, _headers|
       assert_match 'sale', endpoint
-      auth_purchase_assertions(data)
+      auth_purchase_credit_assertions(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -158,6 +158,36 @@ class VersaPayTest < Test::Unit::TestCase
     assert_nil @gateway.send(:dig_cvv_code, first_transaction)
   end
 
+  def test_successful_void
+    stub_comms do
+      @gateway.void('transaction_ID')
+    end.check_request do |endpoint, data, _headers|
+      assert_match 'void', endpoint
+      data = JSON.parse(data)
+      assert_equal 'transaction_ID', data['transaction']
+    end.respond_with('{"success": true}')
+  end
+
+  def test_successful_refund
+    stub_comms do
+      @gateway.refund(@amount, 'transaction_ID')
+    end.check_request do |endpoint, data, _headers|
+      assert_match 'refund', endpoint
+      data = JSON.parse(data)
+      assert_equal @amount, data['amount_cents']
+      assert_equal 'transaction_ID', data['transaction']
+    end.respond_with('{"success": true}')
+  end
+
+  def test_successful_credit
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, _headers|
+      assert_match 'credit', endpoint
+      auth_purchase_credit_assertions(data)
+    end.respond_with('{"success": true}')
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -165,7 +195,7 @@ class VersaPayTest < Test::Unit::TestCase
 
   private
 
-  def auth_purchase_assertions(data)
+  def auth_purchase_credit_assertions(data)
     billing_address = @options[:billing_address]
     data = JSON.parse(data)
     assert_equal @amount.to_s, data['order']['amount_cents']
