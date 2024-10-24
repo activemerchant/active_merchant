@@ -19,6 +19,12 @@ class RemoteNuveiTest < Test::Unit::TestCase
       user_token_id: '123456'
     }
 
+    @aft_options = {
+      is_aft: true,
+      cardholder_first_name: 'John',
+      cardholder_last_name: 'Doe'
+    }
+
     @three_ds_options = {
       execute_threed: true,
       redirect_url: 'http://www.example.com/redirect',
@@ -324,5 +330,20 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'APPROVED', response.message
     assert_not_nil response.params[:paymentOption][:userPaymentOptionId]
+  end
+
+  def test_purchase_account_funding_transaction
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(@aft_options))
+    assert_success response
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_refund_account_funding_transaction
+    purchase_response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase_response
+
+    refund_response = @gateway.refund(@amount, purchase_response.authorization, @aft_options)
+    assert_success refund_response
+    assert_equal 'APPROVED', refund_response.message
   end
 end
