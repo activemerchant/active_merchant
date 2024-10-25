@@ -213,6 +213,15 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_successful_authorize_with_recurring_detail_reference
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(recurring_detail_reference: '12345'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'john.smith@test.com', JSON.parse(data)['shopperEmail']
+      assert_equal '12345', JSON.parse(data)['selectedRecurringDetailReference']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_adds_3ds1_standalone_fields
     eci = '05'
     cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
@@ -648,6 +657,14 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_manual_capture_sent
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(manual_capture: 'true'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'true', JSON.parse(data)['additionalData']['manualCapture']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_risk_data_complex_data
     stub_comms do
       risk_data = {
@@ -784,6 +801,25 @@ class AdyenTest < Test::Unit::TestCase
       assert_match(/"shopperInteraction":"ContAuth"/, data)
       assert_match(/"recurringProcessingModel":"Subscription"/, data)
       refute_includes data, 'mpiData'
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_passing_shopper_interaction_moto
+    options = {
+      stored_credential: {
+        initiator: 'merchant',
+        recurring_type: 'unscheduled',
+        initial_transaction: true
+      },
+      shopper_interaction: 'Moto',
+      recurring_processing_model: nil,
+      order_id: '345123'
+    }
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"shopperInteraction":"Moto"/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -1326,7 +1362,7 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @nt_credit_card, @options.merge(stored_credential: stored_credential))
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
-      assert_equal 'Ecommerce', parsed['shopperInteraction']
+      assert_equal 'ContAuth', parsed['shopperInteraction']
       assert_nil parsed['mpiData']
     end.respond_with(successful_authorize_response)
     assert_success response
@@ -1370,6 +1406,13 @@ class AdyenTest < Test::Unit::TestCase
   def test_successful_purchase_with_network_token
     response = stub_comms do
       @gateway.purchase(@amount, @nt_credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_recurring_detail_reference
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(recurring_detail_reference: '12345'))
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end

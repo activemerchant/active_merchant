@@ -65,6 +65,14 @@
 * Nuvei: Add partial approval feature [javierpedrozaing] #5250
 * Nuvei: Add ACH support [javierpedrozaing] #5269
 * Nuvei: Add GSF for verify method [javierpedrozaing] #5278
+* Nuvei: Add Google and Apple pay [javierpedrozaing] #5289
+* Cybersource and Cybersource Rest: Add the MCC field [yunnydang] #5301
+* Adyen: Add the manual_capture field [yunnydang] #5310
+* Versapay: First Implementation [gasb150] #5288
+* Adyen: Enable GSF recurring_detail_reference on other transactions [rubenmarindev] #5285
+* Adyen: Update skip_mpi_data [almalee24] #5306
+* Paysafe: Update fields in standalonecredits [almalee24] #5293
+* GlobalCollect: Add support for $0 Auth [almalee24] #5303
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

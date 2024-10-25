@@ -105,6 +105,14 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_merchant_category_code
+    stub_comms do
+      @gateway.purchase(100, @credit_card, @options.merge!(merchant_category_code: '1111'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<merchantCategoryCode>1111<\/merchantCategoryCode>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_purchase_with_purchase_totals_data
     stub_comms do
       @gateway.purchase(100, @credit_card, @options.merge(discount_management_indicator: 'T', purchase_tax_amount: 7.89, original_amount: 1.23, invoice_amount: 1.23))
@@ -119,6 +127,14 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.authorize(100, @credit_card, @options.merge(national_tax_indicator: national_tax_indicator))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<otherTax>\s+<nationalTaxIndicator>#{national_tax_indicator}<\/nationalTaxIndicator>\s+<\/otherTax>/m, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_successful_authorize_with_merchant_category_code
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(merchant_category_code: '1111'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<merchantCategoryCode>1111<\/merchantCategoryCode>/, data)
     end.respond_with(successful_authorization_response)
   end
 
@@ -739,6 +755,14 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
   end
 
+  def test_successful_capture_with_merchant_category_code
+    stub_comms do
+      @gateway.capture(100, '1846925324700976124593', @options.merge!(merchant_category_code: '1111'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<merchantCategoryCode>1111<\/merchantCategoryCode>/, data)
+    end.respond_with(successful_capture_response)
+  end
+
   def test_successful_credit_card_purchase_request
     @gateway.stubs(:ssl_post).returns(successful_capture_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -844,6 +868,14 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_success(response = @gateway.purchase(@amount, @elo_credit_card, @options))
 
     assert_success(@gateway.refund(@amount, response.authorization))
+  end
+
+  def test_successful_refund_with_merchant_category_code
+    stub_comms do
+      @gateway.refund(100, 'test;12345', @options.merge!(merchant_category_code: '1111'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<merchantCategoryCode>1111<\/merchantCategoryCode>/, data)
+    end.respond_with(successful_refund_response)
   end
 
   def test_successful_credit_to_card_request

@@ -1459,6 +1459,10 @@ verify:
   login: 'demo'
   password: 'password'
 
+versa_pay:
+  api_token: API_TOKEN
+  api_key: API_KEY
+
 viaklix:
   login: LOGIN
   password: PASSWORD
