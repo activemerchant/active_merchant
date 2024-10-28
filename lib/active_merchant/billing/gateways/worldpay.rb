@@ -798,7 +798,7 @@ module ActiveMerchant #:nodoc:
         stored_credential_params = generate_stored_credential_params(is_initial_transaction, reason, options[:stored_credential][:initiator])
 
         xml.storedCredentials stored_credential_params do
-          xml.schemeTransactionIdentifier network_transaction_id(options) if network_transaction_id(options) && !is_initial_transaction
+          xml.schemeTransactionIdentifier network_transaction_id(options) if network_transaction_id(options) && subsequent_non_cardholder_transaction?(options, is_initial_transaction)
         end
       end
 
@@ -809,8 +809,12 @@ module ActiveMerchant #:nodoc:
         stored_credential_params = generate_stored_credential_params(is_initial_transaction, options[:stored_credential_initiated_reason])
 
         xml.storedCredentials stored_credential_params do
-          xml.schemeTransactionIdentifier options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id] && !is_initial_transaction
+          xml.schemeTransactionIdentifier options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id] && subsequent_non_cardholder_transaction?(options, is_initial_transaction)
         end
+      end
+
+      def subsequent_non_cardholder_transaction?(options, is_initial_transaction)
+        !is_initial_transaction && options&.dig(:stored_credential, :initiator) != 'cardholder'
       end
 
       def add_shopper(xml, options)

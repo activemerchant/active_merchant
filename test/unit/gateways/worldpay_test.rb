@@ -608,6 +608,26 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_network_token_with_stored_credentials
+    response = stub_comms do
+      @gateway.purchase(@amount, @nt_credit_card, @options.merge(stored_credential_usage: 'FIRST',
+        stored_credential_transaction_id: '123', stored_credential: { initiator: 'merchant' }))
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_success_purchase_with_network_token_with_stored_credentials_with_cit
+    response = stub_comms do
+                 @gateway.purchase(@amount, @nt_credit_card, @options.merge(stored_credential_usage: 'FIRST',
+                   stored_credential_transaction_id: '123', stored_credential: { initiator: 'cardholder' }))
+               end.check_request do |_endpoint, data, _headers|
+      element = Nokogiri::XML(data)
+      scheme_transaction_identifier = element.xpath('//schemeTransactionIdentifier')
+      assert_empty(scheme_transaction_identifier, 'XML should not contain <schemeTransactionIdentifier> element')
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
   def test_successful_authorize_with_network_token_with_eci
     response = stub_comms do
       @gateway.authorize(@amount, @nt_credit_card, @options)
