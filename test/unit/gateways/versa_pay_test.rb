@@ -9,16 +9,13 @@ class VersaPayTest < Test::Unit::TestCase
     @amount = 100
     @options = {
       email: 'test@gmail.com',
-      billing_address: address.merge(name: 'Cure Tester'),
-      ip_address: '127.0.0.1'
+      billing_address: address.merge(name: 'Cure Tester')
     }
+    @test_url = @gateway.test_url
   end
 
   def test_required_client_id_and_client_secret
-    error = assert_raises ArgumentError do
-      VersaPayGateway.new
-    end
-
+    error = assert_raises(ArgumentError) { VersaPayGateway.new }
     assert_equal 'Missing required parameter: api_token', error.message
   end
 
@@ -39,50 +36,59 @@ class VersaPayTest < Test::Unit::TestCase
   end
 
   def test_build_order_request_url
-    action = :auth
-    assert_equal @gateway.send(:url, action), "#{@gateway.test_url}/api/gateway/v1/orders/auth"
+    action = 'auth'
+    assert_match %r{^#{Regexp.escape(@test_url)}/api/gateway/v1/orders/auth$}, @gateway.send(:url, action)
+  end
+
+  def test_build_store_unstore_request_url
+    action = 'store'
+    assert_match %r{^#{Regexp.escape(@test_url)}/api/gateway/v1/wallets$}, @gateway.send(:url, action)
+
+    action = 'unstore'
+    assert_match %r{^#{Regexp.escape(@test_url)}/api/gateway/v1/wallets/WT/methods/FT$}, @gateway.send(:url, action, { fund_token: 'FT', wallet_token: 'WT' })
+    # Test URL for 'wallets' action with missing tokens
+    assert_match %r{^#{Regexp.escape(@test_url)}/api/gateway/v1/wallets//methods/$}, @gateway.send(:url, action)
   end
 
   def test_error_code_from_errors
     # a HTTP 412 response structure
-    error = @gateway.send(:error_code_from, { 'success' => false, 'errors' => ['fund_address_unspecified'], 'response_code' => 999 })
+    error = @gateway.send(:error_code_from, { 'success' => false, 'errors' => ['fund_address_unspecified'], 'response_code' => 999 }, 'sale')
     assert_equal error, 'response_code: 999'
   end
 
   def test_error_code_from_gateway_error_code
-    error = @gateway.send(:error_code_from, declined_errors)
+    error = @gateway.send(:error_code_from, declined_errors, 'sale')
     assert_equal error, 'gateway_error_code: 567.005 | response_code: 999'
   end
 
   def test_message_from_successful_purchase
-    message = @gateway.send(:message_from, @gateway.send(:parse, successful_purchase_response))
+    message = @gateway.send(:message_from, @gateway.send(:parse, successful_purchase_response), 'sale')
     assert_equal message, 'Succeeded'
   end
 
   def test_message_from_failed_transaction_response
-    message = @gateway.send(:message_from, declined_errors)
+    message = @gateway.send(:message_from, declined_errors, 'sale')
     assert_equal message, 'gateway_error_message: DECLINED | gateway_response_errors: [gateway - DECLINED]'
   end
 
   def test_message_from_failed_transaction_response_412
-    message = @gateway.send(:message_from, { 'success' => false, 'errors' => ['fund_address_unspecified'], 'response_code' => 999 })
+    message = @gateway.send(:message_from, { 'success' => false, 'errors' => ['fund_address_unspecified'], 'response_code' => 999 }, 'sale')
     assert_equal message, 'errors: fund_address_unspecified'
   end
 
   def test_successful_authorize
-    stub_comms do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, _headers|
+    end.check_request do |_method, endpoint, data, _headers|
       assert_match 'auth', endpoint
       auth_purchase_credit_assertions(data)
     end.respond_with(successful_authorize_response)
-    @gateway.authorize(@amount, @credit_card, @options)
   end
 
   def test_successful_purchase
-    stub_comms do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, _headers|
+    end.check_request do |_method, endpoint, data, _headers|
       assert_match 'sale', endpoint
       auth_purchase_credit_assertions(data)
     end.respond_with(successful_purchase_response)
@@ -90,9 +96,9 @@ class VersaPayTest < Test::Unit::TestCase
 
   def test_successful_capture
     authorization = 'some_authorize'
-    stub_comms do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, authorization, @options)
-    end.check_request do |endpoint, data, _headers|
+    end.check_request do |_method, endpoint, data, _headers|
       assert_match 'capture', endpoint
       data = JSON.parse(data)
       assert_equal @amount, data['amount_cents']
@@ -159,9 +165,9 @@ class VersaPayTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    stub_comms do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.void('transaction_ID')
-    end.check_request do |endpoint, data, _headers|
+    end.check_request do |_method, endpoint, data, _headers|
       assert_match 'void', endpoint
       data = JSON.parse(data)
       assert_equal 'transaction_ID', data['transaction']
@@ -169,9 +175,9 @@ class VersaPayTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    stub_comms do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.refund(@amount, 'transaction_ID')
-    end.check_request do |endpoint, data, _headers|
+    end.check_request do |_method, endpoint, data, _headers|
       assert_match 'refund', endpoint
       data = JSON.parse(data)
       assert_equal @amount, data['amount_cents']
@@ -180,11 +186,45 @@ class VersaPayTest < Test::Unit::TestCase
   end
 
   def test_successful_credit
-    stub_comms do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.credit(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, _headers|
+    end.check_request do |_method, endpoint, data, _headers|
       assert_match 'credit', endpoint
       auth_purchase_credit_assertions(data)
+    end.respond_with('{"success": true}')
+  end
+
+  def test_successful_store
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options)
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_match 'wallets', endpoint
+      parsed_data = JSON.parse(data)
+      credit_card_assertions(parsed_data)
+      assert_include parsed_data, 'contact'
+      assert_equal parsed_data['contact']['email'], @options[:email]
+      credit_card_address_assertions(parsed_data)
+    end.respond_with('{"success": true}')
+  end
+
+  def test_successful_purchase_third_party_token
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, '||third_party_token', @options)
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_match 'sale', endpoint
+      parsed_data = JSON.parse(data)
+      assert_equal parsed_data['fund_token'], 'third_party_token'
+      billing_address_assertions(parsed_data)
+      invoice_assertions(parsed_data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_unstore
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.unstore('auth_token|wallet_token|fund_token')
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_match 'wallets/wallet_token/methods/fund_token', endpoint
+      assert_equal({}, JSON.parse(data))
     end.respond_with('{"success": true}')
   end
 
@@ -196,22 +236,46 @@ class VersaPayTest < Test::Unit::TestCase
   private
 
   def auth_purchase_credit_assertions(data)
+    parsed_data = JSON.parse(data)
+    invoice_assertions(parsed_data)
+    billing_address_assertions(parsed_data)
+    credit_card_assertions(parsed_data)
+    credit_card_address_assertions(parsed_data)
+  end
+
+  def credit_card_assertions(data)
+    assert_equal @credit_card.name, data['credit_card']['name']
+    assert_equal "0#{credit_card.month}", data['credit_card']['expiry_month']
+    assert_equal @credit_card.year, data['credit_card']['expiry_year']
+    assert_equal @credit_card.number, data['credit_card']['card_number']
+    assert_equal @credit_card.verification_value, data['credit_card']['cvv']
+  end
+
+  def credit_card_address_assertions(data)
     billing_address = @options[:billing_address]
-    data = JSON.parse(data)
-    assert_equal @amount.to_s, data['order']['amount_cents']
+
+    address = data['credit_card']['address']
+    assert_equal billing_address[:address1], address['address_1']
+    assert_equal billing_address[:city], address['city']
+    assert_equal 'ON', address['province']
+    assert_equal billing_address[:zip], address['postal_code']
+    assert_equal 'CAN', address['country']
+  end
+
+  def billing_address_assertions(data)
+    billing_address = @options[:billing_address]
     assert_equal @options[:email], data['contact']['email']
-    assert_equal 'USD', data['order']['currency']
     assert_equal billing_address[:company], data['order']['billing_name']
     assert_equal billing_address[:address1], data['order']['billing_address']
     assert_equal billing_address[:city], data['order']['billing_city']
     assert_equal 'CAN', data['order']['billing_country']
     assert_equal @options[:email], data['order']['billing_email']
     assert_equal billing_address[:phone], data['order']['billing_telephone']
-    assert_equal @credit_card.name, data['credit_card']['name']
-    assert_equal "0#{credit_card.month}", data['credit_card']['expiry_month']
-    assert_equal @credit_card.year, data['credit_card']['expiry_year']
-    assert_equal @credit_card.number, data['credit_card']['card_number']
-    assert_equal @credit_card.verification_value, data['credit_card']['cvv']
+  end
+
+  def invoice_assertions(data)
+    assert_equal @amount.to_s, data['order']['amount_cents']
+    assert_equal 'USD', data['order']['currency']
   end
 
   def successful_authorize_response
