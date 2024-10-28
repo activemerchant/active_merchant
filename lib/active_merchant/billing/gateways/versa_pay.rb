@@ -30,13 +30,43 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {
           amount_cents: money,
-          transaction: authorization
+          transaction: authorization.split('|').first
         }
         commit('capture', post)
       end
 
       def verify(credit_card, options = {})
         transact(0, credit_card, options, 'verify')
+      end
+
+      def void(authorization, options = {})
+        commit('void', { transaction: authorization.split('|').first })
+      end
+
+      def refund(money, authorization, options = {})
+        post = {
+          amount_cents: money,
+          transaction: authorization.split('|').first
+        }
+        commit('refund', post)
+      end
+
+      def credit(money, payment_method, options = {})
+        transact(money, payment_method, options, 'credit')
+      end
+
+      def store(payment_method, options = {})
+        post = {
+          contact: { email: options[:email] }
+        }
+        add_customer_data(post, options)
+        add_payment_method(post, payment_method, options)
+        commit('store', post)
+      end
+
+      def unstore(authorization, options = {})
+        _, wallet_token, fund_token = authorization.split('|')
+        commit('unstore', {}, :delete, { fund_token: fund_token, wallet_token: wallet_token })
       end
 
       def supports_scrubbing?
@@ -125,6 +155,9 @@ module ActiveMerchant #:nodoc:
             cvv: payment_method.verification_value
           }
           add_address(post[:credit_card], options, 'billing', 'payment_method')
+        elsif payment_method.is_a?(String)
+          fund_token = payment_method.split('|').last
+          post[:fund_token] = fund_token
         end
       end
 
@@ -138,35 +171,42 @@ module ActiveMerchant #:nodoc:
         }.with_indifferent_access
       end
 
-      def commit(action, post)
-        raw_response = ssl_post(url(action), post.to_json, request_headers)
+      def commit(action, post, method = :post, options = {})
+        raw_response = ssl_request(method, url(action, options), post.to_json, request_headers)
         response = parse(raw_response)
         first_transaction = response['transactions']&.first
 
         Response.new(
-          success_from(response),
-          message_from(response),
+          success_from(response, action),
+          message_from(response, action),
           response,
           authorization: authorization_from(response),
           avs_result: AVSResult.new(code: dig_avs_code(first_transaction)),
           cvv_result: CVVResult.new(dig_cvv_code(first_transaction)),
           test: test?,
-          error_code: error_code_from(response)
+          error_code: error_code_from(response, action)
         )
       end
 
-      def success_from(response)
-        response['success'] || false
+      def success_from(response, action)
+        case action
+        when 'store'
+          response['wallet_token'] || response['fund_token'] || false
+        when 'unstore'
+          response['fund_token'] || false
+        else
+          response['success'] || false
+        end
       end
 
-      def message_from(response)
-        return 'Succeeded' if success_from(response)
+      def message_from(response, action)
+        return 'Succeeded' if success_from(response, action)
 
         first_transaction = response['transactions']&.first
         gateway_response_errors = gateway_errors_message(response)
 
         response_message = {
-          errors: response['errors']&.join(', ').presence,
+          errors: response.dig('errors')&.join(', ').presence,
           gateway_error_message: first_transaction&.dig('gateway_error_message').presence,
           gateway_response_errors: gateway_response_errors.presence
         }.compact
@@ -175,11 +215,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response['transaction']
+        transaction = response['transaction']
+        wallet_token = response['wallet_token'] || response.dig('wallets', 0, 'token')
+        fund_token = response['fund_token'] || response.dig('wallets', 0, 'credit_cards', 0, 'token')
+        [transaction, wallet_token, fund_token].join('|')
       end
 
-      def error_code_from(response)
-        return if success_from(response)
+      def error_code_from(response, action)
+        return if success_from(response, action)
 
         first_transaction = response['transactions']&.first
         error_info = {
@@ -205,8 +248,16 @@ module ActiveMerchant #:nodoc:
         end.join(' , ')
       end
 
-      def url(endpoint)
-        "#{test? ? test_url : live_url}/api/gateway/v1/orders/#{endpoint}"
+      def url(endpoint, options = {})
+        case endpoint
+        when 'unstore'
+          parameters = "/#{options[:wallet_token]}/methods/#{options[:fund_token]}"
+          "#{test? ? test_url : live_url}/api/gateway/v1/wallets#{parameters}"
+        when 'store'
+          "#{test? ? test_url : live_url}/api/gateway/v1/wallets"
+        else
+          "#{test? ? test_url : live_url}/api/gateway/v1/orders/#{endpoint}"
+        end
       end
 
       def basic_auth
@@ -237,15 +288,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def find_cvv_avs_code(first_transaction, to_find)
-        neasted_response = first_transaction.dig(
+        nested_response = first_transaction.dig(
           'gateway_response',
           'gateway_response',
           'response', 'content',
           'create'
         )
-        return nil unless neasted_response.is_a?(Array)
+        return nil unless nested_response.is_a?(Array)
 
-        neasted_response.find { |x| x.dig('transaction', to_find) }&.dig('transaction', to_find)
+        nested_response.find { |x| x.dig('transaction', to_find) }&.dig('transaction', to_find)
       end
 
       def handle_response(response)
@@ -253,7 +304,7 @@ module ActiveMerchant #:nodoc:
         when 200..412
           response.body
         else
-          raise ResponseError.new(response)
+          response.body || raise(ResponseError.new(response)) # some errors 500 has the error message
         end
       end
     end

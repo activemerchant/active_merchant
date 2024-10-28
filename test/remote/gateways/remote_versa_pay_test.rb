@@ -29,7 +29,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_success response
     assert_equal response.message, 'Succeeded'
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, response.params['transaction']
+    assert_equal response.authorization, "#{response.params['transaction']}||"
     assert_equal response.params['transactions'][0]['action'], 'authorize'
     assert_nil response.error_code
   end
@@ -40,7 +40,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_success response
     assert_equal response.message, 'Succeeded'
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, response.params['transaction']
+    assert_equal response.authorization, "#{response.params['transaction']}||"
     assert_equal response.params['transactions'][0]['action'], 'authorize'
   end
 
@@ -50,7 +50,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal response.message, 'gateway_error_message: DECLINED | gateway_response_errors: [gateway - DECLINED]'
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, response.params['transaction']
+    assert_equal response.authorization, "#{response.params['transaction']}||"
     assert_equal response.params['transactions'][0]['action'], 'verify'
 
     assert_equal response.error_code, 'gateway_error_code: 567.005 | response_code: 999'
@@ -61,7 +61,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal response.message, 'gateway_error_message: DECLINED | gateway_response_errors: [gateway - DECLINED]'
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, response.params['transaction']
+    assert_equal response.authorization, "#{response.params['transaction']}||"
     assert_equal response.params['transactions'][0]['action'], 'verify'
 
     assert_equal response.error_code, 'gateway_error_code: 567.005 | response_code: 999'
@@ -72,7 +72,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, response.params['transaction']
+    assert_equal response.authorization, "#{response.params['transaction']}||"
     assert_equal response.params['transactions'][0]['action'], 'sale'
   end
 
@@ -107,7 +107,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
   def test_failed_purchase_no_found_credit_card
     response = @gateway.purchase(@amount, @no_valid_date_credit_card, @options)
     assert_failure response
-    assert_equal response.message, 'gateway_response_errors: [credit_card - token: Not found.]'
+    assert_equal response.message, 'errors: Validation failed: Credit card gateway token not found'
     assert_equal response.error_code, 'response_code: 999'
   end
 
@@ -120,7 +120,21 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
     assert_equal authorize.params['order'], response.params['order']
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, response.params['transaction']
+    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.params['transactions'][0]['action'], 'capture'
+  end
+
+  def test_successful_partial_capture
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_success authorize
+    response = @gateway.capture(@amount - 100, authorize.authorization, @options)
+    assert_success response
+
+    assert_equal 'Succeeded', response.message
+    assert_equal authorize.params['order'], response.params['order']
+    assert_equal @options[:order_id], response.params['order']
+    assert_equal response.authorization, "#{response.params['transaction']}||"
     assert_equal response.params['transactions'][0]['action'], 'capture'
   end
 
@@ -130,7 +144,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_success response
     assert_equal response.message, 'Succeeded'
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, response.params['transaction']
+    assert_equal response.authorization, "#{response.params['transaction']}||"
     assert_equal response.params['transactions'][0]['action'], 'verify'
   end
 
@@ -169,6 +183,100 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     # verify return both avs_response and cvv_response
     assert_equal response.avs_result, { 'code' => 'N', 'message' => "Street address and postal code do not match. For American Express: Card member's name, street address and postal code do not match.", 'postal_match' => 'N', 'street_match' => 'N' }
     assert_equal response.cvv_result, { 'code' => 'M', 'message' => 'CVV matches' }
+  end
+
+  def test_successful_void
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_success authorize
+    response = @gateway.void(authorize.authorization, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal authorize.params['order'], response.params['order']
+    assert_equal @options[:order_id], response.params['order']
+    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.params['transactions'][0]['action'], 'void'
+  end
+
+  def test_failed_void
+    response = @gateway.void('123456', @options)
+    assert_failure response
+    assert_equal response.message, 'errors: order_not_found' # come from a 500 HTTP error
+    assert_equal response.error_code, 'response_code: 250'
+  end
+
+  def test_successful_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    response = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal purchase.params['order'], response.params['order']
+    assert_equal @options[:order_id], response.params['order']
+    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.params['transactions'][0]['action'], 'refund'
+  end
+
+  def test_failed_refund
+    response = @gateway.refund(@amount, '123456', @options)
+    assert_failure response
+    assert_equal response.message, 'errors: order_not_found' # come from a 500 HTTP error
+    assert_equal response.error_code, 'response_code: 250'
+  end
+
+  def test_successful_credit
+    response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal @options[:order_id], response.params['order']
+    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.params['transactions'][0]['action'], 'credit'
+  end
+
+  def test_failed_credit
+    response = @gateway.credit(@amount, @no_valid_date_credit_card, @options)
+    assert_failure response
+    assert_equal response.message, 'errors: Validation failed: Credit card gateway token not found'
+    assert_equal response.error_code, 'response_code: 999'
+  end
+
+  def test_successful_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+
+    wallet_token = response.params['wallet_token']
+    fund_token = response.params['fund_token']
+    assert_equal response.authorization, "|#{wallet_token}|#{fund_token}"
+    assert_include response.params, 'wallet_token'
+    assert_include response.params, 'fund_token'
+    assert_include response.params, 'wallets'
+    assert_include response.params['wallets'][0], 'token'
+    assert_include response.params['wallets'][0], 'credit_cards'
+    assert_include response.params['wallets'][0]['credit_cards'][0], 'token'
+    assert_match response.params['wallets'][0]['token'], response.authorization
+    assert_match response.params['wallets'][0]['credit_cards'][0]['token'], response.authorization
+  end
+
+  def test_successful_purchase_after_store
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    response = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal @options[:order_id], response.params['order']
+    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.params['transactions'][0]['action'], 'sale'
+  end
+
+  def test_successful_unstore
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    fund_token = store.params['fund_token']
+    response = @gateway.unstore(store.authorization, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal response.authorization, "||#{fund_token}"
   end
 
   def test_transcript_scrubbing
