@@ -71,6 +71,7 @@ module ActiveMerchant #:nodoc:
         add_data_airline(post, options)
         add_data_lodging(post, options)
         add_metadata(post, options)
+        add_recurring_detail_reference(post, options)
         commit('authorise', post, options)
       end
 
@@ -115,7 +116,7 @@ module ActiveMerchant #:nodoc:
           post[:dateOfBirth] = options[:date_of_birth] if options[:date_of_birth]
           post[:nationality] = options[:nationality] if options[:nationality]
         end
-
+        add_recurring_detail_reference(post, options)
         commit(action, post, options)
       end
 
@@ -132,6 +133,7 @@ module ActiveMerchant #:nodoc:
         add_invoice_for_modification(post, money, options)
         add_reference(post, authorization, options)
         add_extra_data(post, nil, options)
+        add_recurring_detail_reference(post, options)
         commit('adjustAuthorisation', post, options)
       end
 
@@ -569,16 +571,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment, options, action = nil)
-        if payment.is_a?(String)
+        case payment
+        when String
           _, _, recurring_detail_reference = payment.split('#')
           post[:selectedRecurringDetailReference] = recurring_detail_reference
           options[:recurring_contract_type] ||= 'RECURRING'
-        elsif payment.is_a?(Check)
+        when Check
           add_bank_account(post, payment, options, action)
         else
-          add_network_tokenization_card(post, payment, options) if payment.is_a?(NetworkTokenizationCreditCard) || options[:wallet_type] == :google_pay
+          add_network_tokenization_card(post, payment, options) if network_tokenization_payment?(payment, options)
           add_card(post, payment)
         end
+      end
+
+      def network_tokenization_payment?(payment, options)
+        payment.is_a?(NetworkTokenizationCreditCard) || options[:wallet_type] == :google_pay
+      end
+
+      def add_recurring_detail_reference(post, options)
+        post[:selectedRecurringDetailReference] = options[:recurring_detail_reference] if options[:recurring_detail_reference].present?
       end
 
       def add_bank_account(post, bank_account, options, action)
@@ -647,7 +658,7 @@ module ActiveMerchant #:nodoc:
           post[:additionalData]['paymentdatasource.tokenized'] = options[:wallet_type] ? 'false' : 'true' if selected_brand == 'googlepay'
         end
 
-        return if skip_mpi_data?(options)
+        return if skip_mpi_data?(payment, options)
 
         post[:mpiData] = {
           authenticationResponse: 'Y',
@@ -999,13 +1010,16 @@ module ActiveMerchant #:nodoc:
         response.authorization ? response.authorization.split('#')[2].nil? : true
       end
 
-      def skip_mpi_data?(options = {})
+      def skip_mpi_data?(payment, options = {})
+        return true if options[:shopper_interaction] == 'ContAuth' && options[:recurring_processing_model] == 'Subscription'
+        return true if options.dig(:stored_credential, :initiator) == 'merchant' && payment.is_a?(NetworkTokenizationCreditCard)
+
         # Skips adding the NT mpi data if it is explicitly skipped in options, or if it is MIT and not the initial transaction.
-        options[:skip_mpi_data] == 'Y' || options[:wallet_type] || (!options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'merchant')
+        options[:wallet_type] || (!options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'merchant')
       end
 
       def ecommerce_shopper_interaction?(payment, options)
-        return true if payment.is_a?(NetworkTokenizationCreditCard)
+        return true if payment.is_a?(NetworkTokenizationCreditCard) && options.dig(:stored_credential, :initiator) != 'merchant'
         return true unless (stored_credential = options[:stored_credential])
 
         (stored_credential[:initial_transaction] && stored_credential[:initiator] == 'cardholder') ||
