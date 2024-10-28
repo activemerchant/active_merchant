@@ -11,6 +11,7 @@ class RemoteNuveiTest < Test::Unit::TestCase
     @challenge_credit_card = credit_card('2221008123677736', first_name: 'CL-BRW2', last_name: '')
     @three_ds_amount = 151 # for challenge = 151, for frictionless >= 150
     @frictionless_credit_card = credit_card('4000020951595032', first_name: 'FL-BRW2', last_name: '')
+    @credit_card_3ds = credit_card('4000020951595032')
 
     @options = {
       email: 'test@gmail.com',
@@ -40,6 +41,14 @@ class RemoteNuveiTest < Test::Unit::TestCase
     }
 
     @bank_account = check(account_number: '111111111', routing_number: '999999992')
+
+    @three_d_secure_options = @options.merge({
+      three_d_secure: {
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        eci: '05'
+      }
+    })
 
     @apple_pay_card = network_tokenization_credit_card(
       '5204245250460049',
@@ -310,6 +319,30 @@ class RemoteNuveiTest < Test::Unit::TestCase
     response = @gateway.authorize(1.25, @bank_account, @options)
     assert_success response
     assert_match 'PENDING', response.message
+  end
+
+  def test_failing_purchase_three_d_secure
+    @three_d_secure_options[:three_d_secure][:cavv] = 'wrong_cavv_value'
+    assert response = @gateway.purchase(@amount, @credit_card_3ds, @three_d_secure_options)
+    assert_failure response
+    assert_equal 'UNEXPECTED SYSTEM ERROR - PLEASE RETRY LATER', response.message
+    assert_match 'ERROR', response.params['transactionStatus']
+  end
+
+  def test_successful_purchase_with_three_d_secure
+    assert response = @gateway.purchase(@amount, @credit_card_3ds, @three_d_secure_options)
+    assert_success response
+    assert response.authorization
+    assert_equal 'APPROVED', response.message
+    assert_match 'SUCCESS', response.params['status']
+  end
+
+  def test_successful_purchase_three_d_secure_challenge_preference
+    assert response = @gateway.purchase(@amount, @credit_card_3ds, @three_d_secure_options.merge(challenge_preference: 'ExemptionRequest', exemption_request_reason: 'AccountVerification'))
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert_match 'SUCCESS', response.params['status']
+    assert response.authorization
   end
 
   def test_successful_purchase_with_apple_pay
