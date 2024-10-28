@@ -85,6 +85,7 @@
 * Nuvei: Add card holder name verification params [javierpedrozaing] #5312
 * Stripe: Remove StripePaymenToken & ApplePayPaymentToken [almalee24] #5304
 * HPS: Update API urls [jherreraa] #5313
+* MIT: Change test URL [Buitragox] #5335
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

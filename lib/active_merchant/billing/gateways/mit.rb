@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MitGateway < Gateway
       self.live_url = 'https://wpy.mitec.com.mx/ModuloUtilWS/activeCDP.htm'
-      self.test_url = 'https://scqa.mitec.com.mx/ModuloUtilWS/activeCDP.htm'
+      self.test_url = 'https://shoppingrc.mitec.com.mx/ModuloUtilWS/activeCDP.htm'
 
       self.supported_countries = ['MX']
       self.default_currency = 'MXN'
