@@ -18,6 +18,10 @@ class HpsTest < Test::Unit::TestCase
     }
   end
 
+  def test_api_version
+    assert_equal 'v3', @gateway.fetch_version
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_charge_response)
 

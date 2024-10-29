@@ -16,6 +16,11 @@ class ForteTest < Test::Unit::TestCase
     }
   end
 
+  def test_url
+    assert_equal 'https://api.forte.net/v2', @gateway.live_url
+    assert_equal 'https://sandbox.forte.net/api/v2', @gateway.test_url
+  end
+
   def test_successful_purchase
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
