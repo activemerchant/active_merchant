@@ -43,6 +43,9 @@ module ActiveMerchant # :nodoc:
 
       self.display_name = 'Braintree (Blue Platform)'
 
+      version Braintree::Configuration::API_VERSION
+      version Braintree::Version::String, :gem
+
       ERROR_CODES = {
         cannot_refund_if_unsettled: 91506
       }
