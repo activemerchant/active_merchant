@@ -127,6 +127,14 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     }
   end
 
+  def test_build_url
+    assert_equal "#{@gateway.test_url}/Recurring/v40/storeToken", @gateway.send(:build_url, 'store')
+    assert_equal "#{@gateway.test_url}/Payment/v40/authorise3d", @gateway.send(:build_url, 'finalize3ds')
+    assert_equal "#{@gateway.test_url}/Payout/v40/storeDetailAndSubmitThirdParty", @gateway.send(:build_url, 'storeDetailAndSubmitThirdParty')
+    assert_equal "#{@gateway.test_url}/Payout/v40/confirmThirdParty", @gateway.send(:build_url, 'confirmThirdParty')
+    assert_equal "#{@gateway.test_url}/Payment/v40/authorise", @gateway.send(:build_url, 'authorise')
+  end
+
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)

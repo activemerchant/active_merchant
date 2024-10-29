@@ -55,6 +55,7 @@ module ActiveMerchant # :nodoc:
     class Gateway
       include PostsData
       include CreditCardFormatting
+      include Versionable
 
       CREDIT_DEPRECATION_MESSAGE = 'Support for using credit to refund existing transactions is deprecated and will be removed from a future release of ActiveMerchant. Please use the refund method instead.'
       RECURRING_DEPRECATION_MESSAGE = 'Recurring functionality in ActiveMerchant is deprecated and will be removed in a future version. Please contact the ActiveMerchant maintainers if you have an interest in taking ownership of a separate gem that continues support for it.'
@@ -142,6 +143,8 @@ module ActiveMerchant # :nodoc:
       # Useful for things like the PayPal build notation (BN) id fields
       class_attribute :application_id, instance_writer: false
       self.application_id = nil
+
+      self.versions = {}
 
       attr_reader :options
 

@@ -18,6 +18,10 @@ class BraintreeBlueTest < Test::Unit::TestCase
     $VERBOSE = @old_verbose
   end
 
+  def test_api_version
+    assert_equal '6', @gateway.fetch_version
+  end
+
   def test_refund_legacy_method_signature
     Braintree::TransactionGateway.any_instance.expects(:refund).
       with('transaction_id', nil).
