@@ -426,7 +426,7 @@ module ActiveMerchant #:nodoc:
         return unless adding_network_token_card_data?(payment_method)
 
         post_data[:card] ||= {}
-        post_data[:card][:last4] = options[:last_4]
+        post_data[:card][:last4] = options[:last_4] || payment_method.number[-4..]
         post_data[:card][:network_token] = {}
         post_data[:card][:network_token][:number] = payment_method.number
         post_data[:card][:network_token][:exp_month] = payment_method.month
