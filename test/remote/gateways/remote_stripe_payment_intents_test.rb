@@ -1560,6 +1560,15 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'M', verify.cvv_result['code']
   end
 
+  def test_successful_verify_returns_card_three_3d_supported
+    options = {
+      customer: @customer,
+      billing_address: address
+    }
+    assert verify = @gateway.verify(@visa_card, options)
+    assert_equal true, verify.params.dig('three_d_secure_usage_supported')
+  end
+
   def test_failed_verify
     options = {
       customer: @customer

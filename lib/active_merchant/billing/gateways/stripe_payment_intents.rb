@@ -529,6 +529,8 @@ module ActiveMerchant #:nodoc:
         payment_method_response = create_payment_method(payment_method, options)
         return payment_method_response if payment_method_response.failure?
 
+        add_card_3d_secure_usage_supported(payment_method_response)
+
         responses << payment_method_response
         add_payment_method_token(post, payment_method_response.params['id'], options)
       end
@@ -731,6 +733,13 @@ module ActiveMerchant #:nodoc:
 
         name = [payment_method.first_name, payment_method.last_name].compact.join(' ')
         post[:billing_details][:name] = name
+      end
+
+      # This surfaces the three_d_secure_usage.supported field and saves it as an instance variable so that we can access it later on in the response
+      def add_card_3d_secure_usage_supported(response)
+        return unless response.params['card'] && response.params['card']['three_d_secure_usage']
+
+        @card_3d_supported = response.params['card']['three_d_secure_usage']['supported'] if response.params['card']['three_d_secure_usage']['supported']
       end
 
       def format_idempotency_key(options, suffix)

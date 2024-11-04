@@ -373,6 +373,16 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal 'succeeded', verify.params['status']
   end
 
+  def test_successful_verify_returns_card_three_3d_supported
+    @gateway.instance_variable_set(:@card_3d_supported, true)
+    @gateway.expects(:ssl_request).returns(successful_verify_response)
+
+    assert verify = @gateway.verify(@visa_token)
+    assert_success verify
+    assert_equal 'succeeded', verify.params['status']
+    assert_equal true, verify.params['three_d_secure_usage_supported']
+  end
+
   def test_successful_verify_google_pay
     stub_comms(@gateway, :ssl_request) do
       @gateway.verify(@google_pay, @options.merge(new_ap_gp_route: true))

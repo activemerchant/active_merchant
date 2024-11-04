@@ -628,9 +628,20 @@ module ActiveMerchant #:nodoc:
         response.merge!(headers)
       end
 
+      def add_card_response_field(response)
+        return unless @card_3d_supported.present?
+
+        card_details = {}
+        card_details['three_d_secure_usage_supported'] = @card_3d_supported if @card_3d_supported
+
+        response.merge!(card_details)
+      end
+
       def parse(body)
         response = JSON.parse(body)
         add_header_fields(response)
+        add_card_response_field(response)
+
         response
       end
 
