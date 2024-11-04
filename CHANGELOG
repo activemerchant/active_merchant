@@ -75,6 +75,7 @@
 * GlobalCollect: Add support for $0 Auth [almalee24] #5303
 * Versapay: Store and Unstore transactions [gasb150] #5315
 * Nuvei: Add 3DS Global [javierpedrozaing] #5308
+* StripePI: Last4 From Payment Method [nashton] #5322
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

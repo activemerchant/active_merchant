@@ -275,6 +275,17 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_not_nil(purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['network_token'])
   end
 
+  def test_successful_purchase_with_network_token_cc
+    options = {
+      currency: 'USD'
+    }
+
+    purchase = @gateway.purchase(@amount, @network_token_credit_card, options)
+    assert_equal(nil, purchase.responses.first.params.dig('token', 'card', 'tokenization_method'))
+    assert purchase.success?
+    assert_not_nil(purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['network_token'])
+  end
+
   def test_successful_purchase_with_google_pay_when_sending_the_billing_address
     options = {
       currency: 'GBP',

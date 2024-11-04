@@ -618,6 +618,22 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response_with_network_token_fields)
   end
 
+  def test_purchase_with_network_token_cc
+    options = {
+      currency: 'USD'
+    }
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @network_token_credit_card, options)
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_match(%r{/payment_intents}, endpoint)
+      assert_match('confirm=true', data)
+      assert_match('payment_method_data[type]=card', data)
+      assert_match('[card][last4]=5556', data)
+      assert_match('[card][network_token][number]=4000056655665556', data)
+    end.respond_with(successful_create_intent_response_with_network_token_fields)
+  end
+
   def test_purchase_with_shipping_options
     options = {
       currency: 'GBP',
