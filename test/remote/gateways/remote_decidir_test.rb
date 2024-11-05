@@ -9,6 +9,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
     @credit_card = credit_card('4507990000004905')
     @master_card_credit_card = credit_card('5299910010000015')
     @amex_credit_card = credit_card('373953192351004')
+    @patagonia_365_card = credit_card('5046562602769006')
     @diners_club_credit_card = credit_card('36463664750005')
     @cabal_credit_card = credit_card('5896570000000008')
     @naranja_credit_card = credit_card('5895627823453005')
@@ -61,6 +62,14 @@ class RemoteDecidirTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_amex
     response = @gateway_for_purchase.purchase(@amount, @amex_credit_card, @options)
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_patagonia_365
+    @patagonia_365_card.brand = 'patagonia_365'
+    response = @gateway_for_purchase.purchase(@amount, @patagonia_365_card, @options)
     assert_success response
     assert_equal 'approved', response.message
     assert response.authorization

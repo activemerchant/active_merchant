@@ -10,6 +10,7 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     @credit_card = credit_card('4484590159923090')
     @american_express = credit_card('376414000000009')
     @cabal = credit_card('5896570000000008')
+    @patagonia_365 = credit_card('5046562602769006')
     @visa_debit = credit_card('4517721004856075')
     @declined_card = credit_card('4000300011112220')
     @options = {
@@ -229,6 +230,17 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     response = @gateway_purchase.purchase(@amount, payment_reference, options)
     assert_success response
     assert_equal 63, response.params['payment_method_id']
+  end
+
+  def test_successful_purchase_with_card_brand_patagonia_365
+    options = @options.merge(card_brand: 'patagonia_365')
+
+    assert response = @gateway_purchase.store(@patagonia_365)
+    payment_reference = response.authorization
+
+    response = @gateway_purchase.purchase(@amount, payment_reference, options)
+    assert_success response
+    assert_equal 55, response.params['payment_method_id']
   end
 
   def test_successful_purchase_with_payment_method_id
