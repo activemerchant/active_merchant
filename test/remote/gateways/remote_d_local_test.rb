@@ -50,6 +50,20 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_match 'The payment was paid', response.message
   end
 
+  def test_successful_purchase_with_country_override
+    options = {
+      billing_address: address(country: 'Mexico'),
+      document: '71575743221',
+      currency: 'BRL',
+      country: 'Brazil'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+    assert_match 'BR', response.params['card']['country']
+  end
+
   def test_successful_purchase_with_ip_and_phone
     response = @gateway.purchase(@amount, @credit_card, @options.merge(ip: '127.0.0.1'))
     assert_success response

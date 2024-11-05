@@ -110,9 +110,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_country(post, card, options)
-        return unless address = options[:billing_address] || options[:address]
+        return unless (address = options[:billing_address] || options[:address]) || options[:country]
 
-        post[:country] = lookup_country_code(address[:country])
+        country = options[:country] ? lookup_country_code(options[:country]) : lookup_country_code(address[:country])
+        post[:country] = country
       end
 
       def lookup_country_code(country_field)

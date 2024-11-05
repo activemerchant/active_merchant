@@ -176,6 +176,14 @@ class DLocalTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_country_overrride
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(country: 'Brazil'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'BR', JSON.parse(data)['country']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_purchase_with_force_type
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(force_type: 'debit'))
