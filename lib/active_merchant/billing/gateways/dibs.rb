@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class DibsGateway < Gateway
       self.display_name = 'DIBS'
       self.homepage_url = 'http://www.dibspayment.com/'

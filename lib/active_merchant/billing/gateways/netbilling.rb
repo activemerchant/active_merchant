@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # To perform PCI Compliant Repeat Billing
     #
     #   Ensure that PCI Compliant Repeat Billing is enabled on your merchant account:

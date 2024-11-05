@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CheckoutV2Gateway < Gateway
       self.display_name = 'Checkout.com Unified Payments'
       self.homepage_url = 'https://www.checkout.com/'
@@ -576,7 +576,7 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, response, options),
           body,
-          authorization: authorization,
+          authorization:,
           error_code: error_code_from(succeeded, body, options),
           test: test?,
           avs_result: avs_result(response),

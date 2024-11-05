@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SimetrikGateway < Gateway
       self.test_url = 'https://payments.sta.simetrik.com/v1'
       self.live_url = 'https://payments.simetrik.com/v1'

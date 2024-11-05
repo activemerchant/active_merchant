@@ -1454,9 +1454,9 @@ class PaypalTest < Test::Unit::TestCase
         authentication_response_status: 'Y',
         eci: 'eci',
         cavv: 'cavv',
-        xid: xid,
-        ds_transaction_id: ds_transaction_id,
-        version: version
+        xid:,
+        ds_transaction_id:,
+        version:
       }
     }
   end

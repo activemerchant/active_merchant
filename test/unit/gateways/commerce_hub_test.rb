@@ -359,7 +359,7 @@ class CommerceHubTest < Test::Unit::TestCase
   def stored_credential_options(*args, ntid: nil)
     {
       order_id: '#1001',
-      stored_credential: stored_credential(*args, ntid: ntid)
+      stored_credential: stored_credential(*args, ntid:)
     }
   end
 

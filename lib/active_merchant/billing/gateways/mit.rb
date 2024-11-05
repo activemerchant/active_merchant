@@ -3,8 +3,8 @@ require 'openssl'
 require 'digest'
 require 'base64'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MitGateway < Gateway
       self.live_url = 'https://wpy.mitec.com.mx/ModuloUtilWS/activeCDP.htm'
       self.test_url = 'https://shoppingrc.mitec.com.mx/ModuloUtilWS/activeCDP.htm'

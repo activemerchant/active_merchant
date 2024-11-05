@@ -153,7 +153,7 @@ module ActiveMerchant
     def credit_card(number = '4242424242424242', options = {})
       number = number.is_a?(Integer) ? number.to_s : number
       defaults = {
-        number: number,
+        number:,
         month: default_expiration_date.month,
         year: default_expiration_date.year,
         first_name: 'Longbob',
@@ -177,7 +177,7 @@ module ActiveMerchant
 
     def network_tokenization_credit_card(number = '4242424242424242', options = {})
       defaults = {
-        number: number,
+        number:,
         month: default_expiration_date.month,
         year: default_expiration_date.year,
         first_name: 'Longbob',

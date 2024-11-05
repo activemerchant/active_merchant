@@ -1,6 +1,6 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-    class ModernPaymentsCimGateway < Gateway #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
+    class ModernPaymentsCimGateway < Gateway # :nodoc:
       self.test_url = 'https://secure.modpay.com/netservices/test/ModpayTest.asmx'
       self.live_url = 'https://secure.modpay.com/ws/modpay.asmx'
 

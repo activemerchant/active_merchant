@@ -426,10 +426,10 @@ class CredoraxTest < Test::Unit::TestCase
     xid = 'sample-xid'
     options_with_normalized_3ds = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        cavv: cavv,
-        xid: xid
+        version:,
+        eci:,
+        cavv:,
+        xid:
       }
     )
 
@@ -494,10 +494,10 @@ class CredoraxTest < Test::Unit::TestCase
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     options_with_normalized_3ds = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id
+        version:,
+        eci:,
+        cavv:,
+        ds_transaction_id:
       }
     )
 
@@ -516,9 +516,9 @@ class CredoraxTest < Test::Unit::TestCase
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     options_with_normalized_3ds = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        ds_transaction_id: ds_transaction_id
+        version:,
+        eci:,
+        ds_transaction_id:
       }
     )
 
@@ -1099,7 +1099,7 @@ class CredoraxTest < Test::Unit::TestCase
       description: 'AM test',
       currency: 'GBP',
       customer: '123',
-      stored_credential: stored_credential(*args, id: id)
+      stored_credential: stored_credential(*args, id:)
     }
   end
 

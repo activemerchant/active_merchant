@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class AdyenGateway < Gateway
       # we recommend setting up merchant-specific endpoints.
       # https://docs.adyen.com/developers/api-manual#apiendpoints
@@ -555,7 +555,7 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(money)
         amount = {
           value: localized_amount(money, currency),
-          currency: currency
+          currency:
         }
 
         post[:amount] = amount
@@ -565,7 +565,7 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(money)
         amount = {
           value: localized_amount(money, currency),
-          currency: currency
+          currency:
         }
         post[:modificationAmount] = amount
       end

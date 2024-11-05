@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class GlobalCollectGateway < Gateway
       class_attribute :preproduction_url
       class_attribute :ogone_direct_test
@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         add_threeds_exemption_data(post, options)
         action = options[:action] || :authorize
 
-        commit(:post, action, post, options: options)
+        commit(:post, action, post, options:)
       end
 
       def capture(money, authorization, options = {})
@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
         add_order(post, money, options, capture: true)
         add_customer_data(post, options)
         add_creator_info(post, options)
-        commit(:post, :capture, post, authorization: authorization)
+        commit(:post, :capture, post, authorization:)
       end
 
       def refund(money, authorization, options = {})
@@ -59,13 +59,13 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_refund_customer_data(post, options)
         add_creator_info(post, options)
-        commit(:post, :refund, post, authorization: authorization)
+        commit(:post, :refund, post, authorization:)
       end
 
       def void(authorization, options = {})
         post = nestable_hash
         add_creator_info(post, options)
-        commit(:post, :void, post, authorization: authorization)
+        commit(:post, :void, post, authorization:)
       end
 
       def verify(payment, options = {})
@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def inquire(authorization, options = {})
-        commit(:get, :inquire, nil, authorization: authorization)
+        commit(:get, :inquire, nil, authorization:)
       end
 
       def supports_scrubbing?

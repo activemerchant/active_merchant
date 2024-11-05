@@ -1,7 +1,7 @@
 require 'active_merchant/billing/gateways/cyber_source/cyber_source_common'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CyberSourceRestGateway < Gateway
       include ActiveMerchant::Billing::CyberSourceCommon
 
@@ -220,7 +220,7 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(amount)
         post[:orderInformation][:amountDetails] = {
           totalAmount: localized_amount(amount, currency),
-          currency: currency
+          currency:
         }
       end
 
@@ -444,10 +444,10 @@ module ActiveMerchant #:nodoc:
       # https://developer.cybersource.com/docs/cybs/en-us/payments/developer/all/rest/payments/GenerateHeader/httpSignatureAuthentication.html
       def get_http_signature(resource, digest, http_method = 'post', gmtdatetime = Time.now.httpdate)
         string_to_sign = {
-          host: host,
+          host:,
           date: gmtdatetime,
           "request-target": "#{http_method} /pts/v2/#{resource}",
-          digest: digest,
+          digest:,
           "v-c-merchant-id": @options[:merchant_id]
         }.map { |k, v| "#{k}: #{v}" }.join("\n").force_encoding(Encoding::UTF_8)
 
@@ -490,7 +490,7 @@ module ActiveMerchant #:nodoc:
         return unless mdd_fields.present?
 
         post[:merchantDefinedInformation] = mdd_fields.map do |key, value|
-          { key: key, value: value }
+          { key:, value: }
         end
       end
 

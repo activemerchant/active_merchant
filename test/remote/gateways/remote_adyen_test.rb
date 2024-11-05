@@ -377,12 +377,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
     authentication_response_status = 'Y'
     options = @options.merge(
       three_d_secure: {
-        eci: eci,
-        cavv: cavv,
-        cavv_algorithm: cavv_algorithm,
-        xid: xid,
-        enrolled: enrolled,
-        authentication_response_status: authentication_response_status
+        eci:,
+        cavv:,
+        cavv_algorithm:,
+        xid:,
+        enrolled:,
+        authentication_response_status:
       }
     )
 
@@ -407,12 +407,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     options = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id,
-        directory_response_status: directory_response_status,
-        authentication_response_status: authentication_response_status
+        version:,
+        eci:,
+        cavv:,
+        ds_transaction_id:,
+        directory_response_status:,
+        authentication_response_status:
       }
     )
 
@@ -935,11 +935,11 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_void_requires_unique_idempotency_key
     idempotency_key = SecureRandom.hex
-    options = @options.merge(idempotency_key: idempotency_key)
+    options = @options.merge(idempotency_key:)
     auth = @gateway.authorize(@amount, @credit_card, options)
     assert_success auth
 
-    assert void = @gateway.void(auth.authorization, idempotency_key: idempotency_key)
+    assert void = @gateway.void(auth.authorization, idempotency_key:)
     assert_failure void
 
     assert void = @gateway.void(auth.authorization, idempotency_key: "#{idempotency_key}-auto-void")
@@ -1044,8 +1044,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
     shopper_reference = response.params['additionalData']['recurring.shopperReference']
     recurring_detail_reference = response.params['additionalData']['recurring.recurringDetailReference']
 
-    assert response = @gateway.unstore(shopper_reference: shopper_reference,
-                                       recurring_detail_reference: recurring_detail_reference)
+    assert response = @gateway.unstore(shopper_reference:,
+                                       recurring_detail_reference:)
 
     assert_success response
     assert_equal '[detail-successfully-disabled]', response.message
@@ -1060,8 +1060,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
     shopper_reference = response.params['additionalData']['recurring.shopperReference']
     recurring_detail_reference = response.params['additionalData']['recurring.recurringDetailReference']
 
-    assert response = @gateway.unstore(shopper_reference: shopper_reference,
-                                       recurring_detail_reference: recurring_detail_reference)
+    assert response = @gateway.unstore(shopper_reference:,
+                                       recurring_detail_reference:)
 
     assert_success response
     assert_equal '[detail-successfully-disabled]', response.message
@@ -1077,12 +1077,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
     recurring_detail_reference = response.params['additionalData']['recurring.recurringDetailReference']
 
     assert response = @gateway.unstore(shopper_reference: 'random_reference',
-                                       recurring_detail_reference: recurring_detail_reference)
+                                       recurring_detail_reference:)
 
     assert_failure response
     assert_equal 'Contract not found', response.message
 
-    assert response = @gateway.unstore(shopper_reference: shopper_reference,
+    assert response = @gateway.unstore(shopper_reference:,
                                        recurring_detail_reference: 'random_reference')
 
     assert_failure response
@@ -1576,7 +1576,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       total_tax_amount: '160',
       customer_reference: '101'
     }
-    assert response = @gateway.authorize(@amount, @avs_credit_card, @options.merge(level_2_data: level_2_data))
+    assert response = @gateway.authorize(@amount, @avs_credit_card, @options.merge(level_2_data:))
     assert response.test?
     refute response.authorization.blank?
     assert_success response
@@ -1587,7 +1587,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       total_tax_amount: '160',
       customer_reference: '101'
     }
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: level_2_data))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data:))
     assert_success response
     assert_equal '[capture-received]', response.message
   end
@@ -1623,7 +1623,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
         }
       ]
     }
-    assert response = @gateway.authorize(@amount, @avs_credit_card, @options.merge(level_3_data: level_3_data))
+    assert response = @gateway.authorize(@amount, @avs_credit_card, @options.merge(level_3_data:))
     assert response.test?
     assert_success response
   end
@@ -1652,7 +1652,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
         }
       ]
     }
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_3_data: level_3_data))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_3_data:))
     assert_success response
     assert_equal '[capture-received]', response.message
   end
@@ -1822,7 +1822,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       field_four: 'EASY AS ONE TWO THREE'
     }
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(metadata: metadata))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(metadata:))
     assert_success response
     assert_equal '[capture-received]', response.message
   end

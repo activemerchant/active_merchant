@@ -2,8 +2,8 @@ require 'net/http'
 require 'net/https'
 require 'active_merchant/billing/response'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     #
     # == Description
     # The Gateway class is the base class for all ActiveMerchant gateway implementations.

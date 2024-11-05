@@ -1,8 +1,8 @@
 require 'active_merchant/billing/gateways/smart_ps'
 require 'active_merchant/billing/gateways/braintree/braintree_common'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class BraintreeOrangeGateway < SmartPs
       include BraintreeCommon
 

@@ -142,7 +142,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
     purchase_payment_id = response.params['id']
     order_id = response.params['order_id']
 
-    response = @gateway.inquire(nil, { order_id: order_id })
+    response = @gateway.inquire(nil, { order_id: })
     check_payment_id = response.params['payment_id']
     assert_success response
     assert_match purchase_payment_id, check_payment_id

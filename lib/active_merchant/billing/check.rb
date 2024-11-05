@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # The Check object is a plain old Ruby object, similar to CreditCard. It supports validation
     # of necessary attributes such as checkholder's name, routing and account numbers, but it is
     # not backed by any database.

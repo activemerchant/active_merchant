@@ -373,7 +373,7 @@ class RapydTest < Test::Unit::TestCase
     assert card_id = store.params.dig('data', 'default_payment_method')
 
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, store.authorization, @options.merge(customer_id: customer_id))
+      @gateway.purchase(@amount, store.authorization, @options.merge(customer_id:))
     end.check_request do |_method, _endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['receipt_email'], @options[:email]

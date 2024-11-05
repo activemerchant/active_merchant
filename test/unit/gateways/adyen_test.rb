@@ -235,12 +235,12 @@ class AdyenTest < Test::Unit::TestCase
     authentication_response_status = 'Y'
     options_with_3ds1_standalone = @options.merge(
       three_d_secure: {
-        eci: eci,
-        cavv: cavv,
-        cavv_algorithm: cavv_algorithm,
-        xid: xid,
-        enrolled: enrolled,
-        authentication_response_status: authentication_response_status
+        eci:,
+        cavv:,
+        cavv_algorithm:,
+        xid:,
+        enrolled:,
+        authentication_response_status:
       }
     )
     stub_comms do
@@ -264,12 +264,12 @@ class AdyenTest < Test::Unit::TestCase
     authentication_response_status = 'Y'
     options_with_3ds2_standalone = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id,
-        directory_response_status: directory_response_status,
-        authentication_response_status: authentication_response_status
+        version:,
+        eci:,
+        cavv:,
+        ds_transaction_id:,
+        directory_response_status:,
+        authentication_response_status:
       }
     )
     stub_comms do
@@ -676,7 +676,7 @@ class AdyenTest < Test::Unit::TestCase
         'basket.item.productTitle' => 'Blue T Shirt',
         'promotions.promotion.promotionName' => 'Big Sale promotion'
       }
-      @gateway.authorize(@amount, @credit_card, @options.merge({ risk_data: risk_data }))
+      @gateway.authorize(@amount, @credit_card, @options.merge({ risk_data: }))
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert_equal 'express', parsed['additionalData']['riskdata.deliveryMethod']
@@ -1363,7 +1363,7 @@ class AdyenTest < Test::Unit::TestCase
   def test_authorize_with_network_tokenization_credit_card_and_stored_credentials
     stored_credential = stored_credential(:merchant, :recurring)
     response = stub_comms do
-      @gateway.authorize(@amount, @nt_credit_card, @options.merge(stored_credential: stored_credential))
+      @gateway.authorize(@amount, @nt_credit_card, @options.merge(stored_credential:))
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert_equal 'ContAuth', parsed['shopperInteraction']
@@ -1789,7 +1789,7 @@ class AdyenTest < Test::Unit::TestCase
     }
 
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(metadata: metadata))
+      @gateway.authorize(@amount, @credit_card, @options.merge(metadata:))
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert_equal parsed['metadata']['field_one'], metadata[:field_one]
@@ -1808,7 +1808,7 @@ class AdyenTest < Test::Unit::TestCase
       description: 'AM test',
       currency: 'GBP',
       customer: '123',
-      stored_credential: stored_credential(*args, ntid: ntid)
+      stored_credential: stored_credential(*args, ntid:)
     }
   end
 

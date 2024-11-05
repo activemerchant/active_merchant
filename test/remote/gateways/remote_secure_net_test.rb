@@ -12,7 +12,7 @@ class SecureNetTest < Test::Unit::TestCase
     n = Time.now
     order_id = n.to_i.to_s + n.usec.to_s
     @options = {
-      order_id: order_id,
+      order_id:,
       billing_address: address,
       description: 'Store Purchase'
     }

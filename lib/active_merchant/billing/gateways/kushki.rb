@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class KushkiGateway < Gateway
       self.display_name = 'Kushki'
       self.homepage_url = 'https://www.kushkipagos.com'

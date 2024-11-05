@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module PostsData #:nodoc:
+module ActiveMerchant # :nodoc:
+  module PostsData # :nodoc:
     def self.included(base)
       base.class_attribute :ssl_strict
       base.ssl_strict = true

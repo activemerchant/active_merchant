@@ -263,9 +263,9 @@ class StripeTest < Test::Unit::TestCase
     options = @options.merge(
       transfer_destination: destination,
       transfer_amount: amount,
-      on_behalf_of: on_behalf_of,
-      transfer_group: transfer_group,
-      application_fee_amount: application_fee_amount
+      on_behalf_of:,
+      transfer_group:,
+      application_fee_amount:
     )
 
     stub_comms(@gateway, :ssl_request) do
@@ -402,7 +402,7 @@ class StripeTest < Test::Unit::TestCase
     }
 
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, 'cus_xxx|card_xxx', @options.merge({ application: application }))
+      @gateway.purchase(@amount, 'cus_xxx|card_xxx', @options.merge({ application: }))
     end.check_request do |_method, _endpoint, _data, headers|
       assert_match(/\"application\"/, headers['X-Stripe-Client-User-Agent'])
       assert_match(/\"name\":\"app\"/, headers['X-Stripe-Client-User-Agent'])

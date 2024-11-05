@@ -388,7 +388,7 @@ class ElavonTest < Test::Unit::TestCase
     ps2000_data = 'A8181831435010530042VE'
     network_transaction_id = "#{oar_data}|#{ps2000_data}"
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: network_transaction_id }))
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: }))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<ssl_oar_data>#{oar_data}<\/ssl_oar_data>/, data)
       assert_match(/<ssl_ps2000_data>#{ps2000_data}<\/ssl_ps2000_data>/, data)
@@ -400,7 +400,7 @@ class ElavonTest < Test::Unit::TestCase
     ps2000_data = nil
     network_transaction_id = "#{oar_data}|#{ps2000_data}"
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: network_transaction_id }))
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: }))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<ssl_oar_data>#{oar_data}<\/ssl_oar_data>/, data)
       refute_match(/<ssl_ps2000_data/, data)
@@ -667,7 +667,7 @@ class ElavonTest < Test::Unit::TestCase
     ps2000_data = 'A8181831435010530042VE'
     network_transaction_id = "#{oar_data}|#{ps2000_data}"
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: network_transaction_id }))
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring', network_transaction_id: }))
     end.check_request do |_endpoint, data, _headers|
       refute_match(/<ssl_oar_data/, data)
       assert_match(/<ssl_ps2000_data>#{ps2000_data}<\/ssl_ps2000_data>/, data)
@@ -809,7 +809,7 @@ class ElavonTest < Test::Unit::TestCase
       ]
     }
 
-    options = @options.merge(level_3_data: level_3_data)
+    options = @options.merge(level_3_data:)
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -862,7 +862,7 @@ class ElavonTest < Test::Unit::TestCase
       country: 'USA',
       zip: '27701'
     }
-    options = @options.merge(shipping_address: shipping_address)
+    options = @options.merge(shipping_address:)
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|

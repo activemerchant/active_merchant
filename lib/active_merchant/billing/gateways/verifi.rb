@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class VerifiGateway < Gateway
       class VerifiPostData < PostData
         # Fields that will be sent even if they are blank

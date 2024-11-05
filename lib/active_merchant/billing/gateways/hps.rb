@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class HpsGateway < Gateway
       self.live_url = 'https://api2.heartlandportico.com/hps.exchange.posgateway/posgatewayservice.asmx'
       self.test_url = 'https://cert.api2.heartlandportico.com/Hps.Exchange.PosGateway/PosGatewayService.asmx'

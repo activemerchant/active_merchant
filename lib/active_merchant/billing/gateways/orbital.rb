@@ -1,8 +1,8 @@
 require 'active_merchant/billing/gateways/orbital/orbital_soft_descriptors'
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information on Orbital, visit the {integration center}[http://download.chasepaymentech.com]
     #
     # ==== Authentication Options
@@ -241,7 +241,7 @@ module ActiveMerchant #:nodoc:
       # R – Refund request
       def refund(money, authorization, options = {})
         payment_method = options[:payment_method]
-        order = build_new_order_xml(REFUND, money, payment_method, options.merge(authorization: authorization)) do |xml|
+        order = build_new_order_xml(REFUND, money, payment_method, options.merge(authorization:)) do |xml|
           add_payment_source(xml, payment_method, options)
           xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
@@ -316,13 +316,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def retrieve_customer_profile(customer_ref_num)
-        options = { customer_profile_action: RETRIEVE, customer_ref_num: customer_ref_num }
+        options = { customer_profile_action: RETRIEVE, customer_ref_num: }
         order = build_customer_request_xml(nil, options)
         commit(order, :retrieve_customer_profile)
       end
 
       def delete_customer_profile(customer_ref_num)
-        options = { customer_profile_action: DELETE, customer_ref_num: customer_ref_num }
+        options = { customer_profile_action: DELETE, customer_ref_num: }
         order = build_customer_request_xml(nil, options)
         commit(order, :delete_customer_profile)
       end
@@ -942,7 +942,7 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           {
-            authorization: authorization,
+            authorization:,
             test: self.test?,
             avs_result: OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
             cvv_result: OrbitalGateway::CVVResult.new(response[:cvv2_resp_code])

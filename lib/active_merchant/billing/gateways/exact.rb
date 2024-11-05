@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ExactGateway < Gateway
       self.live_url = self.test_url = 'https://secure2.e-xact.com/vplug-in/transaction/rpc-enc/service.asmx'
 

@@ -1,7 +1,7 @@
 require 'active_merchant/billing/rails'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class OmiseGateway < Gateway
       API_URL     = 'https://api.omise.co/'
       VAULT_URL   = 'https://vault.omise.co/'

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SumUpGateway < Gateway
       self.live_url = 'https://api.sumup.com/v0.1/'
 

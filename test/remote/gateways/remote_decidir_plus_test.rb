@@ -189,7 +189,7 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     assert response = @gateway_purchase.store(@credit_card)
     payment_reference = response.authorization
 
-    response = @gateway_purchase.purchase(@amount, payment_reference, @options.merge({ customer: customer }))
+    response = @gateway_purchase.purchase(@amount, payment_reference, @options.merge({ customer: }))
     assert_success response
 
     assert_equal 'approved', response.message
@@ -256,7 +256,7 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_establishment_name
     establishment_name = 'Heavenly Buffaloes'
-    options = @options.merge(establishment_name: establishment_name)
+    options = @options.merge(establishment_name:)
 
     assert response = @gateway_purchase.store(@credit_card)
     payment_reference = response.authorization

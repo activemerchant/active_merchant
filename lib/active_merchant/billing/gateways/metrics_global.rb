@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information on the Metrics Global Payment Gateway, visit the {Metrics Global website}[www.metricsglobal.com].
     # Further documentation on AVS and CVV response codes are available under the support section of the Metrics Global
     # control panel.

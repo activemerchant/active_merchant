@@ -855,8 +855,8 @@ module ActiveMerchant
             response,
             authorization: authorization_from(action, response),
             test: test?,
-            avs_result: avs_result,
-            cvv_result: cvv_result,
+            avs_result:,
+            cvv_result:,
             fraud_review: fraud_review?(response),
             error_code: map_error_code(response[:response_code], response[:response_reason_code])
           )
@@ -903,7 +903,7 @@ module ActiveMerchant
         doc = Nokogiri::XML(body)
         doc.remove_namespaces!
 
-        response = { action: action }
+        response = { action: }
 
         response[:response_code] = if (element = doc.at_xpath('//transactionResponse/responseCode'))
                                      empty?(element.content) ? nil : element.content.to_i

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PinGateway < Gateway
       self.test_url = 'https://test-api.pinpayments.com/1'
       self.live_url = 'https://api.pinpayments.com/1'

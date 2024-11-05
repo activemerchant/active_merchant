@@ -20,7 +20,7 @@ class RemoteBraintreeTokenNonceTest < Test::Unit::TestCase
         zip: '32191',
         phone_number: '693-630-6935'
       },
-      ach_mandate: ach_mandate
+      ach_mandate:
     }
   end
 

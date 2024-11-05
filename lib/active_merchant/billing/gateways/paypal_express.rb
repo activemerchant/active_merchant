@@ -3,8 +3,8 @@ require 'active_merchant/billing/gateways/paypal/paypal_express_response'
 require 'active_merchant/billing/gateways/paypal/paypal_recurring_api'
 require 'active_merchant/billing/gateways/paypal_express_common'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PaypalExpressGateway < Gateway
       include PaypalCommonAPI
       include PaypalExpressCommon

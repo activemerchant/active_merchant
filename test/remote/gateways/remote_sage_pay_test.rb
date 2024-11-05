@@ -199,7 +199,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
         initial_transaction: false,
         initiator: 'merchant',
         reason_type: 'installment',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       },
       recurring_frequency: '30',
       recurring_expiry: "#{Time.now.year + 1}-04-21",

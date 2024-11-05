@@ -14,7 +14,7 @@ class CommercegateTest < Test::Unit::TestCase
     @amount = 1000
 
     @options = {
-      address: address
+      address:
     }
   end
 

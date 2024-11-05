@@ -73,7 +73,7 @@ class AirwallexTest < Test::Unit::TestCase
     return_url = 'https://example.com'
 
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(return_url: return_url))
+      @gateway.authorize(@amount, @credit_card, @options.merge(return_url:))
     end.check_request do |endpoint, data, _headers|
       assert_match(/\"return_url\":\"https:\/\/example.com\"/, data) unless endpoint == setup_endpoint
     end.respond_with(successful_authorize_response)
@@ -259,7 +259,7 @@ class AirwallexTest < Test::Unit::TestCase
     merchant_order_id = "order_#{(Time.now.to_f.round(2) * 100).to_i}"
     stub_comms do
       # merchant_order_id is only passed directly on refunds
-      @gateway.refund(@amount, 'abc123', @options.merge(request_id: request_id, merchant_order_id: merchant_order_id))
+      @gateway.refund(@amount, 'abc123', @options.merge(request_id:, merchant_order_id:))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/request_/, data)
       assert_match(/order_/, data)
@@ -269,7 +269,7 @@ class AirwallexTest < Test::Unit::TestCase
   def test_purchase_passes_appropriate_request_id_per_call
     request_id = SecureRandom.uuid
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(request_id: request_id))
+      @gateway.purchase(@amount, @credit_card, @options.merge(request_id:))
     end.check_request do |_endpoint, data, _headers|
       if data.include?('payment_method')
         # check for this on the purchase call
@@ -284,7 +284,7 @@ class AirwallexTest < Test::Unit::TestCase
   def test_purchase_passes_appropriate_merchant_order_id
     merchant_order_id = SecureRandom.uuid
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(merchant_order_id: merchant_order_id))
+      @gateway.purchase(@amount, @credit_card, @options.merge(merchant_order_id:))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/\"merchant_order_id\":\"#{merchant_order_id}\"/, data)
     end.respond_with(successful_purchase_response)

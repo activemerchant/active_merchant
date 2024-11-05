@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class VersaPayGateway < Gateway
       self.test_url = 'https://uat.versapay.com'
       self.live_url = 'https://secure.versapay.com'
@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
 
       def unstore(authorization, options = {})
         _, wallet_token, fund_token = authorization.split('|')
-        commit('unstore', {}, :delete, { fund_token: fund_token, wallet_token: wallet_token })
+        commit('unstore', {}, :delete, { fund_token:, wallet_token: })
       end
 
       def supports_scrubbing?

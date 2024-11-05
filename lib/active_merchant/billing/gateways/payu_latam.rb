@@ -1,7 +1,7 @@
 require 'digest/md5'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayuLatamGateway < Gateway
       self.display_name = 'PayU Latam'
       self.homepage_url = 'http://www.payulatam.com'

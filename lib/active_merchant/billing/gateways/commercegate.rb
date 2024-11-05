@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CommercegateGateway < Gateway
       self.test_url = self.live_url = 'https://secure.commercegate.com/gateway/nvp'
 

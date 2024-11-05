@@ -1,7 +1,7 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class EwayRapidGateway < Gateway
       self.test_url = 'https://api.sandbox.ewaypayments.com/'
       self.live_url = 'https://api.ewaypayments.com/'
@@ -378,7 +378,7 @@ module ActiveMerchant #:nodoc:
           else
             'I'
           end
-        { code: code }
+        { code: }
       end
 
       def cvv_result_from(response)

@@ -90,7 +90,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
       zip: '95014'
     }
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: billing_address))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address:))
     assert_success response
     assert_equal 'Approved', response.message
     assert_equal 'John', response.params['billingAddress']['firstName']
@@ -107,7 +107,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
       zip: '95014'
     }
 
-    response = @gateway.purchase(@amount, @google_pay, @options.merge(billing_address: billing_address))
+    response = @gateway.purchase(@amount, @google_pay, @options.merge(billing_address:))
     assert_success response
     assert_equal 'Approved', response.message
     assert_equal 'DecryptedWallet', response.params['source']['sourceType']

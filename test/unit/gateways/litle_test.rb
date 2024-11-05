@@ -658,7 +658,7 @@ class LitleTest < Test::Unit::TestCase
         initial_transaction: false,
         reason_type: 'unscheduled',
         initiator: 'cardholder',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
 
@@ -682,7 +682,7 @@ class LitleTest < Test::Unit::TestCase
         initial_transaction: false,
         reason_type: 'unscheduled',
         initiator: 'cardholder',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
 
@@ -723,7 +723,7 @@ class LitleTest < Test::Unit::TestCase
         initial_transaction: false,
         reason_type: 'unscheduled',
         initiator: 'merchant',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
 
@@ -763,7 +763,7 @@ class LitleTest < Test::Unit::TestCase
         initial_transaction: false,
         reason_type: 'installment',
         initiator: 'merchant',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
 
@@ -803,7 +803,7 @@ class LitleTest < Test::Unit::TestCase
         initial_transaction: false,
         reason_type: 'recurring',
         initiator: 'merchant',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
 

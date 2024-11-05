@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PlexoGateway < Gateway
       self.test_url = 'https://api.testing.plexo.com.uy/v1/payments'
       self.live_url = 'https://api.plexo.com.uy/v1/payments'

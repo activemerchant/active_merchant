@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # The Mercury gateway integration by default requires that the Mercury
     # account being used has tokenization turned. This enables the use of
     # capture/refund/void without having to pass the credit card back in each

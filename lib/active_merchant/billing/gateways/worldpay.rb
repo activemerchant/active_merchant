@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class WorldpayGateway < Gateway
       self.test_url = 'https://secure-test.worldpay.com/jsp/merchant/xml/paymentService.jsp'
       self.live_url = 'https://secure.worldpay.com/jsp/merchant/xml/paymentService.jsp'
@@ -910,7 +910,7 @@ module ActiveMerchant #:nodoc:
         xml = xml.strip.gsub(/\&/, '&amp;')
         doc = Nokogiri::XML(xml, &:strict)
         doc.remove_namespaces!
-        resp_params = { action: action }
+        resp_params = { action: }
 
         parse_elements(doc.root, resp_params)
         extract_issuer_response(doc.root, resp_params)
@@ -1061,7 +1061,7 @@ module ActiveMerchant #:nodoc:
         case action
         when 'store'
           authorization_from_token_details(
-            order_id: order_id,
+            order_id:,
             token_id: raw[:payment_token_id],
             token_scope: 'shopper',
             customer: options[:customer]

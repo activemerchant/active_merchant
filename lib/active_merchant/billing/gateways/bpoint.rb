@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class BpointGateway < Gateway
       self.live_url = 'https://www.bpoint.com.au/evolve/service_1_4_4.asmx'
 

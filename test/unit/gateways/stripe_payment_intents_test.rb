@@ -135,7 +135,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
   def test_create_intent_with_optional_idempotency_key_header
     idempotency_key = 'test123'
-    options = @options.merge(idempotency_key: idempotency_key)
+    options = @options.merge(idempotency_key:)
 
     create_intent = stub_comms(@gateway, :ssl_request) do
       @gateway.create_intent(@amount, @visa_token, options)
@@ -152,7 +152,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
   def test_request_three_d_secure
     request_three_d_secure = 'any'
-    options = @options.merge(request_three_d_secure: request_three_d_secure)
+    options = @options.merge(request_three_d_secure:)
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.create_intent(@amount, @visa_token, options)
@@ -161,7 +161,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_request_three_d_secure_response)
 
     request_three_d_secure = 'automatic'
-    options = @options.merge(request_three_d_secure: request_three_d_secure)
+    options = @options.merge(request_three_d_secure:)
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.create_intent(@amount, @visa_token, options)
@@ -170,7 +170,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_request_three_d_secure_response)
 
     request_three_d_secure = 'challenge'
-    options = @options.merge(request_three_d_secure: request_three_d_secure)
+    options = @options.merge(request_three_d_secure:)
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.create_intent(@amount, @visa_token, options)
@@ -179,7 +179,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_request_three_d_secure_response)
 
     request_three_d_secure = true
-    options = @options.merge(request_three_d_secure: request_three_d_secure)
+    options = @options.merge(request_three_d_secure:)
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.create_intent(@amount, @visa_token, options)
@@ -267,8 +267,8 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     options = @options.merge(
       transfer_destination: destination,
       transfer_amount: amount,
-      on_behalf_of: on_behalf_of,
-      transfer_group: transfer_group,
+      on_behalf_of:,
+      transfer_group:,
       application_fee: application_fee_amount
     )
 
@@ -286,9 +286,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
   def test_on_behalf_of
     on_behalf_of = 'account_27704'
 
-    options = @options.merge(
-      on_behalf_of: on_behalf_of
-    )
+    options = @options.merge(on_behalf_of:)
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.create_intent(@amount, @visa_token, options)
@@ -1004,7 +1002,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
   def test_create_setup_intent_with_moto_exemption
     idempotency_key = 'test123'
-    options = @options.merge(moto: true, confirm: true, idempotency_key: idempotency_key)
+    options = @options.merge(moto: true, confirm: true, idempotency_key:)
 
     create_intent = stub_comms(@gateway, :ssl_request) do
       @gateway.create_setup_intent(@visa_token, options)

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PagoFacilGateway < Gateway
       self.test_url = 'https://www.pagofacil.net/st/public/Wsrtransaccion/index/format/json?'
       self.live_url = 'https://www.pagofacil.net/ws/public/Wsrtransaccion/index/format/json?'

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class FlexChargeGateway < Gateway
       self.test_url = 'https://api-sandbox.flex-charge.com/v1/'
       self.live_url = 'https://api.flex-charge.com/v1/'
@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
           idempotencyKey: options[:idempotency_key] || SecureRandom.uuid,
           orderId: order_id,
           amount: money,
-          currency: currency
+          currency:
         }
 
         commit(:capture, post, authorization)
@@ -82,8 +82,8 @@ module ActiveMerchant #:nodoc:
         post = {
           payment_method: {
             credit_card: {
-              first_name: first_name,
-              last_name: last_name,
+              first_name:,
+              last_name:,
               month: credit_card.month,
               year: credit_card.year,
               number: credit_card.number,

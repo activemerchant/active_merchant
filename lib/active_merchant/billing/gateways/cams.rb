@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CamsGateway < Gateway
       self.live_url = 'https://secure.centralams.com/gw/api/transact.php'
 

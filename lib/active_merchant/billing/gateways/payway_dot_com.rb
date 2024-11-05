@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PaywayDotComGateway < Gateway
       self.test_url = 'https://paywaywsdev.com/PaywayWS/Payment/CreditCard'
       self.live_url = 'https://paywayws.net/PaywayWS/Payment/CreditCard'
@@ -212,8 +212,8 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: error_code_from(response),
           authorization: authorization_from(response),
-          avs_result: avs_result,
-          cvv_result: cvv_result
+          avs_result:,
+          cvv_result:
         )
       end
 

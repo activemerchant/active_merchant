@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class Shift4Gateway < Gateway
       self.test_url = 'https://utgapi.shift4test.com/api/rest/v1/'
       self.live_url = 'https://utg.shift4api.net/api/rest/v1/'

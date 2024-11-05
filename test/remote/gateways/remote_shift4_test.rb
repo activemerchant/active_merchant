@@ -5,7 +5,7 @@ class RemoteShift4Test < Test::Unit::TestCase
     @gateway = Shift4Gateway.new(fixtures(:shift4))
     access_token = @gateway.setup_access_token
 
-    @gateway = Shift4Gateway.new(fixtures(:shift4).merge(access_token: access_token))
+    @gateway = Shift4Gateway.new(fixtures(:shift4).merge(access_token:))
 
     @amount = 500
     @credit_card = credit_card('4000100011112224', verification_value: '333', first_name: 'John', last_name: 'Smith')
