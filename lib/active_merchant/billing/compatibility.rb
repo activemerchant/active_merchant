@@ -90,8 +90,8 @@ module ActiveMerchant
             add(:base, error)
           end
 
-          def each_full(&)
-            full_messages.each(&)
+          def each_full(&block)
+            full_messages.each(&block)
           end
 
           def full_messages

@@ -152,12 +152,12 @@ module ActiveMerchant # :nodoc:
         response
       end
 
-      def commit(action, &)
+      def commit(action, &block)
         headers = {
           'Content-Type' => 'text/xml; charset=utf-8',
           'SOAPAction' => "http://www.ippayments.com.au/interface/api/#{endpoint(action)}/#{action}"
         }
-        response = parse(ssl_post("#{commit_url}/#{endpoint(action)}.asmx", new_submit_xml(action, &), headers))
+        response = parse(ssl_post("#{commit_url}/#{endpoint(action)}.asmx", new_submit_xml(action, &block), headers))
 
         Response.new(
           success_from(response),

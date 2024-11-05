@@ -459,8 +459,8 @@ module ActiveMerchant
         e.response
       end
 
-      def commit(action, options, verb = :post, payment_method_details = PaymentMethodDetails.new(), &)
-        request = build_xml_request(action, payment_method_details, &)
+      def commit(action, options, verb = :post, payment_method_details = PaymentMethodDetails.new(), &block)
+        request = build_xml_request(action, payment_method_details, &block)
         response = api_request(action, request, verb, payment_method_details, options)
         parsed = parse(response)
 

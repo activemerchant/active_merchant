@@ -391,7 +391,7 @@ module ActiveMerchant # :nodoc:
         mapped
       end
 
-      def commit(&)
+      def commit(&block)
         yield
       rescue Braintree::BraintreeError => e
         Response.new(false, e.class.to_s)

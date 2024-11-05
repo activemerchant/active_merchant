@@ -46,8 +46,8 @@ module ActiveMerchant # :nodoc:
     end
 
     class MultiResponse < Response
-      def self.run(use_first_response = false, &)
-        new(use_first_response).tap(&)
+      def self.run(use_first_response = false, &block)
+        new(use_first_response).tap(&block)
       end
 
       attr_reader :responses, :primary_response
