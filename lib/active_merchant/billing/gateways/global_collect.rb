@@ -335,7 +335,7 @@ module ActiveMerchant # :nodoc:
         post['order']['customer']['merchantCustomerId'] = options[:customer] if options[:customer]
         post['order']['customer']['companyInformation']['name'] = options[:company] if options[:company]
         post['order']['customer']['contactDetails']['emailAddress'] = options[:email] if options[:email]
-        if address = options[:billing_address] || options[:address] && (address[:phone])
+        if address = options[:billing_address] || (options[:address] && (address[:phone]))
           post['order']['customer']['contactDetails']['phoneNumber'] = address[:phone]
         end
       end
@@ -346,7 +346,7 @@ module ActiveMerchant # :nodoc:
             'countryCode' => address[:country]
           }
           post['customer']['contactDetails']['emailAddress'] = options[:email] if options[:email]
-          if address = options[:billing_address] || options[:address] && (address[:phone])
+          if address = options[:billing_address] || (options[:address] && (address[:phone]))
             post['customer']['contactDetails']['phoneNumber'] = address[:phone]
           end
         end
@@ -488,7 +488,7 @@ module ActiveMerchant # :nodoc:
       def json_error(raw_response)
         {
           'error_message' => 'Invalid response received from the Ingenico ePayments (formerly GlobalCollect) API.  Please contact Ingenico ePayments if you continue to receive this message.' \
-            "  (The raw response returned by the API was #{raw_response.inspect})"
+                             "  (The raw response returned by the API was #{raw_response.inspect})"
         }
       end
 

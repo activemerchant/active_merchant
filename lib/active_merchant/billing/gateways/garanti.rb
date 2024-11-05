@@ -62,7 +62,7 @@ module ActiveMerchant # :nodoc:
         Digest::SHA1.hexdigest(data).upcase
       end
 
-      def build_xml_request(money, credit_card, options, &block)
+      def build_xml_request(money, credit_card, options, &)
         card_number = credit_card.respond_to?(:number) ? credit_card.number : ''
         hash_data   = generate_hash_data(format_order_id(options[:order_id]), @options[:terminal_id], card_number, amount(money), security_data)
 
@@ -132,7 +132,7 @@ module ActiveMerchant # :nodoc:
         end
       end
 
-      def add_order_data(xml, options, &block)
+      def add_order_data(xml, options, &)
         xml.tag! 'Order' do
           xml.tag! 'OrderID', format_order_id(options[:order_id])
           xml.tag! 'GroupID'

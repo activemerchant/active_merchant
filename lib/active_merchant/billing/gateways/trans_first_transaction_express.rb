@@ -438,21 +438,21 @@ module ActiveMerchant # :nodoc:
       end
 
       # -- request methods ---------------------------------------------------
-      def build_xml_transaction_request(&block)
-        build_xml_request('SendTranRequest', &block)
+      def build_xml_transaction_request(&)
+        build_xml_request('SendTranRequest', &)
       end
 
-      def build_xml_payment_storage_request(&block)
-        build_xml_request('UpdtRecurrProfRequest', &block)
+      def build_xml_payment_storage_request(&)
+        build_xml_request('UpdtRecurrProfRequest', &)
       end
 
-      def build_xml_payment_update_request(&block)
+      def build_xml_payment_update_request(&)
         merchant_product_type = 5 # credit card
-        build_xml_request('UpdtRecurrProfRequest', merchant_product_type, &block)
+        build_xml_request('UpdtRecurrProfRequest', merchant_product_type, &)
       end
 
-      def build_xml_payment_search_request(&block)
-        build_xml_request('FndRecurrProfRequest', &block)
+      def build_xml_payment_search_request(&)
+        build_xml_request('FndRecurrProfRequest', &)
       end
 
       def build_xml_request(wrapper, merchant_product_type = nil)

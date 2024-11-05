@@ -79,8 +79,8 @@ module ActiveMerchant # :nodoc:
 
       private
 
-      def commit(action, &block)
-        request = build_xml_request(action, &block)
+      def commit(action, &)
+        request = build_xml_request(action, &)
         response = parse(ssl_post(url, request, 'Content-Type' => 'text/xml'))
 
         Response.new(

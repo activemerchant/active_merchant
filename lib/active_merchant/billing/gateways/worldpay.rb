@@ -677,8 +677,8 @@ module ActiveMerchant # :nodoc:
 
       def should_send_payment_cryptogram?(options, payment_method)
         wallet_type_google_pay?(options) ||
-          payment_method_apple_pay?(payment_method) &&
-            merchant_initiated?(options)
+          (payment_method_apple_pay?(payment_method) &&
+            merchant_initiated?(options))
       end
 
       def merchant_initiated?(options)

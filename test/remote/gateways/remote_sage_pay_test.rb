@@ -373,9 +373,9 @@ class RemoteSagePayTest < Test::Unit::TestCase
     # Example from "Sage Pay Direct Integration and Protocol Guidelines 3.00"
     # Published: 27/08/2015
     @options[:basket] = '4:Pioneer NSDV99 DVD-Surround Sound System:1:424.68:' \
-      '74.32:499.00: 499.00:Donnie Darko Director’s Cut:3:11.91:2.08:13.99:' \
-      '41.97: Finding Nemo:2:11.05:1.94:12.99:25.98: Delivery:---:---:---:---' \
-      ':4.99'
+                        '74.32:499.00: 499.00:Donnie Darko Director’s Cut:3:11.91:2.08:13.99:' \
+                        '41.97: Finding Nemo:2:11.05:1.94:12.99:25.98: Delivery:---:---:---:---' \
+                        ':4.99'
     response = @gateway.purchase(@amount, @visa, @options)
     assert_success response
   end

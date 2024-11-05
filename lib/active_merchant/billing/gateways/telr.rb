@@ -162,9 +162,9 @@ module ActiveMerchant # :nodoc:
         country.code(:alpha2)
       end
 
-      def commit(action, amount = nil, currency = nil, &block)
+      def commit(action, amount = nil, currency = nil, &)
         currency = default_currency if currency == nil
-        request = build_xml_request(&block)
+        request = build_xml_request(&)
         response = ssl_post(live_url, request, headers)
         parsed = parse(response)
 

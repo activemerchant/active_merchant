@@ -417,7 +417,7 @@ module ActiveMerchant # :nodoc:
                   end
 
                   if action == :add
-                    xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1)
+                    xml.tag! 'Start', format_rp_date(options[:starting_at] || (Date.today + 1))
                   else
                     xml.tag! 'Start', format_rp_date(options[:starting_at]) unless options[:starting_at].nil?
                   end

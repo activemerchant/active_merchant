@@ -142,7 +142,7 @@ module ActiveMerchant # :nodoc:
 
         three_ds =
           {
-            "3D":
+            '3D':
               {
                 eci: three_d_secure[:eci],
                 xid: three_d_secure[:xid],

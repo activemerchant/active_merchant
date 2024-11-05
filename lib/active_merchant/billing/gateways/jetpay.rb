@@ -206,7 +206,7 @@ module ActiveMerchant # :nodoc:
 
       private
 
-      def build_xml_request(transaction_type, options = {}, transaction_id = nil, &block)
+      def build_xml_request(transaction_type, options = {}, transaction_id = nil, &)
         xml = Builder::XmlMarkup.new
         xml.tag! 'JetPay' do
           # The basic values needed for any request

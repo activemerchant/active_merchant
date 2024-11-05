@@ -1591,7 +1591,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     Braintree::ErrorResult.new(@internal_gateway, { errors: {} }.merge(options))
   end
 
-  def with_braintree_configuration_restoration(&block)
+  def with_braintree_configuration_restoration(&)
     # Remember the wiredump device since we may overwrite it
     existing_wiredump_device = ActiveMerchant::Billing::BraintreeBlueGateway.wiredump_device
 

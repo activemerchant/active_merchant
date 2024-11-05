@@ -378,9 +378,9 @@ module ActiveMerchant # :nodoc:
         # - http://www.beachnet.com/~hstiles/cardtype.html
         def valid_number?(number)
           valid_test_mode_card_number?(number) ||
-            valid_card_number_length?(number) &&
+            (valid_card_number_length?(number) &&
               valid_card_number_characters?(brand?(number), number) &&
-              valid_by_algorithm?(brand?(number), number)
+              valid_by_algorithm?(brand?(number), number))
         end
 
         def card_companies

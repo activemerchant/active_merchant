@@ -159,8 +159,8 @@ module ActiveMerchant # :nodoc:
         xml.trackid(trackid) if trackid
       end
 
-      def commit(action, amount = nil, options = {}, &builder)
-        response = parse_xml(ssl_post(live_url, build_xml(action, &builder)))
+      def commit(action, amount = nil, options = {}, &)
+        response = parse_xml(ssl_post(live_url, build_xml(action, &)))
         Response.new(
           (response[:responsecode] == '0'),
           (response[:result] || response[:error_text] || 'Unknown Response'),

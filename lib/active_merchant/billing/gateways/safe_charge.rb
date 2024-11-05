@@ -180,7 +180,7 @@ module ActiveMerchant # :nodoc:
 
       def add_network_token(post, payment, options)
         post[:sg_CAVV] = payment.payment_cryptogram
-        post[:sg_ECI] = options[:three_d_secure] && options[:three_d_secure][:eci] || '05'
+        post[:sg_ECI] = (options[:three_d_secure] && options[:three_d_secure][:eci]) || '05'
         post[:sg_IsExternalMPI] = 1
         post[:sg_ExternalTokenProvider] = 5
       end

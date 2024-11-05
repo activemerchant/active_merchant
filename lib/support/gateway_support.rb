@@ -23,8 +23,8 @@ class GatewaySupport # :nodoc:
     @gateways.delete(ActiveMerchant::Billing::BogusGateway)
   end
 
-  def each_gateway(&block)
-    @gateways.each(&block)
+  def each_gateway(&)
+    @gateways.each(&)
   end
 
   def features

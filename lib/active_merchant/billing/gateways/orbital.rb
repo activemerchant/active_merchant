@@ -766,7 +766,7 @@ module ActiveMerchant # :nodoc:
       #=====SCA (STORED CREDENTIAL) FIELDS=====
 
       def add_stored_credentials(xml, parameters)
-        return unless parameters[:mit_stored_credential_ind] == 'Y' || parameters[:stored_credential] && !parameters[:stored_credential].values.all?(&:nil?)
+        return unless parameters[:mit_stored_credential_ind] == 'Y' || (parameters[:stored_credential] && !parameters[:stored_credential].values.all?(&:nil?))
 
         if msg_type = get_msg_type(parameters)
           xml.tag! :MITMsgType, msg_type
@@ -818,7 +818,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_digital_token_cryptogram(xml, credit_card, three_d_secure)
-        return unless credit_card.is_a?(NetworkTokenizationCreditCard) || three_d_secure && credit_card.brand == 'discover'
+        return unless credit_card.is_a?(NetworkTokenizationCreditCard) || (three_d_secure && credit_card.brand == 'discover')
 
         cryptogram =
           if three_d_secure && credit_card.brand == 'discover'

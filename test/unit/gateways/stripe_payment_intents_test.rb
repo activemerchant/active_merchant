@@ -244,9 +244,9 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
     assert cancel = @gateway.void(intent_id, cancellation_reason: 'requested_by_customer')
     assert_equal 'You cannot cancel this PaymentIntent because ' \
-      'it has a status of succeeded. Only a PaymentIntent with ' \
-      'one of the following statuses may be canceled: ' \
-      'requires_payment_method, requires_capture, requires_confirmation, requires_action.', cancel.message
+                 'it has a status of succeeded. Only a PaymentIntent with ' \
+                 'one of the following statuses may be canceled: ' \
+                 'requires_payment_method, requires_capture, requires_confirmation, requires_action.', cancel.message
   end
 
   def test_failed_verify

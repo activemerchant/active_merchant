@@ -21,10 +21,10 @@ module CommStub
       end
     end
 
-    def overwrite_gateway_method(&block)
+    def overwrite_gateway_method(&)
       singleton_class = (class << @gateway; self; end)
       singleton_class.send(:undef_method, @method_to_stub)
-      singleton_class.send(:define_method, @method_to_stub, &block)
+      singleton_class.send(:define_method, @method_to_stub, &)
     end
 
     def respond_with(*responses)

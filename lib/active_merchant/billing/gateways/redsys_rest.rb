@@ -479,7 +479,7 @@ module ActiveMerchant # :nodoc:
         if /^\d{4}/.match?(cleansed)
           cleansed[0..11]
         else
-          '%04d' % [rand(0..9999)] + cleansed[0...8]
+          ('%04d' % [rand(0..9999)]) + cleansed[0...8]
         end
       end
 

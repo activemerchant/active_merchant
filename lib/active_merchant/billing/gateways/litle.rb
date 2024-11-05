@@ -603,9 +603,9 @@ module ActiveMerchant # :nodoc:
         }
       end
 
-      def build_xml_request(&block)
+      def build_xml_request(&)
         builder = Nokogiri::XML::Builder.new
-        builder.__send__('litleOnlineRequest', root_attributes, &block)
+        builder.__send__('litleOnlineRequest', root_attributes, &)
         builder.doc.root.to_xml
       end
 

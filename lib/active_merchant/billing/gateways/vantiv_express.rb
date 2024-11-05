@@ -551,8 +551,8 @@ module ActiveMerchant # :nodoc:
         CVVResult.new(response['card']['cvvresponsecode']) if response['card']
       end
 
-      def build_xml_request(&block)
-        builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8', &block)
+      def build_xml_request(&)
+        builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8', &)
 
         builder.to_xml
       end

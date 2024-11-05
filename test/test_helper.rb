@@ -127,7 +127,7 @@ module ActiveMerchant
 
     private
 
-    def clean_backtrace(&block)
+    def clean_backtrace(&)
       yield
     rescue ASSERTION_CLASS => e
       path = File.expand_path(__FILE__)
@@ -333,7 +333,7 @@ Test::Unit::TestCase.class_eval do
       gateway.purchase(amount, credit_card, params)
     end
 
-    File.open('transcript.log', 'w') { |f| f.write(transcript) }
+    File.write('transcript.log', transcript)
     assert false, 'A purchase transcript has been written to transcript.log for you to test scrubbing with.'
   end
 end

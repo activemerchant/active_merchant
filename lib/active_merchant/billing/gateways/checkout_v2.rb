@@ -657,7 +657,7 @@ module ActiveMerchant # :nodoc:
         store_response = response['token'] || response['id']
         return true if store_response && ((action == :tokens && store_response.match(/tok/)) || (action == :store && store_response.match(/src_/)))
 
-        response['response_summary'] == 'Approved' || response['approved'] == true || !response.key?('response_summary') && response.key?('action_id')
+        response['response_summary'] == 'Approved' || response['approved'] == true || (!response.key?('response_summary') && response.key?('action_id'))
       end
 
       def message_from(succeeded, response, options)

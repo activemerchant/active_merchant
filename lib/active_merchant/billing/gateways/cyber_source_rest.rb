@@ -446,9 +446,9 @@ module ActiveMerchant # :nodoc:
         string_to_sign = {
           host:,
           date: gmtdatetime,
-          "request-target": "#{http_method} /pts/v2/#{resource}",
+          'request-target': "#{http_method} /pts/v2/#{resource}",
           digest:,
-          "v-c-merchant-id": @options[:merchant_id]
+          'v-c-merchant-id': @options[:merchant_id]
         }.map { |k, v| "#{k}: #{v}" }.join("\n").force_encoding(Encoding::UTF_8)
 
         {

@@ -189,7 +189,7 @@ module ActiveMerchant
         return 100 unless options[:verify_amount].present?
 
         amount = options[:verify_amount]
-        raise ArgumentError.new 'verify_amount value must be an integer' unless amount.is_a?(Integer) && !amount.negative? || amount.is_a?(String) && amount.match?(/^\d+$/) && !amount.to_i.negative?
+        raise ArgumentError.new 'verify_amount value must be an integer' unless (amount.is_a?(Integer) && !amount.negative?) || (amount.is_a?(String) && amount.match?(/^\d+$/) && !amount.to_i.negative?)
         raise ArgumentError.new 'Billing address including zip code is required for a 0 amount verify' if amount.to_i.zero? && !validate_billing_address_values?(options)
 
         amount.to_i
@@ -839,8 +839,8 @@ module ActiveMerchant
         end
       end
 
-      def commit(action, options = {}, &payload)
-        raw_response = ssl_post(url, post_data(action, &payload), headers)
+      def commit(action, options = {}, &)
+        raw_response = ssl_post(url, post_data(action, &), headers)
         response = parse(action, raw_response, options)
 
         avs_result_code = response[:avs_result_code].upcase if response[:avs_result_code]

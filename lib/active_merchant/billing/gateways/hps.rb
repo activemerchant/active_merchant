@@ -321,7 +321,7 @@ module ActiveMerchant # :nodoc:
         } do
           xml.SOAP :Body do
             xml.hps :PosRequest do
-              xml.hps :"Ver1.0" do
+              xml.hps :'Ver1.0' do
                 xml.hps :Header do
                   xml.hps :SecretAPIKey, @options[:secret_api_key]
                   xml.hps :DeveloperID, @options[:developer_id] if @options[:developer_id]
@@ -374,8 +374,8 @@ module ActiveMerchant # :nodoc:
         response
       end
 
-      def commit(action, reference = nil, &request)
-        data = build_request(action, &request)
+      def commit(action, reference = nil, &)
+        data = build_request(action, &)
 
         response =
           begin
