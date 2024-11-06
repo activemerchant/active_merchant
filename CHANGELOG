@@ -76,8 +76,9 @@
 * Versapay: Store and Unstore transactions [gasb150] #5315
 * Nuvei: Add 3DS Global [javierpedrozaing] #5308
 * StripePI: Store the three_d_secure_usage field [yunnydang] #5321
-* StripePI: Last4 From Payment Method [nashton] #5322
+* StripePI: Last4 From Payment Method [naashton] #5322
 * New Card Type: Patagonia365 [gasb150] #5265
+* Decidir: Patagonia365 Card Type Mapping [naashton] #5324
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
