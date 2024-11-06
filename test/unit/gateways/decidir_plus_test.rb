@@ -39,6 +39,10 @@ class DecidirPlusTest < Test::Unit::TestCase
     }
   end
 
+  def test_supported_card_types
+    assert_equal DecidirPlusGateway.supported_cardtypes, %i[visa master american_express discover diners_club naranja cabal patagonia_365]
+  end
+
   def test_successful_purchase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @payment_reference, @options)

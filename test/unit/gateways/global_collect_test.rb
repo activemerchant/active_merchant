@@ -49,6 +49,10 @@ class GlobalCollectTest < Test::Unit::TestCase
     )
   end
 
+  def test_supported_card_types
+    assert_equal GlobalCollectGateway.supported_cardtypes, %i[visa master american_express discover naranja cabal tuya patagonia_365]
+  end
+
   def test_successful_authorize_and_capture
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@accepted_amount, @credit_card, @options)

@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
                                     OM PA PE PF PH PK PL PN PR PT PW PY QA RE RO RS RU RW SA SB SC SE SG SI SK SL SM SN ST SV
                                     SZ TC TD TF TG TH TJ TK TM TO TR TT TV TW TZ UA UG US UY UZ VA VC VE VI VN VU WF WS YE YT
                                     ZA ZM)
-      self.supported_cardtypes = %i[visa master american_express discover jcb maestro elo naranja cabal unionpay]
+      self.supported_cardtypes = %i[visa master american_express discover jcb maestro elo naranja cabal unionpay patagonia_365]
       self.currencies_without_fractions = %w(HUF IDR JPY KRW BEF XOF XAF XPF GRD GNF ITL LUF MGA MGF PYG PTE RWF ESP TRL VND KMF)
       self.currencies_with_three_decimal_places = %w(BHD KWD OMR TND LYD JOD IQD)
       self.homepage_url = 'http://www.worldpay.com/'

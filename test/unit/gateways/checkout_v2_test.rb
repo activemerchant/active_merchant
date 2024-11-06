@@ -16,6 +16,10 @@ class CheckoutV2Test < Test::Unit::TestCase
     @token = '2MPedsuenG2o8yFfrsdOBWmOuEf'
   end
 
+  def test_supported_card_types
+    assert_equal CheckoutV2Gateway.supported_cardtypes, %i[visa master american_express diners_club maestro discover jcb mada bp_plus patagonia_365]
+  end
+
   def test_setup_access_token_should_rise_an_exception_under_bad_request
     error = assert_raises(ActiveMerchant::OAuthResponseError) do
       @gateway.expects(:raw_ssl_request).returns(Net::HTTPBadRequest.new(1.0, 400, 'Bad Request'))

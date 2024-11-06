@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency    = 'EUR'
       self.money_format        = :cents
       # Not all card types may be activated by the bank!
-      self.supported_cardtypes = %i[visa master american_express jcb diners_club unionpay]
+      self.supported_cardtypes = %i[visa master american_express jcb diners_club unionpay patagonia_365]
       self.homepage_url        = 'http://www.redsys.es/'
       self.display_name        = 'Redsys (REST)'
 

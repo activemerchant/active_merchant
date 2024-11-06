@@ -92,6 +92,10 @@ class CyberSourceTest < Test::Unit::TestCase
     + '1111111115555555222233101abcdefghijkl7777777777777777777777777promotionCde'
   end
 
+  def test_supported_card_types
+    assert_equal CyberSourceGateway.supported_cardtypes, %i[visa master american_express discover diners_club jcb dankort maestro elo patagonia_365]
+  end
+
   def test_successful_credit_card_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
