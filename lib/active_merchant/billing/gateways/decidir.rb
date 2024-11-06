@@ -156,6 +156,8 @@ module ActiveMerchant #:nodoc:
           63
         elsif CreditCard.brand?(credit_card.number) == 'naranja'
           24
+        elsif CreditCard.brand?(credit_card.number) == 'patagonia_365'
+          55
         else
           1
         end

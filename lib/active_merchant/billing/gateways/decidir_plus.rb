@@ -204,6 +204,8 @@ module ActiveMerchant #:nodoc:
             63
           when 'diners_club'
             8
+          when 'patagonia_365'
+            55
           else
             1
           end
