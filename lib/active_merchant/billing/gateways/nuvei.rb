@@ -44,9 +44,11 @@ module ActiveMerchant
         add_customer_ip(post, options)
         add_stored_credentials(post, payment, options)
         add_account_funding_transaction(post, payment, options)
+        add_cardholder_name_verification(post, payment, transaction_type, options)
         post[:userTokenId] = options[:user_token_id] if options[:user_token_id]
         post[:isPartialApproval] = options[:is_partial_approval] ? 1 : 0
         post[:authenticationOnlyType] = options[:authentication_only_type] if options[:authentication_only_type]
+
         if options[:execute_threed]
           execute_3ds_flow(post, money, payment, transaction_type, options)
         else
@@ -271,7 +273,7 @@ module ActiveMerchant
             eci: three_d_secure_options[:eci],
             cavv: three_d_secure_options[:cavv],
             dsTransID: three_d_secure_options[:ds_transaction_id],
-            challenge_preference: options[:challenge_preference]
+            challengePreference: options[:challenge_preference]
           }
         }.compact
 
@@ -292,6 +294,20 @@ module ActiveMerchant
           firstName: first_name,
           lastName: last_name
         }.compact
+      end
+
+      def add_cardholder_name_verification(post, payment, transaction_type, options)
+        return unless transaction_type == 'Auth'
+
+        post[:cardHolderNameVerification] = { performNameVerification: 'true' } if options[:perform_name_verification]
+
+        cardholder_data = {
+          firstName: payment.first_name,
+          lastName: payment.last_name
+        }.compact
+
+        post[:billingAddress] ||= {}
+        post[:billingAddress].merge!(cardholder_data)
       end
 
       def execute_3ds_flow(post, money, payment, transaction_type, options = {})

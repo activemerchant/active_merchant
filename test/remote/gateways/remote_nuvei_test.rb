@@ -373,4 +373,10 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_success refund_response
     assert_equal 'APPROVED', refund_response.message
   end
+
+  def test_successful_authorize_with_cardholder_name_verification
+    response = @gateway.authorize(0, @credit_card, @options.merge({ perform_name_verification: true }))
+    assert_success response
+    assert_match 'APPROVED', response.message
+  end
 end
