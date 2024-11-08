@@ -34,7 +34,7 @@ module ActiveMerchant
       end
 
       def authorize(money, payment, options = {}, transaction_type = 'Auth')
-        post = { transactionType: transaction_type, savePM: false }
+        post = { transactionType: transaction_type }
 
         build_post_data(post)
         add_amount(post, money, options)
@@ -99,14 +99,26 @@ module ActiveMerchant
 
       def credit(money, payment, options = {})
         post = { userTokenId: options[:user_token_id] }
-
+        payment_key = payment.is_a?(NetworkTokenizationCreditCard) ? :userPaymentOption : :cardData
         build_post_data(post)
         add_amount(post, money, options)
-        add_payment_method(post, payment, :cardData, options)
-        add_address(post, payment, options)
-        add_customer_ip(post, options)
+        options[:is_payout] ? send_payout_transaction(payment_key, post, payment, options) : send_unreferenced_refund_transaction(post, payment, options)
+      end
 
+      def send_payout_transaction(payment_key, post, payment, options = {})
+        add_payment_method(post, payment, payment_key, options)
+        add_customer_ip(post, options)
+        url_details(post, options)
         commit(:general_credit, post.compact)
+      end
+
+      def send_unreferenced_refund_transaction(post, payment, options = {})
+        post[:paymentOption] = { userPaymentOptionId: options[:user_payment_option_id] } if options[:user_payment_option_id]
+        unless options[:user_payment_option_id]
+          add_payment_method(post, payment, :paymentOption, options)
+          post[:paymentOption][:card].slice!(:cardNumber, :cardHolderName, :expirationMonth, :expirationYear, :CVV)
+        end
+        commit(:refund, post.compact)
       end
 
       def add_stored_credentials(post, payment, options = {})
@@ -220,37 +232,47 @@ module ActiveMerchant
             paymentMethod: 'apmgw_ACH',
             AccountNumber: payment.account_number,
             RoutingNumber: payment.routing_number,
-            classic_ach_account_type: options[:account_type]
+            SECCode: options[:account_type] || 'WEB'
           }
         }
       end
 
       def add_payment_method(post, payment, key, options = {})
-        payment_data = payment.is_a?(CreditCard) || payment.is_a?(NetworkTokenizationCreditCard) ? credit_card_hash(payment) : payment
-        if payment.is_a?(NetworkTokenizationCreditCard)
-          payment_data[:brand] = payment.brand.upcase
+        return post[key] = { userPaymentOptionId: options[:user_payment_option_id] } if key == :userPaymentOption
 
-          external_token = {}
-          external_token[:externalTokenProvider] = NETWORK_TOKENIZATION_CARD_MAPPING[payment.source.to_s]
-          external_token[:cryptogram] = payment.payment_cryptogram if payment.payment_cryptogram
-          external_token[:eciProvider] = payment.eci if payment.eci
+        payment_data = extract_payment_data(payment)
 
-          payment_data.slice!(:cardNumber, :expirationMonth, :expirationYear, :last4Digits, :brand, :CVV)
-
-          post[:paymentOption] = { card: payment_data.merge(externalToken: external_token) }
-
-        elsif payment.is_a?(CreditCard)
+        case payment
+        when NetworkTokenizationCreditCard
+          add_network_tokenization_data(post, payment, payment_data)
+        when CreditCard
           post[key] = key == :paymentOption ? { card: payment_data } : payment_data
-        elsif payment.is_a?(Check)
-          post[:userTokenId] = options[:user_token_id]
+        when Check
           add_bank_account(post, payment, options)
           url_details(post, options)
         else
-          post[key] = {
-            userPaymentOptionId: payment_data,
-            card: { CVV: options[:cvv_code] }
-          }
+          post[key] = { userPaymentOptionId: payment_data }
         end
+      end
+
+      def extract_payment_data(payment)
+        if payment.is_a?(CreditCard) || payment.is_a?(NetworkTokenizationCreditCard)
+          credit_card_hash(payment)
+        else
+          payment
+        end
+      end
+
+      def add_network_tokenization_data(post, payment, payment_data)
+        payment_data[:brand] = payment.brand.upcase
+        external_token = {
+          externalTokenProvider: NETWORK_TOKENIZATION_CARD_MAPPING[payment.source.to_s],
+          cryptogram: payment.payment_cryptogram,
+          eciProvider: payment.eci
+        }.compact
+
+        payment_data.slice!(:cardNumber, :expirationMonth, :expirationYear, :last4Digits, :brand, :CVV)
+        post[:paymentOption] = { card: payment_data.merge(externalToken: external_token) }
       end
 
       def add_customer_names(full_name, payment_method)
@@ -475,7 +497,15 @@ module ActiveMerchant
       end
 
       def authorization_from(action, response, post)
-        response.dig(:transactionId)
+        if zero_auth?(post)
+          response.dig(:paymentOption, :userPaymentOptionId)
+        else
+          response[:transactionId]
+        end
+      end
+
+      def zero_auth?(post)
+        post[:userTokenId].present? && post[:transactionType] == 'Auth' && post[:amount].to_i == 0
       end
 
       def message_from(response)
