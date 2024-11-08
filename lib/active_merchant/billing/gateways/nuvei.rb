@@ -43,6 +43,7 @@ module ActiveMerchant
         add_address(post, payment, options)
         add_customer_ip(post, options)
         add_stored_credentials(post, payment, options)
+        add_account_funding_transaction(post, payment, options)
         post[:userTokenId] = options[:user_token_id] if options[:user_token_id]
         post[:isPartialApproval] = options[:is_partial_approval] ? 1 : 0
         post[:authenticationOnlyType] = options[:authentication_only_type] if options[:authentication_only_type]
@@ -122,6 +123,18 @@ module ActiveMerchant
           storedCredentialsMode: stored_credentials_mode
         }
         post[:isRebilling] = stored_credentials_mode
+      end
+
+      def add_account_funding_transaction(post, payment, options = {})
+        return unless options[:is_aft]
+
+        recipient_details = {
+          firstName: payment.first_name,
+          lastName: payment.last_name,
+          country: options.dig(:billing_address, :country)
+        }.compact
+
+        post[:recipientDetails] = recipient_details unless recipient_details.empty?
       end
 
       def set_reason_type(post, options)

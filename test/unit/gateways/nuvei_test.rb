@@ -367,6 +367,19 @@ class NuveiTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_account_funding_transactions
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(is_aft: true))
+    end.check_request do |_method, endpoint, data, _headers|
+      if /payment/.match?(endpoint)
+        json_data = JSON.parse(data)
+        assert_match(@credit_card.first_name, json_data['recipientDetails']['firstName'])
+        assert_match(@credit_card.last_name, json_data['recipientDetails']['lastName'])
+        assert_match(@options[:billing_address][:country], json_data['recipientDetails']['country'])
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def three_ds_assertions(payment_option_card)
