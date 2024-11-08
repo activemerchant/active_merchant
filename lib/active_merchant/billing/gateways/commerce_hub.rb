@@ -120,13 +120,13 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_three_d_secure(post, payment, options)
+      def add_three_d_secure(post, options)
         return unless three_d_secure = options[:three_d_secure]
 
         post[:additionalData3DS] = {
           dsTransactionId: three_d_secure[:ds_transaction_id],
           authenticationStatus: three_d_secure[:authentication_response_status],
-          serviceProviderTransactionId: three_d_secure[:three_ds_server_trans_id],
+          serverTransactionId: three_d_secure[:three_ds_server_trans_id],
           acsTransactionId: three_d_secure[:acs_transaction_id],
           mpiData: {
             cavv: three_d_secure[:cavv],
@@ -228,7 +228,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_purchase_and_auth_request(post, money, payment, options)
-        add_three_d_secure(post, payment, options)
+        add_three_d_secure(post, options)
         add_invoice(post, money, options)
         add_payment(post, payment, options)
         add_stored_credentials(post, options)

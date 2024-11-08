@@ -46,7 +46,8 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
       cavv: 'AAABCZIhcQAAAABZlyFxAAAAAAA',
       eci: '05',
       xid: '&x_MD5_Hash=abfaf1d1df004e3c27d5d2e05929b529&x_state=BC&x_reference_3=&x_auth_code=ET141870&x_fp_timestamp=1231877695',
-      version: '2.2.0'
+      version: '2.2.0',
+      three_ds_server_trans_id: 'df8b9557-e41b-4e17-87e9-2328694a2ea0'
     }
     @dynamic_descriptors = {
       mcc: '1234',
@@ -118,6 +119,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
+    assert_equal response.params['additionalData3DS']['serverTransactionId'], @three_d_secure[:three_ds_server_trans_id]
   end
 
   def test_successful_purchase_whit_physical_goods_indicator
