@@ -422,7 +422,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+      assert_match(/<storedCredentials usage\=\"USED\"\>/, data)
       assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
@@ -437,7 +437,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @nt_credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+      assert_match(/<storedCredentials usage\=\"USED\"\>/, data)
       assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
@@ -448,7 +448,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @nt_credit_card, @options.merge({ stored_credential: stored_credential_params }))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+      assert_match(/<storedCredentials usage\=\"USED\"\>/, data)
       assert_match(/<schemeTransactionIdentifier\>20005060720116005060\<\/schemeTransactionIdentifier\>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
@@ -1700,6 +1700,25 @@ class WorldpayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"RECURRING\"\>/, data)
       assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_stored_credentials_for_subsequent_customer_transaction
+    options = @options.merge!({
+      stored_credential: {
+        network_transaction_id: '3812908490218390214124',
+        initial_transaction: false,
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    })
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"USED\"\>/, data)
+      assert_not_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
   end

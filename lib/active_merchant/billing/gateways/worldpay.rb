@@ -783,7 +783,7 @@ module ActiveMerchant #:nodoc:
       def add_stored_credential_options(xml, options = {})
         if options[:stored_credential]
           add_stored_credential_using_normalized_fields(xml, options)
-        else
+        elsif options[:stored_credential_usage]
           add_stored_credential_using_gateway_specific_fields(xml, options)
         end
       end
@@ -798,23 +798,21 @@ module ActiveMerchant #:nodoc:
         stored_credential_params = generate_stored_credential_params(is_initial_transaction, reason, options[:stored_credential][:initiator])
 
         xml.storedCredentials stored_credential_params do
-          xml.schemeTransactionIdentifier network_transaction_id(options) if network_transaction_id(options) && subsequent_non_cardholder_transaction?(options, is_initial_transaction)
+          xml.schemeTransactionIdentifier network_transaction_id(options) if send_network_transaction_id?(options)
         end
       end
 
       def add_stored_credential_using_gateway_specific_fields(xml, options)
-        return unless options[:stored_credential_usage]
-
         is_initial_transaction = options[:stored_credential_usage] == 'FIRST'
         stored_credential_params = generate_stored_credential_params(is_initial_transaction, options[:stored_credential_initiated_reason])
 
         xml.storedCredentials stored_credential_params do
-          xml.schemeTransactionIdentifier options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id] && subsequent_non_cardholder_transaction?(options, is_initial_transaction)
+          xml.schemeTransactionIdentifier options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id] && !is_initial_transaction
         end
       end
 
-      def subsequent_non_cardholder_transaction?(options, is_initial_transaction)
-        !is_initial_transaction && options&.dig(:stored_credential, :initiator) != 'cardholder'
+      def send_network_transaction_id?(options)
+        network_transaction_id(options) && !options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) != 'cardholder'
       end
 
       def add_shopper(xml, options)
@@ -1164,6 +1162,10 @@ module ActiveMerchant #:nodoc:
 
         stored_credential_params = {}
         stored_credential_params['usage'] = is_initial_transaction ? 'FIRST' : 'USED'
+
+        return stored_credential_params unless %w(RECURRING INSTALMENT).include?(reason)
+        return stored_credential_params if customer_or_merchant == 'customerInitiatedReason' && stored_credential_params['usage'] == 'USED'
+
         stored_credential_params[customer_or_merchant] = reason if reason
         stored_credential_params
       end
