@@ -311,20 +311,31 @@ module ActiveMerchant #:nodoc:
         source[:walletType] = payment.source.to_s.upcase
       end
 
+      def add_network_token(source, payment, options)
+        source[:sourceType] = 'PaymentToken'
+        source[:tokenData] = payment.number
+        source[:tokenSource] = 'NETWORK_TOKEN'
+        source[:cryptogram] = payment.payment_cryptogram
+        source[:card] = {
+          expirationMonth: format(payment.month, :two_digits),
+          expirationYear: format(payment.year, :four_digits)
+        }
+      end
+
       def add_payment(post, payment, options = {})
         source = {}
-        case payment
-        when NetworkTokenizationCreditCard
-          add_decrypted_wallet(source, payment, options)
-        when CreditCard
-          if options[:encryption_data].present?
-            source[:sourceType] = 'PaymentCard'
-            source[:encryptionData] = options[:encryption_data]
-          else
-            add_credit_card(source, payment, options)
-          end
-        when String
+
+        if payment.is_a?(String)
           add_payment_token(source, payment, options)
+        elsif payment.mobile_wallet?
+          add_decrypted_wallet(source, payment, options)
+        elsif payment.network_token?
+          add_network_token(source, payment, options)
+        elsif options[:encryption_data].present?
+          source[:sourceType] = 'PaymentCard'
+          source[:encryptionData] = options[:encryption_data]
+        elsif payment.is_a?(CreditCard)
+          add_credit_card(source, payment, options)
         end
         post[:source] = source
       end

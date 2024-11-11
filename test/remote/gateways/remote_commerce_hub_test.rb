@@ -37,6 +37,15 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
       source: :apple_pay,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
     )
+    @network_token = network_tokenization_credit_card(
+      '4005550000000019',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :network_token,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
     @declined_card = credit_card('4000300011112220', month: '02', year: '2035', verification_value: '123')
     @master_card = credit_card('5454545454545454', brand: 'master')
     @options = {}
@@ -344,6 +353,13 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Approved', response.message
     assert_equal 'DecryptedWallet', response.params['source']['sourceType']
+  end
+
+  def test_successful_purchase_with_network_token
+    response = @gateway.purchase(@amount, @network_token, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_equal 'PaymentToken', response.params['source']['sourceType']
   end
 
   def test_failed_purchase_with_declined_apple_pay

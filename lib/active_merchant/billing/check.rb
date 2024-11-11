@@ -60,6 +60,18 @@ module ActiveMerchant #:nodoc:
         false
       end
 
+      def network_token?
+        false
+      end
+
+      def mobile_wallet?
+        false
+      end
+
+      def encrypted_wallet?
+        false
+      end
+
       def valid_routing_number?
         digits = routing_number.to_s.split('').map(&:to_i).select { |d| (0..9).cover?(d) }
         case digits.size
