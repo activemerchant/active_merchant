@@ -10,6 +10,9 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     @fully_auth_card = credit_card('5223450000000007', brand: 'mastercard', verification_value: '090', month: '12')
     @declined_card = credit_card('4176661000001111', verification_value: '681', month: '12')
     @three_ds_card = credit_card('5455330200000016', verification_value: '737', month: '10', year: Time.now.year + 2)
+    @inquiry_match_card = credit_card('4123560000000072')
+    @inquiry_no_match_card = credit_card('4123560000000429')
+    @inquiry_unverified_card = credit_card('4176660000000266')
     @address = {
       name:     'Jon Smith',
       address1: '123 Your Street',
@@ -306,6 +309,40 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, options_with_auth_details)
     assert_success response
     assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_zero_authorize_with_name_inquiry_match
+    extra_options = @options.merge({ account_name_inquiry: true, first_name: 'Art', last_name: 'Vandelay' })
+    response = @gateway.authorize(0, @inquiry_match_card, extra_options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '2', response.params['O']
+    assert_equal 'A', response.params['Z26']
+    assert_equal 'A', response.params['Z27']
+    assert_equal 'A', response.params['Z28']
+    assert response.authorization
+  end
+
+  def test_successful_zero_authorize_with_name_inquiry_no_match
+    extra_options = @options.merge({ account_name_inquiry: true, first_name: 'Art', last_name: 'Vandelay' })
+    response = @gateway.authorize(0, @inquiry_no_match_card, extra_options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '2', response.params['O']
+    assert_equal 'C', response.params['Z26']
+    assert_equal 'C', response.params['Z27']
+    assert_equal 'C', response.params['Z28']
+    assert response.authorization
+  end
+
+  def test_successful_zero_authorize_with_name_inquiry_unverified
+    extra_options = @options.merge({ account_name_inquiry: true, first_name: 'Art', last_name: 'Vandelay' })
+    response = @gateway.authorize(0, @inquiry_unverified_card, extra_options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '2', response.params['O']
+    assert_equal 'U', response.params['Z26']
     assert response.authorization
   end
 

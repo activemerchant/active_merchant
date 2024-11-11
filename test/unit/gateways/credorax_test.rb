@@ -840,6 +840,20 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_credit_response)
   end
 
+  def test_authorize_adds_cardholder_name_inquiry
+    @options[:account_name_inquiry] = true
+    @options[:first_name] = 'Art'
+    @options[:last_name] = 'Vandelay'
+    stub_comms do
+      @gateway.authorize(0, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/c22=Art/, data)
+      assert_match(/c23=Vandelay/, data)
+      assert_match(/a9=5/, data)
+      assert_not_match(/c1=/, data)
+    end.respond_with(successful_credit_response)
+  end
+
   def test_purchase_omits_phone_when_nil
     # purchase passes the phone number when provided
     @options[:billing_address][:phone] = '555-444-3333'
