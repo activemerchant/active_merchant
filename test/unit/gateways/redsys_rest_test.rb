@@ -13,6 +13,15 @@ class RedsysRestTest < Test::Unit::TestCase
     @credit_card = credit_card
     @amount = 100
 
+    @nt_credit_card = network_tokenization_credit_card(
+      '4895370015293175',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      eci: '07',
+      source: :network_token,
+      verification_value: '737',
+      brand: 'visa'
+    )
+
     @options = {
       order_id: '1001',
       billing_address: address,
@@ -76,6 +85,22 @@ class RedsysRestTest < Test::Unit::TestCase
     assert_equal res.success?, true
     assert_equal res.message, 'CardConfiguration'
     assert_equal res.params.include?('ds_emv3ds'), true
+  end
+
+  def test_successful_purchase_with_network_token
+    stub_comms(@gateway, :commit) do
+      @gateway.purchase(100, @nt_credit_card, @options)
+    end.check_request do |post, _options|
+      assert_equal post[:DS_MERCHANT_TRANSACTIONTYPE], '0'
+      assert_equal post[:DS_MERCHANT_AMOUNT], @amount.to_s
+      assert_equal post[:DS_MERCHANT_CURRENCY], '978'
+      assert_equal post[:DS_MERCHANT_ORDER], @options[:order_id]
+      assert_equal post[:Ds_Merchant_TokenData][:token], @nt_credit_card.number
+      assert_equal post[:Ds_Merchant_TokenData][:tokenCryptogram], @nt_credit_card.payment_cryptogram
+      assert_equal post[:Ds_Merchant_TokenData][:expirationDate], '2509'
+      assert_equal post[:DS_MERCHANT_PRODUCTDESCRIPTION], 'Store+Purchase'
+      assert_equal post[:DS_MERCHANT_DIRECTPAYMENT], true
+    end.respond_with(successful_purchase_response_with_network_token)
   end
 
   def test_use_of_add_threeds
@@ -354,5 +379,9 @@ class RedsysRestTest < Test::Unit::TestCase
 
   def error_void_response
     %[{\"errorCode\":\"SIS0222\"}]
+  end
+
+  def successful_purchase_response_with_network_token
+    %[{\"Ds_SignatureVersion\":\"HMAC_SHA256_V1\",\"Ds_MerchantParameters\":\"eyJEc19BbW91bnQiOiIxMDAiLCJEc19DdXJyZW5jeSI6Ijk3OCIsIkRzX09yZGVyIjoiMTc3ODY4ODM3LjMzIiwiRHNfTWVyY2hhbnRDb2RlIjoiOTk5MDA4ODgxIiwiRHNfVGVybWluYWwiOiIxIiwiRHNfUmVzcG9uc2UiOiIwMTk1IiwiRHNfQXV0aG9yaXNhdGlvbkNvZGUiOiIiLCJEc19UcmFuc2FjdGlvblR5cGUiOiIwIiwiRHNfU2VjdXJlUGF5bWVudCI6IjAiLCJEc19MYW5ndWFnZSI6IjEiLCJEc19DYXJkTnVtYmVyIjoiNDU0ODgxKioqKioqMDAwNCIsIkRzX01lcmNoYW50RGF0YSI6IiIsIkRzX0NhcmRfQ291bnRyeSI6IjcyNCIsIkRzX1Byb2Nlc3NlZFBheU1ldGhvZCI6IjMiLCJEc19Db250cm9sXzE3MzE1MTEzMjQ1MzYiOiIxNzMxNTExMzI0NTM2IiwiRHNfRUNJIjoiMDciLCJEc19SZXNwb25zZV9EZXNjcmlwdGlvbiI6IkVNSVNPUiBFWElHRSBBVVRFTlRJQ0FDScOTTiJ9\",\"Ds_Signature\":\"rn7nE_-I6V3cbxGN_0EK7SM8CcaMud7bssHzP97OOs8=\"}]
   end
 end
