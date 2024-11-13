@@ -264,7 +264,8 @@ class RemoteNuveiTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, response.authorization, @options)
     assert_success capture
-    options_stored_credentials = @options.merge!(related_transaction_id: response.authorization, stored_credential: stored_credential(:cardholder, :recurring, id: response.network_transaction_id))
+
+    options_stored_credentials = @options.merge!(stored_credential: stored_credential(:cardholder, :recurring, id: response.network_transaction_id))
     assert purchase_response = @gateway.purchase(@amount, @credit_card, options_stored_credentials)
     assert_success purchase_response
   end

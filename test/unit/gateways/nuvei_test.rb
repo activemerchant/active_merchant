@@ -287,6 +287,7 @@ class NuveiTest < Test::Unit::TestCase
     end.check_request do |_method, endpoint, data, _headers|
       if /payment/.match?(endpoint)
         json_data = JSON.parse(data)
+        assert_match(/abc123/, json_data['relatedTransactionId'])
         assert_match(/RECURRING/, json_data['authenticationOnlyType'])
       end
     end.respond_with(successful_purchase_response)
