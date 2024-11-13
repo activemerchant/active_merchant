@@ -958,11 +958,11 @@ module ActiveMerchant # :nodoc:
           if credit_card_or_vault_id.is_a?(NetworkTokenizationCreditCard)
             case credit_card_or_vault_id.source
             when :apple_pay
-              add_apple_pay(parameters, credit_card_or_vault_id)
+              add_apple_pay(parameters, credit_card_or_vault_id, options)
             when :google_pay
-              add_google_pay(parameters, credit_card_or_vault_id)
+              add_google_pay(parameters, credit_card_or_vault_id, options)
             else
-              add_network_tokenization_card(parameters, credit_card_or_vault_id)
+              add_network_tokenization_card(parameters, credit_card_or_vault_id, options)
             end
           else
             add_credit_card(parameters, credit_card_or_vault_id)
@@ -991,32 +991,54 @@ module ActiveMerchant # :nodoc:
         }
       end
 
-      def add_apple_pay(parameters, payment_method)
-        parameters[:apple_pay_card] = {
-          number: payment_method.number,
-          expiration_month: payment_method.month.to_s.rjust(2, '0'),
-          expiration_year: payment_method.year.to_s,
-          cardholder_name: payment_method.name,
-          cryptogram: payment_method.payment_cryptogram,
-          eci_indicator: payment_method.eci
-        }
+      def add_apple_pay(parameters, payment_method, options)
+        if options.dig(:stored_credential, :initiator) == 'merchant'
+          parameters[:apple_pay_card] = {
+            number: payment_method.number,
+            expiration_month: payment_method.month.to_s.rjust(2, '0'),
+            expiration_year: payment_method.year.to_s,
+            cardholder_name: payment_method.name,
+            cryptogram: payment_method.payment_cryptogram
+          }
+        else
+          parameters[:apple_pay_card] = {
+            number: payment_method.number,
+            expiration_month: payment_method.month.to_s.rjust(2, '0'),
+            expiration_year: payment_method.year.to_s,
+            cardholder_name: payment_method.name,
+            cryptogram: payment_method.payment_cryptogram,
+            eci_indicator: payment_method.eci
+          }
+        end
       end
 
-      def add_google_pay(parameters, payment_method)
+      def add_google_pay(parameters, payment_method, options)
         Braintree::Version::Major < 3 ? pay_card = :android_pay_card : pay_card = :google_pay_card
-        parameters[pay_card] = {
-          number: payment_method.number,
-          cryptogram: payment_method.payment_cryptogram,
-          expiration_month: payment_method.month.to_s.rjust(2, '0'),
-          expiration_year: payment_method.year.to_s,
-          google_transaction_id: payment_method.transaction_id,
-          source_card_type: payment_method.brand,
-          source_card_last_four: payment_method.last_digits,
-          eci_indicator: payment_method.eci
-        }
+        if options.dig(:stored_credential, :initiator) == 'merchant'
+          parameters[pay_card] = {
+            number: payment_method.number,
+            expiration_month: payment_method.month.to_s.rjust(2, '0'),
+            expiration_year: payment_method.year.to_s,
+            google_transaction_id: payment_method.transaction_id,
+            source_card_type: payment_method.brand,
+            source_card_last_four: payment_method.last_digits,
+            cryptogram: payment_method.payment_cryptogram
+          }
+        else
+          parameters[pay_card] = {
+            number: payment_method.number,
+            cryptogram: payment_method.payment_cryptogram,
+            expiration_month: payment_method.month.to_s.rjust(2, '0'),
+            expiration_year: payment_method.year.to_s,
+            google_transaction_id: payment_method.transaction_id,
+            source_card_type: payment_method.brand,
+            source_card_last_four: payment_method.last_digits,
+            eci_indicator: payment_method.eci
+          }
+        end
       end
 
-      def add_network_tokenization_card(parameters, payment_method)
+      def add_network_tokenization_card(parameters, payment_method, options)
         parameters[:credit_card] = {
           number: payment_method.number,
           expiration_month: payment_method.month.to_s.rjust(2, '0'),
