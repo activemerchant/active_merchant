@@ -731,7 +731,7 @@ module ActiveMerchant #:nodoc:
       def add_card_3d_secure_usage_supported(response)
         return unless response.params['card'] && response.params['card']['three_d_secure_usage']
 
-        @card_3d_supported = response.params['card']['three_d_secure_usage']['supported'] if response.params['card']['three_d_secure_usage']['supported']
+        @card_3d_supported = response.params['card']['three_d_secure_usage']['supported']
       end
 
       def format_idempotency_key(options, suffix)
