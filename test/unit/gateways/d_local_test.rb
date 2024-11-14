@@ -348,7 +348,19 @@ class DLocalTest < Test::Unit::TestCase
     response = @gateway.void('D-15104-be03e883-3e6b-497d-840e-54c8b6209bc3', @options)
     assert_success response
 
+    assert_equal 'The payment was cancelled', response.message
     assert_equal 'D-15104-c147279d-14ab-4537-8ba6-e3e1cde0f8d2', response.authorization
+  end
+
+  def test_faild_void_with_status_paid
+    @gateway.expects(:ssl_post).returns(failed_void_response_with_status_paid)
+
+    response = @gateway.void('D-15104-be03e883-3e6b-497d-840e-54c8b6209bc3', @options)
+    assert_failure response
+
+    assert_equal 'D-15104-c147279d-14ab-4537-8ba6-e3e1cde0f8d2', response.authorization
+    assert_equal '200', response.error_code
+    assert_equal 'The payment was paid', response.message
   end
 
   def test_failed_void
@@ -614,6 +626,10 @@ class DLocalTest < Test::Unit::TestCase
 
   def failed_void_response
     '{"code":5002,"message":"Invalid transaction status"}'
+  end
+
+  def failed_void_response_with_status_paid
+    '{"id":"D-15104-c147279d-14ab-4537-8ba6-e3e1cde0f8d2","amount":1.00,"currency":"BRL","payment_method_id":"VI","payment_method_type":"CARD","payment_method_flow":"DIRECT","country":"BR","created_date":"2018-12-06T20:38:01.000+0000","approved_date":"2018-12-06T20:38:01.000+0000","status":"PAID","status_detail":"The payment was paid","status_code":"200","order_id":"46d8978863be935d892cfa3e992f65f3"}'
   end
 
   def successful_purchase_with_network_tx_reference_response

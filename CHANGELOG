@@ -94,6 +94,7 @@
 * Worldpay: Update Stored Credentials [almalee24] #5330
 * Update Rubocop 1.26.0 [almalee24] #5325
 * RedsysREST: Add Network Tokens [gasb150] #5333
+* DLocal: Update the success_from for Void [almalee24] #5337
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
