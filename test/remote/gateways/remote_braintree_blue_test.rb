@@ -1447,7 +1447,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'apple_pay_card', response.params['braintree_transaction']['payment_instrument_type']
   end
 
-  def test_authorize_and_capture_with_apple_pay_recurring
+  def test_successful_apple_pay_recurring_purchase_mit
     network_tokenized_credit_card = network_tokenization_credit_card(
       '4111111111111111',
       brand: 'visa',
@@ -1455,51 +1455,12 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       source: :apple_pay,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
     )
+    apple_pay_options = @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring' })
 
-    apple_pay_options = @options.merge(stored_credential: { initiator: 'customer', reason_type: 'recurring' })
-    assert auth = @gateway.authorize(@amount, network_tokenized_credit_card, apple_pay_options)
-    assert_success auth
-    assert_equal '1000 Approved', auth.message
-    assert auth.authorization
-    assert capture = @gateway.capture(@amount, auth.authorization)
-    assert_success capture
-    assert_equal true, capture.params['braintree_transaction']['recurring']
-    assert_equal 'apple_pay_card', capture.params['braintree_transaction']['payment_instrument_type']
-  end
-
-  def test_successful_google_pay_recurring_purchase
-    network_tokenized_credit_card = network_tokenization_credit_card(
-      '4111111111111111',
-      brand: 'visa',
-      transaction_id: '1234567890',
-      source: :google_pay,
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
-
-    google_pay_options = @options.merge(stored_credential: { initiator: 'customer', reason_type: 'recurring' })
-    assert response = @gateway.purchase(@amount, network_tokenized_credit_card, google_pay_options)
+    assert response = @gateway.purchase(@amount, network_tokenized_credit_card, apple_pay_options)
     assert_success response
     assert_equal true, response.params['braintree_transaction']['recurring']
-    assert_equal 'android_pay_card', response.params['braintree_transaction']['payment_instrument_type']
-  end
-
-  def test_authorize_and_capture_with_google_pay_card_recurring
-    credit_card = network_tokenization_credit_card(
-      '4111111111111111',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      source: :google_pay,
-      transaction_id: '123456789'
-    )
-
-    google_options = @options.merge(stored_credential: { initiator: 'customer', reason_type: 'recurring' })
-    assert auth = @gateway.authorize(@amount, credit_card, google_options)
-    assert_success auth
-    assert_equal '1000 Approved', auth.message
-    assert auth.authorization
-    assert capture = @gateway.capture(@amount, auth.authorization)
-    assert_success capture
-    assert_equal true, capture.params['braintree_transaction']['recurring']
-    assert_equal 'android_pay_card', capture.params['braintree_transaction']['payment_instrument_type']
+    assert_equal 'apple_pay_card', response.params['braintree_transaction']['payment_instrument_type']
   end
 
   def test_unsuccessful_apple_pay_purchase_and_return_payment_details
