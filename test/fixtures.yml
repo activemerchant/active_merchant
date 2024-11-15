@@ -452,6 +452,12 @@ forte:
   api_key: "f087a90f00f0ae57050c937ed3815c9f"
   secret: "d793d64064e3113a74fa72035cfc3a1d"
 
+fortis:
+  user_id: 'USER_ID'
+  user_api_key: 'USER_API_KEY'
+  developer_id: 'DEVELOPER_ID'
+  location_id: 'LOCATION_ID'
+
 garanti:
   login: "PROVAUT"
   terminal_id: 30691300
