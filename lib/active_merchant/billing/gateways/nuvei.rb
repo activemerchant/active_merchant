@@ -153,7 +153,7 @@ module ActiveMerchant
 
         unless reason_type == 'ADDCARD'
           fetch_session_token
-          post[:relatedTransactionId] = options[:related_transaction_id]
+          post[:relatedTransactionId] = options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
         end
 
         post[:authenticationOnlyType] = reason_type
@@ -178,7 +178,7 @@ module ActiveMerchant
       private
 
       def network_transaction_id_from(response)
-        response.dig('paymentOption', 'paymentAccountReference')
+        response.dig('transactionId')
       end
 
       def add_customer_ip(post, options)
