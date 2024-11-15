@@ -92,6 +92,21 @@ class LitleTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_alternate_response
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, _data, _headers|
+      # Counterpoint to test_successful_postlive_url:
+      assert_match(/www\.testvantivcnp\.com/, endpoint)
+    end.respond_with(successful_purchase_alternate_response)
+
+    assert_success response
+    assert_equal '136', response.params['response']
+    assert_equal 'Approved', response.message
+    assert_equal '100000000000000006;sale;100', response.authorization
+    assert response.test?
+  end
+
   def test_successful_purchase_prepaid_card_141
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
@@ -825,6 +840,25 @@ class LitleTest < Test::Unit::TestCase
           <response>#{code}</response>
           <responseTime>2014-03-31T11:34:39</responseTime>
           <message>#{message}</message>
+          <authCode>11111 </authCode>
+          <fraudResult>
+            <avsResult>01</avsResult>
+            <cardValidationResult>M</cardValidationResult>
+          </fraudResult>
+        </saleResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def successful_purchase_alternate_response
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <saleResponse id='1' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>100000000000000006</litleTxnId>
+          <orderId>1</orderId>
+          <response>136</response>
+          <responseTime>2014-03-31T11:34:39</responseTime>
+          <message>Approved</message>
           <authCode>11111 </authCode>
           <fraudResult>
             <avsResult>01</avsResult>
