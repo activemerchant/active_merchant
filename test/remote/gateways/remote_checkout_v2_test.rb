@@ -1138,13 +1138,13 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = @gateway.verify(@credit_card, @options_for_verify)
+    response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_match %r{Succeeded}, response.message
   end
 
   def test_successful_verify_via_oauth
-    response = @gateway_oauth.verify(@credit_card, @options_for_verify)
+    response = @gateway_oauth.verify(@credit_card, @options)
     assert_success response
     assert_match %r{Succeeded}, response.message
     assert_not_nil response.responses.first.params['access_token']
@@ -1152,6 +1152,26 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_verify
+    response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_match %r{request_invalid: card_number_invalid}, response.message
+  end
+
+  def test_successful_verify_with_ammount_allocations
+    response = @gateway.verify(@credit_card, @options_for_verify)
+    assert_success response
+    assert_match %r{Succeeded}, response.message
+  end
+
+  def test_successful_verify_via_oauth_with_ammount_allocations
+    response = @gateway_oauth.verify(@credit_card, @options_for_verify)
+    assert_success response
+    assert_match %r{Succeeded}, response.message
+    assert_not_nil response.responses.first.params['access_token']
+    assert_not_nil response.responses.first.params['expires']
+  end
+
+  def test_failed_verify_with_ammount_allocations
     response = @gateway.verify(@declined_card, @options_for_verify)
     assert_failure response
     assert_match %r{request_invalid: card_number_invalid}, response.message
