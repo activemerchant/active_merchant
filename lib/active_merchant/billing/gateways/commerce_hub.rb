@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CommerceHubGateway < Gateway
       self.test_url = 'https://connect-cert.fiservapps.com/ch'
-      self.live_url = 'https://prod.api.fiservapps.com/ch'
+      self.live_url = 'https://connect.fiservapis.com/ch'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
