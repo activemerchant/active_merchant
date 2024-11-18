@@ -509,7 +509,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_amount_allocations_data(post, options)
-        return unless options[:amount_allocations]&.is_a?(Array)
+        return unless options[:amount_allocations].is_a?(Array)
 
         post[:amount_allocations] = options[:amount_allocations].select do |v|
           v[:id].present? && v[:amount].present?
