@@ -68,9 +68,10 @@ class RedsysRestTest < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'unscheduled',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     }
+
     res = @gateway.purchase(123, credit_card, used_options)
     assert_success res
     assert_equal 'Transaction Approved', res.message

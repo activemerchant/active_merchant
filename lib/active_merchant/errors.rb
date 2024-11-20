@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  class ActiveMerchantError < StandardError #:nodoc:
+module ActiveMerchant # :nodoc:
+  class ActiveMerchantError < StandardError # :nodoc:
   end
 
   class ConnectionError < ActiveMerchantError # :nodoc:

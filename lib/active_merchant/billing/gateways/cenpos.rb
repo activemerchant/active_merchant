@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CenposGateway < Gateway
       self.display_name = 'CenPOS'
       self.homepage_url = 'https://www.cenpos.com/'

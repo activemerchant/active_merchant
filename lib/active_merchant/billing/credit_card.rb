@@ -2,8 +2,8 @@ require 'time'
 require 'date'
 require 'active_merchant/billing/model'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # A +CreditCard+ object represents a physical credit card, and is capable of validating the various
     # data associated with these.
     #
@@ -388,7 +388,7 @@ module ActiveMerchant #:nodoc:
         value.to_s.gsub(regex, '')
       end
 
-      def validate_essential_attributes #:nodoc:
+      def validate_essential_attributes # :nodoc:
         errors = []
 
         if self.class.requires_name?
@@ -412,7 +412,7 @@ module ActiveMerchant #:nodoc:
         errors
       end
 
-      def validate_card_brand_and_number #:nodoc:
+      def validate_card_brand_and_number # :nodoc:
         errors = []
 
         errors << [:brand, 'is invalid'] if !empty?(brand) && !CreditCard.card_companies.include?(brand)
@@ -428,7 +428,7 @@ module ActiveMerchant #:nodoc:
         errors
       end
 
-      def validate_verification_value #:nodoc:
+      def validate_verification_value # :nodoc:
         errors = []
 
         if verification_value?
@@ -439,7 +439,7 @@ module ActiveMerchant #:nodoc:
         errors
       end
 
-      class ExpiryDate #:nodoc:
+      class ExpiryDate # :nodoc:
         attr_reader :month, :year
 
         def initialize(month, year)
@@ -447,11 +447,11 @@ module ActiveMerchant #:nodoc:
           @year = year.to_i
         end
 
-        def expired? #:nodoc:
+        def expired? # :nodoc:
           Time.now.utc > expiration
         end
 
-        def expiration #:nodoc:
+        def expiration # :nodoc:
           Time.utc(year, month, month_days, 23, 59, 59)
         rescue ArgumentError
           Time.at(0).utc

@@ -1,6 +1,6 @@
 require File.join(File.dirname(__FILE__), '..', 'check.rb')
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class InspireGateway < Gateway
       self.live_url = self.test_url = 'https://secure.inspiregateway.net/api/transact.php'
 

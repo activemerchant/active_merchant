@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class FirstdataE4V27Gateway < Gateway
       self.test_url = 'https://api.demo.globalgatewaye4.firstdata.com/transaction/v28'
       self.live_url = 'https://api.globalgatewaye4.firstdata.com/transaction/v28'

@@ -22,7 +22,7 @@ class RemoteWompiTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_more_options
     reference = SecureRandom.alphanumeric(12)
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(reference: reference, installments: 3))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(reference:, installments: 3))
     assert_success response
     response_data = response.params['data']
     assert_equal response_data.dig('reference'), reference

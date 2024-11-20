@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class IpgGateway < Gateway
       self.test_url = 'https://test.ipg-online.com/ipgapi/services'
       self.live_url = 'https://www5.ipg-online.com/ipgapi/services'
@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_storage_item(xml, credit_card, options)
-        requires!(options.merge!({ credit_card: credit_card, hosted_data_id: @hosted_data_id }), :credit_card, :hosted_data_id)
+        requires!(options.merge!({ credit_card:, hosted_data_id: @hosted_data_id }), :credit_card, :hosted_data_id)
         xml.tag!('ns2:StoreHostedData') do
           xml.tag!('ns2:DataStorageItem') do
             add_credit_card(xml, credit_card, {}, 'ns2')
@@ -161,7 +161,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_unstore_item(xml, hosted_data_id)
-        requires!({}.merge!({ hosted_data_id: hosted_data_id }), :hosted_data_id)
+        requires!({}.merge!({ hosted_data_id: }), :hosted_data_id)
         xml.tag!('ns2:StoreHostedData') do
           xml.tag!('ns2:DataStorageItem') do
             xml.tag!('ns2:Function', 'delete')
@@ -264,7 +264,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(xml, money, payment, options)
-        requires!(options.merge!({ money: money }), :currency, :money)
+        requires!(options.merge!({ money: }), :currency, :money)
         xml.tag!('v1:Payment') do
           xml.tag!('v1:HostedDataID', payment) if payment&.is_a?(String)
           xml.tag!('v1:HostedDataStoreID', options[:hosted_data_store_id]) if options[:hosted_data_store_id]

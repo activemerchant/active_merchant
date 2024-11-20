@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class Flo2cashGateway < Gateway
       self.display_name = 'Flo2Cash'
       self.homepage_url = 'http://www.flo2cash.co.nz/'

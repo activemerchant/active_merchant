@@ -190,10 +190,10 @@ class RemoteCredoraxTest < Test::Unit::TestCase
 
     options = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        cavv: cavv,
-        xid: xid
+        version:,
+        eci:,
+        cavv:,
+        xid:
       },
       # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without a r1 (processor) parameter.
       processor: 'CREDORAX'
@@ -236,10 +236,10 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     options = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id
+        version:,
+        eci:,
+        cavv:,
+        ds_transaction_id:
       },
       # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without a r1 (processor) parameter.
       processor: 'CREDORAX'
@@ -277,10 +277,10 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     options = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id
+        version:,
+        eci:,
+        cavv:,
+        ds_transaction_id:
       }
     )
 
@@ -331,10 +331,10 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     options = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id
+        version:,
+        eci:,
+        cavv:,
+        ds_transaction_id:
       },
       # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without a r1 (processor) parameter.
       processor: 'CREDORAX'
@@ -956,6 +956,6 @@ class RemoteCredoraxTest < Test::Unit::TestCase
 
   def stored_credential_options(*args, id: nil)
     @options.merge(order_id: generate_unique_id,
-                   stored_credential: stored_credential(*args, id: id))
+                   stored_credential: stored_credential(*args, id:))
   end
 end

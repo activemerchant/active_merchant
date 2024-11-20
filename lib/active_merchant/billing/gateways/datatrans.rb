@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class DatatransGateway < Gateway
       self.test_url = 'https://api.sandbox.datatrans.com/v1/'
       self.live_url = 'https://api.datatrans.com/v1/'
@@ -56,20 +56,20 @@ module ActiveMerchant #:nodoc:
         post = { refno: options.fetch(:order_id, '') }
         transaction_id = authorization.split('|').first
         add_currency_amount(post, money, options)
-        commit('settle', post, { transaction_id: transaction_id })
+        commit('settle', post, { transaction_id: })
       end
 
       def refund(money, authorization, options = {})
         post = { refno: options.fetch(:order_id, '') }
         transaction_id = authorization.split('|').first
         add_currency_amount(post, money, options)
-        commit('credit', post, { transaction_id: transaction_id })
+        commit('credit', post, { transaction_id: })
       end
 
       def void(authorization, options = {})
         post = {}
         transaction_id = authorization.split('|').first
-        commit('cancel', post, { transaction_id: transaction_id })
+        commit('cancel', post, { transaction_id: })
       end
 
       def store(payment_method, options = {})
@@ -142,7 +142,7 @@ module ActiveMerchant #:nodoc:
 
         three_ds =
           {
-            "3D":
+            '3D':
               {
                 eci: three_d_secure[:eci],
                 xid: three_d_secure[:xid],

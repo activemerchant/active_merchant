@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SoEasyPayGateway < Gateway
       self.live_url = self.test_url = 'https://secure.soeasypay.com/gateway.asmx'
       self.money_format = :cents

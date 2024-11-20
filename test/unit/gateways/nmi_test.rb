@@ -190,7 +190,7 @@ class NmiTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_shipping_fields
-    options = @transaction_options.merge({ shipping_address: shipping_address })
+    options = @transaction_options.merge({ shipping_address: })
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
@@ -243,7 +243,7 @@ class NmiTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_shipping_email
-    options = @transaction_options.merge({ shipping_address: shipping_address, shipping_email: 'test@example.com' })
+    options = @transaction_options.merge({ shipping_address:, shipping_email: 'test@example.com' })
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
@@ -308,11 +308,11 @@ class NmiTest < Test::Unit::TestCase
     xid = '00000000000000000501'
     options_with_3ds = @transaction_options.merge(
       three_d_secure: {
-        version: version,
-        authentication_response_status: authentication_response_status,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id,
-        xid: xid
+        version:,
+        authentication_response_status:,
+        cavv:,
+        ds_transaction_id:,
+        xid:
       }
     )
 
@@ -339,11 +339,11 @@ class NmiTest < Test::Unit::TestCase
     xid = '00000000000000000501'
     options_with_3ds = @transaction_options.merge(
       three_d_secure: {
-        version: version,
-        authentication_response_status: authentication_response_status,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id,
-        xid: xid
+        version:,
+        authentication_response_status:,
+        cavv:,
+        ds_transaction_id:,
+        xid:
       }
     )
 
@@ -951,7 +951,7 @@ class NmiTest < Test::Unit::TestCase
       tax: 5.25,
       shipping: 10.51,
       ponumber: 1002,
-      stored_credential: stored_credential(*args, id: id)
+      stored_credential: stored_credential(*args, id:)
     }
   end
 

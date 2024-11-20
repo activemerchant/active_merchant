@@ -1,7 +1,7 @@
 require 'active_support/core_ext/hash/slice'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # This gateway uses the current Stripe {Payment Intents API}[https://stripe.com/docs/api/payment_intents].
     # For the legacy API, see the Stripe gateway
     class StripePaymentIntentsGateway < StripeGateway
@@ -494,7 +494,7 @@ module ActiveMerchant #:nodoc:
             number: payment.number,
             exp_month: payment.month,
             exp_year: payment.year,
-            tokenization_method: tokenization_method,
+            tokenization_method:,
             eci: payment.eci,
             cryptogram: payment.payment_cryptogram
           }
@@ -692,7 +692,7 @@ module ActiveMerchant #:nodoc:
 
         unless post[:payment_method_data][:billing_details]
           name = [payment_method.first_name, payment_method.last_name].compact.join(' ')
-          post[:payment_method_data][:billing_details] = { name: name }
+          post[:payment_method_data][:billing_details] = { name: }
         end
       end
 
@@ -731,7 +731,7 @@ module ActiveMerchant #:nodoc:
       def add_card_3d_secure_usage_supported(response)
         return unless response.params['card'] && response.params['card']['three_d_secure_usage']
 
-        @card_3d_supported = response.params['card']['three_d_secure_usage']['supported'] if response.params['card']['three_d_secure_usage']['supported']
+        @card_3d_supported = response.params['card']['three_d_secure_usage']['supported']
       end
 
       def format_idempotency_key(options, suffix)

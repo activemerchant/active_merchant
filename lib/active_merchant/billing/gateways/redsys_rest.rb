@@ -1,7 +1,7 @@
 # coding: utf-8
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # = Redsys Merchant Gateway
     #
     # Gateway support for the Spanish "Redsys" payment gateway system. This is
@@ -240,7 +240,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_action(post, :cancel)
         order_id, amount, currency = split_authorization(authorization)
-        add_amount(post, amount, currency: currency)
+        add_amount(post, amount, currency:)
         add_order(post, order_id)
         add_description(post, options)
 
@@ -491,7 +491,7 @@ module ActiveMerchant #:nodoc:
         if /^\d{4}/.match?(cleansed)
           cleansed[0..11]
         else
-          '%04d' % [rand(0..9999)] + cleansed[0...8]
+          ('%04d' % [rand(0..9999)]) + cleansed[0...8]
         end
       end
 

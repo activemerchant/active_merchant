@@ -1,8 +1,8 @@
 require 'rubygems'
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CheckoutGateway < Gateway
       self.default_currency = 'USD'
       self.money_format = :cents
@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
         _, _, orig_action, amount, currency = split_authorization(authorization)
         commit("void_#{orig_action}") do |xml|
           add_credentials(xml, options)
-          add_invoice(xml, amount.to_i, options.merge(currency: currency))
+          add_invoice(xml, amount.to_i, options.merge(currency:))
           add_reference(xml, authorization)
         end
       end
@@ -159,8 +159,8 @@ module ActiveMerchant #:nodoc:
         xml.trackid(trackid) if trackid
       end
 
-      def commit(action, amount = nil, options = {}, &builder)
-        response = parse_xml(ssl_post(live_url, build_xml(action, &builder)))
+      def commit(action, amount = nil, options = {}, &)
+        response = parse_xml(ssl_post(live_url, build_xml(action, &)))
         Response.new(
           (response[:responsecode] == '0'),
           (response[:result] || response[:error_text] || 'Unknown Response'),

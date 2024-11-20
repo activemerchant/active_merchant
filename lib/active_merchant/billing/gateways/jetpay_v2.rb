@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class JetpayV2Gateway < Gateway
       self.test_url = 'https://test1.jetpay.com/jetpay'
       self.live_url = 'https://gateway20.jetpay.com/jetpay'

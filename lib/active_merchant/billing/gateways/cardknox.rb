@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CardknoxGateway < Gateway
       self.live_url = 'https://x1.cardknox.com/gateway'
 

@@ -227,9 +227,9 @@ class RemoteElavonTest < Test::Unit::TestCase
 
     # Subsequent unscheduled MIT purchase, with additional data
     unscheduled_params = {
-      approval_code: approval_code,
-      par_value: par_value,
-      association_token_data: association_token_data,
+      approval_code:,
+      par_value:,
+      association_token_data:,
       stored_credential: {
         reason_type: 'unscheduled',
         initiator: 'merchant',
@@ -241,7 +241,7 @@ class RemoteElavonTest < Test::Unit::TestCase
 
     # Subsequent recurring MIT purchase
     recurring_params = {
-      approval_code: approval_code,
+      approval_code:,
       stored_credential: {
         reason_type: 'recurring',
         initiator: 'merchant',
@@ -255,7 +255,7 @@ class RemoteElavonTest < Test::Unit::TestCase
     installment_params = {
       installments: '4',
       payment_number: '2',
-      approval_code: approval_code,
+      approval_code:,
       stored_credential: {
         reason_type: 'installment',
         initiator: 'merchant',
@@ -289,8 +289,8 @@ class RemoteElavonTest < Test::Unit::TestCase
 
     # Subsequent unscheduled MIT purchase, with additional data
     unscheduled_params = {
-      par_value: par_value,
-      association_token_data: association_token_data,
+      par_value:,
+      association_token_data:,
       stored_credential: {
         reason_type: 'unscheduled',
         initiator: 'merchant',
@@ -346,8 +346,8 @@ class RemoteElavonTest < Test::Unit::TestCase
     # Subsequent unscheduled MIT purchase, with additional data
     unscheduled_params = {
       ssl_token: token,
-      par_value: par_value,
-      association_token_data: association_token_data,
+      par_value:,
+      association_token_data:,
       stored_credential: {
         reason_type: 'unscheduled',
         initiator: 'merchant',

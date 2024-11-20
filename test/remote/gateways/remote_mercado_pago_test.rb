@@ -141,7 +141,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     metadata = { 'key_1' => 'value_1',
       'key_2' => 'value_2',
       'key_3' => { 'nested_key_1' => 'value_3' } }
-    response = @gateway.purchase(@amount, @credit_card, @options.merge({ metadata: metadata }))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ metadata: }))
     assert_success response
     assert_equal metadata, response.params['metadata']
   end

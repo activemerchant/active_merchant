@@ -191,7 +191,7 @@ class DecidirPlusTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_establishment_name
     establishment_name = 'Heavenly Buffaloes'
-    options = @options.merge(establishment_name: establishment_name)
+    options = @options.merge(establishment_name:)
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @payment_reference, options)
@@ -222,7 +222,7 @@ class DecidirPlusTest < Test::Unit::TestCase
       merchant_email: 'merchant@mail.com',
       merchant_phone: '2678433111'
     }
-    options = @options.merge(aggregate_data: aggregate_data)
+    options = @options.merge(aggregate_data:)
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @payment_reference, options)

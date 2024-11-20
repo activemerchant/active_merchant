@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # Initial setup instructions can be found in
     # http://apps.cybersource.com/library/documentation/dev_guides/SOAP_Toolkits/SOAP_toolkits.pdf
     #
@@ -493,8 +493,8 @@ module ActiveMerchant #:nodoc:
 
         xml = Builder::XmlMarkup.new indent: 2
         add_purchase_data(xml, money, true, options)
-        add_credit_service(xml, request_id: request_id,
-                                request_token: request_token,
+        add_credit_service(xml, request_id:,
+                                request_token:,
                                 use_check_service: reference_is_a_check?(identification))
         add_merchant_category_code(xml, options)
         add_partner_solution_id(xml)
@@ -1222,7 +1222,7 @@ module ActiveMerchant #:nodoc:
           message,
           response,
           test: test?,
-          authorization: authorization,
+          authorization:,
           fraud_review: in_fraud_review?(response),
           avs_result: { code: response[:avsCode] },
           cvv_result: response[:cvCode]

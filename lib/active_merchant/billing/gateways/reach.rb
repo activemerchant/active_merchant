@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ReachGateway < Gateway
       self.test_url = 'https://checkout.rch.how/'
       self.live_url = 'https://checkout.rch.io/'
@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
         add_custom_fields_data(request, options)
         add_customer_data(request, options, payment)
         add_stored_credentials(request, options)
-        post = { request: request, card: add_payment(payment, options) }
+        post = { request:, card: add_payment(payment, options) }
         if options[:stored_credential]
           MultiResponse.run(:use_first_response) do |r|
             r.process { commit('checkout', post) }

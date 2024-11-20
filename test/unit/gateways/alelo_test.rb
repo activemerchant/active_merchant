@@ -346,7 +346,7 @@ class AleloTest < Test::Unit::TestCase
       'Content-Type' => 'application/x-www-form-urlencoded'
     }
 
-    gateway.expects(:ssl_post).with(url, params, headers).returns({ access_token: access_token }.to_json)
+    gateway.expects(:ssl_post).with(url, params, headers).returns({ access_token: }.to_json)
   end
 
   def encryption_key_expectation!(gateway, public_key = 'def456')

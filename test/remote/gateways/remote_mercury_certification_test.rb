@@ -107,7 +107,7 @@ class RemoteMercuryCertificationTest < Test::Unit::TestCase
 
   def options(order_id = nil, other = {})
     {
-      order_id: order_id,
+      order_id:,
       description: 'ActiveMerchant'
     }.merge(other)
   end

@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class HdfcGateway < Gateway
       self.display_name = 'HDFC'
       self.homepage_url = 'http://www.hdfcbank.com/sme/sme-details/merchant-services/guzh6m0i'

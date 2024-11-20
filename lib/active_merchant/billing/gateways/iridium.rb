@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information on the Iridium Gateway please download the
     # documentation from their Merchant Management System.
     #
@@ -395,7 +395,7 @@ module ActiveMerchant #:nodoc:
           message,
           response,
           test: test?,
-          authorization: authorization,
+          authorization:,
           avs_result: {
             street_match: AVS_CODE[ response[:transaction_output_data][:address_numeric_check_result] ],
             postal_match: AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ]

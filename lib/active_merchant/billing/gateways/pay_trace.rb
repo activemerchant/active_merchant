@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayTraceGateway < Gateway
       self.test_url = 'https://api.sandbox.paytrace.com'
       self.live_url = 'https://api.paytrace.com'
@@ -254,7 +254,8 @@ module ActiveMerchant #:nodoc:
           true
         elsif value.casecmp('false').zero?
           false
-        else return nil
+        else
+          return nil
         end
       end
 

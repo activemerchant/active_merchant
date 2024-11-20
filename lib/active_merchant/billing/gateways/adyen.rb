@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class AdyenGateway < Gateway
       # we recommend setting up merchant-specific endpoints.
       # https://docs.adyen.com/developers/api-manual#apiendpoints
@@ -294,8 +294,8 @@ module ActiveMerchant #:nodoc:
         return unless options[:level_2_data].present?
 
         mapper = {
-          "enhancedSchemeData.totalTaxAmount": 'total_tax_amount',
-          "enhancedSchemeData.customerReference": 'customer_reference'
+          'enhancedSchemeData.totalTaxAmount': 'total_tax_amount',
+          'enhancedSchemeData.customerReference': 'customer_reference'
         }
         post[:additionalData].merge!(extract_and_transform(mapper, options[:level_2_data]))
       end
@@ -303,13 +303,13 @@ module ActiveMerchant #:nodoc:
       def add_level_3_data(post, options)
         return unless options[:level_3_data].present?
 
-        mapper = { "enhancedSchemeData.freightAmount": 'freight_amount',
-          "enhancedSchemeData.destinationStateProvinceCode": 'destination_state_province_code',
-          "enhancedSchemeData.shipFromPostalCode": 'ship_from_postal_code',
-          "enhancedSchemeData.orderDate": 'order_date',
-          "enhancedSchemeData.destinationPostalCode": 'destination_postal_code',
-          "enhancedSchemeData.destinationCountryCode": 'destination_country_code',
-          "enhancedSchemeData.dutyAmount": 'duty_amount' }
+        mapper = { 'enhancedSchemeData.freightAmount': 'freight_amount',
+          'enhancedSchemeData.destinationStateProvinceCode': 'destination_state_province_code',
+          'enhancedSchemeData.shipFromPostalCode': 'ship_from_postal_code',
+          'enhancedSchemeData.orderDate': 'order_date',
+          'enhancedSchemeData.destinationPostalCode': 'destination_postal_code',
+          'enhancedSchemeData.destinationCountryCode': 'destination_country_code',
+          'enhancedSchemeData.dutyAmount': 'duty_amount' }
 
         post[:additionalData].merge!(extract_and_transform(mapper, options[:level_3_data]))
 
@@ -555,7 +555,7 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(money)
         amount = {
           value: localized_amount(money, currency),
-          currency: currency
+          currency:
         }
 
         post[:amount] = amount
@@ -565,7 +565,7 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(money)
         amount = {
           value: localized_amount(money, currency),
-          currency: currency
+          currency:
         }
         post[:modificationAmount] = amount
       end

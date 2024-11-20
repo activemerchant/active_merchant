@@ -77,7 +77,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_destination
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(destination: destination)
+    custom_options = @options.merge(destination:)
     assert response = @gateway.purchase(@amount, @credit_card, custom_options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -89,7 +89,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_destination_and_amount
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(destination: destination, destination_amount: @amount - 20)
+    custom_options = @options.merge(destination:, destination_amount: @amount - 20)
     assert response = @gateway.purchase(@amount, @credit_card, custom_options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -167,10 +167,10 @@ class RemoteStripeTest < Test::Unit::TestCase
     # simultaneously. They are mutually exclusive.
     options = @options.merge({
       customer: @customer,
-      application_fee_amount: application_fee_amount,
+      application_fee_amount:,
       transfer_destination: destination,
       on_behalf_of: destination,
-      transfer_group: transfer_group
+      transfer_group:
     })
 
     assert response = @gateway.purchase(@amount, @credit_card, options)
@@ -217,7 +217,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_unsuccessful_purchase_with_destination_and_amount
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(destination: destination, destination_amount: @amount + 20)
+    custom_options = @options.merge(destination:, destination_amount: @amount + 20)
     assert response = @gateway.purchase(@amount, @credit_card, custom_options)
     assert_failure response
     assert_match %r{must be less than or equal to the charge amount}, response.message
@@ -271,7 +271,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_authorization_and_capture_with_destination
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(destination: destination)
+    custom_options = @options.merge(destination:)
 
     assert authorization = @gateway.authorize(@amount, @credit_card, custom_options)
     assert_success authorization
@@ -286,7 +286,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_authorization_and_capture_with_destination_and_amount
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(destination: destination, destination_amount: @amount - 20)
+    custom_options = @options.merge(destination:, destination_amount: @amount - 20)
 
     assert authorization = @gateway.authorize(@amount, @credit_card, custom_options)
     assert_success authorization
@@ -361,7 +361,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_successful_void_with_reverse_transfer
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(destination: destination))
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(destination:))
     assert_success response
 
     @gateway.capture(@amount, response.authorization)
@@ -440,7 +440,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_refund_with_reverse_transfer
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(destination: destination))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(destination:))
     assert_success response
 
     assert refund = @gateway.refund(@amount - 20, response.authorization, reverse_transfer: true)
@@ -593,7 +593,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_successful_store_with_existing_account
     account = fixtures(:stripe_destination)[:stripe_user_id]
-    assert response = @gateway.store(@debit_card, account: account)
+    assert response = @gateway.store(@debit_card, account:)
     assert_success response
     # Delete the stored external account to prevent hitting the limit
     @gateway.delete_latest_test_external_account(account)

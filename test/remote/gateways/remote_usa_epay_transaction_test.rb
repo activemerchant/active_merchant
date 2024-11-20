@@ -101,7 +101,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
       recurring_receipt: true
     ]
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(recurring_fields: recurring_fields))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(recurring_fields:))
     assert_equal 'Success', response.message
     assert_success response
   end
@@ -114,7 +114,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
       4 => 'dallas'
     }
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_fields: custom_fields))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_fields:))
     assert_equal 'Success', response.message
     assert_success response
   end
@@ -125,7 +125,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
       { sku: 'def456', cost: 200, quantity: 2, name: 'an item' }
     ]
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(line_items: line_items))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(line_items:))
     assert_equal 'Success', response.message
     assert_success response
   end

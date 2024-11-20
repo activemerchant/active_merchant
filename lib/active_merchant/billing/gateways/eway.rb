@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # Public: For more information on the Eway Gateway please visit their
     # {Developers Area}[http://www.eway.com.au/developers/api/direct-payments]
     class EwayGateway < Gateway

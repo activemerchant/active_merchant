@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PagarmeGateway < Gateway
       self.live_url = 'https://api.pagar.me/1/'
 

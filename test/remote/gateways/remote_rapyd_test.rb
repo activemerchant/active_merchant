@@ -156,7 +156,7 @@ class RemoteRapydTest < Test::Unit::TestCase
   def test_successful_purchase_with_address
     billing_address = address(name: 'Henry Winkler', address1: '123 Happy Days Lane')
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: billing_address))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address:))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end

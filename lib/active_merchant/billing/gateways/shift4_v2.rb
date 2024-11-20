@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class Shift4V2Gateway < SecurionPayGateway
       # same endpont for testing
       self.live_url = 'https://api.shift4.com/'

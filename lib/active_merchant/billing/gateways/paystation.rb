@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PaystationGateway < Gateway
       self.live_url = self.test_url = 'https://www.paystation.co.nz/direct/paystation.dll'
 

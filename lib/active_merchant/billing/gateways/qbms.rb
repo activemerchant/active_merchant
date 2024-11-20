@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class QbmsGateway < Gateway
       API_VERSION = '4.0'
 
@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
 
         if status_code != 0
           return {
-            status_code: status_code,
+            status_code:,
             status_message: signon.attributes['statusMessage']
           }
         end

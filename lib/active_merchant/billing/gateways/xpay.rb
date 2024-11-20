@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class XpayGateway < Gateway
       self.display_name = 'XPay Gateway'
       self.homepage_url = 'https://developer.nexi.it/en'
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
 
       def operation_request(action, amount, authorization, options)
         options[:correlation_id], options[:reference] = authorization.split('#')
-        commit(action, { amount: amount, currency: options[:currency] }, options)
+        commit(action, { amount:, currency: options[:currency] }, options)
       end
 
       def add_invoice(post, amount, options)
@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         post[:order] = {
           orderId: options[:order_id],
           amount: localized_amount(amount, currency),
-          currency: currency
+          currency:
         }.compact
       end
 

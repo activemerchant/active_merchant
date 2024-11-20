@@ -86,6 +86,13 @@
 * Stripe: Remove StripePaymenToken & ApplePayPaymentToken [almalee24] #5304
 * HPS: Update API urls [jherreraa] #5313
 * MIT: Change test URL [Buitragox] #5335
+* Nuvei: Fix NTID stored credentials [javierpedrozaing] #5334
+* StripePI: Fix the store three_d_secure_usage field [yunnydang] #5338
+* Litle: Success codes added to valid responses [jherreraa] #5339
+* CommerceHub: Update Production URL [almalee24] #5340
+* CommerceHub: Add Network Token support [almalee24] #5331
+* Worldpay: Update Stored Credentials [almalee24] #5330
+* Update Rubocop 1.26.0 [almalee24] #5325
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

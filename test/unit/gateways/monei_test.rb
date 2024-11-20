@@ -163,9 +163,9 @@ class MoneiTest < Test::Unit::TestCase
     lang = 'en'
 
     @options.merge!({
-      ip: ip,
-      user_agent: user_agent,
-      lang: lang
+      ip:,
+      user_agent:,
+      lang:
     })
 
     stub_comms do
