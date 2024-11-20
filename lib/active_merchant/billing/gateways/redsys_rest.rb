@@ -280,7 +280,10 @@ module ActiveMerchant # :nodoc:
       end
 
       def scrub(transcript)
+        merchant_parameters = filter_merchant_parameters(transcript)
+
         transcript.
+          gsub(%r((Ds_MerchantParameters=)(\w+)), '\1' + merchant_parameters.to_s + '\3').
           gsub(%r((PAN\"=>\")(\d+)), '\1[FILTERED]').
           gsub(%r((CVV2\"=>\")(\d+)), '\1[FILTERED]')
       end
@@ -338,14 +341,23 @@ module ActiveMerchant # :nodoc:
         post[:DS_MERCHANT_ORDER] = clean_order_id(order_id)
       end
 
-      def add_payment(post, card)
-        name = [card.first_name, card.last_name].join(' ').slice(0, 60)
-        year = sprintf('%.4i', card.year)
-        month = sprintf('%.2i', card.month)
-        post['DS_MERCHANT_TITULAR'] = CGI.escape(name)
-        post['DS_MERCHANT_PAN'] = card.number
-        post['DS_MERCHANT_EXPIRYDATE'] = "#{year[2..3]}#{month}"
-        post['DS_MERCHANT_CVV2'] = card.verification_value if card.verification_value.present?
+      def add_payment(post, payment_method)
+        year = sprintf('%.4i', payment_method.year)
+        month = sprintf('%.2i', payment_method.month)
+
+        if payment_method.is_a?(NetworkTokenizationCreditCard)
+          post[:Ds_Merchant_TokenData] = {
+            tokenCryptogram: payment_method.payment_cryptogram,
+            expirationDate: "#{year[2..3]}#{month}",
+            token: payment_method.number
+          }
+        else
+          name = [payment_method.first_name, payment_method.last_name].join(' ').slice(0, 60)
+          post['DS_MERCHANT_TITULAR'] = CGI.escape(name)
+          post['DS_MERCHANT_PAN'] = payment_method.number
+          post['DS_MERCHANT_EXPIRYDATE'] = "#{year[2..3]}#{month}"
+          post['DS_MERCHANT_CVV2'] = payment_method.verification_value if payment_method.verification_value.present?
+        end
       end
 
       def determine_action(options)
@@ -434,7 +446,7 @@ module ActiveMerchant # :nodoc:
 
         # Need to get updated for 3DS support
         if code = response[:ds_response]
-          (code.to_i < 100) || [400, 481, 500, 900].include?(code.to_i)
+          (code.to_i < 100) || [195, 400, 481, 500, 900].include?(code.to_i)
         else
           false
         end
@@ -506,6 +518,23 @@ module ActiveMerchant # :nodoc:
 
       def mac256(key, data)
         OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha256'), key, data)
+      end
+
+      def filter_merchant_parameters(transcript)
+        # Enhancement, the gateway response with base64 and it contians sensible data.
+        # Decode + Scrub + Encode the returned sensitive dat.
+        pre_filter_data =  transcript.match(%r(Ds_MerchantParameters=(\w+)))
+        return unless pre_filter_data
+
+        decoded_pre_filter_data = Base64.decode64(pre_filter_data[1])
+
+        filter_data = decoded_pre_filter_data.
+                      gsub(%r((PAN\":\")(\d+)), '\1[FILTERED]').
+                      gsub(%r((CVV2\":\")(\d+)), '\1[FILTERED]').
+                      gsub(%r((token\":\")(\d+)), '\1[FILTERED]').
+                      gsub(%r((tokenCryptogram\":\")([^*]*?")), '\1[FILTERED]"')
+
+        Base64.strict_encode64(filter_data)
       end
     end
   end
