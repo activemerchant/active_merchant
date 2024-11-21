@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class IatsPaymentsGateway < Gateway
       class_attribute :live_na_url, :live_uk_url
 

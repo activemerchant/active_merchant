@@ -25,7 +25,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
     @options = {
       order_id: generate_unique_id,
-      address: address,
+      address:,
       merchant_id: 'merchant1234'
     }
 
@@ -1017,7 +1017,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def stored_credential_options(*args, id: nil)
     @options.merge(order_id: generate_unique_id,
-                   stored_credential: stored_credential(*args, id: id))
+                   stored_credential: stored_credential(*args, id:))
   end
 end
 
@@ -1233,7 +1233,7 @@ class TandemOrbitalTests < Test::Unit::TestCase
 
     @options = {
       order_id: generate_unique_id,
-      address: address,
+      address:,
       merchant_id: 'merchant1234'
     }
 
@@ -1685,6 +1685,6 @@ class TandemOrbitalTests < Test::Unit::TestCase
 
   def stored_credential_options(*args, id: nil)
     @options.merge(order_id: generate_unique_id,
-                   stored_credential: stored_credential(*args, id: id))
+                   stored_credential: stored_credential(*args, id:))
   end
 end

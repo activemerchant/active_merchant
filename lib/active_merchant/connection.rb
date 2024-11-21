@@ -60,7 +60,7 @@ module ActiveMerchant
       headers = headers.dup
       headers['connection'] ||= 'close'
 
-      retry_exceptions(max_retries: max_retries, logger: logger, tag: tag) do
+      retry_exceptions(max_retries:, logger:, tag:) do
         info "connection_http_method=#{method.to_s.upcase} connection_uri=#{endpoint}", tag
 
         result = nil

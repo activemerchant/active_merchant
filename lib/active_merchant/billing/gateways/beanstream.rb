@@ -1,7 +1,7 @@
 require 'active_merchant/billing/gateways/beanstream/beanstream_core'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # This class implements the Canadian {Beanstream}[http://www.beanstream.com] payment gateway.
     # It is also named TD Canada Trust Online Mart payment gateway.
     # To learn more about the specification of Beanstream gateway, please read the OM_Direct_Interface_API.pdf,

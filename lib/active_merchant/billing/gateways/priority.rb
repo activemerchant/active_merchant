@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PriorityGateway < Gateway
       # Sandbox and Production
       self.test_url = 'https://sandbox.api.mxmerchant.com/checkout/v3/payment'
@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
         add_auth_purchase_params(params, options)
         add_credit_card(params, credit_card, 'purchase', options)
 
-        commit('purchase', params: params)
+        commit('purchase', params:)
       end
 
       def authorize(amount, credit_card, options = {})
@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
         add_auth_purchase_params(params, options)
         add_credit_card(params, credit_card, 'purchase', options)
 
-        commit('purchase', params: params)
+        commit('purchase', params:)
       end
 
       def credit(amount, credit_card, options = {})
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
         add_merchant_id(params)
         add_amount(params, amount, options)
         add_credit_params(params, credit_card, options)
-        commit('credit', params: params)
+        commit('credit', params:)
       end
 
       def refund(amount, authorization, options = {})
@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
         # refund amounts must be negative
         params['amount'] = ('-' + localized_amount(amount.to_f, options[:currency])).to_f
 
-        commit('refund', params: params)
+        commit('refund', params:)
       end
 
       def capture(amount, authorization, options = {})
@@ -104,19 +104,19 @@ module ActiveMerchant #:nodoc:
         params['paymentToken'] = payment_token(authorization) || options[:payment_token]
         add_auth_purchase_params(params, options)
 
-        commit('capture', params: params)
+        commit('capture', params:)
       end
 
       def void(authorization, options = {})
         params = {}
 
-        commit('void', params: params, iid: payment_id(authorization))
+        commit('void', params:, iid: payment_id(authorization))
       end
 
       def verify(credit_card, _options = {})
         jwt = create_jwt.params['jwtToken']
 
-        commit('verify', card_number: credit_card.number, jwt: jwt)
+        commit('verify', card_number: credit_card.number, jwt:)
       end
 
       def get_payment_status(batch_id)

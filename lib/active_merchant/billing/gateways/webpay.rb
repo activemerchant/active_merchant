@@ -1,7 +1,7 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class WebpayGateway < StripeGateway
       self.live_url = 'https://api.webpay.jp/v1/'
 

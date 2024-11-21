@@ -147,7 +147,7 @@ class GatewayTest < Test::Unit::TestCase
     order_id = 'abc123'
 
     post = {}
-    options = { order_id: order_id, do_not_add: 24 }
+    options = { order_id:, do_not_add: 24 }
 
     @gateway.add_field_to_post_if_present(post, options, :order_id)
 
@@ -160,7 +160,7 @@ class GatewayTest < Test::Unit::TestCase
     transaction_number = 500
 
     post = {}
-    options = { order_id: order_id, transaction_number: transaction_number, do_not_add: 24 }
+    options = { order_id:, transaction_number:, do_not_add: 24 }
 
     @gateway.add_fields_to_post_if_present(post, options, %i[order_id transaction_number])
 

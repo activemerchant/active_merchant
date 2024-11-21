@@ -72,7 +72,7 @@ class DLocalTest < Test::Unit::TestCase
     installments_id = 'INS54434'
 
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(installments: installments, installments_id: installments_id))
+      @gateway.purchase(@amount, @credit_card, @options.merge(installments:, installments_id:))
     end.check_request do |_endpoint, data, _headers|
       assert_equal installments, JSON.parse(data)['card']['installments']
       assert_equal installments_id, JSON.parse(data)['card']['installments_id']
@@ -170,7 +170,7 @@ class DLocalTest < Test::Unit::TestCase
     additional_data = { 'submerchant' => { 'name' => 'socks' } }
 
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(additional_data: additional_data))
+      @gateway.purchase(@amount, @credit_card, @options.merge(additional_data:))
     end.check_request do |_endpoint, data, _headers|
       assert_equal additional_data, JSON.parse(data)['additional_risk_data']
     end.respond_with(successful_purchase_response)

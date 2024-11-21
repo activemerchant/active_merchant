@@ -22,7 +22,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
       order_id: generate_unique_id,
       company_name: 'Acme',
       title: 'QA Manager',
-      billing_address: billing_address,
+      billing_address:,
       shipping_address: billing_address,
       email: 'example@example.com',
       description: 'Store Purchase'

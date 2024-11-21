@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class FirstGivingGateway < Gateway
       self.test_url = 'http://usapisandbox.fgdev.net'
       self.live_url = 'https://api.firstgiving.com'

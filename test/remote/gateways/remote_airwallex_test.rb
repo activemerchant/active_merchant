@@ -42,7 +42,7 @@ class RemoteAirwallexTest < Test::Unit::TestCase
   def test_successful_purchase_with_specified_ids
     request_id = SecureRandom.uuid
     merchant_order_id = SecureRandom.uuid
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(request_id: request_id, merchant_order_id: merchant_order_id))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(request_id:, merchant_order_id:))
     assert_success response
     assert_match(request_id, response.params.dig('request_id'))
     assert_match(merchant_order_id, response.params.dig('merchant_order_id'))

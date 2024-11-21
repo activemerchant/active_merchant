@@ -18,8 +18,8 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     }
 
     ach_mandate = 'By clicking "Checkout", I authorize Braintree, a service of PayPal, ' \
-      'on behalf of My Company (i) to verify my bank account information ' \
-      'using bank information and consumer reports and (ii) to debit my bank account.'
+                  'on behalf of My Company (i) to verify my bank account information ' \
+                  'using bank information and consumer reports and (ii) to debit my bank account.'
 
     @check_required_options = {
       billing_address: {
@@ -29,7 +29,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
         state: 'FL',
         zip: '32191'
       },
-      ach_mandate: ach_mandate
+      ach_mandate:
     }
 
     @nt_credit_card = network_tokenization_credit_card('4111111111111111',
@@ -381,7 +381,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       country_name: 'United States of America'
     }
     credit_card = credit_card('5105105105105100')
-    assert response = @gateway.store(credit_card, billing_address: billing_address)
+    assert response = @gateway.store(credit_card, billing_address:)
     assert_success response
     assert_equal 'OK', response.message
 
@@ -412,7 +412,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       country_name: nil
     }
     credit_card = credit_card('5105105105105100')
-    assert response = @gateway.store(credit_card, billing_address: billing_address)
+    assert response = @gateway.store(credit_card, billing_address:)
     assert_success response
     assert_equal 'OK', response.message
 
@@ -424,7 +424,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   def test_successful_store_with_credit_card_token
     credit_card = credit_card('5105105105105100')
     credit_card_token = generate_unique_id
-    assert response = @gateway.store(credit_card, credit_card_token: credit_card_token)
+    assert response = @gateway.store(credit_card, credit_card_token:)
     assert_success response
     assert_equal 'OK', response.message
     assert_equal credit_card_token, response.params['braintree_customer']['credit_cards'][0]['token']
@@ -674,8 +674,8 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.purchase(
       @amount,
       @credit_card,
-      billing_address: billing_address,
-      shipping_address: shipping_address
+      billing_address:,
+      shipping_address:
     )
     assert_success response
     transaction = response.params['braintree_transaction']
@@ -860,7 +860,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'OK', response.message
     assert credit_card_token = response.params['credit_card_token']
-    assert delete_response = @gateway.unstore(nil, credit_card_token: credit_card_token)
+    assert delete_response = @gateway.unstore(nil, credit_card_token:)
     assert_success delete_response
   end
 
@@ -1490,11 +1490,11 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   private
 
   def stored_credential_options(*args, id: nil)
-    stored_credential(*args, id: id)
+    stored_credential(*args, id:)
   end
 
   def assert_avs(address1, zip, expected_avs_code)
-    response = @gateway.purchase(@amount, @credit_card, billing_address: { address1: address1, zip: zip })
+    response = @gateway.purchase(@amount, @credit_card, billing_address: { address1:, zip: })
 
     assert_success response
     assert_equal expected_avs_code, response.avs_result['code']

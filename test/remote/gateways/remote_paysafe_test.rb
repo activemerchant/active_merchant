@@ -24,7 +24,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
       },
       email: 'profile@memail.com',
       phone: '111-222-3456',
-      address: address
+      address:
     }
     @pm_token = @gateway.store(credit_card('4111111111111111'), @profile_options).authorization
     @mc_three_d_secure_2_options = {
@@ -224,7 +224,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'installment',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
     response = @gateway.purchase(@amount, @credit_card, stored_options)
@@ -250,7 +250,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'unscheduled',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
     response = @gateway.purchase(@amount, @credit_card, stored_options)

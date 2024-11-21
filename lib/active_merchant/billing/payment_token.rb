@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # Base class representation of cryptographic payment data tokens that may be used for EMV-style transactions
     # like Apple Pay. Payment data may be transmitted via any data type, and may also be padded
     # with metadata specific to the cryptographer. This metadata should be parsed and interpreted in concrete

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CardConnectGateway < Gateway
       self.test_url = 'https://fts-uat.cardconnect.com/cardconnect/rest/'
       self.live_url = 'https://fts.cardconnect.com/cardconnect/rest/'

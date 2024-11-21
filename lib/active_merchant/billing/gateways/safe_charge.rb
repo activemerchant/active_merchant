@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SafeChargeGateway < Gateway
       self.test_url = 'https://process.sandbox.safecharge.com/service.asmx/Process'
       self.live_url = 'https://process.safecharge.com/service.asmx/Process'
@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
 
       def add_network_token(post, payment, options)
         post[:sg_CAVV] = payment.payment_cryptogram
-        post[:sg_ECI] = options[:three_d_secure] && options[:three_d_secure][:eci] || '05'
+        post[:sg_ECI] = (options[:three_d_secure] && options[:three_d_secure][:eci]) || '05'
         post[:sg_IsExternalMPI] = 1
         post[:sg_ExternalTokenProvider] = 5
       end
@@ -286,9 +286,9 @@ module ActiveMerchant #:nodoc:
         auth_code, transaction_id, token, month, year, original_amount = authorization.split('|')
 
         {
-          auth_code: auth_code,
-          transaction_id: transaction_id,
-          token: token,
+          auth_code:,
+          transaction_id:,
+          token:,
           exp_month: month,
           exp_year: year,
           original_amount: amount(original_amount.to_f * 100)

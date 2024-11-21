@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class QuickbooksGateway < Gateway
       self.test_url = 'https://sandbox.api.intuit.com'
       self.live_url = 'https://api.intuit.com'

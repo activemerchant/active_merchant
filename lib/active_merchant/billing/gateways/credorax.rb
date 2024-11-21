@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CredoraxGateway < Gateway
       class_attribute :test_url, :live_na_url, :live_eu_url
 

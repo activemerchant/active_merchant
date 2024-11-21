@@ -67,7 +67,7 @@ class RedsysTest < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'unscheduled',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     }
     res = @gateway.purchase(123, credit_card, used_options)
@@ -130,7 +130,7 @@ class RedsysTest < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'recurring',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     }
     res = @gateway.purchase(123, credit_card, used_options)
@@ -189,7 +189,7 @@ class RedsysTest < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'recurring',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     }
     res = @gateway.purchase(123, '77bff3a969d6f97b2ec815448cdcff453971f573', used_options)

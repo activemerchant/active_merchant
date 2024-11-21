@@ -1,7 +1,7 @@
 require 'test_helper'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayTraceGateway < Gateway
       def settle
         post = {}
@@ -392,7 +392,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
   def test_duplicate_customer_creation
     create = @gateway.store(@discover, @options)
     customer_id = create.params['customer_id']
-    response = @gateway.store(@discover, @options.merge(customer_id: customer_id))
+    response = @gateway.store(@discover, @options.merge(customer_id:))
     assert_failure response
   end
 

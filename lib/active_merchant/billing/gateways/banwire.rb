@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class BanwireGateway < Gateway
       URL = 'https://banwire.com/api.pago_pro'
 

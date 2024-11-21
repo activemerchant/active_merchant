@@ -339,7 +339,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_risk_data_in_request
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(risk_data: risk_data))
+      @gateway.authorize(@amount, @credit_card, @options.merge(risk_data:))
     end.check_request do |_endpoint, data, _headers|
       doc = Nokogiri::XML(data)
 
@@ -422,7 +422,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+      assert_match(/<storedCredentials usage\=\"USED\"\>/, data)
       assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
@@ -437,7 +437,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @nt_credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+      assert_match(/<storedCredentials usage\=\"USED\"\>/, data)
       assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
@@ -448,7 +448,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @nt_credit_card, @options.merge({ stored_credential: stored_credential_params }))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+      assert_match(/<storedCredentials usage\=\"USED\"\>/, data)
       assert_match(/<schemeTransactionIdentifier\>20005060720116005060\<\/schemeTransactionIdentifier\>/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
@@ -615,7 +615,7 @@ class WorldpayTest < Test::Unit::TestCase
   def test_successful_purchase_with_network_token_with_stored_credentials
     response = stub_comms do
       @gateway.purchase(@amount, @nt_credit_card, @options.merge(stored_credential_usage: 'FIRST',
-        stored_credential_transaction_id: '123', stored_credential: { initiator: 'merchant' }))
+                                                                 stored_credential_transaction_id: '123', stored_credential: { initiator: 'merchant' }))
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end
@@ -623,7 +623,7 @@ class WorldpayTest < Test::Unit::TestCase
   def test_success_purchase_with_network_token_with_stored_credentials_with_cit
     response = stub_comms do
                  @gateway.purchase(@amount, @nt_credit_card, @options.merge(stored_credential_usage: 'FIRST',
-                   stored_credential_transaction_id: '123', stored_credential: { initiator: 'cardholder' }))
+                                                                            stored_credential_transaction_id: '123', stored_credential: { initiator: 'cardholder' }))
                end.check_request do |_endpoint, data, _headers|
       element = Nokogiri::XML(data)
       scheme_transaction_identifier = element.xpath('//schemeTransactionIdentifier')
@@ -959,7 +959,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(address: address))
+      @gateway.authorize(100, @credit_card, @options.merge(address:))
     end.check_request do |_endpoint, data, _headers|
       assert_match %r(<firstName>Jim</firstName>), data
       assert_match %r(<lastName>Smith</lastName>), data
@@ -1326,9 +1326,9 @@ class WorldpayTest < Test::Unit::TestCase
     df_reference_id = '1326vj9jc2'
 
     options = @options.merge(
-      session_id: session_id,
-      df_reference_id: df_reference_id,
-      browser_size: browser_size,
+      session_id:,
+      df_reference_id:,
+      browser_size:,
       execute_threed: true,
       three_ds_version: '2.0.1'
     )
@@ -1704,6 +1704,25 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_stored_credentials_for_subsequent_customer_transaction
+    options = @options.merge!({
+      stored_credential: {
+        network_transaction_id: '3812908490218390214124',
+        initial_transaction: false,
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    })
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"USED\"\>/, data)
+      assert_not_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_authorize_recurring_apple_pay_with_ntid
     stored_credential_params = stored_credential(:used, :recurring, :merchant, network_transaction_id: '3812908490218390214124')
 
@@ -1761,9 +1780,9 @@ class WorldpayTest < Test::Unit::TestCase
       three_d_secure: {
         eci: 'eci',
         cavv: 'cavv',
-        xid: xid,
-        ds_transaction_id: ds_transaction_id,
-        version: version
+        xid:,
+        ds_transaction_id:,
+        version:
       }
     }
   end

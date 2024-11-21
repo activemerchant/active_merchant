@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-module ActiveMerchant #:nodoc:
+module ActiveMerchant # :nodoc:
   class InvalidCountryCodeError < StandardError
   end
 

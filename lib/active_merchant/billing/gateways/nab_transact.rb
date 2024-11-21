@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # The National Australia Bank provide a payment gateway that seems to
     # be a rebadged Securepay Australia service, though some differences exist.
     class NabTransactGateway < Gateway

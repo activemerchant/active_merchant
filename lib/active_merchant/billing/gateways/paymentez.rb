@@ -1,9 +1,9 @@
 require 'base64'
 require 'digest'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-    class PaymentezGateway < Gateway #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
+    class PaymentezGateway < Gateway # :nodoc:
       self.test_url = 'https://ccapi-stg.paymentez.com/v2/'
       self.live_url = 'https://ccapi.paymentez.com/v2/'
 

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MicropaymentGateway < Gateway
       self.display_name = 'micropayment'
       self.homepage_url = 'https://www.micropayment.de/'

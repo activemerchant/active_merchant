@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CtPaymentGateway < Gateway
       self.test_url = 'https://test.ctpaiement.ca/v1/'
       self.live_url = 'https://www.ctpaiement.com/v1/'
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_terminal_number(post, options)
-        post[:MerchantTerminalNumber] = options[:merchant_terminal_number] || ' ' * 5
+        post[:MerchantTerminalNumber] = options[:merchant_terminal_number] || (' ' * 5)
       end
 
       def add_money(post, money)
@@ -163,11 +163,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_operator_id(post, options)
-        post[:OperatorID] = options[:operator_id] || '0' * 8
+        post[:OperatorID] = options[:operator_id] || ('0' * 8)
       end
 
       def add_customer_data(post, options)
-        post[:CustomerNumber] = options[:customer_number] || '0' * 8
+        post[:CustomerNumber] = options[:customer_number] || ('0' * 8)
       end
 
       def add_address(post, creditcard, options)
@@ -248,7 +248,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         "#{response['transactionNumber']};#{response['authorizationNumber']};"\
-        "#{response['invoiceNumber']};#{response['token']};#{response['id']}"
+          "#{response['invoiceNumber']};#{response['token']};#{response['id']}"
       end
 
       def post_data(action, parameters = {})

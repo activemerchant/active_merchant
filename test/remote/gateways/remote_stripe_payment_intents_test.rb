@@ -1159,10 +1159,10 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     options = {
       currency: 'USD',
       customer: @customer,
-      application_fee: application_fee,
+      application_fee:,
       transfer_destination: @destination_account,
       on_behalf_of: @destination_account,
-      transfer_group: transfer_group
+      transfer_group:
     }
 
     assert response = @gateway.create_intent(@amount, nil, options)
@@ -1388,7 +1388,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       return_url: 'https://www.example.com',
       confirmation_method: 'manual',
       capture_method: 'manual',
-      idempotency_key: idempotency_key
+      idempotency_key:
     }
     assert create_response = @gateway.create_intent(@amount, @three_ds_payment_method, options)
     assert_equal 'requires_confirmation', create_response.params['status']
@@ -1397,7 +1397,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert get_response = @gateway.show_intent(intent_id, options)
     assert_equal 'requires_confirmation', get_response.params['status']
 
-    assert_failure cancel_response = @gateway.void(intent_id, cancellation_reason: 'requested_by_customer', idempotency_key: idempotency_key)
+    assert_failure cancel_response = @gateway.void(intent_id, cancellation_reason: 'requested_by_customer', idempotency_key:)
     assert_match(/^Keys for idempotent requests can only be used for the same endpoint they were first used for/, cancel_response.message)
 
     assert cancel_response = @gateway.void(intent_id, cancellation_reason: 'requested_by_customer', idempotency_key: "#{idempotency_key}-auto-void")
@@ -1418,9 +1418,9 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     assert cancel_response = @gateway.void(intent_id, cancellation_reason: 'requested_by_customer')
     assert_equal 'You cannot cancel this PaymentIntent because ' \
-      'it has a status of succeeded. Only a PaymentIntent with ' \
-      'one of the following statuses may be canceled: ' \
-      'requires_payment_method, requires_capture, requires_confirmation, requires_action, processing.', cancel_response.message
+                 'it has a status of succeeded. Only a PaymentIntent with ' \
+                 'one of the following statuses may be canceled: ' \
+                 'requires_payment_method, requires_capture, requires_confirmation, requires_action, processing.', cancel_response.message
   end
 
   def test_refund_a_payment_intent
@@ -1501,7 +1501,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     options = {
       currency: 'GBP',
-      idempotency_key: idempotency_key
+      idempotency_key:
     }
 
     assert store1 = @gateway.store(@visa_card, options)

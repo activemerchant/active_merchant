@@ -10,8 +10,8 @@ end
 
 raise 'Need braintree gem >= 2.0.0.' unless Braintree::Version::Major >= 2 && Braintree::Version::Minor >= 0
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information on the Braintree Gateway please visit their
     # {Developer Portal}[https://www.braintreepayments.com/developers]
     #
@@ -160,7 +160,7 @@ module ActiveMerchant #:nodoc:
           end
 
           if merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
-            payload[:options] = { merchant_account_id: merchant_account_id }
+            payload[:options] = { merchant_account_id: }
           end
 
           commit do
@@ -1061,7 +1061,7 @@ module ActiveMerchant #:nodoc:
           {
             customer_vault_id: options[:customer],
             bank_account_token: result.payment_method&.token,
-            verified: verified
+            verified:
           },
           authorization: result.payment_method&.token
         )

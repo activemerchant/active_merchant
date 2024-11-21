@@ -134,7 +134,7 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_authorize_with_national_tax_indicator
     national_tax_indicator = 1
     stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(national_tax_indicator: national_tax_indicator))
+      @gateway.authorize(100, @credit_card, @options.merge(national_tax_indicator:))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<otherTax>\s+<nationalTaxIndicator>#{national_tax_indicator}<\/nationalTaxIndicator>\s+<\/otherTax>/m, data)
     end.respond_with(successful_authorization_response)
@@ -234,7 +234,7 @@ class CyberSourceTest < Test::Unit::TestCase
     }
 
     stub_comms do
-      @gateway.authorize(100, @credit_card, billing_address: billing_address)
+      @gateway.authorize(100, @credit_card, billing_address:)
     end.check_request do |_endpoint, data, _headers|
       assert_nil billing_address[:zip]
       assert_nil billing_address[:phone]
@@ -250,7 +250,7 @@ class CyberSourceTest < Test::Unit::TestCase
     name = 'Wesley Crusher'
 
     stub_comms do
-      @gateway.authorize(100, @credit_card, billing_address: { name: name })
+      @gateway.authorize(100, @credit_card, billing_address: { name: })
     end.check_request do |_endpoint, data, _headers|
       assert_match(%r(<billTo>.*<firstName>Wesley</firstName>.*</billTo>)m, data)
       assert_match(%r(<billTo>.*<lastName>Crusher</lastName>.*</billTo>)m, data)
@@ -261,7 +261,7 @@ class CyberSourceTest < Test::Unit::TestCase
     name = 'Wesley Crusher'
 
     stub_comms do
-      @gateway.authorize(100, @credit_card, shipping_address: { name: name })
+      @gateway.authorize(100, @credit_card, shipping_address: { name: })
     end.check_request do |_endpoint, data, _headers|
       assert_match(%r(<shipTo>.*<firstName>Wesley</firstName>.*</shipTo>)m, data)
       assert_match(%r(<shipTo>.*<lastName>Crusher</lastName>.*</shipTo>)m, data)
@@ -1574,15 +1574,15 @@ class CyberSourceTest < Test::Unit::TestCase
     enrolled = 'Y'
     options_with_normalized_3ds = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id,
-        cavv_algorithm: cavv_algorithm,
-        enrolled: enrolled,
-        authentication_response_status: authentication_response_status
+        version:,
+        eci:,
+        cavv:,
+        ds_transaction_id:,
+        cavv_algorithm:,
+        enrolled:,
+        authentication_response_status:
       },
-      commerce_indicator: commerce_indicator
+      commerce_indicator:
     )
 
     stub_comms do
@@ -1672,14 +1672,14 @@ class CyberSourceTest < Test::Unit::TestCase
     collection_indicator = 2
     options_with_normalized_3ds = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id,
-        cavv_algorithm: cavv_algorithm
+        version:,
+        eci:,
+        cavv:,
+        ds_transaction_id:,
+        cavv_algorithm:
       },
-      commerce_indicator: commerce_indicator,
-      collection_indicator: collection_indicator
+      commerce_indicator:,
+      collection_indicator:
     )
 
     stub_comms do
@@ -1757,7 +1757,7 @@ class CyberSourceTest < Test::Unit::TestCase
       three_d_secure: {
         version: '2.0',
         eci: '05',
-        cavv: cavv,
+        cavv:,
         ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
         cavv_algorithm: 'vbv'
       }
@@ -2091,17 +2091,17 @@ class CyberSourceTest < Test::Unit::TestCase
     version = '2.0'
     @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        xid: xid,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id,
-        cavv_algorithm: cavv_algorithm,
-        enrolled: enrolled,
-        authentication_response_status: authentication_response_status
+        version:,
+        eci:,
+        xid:,
+        cavv:,
+        ds_transaction_id:,
+        cavv_algorithm:,
+        enrolled:,
+        authentication_response_status:
       },
-      commerce_indicator: commerce_indicator,
-      collection_indicator: collection_indicator
+      commerce_indicator:,
+      collection_indicator:
     ).compact
   end
 

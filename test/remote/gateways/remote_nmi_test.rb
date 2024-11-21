@@ -282,7 +282,7 @@ class RemoteNmiTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_shipping_fields
-    options = @options.merge({ shipping_address: shipping_address, shipping_email: 'test@example.com' })
+    options = @options.merge({ shipping_address:, shipping_email: 'test@example.com' })
 
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
@@ -637,6 +637,6 @@ class RemoteNmiTest < Test::Unit::TestCase
 
   def stored_credential_options(*args, id: nil)
     @options.merge(order_id: generate_unique_id,
-                   stored_credential: stored_credential(*args, id: id))
+                   stored_credential: stored_credential(*args, id:))
   end
 end

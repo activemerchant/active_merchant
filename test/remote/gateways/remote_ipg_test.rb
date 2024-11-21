@@ -62,7 +62,7 @@ class RemoteIpgTest < Test::Unit::TestCase
       network_transaction_id: nil
     }
     order_id = generate_unique_id
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge({ order_id: order_id }))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge({ order_id: }))
     assert_success response
 
     @options[:stored_credential] = {
@@ -72,7 +72,7 @@ class RemoteIpgTest < Test::Unit::TestCase
       network_transaction_id: response.params['IpgTransactionId']
     }
 
-    assert recurring_purchase = @gateway.purchase(@amount, @credit_card, @options.merge({ order_id: order_id }))
+    assert recurring_purchase = @gateway.purchase(@amount, @credit_card, @options.merge({ order_id: }))
     assert_success recurring_purchase
     assert_equal 'APPROVED', recurring_purchase.message
   end
@@ -109,7 +109,7 @@ class RemoteIpgTest < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture
     order_id = generate_unique_id
-    response = @gateway.authorize(@amount, @credit_card, @options.merge!({ order_id: order_id }))
+    response = @gateway.authorize(@amount, @credit_card, @options.merge!({ order_id: }))
     assert_success response
     assert_equal 'APPROVED', response.message
 
@@ -134,7 +134,7 @@ class RemoteIpgTest < Test::Unit::TestCase
 
   def test_successful_void
     order_id = generate_unique_id
-    response = @gateway.authorize(@amount, @credit_card, @options.merge!({ order_id: order_id }))
+    response = @gateway.authorize(@amount, @credit_card, @options.merge!({ order_id: }))
     assert_success response
 
     void = @gateway.void(response.authorization, @options)

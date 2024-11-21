@@ -444,7 +444,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     net_amount = 9500
 
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(net_amount: net_amount))
+      @gateway.purchase(@amount, @credit_card, @options.merge(net_amount:))
     end.check_request do |endpoint, data, _headers|
       assert_match("\"net_amount\":#{net_amount}", data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
@@ -494,7 +494,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     net_amount = 9500
 
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(net_amount: net_amount))
+      @gateway.authorize(@amount, @credit_card, @options.merge(net_amount:))
     end.check_request do |endpoint, data, _headers|
       assert_match("\"net_amount\":#{net_amount}", data) if endpoint =~ /payments/
     end.respond_with(successful_authorize_response)

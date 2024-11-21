@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MundipaggGateway < Gateway
       self.live_url = 'https://api.mundipagg.com/core/v1'
 

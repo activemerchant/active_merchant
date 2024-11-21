@@ -37,6 +37,15 @@ class CommerceHubTest < Test::Unit::TestCase
       source: :no_source,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
     )
+    @network_token = network_tokenization_credit_card(
+      '4005550000000019',
+      brand: 'visa',
+      eci: '05',
+      month: '02',
+      year: '2035',
+      source: :network_token,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
     @declined_card = credit_card('4000300011112220', month: '02', year: '2035', verification_value: '123')
     @dynamic_descriptors = {
       mcc: '1234',
@@ -148,6 +157,24 @@ class CommerceHubTest < Test::Unit::TestCase
       assert_equal request['source']['card']['cardData'], @apple_pay.number
       assert_equal request['source']['cavv'], @apple_pay.payment_cryptogram
       assert_equal request['source']['walletType'], 'APPLE_PAY'
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_network_token
+    response = stub_comms do
+      @gateway.purchase(@amount, @network_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['transactionDetails']['captureFlag'], true
+      assert_equal request['merchantDetails']['terminalId'], @gateway.options[:terminal_id]
+      assert_equal request['merchantDetails']['merchantId'], @gateway.options[:merchant_id]
+      assert_equal request['amount']['total'], (@amount / 100.0).to_f
+      assert_equal request['source']['tokenData'], @network_token.number
+      assert_equal request['source']['cryptogram'], @network_token.payment_cryptogram
+      assert_equal request['source']['tokenSource'], 'NETWORK_TOKEN'
+      assert_equal request['source']['card']['expirationMonth'], "0#{@network_token.month}"
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -332,7 +359,7 @@ class CommerceHubTest < Test::Unit::TestCase
   def stored_credential_options(*args, ntid: nil)
     {
       order_id: '#1001',
-      stored_credential: stored_credential(*args, ntid: ntid)
+      stored_credential: stored_credential(*args, ntid:)
     }
   end
 

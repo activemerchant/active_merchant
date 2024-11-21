@@ -1,7 +1,7 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class FatZebraGateway < Gateway
       self.live_url = 'https://gateway.fatzebra.com.au/v1.0'
       self.test_url = 'https://gateway.sandbox.fatzebra.com.au/v1.0'

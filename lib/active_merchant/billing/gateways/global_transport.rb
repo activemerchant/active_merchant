@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class GlobalTransportGateway < Gateway
       self.test_url = 'https://certapia.globalpay.com/GlobalPay/transact.asmx/ProcessCreditCard'
       self.live_url = 'https://api.globalpay.com/GlobalPay/transact.asmx/ProcessCreditCard'

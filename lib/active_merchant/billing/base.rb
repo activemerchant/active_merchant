@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     module Base
       GATEWAY_MODE_DEPRECATION_MESSAGE = 'Base#gateway_mode is deprecated in favor of Base#mode and will be removed in a future version'
 

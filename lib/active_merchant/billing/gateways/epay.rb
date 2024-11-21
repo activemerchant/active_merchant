@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class EpayGateway < Gateway
       self.live_url = 'https://ssl.ditonlinebetalingssystem.dk/'
 

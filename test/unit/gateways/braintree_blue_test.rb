@@ -277,9 +277,9 @@ class BraintreeBlueTest < Test::Unit::TestCase
       customer_ip: '127.0.0.1'
     }
     Braintree::TransactionGateway.any_instance.expects(:sale).
-      with(has_entries(risk_data: risk_data)).returns(braintree_result)
+      with(has_entries(risk_data:)).returns(braintree_result)
 
-    @gateway.authorize(100, credit_card('4111111111111111'), risk_data: risk_data)
+    @gateway.authorize(100, credit_card('4111111111111111'), risk_data:)
   end
 
   def test_hold_in_escrow_can_be_specified
@@ -322,7 +322,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       last_name: 'Smith'
     )
     customer.stubs(:id).returns('123')
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
 
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       params[:credit_card][:options][:verification_merchant_account_id] == 'merchant_account_id'
@@ -346,7 +346,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       last_name: 'Smith'
     )
     customer.stubs(:id).returns('123')
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       params[:credit_card][:options][:verification_merchant_account_id] == 'value_from_options'
     end.returns(result)
@@ -363,7 +363,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       last_name: 'Smith'
     )
     customer.stubs(:id).returns('123')
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       params[:credit_card][:options].has_key?(:verify_card)
       assert_equal true, params[:credit_card][:options][:verify_card]
@@ -385,7 +385,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       last_name: 'Smith',
       id: '123'
     )
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_equal 'bob@example.com', params[:email]
       params
@@ -404,7 +404,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       last_name: 'Smith',
       id: '123'
     )
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_equal nil, params[:email]
       params
@@ -423,7 +423,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       last_name: 'Smith'
     )
     customer.stubs(:id).returns('123')
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       params[:credit_card][:options].has_key?(:verify_card)
       assert_equal false, params[:credit_card][:options][:verify_card]
@@ -453,7 +453,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     }
     customer = stub(customer_attributes)
     customer.stubs(:id).returns('123')
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_not_nil params[:credit_card][:billing_address]
       %i[street_address extended_address locality region postal_code country_name].each do |billing_attribute|
@@ -462,7 +462,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       params
     end.returns(result)
 
-    @gateway.store(credit_card('41111111111111111111'), billing_address: billing_address)
+    @gateway.store(credit_card('41111111111111111111'), billing_address:)
   end
 
   def test_store_with_phone_only_billing_address_option
@@ -478,13 +478,13 @@ class BraintreeBlueTest < Test::Unit::TestCase
     }
     customer = stub(customer_attributes)
     customer.stubs(:id).returns('123')
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_nil params[:credit_card][:billing_address]
       params
     end.returns(result)
 
-    @gateway.store(credit_card('41111111111111111111'), billing_address: billing_address)
+    @gateway.store(credit_card('41111111111111111111'), billing_address:)
   end
 
   def test_store_with_nil_billing_address_options
@@ -508,13 +508,13 @@ class BraintreeBlueTest < Test::Unit::TestCase
     }
     customer = stub(customer_attributes)
     customer.stubs(:id).returns('123')
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_nil params[:credit_card][:billing_address]
       params
     end.returns(result)
 
-    @gateway.store(credit_card('41111111111111111111'), billing_address: billing_address)
+    @gateway.store(credit_card('41111111111111111111'), billing_address:)
   end
 
   def test_store_with_credit_card_token
@@ -529,7 +529,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     braintree_credit_card = stub_everything(token: 'cctoken')
     customer.stubs(:credit_cards).returns([braintree_credit_card])
 
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_equal 'cctoken', params[:credit_card][:token]
       params
@@ -551,7 +551,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     )
     customer.stubs(:id).returns('customerid')
 
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:find).
       with('customerid').
       raises(Braintree::NotFoundError)
@@ -571,7 +571,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       token: 'cctoken'
     )
 
-    result = Braintree::SuccessfulResult.new(credit_card: credit_card)
+    result = Braintree::SuccessfulResult.new(credit_card:)
     Braintree::CustomerGateway.any_instance.expects(:find).with('customerid')
     Braintree::CreditCardGateway.any_instance.expects(:create).with do |params|
       assert_equal 'customerid', params[:customer_id]
@@ -607,7 +607,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       }
     }
 
-    result = Braintree::SuccessfulResult.new(credit_card: credit_card)
+    result = Braintree::SuccessfulResult.new(credit_card:)
     Braintree::CustomerGateway.any_instance.expects(:find).with('customerid')
     Braintree::CreditCardGateway.any_instance.expects(:create).with do |params|
       assert_equal 'customerid', params[:customer_id]
@@ -629,7 +629,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     Braintree::CustomerGateway.any_instance.stubs(:find).with('vault_id').returns(customer)
     BraintreeBlueGateway.any_instance.stubs(:customer_hash)
 
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:update).with do |vault, params|
       assert_equal '567', params[:credit_card][:cvv]
       assert_equal 'Longbob Longsen', params[:credit_card][:cardholder_name]
@@ -645,7 +645,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     Braintree::CustomerGateway.any_instance.stubs(:find).with('vault_id').returns(customer)
     BraintreeBlueGateway.any_instance.stubs(:customer_hash)
 
-    result = Braintree::SuccessfulResult.new(customer: customer)
+    result = Braintree::SuccessfulResult.new(customer:)
     Braintree::CustomerGateway.any_instance.expects(:update).with do |vault, params|
       assert_equal true, params[:credit_card][:options][:verify_card]
       [vault, params]
@@ -679,7 +679,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       country: 'US'
     }
     params = { first_name: 'John' }
-    options = { billing_address: billing_address }
+    options = { billing_address: }
     expected_params = {
       first_name: 'John',
       credit_card: {
@@ -1591,7 +1591,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     Braintree::ErrorResult.new(@internal_gateway, { errors: {} }.merge(options))
   end
 
-  def with_braintree_configuration_restoration(&block)
+  def with_braintree_configuration_restoration(&)
     # Remember the wiredump device since we may overwrite it
     existing_wiredump_device = ActiveMerchant::Billing::BraintreeBlueGateway.wiredump_device
 

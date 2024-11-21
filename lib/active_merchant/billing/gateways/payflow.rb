@@ -3,8 +3,8 @@ require 'active_merchant/billing/gateways/payflow/payflow_common_api'
 require 'active_merchant/billing/gateways/payflow/payflow_response'
 require 'active_merchant/billing/gateways/payflow_express'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayflowGateway < Gateway
       include PayflowCommonAPI
 
@@ -91,14 +91,14 @@ module ActiveMerchant #:nodoc:
       def cancel_recurring(profile_id)
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        request = build_recurring_request(:cancel, 0, profile_id: profile_id)
+        request = build_recurring_request(:cancel, 0, profile_id:)
         commit(request, options.merge(request_type: :recurring))
       end
 
       def recurring_inquiry(profile_id, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        request = build_recurring_request(:inquiry, nil, options.update(profile_id: profile_id))
+        request = build_recurring_request(:inquiry, nil, options.update(profile_id:))
         commit(request, options.merge(request_type: :recurring))
       end
 
@@ -417,7 +417,7 @@ module ActiveMerchant #:nodoc:
                   end
 
                   if action == :add
-                    xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1)
+                    xml.tag! 'Start', format_rp_date(options[:starting_at] || (Date.today + 1))
                   else
                     xml.tag! 'Start', format_rp_date(options[:starting_at]) unless options[:starting_at].nil?
                   end

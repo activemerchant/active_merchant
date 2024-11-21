@@ -1,8 +1,8 @@
 require 'active_merchant/billing/gateways/viaklix'
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ElavonGateway < Gateway
       include Empty
 

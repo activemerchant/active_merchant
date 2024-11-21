@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class InstapayGateway < Gateway
       self.live_url = 'https://trans.instapaygateway.com/cgi-bin/process.cgi'
 

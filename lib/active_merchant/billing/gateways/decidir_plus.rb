@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class DecidirPlusGateway < Gateway
       self.test_url = 'https://developers.decidir.com/api/v2'
       self.live_url = 'https://live.decidir.com/api/v2'

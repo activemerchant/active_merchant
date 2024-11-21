@@ -448,7 +448,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_risk_data
-    options = @options.merge({ execute_threed: true, three_ds_version: '2.0', risk_data: risk_data })
+    options = @options.merge({ execute_threed: true, three_ds_version: '2.0', risk_data: })
     assert response = @gateway.authorize(@amount, @threeDS2_card, options)
     assert_success response
     assert_equal 'SUCCESS', response.message
@@ -539,7 +539,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         execute_threed: true,
         accept_header: 'text/html',
         user_agent: 'Mozilla/5.0',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1',
         cookie: 'machine=32423423'
       }
@@ -566,7 +566,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         execute_threed: true,
         accept_header: 'text/html',
         user_agent: 'Mozilla/5.0',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1'
       }
     )
@@ -707,7 +707,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         execute_threed: true,
         accept_header: 'text/html',
         user_agent: 'Mozilla/5.0',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1',
         cookie: 'machine=32423423',
         stored_credential: stored_credential_params
@@ -728,7 +728,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         execute_threed: true,
         accept_header: 'text/html',
         user_agent: 'Mozilla/5.0',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1',
         cookie: 'machine=32423423',
         stored_credential_usage: 'FIRST'
@@ -822,7 +822,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       {
         execute_threed: true,
         accept_header: 'text/html',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1',
         cookie: 'machine=32423423'
       }
@@ -885,13 +885,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     billing_address.delete(:address1)
     billing_address.delete(:zip)
     billing_address.delete(:country)
-    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: billing_address))
+    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address:))
   end
 
   def test_state_omitted
     billing_address = address
     billing_address.delete(:state)
-    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: billing_address))
+    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address:))
   end
 
   def test_ip_address
