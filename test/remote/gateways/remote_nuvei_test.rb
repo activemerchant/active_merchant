@@ -16,8 +16,7 @@ class RemoteNuveiTest < Test::Unit::TestCase
     @options = {
       email: 'test@gmail.com',
       billing_address: address.merge(name: 'Cure Tester'),
-      ip: '127.0.0.1',
-      user_token_id: '123456'
+      ip: '127.0.0.1'
     }
 
     @three_ds_options = {
@@ -227,38 +226,75 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_match 'APPROVED', response.message
   end
 
-  def test_successful_general_credit
-    credit_response = @gateway.credit(@amount, @credit_card, @options)
-    assert_success credit_response
-    assert_match 'SUCCESS', credit_response.params['status']
-    assert_match 'APPROVED', credit_response.message
+  def test_successful_unreferenced_refund
+    refund_response = @gateway.credit(@amount, @credit_card, @options.merge(user_token_id: '12345678'))
+    assert_success refund_response
+    assert_match 'SUCCESS', refund_response.params['status']
+    assert_match 'APPROVED', refund_response.message
   end
 
-  def test_failed_general_credit
-    credit_response = @gateway.credit(@amount, @declined_card, @options)
-    assert_failure credit_response
-    assert_match 'DECLINED', credit_response.params['transactionStatus']
-    assert_match 'External Error in Processing', credit_response.message
+  def test_successful_unreferenced_refund_with_user_option_id
+    # getting the user_option_id from prevouse purchase
+    purchase_response = @gateway.purchase(@amount, @credit_card, @options.merge(user_token_id: '12345678'))
+    assert_success purchase_response
+
+    user_payment_id = purchase_response.params[:paymentOption][:userPaymentOptionId]
+
+    refund_response = @gateway.credit(@amount, @credit_card, @options.merge(user_token_id: '12345678', user_payment_option_id: user_payment_id))
+    assert_success refund_response
+    assert_match 'SUCCESS', refund_response.params['status']
+    assert_match 'APPROVED', refund_response.message
+  end
+
+  def test_successful_payout
+    payout_response = @gateway.credit(@amount, @credit_card, @options.merge(user_token_id: '12345678', is_payout: true))
+    assert_success payout_response
+    assert_match 'SUCCESS', payout_response.params['status']
+    assert_match 'APPROVED', payout_response.message
+  end
+
+  def test_successful_payout_with_google_pay
+    purchase_response = @gateway.purchase(@amount, @credit_card, @options.merge(user_token_id: '12345678'))
+    assert_success purchase_response
+    user_payment_id = purchase_response.params[:paymentOption][:userPaymentOptionId]
+
+    options = @options.merge(
+      user_payment_option_id: user_payment_id,
+      user_token_id: '12345678',
+      is_payout: true,
+      notification_url: 'https://example.com/notification'
+    )
+    payout_response = @gateway.credit(@amount, @google_pay_card, options)
+    assert_success payout_response
+    assert_match 'SUCCESS', payout_response.params['status']
+    assert_match 'APPROVED', payout_response.message
+  end
+
+  def test_failed_unreferenced_refund
+    refund_response = @gateway.credit(@amount, @declined_card, @options.merge(user_token_id: '12345678'))
+    assert_failure refund_response
+
+    assert_match 'DECLINED', refund_response.params['transactionStatus']
+    assert_match 'External Error in Processing', refund_response.message
+  end
+
+  def test_failed_payout
+    payout_response = @gateway.credit(@amount, @declined_card, @options.merge(user_token_id: '12345678'))
+    assert_failure payout_response
+
+    assert_match 'DECLINED', payout_response.params['transactionStatus']
+    assert_match 'External Error in Processing', payout_response.message
   end
 
   def test_successful_store
-    response = @gateway.store(@credit_card, @options)
+    response = @gateway.store(@credit_card, @options.merge(user_token_id: '12345678'))
     assert_success response
     assert_match 'SUCCESS', response.params['status']
     assert_match 'APPROVED', response.message
   end
 
-  def test_successful_purchase_with_stored_card
-    response = @gateway.store(@credit_card, @options)
-    assert_success response
-
-    payment_method_token = response.params[:paymentOption][:userPaymentOptionId]
-    purchase = @gateway.purchase(@amount, payment_method_token, @options.merge(cvv_code: '999'))
-    assert_success purchase
-  end
-
   def test_purchase_using_stored_credentials_cit
-    options = @options.merge!(stored_credential: stored_credential(:cardholder, :unscheduled, :initial))
+    options = @options.merge!(user_token_id: '12345678', stored_credential: stored_credential(:cardholder, :unscheduled, :initial))
     assert response = @gateway.authorize(@amount, @credit_card, options)
     assert_success response
 
@@ -272,7 +308,7 @@ class RemoteNuveiTest < Test::Unit::TestCase
 
   def test_purchase_using_stored_credentials_recurring_cit
     # Initial transaction with stored credentials
-    initial_options = @options.merge(stored_credential: stored_credential(:cardholder, :unscheduled, :initial))
+    initial_options = @options.merge(user_token_id: '12345678', stored_credential: stored_credential(:cardholder, :unscheduled, :initial))
     initial_response = @gateway.purchase(@amount, @credit_card, initial_options)
     assert_success initial_response
 
@@ -280,7 +316,7 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_match 'SUCCESS', initial_response.params['status']
 
     stored_credential_options = @options.merge(
-      related_transaction_id: initial_response.authorization,
+      user_token_id: '12345678',
       stored_credential: stored_credential(:merchant, :recurring, network_transaction_id: initial_response.network_transaction_id)
     )
 
@@ -290,7 +326,7 @@ class RemoteNuveiTest < Test::Unit::TestCase
   end
 
   def test_purchase_using_stored_credentials_merchant_installments_cit
-    initial_options = @options.merge(stored_credential: stored_credential(:cardholder, :unscheduled, :initial))
+    initial_options = @options.merge(user_token_id: '12345678', stored_credential: stored_credential(:cardholder, :unscheduled, :initial))
     initial_response = @gateway.purchase(@amount, @credit_card, initial_options)
     assert_success initial_response
 
@@ -298,7 +334,7 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_match 'SUCCESS', initial_response.params['status']
 
     stored_credential_options = @options.merge(
-      related_transaction_id: initial_response.authorization,
+      user_token_id: '12345678',
       stored_credential: stored_credential(:merchant, :installments, network_transaction_id: initial_response.network_transaction_id)
     )
 

@@ -246,15 +246,34 @@ class NuveiTest < Test::Unit::TestCase
     end
   end
 
-  def test_successful_credit
+  def test_successful_unreferenced_refund
     stub_comms(@gateway, :ssl_request) do
       @gateway.credit(@amount, @credit_card, @options)
     end.check_request do |_method, endpoint, data, _headers|
       json_data = JSON.parse(data)
-      if /payout/.match?(endpoint)
-        assert_match(/#{@amount}/, json_data['amount'])
-        assert_match(/#{@credit_card.number}/, json_data['cardData']['cardNumber'])
-      end
+      assert_match(/refund/, endpoint)
+      assert_match(/#{@amount}/, json_data['amount'])
+      assert_match(/#{@credit_card.number}/, json_data['paymentOption']['card']['cardNumber'])
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_payout
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.credit(@amount, @credit_card, @options.merge(user_payment_option_id: '12345678', is_payout: true))
+    end.check_request do |_method, endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      assert_match(/payout/, endpoint)
+      assert_match(/#{@credit_card.number}/, json_data['cardData']['cardNumber'])
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_payout_with_google_pay
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.credit(@amount, @apple_pay_card, @options.merge(user_payment_option_id: '12345678', is_payout: true))
+    end.check_request do |_method, endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      assert_match(/payout/, endpoint)
+      assert_match('12345678', json_data['userPaymentOption']['userPaymentOptionId'])
     end.respond_with(successful_purchase_response)
   end
 
