@@ -1087,7 +1087,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       '4111111111111111',
       brand: 'visa',
       transaction_id: '123',
-      payment_cryptogram: 'cryptogram',
+      payment_cryptogram: 'some_other_value',
       source: :apple_pay
     )
 
