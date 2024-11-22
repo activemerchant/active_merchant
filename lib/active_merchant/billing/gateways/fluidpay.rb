@@ -241,14 +241,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response['msg'] == 'success'
+        response.dig('data', 'response') == 'approved'
       end
 
       def message_from(succeeded, response)
         if succeeded
           'Succeeded'
         else
-          response['msg']
+          "#{response.dig('data', 'response')&.capitalize}-#{response.dig('data', 'response_body', "card", "processor_response_text")}"
         end
       end
 
