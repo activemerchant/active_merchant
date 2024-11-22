@@ -306,8 +306,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
 
     assert_failure response
-    assert_equal response.error_code, '5'
-    assert_equal "Element 'tokenNumber' must have valid numeric content.", response.message
+    assert_equal response.error_code, '2'
+    assert_match "Missing required elements 'tokenNumber'", response.message
   end
 
   def test_unsucessfull_authorize_with_token_number_as_empty_string_apple_pay
@@ -315,8 +315,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
 
     assert_failure response
-    assert_equal response.error_code, '5'
-    assert_equal "Element 'tokenNumber' must have valid numeric content.", response.message
+    assert_equal response.error_code, '2'
+    assert_match "Missing required elements 'tokenNumber'", response.message
   end
 
   def test_unsucessfull_authorize_with_invalid_token_number_apple_pay
@@ -1342,7 +1342,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
     refund = @cftgateway.refund(@amount * 2, auth.authorization, authorization_validated: true)
     assert_failure refund
-    assert_equal 'Refund amount too high', refund.message
+    assert_equal 'Invalid amount: The refund amount should be equal to the captured value', refund.message
   end
 
   def test_successful_purchase_with_options_synchronous_response

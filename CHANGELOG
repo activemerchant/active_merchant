@@ -99,6 +99,7 @@
 * FlexCharge: Update homePage url [javierpedrozaing] #5351
 * Nuvei: Fix send savePM in false by default [javierpedrozaing] #5353
 * Decidir and DecicirPlus: Add the wallet_id field [yunnydang] #5354
+* Worldpay: Idempotency key fix [jherreraa] #5343
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
