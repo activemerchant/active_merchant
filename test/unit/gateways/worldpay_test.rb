@@ -223,6 +223,17 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal payment, :credit
   end
 
+  def test_successful_purchase_checking_idempotency_header
+    headers_list = []
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge!({ idempotency_key: 'test123' }))
+    end.check_request do |_endpoint, _data, headers|
+      headers_list << headers
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_not_equal headers_list[0]['Idempotency-Key'], headers_list[1]['Idempotency-Key']
+    assert_success response
+  end
+
   def test_successful_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
