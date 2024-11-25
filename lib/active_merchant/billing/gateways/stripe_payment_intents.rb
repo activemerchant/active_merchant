@@ -18,7 +18,7 @@ module ActiveMerchant # :nodoc:
 
       def create_intent(money, payment_method, options = {})
         MultiResponse.run do |r|
-          if payment_method.is_a?(NetworkTokenizationCreditCard) && digital_wallet_payment_method?(payment_method) && options[:new_ap_gp_route] != true
+          if payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.mobile_wallet? && options[:new_ap_gp_route] != true
             r.process { tokenize_apple_google(payment_method, options) }
             payment_method = (r.params['token']['id']) if r.success?
           end
@@ -28,16 +28,8 @@ module ActiveMerchant # :nodoc:
             add_capture_method(post, options)
             add_confirmation_method(post, options)
             add_customer(post, options)
-
-            if new_apple_google_pay_flow(payment_method, options)
-              add_digital_wallet(post, payment_method, options)
-              add_billing_address(post, payment_method, options)
-            else
-              result = add_payment_method_token(post, payment_method, options)
-              return result if result.is_a?(ActiveMerchant::Billing::Response)
-            end
-
-            add_network_token_info(post, payment_method, options)
+            add_payment_method(post, payment_method, options)
+            add_billing_address(post, payment_method, options)
             add_external_three_d_secure_auth_data(post, options)
             add_metadata(post, options)
             add_return_url(post, options)
@@ -75,14 +67,8 @@ module ActiveMerchant # :nodoc:
 
       def confirm_intent(intent_id, payment_method, options = {})
         post = {}
-        if new_apple_google_pay_flow(payment_method, options)
-          add_digital_wallet(post, payment_method, options)
-        else
-          result = add_payment_method_token(post, payment_method, options)
-          return result if result.is_a?(ActiveMerchant::Billing::Response)
-        end
 
-        add_network_token_info(post, payment_method, options)
+        add_payment_method(post, payment_method, options)
         add_payment_method_types(post, options)
         CONFIRM_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
@@ -91,61 +77,53 @@ module ActiveMerchant # :nodoc:
         commit(:post, "payment_intents/#{intent_id}/confirm", post, options)
       end
 
-      def create_payment_method(payment_method, options = {})
-        post_data = add_payment_method_data(payment_method, options)
-        options = format_idempotency_key(options, 'pm')
-        commit(:post, 'payment_methods', post_data, options)
-      end
-
-      def new_apple_google_pay_flow(payment_method, options)
-        return false unless options[:new_ap_gp_route]
-
-        payment_method.is_a?(NetworkTokenizationCreditCard) && digital_wallet_payment_method?(payment_method)
-      end
-
-      def add_payment_method_data(payment_method, options = {})
-        post = {
+      def add_credit_card(post, payment_method, options = {})
+        post[:payment_method_data] = {
           type: 'card',
           card: {
             exp_month: payment_method.month,
-            exp_year: payment_method.year
-          }
+            exp_year: payment_method.year,
+            number: payment_method.number,
+            cvc: payment_method.verification_value
+          }.compact
         }
-        post[:card][:number] = payment_method.number unless adding_network_token_card_data?(payment_method)
-        post[:card][:cvc] = payment_method.verification_value if payment_method.verification_value
-        if billing = options[:billing_address] || options[:address]
-          post[:billing_details] = add_address(billing, options)
-        end
 
         # wallet_type is only passed for non-tokenized GooglePay which acts as a CreditCard
         if options[:wallet_type]
           post[:metadata] ||= {}
           post[:metadata][:input_method] = 'GooglePay'
         end
-        add_name_only(post, payment_method) if post[:billing_details].nil?
-        add_network_token_data(post, payment_method, options)
-        post
       end
 
-      def add_payment_method_card_data_token(post_data, payment_method)
-        post_data.merge!({
-          payment_method_types: ['card'],
-          payment_method_data: { type: 'card', card: { token: payment_method } }
-        })
+      def add_network_token(post, payment_method, options)
+        post[:payment_method_data] = {
+          type: 'card',
+          card: {
+            exp_month: payment_method.month,
+            exp_year: payment_method.year,
+            cvc: payment_method.verification_value,
+            last4: options[:last_4] || payment_method.number[-4..],
+            network_token: {
+              exp_month: payment_method.month,
+              exp_year: payment_method.year,
+              number: payment_method.number,
+              payment_account_reference: options[:payment_account_reference]
+            }.compact
+          }
+        }
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:network_token] = {
+          cryptogram: payment_method.respond_to?(:payment_cryptogram) ? payment_method.payment_cryptogram : options[:cryptogram],
+          electronic_commerce_indicator: format_eci(payment_method, options)
+        }.compact
       end
 
       def update_intent(money, intent_id, payment_method, options = {})
         post = {}
         add_amount(post, money, options)
-
-        if new_apple_google_pay_flow(payment_method, options)
-          add_digital_wallet(post, payment_method, options)
-        else
-          result = add_payment_method_token(post, payment_method, options)
-          return result if result.is_a?(ActiveMerchant::Billing::Response)
-        end
-
-        add_network_token_info(post, payment_method, options)
+        add_payment_method(post, payment_method, options)
         add_payment_method_types(post, options)
         add_customer(post, options)
         add_metadata(post, options)
@@ -160,34 +138,23 @@ module ActiveMerchant # :nodoc:
       end
 
       def create_setup_intent(payment_method, options = {})
-        MultiResponse.run do |r|
-          r.process do
-            post = {}
-            add_customer(post, options)
+        post = {
+          on_behalf_of: options[:on_behalf_of],
+          description: options[:description],
+          expand: ['latest_attempt'],
+          usage: (options[:usage] if %w(on_session off_session).include?(options[:usage]))
+        }.compact
 
-            if new_apple_google_pay_flow(payment_method, options)
-              add_digital_wallet(post, payment_method, options)
-              add_billing_address(post, payment_method, options)
-            else
-              result = add_payment_method_token(post, payment_method, options, r)
-              return result if result.is_a?(ActiveMerchant::Billing::Response)
-            end
+        add_customer(post, options)
+        add_payment_method(post, payment_method, options)
+        add_metadata(post, options)
+        add_return_url(post, options)
+        add_fulfillment_date(post, options)
+        request_three_d_secure(post, options)
+        add_card_brand(post, options)
+        add_exemption(post, options)
 
-            add_network_token_info(post, payment_method, options)
-            add_metadata(post, options)
-            add_return_url(post, options)
-            add_fulfillment_date(post, options)
-            request_three_d_secure(post, options)
-            add_card_brand(post, options)
-            add_exemption(post, options)
-            post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
-            post[:usage] = options[:usage] if %w(on_session off_session).include?(options[:usage])
-            post[:description] = options[:description] if options[:description]
-            post[:expand] = ['latest_attempt']
-
-            commit(:post, 'setup_intents', post, options)
-          end
-        end
+        commit(:post, 'setup_intents', post, options)
       end
 
       def retrieve_setup_intent(setup_intent_id, options = {})
@@ -230,7 +197,7 @@ module ActiveMerchant # :nodoc:
         if intent_id.include?('pi_')
           intent = api_request(:get, "payment_intents/#{intent_id}", nil, options)
 
-          return Response.new(false, intent['error']['message'], intent) if intent['error']
+          return Response.new(false, intent.dig('error', 'message'), intent) if intent['error']
 
           charge_id = intent.try(:[], 'charges').try(:[], 'data').try(:[], 0).try(:[], 'id')
 
@@ -246,35 +213,17 @@ module ActiveMerchant # :nodoc:
         super(money, charge_id, options)
       end
 
-      # Note: Not all payment methods are currently supported by the {Payment Methods API}[https://stripe.com/docs/payments/payment-methods]
-      # Current implementation will create a PaymentMethod object if the method is a token or credit card
-      # All other types will default to legacy Stripe store
       def store(payment_method, options = {})
-        params = {}
-        # If customer option is provided, create a payment method and attach to customer id
-        # Otherwise, create a customer, then attach
-        if new_apple_google_pay_flow(payment_method, options)
-          options[:customer] = customer(payment_method, options).params['id'] unless options[:customer]
-          verify(payment_method, options.merge!(action: :store))
-        elsif payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
-          result = add_payment_method_token(params, payment_method, options)
-          return result if result.is_a?(ActiveMerchant::Billing::Response)
-
-          customer_id = options[:customer] || customer(payment_method, options).params['id']
-          options = format_idempotency_key(options, 'attach')
-          attach_parameters = { customer: customer_id }
-          attach_parameters[:validate] = options[:validate] unless options[:validate].nil?
-          commit(:post, "payment_methods/#{params[:payment_method]}/attach", attach_parameters, options)
-        else
-          super(payment_method, options)
-        end
+        options[:customer] = customer(payment_method, options).params['id'] unless options[:customer]
+        verify(payment_method, options.merge!(action: :store))
       end
 
       def customer(payment, options)
-        post = {}
-        post[:description] = options[:description] if options[:description]
-        post[:expand] = [:sources]
-        post[:email] = options[:email]
+        post = {
+          description: options[:description],
+          expand: [:sources],
+          email: options[:email]
+        }.compact
 
         if billing = options[:billing_address] || options[:address]
           post.merge!(add_address(billing, options))
@@ -298,7 +247,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def verify(payment_method, options = {})
-        create_setup_intent(payment_method, options.merge!({ confirm: true, verify: true }))
+        create_setup_intent(payment_method, options.merge!(confirm: true))
       end
 
       def setup_purchase(money, options = {})
@@ -323,16 +272,6 @@ module ActiveMerchant # :nodoc:
         else
           super
         end
-      end
-
-      def digital_wallet_payment_method?(payment_method)
-        payment_method.source == :google_pay || payment_method.source == :apple_pay
-      end
-
-      def adding_network_token_card_data?(payment_method)
-        return true if payment_method.is_a?(ActiveMerchant::Billing::NetworkTokenizationCreditCard) && payment_method.source == :network_token
-
-        false
       end
 
       def off_session_request?(options = {})
@@ -401,50 +340,18 @@ module ActiveMerchant # :nodoc:
         post[:return_url] = options[:return_url] if options[:return_url]
       end
 
-      def add_payment_method_token(post, payment_method, options, responses = [])
-        case payment_method
-        when String
+      def add_payment_method(post, payment_method, options)
+        return unless payment_method
+
+        if payment_method.is_a?(String)
           extract_token_from_string_and_maybe_add_customer_id(post, payment_method)
-        when ActiveMerchant::Billing::CreditCard
-          return create_payment_method_and_extract_token(post, payment_method, options, responses) if options[:verify]
-
-          get_payment_method_data_from_card(post, payment_method, options, responses)
-        when ActiveMerchant::Billing::NetworkTokenizationCreditCard
-          get_payment_method_data_from_card(post, payment_method, options, responses)
+        elsif payment_method.mobile_wallet? && options[:new_ap_gp_route]
+          add_digital_wallet(post, payment_method, options)
+        elsif payment_method.is_a?(NetworkTokenizationCreditCard)
+          add_network_token(post, payment_method, options)
+        else
+          add_credit_card(post, payment_method, options)
         end
-      end
-
-      def add_network_token_data(post_data, payment_method, options)
-        return unless adding_network_token_card_data?(payment_method)
-
-        post_data[:card] ||= {}
-        post_data[:card][:last4] = options[:last_4] || payment_method.number[-4..]
-        post_data[:card][:network_token] = {}
-        post_data[:card][:network_token][:number] = payment_method.number
-        post_data[:card][:network_token][:exp_month] = payment_method.month
-        post_data[:card][:network_token][:exp_year] = payment_method.year
-        post_data[:card][:network_token][:payment_account_reference] = options[:payment_account_reference] if options[:payment_account_reference]
-
-        post_data
-      end
-
-      def add_network_token_info(post, payment_method, options)
-        # wallet_type is only passed for non-tokenized GooglePay which acts as a CreditCard
-        if options[:wallet_type]
-          post[:metadata] ||= {}
-          post[:metadata][:input_method] = 'GooglePay'
-        end
-
-        return unless payment_method.is_a?(NetworkTokenizationCreditCard) && options.dig(:stored_credential, :initiator) != 'merchant'
-        return if digital_wallet_payment_method?(payment_method) && options[:new_ap_gp_route] != true
-
-        post[:payment_method_options] ||= {}
-        post[:payment_method_options][:card] ||= {}
-        post[:payment_method_options][:card][:network_token] ||= {}
-        post[:payment_method_options][:card][:network_token].merge!({
-          cryptogram: payment_method.respond_to?(:payment_cryptogram) ? payment_method.payment_cryptogram : options[:cryptogram],
-          electronic_commerce_indicator: format_eci(payment_method, options)
-        }.compact)
       end
 
       def add_digital_wallet(post, payment_method, options)
@@ -462,6 +369,13 @@ module ActiveMerchant # :nodoc:
             }
           }
         }
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:network_token] = {
+          cryptogram: payment_method.respond_to?(:payment_cryptogram) ? payment_method.payment_cryptogram : options[:cryptogram],
+          electronic_commerce_indicator: format_eci(payment_method, options)
+        }.compact
       end
 
       def format_eci(payment_method, options)
@@ -481,7 +395,8 @@ module ActiveMerchant # :nodoc:
         end
 
         if payment_method.include?('tok_')
-          add_payment_method_card_data_token(post, payment_method)
+          post[:payment_method_types] = ['card']
+          post[:payment_method_data] = { type: 'card', card: { token: payment_method } }
         else
           post[:payment_method] = payment_method
         end
@@ -501,30 +416,13 @@ module ActiveMerchant # :nodoc:
         }
         add_billing_address_for_card_tokenization(post, options) if %i(apple_pay android_pay).include?(tokenization_method)
         token_response = api_request(:post, 'tokens', post, options)
-        success = token_response['error'].nil?
-        if success && token_response['id']
+        if (success = token_response['error'].nil?) && token_response['id']
           Response.new(success, nil, token: token_response)
         elsif token_response['error']['message']
           Response.new(false, "The tokenization process fails. #{token_response['error']['message']}")
         else
           Response.new(false, "The tokenization process fails. #{token_response}")
         end
-      end
-
-      def get_payment_method_data_from_card(post, payment_method, options, responses)
-        return create_payment_method_and_extract_token(post, payment_method, options, responses) unless off_session_request?(options) || adding_network_token_card_data?(payment_method)
-
-        post[:payment_method_data] = add_payment_method_data(payment_method, options)
-      end
-
-      def create_payment_method_and_extract_token(post, payment_method, options, responses)
-        payment_method_response = create_payment_method(payment_method, options)
-        return payment_method_response if payment_method_response.failure?
-
-        add_card_3d_secure_usage_supported(payment_method_response)
-
-        responses << payment_method_response
-        add_payment_method_token(post, payment_method_response.params['id'], options)
       end
 
       def add_payment_method_types(post, options)
@@ -621,9 +519,9 @@ module ActiveMerchant # :nodoc:
 
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
-        post[:payment_method_options][:card][:mit_exemption] = {}
-
-        post[:payment_method_options][:card][:mit_exemption][:network_transaction_id] = options[:network_transaction_id]
+        post[:payment_method_options][:card][:mit_exemption] = {
+          network_transaction_id: options[:network_transaction_id]
+        }
       end
 
       def add_claim_without_transaction_id(post, options = {})
