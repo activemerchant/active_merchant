@@ -1173,6 +1173,38 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert response.authorization.present?
   end
 
+  def test_unsuccessful_adding_bank_account_to_customer
+    bank_account = check({ account_number: '1000000002', routing_number: '011000015' })
+    options = {
+      billing_address: {
+        address1: '1670',
+        address2: '1670 NW 82ND AVE',
+        city: 'Miami',
+        state: 'FL',
+        zip: '32191'
+      },
+      ach_mandate: 'ACH Mandate',
+      merchant_account_id: 'merchant_account_id'
+    }
+    customer = stub(
+      credit_cards: [stub_everything],
+      email: 'email',
+      phone: '321-654-0987',
+      first_name: 'John',
+      last_name: 'Smith'
+    )
+    customer.stubs(:id).returns('123')
+
+    Braintree::CustomerGateway.any_instance.expects(:create).returns(Braintree::SuccessfulResult.new(customer:))
+    Braintree::ClientTokenGateway.any_instance.expects(:generate).returns('IntcImNsaWVudF90b2tlblwiOlwiMTIzNFwifSI=')
+    ActiveMerchant::Billing::TokenNonce.any_instance.expects(:ssl_request).returns(JSON.generate(token_bank_response))
+    Braintree::PaymentMethodGateway.any_instance.expects(:create).returns(braintree_error_result(message: 'US bank account is not accepted by merchant account.'))
+
+    assert response = @gateway.store(bank_account, options)
+    refute response.success?
+    assert_equal response.message, 'US bank account is not accepted by merchant account.'
+  end
+
   def test_unsuccessful_transaction_returns_message_when_available
     Braintree::TransactionGateway.any_instance.
       expects(:sale).
@@ -1654,6 +1686,24 @@ class BraintreeBlueTest < Test::Unit::TestCase
         expiration_month: '09',
         expiration_year: (Time.now.year + 1).to_s,
         cardholder_name: 'Longbob Longsen'
+      }
+    }
+  end
+
+  def token_bank_response
+    {
+      'data' => {
+        'tokenizeUsBankAccount' => {
+          'paymentMethod' => {
+            'id' => 'tokenusbankacct_bc_zrg45z_7wz95v_nscrks_q4zpjs_5m7',
+            'details' => {
+              'last4' => '0125'
+            }
+          }
+        }
+      },
+      'extensions' => {
+        'requestId' => '769b26d5-27e4-4602-b51d-face8b6ffdd5'
       }
     }
   end

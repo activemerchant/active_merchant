@@ -1061,26 +1061,33 @@ module ActiveMerchant # :nodoc:
           }
         )
 
-        verified = result.success? && result.payment_method&.verified
-        message = message_from_result(result)
-        message = not_verified_reason(result.payment_method) unless verified
-
+        success = bank_account_verified?(result)
+        resp_body = if result.respond_to?(:payment_method)
+                      {
+                        customer_vault_id: options[:customer],
+                        bank_account_token: result.payment_method&.token,
+                        verified: success
+                      }
+                    end
         Response.new(
-          verified,
-          message,
-          {
-            customer_vault_id: options[:customer],
-            bank_account_token: result.payment_method&.token,
-            verified:
-          },
-          authorization: result.payment_method&.token
+          success,
+          message_from_bank_account_result(success, result),
+          resp_body || {},
+          authorization: (result.payment_method&.token if result.respond_to?(:payment_method))
         )
       end
 
-      def not_verified_reason(bank_account)
-        return unless bank_account.verifications.present?
+      def bank_account_verified?(result)
+        return false unless result.respond_to?(:payment_method)
 
-        verification = bank_account.verifications.first
+        result.success? && result.payment_method&.verified
+      end
+
+      def message_from_bank_account_result(success, response)
+        return message_from_result(response) if !response.respond_to?(:payment_method) || success
+        return unless response.payment_method.verifications.present?
+
+        verification = response.payment_method.verifications.first
         "verification_status: [#{verification.status}], processor_response: [#{verification.processor_response_code}-#{verification.processor_response_text}]"
       end
 
