@@ -838,6 +838,17 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_fast_fund_credit
+    options = @options.merge({ fast_fund_credit: true, email: 'test@email.com' })
+
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<FF_DISBURSE-SSL>/, data)
+      assert_match(/<shopperEmailAddress>/, data)
+    end.respond_with(successful_visa_credit_response)
+  end
+
   def test_successful_visa_credit
     response = stub_comms do
       @gateway.credit(@amount, @credit_card, @options)

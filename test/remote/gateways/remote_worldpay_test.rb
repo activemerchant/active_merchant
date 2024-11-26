@@ -51,7 +51,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
     @options = {
       order_id: generate_unique_id,
-      email: 'wow@example.com'
+      email: 'wow@example.com',
+      ip: '127.0.0.1'
     }
 
     @level_two_data = {
@@ -1037,35 +1038,32 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal '20', credit.error_code
   end
 
-  # These three fast_fund_credit tests are currently failing with the message: Disbursement transaction not supported
-  # It seems that the current sandbox setup does not support testing this.
+  def test_successful_fast_fund_credit_on_cft_gateway
+    options = @options.merge({ fast_fund_credit: true })
 
-  # def test_successful_fast_fund_credit_on_cft_gateway
-  #   options = @options.merge({ fast_fund_credit: true })
+    credit = @cftgateway.credit(@amount, @credit_card, options)
+    assert_success credit
+    assert_equal 'SUCCESS', credit.message
+  end
 
-  #   credit = @cftgateway.credit(@amount, @credit_card, options)
-  #   assert_success credit
-  #   assert_equal 'SUCCESS', credit.message
-  # end
+  def test_successful_fast_fund_credit_with_token_on_cft_gateway
+    assert store = @gateway.store(@credit_card, @store_options)
+    assert_success store
 
-  # def test_successful_fast_fund_credit_with_token_on_cft_gateway
-  #   assert store = @gateway.store(@credit_card, @store_options)
-  #   assert_success store
+    options = @options.merge({ fast_fund_credit: true })
+    assert credit = @cftgateway.credit(@amount, store.authorization, options)
+    assert_success credit
+  end
 
-  #   options = @options.merge({ fast_fund_credit: true })
-  #   assert credit = @cftgateway.credit(@amount, store.authorization, options)
-  #   assert_success credit
-  # end
+  def test_failed_fast_fund_credit_on_cft_gateway
+    options = @options.merge({ fast_fund_credit: true })
+    refused_card = credit_card('4444333322221111', name: 'REFUSED') # 'magic' value for testing failures, provided by Worldpay
 
-  # def test_failed_fast_fund_credit_on_cft_gateway
-  #   options = @options.merge({ fast_fund_credit: true })
-  #   refused_card = credit_card('4444333322221111', name: 'REFUSED') # 'magic' value for testing failures, provided by Worldpay
-
-  #   credit = @cftgateway.credit(@amount, refused_card, options)
-  #   assert_failure credit
-  #   assert_equal '01', credit.params['action_code']
-  #   assert_equal "A transaction status of 'ok' or 'PUSH_APPROVED' is required.", credit.message
-  # end
+    credit = @cftgateway.credit(@amount, refused_card, options)
+    assert_failure credit
+    assert_equal '01', credit.params['action_code']
+    assert_equal "A transaction status of 'ok' or 'PUSH_APPROVED' is required.", credit.message
+  end
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do

@@ -402,7 +402,12 @@ module ActiveMerchant # :nodoc:
               add_amount(xml, money, options)
               add_order_content(xml, options)
               add_payment_details_for_ff_credit(xml, payment_method, options)
-              add_shopper_id(xml, options)
+
+              if options[:email]
+                xml.shopper do
+                  xml.shopperEmailAddress options[:email]
+                end
+              end
             end
           end
         end
@@ -477,6 +482,7 @@ module ActiveMerchant # :nodoc:
               add_token_for_ff_credit(xml, payment_method, options)
             end
           end
+          add_shopper_id(xml, options)
         end
       end
 
@@ -670,8 +676,8 @@ module ActiveMerchant # :nodoc:
             eci = eci_value(payment_method, options)
             xml.eciIndicator eci if eci.present?
           end
-          add_shopper_id(xml, options, false)
           add_stored_credential_options(xml, options)
+          add_shopper_id(xml, options, false)
         end
       end
 
