@@ -1059,6 +1059,42 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'transaction_id', response.authorization
   end
 
+  def test_apple_pay_card_recurring
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      with(
+        amount: '1.00',
+        order_id: '1',
+        customer: { id: nil, email: nil, phone: nil,
+                    first_name: 'Longbob', last_name: 'Longsen' },
+        options: { store_in_vault: false, submit_for_settlement: nil, hold_in_escrow: nil },
+        custom_fields: nil,
+        apple_pay_card: {
+          number: '4111111111111111',
+          expiration_month: '09',
+          expiration_year: (Time.now.year + 1).to_s,
+          cardholder_name: 'Longbob Longsen',
+          cryptogram: 'cryptogram'
+        },
+        external_vault: {
+          status: 'vaulted',
+          previous_network_transaction_id: '123ABC'
+        },
+        transaction_source: 'recurring'
+      ).
+      returns(braintree_result(id: 'transaction_id'))
+
+    apple_pay = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      transaction_id: '123',
+      payment_cryptogram: 'some_other_value',
+      source: :apple_pay
+    )
+
+    response = @gateway.authorize(100, apple_pay, { test: true, order_id: '1', stored_credential: stored_credential(:merchant, :recurring, id: '123ABC') })
+    assert_equal 'transaction_id', response.authorization
+  end
+
   def test_google_pay_card
     Braintree::TransactionGateway.any_instance.expects(:sale).
       with(

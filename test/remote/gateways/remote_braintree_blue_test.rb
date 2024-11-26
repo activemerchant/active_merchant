@@ -1431,6 +1431,38 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'Unknown', response.params['braintree_transaction']['apple_pay_details']['issuing_bank']
   end
 
+  def test_successful_apple_pay_recurring_purchase
+    network_tokenized_credit_card = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      transaction_id: '123',
+      source: :apple_pay,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
+    apple_pay_options = @options.merge(stored_credential: { initiator: 'customer', reason_type: 'recurring' })
+
+    assert response = @gateway.purchase(@amount, network_tokenized_credit_card, apple_pay_options)
+    assert_success response
+    assert_equal true, response.params['braintree_transaction']['recurring']
+    assert_equal 'apple_pay_card', response.params['braintree_transaction']['payment_instrument_type']
+  end
+
+  def test_successful_apple_pay_recurring_purchase_mit
+    network_tokenized_credit_card = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      transaction_id: '123',
+      source: :apple_pay,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+    )
+    apple_pay_options = @options.merge(stored_credential: { initiator: 'merchant', reason_type: 'recurring' })
+
+    assert response = @gateway.purchase(@amount, network_tokenized_credit_card, apple_pay_options)
+    assert_success response
+    assert_equal true, response.params['braintree_transaction']['recurring']
+    assert_equal 'apple_pay_card', response.params['braintree_transaction']['payment_instrument_type']
+  end
+
   def test_unsuccessful_apple_pay_purchase_and_return_payment_details
     credit_card = network_tokenization_credit_card(
       '4111111111111111',
