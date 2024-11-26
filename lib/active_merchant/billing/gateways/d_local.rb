@@ -245,7 +245,7 @@ module ActiveMerchant # :nodoc:
         return false unless response['status_code']
 
         if action == 'void'
-          response['status_code'] == '400' && response['status'] == 'CANCELLED'
+          response['status_code'].to_s == '400' && response['status'] == 'CANCELLED'
         else
           %w[100 200 400 600 700].include? response['status_code'].to_s
         end
