@@ -63,6 +63,11 @@ class FlexChargeTest < Test::Unit::TestCase
     }.merge(@options)
   end
 
+  def test_valid_homepage_url
+    assert @gateway.homepage_url.present?
+    assert_equal 'https://www.flexfactor.io/', @gateway.homepage_url
+  end
+
   def test_supported_countries
     assert_equal %w(US), FlexChargeGateway.supported_countries
   end
