@@ -1169,7 +1169,6 @@ module ActiveMerchant # :nodoc:
         stored_credential_params = {}
         stored_credential_params['usage'] = is_initial_transaction ? 'FIRST' : 'USED'
 
-        return stored_credential_params unless %w(RECURRING INSTALMENT).include?(reason)
         return stored_credential_params if customer_or_merchant == 'customerInitiatedReason' && stored_credential_params['usage'] == 'USED'
 
         stored_credential_params[customer_or_merchant] = reason if reason
