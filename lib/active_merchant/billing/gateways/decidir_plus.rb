@@ -93,6 +93,12 @@ module ActiveMerchant # :nodoc:
         authorization.split('|')[0]
       end
 
+      def add_wallet_id(post, options)
+        return unless options[:wallet_id]
+
+        post[:wallet_id] = options[:wallet_id]
+      end
+
       def add_payment(post, payment, options = {})
         if payment.is_a?(String)
           token, bin = payment.split('|')
@@ -133,6 +139,7 @@ module ActiveMerchant # :nodoc:
 
         add_aggregate_data(post, options) if options[:aggregate_data]
         add_sub_payments(post, options)
+        add_wallet_id(post, options)
       end
 
       def add_aggregate_data(post, options)

@@ -119,6 +119,7 @@ module ActiveMerchant # :nodoc:
         post[:site_transaction_id] = options[:order_id]
         post[:bin] = credit_card.number[0..5]
         post[:payment_type] = options[:payment_type] || 'single'
+        post[:wallet_id] = options[:wallet_id] if options[:wallet_id]
         post[:installments] = options[:installments] ? options[:installments].to_i : 1
         post[:description] = options[:description] if options[:description]
         post[:email] = options[:email] if options[:email]

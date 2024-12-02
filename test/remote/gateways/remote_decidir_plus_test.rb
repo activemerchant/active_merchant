@@ -221,6 +221,17 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     assert_equal({ 'send_to_cs' => false, 'status' => nil }, response.params['fraud_detection'])
   end
 
+  def test_successful_purchase_with_wallet_id
+    options = @options.merge(wallet_id: 'moto')
+
+    assert response = @gateway_purchase.store(@credit_card)
+    payment_reference = response.authorization
+
+    response = @gateway_purchase.purchase(@amount, payment_reference, options)
+    assert_success response
+    assert_equal 1, response.params['payment_method_id']
+  end
+
   def test_successful_purchase_with_card_brand
     options = @options.merge(card_brand: 'cabal')
 

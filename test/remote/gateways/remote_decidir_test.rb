@@ -183,6 +183,15 @@ class RemoteDecidirTest < Test::Unit::TestCase
     assert_equal 'approved', response.message
   end
 
+  def test_successful_purchase_wallet_id
+    options = @options.merge(wallet_id: 'moto')
+
+    response = @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+  end
+
   def test_successful_purchase_with_customer_object
     customer_options = {
       customer_id: 'John',
