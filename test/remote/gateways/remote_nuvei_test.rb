@@ -172,11 +172,11 @@ class RemoteNuveiTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_invalid_cvv
-    @credit_card.verification_value = nil
+    @credit_card.verification_value = ''
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match 'ERROR', response.params['transactionStatus']
-    assert_match 'Invalid CVV2', response.message
+    assert_match 'ERROR', response.params['status']
+    assert_match 'cardData.CVV is invalid', response.message
   end
 
   def test_failed_capture_invalid_transaction_id
@@ -218,6 +218,14 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_success response
     assert_match 'SUCCESS', response.params['status']
     assert_match 'APPROVED', response.message
+  end
+
+  def test_successful_save_payment_method_override
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(save_payment_method: false))
+    assert_success response
+    assert_match 'SUCCESS', response.params['status']
+    assert_match 'APPROVED', response.message
+    assert_not_nil response.params[:paymentOption][:userPaymentOptionId]
   end
 
   def test_successful_verify_with_authentication_only_type
