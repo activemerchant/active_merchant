@@ -144,7 +144,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_3ds(post, options)
-        return unless options.has_key?(:execute_threed)
+        return unless options[:execute_threed] && options[:three_ds_2]
 
         browser_info_3ds = options[:three_ds_2][:browser_info]
 
