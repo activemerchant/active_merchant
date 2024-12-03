@@ -8,7 +8,7 @@ module ActiveMerchant # :nodoc:
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover]
       self.money_format = :cents
-      self.homepage_url = 'https://www.flex-charge.com/'
+      self.homepage_url = 'https://www.flexfactor.io/'
       self.display_name = 'FlexCharge'
 
       ENDPOINTS_MAPPING = {
