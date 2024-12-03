@@ -35,6 +35,7 @@ module ActiveMerchant
 
       def authorize(money, payment, options = {}, transaction_type = 'Auth')
         post = { transactionType: transaction_type }
+        post[:savePM] = options[:save_payment_method] ? options[:save_payment_method].to_s : 'false'
 
         build_post_data(post)
         add_amount(post, money, options)
@@ -94,6 +95,7 @@ module ActiveMerchant
       end
 
       def store(credit_card, options = {})
+        options[:save_payment_method] = true
         authorize(0, credit_card, options)
       end
 

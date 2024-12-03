@@ -133,6 +133,7 @@ class NuveiTest < Test::Unit::TestCase
     end.check_request do |_method, endpoint, data, _headers|
       if /payment/.match?(endpoint)
         json_data = JSON.parse(data)
+        assert_equal 'false', json_data['savePM']
         assert_match(/#{@amount}/, json_data['amount'])
         assert_match(/#{@credit_card.number}/, json_data['paymentOption']['card']['cardNumber'])
         assert_match(/#{@credit_card.verification_value}/, json_data['paymentOption']['card']['CVV'])
@@ -283,6 +284,7 @@ class NuveiTest < Test::Unit::TestCase
     end.check_request do |_method, endpoint, data, _headers|
       json_data = JSON.parse(data)
       if /payment/.match?(endpoint)
+        assert_equal 'true', json_data['savePM']
         assert_match(/#{@credit_card.number}/, json_data['paymentOption']['card']['cardNumber'])
         assert_equal '0', json_data['amount']
       end
