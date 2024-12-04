@@ -53,7 +53,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_equal response.authorization, "#{response.params['transaction']}||"
     assert_equal response.params['transactions'][0]['action'], 'verify'
 
-    assert_equal response.error_code, 'gateway_error_code: 567.005 | response_code: 999'
+    assert_equal response.error_code, '567.005'
   end
 
   def test_failed_authorize_declined_amount
@@ -64,7 +64,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_equal response.authorization, "#{response.params['transaction']}||"
     assert_equal response.params['transactions'][0]['action'], 'verify'
 
-    assert_equal response.error_code, 'gateway_error_code: 567.005 | response_code: 999'
+    assert_equal response.error_code, '567.005'
   end
 
   def test_successful_purchase
@@ -82,7 +82,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal response.message, 'gateway_error_message: DECLINED | gateway_response_errors: [gateway - DECLINED]'
     assert_equal response.params['transactions'][0]['action'], 'verify'
-    assert_equal response.error_code, 'gateway_error_code: 567.005 | response_code: 999'
+    assert_equal response.error_code, '567.005'
   end
 
   def test_failed_purchase_declined_amount
@@ -90,7 +90,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal response.message, 'gateway_error_message: DECLINED | gateway_response_errors: [gateway - DECLINED]'
     assert_equal response.params['transactions'][0]['action'], 'verify'
-    assert_equal response.error_code, 'gateway_error_code: 567.005 | response_code: 999'
+    assert_equal response.error_code, '567.005'
   end
 
   def test_failed_purchase_no_billing_address
@@ -101,14 +101,14 @@ class RemoteVersaPayTest < Test::Unit::TestCase
 
     assert_equal response.message, 'errors: fund_address_unspecified'
 
-    assert_equal response.error_code, 'response_code: 999'
+    assert_equal response.error_code, nil
   end
 
   def test_failed_purchase_no_found_credit_card
     response = @gateway.purchase(@amount, @no_valid_date_credit_card, @options)
     assert_failure response
     assert_equal response.message, 'errors: Validation failed: Credit card gateway token not found'
-    assert_equal response.error_code, 'response_code: 999'
+    assert_equal response.error_code, nil
   end
 
   def test_successful_capture
@@ -202,7 +202,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     response = @gateway.void('123456', @options)
     assert_failure response
     assert_equal response.message, 'errors: order_not_found' # come from a 500 HTTP error
-    assert_equal response.error_code, 'response_code: 250'
+    assert_equal response.error_code, nil
   end
 
   def test_successful_refund
@@ -221,7 +221,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, '123456', @options)
     assert_failure response
     assert_equal response.message, 'errors: order_not_found' # come from a 500 HTTP error
-    assert_equal response.error_code, 'response_code: 250'
+    assert_equal response.error_code, nil
   end
 
   def test_successful_credit
@@ -237,7 +237,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     response = @gateway.credit(@amount, @no_valid_date_credit_card, @options)
     assert_failure response
     assert_equal response.message, 'errors: Validation failed: Credit card gateway token not found'
-    assert_equal response.error_code, 'response_code: 999'
+    assert_equal response.error_code, nil
   end
 
   def test_successful_store
@@ -256,6 +256,31 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_include response.params['wallets'][0]['credit_cards'][0], 'token'
     assert_match response.params['wallets'][0]['token'], response.authorization
     assert_match response.params['wallets'][0]['credit_cards'][0]['token'], response.authorization
+  end
+
+  def test_failed_account_loggin
+    response = @bad_gateway.purchase(@credit_card, @options)
+    assert_failure response
+    assert_equal response.message, 'error: Please log in or create an account to continue.'
+    assert_equal response.error_code, nil
+  end
+
+  def test_failed_stored_with_invalid_cvv
+    credit_card = @credit_card.dup
+    credit_card.verification_value = nil
+    response = @gateway.store(credit_card, @options)
+    assert_failure response
+    assert_equal response.message, "error: Validation failed: CVV can't be blank, CVV should be a number, CVV too short (minimum is 3 characters), CVV should be 3 digits"
+    assert_equal response.error_code, nil
+  end
+
+  def test_failed_purchase_with_invalid_cvv
+    credit_card = @credit_card.dup
+    credit_card.verification_value = nil
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal response.message, "errors: CVV can't be blank, CVV should be a number, CVV too short (minimum is 3 characters"
+    assert_equal response.error_code, nil
   end
 
   def test_successful_purchase_after_store
