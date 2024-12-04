@@ -954,12 +954,7 @@ module ActiveMerchant # :nodoc:
         cookie = options[:cookie] || cookie
         headers['Cookie'] = cookie if cookie
 
-        # Required because Worldpay does not accept duplicate idempotency keys
-        # for different transactions, such as in the case of an authorize => capture flow.
-        if idempotency_key
-          headers['Idempotency-Key'] = idempotency_key
-          options[:idempotency_key] = SecureRandom.uuid
-        end
+        headers['Idempotency-Key'] = idempotency_key if idempotency_key
         headers
       end
 

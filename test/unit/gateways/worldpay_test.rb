@@ -223,12 +223,6 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal payment, :credit
   end
 
-  def test_idempotency_header
-    options = { idempotency_key: 'test123' }
-    headers = @gateway.send(:headers, options)
-    assert_not_equal options[:idempotency_key], headers['Idempotency-Key']
-  end
-
   def test_successful_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
