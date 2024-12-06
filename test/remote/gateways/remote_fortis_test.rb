@@ -53,6 +53,24 @@ class RemoteFortisTest < Test::Unit::TestCase
     assert_equal 'CC - Approved / ACH - Accepted', response.message
   end
 
+  def test_successful_reference_purchase
+    purchase1 = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase1
+
+    assert purchase = @gateway.purchase(@amount, purchase1.authorization)
+    assert_success purchase
+    assert_equal 'CC - Approved / ACH - Accepted', purchase.message
+  end
+
+  def test_successful_reference_authorize
+    authorize1 = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize1
+
+    assert authorize = @gateway.authorize(@amount, authorize1.authorization)
+    assert_success authorize
+    assert_equal 'CC - Approved / ACH - Accepted', authorize.message
+  end
+
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -151,6 +169,14 @@ class RemoteFortisTest < Test::Unit::TestCase
   end
 
   def test_storing_credit_card
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+  end
+
+  def test_storing_credit_card_with_location_as_option
+    @gateway = FortisGateway.new(fixtures(:fortis).except(:location_id))
+    @options[:location_id] = fixtures(:fortis)[:location_id]
+
     store = @gateway.store(@credit_card, @options)
     assert_success store
   end

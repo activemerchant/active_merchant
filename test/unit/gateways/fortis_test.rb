@@ -87,10 +87,11 @@ class FortisTest < Test::Unit::TestCase
   end
 
   def test_authorization_from
-    assert_equal '31efa3732483237895c9a23d', @gateway.send(:authorization_from, { data: { id: '31efa3732483237895c9a23d' } })
-    assert_nil @gateway.send(:authorization_from, { data: { id: nil } })
-    assert_nil @gateway.send(:authorization_from, { data: {} })
-    assert_nil @gateway.send(:authorization_from, {})
+    assert_equal '31efa3732483237895c9a23d|txn', @gateway.send(:authorization_from, { data: { id: '31efa3732483237895c9a23d' } }, false)
+    assert_equal '31efa3732483237895c9a23d|token', @gateway.send(:authorization_from, { data: { id: '31efa3732483237895c9a23d' } }, true)
+    assert_equal '|txn', @gateway.send(:authorization_from, { data: { id: nil } }, false)
+    assert_equal '|txn', @gateway.send(:authorization_from, { data: {} }, false)
+    assert_equal '|txn', @gateway.send(:authorization_from, {}, false)
   end
 
   def test_successfully_build_an_authorize_request
