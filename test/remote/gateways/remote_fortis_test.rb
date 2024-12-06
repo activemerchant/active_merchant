@@ -40,7 +40,7 @@ class RemoteFortisTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    response = @gateway.authorize(@amount, @credit_card, @options)
+    response = @gateway.authorize(0, @credit_card, @options)
     assert_success response
     assert_equal 'CC - Approved / ACH - Accepted', response.message
     assert_equal 'Y', response.avs_result['postal_match']
@@ -51,6 +51,24 @@ class RemoteFortisTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'CC - Approved / ACH - Accepted', response.message
+  end
+
+  def test_successful_reference_purchase
+    purchase1 = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase1
+
+    assert purchase = @gateway.purchase(@amount, purchase1.authorization)
+    assert_success purchase
+    assert_equal 'CC - Approved / ACH - Accepted', purchase.message
+  end
+
+  def test_successful_reference_authorize
+    authorize1 = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize1
+
+    assert authorize = @gateway.authorize(@amount, authorize1.authorization)
+    assert_success authorize
+    assert_equal 'CC - Approved / ACH - Accepted', authorize.message
   end
 
   def test_successful_authorize_and_capture
@@ -96,6 +114,12 @@ class RemoteFortisTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_more_options
     response = @gateway.purchase(@amount, @credit_card, @complete_options)
+    assert_success response
+    assert_equal 'CC - Approved / ACH - Accepted', response.message
+  end
+
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal 'CC - Approved / ACH - Accepted', response.message
   end
@@ -151,6 +175,14 @@ class RemoteFortisTest < Test::Unit::TestCase
   end
 
   def test_storing_credit_card
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+  end
+
+  def test_storing_credit_card_with_location_as_option
+    @gateway = FortisGateway.new(fixtures(:fortis).except(:location_id))
+    @options[:location_id] = fixtures(:fortis)[:location_id]
+
     store = @gateway.store(@credit_card, @options)
     assert_success store
   end
