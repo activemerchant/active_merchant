@@ -143,11 +143,18 @@ module ActiveMerchant # :nodoc:
         add_payment(post, payment, include_cvv: false)
         add_address(post, payment, options)
 
-        commit path(:store), post
+        commit path(:store), post, :post, options
       end
 
       def unstore(authorization, options = {})
         commit path(:unstore, authorization), nil, :delete
+      end
+
+      def verify(credit_card, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
       end
 
       def supports_scrubbing?
@@ -175,11 +182,15 @@ module ActiveMerchant # :nodoc:
           credit: '/transactions/cc/refund/keyed',
           store: '/tokens/cc',
           unstore: '/tokens/{placeholder}'
-        }[action]&.gsub('{placeholder}', value.to_s)
+        }[action]&.gsub('{placeholder}', value.to_s.split('|').first || '')
       end
 
       def payment_type(payment)
-        payment.is_a?(String) ? 'token' : 'keyed'
+        if payment.is_a?(String)
+          payment.split('|').last == 'txn' ? 'prev-trxn' : 'token'
+        else
+          'keyed'
+        end
       end
 
       def auth_purchase_request(money, payment, options = {})
@@ -230,7 +241,8 @@ module ActiveMerchant # :nodoc:
           post[:cvv] = payment.verification_value if include_cvv
           post[:account_holder_name] = payment.name
         when String
-          post[:token_id] = payment
+          key = { 'prev-trxn' => :previous_transaction_id, 'token' => :token_id }[payment_type(payment)]
+          post[key] = payment.split('|').first
         end
       end
 
@@ -268,7 +280,7 @@ module ActiveMerchant # :nodoc:
           success_from(http_code, response),
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(response, token?(path)),
           avs_result: AVSResult.new(code: response.dig(:data, :avs_enhanced)),
           cvv_result: CVVResult.new(response.dig(:data, :cvv_response)),
           test: test?,
@@ -319,8 +331,12 @@ module ActiveMerchant # :nodoc:
         REASON_MAPPING[code_id] || ((1302..1399).include?(code_id) ? 'Reserved for Future Fraud Reason Codes' : nil)
       end
 
-      def authorization_from(response)
-        response.dig(:data, :id)
+      def authorization_from(response, is_token)
+        "#{response.dig(:data, :id)}|#{is_token ? 'token' : 'txn'}"
+      end
+
+      def token?(path)
+        path.match?(/tokens/)
       end
 
       def error_code_from(http_code, response)
