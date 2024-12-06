@@ -30,6 +30,11 @@ class FatZebraTest < Test::Unit::TestCase
     }
   end
 
+  def test_url
+    assert_equal 'https://gateway.fatzebra.com.au/v1.0', @gateway.live_url
+    assert_equal 'https://gateway.sandbox.fatzebra.com.au/v1.0', @gateway.test_url
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_request).returns(successful_purchase_response)
 
