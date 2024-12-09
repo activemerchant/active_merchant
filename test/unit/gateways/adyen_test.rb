@@ -144,6 +144,12 @@ class AdyenTest < Test::Unit::TestCase
   #   assert response
   #   assert_success response
   # end
+  def test_endpoint
+    assert_equal 'Recurring/v68/disable', @gateway.send(:endpoint, 'disable')
+    assert_equal 'Recurring/v68/storeToken', @gateway.send(:endpoint, 'storeToken')
+    assert_equal 'Payout/v68/payout', @gateway.send(:endpoint, 'payout')
+    assert_equal 'Payment/v68/authorise', @gateway.send(:endpoint, 'authorise')
+  end
 
   def test_supported_card_types
     assert_equal AdyenGateway.supported_cardtypes, %i[visa master american_express diners_club jcb dankort maestro discover elo naranja cabal unionpay patagonia_365]

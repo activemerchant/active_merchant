@@ -19,6 +19,9 @@ module ActiveMerchant # :nodoc:
       self.money_format = :cents
       self.supported_cardtypes = %i[visa master american_express discover naranja cabal tuya patagonia_365]
 
+      version 'v1'
+      version 'v2', :ogone_direct
+
       def initialize(options = {})
         requires!(options, :merchant_id, :api_key_id, :secret_api_key)
         super
@@ -443,7 +446,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def uri(action, authorization)
-        version = ogone_direct? ? 'v2' : 'v1'
+        version = ogone_direct? ? fetch_version(:ogone_direct) : fetch_version
         uri = "/#{version}/#{@options[:merchant_id]}/"
         case action
         when :authorize, :verify
