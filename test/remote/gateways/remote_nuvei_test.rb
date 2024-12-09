@@ -351,6 +351,17 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_match 'SUCCESS', recurring_response.params['status']
   end
 
+  def test_purchase_subsequent_mit
+    initial_options = @options.merge(user_token_id: '12345678', stored_credential: stored_credential(:merchant, :unscheduled, :initial))
+    initial_response = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_response
+
+    subsequent_options = @options.merge(user_token_id: '12345678', stored_credential: stored_credential(:merchant, :recurring, network_transaction_id: initial_response.authorization))
+    subsequent_response = @gateway.purchase(@amount, @credit_card, subsequent_options)
+    assert_success subsequent_response
+    assert_match 'SUCCESS', subsequent_response.params['status']
+  end
+
   def test_successful_partial_approval
     response = @gateway.authorize(55, @credit_card, @options.merge(is_partial_approval: true))
     assert_success response

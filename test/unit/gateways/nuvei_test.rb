@@ -297,6 +297,8 @@ class NuveiTest < Test::Unit::TestCase
     end.check_request do |_method, endpoint, data, _headers|
       if /payment/.match?(endpoint)
         json_data = JSON.parse(data)
+        assert_equal('0', json_data['isRebilling'])
+        assert_equal('0', json_data['paymentOption']['card']['storedCredentials']['storedCredentialsMode'])
         assert_match(/ADDCARD/, json_data['authenticationOnlyType'])
       end
     end.respond_with(successful_purchase_response)
@@ -308,6 +310,8 @@ class NuveiTest < Test::Unit::TestCase
     end.check_request do |_method, endpoint, data, _headers|
       if /payment/.match?(endpoint)
         json_data = JSON.parse(data)
+        assert_equal('1', json_data['isRebilling'])
+        assert_equal('1', json_data['paymentOption']['card']['storedCredentials']['storedCredentialsMode'])
         assert_match(/abc123/, json_data['relatedTransactionId'])
         assert_match(/RECURRING/, json_data['authenticationOnlyType'])
       end

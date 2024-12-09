@@ -132,12 +132,19 @@ module ActiveMerchant
       end
 
       def set_initiator_type(post, payment, options)
-        is_initial_transaction = options[:stored_credential][:initial_transaction]
+        stored_credential = options[:stored_credential]
+        return unless stored_credential
+
+        is_initial_transaction = stored_credential[:initial_transaction]
         stored_credentials_mode = is_initial_transaction ? '0' : '1'
 
-        post[:storedCredentials] = {
-          storedCredentialsMode: stored_credentials_mode
-        }
+        if payment.is_a?(CreditCard)
+          post[:paymentOption] ||= {}
+          post[:paymentOption][:card] ||= {}
+          post[:paymentOption][:card][:storedCredentials] ||= {}
+          post[:paymentOption][:card][:storedCredentials][:storedCredentialsMode] = stored_credentials_mode
+        end
+
         post[:isRebilling] = stored_credentials_mode
       end
 
