@@ -57,6 +57,7 @@ module ActiveMerchant # :nodoc:
         add_instruction_data(post, options)
         add_payout_sender_data(post, options)
         add_payout_destination_data(post, options)
+        add_metadata(post, options)
 
         commit(:credit, post, options)
       end
@@ -580,8 +581,15 @@ module ActiveMerchant # :nodoc:
           error_code: error_code_from(succeeded, body, options),
           test: test?,
           avs_result: avs_result(response),
-          cvv_result: cvv_result(response)
+          cvv_result: cvv_result(response),
+          pending: pending_result(response, action)
         )
+      end
+
+      def pending_result(response, action)
+        return unless action == :credit
+
+        response['status'] == 'Pending'
       end
 
       def headers(action, options)
@@ -664,7 +672,9 @@ module ActiveMerchant # :nodoc:
         if succeeded
           'Succeeded'
         elsif response['error_type']
-          response['error_type'] + ': ' + response['error_codes'].first
+          return response['error_type'] unless response['error_codes']
+
+          "#{response['error_type']}: #{response['error_codes'].first}"
         else
           response_summary = response['response_summary'] || response.dig('actions', 0, 'response_summary')
           response_summary || response['response_code'] || response['status'] || response['message'] || 'Unable to read error message'
