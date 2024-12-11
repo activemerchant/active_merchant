@@ -7,6 +7,9 @@ module ActiveMerchant #:nodoc:
     # particularly useful if you already have code interacting with
     # ActiveMerchant and want to easily take advantage of Spreedly's vault.
     class SpreedlyCoreGateway < Gateway
+      SUCCESS_CODE = 200
+      SOFT_DECLINE_CODES = [401, 402, 408, 415, 422].freeze
+
       self.live_url = 'https://core.spreedly.com/v1'
 
       self.supported_countries = %w(AD AE AT AU BD BE BG BN CA CH CY CZ DE DK EE EG ES FI FR GB
@@ -99,7 +102,7 @@ module ActiveMerchant #:nodoc:
       # credit_card    - The CreditCard to store
       # options        - A standard ActiveMerchant options hash
       def store(credit_card, options = {})
-        retain = (options.has_key?(:retain) ? options[:retain] : true)
+        retain = true
         save_card(retain, credit_card, options)
       end
 
@@ -281,21 +284,26 @@ module ActiveMerchant #:nodoc:
 
       def commit(relative_url, request, method = :post, authorization_field = :token)
         begin
-          raw_response = ssl_request(method, "#{live_url}/#{relative_url}", request, headers)
+          raw_response = ssl_request(method, request_url(relative_url), request, headers)
         rescue ResponseError => e
           raw_response = e.response.body
         end
 
-        response_from(raw_response, authorization_field)
+        response_from(raw_response, authorization_field, request, relative_url)
       end
 
-      def response_from(raw_response, authorization_field)
+      def response_from(raw_response, authorization_field, request_body, relative_url)
         parsed = parse(raw_response)
         options = {
           authorization: parsed[authorization_field],
           test: (parsed[:on_test_gateway] == 'true'),
           avs_result: { code: parsed[:response_avs_code] },
-          cvv_result: parsed[:response_cvv_code]
+          cvv_result: parsed[:response_cvv_code],
+          response_type: response_type(@response_http_code.to_i),
+          response_http_code: @response_http_code,
+          request_endpoint: request_url(relative_url),
+          request_method: :post,
+          request_body:
         }
 
         Response.new(parsed[:succeeded] == 'true', parsed[:message] || parsed[:error], parsed, options)
@@ -306,6 +314,30 @@ module ActiveMerchant #:nodoc:
           'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:login]}:#{@options[:password]}").chomp),
           'Content-Type' => 'text/xml'
         }
+      end
+
+      def request_url(relative_url)
+        "#{live_url}/#{relative_url}"
+      end
+
+      def handle_response(response)
+        @response_http_code = response.code.to_i
+        case @response_http_code
+        when 200...300
+          response.body
+        else
+          raise ResponseError.new(response)
+        end
+      end
+
+      def response_type(code)
+        if code == SUCCESS_CODE
+          0
+        elsif SOFT_DECLINE_CODES.include?(code)
+          1
+        else
+          2
+        end
       end
     end
   end
