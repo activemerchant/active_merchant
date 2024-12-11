@@ -342,6 +342,26 @@ class PriorityTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_verify
+    @gateway.stubs(:create_jwt).returns(jwt_response)
+
+    response = stub_comms(@gateway, :ssl_get) do
+      @gateway.verify(@credit_card)
+    end.respond_with(successful_bin_search_response)
+
+    assert_success response
+  end
+
+  def test_failed_verify_no_bank
+    @gateway.stubs(:create_jwt).returns(jwt_response)
+
+    response = stub_comms(@gateway, :ssl_get) do
+      @gateway.verify(credit_card('4242424242424242'))
+    end.respond_with(no_bank_bin_search_response)
+
+    assert_failure response
+  end
+
   def successful_refund_response
     %(
         {
@@ -1420,6 +1440,97 @@ class PriorityTest < Test::Unit::TestCase
         ],
         "responseCode": "eSD7row8WL3JkUkOymB3FlQ"
     }
+    )
+  end
+
+  def jwt_response
+    response = {
+      processorName: 'TSYS',
+      jwtToken: 'eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InZvcnRleDAwMDEifQ.eyJ1aWQiOiIxMjc2QzU5Qi03OUJFLTQ5QzEtQkE4Ri01RTM0MkFENzBGQjkiLCJncmFudHMiOlsiZ2xvYmFsIiwicHBzOm14LW1lcmNoYW50IiwibWVyY2hhbnQ6MTAwMDAwMzMxMCIsInhtaWQ6ODczOTczMTIwODY2MTM0NCJdLCJyb2xlIjoibXgtbWVyY2hhbnQtcmVwb3J0IiwiZmx5SW5BbGxvd2VkIjpmYWxzZSwidXNlck5hbWUiOiJzeXN0ZW11c2VyLm14bWVyY2hhbnQiLCJpYXQiOjE3MzQxMTk3ODIsImV4cCI6MTczNDIwNjE4MiwiYXVkIjoiaHR0cHM6Ly9zYW5kYm94Lm14bWVyY2hhbnQuY29tIiwiaXNzIjoiaHR0cHM6Ly9zYW5kYm94Lm14bWVyY2hhbnQuY29tIiwic3ViIjoiblNGQ0V5eHdkVG9vOHhJOWVNcldMUWRnIn0.Tvm7c_YXQupGXCn2Pf6MlN0VMnTVZxHFn4OQ2ojaSyMJUq4tTFdf8xPqAbQql-JEaekZfUJmwbGF_zaxgY4VKQ'
+    }
+
+    ActiveMerchant::Billing::Response.new(
+      true,
+      response,
+      response
+    )
+  end
+
+  def successful_bin_search_response
+    %(
+      {
+        "id": "41111111",
+        "bin": "41111111",
+        "bank": {
+          "www": "www.jpmorganchase.com",
+          "name": "JPMORGAN CHASE BANK N.A.",
+          "phone": "416-981-9200"
+        },
+        "type": "",
+        "brand": "VISA",
+        "level": "",
+        "source": "pci.bindb.com",
+        "country": {
+          "iso": "840",
+          "info": "Wilmington",
+          "name": "United States",
+          "abbreviation2": "US",
+          "abbreviation3": "USA"
+        },
+        "created": "2024-02-15T15:58:38.306Z",
+        "creator": {
+          "id": "system",
+          "user": "system"
+        },
+        "prepaid": null,
+        "business": null,
+        "modified": "2024-02-15T15:58:38.306Z",
+        "modifier": {
+          "id": "system",
+          "user": "system"
+        },
+        "reloadable": null,
+        "isCreditCard": true
+      }
+    )
+  end
+
+  def no_bank_bin_search_response
+    %(
+      {
+        "id": "42424242",
+        "bin": "42424242",
+        "bank": {
+          "www": "",
+          "name": "",
+          "phone": ""
+        },
+        "type": "CREDIT",
+        "brand": "VISA",
+        "level": "CLASSIC",
+        "source": "pci.bindb.com",
+        "country": {
+          "iso": "826",
+          "info": "",
+          "name": "United Kingdom",
+          "abbreviation2": "GB",
+          "abbreviation3": "GBR"
+        },
+        "created": "2023-04-03T12:39:37.033Z",
+        "creator": {
+          "id": "system",
+          "user": "system"
+        },
+        "prepaid": false,
+        "business": false,
+        "modified": "2024-01-16T06:29:37.125Z",
+        "modifier": {
+          "id": "system",
+          "user": "system"
+        },
+        "reloadable": false,
+        "isCreditCard": true
+      }
     )
   end
 end
