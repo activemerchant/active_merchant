@@ -315,7 +315,7 @@ module ActiveMerchant # :nodoc:
         when 'void'
           base_url + "/#{ref_number}?force=true"
         when 'verify'
-          (verify_url + '?search=') + credit_card_number.to_s[0..6]
+          (verify_url + '?search=') + credit_card_number.to_s[0..7]
         when 'get_payment_status', 'close_batch'
           batch_url + "/#{params}"
         when 'create_jwt'
@@ -366,7 +366,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def success_from(response, action)
-        return !response['bank'].empty? if action == 'verify' && response['bank']
+        return !response['bank'].empty? if action == 'verify' && response['bank'] && !response.dig('bank', 'name').blank?
 
         %w[Approved Open Success Settled Voided].include?(response['status'])
       end
