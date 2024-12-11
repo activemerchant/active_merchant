@@ -277,7 +277,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   def test_successful_render_for_oauth
     processing_channel_id = 'abcd123'
     response = stub_comms(@gateway_oauth, :ssl_request) do
-      @gateway_oauth.purchase(@amount, @credit_card, { processing_channel_id: processing_channel_id })
+      @gateway_oauth.purchase(@amount, @credit_card, { processing_channel_id: })
     end.check_request do |_method, endpoint, data, headers|
       if endpoint.match?(/token/)
         assert_equal headers['Authorization'], 'Basic YWJjZDoxMjM0'
@@ -509,7 +509,7 @@ class CheckoutV2Test < Test::Unit::TestCase
         stored_credential: {
           initial_transaction: false,
           reason_type: 'recurring',
-          network_transaction_id: network_transaction_id
+          network_transaction_id:
         }
       }
       @gateway.purchase(@amount, @credit_card, options)

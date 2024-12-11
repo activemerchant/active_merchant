@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class WompiGateway < Gateway
       self.test_url = 'https://sync.sandbox.wompi.co/v1'
       self.live_url = 'https://sync.production.wompi.co/v1'
@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options = {})
         post = {
           reference: options[:reference] || generate_reference,
-          public_key: public_key
+          public_key:
         }
         add_invoice(post, money, options)
         add_tip_in_cents(post, options)
@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment, options = {})
         post = {
-          public_key: public_key,
+          public_key:,
           type: 'CARD',
           financial_operation: 'PREAUTHORIZATION'
         }
@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {
           reference: options[:reference] || generate_reference,
-          public_key: public_key,
+          public_key:,
           payment_source_id: authorization.to_i
         }
         add_invoice(post, money, options)

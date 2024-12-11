@@ -25,7 +25,8 @@ class RemoteEbanxTest < Test::Unit::TestCase
       },
       tags: EbanxGateway::TAGS,
       soft_descriptor: 'ActiveMerchant',
-      email: 'neymar@test.com'
+      email: 'neymar@test.com',
+      processing_type: 'local'
     }
 
     @hiper_card = credit_card('6062825624254001')
@@ -153,7 +154,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount - 1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization, { processing_type: 'local' })
     assert_success capture
   end
 
@@ -168,7 +169,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture(@amount, '')
+    response = @gateway.capture(@amount, '', { processing_type: 'local' })
     assert_failure response
     assert_equal 'Parameters hash or merchant_payment_code not informed', response.message
   end
@@ -193,7 +194,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.refund(@amount, '')
+    response = @gateway.refund(@amount, '', { processing_type: 'local' })
     assert_failure response
     assert_equal 'Parameters hash or merchant_payment_code not informed', response.message
     assert_equal 'BP-REF-1', response.error_code
@@ -203,13 +204,13 @@ class RemoteEbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert void = @gateway.void(auth.authorization)
+    assert void = @gateway.void(auth.authorization, { processing_type: 'local' })
     assert_success void
     assert_equal 'Accepted', void.message
   end
 
   def test_failed_void
-    response = @gateway.void('')
+    response = @gateway.void('', { processing_type: 'local' })
     assert_failure response
     assert_equal 'Parameters hash or merchant_payment_code not informed', response.message
   end
@@ -321,7 +322,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    inquire = @gateway.inquire(purchase.authorization)
+    inquire = @gateway.inquire(purchase.authorization, { processing_type: 'local' })
     assert_success inquire
 
     assert_equal 'Accepted', purchase.message

@@ -2,8 +2,8 @@
 
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # = Ogone DirectLink Gateway
     #
     # DirectLink is the API version of the Ogone Payment Platform. It allows server to server

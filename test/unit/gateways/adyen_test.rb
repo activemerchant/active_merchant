@@ -235,12 +235,12 @@ class AdyenTest < Test::Unit::TestCase
     authentication_response_status = 'Y'
     options_with_3ds1_standalone = @options.merge(
       three_d_secure: {
-        eci: eci,
-        cavv: cavv,
-        cavv_algorithm: cavv_algorithm,
-        xid: xid,
-        enrolled: enrolled,
-        authentication_response_status: authentication_response_status
+        eci:,
+        cavv:,
+        cavv_algorithm:,
+        xid:,
+        enrolled:,
+        authentication_response_status:
       }
     )
     stub_comms do
@@ -264,12 +264,12 @@ class AdyenTest < Test::Unit::TestCase
     authentication_response_status = 'Y'
     options_with_3ds2_standalone = @options.merge(
       three_d_secure: {
-        version: version,
-        eci: eci,
-        cavv: cavv,
-        ds_transaction_id: ds_transaction_id,
-        directory_response_status: directory_response_status,
-        authentication_response_status: authentication_response_status
+        version:,
+        eci:,
+        cavv:,
+        ds_transaction_id:,
+        directory_response_status:,
+        authentication_response_status:
       }
     )
     stub_comms do
@@ -676,7 +676,7 @@ class AdyenTest < Test::Unit::TestCase
         'basket.item.productTitle' => 'Blue T Shirt',
         'promotions.promotion.promotionName' => 'Big Sale promotion'
       }
-      @gateway.authorize(@amount, @credit_card, @options.merge({ risk_data: risk_data }))
+      @gateway.authorize(@amount, @credit_card, @options.merge({ risk_data: }))
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert_equal 'express', parsed['additionalData']['riskdata.deliveryMethod']
@@ -1363,7 +1363,7 @@ class AdyenTest < Test::Unit::TestCase
   def test_authorize_with_network_tokenization_credit_card_and_stored_credentials
     stored_credential = stored_credential(:merchant, :recurring)
     response = stub_comms do
-      @gateway.authorize(@amount, @nt_credit_card, @options.merge(stored_credential: stored_credential))
+      @gateway.authorize(@amount, @nt_credit_card, @options.merge(stored_credential:))
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert_equal 'ContAuth', parsed['shopperInteraction']
@@ -1455,41 +1455,41 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_authorize_with_sub_sellers
     sub_seller_options = {
-      "subMerchant.numberOfSubSellers": '2',
-      "subMerchant.subSeller1.id": '111111111',
-      "subMerchant.subSeller1.name": 'testSub1',
-      "subMerchant.subSeller1.street": 'Street1',
-      "subMerchant.subSeller1.postalCode": '12242840',
-      "subMerchant.subSeller1.city": 'Sao jose dos campos',
-      "subMerchant.subSeller1.state": 'SP',
-      "subMerchant.subSeller1.country": 'BRA',
-      "subMerchant.subSeller1.taxId": '12312312340',
-      "subMerchant.subSeller1.mcc": '5691',
-      "subMerchant.subSeller1.debitSettlementBank": '1',
-      "subMerchant.subSeller1.debitSettlementAgency": '1',
-      "subMerchant.subSeller1.debitSettlementAccountType": '1',
-      "subMerchant.subSeller1.debitSettlementAccount": '1',
-      "subMerchant.subSeller1.creditSettlementBank": '1',
-      "subMerchant.subSeller1.creditSettlementAgency": '1',
-      "subMerchant.subSeller1.creditSettlementAccountType": '1',
-      "subMerchant.subSeller1.creditSettlementAccount": '1',
-      "subMerchant.subSeller2.id": '22222222',
-      "subMerchant.subSeller2.name": 'testSub2',
-      "subMerchant.subSeller2.street": 'Street2',
-      "subMerchant.subSeller2.postalCode": '12300000',
-      "subMerchant.subSeller2.city": 'Jacarei',
-      "subMerchant.subSeller2.state": 'SP',
-      "subMerchant.subSeller2.country": 'BRA',
-      "subMerchant.subSeller2.taxId": '12312312340',
-      "subMerchant.subSeller2.mcc": '5691',
-      "subMerchant.subSeller2.debitSettlementBank": '1',
-      "subMerchant.subSeller2.debitSettlementAgency": '1',
-      "subMerchant.subSeller2.debitSettlementAccountType": '1',
-      "subMerchant.subSeller2.debitSettlementAccount": '1',
-      "subMerchant.subSeller2.creditSettlementBank": '1',
-      "subMerchant.subSeller2.creditSettlementAgency": '1',
-      "subMerchant.subSeller2.creditSettlementAccountType": '1',
-      "subMerchant.subSeller2.creditSettlementAccount": '1'
+      'subMerchant.numberOfSubSellers': '2',
+      'subMerchant.subSeller1.id': '111111111',
+      'subMerchant.subSeller1.name': 'testSub1',
+      'subMerchant.subSeller1.street': 'Street1',
+      'subMerchant.subSeller1.postalCode': '12242840',
+      'subMerchant.subSeller1.city': 'Sao jose dos campos',
+      'subMerchant.subSeller1.state': 'SP',
+      'subMerchant.subSeller1.country': 'BRA',
+      'subMerchant.subSeller1.taxId': '12312312340',
+      'subMerchant.subSeller1.mcc': '5691',
+      'subMerchant.subSeller1.debitSettlementBank': '1',
+      'subMerchant.subSeller1.debitSettlementAgency': '1',
+      'subMerchant.subSeller1.debitSettlementAccountType': '1',
+      'subMerchant.subSeller1.debitSettlementAccount': '1',
+      'subMerchant.subSeller1.creditSettlementBank': '1',
+      'subMerchant.subSeller1.creditSettlementAgency': '1',
+      'subMerchant.subSeller1.creditSettlementAccountType': '1',
+      'subMerchant.subSeller1.creditSettlementAccount': '1',
+      'subMerchant.subSeller2.id': '22222222',
+      'subMerchant.subSeller2.name': 'testSub2',
+      'subMerchant.subSeller2.street': 'Street2',
+      'subMerchant.subSeller2.postalCode': '12300000',
+      'subMerchant.subSeller2.city': 'Jacarei',
+      'subMerchant.subSeller2.state': 'SP',
+      'subMerchant.subSeller2.country': 'BRA',
+      'subMerchant.subSeller2.taxId': '12312312340',
+      'subMerchant.subSeller2.mcc': '5691',
+      'subMerchant.subSeller2.debitSettlementBank': '1',
+      'subMerchant.subSeller2.debitSettlementAgency': '1',
+      'subMerchant.subSeller2.debitSettlementAccountType': '1',
+      'subMerchant.subSeller2.debitSettlementAccount': '1',
+      'subMerchant.subSeller2.creditSettlementBank': '1',
+      'subMerchant.subSeller2.creditSettlementAgency': '1',
+      'subMerchant.subSeller2.creditSettlementAccountType': '1',
+      'subMerchant.subSeller2.creditSettlementAccount': '1'
     }
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(sub_merchant_data: sub_seller_options))
@@ -1592,13 +1592,13 @@ class AdyenTest < Test::Unit::TestCase
       additional_data_keys = additional_data.keys
       assert_all(leve_3_keys) { |item| additional_data_keys.include?(item) }
 
-      mapper = { "enhancedSchemeData.freightAmount": 'freight_amount',
-                "enhancedSchemeData.destinationStateProvinceCode": 'destination_state_province_code',
-                "enhancedSchemeData.shipFromPostalCode": 'ship_from_postal_code',
-                "enhancedSchemeData.orderDate": 'order_date',
-                "enhancedSchemeData.destinationPostalCode": 'destination_postal_code',
-                "enhancedSchemeData.destinationCountryCode": 'destination_country_code',
-                "enhancedSchemeData.dutyAmount": 'duty_amount' }
+      mapper = { 'enhancedSchemeData.freightAmount': 'freight_amount',
+                'enhancedSchemeData.destinationStateProvinceCode': 'destination_state_province_code',
+                'enhancedSchemeData.shipFromPostalCode': 'ship_from_postal_code',
+                'enhancedSchemeData.orderDate': 'order_date',
+                'enhancedSchemeData.destinationPostalCode': 'destination_postal_code',
+                'enhancedSchemeData.destinationCountryCode': 'destination_country_code',
+                'enhancedSchemeData.dutyAmount': 'duty_amount' }
 
       mapper.each do |item|
         assert_equal additional_data[item[0]], level_3_options[item[1]]
@@ -1789,7 +1789,7 @@ class AdyenTest < Test::Unit::TestCase
     }
 
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(metadata: metadata))
+      @gateway.authorize(@amount, @credit_card, @options.merge(metadata:))
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert_equal parsed['metadata']['field_one'], metadata[:field_one]
@@ -1808,7 +1808,7 @@ class AdyenTest < Test::Unit::TestCase
       description: 'AM test',
       currency: 'GBP',
       customer: '123',
-      stored_credential: stored_credential(*args, ntid: ntid)
+      stored_credential: stored_credential(*args, ntid:)
     }
   end
 

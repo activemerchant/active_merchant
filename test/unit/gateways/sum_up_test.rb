@@ -38,7 +38,7 @@ class SumUpTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       json_data = JSON.parse(data)
       if checkout_ref = json_data['checkout_reference']
-        assert_match /#{@options[:partner_id]}-#{@options[:order_id]}/, checkout_ref
+        assert_match(/#{@options[:partner_id]}-#{@options[:order_id]}/, checkout_ref)
       end
     end.respond_with(successful_create_checkout_response)
   end
@@ -50,7 +50,7 @@ class SumUpTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       json_data = JSON.parse(data)
       if checkout_ref = json_data['checkout_reference']
-        assert_match /#{@options[:order_id]}/, checkout_ref
+        assert_match(/#{@options[:order_id]}/, checkout_ref)
       end
     end.respond_with(successful_create_checkout_response)
   end

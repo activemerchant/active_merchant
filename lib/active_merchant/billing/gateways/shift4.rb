@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class Shift4Gateway < Gateway
       self.test_url = 'https://utgapi.shift4test.com/api/rest/v1/'
       self.live_url = 'https://utg.shift4api.net/api/rest/v1/'
@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
 
       def add_transaction(post, options)
         post[:transaction] = {}
-        post[:transaction][:invoice] = options[:invoice] || Time.new.to_i.to_s[1..3] + rand.to_s[2..7]
+        post[:transaction][:invoice] = options[:invoice] || (Time.new.to_i.to_s[1..3] + rand.to_s[2..7])
         post[:transaction][:notes] = options[:notes] if options[:notes].present?
         post[:transaction][:vendorReference] = options[:order_id]
 

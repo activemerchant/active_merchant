@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CreditcallGateway < Gateway
       include Empty
 

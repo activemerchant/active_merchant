@@ -2,8 +2,8 @@
 
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # = Redsys Merchant Gateway
     #
     # Gateway support for the Spanish "Redsys" payment gateway system. This is
@@ -247,7 +247,7 @@ module ActiveMerchant #:nodoc:
         data = {}
         add_action(data, :cancel)
         order_id, amount, currency = split_authorization(authorization)
-        add_amount(data, amount, currency: currency)
+        add_amount(data, amount, currency:)
         add_order(data, order_id)
         data[:description] = options[:description]
 
@@ -321,7 +321,7 @@ module ActiveMerchant #:nodoc:
           year  = sprintf('%.4i', card.year)
           month = sprintf('%.2i', card.month)
           data[:card] = {
-            name: name,
+            name:,
             pan: card.number,
             date: "#{year[2..3]}#{month}",
             cvv: card.verification_value

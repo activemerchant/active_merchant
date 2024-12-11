@@ -110,10 +110,10 @@ class EwayRapidTest < Test::Unit::TestCase
     xid = 'AAAAAAAA4n1uzQPRaATeQAAAAAA='
     authentication_response_status = 'Y'
     options_with_3ds1 = {
-      eci: eci,
-      cavv: cavv,
-      xid: xid,
-      authentication_response_status: authentication_response_status
+      eci:,
+      cavv:,
+      xid:,
+      authentication_response_status:
     }
 
     stub_comms do
@@ -131,11 +131,11 @@ class EwayRapidTest < Test::Unit::TestCase
     ds_transaction_id = '8fe2e850-a028-407e-9a18-c8cf7598ca10'
 
     options_with_3ds2 = {
-      version: version,
-      eci: eci,
-      cavv: cavv,
-      ds_transaction_id: ds_transaction_id,
-      authentication_response_status: authentication_response_status
+      version:,
+      eci:,
+      cavv:,
+      ds_transaction_id:,
+      authentication_response_status:
     }
 
     stub_comms do

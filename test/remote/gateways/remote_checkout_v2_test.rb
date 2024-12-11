@@ -384,7 +384,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'installment',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
     response = @gateway.purchase(@amount, @credit_card, stored_options)
@@ -409,7 +409,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'installment',
-        network_transaction_id: network_transaction_id
+        network_transaction_id:
       }
     )
     response = @gateway_oauth.purchase(@amount, @credit_card, stored_options)
@@ -963,7 +963,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_successful_purchase_after_purchase_with_google_pay
     purchase = @gateway.purchase(@amount, @google_pay_master_cryptogram_3ds_network_token, @options)
     source_id = purchase.params['source']['id']
-    response = @gateway.purchase(@amount, source_id, @options.merge(source_id: source_id, source_type: 'id'))
+    response = @gateway.purchase(@amount, source_id, @options.merge(source_id:, source_type: 'id'))
     assert_success response
   end
 
@@ -1091,7 +1091,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     verify = @gateway.verify(@apple_pay_network_token, @options)
     assert_success verify
     source_id = verify.params['source']['id']
-    response = @gateway.purchase(@amount, source_id, @options.merge(source_id: source_id, source_type: 'id'))
+    response = @gateway.purchase(@amount, source_id, @options.merge(source_id:, source_type: 'id'))
     assert_success response
     assert_success verify
   end

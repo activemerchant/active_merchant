@@ -1,7 +1,7 @@
 require 'active_support/core_ext/hash/slice'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # This gateway uses an older version of the Stripe API.
     # To utilize the updated {Payment Intents API}[https://stripe.com/docs/api/payment_intents], integrate with the StripePaymentIntents gateway
     class StripeGateway < Gateway
@@ -588,10 +588,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_card_response_field(response)
-        return unless @card_3d_supported.present?
+        return if @card_3d_supported.nil?
 
         card_details = {}
-        card_details['three_d_secure_usage_supported'] = @card_3d_supported if @card_3d_supported
+        card_details['three_d_secure_usage_supported'] = @card_3d_supported
 
         response.merge!(card_details)
       end
@@ -819,7 +819,7 @@ module ActiveMerchant #:nodoc:
             currency: 'usd',
             routing_number: bank_account.routing_number,
             account_holder_name: bank_account.name,
-            account_holder_type: account_holder_type
+            account_holder_type:
           }
         }
 

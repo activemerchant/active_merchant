@@ -1,7 +1,7 @@
 require 'base64'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class WirecardGateway < Gateway
       self.test_url = 'https://c3-test.wirecard.com/secure/ssl-gateway'
       self.live_url = 'https://c3.wirecard.com/secure/ssl-gateway'
@@ -184,7 +184,7 @@ module ActiveMerchant #:nodoc:
           message,
           response,
           test: test?,
-          authorization: authorization,
+          authorization:,
           avs_result: { code: avs_code(response, options) },
           cvv_result: response[:CVCResponseCode]
         )

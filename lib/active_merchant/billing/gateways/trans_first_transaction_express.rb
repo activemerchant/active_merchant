@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class TransFirstTransactionExpressGateway < Gateway
       self.display_name = 'TransFirst Transaction Express'
       self.homepage_url = 'http://transactionexpress.com/'

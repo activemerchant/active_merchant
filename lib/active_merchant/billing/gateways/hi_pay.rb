@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class HiPayGateway < Gateway
       # to add more check => payment_product_list: https://developer.hipay.com/api-explorer/api-online-payments#/payments/generateHostedPaymentPage
       PAYMENT_PRODUCT = {
@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
           payment_product = payment_method.is_a?(CreditCard) ? PAYMENT_PRODUCT[payment_method.brand] : PAYMENT_PRODUCT[payment_product&.downcase]
 
           post = {
-            payment_product: payment_product,
+            payment_product:,
             operation: options[:operation] || 'Authorization',
             cardtoken: card_token
           }
@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
       def unstore(authorization, options = {})
         _transaction_ref, card_token, _payment_product = authorization.split('|') if authorization.split('|').size == 3
         card_token, _payment_product = authorization.split('|') if authorization.split('|').size == 2
-        commit('unstore', { card_token: card_token }, options, :delete)
+        commit('unstore', { card_token: }, options, :delete)
       end
 
       def refund(money, authorization, options)
@@ -144,7 +144,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_3ds(post, options)
-        return unless options.has_key?(:execute_threed)
+        return unless options[:execute_threed] && options[:three_ds_2]
 
         browser_info_3ds = options[:three_ds_2][:browser_info]
 

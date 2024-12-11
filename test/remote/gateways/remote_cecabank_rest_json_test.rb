@@ -10,7 +10,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
 
     @options = {
       order_id: generate_unique_id,
-      three_d_secure: three_d_secure,
+      three_d_secure:,
       exemption_type: 'transaction_risk_analysis_exemption'
     }
 

@@ -714,10 +714,10 @@ class VersaPayTest < Test::Unit::TestCase
                         cvvresponse: 'P',
                         avsresponse: 'D',
                         hash: '######0006',
-                        "cardtype.name": 'Visa',
+                        'cardtype.name': 'Visa',
                         accountholder: 'John Smith',
                         amount: '0.00',
-                        "account.id": '2013',
+                        'account.id': '2013',
                         token: '9bbb5a74-2df1-489a-8fdd-595fab2dd8b6',
                         id: '1695157'
                       }

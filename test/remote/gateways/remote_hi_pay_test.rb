@@ -10,6 +10,7 @@ class RemoteHiPayTest < Test::Unit::TestCase
     @bad_credit_card = credit_card('4150551403657424')
     @master_credit_card = credit_card('5399999999999999')
     @challenge_credit_card = credit_card('4242424242424242')
+    @threeds_credit_card = credit_card('5300000000000006')
 
     @options = {
       order_id: "Sp_ORDER_#{SecureRandom.random_number(1000000000)}",
@@ -66,6 +67,24 @@ class RemoteHiPayTest < Test::Unit::TestCase
     assert_equal 2, response.responses.size
   end
 
+  def test_challenge_without_threeds_params
+    response = @gateway.purchase(@amount, @threeds_credit_card, @options.merge(@billing_address))
+    assert_success response
+    assert_equal 'Authentication requested', response.message
+    assert_match %r{stage-secure-gateway.hipay-tpp.com\/gateway\/forward\/\w+}, response.params['forwardUrl']
+
+    assert_kind_of MultiResponse, response
+    assert_equal 2, response.responses.size
+  end
+
+  def test_frictionless_with_threeds_params
+    response = @gateway.purchase(@amount, @threeds_credit_card, @options.merge(@billing_address).merge(@execute_threed))
+    assert_success response
+    assert_equal 'Captured', response.message
+    assert_kind_of MultiResponse, response
+    assert_equal 2, response.responses.size
+  end
+
   def test_successful_purchase_with_mastercard
     response = @gateway.purchase(@amount, @master_credit_card, @options)
     assert_success response
@@ -90,11 +109,11 @@ class RemoteHiPayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @bad_credit_card, @options)
     assert_failure response
     assert_equal 'Authorization Refused', response.message
-    assert_equal '1010201', response.error_code
-    assert_equal 'Invalid Parameter', response.params['reason']['message']
+    assert_equal '4010202', response.error_code
+    assert_equal 'Invalid Card Number', response.params['reason']['message']
 
     assert_kind_of MultiResponse, response
-    # Complete tokenization, failed in the purhcase step
+    # Complete tokenization, failed in the purchase step
     assert_equal 2, response.responses.size
   end
 

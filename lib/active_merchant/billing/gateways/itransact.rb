@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # iTransact, Inc. is an authorized reseller of the PaymentClearing gateway. If your merchant service provider uses PaymentClearing.com to process payments, you can use this module.
     #
     #

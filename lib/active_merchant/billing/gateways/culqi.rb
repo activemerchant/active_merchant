@@ -1,7 +1,7 @@
 require 'digest/md5'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # Important note:
     # ===
     # Culqi merchant accounts are configured for either purchase or auth/capture

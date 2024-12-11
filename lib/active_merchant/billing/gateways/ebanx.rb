@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class EbanxGateway < Gateway
       self.test_url = 'https://sandbox.ebanxpay.com/ws/'
       self.live_url = 'https://api.ebanxpay.com/ws/'
@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
         add_additional_data(post, options)
         add_stored_credentials(post, options)
 
-        commit(:purchase, post)
+        commit(:purchase, post, options)
       end
 
       def authorize(money, payment, options = {})
@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
         add_stored_credentials(post, options)
         post[:payment][:creditcard][:auto_capture] = false
 
-        commit(:authorize, post)
+        commit(:authorize, post, options)
       end
 
       def capture(money, authorization, options = {})
@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
         post[:hash] = authorization
         post[:amount] = amount(money) if options[:include_capture_amount].to_s == 'true'
 
-        commit(:capture, post)
+        commit(:capture, post, options)
       end
 
       def refund(money, authorization, options = {})
@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
         post[:amount] = amount(money)
         post[:description] = options[:description]
 
-        commit(:refund, post)
+        commit(:refund, post, options)
       end
 
       def void(authorization, options = {})
@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
         add_integration_key(post)
         add_authorization(post, authorization)
 
-        commit(:void, post)
+        commit(:void, post, options)
       end
 
       def store(credit_card, options = {})
@@ -106,7 +106,7 @@ module ActiveMerchant #:nodoc:
         add_payment_type(post)
         post[:creditcard] = payment_details(credit_card)
 
-        commit(:store, post)
+        commit(:store, post, options)
       end
 
       def verify(credit_card, options = {})
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
         post[:card] = payment_details(credit_card)
         post[:device_id] = options[:device_id] if options[:device_id]
 
-        commit(:verify, post)
+        commit(:verify, post, options)
       end
 
       def inquire(authorization, options = {})
@@ -125,7 +125,7 @@ module ActiveMerchant #:nodoc:
         add_integration_key(post)
         add_authorization(post, authorization)
 
-        commit(:inquire, post)
+        commit(:inquire, post, options)
       end
 
       def supports_network_tokenization?
@@ -254,7 +254,6 @@ module ActiveMerchant #:nodoc:
         post[:metadata] = options[:metadata] if options[:metadata]
         post[:metadata] = {} if post[:metadata].nil?
         post[:metadata][:merchant_payment_code] = options[:order_id] if options[:order_id]
-        post[:processing_type] = options[:processing_type] if options[:processing_type]
         post[:payment][:tags] = TAGS
       end
 
@@ -262,10 +261,10 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(action, parameters)
+      def commit(action, parameters, options = {})
         url = url_for((test? ? test_url : live_url), action, parameters)
 
-        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), headers(parameters)))
+        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), headers(options)))
 
         success = success_from(action, response)
 
@@ -279,17 +278,11 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def headers(params)
-        processing_type = params[:processing_type]
-        commit_headers = { 'x-ebanx-client-user-agent': "ActiveMerchant/#{ActiveMerchant::VERSION}" }
-
-        add_processing_type_to_commit_headers(commit_headers, processing_type) if processing_type == 'local'
-
-        commit_headers
-      end
-
-      def add_processing_type_to_commit_headers(commit_headers, processing_type)
-        commit_headers['x-ebanx-api-processing-type'] = processing_type
+      def headers(options)
+        {
+          'x-ebanx-client-user-agent' => "ActiveMerchant/#{ActiveMerchant::VERSION}",
+          'x-ebanx-api-processing-type' => ('local' if options[:processing_type] == 'local')
+        }.compact
       end
 
       def success_from(action, response)

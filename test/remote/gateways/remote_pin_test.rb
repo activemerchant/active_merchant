@@ -192,7 +192,7 @@ class RemotePinTest < Test::Unit::TestCase
     assert_not_nil response.authorization
     assert_equal @credit_card.year, response.params['response']['card']['expiry_year']
 
-    response = @gateway.update(response.authorization, @visa_credit_card, address: address)
+    response = @gateway.update(response.authorization, @visa_credit_card, address:)
     assert_success response
     assert_not_nil response.authorization
     assert_equal @visa_credit_card.year, response.params['response']['card']['expiry_year']

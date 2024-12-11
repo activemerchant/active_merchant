@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class WorldpayOnlinePaymentsGateway < Gateway
       self.live_url = 'https://api.worldpay.com/v1/'
 
@@ -176,7 +176,7 @@ module ActiveMerchant #:nodoc:
           success ? 'SUCCESS' : response['message'],
           response,
           test: test?,
-          authorization: authorization,
+          authorization:,
           avs_result: {},
           cvv_result: {},
           error_code: success ? nil : response['customCode']

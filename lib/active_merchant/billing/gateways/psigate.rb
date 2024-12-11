@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # This class implements the Psigate gateway for the ActiveMerchant module.
     #
     # Modifications by Sean O'Hara ( sohara at sohara dot com )

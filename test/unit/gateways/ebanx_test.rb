@@ -348,9 +348,9 @@ class EbanxTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @network_token, @options)
     end.check_request do |_method, _endpoint, data, _headers|
-      assert_match /"network_token_pan\":\"#{@network_token.number}\"/, data
-      assert_match /"network_token_cryptogram\":\"#{@network_token.payment_cryptogram}\"/, data
-      assert_match /"network_token_expire_date\":\"#{@network_token.month}\/#{@network_token.year}\"/, data
+      assert_match(/"network_token_pan\":\"#{@network_token.number}\"/, data)
+      assert_match(/"network_token_cryptogram\":\"#{@network_token.payment_cryptogram}\"/, data)
+      assert_match(/"network_token_expire_date\":\"#{@network_token.month}\/#{@network_token.year}\"/, data)
     end.respond_with(successful_purchase_with_network_token)
 
     assert_success response

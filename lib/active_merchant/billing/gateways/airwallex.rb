@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class AirwallexGateway < Gateway
       self.test_url = 'https://api-demo.airwallex.com/api/v1'
       self.live_url = 'https://pci-api.airwallex.com/api/v1'
@@ -152,7 +152,7 @@ module ActiveMerchant #:nodoc:
       def build_request_url(action, id = nil)
         base_url = (test? ? test_url : live_url)
         endpoint = ENDPOINTS[action].to_s
-        endpoint = id.present? ? endpoint % { id: id } : endpoint
+        endpoint = id.present? ? endpoint % { id: } : endpoint
         base_url + endpoint
       end
 
@@ -244,7 +244,7 @@ module ActiveMerchant #:nodoc:
         shipping[:last_name] = last_name if last_name
         shipping[:phone_number] = shipping_address[:phone_number] if shipping_address[:phone_number]
         shipping[:address] = physical_address
-        post[:order] = { shipping: shipping }
+        post[:order] = { shipping: }
       end
 
       def build_shipping_address(shipping_address)
@@ -296,7 +296,7 @@ module ActiveMerchant #:nodoc:
           eci: three_d_secure[:eci]
         }.merge(three_ds_version_specific_fields(three_d_secure))
 
-        pm_options ? pm_options.merge!(external_three_ds: external_three_ds) : post['payment_method_options'] = { card: { external_three_ds: external_three_ds } }
+        pm_options ? pm_options.merge!(external_three_ds:) : post['payment_method_options'] = { card: { external_three_ds: } }
       end
 
       def format_three_ds_version(three_d_secure)

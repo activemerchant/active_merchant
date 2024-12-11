@@ -1,7 +1,7 @@
 require 'digest/md5'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayuLatamGateway < Gateway
       self.display_name = 'PayU Latam'
       self.homepage_url = 'http://www.payulatam.com'
@@ -167,7 +167,7 @@ module ActiveMerchant #:nodoc:
         order[:accountId] = @options[:account_id]
         order[:partnerId] = options[:partner_id] if options[:partner_id]
         order[:referenceCode] = options[:order_id] || generate_unique_id
-        order[:description] = options[:description] || 'Compra en ' + @options[:merchant_id]
+        order[:description] = options[:description] || ('Compra en ' + @options[:merchant_id])
         order[:language] = options[:language] || 'en'
         order[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
         post[:transaction][:order] = order

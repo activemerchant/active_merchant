@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PaysafeGateway < Gateway
       self.test_url = 'https://api.test.paysafe.com'
       self.live_url = 'https://api.paysafe.com'

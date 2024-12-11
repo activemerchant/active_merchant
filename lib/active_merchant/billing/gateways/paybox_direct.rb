@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayboxDirectGateway < Gateway
       class_attribute :live_url_backup
 
@@ -68,20 +68,20 @@ module ActiveMerchant #:nodoc:
         # ECI=02 => MasterCard success
         # ECI=05 => Visa, Amex or JCB success
         if options[:eci] == '02' || options[:eci] == '05'
-          post[:"3DSTATUS"] = 'Y'
-          post[:"3DENROLLED"] = 'Y'
-          post[:"3DSIGNVAL"] = 'Y'
-          post[:"3DERROR"] = '0'
+          post[:'3DSTATUS'] = 'Y'
+          post[:'3DENROLLED'] = 'Y'
+          post[:'3DSIGNVAL'] = 'Y'
+          post[:'3DERROR'] = '0'
         else
-          post[:"3DSTATUS"] = 'N'
-          post[:"3DENROLLED"] = 'N'
-          post[:"3DSIGNVAL"] = 'N'
-          post[:"3DERROR"] = '10000'
+          post[:'3DSTATUS'] = 'N'
+          post[:'3DENROLLED'] = 'N'
+          post[:'3DSIGNVAL'] = 'N'
+          post[:'3DERROR'] = '10000'
         end
-        post[:"3DECI"] = options[:eci]
-        post[:"3DXID"] = options[:xid]
-        post[:"3DCAVV"] = options[:cavv]
-        post[:"3DCAVVALGO"] = options[:cavv_algorithm]
+        post[:'3DECI'] = options[:eci]
+        post[:'3DXID'] = options[:xid]
+        post[:'3DCAVV'] = options[:cavv]
+        post[:'3DCAVVALGO'] = options[:cavv_algorithm]
       end
 
       def authorize(money, creditcard, options = {})

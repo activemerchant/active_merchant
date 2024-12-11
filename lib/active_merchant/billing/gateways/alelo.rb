@@ -1,7 +1,7 @@
 require 'jose'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class AleloGateway < Gateway
       class_attribute :prelive_url
 
@@ -149,9 +149,9 @@ module ActiveMerchant #:nodoc:
         end
 
         {
-          key: key,
-          uuid: uuid,
-          access_token: access_token,
+          key:,
+          uuid:,
+          access_token:,
           multiresp: multiresp.responses.present? ? multiresp : nil
         }
       rescue ActiveMerchant::OAuthResponseError => e
@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
         token = JOSE::JWE.block_encrypt(jwk, body.to_json, alg_enc).compact
 
         encrypted_body = {
-          token: token,
+          token:,
           uuid: credentials[:uuid]
         }
 

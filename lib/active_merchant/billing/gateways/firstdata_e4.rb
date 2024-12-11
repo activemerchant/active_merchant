@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class FirstdataE4Gateway < Gateway
       # TransArmor support requires v11 or lower
       self.test_url = 'https://api.demo.globalgatewaye4.firstdata.com/transaction/v11'

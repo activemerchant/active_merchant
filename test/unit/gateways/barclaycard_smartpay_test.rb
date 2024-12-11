@@ -188,9 +188,9 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
         @amount,
         @credit_card,
         @options.merge(
-          shopper_interaction: shopper_interaction,
-          device_fingerprint: device_fingerprint,
-          shopper_statement: shopper_statement
+          shopper_interaction:,
+          device_fingerprint:,
+          shopper_statement:
         )
       )
     end.check_request do |_endpoint, data, _headers|

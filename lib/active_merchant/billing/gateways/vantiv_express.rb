@@ -1,8 +1,8 @@
 require 'nokogiri'
 require 'securerandom'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class VantivExpressGateway < Gateway
       self.test_url = 'https://certtransaction.elementexpress.com'
       self.live_url = 'https://transaction.elementexpress.com'
@@ -237,7 +237,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         trans_id, trans_amount, eci = authorization.split('|')
-        options.merge!({ trans_id: trans_id, trans_amount: trans_amount, reversal_type: 1 })
+        options.merge!({ trans_id:, trans_amount:, reversal_type: 1 })
 
         request = build_xml_request do |xml|
           xml.CreditCardReversal(xmlns: live_url) do

@@ -60,7 +60,7 @@ module ActiveMerchant
       headers = headers.dup
       headers['connection'] ||= 'close'
 
-      retry_exceptions(max_retries: max_retries, logger: logger, tag: tag) do
+      retry_exceptions(max_retries:, logger:, tag:) do
         info "connection_http_method=#{method.to_s.upcase} connection_uri=#{endpoint}", tag
 
         result = nil
@@ -76,7 +76,7 @@ module ActiveMerchant
               http.get(endpoint.request_uri, headers)
             when :post
               debug body
-              http.post(endpoint.request_uri, body, RUBY_184_POST_HEADERS.merge(headers))
+              http.post(endpoint.request_uri, body, headers.reverse_merge!(RUBY_184_POST_HEADERS))
             when :put
               debug body
               http.put(endpoint.request_uri, body, headers)

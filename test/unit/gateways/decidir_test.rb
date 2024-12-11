@@ -156,6 +156,19 @@ class DecidirTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_wallet_id
+    options = @options.merge(wallet_id: 'moto')
+
+    response = stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_equal('moto', JSON.parse(data, symbolize_names: true)[:wallet_id])
+      assert_match(/#{options[:wallet_id]}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_sub_payments
     options = @options.merge(sub_payments: @sub_payments)
     options[:installments] = 4

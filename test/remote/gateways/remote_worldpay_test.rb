@@ -51,7 +51,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
     @options = {
       order_id: generate_unique_id,
-      email: 'wow@example.com'
+      email: 'wow@example.com',
+      ip: '127.0.0.1'
     }
 
     @level_two_data = {
@@ -306,8 +307,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
 
     assert_failure response
-    assert_equal response.error_code, '5'
-    assert_equal "Element 'tokenNumber' must have valid numeric content.", response.message
+    assert_equal response.error_code, '2'
+    assert_match "Missing required elements 'tokenNumber'", response.message
   end
 
   def test_unsucessfull_authorize_with_token_number_as_empty_string_apple_pay
@@ -315,8 +316,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
 
     assert_failure response
-    assert_equal response.error_code, '5'
-    assert_equal "Element 'tokenNumber' must have valid numeric content.", response.message
+    assert_equal response.error_code, '2'
+    assert_match "Missing required elements 'tokenNumber'", response.message
   end
 
   def test_unsucessfull_authorize_with_invalid_token_number_apple_pay
@@ -448,7 +449,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_risk_data
-    options = @options.merge({ execute_threed: true, three_ds_version: '2.0', risk_data: risk_data })
+    options = @options.merge({ execute_threed: true, three_ds_version: '2.0', risk_data: })
     assert response = @gateway.authorize(@amount, @threeDS2_card, options)
     assert_success response
     assert_equal 'SUCCESS', response.message
@@ -539,7 +540,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         execute_threed: true,
         accept_header: 'text/html',
         user_agent: 'Mozilla/5.0',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1',
         cookie: 'machine=32423423'
       }
@@ -566,7 +567,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         execute_threed: true,
         accept_header: 'text/html',
         user_agent: 'Mozilla/5.0',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1'
       }
     )
@@ -707,7 +708,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         execute_threed: true,
         accept_header: 'text/html',
         user_agent: 'Mozilla/5.0',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1',
         cookie: 'machine=32423423',
         stored_credential: stored_credential_params
@@ -728,7 +729,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         execute_threed: true,
         accept_header: 'text/html',
         user_agent: 'Mozilla/5.0',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1',
         cookie: 'machine=32423423',
         stored_credential_usage: 'FIRST'
@@ -822,7 +823,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       {
         execute_threed: true,
         accept_header: 'text/html',
-        session_id: session_id,
+        session_id:,
         ip: '127.0.0.1',
         cookie: 'machine=32423423'
       }
@@ -885,13 +886,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     billing_address.delete(:address1)
     billing_address.delete(:zip)
     billing_address.delete(:country)
-    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: billing_address))
+    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address:))
   end
 
   def test_state_omitted
     billing_address = address
     billing_address.delete(:state)
-    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: billing_address))
+    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address:))
   end
 
   def test_ip_address
@@ -1037,35 +1038,32 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal '20', credit.error_code
   end
 
-  # These three fast_fund_credit tests are currently failing with the message: Disbursement transaction not supported
-  # It seems that the current sandbox setup does not support testing this.
+  def test_successful_fast_fund_credit_on_cft_gateway
+    options = @options.merge({ fast_fund_credit: true })
 
-  # def test_successful_fast_fund_credit_on_cft_gateway
-  #   options = @options.merge({ fast_fund_credit: true })
+    credit = @cftgateway.credit(@amount, @credit_card, options)
+    assert_success credit
+    assert_equal 'SUCCESS', credit.message
+  end
 
-  #   credit = @cftgateway.credit(@amount, @credit_card, options)
-  #   assert_success credit
-  #   assert_equal 'SUCCESS', credit.message
-  # end
+  def test_successful_fast_fund_credit_with_token_on_cft_gateway
+    assert store = @gateway.store(@credit_card, @store_options)
+    assert_success store
 
-  # def test_successful_fast_fund_credit_with_token_on_cft_gateway
-  #   assert store = @gateway.store(@credit_card, @store_options)
-  #   assert_success store
+    options = @options.merge({ fast_fund_credit: true })
+    assert credit = @cftgateway.credit(@amount, store.authorization, options)
+    assert_success credit
+  end
 
-  #   options = @options.merge({ fast_fund_credit: true })
-  #   assert credit = @cftgateway.credit(@amount, store.authorization, options)
-  #   assert_success credit
-  # end
+  def test_failed_fast_fund_credit_on_cft_gateway
+    options = @options.merge({ fast_fund_credit: true })
+    refused_card = credit_card('4444333322221111', name: 'REFUSED') # 'magic' value for testing failures, provided by Worldpay
 
-  # def test_failed_fast_fund_credit_on_cft_gateway
-  #   options = @options.merge({ fast_fund_credit: true })
-  #   refused_card = credit_card('4444333322221111', name: 'REFUSED') # 'magic' value for testing failures, provided by Worldpay
-
-  #   credit = @cftgateway.credit(@amount, refused_card, options)
-  #   assert_failure credit
-  #   assert_equal '01', credit.params['action_code']
-  #   assert_equal "A transaction status of 'ok' or 'PUSH_APPROVED' is required.", credit.message
-  # end
+    credit = @cftgateway.credit(@amount, refused_card, options)
+    assert_failure credit
+    assert_equal '01', credit.params['action_code']
+    assert_equal "A transaction status of 'ok' or 'PUSH_APPROVED' is required.", credit.message
+  end
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
@@ -1342,7 +1340,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
     refund = @cftgateway.refund(@amount * 2, auth.authorization, authorization_validated: true)
     assert_failure refund
-    assert_equal 'Refund amount too high', refund.message
+    assert_equal 'Invalid amount: The refund amount should be equal to the captured value', refund.message
   end
 
   def test_successful_purchase_with_options_synchronous_response

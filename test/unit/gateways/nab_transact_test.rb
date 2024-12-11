@@ -227,8 +227,8 @@ class NabTransactTest < Test::Unit::TestCase
     XML
   end
 
-  def assert_metadata(name, location, &block)
-    stub_comms(@gateway, :ssl_request, &block).check_request do |_method, _endpoint, data, _headers|
+  def assert_metadata(name, location, &)
+    stub_comms(@gateway, :ssl_request, &).check_request do |_method, _endpoint, data, _headers|
       metadata_matcher = Regexp.escape(valid_metadata(name, location))
       assert_match %r{#{metadata_matcher}}, data
     end.respond_with(successful_purchase_response)

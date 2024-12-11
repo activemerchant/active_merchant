@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class BarclaycardSmartpayGateway < Gateway
       self.test_url = 'https://pal-test.barclaycardsmartpay.com/pal/servlet'
       self.live_url = 'https://pal-live.barclaycardsmartpay.com/pal/servlet'

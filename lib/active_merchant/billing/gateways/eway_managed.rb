@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class EwayManagedGateway < Gateway
       self.test_url = 'https://www.eway.com.au/gateway/ManagedPaymentService/test/managedCreditCardPayment.asmx'
       self.live_url = 'https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx'

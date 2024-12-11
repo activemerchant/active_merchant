@@ -787,7 +787,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1,
-                        billing_address: billing_address)
+                        billing_address:)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<AVSDestzip>90001/, data)
       assert_match(/<AVSDestaddress1>456 Main St./, data)
@@ -825,7 +825,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     card = credit_card('4242424242424242', first_name: 'John', last_name: 'Jacob Jingleheimer Smith-Jones')
 
     response = stub_comms do
-      @gateway.purchase(50, card, order_id: 1, address: address)
+      @gateway.purchase(50, card, order_id: 1, address:)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/John Jacob/, data)
       assert_no_match(/Jones/, data)
@@ -884,7 +884,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     card = credit_card('4242424242424242', first_name: nil, last_name: '')
 
     response = stub_comms do
-      @gateway.purchase(50, card, order_id: 1, billing_address: billing_address)
+      @gateway.purchase(50, card, order_id: 1, billing_address:)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/Joan Smith/, data)
     end.respond_with(successful_purchase_response)
@@ -905,7 +905,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     card = credit_card('4242424242424242', first_name: nil, last_name: nil)
 
     response = stub_comms do
-      @gateway.purchase(50, card, order_id: 1, billing_address: billing_address)
+      @gateway.purchase(50, card, order_id: 1, billing_address:)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/\<AVSname\/>\n/, data)
     end.respond_with(successful_purchase_response)
@@ -1825,7 +1825,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       description: 'AM test',
       currency: 'GBP',
       customer: '123',
-      stored_credential: stored_credential(*args, id: id)
+      stored_credential: stored_credential(*args, id:)
     }
   end
 

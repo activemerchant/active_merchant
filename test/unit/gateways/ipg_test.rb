@@ -47,7 +47,7 @@ class IpgTest < Test::Unit::TestCase
     }
 
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential, order_id: '123' }))
+      @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential:, order_id: '123' }))
     end.check_request do |_endpoint, data, _headers|
       doc = REXML::Document.new(data)
       assert_match('FIRST', REXML::XPath.first(doc, '//v1:recurringType').text)
@@ -61,7 +61,7 @@ class IpgTest < Test::Unit::TestCase
     }
 
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential, order_id: '123' }))
+      @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential:, order_id: '123' }))
     end.check_request do |_endpoint, data, _headers|
       doc = REXML::Document.new(data)
       assert_match('REPEAT', REXML::XPath.first(doc, '//v1:recurringType').text)
@@ -90,7 +90,7 @@ class IpgTest < Test::Unit::TestCase
     }
 
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge({ submerchant: submerchant }))
+      @gateway.purchase(@amount, @credit_card, @options.merge({ submerchant: }))
     end.check_request do |_endpoint, data, _headers|
       doc = REXML::Document.new(data)
       assert_match(submerchant[:mcc], REXML::XPath.first(doc, '//v1:SubMerchant//v1:Mcc').text)
@@ -206,7 +206,7 @@ class IpgTest < Test::Unit::TestCase
   def test_successful_authorize
     order_id = generate_unique_id
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge!({ order_id: order_id }))
+      @gateway.authorize(@amount, @credit_card, @options.merge!({ order_id: }))
     end.check_request do |_endpoint, data, _headers|
       doc = REXML::Document.new(data)
       assert_match('preAuth', REXML::XPath.first(doc, '//v1:CreditCardTxType//v1:Type').text)

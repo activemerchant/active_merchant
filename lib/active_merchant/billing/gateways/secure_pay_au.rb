@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SecurePayAuGateway < Gateway
       API_VERSION = 'xml-4.2'
       PERIODIC_API_VERSION = 'spxml-3.0'

@@ -1,8 +1,8 @@
 require 'digest'
 require 'jwe'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class VposGateway < Gateway
       self.test_url = 'https://vpos.infonet.com.py:8888'
       self.live_url = 'https://vpos.infonet.com.py'
@@ -58,8 +58,8 @@ module ActiveMerchant #:nodoc:
         _, shop_process_id = authorization.to_s.split('#')
         token = generate_token(shop_process_id, 'rollback', '0.00')
         post = {
-          token: token,
-          shop_process_id: shop_process_id
+          token:,
+          shop_process_id:
         }
         commit(:pci_buy_rollback, post)
       end
@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
       # Required to encrypt PAN data.
       def one_time_public_key
         token = generate_token('get_encription_public_key', @public_key)
-        response = commit(:pci_encryption_key, token: token)
+        response = commit(:pci_encryption_key, token:)
         response.params['encryption_key']
       end
 
@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
         card_number = payment.number
         cvv = payment.verification_value
 
-        payload = { card_number: card_number, cvv: cvv }.to_json
+        payload = { card_number:, cvv: }.to_json
 
         encryption_key = @encryption_key || OpenSSL::PKey::RSA.new(one_time_public_key)
 

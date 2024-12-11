@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class QvalentGateway < Gateway
       self.display_name = 'Qvalent'
       self.homepage_url = 'https://www.qvalent.com/'

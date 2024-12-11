@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SallieMaeGateway < Gateway
       self.live_url = self.test_url = 'https://trans.salliemae.com/cgi-bin/process.cgi'
 

@@ -1,7 +1,7 @@
 require 'active_merchant/billing/gateways/paypal'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # The PayPal gateway for PayPal Website Payments Pro Canada only supports Visa and MasterCard
     class PaypalCaGateway < PaypalGateway
       self.supported_cardtypes = %i[visa master]

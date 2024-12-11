@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ProPayGateway < Gateway
       self.test_url = 'https://xmltest.propay.com/API/PropayAPI.aspx'
       self.live_url = 'https://epay.propay.com/api/propayapi.aspx'

@@ -1,8 +1,8 @@
 require 'active_merchant/billing/gateways/payflow'
 require 'active_merchant/billing/gateways/payflow_express_uk'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayflowUkGateway < PayflowGateway
       self.default_currency = 'GBP'
       self.partner = 'PayPalUk'

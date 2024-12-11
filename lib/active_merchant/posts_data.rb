@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module PostsData #:nodoc:
+module ActiveMerchant # :nodoc:
+  module PostsData # :nodoc:
     def self.included(base)
       base.class_attribute :ssl_strict
       base.ssl_strict = true
@@ -90,6 +90,17 @@ module ActiveMerchant #:nodoc:
         response.body
       else
         raise ResponseError.new(response)
+      end
+    end
+
+    # This class is needed to play along with the Refinement done for Net::HTTP
+    # class so it can have a way to detect if the hash that represent the headers
+    # should use the case sensitive version of the headers or not.
+    class CaseSensitiveHeaders < Hash
+      def dup
+        case_sensitive_dup = self.class.new
+        each { |key, value| case_sensitive_dup[key] = value }
+        case_sensitive_dup
       end
     end
   end

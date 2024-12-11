@@ -1,8 +1,8 @@
 require File.join(File.dirname(__FILE__), '..', 'check.rb')
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-    class SmartPs < Gateway #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
+    class SmartPs < Gateway # :nodoc:
       ##
       # This is the base gateway for processors who use the smartPS processing system
 

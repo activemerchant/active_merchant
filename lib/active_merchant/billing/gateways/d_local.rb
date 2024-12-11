@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class DLocalGateway < Gateway
       self.test_url = 'https://sandbox.dlocal.com'
       self.live_url = 'https://api.dlocal.com'
@@ -244,7 +244,11 @@ module ActiveMerchant #:nodoc:
       def success_from(action, response)
         return false unless response['status_code']
 
-        %w[100 200 400 600 700].include? response['status_code'].to_s
+        if action == 'void'
+          response['status_code'].to_s == '400' && response['status'] == 'CANCELLED'
+        else
+          %w[100 200 400 600 700].include? response['status_code'].to_s
+        end
       end
 
       def message_from(action, response)

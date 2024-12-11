@@ -226,7 +226,7 @@ class MundipaggTest < Test::Unit::TestCase
     }
 
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
-    response = @gateway.authorize(@amount, @credit_card, @options.merge(shipping_address: shipping_address))
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(shipping_address:))
     assert_success response
 
     assert_equal 'ch_gm5wrlGMI2Fb0x6K', response.authorization

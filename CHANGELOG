@@ -86,6 +86,24 @@
 * Stripe: Remove StripePaymenToken & ApplePayPaymentToken [almalee24] #5304
 * HPS: Update API urls [jherreraa] #5313
 * MIT: Change test URL [Buitragox] #5335
+* Nuvei: Fix NTID stored credentials [javierpedrozaing] #5334
+* StripePI: Fix the store three_d_secure_usage field [yunnydang] #5338
+* Litle: Success codes added to valid responses [jherreraa] #5339
+* CommerceHub: Update Production URL [almalee24] #5340
+* CommerceHub: Add Network Token support [almalee24] #5331
+* Worldpay: Update Stored Credentials [almalee24] #5330
+* Update Rubocop 1.26.0 [almalee24] #5325
+* RedsysREST: Add Network Tokens [gasb150] #5333
+* DLocal: Update the success_from for Void [almalee24] #5337
+* Braintree: Add support for stored credentials with Apple Pay [bdcano] #5336
+* FlexCharge: Update homePage url [javierpedrozaing] #5351
+* Nuvei: Fix send savePM in false by default [javierpedrozaing] #5353
+* Decidir and DecicirPlus: Add the wallet_id field [yunnydang] #5354
+* Worldpay: Update where to pass shopperIPAddress [almalee24] #5348
+* Braintree: Account for BraintreeError [almalee24] #5346
+* Worldpay: Fix stored credentials unscheduled reason type [Buitragox] #5352
+* Worldpay: Worldpay: Idempotency key fix [jherreraa] #5359
+* Hi Pay: Don't add 3ds when :three_ds_2 is missing [Buitragox] #5355
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

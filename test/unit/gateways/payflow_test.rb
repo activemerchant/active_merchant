@@ -142,7 +142,7 @@ class PayflowTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
     end.check_request do |_endpoint, data, _headers|
-      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_version: expected_version
+      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_version:
     end.respond_with(successful_authorization_response)
   end
 
@@ -152,7 +152,7 @@ class PayflowTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
     end.check_request do |_endpoint, data, _headers|
-      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_ds_transaction_id: expected_ds_transaction_id
+      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_ds_transaction_id:
     end.respond_with(successful_authorization_response)
   end
 
@@ -166,8 +166,8 @@ class PayflowTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
     end.check_request do |_endpoint, data, _headers|
       xml = REXML::Document.new(data)
-      assert_three_d_secure_via_mpi(xml, tx_type: 'Authorization', expected_version: expected_version, expected_ds_transaction_id: expected_ds_transaction_id)
-      assert_three_d_secure xml, authorize_buyer_auth_result_path, expected_version: expected_version, expected_authentication_status: expected_authentication_status, expected_ds_transaction_id: expected_ds_transaction_id
+      assert_three_d_secure_via_mpi(xml, tx_type: 'Authorization', expected_version:, expected_ds_transaction_id:)
+      assert_three_d_secure xml, authorize_buyer_auth_result_path, expected_version:, expected_authentication_status:, expected_ds_transaction_id:
     end.respond_with(successful_authorization_response)
   end
 
@@ -178,7 +178,7 @@ class PayflowTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
     end.check_request do |_endpoint, data, _headers|
-      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_version: expected_version, expected_authentication_status: expected_authentication_status
+      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_version:, expected_authentication_status:
     end.respond_with(successful_authorization_response)
   end
 
@@ -189,7 +189,7 @@ class PayflowTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
     end.check_request do |_endpoint, data, _headers|
-      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_version: expected_version, expected_authentication_status: expected_authentication_status
+      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_version:, expected_authentication_status:
     end.respond_with(successful_authorization_response)
   end
 
@@ -1110,7 +1110,7 @@ class PayflowTest < Test::Unit::TestCase
       { name: 'THREEDSVERSION', expected: expected_version },
       { name: 'DSTRANSACTIONID', expected: expected_ds_transaction_id }
     ].each do |item|
-      assert_equal item[:expected], REXML::XPath.first(xml_doc, threeds_xpath_for_extdata(item[:name], tx_type: tx_type))
+      assert_equal item[:expected], REXML::XPath.first(xml_doc, threeds_xpath_for_extdata(item[:name], tx_type:))
     end
   end
 

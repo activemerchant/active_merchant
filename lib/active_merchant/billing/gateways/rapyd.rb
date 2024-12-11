@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class RapydGateway < Gateway
       class_attribute :payment_redirect_test, :payment_redirect_live
 
@@ -380,7 +380,7 @@ module ActiveMerchant #:nodoc:
       def avs_result(response)
         return nil unless (code = response.dig('data', 'payment_method_data', 'acs_check'))
 
-        AVSResult.new(code: code)
+        AVSResult.new(code:)
       end
 
       def cvv_result(response)

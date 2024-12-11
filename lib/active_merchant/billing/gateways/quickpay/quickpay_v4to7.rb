@@ -2,8 +2,8 @@ require 'rexml/document'
 require 'digest/md5'
 require 'active_merchant/billing/gateways/quickpay/quickpay_common'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class QuickpayV4to7Gateway < Gateway
       include QuickpayCommon
       self.live_url = self.test_url = 'https://secure.quickpay.dk/api'
