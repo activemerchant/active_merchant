@@ -85,7 +85,7 @@ class BraintreeTokenNonceTest < Test::Unit::TestCase
   end
 
   def test_token_from
-    credit_card = credit_card('4111111111111111')
+    credit_card = credit_card(number: 4111111111111111)
     c_token = @generator.send(:token_from, credit_card, token_credit_response)
     assert_match(/tokencc_/, c_token)
 
@@ -95,7 +95,7 @@ class BraintreeTokenNonceTest < Test::Unit::TestCase
   end
 
   def test_nil_token_from
-    credit_card = credit_card('4111111111111111')
+    credit_card = credit_card(number: 4111111111111111)
     c_token = @generator.send(:token_from, credit_card, token_bank_response)
     assert_nil c_token
 

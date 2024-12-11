@@ -117,7 +117,7 @@ class VersaPayTest < Test::Unit::TestCase
 
     assert_equal({ 'errors' => '{"key1": "value1", "key2": "value2"',
                   'status' => 'Unable to parse JSON response',
-                  'message' => "unexpected token at '{\"key1\": \"value1\", \"key2\": \"value2\"'" },
+                  'message' => "859: unexpected token at '{\"key1\": \"value1\", \"key2\": \"value2\"'" },
                  @gateway.send(:parse, body))
   end
 
