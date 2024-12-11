@@ -165,6 +165,7 @@ module ActiveMerchant # :nodoc:
         add_echo(post, options)
         add_submerchant_id(post, options)
         add_stored_credential(post, options)
+        add_account_name_inquiry(post, options)
         add_processor(post, options)
         add_authorization_details(post, options)
 
@@ -282,7 +283,7 @@ module ActiveMerchant # :nodoc:
       }
 
       def add_payment_method(post, payment_method, options)
-        post[:c1] = payment_method&.name || ''
+        post[:c1] = payment_method&.name || '' unless options[:account_name_inquiry].to_s == 'true'
         add_network_tokenization_card(post, payment_method, options) if payment_method.is_a? NetworkTokenizationCreditCard
         post[:b2] = CARD_TYPES[payment_method.brand] || ''
         post[:b1] = payment_method.number
@@ -353,6 +354,14 @@ module ActiveMerchant # :nodoc:
       def add_customer_name(post, options)
         post[:j5] = options[:first_name] if options[:first_name]
         post[:j13] = options[:last_name] if options[:last_name]
+      end
+
+      def add_account_name_inquiry(post, options)
+        return unless options[:account_name_inquiry].to_s == 'true'
+
+        post[:c22] = options[:first_name] if options[:first_name]
+        post[:c23] = options[:last_name] if options[:last_name]
+        post[:a9] = '5'
       end
 
       def add_3d_secure(post, options)
