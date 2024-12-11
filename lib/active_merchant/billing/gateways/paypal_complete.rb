@@ -312,7 +312,12 @@ module ActiveMerchant #:nodoc:
         elsif path.start_with?('/v3/vault/payment-tokens')
           true
         elsif path.start_with?('/v2/checkout/orders')
-          response['status'] == 'COMPLETED'
+          response['status'] == 'COMPLETED' &&
+            response['purchase_units'].all? do |unit|
+              unit['payments']['captures'].all? do |capture|
+                capture['status'] == 'COMPLETED'
+              end
+            end
         elsif path.start_with?('/v2/payments/captures')
           response['status'] == 'COMPLETED'
         end

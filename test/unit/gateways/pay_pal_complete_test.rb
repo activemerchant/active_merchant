@@ -11,7 +11,8 @@ class PayPalCompleteTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      line_items: []
     }
   end
 
@@ -21,6 +22,14 @@ class PayPalCompleteTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
+  end
+
+  def test_unsuccessful_purchase
+    stub_auth
+    stub_failed_capture
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
   end
 
   def test_successful_store
@@ -110,6 +119,12 @@ class PayPalCompleteTest < Test::Unit::TestCase
     @gateway.expects(:raw_ssl_request).with do |http_method, endpoint|
       http_method == :delete && endpoint.to_s.start_with?('https://api-m.sandbox.paypal.com/v3/vault/payment-tokens')
     end.returns(stubbed_response_for(:successful_unstore_response, code: 204))
+  end
+
+  def stub_failed_capture
+    @gateway.expects(:raw_ssl_request).with do |_, endpoint|
+      endpoint.to_s.start_with?('https://api-m.sandbox.paypal.com/v2/checkout/orders')
+    end.returns(stubbed_response_for(:successful_create_order_response_with_failed_capture, code: 201))
   end
 
   def successful_access_token_response
@@ -280,6 +295,82 @@ class PayPalCompleteTest < Test::Unit::TestCase
                     "avs_code": "A",
                     "cvv_code": "M",
                     "response_code": "0000"
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "links": [
+          { "href": "https://api.sandbox.paypal.com/v2/checkout/orders/8UY678134N833721C",
+            "rel": "self",
+            "method": "GET"
+          }
+        ]
+      }
+    RESPONSE
+  end
+
+  def successful_create_order_response_with_failed_capture
+    <<~RESPONSE
+      {
+        "id": "8UY678134N833721C",
+        "status": "COMPLETED",
+        "payment_source": {
+          "card": {
+            "name": "Lavern Hane",
+            "last_digits": "1111",
+            "expiry": "2030-03",
+            "brand": "VISA",
+            "available_networks": ["VISA"],
+            "type": "UNKNOWN",
+            "bin_details": {}
+          }
+        },
+        "purchase_units": [
+          {
+            "reference_id": "hal-2023121103493138",
+            "payments": {
+              "captures": [
+                {
+                  "id": "9T984786YR7857502",
+                  "status": "DECLINED",
+                  "amount": {
+                    "currency_code": "USD", "value": "375.00"
+                  },
+                  "final_capture": true,
+                  "disbursement_mode": "INSTANT",
+                  "seller_protection": {
+                    "status": "NOT_ELIGIBLE"
+                  },
+                  "seller_receivable_breakdown": {
+                    "gross_amount": {
+                      "currency_code": "USD", "value": "375.00"
+                    }, "paypal_fee": {
+                      "currency_code": "USD", "value": "10.20"
+                    }, "net_amount": {
+                      "currency_code": "USD", "value": "364.80"
+                    }
+                  },
+                  "links": [
+                    {
+                      "href": "https://api.paypal.com/v2/payments/captures/9T984786YR7857502",
+                      "rel": "self",
+                      "method": "GET"
+                    },
+                    {
+                      "href": "https://api.paypal.com/v2/checkout/orders/2R602439FG987541K",
+                      "rel": "up",
+                      "method": "GET"
+                    }
+                  ],
+                  "create_time": "2024-10-28T15:46:13Z",
+                  "update_time": "2024-10-28T15:46:13Z",
+                  "network_transaction_reference": {
+                    "id": "009116868994323", "network": "AMEX"
+                  },
+                  "processor_response": {
+                    "avs_code": "Y", "response_code": "5100"
                   }
                 }
               ]
