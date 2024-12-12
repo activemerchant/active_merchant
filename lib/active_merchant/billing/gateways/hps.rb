@@ -20,8 +20,6 @@ module ActiveMerchant # :nodoc:
         google_pay:       'GooglePayApp'
       }
 
-      version 'v3'
-
       def initialize(options = {})
         requires!(options, :secret_api_key)
         super

@@ -49,28 +49,6 @@ class GlobalCollectTest < Test::Unit::TestCase
     )
   end
 
-  def test_url
-    url = @gateway.test? ? @gateway.test_url : @gateway.live_url
-    merchant_id = @gateway.options[:merchant_id]
-    assert_equal "#{url}/v1/#{merchant_id}/payments", @gateway.send(:url, :authorize, nil)
-    assert_equal "#{url}/v1/#{merchant_id}/payments", @gateway.send(:url, :verify, nil)
-    assert_equal "#{url}/v1/#{merchant_id}/payments/0000/approve", @gateway.send(:url, :capture, '0000')
-    assert_equal "#{url}/v1/#{merchant_id}/payments/0000/refund", @gateway.send(:url, :refund, '0000')
-    assert_equal "#{url}/v1/#{merchant_id}/payments/0000/cancel", @gateway.send(:url, :void, '0000')
-    assert_equal "#{url}/v1/#{merchant_id}/payments/0000", @gateway.send(:url, :inquire, '0000')
-  end
-
-  def test_ogone_url
-    url = @gateway_direct.test? ? @gateway_direct.ogone_direct_test : @gateway_direct.ogone_direct_live
-    merchant_id = @gateway_direct.options[:merchant_id]
-    assert_equal "#{url}/v2/#{merchant_id}/payments", @gateway_direct.send(:url, :authorize, nil)
-    assert_equal "#{url}/v2/#{merchant_id}/payments", @gateway_direct.send(:url, :verify, nil)
-    assert_equal "#{url}/v2/#{merchant_id}/payments/0000/capture", @gateway_direct.send(:url, :capture, '0000')
-    assert_equal "#{url}/v2/#{merchant_id}/payments/0000/refund", @gateway_direct.send(:url, :refund, '0000')
-    assert_equal "#{url}/v2/#{merchant_id}/payments/0000/cancel", @gateway_direct.send(:url, :void, '0000')
-    assert_equal "#{url}/v2/#{merchant_id}/payments/0000", @gateway_direct.send(:url, :inquire, '0000')
-  end
-
   def test_supported_card_types
     assert_equal GlobalCollectGateway.supported_cardtypes, %i[visa master american_express discover naranja cabal tuya patagonia_365]
   end
