@@ -416,13 +416,13 @@ class RemoteNuveiTest < Test::Unit::TestCase
   end
 
   def test_purchase_account_funding_transaction
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(is_aft: true))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(is_aft: true, aft_recipient_first_name: 'John', aft_recipient_last_name: 'Doe'))
     assert_success response
     assert_equal 'APPROVED', response.message
   end
 
   def test_refund_account_funding_transaction
-    purchase_response = @gateway.purchase(@amount, @credit_card, @options)
+    purchase_response = @gateway.purchase(@amount, @credit_card, @options.merge(is_aft: true, aft_recipient_first_name: 'John', aft_recipient_last_name: 'Doe'))
     assert_success purchase_response
 
     refund_response = @gateway.refund(@amount, purchase_response.authorization)
