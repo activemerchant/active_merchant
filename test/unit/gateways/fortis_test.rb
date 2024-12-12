@@ -18,8 +18,7 @@ class FortisTest < Test::Unit::TestCase
   def test_raises_error_without_required_options
     assert_raises(ArgumentError) { FortisGateway.new }
     assert_raises(ArgumentError) { FortisGateway.new(user_id: 'abc') }
-    assert_raises(ArgumentError) { FortisGateway.new(user_id: 'abc', user_api_key: 'def') }
-    assert_nothing_raised { FortisGateway.new(user_id: 'abc', user_api_key: 'def', developer_id: 'ghi') }
+    assert_nothing_raised { FortisGateway.new(user_id: 'abc', user_api_key: 'def') }
   end
 
   def test_parse_valid_json

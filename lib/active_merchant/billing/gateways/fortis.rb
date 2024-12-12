@@ -110,7 +110,7 @@ module ActiveMerchant # :nodoc:
       }
 
       def initialize(options = {})
-        requires!(options, :user_id, :user_api_key, :developer_id)
+        requires!(options, :user_id, :user_api_key)
         super
       end
 
