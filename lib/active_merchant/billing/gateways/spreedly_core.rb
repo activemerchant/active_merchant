@@ -189,8 +189,6 @@ module ActiveMerchant #:nodoc:
           add_credit_card(doc, payment_method, options)
         elsif payment_method.is_a?(Check)
           add_bank_account(doc, payment_method, options)
-        else
-          raise TypeError, 'Payment method not supported'
         end
       end
 
