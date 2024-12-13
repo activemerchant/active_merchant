@@ -673,4 +673,30 @@ class RemoteCyberSourceRestTest < Test::Unit::TestCase
     assert_equal 'AUTHORIZED', response.message
     assert_nil response.params['_links']['capture']
   end
+
+  def test_void_of_purchase
+    purchase_response = @gateway.purchase(@amount, @visa_card, @options)
+    response = @gateway.void([purchase_response.authorization, 'captures'].join('|'), @options)
+    assert_success response
+    assert response.params['id'].present?
+    assert_equal 'VOIDED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
+  def test_store_with_purchase
+    response = @gateway.store(@amount, @visa_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    assert_nil response.params['_links']['capture']
+  end
+
+  def test_store_without_purchase
+    response = @gateway.store(0, @visa_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+    refute_empty response.params['_links']['capture']
+    assert_equal '0.00', response.params['orderInformation']['amountDetails']['authorizedAmount']
+  end
 end

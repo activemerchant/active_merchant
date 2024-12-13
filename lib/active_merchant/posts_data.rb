@@ -34,12 +34,24 @@ module ActiveMerchant # :nodoc:
       base.class_attribute :proxy_password
     end
 
+    def ssl_action(http_method, endpoint, data = {}, headers = {})
+      if http_method == 'post'
+        ssl_post(endpoint, data, headers)
+      else
+        send("ssl_#{http_method}", endpoint, headers)
+      end
+    end
+
     def ssl_get(endpoint, headers = {})
       ssl_request(:get, endpoint, nil, headers)
     end
 
     def ssl_post(endpoint, data, headers = {})
       ssl_request(:post, endpoint, data, headers)
+    end
+
+    def ssl_delete(endpoint, headers = {})
+      ssl_request(:delete, endpoint, nil, headers)
     end
 
     def ssl_request(method, endpoint, data, headers)
