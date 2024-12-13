@@ -199,7 +199,7 @@ module ActiveMerchant #:nodoc:
           doc.first_name(credit_card.first_name)
           doc.last_name(credit_card.last_name)
           doc.month(credit_card.month)
-          doc.year(credit_card.year)
+          doc.year(format(credit_card.year, :four_digits_year))
           doc.email(options[:email])
           doc.address1(options[:billing_address].try(:[], :address1))
           doc.address2(options[:billing_address].try(:[], :address2))
