@@ -71,7 +71,8 @@ class RemoteEbanxTest < Test::Unit::TestCase
       ip: '127.0.0.1',
       email: 'joe@example.com',
       birth_date: '10/11/1980',
-      person_type: 'personal'
+      person_type: 'personal',
+      payment_type_code: 'visa'
     })
 
     response = @gateway.purchase(@amount, @credit_card, options)
