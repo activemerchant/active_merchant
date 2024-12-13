@@ -103,7 +103,7 @@ module ActiveMerchant # :nodoc:
         post = {}
         add_integration_key(post)
         customer_country(post, options)
-        add_payment_type(post)
+        add_payment_type(post, options)
         post[:creditcard] = payment_details(credit_card)
 
         commit(:store, post, options)
@@ -112,7 +112,7 @@ module ActiveMerchant # :nodoc:
       def verify(credit_card, options = {})
         post = {}
         add_integration_key(post)
-        add_payment_type(post)
+        add_payment_type(post, options)
         customer_country(post, options)
         post[:card] = payment_details(credit_card)
         post[:device_id] = options[:device_id] if options[:device_id]
@@ -220,13 +220,13 @@ module ActiveMerchant # :nodoc:
 
       def add_card_or_token(post, payment, options)
         payment = payment.split('|')[0] if payment.is_a?(String)
-        add_payment_type(post[:payment])
+        add_payment_type(post[:payment], options)
         post[:payment][:creditcard] = payment_details(payment)
         post[:payment][:creditcard][:soft_descriptor] = options[:soft_descriptor] if options[:soft_descriptor]
       end
 
-      def add_payment_type(post)
-        post[:payment_type_code] = 'creditcard'
+      def add_payment_type(post, options)
+        post[:payment_type_code] = options[:payment_type_code] || 'creditcard'
       end
 
       def payment_details(payment)

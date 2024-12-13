@@ -115,6 +115,7 @@
 * SafeCharge: Add Australia & Canada as supported countries [almalee24] #5377
 * RedsysRest: Improve authorization from in Redsys [gasb150] #5372
 * Ebanx: Add the notification_url field [yunnydang] #5388
+* Ebanx: Add optional payment_type_code override [jcreiff] #5370
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

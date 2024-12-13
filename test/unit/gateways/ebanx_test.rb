@@ -64,6 +64,26 @@ class EbanxTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_default_payment_type_code
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"payment_type_code\":\"creditcard\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_payment_type_code_override
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ payment_type_code: 'visa' }))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"payment_type_code\":\"visa\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_stored_credentials_cardholder_recurring
     options = @options.merge!({
       stored_credential: {
