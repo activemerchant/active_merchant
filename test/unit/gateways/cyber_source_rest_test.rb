@@ -342,7 +342,7 @@ class CyberSourceRestTest < Test::Unit::TestCase
   end
 
   def test_url_building
-    assert_equal "#{@gateway.class.test_url}/pts/v2/action", @gateway.send(:url, 'action')
+    assert_equal "#{@gateway.class.test_url}/action", @gateway.send(:url, 'action')
   end
 
   def test_stored_credential_cit_initial
@@ -636,11 +636,81 @@ class CyberSourceRestTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.void(purchase, @options)
+    end.check_request do |endpoint, _data, _headers|
+      assert_equal "#{@gateway.class.test_url}/pts/v2/payments/1000/reversals", endpoint
     end.respond_with(successful_void_response)
 
     assert_failure response
     assert_equal nil, response.message
     assert_equal nil, response.error_code
+  end
+
+  def test_void_captures
+    authorization = '1234567890|1999|captures'
+
+    stub_comms do
+      @gateway.void(authorization, @options)
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal "#{@gateway.class.test_url}/pts/v2/captures/1234567890/voids", endpoint
+      assert_equal '1', request['clientReferenceInformation']['code']
+    end.respond_with(successful_void_response)
+  end
+
+  def test_void_payments
+    authorization = '1234567890|1999|payments'
+
+    stub_comms do
+      @gateway.void(authorization, @options)
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal "#{@gateway.class.test_url}/pts/v2/payments/1234567890/voids", endpoint
+      assert_equal '1', request['clientReferenceInformation']['code']
+    end.respond_with(successful_void_response)
+  end
+
+  def test_void_refunds
+    authorization = '1234567890|1999|refunds'
+
+    stub_comms do
+      @gateway.void(authorization, @options)
+    end.check_request do |endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal "#{@gateway.class.test_url}/pts/v2/refunds/1234567890/voids", endpoint
+      assert_equal '1', request['clientReferenceInformation']['code']
+    end.respond_with(successful_void_response)
+  end
+
+  def test_store_credit_card_with_payment
+    stub_comms do
+      @gateway.store(100, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal true, request['processingInformation']['capture']
+      assert_equal %w[TOKEN_CREATE], request['processingInformation']['actionList']
+      assert_equal %w[customer paymentInstrument], request['processingInformation']['actionTokenTypes']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_store_credit_card_without_payment
+    stub_comms do
+      @gateway.store(0, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal false, request['processingInformation']['capture']
+      assert_equal %w[TOKEN_CREATE], request['processingInformation']['actionList']
+      assert_equal %w[customer paymentInstrument], request['processingInformation']['actionTokenTypes']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_unstore
+    customer_id = '12345'
+
+    stub_comms(@gateway, :ssl_delete) do
+      @gateway.unstore(customer_id, @options)
+    end.check_request do |endpoint, _data, _headers|
+      assert_equal "#{@gateway.class.test_url}/tms/v2/customers/12345", endpoint
+    end.respond_with(successful_unstore_response)
   end
 
   private
@@ -964,4 +1034,6 @@ class CyberSourceRestTest < Test::Unit::TestCase
       }
     RESPONSE
   end
+
+  def successful_unstore_response; end
 end

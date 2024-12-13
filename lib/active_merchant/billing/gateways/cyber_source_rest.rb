@@ -55,31 +55,50 @@ module ActiveMerchant # :nodoc:
         post = build_auth_request(money, payment, options)
         post[:processingInformation][:capture] = true if capture
 
-        commit('payments', post, options)
+        commit('pts/v2/payments', post, options)
       end
 
       def capture(money, authorization, options = {})
         payment = authorization.split('|').first
         post = build_reference_request(money, options)
 
-        commit("payments/#{payment}/captures", post, options)
+        commit("pts/v2/payments/#{payment}/captures", post, options)
       end
 
       def refund(money, authorization, options = {})
         payment = authorization.split('|').first
         post = build_reference_request(money, options)
-        commit("payments/#{payment}/refunds", post, options)
+        commit("pts/v2/payments/#{payment}/refunds", post, options)
       end
 
       def credit(money, payment, options = {})
         post = build_credit_request(money, payment, options)
-        commit('credits', post)
+        commit('pts/v2/credits', post)
       end
 
       def void(authorization, options = {})
-        payment, amount = authorization.split('|')
+        payment, amount, action = authorization.split('|')
         post = build_void_request(options, amount)
-        commit("payments/#{payment}/reversals", post)
+        endpoint =
+          case action
+          when 'captures', 'payments', 'refunds'
+            "pts/v2/#{action}/#{payment}/voids"
+          else
+            "pts/v2/payments/#{payment}/reversals"
+          end
+        commit(endpoint, post)
+      end
+
+      def store(money, payment, options = {})
+        post = build_auth_request(money, payment, options)
+        post[:processingInformation][:capture] = !money.zero?
+        add_tms_create_information(post, options)
+
+        commit('pts/v2/payments', post, options)
+      end
+
+      def unstore(customer_id, options = {})
+        commit("tms/v2/customers/#{customer_id}", {}, options, :delete)
       end
 
       def verify(credit_card, options = {})
@@ -149,15 +168,18 @@ module ActiveMerchant # :nodoc:
       end
 
       def build_void_request(options, amount = nil)
-        { reversalInformation: { amountDetails: { totalAmount: nil } } }.tap do |post|
+        { clientReferenceInformation: {}, reversalInformation: { amountDetails: { totalAmount: nil } } }.tap do |post|
           add_reversal_amount(post, amount.to_i) if amount.present?
           add_merchant_category_code(post, options)
+          add_code(post, options)
         end.compact
       end
 
       def build_auth_request(amount, payment, options)
         { clientReferenceInformation: {}, paymentInformation: {}, orderInformation: {} }.tap do |post|
           add_customer_id(post, options)
+          add_customer_information(post, options)
+          add_device_information(post, options)
           add_code(post, options)
           add_payment(post, payment, options)
           add_mdd_fields(post, options)
@@ -206,6 +228,26 @@ module ActiveMerchant # :nodoc:
         return unless options[:customer_id].present?
 
         post[:paymentInformation][:customer] = { customerId: options[:customer_id] }
+      end
+
+      def add_customer_information(post, options)
+        post[:customerInformation] = {
+          email: options[:email],
+          merchantCustomerId: options[:merchant_customer_id]
+        }.compact
+      end
+
+      def add_device_information(post, options)
+        post[:deviceInformation] = {
+          ipAddress: options[:ip_address]
+        }.compact
+      end
+
+      def add_tms_create_information(post, options)
+        post[:processingInformation].tap do |hash|
+          hash[:actionList] = options[:action_list] || %w[TOKEN_CREATE]
+          hash[:actionTokenTypes] = options[:action_token_types] || %w[customer paymentInstrument]
+        end
       end
 
       def add_reversal_amount(post, amount)
@@ -293,11 +335,11 @@ module ActiveMerchant # :nodoc:
       def add_credit_card(post, creditcard)
         post[:paymentInformation][:card] = {
           number: creditcard.number,
-          expirationMonth: format(creditcard.month, :two_digits),
-          expirationYear: format(creditcard.year, :four_digits),
+          expirationMonth: format(creditcard.month, :two_digits).presence,
+          expirationYear: format(creditcard.year, :four_digits).presence,
           securityCode: creditcard.verification_value,
           type: CREDIT_CARD_CODES[card_brand(creditcard).to_sym]
-        }
+        }.compact
       end
 
       def add_address(post, payment_method, address, options, address_type)
@@ -360,14 +402,15 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_authorization_options(post, payment, options)
-        initiator = options.dig(:stored_credential, :initiator) == 'cardholder' ? 'customer' : 'merchant'
+        initiator = options.dig(:stored_credential, :initiator)
+        initiator = 'customer' if initiator == 'cardholder'
         authorization_options = {
           authorizationOptions: {
             initiator: {
               type: initiator
-            }
+            }.compact
           }
-        }.compact
+        }
 
         authorization_options[:authorizationOptions][:initiator][:storedCredentialUsed] = true if initiator == 'merchant'
         authorization_options[:authorizationOptions][:initiator][:credentialStoredOnFile] = true if options.dig(:stored_credential, :initial_transaction)
@@ -386,7 +429,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def url(action)
-        "#{test? ? test_url : live_url}/pts/v2/#{action}"
+        "#{test? ? test_url : live_url}/#{action}"
       end
 
       def host
@@ -394,14 +437,17 @@ module ActiveMerchant # :nodoc:
       end
 
       def parse(body)
-        JSON.parse(body)
+        JSON.parse(body || '{}')
       end
 
-      def commit(action, post, options = {})
+      def commit(action, post, options = {}, http_method = 'post')
         add_reconciliation_id(post, options)
         add_sec_code(post, options)
         add_invoice_number(post, options)
-        response = parse(ssl_post(url(action), post.to_json, auth_headers(action, options, post)))
+
+        response = parse(ssl_action(http_method, url(action), post.to_json, auth_headers(action, options, post, http_method).compact))
+        return Response.new(true, 'No content', response, test: test?) if response.empty?
+
         Response.new(
           success_from(response),
           message_from(response),
@@ -420,7 +466,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def success_from(response)
-        %w(AUTHORIZED PENDING REVERSED).include?(response['status'])
+        %w(AUTHORIZED PENDING REVERSED VOIDED).include?(response['status'])
       end
 
       def message_from(response)
@@ -446,10 +492,10 @@ module ActiveMerchant # :nodoc:
         string_to_sign = {
           host:,
           date: gmtdatetime,
-          'request-target': "#{http_method} /pts/v2/#{resource}",
+          'request-target': "#{http_method} /#{resource}",
           digest:,
           'v-c-merchant-id': @options[:merchant_id]
-        }.map { |k, v| "#{k}: #{v}" }.join("\n").force_encoding(Encoding::UTF_8)
+        }.compact.map { |k, v| "#{k}: #{v}" }.join("\n").force_encoding(Encoding::UTF_8)
 
         {
           keyid: @options[:public_key],
