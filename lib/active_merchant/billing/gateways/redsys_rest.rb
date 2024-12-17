@@ -386,7 +386,7 @@ module ActiveMerchant # :nodoc:
           succeeded,
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(response, post, options),
           test: test?,
           error_code: succeeded ? nil : response[:ds_response]
         )
@@ -465,9 +465,13 @@ module ActiveMerchant # :nodoc:
         Base64.urlsafe_encode64(mac256(key, data)) == signature
       end
 
-      def authorization_from(response)
-        # Need to get updated for 3DS support
-        [response[:ds_order], response[:ds_amount], response[:ds_currency]].join('|')
+      def authorization_from(response, post, options)
+        array_resp = if success_from(response, options) && options[:execute_threed] # 3DS Case
+                       [post[:DS_MERCHANT_AMOUNT], post[:DS_MERCHANT_CURRENCY]]
+                     else
+                       [response[:ds_amount], response[:ds_currency]]
+                     end
+        ([response[:ds_order]] << array_resp).join('|')
       end
 
       def split_authorization(authorization)
