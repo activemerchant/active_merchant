@@ -72,6 +72,8 @@ module ActiveMerchant # :nodoc:
         add_data_lodging(post, options)
         add_metadata(post, options)
         add_recurring_detail_reference(post, options)
+        add_fund_source(post, options)
+        add_fund_destination(post, options)
         commit('authorise', post, options)
       end
 
@@ -787,6 +789,7 @@ module ActiveMerchant # :nodoc:
 
         post[:fundSource] = {}
         post[:fundSource][:additionalData] = fund_source[:additional_data] if fund_source[:additional_data]
+        post[:fundSource][:shopperEmail] = fund_source[:shopper_email] if fund_source[:shopper_email]
 
         if fund_source[:first_name] && fund_source[:last_name]
           post[:fundSource][:shopperName] = {}
@@ -797,6 +800,13 @@ module ActiveMerchant # :nodoc:
         if (address = fund_source[:billing_address])
           add_billing_address(post[:fundSource], options, address)
         end
+      end
+
+      def add_fund_destination(post, options)
+        return unless fund_destination = options[:fund_destination]
+
+        post[:fundDestination] = {}
+        post[:fundDestination][:additionalData] = fund_destination[:additional_data] if fund_destination[:additional_data]
       end
 
       def add_metadata(post, options = {})
