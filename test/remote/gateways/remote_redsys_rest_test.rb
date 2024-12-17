@@ -228,6 +228,10 @@ class RemoteRedsysRestTest < Test::Unit::TestCase
     assert_equal 'https://sis-d.redsys.es/sis-simulador-web/threeDsMethod.jsp', three_ds_data['threeDSMethodURL']
     assert_equal 'CardConfiguration', response.message
     assert response.authorization
+    order, amount, currency = response.authorization.split('|')
+    assert_match(/\d+/, order)
+    assert_equal '100', amount
+    assert_equal '978', currency
   end
 
   # Pending 3DS support
