@@ -207,6 +207,14 @@ module ActiveMerchant #:nodoc:
           doc.state(options[:billing_address].try(:[], :state))
           doc.zip(options[:billing_address].try(:[], :zip))
           doc.country(options[:billing_address].try(:[], :country))
+          doc.phone_number(options[:billing_address].try(:[], :phone))
+          doc.shipping_address1(options[:shiping_address].try(:[], :address1))
+          doc.shipping_address2(options[:shiping_address].try(:[], :address2))
+          doc.shipping_city(options[:shiping_address].try(:[], :city))
+          doc.shipping_state(options[:shiping_address].try(:[], :state))
+          doc.shipping_zip(options[:shiping_address].try(:[], :zip))
+          doc.shipping_country(options[:shiping_address].try(:[], :country))
+          doc.shipping_phone_number(options[:shiping_address].try(:[], :phone))
         end
       end
 
