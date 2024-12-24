@@ -120,6 +120,10 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{transaction_token}.xml", nil, :get)
       end
 
+      def deliver(receiver_token, request)
+        commit("receivers/#{receiver_token}/deliver.xml", request)
+      end
+
       alias status find
 
       def supports_scrubbing?
