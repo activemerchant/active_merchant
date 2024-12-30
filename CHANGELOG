@@ -107,6 +107,7 @@
 * SecurePayAU: Send order ID for payments with stored card [dacook] #3979
 * Orbital: Add XSD version testing to unit test [almalee24] #5375
 * Priority: fix for bin lookup [Buitragox] #5366
+* CommerceHub: Update merchantInvoiceNumber & merchantTransactionId [almalee24] #5374
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
