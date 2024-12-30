@@ -181,7 +181,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def commit(action, request)
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request), {"Content-Type" => "text/xml; charset=utf-8"}))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request), { 'Content-Type' => 'text/xml; charset=utf-8' }))
 
         Response.new(
           success?(response),
@@ -242,7 +242,7 @@ module ActiveMerchant # :nodoc:
 
       def commit_periodic(request)
         my_request = build_periodic_request(request)
-        response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request, {"Content-Type" => "text/xml; charset=utf-8"}))
+        response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request, { 'Content-Type' => 'text/xml; charset=utf-8' }))
 
         Response.new(
           success?(response),

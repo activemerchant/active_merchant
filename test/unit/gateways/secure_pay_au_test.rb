@@ -82,7 +82,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   def test_periodic_payment_submits_order_id
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, '123', @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<transactionReference>order123<\/transactionReference>/, data)
     end.respond_with(successful_purchase_response)
   end

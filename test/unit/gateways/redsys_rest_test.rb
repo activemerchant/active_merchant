@@ -98,7 +98,7 @@ class RedsysRestTest < Test::Unit::TestCase
       assert_equal post[:DS_MERCHANT_ORDER], @options[:order_id]
       assert_equal post[:Ds_Merchant_TokenData][:token], @nt_credit_card.number
       assert_equal post[:Ds_Merchant_TokenData][:tokenCryptogram], @nt_credit_card.payment_cryptogram
-      assert_equal post[:Ds_Merchant_TokenData][:expirationDate], '2509'
+      assert_equal post[:Ds_Merchant_TokenData][:expirationDate], "#{@nt_credit_card.year.to_s[-2..]}09"
       assert_equal post[:DS_MERCHANT_PRODUCTDESCRIPTION], 'Store+Purchase'
       assert_equal post[:DS_MERCHANT_DIRECTPAYMENT], true
     end.respond_with(successful_purchase_response_with_network_token)
