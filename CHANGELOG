@@ -112,6 +112,7 @@
 * VersaPay: Improve Message Error and Error Mapping [gasb150] #5357
 * CheckoutV2: Add metadata to Credit [almalee24] #5328
 * Normalize API versions for Adyen, Braintree & GlobalCollect [Buitragox] #5371
+* SafeCharge: Add Australia & Canada as supported countries [almalee24] #5377
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
