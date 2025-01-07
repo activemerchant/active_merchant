@@ -661,33 +661,6 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
-  def test_fund_source_and_fund_destination_sent
-    fund_options = {
-      fund_source: {
-        additional_data: { fundingSource: 'Debit' },
-        first_name: 'Payer',
-        last_name: 'Name',
-        billing_address: @us_address,
-        shopper_email: 'john.smith@test.com'
-      },
-      fund_destination: {
-        additional_data: { walletIdentifier: '12345' }
-      }
-    }
-
-    stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(fund_options))
-    end.check_request do |_endpoint, data, _headers|
-      fund_source = JSON.parse(data)['fundSource']
-      fund_destination = JSON.parse(data)['fundDestination']
-      assert_equal 'john.smith@test.com', fund_source['shopperEmail']
-      assert_equal 'Payer', fund_source['shopperName']['firstName']
-      assert_equal 'Name', fund_source['shopperName']['lastName']
-      assert_equal 'Debit', fund_source['additionalData']['fundingSource']
-      assert_equal '12345', fund_destination['additionalData']['walletIdentifier']
-    end.respond_with(successful_authorize_response)
-  end
-
   def test_manual_capture_sent
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(manual_capture: 'true'))

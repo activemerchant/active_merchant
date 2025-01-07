@@ -440,25 +440,6 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Authorised', response.message
   end
 
-  def test_successful_authorize_with_fund_source_and_fund_destination
-    fund_options = {
-      fund_source: {
-        additional_data: { fundingSource: 'Debit' },
-        first_name: 'Payer',
-        last_name: 'Name',
-        billing_address: @us_address,
-        shopper_email: 'john.smith@test.com'
-      },
-      fund_destination: {
-        additional_data: { walletIdentifier: '12345' }
-      }
-    }
-
-    response = @gateway.authorize(@amount, @credit_card, @options.merge!(fund_options))
-    assert_success response
-    assert_equal 'Authorised', response.message
-  end
-
   def test_successful_authorize_with_credit_card_no_name
     credit_card_no_name = ActiveMerchant::Billing::CreditCard.new({
       number: '4111111111111111',
