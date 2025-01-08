@@ -15,6 +15,46 @@ class CheckoutV2Test < Test::Unit::TestCase
     @credit_card = credit_card
     @amount = 100
     @token = '2MPedsuenG2o8yFfrsdOBWmOuEf'
+
+    @lvl_2_3_options = {
+      order_id: '1',
+      billing_address: address,
+      shipping_address: address,
+      description: 'Purchase',
+      email: 'longbob.longsen@example.com',
+      processing_channel_id: 'pc_lxgl7aqahkzubkundd2l546hdm',
+      invoice_id: 12462,
+      tax_number: 123456,
+      from_address_zip: 12345,
+      tax_amount: 30,
+      shipping_amount: 20,
+      discount_amount: 10,
+      duty_amount: 5,
+      line_items: [
+        { # only for American Express in level 2 or any lvl 3
+          commodity_code: 123,
+          name: 'glass',
+          quantity: 1,
+          unit_price: 200,
+          tax_amount: 12,
+          discount_amount: 12,
+          total_amount: 200,
+          reference: 'glass123',
+          unit_of_measure: 'Centimeters'
+        },
+        {
+          commodity_code: 456,
+          name: 'water',
+          quantity: 2,
+          unit_price: 100,
+          tax_amount: 6,
+          discount_amount: 6,
+          total_amount: 100,
+          reference: 'water123',
+          unit_of_measure: 'Liters'
+        }
+      ]
+    }
   end
 
   def test_supported_card_types
@@ -1113,6 +1153,89 @@ class CheckoutV2Test < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, alternate_credit_card)
     end.respond_with(successful_authorize_response)
+  end
+
+  def test_authorize_with_level_2_3_data
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @lvl_2_3_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request.dig('customer', 'tax_number'), 123456
+      assert_equal request.dig('processing', 'order_id'), 12462
+      assert_equal request.dig('processing', 'tax_amount'), 30
+      assert_equal request.dig('processing', 'discount_amount'), 10
+      assert_equal request.dig('processing', 'shipping_amount'), 20
+      assert_equal request.dig('processing', 'duty_amount'), 5
+      assert_equal request.dig('shipping', 'from_address_zip'), 12345
+
+      item_one = request['items'][0]
+      item_two = request['items'][1]
+
+      assert_equal item_one['reference'], 'glass123'
+      assert_equal item_one['name'], 'glass'
+      assert_equal item_one['quantity'], 1
+      assert_equal item_one['unit_price'], 200
+      assert_equal item_one['tax_amount'], 12
+      assert_equal item_one['discount_amount'], 12
+      assert_equal item_one['total_amount'], 200
+      assert_equal item_one['commodity_code'], 123
+      assert_equal item_one['unit_of_measure'], 'Centimeters'
+
+      assert_equal item_two['reference'], 'water123'
+      assert_equal item_two['name'], 'water'
+      assert_equal item_two['quantity'], 2
+      assert_equal item_two['unit_price'], 100
+      assert_equal item_two['tax_amount'], 6
+      assert_equal item_two['discount_amount'], 6
+      assert_equal item_two['total_amount'], 100
+      assert_equal item_two['commodity_code'], 456
+      assert_equal item_two['unit_of_measure'], 'Liters'
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
+  end
+
+  def test_capture_with_level_2_3_data
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.capture(@amount, 'some_value', @lvl_2_3_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request.dig('customer', 'tax_number'), 123456
+      assert_equal request.dig('processing', 'order_id'), 12462
+      assert_equal request.dig('processing', 'tax_amount'), 30
+      assert_equal request.dig('processing', 'discount_amount'), 10
+      assert_equal request.dig('processing', 'duty_amount'), 5
+      assert_equal request.dig('processing', 'shipping_amount'), 20
+      assert_equal request.dig('shipping', 'from_address_zip'), 12345
+
+      item_one = request['items'][0]
+      item_two = request['items'][1]
+
+      assert_equal item_one['name'], 'glass'
+      assert_equal item_one['quantity'], 1
+      assert_equal item_one['unit_price'], 200
+      assert_equal item_one['reference'], 'glass123'
+      assert_equal item_one['commodity_code'], 123
+      assert_equal item_one['unit_of_measure'], 'Centimeters'
+      assert_equal item_one['total_amount'], 200
+      assert_equal item_one['tax_amount'], 12
+      assert_equal item_one['discount_amount'], 12
+
+      assert_equal item_two['reference'], 'water123'
+      assert_equal item_two['name'], 'water'
+      assert_equal item_two['quantity'], 2
+      assert_equal item_two['unit_price'], 100
+      assert_equal item_two['tax_amount'], 6
+      assert_equal item_two['discount_amount'], 6
+      assert_equal item_two['total_amount'], 100
+      assert_equal item_two['commodity_code'], 456
+      assert_equal item_two['unit_of_measure'], 'Liters'
+    end.respond_with(successful_capture_response)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
   end
 
   private
