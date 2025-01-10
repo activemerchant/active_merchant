@@ -421,7 +421,7 @@ module ActiveMerchant # :nodoc:
           authorization_options[:authorizationOptions][:initiator][:merchantInitiatedTransaction][:originalAuthorizedAmount] = post.dig(:orderInformation, :amountDetails, :totalAmount) if card_brand(payment) == 'discover'
         end
         authorization_options[:authorizationOptions][:initiator][:merchantInitiatedTransaction][:reason] = options[:reason_code] if options[:reason_code]
-        post[:processingInformation].merge!(authorization_options)
+        post[:processingInformation].deep_merge!(authorization_options)
       end
 
       def network_transaction_id_from(response)

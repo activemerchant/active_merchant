@@ -692,6 +692,22 @@ class CyberSourceRestTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_store_credit_card_with_payment_and_stored_credential
+    stub_comms do
+      @options.merge!(
+        ignore_avs: true,
+        stored_credential: stored_credential(:cardholder, :internet, :initial)
+      )
+      @gateway.store(100, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal true, request['processingInformation']['capture']
+      assert_equal 'true', request['processingInformation']['authorizationOptions']['ignoreAvsResult']
+      assert_equal %w[TOKEN_CREATE], request['processingInformation']['actionList']
+      assert_equal %w[customer paymentInstrument], request['processingInformation']['actionTokenTypes']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_store_credit_card_without_payment
     stub_comms do
       @gateway.store(0, @credit_card, @options)
