@@ -31,7 +31,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
        501058 501060 501061 501062 501063 501066 501067 501072 501075 501083 501087 501623
        501800 501089 501091 501092 501095 501104 501105 501107 501108 501109 501500 501879
        502000 502113 502301 503175 503645 503800
-       503670 504310 504338 504363 504533 504587 504620 504639 504738 504781 504910
+       503670 504310 504338 504363 504533 504587 504620 504738 504781 504910
        505616
        507001 507002 507004 507082 507090 560014 560565 561033 572402 572610 572626 576904 578614
        585274 585697 586509 588729 588792 589244 589300 589407 589471 589605 589633 589647 589671
@@ -603,6 +603,18 @@ class CreditCardMethodsTest < Test::Unit::TestCase
 
   def test_should_detect_invalid_patagonia_365_card
     assert_false CreditCard.valid_number?('5046562602769005')
+  end
+
+  def test_should_detect_sol_cards
+    assert_equal 'sol', CreditCard.brand?('5046391746825544')
+  end
+
+  def test_should_validate_sol_card
+    assert_true CreditCard.valid_number?('5046391746825544')
+  end
+
+  def test_should_detect_invalid_sol_card
+    assert_false CreditCard.valid_number?('5046390000000001')
   end
 
   def test_credit_card?
