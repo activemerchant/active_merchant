@@ -7,6 +7,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   include CommStub
 
   def setup
+    @schema_version = '9.5'
     @gateway = ActiveMerchant::Billing::OrbitalGateway.new(
       login: 'login',
       password: 'password',
@@ -2050,6 +2051,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def schema_file
-    @schema_file ||= File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI95.xsd")
+    assert_equal @schema_version, @gateway.class::API_VERSION
+    @schema_file ||= File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI#{@schema_version.delete('.')}.xsd")
   end
 end

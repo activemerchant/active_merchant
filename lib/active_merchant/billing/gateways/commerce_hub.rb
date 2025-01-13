@@ -154,16 +154,12 @@ module ActiveMerchant # :nodoc:
           physicalGoodsIndicator: [true, 'true'].include?(options[:physical_goods_indicator])
         }
 
-        if options[:order_id].present? && action == 'sale'
+        if action == 'sale'
           details[:merchantOrderId] = options[:order_id]
-          details[:merchantTransactionId] = options[:order_id]
+          details[:merchantTransactionId] = rand.to_s[2..13]
         end
 
-        if action != 'capture'
-          details[:merchantInvoiceNumber] = options[:merchant_invoice_number] || rand.to_s[2..13]
-          details[:primaryTransactionType] = options[:primary_transaction_type]
-          details[:accountVerification] = options[:account_verification]
-        end
+        details[:merchantInvoiceNumber] = options[:order_id] if action != 'capture'
 
         post[:transactionDetails] = details.compact
       end

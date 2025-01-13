@@ -152,11 +152,20 @@ module ActiveMerchant
         return unless options[:is_aft]
 
         recipient_details = {
-          firstName: payment.first_name,
-          lastName: payment.last_name,
-          country: options.dig(:billing_address, :country)
+          firstName: options[:aft_recipient_first_name],
+          lastName: options[:aft_recipient_last_name]
         }.compact
 
+        address_details = {
+          firstName: payment.first_name,
+          lastName: payment.last_name,
+          country: options.dig(:billing_address, :country),
+          address: options.dig(:billing_address, :address1),
+          city: options.dig(:billing_address, :city),
+          state: options.dig(:billing_address, :state)
+        }.compact
+
+        post[:billingAddress].merge!(address_details)
         post[:recipientDetails] = recipient_details unless recipient_details.empty?
       end
 

@@ -104,6 +104,10 @@
 * Worldpay: Fix stored credentials unscheduled reason type [Buitragox] #5352
 * Worldpay: Worldpay: Idempotency key fix [jherreraa] #5359
 * Hi Pay: Don't add 3ds when :three_ds_2 is missing [Buitragox] #5355
+* SecurePayAU: Send order ID for payments with stored card [dacook] #3979
+* Orbital: Add XSD version testing to unit test [almalee24] #5375
+* Priority: fix for bin lookup [Buitragox] #5366
+* CommerceHub: Update merchantInvoiceNumber & merchantTransactionId [almalee24] #5374
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
