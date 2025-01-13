@@ -206,6 +206,7 @@ module ActiveMerchant # :nodoc:
         gateway_response_errors = gateway_errors_message(response)
 
         response_message = {
+          error: response.dig('error') || response.dig('wallets', 'error'),
           errors: response.dig('errors')&.join(', ').presence,
           gateway_error_message: first_transaction&.dig('gateway_error_message').presence,
           gateway_response_errors: gateway_response_errors.presence
@@ -224,13 +225,7 @@ module ActiveMerchant # :nodoc:
       def error_code_from(response, action)
         return if success_from(response, action)
 
-        first_transaction = response['transactions']&.first
-        error_info = {
-          gateway_error_code: first_transaction&.dig('gateway_error_code'),
-          response_code: response['response_code']
-        }.compact
-
-        error_info.map { |key, value| "#{key}: #{value}" }.join(' | ')
+        response.dig('transactions', 0, 'gateway_error_code')
       end
 
       def gateway_errors_message(response)
