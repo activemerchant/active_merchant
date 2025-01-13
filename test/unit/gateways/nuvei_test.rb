@@ -395,13 +395,18 @@ class NuveiTest < Test::Unit::TestCase
 
   def test_successful_account_funding_transactions
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge(is_aft: true))
+      @gateway.purchase(@amount, @credit_card, @options.merge(is_aft: true, aft_recipient_first_name: 'John', aft_recipient_last_name: 'Doe'))
     end.check_request do |_method, endpoint, data, _headers|
       if /payment/.match?(endpoint)
         json_data = JSON.parse(data)
-        assert_match(@credit_card.first_name, json_data['recipientDetails']['firstName'])
-        assert_match(@credit_card.last_name, json_data['recipientDetails']['lastName'])
-        assert_match(@options[:billing_address][:country], json_data['recipientDetails']['country'])
+        assert_match('John', json_data['recipientDetails']['firstName'])
+        assert_match('Doe', json_data['recipientDetails']['lastName'])
+        assert_match(@credit_card.first_name, json_data['billingAddress']['firstName'])
+        assert_match(@credit_card.last_name, json_data['billingAddress']['lastName'])
+        assert_match(@options[:billing_address][:address1], json_data['billingAddress']['address'])
+        assert_match(@options[:billing_address][:city], json_data['billingAddress']['city'])
+        assert_match(@options[:billing_address][:state], json_data['billingAddress']['state'])
+        assert_match(@options[:billing_address][:country], json_data['billingAddress']['country'])
       end
     end.respond_with(successful_purchase_response)
   end

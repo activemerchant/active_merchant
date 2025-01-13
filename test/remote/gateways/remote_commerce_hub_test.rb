@@ -174,7 +174,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
     assert_equal 'X', response.cvv_result['code']
     assert_equal 'CVV check not supported for card', response.cvv_result['message']
-    assert_nil response.avs_result['code']
+    assert_equal 'Y', response.avs_result['code']
   end
 
   def test_successful_purchase_with_billing_and_shipping

@@ -29,7 +29,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_success response
     assert_equal response.message, 'Succeeded'
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.authorization, response.params['transaction']
     assert_equal response.params['transactions'][0]['action'], 'authorize'
     assert_nil response.error_code
   end
@@ -40,7 +40,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_success response
     assert_equal response.message, 'Succeeded'
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.authorization, response.params['transaction']
     assert_equal response.params['transactions'][0]['action'], 'authorize'
   end
 
@@ -50,7 +50,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal response.message, 'gateway_error_message: DECLINED | gateway_response_errors: [gateway - DECLINED]'
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.authorization, response.params['transaction']
     assert_equal response.params['transactions'][0]['action'], 'verify'
 
     assert_equal response.error_code, '567.005'
@@ -61,7 +61,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal response.message, 'gateway_error_message: DECLINED | gateway_response_errors: [gateway - DECLINED]'
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.authorization, response.params['transaction']
     assert_equal response.params['transactions'][0]['action'], 'verify'
 
     assert_equal response.error_code, '567.005'
@@ -72,7 +72,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.authorization, response.params['transaction']
     assert_equal response.params['transactions'][0]['action'], 'sale'
   end
 
@@ -120,7 +120,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
     assert_equal authorize.params['order'], response.params['order']
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.authorization, response.params['transaction']
     assert_equal response.params['transactions'][0]['action'], 'capture'
   end
 
@@ -134,7 +134,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
     assert_equal authorize.params['order'], response.params['order']
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.authorization, response.params['transaction']
     assert_equal response.params['transactions'][0]['action'], 'capture'
   end
 
@@ -144,7 +144,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_success response
     assert_equal response.message, 'Succeeded'
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.authorization, response.params['transaction']
     assert_equal response.params['transactions'][0]['action'], 'verify'
   end
 
@@ -194,7 +194,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
     assert_equal authorize.params['order'], response.params['order']
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.authorization, response.params['transaction']
     assert_equal response.params['transactions'][0]['action'], 'void'
   end
 
@@ -213,7 +213,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
     assert_equal purchase.params['order'], response.params['order']
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.authorization, response.params['transaction']
     assert_equal response.params['transactions'][0]['action'], 'refund'
   end
 
@@ -229,7 +229,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.authorization, response.params['transaction']
     assert_equal response.params['transactions'][0]['action'], 'credit'
   end
 
@@ -247,7 +247,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
 
     wallet_token = response.params['wallet_token']
     fund_token = response.params['fund_token']
-    assert_equal response.authorization, "|#{wallet_token}|#{fund_token}"
+    assert_equal response.authorization, "#{wallet_token}|#{fund_token}"
     assert_include response.params, 'wallet_token'
     assert_include response.params, 'fund_token'
     assert_include response.params, 'wallets'
@@ -290,7 +290,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_equal @options[:order_id], response.params['order']
-    assert_equal response.authorization, "#{response.params['transaction']}||"
+    assert_equal response.authorization, response.params['transaction']
     assert_equal response.params['transactions'][0]['action'], 'sale'
   end
 
@@ -301,7 +301,7 @@ class RemoteVersaPayTest < Test::Unit::TestCase
     response = @gateway.unstore(store.authorization, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
-    assert_equal response.authorization, "||#{fund_token}"
+    assert_equal response.authorization, fund_token
   end
 
   def test_transcript_scrubbing
