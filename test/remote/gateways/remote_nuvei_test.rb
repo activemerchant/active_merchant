@@ -107,7 +107,7 @@ class RemoteNuveiTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
 
-    capture_response = @gateway.capture(@amount, response.authorization)
+    capture_response = @gateway.capture(round_down(@amount).to_i, response.authorization)
 
     assert_success capture_response
     assert_match 'APPROVED', capture_response.message
@@ -306,7 +306,7 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card, options)
     assert_success response
 
-    assert capture = @gateway.capture(@amount, response.authorization, @options)
+    assert capture = @gateway.capture(round_down(@amount).to_i, response.authorization, @options)
     assert_success capture
 
     options_stored_credentials = @options.merge!(stored_credential: stored_credential(:cardholder, :recurring, id: response.network_transaction_id))
@@ -366,7 +366,7 @@ class RemoteNuveiTest < Test::Unit::TestCase
     response = @gateway.authorize(55, @credit_card, @options.merge(is_partial_approval: true))
     assert_success response
     assert_equal '55', response.params['partialApproval']['requestedAmount']
-    assert_equal '55', response.params['partialApproval']['processedAmount']
+    assert_equal round_down(55), response.params['partialApproval']['processedAmount']
     assert_match 'APPROVED', response.message
   end
 
@@ -434,5 +434,11 @@ class RemoteNuveiTest < Test::Unit::TestCase
     response = @gateway.authorize(0, @credit_card, @options.merge({ perform_name_verification: true }))
     assert_success response
     assert_match 'APPROVED', response.message
+  end
+
+  def round_down(value, decimals = 1)
+    value = value.to_f / 2
+    factor = 10**decimals
+    ((value * factor).floor / factor.to_f).to_s
   end
 end

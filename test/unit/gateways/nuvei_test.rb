@@ -160,6 +160,24 @@ class NuveiTest < Test::Unit::TestCase
     end.respond_with(successful_init_payment_response, successful_purchase_response)
   end
 
+  def test_successful_purchase_with_null_three_ds_2
+    stub_comms(@gateway, :ssl_request) do
+      options = @options.merge(@three_ds_options)
+      options[:three_ds_2] = nil
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      payment_option_card = json_data['paymentOption']['card']
+      if /(initPayment|payment)/.match?(endpoint)
+        assert_equal @amount.to_s, json_data['amount']
+        assert_equal @credit_card.number, payment_option_card['cardNumber']
+        assert_equal @credit_card.verification_value, payment_option_card['CVV']
+      end
+
+      assert_not_includes payment_option_card, 'threeD' if /payment/.match?(endpoint)
+    end.respond_with(successful_init_payment_response, successful_purchase_response)
+  end
+
   def test_successful_purchase_with_3ds_forced
     stub_comms(@gateway, :ssl_request) do
       op = @options.dup
