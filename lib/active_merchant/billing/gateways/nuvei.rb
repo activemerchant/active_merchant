@@ -374,6 +374,8 @@ module ActiveMerchant
       end
 
       def add_3ds_data(post, options = {})
+        return unless options[:three_ds_2]
+
         three_d_secure = options[:three_ds_2]
         # 01 => Challenge requested, 02 => Exemption requested, 03 or not sending parameter => No preference
         challenge_preference = if [true, 'true'].include?(options[:force_3d_secure])
