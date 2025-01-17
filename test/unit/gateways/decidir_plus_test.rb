@@ -40,7 +40,7 @@ class DecidirPlusTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal DecidirPlusGateway.supported_cardtypes, %i[visa master american_express discover diners_club naranja cabal patagonia_365]
+    assert_equal DecidirPlusGateway.supported_cardtypes, %i[visa master american_express discover diners_club naranja cabal patagonia_365 tarjeta_sol]
   end
 
   def test_successful_purchase

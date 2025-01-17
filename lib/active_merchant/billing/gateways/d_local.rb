@@ -6,7 +6,7 @@ module ActiveMerchant # :nodoc:
 
       self.supported_countries = %w[AR BD BO BR CL CM CN CO CR DO EC EG GH GT IN ID JP KE MY MX MA NG PA PY PE PH SN SV TH TR TZ UG UY VN ZA]
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro naranja cabal elo alia carnet patagonia_365]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro naranja cabal elo alia carnet patagonia_365 tarjeta_sol]
 
       self.homepage_url = 'https://dlocal.com/'
       self.display_name = 'dLocal'

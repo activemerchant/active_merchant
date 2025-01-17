@@ -40,7 +40,7 @@ class MercadoPagoTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal MercadoPagoGateway.supported_cardtypes, %i[visa master american_express elo cabal naranja creditel patagonia_365]
+    assert_equal MercadoPagoGateway.supported_cardtypes, %i[visa master american_express elo cabal naranja creditel patagonia_365 tarjeta_sol]
   end
 
   def test_successful_purchase

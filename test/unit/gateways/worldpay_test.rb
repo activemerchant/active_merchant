@@ -182,7 +182,7 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal WorldpayGateway.supported_cardtypes, %i[visa master american_express discover jcb maestro elo naranja cabal unionpay patagonia_365]
+    assert_equal WorldpayGateway.supported_cardtypes, %i[visa master american_express discover jcb maestro elo naranja cabal unionpay patagonia_365 tarjeta_sol]
   end
 
   def test_payment_type_for_network_card

@@ -27,7 +27,7 @@ class DLocalTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal DLocalGateway.supported_cardtypes, %i[visa master american_express discover jcb diners_club maestro naranja cabal elo alia carnet patagonia_365]
+    assert_equal DLocalGateway.supported_cardtypes, %i[visa master american_express discover jcb diners_club maestro naranja cabal elo alia carnet patagonia_365 tarjeta_sol]
   end
 
   def test_successful_purchase

@@ -152,7 +152,7 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal AdyenGateway.supported_cardtypes, %i[visa master american_express diners_club jcb dankort maestro discover elo naranja cabal unionpay patagonia_365]
+    assert_equal AdyenGateway.supported_cardtypes, %i[visa master american_express diners_club jcb dankort maestro discover elo naranja cabal unionpay patagonia_365 tarjeta_sol]
   end
 
   def test_successful_authorize
