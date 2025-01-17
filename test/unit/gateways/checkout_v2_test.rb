@@ -1,4 +1,5 @@
 require 'test_helper'
+
 class CheckoutV2Test < Test::Unit::TestCase
   include CommStub
 
@@ -799,7 +800,8 @@ class CheckoutV2Test < Test::Unit::TestCase
       funds_transfer_type: 'FD',
       source_type: 'currency_account',
       source_id: 'ca_spwmped4qmqenai7hcghquqle4',
-      account_holder_type: 'individual'
+      account_holder_type: 'individual',
+      metadata: { transaction_token: '123' }
     }
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.credit(@amount, @credit_card, options)
@@ -811,6 +813,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       assert_equal request['destination']['account_holder']['type'], options[:account_holder_type]
       assert_equal request['destination']['account_holder']['first_name'], @credit_card.first_name
       assert_equal request['destination']['account_holder']['last_name'], @credit_card.last_name
+      assert_equal request['metadata']['transaction_token'], '123'
     end.respond_with(successful_credit_response)
     assert_success response
   end
@@ -1036,6 +1039,15 @@ class CheckoutV2Test < Test::Unit::TestCase
 
     assert_failure response
     assert_match(/request_invalid: card_expired/, response.error_code)
+  end
+
+  def test_error_type_without_error_code_returned
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(error_type_without_error_codes_response)
+
+    assert_failure response
+    assert_match(/request_invalid/, response.error_code)
   end
 
   def test_4xx_error_message
@@ -1467,6 +1479,14 @@ class CheckoutV2Test < Test::Unit::TestCase
     %(
       {
         "request_id": "e5a3ce6f-a4e9-4445-9ec7-e5975e9a6213","error_type": "request_invalid","error_codes": ["card_expired"]
+      }
+    )
+  end
+
+  def error_type_without_error_codes_response
+    %(
+      {
+        "request_id": "e5a3ce6f-a4e9-4445-9ec7-e5975e9a6213","error_type": "request_invalid"
       }
     )
   end

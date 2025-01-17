@@ -904,6 +904,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway_oauth.credit(@amount, @credit_card, @options.merge({ source_type: 'currency_account', source_id: 'ca_spwmped4qmqenai7hcghquqle4', account_holder_type: 'individual' }))
     assert_success response
     assert_equal 'Succeeded', response.message
+    assert_equal true, response.primary_response.pending
   end
 
   def test_successful_money_transfer_payout_via_credit_individual_account_holder_type
@@ -912,6 +913,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway_oauth.credit(@amount, @credit_card, @payout_options.merge(account_holder_type: 'individual', payout: true))
     assert_success response
     assert_equal 'Succeeded', response.message
+    assert_equal true, response.primary_response.pending
   end
 
   def test_successful_money_transfer_payout_via_credit_corporate_account_holder_type

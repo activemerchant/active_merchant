@@ -17,8 +17,9 @@ module ActiveMerchant # :nodoc:
       self.homepage_url = 'https://www.adyen.com/'
       self.display_name = 'Adyen'
 
-      PAYMENT_API_VERSION = 'v68'
-      RECURRING_API_VERSION = 'v68'
+      version 'v68', :payment_api
+      version 'v68', :payout_api
+      version 'v68', :recurring_api
 
       STANDARD_ERROR_CODE_MAPPING = {
         '0' => STANDARD_ERROR_CODE[:processing_error],
@@ -880,11 +881,11 @@ module ActiveMerchant # :nodoc:
       def endpoint(action)
         case action
         when 'disable', 'storeToken'
-          "Recurring/#{RECURRING_API_VERSION}/#{action}"
+          "Recurring/#{fetch_version(:recurring_api)}/#{action}"
         when 'payout'
-          "Payout/#{PAYMENT_API_VERSION}/#{action}"
+          "Payout/#{fetch_version(:payout_api)}/#{action}"
         else
-          "Payment/#{PAYMENT_API_VERSION}/#{action}"
+          "Payment/#{fetch_version(:payment_api)}/#{action}"
         end
       end
 
