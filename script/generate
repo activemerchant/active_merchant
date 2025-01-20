@@ -10,6 +10,7 @@ end
 
 class Generate < Thor
   register(GatewayGenerator, 'gateway', 'gateway NAME', 'Generates a new gateway.')
+  register(CardTypeGenerator, 'card_type', 'card_type NAME', 'Adds a new card type to all gateways.')
 end
 
 Generate.start
