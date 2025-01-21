@@ -54,6 +54,16 @@ class EbanxTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_notification_url
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(notification_url: 'https://notify.example.com/'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"notification_url\":\"https://notify.example.com/\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_stored_credentials_cardholder_recurring
     options = @options.merge!({
       stored_credential: {

@@ -255,6 +255,7 @@ module ActiveMerchant # :nodoc:
         post[:metadata] = {} if post[:metadata].nil?
         post[:metadata][:merchant_payment_code] = options[:order_id] if options[:order_id]
         post[:payment][:tags] = TAGS
+        post[:notification_url] = options[:notification_url] if options[:notification_url]
       end
 
       def parse(body)
