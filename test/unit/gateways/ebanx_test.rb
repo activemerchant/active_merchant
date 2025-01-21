@@ -392,6 +392,10 @@ class EbanxTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed_network_token), post_scrubbed_network_token
   end
 
+  def test_supported_countries
+    assert_equal %w[BR MX CO CL AR PE BO EC CR DO GT PA PY UY], EbanxGateway.supported_countries
+  end
+
   private
 
   def pre_scrubbed
