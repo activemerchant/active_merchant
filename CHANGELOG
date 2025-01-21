@@ -117,6 +117,7 @@
 * Ebanx: Add the notification_url field [yunnydang] #5388
 * Ebanx: Add optional payment_type_code override [jcreiff] #5370
 * Ebanx: Update list of supported countries [jcreiff] #5387
+* Add alternate spelling for Vietnam [jcreiff] #5386
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
