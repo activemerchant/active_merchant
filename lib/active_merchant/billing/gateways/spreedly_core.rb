@@ -313,7 +313,8 @@ module ActiveMerchant #:nodoc:
           response_http_code: @response_http_code,
           request_endpoint: request_url(relative_url),
           request_method: :post,
-          request_body:
+          request_body:,
+          auth_code: fetch_auth_code(parsed)
         }
 
         Response.new(parsed[:succeeded] == 'true', parsed[:message] || parsed[:error], parsed, options)
@@ -348,6 +349,10 @@ module ActiveMerchant #:nodoc:
         else
           2
         end
+      end
+
+      def fetch_auth_code(parsed)
+        parsed.dig(:gateway_specific_response_fields, 'nmi', 'authcode')
       end
     end
   end
