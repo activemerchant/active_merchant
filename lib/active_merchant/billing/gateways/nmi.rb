@@ -325,7 +325,8 @@ module ActiveMerchant #:nodoc:
           response_http_code: @response_http_code,
           request_endpoint: url,
           request_method: :post,
-          request_body: params
+          request_body: params,
+          auth_code: response[:authcode]
         )
       end
 
