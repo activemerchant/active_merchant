@@ -15,7 +15,7 @@ gem install swiss-activemerchant
 Or, if you're using Bundler, just add the following to your Gemfile:
 
 ```ruby
-gem 'swiss-activemerchant'
+gem 'swiss-crm-activemerchant'
 ```
 
 ## Usage
@@ -234,13 +234,13 @@ gem build activemerchant.gemspec
 3. Push to RubyGems: Push the updated gem to RubyGems:
 
 ```console
-gem push swiss-activemerchant-x.x.x.gem
+gem push swiss-crm-activemerchant-x.x.x.gem
 ```
 
 4. Yank Previous Version: If necessary, yank the previous version to prevent installations:
 
 ```console
-gem yank swiss-activemerchant -v x.x.x
+gem yank swiss-crm-activemerchant -v x.x.x
 ```
 
 ## API stability policy
