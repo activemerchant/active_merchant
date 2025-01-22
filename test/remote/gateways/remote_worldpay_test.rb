@@ -871,6 +871,24 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert response.params['last_event'] || response.params['ok']
   end
 
+  def test_3ds_version_2_parameters_for_nt
+    options = @options.merge(
+      {
+        three_d_secure: {
+          version: '2.1.0',
+          ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
+          cavv: 'MAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+          eci: '05'
+        }
+      }
+    )
+
+    assert response = @gateway.authorize(@amount, @nt_credit_card, @options.merge(options))
+    assert response.test?
+    assert response.success?
+    assert response.params['last_event'] || response.params['ok']
+  end
+
   def test_failed_capture
     assert response = @gateway.capture(@amount, 'bogus')
     assert_failure response
