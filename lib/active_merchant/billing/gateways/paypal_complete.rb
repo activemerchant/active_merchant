@@ -340,7 +340,7 @@ module ActiveMerchant #:nodoc:
 
       def handle_response(response)
         case response.code.to_i
-        when 200..300
+        when 200..499
           response.body || '{}'
         else
           raise ResponseError.new(response)
