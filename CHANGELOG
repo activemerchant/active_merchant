@@ -118,6 +118,7 @@
 * Ebanx: Add optional payment_type_code override [jcreiff] #5370
 * Ebanx: Update list of supported countries [jcreiff] #5387
 * Add alternate spelling for Vietnam [jcreiff] #5386
+* Checkout v2: add l2/l3 [gasb150] #5385
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
