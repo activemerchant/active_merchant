@@ -678,6 +678,7 @@ module ActiveMerchant # :nodoc:
           end
           add_stored_credential_options(xml, options)
           add_shopper_id(xml, options, false)
+          add_three_d_secure(xml, options)
         end
       end
 

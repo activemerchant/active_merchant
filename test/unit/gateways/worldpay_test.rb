@@ -28,11 +28,6 @@ class WorldpayTest < Test::Unit::TestCase
       source: :network_token,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
     )
-    @nt_credit_card_without_eci = network_tokenization_credit_card(
-      '4895370015293175',
-      source: :network_token,
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
     @credit_card_with_two_digits_year = credit_card(
       '4514 1600 0000 0008',
       month: 10,
@@ -1408,6 +1403,19 @@ class WorldpayTest < Test::Unit::TestCase
       assert_match %r{<cavv>cavv</cavv>}, data
       assert_match %r{<dsTransactionId>ds_transaction_id</dsTransactionId>}, data
       assert_match %r{<threeDSVersion>2.1.0</threeDSVersion>}, data
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_3ds_version_2_request_nt
+    stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options.merge(three_d_secure_option(version: '2.1.0', ds_transaction_id: 'ds_transaction_id')))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r{<paymentService version="1.4" merchantCode="testlogin">}, data
+      assert_match %r{<eci>eci</eci>}, data
+      assert_match %r{<cavv>cavv</cavv>}, data
+      assert_match %r{<dsTransactionId>ds_transaction_id</dsTransactionId>}, data
+      assert_match %r{<threeDSVersion>2.1.0</threeDSVersion>}, data
+      assert_match %r(<EMVCO_TOKEN-SSL type="NETWORKTOKEN">), data
     end.respond_with(successful_authorize_response)
   end
 
