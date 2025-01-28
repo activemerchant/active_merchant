@@ -151,6 +151,11 @@ module ActiveMerchant # :nodoc:
         add_stored_credential(post, options)
         add_processor(post, options)
 
+        if options[:aft]
+          add_recipient(post, options)
+          add_sender(post, payment_method, options)
+        end
+
         commit(:purchase, post)
       end
 
@@ -168,6 +173,11 @@ module ActiveMerchant # :nodoc:
         add_account_name_inquiry(post, options)
         add_processor(post, options)
         add_authorization_details(post, options)
+
+        if options[:aft]
+          add_recipient(post, options)
+          add_sender(post, payment_method, options)
+        end
 
         commit(:authorize, post)
       end
@@ -341,6 +351,21 @@ module ActiveMerchant # :nodoc:
         post[:c3] = options[:email] || 'unspecified@example.com'
       end
 
+      def add_sender(post, payment_method, options)
+        return unless options[:sender_ref_number] || options[:sender_fund_source] || options[:sender_country_code] || options[:sender_address] || options[:sender_street_address] || options[:sender_city] || options[:sender_state] || options[:sender_first_name] || options[:sender_last_name]
+
+        sender_country_code = options[:sender_country_code]&.length == 3 ? options[:sender_country_code] : Country.find(options[:sender_country_code]).code(:alpha3).value if options[:sender_country_code]
+        post[:s15] = sender_country_code
+        post[:s16] = payment_method.number
+        post[:s17] = options[:sender_ref_number] if options[:sender_ref_number]
+        post[:s18] = options[:sender_fund_source] if options[:sender_fund_source]
+        post[:s10] = options[:sender_first_name] if options[:sender_first_name]
+        post[:s11] = options[:sender_last_name] if options[:sender_last_name]
+        post[:s12] = options[:sender_street_address] if options[:sender_street_address]
+        post[:s13] = options[:sender_city] if options[:sender_city]
+        post[:s14] = options[:sender_state] if options[:sender_state]
+      end
+
       def add_recipient(post, options)
         return unless options[:recipient_street_address] || options[:recipient_city] || options[:recipient_province_code] || options[:recipient_country_code]
 
@@ -349,6 +374,11 @@ module ActiveMerchant # :nodoc:
         post[:j7] = options[:recipient_city] if options[:recipient_city]
         post[:j8] = options[:recipient_province_code] if options[:recipient_province_code]
         post[:j9] = recipient_country_code
+
+        if options[:aft]
+          post[:j5] = options[:recipient_first_name] if options[:recipient_first_name]
+          post[:j13] = options[:recipient_last_name] if options[:recipient_last_name]
+        end
       end
 
       def add_customer_name(post, options)
