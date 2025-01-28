@@ -122,6 +122,7 @@
 * Worldpay: Update passing 3DS data for NT [almalee24] #5389
 * Ebanx: Add the merchant_payment_code override [yunnydang] #5394
 * Credorax: Add AFT fields [yunnydang] #5390
+* Cashnet: Update max_retries to 1 [almalee24] #5393
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
