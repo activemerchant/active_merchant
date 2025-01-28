@@ -175,6 +175,15 @@ class Cashnet < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_preventing_retries
+    Net::HTTP.any_instance.
+      expects(:request).
+      raises(Errno::ECONNREFUSED)
+
+    error = assert_raises(ActiveMerchant::ConnectionError) { @gateway.purchase(@amount, @credit_card) }
+    assert_equal 'The remote server refused the connection', error.message
+  end
+
   private
 
   def expected_expiration_date
