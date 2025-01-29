@@ -6,7 +6,9 @@ class Shift4Test < Test::Unit::TestCase
     @gateway = Shift4Gateway.new(client_guid: '123456', auth_token: 'abcder123')
     @credit_card = credit_card('4000100011112224', verification_value: '333', first_name: 'John', last_name: 'Doe')
     @amount = 5
-    @options = {}
+    @options = {
+      interface_name: 'Interface Name'
+    }
     @extra_options = {
       clerk_id: '1576',
       notes: 'test notes',
@@ -392,7 +394,7 @@ class Shift4Test < Test::Unit::TestCase
     end.check_request do |_endpoint, _data, headers|
       assert_equal headers['CompanyName'], 'Spreedly'
       assert_equal headers['InterfaceVersion'], '1'
-      assert_equal headers['InterfaceName'], 'Spreedly'
+      assert_equal headers['InterfaceName'], 'Interface Name'
     end.respond_with(successful_purchase_response)
   end
 
