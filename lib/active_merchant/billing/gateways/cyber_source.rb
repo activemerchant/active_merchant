@@ -708,7 +708,21 @@ module ActiveMerchant # :nodoc:
           xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
           xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
           xml.tag! 'merchantTaxID',         bill_to_merchant_tax_id           unless bill_to_merchant_tax_id.blank?
+          add_browser_info(xml, options, shipTo)
         end
+      end
+
+      def add_browser_info(xml, options, shipTo)
+        return if shipTo
+        return unless browser_info = options.dig(:three_ds_2, :browser_info)
+
+        xml.tag! 'httpBrowserColorDepth', browser_info[:depth]&.to_s
+        xml.tag! 'httpBrowserJavaEnabled', browser_info[:java]
+        xml.tag! 'httpBrowserJavaScriptEnabled', browser_info[:javascript]
+        xml.tag! 'httpBrowserLanguage', browser_info[:language]&.to_s
+        xml.tag! 'httpBrowserScreenHeight', browser_info[:height]&.to_s
+        xml.tag! 'httpBrowserScreenWidth', browser_info[:width]&.to_s
+        xml.tag! 'httpBrowserTimeDifference', browser_info[:timezone]&.to_s
       end
 
       def address_names(address_name, payment_method)
@@ -1110,10 +1124,18 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_threeds_services(xml, options)
-        xml.tag! 'payerAuthEnrollService', { 'run' => 'true' } if options[:payer_auth_enroll_service]
+        if options[:payer_auth_enroll_service]
+          xml.tag! 'payerAuthEnrollService', { 'run' => 'true' } do
+            browser_info = options.dig(:three_ds_2, :browser_info)
+            xml.tag! 'httpUserAgent', browser_info[:user_agent] if browser_info&.dig(:user_agent)
+            xml.tag! 'returnURL', options[:return_url] if options[:return_url]
+            xml.tag! 'httpUserAccept', browser_info[:accept_header] if browser_info&.dig(:accept_header)
+          end
+        end
+
         if options[:payer_auth_validate_service]
           xml.tag! 'payerAuthValidateService', { 'run' => 'true' } do
-            xml.tag! 'signedPARes', options[:pares]
+            xml.tag! 'authenticationTransactionID', options[:authentication_transaction_id]
           end
         end
       end
