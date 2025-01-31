@@ -285,7 +285,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_recurring_details(post, options)
-        return unless options[:recurring_reference_initial_transaction]
+        return unless options[:recurring_reference_initial_transaction] && options[:nmi_initial_txn_id].present?
 
         post[:billing_method] = 'recurring'
         txn_id, = split_authorization(options[:nmi_initial_txn_id])
