@@ -46,6 +46,7 @@ module ActiveMerchant #:nodoc:
         add_merchant_defined_fields(post, options)
         add_level3_fields(post, options)
         add_three_d_secure(post, options)
+        add_recurring_details(post, options)
 
         commit('sale', post)
       end
@@ -60,6 +61,7 @@ module ActiveMerchant #:nodoc:
         add_merchant_defined_fields(post, options)
         add_level3_fields(post, options)
         add_three_d_secure(post, options)
+        add_recurring_details(post, options)
         commit('auth', post)
       end
 
@@ -157,7 +159,6 @@ module ActiveMerchant #:nodoc:
         post[:orderid] = options[:order_id]
         post[:orderdescription] = options[:description]
         post[:currency] = options[:currency] || currency(money)
-        post[:billing_method] = 'recurring' if options[:recurring]
         if (dup_seconds = (options[:dup_seconds] || self.class.duplicate_window))
           post[:dup_seconds] = dup_seconds
         end
@@ -281,6 +282,14 @@ module ActiveMerchant #:nodoc:
         post[:xid] = three_d_secure[:xid]
         post[:three_ds_version] = three_d_secure[:version]
         post[:directory_server_id] = three_d_secure[:ds_transaction_id]
+      end
+
+      def add_recurring_details(post, options)
+        return unless options[:recurring_reference_initial_transaction]
+
+        post[:billing_method] = 'recurring'
+        txn_id, = split_authorization(options[:nmi_initial_txn_id])
+        post[:initial_transaction_id] = txn_id
       end
 
       def cardholder_auth(trans_status)
