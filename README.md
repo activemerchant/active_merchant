@@ -179,6 +179,7 @@ The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wiki
 * [PagoFacil](http://www.pagofacil.net/) - MX
 * [PayConex](http://www.bluefincommerce.com/) - US, CA
 * [PayGate PayXML](http://paygate.co.za/) - US, ZA
+* [PayFort](http://www.payfort.com/) - EG, AE
 * [PayHub](http://www.payhub.com/) - US
 * [PayJunction](http://www.payjunction.com/) - US
 * [PaySecure](http://www.commsecure.com.au/paysecure.shtml) - AU
