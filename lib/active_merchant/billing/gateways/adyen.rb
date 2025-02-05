@@ -1033,7 +1033,7 @@ module ActiveMerchant # :nodoc:
         return true if payment.is_a?(NetworkTokenizationCreditCard) && options.dig(:stored_credential, :initiator) != 'merchant'
         return true unless (stored_credential = options[:stored_credential])
 
-        (stored_credential[:initial_transaction] && stored_credential[:initiator] == 'cardholder') ||
+        stored_credential[:initiator] == 'cardholder' ||
           (payment.respond_to?(:verification_value) && payment.verification_value && stored_credential[:initial_transaction])
       end
     end
