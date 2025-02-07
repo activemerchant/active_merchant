@@ -6,7 +6,7 @@ module ActiveMerchant
 
       self.supported_countries = %w[US CA IN NZ GB AU US]
       self.default_currency = 'USD'
-      self.money_format = :cents
+      self.money_format = :dollars
       self.supported_cardtypes = %i[visa master american_express discover union_pay]
       self.currencies_without_fractions = %w[CLP KRW JPY ISK MMK PYG UGX VND XAF XOF]
       self.homepage_url = 'https://www.nuvei.com/'
