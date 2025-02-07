@@ -124,6 +124,7 @@
 * Credorax: Add AFT fields [yunnydang] #5390
 * Cashnet: Update max_retries to 1 [almalee24] #5393
 * Cybersource: Update 3DS fields [almalee24] #5396
+* Airwallex: Update authorization_from method to include payment intent ID on refunds [yunnydang] #5400
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
