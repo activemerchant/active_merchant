@@ -73,6 +73,18 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     assert_equal @gateway.options[:access_token], second_purchase.params[:access_token]
   end
 
+  def test_successful_access_token_generation_and_use_with_string_token_values
+    @gateway.send(:fetch_access_token)
+    @gateway.options[:token_expires] = @gateway.options[:token_expires].to_s
+
+    second_purchase = @gateway.purchase(@amount, @credit_card_cit, @cit_options)
+
+    assert_success second_purchase
+    assert_kind_of MultiResponse, second_purchase
+    assert_equal 1, second_purchase.responses.size
+    assert_equal @gateway.options[:access_token], second_purchase.params[:access_token]
+  end
+
   def test_successful_purchase_with_an_expired_access_token
     initial_access_token = @gateway.options[:access_token] = SecureRandom.alphanumeric(10)
     initial_expires = @gateway.options[:token_expires] = DateTime.now.strftime('%Q').to_i
