@@ -1528,10 +1528,31 @@ class CyberSourceTest < Test::Unit::TestCase
   end
 
   def test_3ds_enroll_response
+    three_ds_options = {
+      three_ds_2: {
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 100,
+          java: false,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown'
+        }
+      },
+      return_url: 'return_url.com',
+      payer_auth_enroll_service: true
+    }
     purchase = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(payer_auth_enroll_service: true))
+      @gateway.purchase(@amount, @credit_card, @options.merge!(three_ds_options))
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/\<payerAuthEnrollService run=\"true\"\/\>/, data)
+      browser_info = three_ds_options.dig(:three_ds_2, :browser_info)
+      assert_match(/\<payerAuthEnrollService run=\"true\">/, data)
+      assert_match(/\<httpBrowserColorDepth\>#{browser_info[:depth]}\<\/httpBrowserColorDepth\>/, data)
+      assert_match(/\<httpBrowserJavaEnabled\>#{browser_info[:java]}\<\/httpBrowserJavaEnabled\>/, data)
+      assert_match(/\<httpUserAgent\>#{browser_info[:user_agent]}\<\/httpUserAgent\>/, data)
+      assert_match(/\<returnURL\>#{three_ds_options[:return_url]}\<\/returnURL\>/, data)
     end.respond_with(threedeesecure_purchase_response)
 
     assert_failure purchase
@@ -1542,10 +1563,10 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_3ds_validate_response
     validation = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(payer_auth_validate_service: true, pares: 'ABC123'))
+      @gateway.purchase(@amount, @credit_card, @options.merge(payer_auth_validate_service: true, authentication_transaction_id: 'ABC123'))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/\<payerAuthValidateService run=\"true\"\>/, data)
-      assert_match(/\<signedPARes\>ABC123\<\/signedPARes\>/, data)
+      assert_match(/\<authenticationTransactionID\>ABC123\<\/authenticationTransactionID\>/, data)
     end.respond_with(successful_threedeesecure_validate_response)
 
     assert_success validation
