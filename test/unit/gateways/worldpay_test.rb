@@ -898,6 +898,16 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
   end
 
+  def test_successful_authorize_visa_account_funding_transaction
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(@aft_options))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<fundingTransfer type="A" category="PULL_FROM_CARD">/, data)
+    end.respond_with(successful_visa_credit_response)
+    assert_success response
+    assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
+  end
+
   def test_description
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
