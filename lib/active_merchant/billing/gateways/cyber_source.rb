@@ -26,6 +26,12 @@ module ActiveMerchant #:nodoc:
 
       XSD_VERSION = '1.153'
 
+      # Constants for p12 cert auth
+      WSU_NS = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd'.freeze
+      WSSE_NS = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd'.freeze
+      SOAP_NS = 'http://schemas.xmlsoap.org/soap/envelope/'.freeze
+      DS_NS = 'http://www.w3.org/2000/09/xmldsig#'.freeze
+
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro]
       self.supported_countries = %w(US BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB ZA)
 
@@ -96,6 +102,10 @@ module ActiveMerchant #:nodoc:
       #
       # :password =>  the transaction key you generated in the Business Center
       #
+      # :p12_certificate => the contents of your .p12 file
+      #
+      # :p12_certificate_password => the password you set on your .p12 file
+      #
       # :test => true   sets the gateway to test mode
       #
       # :vat_reg_number => your VAT registration number
@@ -109,7 +119,7 @@ module ActiveMerchant #:nodoc:
       # :ignore_cvv => true   don't want to use CVV so continue processing even
       #                       if CVV would have failed
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, :login, :password, :p12_certificate, :p12_certificate_password)
         super
       end
 
@@ -757,14 +767,153 @@ module ActiveMerchant #:nodoc:
               end
             end
           end
-          xml.tag! 's:Body', {'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema'} do
-            xml.tag! 'requestMessage', {'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{XSD_VERSION}"} do
+          xml.tag! 's:Body', {
+            'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
+            'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
+            'xmlns:wsu' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd',
+            'wsu:Id' => 'Body'
+          } do
+            xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{XSD_VERSION}" } do
               add_merchant_data(xml, options)
               xml << body
             end
           end
         end
-        xml.target!
+        if @options[:p12_certificate].present? && @options[:p12_certificate_password].present?
+          doc = parse_xml(xml)
+          security_element = initialize_security_element(doc)
+          add_security_token(doc, security_element)
+          signature_element = create_signature_element(doc, security_element)
+          sign_info = build_and_add_signed_info(doc, signature_element)
+          sign_and_add_signature_value(doc, signature_element, sign_info)
+          add_key_information(doc, signature_element)
+          doc.to_xml
+        else
+          xml.target!
+        end
+      end
+
+      def parse_xml(xml)
+        Nokogiri::XML(xml.target!)
+      end
+
+      def initialize_security_element(doc)
+        security_element = doc.at_xpath('//wsse:Security', 'wsse' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd')
+        security_element.children.remove
+        security_element
+      end
+
+      def add_security_token(doc, security_element)
+        token_element = generate_security_token(doc)
+        security_element.add_child(token_element)
+      end
+
+      def create_signature_element(doc, security_element)
+        signature_element = doc.create_element('ds:Signature')
+        signature_element.add_namespace('ds', DS_NS)
+        security_element.add_child(signature_element)
+        signature_element
+      end
+
+      def build_and_add_signed_info(doc, signature_element)
+        sign_info = build_signed_info(doc, ['Body'])
+        signature_element.add_child(sign_info)
+        sign_info
+      end
+
+      def sign_and_add_signature_value(doc, signature_element, sign_info)
+        signature = @private_key.sign(
+          OpenSSL::Digest.new('SHA256'),
+          canonicalize_node(sign_info)
+        )
+        signature_value = doc.create_element('ds:SignatureValue')
+        signature_value.content = Base64.strict_encode64(signature)
+        signature_element.add_child(signature_value)
+      end
+
+      def add_key_information(doc, signature_element)
+        key_info = doc.create_element('ds:KeyInfo')
+        security_token_reference = doc.create_element('wsse:SecurityTokenReference')
+        reference = doc.create_element('wsse:Reference')
+        reference['URI'] = '#X509Token'
+        security_token_reference.add_child(reference)
+        key_info.add_child(security_token_reference)
+        signature_element.add_child(key_info)
+      end
+
+      def generate_security_token(doc)
+        decoded_p12_cert =  Base64.decode64(@options[:p12_certificate])
+        cert = OpenSSL::PKCS12.new(decoded_p12_cert, @options[:p12_certificate_password])
+        @private_key = cert.key
+        certificate = cert.certificate.to_pem
+
+        pubcert_lines = certificate.lines.map(&:strip) # Split and trim each line
+        pubcert_lines.shift # Remove "-----BEGIN CERTIFICATE-----"
+        pubcert_lines.pop while pubcert_lines.last.to_s.strip.empty? # Remove empty lines
+        pubcert_lines.pop if pubcert_lines.last == '-----END CERTIFICATE-----' # Remove "-----END CERTIFICATE-----"
+        pub_cert = pubcert_lines.join # Join without line breaks
+
+        token = doc.create_element('wsse:BinarySecurityToken', pub_cert)
+        token['xmlns:wsse'] = WSSE_NS
+        token['ValueType'] = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3'
+        token['EncodingType'] = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary'
+        token['wsu:Id'] = 'X509Token'
+        token.set_attribute('xmlns:wsu', WSU_NS)
+        token
+      rescue OpenSSL::PKCS12::PKCS12Error => e
+        raise ArgumentError, "Invalid p12 certificate or password provided: #{e.message}"
+      end
+
+      def build_signed_info(dom_document, ids)
+        xpath = Nokogiri::XML::XPathContext.new(dom_document)
+        xpath.register_ns('SOAP-ENV', SOAP_NS)
+        xpath.register_ns('wsu', WSU_NS)
+        xpath.register_ns('wsse', WSSE_NS)
+        xpath.register_ns('ds', DS_NS)
+
+        signed_info = Nokogiri::XML::Node.new('ds:SignedInfo', dom_document)
+        signed_info.add_namespace_definition('ds', DS_NS)
+
+        canonicalization_method = Nokogiri::XML::Node.new('ds:CanonicalizationMethod', dom_document)
+        canonicalization_method['Algorithm'] = 'http://www.w3.org/2001/10/xml-exc-c14n#'
+        signed_info.add_child(canonicalization_method)
+
+        signature_method = Nokogiri::XML::Node.new('ds:SignatureMethod', dom_document)
+        signature_method['Algorithm'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
+        signed_info.add_child(signature_method)
+
+        ids.each do |id|
+          nodes = xpath.evaluate("//*[(@wsu:Id='#{id}')]")
+          next if nodes.empty?
+
+          node = nodes.first
+          canonicalized = canonicalize_node(node)
+
+          reference_element = Nokogiri::XML::Node.new('ds:Reference', dom_document)
+          reference_element['URI'] = "##{id}"
+
+          transforms = Nokogiri::XML::Node.new('ds:Transforms', dom_document)
+          transform_element = Nokogiri::XML::Node.new('ds:Transform', dom_document)
+          transform_element['Algorithm'] = 'http://www.w3.org/2001/10/xml-exc-c14n#'
+          transforms.add_child(transform_element)
+          reference_element.add_child(transforms)
+
+          digest_method = Nokogiri::XML::Node.new('ds:DigestMethod', dom_document)
+          digest_method['Algorithm'] = 'http://www.w3.org/2001/04/xmlenc#sha256'
+          reference_element.add_child(digest_method)
+
+          digest_value = Digest::SHA256.digest(canonicalized)
+          digest_value_node = Nokogiri::XML::Node.new('ds:DigestValue', dom_document)
+          digest_value_node.content = Base64.strict_encode64(digest_value)
+          reference_element.add_child(digest_value_node)
+
+          signed_info.add_child(reference_element)
+        end
+        signed_info
+      end
+
+      def canonicalize_node(node)
+        node.canonicalize(Nokogiri::XML::XML_C14N_EXCLUSIVE_1_0)
       end
 
       # Contact CyberSource, make the SOAP request, and parse the reply into a

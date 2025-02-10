@@ -249,6 +249,8 @@ culqi:
 cyber_source:
   login: X
   password: Y
+  p12_certificate: ''
+  p12_certificate_password: ''
 
 # Working credentials, no need to replace
 d_local:
