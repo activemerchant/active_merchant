@@ -37,7 +37,7 @@ module ActiveMerchant
         post = { transactionType: transaction_type }
         post[:savePM] = options[:save_payment_method] ? options[:save_payment_method].to_s : 'false'
 
-        build_post_data(post)
+        build_post_data(post, options)
         add_amount(post, money, options)
         add_payment_method(post, payment, :paymentOption, options)
         add_3ds_global(post, options)
@@ -415,12 +415,12 @@ module ActiveMerchant
         Time.now.utc.strftime('%Y%m%d%H%M%S')
       end
 
-      def build_post_data(post)
+      def build_post_data(post, options = {})
         post[:merchantId] = @options[:merchant_id]
         post[:merchantSiteId] = @options[:merchant_site_id]
         post[:timeStamp] = current_timestamp.to_i
         post[:clientRequestId] = SecureRandom.uuid
-        post[:clientUniqueId] = SecureRandom.hex(16)
+        post[:clientUniqueId] = options[:order_id] || generate_unique_id
       end
 
       def calculate_checksum(post, action)
