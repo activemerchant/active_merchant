@@ -56,7 +56,7 @@ module ActiveMerchant # :nodoc:
         'tuya' => ->(num) { num =~ /^588800\d{10}$/ },
         'uatp' => ->(num) { num =~ /^(1175|1290)\d{11}$/ },
         'patagonia_365' => ->(num) { num =~ /^504656\d{10}$/ },
-        'sol' => ->(num) { num =~ /^504639\d{10}$/ }
+        'tarjeta_sol' => ->(num) { num =~ /^504639\d{10}$/ }
       }
 
       SODEXO_NO_LUHN = ->(num) { num =~ /^(505864|505865)\d{10}$/ }
