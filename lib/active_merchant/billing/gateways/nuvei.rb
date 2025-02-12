@@ -6,7 +6,7 @@ module ActiveMerchant
 
       self.supported_countries = %w[US CA IN NZ GB AU US]
       self.default_currency = 'USD'
-      self.money_format = :cents
+      self.money_format = :dollars
       self.supported_cardtypes = %i[visa master american_express discover union_pay]
       self.currencies_without_fractions = %w[CLP KRW JPY ISK MMK PYG UGX VND XAF XOF]
       self.homepage_url = 'https://www.nuvei.com/'
@@ -374,6 +374,8 @@ module ActiveMerchant
       end
 
       def add_3ds_data(post, options = {})
+        return unless options[:three_ds_2]
+
         three_d_secure = options[:three_ds_2]
         # 01 => Challenge requested, 02 => Exemption requested, 03 or not sending parameter => No preference
         challenge_preference = if [true, 'true'].include?(options[:force_3d_secure])

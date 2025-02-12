@@ -71,10 +71,17 @@ class RemoteEbanxTest < Test::Unit::TestCase
       ip: '127.0.0.1',
       email: 'joe@example.com',
       birth_date: '10/11/1980',
-      person_type: 'personal'
+      person_type: 'personal',
+      payment_type_code: 'visa'
     })
 
     response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_successful_purchase_with_notification_url
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(notification_url: 'https://notify.example.com/'))
     assert_success response
     assert_equal 'Accepted', response.message
   end
@@ -349,6 +356,14 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_long_order_id
     options = @options.update(order_id: SecureRandom.hex(50))
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_successful_purchase_with_supplied_payment_merchant_code
+    options = @options.merge(merchant_payment_code: SecureRandom.hex(40))
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response

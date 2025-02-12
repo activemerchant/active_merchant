@@ -25,6 +25,7 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'AUTHORIZED', response.message
+    assert_not_nil response.authorization
   end
 
   def test_successful_purchase_with_shipping_address
@@ -103,6 +104,7 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, purchase.authorization, @options)
     assert_success refund
     assert_equal 'RECEIVED', refund.message
+    assert_not_nil refund.authorization
   end
 
   def test_partial_refund

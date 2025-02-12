@@ -198,6 +198,23 @@ class SecurePayAuTest < Test::Unit::TestCase
     assert_equal 'test3', response.params['client_id']
   end
 
+  def test_request_timeout_default
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<timeoutValue>60/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_override_request_timeout
+    gateway = SecurePayAuGateway.new(login: 'login', password: 'password', request_timeout: 44)
+    stub_comms(gateway, :ssl_request) do
+      gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<timeoutValue>44/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_scrub
     assert_equal @gateway.scrub(pre_scrub), post_scrub
   end

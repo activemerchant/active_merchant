@@ -160,6 +160,11 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
         }
       }
     )
+    @minimun_level2_options = @options.merge({
+      order_data: {
+        tax_amount: 130
+      }
+    })
   end
 
   def test_failed_access_token
@@ -904,6 +909,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway_oauth.credit(@amount, @credit_card, @options.merge({ source_type: 'currency_account', source_id: 'ca_spwmped4qmqenai7hcghquqle4', account_holder_type: 'individual' }))
     assert_success response
     assert_equal 'Succeeded', response.message
+    assert_equal true, response.primary_response.pending
   end
 
   def test_successful_money_transfer_payout_via_credit_individual_account_holder_type
@@ -912,6 +918,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway_oauth.credit(@amount, @credit_card, @payout_options.merge(account_holder_type: 'individual', payout: true))
     assert_success response
     assert_equal 'Succeeded', response.message
+    assert_equal true, response.primary_response.pending
   end
 
   def test_successful_money_transfer_payout_via_credit_corporate_account_holder_type
@@ -1183,5 +1190,60 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal '1111111111111111111111111111112', response.params['reference']
     assert_equal 31, response.params['reference'].length
     assert_equal 'Visa', response.params['source']['scheme']
+  end
+
+  def test_successful_purchase_with_minimun_level_2_data
+    response = @gateway.purchase(@amount, @credit_card, @minimun_level2_options)
+    assert_success response
+  end
+
+  def test_successful_authorize_and_capture_with_minimun_level_2_data
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize
+
+    response = @gateway.capture(@amount, authorize.authorization, @minimun_level2_options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_minimun_level_2_data_for_amex
+    amex_options = {
+      currency: 'USD',
+      line_items: [{ item_name: 'Paint', quantity: '1', unit_cost: '1270' }]
+    }
+    amex_card = credit_card('345678901234564', brand: 'american_express', verification_value: '1000', month: '12', year: Time.now.year)
+
+    response = @gateway.purchase(1500, amex_card, @minimun_level2_options.merge(amex_options))
+    assert_success response
+  end
+
+  def test_successful_purchase_with_minimun_level_3_data
+    order_data = {
+      processing: { order_id: '01234' },
+      tax_number: '123456',
+      from_address_zip: '000123456',
+      tax_amount: 30,
+      discount_amount: 0,
+      shipping_amount: 200,
+      duty_amount: 0
+    }
+    line_items = {
+      line_items: [
+        {
+          commodity_code: '123',
+          name: 'Paint',
+          quantity: 1,
+          unit_price: 1270,
+          tax_amount: 30,
+          discount_amount: 0,
+          total_amount: 1270,
+          reference: 'Paint123',
+          unit_of_measure: 'Liters'
+        }
+      ]
+    }
+    options = @options.merge({ currency: 'USD' }).merge(order_data).merge(line_items)
+
+    response = @gateway.purchase(1500, @credit_card, options)
+    assert_success response
   end
 end

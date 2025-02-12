@@ -73,6 +73,16 @@ class CountryTest < Test::Unit::TestCase
     assert_not_equal 'ROM', country.code(:alpha3).value
   end
 
+  def test_find_vietnam_with_either_spelling
+    country = ActiveMerchant::Country.find('Viet Nam')
+    assert_equal 'VN', country.code(:alpha2).value
+    assert_equal 'VNM', country.code(:alpha3).value
+
+    country = ActiveMerchant::Country.find('Vietnam')
+    assert_equal 'VN', country.code(:alpha2).value
+    assert_equal 'VNM', country.code(:alpha3).value
+  end
+
   def test_raise_on_nil_name
     assert_raises(ActiveMerchant::InvalidCountryCodeError) do
       ActiveMerchant::Country.find(nil)

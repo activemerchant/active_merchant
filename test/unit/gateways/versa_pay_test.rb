@@ -50,15 +50,55 @@ class VersaPayTest < Test::Unit::TestCase
     assert_match %r{^#{Regexp.escape(@test_url)}/api/gateway/v1/wallets//methods/$}, @gateway.send(:url, action)
   end
 
+  def test_authorization_from
+    response = { 'transaction' => 'token_from_transaction', 'wallet_token' => 'token_from_wallet', 'fund_token' => 'token_from_fund' }
+    auth = @gateway.send(:authorization_from, response)
+    assert_equal auth, 'token_from_transaction|token_from_wallet|token_from_fund'
+  end
+
+  def test_authorization_from_diggin
+    response = { 'transaction' => 'token_from_transaction', 'wallets' => [{ 'token' => 'token_from_wallets', 'credit_cards' => [{ 'token' => 'token_from_credit_cards' }] }] }
+    auth = @gateway.send(:authorization_from, response)
+    assert_equal auth, 'token_from_transaction|token_from_wallets|token_from_credit_cards'
+  end
+
+  def test_authorization_from_with_no_info_returned
+    response = {}
+    auth = @gateway.send(:authorization_from, response)
+    assert_equal auth, ''
+  end
+
+  def test_authorization_from_with_one_filed_returned
+    response = { 'transaction' => 'token_from_transaction' }
+    auth = @gateway.send(:authorization_from, response)
+    assert_equal auth, 'token_from_transaction'
+  end
+
+  def test_authorization_from_with_two_fields_returned
+    response = { 'wallet_token' => 'token_from_wallet', 'fund_token' => 'token_from_fund' }
+    auth = @gateway.send(:authorization_from, response)
+    assert_equal auth, 'token_from_wallet|token_from_fund'
+  end
+
   def test_error_code_from_errors
     # a HTTP 412 response structure
     error = @gateway.send(:error_code_from, { 'success' => false, 'errors' => ['fund_address_unspecified'], 'response_code' => 999 }, 'sale')
-    assert_equal error, 'response_code: 999'
+    assert_equal error, nil
   end
 
   def test_error_code_from_gateway_error_code
     error = @gateway.send(:error_code_from, declined_errors, 'sale')
-    assert_equal error, 'gateway_error_code: 567.005 | response_code: 999'
+    assert_equal error, '567.005'
+  end
+
+  def test_message_error_from_wallet
+    message = @gateway.send(:message_from, wallet_error, 'store')
+    assert_equal message, "error: Validation failed: CVV can't be blank, CVV should be a number, CVV too short (minimum is 3 characters), CVV should be 3 digits"
+  end
+
+  def test_message_error_from_loggin
+    message = @gateway.send(:message_from, log_in_error, 'authorize')
+    assert_equal message, 'error: Please log in or create an account to continue.'
   end
 
   def test_message_from_successful_purchase
@@ -209,7 +249,7 @@ class VersaPayTest < Test::Unit::TestCase
 
   def test_successful_purchase_third_party_token
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, '||third_party_token', @options)
+      @gateway.purchase(@amount, 'wallet_token|third_party_token', @options)
     end.check_request do |_method, endpoint, data, _headers|
       assert_match 'sale', endpoint
       parsed_data = JSON.parse(data)
@@ -221,7 +261,7 @@ class VersaPayTest < Test::Unit::TestCase
 
   def test_successful_unstore
     stub_comms(@gateway, :ssl_request) do
-      @gateway.unstore('auth_token|wallet_token|fund_token')
+      @gateway.unstore('wallet_token|fund_token')
     end.check_request do |_method, endpoint, data, _headers|
       assert_match 'wallets/wallet_token/methods/fund_token', endpoint
       assert_equal({}, JSON.parse(data))
@@ -855,6 +895,18 @@ class VersaPayTest < Test::Unit::TestCase
         'credit_card_brand' => 'visa',
         'credit_card_expiry' => '092025' }],
      'response_code' => 999 }
+  end
+
+  def log_in_error
+    { 'error' => 'Please log in or create an account to continue.' }
+  end
+
+  def wallet_error
+    { 'wallet_token' => nil,
+     'fund_token' => nil,
+     'wallets' =>
+      { 'error' =>
+        "Validation failed: CVV can't be blank, CVV should be a number, CVV too short (minimum is 3 characters), CVV should be 3 digits" } }
   end
 
   def pre_scrubbed

@@ -1471,6 +1471,22 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_capture_with_localized_shopper_statement
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge(localized_shopper_statement: { 'ja-Kana' => 'ADYEN - セラーA' }))
+    assert_success capture
+  end
+
+  def test_successful_refund_with_localized_shopper_statement
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, @options.merge(localized_shopper_statement: { 'ja-Kana' => 'ADYEN - セラーA' }))
+    assert_success refund
+  end
+
   def test_purchase_with_skip_mpi_data
     options = {
       reference: '345123',
@@ -1816,6 +1832,11 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @options[:billing_address][:country] = 'QZ'
     response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_authorize_with_localized_shopper_statement
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(localized_shopper_statement: { 'ja-Kana' => 'ADYEN - セラーA' }))
     assert_success response
   end
 

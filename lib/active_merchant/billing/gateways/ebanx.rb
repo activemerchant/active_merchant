@@ -4,7 +4,7 @@ module ActiveMerchant # :nodoc:
       self.test_url = 'https://sandbox.ebanxpay.com/ws/'
       self.live_url = 'https://api.ebanxpay.com/ws/'
 
-      self.supported_countries = %w(BR MX CO CL AR PE BO EC)
+      self.supported_countries = %w(BR MX CO CL AR PE BO EC CR DO GT PA PY UY)
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover diners_club elo hipercard]
 
@@ -103,7 +103,7 @@ module ActiveMerchant # :nodoc:
         post = {}
         add_integration_key(post)
         customer_country(post, options)
-        add_payment_type(post)
+        add_payment_type(post, options)
         post[:creditcard] = payment_details(credit_card)
 
         commit(:store, post, options)
@@ -112,7 +112,7 @@ module ActiveMerchant # :nodoc:
       def verify(credit_card, options = {})
         post = {}
         add_integration_key(post)
-        add_payment_type(post)
+        add_payment_type(post, options)
         customer_country(post, options)
         post[:card] = payment_details(credit_card)
         post[:device_id] = options[:device_id] if options[:device_id]
@@ -213,20 +213,20 @@ module ActiveMerchant # :nodoc:
       def add_invoice(post, money, options)
         post[:payment][:amount_total] = amount(money)
         post[:payment][:currency_code] = (options[:currency] || currency(money))
-        post[:payment][:merchant_payment_code] = Digest::MD5.hexdigest(options[:order_id])
+        post[:payment][:merchant_payment_code] = Digest::MD5.hexdigest(order_id_override(options))
         post[:payment][:instalments] = options[:instalments] || 1
         post[:payment][:order_number] = options[:order_id][0..39] if options[:order_id]
       end
 
       def add_card_or_token(post, payment, options)
         payment = payment.split('|')[0] if payment.is_a?(String)
-        add_payment_type(post[:payment])
+        add_payment_type(post[:payment], options)
         post[:payment][:creditcard] = payment_details(payment)
         post[:payment][:creditcard][:soft_descriptor] = options[:soft_descriptor] if options[:soft_descriptor]
       end
 
-      def add_payment_type(post)
-        post[:payment_type_code] = 'creditcard'
+      def add_payment_type(post, options)
+        post[:payment_type_code] = options[:payment_type_code] || 'creditcard'
       end
 
       def payment_details(payment)
@@ -249,12 +249,18 @@ module ActiveMerchant # :nodoc:
         end
       end
 
+      # we will prefer the merchant_payment_code if both fields are provided
+      def order_id_override(options)
+        options[:merchant_payment_code] || options[:order_id]
+      end
+
       def add_additional_data(post, options)
         post[:device_id] = options[:device_id] if options[:device_id]
         post[:metadata] = options[:metadata] if options[:metadata]
         post[:metadata] = {} if post[:metadata].nil?
-        post[:metadata][:merchant_payment_code] = options[:order_id] if options[:order_id]
+        post[:metadata][:merchant_payment_code] = order_id_override(options)
         post[:payment][:tags] = TAGS
+        post[:notification_url] = options[:notification_url] if options[:notification_url]
       end
 
       def parse(body)

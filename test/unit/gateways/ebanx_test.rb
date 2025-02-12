@@ -54,6 +54,62 @@ class EbanxTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_without_merchant_payment_code
+    # hexdigest of 1 is c4ca4238a0b923820dcc509a6f75849b
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"merchant_payment_code\":\"1\"}, data
+      assert_match %r{"merchant_payment_code\":\"c4ca4238a0b923820dcc509a6f75849b\"}, data
+      assert_match %r{"order_number\":\"1\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_merchant_payment_code
+    # hexdigest of 2 is c81e728d9d4c2f636f067f89cc14862c
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(merchant_payment_code: '2'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"merchant_payment_code\":\"2\"}, data
+      assert_match %r{"merchant_payment_code\":\"c81e728d9d4c2f636f067f89cc14862c\"}, data
+      assert_match %r{"order_number\":\"1\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_notification_url
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(notification_url: 'https://notify.example.com/'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"notification_url\":\"https://notify.example.com/\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_default_payment_type_code
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"payment_type_code\":\"creditcard\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_payment_type_code_override
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ payment_type_code: 'visa' }))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"payment_type_code\":\"visa\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_stored_credentials_cardholder_recurring
     options = @options.merge!({
       stored_credential: {
@@ -360,6 +416,10 @@ class EbanxTest < Test::Unit::TestCase
   def test_scrub_network_token
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed_network_token), post_scrubbed_network_token
+  end
+
+  def test_supported_countries
+    assert_equal %w[BR MX CO CL AR PE BO EC CR DO GT PA PY UY], EbanxGateway.supported_countries
   end
 
   private

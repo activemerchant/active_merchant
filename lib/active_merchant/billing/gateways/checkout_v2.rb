@@ -44,6 +44,7 @@ module ActiveMerchant # :nodoc:
         add_customer_data(post, options)
         add_shipping_address(post, options)
         add_metadata(post, options)
+        add_level_two_three_data(post, options)
 
         commit(:capture, post, options, authorization)
       end
@@ -57,6 +58,7 @@ module ActiveMerchant # :nodoc:
         add_instruction_data(post, options)
         add_payout_sender_data(post, options)
         add_payout_destination_data(post, options)
+        add_metadata(post, options)
 
         commit(:credit, post, options)
       end
@@ -150,6 +152,7 @@ module ActiveMerchant # :nodoc:
         add_processing_data(post, options)
         add_payment_sender_data(post, options)
         add_risk_data(post, options)
+        add_level_two_three_data(post, options)
         truncate_amex_reference_id(post, options, payment_method)
       end
 
@@ -504,6 +507,67 @@ module ActiveMerchant # :nodoc:
         end
       end
 
+      def add_level_two_three_data(post, options)
+        post[:processing] ||= {}
+        post[:customer] ||= {}
+
+        # American Express only supports Level 2 data.
+        # Only is required add items info in lvl2 data for amex
+        add_items(post, options)
+        add_level_two_data(post, options)
+        add_level_three_data(post, options)
+        add_shipping_data(post, options)
+      end
+
+      def add_items(post, options)
+        items = build_items(options[:line_items] || [])
+        post[:items] = items unless items.empty?
+      end
+
+      def add_level_two_data(post, options)
+        post[:customer][:tax_number] = options[:tax_number] # field no require for amex
+
+        post[:processing].merge!(
+          {
+            order_id: options[:invoice_id],
+            tax_amount: options[:tax_amount]
+          }.compact
+        )
+      end
+
+      def add_level_three_data(post, options)
+        post[:processing].merge!(
+          {
+            discount_amount: options[:discount_amount],
+            shipping_amount: options[:shipping_amount],
+            duty_amount: options[:duty_amount]
+          }.compact
+        )
+      end
+
+      def add_shipping_data(post, options)
+        post[:shipping] ||= {}
+        post[:shipping][:from_address_zip] = options[:from_address_zip]
+      end
+
+      def build_items(line_items = [])
+        line_items.map do |item|
+          {
+            # for lvl 2 amex and lvl 3 visa/master
+            name: item[:name],
+            quantity: item[:quantity],
+            unit_price: item[:unit_price],
+            # for lvl3 visa/master
+            reference: item[:reference],
+            tax_amount: item[:tax_amount],
+            discount_amount: item[:discount_amount],
+            total_amount: item[:total_amount],
+            commodity_code: item[:commodity_code],
+            unit_of_measure: item[:unit_of_measure]
+          }.compact
+        end
+      end
+
       def access_token_header
         {
           'Authorization' => "Basic #{Base64.encode64("#{@options[:client_id]}:#{@options[:client_secret]}").delete("\n")}",
@@ -580,8 +644,15 @@ module ActiveMerchant # :nodoc:
           error_code: error_code_from(succeeded, body, options),
           test: test?,
           avs_result: avs_result(response),
-          cvv_result: cvv_result(response)
+          cvv_result: cvv_result(response),
+          pending: pending_result(response, action)
         )
+      end
+
+      def pending_result(response, action)
+        return unless action == :credit
+
+        response['status'] == 'Pending'
       end
 
       def headers(action, options)
@@ -664,7 +735,9 @@ module ActiveMerchant # :nodoc:
         if succeeded
           'Succeeded'
         elsif response['error_type']
-          response['error_type'] + ': ' + response['error_codes'].first
+          return response['error_type'] unless response['error_codes']
+
+          "#{response['error_type']}: #{response['error_codes'].first}"
         else
           response_summary = response['response_summary'] || response.dig('actions', 0, 'response_summary')
           response_summary || response['response_code'] || response['status'] || response['message'] || 'Unable to read error message'

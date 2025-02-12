@@ -6,7 +6,7 @@ module ActiveMerchant # :nodoc:
       self.test_url = 'https://process.sandbox.safecharge.com/service.asmx/Process'
       self.live_url = 'https://process.safecharge.com/service.asmx/Process'
 
-      self.supported_countries = %w[AT BE BG CY CZ DE DK EE GR ES FI FR GI HK HR HU IE IS IT LI LT LU LV MT MX NL NO PL PT RO SE SG SI SK GB US]
+      self.supported_countries = %w[AT AU BE BG CA CY CZ DE DK EE GR ES FI FR GI HK HR HU IE IS IT LI LT LU LV MT MX NL NO PL PT RO SE SG SI SK GB US]
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master]
 

@@ -107,6 +107,24 @@
 * SecurePayAU: Send order ID for payments with stored card [dacook] #3979
 * Orbital: Add XSD version testing to unit test [almalee24] #5375
 * Priority: fix for bin lookup [Buitragox] #5366
+* CommerceHub: Update merchantInvoiceNumber & merchantTransactionId [almalee24] #5374
+* VersaPay: refactor authorization from structure [gasb150] #5363
+* VersaPay: Improve Message Error and Error Mapping [gasb150] #5357
+* CheckoutV2: Add metadata to Credit [almalee24] #5328
+* Normalize API versions for Adyen, Braintree & GlobalCollect [Buitragox] #5371
+* SafeCharge: Add Australia & Canada as supported countries [almalee24] #5377
+* RedsysRest: Improve authorization from in Redsys [gasb150] #5372
+* Ebanx: Add the notification_url field [yunnydang] #5388
+* Ebanx: Add optional payment_type_code override [jcreiff] #5370
+* Ebanx: Update list of supported countries [jcreiff] #5387
+* Add alternate spelling for Vietnam [jcreiff] #5386
+* Checkout v2: add l2/l3 [gasb150] #5385
+* Worldpay: Update passing 3DS data for NT [almalee24] #5389
+* Ebanx: Add the merchant_payment_code override [yunnydang] #5394
+* Credorax: Add AFT fields [yunnydang] #5390
+* Cashnet: Update max_retries to 1 [almalee24] #5393
+* Cybersource: Update 3DS fields [almalee24] #5396
+* Airwallex: Update authorization_from method to include payment intent ID on refunds [yunnydang] #5400
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

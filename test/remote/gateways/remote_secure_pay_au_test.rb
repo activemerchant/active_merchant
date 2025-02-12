@@ -122,7 +122,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
 
     assert response = @gateway.void(authorization + '1')
     assert_failure response
-    assert_equal 'Unable to retrieve original FDR txn', response.message
+    assert_equal 'Transaction type not available', response.message
   end
 
   def test_successful_unstore

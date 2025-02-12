@@ -310,6 +310,7 @@ module ActiveMerchant # :nodoc:
       { alpha2: 'VU', name: 'Vanuatu', alpha3: 'VUT', numeric: '548' },
       { alpha2: 'VE', name: 'Venezuela', alpha3: 'VEN', numeric: '862' },
       { alpha2: 'VN', name: 'Viet Nam', alpha3: 'VNM', numeric: '704' },
+      { alpha2: 'VN', name: 'Vietnam', alpha3: 'VNM', numeric: '704' },
       { alpha2: 'VG', name: 'Virgin Islands, British', alpha3: 'VGB', numeric: '092' },
       { alpha2: 'VI', name: 'Virgin Islands, U.S.', alpha3: 'VIR', numeric: '850' },
       { alpha2: 'WF', name: 'Wallis and Futuna', alpha3: 'WLF', numeric: '876' },

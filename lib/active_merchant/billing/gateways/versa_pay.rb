@@ -30,7 +30,7 @@ module ActiveMerchant # :nodoc:
       def capture(money, authorization, options = {})
         post = {
           amount_cents: money,
-          transaction: authorization.split('|').first
+          transaction: authorization
         }
         commit('capture', post)
       end
@@ -40,13 +40,13 @@ module ActiveMerchant # :nodoc:
       end
 
       def void(authorization, options = {})
-        commit('void', { transaction: authorization.split('|').first })
+        commit('void', { transaction: authorization })
       end
 
       def refund(money, authorization, options = {})
         post = {
           amount_cents: money,
-          transaction: authorization.split('|').first
+          transaction: authorization
         }
         commit('refund', post)
       end
@@ -65,7 +65,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def unstore(authorization, options = {})
-        _, wallet_token, fund_token = authorization.split('|')
+        wallet_token, fund_token = authorization.split('|')
         commit('unstore', {}, :delete, { fund_token:, wallet_token: })
       end
 
@@ -206,6 +206,7 @@ module ActiveMerchant # :nodoc:
         gateway_response_errors = gateway_errors_message(response)
 
         response_message = {
+          error: response.dig('error') || response.dig('wallets', 'error'),
           errors: response.dig('errors')&.join(', ').presence,
           gateway_error_message: first_transaction&.dig('gateway_error_message').presence,
           gateway_response_errors: gateway_response_errors.presence
@@ -218,19 +219,13 @@ module ActiveMerchant # :nodoc:
         transaction = response['transaction']
         wallet_token = response['wallet_token'] || response.dig('wallets', 0, 'token')
         fund_token = response['fund_token'] || response.dig('wallets', 0, 'credit_cards', 0, 'token')
-        [transaction, wallet_token, fund_token].join('|')
+        [transaction, wallet_token, fund_token].compact.join('|')
       end
 
       def error_code_from(response, action)
         return if success_from(response, action)
 
-        first_transaction = response['transactions']&.first
-        error_info = {
-          gateway_error_code: first_transaction&.dig('gateway_error_code'),
-          response_code: response['response_code']
-        }.compact
-
-        error_info.map { |key, value| "#{key}: #{value}" }.join(' | ')
+        response.dig('transactions', 0, 'gateway_error_code')
       end
 
       def gateway_errors_message(response)

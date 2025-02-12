@@ -144,6 +144,12 @@ class AdyenTest < Test::Unit::TestCase
   #   assert response
   #   assert_success response
   # end
+  def test_endpoint
+    assert_equal 'Recurring/v68/disable', @gateway.send(:endpoint, 'disable')
+    assert_equal 'Recurring/v68/storeToken', @gateway.send(:endpoint, 'storeToken')
+    assert_equal 'Payout/v68/payout', @gateway.send(:endpoint, 'payout')
+    assert_equal 'Payment/v68/authorise', @gateway.send(:endpoint, 'authorise')
+  end
 
   def test_supported_card_types
     assert_equal AdyenGateway.supported_cardtypes, %i[visa master american_express diners_club jcb dankort maestro discover elo naranja cabal unionpay patagonia_365]
@@ -223,6 +229,14 @@ class AdyenTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_equal 'john.smith@test.com', JSON.parse(data)['shopperEmail']
       assert_equal '12345', JSON.parse(data)['selectedRecurringDetailReference']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_successful_authorize_with_localized_shopper_statement
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(localized_shopper_statement: { 'ja-Kana' => 'ADYEN - セラーA' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'ADYEN - セラーA', JSON.parse(data)['localizedShopperStatement']['ja-Kana']
     end.respond_with(successful_authorize_response)
   end
 
@@ -434,6 +448,22 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.capture(@amount, '7914775043909934', @options.merge(shopper_statement: 'test1234'))
     end.check_request do |_endpoint, data, _headers|
       assert_equal 'test1234', JSON.parse(data)['additionalData']['shopperStatement']
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_successful_capture_with_localized_shopper_statement
+    stub_comms do
+      @gateway.capture(@amount, '7914775043909934', @options.merge(localized_shopper_statement: { 'ja-Kana' => 'ADYEN - セラーA' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'ADYEN - セラーA', JSON.parse(data)['additionalData']['localizedShopperStatement']['ja-Kana']
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_successful_refund_with_localized_shopper_statement
+    stub_comms do
+      @gateway.refund(@amount, '7914775043909934', @options.merge(localized_shopper_statement: { 'ja-Kana' => 'ADYEN - セラーA' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'ADYEN - セラーA', JSON.parse(data)['additionalData']['localizedShopperStatement']['ja-Kana']
     end.respond_with(successful_capture_response)
   end
 
