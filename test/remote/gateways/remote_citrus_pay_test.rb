@@ -13,6 +13,13 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @nt_credit_card = network_tokenization_credit_card('4111111111111111',
+                                                       brand: 'visa',
+                                                       eci: '05',
+                                                       month: 06,
+                                                       year: 2029,
+                                                       source: :network_token,
+                                                       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
   end
 
   def teardown
@@ -21,6 +28,12 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_nt
+    assert response = @gateway.purchase(@amount, @nt_credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end

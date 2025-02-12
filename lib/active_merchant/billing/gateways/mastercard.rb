@@ -25,14 +25,41 @@ module ActiveMerchant
       end
 
       def authorize(amount, payment_method, options = {})
-        post = new_post
-        add_invoice(post, amount, options)
-        add_reference(post, *new_authorization(options))
-        add_payment_method(post, payment_method)
-        add_customer_data(post, payment_method, options)
-        add_3dsecure_id(post, options)
+        if options[:authentication].present?
+          initiate_3ds_authorization(options, amount, payment_method)
+        else
+          post = new_post
+          add_invoice(post, amount, options)
+          add_reference(post, *new_authorization(options))
+          add_payment_method(post, payment_method)
+          add_customer_data(post, payment_method, options)
+          add_3dsecure_id(post, options)
+          add_3ds_request_data(post, options)
 
-        commit('authorize', post)
+          commit('authorize', post)
+        end
+      end
+
+      def initiate_3ds_authorization(options, amount, payment_method)
+        post = {
+          authentication: {
+            channel: 'PAYER_BROWSER'
+          },
+          order: {
+            currency: (options[:currency] || currency(amount))
+          },
+          sourceOfFunds: {
+            provided: {
+              card: {
+                number: payment_method.number
+              }
+            }
+          },
+          transactionid: '1',
+          orderid: (options[:order_id] || SecureRandom.uuid)
+        }
+
+        commit('initiate_authentication', post)
       end
 
       def capture(amount, authorization, options = {})
@@ -124,11 +151,20 @@ module ActiveMerchant
         card = {}
         card[:expiry] = {}
         card[:number] = payment_method.number
-        card[:securityCode] = payment_method.verification_value
         card[:expiry][:year] = format(payment_method.year, :two_digits)
         card[:expiry][:month] = format(payment_method.month, :two_digits)
 
-        post[:sourceOfFunds][:type] = 'CARD'
+        if payment_method.is_a?(NetworkTokenizationCreditCard)
+          post[:sourceOfFunds][:type] = 'SCHEME_TOKEN'
+          post[:transaction][:source] = 'INTERNET'
+          card[:devicePayment] = {
+            onlinePaymentCryptogram: payment_method.payment_cryptogram,
+            eciIndicator: payment_method.eci
+          }
+        else
+          # post[:sourceOfFunds][:type] = 'CARD'
+          card[:securityCode] = payment_method.verification_value
+        end
         post[:sourceOfFunds][:provided][:card].merge!(card)
       end
 
@@ -179,6 +215,23 @@ module ActiveMerchant
         post.merge!({ '3DSecureId' => options[:threed_secure_id] })
       end
 
+      def add_3ds_request_data(post, options)
+        post[:authentication] = options[:authentication] if options[:authentication]
+
+        device = {
+          browser: 'MOZILLA',
+          browserDetails: {
+            '3DSecureChallengeWindowSize': 'FULL_SCREEN',
+            acceptHeaders: 'application/json',
+            javaEnabled: true,
+            language: 'en-US'
+          },
+          ipAddress: '127.0.0.1'
+        }
+        post[:device].merge!(device)
+        post[:apiOperation] = 'AUTHENTICATE_PAYER'
+      end
+
       def country_code(country)
         if country
           country = ActiveMerchant::Country.find(country)
@@ -197,6 +250,9 @@ module ActiveMerchant
       def commit(action, post)
         url = build_url(post.delete(:orderid), post.delete(:transactionid))
         post[:apiOperation] = action.upcase
+        require 'pry'
+        binding.pry
+
         begin
           raw = parse(ssl_request(:put, url, build_request(post), headers))
         rescue ResponseError => e

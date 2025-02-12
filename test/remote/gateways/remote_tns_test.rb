@@ -6,15 +6,23 @@ class RemoteTnsTest < Test::Unit::TestCase
     @gateway = TnsGateway.new(fixtures(:tns))
 
     @amount = 100
-    @credit_card = credit_card('5123456789012346', month: 05, year: 2024)
+    @credit_card = credit_card('4111111111111111', month: 05, year: 2025)
     @ap_credit_card = credit_card('5424180279791732', month: 05, year: 2024)
     @declined_card = credit_card('5123456789012346', month: 01, year: 2028)
+    @three_ds_card = credit_card('4440000009900010', month: 01, year: 2039)
 
     @options = {
       order_id: generate_unique_id,
       billing_address: address,
       description: 'Store Purchase'
     }
+    @nt_credit_card = network_tokenization_credit_card('4111111111111111',
+                                                       brand: 'visa',
+                                                       eci: '05',
+                                                       month: 06,
+                                                       year: 2029,
+                                                       source: :network_token,
+                                                       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
   end
 
   def teardown
@@ -23,6 +31,20 @@ class RemoteTnsTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_authorize_with_3ds
+    @options[:authentication] = { redirectResponseUrl: 'https://example.com/redirect', channel: 'PAYMENT_TRANSACTION' }
+
+    assert response = @gateway.authorize(@amount, @three_ds_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_network_token
+    assert response = @gateway.purchase(@amount, @nt_credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end

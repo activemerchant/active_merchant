@@ -5,7 +5,7 @@ module ActiveMerchant
 
       class_attribute :live_na_url, :live_ap_url, :live_eu_url, :test_na_url, :test_ap_url, :test_eu_url
 
-      VERSION = '52'
+      VERSION = '100'
 
       self.live_na_url = "https://secure.na.tnspayments.com/api/rest/version/#{VERSION}/"
       self.live_ap_url = "https://secure.ap.tnspayments.com/api/rest/version/#{VERSION}/"
