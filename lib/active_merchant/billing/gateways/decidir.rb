@@ -7,7 +7,7 @@ module ActiveMerchant # :nodoc:
       self.supported_countries = ['AR']
       self.money_format = :cents
       self.default_currency = 'ARS'
-      self.supported_cardtypes = %i[visa master american_express diners_club naranja cabal tuya patagonia_365]
+      self.supported_cardtypes = %i[visa master american_express diners_club naranja cabal tuya patagonia_365 tarjeta_sol]
 
       self.homepage_url = 'http://www.decidir.com'
       self.display_name = 'Decidir'
