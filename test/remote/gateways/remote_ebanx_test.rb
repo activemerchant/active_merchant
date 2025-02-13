@@ -362,6 +362,14 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_equal 'Accepted', response.message
   end
 
+  def test_successful_purchase_with_supplied_payment_merchant_code
+    options = @options.merge(merchant_payment_code: SecureRandom.hex(40))
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
   def test_successful_purchase_with_stored_credentials_cardholder_recurring
     options = @options.merge!({
       stored_credential: {

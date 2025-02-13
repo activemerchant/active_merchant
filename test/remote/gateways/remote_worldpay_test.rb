@@ -871,6 +871,24 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert response.params['last_event'] || response.params['ok']
   end
 
+  def test_3ds_version_2_parameters_for_nt
+    options = @options.merge(
+      {
+        three_d_secure: {
+          version: '2.1.0',
+          ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
+          cavv: 'MAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+          eci: '05'
+        }
+      }
+    )
+
+    assert response = @gateway.authorize(@amount, @nt_credit_card, @options.merge(options))
+    assert response.test?
+    assert response.success?
+    assert response.params['last_event'] || response.params['ok']
+  end
+
   def test_failed_capture
     assert response = @gateway.capture(@amount, 'bogus')
     assert_failure response
@@ -1036,6 +1054,38 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_failure credit
     assert_equal 'ACQUIRER ERROR', credit.message
     assert_equal '20', credit.error_code
+  end
+
+  def test_successful_authorize_visa_account_funding_transfer
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(@aft_options))
+    assert_success auth
+    assert_equal 'funding_transfer_transaction', auth.params['action']
+    assert_equal 'SUCCESS', auth.message
+  end
+
+  def test_successful_authorize_visa_account_funding_transfer_via_token
+    assert store = @gateway.store(@credit_card, @store_options)
+    assert_success store
+
+    auth = @gateway.authorize(@amount, store.authorization, @options.merge(@aft_options))
+    assert_success auth
+    assert_equal 'funding_transfer_transaction', auth.params['action']
+    assert_equal 'SUCCESS', auth.message
+  end
+
+  def test_failed_authorize_visa_account_funding_transfer
+    auth = @gateway.authorize(@amount, credit_card('4111111111111111', name: 'REFUSED'), @options.merge(@aft_options))
+    assert_failure auth
+    assert_equal 'funding_transfer_transaction', auth.params['action']
+    assert_equal 'REFUSED', auth.message
+  end
+
+  def test_failed_authorize_visa_account_funding_transfer_acquirer_error
+    auth = @gateway.authorize(@amount, credit_card('4111111111111111', name: 'ACQERROR'), @options.merge(@aft_options))
+    assert_failure auth
+    assert_equal 'ACQUIRER ERROR', auth.message
+    assert_equal 'funding_transfer_transaction', auth.params['action']
+    assert_equal '20', auth.error_code
   end
 
   def test_successful_fast_fund_credit_on_cft_gateway

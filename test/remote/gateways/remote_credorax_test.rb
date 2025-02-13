@@ -154,6 +154,32 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_aft_fields
+    aft_options = @options.merge(
+      aft: true,
+      sender_ref_number: 'test',
+      sender_fund_source: '01',
+      sender_country_code: 'USA',
+      sender_street_address: 'sender street',
+      sender_city: 'city',
+      sender_state: 'NY',
+      sender_first_name: 'george',
+      sender_last_name: 'smith',
+      recipient_street_address: 'street',
+      recipient_postal_code: '12345',
+      recipient_city: 'chicago',
+      recipient_province_code: '312',
+      recipient_country_code: 'USA',
+      recipient_first_name: 'logan',
+      recipient_last_name: 'bill'
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, aft_options)
+    assert_success response
+    assert_equal '1', response.params['H9']
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_auth_data_via_3ds1_fields
     options = @options.merge(
       eci: '02',

@@ -373,7 +373,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def authorization_from(response)
-        response.dig('latest_payment_attempt', 'payment_intent_id')
+        response.dig('latest_payment_attempt', 'payment_intent_id') || response.dig('payment_intent_id')
       end
 
       def error_code_from(response)

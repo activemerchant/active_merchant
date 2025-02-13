@@ -204,6 +204,7 @@ class AirwallexTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal 'RECEIVED', response.message
+    assert_equal response.authorization, 'int_hkdmb6rw6g79o82v60s'
     assert response.test?
   end
 

@@ -5,7 +5,7 @@ class RemoteNuveiTest < Test::Unit::TestCase
   def setup
     @gateway = NuveiGateway.new(fixtures(:nuvei))
 
-    @amount = 100
+    @amount = 10000
     @credit_card = credit_card('4761344136141390', verification_value: '999', first_name: 'Cure', last_name: 'Tester')
     @declined_card = credit_card('4000128449498204')
     @challenge_credit_card = credit_card('2221008123677736', first_name: 'CL-BRW2', last_name: '')
@@ -140,7 +140,7 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_success response
     assert_not_nil response.params[:transactionId]
     assert_match 'SUCCESS', response.params['status']
-    assert_match 'REDIRECT', response.message
+    assert_match 'APPROVED', response.message
   end
 
   def test_successful_purchase_with_not_enrolled_card
@@ -365,8 +365,8 @@ class RemoteNuveiTest < Test::Unit::TestCase
   def test_successful_partial_approval
     response = @gateway.authorize(55, @credit_card, @options.merge(is_partial_approval: true))
     assert_success response
-    assert_equal '55', response.params['partialApproval']['requestedAmount']
-    assert_equal round_down(55), response.params['partialApproval']['processedAmount']
+    assert_equal '0.55', response.params['partialApproval']['requestedAmount']
+    assert_equal '0.55', response.params['partialApproval']['processedAmount']
     assert_match 'APPROVED', response.message
   end
 

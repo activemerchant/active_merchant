@@ -232,6 +232,14 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_successful_authorize_with_localized_shopper_statement
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(localized_shopper_statement: { 'ja-Kana' => 'ADYEN - セラーA' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'ADYEN - セラーA', JSON.parse(data)['localizedShopperStatement']['ja-Kana']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_adds_3ds1_standalone_fields
     eci = '05'
     cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
@@ -440,6 +448,22 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.capture(@amount, '7914775043909934', @options.merge(shopper_statement: 'test1234'))
     end.check_request do |_endpoint, data, _headers|
       assert_equal 'test1234', JSON.parse(data)['additionalData']['shopperStatement']
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_successful_capture_with_localized_shopper_statement
+    stub_comms do
+      @gateway.capture(@amount, '7914775043909934', @options.merge(localized_shopper_statement: { 'ja-Kana' => 'ADYEN - セラーA' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'ADYEN - セラーA', JSON.parse(data)['additionalData']['localizedShopperStatement']['ja-Kana']
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_successful_refund_with_localized_shopper_statement
+    stub_comms do
+      @gateway.refund(@amount, '7914775043909934', @options.merge(localized_shopper_statement: { 'ja-Kana' => 'ADYEN - セラーA' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'ADYEN - セラーA', JSON.parse(data)['additionalData']['localizedShopperStatement']['ja-Kana']
     end.respond_with(successful_capture_response)
   end
 
@@ -736,7 +760,7 @@ class AdyenTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"shopperInteraction":"Ecommerce"/, data)
       assert_match(/"recurringProcessingModel":"Subscription"/, data)
     end.respond_with(successful_authorize_response)
 
@@ -786,7 +810,7 @@ class AdyenTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"shopperInteraction":"Ecommerce"/, data)
       assert_match(/"recurringProcessingModel":"CardOnFile"/, data)
     end.respond_with(successful_authorize_response)
 

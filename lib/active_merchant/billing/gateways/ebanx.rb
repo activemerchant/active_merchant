@@ -213,7 +213,7 @@ module ActiveMerchant # :nodoc:
       def add_invoice(post, money, options)
         post[:payment][:amount_total] = amount(money)
         post[:payment][:currency_code] = (options[:currency] || currency(money))
-        post[:payment][:merchant_payment_code] = Digest::MD5.hexdigest(options[:order_id])
+        post[:payment][:merchant_payment_code] = Digest::MD5.hexdigest(order_id_override(options))
         post[:payment][:instalments] = options[:instalments] || 1
         post[:payment][:order_number] = options[:order_id][0..39] if options[:order_id]
       end
@@ -249,11 +249,16 @@ module ActiveMerchant # :nodoc:
         end
       end
 
+      # we will prefer the merchant_payment_code if both fields are provided
+      def order_id_override(options)
+        options[:merchant_payment_code] || options[:order_id]
+      end
+
       def add_additional_data(post, options)
         post[:device_id] = options[:device_id] if options[:device_id]
         post[:metadata] = options[:metadata] if options[:metadata]
         post[:metadata] = {} if post[:metadata].nil?
-        post[:metadata][:merchant_payment_code] = options[:order_id] if options[:order_id]
+        post[:metadata][:merchant_payment_code] = order_id_override(options)
         post[:payment][:tags] = TAGS
         post[:notification_url] = options[:notification_url] if options[:notification_url]
       end

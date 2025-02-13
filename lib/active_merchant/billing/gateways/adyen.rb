@@ -75,6 +75,7 @@ module ActiveMerchant # :nodoc:
         add_recurring_detail_reference(post, options)
         add_fund_source(post, options)
         add_fund_destination(post, options)
+        post[:localizedShopperStatement] = options[:localized_shopper_statement] if options[:localized_shopper_statement]
         commit('authorise', post, options)
       end
 
@@ -94,6 +95,7 @@ module ActiveMerchant # :nodoc:
         add_reference(post, authorization, options)
         add_splits(post, options)
         add_network_transaction_reference(post, options)
+        add_shopper_statement(post, options)
         commit('refund', post, options)
       end
 
@@ -427,11 +429,9 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_shopper_statement(post, options)
-        return unless options[:shopper_statement]
-
-        post[:additionalData] = {
-          shopperStatement: options[:shopper_statement]
-        }
+        post[:additionalData] ||= {}
+        post[:additionalData][:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
+        post[:additionalData][:localizedShopperStatement] = options[:localized_shopper_statement] if options[:localized_shopper_statement]
       end
 
       def add_merchant_data(post, options)
@@ -1033,7 +1033,7 @@ module ActiveMerchant # :nodoc:
         return true if payment.is_a?(NetworkTokenizationCreditCard) && options.dig(:stored_credential, :initiator) != 'merchant'
         return true unless (stored_credential = options[:stored_credential])
 
-        (stored_credential[:initial_transaction] && stored_credential[:initiator] == 'cardholder') ||
+        stored_credential[:initiator] == 'cardholder' ||
           (payment.respond_to?(:verification_value) && payment.verification_value && stored_credential[:initial_transaction])
       end
     end
