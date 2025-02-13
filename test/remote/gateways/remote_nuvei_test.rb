@@ -16,7 +16,8 @@ class RemoteNuveiTest < Test::Unit::TestCase
     @options = {
       email: 'test@gmail.com',
       billing_address: address.merge(name: 'Cure Tester'),
-      ip: '127.0.0.1'
+      ip: '127.0.0.1',
+      order_id: '123456'
     }
 
     @three_ds_options = {
@@ -93,6 +94,17 @@ class RemoteNuveiTest < Test::Unit::TestCase
   def test_successful_authorize
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
+    assert_equal response.params[:clientUniqueId], @options[:order_id]
+    assert_not_nil response.params[:orderId]
+    assert_not_nil response.params[:transactionId]
+    assert_match 'APPROVED', response.message
+  end
+
+  def test_successful_authorize_without_order_id
+    @options.delete(:order_id)
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_not_nil response.params[:clientUniqueId]
     assert_not_nil response.params[:transactionId]
     assert_match 'APPROVED', response.message
   end
@@ -122,6 +134,8 @@ class RemoteNuveiTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
+    assert_equal response.params[:clientUniqueId], @options[:order_id]
+    assert_not_nil response.params[:orderId]
     assert_not_nil response.params[:transactionId]
     assert_match 'APPROVED', response.message
     assert_match 'SUCCESS', response.params['status']

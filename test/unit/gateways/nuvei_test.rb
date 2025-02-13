@@ -17,7 +17,8 @@ class NuveiTest < Test::Unit::TestCase
     @options = {
       email: 'test@gmail.com',
       billing_address: address.merge(name: 'Cure Tester'),
-      ip_address: '127.0.0.1'
+      ip_address: '127.0.0.1',
+      order_id: '123456'
     }
 
     @three_ds_options = {
@@ -115,6 +116,17 @@ class NuveiTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_client_unique_id_present_without_order_id
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |_method, endpoint, data, _headers|
+      if /payment/.match?(endpoint)
+        json_data = JSON.parse(data)
+        assert_not_nil(json_data['clientUniqueId'])
+      end
+    end
+  end
+
   def test_successful_authorize
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -122,6 +134,7 @@ class NuveiTest < Test::Unit::TestCase
       json_data = JSON.parse(data)
       if /payment/.match?(endpoint)
         assert_match(%r(/payment), endpoint)
+        assert_equal('123456', json_data['clientUniqueId'])
         assert_match(/Auth/, json_data['transactionType'])
       end
     end.respond_with(successful_authorize_response)
@@ -157,6 +170,7 @@ class NuveiTest < Test::Unit::TestCase
         json_data = JSON.parse(data)
         assert_equal 'false', json_data['savePM']
         assert_match('100.00', json_data['amount'])
+        assert_equal('123456', json_data['clientUniqueId'])
         assert_match(/#{@credit_card.number}/, json_data['paymentOption']['card']['cardNumber'])
         assert_match(/#{@credit_card.verification_value}/, json_data['paymentOption']['card']['CVV'])
         assert_match(%r(/payment), endpoint)
