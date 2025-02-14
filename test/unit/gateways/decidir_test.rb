@@ -93,6 +93,21 @@ class DecidirTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_tarjeta_sol
+    tarjeta_sol_card = credit_card('5046391746825544')
+
+    response = stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, tarjeta_sol_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"payment_method_id":64/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 7719132, response.authorization
+    assert_equal 'approved', response.message
+    assert response.test?
+  end
+
   def test_successful_purchase_with_aggregate_data
     options = {
       aggregate_data: {

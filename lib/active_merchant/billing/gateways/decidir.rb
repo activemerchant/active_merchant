@@ -135,33 +135,24 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_payment_method_id(credit_card, options)
-        if options[:payment_method_id]
-          options[:payment_method_id].to_i
-        elsif options[:debit]
-          if CreditCard.brand?(credit_card.number) == 'visa'
-            31
-          elsif CreditCard.brand?(credit_card.number) == 'master'
-            105
-          elsif CreditCard.brand?(credit_card.number) == 'maestro'
-            106
-          elsif CreditCard.brand?(credit_card.number) == 'cabal'
-            108
-          end
-        elsif CreditCard.brand?(credit_card.number) == 'master'
-          104
-        elsif CreditCard.brand?(credit_card.number) == 'american_express'
-          65
-        elsif CreditCard.brand?(credit_card.number) == 'diners_club'
-          8
-        elsif CreditCard.brand?(credit_card.number) == 'cabal'
-          63
-        elsif CreditCard.brand?(credit_card.number) == 'naranja'
-          24
-        elsif CreditCard.brand?(credit_card.number) == 'patagonia_365'
-          55
-        else
-          1
-        end
+        return options[:payment_method_id].to_i if options[:payment_method_id]
+
+        card_brand = CreditCard.brand?(credit_card.number)
+        debit = options[:debit]
+
+        payment_method_ids = {
+          'visa' => debit ? 31 : 1,
+          'master' => debit ? 105 : 104,
+          'maestro' => 106,
+          'cabal' => debit ? 108 : 63,
+          'american_express' => 65,
+          'diners_club' => 8,
+          'naranja' => 24,
+          'patagonia_365' => 55,
+          'tarjeta_sol' => 64
+        }
+
+        payment_method_ids.fetch(card_brand, 1)
       end
 
       def add_invoice(post, money, options)
