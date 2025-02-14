@@ -12,7 +12,7 @@ module ActiveMerchant # :nodoc:
       self.default_currency = 'USD'
       self.currencies_without_fractions = ActiveMerchant::Billing::CyberSourceGateway.currencies_without_fractions
 
-      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb maestro elo union_pay cartes_bancaires mada patagonia_365]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb maestro elo union_pay cartes_bancaires mada patagonia_365 tarjeta_sol]
 
       self.homepage_url = 'http://www.cybersource.com'
       self.display_name = 'Cybersource REST'

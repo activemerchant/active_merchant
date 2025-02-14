@@ -93,7 +93,7 @@ class CyberSourceTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal CyberSourceGateway.supported_cardtypes, %i[visa master american_express discover diners_club jcb dankort maestro elo patagonia_365]
+    assert_equal CyberSourceGateway.supported_cardtypes, %i[visa master american_express discover diners_club jcb dankort maestro elo patagonia_365 tarjeta_sol]
   end
 
   def test_successful_credit_card_purchase

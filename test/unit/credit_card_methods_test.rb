@@ -606,7 +606,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_should_detect_sol_cards
-    assert_equal 'sol', CreditCard.brand?('5046391746825544')
+    assert_equal 'tarjeta_sol', CreditCard.brand?('5046391746825544')
   end
 
   def test_should_validate_sol_card

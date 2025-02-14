@@ -72,7 +72,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal GlobalCollectGateway.supported_cardtypes, %i[visa master american_express discover naranja cabal tuya patagonia_365]
+    assert_equal GlobalCollectGateway.supported_cardtypes, %i[visa master american_express discover naranja cabal tuya patagonia_365 tarjeta_sol]
   end
 
   def test_successful_authorize_and_capture

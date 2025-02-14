@@ -58,7 +58,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal CheckoutV2Gateway.supported_cardtypes, %i[visa master american_express diners_club maestro discover jcb mada bp_plus patagonia_365]
+    assert_equal CheckoutV2Gateway.supported_cardtypes, %i[visa master american_express diners_club maestro discover jcb mada bp_plus patagonia_365 tarjeta_sol]
   end
 
   def test_setup_access_token_should_rise_an_exception_under_bad_request
