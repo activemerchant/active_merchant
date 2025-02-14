@@ -135,32 +135,23 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_payment_method_id(credit_card, options)
-        if options[:payment_method_id]
-          options[:payment_method_id].to_i
-        elsif options[:debit]
-          if CreditCard.brand?(credit_card.number) == 'visa'
-            31
-          elsif CreditCard.brand?(credit_card.number) == 'master'
-            105
-          elsif CreditCard.brand?(credit_card.number) == 'maestro'
-            106
-          elsif CreditCard.brand?(credit_card.number) == 'cabal'
-            108
-          end
-        elsif CreditCard.brand?(credit_card.number) == 'master'
-          104
-        elsif CreditCard.brand?(credit_card.number) == 'american_express'
-          65
-        elsif CreditCard.brand?(credit_card.number) == 'diners_club'
-          8
-        elsif CreditCard.brand?(credit_card.number) == 'cabal'
-          63
-        elsif CreditCard.brand?(credit_card.number) == 'naranja'
-          24
-        elsif CreditCard.brand?(credit_card.number) == 'patagonia_365'
-          55
-        else
-          1
+        return options[:payment_method_id].to_i if options[:payment_method_id]
+
+        brand = CreditCard.brand?(credit_card.number)
+        return 31 if options[:debit] && brand == 'visa'
+        return 105 if options[:debit] && brand == 'master'
+        return 106 if options[:debit] && brand == 'maestro'
+        return 108 if options[:debit] && brand == 'cabal'
+
+        case brand
+        when 'master' then 104
+        when 'american_express' then 65
+        when 'diners_club' then 8
+        when 'cabal' then 63
+        when 'naranja' then 24
+        when 'patagonia_365' then 55
+        when 'tarjeta_sol' then 64
+        else 1
         end
       end
 
