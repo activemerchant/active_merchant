@@ -440,12 +440,12 @@ module ActiveMerchant # :nodoc:
             xml.accountReference options[:aft_sender_account_reference], 'accountType' => options[:aft_sender_account_type]
             xml.fullName do
               xml.first options.dig(:aft_sender_full_name, :first)
-              xml.middle options.dig(:aft_sender_full_name, :middle)
+              xml.middle options.dig(:aft_sender_full_name, :middle) if options.dig(:aft_sender_full_name, :middle)
               xml.last options.dig(:aft_sender_full_name, :last)
             end
             xml.fundingAddress do
               xml.address1 options.dig(:aft_sender_funding_address, :address1)
-              xml.address2 options.dig(:aft_sender_funding_address, :address2)
+              xml.address2 options.dig(:aft_sender_funding_address, :address2) if options.dig(:aft_sender_funding_address, :address2)
               xml.postalCode options.dig(:aft_sender_funding_address, :postal_code)
               xml.city options.dig(:aft_sender_funding_address, :city)
               xml.state options.dig(:aft_sender_funding_address, :state)
@@ -456,12 +456,12 @@ module ActiveMerchant # :nodoc:
             xml.accountReference options[:aft_recipient_account_reference], 'accountType' => options[:aft_recipient_account_type]
             xml.fullName do
               xml.first options.dig(:aft_recipient_full_name, :first)
-              xml.middle options.dig(:aft_recipient_full_name, :middle)
+              xml.middle options.dig(:aft_recipient_full_name, :middle) if options.dig(:aft_recipient_full_name, :middle)
               xml.last options.dig(:aft_recipient_full_name, :last)
             end
             xml.fundingAddress do
               xml.address1 options.dig(:aft_recipient_funding_address, :address1)
-              xml.address2 options.dig(:aft_recipient_funding_address, :address2)
+              xml.address2 options.dig(:aft_recipient_funding_address, :address2) if options.dig(:aft_recipient_funding_address, :address2)
               xml.postalCode options.dig(:aft_recipient_funding_address, :postal_code)
               xml.city options.dig(:aft_recipient_funding_address, :city)
               xml.state options.dig(:aft_recipient_funding_address, :state)
