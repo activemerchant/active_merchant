@@ -193,6 +193,46 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         }
       }
     }
+
+    @aft_less_options = {
+      account_funding_transaction: true,
+      aft_type: 'A',
+      aft_payment_purpose: '01',
+      aft_sender_account_type: '02',
+      aft_sender_account_reference: '4111111111111112',
+      aft_sender_full_name: {
+        first: 'First',
+        last: 'Sender'
+      },
+      aft_sender_funding_address: {
+        address1: '123 Sender St',
+        postal_code: '12345',
+        city: 'Senderville',
+        state: 'NC',
+        country_code: 'US'
+      },
+      aft_recipient_account_type: '03',
+      aft_recipient_account_reference: '4111111111111111',
+      aft_recipient_full_name: {
+        first: 'First',
+        last: 'Recipient'
+      },
+      aft_recipient_funding_address: {
+        address1: '123 Recipient St',
+        postal_code: '12345',
+        city: 'Recipientville',
+        state: 'NC',
+        country_code: 'US'
+      },
+      aft_recipient_funding_data: {
+        telephone_number: '123456789',
+        birth_date: {
+          day_of_month: '01',
+          month: '01',
+          year: '1980'
+        }
+      }
+    }
   end
 
   def test_successful_purchase
@@ -1086,6 +1126,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'ACQUIRER ERROR', auth.message
     assert_equal 'funding_transfer_transaction', auth.params['action']
     assert_equal '20', auth.error_code
+  end
+
+  def test_successful_authorize_visa_account_funding_transfer_with_no_middle_name_address2
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(@aft_less_options))
+    assert_success auth
+    assert_equal 'funding_transfer_transaction', auth.params['action']
+    assert_equal 'SUCCESS', auth.message
   end
 
   def test_successful_fast_fund_credit_on_cft_gateway
