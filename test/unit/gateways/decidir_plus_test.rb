@@ -53,6 +53,19 @@ class DecidirPlusTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_tarjeta_sol
+    options = @options.merge(card_brand: 'tarjeta_sol')
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @payment_reference, options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      data = JSON.parse(data)
+      assert_equal(64, data['payment_method_id'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_failed_purchase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
