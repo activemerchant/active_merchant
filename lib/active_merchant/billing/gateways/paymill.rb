@@ -1,11 +1,11 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PaymillGateway < Gateway
       self.supported_countries = %w(AD AT BE BG CH CY CZ DE DK EE ES FI FO FR GB
                                     GI GR HR HU IE IL IM IS IT LI LT LU LV MC MT
                                     NL NO PL PT RO SE SI SK TR VA)
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :union_pay, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club discover union_pay jcb]
       self.homepage_url = 'https://paymill.com'
       self.display_name = 'PAYMILL'
       self.money_format = :cents
@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         action_with_token(:purchase, money, payment_method, options)
       end
 
@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'transactions', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
 
         post[:amount] = amount(money)
@@ -43,11 +43,16 @@ module ActiveMerchant #:nodoc:
         commit(:post, "refunds/#{transaction_id(authorization)}", post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit(:delete, "preauthorizations/#{preauth(authorization)}")
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
+        # The store request requires a currency and amount of at least $1 USD.
+        # This is used for an authorization that is handled internally by Paymill.
+        options[:currency] = 'USD'
+        options[:money] = 100
+
         save_card(credit_card, options)
       end
 
@@ -81,15 +86,15 @@ module ActiveMerchant #:nodoc:
         post['account.expiry.year'] = sprintf('%.4i', credit_card.year)
         post['account.verification'] = credit_card.verification_value
         post['account.email'] = (options[:email] || nil)
-        post['presentation.amount3D'] =  (options[:money] || nil)
-        post['presentation.currency3D'] = (options[:currency] || currency( options[:money]))
+        post['presentation.amount3D'] = (options[:money] || nil)
+        post['presentation.currency3D'] = (options[:currency] || currency(options[:money]))
       end
 
       def headers
         { 'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:private_key]}:X").chomp) }
       end
 
-      def commit(method, action, parameters=nil)
+      def commit(method, action, parameters = nil)
         begin
           raw_response = ssl_request(method, live_url + action, post_data(parameters), headers)
         rescue ResponseError => e
@@ -107,8 +112,8 @@ module ActiveMerchant #:nodoc:
       def response_from(raw_response)
         parsed = JSON.parse(raw_response)
         options = {
-          :authorization => authorization_from(parsed),
-          :test => (parsed['mode'] == 'test'),
+          authorization: authorization_from(parsed),
+          test: (parsed['mode'] == 'test')
         }
 
         succeeded = (parsed['data'] == []) || (parsed['data']['response_code'].to_i == 20000)
@@ -128,13 +133,13 @@ module ActiveMerchant #:nodoc:
       def action_with_token(action, money, payment_method, options)
         options[:money] = money
         case payment_method
-          when String
-            self.send("#{action}_with_token", money, payment_method, options)
-          else
-            MultiResponse.run do |r|
-              r.process { save_card(payment_method, options) }
-              r.process { self.send("#{action}_with_token", money, r.authorization, options) }
-            end
+        when String
+          self.send("#{action}_with_token", money, payment_method, options)
+        else
+          MultiResponse.run do |r|
+            r.process { save_card(payment_method, options) }
+            r.process { self.send("#{action}_with_token", money, r.authorization, options) }
+          end
         end
       end
 
@@ -176,7 +181,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def response_for_save_from(raw_response)
-        options = { :test => test? }
+        options = { test: test? }
 
         parser = ResponseParser.new(raw_response, options)
         parser.generate_response
@@ -193,7 +198,7 @@ module ActiveMerchant #:nodoc:
       def post_data(params)
         return nil unless params
 
-        no_blanks = params.reject { |key, value| value.blank? }
+        no_blanks = params.reject { |_key, value| value.blank? }
         no_blanks.map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
@@ -239,7 +244,6 @@ module ActiveMerchant #:nodoc:
         31202 => 'Pending due to international account (accept manually)',
         31203 => 'Pending due to currency conflict (accept manually)',
         31204 => 'Pending due to fraud filters (accept manually)',
-
 
         40000 => 'Problem with transaction data',
         40001 => 'Problem with payment data',
@@ -315,17 +319,16 @@ module ActiveMerchant #:nodoc:
 
       def response_message(parsed_response)
         return parsed_response['error'] if parsed_response['error']
-        return 'Transaction approved.' if (parsed_response['data'] == [])
+        return 'Transaction approved.' if parsed_response['data'] == []
 
         code = parsed_response['data']['response_code'].to_i
         RESPONSE_CODES[code] || code.to_s
       end
 
-
       class ResponseParser
         attr_reader :raw_response, :parsed, :succeeded, :message, :options
 
-        def initialize(raw_response='', options={})
+        def initialize(raw_response = '', options = {})
           @raw_response = raw_response
           @options = options
         end
@@ -354,12 +357,10 @@ module ActiveMerchant #:nodoc:
 
         def handle_response_correct_parsing
           @message = parsed['transaction']['processing']['return']['message']
-          if @succeeded = is_ack?
-            @options[:authorization] = parsed['transaction']['identification']['uniqueId']
-          end
+          @options[:authorization] = parsed['transaction']['identification']['uniqueId'] if @succeeded = ack?
         end
 
-        def is_ack?
+        def ack?
           parsed['transaction']['processing']['result'] == 'ACK'
         end
       end

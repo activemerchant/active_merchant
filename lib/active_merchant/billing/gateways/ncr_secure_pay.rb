@@ -1,24 +1,24 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class NcrSecurePayGateway < Gateway
       self.test_url = 'https://testbox.monetra.com:8665/'
       self.live_url = 'https://portal.ncrsecurepay.com:8444/'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'http://www.ncrretailonline.com'
       self.display_name = 'NCR Secure Pay'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :username, :password)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
         commit('sale', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
         commit('preauth', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         add_reference(post, authorization)
         add_invoice(post, money, options)
@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
         commit('preauthcomplete', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         add_reference(post, authorization)
         add_invoice(post, money, options)
@@ -52,13 +52,13 @@ module ActiveMerchant #:nodoc:
         commit('credit', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, authorization)
         commit('void', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -141,7 +141,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def request_body(action, parameters = {})
-        Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |xml|
+        Nokogiri::XML::Builder.new(encoding: 'utf-8') do |xml|
           xml.MonetraTrans do
             xml.Trans(identifier: parameters.delete(:identifier) || '1') do
               xml.username(options[:username])
@@ -156,9 +156,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        unless success_from(response)
-          response[:msoft_code] || response[:phard_code]
-        end
+        response[:msoft_code] || response[:phard_code] unless success_from(response)
       end
     end
   end

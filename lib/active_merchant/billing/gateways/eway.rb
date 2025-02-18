@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # Public: For more information on the Eway Gateway please visit their
     # {Developers Area}[http://www.eway.com.au/developers/api/direct-payments]
     class EwayGateway < Gateway
@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :cents
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
       self.homepage_url = 'http://www.eway.com.au/'
       self.display_name = 'eWAY'
 
@@ -38,7 +38,7 @@ module ActiveMerchant #:nodoc:
         commit(purchase_url(post[:CVN]), money, post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
 
         add_customer_id(post)
@@ -64,13 +64,14 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def requires_address!(options)
-        raise ArgumentError.new('Missing eWay required parameters: address or billing_address') unless (options.has_key?(:address) or options.has_key?(:billing_address))
+        raise ArgumentError.new('Missing eWay required parameters: address or billing_address') unless options.has_key?(:address) || options.has_key?(:billing_address)
       end
 
       def add_creditcard(post, creditcard)
-        post[:CardNumber]  = creditcard.number
-        post[:CardExpiryMonth]  = sprintf('%.2i', creditcard.month)
+        post[:CardNumber] = creditcard.number
+        post[:CardExpiryMonth] = sprintf('%.2i', creditcard.month)
         post[:CardExpiryYear] = sprintf('%.4i', creditcard.year)[-2..-1]
         post[:CustomerFirstName] = creditcard.first_name
         post[:CustomerLastName]  = creditcard.last_name
@@ -81,7 +82,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
-          post[:CustomerAddress]    = [ address[:address1], address[:address2], address[:city], address[:state], address[:country] ].compact.join(', ')
+          post[:CustomerAddress]    = [address[:address1], address[:address2], address[:city], address[:state], address[:country]].compact.join(', ')
           post[:CustomerPostcode]   = address[:zip]
         end
       end
@@ -110,11 +111,12 @@ module ActiveMerchant #:nodoc:
         raw_response = ssl_post(url, post_data(parameters))
         response = parse(raw_response)
 
-        Response.new(success?(response),
+        Response.new(
+          success?(response),
           message_from(response[:ewaytrxnerror]),
           response,
-          :authorization => response[:ewaytrxnnumber],
-          :test => test?
+          authorization: response[:ewaytrxnnumber],
+          test: test?
         )
       end
 
@@ -144,7 +146,8 @@ module ActiveMerchant #:nodoc:
 
       def message_from(message)
         return '' if message.blank?
-        MESSAGES[message[0,2]] || message
+
+        MESSAGES[message[0, 2]] || message
       end
 
       def purchase_url(cvn)

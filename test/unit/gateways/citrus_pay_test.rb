@@ -48,7 +48,7 @@ class CitrusPayTest < Test::Unit::TestCase
 
     capture = stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, response.authorization)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/f3d100a7-18d9-4609-aabc-8a710ad0e210/, data)
     end.respond_with(successful_capture_response)
 
@@ -65,7 +65,7 @@ class CitrusPayTest < Test::Unit::TestCase
 
     refund = stub_comms(@gateway, :ssl_request) do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/ce61e06e-8c92-4a0f-a491-6eb473d883dd/, data)
     end.respond_with(successful_refund_response)
 
@@ -82,7 +82,7 @@ class CitrusPayTest < Test::Unit::TestCase
 
     void = stub_comms(@gateway, :ssl_request) do
       @gateway.void(response.authorization)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/ce61e06e-8c92-4a0f-a491-6eb473d883dd/, data)
     end.respond_with(successful_void_response)
 
@@ -91,16 +91,16 @@ class CitrusPayTest < Test::Unit::TestCase
 
   def test_passing_alpha3_country_code
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, :billing_address => {country: 'US'})
-    end.check_request do |method, endpoint, data, headers|
+      @gateway.authorize(@amount, @credit_card, billing_address: { country: 'US' })
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/USA/, data)
     end.respond_with(successful_authorize_response)
   end
 
   def test_non_existent_country
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, :billing_address => {country: 'Blah'})
-    end.check_request do |method, endpoint, data, headers|
+      @gateway.authorize(@amount, @credit_card, billing_address: { country: 'Blah' })
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"country":null/, data)
     end.respond_with(successful_authorize_response)
   end
@@ -108,15 +108,15 @@ class CitrusPayTest < Test::Unit::TestCase
   def test_passing_cvv
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/#{@credit_card.verification_value}/, data)
     end.respond_with(successful_authorize_response)
   end
 
   def test_passing_billing_address
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, :billing_address => address)
-    end.check_request do |method, endpoint, data, headers|
+      @gateway.authorize(@amount, @credit_card, billing_address: address)
+    end.check_request do |_method, _endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert_equal('456 My Street', parsed['billing']['address']['street'])
       assert_equal('K1C2N6', parsed['billing']['address']['postcodeZip'])
@@ -125,8 +125,8 @@ class CitrusPayTest < Test::Unit::TestCase
 
   def test_passing_shipping_name
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, :shipping_address => address)
-    end.check_request do |method, endpoint, data, headers|
+      @gateway.authorize(@amount, @credit_card, shipping_address: address)
+    end.check_request do |_method, _endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert_equal('Jim', parsed['shipping']['firstName'])
       assert_equal('Smith', parsed['shipping']['lastName'])
@@ -157,7 +157,7 @@ class CitrusPayTest < Test::Unit::TestCase
     assert_equal 'FAILURE - DECLINED', response.message
   end
 
-  def test_north_america_region_url
+  def test_url
     @gateway = TnsGateway.new(
       userid: 'userid',
       password: 'password',
@@ -166,24 +166,8 @@ class CitrusPayTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
-      assert_match(/secure.na.tnspayments.com/, endpoint)
-    end.respond_with(successful_capture_response)
-
-    assert_success response
-  end
-
-  def test_asia_pacific_region_url
-    @gateway = TnsGateway.new(
-      userid: 'userid',
-      password: 'password',
-      region: 'asia_pacific'
-    )
-
-    response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
-      assert_match(/secure.ap.tnspayments.com/, endpoint)
+    end.check_request do |_method, endpoint, _data, _headers|
+      assert_match(/secure.uat.tnspayments.com/, endpoint)
     end.respond_with(successful_capture_response)
 
     assert_success response

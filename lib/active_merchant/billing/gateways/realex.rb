@@ -26,15 +26,12 @@ module ActiveMerchant
         'visa'              => 'VISA',
         'american_express'  => 'AMEX',
         'diners_club'       => 'DINERS',
-        'switch'            => 'SWITCH',
-        'solo'              => 'SWITCH',
-        'laser'             => 'LASER',
         'maestro'           => 'MC'
       }
 
       self.money_format = :cents
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :switch, :solo, :laser ]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
       self.supported_countries = %w(IE GB FR BE NL LU IT US CA ES)
       self.homepage_url = 'http://www.realexpayments.com/'
       self.display_name = 'Realex'
@@ -45,7 +42,8 @@ module ActiveMerchant
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        options[:refund_hash] = Digest::SHA1.hexdigest(options[:rebate_secret]) if options.has_key?(:rebate_secret)
+        options[:refund_hash] = Digest::SHA1.hexdigest(options[:rebate_secret]) if options[:rebate_secret].present?
+        options[:credit_hash] = Digest::SHA1.hexdigest(options[:refund_secret]) if options[:refund_secret].present?
         super
       end
 
@@ -73,13 +71,20 @@ module ActiveMerchant
         commit(request)
       end
 
-      def credit(money, authorization, options = {})
-        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
-        refund(money, authorization, options)
+      def credit(money, creditcard, options = {})
+        request = build_credit_request(money, creditcard, options)
+        commit(request)
       end
 
       def void(authorization, options = {})
         request = build_void_request(authorization, options)
+        commit(request)
+      end
+
+      def verify(credit_card, options = {})
+        requires!(options, :order_id)
+
+        request = build_verify_request(credit_card, options)
         commit(request)
       end
 
@@ -89,11 +94,12 @@ module ActiveMerchant
 
       def scrub(transcript)
         transcript.
-        gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-        gsub(%r((<number>)\d+(</number>))i, '\1[FILTERED]\2')
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<number>)\d+(</number>))i, '\1[FILTERED]\2')
       end
 
       private
+
       def commit(request)
         response = parse(ssl_post(self.live_url, request))
 
@@ -101,8 +107,8 @@ module ActiveMerchant
           (response[:result] == '00'),
           message_from(response),
           response,
-          :test => (response[:message] =~ %r{\[ test system \]}),
-          :authorization => authorization_from(response),
+          test: (response[:message] =~ %r{\[ test system \]}),
+          authorization: authorization_from(response),
           avs_result: AVSResult.new(code: response[:avspostcoderesponse]),
           cvv_result: CVVResult.new(response[:cvnresult])
         )
@@ -113,7 +119,7 @@ module ActiveMerchant
 
         doc = Nokogiri::XML(xml)
         doc.xpath('//response/*').each do |node|
-          if (node.elements.size == 0)
+          if node.elements.size == 0
             response[node.name.downcase.to_sym] = normalize(node.text)
           else
             node.elements.each do |childnode|
@@ -132,7 +138,7 @@ module ActiveMerchant
 
       def build_purchase_or_authorization_request(action, money, credit_card, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'auth' do
           add_merchant_details(xml, options)
           xml.tag! 'orderid', sanitize_order_id(options[:order_id])
@@ -140,7 +146,12 @@ module ActiveMerchant
           add_card(xml, credit_card)
           xml.tag! 'autosettle', 'flag' => auto_settle_flag(action)
           add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card.number)
-          add_network_tokenization_card(xml, credit_card) if credit_card.is_a?(NetworkTokenizationCreditCard)
+          if credit_card.is_a?(NetworkTokenizationCreditCard)
+            add_network_tokenization_card(xml, credit_card)
+          else
+            add_three_d_secure(xml, options)
+          end
+          add_stored_credential(xml, options)
           add_comments(xml, options)
           add_address_and_customer_info(xml, options)
         end
@@ -149,7 +160,7 @@ module ActiveMerchant
 
       def build_capture_request(money, authorization, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'settle' do
           add_merchant_details(xml, options)
           add_amount(xml, money, options)
@@ -162,7 +173,7 @@ module ActiveMerchant
 
       def build_refund_request(money, authorization, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'rebate' do
           add_merchant_details(xml, options)
           add_transaction_identifiers(xml, authorization, options)
@@ -175,9 +186,25 @@ module ActiveMerchant
         xml.target!
       end
 
+      def build_credit_request(money, credit_card, options)
+        timestamp = new_timestamp
+        xml = Builder::XmlMarkup.new indent: 2
+        xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'credit' do
+          add_merchant_details(xml, options)
+          xml.tag! 'orderid', sanitize_order_id(options[:order_id])
+          add_amount(xml, money, options)
+          add_card(xml, credit_card)
+          xml.tag! 'refundhash', @options[:credit_hash] if @options[:credit_hash]
+          xml.tag! 'autosettle', 'flag' => 1
+          add_comments(xml, options)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card.number)
+        end
+        xml.target!
+      end
+
       def build_void_request(authorization, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'void' do
           add_merchant_details(xml, options)
           add_transaction_identifiers(xml, authorization, options)
@@ -187,16 +214,31 @@ module ActiveMerchant
         xml.target!
       end
 
+      # Verify initiates an OTB (Open To Buy) request
+      def build_verify_request(credit_card, options)
+        timestamp = new_timestamp
+        xml = Builder::XmlMarkup.new indent: 2
+        xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'otb' do
+          add_merchant_details(xml, options)
+          xml.tag! 'orderid', sanitize_order_id(options[:order_id])
+          add_card(xml, credit_card)
+          add_comments(xml, options)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), credit_card.number)
+        end
+        xml.target!
+      end
+
       def add_address_and_customer_info(xml, options)
         billing_address = options[:billing_address] || options[:address]
         shipping_address = options[:shipping_address]
+        ipv4_address = ipv4?(options[:ip]) ? options[:ip] : nil
 
-        return unless billing_address || shipping_address || options[:customer] || options[:invoice] || options[:ip]
+        return unless billing_address || shipping_address || options[:customer] || options[:invoice] || ipv4_address
 
         xml.tag! 'tssinfo' do
           xml.tag! 'custnum', options[:customer] if options[:customer]
           xml.tag! 'prodid', options[:invoice] if options[:invoice]
-          xml.tag! 'custipaddress', options[:ip] if options[:ip]
+          xml.tag! 'custipaddress', options[:ip] if ipv4_address
 
           if billing_address
             xml.tag! 'address', 'type' => 'billing' do
@@ -216,9 +258,7 @@ module ActiveMerchant
 
       def add_merchant_details(xml, options)
         xml.tag! 'merchantid', @options[:login]
-        if options[:account] || @options[:account]
-          xml.tag! 'account', (options[:account] || @options[:account])
-        end
+        xml.tag! 'account', (options[:account] || @options[:account]) if options[:account] || @options[:account]
       end
 
       def add_transaction_identifiers(xml, authorization, options)
@@ -230,6 +270,7 @@ module ActiveMerchant
 
       def add_comments(xml, options)
         return unless options[:description]
+
         xml.tag! 'comments' do
           xml.tag! 'comment', options[:description], 'id' => 1
         end
@@ -245,7 +286,7 @@ module ActiveMerchant
           xml.tag! 'expdate', expiry_date(credit_card)
           xml.tag! 'chname', credit_card.name
           xml.tag! 'type', CARD_MAPPING[card_brand(credit_card).to_s]
-          xml.tag! 'issueno', credit_card.issue_number
+          xml.tag! 'issueno', ''
           xml.tag! 'cvn' do
             xml.tag! 'number', credit_card.verification_value
             xml.tag! 'presind', (options['presind'] || (credit_card.verification_value? ? 1 : nil))
@@ -260,14 +301,49 @@ module ActiveMerchant
         end
         xml.tag! 'supplementarydata' do
           xml.tag! 'item', 'type' => 'mobile' do
-            xml.tag! 'field01', payment.source.to_s.gsub('_','-')
+            xml.tag! 'field01', payment.source.to_s.tr('_', '-')
           end
         end
       end
 
+      def add_three_d_secure(xml, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        version = three_d_secure.fetch(:version, '')
+        xml.tag! 'mpi' do
+          if /^2/.match?(version)
+            xml.tag! 'authentication_value', three_d_secure[:cavv]
+            xml.tag! 'ds_trans_id', three_d_secure[:ds_transaction_id]
+          else
+            xml.tag! 'cavv', three_d_secure[:cavv]
+            xml.tag! 'xid', three_d_secure[:xid]
+            version = '1'
+          end
+          xml.tag! 'eci', three_d_secure[:eci]
+          xml.tag! 'message_version', version
+        end
+      end
+
+      def add_stored_credential(xml, options)
+        return unless stored_credential = options[:stored_credential]
+
+        xml.tag! 'storedcredential' do
+          xml.tag! 'type', stored_credential_type(stored_credential[:reason_type])
+          xml.tag! 'initiator', stored_credential[:initiator]
+          xml.tag! 'sequence', stored_credential[:initial_transaction] ? 'first' : 'subsequent'
+          xml.tag! 'srd', stored_credential[:network_transaction_id]
+        end
+      end
+
+      def stored_credential_type(reason)
+        return 'oneoff' if reason == 'unscheduled'
+
+        reason
+      end
+
       def format_address_code(address)
         code = [address[:zip].to_s, address[:address1].to_s + address[:address2].to_s]
-        code.collect{|e| e.gsub(/\D/, '')}.reject{|e| e.empty?}.join('|')
+        code.collect { |e| e.gsub(/\D/, '') }.reject(&:empty?).join('|')
       end
 
       def new_timestamp
@@ -288,31 +364,36 @@ module ActiveMerchant
       end
 
       def message_from(response)
-        message = nil
         case response[:result]
         when '00'
-          message = SUCCESS
+          SUCCESS
         when '101'
-          message = response[:message]
+          response[:message]
         when '102', '103'
-          message = DECLINED
+          DECLINED
         when /^2[0-9][0-9]/
-          message = BANK_ERROR
+          BANK_ERROR
         when /^3[0-9][0-9]/
-          message = REALEX_ERROR
+          REALEX_ERROR
         when /^5[0-9][0-9]/
-          message = response[:message]
+          response[:message]
         when '600', '601', '603'
-          message = ERROR
+          ERROR
         when '666'
-          message = CLIENT_DEACTIVATED
+          CLIENT_DEACTIVATED
         else
-          message = DECLINED
+          DECLINED
         end
       end
 
       def sanitize_order_id(order_id)
         order_id.to_s.gsub(/[^a-zA-Z0-9\-_]/, '')
+      end
+
+      def ipv4?(ip_address)
+        return false if ip_address.nil?
+
+        !ip_address.match(/\A\d+\.\d+\.\d+\.\d+\z/).nil?
       end
     end
   end

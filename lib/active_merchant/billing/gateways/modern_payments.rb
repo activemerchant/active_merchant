@@ -1,7 +1,7 @@
 require 'active_merchant/billing/gateways/modern_payments_cim'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ModernPaymentsGateway < Gateway
       self.supported_countries = ModernPaymentsCimGateway.supported_countries
       self.supported_cardtypes = ModernPaymentsCimGateway.supported_cardtypes
@@ -28,10 +28,10 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def cim
         @cim ||= ModernPaymentsCimGateway.new(@options)
       end
     end
   end
 end
-

@@ -5,13 +5,13 @@ class LinkpointTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = LinkpointGateway.new(
-      :login => 123123,
-      :pem => 'PEM'
+      login: 123123,
+      pem: 'PEM'
     )
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
-    @options = { :order_id => 1000, :billing_address => address }
+    @options = { order_id: 1000, billing_address: address }
   end
 
   def test_instantiating_without_credential_raises
@@ -65,7 +65,7 @@ class LinkpointTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(2400, @credit_card, :order_id => 1003, :installments => 12, :startdate => 'immediate', :periodicity => :monthly)
+      @gateway.recurring(2400, @credit_card, order_id: 1003, installments: 12, startdate: 'immediate', periodicity: :monthly)
     end
     assert_success response
   end
@@ -79,12 +79,15 @@ class LinkpointTest < Test::Unit::TestCase
   end
 
   def test_purchase_is_valid_xml
-    @gateway.send(:parameters, 1000, @credit_card, :ordertype => 'SALE', :order_id => 1004,
-      :billing_address => {
-        :address1 => '1313 lucky lane',
-        :city => 'Lost Angeles',
-        :state => 'CA',
-        :zip => '90210'
+    @gateway.send(
+      :parameters, 1000, @credit_card,
+      ordertype: 'SALE',
+      order_id: 1004,
+      billing_address: {
+        address1: '1313 lucky lane',
+        city: 'Lost Angeles',
+        state: 'CA',
+        zip: '90210'
       }
     )
 
@@ -93,12 +96,19 @@ class LinkpointTest < Test::Unit::TestCase
   end
 
   def test_recurring_is_valid_xml
-    @gateway.send(:parameters, 1000, @credit_card, :ordertype => 'SALE', :action => 'SUBMIT', :installments => 12, :startdate => 'immediate', :periodicity => 'monthly', :order_id => 1006,
-      :billing_address => {
-        :address1 => '1313 lucky lane',
-        :city => 'Lost Angeles',
-        :state => 'CA',
-        :zip => '90210'
+    @gateway.send(
+      :parameters, 1000, @credit_card,
+      ordertype: 'SALE',
+      action: 'SUBMIT',
+      installments: 12,
+      startdate: 'immediate',
+      periodicity: 'monthly',
+      order_id: 1006,
+      billing_address: {
+        address1: '1313 lucky lane',
+        city: 'Lost Angeles',
+        state: 'CA',
+        zip: '90210'
       }
     )
     assert data = @gateway.send(:post_data, @amount, @credit_card, @options)
@@ -106,31 +116,61 @@ class LinkpointTest < Test::Unit::TestCase
   end
 
   def test_line_items_are_valid_xml
-    options = {:ordertype => 'SALE', :action => 'SUBMIT', :installments => 12, :startdate => 'immediate', :periodicity => 'monthly', :order_id => 1006,
-      :billing_address => {
-        :address1 => '1313 lucky lane',
-        :city => 'Lost Angeles',
-        :state => 'CA',
-        :zip => '90210'
+    options = {
+      ordertype: 'SALE',
+      action: 'SUBMIT',
+      installments: 12,
+      startdate: 'immediate',
+      periodicity: 'monthly',
+      order_id: 1006,
+      billing_address: {
+        address1: '1313 lucky lane',
+        city: 'Lost Angeles',
+        state: 'CA',
+        zip: '90210'
       },
-      :line_items => [{:id => '123456', :description => 'Logo T-Shirt', :price =>
-            '12.00', :quantity => '1', :options => [{:name => 'Color', :value =>
-                'Red'}, {:name => 'Size', :value => 'XL'}]},{:id => '111', :description => 'keychain', :price => '3.00', :quantity => '1'}]}
-
+      line_items: [
+        {
+          id: '123456',
+          description: 'Logo T-Shirt',
+          price: '12.00',
+          quantity: '1',
+          options: [
+            {
+              name: 'Color',
+              value: 'Red'
+            },
+            {
+              name: 'Size',
+              value: 'XL'
+            }
+          ]
+        },
+        {
+          id: '111',
+          description: 'keychain',
+          price: '3.00',
+          quantity: '1'
+        }
+      ]
+    }
 
     assert data = @gateway.send(:post_data, @amount, @credit_card, options)
     assert REXML::Document.new(data)
   end
 
   def test_declined_purchase_is_valid_xml
-    @gateway = LinkpointGateway.new(:login => 123123, :pem => 'PEM')
+    @gateway = LinkpointGateway.new(login: 123123, pem: 'PEM')
 
-    @gateway.send(:parameters, 1000, @credit_card, :ordertype => 'SALE', :order_id => 1005,
-      :billing_address => {
-        :address1 => '1313 lucky lane',
-        :city => 'Lost Angeles',
-        :state => 'CA',
-        :zip => '90210'
+    @gateway.send(
+      :parameters, 1000, @credit_card,
+      ordertype: 'SALE',
+      order_id: 1005,
+      billing_address: {
+        address1: '1313 lucky lane',
+        city: 'Lost Angeles',
+        state: 'CA',
+        zip: '90210'
       }
     )
 
@@ -142,9 +182,9 @@ class LinkpointTest < Test::Unit::TestCase
     Base.mode = :production
 
     gateway = LinkpointGateway.new(
-      :login => 'LOGIN',
-      :pem => 'PEM',
-      :test => true
+      login: 'LOGIN',
+      pem: 'PEM',
+      test: true
     )
 
     assert gateway.test?
@@ -154,8 +194,8 @@ class LinkpointTest < Test::Unit::TestCase
     Base.mode = :production
 
     gateway = LinkpointGateway.new(
-      :login => 'LOGIN',
-      :pem => 'PEM'
+      login: 'LOGIN',
+      pem: 'PEM'
     )
 
     assert !gateway.test?
@@ -166,7 +206,7 @@ class LinkpointTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover, :jcb, :diners_club], LinkpointGateway.supported_cardtypes
+    assert_equal %i[visa master american_express discover jcb diners_club], LinkpointGateway.supported_cardtypes
   end
 
   def test_avs_result
@@ -188,6 +228,7 @@ class LinkpointTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_authorization_response
     '<r_csp>CSI</r_csp><r_time>Sun Jan 6 21:41:31 2008</r_time><r_ref>0004486182</r_ref><r_error/><r_ordernum>1000</r_ordernum><r_message>APPROVED</r_message><r_code>1234560004486182:NNNM:100018312899:</r_code><r_tdate>1199680890</r_tdate><r_score/><r_authresponse/><r_approved>APPROVED</r_approved><r_avs>NNNM</r_avs>'
   end
@@ -215,5 +256,4 @@ class LinkpointTest < Test::Unit::TestCase
   def scrubbed_transcript
     '</orderoptions><creditcard><cardnumber>[FILTERED]</cardnumber><cardexpmonth>9</cardexpmonth><cardexpyear>16</cardexpyear><cvmvalue>[FILTERED]</cvmvalue><cvmindicator>provided</cvmindicator></creditcard><billing><name>Jim Smith</name>'
   end
-
 end

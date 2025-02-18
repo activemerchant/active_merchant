@@ -2,16 +2,36 @@ require 'test_helper'
 
 class PinTest < Test::Unit::TestCase
   def setup
-    @gateway = PinGateway.new(:api_key => 'I_THISISNOTAREALAPIKEY')
+    @gateway = PinGateway.new(api_key: 'I_THISISNOTAREALAPIKEY')
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :email => 'roland@pin.net.au',
-      :billing_address => address,
-      :description => 'Store Purchase',
-      :ip => '127.0.0.1'
+      email: 'roland@pinpayments.com',
+      billing_address: address,
+      description: 'Store Purchase',
+      ip: '127.0.0.1'
+    }
+
+    @three_d_secure = {
+      enabled: true,
+      fallback_ok: true,
+      callback_url: 'https://yoursite.com/authentication_complete'
+    }
+
+    @three_d_secure_v1 = {
+      version: '1.0.2',
+      eci: '05',
+      cavv: '1234',
+      xid: '1234'
+    }
+
+    @three_d_secure_v2 = {
+      version: '2.0.0',
+      eci: '06',
+      cavv: 'jEoEjMykRWFCBEAAAVOBSYAAAA=',
+      ds_transaction_id: 'f92a19e2-485f-4d21-81ea-69a7352f611e'
     }
   end
 
@@ -30,19 +50,19 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_url
-    assert_equal 'https://test-api.pin.net.au/1', PinGateway.test_url
+    assert_equal 'https://test-api.pinpayments.com/1', PinGateway.test_url
   end
 
   def test_live_url
-    assert_equal 'https://api.pin.net.au/1', PinGateway.live_url
+    assert_equal 'https://api.pinpayments.com/1', PinGateway.live_url
   end
 
   def test_supported_countries
-    assert_equal ['AU'], PinGateway.supported_countries
+    assert_equal %w(AU NZ), PinGateway.supported_countries
   end
 
   def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express], PinGateway.supported_cardtypes
+    assert_equal %i[visa master american_express diners_club discover jcb], PinGateway.supported_cardtypes
   end
 
   def test_display_name
@@ -66,13 +86,27 @@ class PinTest < Test::Unit::TestCase
     headers = {}
     @gateway.stubs(:headers).returns(headers)
     @gateway.stubs(:post_data).returns(post_data)
-    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pin.net.au/1/charges', post_data, headers).returns(successful_purchase_response)
+    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/charges', post_data, headers).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'ch_Kw_JxmVqMeSOQU19_krRdw', response.authorization
     assert_equal JSON.parse(successful_purchase_response), response.params
     assert response.test?
+  end
+
+  def test_send_platform_adjustment
+    options_with_platform_adjustment = {
+      platform_adjustment: {
+        amount: 30,
+        currency: 'AUD'
+      }
+    }
+
+    post = {}
+    @gateway.send(:add_platform_adjustment, post, @options.merge(options_with_platform_adjustment))
+    assert_equal 30, post[:platform_adjustment][:amount]
+    assert_equal 'AUD', post[:platform_adjustment][:currency]
   end
 
   def test_unsuccessful_request
@@ -101,16 +135,16 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    @gateway.expects(:ssl_request).returns(successful_store_response)
+    @gateway.expects(:ssl_request).returns(successful_customer_store_response)
     assert response = @gateway.store(@credit_card, @options)
     assert_success response
-    assert_equal 'card_sVOs8D9nANoNgDc38NvKow', response.authorization
-    assert_equal JSON.parse(successful_store_response), response.params
+    assert_equal 'card__o8I8GmoXDF0d35LEDZbNQ;cus_05p0n7UFPmcyCNjD8c6HdA', response.authorization
+    assert_equal JSON.parse(successful_customer_store_response), response.params
     assert response.test?
   end
 
   def test_unsuccessful_store
-    @gateway.expects(:ssl_request).returns(failed_store_response)
+    @gateway.expects(:ssl_request).returns(failed_customer_store_response)
 
     assert response = @gateway.store(@credit_card, @options)
     assert_failure response
@@ -118,19 +152,39 @@ class PinTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_unstore
+    token = 'cus_05p0n7UFPmcyCNjD8c6HdA'
+    @gateway.expects(:ssl_request).with(:delete, "https://test-api.pinpayments.com/1/customers/#{token}", instance_of(String), instance_of(Hash)).returns(nil)
+
+    assert response = @gateway.unstore(token)
+    assert_success response
+    assert_nil response.message
+    assert response.test?
+  end
+
+  def test_unsuccessful_unstore
+    token = 'cus_05p0n7UFPmcyCNjD8c6HdA'
+    @gateway.expects(:ssl_request).with(:delete, "https://test-api.pinpayments.com/1/customers/#{token}", instance_of(String), instance_of(Hash)).returns(failed_customer_unstore_response)
+
+    assert response = @gateway.unstore(token)
+    assert_failure response
+    assert_equal 'The requested resource could not be found.', response.message
+    assert response.test?
+  end
+
   def test_successful_update
     token = 'cus_05p0n7UFPmcyCNjD8c6HdA'
-    @gateway.expects(:ssl_request).with(:put, "https://test-api.pin.net.au/1/customers/#{token}", instance_of(String), instance_of(Hash)).returns(successful_customer_store_response)
+    @gateway.expects(:ssl_request).with(:put, "https://test-api.pinpayments.com/1/customers/#{token}", instance_of(String), instance_of(Hash)).returns(successful_customer_store_response)
     assert response = @gateway.update('cus_05p0n7UFPmcyCNjD8c6HdA', @credit_card, @options)
     assert_success response
-    assert_equal 'cus_05p0n7UFPmcyCNjD8c6HdA', response.authorization
+    assert_equal 'card__o8I8GmoXDF0d35LEDZbNQ;cus_05p0n7UFPmcyCNjD8c6HdA', response.authorization
     assert_equal JSON.parse(successful_customer_store_response), response.params
     assert response.test?
   end
 
   def test_successful_refund
     token = 'ch_encBuMDf17qTabmVjDsQlg'
-    @gateway.expects(:ssl_request).with(:post, "https://test-api.pin.net.au/1/charges/#{token}/refunds", {:amount => '100'}.to_json, instance_of(Hash)).returns(successful_refund_response)
+    @gateway.expects(:ssl_request).with(:post, "https://test-api.pinpayments.com/1/charges/#{token}/refunds", { amount: '100' }.to_json, instance_of(Hash)).returns(successful_refund_response)
 
     assert response = @gateway.refund(100, token)
     assert_equal 'rf_d2C7M6Mn4z2m3APqarNN6w', response.authorization
@@ -140,7 +194,7 @@ class PinTest < Test::Unit::TestCase
 
   def test_unsuccessful_refund
     token = 'ch_encBuMDf17qTabmVjDsQlg'
-    @gateway.expects(:ssl_request).with(:post, "https://test-api.pin.net.au/1/charges/#{token}/refunds", {:amount => '100'}.to_json, instance_of(Hash)).returns(failed_refund_response)
+    @gateway.expects(:ssl_request).with(:post, "https://test-api.pinpayments.com/1/charges/#{token}/refunds", { amount: '100' }.to_json, instance_of(Hash)).returns(failed_refund_response)
 
     assert response = @gateway.refund(100, token)
     assert_failure response
@@ -153,7 +207,7 @@ class PinTest < Test::Unit::TestCase
     headers = {}
     @gateway.stubs(:headers).returns(headers)
     @gateway.stubs(:post_data).returns(post_data)
-    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pin.net.au/1/charges', post_data, headers).returns(successful_purchase_response)
+    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/charges', post_data, headers).returns(successful_purchase_response)
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
@@ -168,11 +222,39 @@ class PinTest < Test::Unit::TestCase
     token = 'ch_encBuMDf17qTabmVjDsQlg'
     @gateway.stubs(:headers).returns(headers)
     @gateway.stubs(:post_data).returns(post_data)
-    @gateway.expects(:ssl_request).with(:put, "https://test-api.pin.net.au/1/charges/#{token}/capture", post_data, headers).returns(successful_capture_response)
+    @gateway.expects(:ssl_request).with(:put, "https://test-api.pinpayments.com/1/charges/#{token}/capture", post_data, headers).returns(successful_capture_response)
 
     assert response = @gateway.capture(100, token)
     assert_success response
     assert_equal token, response.authorization
+    assert response.test?
+  end
+
+  def test_succesful_purchase_with_3ds
+    post_data = {}
+    headers = {}
+    @gateway.stubs(:headers).returns(headers)
+    @gateway.stubs(:post_data).returns(post_data)
+    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/charges', post_data, headers).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: @three_d_secure_v1))
+    assert_success response
+    assert_equal 'ch_Kw_JxmVqMeSOQU19_krRdw', response.authorization
+    assert_equal JSON.parse(successful_purchase_response), response.params
+    assert response.test?
+  end
+
+  def test_succesful_authorize_with_3ds
+    post_data = {}
+    headers = {}
+    @gateway.stubs(:headers).returns(headers)
+    @gateway.stubs(:post_data).returns(post_data)
+    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/charges', post_data, headers).returns(successful_purchase_response)
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure: @three_d_secure_v1))
+    assert_success response
+    assert_equal 'ch_Kw_JxmVqMeSOQU19_krRdw', response.authorization
+    assert_equal JSON.parse(successful_purchase_response), response.params
     assert response.test?
   end
 
@@ -225,7 +307,7 @@ class PinTest < Test::Unit::TestCase
 
     @gateway.send(:add_customer_data, post, @options)
 
-    assert_equal 'roland@pin.net.au', post[:email]
+    assert_equal 'roland@pinpayments.com', post[:email]
     assert_equal '127.0.0.1', post[:ip_address]
   end
 
@@ -262,7 +344,7 @@ class PinTest < Test::Unit::TestCase
     @gateway.send(:add_capture, post, @options)
     assert_equal post[:capture], true
 
-    @gateway.send(:add_capture, post, :capture => false)
+    @gateway.send(:add_capture, post, capture: false)
     assert_equal post[:capture], false
   end
 
@@ -291,6 +373,32 @@ class PinTest < Test::Unit::TestCase
     assert_false post.has_key?(:card)
   end
 
+  def test_add_3ds
+    post = {}
+    @gateway.send(:add_3ds, post, @options.merge(three_d_secure: @three_d_secure))
+    assert_equal true, post[:three_d_secure][:enabled]
+    assert_equal true, post[:three_d_secure][:fallback_ok]
+    assert_equal 'https://yoursite.com/authentication_complete', post[:three_d_secure][:callback_url]
+  end
+
+  def test_add_3ds_v1
+    post = {}
+    @gateway.send(:add_3ds, post, @options.merge(three_d_secure: @three_d_secure_v1))
+    assert_equal '1.0.2', post[:three_d_secure][:version]
+    assert_equal '05', post[:three_d_secure][:eci]
+    assert_equal '1234', post[:three_d_secure][:cavv]
+    assert_equal '1234', post[:three_d_secure][:transaction_id]
+  end
+
+  def test_add_3ds_v2
+    post = {}
+    @gateway.send(:add_3ds, post, @options.merge(three_d_secure: @three_d_secure_v2))
+    assert_equal '2.0.0', post[:three_d_secure][:version]
+    assert_equal '06', post[:three_d_secure][:eci]
+    assert_equal 'jEoEjMykRWFCBEAAAVOBSYAAAA=', post[:three_d_secure][:cavv]
+    assert_equal 'f92a19e2-485f-4d21-81ea-69a7352f611e', post[:three_d_secure][:transaction_id]
+  end
+
   def test_post_data
     post = {}
     @gateway.send(:add_creditcard, post, @credit_card)
@@ -304,13 +412,13 @@ class PinTest < Test::Unit::TestCase
     }
 
     @gateway.expects(:ssl_request).with(:post, anything, anything, expected_headers).returns(successful_purchase_response)
-    assert response = @gateway.purchase(@amount, @credit_card, {})
+    assert @gateway.purchase(@amount, @credit_card, {})
 
     expected_headers['X-Partner-Key'] = 'MyPartnerKey'
     expected_headers['X-Safe-Card'] = '1'
 
     @gateway.expects(:ssl_request).with(:post, anything, anything, expected_headers).returns(successful_purchase_response)
-    assert response = @gateway.purchase(@amount, @credit_card, :partner_key => 'MyPartnerKey', :safe_card => '1')
+    assert @gateway.purchase(@amount, @credit_card, partner_key: 'MyPartnerKey', safe_card: '1')
   end
 
   def test_transcript_scrubbing
@@ -327,7 +435,7 @@ class PinTest < Test::Unit::TestCase
         "amount":400,
         "currency":"AUD",
         "description":"test charge",
-        "email":"roland@pin.net.au",
+        "email":"roland@pinpayments.com",
         "ip_address":"203.192.1.172",
         "created_at":"2013-01-14T03:00:41Z",
         "status_message":"Success!",
@@ -407,7 +515,7 @@ class PinTest < Test::Unit::TestCase
     '{
       "response":{
         "token":"cus_05p0n7UFPmcyCNjD8c6HdA",
-        "email":"roland@pin.net.au",
+        "email":"roland@pinpayments.com",
         "created_at":"2013-01-16T03:16:11Z",
         "card":{
           "token":"card__o8I8GmoXDF0d35LEDZbNQ",
@@ -435,6 +543,13 @@ class PinTest < Test::Unit::TestCase
           "message":"Card number [\"is not a valid credit card number\"]"
         }
       ]
+    }'
+  end
+
+  def failed_customer_unstore_response
+    '{
+      "error": "not_found",
+      "error_description": "The requested resource could not be found."
     }'
   end
 
@@ -473,7 +588,7 @@ class PinTest < Test::Unit::TestCase
         "amount":400,
         "currency":"AUD",
         "description":"test charge",
-        "email":"roland@pin.net.au",
+        "email":"roland@pinpayments.com",
         "ip_address":"203.192.1.172",
         "created_at":"2013-01-14T03:00:41Z",
         "status_message":"Success!",
@@ -504,7 +619,7 @@ class PinTest < Test::Unit::TestCase
     '{
       "amount":"100",
       "currency":"AUD",
-      "email":"roland@pin.net.au",
+      "email":"roland@pinpayments.com",
       "ip_address":"203.59.39.62",
       "description":"Store Purchase 1437598192",
       "card":{
@@ -526,7 +641,7 @@ class PinTest < Test::Unit::TestCase
     '{
       "amount":"100",
       "currency":"AUD",
-      "email":"roland@pin.net.au",
+      "email":"roland@pinpayments.com",
       "ip_address":"203.59.39.62",
       "description":"Store Purchase 1437598192",
       "card":{
@@ -543,5 +658,4 @@ class PinTest < Test::Unit::TestCase
       }
     }'
   end
-
 end

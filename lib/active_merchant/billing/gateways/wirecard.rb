@@ -1,7 +1,7 @@
 require 'base64'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class WirecardGateway < Gateway
       self.test_url = 'https://c3-test.wirecard.com/secure/ssl-gateway'
       self.live_url = 'https://c3.wirecard.com/secure/ssl-gateway'
@@ -13,9 +13,9 @@ module ActiveMerchant #:nodoc:
         'xsi:noNamespaceSchemaLocation' => 'wirecard.xsd'
       }
 
-      PERMITTED_TRANSACTIONS = %w[ PREAUTHORIZATION CAPTURE PURCHASE ]
+      PERMITTED_TRANSACTIONS = %w[PREAUTHORIZATION CAPTURE PURCHASE]
 
-      RETURN_CODES = %w[ ACK NOK ]
+      RETURN_CODES = %w[ACK NOK]
 
       # Wirecard only allows phone numbers with a format like this: +xxx(yyy)zzz-zzzz-ppp, where:
       #   xxx = Country code
@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
       # number 5551234 within area code 202 (country code 1).
       VALID_PHONE_FORMAT = /\+\d{1,3}(\(?\d{3}\)?)?\d{3}-\d{4}-\d{3}/
 
-      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb, :switch ]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
       self.supported_countries = %w(AD CY GI IM MT RO CH AT DK GR IT MC SM TR BE EE HU LV NL SK GB BG FI IS LI NO SI VA FR IL LT PL ES CZ DE IE LU PT SE)
       self.homepage_url = 'http://www.wirecard.com'
       self.display_name = 'Wirecard'
@@ -138,8 +138,9 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def clean_description(description)
-        description.to_s.slice(0,32).encode('US-ASCII', invalid: :replace, undef: :replace, replace: '?')
+        description.to_s.slice(0, 32).encode('US-ASCII', invalid: :replace, undef: :replace, replace: '?')
       end
 
       def prepare_options_hash(options)
@@ -178,11 +179,14 @@ module ActiveMerchant #:nodoc:
         message = response[:Message]
         authorization = response[:GuWID]
 
-        Response.new(success, message, response,
-          :test => test?,
-          :authorization => authorization,
-          :avs_result => { :code => avs_code(response, options) },
-          :cvv_result => response[:CVCResponseCode]
+        Response.new(
+          success,
+          message,
+          response,
+          test: test?,
+          authorization:,
+          avs_result: { code: avs_code(response, options) },
+          cvv_result: response[:CVCResponseCode]
         )
       rescue ResponseError => e
         if e.response.code == '401'
@@ -196,16 +200,16 @@ module ActiveMerchant #:nodoc:
       def build_request(action, money, options)
         options = prepare_options_hash(options)
         options[:action] = action
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'WIRECARD_BXML' do
           xml.tag! 'W_REQUEST' do
             xml.tag! 'W_JOB' do
-               xml.tag! 'JobID', ''
-               # UserID for this transaction
-               xml.tag! 'BusinessCaseSignature', options[:signature] || options[:login]
-               # Create the whole rest of the message
-               add_transaction_data(xml, money, options)
+              xml.tag! 'JobID', ''
+              # UserID for this transaction
+              xml.tag! 'BusinessCaseSignature', options[:signature] || options[:login]
+              # Create the whole rest of the message
+              add_transaction_data(xml, money, options)
             end
           end
         end
@@ -262,6 +266,7 @@ module ActiveMerchant #:nodoc:
       # Includes the credit-card data to the transaction-xml
       def add_creditcard(xml, creditcard)
         raise 'Creditcard must be supplied!' if creditcard.nil?
+
         xml.tag! 'CREDIT_CARD_DATA' do
           xml.tag! 'CreditCardNumber', creditcard.number
           xml.tag! 'CVC2', creditcard.verification_value
@@ -274,6 +279,7 @@ module ActiveMerchant #:nodoc:
       # Includes the IP address of the customer to the transaction-xml
       def add_customer_data(xml, options)
         return unless options[:ip]
+
         xml.tag! 'CONTACT_DATA' do
           xml.tag! 'IPAddress', options[:ip]
         end
@@ -282,6 +288,7 @@ module ActiveMerchant #:nodoc:
       # Includes the address to the transaction-xml
       def add_address(xml, address)
         return if address.nil?
+
         xml.tag! 'CORPTRUSTCENTER_DATA' do
           xml.tag! 'ADDRESS' do
             xml.tag! 'Address1', address[:address1]
@@ -289,9 +296,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'City', address[:city]
             xml.tag! 'ZipCode', address[:zip]
 
-            if address[:state] =~ /[A-Za-z]{2}/ && address[:country] =~ /^(us|ca)$/i
-              xml.tag! 'State', address[:state].upcase
-            end
+            xml.tag! 'State', address[:state].upcase if address[:state] =~ /[A-Za-z]{2}/ && address[:country] =~ /^(us|ca)$/i
 
             xml.tag! 'Country', address[:country]
             xml.tag! 'Phone', address[:phone] if address[:phone] =~ VALID_PHONE_FORMAT
@@ -330,9 +335,7 @@ module ActiveMerchant #:nodoc:
         status = nil
 
         root.elements.to_a.each do |node|
-          if node.name =~ /FNC_CC_/
-            status = REXML::XPath.first(node, 'CC_TRANSACTION/PROCESSING_STATUS')
-          end
+          status = REXML::XPath.first(node, 'CC_TRANSACTION/PROCESSING_STATUS') if node.name =~ /FNC_CC_/
         end
 
         message = ''
@@ -342,7 +345,7 @@ module ActiveMerchant #:nodoc:
           end
 
           status.elements.to_a.each do |node|
-            if (node.elements.size == 0)
+            if node.elements.size == 0
               response[node.name.to_sym] = (node.text || '').strip
             else
               node.elements.each do |childnode|
@@ -391,7 +394,7 @@ module ActiveMerchant #:nodoc:
           string << error[:Message] if error[:Message]
           error[:Advice].each_with_index do |advice, index|
             string << ' (' if index == 0
-            string << "#{index+1}. #{advice}"
+            string << "#{index + 1}. #{advice}"
             string << ' and ' if index < error[:Advice].size - 1
             string << ')' if index == error[:Advice].size - 1
           end
@@ -406,7 +409,7 @@ module ActiveMerchant #:nodoc:
         'N' => 'I', # CSC Match
         'U' => 'U', # Data Not Checked
         'Y' => 'D', # All Data Matched
-        'Z' => 'P', # CSC and Postcode Matched
+        'Z' => 'P' # CSC and Postcode Matched
       }
 
       # Amex have different AVS response codes to visa etc

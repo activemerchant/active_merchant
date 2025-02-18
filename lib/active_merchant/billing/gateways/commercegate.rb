@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CommercegateGateway < Gateway
       self.test_url = self.live_url = 'https://secure.commercegate.com/gateway/nvp'
 
@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :dollars
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.commercegate.com/'
       self.display_name = 'CommerceGate'
 
@@ -74,9 +74,8 @@ module ActiveMerchant #:nodoc:
         post[:customerIP]  = options[:ip] || '127.0.0.1'
         post[:amount]      = amount(money)
         post[:email]       = options[:email] || 'unknown@example.com'
-        post[:currencyCode]= options[:currency] || currency(money)
-        post[:merchAcct]   = options[:merchant]
-
+        post[:currencyCode] = options[:currency] || currency(money)
+        post[:merchAcct] = options[:merchant]
       end
 
       def add_creditcard(params, creditcard)
@@ -103,7 +102,7 @@ module ActiveMerchant #:nodoc:
           response,
           authorization: response['transID'],
           test: test?,
-          avs_result: {code: response['avsCode']},
+          avs_result: { code: response['avsCode'] },
           cvv_result: response['cvvCode']
         )
       end
@@ -112,7 +111,7 @@ module ActiveMerchant #:nodoc:
         results = {}
 
         body.split(/\&/).each do |pair|
-          key,val = pair.split(%r{=})
+          key, val = pair.split(%r{=})
           results[key] = CGI.unescape(val)
         end
 
@@ -127,9 +126,9 @@ module ActiveMerchant #:nodoc:
         if response['returnText'].present?
           response['returnText']
         else
-          'Invalid response received from the CommerceGate API. ' +
-          'Please contact CommerceGate support if you continue to receive this message. ' +
-          "(The raw response returned by the API was #{response.inspect})"
+          'Invalid response received from the CommerceGate API. ' \
+            'Please contact CommerceGate support if you continue to receive this message. ' \
+            "(The raw response returned by the API was #{response.inspect})"
         end
       end
 

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information on the Iridium Gateway please download the
     # documentation from their Merchant Management System.
     #
@@ -10,12 +10,12 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://gw1.iridiumcorp.net/'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['GB', 'ES']
+      self.supported_countries = %w[GB ES]
       self.default_currency = 'EUR'
       self.money_format = :cents
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :maestro, :jcb, :solo, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover maestro jcb diners_club]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.iridiumcorp.co.uk/'
@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
         'YER' => '886',
         'ZAR' => '710',
         'ZMK' => '894',
-        'ZWD' => '716',
+        'ZWD' => '716'
       }
 
       AVS_CODE = {
@@ -251,16 +251,16 @@ module ActiveMerchant #:nodoc:
         commit(build_reference_request('COLLECTION', money, authorization, options), options)
       end
 
-      def credit(money, authorization, options={})
+      def credit(money, authorization, options = {})
         ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         commit(build_reference_request('REFUND', money, authorization, options), options)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit(build_reference_request('VOID', nil, authorization, options), options)
       end
 
@@ -278,7 +278,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def build_purchase_request(type, money, creditcard, options)
-        options.merge!(:action => 'CardDetailsTransaction')
+        options[:action] = 'CardDetailsTransaction'
         build_request(options) do |xml|
           add_purchase_data(xml, type, money, options)
           add_creditcard(xml, creditcard)
@@ -287,16 +287,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_reference_request(type, money, authorization, options)
-        options.merge!(:action => 'CrossReferenceTransaction')
-        order_id, cross_reference, _ = authorization.split(';')
+        options[:action] = 'CrossReferenceTransaction'
+        order_id, cross_reference, = authorization.split(';')
         build_request(options) do |xml|
           if money
-            details = {'CurrencyCode' => currency_code(options[:currency] || default_currency), 'Amount' => amount(money)}
+            currency = options[:currency] || currency(money)
+            details = { 'CurrencyCode' => currency_code(currency), 'Amount' => localized_amount(money, currency) }
           else
-            details = {'CurrencyCode' => currency_code(default_currency), 'Amount' => '0'}
+            details = { 'CurrencyCode' => currency_code(default_currency), 'Amount' => '0' }
           end
           xml.tag! 'TransactionDetails', details do
-            xml.tag! 'MessageDetails', {'TransactionType' => type, 'CrossReference' => cross_reference}
+            xml.tag! 'MessageDetails', { 'TransactionType' => type, 'CrossReference' => cross_reference }
             xml.tag! 'OrderID', (options[:order_id] || order_id)
           end
         end
@@ -304,13 +305,13 @@ module ActiveMerchant #:nodoc:
 
       def build_request(options)
         requires!(options, :action)
-        xml = Builder::XmlMarkup.new :indent => 2
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
+        xml = Builder::XmlMarkup.new indent: 2
+        xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
         xml.tag! 'soap:Envelope', { 'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/',
                                     'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
-                                    'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema'} do
+                                    'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema' } do
           xml.tag! 'soap:Body' do
-            xml.tag! options[:action], {'xmlns' => 'https://www.thepaymentgateway.net/'} do
+            xml.tag! options[:action], { 'xmlns' => 'https://www.thepaymentgateway.net/' } do
               xml.tag! 'PaymentMessage' do
                 add_merchant_data(xml, options)
                 yield(xml)
@@ -327,9 +328,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_purchase_data(xml, type, money, options)
+        currency = options[:currency] || currency(money)
         requires!(options, :order_id)
-        xml.tag! 'TransactionDetails', {'Amount' => amount(money), 'CurrencyCode' => currency_code(options[:currency] || currency(money))} do
-          xml.tag! 'MessageDetails', {'TransactionType' => type}
+        xml.tag! 'TransactionDetails', { 'Amount' => localized_amount(money, currency), 'CurrencyCode' => currency_code(currency) } do
+          xml.tag! 'MessageDetails', { 'TransactionType' => type }
           xml.tag! 'OrderID', options[:order_id]
           xml.tag! 'TransactionControl' do
             xml.tag! 'ThreeDSecureOverridePolicy', 'FALSE'
@@ -342,9 +344,7 @@ module ActiveMerchant #:nodoc:
       def add_customerdetails(xml, creditcard, address, options, shipTo = false)
         xml.tag! 'CustomerDetails' do
           if address
-            unless address[:country].blank?
-              country_code = Country.find(address[:country]).code(:numeric)
-            end
+            country_code = Country.find(address[:country]).code(:numeric) unless address[:country].blank?
             xml.tag! 'BillingAddress' do
               xml.tag! 'Address1', address[:address1]
               xml.tag! 'Address2', address[:address2]
@@ -371,35 +371,44 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_merchant_data(xml, options)
-        xml.tag! 'MerchantAuthentication', {'MerchantID' => @options[:login], 'Password' => @options[:password]}
+        xml.tag! 'MerchantAuthentication', { 'MerchantID' => @options[:login], 'Password' => @options[:password] }
       end
 
       def commit(request, options)
         requires!(options, :action)
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, request,
-                              {'SOAPAction' => 'https://www.thepaymentgateway.net/' + options[:action],
-                               'Content-Type' => 'text/xml; charset=utf-8' }))
+        response = parse(
+          ssl_post(
+            test? ? self.test_url : self.live_url, request,
+            {
+              'SOAPAction' => 'https://www.thepaymentgateway.net/' + options[:action],
+              'Content-Type' => 'text/xml; charset=utf-8'
+            }
+          )
+        )
 
         success = response[:transaction_result][:status_code] == '0'
         message = response[:transaction_result][:message]
-        authorization = success ? [ options[:order_id], response[:transaction_output_data][:cross_reference], response[:transaction_output_data][:auth_code] ].compact.join(';') : nil
+        authorization = success ? [options[:order_id], response[:transaction_output_data][:cross_reference], response[:transaction_output_data][:auth_code]].compact.join(';') : nil
 
-        Response.new(success, message, response,
-          :test => test?,
-          :authorization => authorization,
-          :avs_result => {
-            :street_match => AVS_CODE[ response[:transaction_output_data][:address_numeric_check_result] ],
-            :postal_match => AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ],
+        Response.new(
+          success,
+          message,
+          response,
+          test: test?,
+          authorization:,
+          avs_result: {
+            street_match: AVS_CODE[ response[:transaction_output_data][:address_numeric_check_result] ],
+            postal_match: AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ]
           },
-          :cvv_result => CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ]
+          cvv_result: CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ]
         )
       end
 
       def parse(xml)
         reply = {}
         xml = REXML::Document.new(xml)
-        if (root = REXML::XPath.first(xml, '//CardDetailsTransactionResponse')) or
-              (root = REXML::XPath.first(xml, '//CrossReferenceTransactionResponse'))
+        if (root = REXML::XPath.first(xml, '//CardDetailsTransactionResponse')) ||
+           (root = REXML::XPath.first(xml, '//CrossReferenceTransactionResponse'))
           root.elements.to_a.each do |node|
             case node.name
             when 'Message'
@@ -419,39 +428,39 @@ module ActiveMerchant #:nodoc:
         case node.name
         when 'CrossReferenceTransactionResult'
           reply[:transaction_result] = {}
-          node.attributes.each do |a,b|
+          node.attributes.each do |a, b|
             reply[:transaction_result][a.underscore.to_sym] = b
           end
-          node.elements.each{|e| parse_element(reply[:transaction_result], e) } if node.has_elements?
+          node.elements.each { |e| parse_element(reply[:transaction_result], e) } if node.has_elements?
 
         when 'CardDetailsTransactionResult'
           reply[:transaction_result] = {}
-          node.attributes.each do |a,b|
+          node.attributes.each do |a, b|
             reply[:transaction_result][a.underscore.to_sym] = b
           end
-          node.elements.each{|e| parse_element(reply[:transaction_result], e) } if node.has_elements?
+          node.elements.each { |e| parse_element(reply[:transaction_result], e) } if node.has_elements?
 
         when 'TransactionOutputData'
           reply[:transaction_output_data] = {}
-          node.attributes.each{|a,b| reply[:transaction_output_data][a.underscore.to_sym] = b }
-          node.elements.each{|e| parse_element(reply[:transaction_output_data], e) } if node.has_elements?
+          node.attributes.each { |a, b| reply[:transaction_output_data][a.underscore.to_sym] = b }
+          node.elements.each { |e| parse_element(reply[:transaction_output_data], e) } if node.has_elements?
         when 'CustomVariables'
           reply[:custom_variables] = {}
-          node.attributes.each{|a,b| reply[:custom_variables][a.underscore.to_sym] = b }
-          node.elements.each{|e| parse_element(reply[:custom_variables], e) } if node.has_elements?
+          node.attributes.each { |a, b| reply[:custom_variables][a.underscore.to_sym] = b }
+          node.elements.each { |e| parse_element(reply[:custom_variables], e) } if node.has_elements?
         when 'GatewayEntryPoints'
           reply[:gateway_entry_points] = {}
-          node.attributes.each{|a,b| reply[:gateway_entry_points][a.underscore.to_sym] = b }
-          node.elements.each{|e| parse_element(reply[:gateway_entry_points], e) } if node.has_elements?
+          node.attributes.each { |a, b| reply[:gateway_entry_points][a.underscore.to_sym] = b }
+          node.elements.each { |e| parse_element(reply[:gateway_entry_points], e) } if node.has_elements?
         else
           k = node.name.underscore.to_sym
           if node.has_elements?
             reply[k] = {}
-            node.elements.each{|e| parse_element(reply[k], e) }
+            node.elements.each { |e| parse_element(reply[k], e) }
           else
             if node.has_attributes?
               reply[k] = {}
-              node.attributes.each{|a,b| reply[k][a.underscore.to_sym] = b }
+              node.attributes.each { |a, b| reply[k][a.underscore.to_sym] = b }
             else
               reply[k] = node.text
             end

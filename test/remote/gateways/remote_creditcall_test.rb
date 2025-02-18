@@ -89,7 +89,7 @@ class RemoteCreditcallTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -112,7 +112,7 @@ class RemoteCreditcallTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -147,7 +147,7 @@ class RemoteCreditcallTest < Test::Unit::TestCase
     @declined_card.number = ''
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{PAN Must be >= 13 Digits}, response.message
+    assert_match %r{PAN Must be >= 12 Digits}, response.message
   end
 
   def test_invalid_login
@@ -155,7 +155,7 @@ class RemoteCreditcallTest < Test::Unit::TestCase
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match %r{Invalid TerminalID - Must be 8 digit number}, response.message
+    assert_match %r{Invalid terminal details}, response.message
   end
 
   def test_transcript_scrubbing
@@ -167,6 +167,5 @@ class RemoteCreditcallTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:transaction_key], transcript)
-
   end
 end

@@ -16,6 +16,12 @@ class QvalentTest < Test::Unit::TestCase
     @amount = 100
   end
 
+  def test_successful_gateway_creation_without_pem_password
+    gateway = QvalentGateway.new(username: 'username', password: 'password', merchant: 'merchant', pem: 'pem')
+
+    assert_instance_of QvalentGateway, gateway
+  end
+
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
@@ -24,6 +30,7 @@ class QvalentTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '5d53a33d960c46d00f5dc061947d998c', response.authorization
+    assert_equal 'M', response.cvv_result['code']
     assert response.test?
   end
 
@@ -55,7 +62,7 @@ class QvalentTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal 'Expired card',response.message
+    assert_equal 'Expired card', response.message
     assert response.test?
   end
 
@@ -90,7 +97,7 @@ class QvalentTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{5d53a33d960c46d00f5dc061947d998c}, data
     end.respond_with(successful_refund_response)
 
@@ -176,8 +183,8 @@ class QvalentTest < Test::Unit::TestCase
 
   def test_3d_secure_fields
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, {xid: '123', cavv: '456', eci: '5'})
-    end.check_request do |method, endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, { xid: '123', cavv: '456', eci: '5' })
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/xid=123/, data)
       assert_match(/cavv=456/, data)
       assert_match(/ECI=5/, data)
@@ -186,15 +193,121 @@ class QvalentTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_stored_credential_fields_initial
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, { stored_credential: { initial_transaction: true, reason_type: 'unscheduled', initiator: 'merchant' } })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/posEntryMode=MANUAL/, data)
+      assert_match(/storedCredentialUsage=UNSCHEDULED_MIT/, data)
+      assert_match(/ECI=SSL/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_fields_recurring
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, { stored_credential: { reason_type: 'recurring', initiator: 'merchant', network_transaction_id: '7890' } })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/posEntryMode=STORED_CREDENTIAL/, data)
+      assert_match(/storedCredentialUsage=RECURRING/, data)
+      assert_match(/ECI=REC/, data)
+      assert_match(/authTraceId=7890/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_fields_unscheduled
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, { stored_credential: { reason_type: 'unscheduled', initiator: 'merchant', network_transaction_id: '7890' } })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/posEntryMode=STORED_CREDENTIAL/, data)
+      assert_match(/storedCredentialUsage=UNSCHEDULED/, data)
+      assert_match(/ECI=MTO/, data)
+      assert_match(/authTraceId=7890/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_fields_cardholder_initiated
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, { stored_credential: { reason_type: 'unscheduled', initiator: 'cardholder', network_transaction_id: '7890' } })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/posEntryMode=STORED_CREDENTIAL/, data)
+      refute_match(/storedCredentialUsage/, data)
+      assert_match(/ECI=MTO/, data)
+      assert_match(/authTraceId=7890/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_fields_mastercard
+    @credit_card.brand = 'master'
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, { stored_credential: { reason_type: 'recurring', initiator: 'merchant', network_transaction_id: '7890' } })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/posEntryMode=STORED_CREDENTIAL/, data)
+      refute_match(/storedCredentialUsage/, data)
+      assert_match(/ECI=REC/, data)
+      assert_match(/authTraceId=7890/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_cvv_result
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(mapped_cvv_response)
+
+    assert_success response
+    assert_equal 'D', response.cvv_result['code']
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
+  def test_default_add_card_reference_number
+    post = {}
+    options = {}
+    options[:order_id] = 1234534
+    @gateway.send(:add_card_reference, post, options)
+    assert_equal post['customer.customerReferenceNumber'], 1234534
+  end
+
+  def test_add_card_reference_number
+    post = {}
+    options = {}
+    options[:order_id] = 1234
+    options[:customer_reference_number] = 4321
+    @gateway.send(:add_card_reference, post, options)
+    assert_equal post['customer.customerReferenceNumber'], 4321
+  end
+
+  def test_default_add_customer_reference_number
+    post = {}
+    @gateway.send(:add_customer_reference, post, {})
+    assert_nil post['customer.customerReferenceNumber']
+  end
+
+  def test_add_customer_reference_number
+    post = {}
+    options = {}
+    options[:customer_reference_number] = 4321
+    @gateway.send(:add_customer_reference, post, options)
+    assert_equal post['customer.customerReferenceNumber'], 4321
   end
 
   private
 
   def successful_purchase_response
     %(
-      response.summaryCode=0\r\nresponse.responseCode=08\r\nresponse.text=Honour with identification\r\nresponse.referenceNo=723907124\r\nresponse.orderNumber=5d53a33d960c46d00f5dc061947d998c\r\nresponse.RRN=723907124   \r\nresponse.settlementDate=20150228\r\nresponse.transactionDate=28-FEB-2015 09:34:15\r\nresponse.cardSchemeName=VISA\r\nresponse.creditGroup=VI/BC/MC\r\nresponse.previousTxn=0\r\nresponse.end\r\n
+      response.summaryCode=0\r\nresponse.responseCode=08\r\nresponse.text=Honour with identification\r\nresponse.referenceNo=723907124\r\nresponse.orderNumber=5d53a33d960c46d00f5dc061947d998c\r\nresponse.RRN=723907124   \r\nresponse.settlementDate=20150228\r\nresponse.transactionDate=28-FEB-2015 09:34:15\r\nresponse.cardSchemeName=VISA\r\nresponse.creditGroup=VI/BC/MC\r\nresponse.previousTxn=0\r\nresponse.cvnResponse=M
+\r\nresponse.end\r\n
     )
   end
 
@@ -278,6 +391,13 @@ class QvalentTest < Test::Unit::TestCase
 
   def empty_purchase_response
     %(
+    )
+  end
+
+  def mapped_cvv_response
+    %(
+      response.summaryCode=0\r\nresponse.responseCode=08\r\nresponse.text=Honour with identification\r\nresponse.referenceNo=723907124\r\nresponse.orderNumber=5d53a33d960c46d00f5dc061947d998c\r\nresponse.RRN=723907124   \r\nresponse.settlementDate=20150228\r\nresponse.transactionDate=28-FEB-2015 09:34:15\r\nresponse.cardSchemeName=VISA\r\nresponse.creditGroup=VI/BC/MC\r\nresponse.previousTxn=0\r\nresponse.cvnResponse=S
+\r\nresponse.end\r\n
     )
   end
 

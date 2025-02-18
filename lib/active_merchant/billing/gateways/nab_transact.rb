@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # The National Australia Bank provide a payment gateway that seems to
     # be a rebadged Securepay Australia service, though some differences exist.
     class NabTransactGateway < Gateway
@@ -12,35 +12,34 @@ module ActiveMerchant #:nodoc:
 
       self.test_url = 'https://demo.transact.nab.com.au/xmlapi/payment'
       self.live_url = 'https://transact.nab.com.au/live/xmlapi/payment'
-      self.test_periodic_url = 'https://transact.nab.com.au/xmlapidemo/periodic'
+      self.test_periodic_url = 'https://demo.transact.nab.com.au/xmlapi/periodic'
       self.live_periodic_url = 'https://transact.nab.com.au/xmlapi/periodic'
 
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       self.homepage_url = 'http://transact.nab.com.au'
       self.display_name = 'NAB Transact'
       self.money_format = :cents
       self.default_currency = 'AUD'
 
-      #Transactions currently accepted by NAB Transact XML API
+      # Transactions currently accepted by NAB Transact XML API
       TRANSACTIONS = {
-        :purchase => 0,           #Standard Payment
-        :refund => 4,             #Refund
-        :void => 6,               #Client Reversal (Void)
-        :unmatched_refund => 666, #Unmatched Refund
-        :authorization => 10,     #Preauthorise
-        :capture => 11            #Preauthorise Complete (Advice)
+        purchase: 0,           # Standard Payment
+        refund: 4,             # Refund
+        void: 6,               # Client Reversal (Void)
+        unmatched_refund: 666, # Unmatched Refund
+        authorization: 10,     # Preauthorise
+        capture: 11            # Preauthorise Complete (Advice)
       }
 
       PERIODIC_TYPES = {
-        :addcrn    => 5,
-        :deletecrn => 5,
-        :trigger   => 8
+        addcrn: 5,
+        deletecrn: 5,
+        trigger: 8
       }
 
-      SUCCESS_CODES = [ '00', '08', '11', '16', '77' ]
-
+      SUCCESS_CODES = %w[00 08 11 16 77]
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -85,6 +84,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         return '' if transcript.blank?
+
         transcript.
           gsub(%r((<cardNumber>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<cvv>)[^<]+(<))i, '\1[FILTERED]\2').
@@ -96,8 +96,8 @@ module ActiveMerchant #:nodoc:
       def add_metadata(xml, options)
         if options[:merchant_name] || options[:merchant_location]
           xml.tag! 'metadata' do
-            xml.tag! 'meta', :name => 'ca_name', :value => options[:merchant_name] if options[:merchant_name]
-            xml.tag! 'meta', :name => 'ca_location', :value => options[:merchant_location] if options[:merchant_location]
+            xml.tag! 'meta', name: 'ca_name', value: options[:merchant_name] if options[:merchant_name]
+            xml.tag! 'meta', name: 'ca_location', value: options[:merchant_location] if options[:merchant_location]
           end
         end
       end
@@ -135,7 +135,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      #Generate payment request XML
+      # Generate payment request XML
       # - API is set to allow multiple Txn's but currently only allows one
       # - txnSource = 23 - (XML)
       def build_request(action, body)
@@ -233,17 +233,23 @@ module ActiveMerchant #:nodoc:
       def commit(action, request)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
 
-        Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(action, response)
+        Response.new(
+          success?(response),
+          message_from(response),
+          response,
+          test: test?,
+          authorization: authorization_from(action, response)
         )
       end
 
       def commit_periodic(action, request)
         response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, build_periodic_request(action, request)))
-        Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(action, response)
+        Response.new(
+          success?(response),
+          message_from(response),
+          response,
+          test: test?,
+          authorization: authorization_from(action, response)
         )
       end
 
@@ -281,7 +287,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|element| parse_element(response, element) }
+          node.elements.each { |element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
@@ -296,7 +302,6 @@ module ActiveMerchant #:nodoc:
       def request_timeout
         @options[:request_timeout] || 60
       end
-
     end
   end
 end

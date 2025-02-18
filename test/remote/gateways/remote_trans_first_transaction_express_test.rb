@@ -1,13 +1,12 @@
 require 'test_helper'
 
 class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
-
   def setup
     @gateway = TransFirstTransactionExpressGateway.new(fixtures(:trans_first_transaction_express))
 
     @amount = 100
     @declined_amount = 21
-    @credit_card = credit_card('4485896261017708')
+    @credit_card = credit_card('4485896261017708', verification_value: 999)
     @check = check
 
     billing_address = address({
@@ -16,14 +15,14 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
       city: 'Broomfield',
       state: 'CO',
       zip: '85284',
-      phone: '(333) 444-5555',
+      phone: '(333) 444-5555'
     })
 
     @options = {
       order_id: generate_unique_id,
       company_name: 'Acme',
       title: 'QA Manager',
-      billing_address: billing_address,
+      billing_address:,
       shipping_address: billing_address,
       email: 'example@example.com',
       description: 'Store Purchase'
@@ -45,7 +44,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_equal 'Street address does not match, but 5-digit postal code matches.', response.avs_result['message']
     assert_equal 'CVV matches', response.cvv_result['message']
   end
- 
+
   def test_successful_purchase_no_avs
     options = @options.dup
     options[:shipping_address] = nil
@@ -59,12 +58,12 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     options = @options.dup
     options[:shipping_address] = {
       address1: '450 Main',
-      zip: '85284',
+      zip: '85284'
     }
 
     options[:billing_address] = {
       address1: '450 Main',
-      zip: '85284',
+      zip: '85284'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -76,15 +75,34 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_equal 'CVV matches', response.cvv_result['message']
   end
 
+  def test_successful_purchase_without_address2
+    # Test that empty string in `address2` doesn't cause transaction failure
+    options = @options.dup
+    options[:shipping_address] = {
+      address1: '450 Main',
+      address2: '',
+      zip: '85284'
+    }
+
+    options[:billing_address] = {
+      address1: '450 Main',
+      address2: '',
+      zip: '85284'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
 
   def test_successful_purchase_without_cvv
     credit_card_opts = {
-      :number => 4485896261017708,
-      :month => Date.new((Time.now.year + 1), 9, 30).month,
-      :year => Date.new((Time.now.year + 1), 9, 30).year,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :brand => 'visa'
+      number: 4485896261017708,
+      month: Date.new((Time.now.year + 1), 9, 30).month,
+      year: Date.new((Time.now.year + 1), 9, 30).year,
+      first_name: 'Longbob',
+      last_name: 'Longsen',
+      brand: 'visa'
     }
 
     credit_card = CreditCard.new(credit_card_opts)
@@ -95,13 +113,39 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_empty_string_cvv
     credit_card_opts = {
-      :number => 4485896261017708,
-      :month => Date.new((Time.now.year + 1), 9, 30).month,
-      :year => Date.new((Time.now.year + 1), 9, 30).year,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :verification_value => '',
-      :brand => 'visa'
+      number: 4485896261017708,
+      month: Date.new((Time.now.year + 1), 9, 30).month,
+      year: Date.new((Time.now.year + 1), 9, 30).year,
+      first_name: 'Longbob',
+      last_name: 'Longsen',
+      verification_value: '',
+      brand: 'visa'
+    }
+
+    credit_card = CreditCard.new(credit_card_opts)
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_without_name
+    credit_card_opts = {
+      number: 4485896261017708,
+      month: Date.new((Time.now.year + 1), 9, 30).month,
+      year: Date.new((Time.now.year + 1), 9, 30).year,
+      first_name: '',
+      last_name: ''
+    }
+
+    credit_card = CreditCard.new(credit_card_opts)
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+
+    credit_card_opts = {
+      number: 4485896261017708,
+      month: Date.new((Time.now.year + 1), 9, 30).month,
+      year: Date.new((Time.now.year + 1), 9, 30).year
     }
 
     credit_card = CreditCard.new(credit_card_opts)
@@ -233,7 +277,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
   def test_successful_refund_with_echeck
     purchase = @gateway.purchase(@amount, @check, @options)
     assert_success purchase
-    assert_match /purchase_echeck/, purchase.authorization
+    assert_match(/purchase_echeck/, purchase.authorization)
 
     refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
@@ -348,5 +392,13 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:gateway_id], clean_transcript)
     assert_scrubbed(@gateway.options[:reg_key], clean_transcript)
+  end
+
+  def test_transcript_scrubbing_account_number
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@check.account_number, clean_transcript)
   end
 end

@@ -1,7 +1,7 @@
 require 'active_merchant/billing/gateways/beanstream/beanstream_core'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class BeanstreamInteracResponse < Response
       def redirect
         params['pageContents']
@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
       # post back is for until the response of the confirmation is
       # received, which contains the order number.
       def self.confirm(transaction)
-        gateway = new(:login => '')
+        gateway = new(login: '')
         gateway.confirm(transaction)
       end
 
@@ -55,4 +55,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

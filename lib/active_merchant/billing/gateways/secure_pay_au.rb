@@ -1,30 +1,27 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SecurePayAuGateway < Gateway
       API_VERSION = 'xml-4.2'
       PERIODIC_API_VERSION = 'spxml-3.0'
 
       class_attribute :test_periodic_url, :live_periodic_url
 
-      self.test_url = 'https://api.securepay.com.au/test/payment'
+      self.test_url = 'https://test.api.securepay.com.au/xmlapi/payment'
       self.live_url = 'https://api.securepay.com.au/xmlapi/payment'
 
       self.test_periodic_url = 'https://test.securepay.com.au/xmlapi/periodic'
       self.live_periodic_url = 'https://api.securepay.com.au/xmlapi/periodic'
 
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://securepay.com.au'
 
       # The name of the gateway
       self.display_name = 'SecurePay'
-
-      class_attribute :request_timeout
-      self.request_timeout = 60
 
       self.money_format = :cents
       self.default_currency = 'AUD'
@@ -35,30 +32,34 @@ module ActiveMerchant #:nodoc:
       # 10 Preauthorise
       # 11 Preauth Complete (Advice)
       TRANSACTIONS = {
-        :purchase => 0,
-        :authorization => 10,
-        :capture => 11,
-        :void => 6,
-        :refund => 4
+        purchase:       0,
+        authorization:  10,
+        capture:        11,
+        void:           6,
+        refund:         4
       }
 
       PERIODIC_ACTIONS = {
-        :add_triggered    => 'add',
-        :remove_triggered => 'delete',
-        :trigger          => 'trigger'
+        add_triggered:      'add',
+        remove_triggered:   'delete',
+        trigger:            'trigger'
       }
 
       PERIODIC_TYPES = {
-        :add_triggered    => 4,
-        :remove_triggered => nil,
-        :trigger          => nil
+        add_triggered:    4,
+        remove_triggered: nil,
+        trigger:          nil
       }
 
-      SUCCESS_CODES = [ '00', '08', '11', '16', '77' ]
+      SUCCESS_CODES = %w[00 08 11 16 77]
 
       def initialize(options = {})
         requires!(options, :login, :password)
         super
+      end
+
+      def request_timeout
+        @options[:request_timeout] || 60
       end
 
       def purchase(money, credit_card_or_stored_id, options = {})
@@ -181,11 +182,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, request)
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request), { 'Content-Type' => 'text/xml; charset=utf-8' }))
 
-        Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(response)
+        Response.new(
+          success?(response),
+          message_from(response),
+          response,
+          test: test?,
+          authorization: authorization_from(response)
         )
       end
 
@@ -204,6 +208,7 @@ module ActiveMerchant #:nodoc:
         end
         xml.tag! 'amount', amount(money)
         xml.tag! 'periodicType', PERIODIC_TYPES[action] if PERIODIC_TYPES[action]
+        xml.tag! 'transactionReference', options[:order_id] if options[:order_id]
 
         xml.target!
       end
@@ -238,12 +243,14 @@ module ActiveMerchant #:nodoc:
 
       def commit_periodic(request)
         my_request = build_periodic_request(request)
-        #puts my_request
-        response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request))
+        response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request, { 'Content-Type' => 'text/xml; charset=utf-8' }))
 
-        Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(response)
+        Response.new(
+          success?(response),
+          message_from(response),
+          response,
+          test: test?,
+          authorization: authorization_from(response)
         )
       end
 
@@ -277,7 +284,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|element| parse_element(response, element) }
+          node.elements.each { |element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end

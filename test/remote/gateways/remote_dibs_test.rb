@@ -5,11 +5,11 @@ class RemoteDibsTest < Test::Unit::TestCase
     @gateway = DibsGateway.new(fixtures(:dibs))
 
     cc_options = {
-        :month => 6,
-        :year => 24,
-        :verification_value => '684',
-        :brand => 'visa'
-      }
+      month: 6,
+      year: 24,
+      verification_value: '684',
+      brand: 'visa'
+    }
 
     @amount = 100
     @credit_card = credit_card('4711100000000000', cc_options)

@@ -5,7 +5,7 @@ class TransactProTest < Test::Unit::TestCase
     @gateway = TransactProGateway.new(
       guid: 'login',
       password: 'password',
-      terminal: 'terminal',
+      terminal: 'terminal'
     )
 
     @credit_card = credit_card
@@ -75,7 +75,7 @@ class TransactProTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).never
 
     assert_raise(ArgumentError) do
-      @gateway.capture(@amount-1, '3d25ab044075924479d3836f549b015481d15d74|100')
+      @gateway.capture(@amount - 1, '3d25ab044075924479d3836f549b015481d15d74|100')
     end
   end
 
@@ -100,7 +100,7 @@ class TransactProTest < Test::Unit::TestCase
   def test_partial_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    assert refund = @gateway.refund(@amount-1, '3d25ab044075924479d3836f549b015481d15d74|100')
+    assert refund = @gateway.refund(@amount - 1, '3d25ab044075924479d3836f549b015481d15d74|100')
     assert_success refund
     assert_equal 'Refund Success', refund.message
     assert_equal '3d25ab044075924479d3836f549b015481d15d74', refund.authorization
@@ -109,7 +109,7 @@ class TransactProTest < Test::Unit::TestCase
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    assert refund = @gateway.refund(@amount+1, '3d25ab044075924479d3836f549b015481d15d74|100')
+    assert refund = @gateway.refund(@amount + 1, '3d25ab044075924479d3836f549b015481d15d74|100')
     assert_failure refund
   end
 

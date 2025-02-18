@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     #
     # NETPAY Gateway
     #
@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'MXN'
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.netpay.com.mx'
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
       }
 
       # The header keys that we will provide in the response params hash
-      RESPONSE_KEYS = ['ResponseMsg', 'ResponseText', 'ResponseCode', 'TimeIn', 'TimeOut', 'AuthCode', 'OrderId', 'CardTypeName', 'MerchantId', 'IssuerAuthDate']
+      RESPONSE_KEYS = %w[ResponseMsg ResponseText ResponseCode TimeIn TimeOut AuthCode OrderId CardTypeName MerchantId IssuerAuthDate]
 
       def initialize(options = {})
         requires!(options, :store_id, :login, :password)
@@ -110,7 +110,6 @@ module ActiveMerchant #:nodoc:
         add_order_id(post, order_id_from(authorization))
         add_amount(post, money, options)
 
-        #commit('Refund', post, options)
         commit('Credit', post, options)
       end
 
@@ -181,8 +180,8 @@ module ActiveMerchant #:nodoc:
 
         success = (response_params['ResponseCode'] == '00')
         message = response_params['ResponseText'] || response_params['ResponseMsg']
-        options = @options.merge(:test => test?,
-                                 :authorization => build_authorization(request_params, response_params))
+        options = @options.merge(test: test?,
+                                 authorization: build_authorization(request_params, response_params))
 
         Response.new(success, message, response_params, options)
       end
@@ -191,7 +190,7 @@ module ActiveMerchant #:nodoc:
         add_login_data(parameters)
         add_action(parameters, action, options)
 
-        post = parameters.collect{|key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        post = parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         parse(ssl_post(url, post), parameters)
       end
 
@@ -216,6 +215,7 @@ module ActiveMerchant #:nodoc:
 
       def currency_code(currency)
         return currency if currency =~ /^\d+$/
+
         CURRENCY_CODES[currency]
       end
     end

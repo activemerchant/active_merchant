@@ -1,10 +1,11 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # This module is included in both PaypalGateway and PaypalExpressGateway
     module PaypalCommonAPI
       include Empty
 
       API_VERSION = '124'
+      API_VERSION_3DS2 = '214.0'
 
       URLS = {
         :test => { :certificate => 'https://api.sandbox.paypal.com/2.0/',
@@ -178,6 +179,11 @@ module ActiveMerchant #:nodoc:
       #     . (period)
       #     {space}
       #
+
+      def inquire(authorization, options = {})
+        transaction_details(authorization)
+      end
+
       def reference_transaction(money, options = {})
         requires!(options, :reference_id)
         commit 'DoReferenceTransaction', build_reference_transaction_request(money, options)
@@ -586,7 +592,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:OrderTotal', localized_amount(money, currency_code), 'currencyID' => currency_code
 
           # All of the values must be included together and add up to the order total
-          if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
+          if [:subtotal, :shipping, :handling, :tax].all?{ |o| options[o].present? }
             xml.tag! 'n2:ItemTotal', localized_amount(options[:subtotal], currency_code), 'currencyID' => currency_code
             xml.tag! 'n2:ShippingTotal', localized_amount(options[:shipping], currency_code),'currencyID' => currency_code
             xml.tag! 'n2:HandlingTotal', localized_amount(options[:handling], currency_code),'currencyID' => currency_code

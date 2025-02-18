@@ -3,10 +3,10 @@ require 'test_helper'
 class NetpayTest < Test::Unit::TestCase
   def setup
     @gateway = NetpayGateway.new(
-                 :store_id => '12345',
-                 :login    => 'login',
-                 :password => 'password'
-               )
+      store_id: '12345',
+      login: 'login',
+      password: 'password'
+    )
 
     @credit_card = credit_card
     @amount = 1000
@@ -14,7 +14,7 @@ class NetpayTest < Test::Unit::TestCase
     @order_id = 'C3836048-631F-112B-001E-7C08C0406975'
 
     @options = {
-      :description => 'Store Purchase'
+      description: 'Store Purchase'
     }
   end
 
@@ -64,7 +64,7 @@ class NetpayTest < Test::Unit::TestCase
       )
     ).returns(successful_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, :ip => '127.0.0.1')
+    assert response = @gateway.purchase(@amount, @credit_card, ip: '127.0.0.1')
     assert_success response
   end
 
@@ -75,7 +75,6 @@ class NetpayTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
   end
-
 
   def test_successful_authorize
     @gateway.expects(:ssl_post).with(
@@ -151,7 +150,7 @@ class NetpayTest < Test::Unit::TestCase
   end
 
   def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express, :diners_club], NetpayGateway.supported_cardtypes
+    assert_equal %i[visa master american_express diners_club], NetpayGateway.supported_cardtypes
   end
 
   private

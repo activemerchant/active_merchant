@@ -19,7 +19,7 @@ class MerchantPartnersTest < Test::Unit::TestCase
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
         assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
@@ -51,7 +51,7 @@ class MerchantPartnersTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
         assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
@@ -70,7 +70,7 @@ class MerchantPartnersTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
         assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
@@ -115,7 +115,7 @@ class MerchantPartnersTest < Test::Unit::TestCase
 
     void = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
         assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
@@ -145,7 +145,7 @@ class MerchantPartnersTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
         assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
@@ -170,7 +170,7 @@ class MerchantPartnersTest < Test::Unit::TestCase
   def test_successful_credit
     response = stub_comms do
       @gateway.credit(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
         assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
@@ -217,7 +217,7 @@ class MerchantPartnersTest < Test::Unit::TestCase
   def test_successful_store
     response = stub_comms do
       @gateway.store(@credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
         assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
@@ -247,7 +247,7 @@ class MerchantPartnersTest < Test::Unit::TestCase
 
     purchase = stub_comms do
       @gateway.purchase(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
         assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
@@ -275,7 +275,7 @@ class MerchantPartnersTest < Test::Unit::TestCase
 
     credit = stub_comms do
       @gateway.credit(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
         assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
@@ -627,7 +627,6 @@ class MerchantPartnersTest < Test::Unit::TestCase
 </interface_driver>
     )
   end
-
 
   def successful_store_response
     %(<?xml version="1.0"?><interface_driver>

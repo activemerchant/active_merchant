@@ -1,10 +1,10 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class NetworkMerchantsGateway < Gateway
       self.live_url = self.test_url = 'https://secure.networkmerchants.com/api/transact.php'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'http://www.nmi.com/'
       self.display_name = 'Network Merchants (NMI)'
@@ -190,7 +190,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit_vault(action, parameters)
-        commit(nil, parameters.merge(:customer_vault => action))
+        commit(nil, parameters.merge(customer_vault: action))
       end
 
       def commit(action, parameters)
@@ -200,11 +200,14 @@ module ActiveMerchant #:nodoc:
 
         authorization = authorization_from(success, parameters, raw)
 
-        Response.new(success, raw['responsetext'], raw,
-          :test => test?,
-          :authorization => authorization,
-          :avs_result => { :code => raw['avsresponse']},
-          :cvv_result => raw['cvvresponse']
+        Response.new(
+          success,
+          raw['responsetext'],
+          raw,
+          test: test?,
+          authorization:,
+          avs_result: { code: raw['avsresponse'] },
+          cvv_result: raw['cvvresponse']
         )
       end
 
@@ -218,9 +221,7 @@ module ActiveMerchant #:nodoc:
         return nil unless success
 
         authorization = response['transactionid']
-        if(parameters[:customer_vault] && (authorization.nil? || authorization.empty?))
-          authorization = response['customer_vault_id']
-        end
+        authorization = response['customer_vault_id'] if parameters[:customer_vault] && (authorization.nil? || authorization.empty?)
 
         authorization
       end
@@ -239,4 +240,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

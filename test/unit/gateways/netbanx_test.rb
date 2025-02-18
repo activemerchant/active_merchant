@@ -15,7 +15,7 @@ class NetbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+    @gateway.expects(:ssl_request).twice.returns(success_verification_response, successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -34,7 +34,7 @@ class NetbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    @gateway.expects(:ssl_request).returns(successful_authorize_response)
+    @gateway.expects(:ssl_request).twice.returns(auth_verification_response, successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
@@ -56,7 +56,7 @@ class NetbanxTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
-    response = @gateway.authorize(@amount, '056ff3a9-5274-4452-92ab-0e3b3e591c3b')
+    response = @gateway.capture(@amount, '056ff3a9-5274-4452-92ab-0e3b3e591c3b')
     assert_success response
 
     assert_equal '11e0906b-6596-4490-b0e3-825f71a82799', response.authorization
@@ -75,7 +75,7 @@ class NetbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    @gateway.expects(:ssl_request).returns(successful_capture_response)
+    @gateway.expects(:ssl_request).twice.returns(success_verification_response, successful_capture_response)
 
     response = @gateway.refund(@amount, '056ff3a9-5274-4452-92ab-0e3b3e591c3b')
     assert_success response
@@ -128,8 +128,8 @@ class NetbanxTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_purchase_with_token
-    @gateway.expects(:ssl_request).returns(successful_purchase_with_token_response)
+  def test_successful_purchase_token
+    @gateway.expects(:ssl_request).twice.returns(success_verification_response, purchase_with_token_response)
 
     response = @gateway.purchase(@amount, 'CL0RCSnrkREnfwA', @options)
     assert_success response
@@ -140,17 +140,16 @@ class NetbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore
-     @gateway.expects(:ssl_request).twice.returns(successful_unstore_response)
+    @gateway.expects(:ssl_request).twice.returns(successful_unstore_response)
 
-     response = @gateway.unstore('2f840ab3-0e71-4387-bad3-4705e6f4b015|e4a3cd5a-56db-4d9b-97d3-fdd9ab3bd0f4')
-     assert_success response
-     assert response.test?
+    response = @gateway.unstore('2f840ab3-0e71-4387-bad3-4705e6f4b015|e4a3cd5a-56db-4d9b-97d3-fdd9ab3bd0f4')
+    assert_success response
+    assert response.test?
 
     response = @gateway.unstore('2f840ab3-0e71-4387-bad3-4705e6f4b015')
     assert_success response
     assert response.test?
   end
-
 
   def test_scrub
     assert @gateway.supports_scrubbing?
@@ -312,7 +311,7 @@ class NetbanxTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_purchase_with_token_response
+  def purchase_with_token_response
     <<-RESPONSE
     {
       "links": [
@@ -413,6 +412,26 @@ class NetbanxTest < Test::Unit::TestCase
       "currencyCode": "CAD",
       "avsResponse": "MATCH",
       "cvvVerification": "MATCH"
+    }
+    RESPONSE
+  end
+
+  def auth_verification_response
+    <<-RESPONSE
+    {
+      "id": "b8c53059-9da3-4054-8caf-3769161a3cdc",
+      "status": "COMPLETED",
+      "message": "OK"
+    }
+    RESPONSE
+  end
+
+  def success_verification_response
+    <<-RESPONSE
+    {
+      "id": "11e0906b-6596-4490-b0e3-825f71a82799",
+      "status": "COMPLETED",
+      "message": "OK"
     }
     RESPONSE
   end

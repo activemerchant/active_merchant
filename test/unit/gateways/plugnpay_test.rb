@@ -1,19 +1,18 @@
 require 'test_helper'
 
 class PlugnpayTest < Test::Unit::TestCase
-
   def setup
     Base.mode = :test
 
     @gateway = PlugnpayGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
 
     @credit_card = credit_card
     @options = {
-      :billing_address => address,
-      :description => 'Store purchase'
+      billing_address: address,
+      description: 'Store purchase'
     }
     @amount = 100
   end
@@ -43,7 +42,7 @@ class PlugnpayTest < Test::Unit::TestCase
 
   def test_capture_full_amount
     @gateway.expects(:ssl_post).with(anything, all_of(regexp_matches(/mode=mark/), regexp_matches(/card_amount=1.00/)), anything).returns('')
-    @gateway.expects(:parse).returns({'auth_msg' => 'Blah blah blah Transaction may not be reauthorized'}, {})
+    @gateway.expects(:parse).returns({ 'auth_msg' => 'Blah blah blah Transaction may not be reauthorized' }, {})
     @gateway.capture(@amount, @credit_card, @options)
   end
 
@@ -70,7 +69,7 @@ class PlugnpayTest < Test::Unit::TestCase
   def test_add_address_outsite_north_america
     result = PlugnpayGateway::PlugnpayPostData.new
 
-    @gateway.send(:add_addresses, result, :billing_address => {:address1 => '164 Waverley Street', :country => 'DE', :state => 'Dortmund'} )
+    @gateway.send(:add_addresses, result, billing_address: { address1: '164 Waverley Street', country: 'DE', state: 'Dortmund' })
 
     assert_equal result[:state], 'ZZ'
     assert_equal result[:province], 'Dortmund'
@@ -80,13 +79,12 @@ class PlugnpayTest < Test::Unit::TestCase
 
     assert_equal result[:card_address1], '164 Waverley Street'
     assert_equal result[:card_country], 'DE'
-
   end
 
   def test_add_address
     result = PlugnpayGateway::PlugnpayPostData.new
 
-    @gateway.send(:add_addresses, result, :billing_address => {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'} )
+    @gateway.send(:add_addresses, result, billing_address: { address1: '164 Waverley Street', country: 'US', state: 'CO' })
 
     assert_equal result[:card_state], 'CO'
     assert_equal result[:card_address1], '164 Waverley Street'
@@ -108,6 +106,7 @@ class PlugnpayTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_purchase_response
     "FinalStatus=success&IPaddress=72%2e138%2e32%2e216&MStatus=success&User_Agent=&acct_code3=newcard&address1=1234%20My%20Street&address2=Apt%201&app_level=5&auth_code=TSTAUT&auth_date=20080125&auth_msg=%20&authtype=authpostauth&avs_code=X&card_address1=1234%20My%20Street&card_amount=1%2e00&card_city=Ottawa&card_country=CA&card_name=Longbob%20Longsen&card_state=ON&card_type=VISA&card_zip=K1C2N6&city=Ottawa&convert=underscores&country=CA&currency=usd&cvvresp=M&dontsndmail=yes&easycart=0&merchant=pnpdemo2&merchfraudlev=&mode=auth&orderID=2008012522252119738&phone=555%2d555%2d5555&publisher_email=trash%40plugnpay%2ecom&publisher_name=pnpdemo2&publisher_password=pnpdemo222&resp_code=00&shipinfo=0&shipname=Jim%20Smith&sresp=A&state=ON&success=yes&zip=K1C2N6&a=b\n"
   end

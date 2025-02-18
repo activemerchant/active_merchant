@@ -1,16 +1,16 @@
 require 'digest/md5'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class NetaxeptGateway < Gateway
       self.test_url = 'https://epayment-test.bbs.no/'
       self.live_url = 'https://epayment.bbs.no/'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['NO', 'DK', 'SE', 'FI']
+      self.supported_countries = %w[NO DK SE FI]
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.betalingsterminal.no/Netthandel-forside/'
@@ -31,8 +31,8 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
 
         MultiResponse.run do |r|
-          r.process{authorize(money, creditcard, options)}
-          r.process{capture(money, r.authorization, options)}
+          r.process { authorize(money, creditcard, options) }
+          r.process { capture(money, r.authorization, options) }
         end
       end
 
@@ -40,9 +40,9 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
 
         MultiResponse.run do |r|
-          r.process{setup_transaction(money, options)}
-          r.process{add_and_auth_credit_card(r.authorization, creditcard, options)}
-          r.process{query_transaction(r.authorization, options)}
+          r.process { setup_transaction(money, options) }
+          r.process { add_and_auth_credit_card(r.authorization, creditcard, options) }
+          r.process { query_transaction(r.authorization, options) }
         end
       end
 
@@ -94,12 +94,12 @@ module ActiveMerchant #:nodoc:
         commit('Netaxept/query.aspx', post)
       end
 
-      def add_credentials(post, options, secure=true)
+      def add_credentials(post, options, secure = true)
         post[:merchantId] = @options[:login]
         post[:token] = @options[:password] if secure
       end
 
-      def add_authorization(post, authorization, money=nil)
+      def add_authorization(post, authorization, money = nil)
         post[:transactionId] = authorization
         post[:transactionAmount] = amount(money) if money
       end
@@ -118,12 +118,12 @@ module ActiveMerchant #:nodoc:
         post[:securityCode] = options.verification_value
       end
 
-      def commit(path, parameters, xml=true)
+      def commit(path, parameters, xml = true)
         raw = parse(ssl_get(build_url(path, parameters)), xml)
 
         success = false
         authorization = (raw['TransactionId'] || parameters[:transactionId])
-        if raw[:container] =~ /Exception|Error/
+        if /Exception|Error/.match?(raw[:container])
           message = (raw['Message'] || raw['Error']['Message'])
         elsif raw['Error'] && !raw['Error'].empty?
           message = (raw['Error']['ResponseText'] || raw['Error']['ResponseCode'])
@@ -136,17 +136,17 @@ module ActiveMerchant #:nodoc:
           success,
           message,
           raw,
-          :test => test?,
-          :authorization => authorization
+          test: test?,
+          authorization:
         )
       end
 
-      def parse(result, expects_xml=true)
+      def parse(result, expects_xml = true)
         if expects_xml
           doc = REXML::Document.new(result)
-          extract_xml(doc.root).merge(:container => doc.root.name)
+          extract_xml(doc.root).merge(container: doc.root.name)
         else
-          {:result => result}
+          { result: }
         end
       end
 
@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_url(base, parameters=nil)
+      def build_url(base, parameters = nil)
         url = (test? ? self.test_url : self.live_url).dup
         url << base
         if parameters
@@ -173,9 +173,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def encode(hash)
-        hash.collect{|(k,v)| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"}.join('&')
+        hash.collect { |(k, v)| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}" }.join('&')
       end
     end
   end
 end
-

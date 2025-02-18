@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information visit {Bank Frick Acquiring Services}[http://www.bankfrickacquiring.com/merchantsolutions_en.html]
     #
     # Written by Piers Chambers (Varyonic.com)
@@ -9,9 +9,9 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://test.ctpe.io/payment/ctpe'
       self.live_url = 'https://ctpe.io/payment/ctpe'
 
-      self.supported_countries = ['LI','US']
+      self.supported_countries = %w[LI US]
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'http://www.bankfrickacquiring.com/'
       self.display_name = 'Bank Frick'
@@ -24,15 +24,15 @@ module ActiveMerchant #:nodoc:
         'authonly'  => 'CC.PA',
         'capture'   => 'CC.CP',
         'refund'    => 'CC.RF',
-        'void'      => 'CC.RV',
+        'void'      => 'CC.RV'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :sender, :channel, :userid, :userpwd)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
         commit('sale', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
         commit('authonly', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         post[:authorization] = authorization
         add_invoice(post, money, options)
@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         post[:authorization] = authorization
         add_invoice(post, money, options)
@@ -68,14 +68,14 @@ module ActiveMerchant #:nodoc:
         commit('refund', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         post[:authorization] = authorization
 
         commit('void', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -97,7 +97,7 @@ module ActiveMerchant #:nodoc:
           post[:zip]     = address[:zip].to_s
           post[:city]    = address[:city].to_s
           post[:country] = address[:country].to_s
-          post[:state]   = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:state]   = address[:state].blank? ? 'n/a' : address[:state]
         end
       end
 
@@ -119,7 +119,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        results  = {}
+        results = {}
         xml = Nokogiri::XML(body)
         resp = xml.xpath('//Response/Transaction/Identification')
         resp.children.each do |element|
@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_xml_request(action, data)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.Request(version: '1.0') do
           xml.Header do
             xml.Security(sender: @options[:sender], type: 'MERCHANT')

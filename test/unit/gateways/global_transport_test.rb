@@ -9,7 +9,7 @@ class GlobalTransportTest < Test::Unit::TestCase
 
     @options = {
       order_id: '1',
-      billing_address: address,
+      billing_address: address
     }
   end
 
@@ -21,7 +21,7 @@ class GlobalTransportTest < Test::Unit::TestCase
     assert_equal '3648838', response.authorization
     assert response.test?
     assert_equal 'CVV matches', response.cvv_result['message']
-    assert_equal 'Street address and postal code do not match.', response.avs_result['message']
+    assert_equal 'Street address and postal code do not match. For American Express: Card member\'s name, street address and postal code do not match.', response.avs_result['message']
   end
 
   def test_failed_purchase
@@ -52,7 +52,7 @@ class GlobalTransportTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(100, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/PNRef=3648890/, data)
     end.respond_with(successful_capture_response)
 
@@ -70,7 +70,7 @@ class GlobalTransportTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(150, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/PNRef=8869269/, data)
     end.respond_with(successful_partial_capture_response)
 
@@ -103,7 +103,7 @@ class GlobalTransportTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(100, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/PNRef=3648838/, data)
     end.respond_with(successful_refund_response)
 
@@ -127,7 +127,7 @@ class GlobalTransportTest < Test::Unit::TestCase
 
     void = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/PNRef=3648838/, data)
     end.respond_with(successful_void_response)
 
@@ -162,7 +162,7 @@ class GlobalTransportTest < Test::Unit::TestCase
   def test_truncation
     stub_comms do
       @gateway.purchase(100, credit_card, order_id: 'a' * 17)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/&InvNum=a{16}&/, data)
     end.respond_with(successful_purchase_response)
   end

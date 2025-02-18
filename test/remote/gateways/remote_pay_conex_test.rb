@@ -27,7 +27,18 @@ class RemotePayConexTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:api_accesskey], transcript)
- end
+  end
+
+  def test_transcript_scrubbing_with_check
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@check.routing_number, transcript)
+    assert_scrubbed(@gateway.options[:api_accesskey], transcript)
+  end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
@@ -61,7 +72,7 @@ class RemotePayConexTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
     assert_equal 'CAPTURED', capture.message
   end
@@ -85,7 +96,7 @@ class RemotePayConexTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
     assert_equal 'REFUND', refund.message
   end

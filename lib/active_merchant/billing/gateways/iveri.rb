@@ -1,24 +1,27 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class IveriGateway < Gateway
-      self.live_url = self.test_url = 'https://portal.nedsecure.co.za/iVeriWebService/Service.asmx'
+      class_attribute :iveri_url
 
-      self.supported_countries = ['US', 'ZA', 'GB']
+      self.live_url = self.test_url = 'https://portal.nedsecure.co.za/iVeriWebService/Service.asmx'
+      self.iveri_url = 'https://portal.host.iveri.com/iVeriWebService/Service.asmx'
+
+      self.supported_countries = %w[US ZA GB]
       self.default_currency = 'ZAR'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
 
       self.homepage_url = 'http://www.iveri.com'
       self.display_name = 'iVeri'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :app_id, :cert_id)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         post = build_vxml_request('Debit', options) do |xml|
           add_auth_purchase_params(xml, money, payment_method, options)
         end
@@ -26,7 +29,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         post = build_vxml_request('Authorisation', options) do |xml|
           add_auth_purchase_params(xml, money, payment_method, options)
         end
@@ -34,7 +37,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = build_vxml_request('Debit', options) do |xml|
           add_authorization(xml, authorization, options)
         end
@@ -42,7 +45,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = build_vxml_request('Credit', options) do |xml|
           add_amount(xml, money, options)
           add_authorization(xml, authorization, options)
@@ -51,21 +54,26 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def void(authorization, options={})
-        post = build_vxml_request('Void', options) do |xml|
+      def void(authorization, options = {})
+        txn_type = options[:reference_type] == :authorize ? 'AuthorisationReversal' : 'Void'
+        post = build_vxml_request(txn_type, options) do |xml|
           add_authorization(xml, authorization, options)
         end
 
         commit(post)
       end
 
-      def verify(credit_card, options={})
-        authorize(0, credit_card, options)
+      def verify(credit_card, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options.merge(reference_type: :authorize)) }
+        end
       end
 
       def verify_credentials
         void = void('', options)
-        return true if void.message ==  'Missing OriginalMerchantTrace'
+        return true if void.message == 'Missing OriginalMerchantTrace'
+
         false
       end
 
@@ -83,11 +91,11 @@ module ActiveMerchant #:nodoc:
       private
 
       def build_xml_envelope(vxml)
-        builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
+        builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
           xml[:soap].Envelope 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema', 'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' do
             xml[:soap].Body do
               xml.Execute 'xmlns' => 'http://iveri.com/' do
-                xml.validateRequest 'true'
+                xml.validateRequest('false')
                 xml.protocol 'V_XML'
                 xml.protocolVersion '2.0'
                 xml.request vxml
@@ -114,8 +122,9 @@ module ActiveMerchant #:nodoc:
       def add_auth_purchase_params(post, money, payment_method, options)
         add_card_holder_authentication(post, options)
         add_amount(post, money, options)
-        add_electronic_commerce_indicator(post, options)
+        add_electronic_commerce_indicator(post, options) unless options[:three_d_secure]
         add_payment_method(post, payment_method, options)
+        add_three_ds(post, options)
       end
 
       def add_amount(post, money, options)
@@ -150,11 +159,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(post)
-        raw_response = begin
-          ssl_post(live_url, build_xml_envelope(post), headers(post))
-        rescue ActiveMerchant::ResponseError => e
-          e.response.body
-        end
+        raw_response =
+          begin
+            ssl_post(url, build_xml_envelope(post), headers(post))
+          rescue ActiveMerchant::ResponseError => e
+            e.response.body
+          end
 
         parsed = parse(raw_response)
         succeeded = success_from(parsed)
@@ -173,6 +183,10 @@ module ActiveMerchant #:nodoc:
         test? ? 'Test' : 'Live'
       end
 
+      def url
+        @options[:url_override].to_s == 'iveri' ? iveri_url : live_url
+      end
+
       def headers(post)
         {
           'Content-Type' => 'text/xml; charset=utf-8',
@@ -187,7 +201,7 @@ module ActiveMerchant #:nodoc:
         vxml = Nokogiri::XML(body).remove_namespaces!.xpath('//Envelope/Body/ExecuteResponse/ExecuteResult').inner_text
         doc = Nokogiri::XML(vxml)
         doc.xpath('*').each do |node|
-          if (node.elements.empty?)
+          if node.elements.empty?
             parsed[underscore(node.name)] = node.text
           else
             node.elements.each do |childnode|
@@ -201,14 +215,14 @@ module ActiveMerchant #:nodoc:
       def parse_element(parsed, node)
         if !node.attributes.empty?
           node.attributes.each do |a|
-            parsed[underscore(node.name)+ '_' + underscore(a[1].name)] = a[1].value
+            parsed[underscore(node.name) + '_' + underscore(a[1].name)] = a[1].value
           end
         end
 
-        if !node.elements.empty?
-          node.elements.each {|e| parse_element(parsed, e) }
-        else
+        if node.elements.empty?
           parsed[underscore(node.name)] = node.text
+        else
+          node.elements.each { |e| parse_element(parsed, e) }
         end
       end
 
@@ -234,17 +248,43 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response, succeeded)
-        unless succeeded
-          response['result_code']
-        end
+        response['result_code'] unless succeeded
       end
 
       def underscore(camel_cased_word)
         camel_cased_word.to_s.gsub(/::/, '/').
-          gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
-          gsub(/([a-z\d])([A-Z])/,'\1_\2').
+          gsub(/([A-Z]+)([A-Z][a-z])/, '\1_\2').
+          gsub(/([a-z\d])([A-Z])/, '\1_\2').
           tr('-', '_').
           downcase
+      end
+
+      def add_three_ds(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post.ElectronicCommerceIndicator(formatted_three_ds_eci(three_d_secure[:eci])) if three_d_secure[:eci]
+        post.CardHolderAuthenticationID(three_d_secure[:xid]) if three_d_secure[:xid]
+        post.CardHolderAuthenticationData(three_d_secure[:cavv]) if three_d_secure[:cavv]
+        post.ThreeDSecure_ProtocolVersion(three_d_secure[:version]) if three_d_secure[:version]
+        post.ThreeDSecure_DSTransID(three_d_secure[:ds_transaction_id]) if three_d_secure[:ds_transaction_id]
+        post.ThreeDSecure_VEResEnrolled(formatted_enrollment(three_d_secure[:enrolled])) if three_d_secure[:enrolled]
+      end
+
+      def formatted_enrollment(val)
+        case val
+        when 'Y', 'N', 'U' then val
+        when true, 'true' then 'Y'
+        when false, 'false' then 'N'
+        end
+      end
+
+      def formatted_three_ds_eci(val)
+        case val
+        when '05', '02' then 'ThreeDSecure'
+        when '06', '01' then 'ThreeDSecureAttempted'
+        when '07' then 'SecureChannel'
+        else val
+        end
       end
     end
   end

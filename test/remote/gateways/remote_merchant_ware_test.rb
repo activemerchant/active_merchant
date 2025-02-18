@@ -4,13 +4,13 @@ class RemoteMerchantWareTest < Test::Unit::TestCase
   def setup
     @gateway = MerchantWareGateway.new(fixtures(:merchant_ware))
 
-    @amount = rand(1000) + 200
+    @amount = rand(200..1199)
 
-    @credit_card = credit_card('5424180279791732', {:brand => 'master'})
+    @credit_card = credit_card('5424180279791732', { brand: 'master' })
 
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => address
+      order_id: generate_unique_id,
+      billing_address: address
     }
   end
 
@@ -93,10 +93,10 @@ class RemoteMerchantWareTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = MerchantWareGateway.new(
-                :login => '',
-                :password => '',
-                :name => ''
-              )
+      login: '',
+      password: '',
+      name: ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Server was unable to process request. ---> Invalid Credentials.', response.message

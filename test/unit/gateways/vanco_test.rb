@@ -3,6 +3,8 @@ require 'test_helper'
 class VancoTest < Test::Unit::TestCase
   include CommStub
 
+  SECONDS_PER_DAY = 3600 * 24
+
   def setup
     @gateway = VancoGateway.new(user_id: 'login', password: 'password', client_id: 'client_id')
     @credit_card = credit_card
@@ -29,10 +31,8 @@ class VancoTest < Test::Unit::TestCase
   def test_successful_purchase_with_fund_id
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(fund_id: 'MyEggcellentFund'))
-    end.check_request do |endpoint, data, headers|
-      if data =~ /<RequestType>EFTAdd/
-        assert_match(%r(<FundID>MyEggcellentFund<\/FundID>), data)
-      end
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<FundID>MyEggcellentFund<\/FundID>), data) if data =~ /<RequestType>EFTAdd/
     end.respond_with(successful_login_response, successful_purchase_with_fund_id_response)
 
     assert_success response
@@ -43,12 +43,58 @@ class VancoTest < Test::Unit::TestCase
   def test_successful_purchase_with_ip_address
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(ip: '192.168.0.1'))
-    end.check_request do |endpoint, data, headers|
-      if data =~ /<RequestType>EFTAdd/
-        assert_match(%r(<CustomerIPAddress>192), data)
-      end
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<CustomerIPAddress>192), data) if data =~ /<RequestType>EFTAdd/
     end.respond_with(successful_login_response, successful_purchase_response)
     assert_success response
+  end
+
+  def test_successful_purchase_with_existing_session_id
+    response = stub_comms do
+      previous_login_response = @gateway.send(:login)
+      @gateway.purchase(
+        @amount,
+        @credit_card,
+        @options.merge(
+          session_id:
+            {
+              id: '5d4177ec3c356ec5f7abe0e17e814250',
+              created_at: Time.parse(previous_login_response.params['auth_requesttime'])
+            }
+        )
+      )
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<SessionID>5d4177ec3c356ec5f7abe0e17e814250<\/SessionID>), data) if data =~ /<RequestType>EFTAddCompleteTransaction/
+    end.respond_with(login_request_response, successful_purchase_with_existing_session_id_response)
+
+    assert_success response
+    assert_equal '14949117|15756594|16136938', response.authorization
+    assert_equal 'Success', response.message
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_expired_session_id
+    two_days_from_now = Time.now - (2 * SECONDS_PER_DAY)
+    response = stub_comms do
+      @gateway.purchase(
+        @amount,
+        @credit_card,
+        @options.merge(
+          session_id:
+            {
+              id: 'f34177ec3c356ec5f7abe0e17e814250',
+              created_at: two_days_from_now
+            }
+        )
+      )
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<SessionID>5d8b104c9d8265db46bdf35ae9685472f4789dc8<\/SessionID>), data) if data =~ /<RequestType>EFTAddCompleteTransaction/
+    end.respond_with(successful_login_response, successful_purchase_response)
+
+    assert_success response
+    assert_equal '14949117|15756594|16136938', response.authorization
+    assert_equal 'Success', response.message
+    assert response.test?
   end
 
   def test_failed_purchase
@@ -143,6 +189,12 @@ class VancoTest < Test::Unit::TestCase
      )
   end
 
+  def successful_purchase_with_existing_session_id_response
+    %(
+      <?xml version="1.0" encoding="UTF-8"  ?><VancoWS><Auth><RequestID>ad4cbab9740e909423a02e622689d6</RequestID><RequestTime>2015-05-01 16:08:07 -0400</RequestTime><RequestType>EFTAddCompleteTransaction</RequestType><Signature></Signature><SessionID>5d4177ec3c356ec5f7abe0e17e814250</SessionID><Version>2</Version></Auth><Response><StartDate>2015-05-01</StartDate><CustomerRef>14949117</CustomerRef><PaymentMethodRef>15756594</PaymentMethodRef><TransactionRef>16136938</TransactionRef><TransactionFee>3.20</TransactionFee></Response></VancoWS>
+     )
+  end
+
   def successful_purchase_with_fund_id_response
     %(
       <?xml version=\"1.0\" encoding=\"UTF-8\"  ?><VancoWS><Auth><RequestID>8cf42301416298c9d6d71a39b27a0d</RequestID><RequestTime>2015-05-05 15:45:57 -0400</RequestTime><RequestType>EFTAddCompleteTransaction</RequestType><Signature></Signature><SessionID>b2ec96e366f38a5c1ecd3f5343475526beaba4f9</SessionID><Version>2</Version></Auth><Response><StartDate>2015-05-05</StartDate><CustomerRef>14949117</CustomerRef><PaymentMethodRef>15756594</PaymentMethodRef><TransactionRef>16137331</TransactionRef><TransactionFee>3.20</TransactionFee></Response></VancoWS>\n\n
@@ -185,4 +237,9 @@ class VancoTest < Test::Unit::TestCase
      )
   end
 
+  def login_request_response
+    %(
+      <?xml version=\"1.0\" encoding=\"UTF-8\"  ?> <VancoWS> <Auth> <RequestID>38de95050240d49f8897578825c717</RequestID> <RequestTime>#{Time.now}</RequestTime> <RequestType>Login</RequestType> <Version>2</Version> </Auth> <Response> <SessionID>9edc7951048106b821f5e304e9ccdcc0700f533a</SessionID> </Response> </VancoWS>
+    )
+  end
 end

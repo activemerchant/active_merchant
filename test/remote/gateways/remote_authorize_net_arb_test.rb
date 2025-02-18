@@ -8,17 +8,17 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
     @check = check
 
     @options = {
-      :amount => 100,
-      :subscription_name => 'Test Subscription 1',
-      :credit_card => @credit_card,
-      :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
-      :interval => {
-        :length => 1,
-        :unit => :months
+      amount: 100,
+      subscription_name: 'Test Subscription 1',
+      credit_card: @credit_card,
+      billing_address: address.merge(first_name: 'Jim', last_name: 'Smith'),
+      interval: {
+        length: 1,
+        unit: :months
       },
-      :duration => {
-        :start_date => Date.today,
-        :occurrences => 1
+      duration: {
+        start_date: Date.today,
+        occurrences: 1
       }
     }
   end
@@ -30,7 +30,7 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
 
     subscription_id = response.authorization
 
-    assert response = @gateway.update_recurring(:subscription_id => subscription_id, :amount => @amount * 2)
+    assert response = @gateway.update_recurring(subscription_id:, amount: @amount * 2)
     assert_success response
 
     assert response = @gateway.status_recurring(subscription_id)
@@ -50,8 +50,8 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
 
   def test_bad_login
     gateway = AuthorizeNetArbGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
 
     assert response = gateway.recurring(@amount, @credit_card, @options)

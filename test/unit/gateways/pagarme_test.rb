@@ -614,7 +614,7 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
   def failed_capture_response
-  <<-FAILED_RESPONSE
+    <<-FAILED_RESPONSE
     {
       "errors": [
         {
@@ -626,11 +626,11 @@ class PagarmeTest < Test::Unit::TestCase
       "method": "post",
       "url": "/transactions/429356/capture"
     }
-  FAILED_RESPONSE
+    FAILED_RESPONSE
   end
 
   def successful_refund_response
-  <<-SUCCESS_RESPONSE
+    <<-SUCCESS_RESPONSE
     {
       "acquirer_name": "development",
       "acquirer_response_code": "00",
@@ -684,11 +684,11 @@ class PagarmeTest < Test::Unit::TestCase
       "subscription_id": null,
       "tid": "1458844196661"
     }
-  SUCCESS_RESPONSE
+    SUCCESS_RESPONSE
   end
 
   def failed_refund_response
-  <<-FAILED_RESPONSE
+    <<-FAILED_RESPONSE
     {
       "errors": [
         {
@@ -700,11 +700,11 @@ class PagarmeTest < Test::Unit::TestCase
       "method": "post",
       "url": "/transactions/429356/refund"
     }
-  FAILED_RESPONSE
+    FAILED_RESPONSE
   end
 
   def successful_void_response
-  <<-SUCCESS_RESPONSE
+    <<-SUCCESS_RESPONSE
     {
       "acquirer_name": "pagarme",
       "acquirer_response_code": "00",
@@ -758,11 +758,11 @@ class PagarmeTest < Test::Unit::TestCase
       "subscription_id": null,
       "tid": 472218
     }
-  SUCCESS_RESPONSE
+    SUCCESS_RESPONSE
   end
 
   def failed_void_response
-  <<-FAILED_RESPONSE
+    <<-FAILED_RESPONSE
     {
       "errors": [
         {
@@ -774,11 +774,11 @@ class PagarmeTest < Test::Unit::TestCase
       "method": "post",
       "url": "/transactions/472218/refund"
     }
-  FAILED_RESPONSE
+    FAILED_RESPONSE
   end
 
   def successful_verify_response
-  <<-SUCCESS_RESPONSE
+    <<-SUCCESS_RESPONSE
     {
       "acquirer_name": "pagarme",
       "acquirer_response_code": "00",
@@ -832,11 +832,11 @@ class PagarmeTest < Test::Unit::TestCase
       "subscription_id": null,
       "tid": 476135
     }
-  SUCCESS_RESPONSE
+    SUCCESS_RESPONSE
   end
 
   def successful_verify_void_response
-  <<-SUCCESS_RESPONSE
+    <<-SUCCESS_RESPONSE
     {
       "acquirer_name": "pagarme",
       "acquirer_response_code": "00",
@@ -890,11 +890,11 @@ class PagarmeTest < Test::Unit::TestCase
       "subscription_id": null,
       "tid": 476135
     }
-  SUCCESS_RESPONSE
+    SUCCESS_RESPONSE
   end
 
   def failed_verify_response
-  <<-FAILED_RESPONSE
+    <<-FAILED_RESPONSE
     {
       "acquirer_name": "pagarme",
       "acquirer_response_code": "88",
@@ -948,7 +948,7 @@ class PagarmeTest < Test::Unit::TestCase
       "subscription_id": null,
       "tid": 476143
     }
-  FAILED_RESPONSE
+    FAILED_RESPONSE
   end
 
   def failed_error_response
@@ -964,15 +964,14 @@ class PagarmeTest < Test::Unit::TestCase
       "method": "post",
       "url": "/transactions"
     }
-  FAILED_RESPONSE
+    FAILED_RESPONSE
   end
 
   def failed_json_response
-  <<-SUCCESS_RESPONSE
+    <<-SUCCESS_RESPONSE
     {
       foo: bar
     }
-  SUCCESS_RESPONSE
+    SUCCESS_RESPONSE
   end
-
 end

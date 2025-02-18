@@ -1,6 +1,6 @@
 require 'nokogiri'
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     module PayflowCommonAPI
       def self.included(base)
         base.default_currency = 'USD'
@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
         # Set the default partner to PayPal
         base.partner = 'PayPal'
 
-        base.supported_countries = ['US', 'CA', 'NZ', 'AU']
+        base.supported_countries = %w[US CA NZ AU]
 
         base.class_attribute :timeout
         base.timeout = 60
@@ -37,22 +37,20 @@ module ActiveMerchant #:nodoc:
       XMLNS = 'http://www.paypal.com/XMLPay'
 
       CARD_MAPPING = {
-        :visa => 'Visa',
-        :master => 'MasterCard',
-        :discover => 'Discover',
-        :american_express => 'Amex',
-        :jcb => 'JCB',
-        :diners_club => 'DinersClub',
-        :switch => 'Switch',
-        :solo => 'Solo'
+        visa: 'Visa',
+        master: 'MasterCard',
+        discover: 'Discover',
+        american_express: 'Amex',
+        jcb: 'JCB',
+        diners_club: 'DinersClub'
       }
 
       TRANSACTIONS = {
-        :purchase       => 'Sale',
-        :authorization  => 'Authorization',
-        :capture        => 'Capture',
-        :void           => 'Void',
-        :credit         => 'Credit'
+        purchase: 'Sale',
+        authorization: 'Authorization',
+        capture: 'Capture',
+        void: 'Void',
+        credit: 'Credit'
       }
 
       CVV_CODE = {
@@ -80,6 +78,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def build_request(body, options = {})
         xml = Builder::XmlMarkup.new
         xml.instruct!
@@ -100,7 +99,7 @@ module ActiveMerchant #:nodoc:
           end
           xml.tag! 'RequestAuth' do
             xml.tag! 'UserPass' do
-              xml.tag! 'User', !@options[:user].blank? ? @options[:user] : @options[:login]
+              xml.tag! 'User', @options[:user].blank? ? @options[:login] : @options[:user]
               xml.tag! 'Password', @options[:password]
             end
           end
@@ -118,7 +117,13 @@ module ActiveMerchant #:nodoc:
               xml.tag!('TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money))
               xml.tag!('Description', options[:description]) unless options[:description].blank?
               xml.tag!('Comment', options[:comment]) unless options[:comment].blank?
-              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+              xml.tag!('ExtData', 'Name' => 'COMMENT2', 'Value' => options[:comment2]) unless options[:comment2].blank?
+              xml.tag!('MerchDescr', options[:merch_descr]) unless options[:merch_descr].blank?
+              xml.tag!(
+                'ExtData',
+                'Name' => 'CAPTURECOMPLETE',
+                'Value' => options[:capture_complete]
+              ) unless options[:capture_complete].blank?
             end
           end
         end
@@ -128,6 +133,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, tag, address, options)
         return if address.nil?
+
         xml.tag! tag do
           xml.tag! 'Name', address[:name] unless address[:name].blank?
           xml.tag! 'EMail', options[:email] unless options[:email].blank?
@@ -155,9 +161,7 @@ module ActiveMerchant #:nodoc:
         # REXML::XPath in Ruby 1.8.6 is now unable to match nodes based on their attributes
         tx_result = root.xpath('.//TransactionResult').first
 
-        if tx_result && tx_result.attributes['Duplicate'].to_s == 'true'
-          response[:duplicate] = true
-        end
+        response[:duplicate] = true if tx_result && tx_result.attributes['Duplicate'].to_s == 'true'
 
         root.xpath('.//*').each do |node|
           parse_element(response, node)
@@ -174,11 +178,11 @@ module ActiveMerchant #:nodoc:
           # down as we do everywhere else. RPPaymentResult elements are not contained
           # in an RPPaymentResults element so we'll come here multiple times
           response[node_name] ||= []
-          response[node_name] << ( payment_result_response = {} )
-          node.xpath('.//*').each{ |e| parse_element(payment_result_response, e) }
+          response[node_name] << (payment_result_response = {})
+          node.xpath('.//*').each { |e| parse_element(payment_result_response, e) }
         when node.xpath('.//*').to_a.any?
-          node.xpath('.//*').each{|e| parse_element(response, e) }
-        when node_name.to_s =~ /amt$/
+          node.xpath('.//*').each { |e| parse_element(response, e) }
+        when /amt$/.match?(node_name.to_s)
           # *Amt elements don't put the value in the #text - instead they use a Currency attribute
           response[node_name] = node.attributes['Currency'].to_s
         when node_name == :ext_data
@@ -198,7 +202,7 @@ module ActiveMerchant #:nodoc:
           'X-VPS-Request-ID' => SecureRandom.hex(16)
         }
 
-        headers.merge!('PAYPAL-NVP' => 'Y') if self.use_paypal_nvp
+        headers['PAYPAL-NVP'] = 'Y' if self.use_paypal_nvp
         headers
       end
 

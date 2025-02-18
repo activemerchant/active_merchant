@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SageGateway < Gateway
       include Empty
 
@@ -7,20 +7,20 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'Sage Payment Solutions'
       self.live_url = 'https://www.sagepayments.net/cgi-bin'
 
-      self.supported_countries =  ['US', 'CA']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_countries = %w[US CA]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
 
       TRANSACTIONS = {
-        :purchase           => '01',
-        :authorization      => '02',
-        :capture            => '11',
-        :void               => '04',
-        :credit             => '06',
-        :refund             => '10'
+        purchase:       '01',
+        authorization:  '02',
+        capture:        '11',
+        void:           '04',
+        credit:         '06',
+        refund:         '10'
       }
 
       SOURCE_CARD   = 'bankcard'
-      SOURCE_ECHECK =  'virtual_check'
+      SOURCE_ECHECK = 'virtual_check'
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
         commit(:credit, post, source)
       end
 
-      def refund(money, reference, options={})
+      def refund(money, reference, options = {})
         post = {}
         add_reference(post, reference)
         add_transaction_data(post, money, options)
@@ -97,7 +97,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-         force_utf8(transcript).
+        force_utf8(transcript).
           gsub(%r((M_id=)[^&]*), '\1[FILTERED]').
           gsub(%r((M_key=)[^&]*), '\1[FILTERED]').
           gsub(%r((C_cardnumber=)[^&]*), '\1[FILTERED]').
@@ -115,7 +115,8 @@ module ActiveMerchant #:nodoc:
       # use the same method as in pay_conex
       def force_utf8(string)
         return nil unless string
-        binary = string.encode('BINARY', invalid: :replace, undef: :replace, replace: '?')   # Needed for Ruby 2.0 since #encode is a no-op if the string is already UTF-8. It's not needed for Ruby 2.1 and up since it's not a no-op there.
+
+        binary = string.encode('BINARY', invalid: :replace, undef: :replace, replace: '?') # Needed for Ruby 2.0 since #encode is a no-op if the string is already UTF-8. It's not needed for Ruby 2.1 and up since it's not a no-op there.
         binary.encode('UTF-8', invalid: :replace, undef: :replace, replace: '?')
       end
 
@@ -179,9 +180,9 @@ module ActiveMerchant #:nodoc:
 
       def parse_check(data)
         response = {}
-        response[:success]          = data[1,1]
-        response[:code]             = data[2,6].strip
-        response[:message]          = data[8,32].strip
+        response[:success]          = data[1, 1]
+        response[:code]             = data[2, 6].strip
+        response[:message]          = data[8, 32].strip
         response[:risk]             = data[40, 2]
         response[:reference]        = data[42, 10]
 
@@ -194,9 +195,9 @@ module ActiveMerchant #:nodoc:
 
       def parse_credit_card(data)
         response = {}
-        response[:success]          = data[1,1]
-        response[:code]             = data[2,6]
-        response[:message]          = data[8,32].strip
+        response[:success]          = data[1, 1]
+        response[:code]             = data[2, 6]
+        response[:message]          = data[8, 32].strip
         response[:front_end]        = data[40, 2]
         response[:cvv_result]       = data[42, 1]
         response[:avs_result]       = data[43, 1].strip
@@ -214,7 +215,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, reference)
-        ref, _ = reference.to_s.split(';')
+        ref, = reference.to_s.split(';')
         post[:T_reference] = ref
       end
 
@@ -227,7 +228,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_addresses(post, options)
-        billing_address   = options[:billing_address] || options[:address] || {}
+        billing_address = options[:billing_address] || options[:address] || {}
 
         post[:C_address]    = billing_address[:address1]
         post[:C_city]       = billing_address[:city]
@@ -259,11 +260,14 @@ module ActiveMerchant #:nodoc:
         url = url(params, source)
         response = parse(ssl_post(url, post_data(action, params)), source)
 
-        Response.new(success?(response), response[:message], response,
-          :test => test?,
-          :authorization => authorization_from(response, source),
-          :avs_result => { :code => response[:avs_result] },
-          :cvv_result => response[:cvv_result]
+        Response.new(
+          success?(response),
+          response[:message],
+          response,
+          test: test?,
+          authorization: authorization_from(response, source),
+          avs_result: { code: response[:avs_result] },
+          cvv_result: response[:cvv_result]
         )
       end
 
@@ -296,7 +300,6 @@ module ActiveMerchant #:nodoc:
       end
 
       class SageVault
-
         def initialize(options, gateway)
           @live_url = 'https://www.sagepayments.net/web_services/wsVault/wsVault.asmx'
           @options = options
@@ -364,9 +367,12 @@ module ActiveMerchant #:nodoc:
         end
 
         def commit(action, request)
-          response = parse(@gateway.ssl_post(@live_url,
-            build_soap_request(action, request),
-            build_headers(action))
+          response = parse(
+            @gateway.ssl_post(
+              @live_url,
+              build_soap_request(action, request),
+              build_headers(action)
+            )
           )
 
           case action
@@ -378,7 +384,10 @@ module ActiveMerchant #:nodoc:
             message = success ? 'Succeeded' : 'Failed'
           end
 
-          Response.new(success, message, response,
+          Response.new(
+            success,
+            message,
+            response,
             authorization: response[:guid]
           )
         end

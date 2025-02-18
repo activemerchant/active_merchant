@@ -1,10 +1,10 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PayscoutGateway < Gateway
       self.live_url = self.test_url = 'https://secure.payscout.com/api/transact.php'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.default_currency = 'USD'
       self.homepage_url = 'http://www.payscout.com/'
       self.display_name = 'Payscout'
@@ -41,7 +41,6 @@ module ActiveMerchant #:nodoc:
         commit('capture', money, post)
       end
 
-
       def refund(money, authorization, options = {})
         post = {}
         post[:transactionid] = authorization
@@ -63,7 +62,7 @@ module ActiveMerchant #:nodoc:
           post[:address1] = address[:address1].to_s
           post[:address2] = address[:address2].to_s
           post[:city]     = address[:city].to_s
-          post[:state]    = (address[:state].blank?  ? 'n/a' : address[:state])
+          post[:state]    = (address[:state].blank? ? 'n/a' : address[:state])
           post[:zip]      = address[:zip].to_s
           post[:country]  = address[:country].to_s
           post[:phone]    = address[:phone].to_s
@@ -79,7 +78,7 @@ module ActiveMerchant #:nodoc:
           post[:shipping_address2]  = address[:address2].to_s
           post[:shipping_city]      = address[:city].to_s
           post[:shipping_country]   = address[:country].to_s
-          post[:shipping_state]     = (address[:state].blank?  ? 'n/a' : address[:state])
+          post[:shipping_state]     = (address[:state].blank? ? 'n/a' : address[:state])
           post[:shipping_zip]       = address[:zip].to_s
           post[:shipping_email]     = address[:email].to_s
         end
@@ -103,7 +102,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[body.split('&').map{|x|x.split('=')}]
+        Hash[body.split('&').map { |x| x.split('=') }]
       end
 
       def commit(action, money, parameters)
@@ -116,12 +115,15 @@ module ActiveMerchant #:nodoc:
 
         message = message_from(response)
         test_mode = (test? || message =~ /TESTMODE/)
-        Response.new(success?(response), message, response,
-          :test => test_mode,
-          :authorization => response['transactionid'],
-          :fraud_review => fraud_review?(response),
-          :avs_result => { :code => response['avsresponse'] },
-          :cvv_result => response['cvvresponse']
+        Response.new(
+          success?(response),
+          message,
+          response,
+          test: test_mode,
+          authorization: response['transactionid'],
+          fraud_review: fraud_review?(response),
+          avs_result: { code: response['avsresponse'] },
+          cvv_result: response['cvvresponse']
         )
       end
 
@@ -153,10 +155,8 @@ module ActiveMerchant #:nodoc:
         post[:password]       = @options[:password]
         post[:type]           = action
 
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end
 end
-

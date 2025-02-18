@@ -33,11 +33,11 @@ class RemoteCardknoxTest < Test::Unit::TestCase
         zip: '46112',
         country: 'US',
         phone: '(555)555-5555',
-        fax: '(555)555-6666',
+        fax: '(555)555-6666'
       }
     }
 
-     @options = {}
+    @options = {}
   end
 
   def test_successful_credit_card_purchase
@@ -124,7 +124,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -138,7 +138,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -146,17 +146,16 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert refund = @gateway.refund(@amount-1, auth.authorization)
+    assert refund = @gateway.refund(@amount - 1, auth.authorization)
     assert_failure refund
     assert_equal 'Refund not allowed on non-captured auth.', refund.message
-
   end
 
   def test_failed_partial_check_refund # the gate way does not support this transaction
     purchase = @gateway.purchase(@amount, @check, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_failure refund
     assert_equal "Transaction is in a state that cannot be refunded\nParameter name: originalReferenceNumber", refund.message # "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
   end
@@ -168,7 +167,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
 
-    assert refund = @gateway.refund(@amount-1, capture.authorization)
+    assert refund = @gateway.refund(@amount - 1, capture.authorization)
     assert_success refund
   end
 
@@ -191,7 +190,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
 
     assert void = @gateway.void(capture.authorization, @options)
@@ -215,7 +214,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
 
-    assert refund = @gateway.refund(@amount-1, capture.authorization)
+    assert refund = @gateway.refund(@amount - 1, capture.authorization)
     assert_success refund
 
     assert void = @gateway.void(refund.authorization, @options)

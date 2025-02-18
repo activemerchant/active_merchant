@@ -1,7 +1,7 @@
 require 'digest/sha2'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class Be2billGateway < Gateway
       self.test_url = 'https://secure-test.be2bill.com/front/service/rest/process.php'
       self.live_url = 'https://secure-magenta1.be2bill.com/front/service/rest/process.php'
@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Be2Bill'
       self.homepage_url = 'http://www.be2bill.com/'
       self.supported_countries = ['FR']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.default_currency = 'EUR'
       self.money_format = :cents
 
@@ -92,8 +92,8 @@ module ActiveMerchant #:nodoc:
           successful?(response),
           message_from(response),
           response,
-          :authorization => response['TRANSACTIONID'],
-          :test          => test?
+          authorization: response['TRANSACTIONID'],
+          test: test?
         )
       end
 
@@ -111,8 +111,8 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         {
-          :method => action,
-          :params => parameters.merge(HASH: signature(parameters, action))
+          method: action,
+          params: parameters.merge(HASH: signature(parameters, action))
         }.to_query
       end
 

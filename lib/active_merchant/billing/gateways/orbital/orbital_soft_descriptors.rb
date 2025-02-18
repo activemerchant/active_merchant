@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class OrbitalSoftDescriptors < Model
       PHONE_FORMAT_1 = /\A\d{3}-\d{3}-\d{4}\z/
       PHONE_FORMAT_2 = /\A\d{3}-\w{7}\z/
@@ -30,14 +30,10 @@ module ActiveMerchant #:nodoc:
         errors << [:merchant_name, 'is required'] if self.merchant_name.blank?
         errors << [:merchant_name, 'is required to be 25 bytes or less'] if self.merchant_name.bytesize > 25
 
-        if(!empty?(self.merchant_phone) && !self.merchant_phone.match(PHONE_FORMAT_1) && !self.merchant_phone.match(PHONE_FORMAT_2))
-          errors << [:merchant_phone, 'is required to follow "NNN-NNN-NNNN" or "NNN-AAAAAAA" format']
-        end
+        errors << [:merchant_phone, 'is required to follow "NNN-NNN-NNNN" or "NNN-AAAAAAA" format'] if !empty?(self.merchant_phone) && !self.merchant_phone.match(PHONE_FORMAT_1) && !self.merchant_phone.match(PHONE_FORMAT_2)
 
-        [:merchant_email, :merchant_url].each do |attr|
-          unless self.send(attr).blank?
-            errors << [attr, 'is required to be 13 bytes or less'] if(self.send(attr).bytesize > 13)
-          end
+        %i[merchant_email merchant_url].each do |attr|
+          errors << [attr, 'is required to be 13 bytes or less'] if !self.send(attr).blank? && (self.send(attr).bytesize > 13)
         end
 
         errors_hash(errors)

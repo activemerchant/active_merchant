@@ -2,64 +2,61 @@ require 'active_merchant/billing/gateways/payflow/payflow_common_api'
 require 'active_merchant/billing/gateways/payflow/payflow_express_response'
 require 'active_merchant/billing/gateways/paypal_express_common'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-      # ==General Parameters
-      # The following parameters are supported for #setup_authorization, #setup_purchase, #authorize and #purchase transactions. I've read
-      # in the docs that they recommend you pass the exact same parameters to both setup and authorize/purchase.
-      #
-      # This information was gleaned from a mix of:
-      # * PayFlow documentation
-      #   * for key value pairs: {Express Checkout for Payflow Pro (PDF)}[https://cms.paypal.com/cms_content/US/en_US/files/developer/PFP_ExpressCheckout_PP.pdf]
-      #   * XMLPay: {Payflow Pro XMLPay Developer's Guide (PDF)}[https://cms.paypal.com/cms_content/US/en_US/files/developer/PP_PayflowPro_XMLPay_Guide.pdf]
-      # * previous ActiveMerchant code
-      # * trial & error
-      #
-      # The following parameters are currently supported.
-      # [<tt>:ip</tt>] (opt) Customer IP Address
-      # [<tt>:order_id</tt>] (opt) An order or invoice number. This will be passed through to the Payflow backend at manager.paypal.com, and show up as "Supplier Reference #"
-      # [<tt>:description</tt>] (opt) Order description, shown to buyer (after redirected to PayPal). If Order Line Items are used (see below), then the description is suppressed. This will not be passed through to the Payflow backend.
-      # [<tt>:billing_address</tt>] (opt) See ActiveMerchant::Billing::Gateway for details
-      # [<tt>:shipping_address</tt>] (opt) See ActiveMerchant::Billing::Gateway for details
-      # [<tt>:currency</tt>] (req) Currency of transaction, will be set to USD by default for PayFlow Express if not specified
-      # [<tt>:email</tt>] (opt) Email of buyer; used to pre-fill PayPal login screen
-      # [<tt>:payer_id</tt>] (opt) Unique PayPal buyer account identification number, as returned by details_for request
-      # [<tt>:token</tt>] (req for #authorize & #purchase) Token returned by setup transaction
-      # [<tt>:no_shipping</tt>] (opt) Boolean for whether or not to display shipping address to buyer
-      # [<tt>:address_override</tt>] (opt) Boolean. If true, display shipping address passed by parameters, rather than shipping address on file with PayPal
-      # [<tt>:allow_note</tt>] (opt) Boolean for permitting buyer to add note during checkout. Note contents can be retrieved with details_for transaction
-      # [<tt>:return_url</tt>] (req) URL to which the buyer’s browser is returned after choosing to pay.
-      # [<tt>:cancel_return_url</tt>] (req) URL to which the buyer is returned if the buyer cancels the order.
-      # [<tt>:notify_url</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
-      # [<tt>:comment</tt>] (opt) Comment field which will be reported to Payflow backend (at manager.paypal.com) as Comment1
-      # [<tt>:comment2</tt>] (opt) Comment field which will be reported to Payflow backend (at manager.paypal.com) as Comment2
-      # [<tt>:discount</tt>] (opt) Total discounts in cents
-      #
-      # ==Line Items
-      # Support for order line items is available, but has to be enabled on the PayFlow backend. This is what I was told by Todd Sieber at Technical Support:
-      #
-      # <em>You will need to call Payflow Support at 1-888-883-9770, choose option #2.  Request that they update your account in "Pandora" under Product Settings >> PayPal Mark and update the Features Bitmap to 1111111111111112.  This is 15 ones and a two.</em>
-      #
-      # See here[https://www.x.com/message/206214#206214] for the forum discussion (requires login to {x.com}[https://x.com]
-      #
-      # [<tt>:items</tt>] (opt) Array of Order Line Items hashes. These are shown to the buyer after redirect to PayPal.
-      #
-      #
-      #
-      #                   The following keys are supported for line items:
-      #                   [<tt>:name</tt>] Name of line item
-      #                   [<tt>:description</tt>] Description of line item
-      #                   [<tt>:amount</tt>] Line Item Amount in Cents (as Integer)
-      #                   [<tt>:quantity</tt>] Line Item Quantity (default to 1 if left blank)
-      #
-      # ====Customization of Payment Page
-      # [<tt>:page_style</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
-      # [<tt>:header_image</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
-      # [<tt>:background_color</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
-      # ====Additional options for old Checkout Experience, being phased out in 2010 and 2011
-      # [<tt>:header_background_color</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
-      # [<tt>:header_border_color</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
-
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
+    # ==General Parameters
+    # The following parameters are supported for #setup_authorization, #setup_purchase, #authorize and #purchase transactions. I've read
+    # in the docs that they recommend you pass the exact same parameters to both setup and authorize/purchase.
+    #
+    # This information was gleaned from a mix of:
+    # * {PayFlow documentation}[https://developer.paypal.com/docs/classic/payflow/integration-guide/]
+    # * previous ActiveMerchant code
+    # * trial & error
+    #
+    # The following parameters are currently supported.
+    # [<tt>:ip</tt>] (opt) Customer IP Address
+    # [<tt>:order_id</tt>] (opt) An order or invoice number. This will be passed through to the Payflow backend at manager.paypal.com, and show up as "Supplier Reference #"
+    # [<tt>:description</tt>] (opt) Order description, shown to buyer (after redirected to PayPal). If Order Line Items are used (see below), then the description is suppressed. This will not be passed through to the Payflow backend.
+    # [<tt>:billing_address</tt>] (opt) See ActiveMerchant::Billing::Gateway for details
+    # [<tt>:shipping_address</tt>] (opt) See ActiveMerchant::Billing::Gateway for details
+    # [<tt>:currency</tt>] (req) Currency of transaction, will be set to USD by default for PayFlow Express if not specified
+    # [<tt>:email</tt>] (opt) Email of buyer; used to pre-fill PayPal login screen
+    # [<tt>:payer_id</tt>] (opt) Unique PayPal buyer account identification number, as returned by details_for request
+    # [<tt>:token</tt>] (req for #authorize & #purchase) Token returned by setup transaction
+    # [<tt>:no_shipping</tt>] (opt) Boolean for whether or not to display shipping address to buyer
+    # [<tt>:address_override</tt>] (opt) Boolean. If true, display shipping address passed by parameters, rather than shipping address on file with PayPal
+    # [<tt>:allow_note</tt>] (opt) Boolean for permitting buyer to add note during checkout. Note contents can be retrieved with details_for transaction
+    # [<tt>:return_url</tt>] (req) URL to which the buyer’s browser is returned after choosing to pay.
+    # [<tt>:cancel_return_url</tt>] (req) URL to which the buyer is returned if the buyer cancels the order.
+    # [<tt>:notify_url</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
+    # [<tt>:comment</tt>] (opt) Comment field which will be reported to Payflow backend (at manager.paypal.com) as Comment1
+    # [<tt>:comment2</tt>] (opt) Comment field which will be reported to Payflow backend (at manager.paypal.com) as Comment2
+    # [<tt>:discount</tt>] (opt) Total discounts in cents
+    #
+    # ==Line Items
+    # Support for order line items is available, but has to be enabled on the PayFlow backend. This is what I was told by Todd Sieber at Technical Support:
+    #
+    # <em>You will need to call Payflow Support at 1-888-883-9770, choose option #2.  Request that they update your account in "Pandora" under Product Settings >> PayPal Mark and update the Features Bitmap to 1111111111111112.  This is 15 ones and a two.</em>
+    #
+    # See here[https://www.x.com/message/206214#206214] for the forum discussion (requires login to {x.com}[https://x.com]
+    #
+    # [<tt>:items</tt>] (opt) Array of Order Line Items hashes. These are shown to the buyer after redirect to PayPal.
+    #
+    #
+    #
+    #                   The following keys are supported for line items:
+    #                   [<tt>:name</tt>] Name of line item
+    #                   [<tt>:description</tt>] Description of line item
+    #                   [<tt>:amount</tt>] Line Item Amount in Cents (as Integer)
+    #                   [<tt>:quantity</tt>] Line Item Quantity (default to 1 if left blank)
+    #
+    # ====Customization of Payment Page
+    # [<tt>:page_style</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
+    # [<tt>:header_image</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
+    # [<tt>:background_color</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
+    # ====Additional options for old Checkout Experience, being phased out in 2010 and 2011
+    # [<tt>:header_background_color</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
+    # [<tt>:header_border_color</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
 
     class PayflowExpressGateway < Gateway
       include PayflowCommonAPI
@@ -111,8 +108,9 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def build_get_express_details_request(token)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'GetExpressCheckout' do
           xml.tag! 'Authorization' do
             xml.tag! 'PayData' do
@@ -128,7 +126,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_setup_express_sale_or_authorization_request(action, money, options = {})
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'SetExpressCheckout' do
           xml.tag! action do
             add_pay_data xml, money, options
@@ -138,7 +136,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_sale_or_authorization_request(action, money, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'DoExpressCheckout' do
           xml.tag! action do
             add_pay_data xml, money, options
@@ -157,7 +155,7 @@ module ActiveMerchant #:nodoc:
             # Comment, Comment2 should make it to the backend at manager.paypal.com, as with Payflow credit card transactions
             # but that doesn't seem to work (yet?). See: https://www.x.com/thread/51908?tstart=0
             xml.tag! 'Comment', options[:comment] unless options[:comment].nil?
-            xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].nil?
+            xml.tag!('ExtData', 'Name' => 'COMMENT2', 'Value' => options[:comment2]) unless options[:comment2].nil?
 
             billing_address = options[:billing_address] || options[:address]
             add_address(xml, 'BillTo', billing_address, options) if billing_address
@@ -182,7 +180,6 @@ module ActiveMerchant #:nodoc:
             end
             xml.tag! 'DiscountAmt', amount(options[:discount]) if options[:discount]
             xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
-
           end
 
           xml.tag! 'Tender' do
@@ -201,7 +198,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'Token', options[:token] unless options[:token].blank?
           xml.tag! 'NoShipping', options[:no_shipping] ? '1' : '0'
           xml.tag! 'AddressOverride', options[:address_override] ? '1' : '0'
-          xml.tag! 'ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank?
+          xml.tag! 'ButtonSource', application_id.to_s.slice(0, 32) unless application_id.blank?
 
           # Customization of the payment page
           xml.tag! 'PageStyle', options[:page_style] unless options[:page_style].blank?
@@ -221,4 +218,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

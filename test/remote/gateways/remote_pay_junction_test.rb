@@ -10,28 +10,28 @@ class PayJunctionTest < Test::Unit::TestCase
   def setup
     @gateway = PayJunctionGateway.new(fixtures(:pay_junction))
 
-    @credit_card = credit_card('4444333322221111', :verification_value => '999')
+    @credit_card = credit_card('4444333322221111', verification_value: '999')
 
     @valid_verification_value = '999'
     @invalid_verification_value = '1234'
 
     @valid_address = {
-      :address1 => '123 Test St.',
-      :address2 => nil,
-      :city => 'Somewhere',
-      :state => 'CA',
-      :zip => '90001'
+      address1: '123 Test St.',
+      address2: nil,
+      city: 'Somewhere',
+      state: 'CA',
+      zip: '90001'
     }
 
     @invalid_address = {
-      :address1 => '187 Apple Tree Lane.',
-      :address2 => nil,
-      :city => 'Woodside',
-      :state => 'CA',
-      :zip => '94062'
+      address1: '187 Apple Tree Lane.',
+      address2: nil,
+      city: 'Woodside',
+      state: 'CA',
+      zip: '94062'
     }
 
-    @options = { :billing_address => @valid_address, :order_id => generate_unique_id }
+    @options = { billing_address: @valid_address, order_id: generate_unique_id }
   end
 
   def test_successful_purchase
@@ -55,7 +55,7 @@ class PayJunctionTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    assert response = @gateway.authorize( AMOUNT, @credit_card, @options)
+    assert response = @gateway.authorize(AMOUNT, @credit_card, @options)
 
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
     assert_equal 'hold', response.params['posture'], 'Should be a held charge'
@@ -71,8 +71,7 @@ class PayJunctionTest < Test::Unit::TestCase
     response = @gateway.capture(AMOUNT, auth.authorization, @options)
     assert_success response
     assert_equal 'capture', response.params['posture'], 'Should be a capture'
-    assert_equal auth.authorization, response.authorization,
-        'Should maintain transaction ID across request'
+    assert_equal auth.authorization, response.authorization, 'Should maintain transaction ID across request'
   end
 
   def test_successful_credit
@@ -90,11 +89,10 @@ class PayJunctionTest < Test::Unit::TestCase
     purchase = @gateway.purchase(AMOUNT, @credit_card, @options)
     assert_success purchase
 
-    assert response = @gateway.void(purchase.authorization, :order_id => order_id)
+    assert response = @gateway.void(purchase.authorization, order_id:)
     assert_success response
     assert_equal 'void', response.params['posture'], 'Should be a capture'
-    assert_equal purchase.authorization, response.authorization,
-        'Should maintain transaction ID across request'
+    assert_equal purchase.authorization, response.authorization, 'Should maintain transaction ID across request'
   end
 
   def test_successful_instant_purchase
@@ -102,26 +100,27 @@ class PayJunctionTest < Test::Unit::TestCase
     # transaction can be executed if you have the transaction ID of a
     # previous successful transaction.
 
-    purchase = @gateway.purchase( AMOUNT, @credit_card, @options)
+    purchase = @gateway.purchase(AMOUNT, @credit_card, @options)
     assert_success purchase
 
-    assert response = @gateway.purchase(AMOUNT, purchase.authorization, :order_id => generate_unique_id)
+    assert response = @gateway.purchase(AMOUNT, purchase.authorization, order_id: generate_unique_id)
 
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
     assert_equal 'capture', response.params['posture'], 'Should be captured funds'
     assert_equal 'charge', response.params['transaction_action']
-    assert_not_equal purchase.authorization, response.authorization,
-        'Should have recieved new transaction ID'
+    assert_not_equal purchase.authorization, response.authorization, 'Should have recieved new transaction ID'
 
     assert_success response
   end
 
   def test_successful_recurring
-    assert response = @gateway.recurring(AMOUNT, @credit_card,
-                        :periodicity  => :monthly,
-                        :payments     => 12,
-                        :order_id => generate_unique_id[0..15]
-                      )
+    assert response = @gateway.recurring(
+      AMOUNT,
+      @credit_card,
+      periodicity: :monthly,
+      payments: 12,
+      order_id: generate_unique_id[0..15]
+    )
 
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
     assert_equal 'charge', response.params['transaction_action']
@@ -136,7 +135,8 @@ class PayJunctionTest < Test::Unit::TestCase
   end
 
   private
+
   def success_price
-    200 + rand(200)
+    rand(200..399)
   end
 end

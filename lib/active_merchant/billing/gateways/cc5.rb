@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # CC5 API is used by many banks in Turkey. Extend this base class to provide
     # concrete implementations.
     class CC5Gateway < Gateway
@@ -48,9 +48,9 @@ module ActiveMerchant #:nodoc:
       protected
 
       def build_sale_request(type, money, creditcard, options = {})
-        requires!(options,  :order_id)
+        requires!(options, :order_id)
 
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
 
         xml.tag! 'CC5Request' do
           add_login_tags(xml)
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
           add_amount_tags(money, options, xml)
           xml.tag! 'Email', options[:email] if options[:email]
 
-          if(address = (options[:billing_address] || options[:address]))
+          if (address = (options[:billing_address] || options[:address]))
             xml.tag! 'BillTo' do
               add_address(xml, address)
             end
@@ -70,14 +70,13 @@ module ActiveMerchant #:nodoc:
               add_address(xml, address)
             end
           end
-
         end
 
         xml.target!
       end
 
       def build_capture_request(money, authorization, options = {})
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
 
         xml.tag! 'CC5Request' do
           add_login_tags(xml)
@@ -88,7 +87,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_void_request(authorization, options = {})
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
 
         xml.tag! 'CC5Request' do
           add_login_tags(xml)
@@ -98,7 +97,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_authorization_credit_request(money, authorization, options = {})
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
 
         xml.tag! 'CC5Request' do
           add_login_tags(xml)
@@ -109,7 +108,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_creditcard_credit_request(money, creditcard, options = {})
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
 
         xml.tag! 'CC5Request' do
           add_login_tags(xml)
@@ -158,8 +157,8 @@ module ActiveMerchant #:nodoc:
           success,
           (success ? 'Approved' : "Declined (Reason: #{response[:proc_return_code]} - #{response[:err_msg]})"),
           response,
-          :test => test?,
-          :authorization => response[:order_id]
+          test: test?,
+          authorization: response[:order_id]
         )
       end
 
@@ -175,7 +174,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|element| parse_element(response, element) }
+          node.elements.each { |element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
@@ -189,7 +188,7 @@ module ActiveMerchant #:nodoc:
         return unless text
 
         if ActiveSupport::Inflector.method(:transliterate).arity == -2
-          ActiveSupport::Inflector.transliterate(text,'')
+          ActiveSupport::Inflector.transliterate(text, '')
         else
           text.gsub(/[^\x00-\x7F]+/, '')
         end

@@ -24,7 +24,7 @@ module ActiveMerchant
     class NetRegistryGateway < Gateway
       self.live_url = self.test_url = 'https://paygate.ssllock.net/external2.pl'
 
-      FILTERED_PARAMS = [ 'card_no', 'card_expiry', 'receipt_array' ]
+      FILTERED_PARAMS = %w[card_no card_expiry receipt_array]
 
       self.supported_countries = ['AU']
 
@@ -32,16 +32,16 @@ module ActiveMerchant
       # steps in setting up your account, as detailed in
       # "Programming for NetRegistry's E-commerce Gateway."
       # [http://rubyurl.com/hNG]
-      self.supported_cardtypes = [:visa, :master, :diners_club, :american_express, :jcb]
+      self.supported_cardtypes = %i[visa master diners_club american_express jcb]
       self.display_name = 'NetRegistry'
       self.homepage_url = 'http://www.netregistry.com.au'
 
       TRANSACTIONS = {
-        :authorization => 'preauth',
-        :purchase => 'purchase',
-        :capture => 'completion',
-        :status => 'status',
-        :refund => 'refund'
+        authorization: 'preauth',
+        purchase: 'purchase',
+        capture: 'completion',
+        status: 'status',
+        refund: 'refund'
       }
 
       # Create a new NetRegistry gateway.
@@ -122,6 +122,7 @@ module ActiveMerchant
       end
 
       private
+
       def add_request_details(params, options)
         params['COMMENT'] = options[:description] unless options[:description].blank?
       end
@@ -130,7 +131,7 @@ module ActiveMerchant
       # format for a command.
       def expiry(credit_card)
         month = format(credit_card.month, :two_digits)
-        year  = format(credit_card.year , :two_digits)
+        year  = format(credit_card.year,  :two_digits)
         "#{month}/#{year}"
       end
 
@@ -141,17 +142,20 @@ module ActiveMerchant
       # omitted if nil.
       def commit(action, params)
         # get gateway response
-        response = parse( ssl_post(self.live_url, post_data(action, params)) )
+        response = parse(ssl_post(self.live_url, post_data(action, params)))
 
-        Response.new(response['status'] == 'approved', message_from(response), response,
-          :authorization => authorization_from(response, action)
+        Response.new(
+          response['status'] == 'approved',
+          message_from(response),
+          response,
+          authorization: authorization_from(response, action)
         )
       end
 
       def post_data(action, params)
         params['COMMAND'] = TRANSACTIONS[action]
         params['LOGIN'] = "#{@options[:login]}/#{@options[:password]}"
-        escape_uri(params.map{|k,v| "#{k}=#{v}"}.join('&'))
+        escape_uri(params.map { |k, v| "#{k}=#{v}" }.join('&'))
       end
 
       # The upstream is picky and so we can't use CGI.escape like we want to

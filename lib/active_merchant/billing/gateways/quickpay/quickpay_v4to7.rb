@@ -2,11 +2,11 @@ require 'rexml/document'
 require 'digest/md5'
 require 'active_merchant/billing/gateways/quickpay/quickpay_common'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class QuickpayV4to7Gateway < Gateway
       include QuickpayCommon
-      self.live_url = self.test_url = 'https://secure.quickpay.dk/api'    
+      self.live_url = self.test_url = 'https://secure.quickpay.dk/api'
       APPROVED = '000'
 
       # The login is the QuickpayId
@@ -141,6 +141,7 @@ module ActiveMerchant #:nodoc:
 
       def add_testmode(post)
         return if post[:transaction].present?
+
         post[:testmode] = test? ? '1' : '0'
       end
 
@@ -163,9 +164,12 @@ module ActiveMerchant #:nodoc:
       def commit(action, params)
         response = parse(ssl_post(self.live_url, post_data(action, params)))
 
-        Response.new(successful?(response), message_from(response), response,
-          :test => test?,
-          :authorization => response[:transaction]
+        Response.new(
+          successful?(response),
+          message_from(response),
+          response,
+          test: test?,
+          authorization: response[:transaction]
         )
       end
 
@@ -224,4 +228,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

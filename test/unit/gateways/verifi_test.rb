@@ -5,16 +5,16 @@ class VerifiTest < Test::Unit::TestCase
 
   def setup
     @gateway = VerifiGateway.new(
-      :login => 'l',
-      :password => 'p'
+      login: 'l',
+      password: 'p'
     )
 
     @credit_card = credit_card('4111111111111111')
 
     @options = {
-      :order_id => '37',
-      :email => 'paul@example.com',
-      :billing_address => address
+      order_id: '37',
+      email: 'paul@example.com',
+      billing_address: address
     }
 
     @amount = 100
@@ -61,15 +61,14 @@ class VerifiTest < Test::Unit::TestCase
     assert_equal '10.34', @gateway.send(:amount, 1034)
 
     assert_raise(ArgumentError) do
-     @gateway.send(:amount, '10.34')
+      @gateway.send(:amount, '10.34')
     end
   end
 
   def test_add_description
     result = {}
-    @gateway.send(:add_invoice_data, result, :description => 'My Purchase is great')
+    @gateway.send(:add_invoice_data, result, description: 'My Purchase is great')
     assert_equal 'My Purchase is great', result[:orderdescription]
-
   end
 
   def test_purchase_meets_minimum_requirements
@@ -83,7 +82,6 @@ class VerifiTest < Test::Unit::TestCase
     minimum_requirements.each do |key|
       assert_not_nil(data =~ /#{key}=/)
     end
-
   end
 
   def test_avs_result

@@ -34,7 +34,7 @@ class RemoteProPayTest < Test::Unit::TestCase
   end
 
   def test_successful_recurring_purchase_without_cvv
-    @options.merge!({recurring_payment: 'Y'})
+    @options[:recurring_payment] = 'Y'
     response = @gateway.purchase(@amount, @credit_card_without_cvv, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -67,7 +67,7 @@ class RemoteProPayTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization, @options)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization, @options)
     assert_success capture
   end
 
@@ -90,7 +90,7 @@ class RemoteProPayTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization, @options)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization, @options)
     assert_success refund
   end
 

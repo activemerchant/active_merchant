@@ -1,4 +1,5 @@
 # encoding: utf-8
+
 require 'test_helper'
 
 class RemoteFinansbankTest < Test::Unit::TestCase
@@ -11,10 +12,10 @@ class RemoteFinansbankTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
 
     @options = {
-      :order_id => '#' + generate_unique_id,
-      :billing_address => address,
-      :description => 'Store Purchase',
-      :email => 'xyz@gmail.com'
+      order_id: '#' + generate_unique_id,
+      billing_address: address,
+      description: 'Store Purchase',
+      email: 'xyz@gmail.com'
     }
   end
 
@@ -88,9 +89,9 @@ class RemoteFinansbankTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = FinansbankGateway.new(
-      :login => '',
-      :password => '',
-      :client_id => ''
+      login: '',
+      password: '',
+      client_id: ''
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

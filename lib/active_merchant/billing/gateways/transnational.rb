@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class TransnationalGateway < NetworkMerchantsGateway
       self.homepage_url = 'http://www.tnbci.com/'
       self.display_name = 'Transnational'
@@ -7,4 +7,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

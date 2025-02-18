@@ -8,7 +8,7 @@ class RemoteWorldNetTest < Test::Unit::TestCase
     @declined_amount = 101
     @credit_card = credit_card('3779810000000005')
     @options = {
-      order_id: generate_order_id,
+      order_id: generate_order_id
     }
     @refund_options = {
       operator: 'mr.nobody',
@@ -28,7 +28,7 @@ class RemoteWorldNetTest < Test::Unit::TestCase
       email: 'joe@example.com',
       billing_address: address,
       description: 'Store Purchase',
-      ip: '127.0.0.1',
+      ip: '127.0.0.1'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -72,7 +72,7 @@ class RemoteWorldNetTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -95,7 +95,7 @@ class RemoteWorldNetTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization, @refund_options)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization, @refund_options)
     assert_success refund
   end
 
@@ -109,10 +109,10 @@ class RemoteWorldNetTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert void = @gateway.void(auth.authorization)
-  # UNSUPPORTED
-  #   assert_success void
-  #   assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', response.message
+    assert @gateway.void(auth.authorization)
+    # UNSUPPORTED
+    #   assert_success void
+    #   assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', response.message
   end
 
   def test_failed_void
@@ -156,7 +156,6 @@ class RemoteWorldNetTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_equal nil, response.message
-    card_reference = response.authorization
 
     assert response = @gateway.unstore('123456789', @options)
     assert_failure response

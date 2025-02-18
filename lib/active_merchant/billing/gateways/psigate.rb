@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # This class implements the Psigate gateway for the ActiveMerchant module.
     #
     # Modifications by Sean O'Hara ( sohara at sohara dot com )
@@ -38,7 +38,7 @@ module ActiveMerchant #:nodoc:
       self.test_url  = 'https://realtimestaging.psigate.com/xml'
       self.live_url  = 'https://realtime.psigate.com/xml'
 
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.supported_countries = ['CA']
       self.homepage_url = 'http://www.psigate.com/'
       self.display_name = 'Psigate'
@@ -102,11 +102,14 @@ module ActiveMerchant #:nodoc:
       def commit(money, creditcard, options = {})
         response = parse(ssl_post(url, post_data(money, creditcard, options)))
 
-        Response.new(successful?(response), message_from(response), response,
-          :test => test?,
-          :authorization => build_authorization(response) ,
-          :avs_result => { :code => response[:avsresult] },
-          :cvv_result => response[:cardidresult]
+        Response.new(
+          successful?(response),
+          message_from(response),
+          response,
+          test: test?,
+          authorization: build_authorization(response),
+          avs_result: { code: response[:avsresult] },
+          cvv_result: response[:cardidresult]
         )
       end
 
@@ -119,7 +122,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(xml)
-        response = {:message => 'Global Error Receipt', :complete => false}
+        response = { message: 'Global Error Receipt', complete: false }
 
         xml = REXML::Document.new(xml)
         xml.elements.each('//Result/*') do |node|
@@ -144,43 +147,43 @@ module ActiveMerchant #:nodoc:
       def parameters(money, creditcard, options = {})
         params = {
           # General order parameters
-          :StoreID => @options[:login],
-          :Passphrase => @options[:password],
-          :TestResult => options[:test_result],
-          :OrderID => options[:order_id],
-          :UserID => options[:user_id],
-          :Phone => options[:phone],
-          :Fax => options[:fax],
-          :Email => options[:email],
-          :TransRefNumber => options[:trans_ref_number],
+          StoreID: @options[:login],
+          Passphrase: @options[:password],
+          TestResult: options[:test_result],
+          OrderID: options[:order_id],
+          UserID: options[:user_id],
+          Phone: options[:phone],
+          Fax: options[:fax],
+          Email: options[:email],
+          TransRefNumber: options[:trans_ref_number],
 
           # Credit Card parameters
-          :PaymentType => 'CC',
-          :CardAction => options[:CardAction],
+          PaymentType: 'CC',
+          CardAction: options[:CardAction],
 
           # Financial parameters
-          :CustomerIP => options[:ip],
-          :SubTotal => amount(money),
-          :Tax1 => options[:tax1],
-          :Tax2 => options[:tax2],
-          :ShippingTotal => options[:shipping_total],
+          CustomerIP: options[:ip],
+          SubTotal: amount(money),
+          Tax1: options[:tax1],
+          Tax2: options[:tax2],
+          ShippingTotal: options[:shipping_total]
         }
 
         if creditcard
           exp_month = sprintf('%.2i', creditcard.month) unless creditcard.month.blank?
-          exp_year = creditcard.year.to_s[2,2] unless creditcard.year.blank?
+          exp_year = creditcard.year.to_s[2, 2] unless creditcard.year.blank?
           card_id_code = (creditcard.verification_value.blank? ? nil : '1')
 
           params.update(
-            :CardNumber => creditcard.number,
-            :CardExpMonth => exp_month,
-            :CardExpYear => exp_year,
-            :CardIDCode => card_id_code,
-            :CardIDNumber => creditcard.verification_value
+            CardNumber: creditcard.number,
+            CardExpMonth: exp_month,
+            CardExpYear: exp_year,
+            CardIDCode: card_id_code,
+            CardIDNumber: creditcard.verification_value
           )
         end
 
-        if(address = (options[:billing_address] || options[:address]))
+        if (address = (options[:billing_address] || options[:address]))
           params[:Bname] = address[:name] || creditcard.name
           params[:Baddress1]    = address[:address1] unless address[:address1].blank?
           params[:Baddress2]    = address[:address2] unless address[:address2].blank?
@@ -210,6 +213,7 @@ module ActiveMerchant #:nodoc:
           return SUCCESS_MESSAGE
         else
           return FAILURE_MESSAGE if response[:errmsg].blank?
+
           return response[:errmsg].gsub(/[^\w]/, ' ').split.join(' ').capitalize
         end
       end

@@ -1,4 +1,4 @@
-$:.unshift File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
 require 'active_merchant/version'
 
 begin
@@ -24,20 +24,21 @@ task :tag_release do
 end
 
 desc 'Run the unit test suite'
-task :default => 'test:local'
-task :test => 'test:units'
+task default: 'test:units'
+task test: 'test:units'
 
 RuboCop::RakeTask.new
 
 namespace :test do
   Rake::TestTask.new(:units) do |t|
+    ENV['RUNNING_UNIT_TESTS'] = 'true'
     t.pattern = 'test/unit/**/*_test.rb'
     t.libs << 'test'
-    t.verbose = true
+    t.verbose = false
   end
 
   desc 'Run all tests that do not require network access'
-  task :local => ['test:units', 'rubocop']
+  task local: ['test:units', 'rubocop']
 
   Rake::TestTask.new(:remote) do |t|
     t.pattern = 'test/remote/**/*_test.rb'

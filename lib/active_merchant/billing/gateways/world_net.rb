@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # See https://helpdesk.worldnettps.com/support/solutions/articles/1000167298-integrator-guide
     class WorldNetGateway < Gateway
       self.test_url = 'https://testpayments.worldnettps.com/merchant/xmlpayment'
@@ -113,9 +113,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(%r{(<CARDNUMBER>\d{6})\d+(\d{4}</CARDNUMBER>)}, '\1...\2')
-          .gsub(%r{(<CVV>)\d+(</CVV)}, '\1...\2')
+        transcript.
+          gsub(%r{(<CARDNUMBER>\d{6})\d+(\d{4}</CARDNUMBER>)}, '\1...\2').
+          gsub(%r{(<CVV>)\d+(</CVV)}, '\1...\2')
       end
 
       private
@@ -128,6 +128,7 @@ module ActiveMerchant #:nodoc:
       def add_address(post, _creditcard, options)
         address = options[:billing_address] || options[:address]
         return unless address
+
         post[:address1] = address[:address1]
         post[:address2] = address[:address2]
         post[:city]     = address[:city]
@@ -278,49 +279,49 @@ module ActiveMerchant #:nodoc:
         # Gateway expects fields in fixed order below.
         case action
         when 'PAYMENT', 'PREAUTH'
-          [
-            :orderid,
-            :terminalid,
-            :amount,
-            :datetime,
-            :cardnumber, :cardtype, :cardexpiry, :cardholdername,
-            :hash,
-            :currency,
-            :terminaltype,
-            :transactiontype,
-            :email,
-            :cvv,
-            :address1, :address2,
-            :postcode,
-            :description,
-            :city, :country,
-            :ipaddress
+          %i[
+            orderid
+            terminalid
+            amount
+            datetime
+            cardnumber cardtype cardexpiry cardholdername
+            hash
+            currency
+            terminaltype
+            transactiontype
+            email
+            cvv
+            address1 address2
+            postcode
+            description
+            city country
+            ipaddress
           ]
         when 'PREAUTHCOMPLETION'
-          [:uniqueref, :terminalid, :amount, :datetime, :hash]
+          %i[uniqueref terminalid amount datetime hash]
         when 'REFUND'
-          [:uniqueref, :terminalid, :amount, :datetime, :hash,
-           :operator, :reason]
+          %i[uniqueref terminalid amount datetime hash
+             operator reason]
         when 'VOID'
           [:uniqueref]
         when 'SECURECARDREGISTRATION'
-          [
-            :merchantref,
-            :terminalid,
-            :datetime,
-            :cardnumber, :cardexpiry, :cardtype, :cardholdername,
-            :hash,
-            :dontchecksecurity,
-            :cvv,
-            :issueno
+          %i[
+            merchantref
+            terminalid
+            datetime
+            cardnumber cardexpiry cardtype cardholdername
+            hash
+            dontchecksecurity
+            cvv
+            issueno
           ]
         when 'SECURECARDREMOVAL'
-          [
-            :merchantref,
-            :cardreference,
-            :terminalid,
-            :datetime,
-            :hash
+          %i[
+            merchantref
+            cardreference
+            terminalid
+            datetime
+            hash
           ]
         end
       end

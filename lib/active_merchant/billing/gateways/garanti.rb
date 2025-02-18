@@ -1,14 +1,14 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class GarantiGateway < Gateway
       self.live_url = 'https://sanalposprov.garanti.com.tr/VPServlet'
       self.test_url = 'https://sanalposprovtest.garanti.com.tr/VPServlet'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['US','TR']
+      self.supported_countries = %w[US TR]
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       # The homepage URL of the gateway
       self.homepage_url = 'https://sanalposweb.garanti.com.tr'
@@ -30,24 +30,23 @@ module ActiveMerchant #:nodoc:
         'JPY' => 392
       }
 
-
       def initialize(options = {})
         requires!(options, :login, :password, :terminal_id, :merchant_id)
         super
       end
 
       def purchase(money, credit_card, options = {})
-        options = options.merge(:gvp_order_type => 'sales')
+        options = options.merge(gvp_order_type: 'sales')
         commit(money, build_sale_request(money, credit_card, options))
       end
 
       def authorize(money, credit_card, options = {})
-        options = options.merge(:gvp_order_type => 'preauth')
+        options = options.merge(gvp_order_type: 'preauth')
         commit(money, build_authorize_request(money, credit_card, options))
       end
 
       def capture(money, ref_id, options = {})
-        options = options.merge(:gvp_order_type => 'postauth')
+        options = options.merge(gvp_order_type: 'postauth')
         commit(money, build_capture_request(money, ref_id, options))
       end
 
@@ -67,8 +66,8 @@ module ActiveMerchant #:nodoc:
         card_number = credit_card.respond_to?(:number) ? credit_card.number : ''
         hash_data   = generate_hash_data(format_order_id(options[:order_id]), @options[:terminal_id], card_number, amount(money), security_data)
 
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct! :xml, :version => '1.0', :encoding => 'UTF-8'
+        xml = Builder::XmlMarkup.new(indent: 2)
+        xml.instruct! :xml, version: '1.0', encoding: 'UTF-8'
 
         xml.tag! 'GVPSRequest' do
           xml.tag! 'Mode', test? ? 'TEST' : 'PROD'
@@ -105,7 +104,7 @@ module ActiveMerchant #:nodoc:
       def build_authorize_request(money, credit_card, options)
         build_xml_request(money, credit_card, options) do |xml|
           add_customer_data(xml, options)
-          add_order_data(xml, options)  do
+          add_order_data(xml, options) do
             add_addresses(xml, options)
           end
           add_credit_card(xml, credit_card)
@@ -116,7 +115,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_capture_request(money, ref_id, options)
-        options = options.merge(:order_id => ref_id)
+        options = options.merge(order_id: ref_id)
         build_xml_request(money, ref_id, options) do |xml|
           add_customer_data(xml, options)
           add_order_data(xml, options)
@@ -138,9 +137,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'OrderID', format_order_id(options[:order_id])
           xml.tag! 'GroupID'
 
-          if block_given?
-            yield xml
-          end
+          yield xml if block_given?
         end
       end
 
@@ -182,7 +179,7 @@ module ActiveMerchant #:nodoc:
       def add_address(xml, address)
         xml.tag! 'Name', normalize(address[:name])
         address_text = address[:address1]
-        address_text << " #{ address[:address2]}" if address[:address2]
+        address_text << " #{address[:address2]}" if address[:address2]
         xml.tag! 'Text', normalize(address_text)
         xml.tag! 'City', normalize(address[:city])
         xml.tag! 'District', normalize(address[:state])
@@ -196,7 +193,7 @@ module ActiveMerchant #:nodoc:
         return unless text
 
         if ActiveSupport::Inflector.method(:transliterate).arity == -2
-          ActiveSupport::Inflector.transliterate(text,'')
+          ActiveSupport::Inflector.transliterate(text, '')
         else
           text.gsub(/[^\x00-\x7F]+/, '')
         end
@@ -215,18 +212,20 @@ module ActiveMerchant #:nodoc:
         CURRENCY_CODES[currency] || CURRENCY_CODES[default_currency]
       end
 
-      def commit(money,request)
+      def commit(money, request)
         url = test? ? self.test_url : self.live_url
         raw_response = ssl_post(url, 'data=' + request)
         response = parse(raw_response)
 
         success = success?(response)
 
-        Response.new(success,
-                     success ? 'Approved' : "Declined (Reason: #{response[:reason_code]} - #{response[:error_msg]} - #{response[:sys_err_msg]})",
-                     response,
-                     :test => test?,
-                     :authorization => response[:order_id])
+        Response.new(
+          success,
+          success ? 'Approved' : "Declined (Reason: #{response[:reason_code]} - #{response[:error_msg]} - #{response[:sys_err_msg]})",
+          response,
+          test: test?,
+          authorization: response[:order_id]
+        )
       end
 
       def parse(body)
@@ -241,7 +240,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|element| parse_element(response, element) }
+          node.elements.each { |element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
@@ -254,8 +253,6 @@ module ActiveMerchant #:nodoc:
       def strip_invalid_xml_chars(xml)
         xml.gsub(/&(?!(?:[a-z]+|#[0-9]+|x[a-zA-Z0-9]+);)/, '&amp;')
       end
-
     end
   end
 end
-

@@ -3,14 +3,14 @@ require 'test_helper'
 class RemoteSallieMaeTest < Test::Unit::TestCase
   def setup
     @gateway = SallieMaeGateway.new(fixtures(:sallie_mae))
-    
+
     @amount = 100
     @credit_card = credit_card('5454545454545454')
     @declined_card = credit_card('4000300011112220')
-    
-    @options = { 
-      :billing_address => address,
-      :description => 'Store Purchase'
+
+    @options = {
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -43,7 +43,7 @@ class RemoteSallieMaeTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = SallieMaeGateway.new(:login => '')
+    gateway = SallieMaeGateway.new(login: '')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid merchant', response.message

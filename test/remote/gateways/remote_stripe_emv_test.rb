@@ -14,15 +14,15 @@ class RemoteStripeEmvTest < Test::Unit::TestCase
     }
 
     @options = {
-      :currency => 'USD',
-      :description => 'ActiveMerchant Test Purchase',
-      :email => 'wow@example.com'
+      currency: 'USD',
+      description: 'ActiveMerchant Test Purchase',
+      email: 'wow@example.com'
     }
 
     #  This capture hex says that the payload is a transaction cryptogram (TC) but does not
     # provide the actual cryptogram. This will only work in test mode and would cause real
     # cards to be declined.
-    @capture_options = { icc_data: '9F270140' } 
+    @capture_options = { icc_data: '9F270140' }
   end
 
   # for EMV contact transactions, it's advised to do a separate auth + capture
@@ -140,7 +140,7 @@ class RemoteStripeEmvTest < Test::Unit::TestCase
   end
 
   def test_authorization_emv_credit_card_in_us_with_metadata
-    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:us], @options.merge({:metadata => {:this_is_a_random_key_name => 'with a random value', :i_made_up_this_key_too => 'canyoutell'}, :order_id => '42', :email => 'foo@wonderfullyfakedomain.com'}))
+    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:us], @options.merge({ metadata: { this_is_a_random_key_name: 'with a random value', i_made_up_this_key_too: 'canyoutell' }, order_id: '42', email: 'foo@wonderfullyfakedomain.com' }))
     assert_success authorization
   end
 end

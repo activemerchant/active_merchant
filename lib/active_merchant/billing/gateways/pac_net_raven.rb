@@ -1,7 +1,6 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PacNetRavenGateway < Gateway
-
       AVS_ADDRESS_CODES = {
         'avs_address_unavailable'   => 'X',
         'avs_address_not_checked'   => 'X',
@@ -29,7 +28,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = self.live_url
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master]
+      self.supported_cardtypes = %i[visa master]
       self.money_format = :cents
       self.default_currency = 'USD'
       self.homepage_url = 'https://www.deepcovelabs.com/raven'
@@ -107,7 +106,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[body.split('&').map{|x| x.split('=').map{|y| CGI.unescape(y)}}]
+        Hash[body.split('&').map { |x| x.split('=').map { |y| CGI.unescape(y) } }]
       end
 
       def commit(action, money, parameters)
@@ -122,15 +121,18 @@ module ActiveMerchant #:nodoc:
 
         test_mode = test? || message =~ /TESTMODE/
 
-        Response.new(success?(response), message, response,
-          :test => test_mode,
-          :authorization => response['TrackingNumber'],
-          :fraud_review => fraud_review?(response),
-          :avs_result => {
-                          :postal_match => AVS_POSTAL_CODES[response['AVSPostalResponseCode']],
-                          :street_match => AVS_ADDRESS_CODES[response['AVSAddressResponseCode']]
-                         },
-          :cvv_result => CVV2_CODES[response['CVV2ResponseCode']]
+        Response.new(
+          success?(response),
+          message,
+          response,
+          test: test_mode,
+          authorization: response['TrackingNumber'],
+          fraud_review: fraud_review?(response),
+          avs_result: {
+            postal_match: AVS_POSTAL_CODES[response['AVSPostalResponseCode']],
+            street_match: AVS_ADDRESS_CODES[response['AVSAddressResponseCode']]
+          },
+          cvv_result: CVV2_CODES[response['CVV2ResponseCode']]
         )
       end
 
@@ -140,6 +142,7 @@ module ActiveMerchant #:nodoc:
 
       def endpoint(action)
         return 'void' if action == 'void'
+
         'submit'
       end
 
@@ -149,9 +152,9 @@ module ActiveMerchant #:nodoc:
 
       def success?(response)
         if %w(cc_settle cc_debit cc_preauth cc_refund).include?(response[:action])
-          !response['ApprovalCode'].nil? and response['ErrorCode'].nil? and response['Status'] == 'Approved'
+          !response['ApprovalCode'].nil? && response['ErrorCode'].nil? && (response['Status'] == 'Approved')
         elsif response[:action] = 'void'
-          !response['ApprovalCode'].nil? and response['ErrorCode'].nil? and response['Status'] == 'Voided'
+          !response['ApprovalCode'].nil? && response['ErrorCode'].nil? && (response['Status'] == 'Voided')
         end
       end
 
@@ -179,8 +182,7 @@ module ActiveMerchant #:nodoc:
         post['RequestID']     = request_id
         post['Signature']     = signature(action, post, parameters)
 
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def timestamp
@@ -192,16 +194,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def signature(action, post, parameters = {})
-        string = if %w(cc_settle cc_debit cc_preauth cc_refund).include?(action)
-          post['UserName'] + post['Timestamp'] + post['RequestID'] + post['PymtType'] + parameters['Amount'].to_s + parameters['Currency']
-        elsif action == 'void'
-          post['UserName'] + post['Timestamp'] + post['RequestID'] + parameters['TrackingNumber']
-        else
-          post['UserName']
-        end
+        string =
+          if %w(cc_settle cc_debit cc_preauth cc_refund).include?(action)
+            post['UserName'] + post['Timestamp'] + post['RequestID'] + post['PymtType'] + parameters['Amount'].to_s + parameters['Currency']
+          elsif action == 'void'
+            post['UserName'] + post['Timestamp'] + post['RequestID'] + parameters['TrackingNumber']
+          else
+            post['UserName']
+          end
         OpenSSL::HMAC.hexdigest(OpenSSL::Digest::SHA1.new(@options[:secret]), @options[:secret], string)
       end
     end
   end
 end
-

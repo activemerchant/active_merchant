@@ -1,17 +1,16 @@
 require 'test_helper'
 
 class TransFirstTest < Test::Unit::TestCase
-
   def setup
     @gateway = TransFirstGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD'
+      login: 'LOGIN',
+      password: 'PASSWORD'
     )
 
     @credit_card = credit_card('4242424242424242')
     @check = check
     @options = {
-      :billing_address => address
+      billing_address: address
     }
     @amount = 100
   end
@@ -68,7 +67,7 @@ class TransFirstTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, 'TransID')
     assert_success response
     assert_equal '207686608|creditcard', response.authorization
-    assert_equal @amount, response.params['amount'].to_i*100
+    assert_equal @amount, response.params['amount'].to_i * 100
   end
 
   def test_failed_refund
@@ -351,7 +350,7 @@ class TransFirstTest < Test::Unit::TestCase
       <AVSCode>N</AVSCode>
       <CVV2Code />
       </BankCardRefundStatus>
-   XML
+    XML
   end
 
   def failed_void_response

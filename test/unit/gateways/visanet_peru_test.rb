@@ -1,6 +1,9 @@
 require 'test_helper'
+require 'timecop'
 
 class VisanetPeruTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = VisanetPeruGateway.new(fixtures(:visanet_peru))
 
@@ -16,25 +19,61 @@ class VisanetPeruTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_request).returns(successful_authorize_response)
-    @gateway.expects(:ssl_request).returns(successful_capture_response)
-
+    @gateway.expects(:ssl_request).with(:post, any_parameters).returns(successful_authorize_response)
+    @gateway.expects(:ssl_request).with(:put, any_parameters).returns(successful_capture_response)
     response = @gateway.purchase(@amount, @credit_card, @options)
+
     assert_success response
     assert_equal 'OK', response.message
+    assert_not_nil response.params['purchaseNumber']
 
     assert_match %r([0-9]{9}|$), response.authorization
-    assert_equal @options[:order_id], response.params['externalTransactionId']
+    assert_equal 'de9dc65c094fb4f1defddc562731af81', response.params['externalTransactionId']
     assert response.test?
   end
 
   def test_failed_purchase
-    @gateway.expects(:ssl_request).returns(failed_authorize_response_bad_card)
+    @gateway.expects(:ssl_request).with(:post, any_parameters).returns(failed_authorize_response_bad_card)
 
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
     assert_equal 'Operacion Denegada.', response.message
+  end
+
+  def test_nonconsecutive_purchase_numbers
+    purchase_times = []
+
+    Timecop.freeze do
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.authorize(@amount, @credit_card, @options)
+      end.check_request do |_method, _endpoint, data, _headers|
+        purchase_times << JSON.parse(data)['purchaseNumber'].to_i
+      end.respond_with(successful_authorize_response)
+
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.authorize(@amount, @credit_card, @options)
+      end.check_request do |_method, _endpoint, data, _headers|
+        purchase_times << JSON.parse(data)['purchaseNumber'].to_i
+      end.respond_with(successful_authorize_response)
+
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.authorize(@amount, @credit_card, @options)
+      end.check_request do |_method, _endpoint, data, _headers|
+        purchase_times << JSON.parse(data)['purchaseNumber'].to_i
+      end.respond_with(successful_authorize_response)
+
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.authorize(@amount, @credit_card, @options)
+      end.check_request do |_method, _endpoint, data, _headers|
+        purchase_times << JSON.parse(data)['purchaseNumber'].to_i
+      end.respond_with(successful_authorize_response)
+    end
+
+    purchase_times.each do |t|
+      assert_equal(t.to_s.length, 12)
+    end
+    assert_equal(purchase_times.uniq.size, purchase_times.size)
   end
 
   def test_successful_authorize
@@ -60,25 +99,25 @@ class VisanetPeruTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
-    assert_equal 'REJECT', response.message
+    assert_equal 'REJECT | Operacion denegada', response.message
   end
 
   def test_successful_capture
-    @gateway.expects(:ssl_request).returns(successful_authorize_response)
-    @gateway.expects(:ssl_request).returns(successful_capture_response)
+    @gateway.expects(:ssl_request).with(:post, any_parameters).returns(successful_authorize_response)
+    @gateway.expects(:ssl_request).with(:put, any_parameters).returns(successful_capture_response)
     response = @gateway.authorize(@amount, @credit_card, @options)
-    capture = @gateway.capture(response.authorization, @options)
+    capture = @gateway.capture(@amount, response.authorization, @options)
     assert_success capture
     assert_equal 'OK', capture.message
     assert_match %r(^[0-9]{9}|$), capture.authorization
-    assert_equal @options[:order_id], capture.params['externalTransactionId']
+    assert_equal 'de9dc65c094fb4f1defddc562731af81', capture.params['externalTransactionId']
     assert capture.test?
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_request).returns(failed_capture_response)
     invalid_purchase_number = '900000044'
-    response = @gateway.capture(invalid_purchase_number)
+    response = @gateway.capture(@amount, invalid_purchase_number)
     assert_failure response
     assert_equal '[ "NUMORDEN 900000044 no se encuentra registrado", "No se realizo el deposito" ]', response.message
     assert_equal 400, response.error_code
@@ -90,18 +129,39 @@ class VisanetPeruTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    @gateway.expects(:ssl_request).returns(successful_refund_response)
+    @gateway.expects(:ssl_request).with(:put, any_parameters).returns(successful_refund_response)
     refund = @gateway.refund(@amount, response.authorization)
     assert_success refund
     assert_equal 'OK', refund.message
   end
 
   def test_failed_refund
-    @gateway.expects(:ssl_request).returns(failed_refund_response)
+    @gateway.expects(:ssl_request).with(:put, any_parameters).returns(failed_refund_response)
     response = @gateway.refund(@amount, '122333444')
     assert_failure response
     assert_match(/No se realizo la anulacion del deposito/, response.message)
     assert_equal 400, response.error_code
+  end
+
+  def test_failed_full_refund_when_unsettled
+    @gateway.expects(:ssl_request).with(:put, any_parameters).returns(failed_refund_response)
+    @gateway.expects(:ssl_request).with(:post, any_parameters).returns(failed_refund_with_action_code_response)
+    response = @gateway.refund(@amount, '122333444|444333221', force_full_refund_if_unsettled: true)
+    assert_failure response
+    assert_equal("Operacion Denegada. | [ 'NUMORDEN 122333444 no se encuentra registrado', 'No se realizo la anulacion del deposito' ]", response.message)
+    assert_equal 400, response.error_code
+  end
+
+  def test_failed_full_refund_when_unsettled_additional_message_concatenation
+    @gateway.expects(:ssl_request).with(:put, any_parameters).returns(failed_refund_with_message_and_action_code_response)
+    @gateway.expects(:ssl_request).with(:post, any_parameters).returns(failed_refund_with_message_and_action_code_response_2)
+    first_msg = 'No se realizo la anulacion del deposito'
+    first_dsc = 'Operacion Denegada.'
+    second_msg = 'Mal funcionamiento de la inteligencia artificial'
+    second_dsc = 'Lo siento Dave, me temo que no puedo hacer eso.'
+
+    response = @gateway.refund(@amount, '122333444|444333221', force_full_refund_if_unsettled: true)
+    assert_equal("#{second_msg} | #{second_dsc} | #{first_msg} | #{first_dsc}", response.message)
   end
 
   def test_successful_void
@@ -299,7 +359,7 @@ class VisanetPeruTest < Test::Unit::TestCase
   end
 
   def successful_capture_response
-   '{"errorCode":0,"errorMessage":"OK","transactionUUID":"8517cf68-4820-4224-959b-01c8117385e0","externalTransactionId":"de9dc65c094fb4f1defddc562731af81","transactionDateTime":1519937673906,"transactionDuration":0,"merchantId":"543025501","userTokenId":null,"aliasName":null,"data":{"FECHAYHORA_TX":null,"DSC_ECI":null,"DSC_COD_ACCION":null,"NOM_EMISOR":null,"ESTADO":"Depositado","RESPUESTA":"1","ID_UNICO":null,"NUMORDEN":null,"CODACCION":null,"ETICKET":null,"IMP_AUTORIZADO":null,"DECISIONCS":null,"COD_AUTORIZA":null,"CODTIENDA":"543025501","PAN":null,"ORI_TARJETA":null}}'
+    '{"errorCode":0,"errorMessage":"OK","transactionUUID":"8517cf68-4820-4224-959b-01c8117385e0","externalTransactionId":"de9dc65c094fb4f1defddc562731af81","transactionDateTime":1519937673906,"transactionDuration":0,"merchantId":"543025501","userTokenId":null,"aliasName":null,"data":{"FECHAYHORA_TX":null,"DSC_ECI":null,"DSC_COD_ACCION":null,"NOM_EMISOR":null,"ESTADO":"Depositado","RESPUESTA":"1","ID_UNICO":null,"NUMORDEN":null,"CODACCION":null,"ETICKET":null,"IMP_AUTORIZADO":null,"DECISIONCS":null,"COD_AUTORIZA":null,"CODTIENDA":"543025501","PAN":null,"ORI_TARJETA":null}}'
   end
 
   def failed_capture_response
@@ -439,6 +499,57 @@ class VisanetPeruTest < Test::Unit::TestCase
       "data": {
         "ESTADO": "",
         "RESPUESTA": "2"
+      },
+      "transactionLog": {
+
+      }
+    }
+    RESPONSE
+  end
+
+  def failed_refund_with_action_code_response
+    <<-RESPONSE
+    {
+      "errorCode": 400,
+      "errorMessage": "[ ]",
+      "data": {
+        "ESTADO": "",
+        "RESPUESTA": "2",
+        "DSC_COD_ACCION": "Operacion Denegada."
+      },
+      "transactionLog": {
+
+      }
+    }
+    RESPONSE
+  end
+
+  def failed_refund_with_message_and_action_code_response
+    <<-RESPONSE
+    {
+      "errorCode": 400,
+      "errorMessage": "No se realizo la anulacion del deposito",
+      "data": {
+        "ESTADO": "",
+        "RESPUESTA": "2",
+        "DSC_COD_ACCION": "Operacion Denegada."
+      },
+      "transactionLog": {
+
+      }
+    }
+    RESPONSE
+  end
+
+  def failed_refund_with_message_and_action_code_response_2
+    <<-RESPONSE
+    {
+      "errorCode": 400,
+      "errorMessage": "Mal funcionamiento de la inteligencia artificial",
+      "data": {
+        "ESTADO": "",
+        "RESPUESTA": "2",
+        "DSC_COD_ACCION": "Lo siento Dave, me temo que no puedo hacer eso."
       },
       "transactionLog": {
 

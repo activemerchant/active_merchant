@@ -1,12 +1,12 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CardConnectGateway < Gateway
-      self.test_url = 'https://fts.cardconnect.com:6443/cardconnect/rest/'
-      self.live_url = 'https://fts.cardconnect.com:8443/cardconnect/rest/'
+      self.test_url = 'https://fts-uat.cardconnect.com/cardconnect/rest/'
+      self.live_url = 'https://fts.cardconnect.com/cardconnect/rest/'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://cardconnect.com/'
       self.display_name = 'Card Connect'
@@ -61,6 +61,8 @@ module ActiveMerchant #:nodoc:
         '60' => STANDARD_ERROR_CODE[:pickup_card]
       }
 
+      SCHEDULED_PAYMENT_TYPES = %w(recurring installment)
+
       def initialize(options = {})
         requires!(options, :merchant_id, :username, :password)
         require_valid_domain!(options, :domain)
@@ -68,8 +70,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def require_valid_domain!(options, param)
-        if options.key?(param)
-          raise ArgumentError.new('not a valid cardconnect domain') unless /\Dcardconnect.com:\d{1,}\D/ =~ options[param]
+        if options[param]
+          raise ArgumentError.new('not a valid cardconnect domain') unless /https:\/\/\D*cardconnect.com/ =~ options[param]
         end
       end
 
@@ -87,7 +89,9 @@ module ActiveMerchant #:nodoc:
           add_currency(post, money, options)
           add_address(post, options)
           add_customer_data(post, options)
-          add_3DS(post, options)
+          add_three_ds_mpi_data(post, options)
+          add_additional_data(post, options)
+          add_stored_credential(post, options)
           post[:capture] = 'Y'
           commit('auth', post)
         end
@@ -101,7 +105,9 @@ module ActiveMerchant #:nodoc:
         add_payment(post, payment)
         add_address(post, options)
         add_customer_data(post, options)
-        add_3DS(post, options)
+        add_three_ds_mpi_data(post, options)
+        add_additional_data(post, options)
+        add_stored_credential(post, options)
         commit('auth', post)
       end
 
@@ -140,9 +146,12 @@ module ActiveMerchant #:nodoc:
 
       def unstore(authorization, options = {})
         account_id, profile_id = authorization.split('|')
-        commit('profile', {},
-               verb: :delete,
-               path: "/#{profile_id}/#{account_id}/#{@options[:merchant_id]}")
+        commit(
+          'profile',
+          {},
+          verb: :delete,
+          path: "/#{profile_id}/#{account_id}/#{@options[:merchant_id]}"
+        )
       end
 
       def supports_scrubbing?
@@ -150,12 +159,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]')
-          .gsub(%r(("cvv2\\":\\")\d*), '\1[FILTERED]')
-          .gsub(%r(("merchid\\":\\")\d*), '\1[FILTERED]')
-          .gsub(%r((&?"account\\":\\")\d*), '\1[FILTERED]')
-          .gsub(%r((&?"token\\":\\")\d*), '\1[FILTERED]')
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r(("cvv2\\":\\")\d*), '\1[FILTERED]').
+          gsub(%r(("merchid\\":\\")\d*), '\1[FILTERED]').
+          gsub(%r((&?"account\\":\\")\d*), '\1[FILTERED]').
+          gsub(%r((&?"token\\":\\")\d*), '\1[FILTERED]')
       end
 
       private
@@ -167,7 +176,7 @@ module ActiveMerchant #:nodoc:
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
           post[:address] = address[:address1] if address[:address1]
-          post[:address].concat(" #{address[:address2]}") if address[:address2]
+          post[:address2] = address[:address2] if address[:address2]
           post[:city] = address[:city] if address[:city]
           post[:region] = address[:state] if address[:state]
           post[:country] = address[:country] if address[:country]
@@ -186,7 +195,11 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:orderid] = options[:order_id]
-        post[:ecomind] = (options[:recurring] ? 'R' : 'E')
+        post[:ecomind] = if options[:ecomind]
+                           options[:ecomind].capitalize
+                         else
+                           (options[:recurring] ? 'R' : 'E')
+                         end
       end
 
       def add_payment(post, payment)
@@ -231,16 +244,28 @@ module ActiveMerchant #:nodoc:
           post[:items] = options[:items].map do |item|
             updated = {}
             item.each_pair do |k, v|
-              updated.merge!(k.to_s.gsub(/_/, '') => v)
+              updated.merge!(k.to_s.delete('_') => v)
             end
+            updated
           end
         end
+        post[:userfields] = options[:user_fields] if options[:user_fields]
       end
 
-      def add_3DS(post, options)
-        post[:secureflag] = options[:secure_flag] if options[:secure_flag]
-        post[:securevalue] = options[:secure_value] if options[:secure_value]
-        post[:securexid] = options[:secure_xid] if options[:secure_xid]
+      def add_three_ds_mpi_data(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post[:secureflag]  = three_d_secure[:eci]
+        post[:securevalue] = three_d_secure[:cavv]
+        post[:securedstid] = three_d_secure[:ds_transaction_id]
+      end
+
+      def add_stored_credential(post, options)
+        return unless stored_credential = options[:stored_credential]
+
+        post[:cof] = stored_credential[:initiator] == 'merchant' ? 'M' : 'C'
+        post[:cofscheduled] = SCHEDULED_PAYMENT_TYPES.include?(stored_credential[:reason_type]) ? 'Y' : 'N'
+        post[:cofpermission] = stored_credential[:initial_transaction] ? 'Y' : 'N'
       end
 
       def headers
@@ -267,6 +292,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters, verb: :put, path: '')
+        parameters[:frontendid] = application_id
         parameters[:merchid] = @options[:merchant_id]
         url = url(action, path)
         response = parse(ssl_request(verb, url, post_data(parameters), headers))
@@ -281,6 +307,10 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: error_code_from(response)
         )
+      rescue ResponseError => e
+        return Response.new(false, 'Unable to authenticate.  Please check your credentials.', {}, test: test?) if e.response.code == '401'
+
+        raise
       end
 
       def success_from(response)

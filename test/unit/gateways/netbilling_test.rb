@@ -4,11 +4,11 @@ class NetbillingTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = NetbillingGateway.new(:login => 'login')
+    @gateway = NetbillingGateway.new(login: 'login')
 
     @credit_card = credit_card('4242424242424242')
     @amount = 100
-    @options = { :billing_address => address }
+    @options = { billing_address: address }
   end
 
   def test_successful_request
@@ -43,11 +43,11 @@ class NetbillingTest < Test::Unit::TestCase
   end
 
   def test_site_tag_sent_if_provided
-    @gateway = NetbillingGateway.new(:login => 'login', :site_tag => 'dummy-site-tag')
+    @gateway = NetbillingGateway.new(login: 'login', site_tag: 'dummy-site-tag')
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/site_tag=dummy-site-tag/, data)
     end.respond_with(successful_purchase_response)
 
@@ -57,7 +57,7 @@ class NetbillingTest < Test::Unit::TestCase
   def test_site_tag_not_sent_if_not_provided
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(/site_tag/, data)
     end.respond_with(successful_purchase_response)
 
@@ -114,6 +114,7 @@ class NetbillingTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_purchase_response
     'avs_code=X&cvv2_code=M&status_code=1&auth_code=999999&trans_id=110270311543&auth_msg=TEST+APPROVED&auth_date=2008-01-25+16:43:54'
   end

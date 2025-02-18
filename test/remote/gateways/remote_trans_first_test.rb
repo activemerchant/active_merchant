@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteTransFirstTest < Test::Unit::TestCase
-
   def setup
     @gateway = TransFirstGateway.new(fixtures(:trans_first))
 
@@ -9,9 +8,9 @@ class RemoteTransFirstTest < Test::Unit::TestCase
     @check = check
     @amount = 1201
     @options = {
-      :order_id => generate_unique_id,
-      :invoice => 'ActiveMerchant Sale',
-      :billing_address => address
+      order_id: generate_unique_id,
+      invoice: 'ActiveMerchant Sale',
+      billing_address: address
     }
   end
 
@@ -78,7 +77,7 @@ class RemoteTransFirstTest < Test::Unit::TestCase
     assert_success void
   end
 
-  # Refunds can only be successfully run on settled transactions which take 24 hours 
+  # Refunds can only be successfully run on settled transactions which take 24 hours
   # def test_successful_refund
   #   assert purchase = @gateway.purchase(@amount, @credit_card, @options)
   #   assert_success purchase
@@ -107,8 +106,8 @@ class RemoteTransFirstTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = TransFirstGateway.new(
-      :login => '',
-      :password => ''
+      login: '',
+      password: ''
     )
     assert response = gateway.purchase(1100, @credit_card, @options)
     assert_failure response

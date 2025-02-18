@@ -16,6 +16,19 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
+    @options[:email] = '%d@example.org' % Time.now
+    @options[:name] = 'Customer name'
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+  end
+
+  def test_successful_purchase_with_mexico_url
+    @options[:email] = '%d@example.org' % Time.now
+    @options[:name] = 'Customer name'
+    credentials = fixtures(:openpay).merge(merchant_country: 'MX')
+    @gateway = OpenpayGateway.new(credentials)
+
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_nil response.message
@@ -31,7 +44,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'The card was declined', response.message
+    assert_equal 'The card was declined by the bank', response.message
   end
 
   def test_successful_refund
@@ -48,7 +61,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_refund
-    assert response = @gateway.refund(@amount, '1',  @options)
+    assert response = @gateway.refund(@amount, '1', @options)
     assert_failure response
     assert_not_nil response.message
   end
@@ -69,7 +82,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   def test_unsuccessful_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'The card was declined', response.message
+    assert_equal 'The card was declined by the bank', response.message
   end
 
   def test_successful_capture
@@ -165,7 +178,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   def test_unsuccessful_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match /The card was declined/, response.message
+    assert_match(/The card was declined/, response.message)
   end
 
   def test_invalid_login

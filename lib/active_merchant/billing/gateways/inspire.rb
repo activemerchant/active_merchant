@@ -1,11 +1,11 @@
 require File.join(File.dirname(__FILE__), '..', 'check.rb')
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class InspireGateway < Gateway
       self.live_url = self.test_url = 'https://secure.inspiregateway.net/api/transact.php'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.homepage_url = 'http://www.inspiregateway.com'
       self.display_name = 'Inspire Commerce'
 
@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)
-        add_payment_source(post, creditcard,options)
+        add_payment_source(post, creditcard, options)
         add_address(post, creditcard, options)
         add_customer_data(post, options)
 
@@ -51,13 +51,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        post ={}
+        post = {}
         post[:transactionid] = authorization
         commit('capture', money, post)
       end
 
       def void(authorization, options = {})
-        post ={}
+        post = {}
         post[:transactionid] = authorization
         commit('void', nil, post)
       end
@@ -93,32 +93,29 @@ module ActiveMerchant #:nodoc:
       # store and unstore need to be defined
       def store(creditcard, options = {})
         billing_id = options.delete(:billing_id).to_s || true
-        authorize(100, creditcard, options.merge(:store => billing_id))
+        authorize(100, creditcard, options.merge(store: billing_id))
       end
 
-      alias_method :unstore, :delete
+      alias unstore delete
 
       private
-      def add_customer_data(post, options)
-        if options.has_key? :email
-          post[:email] = options[:email]
-        end
 
-        if options.has_key? :ip
-          post[:ipaddress] = options[:ip]
-        end
+      def add_customer_data(post, options)
+        post[:email] = options[:email] if options.has_key? :email
+
+        post[:ipaddress] = options[:ip] if options.has_key? :ip
       end
 
       def add_address(post, creditcard, options)
         if address = options[:billing_address] || options[:address]
           post[:address1]    = address[:address1].to_s
           post[:address2]    = address[:address2].to_s unless address[:address2].blank?
-          post[:company]    = address[:company].to_s
-          post[:phone]      = address[:phone].to_s
-          post[:zip]        = address[:zip].to_s
-          post[:city]       = address[:city].to_s
-          post[:country]    = address[:country].to_s
-          post[:state]      = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:company]     = address[:company].to_s
+          post[:phone]       = address[:phone].to_s
+          post[:zip]         = address[:zip].to_s
+          post[:city]        = address[:city].to_s
+          post[:country]     = address[:country].to_s
+          post[:state]       = address[:state].blank? ? 'n/a' : address[:state]
         end
       end
 
@@ -127,7 +124,7 @@ module ActiveMerchant #:nodoc:
         post[:orderdescription] = options[:description]
       end
 
-      def add_payment_source(params, source, options={})
+      def add_payment_source(params, source, options = {})
         case determine_funding_source(source)
         when :vault       then add_customer_vault_id(params, source)
         when :credit_card then add_creditcard(params, source, options)
@@ -135,18 +132,18 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_customer_vault_id(params,vault_id)
+      def add_customer_vault_id(params, vault_id)
         params[:customer_vault_id] = vault_id
       end
 
-      def add_creditcard(post, creditcard,options)
+      def add_creditcard(post, creditcard, options)
         if options[:store]
           post[:customer_vault] = 'add_customer'
           post[:customer_vault_id] = options[:store] unless options[:store] == true
         end
-        post[:ccnumber]  = creditcard.number
+        post[:ccnumber] = creditcard.number
         post[:cvv] = creditcard.verification_value if creditcard.verification_value?
-        post[:ccexp]  = expdate(creditcard)
+        post[:ccexp] = expdate(creditcard)
         post[:firstname] = creditcard.first_name
         post[:lastname]  = creditcard.last_name
       end
@@ -163,7 +160,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         results = {}
         body.split(/&/).each do |pair|
-          key,val = pair.split(%r{=})
+          key, val = pair.split(%r{=})
           results[key] = val
         end
 
@@ -171,22 +168,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, money, parameters)
-        parameters[:amount]  = amount(money) if money
+        parameters[:amount] = amount(money) if money
 
-        response = parse( ssl_post(self.live_url, post_data(action,parameters)) )
+        response = parse(ssl_post(self.live_url, post_data(action, parameters)))
 
-        Response.new(response['response'] == '1', message_from(response), response,
-          :authorization => response['transactionid'],
-          :test => test?,
-          :cvv_result => response['cvvresponse'],
-          :avs_result => { :code => response['avsresponse'] }
+        Response.new(
+          response['response'] == '1',
+          message_from(response), response,
+          authorization: response['transactionid'],
+          test: test?,
+          cvv_result: response['cvvresponse'],
+          avs_result: { code: response['avsresponse'] }
         )
-
       end
 
       def message_from(response)
         case response['responsetext']
-        when 'SUCCESS','Approved'
+        when 'SUCCESS', 'Approved'
           'This transaction has been approved'
         when 'DECLINE'
           'This transaction has been declined'
@@ -197,18 +195,17 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         post = {}
-        post[:username]      = @options[:login]
+        post[:username]   = @options[:login]
         post[:password]   = @options[:password]
         post[:type]       = action if action
 
-        request = post.merge(parameters).map {|key,value| "#{key}=#{CGI.escape(value.to_s)}"}.join('&')
-        request
+        post.merge(parameters).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def determine_funding_source(source)
         case
         when source.is_a?(String) then :vault
-        when CreditCard.card_companies.keys.include?(card_brand(source)) then :credit_card
+        when CreditCard.card_companies.include?(card_brand(source)) then :credit_card
         when card_brand(source) == 'check' then :check
         else raise ArgumentError, 'Unsupported funding source provided'
         end
@@ -216,4 +213,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

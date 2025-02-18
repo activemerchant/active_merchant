@@ -10,21 +10,21 @@ class RemoteStripeConnectTest < Test::Unit::TestCase
     @new_credit_card = credit_card('5105105105105100')
 
     @options = {
-      :currency => 'USD',
-      :description => 'ActiveMerchant Test Purchase',
-      :email => 'wow@example.com',
-      :stripe_account => fixtures(:stripe_destination)[:stripe_user_id]
+      currency: 'USD',
+      description: 'ActiveMerchant Test Purchase',
+      email: 'wow@example.com',
+      stripe_account: fixtures(:stripe_destination)[:stripe_user_id]
     }
   end
 
   def test_application_fee_for_stripe_connect
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:application_fee => 12 ))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(application_fee: 12))
     assert_success response
   end
 
   def test_successful_refund_with_application_fee
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:application_fee => 12))
-    assert refund = @gateway.refund(@amount, response.authorization, @options.merge(:refund_application_fee => true))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(application_fee: 12))
+    assert refund = @gateway.refund(@amount, response.authorization, @options.merge(refund_application_fee: true))
     assert_success refund
 
     # Verify the application fee is refunded
@@ -35,8 +35,8 @@ class RemoteStripeConnectTest < Test::Unit::TestCase
   end
 
   def test_refund_partial_application_fee
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:application_fee => 12))
-    assert refund = @gateway.refund(@amount-20, response.authorization, @options.merge(:refund_fee_amount => '10'))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(application_fee: 12))
+    assert refund = @gateway.refund(@amount - 20, response.authorization, @options.merge(refund_fee_amount: '10'))
     assert_success refund
 
     # Verify the application fee is partially refunded
@@ -47,8 +47,8 @@ class RemoteStripeConnectTest < Test::Unit::TestCase
   end
 
   def test_refund_application_fee_amount_zero
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:application_fee => 12))
-    assert refund = @gateway.refund(@amount-20, response.authorization, @options.merge(:refund_fee_amount => '0'))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(application_fee: 12))
+    assert refund = @gateway.refund(@amount - 20, response.authorization, @options.merge(refund_fee_amount: '0'))
     assert_success refund
 
     # Verify the application fee is not refunded

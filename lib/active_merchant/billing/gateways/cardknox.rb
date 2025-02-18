@@ -1,11 +1,11 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CardknoxGateway < Gateway
       self.live_url = 'https://x1.cardknox.com/gateway'
 
-      self.supported_countries = ['US','CA','GB']
+      self.supported_countries = %w[US CA GB]
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
       self.homepage_url = 'https://www.cardknox.com/'
       self.display_name = 'Cardknox'
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
         }
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_key)
         super
       end
@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
       # - check
       # - cardknox token, which is returned in the the authorization string "ref_num;token;command"
 
-      def purchase(amount, source, options={})
+      def purchase(amount, source, options = {})
         post = {}
         add_amount(post, amount, options)
         add_invoice(post, options)
@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
         commit(:purchase, source_type(source), post)
       end
 
-      def authorize(amount, source, options={})
+      def authorize(amount, source, options = {})
         post = {}
         add_amount(post, amount)
         add_invoice(post, options)
@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
         commit(:capture, source_type(authorization), post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_reference(post, authorization)
         add_amount(post, amount)
@@ -79,10 +79,10 @@ module ActiveMerchant #:nodoc:
         commit(:void, source_type(authorization), post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
-         r.process { authorize(100, credit_card, options) }
-         r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
 
@@ -116,7 +116,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, reference)
-        reference, _, _ = split_authorization(reference)
+        reference, = split_authorization(reference)
         post[:Refnum] = reference
       end
 
@@ -186,7 +186,7 @@ module ActiveMerchant #:nodoc:
           post[address_key(prefix, 'FirstName')] = address[:first_name]
           post[address_key(prefix, 'LastName')]  = address[:last_name]
         end
-        post[address_key(prefix, 'MiddleName')]  = address[:middle_name]
+        post[address_key(prefix, 'MiddleName')] = address[:middle_name]
 
         post[address_key(prefix, 'Company')]  = address[:company]
         post[address_key(prefix, 'Street')]   = address[:address1]
@@ -247,7 +247,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_cardknox_token(post, authorization)
-        _, token, _ = split_authorization(authorization)
+        _, token, = split_authorization(authorization)
 
         post[:Token] = token
       end
@@ -255,7 +255,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         fields = {}
         for line in body.split('&')
-          key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
+          key, value = *line.scan(%r{^(\w+)\=(.*)$}).flatten
           fields[key] = CGI.unescape(value.to_s)
         end
 
@@ -276,14 +276,13 @@ module ActiveMerchant #:nodoc:
           amount:            fields['xAuthAmount'],
           masked_card_num:   fields['xMaskedCardNumber'],
           masked_account_number: fields['MaskedAccountNumber']
-        }.delete_if{|k, v| v.nil?}
+        }.delete_if { |_k, v| v.nil? }
       end
-
 
       def commit(action, source_type, parameters)
         response = parse(ssl_post(live_url, post_data(COMMANDS[source_type][action], parameters)))
 
-       Response.new(
+        Response.new(
           (response[:status] == 'Approved'),
           message_from(response),
           response,
@@ -312,8 +311,8 @@ module ActiveMerchant #:nodoc:
           Key: @options[:api_key],
           Version: '4.5.4',
           SoftwareName: 'Active Merchant',
-          SoftwareVersion: "#{ActiveMerchant::VERSION}",
-          Command: command,
+          SoftwareVersion: ActiveMerchant::VERSION.to_s,
+          Command: command
         }
 
         seed = SecureRandom.hex(32).upcase
@@ -321,7 +320,7 @@ module ActiveMerchant #:nodoc:
         initial_parameters[:Hash] = "s/#{seed}/#{hash}/n" unless @options[:pin].blank?
         parameters = initial_parameters.merge(parameters)
 
-        parameters.reject{|k, v| v.blank?}.collect{ |key, value| "x#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        parameters.reject { |_k, v| v.blank? }.collect { |key, value| "x#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

@@ -1,10 +1,10 @@
 require 'active_merchant/billing/gateways/paypal'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # The PayPal gateway for PayPal Website Payments Pro Canada only supports Visa and MasterCard
     class PaypalCaGateway < PaypalGateway
-      self.supported_cardtypes = [:visa, :master]
+      self.supported_cardtypes = %i[visa master]
       self.supported_countries = ['CA']
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside'
       self.display_name = 'PayPal Website Payments Pro (CA)'

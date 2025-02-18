@@ -1,29 +1,29 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PagarmeGateway < Gateway
       self.live_url = 'https://api.pagar.me/1/'
 
       self.supported_countries = ['BR']
       self.default_currency = 'BRL'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club]
 
       self.homepage_url = 'https://pagar.me/'
       self.display_name = 'Pagar.me'
 
       STANDARD_ERROR_CODE_MAPPING = {
         'refused' => STANDARD_ERROR_CODE[:card_declined],
-        'processing_error' => STANDARD_ERROR_CODE[:processing_error],
+        'processing_error' => STANDARD_ERROR_CODE[:processing_error]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_key)
         @api_key = options[:api_key]
 
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         post = {}
         add_amount(post, money)
         add_payment_method(post, payment_method)
@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'transactions', post)
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         post = {}
         add_amount(post, money)
         add_payment_method(post, payment_method)
@@ -43,33 +43,27 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'transactions', post)
       end
 
-      def capture(money, authorization, options={})
-        if authorization.nil?
-          return Response.new(false, 'Não é possível capturar uma transação sem uma prévia autorização.')
-        end
+      def capture(money, authorization, options = {})
+        return Response.new(false, 'Não é possível capturar uma transação sem uma prévia autorização.') if authorization.nil?
 
         post = {}
         commit(:post, "transactions/#{authorization}/capture", post)
       end
 
-      def refund(money, authorization, options={})
-        if authorization.nil?
-          return Response.new(false, 'Não é possível estornar uma transação sem uma prévia captura.')
-        end
+      def refund(money, authorization, options = {})
+        return Response.new(false, 'Não é possível estornar uma transação sem uma prévia captura.') if authorization.nil?
 
         void(authorization, options)
       end
 
-      def void(authorization, options={})
-        if authorization.nil?
-          return Response.new(false, 'Não é possível estornar uma transação autorizada sem uma prévia autorização.')
-        end
+      def void(authorization, options = {})
+        return Response.new(false, 'Não é possível estornar uma transação autorizada sem uma prévia autorização.') if authorization.nil?
 
         post = {}
         commit(:post, "transactions/#{authorization}/refund", post)
       end
 
-      def verify(payment_method, options={})
+      def verify(payment_method, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(127, payment_method, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -105,7 +99,7 @@ module ActiveMerchant #:nodoc:
         post[:card_cvv] = credit_card.verification_value
       end
 
-      def add_metadata(post, options={})
+      def add_metadata(post, options = {})
         post[:metadata] = {}
         post[:metadata][:order_id] = options[:order_id]
         post[:metadata][:ip] = options[:ip]
@@ -125,6 +119,7 @@ module ActiveMerchant #:nodoc:
 
         params.map do |key, value|
           next if value != false && value.blank?
+
           if value.is_a?(Hash)
             h = {}
             value.each do |k, v|
@@ -175,15 +170,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def response_error(raw_response)
-        begin
-          parse(raw_response)
-        rescue JSON::ParserError
-          json_error(raw_response)
-        end
+        parse(raw_response)
+      rescue JSON::ParserError
+        json_error(raw_response)
       end
 
       def json_error(raw_response)
-		  msg = 'Resposta inválida retornada pela API do Pagar.me. Por favor entre em contato com suporte@pagar.me se você continuar recebendo essa mensagem.'
+        msg = 'Resposta inválida retornada pela API do Pagar.me. Por favor entre em contato com suporte@pagar.me se você continuar recebendo essa mensagem.'
         msg += "  (A resposta retornada pela API foi #{raw_response.inspect})"
         {
           'errors' => [{
@@ -214,7 +207,7 @@ module ActiveMerchant #:nodoc:
           when 'refunded'
             'Transação estornada'
           else
-            "Transação com status '#{response["status"]}'"
+            "Transação com status '#{response['status']}'"
           end
         elsif failure_from(response)
           'Transação recusada'
@@ -227,12 +220,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        if success_from(response)
-          response['id']
-        end
+        response['id'] if success_from(response)
       end
 
-      def test?()
+      def test?
         @api_key.start_with?('ak_test')
       end
 

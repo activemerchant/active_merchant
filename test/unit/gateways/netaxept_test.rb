@@ -5,15 +5,15 @@ require 'test_helper'
 class NetaxeptTest < Test::Unit::TestCase
   def setup
     @gateway = NetaxeptGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      login: 'login',
+      password: 'password'
+    )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1'
+      order_id: '1'
     }
   end
 
@@ -57,7 +57,7 @@ class NetaxeptTest < Test::Unit::TestCase
     @gateway.expects(:ssl_get).returns(successful_purchase_response[2]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(successful_purchase_response[3]).in_sequence(s)
 
-    assert_success @gateway.purchase(100, @credit_card, @options.merge(:currency => 'USD'))
+    assert_success @gateway.purchase(100, @credit_card, @options.merge(currency: 'USD'))
   end
 
   def test_handles_currency_with_option
@@ -67,7 +67,7 @@ class NetaxeptTest < Test::Unit::TestCase
     @gateway.expects(:ssl_get).returns(successful_purchase_response[2]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(successful_purchase_response[3]).in_sequence(s)
 
-    assert_success @gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'USD'))
+    assert_success @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'USD'))
   end
 
   def test_handles_setup_transaction_error
@@ -91,7 +91,7 @@ class NetaxeptTest < Test::Unit::TestCase
   end
 
   def test_url_escape_password
-    @gateway = NetaxeptGateway.new(:login => 'login', :password => '1a=W+Yr2')
+    @gateway = NetaxeptGateway.new(login: 'login', password: '1a=W+Yr2')
 
     s = sequence('request')
     @gateway.expects(:ssl_get).with(regexp_matches(/token=1a%3DW%2BYr2/)).returns(successful_purchase_response[0]).in_sequence(s)

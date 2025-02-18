@@ -9,9 +9,9 @@ class RemotePayscoutTest < Test::Unit::TestCase
     @declined_card = credit_card('34343')
 
     @options = {
-      :order_id => '1',
-      :description => 'Store Purchase',
-      :billing_address => address
+      order_id: '1',
+      description: 'Store Purchase',
+      billing_address: address
     }
   end
 
@@ -21,12 +21,10 @@ class RemotePayscoutTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
 
-
     assert_success response
     assert_equal 'The transaction has been approved', response.message
     assert_equal 'N', response.cvv_result['code']
   end
-
 
   def test_approved_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -150,8 +148,8 @@ class RemotePayscoutTest < Test::Unit::TestCase
 
   def test_invalid_credentials
     gateway = PayscoutGateway.new(
-      :username => 'xxx',
-      :password => 'xxx'
+      username: 'xxx',
+      password: 'xxx'
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

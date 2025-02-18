@@ -1,7 +1,7 @@
 require 'active_merchant/billing/gateways/migs/migs_codes'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class MigsGateway < Gateway
       include MigsCodes
 
@@ -17,10 +17,10 @@ module ActiveMerchant #:nodoc:
       # MiGS is supported throughout Asia Pacific, Middle East and Africa
       # MiGS is used in Australia (AU) by ANZ (eGate), CBA (CommWeb) and more
       # Source of Country List: http://www.scribd.com/doc/17811923
-      self.supported_countries = %w(AU AE BD BN EG HK ID IN JO KW LB LK MU MV MY NZ OM PH QA SA SG TT VN)
+      self.supported_countries = %w(AU AE BD BN EG HK ID JO KW LB LK MU MV MY NZ OM PH QA SA SG TT VN)
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       self.money_format = :cents
       self.currencies_without_fractions = %w(IDR)
@@ -63,13 +63,14 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard)
         add_standard_parameters('pay', post, options[:unique_id])
         add_3ds(post, options)
+        add_tx_source(post, options)
 
         commit(post)
       end
 
       # MiGS works by merchants being either purchase only or authorize/capture
       # So authorize is the same as purchase when in authorize mode
-      alias_method :authorize, :purchase
+      alias authorize purchase
 
       # ==== Options
       #
@@ -78,11 +79,12 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         requires!(@options, :advanced_login, :advanced_password)
 
-        post = options.merge(:TransNo => authorization)
+        post = options.merge(TransNo: authorization)
 
         add_amount(post, money, options)
         add_advanced_user(post)
         add_standard_parameters('capture', post, options[:unique_id])
+        add_tx_source(post, options)
 
         commit(post)
       end
@@ -94,11 +96,12 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         requires!(@options, :advanced_login, :advanced_password)
 
-        post = options.merge(:TransNo => authorization)
+        post = options.merge(TransNo: authorization)
 
         add_amount(post, money, options)
         add_advanced_user(post)
         add_standard_parameters('refund', post, options[:unique_id])
+        add_tx_source(post, options)
 
         commit(post)
       end
@@ -106,10 +109,11 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         requires!(@options, :advanced_login, :advanced_password)
 
-        post = options.merge(:TransNo => authorization)
+        post = options.merge(TransNo: authorization)
 
         add_advanced_user(post)
         add_standard_parameters('voidAuthorisation', post, options[:unique_id])
+        add_tx_source(post, options)
 
         commit(post)
       end
@@ -119,7 +123,7 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -169,10 +173,8 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard_type(post, options[:card_type]) if options[:card_type]
 
-        post.merge!(
-          :Locale => options[:locale] || 'en',
-          :ReturnURL => options[:return_url]
-        )
+        post[:Locale] = options[:locale] || 'en'
+        post[:ReturnURL] = options[:return_url]
 
         add_standard_parameters('pay', post, options[:unique_id])
 
@@ -193,9 +195,7 @@ module ActiveMerchant #:nodoc:
         response_hash = parse(data)
 
         expected_secure_hash = calculate_secure_hash(response_hash, @options[:secure_hash])
-        unless response_hash[:SecureHash] == expected_secure_hash
-          raise SecurityError, 'Secure Hash mismatch, response may be tampered with'
-        end
+        raise SecurityError, 'Secure Hash mismatch, response may be tampered with' unless response_hash[:SecureHash] == expected_secure_hash
 
         response_object(response_hash)
       end
@@ -243,6 +243,10 @@ module ActiveMerchant #:nodoc:
         post['3DSstatus'] = options[:three_ds_status] if options[:three_ds_status]
       end
 
+      def add_tx_source(post, options)
+        post[:TxSource] = options[:tx_source] if options[:tx_source]
+      end
+
       def add_creditcard(post, creditcard)
         post[:CardNum] = creditcard.number
         post[:CardSecurityCode] = creditcard.verification_value if creditcard.verification_value?
@@ -250,8 +254,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard_type(post, card_type)
-        post[:Gateway]  = 'ssl'
-        post[:card] = CARD_TYPES.detect{|ct| ct.am_code == card_type}.migs_long_code
+        post[:Gateway] = 'ssl'
+        post[:card] = CARD_TYPES.detect { |ct| ct.am_code == card_type }.migs_long_code
       end
 
       def parse(body)
@@ -277,12 +281,15 @@ module ActiveMerchant #:nodoc:
         cvv_result_code = response[:CSCResultCode]
         cvv_result_code = 'P' if cvv_result_code == 'Unsupported'
 
-        Response.new(success?(response), response[:Message], response,
-          :test => test?,
-          :authorization => response[:TransactionNo],
-          :fraud_review => fraud_review?(response),
-          :avs_result => { :code => avs_response_code },
-          :cvv_result => cvv_result_code
+        Response.new(
+          success?(response),
+          response[:Message],
+          response,
+          test: test?,
+          authorization: response[:TransactionNo],
+          fraud_review: fraud_review?(response),
+          avs_result: { code: avs_response_code },
+          cvv_result: cvv_result_code
         )
       end
 
@@ -296,11 +303,11 @@ module ActiveMerchant #:nodoc:
 
       def add_standard_parameters(action, post, unique_id = nil)
         post.merge!(
-          :Version     => API_VERSION,
-          :Merchant    => @options[:login],
-          :AccessCode  => @options[:password],
-          :Command     => action,
-          :MerchTxnRef => unique_id || generate_unique_id.slice(0, 40)
+          Version: API_VERSION,
+          Merchant: @options[:login],
+          AccessCode: @options[:password],
+          Command: action,
+          MerchTxnRef: unique_id || generate_unique_id.slice(0, 40)
         )
       end
 
@@ -314,11 +321,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def calculate_secure_hash(post, secure_hash)
-        input = post
-                .reject { |k| %i[SecureHash SecureHashType].include?(k) }
-                .sort
-                .map { |(k, v)| "vpc_#{k}=#{v}" }
-                .join('&')
+        input = post.
+                reject { |k| %i[SecureHash SecureHashType].include?(k) }.
+                sort.
+                map { |(k, v)| "vpc_#{k}=#{v}" }.
+                join('&')
         OpenSSL::HMAC.hexdigest('SHA256', [secure_hash].pack('H*'), input).upcase
       end
     end

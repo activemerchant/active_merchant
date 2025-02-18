@@ -1,25 +1,24 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SecureNetGateway < Gateway
-
       API_VERSION = '4.0'
 
       TRANSACTIONS = {
-        :auth_only                      => '0000',
-        :auth_capture                   => '0100',
-        :prior_auth_capture             => '0200',
-        :void                           => '0400',
-        :credit                         => '0500'
+        auth_only:            '0000',
+        auth_capture:         '0100',
+        prior_auth_capture:   '0200',
+        void:                 '0400',
+        credit:               '0500'
       }
 
       XML_ATTRIBUTES = {
-                        'xmlns' => 'http://gateway.securenet.com/API/Contracts',
-                        'xmlns:i' => 'http://www.w3.org/2001/XMLSchema-instance'
-                       }
+        'xmlns' => 'http://gateway.securenet.com/API/Contracts',
+        'xmlns:i' => 'http://www.w3.org/2001/XMLSchema-instance'
+      }
       NIL_ATTRIBUTE = { 'i:nil' => 'true' }
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.securenet.com/'
       self.display_name = 'SecureNet'
 
@@ -28,8 +27,8 @@ module ActiveMerchant #:nodoc:
 
       APPROVED, DECLINED = 1, 2
 
-      CARD_CODE_ERRORS = %w( N S )
-      AVS_ERRORS = %w( A E N R W Z )
+      CARD_CODE_ERRORS = %w(N S)
+      AVS_ERRORS = %w(A E N R W Z)
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -80,11 +79,14 @@ module ActiveMerchant #:nodoc:
         data = ssl_post(url, xml, 'Content-Type' => 'text/xml')
         response = parse(data)
 
-        Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => build_authorization(response),
-          :avs_result => { :code => response[:avs_result_code] },
-          :cvv_result => response[:card_code_response_code]
+        Response.new(
+          success?(response),
+          message_from(response),
+          response,
+          test: test?,
+          authorization: build_authorization(response),
+          avs_result: { code: response[:avs_result_code] },
+          cvv_result: response[:card_code_response_code]
         )
       end
 
@@ -136,13 +138,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(xml, options)
-        if options.has_key? :customer
-          xml.tag! 'CUSTOMERID', options[:customer]
-        end
+        xml.tag! 'CUSTOMERID', options[:customer] if options.has_key? :customer
 
-        if options.has_key? :ip
-          xml.tag! 'CUSTOMERIP', options[:ip]
-        end
+        xml.tag! 'CUSTOMERIP', options[:ip] if options.has_key? :ip
       end
 
       def add_address(xml, creditcard, options)
@@ -161,7 +159,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'FIRSTNAME', creditcard.first_name
             xml.tag! 'LASTNAME', creditcard.last_name
             xml.tag! 'PHONE', address[:phone].to_s
-            xml.tag! 'STATE', address[:state].blank?  ? 'n/a' : address[:state]
+            xml.tag! 'STATE', address[:state].blank? ? 'n/a' : address[:state]
             xml.tag! 'ZIP', address[:zip].to_s
           end
         end
@@ -182,14 +180,13 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'LASTNAME', address[:last_name].to_s
             end
 
-            xml.tag! 'STATE', address[:state].blank?  ? 'n/a' : address[:state]
+            xml.tag! 'STATE', address[:state].blank? ? 'n/a' : address[:state]
             xml.tag! 'ZIP', address[:zip].to_s
           end
         else
           xml.tag!('CUSTOMER_SHIP', NIL_ATTRIBUTE) do
           end
         end
-
       end
 
       def add_merchant_key(xml, options)
@@ -248,7 +245,7 @@ module ActiveMerchant #:nodoc:
 
       def recurring_parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|e| recurring_parse_element(response, e) }
+          node.elements.each { |e| recurring_parse_element(response, e) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
@@ -262,7 +259,6 @@ module ActiveMerchant #:nodoc:
       def build_authorization(response)
         [response[:transactionid], response[:transactionamount], response[:last4_digits]].join('|')
       end
-
     end
   end
 end

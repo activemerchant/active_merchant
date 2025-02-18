@@ -6,118 +6,136 @@ class RemoteCardStreamTest < Test::Unit::TestCase
 
     @gateway = CardStreamGateway.new(fixtures(:card_stream))
 
-    @amex = credit_card('374245455400001',
-      :month => '12',
-      :year => '2014',
-      :verification_value => '4887',
-      :brand => :american_express
+    @amex = credit_card(
+      '374245455400001',
+      month: '12',
+      year: Time.now.year + 1,
+      verification_value: '4887',
+      brand: :american_express
     )
 
-    @mastercard = credit_card('5301250070000191',
-      :month => '12',
-      :year => '2014',
-      :verification_value => '419',
-      :brand => :master
+    @mastercard = credit_card(
+      '5301250070000191',
+      month: '12',
+      year: Time.now.year + 1,
+      verification_value: '419',
+      brand: :master
     )
 
-    @visacreditcard = credit_card('4929421234600821',
-      :month => '12',
-      :year => '2014',
-      :verification_value => '356',
-      :brand => :visa
+    @visacreditcard = credit_card(
+      '4929421234600821',
+      month: '12',
+      year: Time.now.year + 1,
+      verification_value: '356',
+      brand: :visa
     )
 
-    @visadebitcard = credit_card('4539791001730106',
-      :month => '12',
-      :year => '2014',
-      :verification_value => '289',
-      :brand => :visa
+    @visadebitcard = credit_card(
+      '4539791001730106',
+      month: '12',
+      year: Time.now.year + 1,
+      verification_value: '289',
+      brand: :visa
     )
 
-    @declined_card = credit_card('4000300011112220',
-      :month => '9',
-      :year => '2014'
+    @declined_card = credit_card(
+      '4000300011112220',
+      month: '9',
+      year: Time.now.year + 1
     )
 
     @amex_options = {
-      :billing_address => {
-        :address1 => 'The Hunts Way',
-        :city => '',
-        :state => 'Leicester',
-        :zip => 'SO18 1GW',
-        :country => 'GB'
+      billing_address: {
+        address1: 'The Hunts Way',
+        city: '',
+        state: 'Leicester',
+        zip: 'SO18 1GW',
+        country: 'GB'
       },
-      :order_id => generate_unique_id,
-      :description => 'AM test purchase',
-      :ip => '1.1.1.1'
+      order_id: generate_unique_id,
+      description: 'AM test purchase',
+      ip: '1.1.1.1'
     }
 
     @visacredit_options = {
-      :billing_address => {
-        :address1 => 'Flat 6, Primrose Rise',
-        :address2 => '347 Lavender Road',
-        :city => '',
-        :state => 'Northampton',
-        :zip => 'NN17 8YG',
-        :country => 'GB'
+      billing_address: {
+        address1: 'Flat 6, Primrose Rise',
+        address2: '347 Lavender Road',
+        city: '',
+        state: 'Northampton',
+        zip: 'NN17 8YG',
+        country: 'GB'
       },
-      :order_id => generate_unique_id,
-      :description => 'AM test purchase',
-      :ip => '1.1.1.1'
+      order_id: generate_unique_id,
+      description: 'AM test purchase',
+      ip: '1.1.1.1'
     }
 
     @visacredit_descriptor_options = {
-      :billing_address => {
-        :address1 => 'Flat 6, Primrose Rise',
-        :address2 => '347 Lavender Road',
-        :city => '',
-        :state => 'Northampton',
-        :zip => 'NN17 8YG',
-        :country => 'GB'
+      billing_address: {
+        address1: 'Flat 6, Primrose Rise',
+        address2: '347 Lavender Road',
+        city: '',
+        state: 'Northampton',
+        zip: 'NN17 8YG',
+        country: 'GB'
       },
-      :merchant_name => 'merchant',
-      :dynamic_descriptor => 'product',
-      :ip => '1.1.1.1',
+      order_id: generate_unique_id,
+      merchant_name: 'merchant',
+      dynamic_descriptor: 'product',
+      ip: '1.1.1.1'
     }
 
     @visacredit_reference_options = {
-      :order_id => generate_unique_id,
-      :description => 'AM test purchase',
-      :ip => '1.1.1.1'
+      order_id: generate_unique_id,
+      description: 'AM test purchase',
+      ip: '1.1.1.1'
     }
 
     @visadebit_options = {
-      :billing_address => {
-        :address1 => 'Unit 5, Pickwick Walk',
-        :address2 => '120 Uxbridge Road',
-        :city => 'Hatch End',
-        :state => 'Middlesex',
-        :zip => 'HA6 7HJ',
-        :country => 'GB'
+      billing_address: {
+        address1: 'Unit 5, Pickwick Walk',
+        address2: '120 Uxbridge Road',
+        city: 'Hatch End',
+        state: 'Middlesex',
+        zip: 'HA6 7HJ',
+        country: 'GB'
       },
-      :order_id => generate_unique_id,
-      :description => 'AM test purchase',
-      :ip => '1.1.1.1'
+      order_id: generate_unique_id,
+      description: 'AM test purchase',
+      ip: '1.1.1.1'
     }
 
     @mastercard_options = {
-      :billing_address => {
-        :address1 => '25 The Larches',
-        :city => 'Narborough',
-        :state => 'Leicester',
-        :zip => 'LE10 2RT',
-        :country => 'GB'
+      billing_address: {
+        address1: '25 The Larches',
+        city: 'Narborough',
+        state: 'Leicester',
+        zip: 'LE10 2RT',
+        country: 'GB'
       },
-      :order_id => generate_unique_id,
-      :description => 'AM test purchase',
-      :ip => '1.1.1.1'
+      order_id: generate_unique_id,
+      description: 'AM test purchase',
+      ip: '1.1.1.1'
     }
 
-    @three_ds_enrolled_card = credit_card('4012001037141112',
-      :month => '12',
-      :year => '2020',
-      :brand => :visa
+    @three_ds_enrolled_card = credit_card(
+      '4012001037141112',
+      month: '12',
+      year: '2020',
+      brand: :visa
     )
+
+    @visacredit_three_ds_options = {
+      threeds_required: true,
+      three_d_secure: {
+        enrolled: 'true',
+        authentication_response_status: 'Y',
+        eci: '05',
+        cavv: 'Y2FyZGluYWxjb21tZXJjZWF1dGg',
+        xid: '00000000000004717472'
+      }
+    }
   end
 
   def test_successful_visacreditcard_authorization_and_capture
@@ -166,7 +184,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
 
     assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @visacredit_options)
     assert_failure responseRefund
-    assert_equal 'Can not REFUND this SALE transaction', responseRefund.message
+    assert_equal 'Cannot REFUND this SALE transaction', responseRefund.message
     assert responseRefund.test?
   end
 
@@ -223,7 +241,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert !responsePurchase.authorization.blank?
 
     assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @visadebit_options)
-    assert_equal 'Can not REFUND this SALE transaction', responseRefund.message
+    assert_equal 'Cannot REFUND this SALE transaction', responseRefund.message
     assert_failure responseRefund
     assert responseRefund.test?
   end
@@ -261,7 +279,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert !responsePurchase.authorization.blank?
 
     assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @amex_options)
-    assert_equal 'Can not REFUND this SALE transaction', responseRefund.message
+    assert_equal 'Cannot REFUND this SALE transaction', responseRefund.message
     assert_failure responseRefund
     assert responseRefund.test?
   end
@@ -299,7 +317,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert !responsePurchase.authorization.blank?
 
     assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @mastercard_options)
-    assert_equal 'Can not REFUND this SALE transaction', responseRefund.message
+    assert_equal 'Cannot REFUND this SALE transaction', responseRefund.message
     assert_failure responseRefund
     assert responseRefund.test?
   end
@@ -313,7 +331,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   end
 
   def test_successful_visacreditcard_purchase_via_reference
-    assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge({:type => '9'}))
+    assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge({ type: '9' }))
     assert_equal 'APPROVED', response.message
     assert_success response
     assert response.test?
@@ -341,6 +359,13 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(currency: 'CEO'))
     assert_failure response
     assert_match %r{MISSING_CURRENCYCODE}, response.message
+  end
+
+  def test_successful_purchase_and_amount_for_non_decimal_currency
+    assert response = @gateway.purchase(14200, @visacreditcard, @visacredit_options.merge(currency: 'JPY'))
+    assert_success response
+    assert_equal '392', response.params['currencyCode']
+    assert_equal '142', response.params['amount']
   end
 
   def test_successful_visadebitcard_purchase
@@ -376,8 +401,8 @@ class RemoteCardStreamTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = CardStreamGateway.new(
-      :login => '',
-      :shared_secret => ''
+      login: '',
+      shared_secret: ''
     )
     assert response = gateway.purchase(142, @mastercard, @mastercard_options)
     assert_match %r{MISSING_MERCHANTID}, response.message
@@ -393,7 +418,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @mastercard_options)
     assert_failure response
-    assert_match %r{INVALID_CARDNUMBER}, response.message
+    assert_match %r{Disallowed cardnumber}, response.message
   end
 
   def test_successful_3dsecure_purchase
@@ -418,14 +443,46 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert !response.params['threeDSPaReq'].blank?
   end
 
+  def test_3dsecure2_auth_authenticated_card
+    assert response = @gateway.authorize(1202, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    assert_equal 'APPROVED', response.message
+    assert_equal '0', response.params['responseCode']
+    assert_equal 'Success', response.params['threeDSResponseMessage']
+    assert response.success?
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
+  def test_3dsecure2_auth_not_authenticated_card
+    @visacredit_three_ds_options[:three_d_secure][:authentication_response_status] = 'N'
+    assert response = @gateway.authorize(1202, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    assert_equal '3DS DECLINED', response.message
+    assert_equal '65803', response.params['responseCode']
+    assert_equal 'not authenticated', response.params['threeDSCheck']
+    refute response.success?
+    assert response.test?
+    refute response.authorization.blank?
+  end
+
+  def test_3dsecure2_auth_not_enrolled_card
+    @visacredit_three_ds_options[:three_d_secure][:enrolled] = 'false'
+    assert response = @gateway.authorize(1202, @visacreditcard, @visacredit_options.merge(@visacredit_three_ds_options))
+    assert_equal '3DS DECLINED', response.message
+    assert_equal '65803', response.params['responseCode']
+    assert_equal 'not checked', response.params['threeDSCheck']
+    refute response.success?
+    assert response.test?
+    refute response.authorization.blank?
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @visacreditcard, @visacredit_options)
     end
     clean_transcript = @gateway.scrub(transcript)
 
-    assert_scrubbed( @visacreditcard.number, clean_transcript)
-    assert_scrubbed( @visacreditcard.verification_value.to_s, clean_transcript)
+    assert_scrubbed(@visacreditcard.number, clean_transcript)
+    assert_scrubbed(@visacreditcard.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:shared_secret], clean_transcript)
   end
 end

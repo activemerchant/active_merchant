@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information visit {Transact Pro Services}[https://www.transactpro.lv/business/]
     #
     # This gateway was formerly associated with www.1stpayments.net
@@ -12,17 +12,17 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://www.transactpro.lv/business/online-payments-acceptance'
       self.display_name = 'Transact Pro'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :guid, :password, :terminal)
         super
       end
 
-      def purchase(amount, payment, options={})
+      def purchase(amount, payment, options = {})
         post = PostData.new
         add_invoice(post, amount, options)
         add_payment(post, payment)
@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         post[:rs] = @options[:terminal]
 
         MultiResponse.run do |r|
-          r.process{commit('init', post)}
+          r.process { commit('init', post) }
           r.process do
             post = PostData.new
             post[:init_transaction_id] = r.authorization
@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorize(amount, payment, options={})
+      def authorize(amount, payment, options = {})
         post = PostData.new
         add_invoice(post, amount, options)
         add_payment(post, payment)
@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
         post[:rs] = @options[:terminal]
 
         MultiResponse.run do |r|
-          r.process{commit('init_dms', post)}
+          r.process { commit('init_dms', post) }
           r.process do
             post = PostData.new
             post[:init_transaction_id] = r.authorization
@@ -66,11 +66,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         identifier, original_amount = split_authorization(authorization)
-        if amount && (amount != original_amount)
-          raise ArgumentError.new("Partial capture is not supported, and #{amount.inspect} != #{original_amount.inspect}")
-        end
+        raise ArgumentError.new("Partial capture is not supported, and #{amount.inspect} != #{original_amount.inspect}") if amount && (amount != original_amount)
 
         post = PostData.new
         add_credentials(post)
@@ -80,7 +78,7 @@ module ActiveMerchant #:nodoc:
         commit('charge_hold', post, original_amount)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         identifier, original_amount = split_authorization(authorization)
 
         post = PostData.new
@@ -91,7 +89,7 @@ module ActiveMerchant #:nodoc:
         commit('refund', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         identifier, amount = split_authorization(authorization)
 
         post = PostData.new
@@ -101,7 +99,7 @@ module ActiveMerchant #:nodoc:
         commit('cancel_dms', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -158,14 +156,14 @@ module ActiveMerchant #:nodoc:
         post[:expire] = "#{month}/#{year[2..3]}"
       end
 
-      def add_credentials(post, key=:guid)
+      def add_credentials(post, key = :guid)
         post[key] = @options[:guid]
         post[:pwd] = Digest::SHA1.hexdigest(@options[:password])
       end
 
       def parse(body)
-        if body =~ /^ID:/
-          body.split('~').reduce(Hash.new) { |h,v|
+        if /^ID:/.match?(body)
+          body.split('~').reduce(Hash.new) { |h, v|
             m = v.match('(.*?):(.*)')
             h.merge!(m[1].underscore.to_sym => m[2])
           }
@@ -174,13 +172,13 @@ module ActiveMerchant #:nodoc:
             { status: 'success', id: m[2] } :
             { status: 'failure', message: m[2] }
         else
-          Hash[ status: body ]
+          { status: body }
         end
       end
 
-      def commit(action, parameters, amount=nil)
+      def commit(action, parameters, amount = nil)
         url = (test? ? test_url : live_url)
-        response = parse(ssl_post(url, post_data(action,parameters)))
+        response = parse(ssl_post(url, post_data(action, parameters)))
 
         Response.new(
           success_from(response),
@@ -199,7 +197,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_authorization(authorization)
-        if authorization =~ /|/
+        if /|/.match?(authorization)
           identifier, amount = authorization.split('|')
           [identifier, amount.to_i]
         else

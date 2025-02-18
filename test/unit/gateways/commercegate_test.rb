@@ -14,7 +14,7 @@ class CommercegateTest < Test::Unit::TestCase
     @amount = 1000
 
     @options = {
-      address: address
+      address:
     }
   end
 
@@ -58,7 +58,6 @@ class CommercegateTest < Test::Unit::TestCase
     assert_equal '10.00', response.params['amount']
     assert_equal 'EUR', response.params['currencyCode']
   end
-
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)

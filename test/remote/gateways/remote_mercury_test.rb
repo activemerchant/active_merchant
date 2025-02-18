@@ -8,28 +8,29 @@ class RemoteMercuryTest < Test::Unit::TestCase
     @gateway = MercuryGateway.new(fixtures(:mercury))
 
     @amount = 100
+    @decline_amount = 257
 
-    @credit_card = credit_card('4003000123456781', :brand => 'visa', :month => '12', :year => '18')
+    @credit_card = credit_card('4895281000000006', brand: 'visa', month: '12', year: Time.now.year)
 
-    @track_1_data = '%B4003000123456781^LONGSEN/L. ^18121200000000000000**123******?*'
-    @track_2_data = ';5413330089010608=2512101097750213?'
+    @track_1_data = "%B#{@credit_card.number}^LONGSEN/L. ^18121200000000000000**111******?*"
+    @track_2_data = ";#{@credit_card.number}=18121200000000000000?"
 
     @options = {
-      :order_id => 'c111111111.1',
-      :description => 'ActiveMerchant'
+      order_id: 'c111111111.1',
+      description: 'ActiveMerchant'
     }
     @options_with_billing = @options.merge(
-      :merchant => '999',
-      :billing_address => {
-        :address1 => '4 Corporate SQ',
-        :zip => '30329'
+      merchant: '999',
+      billing_address: {
+        address1: '123 Main Street',
+        zip: '45209'
       }
     )
     @full_options = @options_with_billing.merge(
-      :ip => '123.123.123.123',
-      :merchant => 'Open Dining',
-      :customer => 'Tim',
-      :tax => '5'
+      ip: '123.123.123.123',
+      merchant: 'Open Dining',
+      customer: 'Tim',
+      tax: '5'
     )
 
     close_batch
@@ -46,13 +47,13 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(1100, @credit_card, @options)
+    response = @gateway.authorize(@decline_amount, @credit_card, @options)
     assert_failure response
     assert_equal 'DECLINE', response.message
   end
 
   def test_purchase_and_void
-    response = @gateway.purchase(102, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
     void = @gateway.void(response.authorization)
@@ -82,13 +83,14 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(1100, @credit_card, @options)
+    response = @gateway.purchase(@decline_amount, @credit_card, @options)
     assert_failure response
     assert_equal 'DECLINE', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
   def test_avs_and_cvv_results
+    @credit_card.verification_value = '222'
     response = @gateway.authorize(333, @credit_card, @options_with_billing)
 
     assert_success response
@@ -101,7 +103,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
       },
       response.avs_result
     )
-    assert_equal({'code'=>'M', 'message'=>'CVV matches'}, response.cvv_result)
+    assert_equal({ 'code' => 'M', 'message' => 'CVV matches' }, response.cvv_result)
   end
 
   def test_avs_and_cvv_results_with_track_data
@@ -118,7 +120,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
       },
       response.avs_result
     )
-    assert_equal({'code'=>'P', 'message'=>'CVV not processed'}, response.cvv_result)
+    assert_equal({ 'code' => 'P', 'message' => 'CVV not processed' }, response.cvv_result)
   end
 
   def test_partial_capture
@@ -136,15 +138,13 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_authorize_with_bad_expiration_date
-    @credit_card.month = 13
-    @credit_card.year = 2001
-    response = @gateway.authorize(575, @credit_card, @options_with_billing)
+    response = @gateway.authorize(267, @credit_card, @options_with_billing)
     assert_failure response
     assert_equal 'INVLD EXP DATE', response.message
   end
 
   def test_mastercard_authorize_and_capture_with_refund
-    mc = credit_card('5499990123456781', :brand => 'master')
+    mc = credit_card('5499990123456781', brand: 'master')
 
     response = @gateway.authorize(200, mc, @options)
     assert_success response
@@ -161,7 +161,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_amex_authorize_and_capture_with_refund
-    amex = credit_card('373953244361001', :brand => 'american_express', :verification_value => '1234')
+    amex = credit_card('373953244361001', brand: 'american_express', verification_value: '1234')
 
     response = @gateway.authorize(201, amex, @options)
     assert_success response
@@ -177,7 +177,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_discover_authorize_and_capture
-    discover = credit_card('6011000997235373', :brand => 'discover')
+    discover = credit_card('6011000997235373', brand: 'discover')
 
     response = @gateway.authorize(225, discover, @options_with_billing)
     assert_success response
@@ -206,14 +206,14 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_success response
     assert_equal '1.00', response.params['authorize']
 
-    capture = gateway.capture(nil, response.authorization, :credit_card => @credit_card)
+    capture = gateway.capture(nil, response.authorization, credit_card: @credit_card)
     assert_success capture
     assert_equal '1.00', capture.params['authorize']
   end
 
   def test_successful_authorize_and_capture_with_track_1_data
     @credit_card.track_data = @track_1_data
-    response = @gateway.authorize(100, @credit_card, @options)
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal '1.00', response.params['authorize']
 

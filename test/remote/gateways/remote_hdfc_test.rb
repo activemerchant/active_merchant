@@ -11,12 +11,12 @@ class RemoteHdfcTest < Test::Unit::TestCase
 
     # Use an American Express card to simulate a failure since HDFC does not
     # support any proper decline cards outside of 3D secure failures.
-    @declined_card = credit_card('377182068239368', :brand => :american_express)
+    @declined_card = credit_card('377182068239368', brand: :american_express)
 
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -61,15 +61,15 @@ class RemoteHdfcTest < Test::Unit::TestCase
   end
 
   def test_passing_billing_address
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:billing_address => address))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: address))
     assert_success response
   end
 
   def test_invalid_login
     gateway = HdfcGateway.new(
-                :login => '',
-                :password => ''
-              )
+      login: '',
+      password: ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'TranPortal ID required.', response.message

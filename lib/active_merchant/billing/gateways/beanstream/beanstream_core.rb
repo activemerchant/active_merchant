@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     module BeanstreamCore
       include Empty
 
@@ -9,20 +9,20 @@ module ActiveMerchant #:nodoc:
       SP_SERVICE_VERSION = '1.1'
 
       TRANSACTIONS = {
-        :authorization  => 'PA',
-        :purchase       => 'P',
-        :capture        => 'PAC',
-        :refund         => 'R',
-        :void           => 'VP',
-        :check_purchase => 'D',
-        :check_refund   => 'C',
-        :void_purchase  => 'VP',
-        :void_refund    => 'VR'
+        authorization:    'PA',
+        purchase:         'P',
+        capture:          'PAC',
+        refund:           'R',
+        void:             'VP',
+        check_purchase:   'D',
+        check_refund:     'C',
+        void_purchase:    'VP',
+        void_refund:      'VR'
       }
 
       PROFILE_OPERATIONS = {
-        :new => 'N',
-        :modify => 'M'
+        new: 'N',
+        modify: 'M'
       }
 
       CVD_CODES = {
@@ -41,24 +41,24 @@ module ActiveMerchant #:nodoc:
       }
 
       PERIODS = {
-        :days   => 'D',
-        :weeks  => 'W',
-        :months => 'M',
-        :years  => 'Y'
+        days: 'D',
+        weeks: 'W',
+        months: 'M',
+        years: 'Y'
       }
 
       PERIODICITIES = {
-        :daily     => [:days, 1],
-        :weekly    => [:weeks, 1],
-        :biweekly  => [:weeks, 2],
-        :monthly   => [:months, 1],
-        :bimonthly => [:months, 2],
-        :yearly    => [:years, 1]
+        daily: [:days, 1],
+        weekly: [:weeks, 1],
+        biweekly: [:weeks, 2],
+        monthly: [:months, 1],
+        bimonthly: [:months, 2],
+        yearly: [:years, 1]
       }
 
       RECURRING_OPERATION = {
-        :update => 'M',
-        :cancel => 'C'
+        update: 'M',
+        cancel: 'C'
       }
 
       STATES = {
@@ -131,10 +131,10 @@ module ActiveMerchant #:nodoc:
         base.default_currency = 'CAD'
 
         # The countries the gateway supports merchants from as 2 digit ISO country codes
-        base.supported_countries = ['CA', 'US']
+        base.supported_countries = %w[CA US]
 
         # The card types supported by the payment gateway
-        base.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+        base.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
         # The homepage URL of the gateway
         base.homepage_url = 'http://www.beanstream.com/'
@@ -155,8 +155,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        reference, _, _ = split_auth(authorization)
-
+        reference, = split_auth(authorization)
         post = {}
         add_amount(post, money)
         add_reference(post, reference)
@@ -194,11 +193,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def void_action(original_transaction_type)
-        (original_transaction_type == TRANSACTIONS[:refund]) ? :void_refund : :void_purchase
+        original_transaction_type == TRANSACTIONS[:refund] ? :void_refund : :void_purchase
       end
 
       def refund_action(type)
-        (type == TRANSACTIONS[:check_purchase]) ? :check_refund : :refund
+        type == TRANSACTIONS[:check_purchase] ? :check_refund : :refund
       end
 
       def secure_profile_action(type)
@@ -229,7 +228,7 @@ module ActiveMerchant #:nodoc:
 
         if billing_address = options[:billing_address] || options[:address]
           post[:ordName]          = billing_address[:name]
-          post[:ordPhoneNumber]   = billing_address[:phone]
+          post[:ordPhoneNumber]   = billing_address[:phone] || billing_address[:phone_number]
           post[:ordAddress1]      = billing_address[:address1]
           post[:ordAddress2]      = billing_address[:address2]
           post[:ordCity]          = billing_address[:city]
@@ -257,9 +256,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def prepare_address_for_non_american_countries(options)
-        [ options[:billing_address], options[:shipping_address] ].compact.each do |address|
+        [options[:billing_address], options[:shipping_address]].compact.each do |address|
           next if empty?(address[:country])
-          unless ['US', 'CA'].include?(address[:country])
+
+          unless %w[US CA].include?(address[:country])
             address[:state] = '--'
             address[:zip]   = '000000' unless address[:zip]
           end
@@ -267,7 +267,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_recurring_payment(post, options)
-        post[:recurringPayment] = true if options[:recurring].to_s == 'true'
+        post[:recurringPayment] = 1 if options[:recurring].to_s == 'true'
       end
 
       def add_invoice(post, options)
@@ -288,9 +288,9 @@ module ActiveMerchant #:nodoc:
           post[:trnExpYear] = format(credit_card.year, :two_digits)
           post[:trnCardCvd] = credit_card.verification_value
           if credit_card.is_a?(NetworkTokenizationCreditCard)
-            post[:"3DSecureXID"] = credit_card.transaction_id
-            post[:"3DSecureECI"] = credit_card.eci
-            post[:"3DSecureCAVV"] = credit_card.payment_cryptogram
+            post[:'3DSecureXID'] = credit_card.transaction_id
+            post[:'3DSecureECI'] = credit_card.eci
+            post[:'3DSecureCAVV'] = credit_card.payment_cryptogram
           end
         end
       end
@@ -313,10 +313,12 @@ module ActiveMerchant #:nodoc:
         post[:serviceVersion] = SP_SERVICE_VERSION
         post[:responseFormat] = 'QS'
         post[:cardValidation] = (options[:cardValidation].to_i == 1) || '0'
-
         post[:operationType] = options[:operationType] || options[:operation] || secure_profile_action(:new)
         post[:customerCode] = options[:billing_id] || options[:vault_id] || false
         post[:status] = options[:status]
+
+        billing_address = options[:billing_address] || options[:address]
+        post[:trnCardOwner] = billing_address ? billing_address[:name] : nil
       end
 
       def add_recurring_amount(post, money)
@@ -365,6 +367,7 @@ module ActiveMerchant #:nodoc:
           if interval.respond_to? :parts
             parts = interval.parts
             raise ArgumentError.new("Cannot recur with mixed interval (#{interval}). Use only one of: days, weeks, months or years") if parts.length > 1
+
             parts.first
           elsif interval.kind_of? Hash
             requires!(interval, :unit)
@@ -377,11 +380,9 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         results = {}
-        if !body.nil?
-          body.split(/&/).each do |pair|
-            key, val = pair.split(/\=/)
-            results[key.to_sym] = val.nil? ? nil : CGI.unescape(val)
-          end
+        body&.split(/&/)&.each do |pair|
+          key, val = pair.split(/\=/)
+          results[key.to_sym] = val.nil? ? nil : CGI.unescape(val)
         end
 
         # Clean up the message text if there is any
@@ -402,21 +403,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(params, use_profile_api = false)
-        post(post_data(params,use_profile_api),use_profile_api)
+        post(post_data(params, use_profile_api), use_profile_api)
       end
 
       def recurring_commit(params)
         recurring_post(post_data(params, false))
       end
 
-      def post(data, use_profile_api=nil)
+      def post(data, use_profile_api = nil)
         response = parse(ssl_post((use_profile_api ? SECURE_PROFILE_URL : self.live_url), data))
         response[:customer_vault_id] = response[:customerCode] if response[:customerCode]
-        build_response(success?(response), message_from(response), response,
-          :test => test? || response[:authCode] == 'TEST',
-          :authorization => authorization_from(response),
-          :cvv_result => CVD_CODES[response[:cvdId]],
-          :avs_result => { :code => (AVS_CODES.include? response[:avsId]) ? AVS_CODES[response[:avsId]] : response[:avsId] }
+        build_response(
+          success?(response),
+          message_from(response),
+          response,
+          test: test? || response[:authCode] == 'TEST',
+          authorization: authorization_from(response),
+          cvv_result: CVD_CODES[response[:cvdId]],
+          avs_result: { code: AVS_CODES.include?(response[:avsId]) ? AVS_CODES[response[:avsId]] : response[:avsId] }
         )
       end
 
@@ -442,7 +446,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_source(post, source)
-        if source.is_a?(String) or source.is_a?(Integer)
+        if source.is_a?(String) || source.is_a?(Integer)
           post[:customerCode] = source
         else
           card_brand(source) == 'check' ? add_check(post, source) : add_credit_card(post, source)
@@ -462,13 +466,13 @@ module ActiveMerchant #:nodoc:
           params[:username] = @options[:user] if @options[:user]
           params[:password] = @options[:password] if @options[:password]
           params[:merchant_id] = @options[:login]
+          params[:passcode] = @options[:api_key]
         end
         params[:vbvEnabled] = '0'
         params[:scEnabled] = '0'
 
-        params.reject{|k, v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        params.reject { |_k, v| v.blank? }.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
-
     end
   end
 end

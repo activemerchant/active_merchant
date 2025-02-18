@@ -1,17 +1,20 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class BarclaycardSmartpayGateway < Gateway
       self.test_url = 'https://pal-test.barclaycardsmartpay.com/pal/servlet'
       self.live_url = 'https://pal-live.barclaycardsmartpay.com/pal/servlet'
 
-      self.supported_countries = ['AL', 'AD', 'AM', 'AT', 'AZ', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IS', 'IE', 'IT', 'KZ', 'LV', 'LI', 'LT', 'LU', 'MK', 'MT', 'MD', 'MC', 'ME', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'TR', 'UA', 'GB', 'VA']
+      self.supported_countries = %w[AL AD AM AT AZ BY BE BA BG HR CY CZ DK EE FI FR DE GR HU IS IE IT KZ LV LI LT LU MK MT MD MC ME NL NO PL PT RO RU SM RS SK SI ES SE CH TR UA GB VA]
       self.default_currency = 'EUR'
-      self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
+      self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND IQD JOD LYD)
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb dankort maestro]
+      self.currencies_without_fractions = %w(CVE DJF GNF IDR JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
 
       self.homepage_url = 'https://www.barclaycardsmartpay.com/'
       self.display_name = 'Barclaycard Smartpay'
+
+      API_VERSION = 'v40'
 
       def initialize(options = {})
         requires!(options, :company, :merchant, :password)
@@ -35,7 +38,9 @@ module ActiveMerchant #:nodoc:
         post[:card] = credit_card_hash(creditcard)
         post[:billingAddress] = billing_address_hash(options) if options[:billing_address]
         post[:deliveryAddress] = shipping_address_hash(options) if options[:shipping_address]
-        add_3ds(post, options) if options[:execute_threed]
+        post[:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
+
+        add_3ds(post, options)
         commit('authorise', post)
       end
 
@@ -66,7 +71,29 @@ module ActiveMerchant #:nodoc:
         post[:nationality] = options[:nationality] if options[:nationality]
         post[:shopperName] = options[:shopper_name] if options[:shopper_name]
 
-        commit('refundWithData', post)
+        if options[:third_party_payout]
+          post[:recurring] = options[:recurring_contract] || { contract: 'PAYOUT' }
+          MultiResponse.run do |r|
+            r.process {
+              commit(
+                'storeDetailAndSubmitThirdParty',
+                post,
+                @options[:store_payout_account],
+                @options[:store_payout_password]
+              )
+            }
+            r.process {
+              commit(
+                'confirmThirdParty',
+                modification_request(r.authorization, @options),
+                @options[:review_payout_account],
+                @options[:review_payout_password]
+              )
+            }
+          end
+        else
+          commit('refundWithData', post)
+        end
       end
 
       def void(identification, options = {})
@@ -84,7 +111,7 @@ module ActiveMerchant #:nodoc:
       def store(creditcard, options = {})
         post = store_request(options)
         post[:card] = credit_card_hash(creditcard)
-        post[:recurring] = {:contract => 'RECURRING'}
+        post[:recurring] = { contract: 'RECURRING' }
 
         commit('store', post)
       end
@@ -105,30 +132,31 @@ module ActiveMerchant #:nodoc:
       # Smartpay may return AVS codes not covered by standard AVSResult codes.
       # Smartpay's descriptions noted below.
       AVS_MAPPING = {
-        '0'  => 'R',  # Unknown
-        '1'  => 'A',	# Address matches, postal code doesn't
-        '2'  => 'N',	# Neither postal code nor address match
-        '3'  => 'R',	# AVS unavailable
-        '4'  => 'E',	# AVS not supported for this card type
-        '5'  => 'U',	# No AVS data provided
-        '6'  => 'Z',	# Postal code matches, address doesn't match
-        '7'  => 'D',	# Both postal code and address match
-        '8'  => 'U',	# Address not checked, postal code unknown
-        '9'  => 'B',	# Address matches, postal code unknown
-        '10' => 'N',	# Address doesn't match, postal code unknown
-        '11' => 'U',	# Postal code not checked, address unknown
-        '12' => 'B',	# Address matches, postal code not checked
-        '13' => 'U',	# Address doesn't match, postal code not checked
-        '14' => 'P',	# Postal code matches, address unknown
-        '15' => 'P',	# Postal code matches, address not checked
-        '16' => 'N',	# Postal code doesn't match, address unknown
-        '17' => 'U',  # Postal code doesn't match, address not checked
-        '18' => 'I'	  # Neither postal code nor address were checked
+        '0'  => 'R', # Unknown
+        '1'  => 'A', # Address matches, postal code doesn't
+        '2'  => 'N', # Neither postal code nor address match
+        '3'  => 'R', # AVS unavailable
+        '4'  => 'E', # AVS not supported for this card type
+        '5'  => 'U', # No AVS data provided
+        '6'  => 'Z', # Postal code matches, address doesn't match
+        '7'  => 'D', # Both postal code and address match
+        '8'  => 'U', # Address not checked, postal code unknown
+        '9'  => 'B', # Address matches, postal code unknown
+        '10' => 'N', # Address doesn't match, postal code unknown
+        '11' => 'U', # Postal code not checked, address unknown
+        '12' => 'B', # Address matches, postal code not checked
+        '13' => 'U', # Address doesn't match, postal code not checked
+        '14' => 'P', # Postal code matches, address unknown
+        '15' => 'P', # Postal code matches, address not checked
+        '16' => 'N', # Postal code doesn't match, address unknown
+        '17' => 'U', # Postal code doesn't match, address not checked
+        '18' => 'I'	 # Neither postal code nor address were checked
       }
 
-      def commit(action, post)
+      def commit(action, post, account = 'ws', password = @options[:password])
         request = post_data(flatten_hash(post))
-        raw_response = ssl_post(build_url(action), request, headers)
+        request_headers = headers(account, password)
+        raw_response = ssl_post(build_url(action), request, request_headers)
         response = parse(raw_response)
 
         Response.new(
@@ -136,21 +164,20 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           test: test?,
-          avs_result: AVSResult.new(:code => parse_avs_code(response)),
+          avs_result: AVSResult.new(code: parse_avs_code(response)),
           authorization: response['recurringDetailReference'] || authorization_from(post, response)
         )
-
       rescue ResponseError => e
         case e.response.code
         when '401'
-          return Response.new(false, 'Invalid credentials', {}, :test => test?)
+          return Response.new(false, 'Invalid credentials', {}, test: test?)
         when '403'
-          return Response.new(false, 'Not allowed', {}, :test => test?)
-        when '422'
-          return Response.new(false, 'Unprocessable Entity', {}, :test => test?)
-        when '500'
-          if e.response.body.split(' ')[0] == 'validation'
-            return Response.new(false, e.response.body.split(' ', 3)[2], {}, :test => test?)
+          return Response.new(false, 'Not allowed', {}, test: test?)
+        when '422', '500'
+          if e.response.body.split(/\W+/).any? { |word| %w(validation configuration security).include?(word) }
+            error_message = e.response.body[/#{Regexp.escape('message=')}(.*?)#{Regexp.escape('&')}/m, 1].tr('+', ' ')
+            error_code = e.response.body[/#{Regexp.escape('errorCode=')}(.*?)#{Regexp.escape('&')}/m, 1]
+            return Response.new(false, error_code + ': ' + error_message, {}, test: test?)
           end
         end
         raise
@@ -160,11 +187,12 @@ module ActiveMerchant #:nodoc:
         authorization = [parameters[:originalReference], response['pspReference']].compact
 
         return nil if authorization.empty?
+
         return authorization.join('#')
       end
 
       def parse_avs_code(response)
-        AVS_MAPPING[response['avsResult'][0..1].strip] if response['avsResult']
+        AVS_MAPPING[response['additionalData']['avsResult'][0..1].strip] if response.dig('additionalData', 'avsResult')
       end
 
       def flatten_hash(hash, prefix = nil)
@@ -180,20 +208,26 @@ module ActiveMerchant #:nodoc:
         flat_hash
       end
 
-      def headers
+      def headers(account, password)
         {
           'Content-Type' => 'application/x-www-form-urlencoded; charset=utf-8',
-          'Authorization' => 'Basic ' + Base64.strict_encode64("ws@Company.#{@options[:company]}:#{@options[:password]}").strip
+          'Authorization' => 'Basic ' + Base64.strict_encode64("#{account}@Company.#{@options[:company]}:#{password}").strip
         }
       end
 
       def parse(response)
-        Hash[
-          response.split('&').map do |x|
-            key, val = x.split('=', 2)
-            [key.split('.').last, CGI.unescape(val)]
+        parsed_response = {}
+        params = CGI.parse(response)
+        params.each do |key, value|
+          parsed_key = key.split('.', 2)
+          if parsed_key.size > 1
+            parsed_response[parsed_key[0]] ||= {}
+            parsed_response[parsed_key[0]][parsed_key[1]] = value[0]
+          else
+            parsed_response[parsed_key[0]] = value[0]
           end
-        ]
+        end
+        parsed_response
       end
 
       def post_data(data)
@@ -208,25 +242,28 @@ module ActiveMerchant #:nodoc:
         return response['resultCode'] if response.has_key?('resultCode') # Payment request
         return response['response'] if response['response'] # Modification request
         return response['result'] if response.has_key?('result') # Store/Recurring request
+
         'Failure' # Negative fallback in case of error
       end
 
       def success_from(response)
         return true if response['result'] == 'Success'
-        return true if response['resultCode'] == 'Authorised'
-        return true if response['resultCode'] == 'Received'
-        successful_responses = %w([capture-received] [cancel-received] [refund-received])
-        successful_responses.include?(response['response'])
+
+        successful_results = %w(Authorised Received [payout-submit-received])
+        successful_responses = %w([capture-received] [cancel-received] [refund-received] [payout-confirm-received])
+        successful_results.include?(response['resultCode']) || successful_responses.include?(response['response'])
       end
 
       def build_url(action)
         case action
         when 'store'
-          "#{test? ? self.test_url : self.live_url}/Recurring/v12/storeToken"
+          "#{test? ? self.test_url : self.live_url}/Recurring/#{API_VERSION}/storeToken"
         when 'finalize3ds'
-          "#{test? ? self.test_url : self.live_url}/Payment/v12/authorise3d"
+          "#{test? ? self.test_url : self.live_url}/Payment/#{API_VERSION}/authorise3d"
+        when 'storeDetailAndSubmitThirdParty', 'confirmThirdParty'
+          "#{test? ? self.test_url : self.live_url}/Payout/#{API_VERSION}/#{action}"
         else
-          "#{test? ? self.test_url : self.live_url}/Payment/v12/#{action}"
+          "#{test? ? self.test_url : self.live_url}/Payment/#{API_VERSION}/#{action}"
         end
       end
 
@@ -262,11 +299,11 @@ module ActiveMerchant #:nodoc:
         hash = {}
         hash[:houseNumberOrName] = house
         hash[:street]            = street
-        hash[:city]              = address[:city] if address[:city]
-        hash[:stateOrProvince]   = address[:state] if address[:state]
-        hash[:postalCode]        = address[:zip] if address[:zip]
-        hash[:country]           = address[:country] if address[:country]
-        hash
+        hash[:city]              = address[:city]
+        hash[:stateOrProvince]   = address[:state]
+        hash[:postalCode]        = address[:zip]
+        hash[:country]           = address[:country]
+        hash.keep_if { |_, v| v }
       end
 
       def amount_hash(money, currency)
@@ -300,26 +337,60 @@ module ActiveMerchant #:nodoc:
 
       def payment_request(money, options)
         hash = {}
-        hash[:merchantAccount]  = @options[:merchant]
-        hash[:reference]        = options[:order_id] if options[:order_id]
-        hash[:shopperEmail]     = options[:email] if options[:email]
-        hash[:shopperIP]        = options[:ip] if options[:ip]
-        hash[:shopperReference] = options[:customer] if options[:customer]
-        hash[:shopperInteraction] = options[:shopper_interaction] if options[:shopper_interaction]
+        hash[:merchantAccount]    = @options[:merchant]
+        hash[:reference]          = options[:order_id]
+        hash[:shopperEmail]       = options[:email]
+        hash[:shopperIP]          = options[:ip]
+        hash[:shopperReference]   = options[:customer]
+        hash[:shopperInteraction] = options[:shopper_interaction]
+        hash[:deviceFingerprint]  = options[:device_fingerprint]
         hash.keep_if { |_, v| v }
       end
 
       def store_request(options)
         hash = {}
         hash[:merchantAccount]  = @options[:merchant]
-        hash[:shopperEmail]     = options[:email] if options[:email]
+        hash[:shopperEmail]     = options[:email]
         hash[:shopperReference] = options[:customer] if options[:customer]
         hash.keep_if { |_, v| v }
       end
 
       def add_3ds(post, options)
-        post[:additionalData] = { executeThreeD: 'true' }
-        post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
+        if three_ds_2_options = options[:three_ds_2]
+          device_channel = three_ds_2_options[:channel]
+          if device_channel == 'app'
+            post[:threeDS2RequestData] = { deviceChannel: device_channel }
+          else
+            add_browser_info(three_ds_2_options[:browser_info], post)
+            post[:threeDS2RequestData] = { deviceChannel: device_channel, notificationURL: three_ds_2_options[:notification_url] }
+          end
+
+          if options.has_key?(:execute_threed)
+            post[:additionalData] ||= {}
+            post[:additionalData][:executeThreeD] = options[:execute_threed]
+            post[:additionalData][:scaExemption] = options[:sca_exemption] if options[:sca_exemption]
+          end
+        else
+          return unless options[:execute_threed] || options[:threed_dynamic]
+
+          post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
+          post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
+        end
+      end
+
+      def add_browser_info(browser_info, post)
+        return unless browser_info
+
+        post[:browserInfo] = {
+          acceptHeader: browser_info[:accept_header],
+          colorDepth: browser_info[:depth],
+          javaEnabled: browser_info[:java],
+          language: browser_info[:language],
+          screenHeight: browser_info[:height],
+          screenWidth: browser_info[:width],
+          timeZoneOffset: browser_info[:timezone],
+          userAgent: browser_info[:user_agent]
+        }
       end
     end
   end

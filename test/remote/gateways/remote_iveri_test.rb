@@ -24,6 +24,16 @@ class RemoteIveriTest < Test::Unit::TestCase
     assert_equal '100', response.params['amount']
   end
 
+  def test_successful_purchase_with_iveri_url
+    credentials = fixtures(:iveri_url).merge(url_override: 'iveri')
+    @gateway = IveriGateway.new(credentials)
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '100', response.params['amount']
+  end
+
   def test_successful_purchase_with_more_options
     options = {
       ip: '127.0.0.1',
@@ -47,7 +57,6 @@ class RemoteIveriTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded', response.message
   end
-
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @bad_card, @options)
@@ -74,7 +83,7 @@ class RemoteIveriTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -97,7 +106,7 @@ class RemoteIveriTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -124,13 +133,21 @@ class RemoteIveriTest < Test::Unit::TestCase
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
+    # authorization portion is successful since we use that as the main response
     assert_success response
+    assert_equal 'Authorisation', response.responses[0].params['transaction_command']
+    assert_equal '0', response.responses[0].params['result_status']
+    # authorizationreversal portion is successful
+    assert_success response.responses.last
+    assert_equal 'AuthorisationReversal', response.responses[1].params['transaction_command']
+    assert_equal '0', response.responses[1].params['result_status']
     assert_equal 'Succeeded', response.message
   end
 
   def test_failed_verify
     response = @gateway.verify(@bad_card, @options)
-    assert_failure response
+    assert_failure response # assert failure of authorization portion
+    assert_failure response.responses.last # assert failure of authorisationvoid portion
     assert_includes ['Denied', 'Hot card', 'Please call'], response.message
   end
 
@@ -162,4 +179,35 @@ class RemoteIveriTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:cert_id], transcript)
   end
 
+  def test_successful_authorize_with_3ds_v1_options
+    @options[:three_d_secure] = {
+      version: '1.0',
+      cavv: 'FHhirTpN0Aefs4rIzTlheBByD77J',
+      eci: '02',
+      xid: SecureRandom.alphanumeric(28),
+      enrolled: 'true',
+      authentication_response_status: 'Y'
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_authorize_with_3ds_v2_options
+    @options[:three_d_secure] = {
+      version: '2.1.0',
+      cavv: 'FHhirTpN0Aefs4rIzTlheBByD77J',
+      eci: '02',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'Y',
+      authentication_response_status: 'Y'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '100', response.params['amount']
+  end
 end

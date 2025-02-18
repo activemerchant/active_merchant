@@ -40,6 +40,12 @@ class RemoteBpointTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_more_options
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ crn1: 'ref' }))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -63,7 +69,7 @@ class RemoteBpointTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -84,7 +90,7 @@ class RemoteBpointTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -97,12 +103,12 @@ class RemoteBpointTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert void = @gateway.void(@amount, auth.authorization)
+    assert void = @gateway.void(auth.authorization, amount: @amount)
     assert_success void
   end
 
   def test_failed_void
-    response = @gateway.void(@amount, '')
+    response = @gateway.void('', amount: @amount)
     assert_failure response
   end
 

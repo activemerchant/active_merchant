@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class CreditcallGateway < Gateway
       include Empty
 
@@ -10,50 +10,50 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://www.creditcall.com'
       self.display_name = 'Creditcall'
-      
+
       CVV_CODE = {
         'matched' => 'M',
         'notmatched' => 'N',
         'notchecked' => 'P',
         'partialmatch' => 'N'
       }
-      
+
       AVS_CODE = {
         'matched;matched' => 'D',
-        'matched;notchecked' =>'B',
+        'matched;notchecked' => 'B',
         'matched;notmatched' => 'A',
         'matched;partialmatch' => 'A',
         'notchecked;matched' => 'P',
-        'notchecked;notchecked' =>'I',
+        'notchecked;notchecked' => 'I',
         'notchecked;notmatched' => 'I',
         'notchecked;partialmatch' => 'I',
         'notmatched;matched' => 'W',
-        'notmatched;notchecked' =>'C',
+        'notmatched;notchecked' => 'C',
         'notmatched;notmatched' => 'C',
         'notmatched;partialmatch' => 'C',
         'partialmatched;matched' => 'W',
-        'partialmatched;notchecked' =>'C',
+        'partialmatched;notchecked' => 'C',
         'partialmatched;notmatched' => 'C',
         'partialmatched;partialmatch' => 'C'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :terminal_id, :transaction_key)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         multi_response = MultiResponse.run do |r|
           r.process { authorize(money, payment_method, options) }
           r.process { capture(money, r.authorization, options) }
         end
 
-        merged_params = multi_response.responses.map { |r| r.params }.reduce({}, :merge)
-        
+        merged_params = multi_response.responses.map(&:params).reduce({}, :merge)
+
         Response.new(
           multi_response.primary_response.success?,
           multi_response.primary_response.message,
@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         request = build_xml_request do |xml|
           add_transaction_details(xml, money, nil, 'Auth', options)
           add_terminal_details(xml, options)
@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         request = build_xml_request do |xml|
           add_transaction_details(xml, money, authorization, 'Conf', options)
           add_terminal_details(xml, options)
@@ -85,7 +85,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         request = build_xml_request do |xml|
           add_transaction_details(xml, money, authorization, 'Refund', options)
           add_terminal_details(xml, options)
@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         request = build_xml_request do |xml|
           add_transaction_details(xml, nil, authorization, 'Void', options)
           add_terminal_details(xml, options)
@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -144,24 +144,24 @@ module ActiveMerchant #:nodoc:
         builder.to_xml
       end
 
-      def add_transaction_details(xml, amount, authorization, type, options={})
+      def add_transaction_details(xml, amount, authorization, type, options = {})
         xml.TransactionDetails do
           xml.MessageType type
-          xml.Amount(unit: 'Minor'){ xml.text(amount) } if amount
+          xml.Amount(unit: 'Minor') { xml.text(amount) } if amount
           xml.CardEaseReference authorization if authorization
           xml.VoidReason '01' if type == 'Void'
         end
       end
 
-      def add_terminal_details(xml, options={})
+      def add_terminal_details(xml, options = {})
         xml.TerminalDetails do
           xml.TerminalID @options[:terminal_id]
           xml.TransactionKey @options[:transaction_key]
-          xml.Software(version: 'SoftwareVersion'){ xml.text('SoftwareName') }
+          xml.Software(version: 'SoftwareVersion') { xml.text('SoftwareName') }
         end
       end
 
-      def add_card_details(xml, payment_method, options={})
+      def add_card_details(xml, payment_method, options = {})
         xml.CardDetails do
           xml.Manual(type: manual_type(options)) do
             xml.PAN payment_method.number
@@ -175,10 +175,11 @@ module ActiveMerchant #:nodoc:
 
       def add_additional_verification(xml, options)
         return unless (options[:verify_zip].to_s == 'true') || (options[:verify_address].to_s == 'true')
+
         if address = options[:billing_address]
           xml.AdditionalVerification do
-            xml.Zip address[:zip] if options[:verify_zip].to_s  == 'true'
-            xml.Address address[:address1] if options[:verify_address].to_s  == 'true'
+            xml.Zip address[:zip] if options[:verify_zip].to_s == 'true'
+            xml.Address address[:address1] if options[:verify_address].to_s == 'true'
           end
         end
       end
@@ -213,7 +214,6 @@ module ActiveMerchant #:nodoc:
             childnode_to_response(response, childnode)
           end
         end
-
 
         response
       end

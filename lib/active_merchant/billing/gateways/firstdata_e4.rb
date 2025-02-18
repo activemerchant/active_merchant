@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class FirstdataE4Gateway < Gateway
       # TransArmor support requires v11 or lower
       self.test_url = 'https://api.demo.globalgatewaye4.firstdata.com/transaction/v11'
@@ -22,28 +22,28 @@ module ActiveMerchant #:nodoc:
 
       SUCCESS = 'true'
 
-      SENSITIVE_FIELDS = [:verification_str2, :expiry_date, :card_number]
+      SENSITIVE_FIELDS = %i[verification_str2 expiry_date card_number]
 
       BRANDS = {
-        :visa => 'Visa',
-        :master => 'Mastercard',
-        :american_express => 'American Express',
-        :jcb => 'JCB',
-        :discover => 'Discover'
+        visa: 'Visa',
+        master: 'Mastercard',
+        american_express: 'American Express',
+        jcb: 'JCB',
+        discover: 'Discover'
       }
 
-      E4_BRANDS = BRANDS.merge({:mastercard => 'Mastercard'})
+      E4_BRANDS = BRANDS.merge({ mastercard: 'Mastercard' })
 
       DEFAULT_ECI = '07'
 
       self.supported_cardtypes = BRANDS.keys
-      self.supported_countries = ['CA', 'US']
+      self.supported_countries = %w[CA US]
       self.default_currency = 'USD'
       self.homepage_url = 'http://www.firstdata.com'
       self.display_name = 'FirstData Global Gateway e4'
 
       STANDARD_ERROR_CODE_MAPPING = {
-      # Bank error codes: https://firstdata.zendesk.com/entries/471297-First-Data-Global-Gateway-e4-Bank-Response-Codes
+        # Bank error codes: https://firstdata.zendesk.com/entries/471297-First-Data-Global-Gateway-e4-Bank-Response-Codes
         '201' => STANDARD_ERROR_CODE[:incorrect_number],
         '531' => STANDARD_ERROR_CODE[:invalid_cvc],
         '503' => STANDARD_ERROR_CODE[:invalid_cvc],
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
         '401' => STANDARD_ERROR_CODE[:call_issuer],
         '402' => STANDARD_ERROR_CODE[:call_issuer],
         '501' => STANDARD_ERROR_CODE[:pickup_card],
-      # Ecommerce error codes -- https://firstdata.zendesk.com/entries/451980-ecommerce-response-codes-etg-codes
+        # Ecommerce error codes -- https://firstdata.zendesk.com/entries/451980-ecommerce-response-codes-etg-codes
         '22' => STANDARD_ERROR_CODE[:invalid_number],
         '25' => STANDARD_ERROR_CODE[:invalid_expiry_date],
         '31' => STANDARD_ERROR_CODE[:incorrect_cvc],
@@ -141,12 +141,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(%r((<Card_Number>).+(</Card_Number>)), '\1[FILTERED]\2')
-          .gsub(%r((<VerificationStr2>).+(</VerificationStr2>)), '\1[FILTERED]\2')
-          .gsub(%r((<Password>).+(</Password>))i, '\1[FILTERED]\2')
-          .gsub(%r((<CAVV>).+(</CAVV>)), '\1[FILTERED]\2')
-          .gsub(%r((Card Number : ).*\d)i, '\1[FILTERED]')
+        transcript.
+          gsub(%r((<Card_Number>).+(</Card_Number>)), '\1[FILTERED]\2').
+          gsub(%r((<VerificationStr2>).+(</VerificationStr2>)), '\1[FILTERED]\2').
+          gsub(%r((<Password>).+(</Password>))i, '\1[FILTERED]\2').
+          gsub(%r((<CAVV>).+(</CAVV>)), '\1[FILTERED]\2').
+          gsub(%r((Card Number : ).*\d)i, '\1[FILTERED]')
       end
 
       def supports_network_tokenization?
@@ -217,7 +217,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_identification(xml, identification)
-        authorization_num, transaction_tag, _ = identification.split(';')
+        authorization_num, transaction_tag, = identification.split(';')
 
         xml.tag! 'Authorization_Num', authorization_num
         xml.tag! 'Transaction_Tag', transaction_tag
@@ -245,23 +245,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card_eci(xml, credit_card, options)
-        eci = if credit_card.is_a?(NetworkTokenizationCreditCard) && credit_card.source == :apple_pay && card_brand(credit_card) == 'discover'
-          # Discover requires any Apple Pay transaction, regardless of in-app
-          # or web, and regardless of the ECI contained in the PKPaymentToken,
-          # to have an ECI value explicitly of 04.
-          '04'
-        else
-          (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
-        end
+        eci =
+          if credit_card.is_a?(NetworkTokenizationCreditCard) && credit_card.source == :apple_pay && card_brand(credit_card) == 'discover'
+            # Discover requires any Apple Pay transaction, regardless of in-app
+            # or web, and regardless of the ECI contained in the PKPaymentToken,
+            # to have an ECI value explicitly of 04.
+            '04'
+          else
+            (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
+          end
 
-        xml.tag! 'Ecommerce_Flag', eci.to_s =~ /^[0-9]+$/ ? eci.to_s.rjust(2, '0') : eci
+        xml.tag! 'Ecommerce_Flag', /^[0-9]+$/.match?(eci.to_s) ? eci.to_s.rjust(2, '0') : eci
       end
 
       def add_credit_card_verification_strings(xml, credit_card, options)
         address = options[:billing_address] || options[:address]
         if address
           address_values = []
-          [:address1, :zip, :city, :state, :country].each { |part| address_values << address[part].to_s }
+          %i[address1 zip city state country].each { |part| address_values << address[part].to_s.tr("\r\n", ' ').strip }
           xml.tag! 'VerificationStr1', address_values.join('|')
         end
 
@@ -297,11 +298,12 @@ module ActiveMerchant #:nodoc:
       def add_credit_card_token(xml, store_authorization, options)
         params = store_authorization.split(';')
         credit_card = CreditCard.new(
-          :brand      => params[1],
-          :first_name => params[2],
-          :last_name  => params[3],
-          :month      => params[4],
-          :year       => params[5])
+          brand: params[1],
+          first_name: params[2],
+          last_name: params[3],
+          month: params[4],
+          year: params[5]
+        )
 
         xml.tag! 'TransarmorToken', params[0]
         xml.tag! 'Expiry_Date', expdate(credit_card)
@@ -352,12 +354,15 @@ module ActiveMerchant #:nodoc:
           response = parse_error(e.response)
         end
 
-        Response.new(successful?(response), message_from(response), response,
-          :test => test?,
-          :authorization => successful?(response) ? response_authorization(action, response, credit_card) : '',
-          :avs_result => {:code => response[:avs]},
-          :cvv_result => response[:cvv2],
-          :error_code => standard_error_code(response)
+        Response.new(
+          successful?(response),
+          message_from(response),
+          response,
+          test: test?,
+          authorization: successful?(response) ? response_authorization(action, response, credit_card) : '',
+          avs_result: { code: response[:avs] },
+          cvv_result: response[:cvv2],
+          error_code: standard_error_code(response)
         )
       end
 
@@ -394,7 +399,7 @@ module ActiveMerchant #:nodoc:
             credit_card.last_name,
             credit_card.month,
             credit_card.year
-            ].map { |value| value.to_s.gsub(/;/, '') }.join(';')
+          ].map { |value| value.to_s.delete(';') }.join(';')
         else
           raise StandardError, "TransArmor support is not enabled on your #{display_name} account"
         end
@@ -406,9 +411,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if(response[:faultcode] && response[:faultstring])
+        if response[:faultcode] && response[:faultstring]
           response[:faultstring]
-        elsif(response[:error_number] && response[:error_number] != '0')
+        elsif response[:error_number] && response[:error_number] != '0'
           response[:error_description]
         else
           result = (response[:exact_message] || '')
@@ -419,10 +424,10 @@ module ActiveMerchant #:nodoc:
 
       def parse_error(error)
         {
-          :transaction_approved => 'false',
-          :error_number => error.code,
-          :error_description => error.body,
-          :ecommerce_error_code => error.body.gsub(/[^\d]/, '')
+          transaction_approved: 'false',
+          error_number: error.code,
+          error_description: error.body,
+          ecommerce_error_code: error.body.gsub(/[^\d]/, '')
         }
       end
 
@@ -438,7 +443,7 @@ module ActiveMerchant #:nodoc:
           parse_elements(response, root)
         end
 
-        response.delete_if{ |k,v| SENSITIVE_FIELDS.include?(k) }
+        response.delete_if { |k, _v| SENSITIVE_FIELDS.include?(k) }
       end
 
       def parse_elements(response, root)

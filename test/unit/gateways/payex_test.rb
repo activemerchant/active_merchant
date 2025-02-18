@@ -3,15 +3,15 @@ require 'test_helper'
 class PayexTest < Test::Unit::TestCase
   def setup
     @gateway = PayexGateway.new(
-                 :account => 'account',
-                 :encryption_key => 'encryption_key'
-               )
+      account: 'account',
+      encryption_key: 'encryption_key'
+    )
 
     @credit_card = credit_card
     @amount = 1000
 
     @options = {
-      :order_id => '1234',
+      order_id: '1234'
     }
   end
 
@@ -98,7 +98,7 @@ class PayexTest < Test::Unit::TestCase
 
   def test_successful_store
     @gateway.expects(:ssl_post).times(3).returns(successful_store_response, successful_initialize_response, successful_purchase_response)
-    assert response = @gateway.store(@credit_card, @options.merge({merchant_ref: '9876'}))
+    assert response = @gateway.store(@credit_card, @options.merge({ merchant_ref: '9876' }))
     assert_success response
     assert_equal 'OK', response.message
     assert_equal 'bcea4ac8d1f44640bff7a8c93caa249c', response.authorization
@@ -115,7 +115,7 @@ class PayexTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_stored_card
     @gateway.expects(:ssl_post).returns(successful_autopay_response)
-    assert response = @gateway.purchase(@amount, 'fakeauth', @options.merge({order_id: '5678'}))
+    assert response = @gateway.purchase(@amount, 'fakeauth', @options.merge({ order_id: '5678' }))
     assert_success response
     assert_equal 'OK', response.message
     assert_equal '2624657', response.authorization
@@ -125,7 +125,7 @@ class PayexTest < Test::Unit::TestCase
   private
 
   def successful_initialize_response
-    %q{<?xml version="1.0" encoding="utf-8"?>
+    '<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
           <Initialize8Response xmlns="http://external.payex.com/PxOrder/">
@@ -133,12 +133,12 @@ class PayexTest < Test::Unit::TestCase
           </Initialize8Response>
         </soap:Body>
       </soap:Envelope>
-    }
+    '
   end
 
   # Place raw successful response from gateway here
   def successful_purchase_response
-    %q{<?xml version="1.0" encoding="utf-8"?>
+    '<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
           <PurchaseCCResponse xmlns="http://confined.payex.com/PxOrder/">
@@ -146,11 +146,11 @@ class PayexTest < Test::Unit::TestCase
           </PurchaseCCResponse>
         </soap:Body>
       </soap:Envelope>
-    }
+    '
   end
 
   def failed_purchase_response
-    %q{<?xml version="1.0" encoding="utf-8"?>
+    '<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
           <PurchaseCCResponse xmlns="http://confined.payex.com/PxOrder/">
@@ -159,11 +159,11 @@ class PayexTest < Test::Unit::TestCase
           </PurchaseCCResponse>
         </soap:Body>
       </soap:Envelope>
-    }
+    '
   end
 
   def successful_authorize_response
-    %q{<?xml version="1.0" encoding="utf-8"?>
+    '<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
           <PurchaseCCResponse xmlns="http://confined.payex.com/PxOrder/">
@@ -171,11 +171,11 @@ class PayexTest < Test::Unit::TestCase
           </PurchaseCCResponse>
         </soap:Body>
       </soap:Envelope>
-    }
+    '
   end
 
   def successful_capture_response
-    %q{<?xml version="1.0" encoding="utf-8"?>
+    '<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
           <Capture5Response xmlns="http://external.payex.com/PxOrder/">
@@ -183,11 +183,11 @@ class PayexTest < Test::Unit::TestCase
           </Capture5Response>
         </soap:Body>
       </soap:Envelope>
-    }
+    '
   end
 
   def failed_capture_response
-    %q{<?xml version="1.0" encoding="utf-8"?>
+    '<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
           <Capture5Response xmlns="http://external.payex.com/PxOrder/">
@@ -195,11 +195,11 @@ class PayexTest < Test::Unit::TestCase
           </Capture5Response>
         </soap:Body>
       </soap:Envelope>
-    }
+    '
   end
 
   def successful_void_response
-    %q{<?xml version="1.0" encoding="utf-8"?>
+    '<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
           <Cancel2Response xmlns="http://external.payex.com/PxOrder/">
@@ -207,11 +207,11 @@ class PayexTest < Test::Unit::TestCase
           </Cancel2Response>
         </soap:Body>
       </soap:Envelope>
-    }
+    '
   end
 
   def unsuccessful_void_response
-    %q{<?xml version="1.0" encoding="utf-8"?>
+    '<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
           <Cancel2Response xmlns="http://external.payex.com/PxOrder/">
@@ -219,11 +219,11 @@ class PayexTest < Test::Unit::TestCase
           </Cancel2Response>
         </soap:Body>
       </soap:Envelope>
-    }
+    '
   end
 
   def successful_refund_response
-    %q{<?xml version="1.0" encoding="utf-8"?>
+    '<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
           <Credit5Response xmlns="http://external.payex.com/PxOrder/">
@@ -231,11 +231,11 @@ class PayexTest < Test::Unit::TestCase
           </Credit5Response>
         </soap:Body>
       </soap:Envelope>
-    }
+    '
   end
 
   def unsuccessful_refund_response
-    %q{<?xml version="1.0" encoding="utf-8"?>
+    '<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
           <Credit5Response xmlns="http://external.payex.com/PxOrder/">
@@ -243,11 +243,11 @@ class PayexTest < Test::Unit::TestCase
           </Credit5Response>
         </soap:Body>
       </soap:Envelope>
-    }
+    '
   end
 
   def successful_store_response
-    %q{<?xml version="1.0" encoding="utf-8"?>
+    '<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
           <CreateAgreement3Response xmlns="http://external.payex.com/PxAgreement/">
@@ -255,11 +255,11 @@ class PayexTest < Test::Unit::TestCase
           </CreateAgreement3Response>
         </soap:Body>
       </soap:Envelope>
-    }
+    '
   end
 
   def successful_unstore_response
-    %q{<?xml version="1.0" encoding="utf-8"?>
+    '<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
           <DeleteAgreementResponse xmlns="http://external.payex.com/PxAgreement/">
@@ -267,11 +267,11 @@ class PayexTest < Test::Unit::TestCase
           </DeleteAgreementResponse>
         </soap:Body>
       </soap:Envelope>
-    }
+    '
   end
 
   def successful_autopay_response
-    %q{<?xml version="1.0" encoding="utf-8"?>
+    '<?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
           <AutoPay3Response xmlns="http://external.payex.com/PxAgreement/">
@@ -279,6 +279,6 @@ class PayexTest < Test::Unit::TestCase
           </AutoPay3Response>
         </soap:Body>
       </soap:Envelope>
-    }
+    '
   end
 end

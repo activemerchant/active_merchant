@@ -1,14 +1,14 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class S5Gateway < Gateway
       self.test_url = 'https://test.ctpe.io/payment/ctpe'
       self.live_url = 'https://ctpe.io/payment/ctpe'
 
       self.supported_countries = ['DK']
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :maestro]
+      self.supported_cardtypes = %i[visa master maestro]
 
       self.homepage_url = 'http://www.s5.dk/'
       self.display_name = 'S5'
@@ -22,12 +22,12 @@ module ActiveMerchant #:nodoc:
         'store'     => 'CC.RG'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :sender, :channel, :login, :password)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         request = build_xml_request do |xml|
           add_identification(xml, options)
           add_payment(xml, money, 'sale', options)
@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         request = build_xml_request do |xml|
           add_identification(xml, options, authorization)
           add_payment(xml, money, 'refund', options)
@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         request = build_xml_request do |xml|
           add_identification(xml, options)
           add_payment(xml, money, 'authonly', options)
@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         request = build_xml_request do |xml|
           add_identification(xml, options, authorization)
           add_payment(xml, money, 'capture', options)
@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         request = build_xml_request do |xml|
           add_identification(xml, options, authorization)
           add_payment(xml, nil, 'void', options)
@@ -89,13 +89,12 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
-
 
       def supports_scrubbing?
         true
@@ -129,21 +128,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_account(xml, payment_method)
-        if !payment_method.respond_to?(:number)
-          xml.Account(registration: payment_method)
-        else
+        if payment_method.respond_to?(:number)
           xml.Account do
             xml.Number        payment_method.number
             xml.Holder        "#{payment_method.first_name} #{payment_method.last_name}"
             xml.Brand         payment_method.brand
             xml.Expiry(year: payment_method.year, month: payment_method.month)
-            xml.Verification  payment_method.verification_value
+            xml.Verification payment_method.verification_value
           end
+        else
+          xml.Account(registration: payment_method)
         end
       end
 
       def add_customer(xml, creditcard, options)
         return unless creditcard.respond_to?(:number)
+
         address = options[:billing_address]
         xml.Customer do
           xml.Contact do
@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        results  = {}
+        results = {}
         xml = Nokogiri::XML(body)
         resp = xml.xpath('//Response/Transaction/Identification')
         resp.children.each do |element|

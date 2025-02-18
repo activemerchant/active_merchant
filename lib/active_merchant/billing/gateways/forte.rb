@@ -1,7 +1,7 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ForteGateway < Gateway
       include Empty
 
@@ -10,41 +10,45 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://www.forte.net'
       self.display_name = 'Forte'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_key, :secret, :location_id, :account_id)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         post = {}
         add_amount(post, money, options)
+        add_service_fee(post, options)
         add_invoice(post, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_billing_address(post, payment_method, options)
         add_shipping_address(post, options)
+        add_xdata(post, options)
         post[:action] = 'sale'
 
         commit(:post, post)
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         post = {}
         add_amount(post, money, options)
+        add_service_fee(post, options)
         add_invoice(post, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_billing_address(post, payment_method, options)
         add_shipping_address(post, options)
+        add_xdata(post, options)
         post[:action] = 'authorize'
 
         commit(:post, post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         post[:transaction_id] = transaction_id_from(authorization)
         post[:authorization_code] = authorization_code_from(authorization) || ''
@@ -53,18 +57,18 @@ module ActiveMerchant #:nodoc:
         commit(:put, post)
       end
 
-      def credit(money, payment_method, options={})
+      def credit(money, payment_method, options = {})
         post = {}
         add_amount(post, money, options)
         add_invoice(post, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_billing_address(post, payment_method, options)
         post[:action] = 'disburse'
 
         commit(:post, post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         add_amount(post, money, options)
         post[:original_transaction_id] = transaction_id_from(authorization)
@@ -74,7 +78,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         post[:transaction_id] = transaction_id_from(authorization)
         post[:authorization_code] = authorization_code_from(authorization)
@@ -83,7 +87,7 @@ module ActiveMerchant #:nodoc:
         commit(:put, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -116,6 +120,20 @@ module ActiveMerchant #:nodoc:
         post[:authorization_amount] = amount(money)
       end
 
+      def add_service_fee(post, options)
+        post[:service_fee_amount] = options[:service_fee_amount] if options[:service_fee_amount]
+      end
+
+      def add_xdata(post, options)
+        post[:xdata] = {}
+        if xdata = options[:xdata]
+          (1..9).each do |n|
+            field = "xdata_#{n}".to_sym
+            post[:xdata][field] = xdata[field] if xdata[field]
+          end
+        end
+      end
+
       def add_billing_address(post, payment, options)
         post[:billing_address] = {}
         if address = options[:billing_address] || options[:address]
@@ -130,17 +148,14 @@ module ActiveMerchant #:nodoc:
           post[:billing_address][:physical_address][:locality] = address[:city] if address[:city]
         end
 
-        if empty?(post[:billing_address][:first_name]) && payment.first_name
-          post[:billing_address][:first_name] = payment.first_name
-        end
+        post[:billing_address][:first_name] = payment.first_name if empty?(post[:billing_address][:first_name]) && payment.first_name
 
-        if empty?(post[:billing_address][:last_name]) && payment.last_name
-          post[:billing_address][:last_name] = payment.last_name
-        end
+        post[:billing_address][:last_name] = payment.last_name if empty?(post[:billing_address][:last_name]) && payment.last_name
       end
 
       def add_shipping_address(post, options)
         return unless options[:shipping_address]
+
         address = options[:shipping_address]
 
         post[:shipping_address] = {}
@@ -154,21 +169,22 @@ module ActiveMerchant #:nodoc:
         post[:shipping_address][:physical_address][:locality] = address[:city] if address[:city]
       end
 
-      def add_payment_method(post, payment_method)
+      def add_payment_method(post, payment_method, options)
         if payment_method.respond_to?(:brand)
           add_credit_card(post, payment_method)
         else
-          add_echeck(post, payment_method)
+          add_echeck(post, payment_method, options)
         end
       end
 
-      def add_echeck(post, payment)
+      def add_echeck(post, payment, options)
         post[:echeck] = {}
         post[:echeck][:account_holder] = payment.name
         post[:echeck][:account_number] = payment.account_number
         post[:echeck][:routing_number] = payment.routing_number
         post[:echeck][:account_type] = payment.account_type
         post[:echeck][:check_number] = payment.number
+        post[:echeck][:sec_code] = options[:sec_code] || 'PPD'
       end
 
       def add_credit_card(post, payment)
@@ -191,7 +207,7 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(response, parameters),
           avs_result: AVSResult.new(code: response['response']['avs_result']),
           cvv_result: CVVResult.new(response['response']['cvv_code']),
           test: test?
@@ -219,8 +235,12 @@ module ActiveMerchant #:nodoc:
         response['response']['response_desc']
       end
 
-      def authorization_from(response)
-        [response.try(:[], 'transaction_id'), response.try(:[], 'response').try(:[], 'authorization_code')].join('#')
+      def authorization_from(response, parameters)
+        if parameters[:action] == 'capture'
+          [response['transaction_id'], response.dig('response', 'authorization_code'), parameters[:transaction_id], parameters[:authorization_code]].join('#')
+        else
+          [response['transaction_id'], response.dig('response', 'authorization_code')].join('#')
+        end
       end
 
       def endpoint
@@ -253,13 +273,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_code_from(authorization)
-        _, authorization_code = split_authorization(authorization)
-        authorization_code
+        _, authorization_code, _, original_auth_authorization_code = split_authorization(authorization)
+        original_auth_authorization_code.present? ? original_auth_authorization_code : authorization_code
       end
 
       def transaction_id_from(authorization)
-        transaction_id, _ = split_authorization(authorization)
-        transaction_id
+        transaction_id, _, original_auth_transaction_id, = split_authorization(authorization)
+        original_auth_transaction_id.present? ? original_auth_transaction_id : transaction_id
       end
     end
   end

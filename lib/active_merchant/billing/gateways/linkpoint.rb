@@ -1,8 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # Initialization Options
     # :login                Your store number
     # :pem                  The text of your linkpoint PEM file. Note
@@ -131,7 +130,7 @@ module ActiveMerchant #:nodoc:
       self.live_url  = 'https://secure.linkpt.net:1129/'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
       self.homepage_url = 'http://www.linkpoint.com/'
       self.display_name = 'LinkPoint'
 
@@ -139,8 +138,8 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login)
 
         @options = {
-          :result => 'LIVE',
-          :pem => LinkpointGateway.pem_file
+          result: 'LIVE',
+          pem: LinkpointGateway.pem_file
         }.update(options)
 
         raise ArgumentError, "You need to pass in your pem file using the :pem parameter or set it globally using ActiveMerchant::Billing::LinkpointGateway.pem_file = File.read( File.dirname(__FILE__) + '/../mycert.pem' ) or similar" if @options[:pem].blank?
@@ -167,28 +166,28 @@ module ActiveMerchant #:nodoc:
       # :threshold              Tells how many times to retry the transaction (if it fails) before contacting the merchant.
       # :comments               Uh... comments
       #
-      def recurring(money, creditcard, options={})
+      def recurring(money, creditcard, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily], :installments, :order_id )
+        requires!(options, %i[periodicity bimonthly monthly biweekly weekly yearly daily], :installments, :order_id)
 
         options.update(
-          :ordertype => 'SALE',
-          :action => options[:action] || 'SUBMIT',
-          :installments => options[:installments] || 12,
-          :startdate => options[:startdate] || 'immediate',
-          :periodicity => options[:periodicity].to_s || 'monthly',
-          :comments => options[:comments] || nil,
-          :threshold => options[:threshold] || 3
+          ordertype: 'SALE',
+          action: options[:action] || 'SUBMIT',
+          installments: options[:installments] || 12,
+          startdate: options[:startdate] || 'immediate',
+          periodicity: options[:periodicity].to_s || 'monthly',
+          comments: options[:comments] || nil,
+          threshold: options[:threshold] || 3
         )
         commit(money, creditcard, options)
       end
 
       # Buy the thing
-      def purchase(money, creditcard, options={})
+      def purchase(money, creditcard, options = {})
         requires!(options, :order_id)
         options.update(
-          :ordertype => 'SALE'
+          ordertype: 'SALE'
         )
         commit(money, creditcard, options)
       end
@@ -201,7 +200,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         requires!(options, :order_id)
         options.update(
-          :ordertype => 'PREAUTH'
+          ordertype: 'PREAUTH'
         )
         commit(money, creditcard, options)
       end
@@ -214,8 +213,8 @@ module ActiveMerchant #:nodoc:
       #
       def capture(money, authorization, options = {})
         options.update(
-          :order_id => authorization,
-          :ordertype => 'POSTAUTH'
+          order_id: authorization,
+          ordertype: 'POSTAUTH'
         )
         commit(money, nil, options)
       end
@@ -223,8 +222,8 @@ module ActiveMerchant #:nodoc:
       # Void a previous transaction
       def void(identification, options = {})
         options.update(
-          :order_id => identification,
-          :ordertype => 'VOID'
+          order_id: identification,
+          ordertype: 'VOID'
         )
         commit(nil, nil, options)
       end
@@ -236,8 +235,8 @@ module ActiveMerchant #:nodoc:
       #
       def refund(money, identification, options = {})
         options.update(
-          :ordertype => 'CREDIT',
-          :order_id => identification
+          ordertype: 'CREDIT',
+          order_id: identification
         )
         commit(money, nil, options)
       end
@@ -259,15 +258,19 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       # Commit the transaction by posting the XML file to the LinkPoint server
       def commit(money, creditcard, options = {})
         response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(money, creditcard, options)))
 
-        Response.new(successful?(response), response[:message], response,
-          :test => test?,
-          :authorization => response[:ordernum],
-          :avs_result => { :code => response[:avs].to_s[2,1] },
-          :cvv_result => response[:avs].to_s[3,1]
+        Response.new(
+          successful?(response),
+          response[:message],
+          response,
+          test: test?,
+          authorization: response[:ordernum],
+          avs_result: { code: response[:avs].to_s[2, 1] },
+          cvv_result: response[:avs].to_s[3, 1]
         )
       end
 
@@ -311,11 +314,11 @@ module ActiveMerchant #:nodoc:
               options_element = item_element.add_element('options')
               for option in value
                 opt_element = options_element.add_element('option')
-                opt_element.add_element('name').text =  option[:name]   unless option[:name].blank?
-                opt_element.add_element('value').text =  option[:value]   unless option[:value].blank?
+                opt_element.add_element('name').text = option[:name] unless option[:name].blank?
+                opt_element.add_element('value').text = option[:value] unless option[:value].blank?
               end
             else
-              item_element.add_element(key.to_s).text =  item[key].to_s unless item[key].blank?
+              item_element.add_element(key.to_s).text = item[key].to_s unless item[key].blank?
             end
           end
         end
@@ -324,57 +327,56 @@ module ActiveMerchant #:nodoc:
       # Set up the parameters hash just once so we don't have to do it
       # for every action.
       def parameters(money, creditcard, options = {})
-
         params = {
-          :payment => {
-            :subtotal => amount(options[:subtotal]),
-            :tax => amount(options[:tax]),
-            :vattax => amount(options[:vattax]),
-            :shipping => amount(options[:shipping]),
-            :chargetotal => amount(money)
+          payment: {
+            subtotal: amount(options[:subtotal]),
+            tax: amount(options[:tax]),
+            vattax: amount(options[:vattax]),
+            shipping: amount(options[:shipping]),
+            chargetotal: amount(money)
           },
-          :transactiondetails => {
-            :transactionorigin => options[:transactionorigin] || 'ECI',
-            :oid => options[:order_id],
-            :ponumber => options[:ponumber],
-            :taxexempt => options[:taxexempt],
-            :terminaltype => options[:terminaltype],
-            :ip => options[:ip],
-            :reference_number => options[:reference_number],
-            :recurring => options[:recurring] || 'NO',  #DO NOT USE if you are using the periodic billing option.
-            :tdate => options[:tdate]
+          transactiondetails: {
+            transactionorigin: options[:transactionorigin] || 'ECI',
+            oid: options[:order_id],
+            ponumber: options[:ponumber],
+            taxexempt: options[:taxexempt],
+            terminaltype: options[:terminaltype],
+            ip: options[:ip],
+            reference_number: options[:reference_number],
+            recurring: options[:recurring] || 'NO', # DO NOT USE if you are using the periodic billing option.
+            tdate: options[:tdate]
           },
-          :orderoptions => {
-            :ordertype => options[:ordertype],
-            :result => @options[:result]
+          orderoptions: {
+            ordertype: options[:ordertype],
+            result: @options[:result]
           },
-          :periodic => {
-            :action => options[:action],
-            :installments => options[:installments],
-            :threshold => options[:threshold],
-            :startdate => options[:startdate],
-            :periodicity => options[:periodicity],
-            :comments => options[:comments]
+          periodic: {
+            action: options[:action],
+            installments: options[:installments],
+            threshold: options[:threshold],
+            startdate: options[:startdate],
+            periodicity: options[:periodicity],
+            comments: options[:comments]
           },
-          :telecheck => {
-            :routing => options[:telecheck_routing],
-            :account => options[:telecheck_account],
-            :checknumber => options[:telecheck_checknumber],
-            :bankname => options[:telecheck_bankname],
-            :dl => options[:telecheck_dl],
-            :dlstate => options[:telecheck_dlstate],
-            :void => options[:telecheck_void],
-            :accounttype => options[:telecheck_accounttype],
-            :ssn => options[:telecheck_ssn],
+          telecheck: {
+            routing: options[:telecheck_routing],
+            account: options[:telecheck_account],
+            checknumber: options[:telecheck_checknumber],
+            bankname: options[:telecheck_bankname],
+            dl: options[:telecheck_dl],
+            dlstate: options[:telecheck_dlstate],
+            void: options[:telecheck_void],
+            accounttype: options[:telecheck_accounttype],
+            ssn: options[:telecheck_ssn]
           }
         }
 
         if creditcard
           params[:creditcard] = {
-            :cardnumber => creditcard.number,
-            :cardexpmonth => creditcard.month,
-            :cardexpyear => format_creditcard_expiry_year(creditcard.year),
-            :track => nil
+            cardnumber: creditcard.number,
+            cardexpmonth: creditcard.month,
+            cardexpyear: format_creditcard_expiry_year(creditcard.year),
+            track: nil
           }
 
           if creditcard.verification_value?
@@ -396,8 +398,8 @@ module ActiveMerchant #:nodoc:
           params[:billing][:zip]       = billing_address[:zip]      unless billing_address[:zip].blank?
           params[:billing][:country]   = billing_address[:country]  unless billing_address[:country].blank?
           params[:billing][:company]   = billing_address[:company]  unless billing_address[:company].blank?
-          params[:billing][:phone]     = billing_address[:phone]  unless billing_address[:phone].blank?
-          params[:billing][:email]     = options[:email] unless options[:email].blank?
+          params[:billing][:phone]     = billing_address[:phone]    unless billing_address[:phone].blank?
+          params[:billing][:email]     = options[:email]            unless options[:email].blank?
         end
 
         if shipping_address = options[:shipping_address]
@@ -418,7 +420,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(xml)
-
         # For reference, a typical response...
         # <r_csp></r_csp>
         # <r_time></r_time>
@@ -433,12 +434,12 @@ module ActiveMerchant #:nodoc:
         # <r_approved>APPROVED</r_approved>
         # <r_avs></r_avs>
 
-        response = {:message => 'Global Error Receipt', :complete => false}
+        response = { message: 'Global Error Receipt', complete: false }
 
         xml = REXML::Document.new("<response>#{xml}</response>")
-        xml.root.elements.each do |node|
+        xml.root&.elements&.each do |node|
           response[node.name.downcase.sub(/^r_/, '').to_sym] = normalize(node.text)
-        end unless xml.root.nil?
+        end
 
         response
       end

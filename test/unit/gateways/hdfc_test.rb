@@ -7,8 +7,8 @@ class HdfcTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = HdfcGateway.new(
-      :login => 'login',
-      :password => 'password'
+      login: 'login',
+      password: 'password'
     )
 
     @credit_card = credit_card
@@ -47,7 +47,7 @@ class HdfcTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/2441955352022771/, data)
     end.respond_with(successful_capture_response)
 
@@ -64,7 +64,7 @@ class HdfcTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/849768440022761/, data)
     end.respond_with(successful_refund_response)
 
@@ -74,45 +74,45 @@ class HdfcTest < Test::Unit::TestCase
   def test_passing_cvv
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/#{@credit_card.verification_value}/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_passing_currency
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :currency => 'INR')
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, currency: 'INR')
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/currencycode>356</, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_passing_invalid_currency
     assert_raise(ArgumentError, 'Unsupported currency for HDFC: AOA') do
-      @gateway.purchase(@amount, @credit_card, :currency => 'AOA')
+      @gateway.purchase(@amount, @credit_card, currency: 'AOA')
     end
   end
 
   def test_passing_order_id
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :order_id => '932823723')
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, order_id: '932823723')
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/932823723/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_passing_description
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :description => 'Awesome Services By Us')
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, description: 'Awesome Services By Us')
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/Awesome Services By Us/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_escaping
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :order_id => 'a' * 41, :description => "This has 'Hack Characters' ~`!\#$%^=+|\\:'\",;<>{}[]() and non-Hack Characters -_@.")
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, order_id: 'a' * 41, description: "This has 'Hack Characters' ~`!\#$%^=+|\\:'\",;<>{}[]() and non-Hack Characters -_@.")
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/>This has Hack Characters  and non-Hack Characters -_@.</, data)
       assert_match(/>#{"a" * 40}</, data)
     end.respond_with(successful_purchase_response)
@@ -120,32 +120,32 @@ class HdfcTest < Test::Unit::TestCase
 
   def test_passing_billing_address
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :billing_address => address)
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, billing_address: address)
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/udf4>Jim Smith\nWidgets Inc\n456 My Street\nApt 1\nOttawa ON K1C2N6\nCA/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_passing_phone_number
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :billing_address => address)
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, billing_address: address)
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/udf3>555555-5555</, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_passing_billing_address_without_phone
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :billing_address => address(:phone => nil))
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, billing_address: address(phone: nil))
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(/udf3/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_passing_eci
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :eci => 22)
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, eci: 22)
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/eci>22</, data)
     end.respond_with(successful_purchase_response)
   end

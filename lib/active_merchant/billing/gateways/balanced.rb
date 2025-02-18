@@ -1,7 +1,7 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     # For more information on Balanced visit https://www.balancedpayments.com
     # or visit #balanced on irc.freenode.net
     #
@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.balancedpayments.com'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'https://www.balancedpayments.com/'
       self.display_name = 'Balanced'
       self.money_format = :cents
@@ -44,13 +44,14 @@ module ActiveMerchant #:nodoc:
         add_common_params(post, options)
 
         MultiResponse.run do |r|
-          identifier = if(payment_method.respond_to?(:number))
-            r.process{store(payment_method, options)}
-            r.authorization
-          else
-            payment_method
-          end
-          r.process{commit('debits', "cards/#{card_identifier_from(identifier)}/debits", post)}
+          identifier =
+            if payment_method.respond_to?(:number)
+              r.process { store(payment_method, options) }
+              r.authorization
+            else
+              payment_method
+            end
+          r.process { commit('debits', "cards/#{card_identifier_from(identifier)}/debits", post) }
         end
       end
 
@@ -61,13 +62,14 @@ module ActiveMerchant #:nodoc:
         add_common_params(post, options)
 
         MultiResponse.run do |r|
-          identifier = if(payment_method.respond_to?(:number))
-            r.process{store(payment_method, options)}
-            r.authorization
-          else
-            payment_method
-          end
-          r.process{commit('card_holds', "cards/#{card_identifier_from(identifier)}/card_holds", post)}
+          identifier =
+            if payment_method.respond_to?(:number)
+              r.process { store(payment_method, options) }
+              r.authorization
+            else
+              payment_method
+            end
+          r.process { commit('card_holds', "cards/#{card_identifier_from(identifier)}/card_holds", post) }
         end
       end
 
@@ -97,7 +99,7 @@ module ActiveMerchant #:nodoc:
         commit('refunds', "debits/#{reference_identifier_from(identifier)}/refunds", post)
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         post = {}
 
         post[:number] = credit_card.number
@@ -117,8 +119,8 @@ module ActiveMerchant #:nodoc:
         case identifier
         when %r{\|}
           uri = identifier.
-            split('|').
-            detect{|part| part.size > 0}
+                split('|').
+                detect { |part| part.size > 0 }
           uri.split('/')[2]
         when %r{\/}
           identifier.split('/')[5]
@@ -137,7 +139,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         address = (options[:billing_address] || options[:address])
-        if(address && address[:zip].present?)
+        if address && address[:zip].present?
           post[:address] = {}
           post[:address][:line1] = address[:address1] if address[:address1]
           post[:address][:line2] = address[:address2] if address[:address2]
@@ -154,37 +156,41 @@ module ActiveMerchant #:nodoc:
         post[:meta] = options[:meta]
       end
 
-      def commit(entity_name, path, post, method=:post)
-        raw_response = begin
-          parse(ssl_request(
-            method,
-            live_url + "/#{path}",
-            post_data(post),
-            headers
-          ))
-        rescue ResponseError => e
-          raise unless(e.response.code.to_s =~ /4\d\d/)
-          parse(e.response.body)
-        end
+      def commit(entity_name, path, post, method = :post)
+        raw_response =
+          begin
+            parse(
+              ssl_request(
+                method,
+                live_url + "/#{path}",
+                post_data(post),
+                headers
+              )
+            )
+          rescue ResponseError => e
+            raise unless e.response.code.to_s =~ /4\d\d/
+
+            parse(e.response.body)
+          end
 
         Response.new(
           success_from(entity_name, raw_response),
           message_from(raw_response),
           raw_response,
           authorization: authorization_from(entity_name, raw_response),
-          test: test?,
+          test: test?
         )
       end
 
       def success_from(entity_name, raw_response)
         entity = (raw_response[entity_name] || []).first
-        if(!entity)
+        if !entity
           false
-        elsif((entity_name == 'refunds') && entity.include?('status'))
+        elsif (entity_name == 'refunds') && entity.include?('status')
           %w(succeeded pending).include?(entity['status'])
-        elsif(entity.include?('status'))
+        elsif entity.include?('status')
           (entity['status'] == 'succeeded')
-        elsif(entity_name == 'cards')
+        elsif entity_name == 'cards'
           !!entity['id']
         else
           false
@@ -192,7 +198,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(raw_response)
-        if(raw_response['errors'])
+        if raw_response['errors']
           error = raw_response['errors'].first
           (error['additional'] || error['message'] || error['description'])
         else
@@ -222,6 +228,7 @@ module ActiveMerchant #:nodoc:
 
         params.map do |key, value|
           next if value.blank?
+
           if value.is_a?(Hash)
             h = {}
             value.each do |k, v|
@@ -236,19 +243,19 @@ module ActiveMerchant #:nodoc:
 
       def headers
         @@ua ||= JSON.dump(
-           bindings_version: ActiveMerchant::VERSION,
-           lang: 'ruby',
-           lang_version: "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
-           lib_version: BalancedGateway::VERSION,
-           platform: RUBY_PLATFORM,
-           publisher: 'active_merchant'
+          bindings_version: ActiveMerchant::VERSION,
+          lang: 'ruby',
+          lang_version: "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
+          lib_version: BalancedGateway::VERSION,
+          platform: RUBY_PLATFORM,
+          publisher: 'active_merchant'
         )
 
         {
-            'Authorization' => 'Basic ' + Base64.encode64(@options[:login].to_s + ':').strip,
-            'User-Agent' => "Balanced/v1.1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-            'Accept' => 'application/vnd.api+json;revision=1.1',
-            'X-Balanced-User-Agent' => @@ua,
+          'Authorization' => 'Basic ' + Base64.encode64(@options[:login].to_s + ':').strip,
+          'User-Agent' => "Balanced/v1.1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'Accept' => 'application/vnd.api+json;revision=1.1',
+          'X-Balanced-User-Agent' => @@ua
         }
       end
     end

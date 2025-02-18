@@ -6,7 +6,7 @@ module ActiveMerchant
       self.default_currency = 'GBP'
       self.supported_countries = ['GB']
 
-      self.supported_cardtypes = [ :visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro, :switch, :solo, :laser ]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb maestro]
 
       self.homepage_url = 'http://www.datacash.com/'
       self.display_name = 'DataCash'
@@ -92,9 +92,9 @@ module ActiveMerchant
 
       def build_void_or_capture_request(type, money, authorization, options)
         parsed_authorization = parse_authorization_string(authorization)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
-        xml.tag! :Request, :version => '2' do
+        xml.tag! :Request, version: '2' do
           add_authentication(xml)
 
           xml.tag! :Transaction do
@@ -107,7 +107,7 @@ module ActiveMerchant
             if money
               xml.tag! :TxnDetails do
                 xml.tag! :merchantreference, format_reference_number(options[:order_id])
-                xml.tag! :amount, amount(money), :currency => options[:currency] || currency(money)
+                xml.tag! :amount, amount(money), currency: options[:currency] || currency(money)
                 xml.tag! :capturemethod, 'ecomm'
               end
             end
@@ -117,22 +117,20 @@ module ActiveMerchant
       end
 
       def build_purchase_or_authorization_request_with_credit_card_request(type, money, credit_card, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
-        xml.tag! :Request, :version => '2' do
+        xml.tag! :Request, version: '2' do
           add_authentication(xml)
 
           xml.tag! :Transaction do
-            if options[:set_up_continuous_authority]
-              xml.tag! :ContAuthTxn, :type => 'setup'
-            end
+            xml.tag! :ContAuthTxn, type: 'setup' if options[:set_up_continuous_authority]
             xml.tag! :CardTxn do
               xml.tag! :method, type
               add_credit_card(xml, credit_card, options[:billing_address])
             end
             xml.tag! :TxnDetails do
               xml.tag! :merchantreference, format_reference_number(options[:order_id])
-              xml.tag! :amount, amount(money), :currency => options[:currency] || currency(money)
+              xml.tag! :amount, amount(money), currency: options[:currency] || currency(money)
               xml.tag! :capturemethod, 'ecomm'
             end
           end
@@ -144,19 +142,19 @@ module ActiveMerchant
         parsed_authorization = parse_authorization_string(authorization)
         raise ArgumentError, 'The continuous authority reference is required for continuous authority transactions' if parsed_authorization[:ca_reference].blank?
 
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
-        xml.tag! :Request, :version => '2' do
+        xml.tag! :Request, version: '2' do
           add_authentication(xml)
           xml.tag! :Transaction do
-            xml.tag! :ContAuthTxn, :type => 'historic'
+            xml.tag! :ContAuthTxn, type: 'historic'
             xml.tag! :HistoricTxn do
               xml.tag! :reference, parsed_authorization[:ca_reference]
               xml.tag! :method, type
             end
             xml.tag! :TxnDetails do
               xml.tag! :merchantreference, format_reference_number(options[:order_id])
-              xml.tag! :amount, amount(money), :currency => options[:currency] || currency(money)
+              xml.tag! :amount, amount(money), currency: options[:currency] || currency(money)
               xml.tag! :capturemethod, 'cont_auth'
             end
           end
@@ -166,9 +164,9 @@ module ActiveMerchant
 
       def build_transaction_refund_request(money, authorization)
         parsed_authorization = parse_authorization_string(authorization)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
-        xml.tag! :Request, :version => '2' do
+        xml.tag! :Request, version: '2' do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :HistoricTxn do
@@ -187,9 +185,9 @@ module ActiveMerchant
       end
 
       def build_credit_request(money, credit_card, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
-        xml.tag! :Request, :version => '2' do
+        xml.tag! :Request, version: '2' do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :CardTxn do
@@ -214,22 +212,10 @@ module ActiveMerchant
       end
 
       def add_credit_card(xml, credit_card, address)
-
         xml.tag! :Card do
-
           # DataCash calls the CC number 'pan'
           xml.tag! :pan, credit_card.number
           xml.tag! :expirydate, format_date(credit_card.month, credit_card.year)
-
-          # optional values - for Solo etc
-          if [ 'switch', 'solo' ].include?(card_brand(credit_card).to_s)
-
-            xml.tag! :issuenumber, credit_card.issue_number unless credit_card.issue_number.blank?
-
-            if !credit_card.start_month.blank? && !credit_card.start_year.blank?
-              xml.tag! :startdate, format_date(credit_card.start_month, credit_card.start_year)
-            end
-          end
 
           xml.tag! :Cv2Avs do
             xml.tag! :cv2, credit_card.verification_value if credit_card.verification_value?
@@ -249,23 +235,23 @@ module ActiveMerchant
             # a predefined one
             xml.tag! :ExtendedPolicy do
               xml.tag! :cv2_policy,
-              :notprovided =>   POLICY_REJECT,
-              :notchecked =>    POLICY_REJECT,
-              :matched =>       POLICY_ACCEPT,
-              :notmatched =>    POLICY_REJECT,
-              :partialmatch =>  POLICY_REJECT
+                       notprovided: POLICY_REJECT,
+                       notchecked: POLICY_REJECT,
+                       matched: POLICY_ACCEPT,
+                       notmatched: POLICY_REJECT,
+                       partialmatch: POLICY_REJECT
               xml.tag! :postcode_policy,
-              :notprovided =>   POLICY_ACCEPT,
-              :notchecked =>    POLICY_ACCEPT,
-              :matched =>       POLICY_ACCEPT,
-              :notmatched =>    POLICY_REJECT,
-              :partialmatch =>  POLICY_ACCEPT
+                       notprovided: POLICY_ACCEPT,
+                       notchecked: POLICY_ACCEPT,
+                       matched: POLICY_ACCEPT,
+                       notmatched: POLICY_REJECT,
+                       partialmatch: POLICY_ACCEPT
               xml.tag! :address_policy,
-              :notprovided =>   POLICY_ACCEPT,
-              :notchecked =>    POLICY_ACCEPT,
-              :matched =>       POLICY_ACCEPT,
-              :notmatched =>    POLICY_REJECT,
-              :partialmatch =>  POLICY_ACCEPT
+                       notprovided: POLICY_ACCEPT,
+                       notchecked: POLICY_ACCEPT,
+                       matched: POLICY_ACCEPT,
+                       notmatched: POLICY_REJECT,
+                       partialmatch: POLICY_ACCEPT
             end
           end
         end
@@ -274,18 +260,20 @@ module ActiveMerchant
       def commit(request)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request))
 
-        Response.new(response[:status] == '1', response[:reason], response,
-          :test => test?,
-          :authorization => "#{response[:datacash_reference]};#{response[:authcode]};#{response[:ca_reference]}"
+        Response.new(
+          response[:status] == '1',
+          response[:reason],
+          response,
+          test: test?,
+          authorization: "#{response[:datacash_reference]};#{response[:authcode]};#{response[:ca_reference]}"
         )
       end
 
       def format_date(month, year)
-        "#{format(month,:two_digits)}/#{format(year, :two_digits)}"
+        "#{format(month, :two_digits)}/#{format(year, :two_digits)}"
       end
 
       def parse(body)
-
         response = {}
         xml = REXML::Document.new(body)
         root = REXML::XPath.first(xml, '//Response')
@@ -299,7 +287,7 @@ module ActiveMerchant
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|e| parse_element(response, e) }
+          node.elements.each { |e| parse_element(response, e) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
@@ -311,7 +299,7 @@ module ActiveMerchant
 
       def parse_authorization_string(authorization)
         reference, auth_code, ca_reference = authorization.to_s.split(';')
-        {:reference => reference, :auth_code => auth_code, :ca_reference => ca_reference}
+        { reference:, auth_code:, ca_reference: }
       end
     end
   end

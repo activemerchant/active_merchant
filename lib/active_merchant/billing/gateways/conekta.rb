@@ -1,10 +1,10 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class ConektaGateway < Gateway
       self.live_url = 'https://api.conekta.io/'
 
       self.supported_countries = ['MX']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express carnet]
       self.homepage_url = 'https://conekta.io/'
       self.display_name = 'Conekta Gateway'
       self.money_format = :cents
@@ -105,7 +105,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shipment_address(post, options)
-        if(address = options[:shipping_address])
+        if (address = options[:shipping_address])
           post[:address] = {}
           post[:address][:street1] = address[:address1] if address[:address1]
           post[:address][:street2] = address[:address2] if address[:address2]
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_address(post, options)
-        if(address = (options[:billing_address] || options[:address]))
+        if (address = (options[:billing_address] || options[:address]))
           post[:billing_address] = {}
           post[:billing_address][:street1] = address[:address1] if address[:address1]
           post[:billing_address][:street2] = address[:address2] if address[:address2]
@@ -142,7 +142,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        if(address = (options[:billing_address] || options[:address]))
+        if (address = (options[:billing_address] || options[:address]))
           post[:address] = {}
           post[:address][:street1] = address[:address1] if address[:address1]
           post[:address][:street2] = address[:address2] if address[:address2]
@@ -162,14 +162,15 @@ module ActiveMerchant #:nodoc:
           post[:card][:name] = payment_source.name
           post[:card][:cvc] = payment_source.verification_value
           post[:card][:number] = payment_source.number
-          post[:card][:exp_month] = "#{sprintf("%02d", payment_source.month)}"
-          post[:card][:exp_year] = "#{"#{payment_source.year}"[-2, 2]}"
+          post[:card][:exp_month] = sprintf('%02d', payment_source.month)
+          post[:card][:exp_year] = payment_source.year.to_s[-2, 2]
           add_address(post[:card], options)
         end
       end
 
       def parse(body)
         return {} unless body
+
         JSON.parse(body)
       end
 
@@ -179,7 +180,7 @@ module ActiveMerchant #:nodoc:
           'Accept-Language' => 'es',
           'Authorization' => 'Basic ' + Base64.encode64("#{@options[:key]}:"),
           'RaiseHtmlError' => 'false',
-          'Conekta-Client-User-Agent' => {'agent'=>"Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}"}.to_json,
+          'Conekta-Client-User-Agent' => { 'agent' => "Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}" }.to_json,
           'X-Conekta-Client-User-Agent' => conekta_client_user_agent(options),
           'X-Conekta-Client-User-Metadata' => options[:meta].to_json
         }
@@ -187,7 +188,8 @@ module ActiveMerchant #:nodoc:
 
       def conekta_client_user_agent(options)
         return user_agent unless options[:application]
-        JSON.dump(JSON.parse(user_agent).merge!({application: options[:application]}))
+
+        JSON.dump(JSON.parse(user_agent).merge!({ application: options[:application] }))
       end
 
       def commit(method, url, parameters, options = {})
@@ -211,11 +213,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def response_error(raw_response)
-        begin
-          parse(raw_response)
-        rescue JSON::ParserError
-          json_error(raw_response)
-        end
+        parse(raw_response)
+      rescue JSON::ParserError
+        json_error(raw_response)
       end
 
       def json_error(raw_response)

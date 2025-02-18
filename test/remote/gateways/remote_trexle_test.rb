@@ -123,7 +123,7 @@ class RemoteTrexleTest < Test::Unit::TestCase
     assert_not_nil response.authorization
     assert_equal @credit_card.year, response.params['response']['card']['expiry_year']
 
-    response = @gateway.update(response.authorization, @credit_card, address: address)
+    response = @gateway.update(response.authorization, @credit_card, address:)
     assert_success response
     assert_not_nil response.authorization
     assert_equal @credit_card.year, response.params['response']['card']['expiry_year']
@@ -163,7 +163,7 @@ class RemoteTrexleTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
-    
+
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end

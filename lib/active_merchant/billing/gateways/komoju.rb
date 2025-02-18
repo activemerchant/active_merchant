@@ -1,16 +1,16 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class KomojuGateway < Gateway
-      self.test_url = 'https://sandbox.komoju.com/api/v1'
+      self.test_url = 'https://komoju.com/api/v1'
       self.live_url = 'https://komoju.com/api/v1'
       self.supported_countries = ['JP']
       self.default_currency = 'JPY'
       self.money_format = :cents
       self.homepage_url = 'https://www.komoju.com/'
       self.display_name = 'Komoju'
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb]
+      self.supported_cardtypes = %i[visa master american_express jcb]
 
       STANDARD_ERROR_CODE_MAPPING = {
         'bad_verification_value' => 'incorrect_cvc',

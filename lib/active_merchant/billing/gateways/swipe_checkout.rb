@@ -1,22 +1,19 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class SwipeCheckoutGateway < Gateway
       TRANSACTION_APPROVED_MSG = 'Transaction approved'
       TRANSACTION_DECLINED_MSG = 'Transaction declined'
 
-      LIVE_URLS = {
-        'NZ' => 'https://api.swipehq.com',
-        'CA' => 'https://api.swipehq.ca'
-      }
+      self.live_url = 'https://api.swipehq.com'
       self.test_url = 'https://api.swipehq.com'
 
       TRANSACTION_API = '/createShopifyTransaction.php'
 
-      self.supported_countries = %w[ NZ CA ]
+      self.supported_countries = %w[NZ CA]
       self.default_currency = 'NZD'
-      self.supported_cardtypes = [:visa, :master]
+      self.supported_cardtypes = %i[visa master]
       self.homepage_url = 'https://www.swipehq.com/checkout'
       self.display_name = 'Swipe Checkout'
       self.money_format = :dollars
@@ -61,7 +58,7 @@ module ActiveMerchant #:nodoc:
         post[:address] = "#{address[:address1]}, #{address[:address2]}"
         post[:city] = address[:city]
         post[:country] = address[:country]
-        post[:mobile] = address[:phone]     # API only has a "mobile" field, no "phone"
+        post[:mobile] = address[:phone] # API only has a "mobile" field, no "phone"
       end
 
       def add_invoice(post, options)
@@ -107,12 +104,13 @@ module ActiveMerchant #:nodoc:
               result = response['data']['result']
               success = (result == 'accepted' || (test? && result == 'test-accepted'))
 
-              Response.new(success,
+              Response.new(
+                success,
                 success ?
                 TRANSACTION_APPROVED_MSG :
                 TRANSACTION_DECLINED_MSG,
                 response,
-                :test => test?
+                test: test?
               )
             else
               build_error_response(message, response)
@@ -120,37 +118,36 @@ module ActiveMerchant #:nodoc:
           rescue ResponseError => e
             build_error_response("ssl_post() with url #{url} raised ResponseError: #{e}")
           rescue JSON::ParserError => e
-            msg = 'Invalid response received from the Swipe Checkout API. ' +
-                  'Please contact support@optimizerhq.com if you continue to receive this message.' +
+            msg = 'Invalid response received from the Swipe Checkout API. ' \
+                  'Please contact support@optimizerhq.com if you continue to receive this message.' \
                   " (Full error message: #{e})"
             build_error_response(msg)
           end
         end
       end
 
-      def call_api(api, params=nil)
+      def call_api(api, params = nil)
         params ||= {}
         params[:merchant_id] = @options[:login]
         params[:api_key] = @options[:api_key]
 
         # ssl_post() returns the response body as a string on success,
         # or raises a ResponseError exception on failure
-        JSON.parse(ssl_post(url(@options[:region], api), params.to_query))
+        JSON.parse(ssl_post(url(api), params.to_query))
       end
 
-      def url(region, api)
-        ((test? ? self.test_url : LIVE_URLS[region]) + api)
+      def url(api)
+        (test? ? self.test_url : self.live_url) + api
       end
 
-      def build_error_response(message, params={})
+      def build_error_response(message, params = {})
         Response.new(
           false,
           message,
           params,
-          :test => test?
+          test: test?
         )
       end
     end
   end
 end
-

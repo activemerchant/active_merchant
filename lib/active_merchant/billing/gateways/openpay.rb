@@ -1,11 +1,18 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class OpenpayGateway < Gateway
-      self.live_url = 'https://api.openpay.mx/v1/'
-      self.test_url = 'https://sandbox-api.openpay.mx/v1/'
+      class_attribute :mx_live_url, :mx_test_url
+      class_attribute :co_live_url, :co_test_url
 
-      self.supported_countries = ['MX']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.co_live_url = 'https://api.openpay.co/v1/'
+      self.co_test_url = 'https://sandbox-api.openpay.co/v1/'
+      self.mx_live_url = 'https://api.openpay.mx/v1/'
+      self.mx_test_url = 'https://sandbox-api.openpay.mx/v1/'
+      self.live_url = self.co_live_url
+      self.test_url = self.co_test_url
+
+      self.supported_countries = %w(CO MX)
+      self.supported_cardtypes = %i[visa master american_express carnet]
       self.homepage_url = 'http://www.openpay.mx/'
       self.display_name = 'Openpay'
       self.default_currency = 'MXN'
@@ -22,6 +29,16 @@ module ActiveMerchant #:nodoc:
         @api_key = options[:key]
         @merchant_id = options[:merchant_id]
         super
+      end
+
+      def gateway_url(options = {})
+        country = options[:merchant_country] || @options[:merchant_country]
+
+        if country == 'MX'
+          test? ? mx_test_url : mx_live_url
+        else
+          test? ? co_test_url : co_live_url
+        end
       end
 
       def purchase(money, creditcard, options = {})
@@ -75,7 +92,7 @@ module ActiveMerchant #:nodoc:
           MultiResponse.run(:first) do |r|
             r.process { commit(:post, 'customers', post, options) }
 
-            if(r.success? && !r.params['id'].blank?)
+            if r.success? && !r.params['id'].blank?
               customer_id = r.params['id']
               r.process { commit(:post, "customers/#{customer_id}/cards", card, options) }
             end
@@ -104,6 +121,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r((cvv2\\?":\\?")\\?"), '\1[BLANK]"').
           gsub(%r((cvv2\\?":\\?")\s+), '\1[BLANK]')
       end
+
       private
 
       def create_post_for_auth_or_purchase(money, creditcard, options)
@@ -115,7 +133,7 @@ module ActiveMerchant #:nodoc:
         post[:device_session_id] = options[:device_session_id]
         post[:currency] = (options[:currency] || currency(money)).upcase
         post[:use_card_points] = options[:use_card_points] if options[:use_card_points]
-        post[:payment_plan] = {payments: options[:payments]} if options[:payments]
+        post[:payment_plan] = { payments: options[:payments] } if options[:payments]
         add_creditcard(post, creditcard, options)
         post
       end
@@ -126,8 +144,8 @@ module ActiveMerchant #:nodoc:
         elsif creditcard.respond_to?(:number)
           card = {
             card_number: creditcard.number,
-            expiration_month: "#{sprintf("%02d", creditcard.month)}",
-            expiration_year: "#{"#{creditcard.year}"[-2, 2]}",
+            expiration_month: sprintf('%02d', creditcard.month),
+            expiration_year: creditcard.year.to_s[-2, 2],
             cvv2: creditcard.verification_value,
             holder_name: creditcard.name
           }
@@ -150,6 +168,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(card, options)
         return unless card.kind_of?(Hash)
+
         if address = (options[:billing_address] || options[:address])
           card[:address] = {
             line1: address[:address1],
@@ -174,6 +193,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         return {} unless body
+
         JSON.parse(body)
       end
 
@@ -181,16 +201,17 @@ module ActiveMerchant #:nodoc:
         response = http_request(method, resource, parameters, options)
         success = !error?(response)
 
-        Response.new(success,
+        Response.new(
+          success,
           (success ? response['error_code'] : response['description']),
           response,
-          :test => test?,
-          :authorization => response['id']
+          test: test?,
+          authorization: response['id']
         )
       end
 
-      def http_request(method, resource, parameters={}, options={})
-        url = (test? ? self.test_url : self.live_url) + @merchant_id + '/' + resource
+      def http_request(method, resource, parameters = {}, options = {})
+        url = gateway_url(options) + @merchant_id + '/' + resource
         raw_response = nil
         begin
           raw_response = ssl_request(method, url, (parameters ? parameters.to_json : nil), headers(options))
@@ -204,24 +225,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def error?(response)
-        response.key?('error_code')
+        response['error_code'] && !response['error_code'].blank?
       end
 
       def response_error(raw_response)
-        begin
-          parse(raw_response)
-        rescue JSON::ParserError
-          json_error(raw_response)
-        end
+        parse(raw_response)
+      rescue JSON::ParserError
+        json_error(raw_response)
       end
 
       def json_error(raw_response)
         msg = 'Invalid response received from the Openpay API.  Please contact soporte@openpay.mx if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
         {
-            'category' => 'request',
-            'error_code' => '9999',
-            'description' => msg
+          'category' => 'request',
+          'error_code' => '9999',
+          'description' => msg
         }
       end
     end

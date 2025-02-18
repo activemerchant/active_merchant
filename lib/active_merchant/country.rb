@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-module ActiveMerchant #:nodoc:
+module ActiveMerchant # :nodoc:
   class InvalidCountryCodeError < StandardError
   end
 
@@ -9,6 +9,7 @@ module ActiveMerchant #:nodoc:
 
   class CountryCode
     attr_reader :value, :format
+
     def initialize(value)
       @value = value.to_s.upcase
       detect_format
@@ -39,11 +40,11 @@ module ActiveMerchant #:nodoc:
 
     def initialize(options = {})
       @name = options.delete(:name)
-      @codes = options.collect{|k,v| CountryCode.new(v)}
+      @codes = options.collect { |_k, v| CountryCode.new(v) }
     end
 
     def code(format)
-      @codes.detect{|c| c.format == format}
+      @codes.detect { |c| c.format == format }
     end
 
     def ==(other)
@@ -183,6 +184,8 @@ module ActiveMerchant #:nodoc:
       { alpha2: 'KI', name: 'Kiribati', alpha3: 'KIR', numeric: '296' },
       { alpha2: 'KP', name: 'Korea, Democratic People\'s Republic of', alpha3: 'PRK', numeric: '408' },
       { alpha2: 'KR', name: 'Korea, Republic of', alpha3: 'KOR', numeric: '410' },
+      { alpha2: 'XK', name: 'Kosovo', alpha3: 'XKX', numeric: '900' },
+      { alpha2: 'QZ', name: 'Kosovo', alpha3: 'XKX', numeric: '900' },
       { alpha2: 'KW', name: 'Kuwait', alpha3: 'KWT', numeric: '414' },
       { alpha2: 'KG', name: 'Kyrgyzstan', alpha3: 'KGZ', numeric: '417' },
       { alpha2: 'LA', name: 'Lao People\'s Democratic Republic', alpha3: 'LAO', numeric: '418' },
@@ -245,6 +248,7 @@ module ActiveMerchant #:nodoc:
       { alpha2: 'PR', name: 'Puerto Rico', alpha3: 'PRI', numeric: '630' },
       { alpha2: 'QA', name: 'Qatar', alpha3: 'QAT', numeric: '634' },
       { alpha2: 'RE', name: 'Reunion', alpha3: 'REU', numeric: '638' },
+      { alpha2: 'RO', name: 'Romania', alpha3: 'ROU', numeric: '642' },
       { alpha2: 'RO', name: 'Romania', alpha3: 'ROM', numeric: '642' },
       { alpha2: 'RU', name: 'Russian Federation', alpha3: 'RUS', numeric: '643' },
       { alpha2: 'RW', name: 'Rwanda', alpha3: 'RWA', numeric: '646' },
@@ -306,6 +310,7 @@ module ActiveMerchant #:nodoc:
       { alpha2: 'VU', name: 'Vanuatu', alpha3: 'VUT', numeric: '548' },
       { alpha2: 'VE', name: 'Venezuela', alpha3: 'VEN', numeric: '862' },
       { alpha2: 'VN', name: 'Viet Nam', alpha3: 'VNM', numeric: '704' },
+      { alpha2: 'VN', name: 'Vietnam', alpha3: 'VNM', numeric: '704' },
       { alpha2: 'VG', name: 'Virgin Islands, British', alpha3: 'VGB', numeric: '092' },
       { alpha2: 'VI', name: 'Virgin Islands, U.S.', alpha3: 'VIR', numeric: '850' },
       { alpha2: 'WF', name: 'Wallis and Futuna', alpha3: 'WLF', numeric: '876' },
@@ -323,11 +328,12 @@ module ActiveMerchant #:nodoc:
       when 2, 3
         upcase_name = name.upcase
         country_code = CountryCode.new(name)
-        country = COUNTRIES.detect{|c| c[country_code.format] == upcase_name }
+        country = COUNTRIES.detect { |c| c[country_code.format] == upcase_name }
       else
-        country = COUNTRIES.detect{|c| c[:name].upcase == name.upcase }
+        country = COUNTRIES.detect { |c| c[:name].casecmp(name).zero? }
       end
       raise InvalidCountryCodeError, "No country could be found for the country #{name}" if country.nil?
+
       Country.new(country.dup)
     end
   end

@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class DigitzsGateway < Gateway
       include Empty
 
@@ -8,25 +8,25 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.money_format = :cents
 
       self.homepage_url = 'https://digitzs.com'
       self.display_name = 'Digitzs'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :app_key, :api_key)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         MultiResponse.run do |r|
           r.process { commit('auth/token', app_token_request(options)) }
           r.process { commit('payments', purchase_request(money, payment, options), options.merge({ app_token: app_token_from(r) })) }
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         MultiResponse.run do |r|
           r.process { commit('auth/token', app_token_request(options)) }
           r.process { commit('payments', refund_request(money, authorization, options), options.merge({ app_token: app_token_from(r) })) }
@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
       def store(payment, options = {})
         MultiResponse.run do |r|
           r.process { commit('auth/token', app_token_request(options)) }
-          options.merge!({ app_token: app_token_from(r) })
+          options[:app_token] = app_token_from(r)
 
           if options[:customer_id].present?
             customer_id = check_customer_exists(options)
@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
         post[:data][:type] = 'payments'
         post[:data][:attributes][:merchantId] = options[:merchant_id]
         post[:data][:attributes][:paymentType] = 'cardRefund'
-        post[:data][:attributes][:originalTransaction] = {id: authorization}
+        post[:data][:attributes][:originalTransaction] = { id: authorization }
         add_transaction(post, money, options)
 
         post
@@ -163,7 +163,7 @@ module ActiveMerchant #:nodoc:
         post[:data][:attributes] = {
           merchantId: options[:merchant_id],
           name: payment.name,
-          externalId: "#{SecureRandom.hex(16)}"
+          externalId: SecureRandom.hex(16)
         }
 
         post
@@ -175,7 +175,7 @@ module ActiveMerchant #:nodoc:
         post[:data][:attributes] = {
           tokenType: 'card',
           customerId: options[:customer_id],
-          label: 'Credit Card',
+          label: 'Credit Card'
         }
         add_payment(post, payment, options)
         add_address(post, options)
@@ -188,6 +188,7 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_get(url + "/customers/#{options[:customer_id]}", headers(options)))
 
         return response.try(:[], 'data').try(:[], 'customerId') if success_from(response)
+
         return nil
       end
 
@@ -197,7 +198,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_with_credit_card(payment, options = {})
         customer_response = commit('customers', create_customer_request(payment, options), options)
-        options.merge!({customer_id: customer_response.authorization})
+        options[:customer_id] = customer_response.authorization
         commit('tokens', create_token_request(payment, options), options)
       end
 
@@ -205,7 +206,7 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(action, parameters, options={})
+      def commit(action, parameters, options = {})
         url = (test? ? test_url : live_url)
         response = parse(ssl_post(url + "/#{action}", parameters.to_json, headers(options)))
 
@@ -228,12 +229,13 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         return response['message'] if response['message']
         return 'Success' if success_from(response)
-        response['errors'].map {|error_hash| error_hash['detail'] }.join(', ')
+
+        response['errors'].map { |error_hash| error_hash['detail'] }.join(', ')
       end
 
       def authorization_from(response)
         if customer_id = response.try(:[], 'data').try(:[], 'attributes').try(:[], 'customerId')
-          "#{customer_id}|#{response.try(:[], "data").try(:[], "id")}"
+          "#{customer_id}|#{response.try(:[], 'data').try(:[], 'id')}"
         else
           response.try(:[], 'data').try(:[], 'id')
         end
@@ -257,13 +259,13 @@ module ActiveMerchant #:nodoc:
           'x-api-key' => @options[:api_key]
         }
 
-        headers.merge!({'Authorization' => "Bearer #{options[:app_token]}"}) if options[:app_token]
+        headers['Authorization'] = "Bearer #{options[:app_token]}" if options[:app_token]
         headers
       end
 
       def error_code_from(response)
         unless success_from(response)
-          response['errors'].nil? ? response['message'] : response['errors'].map {|error_hash| error_hash['code'] }.join(', ')
+          response['errors'].nil? ? response['message'] : response['errors'].map { |error_hash| error_hash['code'] }.join(', ')
         end
       end
 
@@ -276,6 +278,7 @@ module ActiveMerchant #:nodoc:
         return 'cardSplit' if options[:payment_type] == 'card_split'
         return 'tokenSplit' if options[:payment_type] == 'token_split'
         return 'token' if payment.is_a? String
+
         'card'
       end
 

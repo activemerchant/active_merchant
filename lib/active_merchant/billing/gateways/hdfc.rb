@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class HdfcGateway < Gateway
       self.display_name = 'HDFC'
       self.homepage_url = 'http://www.hdfcbank.com/sme/sme-details/merchant-services/guzh6m0i'
@@ -12,14 +12,14 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['IN']
       self.default_currency = 'INR'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master discover diners_club]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :login, :password)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
         commit('purchase', post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         commit('authorize', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}")}
+      CURRENCY_CODES = Hash.new { |_h, k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}") }
       CURRENCY_CODES['AED'] = '784'
       CURRENCY_CODES['AUD'] = '036'
       CURRENCY_CODES['CAD'] = '124'
@@ -81,14 +81,14 @@ module ActiveMerchant #:nodoc:
         post[:udf2] = escape(options[:email]) if options[:email]
         if address = (options[:billing_address] || options[:address])
           post[:udf3] = escape(address[:phone]) if address[:phone]
-          post[:udf4] = escape(<<EOA)
-#{address[:name]}
-#{address[:company]}
-#{address[:address1]}
-#{address[:address2]}
-#{address[:city]} #{address[:state]} #{address[:zip]}
-#{address[:country]}
-EOA
+          post[:udf4] = escape(<<~ADDRESS)
+            #{address[:name]}
+            #{address[:company]}
+            #{address[:address1]}
+            #{address[:address2]}
+            #{address[:city]} #{address[:state]} #{address[:zip]}
+            #{address[:country]}
+          ADDRESS
         end
       end
 
@@ -113,7 +113,7 @@ EOA
         doc.children.each do |node|
           if node.text?
             next
-          elsif (node.elements.size == 0)
+          elsif node.elements.size == 0
             response[node.name.downcase.to_sym] = node.text
           else
             node.elements.each do |childnode|
@@ -134,7 +134,7 @@ EOA
         'purchase' => '1',
         'refund' => '2',
         'authorize' => '4',
-        'capture' => '5',
+        'capture' => '5'
       }
 
       def commit(action, post)
@@ -149,13 +149,13 @@ EOA
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(post, raw),
-          :test => test?
+          authorization: authorization_from(post, raw),
+          test: test?
         )
       end
 
       def build_request(post)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         post.each do |field, value|
           xml.tag!(field, value)
@@ -194,14 +194,12 @@ EOA
         [tranid, member]
       end
 
-      def escape(string, max_length=250)
+      def escape(string, max_length = 250)
         return '' unless string
-        if max_length
-          string = string[0...max_length]
-        end
+
+        string = string[0...max_length] if max_length
         string.gsub(/[^A-Za-z0-9 \-_@\.\n]/, '')
       end
     end
   end
 end
-

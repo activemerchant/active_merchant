@@ -1,4 +1,5 @@
 require 'active_merchant/errors'
+require 'active_merchant/versionable'
 
 require 'active_merchant/billing/avs_result'
 require 'active_merchant/billing/cvv_result'
@@ -13,3 +14,4 @@ require 'active_merchant/billing/apple_pay_payment_token'
 require 'active_merchant/billing/response'
 require 'active_merchant/billing/gateways'
 require 'active_merchant/billing/gateway'
+require 'active_merchant/billing/three_d_secure_eci_mapper'

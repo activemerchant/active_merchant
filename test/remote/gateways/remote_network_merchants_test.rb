@@ -11,9 +11,9 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
     @check = check
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -54,7 +54,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
   end
 
   def test_purchase_and_store
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:store => true))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(store: true))
     assert_success response
     assert_equal response.params['transactionid'], response.authorization
     assert response.params['customer_vault_id']
@@ -153,9 +153,9 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = NetworkMerchantsGateway.new(
-                :login => '',
-                :password => ''
-              )
+      login: '',
+      password: ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid Username', response.message
@@ -163,16 +163,16 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
 
   def test_successful_purchase_without_state
     @options[:billing_address] = {
-      :name     => 'Jim Smith',
-      :address1 => 'Gullhauggrenda 30',
-      :address2 => 'Apt 1',
-      :company  => 'Widgets Inc',
-      :city     => 'Baerums Verk',
-      :state    => nil,
-      :zip      => '1354',
-      :country  => 'NO',
-      :phone    => '(555)555-5555',
-      :fax      => '(555)555-6666'
+      name: 'Jim Smith',
+      address1: 'Gullhauggrenda 30',
+      address2: 'Apt 1',
+      company: 'Widgets Inc',
+      city: 'Baerums Verk',
+      state: nil,
+      zip: '1354',
+      country: 'NO',
+      phone: '(555)555-5555',
+      fax: '(555)555-6666'
     }
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)

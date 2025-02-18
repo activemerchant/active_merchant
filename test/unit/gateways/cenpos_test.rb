@@ -5,9 +5,9 @@ class CenposTest < Test::Unit::TestCase
 
   def setup
     @gateway = CenposGateway.new(
-      :merchant_id => 'merchant_id',
-      :password => 'password',
-      :user_id => 'user_id'
+      merchant_id: 'merchant_id',
+      password: 'password',
+      user_id: 'user_id'
     )
 
     @credit_card = credit_card
@@ -115,7 +115,7 @@ class CenposTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1760035844/, data)
     end.respond_with(successful_capture_response)
 
@@ -151,7 +151,7 @@ class CenposTest < Test::Unit::TestCase
 
     void = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1760035844/, data)
     end.respond_with(successful_void_response)
 
@@ -161,7 +161,7 @@ class CenposTest < Test::Unit::TestCase
   def test_failed_void
     response = stub_comms do
       @gateway.void('1758584451|4242|1.00')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1758584451/, data)
     end.respond_with(failed_void_response)
 
@@ -178,7 +178,7 @@ class CenposTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1609995363/, data)
     end.respond_with(successful_refund_response)
 
@@ -306,7 +306,6 @@ class CenposTest < Test::Unit::TestCase
       <s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"><s:Body><s:Fault><faultcode xmlns:a=\"http://schemas.microsoft.com/net/2005/12/windowscommunicationfoundation/dispatcher\">a:DeserializationFailed</faultcode><faultstring xml:lang=\"en-US\">The formatter threw an exception while trying to deserialize the message: There was an error while trying to deserialize parameter http://tempuri.org/:request. The InnerException message was 'There was an error deserializing the object of type Acriter.ABI.CenPOS.Client.VirtualTerminal.v6.Common.Requests.ProcessCardRequest. The value '' cannot be parsed as the type 'decimal'.'.  Please see InnerException for more details.</faultstring><detail><ExceptionDetail xmlns=\"http://schemas.datacontract.org/2004/07/System.ServiceModel\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\"><HelpLink i:nil=\"true\"/><InnerException><HelpLink i:nil=\"true\"/><InnerException><HelpLink i:nil=\"true\"/><InnerException><HelpLink i:nil=\"true\"/><InnerException i:nil=\"true\"/><Message>Input string was not in a correct format.</Message><StackTrace>   at System.Number.StringToNumber(String str, NumberStyles options, NumberBuffer&amp; number, NumberFormatInfo info, Boolean parseDecimal)&#xD;\n   at System.Number.ParseDecimal(String value, NumberStyles options, NumberFormatInfo numfmt)&#xD;\n   at System.Xml.XmlConvert.ToDecimal(String s)&#xD;\n   at System.Xml.XmlConverter.ToDecimal(String value)</StackTrace><Type>System.FormatException</Type></InnerException><Message>The value '' cannot be parsed as the type 'decimal'.</Message><StackTrace>   at System.Xml.XmlConverter.ToDecimal(String value)&#xD;\n   at System.Xml.XmlDictionaryReader.ReadElementContentAsDecimal()&#xD;\n   at System.Runtime.Serialization.XmlReaderDelegator.ReadElementContentAsDecimal()&#xD;\n   at ReadProcessCardRequestFromXml(XmlReaderDelegator , XmlObjectSerializerReadContext , XmlDictionaryString[] , XmlDictionaryString[] )&#xD;\n   at System.Runtime.Serialization.ClassDataContract.ReadXmlValue(XmlReaderDelegator xmlReader, XmlObjectSerializerReadContext context)&#xD;
     )
   end
-
 
   def successful_credit_response
     %(

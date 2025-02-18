@@ -16,7 +16,7 @@ class CardknoxTest < Test::Unit::TestCase
   def test_successful_purchase_passing_extra_info
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(order_id: '1337', description: 'socool'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/xOrderID=1337/, data)
       assert_match(/xDescription=socool/, data)
     end.respond_with(successful_purchase_response)
@@ -66,18 +66,16 @@ class CardknoxTest < Test::Unit::TestCase
     @credit_card.manual_entry = true
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
-
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{xCardNum=4242424242424242}, data
       assert_match %r{xCardPresent=true}, data
-
     end.respond_with(successful_purchase_response)
 
     assert_success response
   end
 
   def test_ip_is_being_sent # failed
-    @gateway.expects(:ssl_post).with do |url, data|
+    @gateway.expects(:ssl_post).with do |_url, data|
       data =~ /xIP=123.123.123.123/
     end.returns(successful_purchase_response)
 
@@ -133,7 +131,7 @@ class CardknoxTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    assert capture = @gateway.capture(@amount-1, '')
+    assert capture = @gateway.capture(@amount - 1, '')
     assert_failure capture
     assert_equal 'Original transaction not specified', capture.message
   end
@@ -203,7 +201,7 @@ class CardknoxTest < Test::Unit::TestCase
   private
 
   def purchase_request
-   'xKey=api_key&xVersion=4.5.4&xSoftwareName=Active+Merchant&xSoftwareVersion=1.52.0&xCommand=cc%3Asale&xAmount=1.00&xCardNum=4242424242424242&xCVV=123&xExp=0916&xName=Longbob+Longsen&xBillFirstName=Longbob&xBillLastName=Longsen&xBillCompany=Widgets+Inc&xBillStreet=456+My+Street&xBillStreet2=Apt+1&xBillCity=Ottawa&xBillState=ON&xBillZip=K1C2N6&xBillCountry=CA&xBillPhone=%28555%29555-5555&xShipFirstName=Longbob&xShipLastName=Longsen&xShipCompany=Widgets+Inc&xShipStreet=456+My+Street&xShipStreet2=Apt+1&xShipCity=Ottawa&xShipState=ON&xShipZip=K1C2N6&xShipCountry=CA&xShipPhone=%28555%29555-5555&xStreet=456+My+Street&xZip=K1C2N6'
+    'xKey=api_key&xVersion=4.5.4&xSoftwareName=Active+Merchant&xSoftwareVersion=1.52.0&xCommand=cc%3Asale&xAmount=1.00&xCardNum=4242424242424242&xCVV=123&xExp=0916&xName=Longbob+Longsen&xBillFirstName=Longbob&xBillLastName=Longsen&xBillCompany=Widgets+Inc&xBillStreet=456+My+Street&xBillStreet2=Apt+1&xBillCity=Ottawa&xBillState=ON&xBillZip=K1C2N6&xBillCountry=CA&xBillPhone=%28555%29555-5555&xShipFirstName=Longbob&xShipLastName=Longsen&xShipCompany=Widgets+Inc&xShipStreet=456+My+Street&xShipStreet2=Apt+1&xShipCity=Ottawa&xShipState=ON&xShipZip=K1C2N6&xShipCountry=CA&xShipPhone=%28555%29555-5555&xStreet=456+My+Street&xZip=K1C2N6'
   end
 
   def successful_purchase_response # passed avs and cvv
@@ -258,7 +256,7 @@ class CardknoxTest < Test::Unit::TestCase
   end
 
   def successful_verify_response
-   'xResult=A&xStatus=Approved&xError=&xRefNum=15314566&xAuthCode=608755&xBatch=&xAvsResultCode=NNN&xAvsResult=Address%3a+No+Match+%26+5+Digit+Zip%3a+No+Match&xCvvResultCode=N&xCvvResult=No+Match&xAuthAmount=1.00&xToken=09dc51aceb98440fbf0847cad2941d45&xMaskedCardNumber=4xxxxxxxxxxx2224&xName=Longbob+Longsen'
+    'xResult=A&xStatus=Approved&xError=&xRefNum=15314566&xAuthCode=608755&xBatch=&xAvsResultCode=NNN&xAvsResult=Address%3a+No+Match+%26+5+Digit+Zip%3a+No+Match&xCvvResultCode=N&xCvvResult=No+Match&xAuthAmount=1.00&xToken=09dc51aceb98440fbf0847cad2941d45&xMaskedCardNumber=4xxxxxxxxxxx2224&xName=Longbob+Longsen'
   end
 
   def failed_verify_response
@@ -266,10 +264,10 @@ class CardknoxTest < Test::Unit::TestCase
   end
 
   def pre_scrubbed
-   'xKey=api_key&xVersion=4.5.4&xSoftwareName=Active+Merchant&xSoftwareVersion=1.52.0&xCommand=cc%3Asale&xAmount=1.00&xCardNum=4242424242424242&xCVV=123&xExp=0916&xName=Longbob+Longsen&xBillFirstName=Longbob&xBillLastName=Longsen&xBillCompany=Widgets+Inc&xBillStreet=456+My+Street&xBillStreet2=Apt+1&xBillCity=Ottawa&xBillState=ON&xBillZip=K1C2N6&xBillCountry=CA&xBillPhone=%28555%29555-5555&xShipFirstName=Longbob&xShipLastName=Longsen&xShipCompany=Widgets+Inc&xShipStreet=456+My+Street&xShipStreet2=Apt+1&xShipCity=Ottawa&xShipState=ON&xShipZip=K1C2N6&xShipCountry=CA&xShipPhone=%28555%29555-5555&xStreet=456+My+Street&xZip=K1C2N6'
+    'xKey=api_key&xVersion=4.5.4&xSoftwareName=Active+Merchant&xSoftwareVersion=1.52.0&xCommand=cc%3Asale&xAmount=1.00&xCardNum=4242424242424242&xCVV=123&xExp=0916&xName=Longbob+Longsen&xBillFirstName=Longbob&xBillLastName=Longsen&xBillCompany=Widgets+Inc&xBillStreet=456+My+Street&xBillStreet2=Apt+1&xBillCity=Ottawa&xBillState=ON&xBillZip=K1C2N6&xBillCountry=CA&xBillPhone=%28555%29555-5555&xShipFirstName=Longbob&xShipLastName=Longsen&xShipCompany=Widgets+Inc&xShipStreet=456+My+Street&xShipStreet2=Apt+1&xShipCity=Ottawa&xShipState=ON&xShipZip=K1C2N6&xShipCountry=CA&xShipPhone=%28555%29555-5555&xStreet=456+My+Street&xZip=K1C2N6'
   end
 
   def post_scrubbed
-   'xKey=[FILTERED]&xVersion=4.5.4&xSoftwareName=Active+Merchant&xSoftwareVersion=1.52.0&xCommand=cc%3Asale&xAmount=1.00&xCardNum=[FILTERED]&xCVV=[FILTERED]&xExp=0916&xName=Longbob+Longsen&xBillFirstName=Longbob&xBillLastName=Longsen&xBillCompany=Widgets+Inc&xBillStreet=456+My+Street&xBillStreet2=Apt+1&xBillCity=Ottawa&xBillState=ON&xBillZip=K1C2N6&xBillCountry=CA&xBillPhone=%28555%29555-5555&xShipFirstName=Longbob&xShipLastName=Longsen&xShipCompany=Widgets+Inc&xShipStreet=456+My+Street&xShipStreet2=Apt+1&xShipCity=Ottawa&xShipState=ON&xShipZip=K1C2N6&xShipCountry=CA&xShipPhone=%28555%29555-5555&xStreet=456+My+Street&xZip=K1C2N6'
+    'xKey=[FILTERED]&xVersion=4.5.4&xSoftwareName=Active+Merchant&xSoftwareVersion=1.52.0&xCommand=cc%3Asale&xAmount=1.00&xCardNum=[FILTERED]&xCVV=[FILTERED]&xExp=0916&xName=Longbob+Longsen&xBillFirstName=Longbob&xBillLastName=Longsen&xBillCompany=Widgets+Inc&xBillStreet=456+My+Street&xBillStreet2=Apt+1&xBillCity=Ottawa&xBillState=ON&xBillZip=K1C2N6&xBillCountry=CA&xBillPhone=%28555%29555-5555&xShipFirstName=Longbob&xShipLastName=Longsen&xShipCompany=Widgets+Inc&xShipStreet=456+My+Street&xShipStreet2=Apt+1&xShipCity=Ottawa&xShipState=ON&xShipZip=K1C2N6&xShipCountry=CA&xShipPhone=%28555%29555-5555&xStreet=456+My+Street&xZip=K1C2N6'
   end
 end

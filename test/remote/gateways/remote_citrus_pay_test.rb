@@ -34,7 +34,7 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
     more_options = @options.merge({
       ip: '127.0.0.1',
-      email: 'joe@example.com',
+      email: 'joe@example.com'
     })
 
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(more_options))
@@ -56,7 +56,7 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
   def test_failed_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_match /FAILURE/, response.message
+    assert_match %r{FAILURE}, response.message
   end
 
   def test_successful_authorize_and_capture
@@ -73,7 +73,7 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
   def test_failed_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_match /FAILURE/, response.message
+    assert_match(/FAILURE/, response.message)
   end
 
   def test_successful_refund
@@ -104,9 +104,9 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = CitrusPayGateway.new(
-                :userid => 'nosuch',
-                :password => 'thing'
-              )
+      userid: 'nosuch',
+      password: 'thing'
+    )
     response = gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'ERROR - INVALID_REQUEST - Invalid credentials.', response.message
@@ -130,5 +130,4 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
     gateway = CitrusPayGateway.new(userid: 'unknown', password: 'unknown')
     assert !gateway.verify_credentials
   end
-
 end

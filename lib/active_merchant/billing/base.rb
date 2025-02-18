@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     module Base
       GATEWAY_MODE_DEPRECATION_MESSAGE = 'Base#gateway_mode is deprecated in favor of Base#mode and will be removed in a future version'
 
@@ -37,19 +37,6 @@ module ActiveMerchant #:nodoc:
         rescue
           raise ArgumentError, "The specified gateway is not valid (#{name_str})"
         end
-      end
-
-      # Return the matching integration module
-      # You can then get the notification from the module
-      # * <tt>bogus</tt>: Bogus - Does nothing (for testing)
-      # * <tt>chronopay</tt>: Chronopay
-      # * <tt>paypal</tt>: Paypal
-      #
-      #   chronopay = ActiveMerchant::Billing::Base.integration('chronopay')
-      #   notification = chronopay.notification(raw_post)
-      #
-      def self.integration(name)
-        Billing::Integrations.const_get("#{name.to_s.downcase}".camelize)
       end
 
       # A check to see if we're in test mode

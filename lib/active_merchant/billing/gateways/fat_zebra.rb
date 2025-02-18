@@ -1,7 +1,7 @@
 require 'json'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class FatZebraGateway < Gateway
       self.live_url = 'https://gateway.fatzebra.com.au/v1.0'
       self.test_url = 'https://gateway.sandbox.fatzebra.com.au/v1.0'
@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AU']
       self.default_currency = 'AUD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb]
+      self.supported_cardtypes = %i[visa master american_express jcb]
 
       self.homepage_url = 'https://www.fatzebra.com.au/'
       self.display_name = 'Fat Zebra'
@@ -27,6 +27,8 @@ module ActiveMerchant #:nodoc:
         add_extra_options(post, options)
         add_order_id(post, options)
         add_ip(post, options)
+        add_metadata(post, options)
+        add_three_ds(post, options)
 
         commit(:post, 'purchases', post)
       end
@@ -39,6 +41,8 @@ module ActiveMerchant #:nodoc:
         add_extra_options(post, options)
         add_order_id(post, options)
         add_ip(post, options)
+        add_metadata(post, options)
+        add_three_ds(post, options)
 
         post[:capture] = false
 
@@ -46,14 +50,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
+        txn_id, = authorization.to_s.split('|')
         post = {}
+
         add_amount(post, money, options)
         add_extra_options(post, options)
 
-        commit(:post, "purchases/#{CGI.escape(authorization)}/capture", post)
+        commit(:post, "purchases/#{CGI.escape(txn_id)}/capture", post)
       end
 
-      def refund(money, txn_id, options={})
+      def refund(money, authorization, options = {})
+        txn_id, = authorization.to_s.split('|')
         post = {}
 
         add_extra_options(post, options)
@@ -64,9 +71,17 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'refunds', post)
       end
 
-      def store(creditcard, options={})
+      def void(authorization, options = {})
+        txn_id, endpoint = authorization.to_s.split('|')
+
+        commit(:post, "#{endpoint}/void?id=#{txn_id}", {})
+      end
+
+      def store(creditcard, options = {})
         post = {}
+
         add_creditcard(post, creditcard)
+        post[:is_billing] = true if options[:recurring]
 
         commit(:post, 'credit_cards', post)
       end
@@ -97,7 +112,8 @@ module ActiveMerchant #:nodoc:
           post[:cvv] = creditcard.verification_value if creditcard.verification_value?
           post[:card_holder] = creditcard.name if creditcard.name
         elsif creditcard.is_a?(String)
-          post[:card_token] = creditcard
+          id, = creditcard.to_s.split('|')
+          post[:card_token] = id
           post[:cvv] = options[:cvv]
         elsif creditcard.is_a?(Hash)
           ActiveMerchant.deprecated 'Passing the credit card as a Hash is deprecated. Use a String and put the (optional) CVV in the options hash instead.'
@@ -111,12 +127,40 @@ module ActiveMerchant #:nodoc:
       def add_extra_options(post, options)
         extra = {}
         extra[:ecm] = '32' if options[:recurring]
-        extra[:cavv] = options[:cavv] if options[:cavv]
-        extra[:xid] = options[:xid] if options[:xid]
-        extra[:sli] = options[:sli] if options[:sli]
         extra[:name] = options[:merchant] if options[:merchant]
         extra[:location] = options[:merchant_location] if options[:merchant_location]
+        extra[:card_on_file] = options.dig(:extra, :card_on_file) if options.dig(:extra, :card_on_file)
+        extra[:auth_reason]  = options.dig(:extra, :auth_reason) if options.dig(:extra, :auth_reason)
+
+        unless options[:three_d_secure].present?
+          extra[:sli] = options[:sli] if options[:sli]
+          extra[:xid] = options[:xid] if options[:xid]
+          extra[:cavv] = options[:cavv] if options[:cavv]
+        end
+
         post[:extra] = extra if extra.any?
+      end
+
+      def add_three_ds(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post[:extra] = {
+          sli: three_d_secure[:eci],
+          xid: three_d_secure[:xid],
+          cavv: three_d_secure[:cavv],
+          par: three_d_secure[:authentication_response_status],
+          ver: formatted_enrollment(three_d_secure[:enrolled]),
+          threeds_version: three_d_secure[:version],
+          directory_server_txn_id: three_d_secure[:ds_transaction_id]
+        }.compact
+      end
+
+      def formatted_enrollment(val)
+        case val
+        when 'Y', 'N', 'U' then val
+        when true, 'true' then 'Y'
+        when false, 'false' then 'N'
+        end
       end
 
       def add_order_id(post, options)
@@ -127,21 +171,27 @@ module ActiveMerchant #:nodoc:
         post[:customer_ip] = options[:ip] || '127.0.0.1'
       end
 
-      def commit(method, uri, parameters=nil)
-        response = begin
-          parse(ssl_request(method, get_url(uri), parameters.to_json, headers))
-        rescue ResponseError => e
-          return Response.new(false, 'Invalid Login') if(e.response.code == '401')
-          parse(e.response.body)
-        end
+      def add_metadata(post, options)
+        post[:metadata] = options.fetch(:metadata, {})
+      end
+
+      def commit(method, uri, parameters = nil)
+        response =
+          begin
+            parse(ssl_request(method, get_url(uri), parameters.to_json, headers))
+          rescue ResponseError => e
+            return Response.new(false, 'Invalid Login') if e.response.code == '401'
+
+            parse(e.response.body)
+          end
 
         success = success_from(response)
         Response.new(
           success,
           message_from(response),
           response,
-          :test => response['test'],
-          :authorization => authorization_from(response, success)
+          test: response['test'],
+          authorization: authorization_from(response, success, uri)
         )
       end
 
@@ -149,13 +199,15 @@ module ActiveMerchant #:nodoc:
         (
           response['successful'] &&
           response['response'] &&
-          (response['response']['successful'] || response['response']['token'])
+          (response['response']['successful'] || response['response']['token'] || response['response']['response_code'] == '00')
         )
       end
 
-      def authorization_from(response, success)
+      def authorization_from(response, success, uri)
+        endpoint = uri.split('/')[0]
         if success
-          (response['response']['id'] || response['response']['token'])
+          id = response['response']['id'] || response['response']['token']
+          "#{id}|#{endpoint}"
         else
           nil
         end
@@ -172,17 +224,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(response)
-        begin
-          JSON.parse(response)
-        rescue JSON::ParserError
-          msg = 'Invalid JSON response received from Fat Zebra. Please contact support@fatzebra.com.au if you continue to receive this message.'
-          msg += "  (The raw response returned by the API was #{response.inspect})"
-          {
-            'successful' => false,
-            'response' => {},
-            'errors' => [msg]
-          }
-        end
+        JSON.parse(response)
+      rescue JSON::ParserError
+        msg = 'Invalid JSON response received from Fat Zebra. Please contact support@fatzebra.com.au if you continue to receive this message.'
+        msg += "  (The raw response returned by the API was #{response.inspect})"
+        {
+          'successful' => false,
+          'response' => {},
+          'errors' => [msg]
+        }
       end
 
       def get_url(uri)

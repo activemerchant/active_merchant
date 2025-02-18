@@ -1,5 +1,5 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class PaypalExpressResponse < Response
       def email
         info['Payer']
@@ -11,6 +11,10 @@ module ActiveMerchant #:nodoc:
 
       def details
         (@params['PaymentDetails']||{})
+      end
+
+      def checkout_status
+        (@params['CheckoutStatus']||{})
       end
 
       def name

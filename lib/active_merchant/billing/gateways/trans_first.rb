@@ -1,12 +1,11 @@
-module ActiveMerchant #:nodoc:
-
-  module Billing #:nodoc:
+module ActiveMerchant # :nodoc:
+  module Billing # :nodoc:
     class TransFirstGateway < Gateway
       self.test_url = 'https://ws.cert.transfirst.com'
       self.live_url = 'https://webservices.primerchants.com'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.transfirst.com/'
       self.display_name = 'TransFirst'
 
@@ -19,7 +18,7 @@ module ActiveMerchant #:nodoc:
         purchase_echeck: 'ACHDebit',
         refund: 'CreditCardCredit',
         refund_echeck: 'ACHVoidTransaction',
-        void: 'CreditCardAutoRefundorVoid',
+        void: 'CreditCardAutoRefundorVoid'
       }
 
       ENDPOINTS = {
@@ -47,7 +46,7 @@ module ActiveMerchant #:nodoc:
         commit((payment.is_a?(Check) ? :purchase_echeck : :purchase), post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
 
         transaction_id, payment_type = split_authorization(authorization)
@@ -58,10 +57,10 @@ module ActiveMerchant #:nodoc:
         commit((payment_type == 'check' ? :refund_echeck : :refund), post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
 
-        transaction_id, _ = split_authorization(authorization)
+        transaction_id, = split_authorization(authorization)
         add_pair(post, :TransID, transaction_id)
 
         commit(:void, post)
@@ -134,6 +133,7 @@ module ActiveMerchant #:nodoc:
 
       def add_or_use_default(payment_data, default_value)
         return payment_data.capitalize if payment_data
+
         return default_value
       end
 
@@ -167,6 +167,9 @@ module ActiveMerchant #:nodoc:
         end
 
         response
+      rescue StandardError
+        response[:message] = data&.to_s&.strip
+        response
       end
 
       def commit(action, params)
@@ -175,10 +178,10 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response),
           response,
-          :test => test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => response[:avs_code] },
-          :cvv_result => response[:cvv2_code]
+          test: test?,
+          authorization: authorization_from(response),
+          avs_result: { code: response[:avs_code] },
+          cvv_result: response[:cvv2_code]
         )
       end
 
@@ -219,8 +222,7 @@ module ActiveMerchant #:nodoc:
         params[:MerchantID] = @options[:login]
         params[:RegKey] = @options[:password]
 
-        request = params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-        request
+        params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def add_pair(post, key, value, options = {})
