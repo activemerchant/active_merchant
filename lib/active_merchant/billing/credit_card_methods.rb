@@ -43,7 +43,7 @@ module ActiveMerchant # :nodoc:
         'creditel' => ->(num) { num =~ /^601933\d{10}$/ },
         'confiable' => ->(num) { num =~ /^560718\d{10}$/ },
         'synchrony' => ->(num) { num =~ /^700600\d{10}$/ },
-        'routex' => ->(num) { num =~ /^(700674|700676|700678)\d{13}$/ },
+        'routex' => ->(num) { num =~ /^(700674|700676|700678)\d{12,13}$/ },
         'mada' => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MADA_RANGES) },
         'bp_plus' => ->(num) { num =~ /^(7050\d\s\d{9}\s\d{3}$|705\d\s\d{8}\s\d{5}$)/ },
         'passcard' => ->(num) { num =~ /^628026\d{10}$/ },

@@ -401,12 +401,18 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'synchrony', CreditCard.brand?('7006000000000000')
   end
 
-  def test_should_detect_routex_card
+  def test_should_detect_routex_card_with_19_digits
     number = '7006760000000000000'
     assert_equal 'routex', CreditCard.brand?(number)
     assert CreditCard.valid_number?(number)
     assert_equal 'routex', CreditCard.brand?('7006789224703725591')
     assert_equal 'routex', CreditCard.brand?('7006740000000000013')
+  end
+
+  def test_should_detect_routex_card_with_18_digits
+    assert_equal 'routex', CreditCard.brand?('700676000000000000')
+    assert_equal 'routex', CreditCard.brand?('700678922470372559')
+    assert_equal 'routex', CreditCard.brand?('700674000000000001')
   end
 
   def test_should_detect_when_an_argument_brand_does_not_match_calculated_brand
