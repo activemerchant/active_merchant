@@ -63,11 +63,7 @@ module ActiveMerchant # :nodoc:
       def authorize(money, payment_method, options = {})
         requires!(options, :order_id)
         payment_details = payment_details(payment_method, options)
-        if options[:account_funding_transaction]
-          aft_request(money, payment_method, payment_details.merge(**options))
-        else
-          authorize_request(money, payment_method, payment_details.merge(options))
-        end
+        authorize_request(money, payment_method, payment_details.merge(options))
       end
 
       def capture(money, authorization, options = {})
@@ -169,7 +165,11 @@ module ActiveMerchant # :nodoc:
       end
 
       def authorize_request(money, payment_method, options)
-        commit('authorize', build_authorization_request(money, payment_method, options), 'AUTHORISED', 'CAPTURED', options)
+        if options[:account_funding_transaction]
+          aft_request(money, payment_method, options)
+        else
+          commit('authorize', build_authorization_request(money, payment_method, options), 'AUTHORISED', 'CAPTURED', options)
+        end
       end
 
       def capture_request(money, authorization, options)
