@@ -63,11 +63,7 @@ module ActiveMerchant # :nodoc:
       def authorize(money, payment_method, options = {})
         requires!(options, :order_id)
         payment_details = payment_details(payment_method, options)
-        if options[:account_funding_transaction]
-          aft_request(money, payment_method, payment_details.merge(**options))
-        else
-          authorize_request(money, payment_method, payment_details.merge(options))
-        end
+        authorize_request(money, payment_method, payment_details.merge(options))
       end
 
       def capture(money, authorization, options = {})
@@ -169,7 +165,11 @@ module ActiveMerchant # :nodoc:
       end
 
       def authorize_request(money, payment_method, options)
-        commit('authorize', build_authorization_request(money, payment_method, options), 'AUTHORISED', 'CAPTURED', options)
+        if options[:account_funding_transaction]
+          aft_request(money, payment_method, options)
+        else
+          commit('authorize', build_authorization_request(money, payment_method, options), 'AUTHORISED', 'CAPTURED', options)
+        end
       end
 
       def capture_request(money, authorization, options)
@@ -427,6 +427,8 @@ module ActiveMerchant # :nodoc:
               add_payment_method(xml, money, payment_method, options)
               add_shopper(xml, options)
               add_sub_merchant_data(xml, options[:sub_merchant_data]) if options[:sub_merchant_data]
+              add_additional_3ds_data(xml, options) if options[:execute_threed] && options[:three_ds_version] && options[:three_ds_version] =~ /^2/
+              add_3ds_exemption(xml, options) if options[:exemption_type]
               add_aft_data(xml, payment_method, options)
             end
           end
@@ -444,12 +446,12 @@ module ActiveMerchant # :nodoc:
               xml.last options.dig(:aft_sender_full_name, :last)
             end
             xml.fundingAddress do
-              xml.address1 options.dig(:aft_sender_funding_address, :address1)
+              xml.address1 options.dig(:aft_sender_funding_address, :address1) if options.dig(:aft_sender_funding_address, :address1)
               xml.address2 options.dig(:aft_sender_funding_address, :address2) if options.dig(:aft_sender_funding_address, :address2)
-              xml.postalCode options.dig(:aft_sender_funding_address, :postal_code)
-              xml.city options.dig(:aft_sender_funding_address, :city)
-              xml.state options.dig(:aft_sender_funding_address, :state)
-              xml.countryCode options.dig(:aft_sender_funding_address, :country_code)
+              xml.postalCode options.dig(:aft_sender_funding_address, :postal_code) if options.dig(:aft_sender_funding_address, :postal_code)
+              xml.city options.dig(:aft_sender_funding_address, :city) if options.dig(:aft_sender_funding_address, :city)
+              xml.state options.dig(:aft_sender_funding_address, :state) if options.dig(:aft_sender_funding_address, :state)
+              xml.countryCode options.dig(:aft_sender_funding_address, :country_code) if options.dig(:aft_sender_funding_address, :country_code)
             end
           end
           xml.fundingParty 'type' => 'recipient' do
@@ -460,17 +462,17 @@ module ActiveMerchant # :nodoc:
               xml.last options.dig(:aft_recipient_full_name, :last)
             end
             xml.fundingAddress do
-              xml.address1 options.dig(:aft_recipient_funding_address, :address1)
+              xml.address1 options.dig(:aft_recipient_funding_address, :address1) if options.dig(:aft_recipient_funding_address, :address1)
               xml.address2 options.dig(:aft_recipient_funding_address, :address2) if options.dig(:aft_recipient_funding_address, :address2)
-              xml.postalCode options.dig(:aft_recipient_funding_address, :postal_code)
-              xml.city options.dig(:aft_recipient_funding_address, :city)
-              xml.state options.dig(:aft_recipient_funding_address, :state)
-              xml.countryCode options.dig(:aft_recipient_funding_address, :country_code)
+              xml.postalCode options.dig(:aft_recipient_funding_address, :postal_code) if options.dig(:aft_recipient_funding_address, :postal_code)
+              xml.city options.dig(:aft_recipient_funding_address, :city) if options.dig(:aft_recipient_funding_address, :city)
+              xml.state options.dig(:aft_recipient_funding_address, :state) if options.dig(:aft_recipient_funding_address, :state)
+              xml.countryCode options.dig(:aft_recipient_funding_address, :country_code) if options.dig(:aft_recipient_funding_address, :country_code)
             end
             if options[:aft_recipient_funding_data]
               xml.fundingData do
-                add_date_element(xml, 'birthDate', options[:aft_recipient_funding_data][:birth_date])
-                xml.telephoneNumber options.dig(:aft_recipient_funding_data, :telephone_number)
+                add_date_element(xml, 'birthDate', options[:aft_recipient_funding_data][:birth_date]) if options[:aft_recipient_funding_data][:birth_date]
+                xml.telephoneNumber options.dig(:aft_recipient_funding_data, :telephone_number) if options.dig(:aft_recipient_funding_data, :telephone_number)
               end
             end
           end
