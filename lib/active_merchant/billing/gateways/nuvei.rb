@@ -168,6 +168,7 @@ module ActiveMerchant
           state: options.dig(:billing_address, :state)
         }.compact
 
+        post[:billing_address] ||= {}
         post[:billingAddress].merge!(address_details)
         post[:recipientDetails] = recipient_details unless recipient_details.empty?
       end

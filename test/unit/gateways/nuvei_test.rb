@@ -399,6 +399,18 @@ class NuveiTest < Test::Unit::TestCase
     end
   end
 
+  def test_no_method_error_in_authorize
+    assert_nothing_raised(NoMethodError) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end
+  end
+
+  def test_no_method_error_on_purchase_aft
+    assert_nothing_raised(NoMethodError) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(is_aft: true, aft_recipient_first_name: 'John', aft_recipient_last_name: 'Doe'))
+    end
+  end
+
   def test_successful_verify
     @options.merge!(authentication_only_type: 'ACCOUNTVERIFICATION')
     stub_comms(@gateway, :ssl_request) do
