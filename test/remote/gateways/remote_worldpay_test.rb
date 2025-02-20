@@ -603,6 +603,9 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   def test_successful_authorize_with_3ds2_challenge
     session_id = generate_unique_id
     options = @options.merge(
+      # inserted this @aft_otpions for testing during review if desired, did not want to duplicate
+      # this entire test with just this addtion, will remove after review
+      @aft_options,
       {
         execute_threed: true,
         accept_header: 'text/html',
@@ -1108,6 +1111,14 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success store
 
     auth = @gateway.authorize(@amount, store.authorization, @options.merge(@aft_options))
+    assert_success auth
+    assert_equal 'funding_transfer_transaction', auth.params['action']
+    assert_equal 'SUCCESS', auth.message
+  end
+
+  def test_successful_authorize_visa_account_funding_transfer_3ds
+    options = @options.merge(@aft_options, { execute_threed: true, three_ds_version: '2.0' })
+    assert auth = @gateway.authorize(@amount, @threeDS2_card, options)
     assert_success auth
     assert_equal 'funding_transfer_transaction', auth.params['action']
     assert_equal 'SUCCESS', auth.message
