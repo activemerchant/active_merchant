@@ -240,7 +240,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def access_token_valid?
-        @options[:access_token].present? && @options.fetch(:token_expires, 0) > DateTime.now.strftime('%Q').to_i
+        @options[:access_token].present? && @options.fetch(:token_expires, 0).to_i > DateTime.now.strftime('%Q').to_i
       end
 
       def fetch_access_token
