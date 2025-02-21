@@ -323,7 +323,7 @@ module ActiveMerchant # :nodoc:
         headers['AccessToken'] = @access_token
         headers['Invoice'] = options[:invoice] if action != 'capture' && options[:invoice].present?
         headers['InterfaceVersion'] = '1'
-        headers['InterfaceName'] = 'Spreedly'
+        headers['InterfaceName'] = options[:interface_name]
         headers['CompanyName'] = 'Spreedly'
         headers
       end
