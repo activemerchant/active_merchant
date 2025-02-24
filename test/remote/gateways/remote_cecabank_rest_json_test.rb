@@ -81,6 +81,8 @@ class RemoteCecabankTest < Test::Unit::TestCase
   def test_successful_purchase_with_apple_pay
     assert response = @gateway.purchase(@amount, @apple_pay_network_token, { order_id: generate_unique_id })
     assert_success response
+    require 'pry'
+    binding.pry
     assert_equal %i[codAut numAut referencia], JSON.parse(response.message).symbolize_keys.keys.sort
   end
 

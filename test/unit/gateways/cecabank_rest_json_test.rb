@@ -186,6 +186,41 @@ class CecabankJsonTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_format_eci
+    one_digit = @no_encrypted_gateway.send(:eci_formater, '5')
+    two_digits = @no_encrypted_gateway.send(:eci_formater, '12')
+    non_eci = @no_encrypted_gateway.send(:eci_formater, nil)
+    empty_eci = @no_encrypted_gateway.send(:eci_formater, '')
+    # Modify the eci
+    assert_equal one_digit, '05'
+    # Return the same eci value if no modification is required
+    assert_equal two_digits, '12'
+    assert_equal non_eci, nil
+    assert_equal empty_eci, ''
+
+  end
+
+  def test_successful_purchase_with_apple_pay_with_different_cryptogram_values
+    cryptograms = [
+      "YwAAAAgAoTQY7rYAAAAAgBtgE4A",
+      'YwAAAAgAoTQY7rYAAAAAgBtgE4A=',
+      'YwAAAAgAoTQY7rYAAAAAgBtgE4A==',
+      "YwAAAAgAoTQY7rYAAAAAgBtgE4B\u003d",
+      'YwAAAAgAoTQY7rYAAAAAgBtgE4A\u003d'
+    ]
+
+    cryptograms.each do |cryptogram|
+      params = perform_purchase_with_cryptogram(cryptogram)
+      puts "encoded with: #{cryptogram} \n\n"
+      puts "\n\n  #{params} \n" 
+      puts "base64 decode:\n"
+      puts "#{Base64.decode64(params)} \n"
+      puts "base64 strict decode:\n"
+      puts "#{Base64.decode64(params)}----------- \n\n"
+    end
+  end
+  
+
   def test_successful_purchase_with_google_pay
     stub_comms(@no_encrypted_gateway, :ssl_post) do
       @no_encrypted_gateway.purchase(@amount, @google_pay_network_token, @options.merge(xid: 'some_xid'))
@@ -268,6 +303,21 @@ class CecabankJsonTest < Test::Unit::TestCase
   end
 
   private
+
+  def perform_purchase_with_cryptogram(cryptogram)
+    apple_pay = @apple_pay_network_token.dup
+    apple_pay.payment_cryptogram = cryptogram
+  
+    params = {}
+    stub_comms(@no_encrypted_gateway, :ssl_post) do
+      @no_encrypted_gateway.purchase(@amount, apple_pay, @options.merge(xid: 'some_xid'))
+    end.check_request do |_endpoint, data, _headers|
+      data = JSON.parse(data)
+      params = data['parametros']
+    end.respond_with(successful_purchase_response)
+  
+    params
+  end
 
   def decrypt_sensitive_fields(options, data)
     cipher = OpenSSL::Cipher.new('AES-256-CBC').decrypt
