@@ -131,6 +131,7 @@
 * Routex Bin: Update routex bin range to include 18 digits [yunnydang] #5410
 * Nuvei: Fix isRebilling flag for Stored credentials [javierpedrozaing] #5408
 * Shift4: Add interface_name field [almalee24] #5395
+* Stripe: Update tokenization method for google pay [yunnydang] #5414
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

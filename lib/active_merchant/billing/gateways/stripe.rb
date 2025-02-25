@@ -475,9 +475,10 @@ module ActiveMerchant # :nodoc:
           end
 
           if creditcard.is_a?(NetworkTokenizationCreditCard)
+            tokenization_method = creditcard.source == :google_pay ? :android_pay : creditcard.source
             card[:cryptogram] = creditcard.payment_cryptogram
             card[:eci] = creditcard.eci.rjust(2, '0') if creditcard.eci =~ /^[0-9]+$/
-            card[:tokenization_method] = creditcard.source.to_s
+            card[:tokenization_method] = tokenization_method.to_s
           end
           post[:card] = card
 
