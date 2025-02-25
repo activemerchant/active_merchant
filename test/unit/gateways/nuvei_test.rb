@@ -351,16 +351,30 @@ class NuveiTest < Test::Unit::TestCase
     end.check_request do |_method, endpoint, data, _headers|
       if /payment/.match?(endpoint)
         json_data = JSON.parse(data)
-        assert_equal('0', json_data['isRebilling'])
+        assert_not_includes(json_data, 'isRebilling')
         assert_equal('0', json_data['paymentOption']['card']['storedCredentials']['storedCredentialsMode'])
         assert_match(/ADDCARD/, json_data['authenticationOnlyType'])
       end
     end.respond_with(successful_purchase_response)
   end
 
-  def test_successful_stored_credentials_merchant_recurring
+  def test_successful_stored_credentials_init_mit
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: stored_credential(:merchant, :recurring, id: 'abc123')))
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: stored_credential(:merchant, :recurring, id: 'abc123'), is_rebilling: false))
+    end.check_request do |_method, endpoint, data, _headers|
+      if /payment/.match?(endpoint)
+        json_data = JSON.parse(data)
+        assert_equal('0', json_data['isRebilling'])
+        assert_equal('1', json_data['paymentOption']['card']['storedCredentials']['storedCredentialsMode'])
+        assert_match(/abc123/, json_data['relatedTransactionId'])
+        assert_match(/RECURRING/, json_data['authenticationOnlyType'])
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_stored_credentials_subsequent_mit
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: stored_credential(:merchant, :recurring, id: 'abc123'), is_rebilling: true))
     end.check_request do |_method, endpoint, data, _headers|
       if /payment/.match?(endpoint)
         json_data = JSON.parse(data)
@@ -382,6 +396,18 @@ class NuveiTest < Test::Unit::TestCase
         assert_match(/#{@bank_account.routing_number}/, json_data['paymentOption']['alternativePaymentMethod']['RoutingNumber'])
         assert_match(/#{@bank_account.account_number}/, json_data['paymentOption']['alternativePaymentMethod']['AccountNumber'])
       end
+    end
+  end
+
+  def test_no_method_error_in_authorize
+    assert_nothing_raised(NoMethodError) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end
+  end
+
+  def test_no_method_error_on_purchase_aft
+    assert_nothing_raised(NoMethodError) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(is_aft: true, aft_recipient_first_name: 'John', aft_recipient_last_name: 'Doe'))
     end
   end
 

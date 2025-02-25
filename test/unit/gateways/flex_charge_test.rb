@@ -63,6 +63,38 @@ class FlexChargeTest < Test::Unit::TestCase
     }.merge(@options)
   end
 
+  def test_access_token_valid_when_token_present_and_not_expired
+    @gateway.instance_variable_set(:@options, {
+      access_token: 'valid_token',
+      token_expires: (DateTime.now + 10.minutes).strftime('%Q').to_i
+    })
+    assert @gateway.send(:access_token_valid?)
+  end
+
+  def test_access_token_valid_when_token_present_but_expired
+    @gateway.instance_variable_set(:@options, {
+      access_token: 'expired_token',
+      token_expires: (DateTime.now - 10.minutes).strftime('%Q').to_i
+    })
+    refute @gateway.send(:access_token_valid?)
+  end
+
+  def test_access_token_valid_when_token_not_present
+    @gateway.instance_variable_set(:@options, {
+      access_token: nil,
+      token_expires: (DateTime.now + 10.minutes).strftime('%Q').to_i
+    })
+    refute @gateway.send(:access_token_valid?)
+  end
+
+  def test_access_token_valid_when_token_is_an_string
+    @gateway.instance_variable_set(:@options, {
+      access_token:  'valid_token',
+      token_expires: (DateTime.now + 10.minutes).strftime('%Q')
+    })
+    assert @gateway.send(:access_token_valid?)
+  end
+
   def test_valid_homepage_url
     assert @gateway.homepage_url.present?
     assert_equal 'https://www.flexfactor.io/', @gateway.homepage_url

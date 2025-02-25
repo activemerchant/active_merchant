@@ -174,6 +174,46 @@ class WorldpayTest < Test::Unit::TestCase
         }
       }
     }
+
+    @aft_less_options = {
+      account_funding_transaction: true,
+      aft_type: 'A',
+      aft_payment_purpose: '01',
+      aft_sender_account_type: '02',
+      aft_sender_account_reference: '4111111111111112',
+      aft_sender_full_name: {
+        first: 'First',
+        last: 'Sender'
+      },
+      aft_sender_funding_address: {
+        address1: '123 Sender St',
+        postal_code: '12345',
+        city: 'Senderville',
+        state: 'NC',
+        country_code: 'US'
+      },
+      aft_recipient_account_type: '03',
+      aft_recipient_account_reference: '4111111111111111',
+      aft_recipient_full_name: {
+        first: 'First',
+        last: 'Recipient'
+      },
+      aft_recipient_funding_address: {
+        address1: '123 Recipient St',
+        postal_code: '12345',
+        city: 'Recipientville',
+        state: 'NC',
+        country_code: 'US'
+      },
+      aft_recipient_funding_data: {
+        telephone_number: '123456789',
+        birth_date: {
+          day_of_month: '01',
+          month: '01',
+          year: '1980'
+        }
+      }
+    }
   end
 
   def test_supported_card_types
@@ -902,6 +942,18 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(@aft_options))
     end.check_request do |_endpoint, data, _headers|
+      assert_match(/<fundingTransfer type="A" category="PULL_FROM_CARD">/, data)
+    end.respond_with(successful_visa_credit_response)
+    assert_success response
+    assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
+  end
+
+  def test_successful_authorize_visa_aft_not_include_address2_or_middle_name
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(@aft_less_options))
+    end.check_request do |_endpoint, data, _headers|
+      refute data.include?('middle')
+      refute data.include?('address2')
       assert_match(/<fundingTransfer type="A" category="PULL_FROM_CARD">/, data)
     end.respond_with(successful_visa_credit_response)
     assert_success response

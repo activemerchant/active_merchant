@@ -144,8 +144,11 @@ module ActiveMerchant
           post[:paymentOption][:card][:storedCredentials] ||= {}
           post[:paymentOption][:card][:storedCredentials][:storedCredentialsMode] = stored_credentials_mode
         end
+        post[:isRebilling] = options[:is_rebilling] ? '1' : '0' if mit?(options[:stored_credential])
+      end
 
-        post[:isRebilling] = stored_credentials_mode
+      def mit?(stored_credential)
+        stored_credential[:reason_type] != 'unscheduled' && stored_credential[:initial_transaction] == false
       end
 
       def add_account_funding_transaction(post, payment, options = {})
@@ -165,6 +168,7 @@ module ActiveMerchant
           state: options.dig(:billing_address, :state)
         }.compact
 
+        post[:billingAddress] ||= {}
         post[:billingAddress].merge!(address_details)
         post[:recipientDetails] = recipient_details unless recipient_details.empty?
       end
