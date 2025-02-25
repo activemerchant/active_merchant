@@ -171,7 +171,7 @@ module ActiveMerchant # :nodoc:
       # :ignore_cvv => true   don't want to use CVV so continue processing even
       #                       if CVV would have failed
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, :p12, :password)
         super
       end
 
@@ -1194,17 +1194,43 @@ module ActiveMerchant # :nodoc:
       end
 
       # Where we actually build the full SOAP request using builder
+      # def build_request(body, options)
+      #   xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
+
+      #   xml = Builder::XmlMarkup.new indent: 2
+      #   xml.instruct!
+      #   xml.tag! 's:Envelope', { 'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
+      #     xml.tag! 's:Header' do
+      #       xml.tag! 'wsse:Security', { 's:mustUnderstand' => '1', 'xmlns:wsse' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd' } do
+      #         xml.tag! 'wsse:UsernameToken' do
+      #           xml.tag! 'wsse:Username', @options[:login]
+      #           xml.tag! 'wsse:Password', @options[:password], 'Type' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText'
+      #         end
+      #       end
+      #     end
+      #     xml.tag! 's:Body', { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema' } do
+      #       xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
+      #         add_merchant_data(xml, options)
+      #         xml << body
+      #       end
+      #     end
+      #   end
+      #   xml.target!
+      # end
+
       def build_request(body, options)
         xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
-
+      
         xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 's:Envelope', { 'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
           xml.tag! 's:Header' do
-            xml.tag! 'wsse:Security', { 's:mustUnderstand' => '1', 'xmlns:wsse' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd' } do
-              xml.tag! 'wsse:UsernameToken' do
-                xml.tag! 'wsse:Username', @options[:login]
-                xml.tag! 'wsse:Password', @options[:password], 'Type' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText'
+            xml.tag! 'wsse:Security', { 's:mustUnderstand' => '1', 'xmlns:wsse' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd', 'xmlns:wsu' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd' } do
+              xml.tag! 'wsse:BinarySecurityToken', { 'ValueType' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3', 'EncodingType' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary', 'wsu:Id' => 'X509Token' } do
+                xml.text! Base64.encode64(@options[:p12])
+              end
+              xml.tag! 'wsse:SecurityTokenReference' do
+                xml.tag! 'wsse:Reference', { 'URI' => '#X509Token' }
               end
             end
           end
@@ -1216,6 +1242,16 @@ module ActiveMerchant # :nodoc:
           end
         end
         xml.target!
+      end
+
+      def create_detached_signature(signature_element, private_key, security_token_reference)
+        doc = Nokogiri::XML(signature_element)
+    
+        signature = OpenSSL::PKCS7.sign(private_key, security_token_reference, doc.to_xml, [], OpenSSL::PKCS7::DETACHED)
+    
+        signature_element = doc.root.add_child(doc.create_element("Signature", signature.to_pem))
+        
+        doc.to_xml
       end
 
       # Contact CyberSource, make the SOAP request, and parse the reply into a
