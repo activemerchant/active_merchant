@@ -184,39 +184,22 @@ module ActiveMerchant # :nodoc:
       def add_payment_method_id(options)
         return options[:payment_method_id].to_i if options[:payment_method_id]
 
-        if options[:debit]
-          case options[:card_brand]
-          when 'visa'
-            31
-          when 'master'
-            105
-          when 'maestro'
-            106
-          when 'cabal'
-            108
-          else
-            31
-          end
-        else
-          case options[:card_brand]
-          when 'visa'
-            1
-          when 'master'
-            104
-          when 'american_express'
-            65
-          when 'american_express_prisma'
-            111
-          when 'cabal'
-            63
-          when 'diners_club'
-            8
-          when 'patagonia_365'
-            55
-          else
-            1
-          end
-        end
+        card_brand = options[:card_brand]
+        debit = options[:debit]
+
+        payment_method_ids = {
+          'visa' => debit ? 31 : 1,
+          'master' => debit ? 105 : 104,
+          'maestro' => 106,
+          'cabal' => debit ? 108 : 63,
+          'american_express' => 65,
+          'american_express_prisma' => 111,
+          'diners_club' => 8,
+          'patagonia_365' => 55,
+          'tarjeta_sol' => 64
+        }
+
+        payment_method_ids.fetch(card_brand, debit ? 31 : 1)
       end
 
       def add_fraud_detection(post, options)

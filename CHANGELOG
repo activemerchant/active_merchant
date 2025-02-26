@@ -127,6 +127,7 @@
 * Airwallex: Update authorization_from method to include payment intent ID on refunds [yunnydang] #5400
 * New Credit Card Sol: Add new bin set for Sol credit card [javierpedrozaing] #5380
 * Credit Card Sol: Update card name to `tarjeta_sol` instead of `sol` [javierpedrozaing] #5404
+* Credit Card Sol: Update tarjeta sol support for Decidir and Decidir plus gateways [javierpedrozaing] #5405
 * Routex Bin: Update routex bin range to include 18 digits [yunnydang] #5410
 * Nuvei: Fix isRebilling flag for Stored credentials [javierpedrozaing] #5408
 
