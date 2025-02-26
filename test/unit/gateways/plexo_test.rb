@@ -226,6 +226,15 @@ class PlexoTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_inquire_with_payment_id
+    stub_comms(@gateway, :ssl_get) do
+      @gateway.inquire('123456abcdef', {})
+    end.check_request do |endpoint, _headers|
+      refute_match(nil, data)
+      assert_includes endpoint, '123'
+    end.respond_with(successful_inquire_response)
+  end
+
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
@@ -427,6 +436,145 @@ class PlexoTest < Test::Unit::TestCase
         "message": "The requested Merchant was not found.",
         "type": "invalid-request-error",
         "status": 400
+      }
+    RESPONSE
+  end
+
+  def successful_inquire_response
+    <<~RESPONSE
+      {
+        "id": "e440b3a24a774bcbaa0cad486c72b1de",
+        "referenceId": "a5071ef254247d7595668a07c256b2ae",
+        "invoiceNumber": "12345abcde",
+        "status": "approved",
+        "flow": "direct",
+        "processingMethod": "api",
+        "browserDetails": {
+          "ipAddress": "127.0.0.1"
+        },
+        "createdAt": "2025-02-25T17:13:08.683Z",
+        "updatedAt": "2025-02-25T17:13:09.725Z",
+        "processedAt": "2025-02-25T17:13:09.725Z",
+        "merchant": {
+          "id": 3243,
+          "name": "spreedly",
+          "settings": {
+            "merchantIdentificationNumber": "98001456",
+            "metadata": {
+              "paymentProcessorId": "mock"
+            },
+            "paymentProcessor": {
+              "id": 32,
+              "acquirer": "mock"
+            }
+          },
+          "clientId": 221
+        },
+        "client": {
+          "id": 221,
+          "name": "Spreedly",
+          "owner": "PLEXO"
+        },
+        "paymentMethod": {
+          "id": "mastercard",
+          "legacyId": 4,
+          "name": "MASTERCARD",
+          "type": "card",
+          "source": "card",
+          "card": {
+            "name": "55555555XXXXXX4444",
+            "bin": "55555555",
+            "last4": "4444",
+            "expMonth": 12,
+            "expYear": 26,
+            "cardholder": {
+              "firstName": "Santiago",
+              "lastName": "Navatta",
+              "email": "snavatta@plexo.com.uy",
+              "identification": {
+                "type": 1,
+                "value": "123456"
+              },
+              "billingAddress": {
+                "city": "Ottawa",
+                "country": "CA",
+                "line1": "456 My Street",
+                "line2": "Apt 1",
+                "postalCode": "K1C2N6",
+                "state": "ON"
+              }
+            },
+            "type": "prepaid",
+            "origin": "uruguay",
+            "token": "24e9e5885ad741feb12b12561f6ddfd1",
+            "issuer": {
+              "id": 21289,
+              "name": "",
+              "shortName": ""
+            },
+            "tokenization": {
+              "type": "temporal"
+            }
+          },
+          "processor": {
+            "id": 32,
+            "acquirer": "mock"
+          }
+        },
+        "installments": 1,
+        "amount": {
+          "currency": "UYU",
+          "total": 1.0,
+          "details": {
+            "tax": {
+              "type": "none",
+              "amount": 0.0
+            },
+            "taxedAmount": 0.0
+          }
+        },
+        "items": [
+          {
+            "referenceId": "6d82c95c7295b71ca11055fa9b32fa19",
+            "name": "prueba",
+            "description": "prueba desc",
+            "quantity": 1,
+            "price": 100.0,
+            "discount": 0.0,
+            "metadata": {}
+          }
+        ],
+        "metadata": {},
+        "transactions": [
+          {
+            "id": "67bdfa242f47b84ec05039b3",
+            "parentId": "e440b3a24a774bcbaa0cad486c72b1de",
+            "traceId": "c4a589f0-6872-4bd4-9eb2-0269e693a352",
+            "type": "purchase",
+            "status": "created",
+            "createdAt": "2025-02-25T17:13:08.683Z",
+            "expiresAt": "2025-02-26T17:13:08.683Z",
+            "metadata": {},
+            "amount": 1.0
+          },
+          {
+            "id": "67bdfa252f47b84ec05039b6",
+            "parentId": "e440b3a24a774bcbaa0cad486c72b1de",
+            "traceId": "4fa9413d-7150-46cb-b6ae-5bca178d46fb",
+            "referenceId": "a5071ef254247d7595668a07c256b2ae",
+            "type": "purchase",
+            "status": "approved",
+            "createdAt": "2025-02-25T17:13:09.725Z",
+            "processedAt": "2025-02-25T17:13:09.725Z",
+            "resultCode": "0",
+            "resultMessage": "You have been mocked.",
+            "authorization": "123456",
+            "ticket": "7a516ab6e17b46e293e7cd908309f507",
+            "metadata": {},
+            "amount": 1.0
+          }
+        ],
+        "actions": []
       }
     RESPONSE
   end
