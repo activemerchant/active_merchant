@@ -56,6 +56,7 @@ module ActiveMerchant # :nodoc:
             add_card_brand(post, options)
             add_aft_recipient_details(post, options)
             add_aft_sender_details(post, options)
+            add_request_extended_authorization(post, options)
             post[:expand] = ['charges.data.balance_transaction']
 
             CREATE_INTENT_ATTRIBUTES.each do |attribute|
@@ -381,6 +382,14 @@ module ActiveMerchant # :nodoc:
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
         post[:payment_method_options][:card][:network] = options[:card_brand] if options[:card_brand]
+      end
+
+      def add_request_extended_authorization(post, options)
+        return unless options[:request_extended_authorization]
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:request_extended_authorization] = options[:request_extended_authorization] if options[:request_extended_authorization]
       end
 
       def add_level_three(post, options = {})

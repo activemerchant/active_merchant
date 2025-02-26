@@ -722,6 +722,18 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response_with_apple_pay_and_billing_address)
   end
 
+  def test_authorize_with_with_request_extended_authorization
+    options = {
+      request_extended_authorization: 'if_available'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][request_extended_authorization]=if_available', data)
+      assert_match('capture_method=manual', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_stored_credentials_does_not_override_ntid_field
     sc_network_transaction_id = '1078784111114777'
     options = @options.merge(

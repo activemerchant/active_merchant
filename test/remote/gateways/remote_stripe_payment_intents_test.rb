@@ -612,6 +612,19 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     refute authorization.params.dig('charges', 'data')[0]['captured']
   end
 
+  def test_successful_authorize_with_extended_authorization
+    options = {
+      request_extended_authorization: 'if_available'
+    }
+
+    assert authorize = @gateway.authorize(@amount, @visa_payment_method, options)
+    assert_equal 'requires_capture', authorize.params['status']
+
+    card_details = authorize.params['charges']['data'][0]['payment_method_details']['card']
+    assert_equal 'disabled', card_details['extended_authorization']['status']
+    assert_not_nil card_details['capture_before']
+  end
+
   def test_create_payment_intent_manual_capture_method
     options = {
       currency: 'USD',

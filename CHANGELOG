@@ -134,6 +134,7 @@
 * Stripe: Update tokenization method for google pay [yunnydang] #5414
 * StripePI: Add AFT fields [yunnydang] #5418
 * CheckoutV2: Improve payout handling with blank sender data [jcreiff] #5423
+* StripePI: Add the request_extended_authorization field [yunnydang] #5417
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
