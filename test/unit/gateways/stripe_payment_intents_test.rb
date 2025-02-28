@@ -828,6 +828,89 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response)
   end
 
+  def test_successful_authorize_with_aft_data
+    options = {
+      recipient_details: {
+        first_name: 'Jane',
+        last_name: 'Doe',
+        email: 'janedoe@email.com',
+        phone: '447123456789',
+        address: {
+          country: 'GB',
+          line1: '123_Street',
+          line2: '',
+          postal_code: 'tw11qq',
+          state: 'KA',
+          city: 'Preston'
+        },
+        account_details: {
+          card: {
+            first6: '123456',
+            last4: '1234'
+          },
+          unique_identifier: {
+            identifier: '1234567890'
+          }
+        }
+      },
+      sender_details: {
+        first_name: 'Jane',
+        last_name: 'Doe',
+        email: 'test@email.com',
+        occupation: 'swe',
+        nationality: 'US',
+        birth_country: 'US',
+        address: {
+          country: 'DE',
+          line1: '321_Street',
+          line2: '',
+          postal_code: '30880',
+          state: 'KA',
+          city: 'Laatzen'
+        },
+        dob: {
+          day: 3,
+          month: 9,
+          year: 2001
+        }
+      }
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_method, endpoint, data, _headers|
+      if /payment_intents/.match?(endpoint)
+        # recipient_details
+        assert_match(%r{payment_method_options\[card\]\[recipient_details\]\[first_name\]=Jane}, data)
+        assert_match(%r{payment_method_options\[card\]\[recipient_details\]\[last_name\]=Doe}, data)
+        assert_match(%r{payment_method_options\[card\]\[recipient_details\]\[email\]=janedoe%40email.com}, data)
+        assert_match(%r{payment_method_options\[card\]\[recipient_details\]\[phone\]=447123456789}, data)
+        assert_match(%r{payment_method_options\[card\]\[recipient_details\]\[address\]\[country\]=GB}, data)
+        assert_match(%r{payment_method_options\[card\]\[recipient_details\]\[address\]\[line1\]=123_Street}, data)
+        assert_match(%r{payment_method_options\[card\]\[recipient_details\]\[address\]\[postal_code\]=tw11qq}, data)
+        assert_match(%r{payment_method_options\[card\]\[recipient_details\]\[address\]\[state\]=KA}, data)
+        assert_match(%r{payment_method_options\[card\]\[recipient_details\]\[address\]\[city\]=Preston}, data)
+        assert_match(%r{payment_method_options\[card\]\[recipient_details\]\[account_details\]\[card\]\[first6\]=123456}, data)
+        assert_match(%r{payment_method_options\[card\]\[recipient_details\]\[account_details\]\[card\]\[last4\]=1234}, data)
+        assert_match(%r{payment_method_options\[card\]\[recipient_details\]\[account_details\]\[unique_identifier\]\[identifier\]=1234567890}, data)
+        # sender_details
+        assert_match(%r{payment_method_options\[card\]\[sender_details\]\[first_name\]=Jane}, data)
+        assert_match(%r{payment_method_options\[card\]\[sender_details\]\[last_name\]=Doe}, data)
+        assert_match(%r{payment_method_options\[card\]\[sender_details\]\[email\]=test%40email.com}, data)
+        assert_match(%r{payment_method_options\[card\]\[sender_details\]\[occupation\]=swe}, data)
+        assert_match(%r{payment_method_options\[card\]\[sender_details\]\[nationality\]=US}, data)
+        assert_match(%r{payment_method_options\[card\]\[sender_details\]\[birth_country\]=US}, data)
+        assert_match(%r{payment_method_options\[card\]\[sender_details\]\[address\]\[line1\]=321_Street}, data)
+        assert_match(%r{payment_method_options\[card\]\[sender_details\]\[address\]\[postal_code\]=30880}, data)
+        assert_match(%r{payment_method_options\[card\]\[sender_details\]\[address\]\[state\]=KA}, data)
+        assert_match(%r{payment_method_options\[card\]\[sender_details\]\[address\]\[city\]=Laatzen}, data)
+        assert_match(%r{payment_method_options\[card\]\[sender_details\]\[address\]\[country\]=DE}, data)
+        assert_match(%r{payment_method_options\[card\]\[sender_details\]\[dob\]\[day\]=3}, data)
+        assert_match(%r{payment_method_options\[card\]\[sender_details\]\[dob\]\[month\]=9}, data)
+        assert_match(%r{payment_method_options\[card\]\[sender_details\]\[dob\]\[year\]=2001}, data)
+      end
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_succesful_authorize_with_radar_session
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, {

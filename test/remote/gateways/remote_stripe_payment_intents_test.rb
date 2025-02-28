@@ -531,6 +531,60 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal ['all'], purchase.params['charges']['data'][0]['radar_options']['skip_rules']
   end
 
+  # this specific test requires credentials that are setup for AFT
+  def test_successful_authorize_with_aft_data
+    gateway = StripePaymentIntentsGateway.new(fixtures(:stripe_aft))
+    options = {
+      recipient_details: {
+        first_name: 'Jane',
+        last_name: 'Doe',
+        email: 'janedoe@email.com',
+        phone: '+44 7123 456789',
+        address: {
+          country: 'GB',
+          line1: '123 Street',
+          line2: '',
+          postal_code: 'tw11qq',
+          state: 'KA',
+          city: 'Preston'
+        },
+        account_details: {
+          card: {
+            first6: '123456',
+            last4: '1234'
+          },
+          unique_identifier: {
+            identifier: '1234567890'
+          }
+        }
+      },
+      sender_details: {
+        first_name: 'Jane',
+        last_name: 'Doe',
+        email: 'test@email.com',
+        occupation: 'swe',
+        nationality: 'US',
+        birth_country: 'US',
+        address: {
+          country: 'DE',
+          line1: '321 Street',
+          line2: '',
+          postal_code: '30880',
+          state: 'KA',
+          city: 'Laatzen'
+        },
+        dob: {
+          day: 3,
+          month: 9,
+          year: 2001
+        }
+      }
+    }
+
+    assert authorize = gateway.authorize(@amount, @visa_payment_method, options)
+    assert_equal 'requires_capture', authorize.params['status']
+  end
+
   def test_successful_authorization_with_external_auth_data_3ds_2
     options = {
       currency: 'GBP',

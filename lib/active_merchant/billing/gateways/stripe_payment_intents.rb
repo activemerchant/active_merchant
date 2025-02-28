@@ -54,6 +54,8 @@ module ActiveMerchant # :nodoc:
             request_three_d_secure(post, options)
             add_level_three(post, options)
             add_card_brand(post, options)
+            add_aft_recipient_details(post, options)
+            add_aft_sender_details(post, options)
             post[:expand] = ['charges.data.balance_transaction']
 
             CREATE_INTENT_ATTRIBUTES.each do |attribute|
@@ -392,6 +394,82 @@ module ActiveMerchant # :nodoc:
         level_three[:line_items] = options[:line_items] if options[:line_items]
 
         post[:level3] = level_three unless level_three.empty?
+      end
+
+      def add_aft_recipient_details(post, options)
+        return unless options[:recipient_details]&.is_a?(Hash)
+
+        recipient_details = options[:recipient_details]
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:recipient_details] = {}
+        post[:payment_method_options][:card][:recipient_details][:first_name] = recipient_details[:first_name] if recipient_details[:first_name]
+        post[:payment_method_options][:card][:recipient_details][:last_name] = recipient_details[:last_name] if recipient_details[:last_name]
+        post[:payment_method_options][:card][:recipient_details][:email] = recipient_details[:email] if recipient_details[:email]
+        post[:payment_method_options][:card][:recipient_details][:phone] = recipient_details[:phone] if recipient_details[:phone]
+
+        if recipient_details[:address].is_a?(Hash)
+          address = recipient_details[:address]
+          post[:payment_method_options][:card][:recipient_details][:address] = {}
+          post[:payment_method_options][:card][:recipient_details][:address][:country] = address[:country] if address[:country]
+          post[:payment_method_options][:card][:recipient_details][:address][:line1] = address[:line1] if address[:line1]
+          post[:payment_method_options][:card][:recipient_details][:address][:line2] = address[:line2] if address[:line2]
+          post[:payment_method_options][:card][:recipient_details][:address][:postal_code] = address[:postal_code] if address[:postal_code]
+          post[:payment_method_options][:card][:recipient_details][:address][:state] = address[:state] if address[:state]
+          post[:payment_method_options][:card][:recipient_details][:address][:city] = address[:city] if address[:city]
+        end
+
+        if recipient_details[:account_details].is_a?(Hash)
+          account_details = recipient_details[:account_details]
+          post[:payment_method_options][:card][:recipient_details][:account_details] = {}
+
+          if account_details[:card].is_a?(Hash)
+            card = account_details[:card]
+            post[:payment_method_options][:card][:recipient_details][:account_details][:card] = {}
+            post[:payment_method_options][:card][:recipient_details][:account_details][:card][:first6] = card[:first6] if card[:first6]
+            post[:payment_method_options][:card][:recipient_details][:account_details][:card][:last4] = card[:last4] if card[:last4]
+          end
+
+          if account_details[:unique_identifier].is_a?(Hash)
+            unique_identifier = account_details[:unique_identifier]
+            post[:payment_method_options][:card][:recipient_details][:account_details][:unique_identifier] = {}
+            post[:payment_method_options][:card][:recipient_details][:account_details][:unique_identifier][:identifier] = unique_identifier[:identifier] if unique_identifier[:identifier]
+          end
+        end
+      end
+
+      def add_aft_sender_details(post, options)
+        return unless options[:sender_details]&.is_a?(Hash)
+
+        sender_details = options[:sender_details]
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:sender_details] = {}
+        post[:payment_method_options][:card][:sender_details][:first_name] = sender_details[:first_name] if sender_details[:first_name]
+        post[:payment_method_options][:card][:sender_details][:last_name] = sender_details[:last_name] if sender_details[:last_name]
+        post[:payment_method_options][:card][:sender_details][:email] = sender_details[:email] if sender_details[:email]
+        post[:payment_method_options][:card][:sender_details][:occupation] = sender_details[:occupation] if sender_details[:occupation]
+        post[:payment_method_options][:card][:sender_details][:nationality] = sender_details[:nationality] if sender_details[:nationality]
+        post[:payment_method_options][:card][:sender_details][:birth_country] = sender_details[:birth_country] if sender_details[:birth_country]
+
+        if sender_details[:address].is_a?(Hash)
+          address = sender_details[:address]
+          post[:payment_method_options][:card][:sender_details][:address] = {}
+          post[:payment_method_options][:card][:sender_details][:address][:country] = address[:country] if address[:country]
+          post[:payment_method_options][:card][:sender_details][:address][:line1] = address[:line1] if address[:line1]
+          post[:payment_method_options][:card][:sender_details][:address][:line2] = address[:line2] if address[:line2]
+          post[:payment_method_options][:card][:sender_details][:address][:postal_code] = address[:postal_code] if address[:postal_code]
+          post[:payment_method_options][:card][:sender_details][:address][:state] = address[:state] if address[:state]
+          post[:payment_method_options][:card][:sender_details][:address][:city] = address[:city] if address[:city]
+        end
+
+        if sender_details[:dob].is_a?(Hash)
+          dob = sender_details[:dob]
+          post[:payment_method_options][:card][:sender_details][:dob] = {}
+          post[:payment_method_options][:card][:sender_details][:dob][:day] = dob[:day] if dob[:day]
+          post[:payment_method_options][:card][:sender_details][:dob][:month] = dob[:month] if dob[:month]
+          post[:payment_method_options][:card][:sender_details][:dob][:year] = dob[:year] if dob[:year]
+        end
       end
 
       def add_return_url(post, options)
