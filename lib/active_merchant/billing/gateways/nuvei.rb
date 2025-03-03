@@ -162,10 +162,10 @@ module ActiveMerchant
         address_details = {
           firstName: payment.first_name,
           lastName: payment.last_name,
-          country: options.dig(:billing_address, :country),
-          address: options.dig(:billing_address, :address1),
-          city: options.dig(:billing_address, :city),
-          state: options.dig(:billing_address, :state)
+          country: payment.try(:country) || options.dig(:billing_address, :country),
+          address: payment.try(:address1) || payment.try(:address2) || options.dig(:billing_address, :address1),
+          city: payment.try(:city) || options.dig(:billing_address, :city),
+          state: payment.try(:state) || options.dig(:billing_address, :state)
         }.compact
 
         post[:billingAddress] ||= {}
@@ -201,7 +201,7 @@ module ActiveMerchant
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r(("cardNumber\\?":\\?")[^"\\]*)i, '\1[FILTERED]').
-          gsub(%r(("cardCvv\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r(("CVV\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("merchantId\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("merchantSiteId\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r(("merchantKey\\?":\\?")\d+), '\1[FILTERED]').
@@ -392,7 +392,7 @@ module ActiveMerchant
         card = payment_options[:card] ||= {}
         card[:threeD] = {
           v2AdditionalParams: {
-            challengeWindowSize: options[:browser_size],
+            challengeWindowSize: browser_info_3ds[:browser_size],
             challengePreference: challenge_preference
           }.compact,
         browserDetails: {

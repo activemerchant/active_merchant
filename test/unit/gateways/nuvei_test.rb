@@ -190,6 +190,7 @@ class NuveiTest < Test::Unit::TestCase
         assert_equal @credit_card.verification_value, payment_option_card['CVV']
       end
       if /payment/.match?(endpoint)
+        assert_equal '05', payment_option_card['threeD']['v2AdditionalParams']['challengeWindowSize']
         assert_not_includes payment_option_card['threeD']['v2AdditionalParams'], 'challengePreference'
         three_ds_assertions(payment_option_card)
       end
@@ -224,6 +225,7 @@ class NuveiTest < Test::Unit::TestCase
       payment_option_card = json_data['paymentOption']['card']
       if /payment/.match?(endpoint)
         assert_equal '01', payment_option_card['threeD']['v2AdditionalParams']['challengePreference']
+        assert_equal '05', payment_option_card['threeD']['v2AdditionalParams']['challengeWindowSize']
         three_ds_assertions(payment_option_card)
       end
     end.respond_with(successful_init_payment_response, successful_purchase_response)
@@ -556,9 +558,9 @@ class NuveiTest < Test::Unit::TestCase
       starting SSL for ppp-test.nuvei.com:443...
       SSL established, protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384
       I, [2024-07-22T12:21:29.506576 #65153]  INFO -- : [ActiveMerchant::Billing::NuveiGateway] connection_ssl_version=TLSv1.3 connection_ssl_cipher=TLS_AES_256_GCM_SHA384
-      D, [2024-07-22T12:21:29.506622 #65153] DEBUG -- : {"transactionType":"Auth","merchantId":"[FILTERED]","merchantSiteId":"[FILTERED]","timeStamp":"20240722172128","clientRequestId":"8fdaf176-67e7-4fee-86f7-efa3bfb2df60","clientUniqueId":"e1c3cb6c583be8f475dff7e25a894f81","amount":"100","currency":"USD","paymentOption":{"card":{"cardNumber":"[FILTERED]","cardHolderName":"Cure Tester","expirationMonth":"09","expirationYear":"2025","CVV":"999"}},"billingAddress":{"email":"test@gmail.com","country":"CA","firstName":"Cure","lastName":"Tester","phone":"(555)555-5555"},"deviceDetails":{"ipAddress":"127.0.0.1"},"sessionToken":"fdda0126-674f-4f8c-ad24-31ac846654ab","checksum":"577658357a0b2c33e5f567dc52f40e984e50b6fa0344d55abb7849cca9a79741"}
+      D, [2024-07-22T12:21:29.506622 #65153] DEBUG -- : {"transactionType":"Auth","merchantId":"[FILTERED]","merchantSiteId":"[FILTERED]","timeStamp":"20240722172128","clientRequestId":"8fdaf176-67e7-4fee-86f7-efa3bfb2df60","clientUniqueId":"e1c3cb6c583be8f475dff7e25a894f81","amount":"100","currency":"USD","paymentOption":{"card":{"cardNumber":"[FILTERED]","cardHolderName":"Cure Tester","expirationMonth":"09","expirationYear":"2025","CVV":"[FILTERED]"}},"billingAddress":{"email":"test@gmail.com","country":"CA","firstName":"Cure","lastName":"Tester","phone":"(555)555-5555"},"deviceDetails":{"ipAddress":"127.0.0.1"},"sessionToken":"fdda0126-674f-4f8c-ad24-31ac846654ab","checksum":"577658357a0b2c33e5f567dc52f40e984e50b6fa0344d55abb7849cca9a79741"}
       <- "POST /ppp/api/v1/payment HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Bearer fdda0126-674f-4f8c-ad24-31ac846654ab\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: ppp-test.nuvei.com\r\nContent-Length: 702\r\n\r\n"
-      <- "{\"transactionType\":\"Auth\",\"merchantId\":\"[FILTERED]\",\"merchantSiteId\":\"[FILTERED]\",\"timeStamp\":\"20240722172128\",\"clientRequestId\":\"8fdaf176-67e7-4fee-86f7-efa3bfb2df60\",\"clientUniqueId\":\"e1c3cb6c583be8f475dff7e25a894f81\",\"amount\":\"100\",\"currency\":\"USD\",\"paymentOption\":{\"card\":{\"cardNumber\":\"[FILTERED]\",\"cardHolderName\":\"Cure Tester\",\"expirationMonth\":\"09\",\"expirationYear\":\"2025\",\"CVV\":\"999\"}},\"billingAddress\":{\"email\":\"test@gmail.com\",\"country\":\"CA\",\"firstName\":\"Cure\",\"lastName\":\"Tester\",\"phone\":\"(555)555-5555\"},\"deviceDetails\":{\"ipAddress\":\"127.0.0.1\"},\"sessionToken\":\"fdda0126-674f-4f8c-ad24-31ac846654ab\",\"checksum\":\"577658357a0b2c33e5f567dc52f40e984e50b6fa0344d55abb7849cca9a79741\"}"
+      <- "{\"transactionType\":\"Auth\",\"merchantId\":\"[FILTERED]\",\"merchantSiteId\":\"[FILTERED]\",\"timeStamp\":\"20240722172128\",\"clientRequestId\":\"8fdaf176-67e7-4fee-86f7-efa3bfb2df60\",\"clientUniqueId\":\"e1c3cb6c583be8f475dff7e25a894f81\",\"amount\":\"100\",\"currency\":\"USD\",\"paymentOption\":{\"card\":{\"cardNumber\":\"[FILTERED]\",\"cardHolderName\":\"Cure Tester\",\"expirationMonth\":\"09\",\"expirationYear\":\"2025\",\"CVV\":\"[FILTERED]\"}},\"billingAddress\":{\"email\":\"test@gmail.com\",\"country\":\"CA\",\"firstName\":\"Cure\",\"lastName\":\"Tester\",\"phone\":\"(555)555-5555\"},\"deviceDetails\":{\"ipAddress\":\"127.0.0.1\"},\"sessionToken\":\"fdda0126-674f-4f8c-ad24-31ac846654ab\",\"checksum\":\"577658357a0b2c33e5f567dc52f40e984e50b6fa0344d55abb7849cca9a79741\"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Content-Type: application/json\r\n"
       -> "Server: nginx\r\n"
