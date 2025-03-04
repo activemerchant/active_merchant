@@ -186,6 +186,19 @@ class CecabankJsonTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_format_eci
+    one_digit = @no_encrypted_gateway.send(:eci_padding, '5')
+    two_digits = @no_encrypted_gateway.send(:eci_padding, '12')
+    non_eci = @no_encrypted_gateway.send(:eci_padding, nil)
+    empty_eci = @no_encrypted_gateway.send(:eci_padding, '')
+    # Modify the eci only if it's 1 length.
+    assert_equal one_digit, '05'
+    # Return the same eci value if no modification is required
+    assert_equal two_digits, '12'
+    assert_equal non_eci, nil
+    assert_equal empty_eci, ''
+  end
+
   def test_successful_purchase_with_google_pay
     stub_comms(@no_encrypted_gateway, :ssl_post) do
       @no_encrypted_gateway.purchase(@amount, @google_pay_network_token, @options.merge(xid: 'some_xid'))
