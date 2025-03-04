@@ -1472,6 +1472,73 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal 'Successful transaction', response.message
   end
 
+  def test_successful_inquire
+    assert authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(authorize)
+  
+    # Verifica la autorización
+    puts "Authorization: #{authorize.authorization}"
+    puts "Authorization Response: #{authorize.inspect}"
+  
+    # Realiza la solicitud de inquire
+    response = @gateway.inquire(authorize.authorization, @options)
+  
+    # Depura la respuesta
+    puts "Inquire Response: #{response.inspect}"
+
+    @options[:add_merchant_data_last] = true
+    response2 = @gateway.inquire(authorize.authorization, @options)
+    @options[:add_merchant_data_last] = false
+
+    @options[:with_merchant_descriptor] = true
+    response3 = @gateway.inquire(authorize.authorization, @options)
+    @options[:with_merchant_descriptor] = false
+    
+    puts "example 4 block start"
+    @options[:ap_check_first]= true
+    response4 = @gateway.inquire(authorize.authorization, @options)
+    @options[:ap_check_first]= false
+    puts "example 4 block end"
+    @options[:add_merchant_data_last] = true
+    @options[:with_merchant_descriptor] = true
+    response5 = @gateway.inquire(authorize.authorization, @options)
+    @options[:add_merchant_data_last] = false
+    @options[:with_merchant_descriptor] = false
+
+    @options[:add_merchant_data_last] = true
+    @options[:ap_check_first]= true
+    response6 = @gateway.inquire(authorize.authorization, @options)
+    @options[:add_merchant_data_last] = false
+    @options[:ap_check_first]= false
+
+    @options[:with_merchant_descriptor] = true
+    @options[:ap_check_first]= true
+    response7 = @gateway.inquire(authorize.authorization, @options)
+    @options[:with_merchant_descriptor] = false
+    @options[:ap_check_first]= false
+
+    @options[:add_merchant_data_last] = true
+    @options[:with_merchant_descriptor] = true
+    @options[:ap_check_first]= true
+    response8 = @gateway.inquire(authorize.authorization, @options)
+    @options[:add_merchant_data_last] = false
+    @options[:with_merchant_descriptor] = false
+    @options[:ap_check_first]= false
+    
+
+    assert_failure response
+    assert_failure response2
+    assert_failure response3
+    assert_failure response4
+    assert_failure response5
+    assert_failure response6
+    assert_failure response7
+    assert_failure response8
+    
+
+
+  end
+
   private
 
   def assert_successful_response(response)
