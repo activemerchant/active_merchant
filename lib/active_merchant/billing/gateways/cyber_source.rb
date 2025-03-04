@@ -1252,20 +1252,7 @@ module ActiveMerchant # :nodoc:
         end
       end
 
-      # def get_cypher_body(body, options)
-      #   xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
-
-      #   xml = Builder::XmlMarkup.new indent: 2
-      #   xml.tag! 's:Body', { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema', 'wsu:Id' => 'Body' } do
-      #     xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
-      #       add_merchant_data(xml, options)
-      #       xml << body
-      #     end
-      #   end
-      #   xml.target!
-      # end
-
-      def body(request, options)
+      def get_body(request, options)
         xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
 
         xml = Builder::XmlMarkup.new indent: 2
@@ -1285,14 +1272,14 @@ module ActiveMerchant # :nodoc:
 
       # Where we actually build the full SOAP request using builder
       def build_request(request, options)
-        xml_body = body(request, options)
-        digest_value = Digest::SHA256.digest(xml_body)
+        body = get_body(request, options)
+        digest_value = Digest::SHA256.digest(body)
 
         xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 's:Envelope', { 'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
           get_headers(xml, digest_value)
-          xml << xml_body
+          xml << body
         end
         xml.target!
       end
