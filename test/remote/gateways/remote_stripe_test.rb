@@ -10,6 +10,28 @@ class RemoteStripeTest < Test::Unit::TestCase
     @new_credit_card = credit_card('5105105105105100')
     @debit_card = credit_card('4000056655665556')
 
+    @google_pay = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'dGVzdGNyeXB0b2dyYW1YWFhYWFhYWFhYWFg9PQ==',
+      source: :google_pay,
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030'
+    )
+
+    @apple_pay = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'dGVzdGNyeXB0b2dyYW1YWFhYWFhYWFhYWFg9PQ==',
+      source: :apple_pay,
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    )
+
     @check = check({
       bank_name: 'STRIPE TEST BANK',
       account_number: '000123456789',
@@ -85,6 +107,18 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response.params['paid']
     assert_equal 'ActiveMerchant Test Purchase', response.params['description']
     assert_equal 'wow@example.com', response.params['metadata']['email']
+  end
+
+  def test_successful_purchase_with_google_pay_tokenization
+    purchase = @gateway.purchase(@amount, @google_pay, @options)
+    assert_success purchase
+    assert_match('android_pay', purchase.params['source']['tokenization_method'])
+  end
+
+  def test_successful_purchase_with_non_google_pay_tokenization
+    purchase = @gateway.purchase(@amount, @apple_pay, @options)
+    assert_success purchase
+    assert_match('apple_pay', purchase.params['source']['tokenization_method'])
   end
 
   def test_successful_purchase_with_destination_and_amount

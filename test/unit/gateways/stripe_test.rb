@@ -847,6 +847,38 @@ class StripeTest < Test::Unit::TestCase
     assert_equal '07', post[:card][:eci]
   end
 
+  def test_add_creditcard_with_android_pay
+    post = {}
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: '111111111100cryptogram',
+      source: :google_pay,
+      transaction_id: '1234567890'
+    )
+
+    @gateway.send(:add_creditcard, post, credit_card, {})
+
+    assert_equal 'android_pay', post[:card][:tokenization_method]
+  end
+
+  def test_add_creditcard_with_other_tokenization_method
+    post = {}
+    credit_card = network_tokenization_credit_card(
+      '4111111111111111',
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: '111111111100cryptogram',
+      source: :apple_pay,
+      transaction_id: '1234567890'
+    )
+
+    @gateway.send(:add_creditcard, post, credit_card, {})
+
+    assert_equal 'apple_pay', post[:card][:tokenization_method]
+  end
+
   def test_application_fee_is_submitted_for_purchase
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge({ application_fee: 144 }))
