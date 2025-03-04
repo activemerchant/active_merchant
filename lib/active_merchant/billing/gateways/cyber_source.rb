@@ -171,7 +171,7 @@ module ActiveMerchant # :nodoc:
       # :ignore_cvv => true   don't want to use CVV so continue processing even
       #                       if CVV would have failed
       def initialize(options = {})
-        requires!(options, :public_key, :private_key)
+        requires!(options, :login, :password) unless options[:public_key]
         super
       end
 
@@ -1193,34 +1193,9 @@ module ActiveMerchant # :nodoc:
         xml.tag!('partnerSolutionID', application_id)
       end
 
-      # Where we actually build the full SOAP request using builder
-      # def build_request(body, options)
-      #   xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
-
-      #   xml = Builder::XmlMarkup.new indent: 2
-      #   xml.instruct!
-      #   xml.tag! 's:Envelope', { 'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
-      #     xml.tag! 's:Header' do
-      #       xml.tag! 'wsse:Security', { 's:mustUnderstand' => '1', 'xmlns:wsse' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd' } do
-      #         xml.tag! 'wsse:UsernameToken' do
-      #           xml.tag! 'wsse:Username', @options[:login]
-      #           xml.tag! 'wsse:Password', @options[:password], 'Type' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText'
-      #         end
-      #       end
-      #     end
-      #     xml.tag! 's:Body', { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema' } do
-      #       xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
-      #         add_merchant_data(xml, options)
-      #         xml << body
-      #       end
-      #     end
-      #   end
-      #   xml.target!
-      # end
-
       def signed_info(digest_value)
         xml = Builder::XmlMarkup.new indent: 2
-        xml.instruct!
+
         xml.tag! 'ds:SignedInfo', { 'xmlns:ds' => 'http://www.w3.org/2000/09/xmldsig#' } do
           xml.tag! 'ds:CanonicalizationMethod', { 'Algorithm' => 'http://www.w3.org/2001/10/xml-exc-c14n#' }
           xml.tag! 'ds:SignatureMethod', { 'Algorithm' => 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256' }
@@ -1232,22 +1207,20 @@ module ActiveMerchant # :nodoc:
             xml.tag! 'ds:DigestValue', Base64.encode64(digest_value).strip
           end
         end
-        xml.target!
 
+        xml.target!
       end
       
-      def signature_element(digest_value)
+      def signature_element(xml, digest_value)
         sign_info = signed_info(digest_value)
         
         rsa_private_key = OpenSSL::PKey::RSA.new(@options[:private_key])
-        signed_data = rsa_private_key.sign(OpenSSL::Digest::SHA256.new, sign_info)
+        signed_data = rsa_private_key.sign(OpenSSL::Digest::SHA256.new(digest_value), sign_info)
 
-        xml = Builder::XmlMarkup.new indent: 2
-        xml.instruct!
         xml.tag! 'ds:Signature' do
           xml << sign_info
           xml.tag! 'ds:SignatureValue' do
-            xml.text! signed_data
+            xml.text! Base64.encode64(signed_data).strip
           end
           xml.tag! 'ds:KeyInfo' do
             xml.tag! 'wsse:SecurityTokenReference' do
@@ -1255,51 +1228,70 @@ module ActiveMerchant # :nodoc:
             end
           end
         end
-        xml.target!
       end
 
-      def security_token_reference
-        xml = Builder::XmlMarkup.new indent: 2
-        xml.instruct!
+      def security_token_reference(xml)
         xml.tag! 'wsse:BinarySecurityToken', { 'ValueType' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3', 'EncodingType' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary', 'wsu:Id' => 'X509Token' } do
           xml.text! @options[:public_key]
         end
-        xml.target!
       end
 
-      def xml_body(body, options)
-        xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
-
-        xml = Builder::XmlMarkup.new indent: 2
-        xml.instruct!
-        xml.tag! 's:Envelope', { 'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
-          xml.tag! 's:Body', { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema', 'wsu:Id' => 'Body' } do
-            xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
-              add_merchant_data(xml, options)
-              xml << body
+      def get_headers(xml, digest_value)
+        xml.tag! 's:Header' do
+          xml.tag! 'wsse:Security', { 'xmlns:wsse' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd' } do
+            if @options[:public_key]
+              security_token_reference(xml)
+              signature_element(xml, digest_value)
+            else
+              xml.tag! 'wsse:UsernameToken' do
+                xml.tag! 'wsse:Username', @options[:login]
+                xml.tag! 'wsse:Password', @options[:password], 'Type' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText'
+              end
             end
           end
         end
-        xml.target!
       end
 
-      def xml_headers(digest_value)
+      # def get_cypher_body(body, options)
+      #   xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
+
+      #   xml = Builder::XmlMarkup.new indent: 2
+      #   xml.tag! 's:Body', { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema', 'wsu:Id' => 'Body' } do
+      #     xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
+      #       add_merchant_data(xml, options)
+      #       xml << body
+      #     end
+      #   end
+      #   xml.target!
+      # end
+
+      def body(request, options)
+        xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
+
         xml = Builder::XmlMarkup.new indent: 2
-        xml.instruct!
-        xml.tag! 'wsse:Security', { 's:mustUnderstand' => '1', 'xmlns:wsse' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd', 'xmlns:wsu' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd' } do
-          xml << security_token_reference
-          xml << signature_element(digest_value)
+
+        body_options = { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema' }
+        body_options['wsu:Id'] = 'Body' if @options[:public_key]
+
+        xml.tag! 's:Body', body_options do
+          xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
+            add_merchant_data(xml, options)
+            xml << request
+          end
         end
+
         xml.target!
       end
 
-      def build_request(body, options)
-        xml_body = xml_body(body, options)
+      # Where we actually build the full SOAP request using builder
+      def build_request(request, options)
+        xml_body = body(request, options)
         digest_value = Digest::SHA256.digest(xml_body)
+
         xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 's:Envelope', { 'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
-          xml << xml_headers(digest_value)
+          get_headers(xml, digest_value)
           xml << xml_body
         end
         xml.target!
@@ -1309,6 +1301,8 @@ module ActiveMerchant # :nodoc:
       # Response object
       def commit(request, action, amount, options)
         begin
+          require 'pry'
+          binding.pry
           raw_response = ssl_post(test? ? self.test_url : self.live_url, build_request(request, options))
         rescue ResponseError => e
           raw_response = e.response.body
