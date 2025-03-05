@@ -6,6 +6,8 @@ class RemoteCecabankTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4507670001000009', { month: 12, year: Time.now.year, verification_value: '989' })
+    # for some reason purchase with previous card is not working
+    @credit_card_purchase = credit_card('5540500001000004', { month: 12, year: Time.now.year, verification_value: '989' })
     @declined_card = credit_card('5540500001000004', { month: 11, year: Time.now.year + 1, verification_value: '001' })
 
     @options = {
@@ -73,7 +75,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    assert response = @gateway.purchase(@amount, @credit_card, order_id: generate_unique_id)
+    assert response = @gateway.purchase(@amount, @credit_card_purchase, order_id: generate_unique_id)
     assert_success response
     assert_equal %i[codAut numAut referencia], JSON.parse(response.message).symbolize_keys.keys.sort
   end
