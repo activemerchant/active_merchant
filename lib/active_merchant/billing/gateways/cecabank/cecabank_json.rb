@@ -174,8 +174,8 @@ module ActiveMerchant
         }
 
         if payment_method.is_a?(NetworkTokenizationCreditCard) && WALLET_PAYMENT_METHODS[payment_method.source.to_sym]
-          eci_to_format = payment_method.eci || (three_d_secure[:eci] if three_d_response)
-          eci_value = eci_padding(eci_to_format.to_s)
+          eci_to_format = payment_method.eci || three_d_secure[:eci]
+          eci_value = eci_padding(eci_to_format)
           pm[:wallet] = {
 
             # the authentication value should come nil (for recurring cases) or should I remove it?
