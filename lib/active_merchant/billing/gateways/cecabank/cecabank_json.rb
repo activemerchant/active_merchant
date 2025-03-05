@@ -174,7 +174,7 @@ module ActiveMerchant
         }
 
         if payment_method.is_a?(NetworkTokenizationCreditCard) && WALLET_PAYMENT_METHODS[payment_method.source.to_sym]
-          eci_to_format = payment_method.eci || (three_d_secure[:eci] if three_d_response)
+          eci_to_format = payment_method.eci || (three_d_secure[:eci] if three_d_secure)
           eci_value = eci_padding(eci_to_format.to_s)
           pm[:wallet] = {
 
