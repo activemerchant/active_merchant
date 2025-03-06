@@ -44,6 +44,11 @@ module ActiveMerchant # :nodoc:
         commit("/#{authorization}/captures", post, options)
       end
 
+      def inquire(authorization, options = {})
+        post = { payment_id: authorization }
+        commit('status', post, options)
+      end
+
       def refund(money, authorization, options = {})
         post = {}
         post[:ReferenceId] = options[:reference_id] || generate_unique_id
@@ -264,8 +269,11 @@ module ActiveMerchant # :nodoc:
         JSON.parse(body)
       end
 
-      def build_url(action, base)
-        url = base
+      def build_url(action, options, parameters)
+        base_url = test? ? test_url : live_url
+        return "#{base_url}/#{parameters[:payment_id]}" if action == 'status' && parameters[:payment_id]
+
+        url = base_url
         url += action if APPENDED_URLS.any? { |key| action.include?(key) }
         url
       end
@@ -285,10 +293,12 @@ module ActiveMerchant # :nodoc:
       end
 
       def commit(action, parameters, options = {})
-        base_url = (test? ? test_url : live_url)
-        url = build_url(action, base_url)
-        response = parse(ssl_post(url, parameters.to_json, header(options)))
-        response = reorder_amount_fields(response) if AMOUNT_IN_RESPONSE.include?(action)
+        url = build_url(action, options, parameters)
+
+        raw = make_request(action, url, parameters, options)
+        response = parse(raw)
+
+        reorder_amount_fields(response) if AMOUNT_IN_RESPONSE.include?(action)
 
         Response.new(
           success_from(response),
@@ -298,6 +308,16 @@ module ActiveMerchant # :nodoc:
           test: test?,
           error_code: error_code_from(response)
         )
+      end
+
+      def make_request(action, url, parameters, options)
+        if action == 'status'
+          ssl_get(url, header(options))
+        else
+          ssl_post(url, parameters.to_json, header(options))
+        end
+      rescue ResponseError => e
+        e.response.body
       end
 
       def handle_response(response)
