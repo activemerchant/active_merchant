@@ -18,12 +18,12 @@ class DatatransTest < Test::Unit::TestCase
         eci: '05',
         cavv: '3q2+78r+ur7erb7vyv66vv8=',
         cavv_algorithm: '1',
-        xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+        ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
         enrolled: 'Y',
         authentication_response_status: 'Y',
         directory_response_status: 'Y',
         version: '2',
-        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+        three_ds_server_trans_id: '97267598-FAE6-48F2-8083-C23433990FBC'
       }
     })
 
@@ -168,8 +168,8 @@ class DatatransTest < Test::Unit::TestCase
       parsed_3d = parsed_data['card']['3D']
 
       assert_equal('05', parsed_3d['eci'])
-      assert_equal(three_d_secure[:xid], parsed_3d['xid'])
-      assert_equal(three_d_secure[:ds_transaction_id], parsed_3d['threeDSTransactionId'])
+      assert_equal(three_d_secure[:ds_transaction_id], parsed_3d['xid'])
+      assert_equal(three_d_secure[:three_ds_server_trans_id], parsed_3d['threeDSTransactionId'])
       assert_equal(three_d_secure[:cavv], parsed_3d['cavv'])
       assert_equal('2', parsed_3d['threeDSVersion'])
       assert_equal(three_d_secure[:cavv_algorithm], parsed_3d['cavvAlgorithm'])
