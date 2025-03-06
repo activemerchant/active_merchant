@@ -941,6 +941,36 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_payout_transaction_successfully_continues_with_no_sender_data
+    options = {
+      instruction_purpose: 'leisure',
+      account_holder_type: 'individual',
+      billing_address: address,
+      payout: true,
+      destination: {
+        account_holder: {
+          phone: {
+            number: '9108675309',
+            country_code: '1'
+          },
+          identification: {
+            type: 'passport',
+            number: '1234567890'
+          },
+          email: 'too_many_fields@checkout.com',
+          date_of_birth: '2004-10-27',
+          country_of_birth: 'US'
+        }
+      }
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.credit(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      refute_includes data, 'sender'
+    end.respond_with(successful_credit_response)
+    assert_success response
+  end
+
   def test_transaction_successfully_reverts_to_regular_credit_when_payout_is_nil
     options = {
       instruction_purpose: 'leisure',

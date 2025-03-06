@@ -431,7 +431,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_payout_sender_data(post, options)
-        return unless options[:payout] == true
+        return unless options[:payout] == true && options[:sender].is_a?(Hash)
 
         post[:sender] = {
           # options for type are individual, corporate, or government
@@ -471,7 +471,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_payout_destination_data(post, options)
-        return unless options[:payout] == true
+        return unless options[:payout] == true && options[:destination].is_a?(Hash)
 
         post[:destination] ||= {}
         post[:destination][:account_holder] ||= {}
