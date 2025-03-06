@@ -20,12 +20,12 @@ class RemoteDatatransTest < Test::Unit::TestCase
         eci: '05',
         cavv: '3q2+78r+ur7erb7vyv66vv8=',
         cavv_algorithm: '1',
-        xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+        ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
         enrolled: 'Y',
         authentication_response_status: 'Y',
         directory_response_status: 'Y',
         version: '2',
-        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+        three_ds_server_trans_id: '97267598-FAE6-48F2-8083-C23433990FBC'
       }
     }
 

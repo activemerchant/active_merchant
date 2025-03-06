@@ -145,8 +145,8 @@ module ActiveMerchant # :nodoc:
             '3D':
               {
                 eci: three_d_secure[:eci],
-                xid: three_d_secure[:xid],
-                threeDSTransactionId: three_d_secure[:ds_transaction_id],
+                xid: three_d_secure[:ds_transaction_id],
+                threeDSTransactionId: three_d_secure[:three_ds_server_trans_id],
                 cavv: three_d_secure[:cavv],
                 threeDSVersion: three_d_secure[:version],
                 cavvAlgorithm: three_d_secure[:cavv_algorithm],
