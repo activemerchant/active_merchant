@@ -174,8 +174,9 @@ module ActiveMerchant
         }
 
         if payment_method.is_a?(NetworkTokenizationCreditCard) && WALLET_PAYMENT_METHODS[payment_method.source.to_sym]
-          eci_to_format = payment_method.eci || (three_d_secure[:eci] if three_d_response)
-          eci_value = eci_padding(eci_to_format.to_s)
+          eci_to_format = payment_method.eci || three_d_secure[:eci]
+          eci_value = eci_to_format.to_s.rjust(2, '0') unless eci_to_format.nil?
+
           pm[:wallet] = {
 
             # the authentication value should come nil (for recurring cases) or should I remove it?
@@ -188,10 +189,6 @@ module ActiveMerchant
           pm[CreditCard.brand?(payment_method.number) == 'american_express' ? :csc : :cvv2] = payment_method.verification_value
         end
         @options[:encryption_key] ? params[:encryptedData] = pm : params.merge!(pm)
-      end
-
-      def eci_padding(eci)
-        eci.to_s.length == 1 ? "0#{eci}" : eci
       end
 
       def add_stored_credentials(post, creditcard, options)
