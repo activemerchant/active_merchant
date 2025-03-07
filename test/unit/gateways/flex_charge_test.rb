@@ -182,6 +182,19 @@ class FlexChargeTest < Test::Unit::TestCase
     end.respond_with(successful_access_token_response, successful_purchase_response)
   end
 
+  def test_failed_authorization_with_async_flag
+    @options[:async] = true
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_method, endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['transactionType'], 'Authorization' if /evaluate/.match?(endpoint)
+    end.respond_with(successful_access_token_response, successful_purchase_response)
+
+    assert_failure response
+    assert_equal 'CHALLENGE', response.message
+  end
+
   def test_successful_purchase_three_ds_global
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @three_d_secure_options)

@@ -45,7 +45,7 @@ module ActiveMerchant # :nodoc:
         add_three_ds(post, options)
         add_metadata(post, options)
 
-        commit(:purchase, post)
+        commit(:purchase, post, nil, :post, options)
       end
 
       def authorize(money, credit_card, options = {})
@@ -283,20 +283,20 @@ module ActiveMerchant # :nodoc:
         }.with_indifferent_access
       end
 
-      def commit(action, post, authorization = nil, method = :post)
+      def commit(action, post, authorization = nil, method = :post, options = {})
         MultiResponse.run do |r|
           r.process { fetch_access_token } unless access_token_valid?
           r.process do
-            api_request(action, post, authorization, method).tap do |response|
+            api_request(action, post, authorization, method, options).tap do |response|
               response.params.merge!(@options.slice(:access_token, :token_expires)) if @options[:new_credentials]
             end
           end
         end
       end
 
-      def api_request(action, post, authorization = nil, method = :post)
+      def api_request(action, post, authorization = nil, method = :post, options = {})
         response = parse ssl_request(method, url(action, authorization), post.to_json, headers)
-        success = success_from(action, response)
+        success = success_from(action, response, options)
         Response.new(
           success,
           message_from(response, success),
@@ -315,13 +315,13 @@ module ActiveMerchant # :nodoc:
         Response.new(false, message_from(response, false), response, test: test?)
       end
 
-      def success_from(action, response)
+      def success_from(action, response, options)
         case action
         when :store then response.dig(:transaction, :payment_method, :token).present?
         when :inquire then response[:id].present? && SUCCESS_MESSAGES.include?(response[:statusName])
         when :void then response.empty?
         else
-          response[:success] && SUCCESS_MESSAGES.include?(response[:status])
+          response[:success] && SUCCESS_MESSAGES.reject { |msg| msg == 'CHALLENGE' && options[:async] }.include?(response[:status])
         end
       end
 
@@ -334,7 +334,7 @@ module ActiveMerchant # :nodoc:
       def authorization_from(action, response, options)
         if action == :store
           response.dig(:transaction, :payment_method, :token)
-        elsif success_from(action, response)
+        elsif success_from(action, response, options)
           [response[:orderId], options[:currency] || default_currency].compact.join('#')
         end
       end
