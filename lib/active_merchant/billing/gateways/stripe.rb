@@ -719,7 +719,7 @@ module ActiveMerchant # :nodoc:
         return error_id(response, url) unless success
 
         if url == 'customers'
-          [response['id'], response.dig('sources', 'data').first&.dig('id')].join('|')
+          [response['id'], response.dig('sources', 'data')&.first&.dig('id')].join('|')
         elsif method == :post && (url.match(/customers\/.*\/cards/) || url.match(/payment_methods\/.*\/attach/) || options[:action] == :store)
           response_id = options[:action] == :store ? response['payment_method'] : response['id']
           [response['customer'], response_id].join('|')
