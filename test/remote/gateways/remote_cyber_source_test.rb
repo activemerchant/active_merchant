@@ -6,6 +6,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = CyberSourceGateway.new({ nexus: 'NC' }.merge(fixtures(:cyber_source)))
+    @gateway_certificate = CyberSourceGateway.new({ nexus: 'NC' }.merge(fixtures(:cyber_source_certificate)))
     @gateway_latam = CyberSourceGateway.new({}.merge(fixtures(:cyber_source_latam_pe)))
 
     @credit_card = credit_card('4111111111111111', verification_value: '987')
@@ -1470,6 +1471,43 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_success response
     assert_match '0.00', response.params['amount']
     assert_equal 'Successful transaction', response.message
+  end
+
+  def test_successful_certificate_authorization
+    assert response = @gateway_certificate.authorize(@amount, @credit_card, @options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_certificate_purchase
+    assert response = @gateway_certificate.purchase(@amount, @credit_card, @options)
+    assert_successful_response(response)
+  end
+
+  def test_successful_certificate_capture
+    assert auth = @gateway_certificate.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+    assert capture = @gateway_certificate.capture(@amount, auth.authorization, @capture_options)
+    assert_successful_response(capture)
+  end
+
+  def test_successful_certificate_void
+    assert auth = @gateway_certificate.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+    assert void = @gateway_certificate.void(auth.authorization, @options)
+    assert_successful_response(void)
+  end
+
+  def test_successful_certificate_refund
+    assert purchase = @gateway_certificate.purchase(@amount, @credit_card, @options)
+    assert_successful_response(purchase)
+    assert refund = @gateway_certificate.refund(@amount, purchase.authorization)
+    assert_successful_response(refund)
+  end
+
+  def test_successful_certificate_verify
+    response = @gateway_certificate.verify(@credit_card, @options)
+    assert_successful_response(response)
   end
 
   private

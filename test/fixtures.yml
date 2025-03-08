@@ -273,6 +273,11 @@ cyber_source:
   login: X
   password: Y
 
+cyber_source_certificate:
+  merchant_id: merchant_id,
+  public_key: SOMECREDENTIAL,
+  private_key: SOMECREDENTIAL
+
 cyber_source_latam_pe:
   login: merchant_id
   password: soap_key
