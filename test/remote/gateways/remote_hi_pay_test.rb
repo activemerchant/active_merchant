@@ -11,6 +11,7 @@ class RemoteHiPayTest < Test::Unit::TestCase
     @master_credit_card = credit_card('5399999999999999')
     @challenge_credit_card = credit_card('4242424242424242')
     @threeds_credit_card = credit_card('5300000000000006')
+    @amex_threeds_credit_card = credit_card('371449635311004')
 
     @options = {
       order_id: "Sp_ORDER_#{SecureRandom.random_number(1000000000)}",
@@ -69,6 +70,16 @@ class RemoteHiPayTest < Test::Unit::TestCase
 
   def test_challenge_without_threeds_params
     response = @gateway.purchase(@amount, @threeds_credit_card, @options.merge(@billing_address))
+    assert_success response
+    assert_equal 'Authentication requested', response.message
+    assert_match %r{stage-secure-gateway.hipay-tpp.com\/gateway\/forward\/\w+}, response.params['forwardUrl']
+
+    assert_kind_of MultiResponse, response
+    assert_equal 2, response.responses.size
+  end
+
+  def test_amex_challenge_without_threeds_params
+    response = @gateway.purchase(@amount, @amex_threeds_credit_card, @options.merge(@billing_address))
     assert_success response
     assert_equal 'Authentication requested', response.message
     assert_match %r{stage-secure-gateway.hipay-tpp.com\/gateway\/forward\/\w+}, response.params['forwardUrl']
