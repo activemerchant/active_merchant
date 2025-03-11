@@ -4,7 +4,8 @@ module ActiveMerchant # :nodoc:
       # to add more check => payment_product_list: https://developer.hipay.com/api-explorer/api-online-payments#/payments/generateHostedPaymentPage
       PAYMENT_PRODUCT = {
         'visa' => 'visa',
-        'master' => 'mastercard'
+        'master' => 'mastercard',
+        'american_express' => 'american_express'
       }
 
       DEVICE_CHANEL = {
