@@ -361,6 +361,49 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_verify_with_account_name_inquiry
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, {
+        account_holder: {
+          type: 'individual',
+          first_name: 'James',
+          middle_name: 'John',
+          last_name: 'Doe'
+        },
+        account_name_inquiry: true
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"type":"individual"}, data)
+      assert_match(%r{"first_name":"James"}, data)
+      assert_match(%r{"middle_name":"John"}, data)
+      assert_match(%r{"last_name":"Doe"}, data)
+      assert_match(%r{"account_name_inquiry":true}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_verify_omits_account_holder_when_ani_flag_absent
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, {
+        account_holder: {
+          type: 'individual',
+          first_name: 'James',
+          middle_name: 'John',
+          last_name: 'Doe'
+        }
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      refute_match(%r{"type":"individual"}, data)
+      refute_match(%r{"first_name":"James"}, data)
+      refute_match(%r{"middle_name":"John"}, data)
+      refute_match(%r{"last_name":"Doe"}, data)
+      refute_match(%r{"account_name_inquiry":true}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_purchase_with_recipient_fields
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, {

@@ -1150,6 +1150,21 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_not_nil response.responses.first.params['expires']
   end
 
+  def test_successful_verify_with_account_name_inquiry
+    options = @options.merge(
+      account_name_inquiry: true,
+      account_holder: {
+        first_name: 'John',
+        middle_name: 'Joe',
+        last_name: 'Doe',
+        type: 'individual'
+      }
+    )
+    response = @gateway.verify(@credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response

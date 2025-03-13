@@ -148,6 +148,7 @@ module ActiveMerchant # :nodoc:
         add_metadata(post, options, payment_method)
         add_processing_channel(post, options)
         add_marketplace_data(post, options)
+        add_account_name_inquiry(post, options)
         add_recipient_data(post, options)
         add_processing_data(post, options)
         add_payment_sender_data(post, options)
@@ -171,6 +172,18 @@ module ActiveMerchant # :nodoc:
 
       def truncate_amex_reference_id(post, options, payment_method)
         post[:reference] = truncate(options[:order_id], 30) if payment_method.respond_to?(:brand) && payment_method.brand == 'american_express'
+      end
+
+      def add_account_name_inquiry(post, options)
+        return unless options[:account_name_inquiry] && options[:account_holder]&.is_a?(Hash)
+
+        account_holder = options[:account_holder]
+
+        post[:source][:account_holder] = {}
+        %i[first_name middle_name last_name type company_name].each do |key|
+          post[:source][:account_holder][key] = account_holder[key] if account_holder[key]
+        end
+        post[:source][:account_holder][:account_name_inquiry] = true
       end
 
       def add_recipient_data(post, options)
