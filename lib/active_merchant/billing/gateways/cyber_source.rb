@@ -1,3 +1,5 @@
+require 'nokogiri'
+
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     # Initial setup instructions can be found in
@@ -261,6 +263,10 @@ module ActiveMerchant # :nodoc:
         commit(build_retrieve_subscription_request(reference, options), :retrieve, nil, options)
       end
 
+      def inquire(authorization, options = {})
+        commit(build_inquire_request(authorization, options), :inquire, nil, options)
+      end
+
       # CyberSource requires that you provide line item information for tax
       # calculations. If you do not have prices for each item or want to
       # simplify the situation then pass in one fake line item that costs the
@@ -419,6 +425,17 @@ module ActiveMerchant # :nodoc:
         add_merchant_description(xml, options)
         add_partner_solution_id(xml)
 
+        xml.target!
+      end
+
+      def build_inquire_request(authorization, options)
+        _id, request_id, request_token = authorization.split(';')
+        options[:order_id] = nil
+        xml = Builder::XmlMarkup.new indent: 2
+        # xml.tag! 'apPaymentType', 'afp'
+        xml.tag! 'apCheckStatusService', { 'run' => 'true' } do # 997 2050
+          xml.tag! 'checkStatusRequestID', request_id
+        end
         xml.target!
       end
 
@@ -606,14 +623,15 @@ module ActiveMerchant # :nodoc:
         end
       end
 
-      def add_merchant_data(xml, options)
+      def add_merchant_data(xml, options, action)
         xml.tag! 'merchantID', options[:merchant_id] || @options[:login]
-        xml.tag! 'merchantReferenceCode', options[:order_id] || generate_unique_id
-        xml.tag! 'clientLibrary', 'Ruby Active Merchant'
-        xml.tag! 'clientLibraryVersion', VERSION
-        xml.tag! 'clientEnvironment', RUBY_PLATFORM
 
-        add_merchant_descriptor(xml, options)
+        xml.tag! 'merchantReferenceCode', options[:order_id] || generate_unique_id
+
+         xml.tag! 'clientLibrary', 'Ruby Active Merchant'
+          xml.tag! 'clientLibraryVersion', VERSION
+          xml.tag! 'clientEnvironment', RUBY_PLATFORM
+          add_merchant_descriptor(xml, options) unless action == :inquire
       end
 
       def add_merchant_descriptor(xml, options)
@@ -1171,22 +1189,6 @@ module ActiveMerchant # :nodoc:
         xml.subsequentAuthStoredCredential override_subsequent_auth_stored_cred.nil? ? stored_credential_subsequent_auth_stored_cred : override_subsequent_auth_stored_cred
       end
 
-      def cardholder_or_initiated_transaction?(options)
-        options.dig(:stored_credential, :initiator) == 'cardholder' || options.dig(:stored_credential, :initial_transaction)
-      end
-
-      def subsequent_cardholder_initiated_transaction?(options)
-        options.dig(:stored_credential, :initiator) == 'cardholder' && !options.dig(:stored_credential, :initial_transaction)
-      end
-
-      def unscheduled_merchant_initiated_transaction?(options)
-        options.dig(:stored_credential, :initiator) == 'merchant' && options.dig(:stored_credential, :reason_type) == 'unscheduled'
-      end
-
-      def threeds_stored_credential_exemption?(options)
-        options[:three_ds_exemption_type] == 'stored_credential'
-      end
-
       def add_partner_solution_id(xml)
         return unless application_id
 
@@ -1194,7 +1196,9 @@ module ActiveMerchant # :nodoc:
       end
 
       # Where we actually build the full SOAP request using builder
-      def build_request(body, options)
+      def build_request(body, options, action)
+        validate_with_xsd(action, options, body)
+
         xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
 
         xml = Builder::XmlMarkup.new indent: 2
@@ -1209,8 +1213,8 @@ module ActiveMerchant # :nodoc:
             end
           end
           xml.tag! 's:Body', { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema' } do
-            xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
-              add_merchant_data(xml, options)
+            xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{action == :inquire ? '1.141' : xsd_version}" } do
+              add_merchant_data(xml, options, action)
               xml << body
             end
           end
@@ -1221,8 +1225,9 @@ module ActiveMerchant # :nodoc:
       # Contact CyberSource, make the SOAP request, and parse the reply into a
       # Response object
       def commit(request, action, amount, options)
+        request_builded = build_request(request, options, action)
         begin
-          raw_response = ssl_post(test? ? self.test_url : self.live_url, build_request(request, options))
+          raw_response = ssl_post(test? ? self.test_url : self.live_url, request_builded)
         rescue ResponseError => e
           raw_response = e.response.body
         end
@@ -1232,6 +1237,10 @@ module ActiveMerchant # :nodoc:
         rescue REXML::ParseException => e
           response = { message: e.to_s }
         end
+        # puts " request #{action}"
+        # puts request_builded
+        # puts ' response '
+        # puts response
 
         success = success?(response)
         message = message_from(response)
@@ -1331,6 +1340,25 @@ module ActiveMerchant # :nodoc:
 
       def format_routing_number(routing_number, options)
         options[:currency] == 'CAD' && routing_number.length > 8 ? routing_number[-8..-1] : routing_number
+      end
+
+      def validate_with_xsd(action, options, xml_body, xsd_path: '/Users/gsanmartin/Documents/Spreedly/active_merchant/test/schema/cyber_source/CyberSourceTransaction_1.201.xsd')
+        return if action == :authorize
+
+        xsd = Nokogiri::XML::Schema(File.read(xsd_path))
+        xml = Builder::XmlMarkup.new indent: 2
+
+        xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
+
+        xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
+          add_merchant_data(xml, options, action)
+          xml << xml_body
+        end
+        xml_t = xml.target!
+        puts xml_t
+        doc = Nokogiri::XML(xml_t)
+        errors = xsd.validate(doc)
+        errors.empty? ? true : puts(errors.map(&:message))
       end
     end
   end

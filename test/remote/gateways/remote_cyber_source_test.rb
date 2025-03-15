@@ -1472,6 +1472,15 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal 'Successful transaction', response.message
   end
 
+  def test_successful_inquire
+    assert authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(authorize)
+
+    response = @gateway.inquire(authorize.authorization, @options)
+
+    assert_success response
+  end
+
   private
 
   def assert_successful_response(response)

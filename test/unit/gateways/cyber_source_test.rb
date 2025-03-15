@@ -2092,6 +2092,18 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(100, @carnet_card, @options)
     end.check_request do |_endpoint, data, _headers|
+      require 'pry'
+      binding.pry
+      assert_match(/<cardType>002<\/cardType>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_inquire
+    stub_comms do
+      @gateway.inquire("order_id;request_id;request_token", @options)
+    end.check_request do |_endpoint, data, _headers|
+      require 'pry';
+      binding.pry
       assert_match(/<cardType>002<\/cardType>/, data)
     end.respond_with(successful_purchase_response)
   end
