@@ -810,7 +810,7 @@ class AdyenTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/"shopperInteraction":"Ecommerce"/, data)
+      assert_match(/"shopperInteraction":"ContAuth"/, data)
       assert_match(/"recurringProcessingModel":"CardOnFile"/, data)
     end.respond_with(successful_authorize_response)
 
