@@ -20,14 +20,15 @@ module ActiveMerchant # :nodoc:
         pci_encryption_key: '/vpos/api/0.3/application/encryption-key',
         pay_pci_buy_encrypted: '/vpos/api/0.3/pci/encrypted',
         pci_buy_rollback: '/vpos/api/0.3/pci_buy/rollback',
-        refund: '/vpos/api/0.3/refunds'
+        refund: '/vpos/api/0.3/refunds',
+        inquire: '/vpos/api/0.3/pci_buy/confirmations'
       }
 
       def initialize(options = {})
         requires!(options, :private_key, :public_key)
         @private_key = options[:private_key]
         @public_key = options[:public_key]
-        @encryption_key = OpenSSL::PKey::RSA.new(options[:encryption_key]) if options[:encryption_key]
+        @encryption_key = OpenSSL::PKey::RSA.new(options[:encryption_key]) if options[:encryption_key].is_a?(String)
         @shop_process_id = options[:shop_process_id] || SecureRandom.random_number(10**15)
         super
       end
@@ -52,6 +53,15 @@ module ActiveMerchant # :nodoc:
         add_customer_data(post, options)
 
         commit(:pay_pci_buy_encrypted, post)
+      end
+
+      def inquire(authorization, options = {})
+        _, shop_process_id = authorization.to_s.split('#') if authorization
+        shop_process_id = options[:shop_process_id] if options[:shop_process_id]
+        token = generate_token(shop_process_id, 'get_confirmation')
+
+        post = { token:, shop_process_id: }
+        commit(:inquire, post)
       end
 
       def void(authorization, options = {})
