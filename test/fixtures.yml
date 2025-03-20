@@ -540,6 +540,11 @@ itransact:
   password: API_ACCESS_KEY
   gateway_id: GATEWAY_ID
 
+# This is a test key, and could be deleted.
+# Generate your own test key at iugu.com.
+iugu:
+  login: dbb1f4d4603317cbdd790ae8f07d3d71
+
 # Working credentials, no need to replace
 iveri:
   cert_id: CB69E68D-C7E7-46B9-9B7A-025DCABAD6EF
@@ -578,6 +583,9 @@ litle:
   login: ACTIVE
   password: MERCHANT
   merchant_id: 101
+
+iugu:
+  login: 'f18613e02363f0bf015bda330104a159'
 
 # Working test credentials, no need to replace
 maxipago:
