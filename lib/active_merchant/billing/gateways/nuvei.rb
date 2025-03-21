@@ -111,6 +111,7 @@ module ActiveMerchant
         add_payment_method(post, payment, payment_key, options)
         add_customer_ip(post, options)
         url_details(post, options)
+        add_user_details(post, options)
         commit(:general_credit, post.compact)
       end
 
@@ -171,6 +172,34 @@ module ActiveMerchant
         post[:billingAddress] ||= {}
         post[:billingAddress].merge!(address_details)
         post[:recipientDetails] = recipient_details unless recipient_details.empty?
+        add_user_details(post, options)
+      end
+
+      def add_user_details(post, options)
+        return unless options[:user_details]&.is_a?(Hash)
+
+        user_details = options[:user_details]
+        post[:userDetails] = {}
+        post[:userDetails][:firstName] = user_details[:first_name] if user_details[:first_name]
+        post[:userDetails][:lastName] = user_details[:last_name] if user_details[:last_name]
+        post[:userDetails][:address] = user_details[:address] if user_details[:address]
+        post[:userDetails][:streetNumber] = user_details[:street_number] if user_details[:street_number]
+        post[:userDetails][:phone] = user_details[:phone] if user_details[:phone]
+        post[:userDetails][:zip] = user_details[:zip] if user_details[:zip]
+        post[:userDetails][:city] = user_details[:city] if user_details[:city]
+        post[:userDetails][:country] = user_details[:country] if user_details[:country]
+        post[:userDetails][:state] = user_details[:state] if user_details[:state]
+        post[:userDetails][:email] = user_details[:email] if user_details[:email]
+        post[:userDetails][:county] = user_details[:county] if user_details[:county]
+        post[:userDetails][:language] = user_details[:language] if user_details[:language]
+        post[:userDetails][:identification] = user_details[:identification] if user_details[:identification]
+
+        # special case depending on AFT or Payout transactions
+        if user_details[:date_of_birth] && options[:is_aft]
+          post[:userDetails][:dateOfBirth] = user_details[:date_of_birth]
+        elsif user_details[:birth_date] && options[:is_payout]
+          post[:userDetails][:birthdate] = user_details[:birth_date]
+        end
       end
 
       def set_reason_type(post, options)

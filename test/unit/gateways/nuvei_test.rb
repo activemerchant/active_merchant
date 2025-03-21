@@ -21,6 +21,24 @@ class NuveiTest < Test::Unit::TestCase
       order_id: '123456'
     }
 
+    @user_details_options = @options.merge({
+      user_details: {
+        first_name: 'first',
+        last_name: 'last',
+        address: '123 address',
+        street_number: '1234',
+        phone: '123456789',
+        zip: '12345',
+        city: 'city',
+        country: 'US',
+        state: 'CA',
+        email: 'test@test.com',
+        county: 'county',
+        language: 'US',
+        identification: '12345667'
+      }
+    })
+
     @three_ds_options = {
       execute_threed: true,
       redirect_url: 'http://www.example.com/redirect',
@@ -324,6 +342,32 @@ class NuveiTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_payout_with_oct_user_details
+    @user_details_options[:user_details][:birth_date] = '1990-09-01'
+    @user_details_options[:user_details].delete(:language)
+    @user_details_options[:user_details].delete(:county)
+    @user_details_options[:user_details].delete(:street_number)
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.credit(@amount, @credit_card, @user_details_options.merge(user_payment_option_id: '12345678', is_payout: true))
+    end.check_request do |_method, endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      assert_match(/payout/, endpoint)
+      assert_match(/#{@credit_card.number}/, json_data['cardData']['cardNumber'])
+      user_details = json_data['userDetails']
+      assert_match('first', user_details['firstName'])
+      assert_match('last', user_details['lastName'])
+      assert_match('123 address', user_details['address'])
+      assert_match('123456789', user_details['phone'])
+      assert_match('12345', user_details['zip'])
+      assert_match('city', user_details['city'])
+      assert_match('US', user_details['country'])
+      assert_match('CA', user_details['state'])
+      assert_match('test@test.com', user_details['email'])
+      assert_match('12345667', user_details['identification'])
+      assert_match('1990-09-01', user_details['birthdate'])
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_payout_with_google_pay
     stub_comms(@gateway, :ssl_request) do
       @gateway.credit(@amount, @apple_pay_card, @options.merge(user_payment_option_id: '12345678', is_payout: true))
@@ -489,6 +533,40 @@ class NuveiTest < Test::Unit::TestCase
         assert_match(@options[:billing_address][:city], json_data['billingAddress']['city'])
         assert_match(@options[:billing_address][:state], json_data['billingAddress']['state'])
         assert_match(@options[:billing_address][:country], json_data['billingAddress']['country'])
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_account_funding_transactions_with_user_details
+    @user_details_options[:user_details][:date_of_birth] = '1990-09-01'
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @user_details_options.merge(is_aft: true, aft_recipient_first_name: 'John', aft_recipient_last_name: 'Doe'))
+    end.check_request do |_method, endpoint, data, _headers|
+      if /payment/.match?(endpoint)
+        json_data = JSON.parse(data)
+        assert_match('John', json_data['recipientDetails']['firstName'])
+        assert_match('Doe', json_data['recipientDetails']['lastName'])
+        assert_match(@credit_card.first_name, json_data['billingAddress']['firstName'])
+        assert_match(@credit_card.last_name, json_data['billingAddress']['lastName'])
+        assert_match(@options[:billing_address][:address1], json_data['billingAddress']['address'])
+        assert_match(@options[:billing_address][:city], json_data['billingAddress']['city'])
+        assert_match(@options[:billing_address][:state], json_data['billingAddress']['state'])
+        assert_match(@options[:billing_address][:country], json_data['billingAddress']['country'])
+        user_details = json_data['userDetails']
+        assert_match('first', user_details['firstName'])
+        assert_match('last', user_details['lastName'])
+        assert_match('123 address', user_details['address'])
+        assert_match('1234', user_details['streetNumber'])
+        assert_match('123456789', user_details['phone'])
+        assert_match('12345', user_details['zip'])
+        assert_match('city', user_details['city'])
+        assert_match('US', user_details['country'])
+        assert_match('CA', user_details['state'])
+        assert_match('test@test.com', user_details['email'])
+        assert_match('county', user_details['county'])
+        assert_match('US', user_details['language'])
+        assert_match('12345667', user_details['identification'])
+        assert_match('1990-09-01', user_details['dateOfBirth'])
       end
     end.respond_with(successful_purchase_response)
   end
