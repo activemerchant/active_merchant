@@ -20,6 +20,24 @@ class RemoteNuveiTest < Test::Unit::TestCase
       order_id: '123456'
     }
 
+    @user_details_options = @options.merge({
+      user_details: {
+        first_name: 'first',
+        last_name: 'last',
+        street_number: '1234',
+        address: '123 address',
+        phone: '123456789',
+        zip: '12345',
+        city: 'city',
+        country: 'US',
+        state: 'CA',
+        email: 'test@test.com',
+        county: 'county',
+        language: 'US',
+        identification: '12345667'
+      }
+    })
+
     @three_ds_options = {
       execute_threed: true,
       redirect_url: 'http://www.example.com/redirect',
@@ -275,6 +293,17 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_match 'APPROVED', payout_response.message
   end
 
+  def test_successful_payout_with_oct_user_details
+    @user_details_options[:user_details][:birth_date] = '1990-09-01'
+    @user_details_options[:user_details].delete(:language)
+    @user_details_options[:user_details].delete(:county)
+    @user_details_options[:user_details].delete(:street_number)
+    payout_response = @gateway.credit(@amount, @credit_card, @user_details_options.merge(user_token_id: '12345678', is_payout: true))
+    assert_success payout_response
+    assert_match 'SUCCESS', payout_response.params['status']
+    assert_match 'APPROVED', payout_response.message
+  end
+
   def test_successful_payout_with_google_pay
     purchase_response = @gateway.purchase(@amount, @credit_card, @options.merge(user_token_id: '12345678'))
     assert_success purchase_response
@@ -444,6 +473,13 @@ class RemoteNuveiTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options.merge(is_aft: true, aft_recipient_first_name: 'John', aft_recipient_last_name: 'Doe'))
     assert_success response
     assert_equal 'APPROVED', response.message
+  end
+
+  def test_successful_authorize_with_aft_user_details
+    @user_details_options[:user_details][:date_of_birth] = '1990-09-01'
+    response = @gateway.authorize(@amount, @credit_card, @user_details_options.merge(is_aft: true, aft_recipient_first_name: 'John', aft_recipient_last_name: 'Doe'))
+    assert_success response
+    assert_match 'APPROVED', response.message
   end
 
   def test_refund_account_funding_transaction
