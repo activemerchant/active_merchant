@@ -109,7 +109,8 @@ module ActiveMerchant # :nodoc:
           gsub(%r(("environment\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("number\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("cardNumber\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("verification_value\\?":\\?")\d+), '\1[FILTERED]')
+          gsub(%r(("verification_value\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r(("verificationValue\\?":\\?")\d+), '\1[FILTERED]')
       end
 
       def inquire(authorization, options = {})
@@ -219,6 +220,7 @@ module ActiveMerchant # :nodoc:
                                cardBinNumber: credit_card.number[0..5],
                                cardLast4Digits: credit_card.number[-4..-1],
                                cardNumber: credit_card.number,
+                               verificationValue: credit_card.verification_value,
                                Token: false
                              }
                            else
