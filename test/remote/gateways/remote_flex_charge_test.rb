@@ -102,6 +102,14 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
     assert_equal '', response.params['access_token']
   end
 
+  def test_successful_purchase_without_cvv
+    set_credentials!
+    @credit_card_cit.verification_value = nil
+    response = @gateway.purchase(@amount, @credit_card_cit, @cit_options)
+    assert_success response
+    assert_equal 'CHALLENGE', response.message
+  end
+
   def test_successful_purchase_cit_challenge_purchase
     set_credentials!
     response = @gateway.purchase(@amount, @credit_card_cit, @cit_options)
@@ -175,6 +183,7 @@ class RemoteFlexChargeTest < Test::Unit::TestCase
 
   def test_failed_cit_declined_purchase
     set_credentials!
+    @credit_card_cit.verification_value = nil
     response = @gateway.purchase(@amount, @credit_card_cit, @cit_options.except(:phone))
     assert_failure response
     assert_equal 'DECLINED', response.error_code

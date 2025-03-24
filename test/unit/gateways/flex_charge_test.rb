@@ -160,6 +160,8 @@ class FlexChargeTest < Test::Unit::TestCase
         assert_equal request['payer']['email'], @options[:email]
         assert_equal request['description'], @options[:description]
 
+        assert_equal request['paymentMethod']['verificationValue'], @credit_card.verification_value
+
         assert_equal request['billingInformation']['firstName'], 'Cure'
         assert_equal request['billingInformation']['country'], 'CA'
         assert_equal request['shippingInformation']['firstName'], 'Jhon'
