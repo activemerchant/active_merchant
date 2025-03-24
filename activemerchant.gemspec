@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
   s.add_dependency('nokogiri', "~> 1.4")
   s.add_dependency('square.rb', '~> 16.0')
   s.add_dependency('jwt')
+  s.add_dependency('rexml', '3.2.6')
 
   s.add_development_dependency('rake')
   s.add_development_dependency('test-unit', '~> 3')
