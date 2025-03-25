@@ -404,4 +404,11 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Approved', response.message
   end
+
+  def test_client_request_id_is_uuidv4
+    client_request_id = SecureRandom.uuid
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(client_request_id:))
+    assert_match(/\A[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\z/i, response.params['gatewayResponse']['transactionProcessingDetails']['clientRequestId'])
+    assert_match(client_request_id, response.params['gatewayResponse']['transactionProcessingDetails']['clientRequestId'])
+  end
 end

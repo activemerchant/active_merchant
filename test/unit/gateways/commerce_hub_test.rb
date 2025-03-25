@@ -499,6 +499,17 @@ class CommerceHubTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_client_request_id_is_uuidv4
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, _data, headers|
+      client_request_id = headers['Client-Request-Id']
+      assert_not_nil client_request_id, 'Client-Request-Id header is missing'
+      uuid_v4_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      assert_match uuid_v4_regex, client_request_id, 'Client-Request-Id is not a valid UUIDv4'
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def successful_purchase_response
