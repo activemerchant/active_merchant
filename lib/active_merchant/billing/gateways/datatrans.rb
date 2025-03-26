@@ -253,6 +253,8 @@ module ActiveMerchant # :nodoc:
         token_array = [response.dig('responses', 0, 'alias'), options[:expiry_month], options[:expiry_year]].join('|') if action == 'tokenize'
 
         auth = [response['transactionId'], response['acquirerAuthorizationCode'], token_array].join('|')
+        auth = options[:transaction_id] if action == 'settle'
+
         return auth unless auth == '||'
       end
 
