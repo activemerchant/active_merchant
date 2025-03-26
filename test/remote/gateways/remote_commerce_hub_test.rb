@@ -48,7 +48,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     )
     @declined_card = credit_card('4000300011112220', month: '02', year: '2035', verification_value: '123')
     @master_card = credit_card('5454545454545454', brand: 'master')
-    @options = {}
+    @options = { order_id: 'CHG0138916197715e9876f91f3041371eb44b' }
     @three_d_secure = {
       ds_transaction_id: '3543-b90d-d6dc1765c98',
       authentication_response_status: 'A',
@@ -295,6 +295,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     response = @gateway.refund(nil, response.authorization, @options)
     assert_success response
     assert_equal 'Approved', response.message
+    assert_equal @options[:order_id], response.params['transactionDetails']['merchantInvoiceNumber']
   end
 
   def test_successful_purchase_and_partial_refund
@@ -318,6 +319,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'Approved', response.message
+    assert_equal @options[:order_id], response.params['transactionDetails']['merchantInvoiceNumber']
   end
 
   def test_failed_credit
