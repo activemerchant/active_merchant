@@ -72,6 +72,7 @@ module ActiveMerchant # :nodoc:
       def credit(money, payment_method, options = {})
         post = {}
         add_invoice(post, money, options)
+        add_transaction_details(post, options)
         add_transaction_interaction(post, options)
         add_payment(post, payment_method, options)
 
