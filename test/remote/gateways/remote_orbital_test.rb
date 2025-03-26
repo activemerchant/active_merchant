@@ -1330,6 +1330,18 @@ class TandemOrbitalTests < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_krw_currency
+    assert response = @tandem_gateway.purchase(@amount, @credit_card, @options.merge(currency: 'KRW'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_aed_currency
+    assert response = @tandem_gateway.purchase(@amount, @credit_card, @options.merge(currency: 'AED'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_soft_descriptor
     options = @options.merge(
       soft_descriptors: {

@@ -524,6 +524,22 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_supported_krw_currency
+    stub_comms do
+      @gateway.purchase(50, credit_card, order_id: '1', currency: 'KRW')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r{<CurrencyCode>410<\/CurrencyCode>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_supported_aed_currency
+    stub_comms do
+      @gateway.purchase(50, credit_card, order_id: '1', currency: 'AED')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r{<CurrencyCode>784<\/CurrencyCode>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_currency_exponents
     stub_comms do
       @gateway.purchase(50, credit_card, order_id: '1')
