@@ -155,6 +155,7 @@ module ActiveMerchant # :nodoc:
         add_risk_data(post, options)
         add_level_two_three_data(post, options)
         truncate_amex_reference_id(post, options, payment_method)
+        add_partial_authorization(post, options)
       end
 
       def add_invoice(post, money, options)
@@ -216,6 +217,13 @@ module ActiveMerchant # :nodoc:
         return unless options[:processing].is_a?(Hash)
 
         post[:processing] = options[:processing]
+      end
+
+      def add_partial_authorization(post, options)
+        return unless options[:partial_authorization]
+
+        post[:partial_authorization] = {}
+        post[:partial_authorization][:enabled] = options[:partial_authorization] if options[:partial_authorization]
       end
 
       def add_risk_data(post, options)

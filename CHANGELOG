@@ -139,6 +139,7 @@
 * CheckoutV2: Add account name inquiry [jcreiff] #5427
 * Adyen: Update shopperInteraction [almalee24] #5430
 * Nuvei: Add addtional oct and aft user detail fields [yunnydang] #5433
+* CheckoutV2: Add support for partial authorization [yunnydang] #5441
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
