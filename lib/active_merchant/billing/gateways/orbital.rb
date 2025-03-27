@@ -576,11 +576,13 @@ module ActiveMerchant # :nodoc:
       end
 
       def billing_name(payment_source, options)
-        if !payment_source.is_a?(String) && payment_source&.name.present?
-          payment_source.name[0..29]
-        elsif options[:billing_address] && options[:billing_address][:name].present?
-          options[:billing_address][:name][0..29]
-        end
+        name =
+          if !payment_source.is_a?(String) && payment_source&.name.present?
+            payment_source.name
+          elsif options[:billing_address] && options[:billing_address][:name].present?
+            options[:billing_address][:name]
+          end
+        name ? I18n.transliterate(name || '')[0..29] : nil
       end
 
       def avs_supported?(address)
@@ -619,7 +621,7 @@ module ActiveMerchant # :nodoc:
         add_bank_account_type(xml, check)
         xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method]
         xml.tag! :BankPmtDelv, options[:payment_delivery] || 'B'
-        xml.tag! :AVSname, (check&.name ? check.name[0..29] : nil) if get_address(options).blank?
+        xml.tag! :AVSname, (check&.name ? I18n.transliterate(check.name)[0..29] : nil) if get_address(options).blank?
       end
 
       def add_credit_card(xml, credit_card, options)
