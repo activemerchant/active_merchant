@@ -5,6 +5,7 @@ module ActiveMerchant
         'AED' => '784',   # United Arab Emirates Dirham
         'AFN' => '971',   # Afghan Afghani
         'AGD' => '951',   # East Caribbean Dollar
+        'AMD' => '051'    # Armenian Dram
         'ANG' => '532',   # Netherlands Antillean Guilder
         'ARS' => '032',   # Argentine Peso
         'AUD' => '036',   # Australian Dollar
@@ -52,6 +53,7 @@ module ActiveMerchant
         'GMD' => '270',   # Gambian Dalasi
         'GNF' => '324',   # Guinea Franc
         'GTQ' => '320',   # Guatemala Quetzal
+        'GWP' => '624',   # Guinea-Bissau Peso
         'GYD' => '328',   # Guyanese Dollar
         'HKD' => '344',   # Hong Kong Dollar
         'HNL' => '340',   # Honduras Limpera
@@ -87,6 +89,7 @@ module ActiveMerchant
         'MAD' => '504',   # Moroccan Dirham
         'MDL' => '498',   # Moldovan Leu
         'MGA' => '969',   # Malagasy Ariary
+        'MGF' => '450',   # Madagascar Franc
         'MKD' => '807',   # Macedonian Denar
         'MMK' => '104',   # Myanmar Kyat
         'MNT' => '496',   # Mongolia Tugrik
@@ -167,6 +170,8 @@ module ActiveMerchant
       CURRENCY_EXPONENTS = {
         'AED' => 2,   # United Arab Emirates Dirham
         'AFN' => 2,   # Afghan Afghani
+        'AGD' => 2,   # East Caribbean Dollar
+        'AMD' => 2,   # Armenian Dram
         'ANG' => 2,   # Netherlands Antillean Guilder
         'ARS' => 2,   # Argentine Peso
         'AUD' => 2,   # Australian Dollar
@@ -214,6 +219,7 @@ module ActiveMerchant
         'GMD' => 2,   # Gambian Dalasi
         'GNF' => 0,   # Guinea Franc
         'GTQ' => 2,   # Guatemala Quetzal
+        'GWP' => 2,   # Guinea-Bissau Peso
         'GYD' => 2,   # Guyanese Dollar
         'HKD' => 2,   # Hong Kong Dollar
         'HNL' => 2,   # Honduras Limpera
@@ -249,6 +255,7 @@ module ActiveMerchant
         'MAD' => 2,   # Moroccan Dirham
         'MDL' => 2,   # Moldovan Leu
         'MGA' => 1,   # Malagasy Ariary
+        'MGF' => 2,   # Madagascar Franc
         'MKD' => 2,   # Macedonian Denar
         'MMK' => 0,   # Myanmar Kyat
         'MNT' => 2,   # Mongolia Tugrik
