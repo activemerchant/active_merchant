@@ -412,6 +412,15 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(void)
   end
 
+  def test_void_with_no_authorization_value
+    merchant_identifier = 'testTransaction131' + SecureRandom.hex(3)
+
+    @gateway.authorize(@amount, @credit_card, @options.merge(merchant_identifier:))
+
+    assert void = @gateway.void(nil, @options.merge({ merchant_identifier: }), @amount)
+    assert_successful_response(void)
+  end
+
   def test_purchase_and_void_with_merchant_category_code
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_successful_response(purchase)

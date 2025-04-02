@@ -2,6 +2,7 @@ require 'nokogiri'
 
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
+    require 'active_merchant/xml_validate'
     # Initial setup instructions can be found in
     # http://apps.cybersource.com/library/documentation/dev_guides/SOAP_Toolkits/SOAP_toolkits.pdf
     #
@@ -221,8 +222,8 @@ module ActiveMerchant # :nodoc:
         end
       end
 
-      def void(identification, options = {})
-        commit(build_void_request(identification, options), :void, nil, options)
+      def void(identification, options = {}, money = nil)
+        commit(build_void_request(identification, options, money), :void, nil, options)
       end
 
       def refund(money, identification, options = {})
@@ -488,9 +489,13 @@ module ActiveMerchant # :nodoc:
         payment_method_or_reference.is_a?(String) && payment_method_or_reference.split(';')[7] == 'check'
       end
 
-      def build_void_request(identification, options)
-        order_id, request_id, request_token, action, money, currency = identification.split(';')
-        options[:order_id] = order_id
+      def build_void_request(identification, options, money = nil)
+        if identification.nil?
+          request_id = nil
+        else
+          order_id, request_id, request_token, action, money, currency = identification.split(';')
+          options[:order_id] = order_id
+        end
 
         xml = Builder::XmlMarkup.new indent: 2
         case action
@@ -1038,7 +1043,7 @@ module ActiveMerchant # :nodoc:
 
       def add_auth_reversal_service(xml, request_id, request_token)
         xml.tag! 'ccAuthReversalService', { 'run' => 'true' } do
-          xml.tag! 'authRequestID', request_id
+          xml.tag! 'authRequestID', request_id unless request_id.nil?
           xml.tag! 'authRequestToken', request_token
         end
       end
@@ -1075,6 +1080,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_merchant_category_code(xml, options)
+        xml.tag! 'merchantTransactionIdentifier', options[:merchant_identifier] if options[:merchant_identifier]
         xml.tag! 'merchantCategoryCode', options[:merchant_category_code] if options[:merchant_category_code]
       end
 
@@ -1304,6 +1310,7 @@ module ActiveMerchant # :nodoc:
       # Where we actually build the full SOAP request using builder
       def build_request(request, options)
         xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
+        validate_xml(request, options)
 
         body = build_body(request, options, xsd_version)
         xml = Builder::XmlMarkup.new indent: 2
@@ -1430,6 +1437,21 @@ module ActiveMerchant # :nodoc:
 
       def format_routing_number(routing_number, options)
         options[:currency] == 'CAD' && routing_number.length > 8 ? routing_number[-8..-1] : routing_number
+      end
+
+      def validate_xml(xml_body, options)
+        xml = Builder::XmlMarkup.new indent: 2
+
+        xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
+
+        xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
+          add_merchant_data(xml, options)
+          xml << xml_body
+        end
+
+        xml_target = xml.target!
+        xsd_path = File.expand_path('../../../../test/schema/cyber_source/CyberSourceTransaction_1.201.xsd', __dir__)
+        ActiveMerchant::XMLValidate.validate_with_xsd_path(xml_target, options, xsd_path:)
       end
     end
   end
