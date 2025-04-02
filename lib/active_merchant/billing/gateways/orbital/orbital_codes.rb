@@ -4,9 +4,9 @@ module ActiveMerchant
       CURRENCY_CODES = {
         'AED' => '784',   # United Arab Emirates Dirham
         'AFN' => '971',   # Afghan Afghani
-        'AGD' => '951',   # East Caribbean Dollar
-        'AMD' => '051'    # Armenian Dram
+        'AMD' => '051',   # Armenian Dram
         'ANG' => '532',   # Netherlands Antillean Guilder
+        'AOA' => '973',   # Angolan Kwanza
         'ARS' => '032',   # Argentine Peso
         'AUD' => '036',   # Australian Dollar
         'AWG' => '533',   # Aruban Guilder
@@ -131,6 +131,7 @@ module ActiveMerchant
         'SOS' => '706',   # Somali Shilling
         'SRD' => '968',   # Surinamese Dollar
         'STD' => '678',   # Sao Tome & Principe Dobra
+        'STN' => '930',   # Sao Tome & Principe Dobra (new)
         'SVC' => '222',   # El Salvador Colon
         'SYP' => '760',   # Syrian Pound
         'SZL' => '748',   # Swaziland Lilangeni
@@ -170,7 +171,6 @@ module ActiveMerchant
       CURRENCY_EXPONENTS = {
         'AED' => 2,   # United Arab Emirates Dirham
         'AFN' => 2,   # Afghan Afghani
-        'AGD' => 2,   # East Caribbean Dollar
         'AMD' => 2,   # Armenian Dram
         'ANG' => 2,   # Netherlands Antillean Guilder
         'ARS' => 2,   # Argentine Peso
