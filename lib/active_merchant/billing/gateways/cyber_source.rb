@@ -221,8 +221,8 @@ module ActiveMerchant # :nodoc:
         end
       end
 
-      def void(identification, options = {})
-        commit(build_void_request(identification, options), :void, nil, options)
+      def void(identification, options = {}, money = nil)
+        commit(build_void_request(identification, options, money), :void, nil, options)
       end
 
       def refund(money, identification, options = {})
@@ -488,9 +488,13 @@ module ActiveMerchant # :nodoc:
         payment_method_or_reference.is_a?(String) && payment_method_or_reference.split(';')[7] == 'check'
       end
 
-      def build_void_request(identification, options)
-        order_id, request_id, request_token, action, money, currency = identification.split(';')
-        options[:order_id] = order_id
+      def build_void_request(identification, options, money = nil)
+        if identification.nil?
+          request_id = nil
+        else
+          order_id, request_id, request_token, action, money, currency = identification.split(';')
+          options[:order_id] = order_id
+        end
 
         xml = Builder::XmlMarkup.new indent: 2
         case action
@@ -1038,7 +1042,7 @@ module ActiveMerchant # :nodoc:
 
       def add_auth_reversal_service(xml, request_id, request_token)
         xml.tag! 'ccAuthReversalService', { 'run' => 'true' } do
-          xml.tag! 'authRequestID', request_id
+          xml.tag! 'authRequestID', request_id unless request_id.nil?
           xml.tag! 'authRequestToken', request_token
         end
       end
@@ -1075,6 +1079,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_merchant_category_code(xml, options)
+        xml.tag! 'merchantTransactionIdentifier', options[:merchant_identifier] if options[:merchant_identifier]
         xml.tag! 'merchantCategoryCode', options[:merchant_category_code] if options[:merchant_category_code]
       end
 
