@@ -952,7 +952,19 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.void(authorization, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(%r(<ccAuthReversalService run=\"true\"), data)
+      assert_match(%r(<authRequestID>), data)
     end.respond_with(successful_auth_reversal_response)
+  end
+
+  def test_successful_void_authorize_request_without_reference
+    previous_authorization = ''
+
+    stub_comms do
+      @gateway.void(previous_authorization, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(ccAuthReversalService run=\"true\"), data)
+      assert_no_match(%r(<authRequestID>), data)
+    end.respond_with(successful_void_response)
   end
 
   def test_successful_void_with_issuer_additional_data
