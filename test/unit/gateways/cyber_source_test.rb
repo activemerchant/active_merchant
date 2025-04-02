@@ -2198,6 +2198,25 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_equal Nokogiri::XML(xml).canonicalize(Nokogiri::XML::XML_C14N_EXCLUSIVE_1_0), canonicalized
   end
 
+  def test_xml_validator_with_valid_xml
+    valid_xml = @gateway.send(:build_void_request, 'test_auth_response', @options.merge(billing_address: address))
+
+    result = @gateway.send(:validate_xml, valid_xml, @options)
+    assert_equal true, result
+  end
+
+  def test_xml_validator_with_invalid_xml
+    invalid_xml = <<~XML
+      <merchantID></merchantID> <!-- Missing required value -->
+      <purchaseTotals>
+        <currency>USD</currency>
+      </purchaseTotals>
+    XML
+
+    result = @gateway.send(:validate_xml, invalid_xml, @options)
+    assert_equal result, ["7:0: ERROR: Element '{urn:schemas-cybersource-com:transaction-data-1.201}merchantID': This element is not expected. Expected is one of ( {urn:schemas-cybersource-com:transaction-data-1.201}clientSecurityLibraryVersion, {urn:schemas-cybersource-com:transaction-data-1.201}clientApplication, {urn:schemas-cybersource-com:transaction-data-1.201}clientApplicationVersion, {urn:schemas-cybersource-com:transaction-data-1.201}clientApplicationUser, {urn:schemas-cybersource-com:transaction-data-1.201}routingCode, {urn:schemas-cybersource-com:transaction-data-1.201}comments, {urn:schemas-cybersource-com:transaction-data-1.201}returnURL, {urn:schemas-cybersource-com:transaction-data-1.201}invoiceHeader, {urn:schemas-cybersource-com:transaction-data-1.201}paymentScheme, {urn:schemas-cybersource-com:transaction-data-1.201}mandateID )."]
+  end
+
   private
 
   def options_with_normalized_3ds(

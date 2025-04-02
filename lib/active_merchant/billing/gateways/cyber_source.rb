@@ -2,6 +2,7 @@ require 'nokogiri'
 
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
+    require 'active_merchant/xml_validate'
     # Initial setup instructions can be found in
     # http://apps.cybersource.com/library/documentation/dev_guides/SOAP_Toolkits/SOAP_toolkits.pdf
     #
@@ -1309,6 +1310,7 @@ module ActiveMerchant # :nodoc:
       # Where we actually build the full SOAP request using builder
       def build_request(request, options)
         xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
+        validate_xml(request, options)
 
         body = build_body(request, options, xsd_version)
         xml = Builder::XmlMarkup.new indent: 2
@@ -1435,6 +1437,21 @@ module ActiveMerchant # :nodoc:
 
       def format_routing_number(routing_number, options)
         options[:currency] == 'CAD' && routing_number.length > 8 ? routing_number[-8..-1] : routing_number
+      end
+
+      def validate_xml(xml_body, options)
+        xml = Builder::XmlMarkup.new indent: 2
+
+        xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
+
+        xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
+          add_merchant_data(xml, options)
+          xml << xml_body
+        end
+
+        xml_target = xml.target!
+        xsd_path = File.expand_path('../../../../test/schema/cyber_source/CyberSourceTransaction_1.201.xsd', __dir__)
+        ActiveMerchant::XMLValidate.validate_with_xsd_path(xml_target, options, xsd_path:)
       end
     end
   end
