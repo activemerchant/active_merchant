@@ -1,5 +1,6 @@
 require 'active_merchant/billing/gateways/orbital/orbital_soft_descriptors'
 require 'rexml/document'
+require 'active_merchant/billing/gateways/orbital/orbital_codes'
 
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
@@ -28,6 +29,7 @@ module ActiveMerchant # :nodoc:
     # Company will automatically be affiliated.
 
     class OrbitalGateway < Gateway
+      include OrbitalCodes
       include Empty
 
       API_VERSION = '9.5'
@@ -83,52 +85,6 @@ module ActiveMerchant # :nodoc:
       self.money_format = :cents
 
       AVS_SUPPORTED_COUNTRIES = %w[US CA UK GB]
-
-      CURRENCY_CODES = {
-        'AUD' => '036',
-        'BRL' => '986',
-        'CAD' => '124',
-        'CLP' => '152',
-        'CZK' => '203',
-        'DKK' => '208',
-        'HKD' => '344',
-        'ICK' => '352',
-        'INR' => '356',
-        'JPY' => '392',
-        'MXN' => '484',
-        'NZD' => '554',
-        'NOK' => '578',
-        'SGD' => '702',
-        'ZAR' => '710',
-        'SEK' => '752',
-        'CHF' => '756',
-        'GBP' => '826',
-        'USD' => '840',
-        'EUR' => '978'
-      }
-
-      CURRENCY_EXPONENTS = {
-        'AUD' => '2',
-        'BRL' => '2',
-        'CAD' => '2',
-        'CLP' => '2',
-        'CZK' => '2',
-        'DKK' => '2',
-        'HKD' => '2',
-        'ICK' => '2',
-        'INR' => '2',
-        'JPY' => '0',
-        'MXN' => '2',
-        'NZD' => '2',
-        'NOK' => '2',
-        'SGD' => '2',
-        'ZAR' => '2',
-        'SEK' => '2',
-        'CHF' => '2',
-        'GBP' => '2',
-        'USD' => '2',
-        'EUR' => '2'
-      }
 
       # INDUSTRY TYPES
       ECOMMERCE_TRANSACTION = 'EC'
