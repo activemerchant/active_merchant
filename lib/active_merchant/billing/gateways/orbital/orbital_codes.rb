@@ -11,7 +11,7 @@ module ActiveMerchant
           'BSD' => '044', # Bahamian Dollar
           'BDT' => '050', # Bangladeshi Taka
           'BBD' => '052', # Barbados Dollar
-          'BYR' => '933', # Belarussian Ruble
+          'BYN' => '933', # Belarussian Ruble
           'BZD' => '084', # Belize Dollar
           'BMD' => '060', # Bermudian Dollar
           'BOB' => '068', # Bolivian Boliviano
@@ -102,7 +102,7 @@ module ActiveMerchant
           'RWF' => '646', # Rwanda Franc
           'SHP' => '654', # Saint Helena Pound
           'WST' => '882', # Samoan Tala
-          'STD' => '678', # Sao Tome & Principe Dobra
+          'STN' => '678', # Sao Tome & Principe Dobra
           'SAR' => '682', # Saudi Riyal
           'SCR' => '690', # Seychelles Rupee
           'SLL' => '694', # Sierra Leonean Leone
@@ -145,7 +145,7 @@ module ActiveMerchant
           'BSD' => '2', # Bahamian Dollar
           'BDT' => '2', # Bangladeshi Taka
           'BBD' => '2', # Barbados Dollar
-          'BYR' => '0', # Belarussian Ruble
+          'BYN' => '0', # Belarussian Ruble
           'BZD' => '2', # Belize Dollar
           'BMD' => '2', # Bermudian Dollar
           'BOB' => '2', # Bolivian Boliviano
@@ -236,7 +236,7 @@ module ActiveMerchant
           'RWF' => '0', # Rwanda Franc
           'SHP' => '2', # Saint Helena Pound
           'WST' => '2', # Samoan Tala
-          'STD' => '2', # Sao Tome & Principe Dobra
+          'STN' => '2', # Sao Tome & Principe Dobra
           'SAR' => '2', # Saudi Riyal
           'SCR' => '2', # Seychelles Rupee
           'SLL' => '2', # Sierra Leonean Leone
