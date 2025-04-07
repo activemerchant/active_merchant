@@ -422,6 +422,23 @@ class EbanxTest < Test::Unit::TestCase
     assert_equal %w[BR MX CO CL AR PE BO EC CR DO GT PA PY UY], EbanxGateway.supported_countries
   end
 
+  def test_email_is_url_encoded_in_customer_data
+    gateway = EbanxGateway.new(integration_key: 'test_key')
+
+    post = { payment: {} }
+    payment = stub(name: 'John Doe') # You can stub the payment object if needed
+    options = {
+      email: 'john+test@example.com',
+      document: '12345678901',
+      birth_date: '1980-01-01'
+    }
+
+    gateway.send(:add_customer_data, post, payment, options)
+
+    expected_encoded_email = URI.encode_www_form_component('john+test@example.com')
+    assert_equal expected_encoded_email, post[:payment][:email]
+  end
+
   private
 
   def pre_scrubbed
