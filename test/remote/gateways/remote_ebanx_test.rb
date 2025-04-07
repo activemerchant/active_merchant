@@ -326,7 +326,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_inquire
-    purchase = @gateway_local.purchase(@amount, @credit_card,  @options.merge({ processing_type: 'local' }))
+    purchase = @gateway_local.purchase(@amount, @credit_card, @options.merge({ processing_type: 'local' }))
     assert_success purchase
 
     inquire = @gateway_local.inquire(purchase.authorization, { processing_type: 'local' })
