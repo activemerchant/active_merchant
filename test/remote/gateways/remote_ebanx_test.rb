@@ -493,4 +493,12 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_scrubbed(@network_token.number, transcript)
     assert_scrubbed(@network_token.payment_cryptogram, transcript)
   end
+
+  def test_successful_purchase_with_special_character_in_email
+    @options[:email] = 'ney+mar@test.com'
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.success?, "Expected successful response but got: #{response.message}"
+  end
 end
