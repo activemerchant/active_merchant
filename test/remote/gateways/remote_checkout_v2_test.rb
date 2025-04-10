@@ -17,6 +17,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @amex_card = credit_card('341829238058580', brand: 'american_express', verification_value: '1234', month: '6', year: Time.now.year + 1)
     @threeds_card = credit_card('4485040371536584', verification_value: '100', month: '12', year: Time.now.year + 1)
     @mada_card = credit_card('5043000000000000', brand: 'mada')
+    @partial_auth_card = credit_card('5518207720770101', verification_value: '153', month: '12', year: Time.now.year + 1)
 
     @vts_network_token = network_tokenization_credit_card(
       '4242424242424242',
@@ -816,6 +817,24 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
     assert capture = @gateway.capture(nil, auth.authorization)
     assert_success capture
+  end
+
+  def test_successful_authorize_with_partial_authorization
+    options = {
+      order_id: '1',
+      billing_address: address,
+      shipping_address: address,
+      description: 'Purchase',
+      email: 'longbob.longsen@example.com',
+      processing_channel_id: 'pc_aaco6s3z7jbepo7dzdpmdcnfcy',
+      partial_authorization: true
+    }
+    response = @gateway_oauth.authorize(10000, @partial_auth_card, options)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '10010', response.params['response_code']
+    assert_equal 'Partial Value Approved', response.params['response_summary']
   end
 
   def test_successful_authorize_and_capture_with_3ds

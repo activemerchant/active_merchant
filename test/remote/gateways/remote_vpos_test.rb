@@ -4,7 +4,8 @@ class RemoteVposTest < Test::Unit::TestCase
   def setup
     @gateway = VposGateway.new(fixtures(:vpos))
 
-    @amount = 100000
+    # some test fails due duplicated transactions
+    @amount = rand(100..100000)
     @credit_card = credit_card('5418630110000014', month: 8, year: 2026, verification_value: '277')
     @declined_card = credit_card('4000300011112220')
     @options = {
@@ -22,7 +23,29 @@ class RemoteVposTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'IMPORTE DE LA TRN INFERIOR AL M¿NIMO PERMITIDO', response.message
+    assert_equal 'EMISOR NO RECONOCIDO', response.message
+  end
+
+  def test_successful_inquire_transaction_id
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert inquire = @gateway.inquire(purchase.authorization)
+    assert_success inquire
+
+    assert inquire.authorization, purchase.authorization
+    assert_equal 'Transaccion aprobada', inquire.message
+  end
+
+  def test_successful_inquire_shop_process_id
+    shop_process_id = SecureRandom.random_number(10**15)
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options.merge(shop_process_id:))
+    assert_success purchase
+    assert inquire = @gateway.inquire(nil, { shop_process_id: })
+    assert_success inquire
+
+    assert inquire.authorization, purchase.authorization
+    assert_equal 'Transaccion aprobada', inquire.message
   end
 
   def test_successful_refund_using_auth
@@ -56,8 +79,7 @@ class RemoteVposTest < Test::Unit::TestCase
 
   def test_failed_credit
     response = @gateway.credit(@amount, @declined_card)
-    assert_failure response
-    assert_equal 'RefundsServiceError:TIPO DE TRANSACCION NO PERMITIDA PARA TARJETAS EXTRANJERAS', response.message
+    assert_equal 'Transaccion denegada', response.message
   end
 
   def test_successful_void

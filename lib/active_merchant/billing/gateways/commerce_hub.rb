@@ -72,6 +72,7 @@ module ActiveMerchant # :nodoc:
       def credit(money, payment_method, options = {})
         post = {}
         add_invoice(post, money, options)
+        add_transaction_details(post, options)
         add_transaction_interaction(post, options)
         add_payment(post, payment_method, options)
 
@@ -342,7 +343,7 @@ module ActiveMerchant # :nodoc:
 
       def headers(request, options)
         time = DateTime.now.strftime('%Q').to_s
-        client_request_id = options[:client_request_id] || rand.to_s[2..8]
+        client_request_id = options[:client_request_id] || SecureRandom.uuid
         raw_signature = @options[:api_key] + client_request_id.to_s + time + request
         hmac = OpenSSL::HMAC.digest('sha256', @options[:api_secret], raw_signature)
         signature = Base64.strict_encode64(hmac.to_s).to_s

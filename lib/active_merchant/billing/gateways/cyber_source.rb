@@ -489,8 +489,11 @@ module ActiveMerchant # :nodoc:
       end
 
       def build_void_request(identification, options)
-        order_id, request_id, request_token, action, money, currency = identification.split(';')
+        order_id, request_id, request_token, action, money, currency = identification&.split(';')
         options[:order_id] = order_id
+
+        money ||= options[:amount]
+        currency ||= options[:currency]
 
         xml = Builder::XmlMarkup.new indent: 2
         case action
@@ -1038,7 +1041,7 @@ module ActiveMerchant # :nodoc:
 
       def add_auth_reversal_service(xml, request_id, request_token)
         xml.tag! 'ccAuthReversalService', { 'run' => 'true' } do
-          xml.tag! 'authRequestID', request_id
+          xml.tag! 'authRequestID', request_id unless request_id.nil?
           xml.tag! 'authRequestToken', request_token
         end
       end
@@ -1075,6 +1078,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_merchant_category_code(xml, options)
+        xml.tag! 'merchantTransactionIdentifier', options[:merchant_transaction_id] if options[:merchant_transaction_id]
         xml.tag! 'merchantCategoryCode', options[:merchant_category_code] if options[:merchant_category_code]
       end
 

@@ -48,7 +48,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     )
     @declined_card = credit_card('4000300011112220', month: '02', year: '2035', verification_value: '123')
     @master_card = credit_card('5454545454545454', brand: 'master')
-    @options = {}
+    @options = { order_id: 'CHG0138916197715e9876f91f3041371eb44b' }
     @three_d_secure = {
       ds_transaction_id: '3543-b90d-d6dc1765c98',
       authentication_response_status: 'A',
@@ -295,6 +295,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     response = @gateway.refund(nil, response.authorization, @options)
     assert_success response
     assert_equal 'Approved', response.message
+    assert_equal @options[:order_id], response.params['transactionDetails']['merchantInvoiceNumber']
   end
 
   def test_successful_purchase_and_partial_refund
@@ -318,6 +319,7 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'Approved', response.message
+    assert_equal @options[:order_id], response.params['transactionDetails']['merchantInvoiceNumber']
   end
 
   def test_failed_credit
@@ -403,5 +405,12 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
+  end
+
+  def test_client_request_id_is_uuidv4
+    client_request_id = SecureRandom.uuid
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(client_request_id:))
+    assert_match(/\A[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\z/i, response.params['gatewayResponse']['transactionProcessingDetails']['clientRequestId'])
+    assert_match(client_request_id, response.params['gatewayResponse']['transactionProcessingDetails']['clientRequestId'])
   end
 end

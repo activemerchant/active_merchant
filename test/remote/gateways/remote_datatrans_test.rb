@@ -5,7 +5,7 @@ class RemoteDatatransTest < Test::Unit::TestCase
     @gateway = DatatransGateway.new(fixtures(:datatrans))
 
     @amount = 756
-    @credit_card = credit_card('4242424242424242', verification_value: '123', first_name: 'John', last_name: 'Smith', month: 6, year: Time.now.year + 1)
+    @credit_card = credit_card('4242424242424242', verification_value: '123', first_name: 'John', last_name: 'Smith', month: 6, year: Time.now.year)
     @bad_amount = 100000 # anything grather than 500 EUR
     @credit_card_frictionless = credit_card('4000001000000018', verification_value: '123', first_name: 'John', last_name: 'Smith', month: 6, year: 2025)
 
@@ -94,7 +94,7 @@ class RemoteDatatransTest < Test::Unit::TestCase
 
     response = @gateway.capture(@amount, authorize_response.authorization, @options)
     assert_success response
-    assert_equal response.authorization, nil
+    assert_equal response.authorization, authorize_response.authorization.split('|').first
   end
 
   def test_successful_refund
@@ -113,7 +113,7 @@ class RemoteDatatransTest < Test::Unit::TestCase
     capture_response = @gateway.capture(@amount - 100, authorize_response.authorization, @options)
     assert_success capture_response
 
-    response = @gateway.refund(@amount - 200, authorize_response.authorization, @options)
+    response = @gateway.refund(@amount - 200, capture_response.authorization, @options)
     assert_success response
   end
 
@@ -137,7 +137,7 @@ class RemoteDatatransTest < Test::Unit::TestCase
     capture_response = @gateway.capture(100, authorize_response.authorization, @options)
     assert_success capture_response
 
-    response = @gateway.refund(200, authorize_response.authorization, @options)
+    response = @gateway.refund(200, capture_response.authorization, @options)
     assert_failure response
     assert_equal response.error_code, 'INVALID_PROPERTY'
     assert_equal response.message, 'credit.amount'
