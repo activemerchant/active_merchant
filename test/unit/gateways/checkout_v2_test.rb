@@ -641,6 +641,22 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_partial_authorization
+    stub_comms(@gateway, :ssl_request) do
+      options = {
+        phone_country_code: '1',
+        billing_address: address,
+        processing_channel_id: 'pc_aaco6s3z7jbepo7dzdpmdcnfcy',
+        partial_authorization: true
+      }
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['partial_authorization']['enabled'], true
+      assert_equal request['processing_channel_id'], 'pc_aaco6s3z7jbepo7dzdpmdcnfcy'
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_no_customer_name_included_in_token_purchase
     stub_comms(@gateway, :ssl_request) do
       options = {

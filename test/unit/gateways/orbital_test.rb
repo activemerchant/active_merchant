@@ -136,6 +136,37 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     )
   end
 
+  def test_truncates_and_removes_accents_from_name
+    card = credit_card('4242424242424242', first_name: 'José', last_name: 'García-López de la Santa María')
+
+    response = stub_comms do
+      @gateway.purchase(50, card, order_id: 1, billing_address: address)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/Jose Garcia-Lopez de la Santa/, data)
+      assert_no_match(/José/, data)
+      assert_no_match(/García/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_truncates_and_removes_accents_from_name_when_pm_is_a_check
+    check = check(
+      name: 'José García-López de la Santa María',
+      account_number: '072403004',
+      account_type: 'checking',
+      routing_number: '072403004'
+    )
+
+    response = stub_comms do
+      @gateway.purchase(50, check, order_id: 1, billing_address: address)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/Jose Garcia-Lopez de la Santa/, data)
+      assert_no_match(/José/, data)
+      assert_no_match(/García/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_supports_network_tokenization
     assert_true @gateway.supports_network_tokenization?
   end
