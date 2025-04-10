@@ -142,6 +142,7 @@
 * CheckoutV2: Add support for partial authorization [yunnydang] #5441
 * Datatrans: Update the authorization for Capture responses [almalee24] #5437
 * CyberSource: Void Acepts nil values [gasb150] #5442
+* Ebanx: Handle special characters in email [ankurspreedly] #5444
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

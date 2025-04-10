@@ -3,6 +3,7 @@ require 'test_helper'
 class RemoteEbanxTest < Test::Unit::TestCase
   def setup
     @gateway = EbanxGateway.new(fixtures(:ebanx))
+    @gateway_local = EbanxGateway.new(fixtures(:ebanx_local))
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
@@ -25,8 +26,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
       },
       tags: EbanxGateway::TAGS,
       soft_descriptor: 'ActiveMerchant',
-      email: 'neymar@test.com',
-      processing_type: 'local'
+      email: 'neymar@test.com'
     }
 
     @hiper_card = credit_card('6062825624254001')
@@ -87,7 +87,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_passing_processing_type_in_header
-    response = @gateway.purchase(@amount, @credit_card, @options.merge({ processing_type: 'local' }))
+    response = @gateway_local.purchase(@amount, @credit_card, @options.merge({ processing_type: 'local' }))
 
     assert_success response
     assert_equal 'Accepted', response.message
@@ -158,10 +158,10 @@ class RemoteEbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_partial_capture_when_include_capture_amount_is_not_passed
-    auth = @gateway.authorize(@amount, @credit_card, @options)
+    auth = @gateway_local.authorize(@amount, @credit_card, @options.merge({ processing_type: 'local' }))
     assert_success auth
 
-    assert capture = @gateway.capture(@amount - 1, auth.authorization, { processing_type: 'local' })
+    assert capture = @gateway_local.capture(@amount - 1, auth.authorization, { processing_type: 'local' })
     assert_success capture
   end
 
@@ -176,7 +176,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture(@amount, '', { processing_type: 'local' })
+    response = @gateway_local.capture(@amount, '', { processing_type: 'local' })
     assert_failure response
     assert_equal 'Parameters hash or merchant_payment_code not informed', response.message
   end
@@ -201,23 +201,23 @@ class RemoteEbanxTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.refund(@amount, '', { processing_type: 'local' })
+    response = @gateway_local.refund(@amount, '', { processing_type: 'local' })
     assert_failure response
     assert_equal 'Parameters hash or merchant_payment_code not informed', response.message
     assert_equal 'BP-REF-1', response.error_code
   end
 
   def test_successful_void
-    auth = @gateway.authorize(@amount, @credit_card, @options)
+    auth = @gateway_local.authorize(@amount, @credit_card, @options.merge({ processing_type: 'local' }))
     assert_success auth
 
-    assert void = @gateway.void(auth.authorization, { processing_type: 'local' })
+    assert void = @gateway_local.void(auth.authorization, { processing_type: 'local' })
     assert_success void
     assert_equal 'Accepted', void.message
   end
 
   def test_failed_void
-    response = @gateway.void('', { processing_type: 'local' })
+    response = @gateway_local.void('', { processing_type: 'local' })
     assert_failure response
     assert_equal 'Parameters hash or merchant_payment_code not informed', response.message
   end
@@ -318,18 +318,18 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_match %r{Accepted}, response.message
   end
 
-  def test_failed_verify
+  def test_failed_verify_expired
     declined_card = credit_card('6011088896715918')
     response = @gateway.verify(declined_card, @options)
     assert_failure response
-    assert_match %r{Not accepted}, response.message
+    assert_match %r{Expired card}, response.message
   end
 
   def test_successful_inquire
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    purchase = @gateway_local.purchase(@amount, @credit_card, @options.merge({ processing_type: 'local' }))
     assert_success purchase
 
-    inquire = @gateway.inquire(purchase.authorization, { processing_type: 'local' })
+    inquire = @gateway_local.inquire(purchase.authorization, { processing_type: 'local' })
     assert_success inquire
 
     assert_equal 'Accepted', purchase.message
@@ -492,5 +492,13 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
     assert_scrubbed(@network_token.number, transcript)
     assert_scrubbed(@network_token.payment_cryptogram, transcript)
+  end
+
+  def test_successful_purchase_with_special_character_in_email
+    @options[:email] = 'ney+mar@test.com'
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.success?, "Expected successful response but got: #{response.message}"
   end
 end
