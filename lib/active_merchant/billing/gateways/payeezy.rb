@@ -366,7 +366,7 @@ module ActiveMerchant
       def commit(params, options)
         url = base_url(options) + endpoint(params)
 
-        if transaction_id = params.delete(:transaction_id)
+        if transaction_id = params.delete(:transaction_id)&.delete(' ')
           url = "#{url}/#{transaction_id}"
         end
 
@@ -498,7 +498,7 @@ module ActiveMerchant
           end
         else
           [
-            response['transaction_id'],
+            response['transaction_id']&.delete(' '),
             response['transaction_tag'],
             params[:method],
             response['amount']&.to_i
