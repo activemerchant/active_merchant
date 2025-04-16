@@ -1864,7 +1864,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_successful_inquire_with_order_id
     response = stub_comms do
-      @gateway.inquire(nil, { order_id: @options[:order_id].to_s })
+      @gateway.inquire(nil, { order_id: @options[:order_id].to_s, original_action: %w(AUTHORISED CAPTURED) })
     end.check_request do |_endpoint, data, _headers|
       assert_tag_with_attributes('orderInquiry', { 'orderCode' => @options[:order_id].to_s }, data)
     end.respond_with(successful_authorize_response)
@@ -1874,7 +1874,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_successful_inquire_with_authorization
     response = stub_comms do
-      @gateway.inquire(@options[:order_id].to_s, {})
+      @gateway.inquire(@options[:order_id].to_s, { original_action: %w(AUTHORISED CAPTURED) })
     end.check_request do |_endpoint, data, _headers|
       assert_tag_with_attributes('orderInquiry', { 'orderCode' => @options[:order_id].to_s }, data)
     end.respond_with(successful_authorize_response)
