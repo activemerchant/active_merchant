@@ -133,7 +133,10 @@ module ActiveMerchant # :nodoc:
 
       def inquire(authorization, options = {})
         order_id = order_id_from_authorization(authorization.to_s) || options[:order_id]
-        commit('direct_inquiry', build_order_inquiry_request(order_id, options), :ok, options)
+        failure_criteria = %w(REFUSED CANCELLED)
+        failure_criteria.delete('CANCELLED') if options[:original_request] == 'verification'
+
+        commit('direct_inquiry', build_order_inquiry_request(order_id, options), *failure_criteria, options)
       end
 
       def supports_scrubbing
@@ -976,7 +979,7 @@ module ActiveMerchant # :nodoc:
         headers
       end
 
-      def commit(action, request, *success_criteria, options)
+      def commit(action, request, *success_or_failure_criteria, options)
         xml = ssl_post(url, request, headers(options))
         raw = parse(action, xml)
 
@@ -985,8 +988,9 @@ module ActiveMerchant # :nodoc:
           raw[:session_id] = options[:session_id]
           raw[:is3DSOrder] = true
         end
-        success = success_from(action, raw, success_criteria)
-        message = message_from(success, raw, success_criteria, action)
+
+        success = success_from(action, raw, success_or_failure_criteria)
+        message = message_from(success, raw, success_or_failure_criteria, action)
 
         Response.new(
           success,
@@ -1031,32 +1035,37 @@ module ActiveMerchant # :nodoc:
         end
       end
 
-      def success_from(action, raw, success_criteria)
-        success_criteria_success?(raw, success_criteria) || action_success?(action, raw)
+      def success_from(action, raw, success_or_failure_criteria)
+        if action == 'direct_inquiry'
+          return if raw[:error]
+
+          # for direct_inquiry we are looking for failed last_event
+          !success_or_failure_criteria.include?(raw[:last_event])
+        else
+          success_criteria_success?(raw, success_or_failure_criteria) || action_success?(action, raw)
+        end
       end
 
-      def message_from(success, raw, success_criteria, action)
+      def message_from(success, raw, success_or_failure_criteria, action)
         return 'SUCCESS' if success
 
-        raw[:iso8583_return_code_description] || raw[:error] || required_status_message(raw, success_criteria, action) || raw[:issuer_response_description]
+        raw[:iso8583_return_code_description] || raw[:error] || required_status_message(raw, success_or_failure_criteria, action) || raw[:issuer_response_description]
       end
 
-      # success_criteria can be:
+      # success_or_failure_criteria can be:
       #   - a string or an array of strings (if one of many responses)
       #   - An array of strings if one of many responses could be considered a
       #     success.
-      def success_criteria_success?(raw, success_criteria)
+      def success_criteria_success?(raw, success_or_failure_criteria)
         return if raw[:error]
 
-        raw[:ok].present? || (success_criteria.include?(raw[:last_event]) if raw[:last_event])
+        raw[:ok].present? || (success_or_failure_criteria.include?(raw[:last_event]) if raw[:last_event])
       end
 
       def action_success?(action, raw)
         case action
         when 'store'
           raw[:token].present?
-        when 'direct_inquiry'
-          raw[:last_event].present?
         else
           false
         end
@@ -1066,11 +1075,11 @@ module ActiveMerchant # :nodoc:
         raw[:iso8583_return_code_code] || raw[:error_code] || nil unless success == 'SUCCESS'
       end
 
-      def required_status_message(raw, success_criteria, action)
-        return if success_criteria.include?(raw[:last_event])
+      def required_status_message(raw, success_or_failure_criteria, action)
+        return if success_or_failure_criteria.include?(raw[:last_event])
         return unless %w[cancel refund inquiry credit fast_credit].include?(action)
 
-        "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(' or ')} is required."
+        "A transaction status of #{success_or_failure_criteria.collect { |c| "'#{c}'" }.join(' or ')} is required."
       end
 
       def authorization_from(action, raw, options)

@@ -151,6 +151,7 @@
 * Braintree: Update gem to 4.26.0 [almalee24] #5440
 * CheckoutV2: Update Authorization from Basic to Bearer [sinourain] #5381
 * Payeezy: Update authorization when extra space [almalee24] #5446
+* Worldpay: Update inquire success_criteria [almalee24] #5445
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
