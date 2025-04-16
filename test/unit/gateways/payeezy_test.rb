@@ -348,6 +348,25 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal 'Transaction Normal - Approved', response.message
   end
 
+  def test_successful_authorize_and_capture
+    @gateway.expects(:ssl_post).returns(authorize_with_extra_space_in_transaction_id)
+    transaction_id = JSON.parse(authorize_with_extra_space_in_transaction_id)['transaction_id']
+
+    assert_equal transaction_id[/\s/], ' '
+
+    assert authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize
+    assert_equal 'ET176427|69601874|credit_card|100', authorize.authorization
+    assert_not_equal authorize.authorization.split('|').first, transaction_id
+    assert_equal authorize.authorization.split('|').first, transaction_id.delete(' ')
+
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+    assert capture = @gateway.capture(@amount, authorize.authorization)
+    assert_success capture
+    assert_equal 'ET176427|69601874|credit_card|100', capture.authorization
+    assert_equal 'Transaction Normal - Approved', capture.message
+  end
+
   def test_failed_capture
     @gateway.expects(:ssl_post).raises(failed_capture_response)
     assert response = @gateway.capture(@amount, '')
@@ -882,6 +901,12 @@ class PayeezyGateway < Test::Unit::TestCase
   def successful_authorize_response
     <<~RESPONSE
       {\"correlation_id\":\"228.1449517682800\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"authorize\",\"transaction_id\":\"ET156862\",\"transaction_tag\":\"69601979\",\"method\":\"credit_card\",\"amount\":\"100\",\"currency\":\"USD\",\"avs\":\"4\",\"cvv2\":\"M\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"1446473518714242\"}},\"card\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"card_number\":\"4242\",\"exp_date\":\"0916\"},\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\"}
+    RESPONSE
+  end
+
+  def authorize_with_extra_space_in_transaction_id
+    <<~RESPONSE
+      {\"correlation_id\":\"228.1449517682800\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"authorize\",\"transaction_id\":\"ET176427 \",\"transaction_tag\":\"69601874\",\"method\":\"credit_card\",\"amount\":\"100\",\"currency\":\"USD\",\"avs\":\"4\",\"cvv2\":\"M\",\"token\":{\"token_type\":\"FDToken\",\"token_data\":{\"value\":\"1446473518714242\"}},\"card\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"card_number\":\"4242\",\"exp_date\":\"0916\"},\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\"}
     RESPONSE
   end
 
