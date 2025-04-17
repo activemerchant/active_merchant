@@ -258,6 +258,16 @@ class RemoteDatatransTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
   end
 
+  def test_transcript_scrubbing_store
+    transcript = capture_transcript(@gateway) do
+      @gateway.store(@credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+  end
+
   def test_successful_purchase_with_billing_address
     response = @gateway.purchase(@amount, @credit_card, @options.merge({ billing_address: @billing_address }))
 
