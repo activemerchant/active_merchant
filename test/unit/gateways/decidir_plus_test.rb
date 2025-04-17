@@ -40,7 +40,7 @@ class DecidirPlusTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal DecidirPlusGateway.supported_cardtypes, %i[visa master american_express discover diners_club naranja cabal patagonia_365 tarjeta_sol]
+    assert_equal DecidirPlusGateway.supported_cardtypes, %i[visa master american_express discover diners_club naranja cabal patagonia_365 tarjeta_sol discover]
   end
 
   def test_successful_purchase
@@ -61,6 +61,19 @@ class DecidirPlusTest < Test::Unit::TestCase
     end.check_request do |_action, _endpoint, data, _headers|
       data = JSON.parse(data)
       assert_equal(64, data['payment_method_id'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_discover
+    options = @options.merge(card_brand: 'discover')
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @payment_reference, options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      data = JSON.parse(data)
+      assert_equal(139, data['payment_method_id'])
     end.respond_with(successful_purchase_response)
 
     assert_success response

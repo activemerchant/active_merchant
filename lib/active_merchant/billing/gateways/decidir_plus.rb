@@ -6,7 +6,7 @@ module ActiveMerchant # :nodoc:
 
       self.supported_countries = ['AR']
       self.default_currency = 'ARS'
-      self.supported_cardtypes = %i[visa master american_express discover diners_club naranja cabal patagonia_365 tarjeta_sol]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club naranja cabal patagonia_365 tarjeta_sol discover]
 
       self.homepage_url = 'http://decidir.com.ar/home'
       self.display_name = 'Decidir Plus'
@@ -196,7 +196,8 @@ module ActiveMerchant # :nodoc:
           'american_express_prisma' => 111,
           'diners_club' => 8,
           'patagonia_365' => 55,
-          'tarjeta_sol' => 64
+          'tarjeta_sol' => 64,
+          'discover' => 139
         }
 
         payment_method_ids.fetch(card_brand, debit ? 31 : 1)
