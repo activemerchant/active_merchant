@@ -649,7 +649,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     options = @options.merge(
       sender: {
         type: 'individual',
-        dob: '1985-05-15',
+        date_of_birth: '1985-05-15',
         first_name: 'Jane',
         last_name: 'Doe',
         address: {
