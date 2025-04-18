@@ -245,11 +245,13 @@ module ActiveMerchant # :nodoc:
 
         sender = options[:sender]
 
+        birthdate = sender[:dob] || sender[:date_of_birth]
+
         post[:sender] = {}
         post[:sender][:type] = sender[:type] if sender[:type]
         post[:sender][:first_name] = sender[:first_name] if sender[:first_name]
         post[:sender][:last_name] = sender[:last_name] if sender[:last_name]
-        post[:sender][:dob] = sender[:dob] if sender[:dob]
+        post[:sender][:date_of_birth] = birthdate if birthdate
         post[:sender][:reference] = sender[:reference] if sender[:reference]
         post[:sender][:company_name] = sender[:company_name] if sender[:company_name]
 
