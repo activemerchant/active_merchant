@@ -133,7 +133,7 @@ module ActiveMerchant # :nodoc:
 
       def inquire(authorization, options = {})
         order_id = order_id_from_authorization(authorization.to_s) || options[:order_id]
-        commit('direct_inquiry', build_order_inquiry_request(order_id, options), :ok, options)
+        commit('direct_inquiry', build_order_inquiry_request(order_id, options), *options[:original_action], options)
       end
 
       def supports_scrubbing
@@ -1055,8 +1055,6 @@ module ActiveMerchant # :nodoc:
         case action
         when 'store'
           raw[:token].present?
-        when 'direct_inquiry'
-          raw[:last_event].present?
         else
           false
         end

@@ -1460,30 +1460,63 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success purchase
   end
 
-  # There is a delay of up to 5 minutes for a transaction to be recorded by Worldpay. Inquiring
-  # too soon will result in an error "Order not ready". Leaving commented out due to included sleeps.
-  # def test_successful_inquire_with_order_id
-  #   order_id = @options[:order_id]
-  #   assert auth = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success auth
-  #   assert auth.authorization
-  #   sleep 60
+  def test_successful_inquire_with_order_id
+    order_id = @options[:order_id]
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert auth.authorization
+    sleep 40
 
-  #   assert inquire = @gateway.inquire(nil, { order_id: order_id })
-  #   assert_success inquire
-  #   assert auth.authorization == inquire.authorization
-  # end
+    assert inquire = @gateway.inquire(nil, { order_id:, original_action: %w(AUTHORISED CAPTURED) })
 
-  # def test_successful_inquire_with_authorization
-  #   assert auth = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success auth
-  #   assert auth.authorization
-  #   sleep 60
+    if inquire.message == 'Order not ready'
+      sleep 40
 
-  #   assert inquire = @gateway.inquire(auth.authorization, {})
-  #   assert_success inquire
-  #   assert auth.authorization == inquire.authorization
-  # end
+      assert inquire = @gateway.inquire(nil, { order_id:, original_action: %w(AUTHORISED CAPTURED) })
+    end
+
+    assert auth.authorization == inquire.authorization
+    assert_success inquire
+  end
+
+  def test_successful_inquire_with_authorization
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert auth.authorization
+    sleep 40
+
+    assert inquire = @gateway.inquire(auth.authorization, { original_action: %w(AUTHORISED CAPTURED) })
+
+    if inquire.message == 'Order not ready'
+      sleep 40
+
+      assert inquire = @gateway.inquire(auth.authorization, { original_action: %w(AUTHORISED CAPTURED) })
+    end
+
+    assert_success inquire
+    assert auth.authorization == inquire.authorization
+  end
+
+  def test_failed_inquire_with_authorization
+    @credit_card.first_name = nil
+    @credit_card.last_name = 'REFUSED62'
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure auth
+    assert auth.authorization
+    sleep 40
+
+    assert inquire = @gateway.inquire(auth.authorization, { original_action: %w(AUTHORISED CAPTURED) })
+
+    if inquire.message == 'Order not ready'
+      sleep 40
+
+      assert inquire = @gateway.inquire(auth.authorization, { original_action: %w(AUTHORISED CAPTURED) })
+    end
+
+    assert_failure inquire
+    assert auth.authorization == inquire.authorization
+  end
 
   private
 
