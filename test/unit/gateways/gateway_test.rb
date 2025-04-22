@@ -168,4 +168,14 @@ class GatewayTest < Test::Unit::TestCase
     assert_equal post[:transaction_number], transaction_number
     assert_false post.key?(:do_not_add)
   end
+
+  def test_clean_emoji_emoticons_and_accent
+    input = 'Hello😊 World! :D'
+    expected_output = 'Hello World!'
+    assert_equal expected_output, @gateway.send(:clean_emoji_emoticons_and_accent, input)
+
+    input_with_accent = 'Café 😊'
+    expected_output_with_accent = 'Cafe'
+    assert_equal expected_output_with_accent, @gateway.send(:clean_emoji_emoticons_and_accent, input_with_accent)
+  end
 end

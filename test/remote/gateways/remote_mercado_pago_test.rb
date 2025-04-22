@@ -137,6 +137,13 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_equal 'accredited', response.message
   end
 
+  def test_truncates_and_removes_accents_from_name
+    formated_name = 'Jose Maria Lopez Garcia'
+    credit_card = credit_card('5031433215406351', first_name: ':-) José María', last_name: '😀López García')
+    response = @gateway.purchase(@amount, credit_card, @options.merge({ payer: @payer }))
+    assert_equal response.responses.first.params['cardholder']['name'], formated_name
+  end
+
   def test_successful_purchase_with_metadata_passthrough
     metadata = { 'key_1' => 'value_1',
       'key_2' => 'value_2',
