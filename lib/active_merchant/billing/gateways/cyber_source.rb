@@ -427,7 +427,7 @@ module ActiveMerchant # :nodoc:
 
       def build_capture_request(money, authorization, options)
         order_id, request_id, request_token = authorization.split(';')
-        options[:order_id] = order_id
+        options[:order_id] = options[:merchant_reference_code] || order_id
 
         xml = Builder::XmlMarkup.new indent: 2
         add_purchase_data(xml, money, true, options)

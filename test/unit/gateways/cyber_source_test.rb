@@ -756,6 +756,22 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
   end
 
+  def test_successful_capture_with_merchant_reference_code_override
+    stub_comms do
+      @gateway.capture(100, '1846925324700976124593', @options.merge!(merchant_reference_code: '1234566778'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<merchantReferenceCode>1234566778<\/merchantReferenceCode>/, data)
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_successful_capture_without_merchant_reference_code_override
+    stub_comms do
+      @gateway.capture(100, '1846925324700976124593', @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<merchantReferenceCode>1846925324700976124593<\/merchantReferenceCode>/, data)
+    end.respond_with(successful_capture_response)
+  end
+
   def test_successful_credit_card_purchase_request
     @gateway.stubs(:ssl_post).returns(successful_capture_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)

@@ -753,6 +753,27 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_capture_with_merchant_reference_code_override
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+
+    assert response = @gateway.capture(@amount, auth.authorization, @capture_options.merge(merchant_reference_code: '1234566778'))
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+    assert_equal '1234566778', response.params['merchantReferenceCode']
+  end
+
+  def test_successful_capture_without_merchant_reference_code_override
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+    order_id = auth.authorization.split(';').first
+
+    assert response = @gateway.capture(@amount, auth.authorization, @capture_options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+    assert_equal order_id, response.params['merchantReferenceCode']
+  end
+
   def test_successful_capture_with_merchant_category_code
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_successful_response(auth)
