@@ -746,7 +746,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_truncates_and_removes_accents_from_name
     truncated_name = 'Jose Maria Lopez Garc'
-    credit_card = credit_card('4556761029983886', first_name: 'José María', last_name: 'López García')
+    credit_card = credit_card('4556761029983886', first_name: ':-) José María', last_name: '😀López García')
 
     transcript = capture_transcript(@gateway) do
       response = @gateway.authorize(@amount, credit_card, @options)
@@ -758,7 +758,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_truncates_and_removes_accents_from_name_when_pm_is_a_check
     truncated_name = 'Jose Maria Lopez Garc'
-    check = check(name: 'José María López García')
+    check = check(name: ':) José María López García')
 
     transcript = capture_transcript(@echeck_gateway) do
       response = @echeck_gateway.authorize(@amount, check, @options)
