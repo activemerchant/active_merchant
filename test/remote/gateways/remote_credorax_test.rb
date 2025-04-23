@@ -6,7 +6,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
 
     @amount = 100
     @adviser_amount = 1000001
-    @credit_card = credit_card('4176661000001015', verification_value: '281', month: '12')
+    @credit_card = credit_card('4012001038443335', verification_value: '512', month: '12')
     @fully_auth_card = credit_card('5223450000000007', brand: 'mastercard', verification_value: '090', month: '12')
     @declined_card = credit_card('4176661000001111', verification_value: '681', month: '12')
     @three_ds_card = credit_card('5455330200000016', verification_value: '737', month: '10', year: Time.now.year + 2)
@@ -59,12 +59,12 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     }
 
     @apple_pay_card = network_tokenization_credit_card(
-      '4176661000001015',
-      month: 10,
+      '4012001038443335',
+      month: '12',
       year: Time.new.year + 2,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '737',
+      verification_value: '512',
       payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
       eci: '07',
       transaction_id: 'abc123',
@@ -72,20 +72,23 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     )
 
     @google_pay_card = network_tokenization_credit_card(
-      '4176661000001015',
+      '4012001038443335',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      month: '01',
+      month: '12',
       year: Time.new.year + 2,
       source: :google_pay,
       transaction_id: '123456789',
-      eci: '07'
+      eci: '07',
+      verification_value: 512
     )
 
     @nt_credit_card = network_tokenization_credit_card(
-      '4176661000001015',
+      '4012001038443335',
       brand: 'visa',
+      month: '12',
       source: :network_token,
-      payment_cryptogram: 'AgAAAAAAosVKVV7FplLgQRYAAAA='
+      payment_cryptogram: 'AgAAAAAAosVKVV7FplLgQRYAAAA=',
+      verification_value: 512
     )
   end
 
@@ -330,6 +333,14 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', capture.message
   end
 
+  def test_successful_authorize_with_transaction_type
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(transaction_type: '10'))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '1', response.params['H9']
+    assert_equal '10', response.params['A9']
+  end
+
   def test_successful_authorize_with_authorization_details
     options_with_auth_details = @options.merge({ authorization_type: '2', multiple_capture_count: '5' })
     response = @gateway.authorize(@amount, @credit_card, options_with_auth_details)
@@ -562,6 +573,14 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_verify_with_0_auth
+    response = @gateway.verify(@credit_card, @options.merge(zero_dollar_auth: true))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '0', response.params['A4']
+    assert_equal '5', response.params['A9']
   end
 
   def test_failed_verify

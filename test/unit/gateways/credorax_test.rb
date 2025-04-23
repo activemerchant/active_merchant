@@ -289,6 +289,17 @@ class CredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_verify_with_0_auth
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options.merge(zero_dollar_auth: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/a9=5/, data)
+      assert_match(/a4=0/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_verify
     response = stub_comms do
       @gateway.verify(@credit_card)

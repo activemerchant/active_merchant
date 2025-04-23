@@ -240,10 +240,11 @@ module ActiveMerchant # :nodoc:
         commit(:credit, post)
       end
 
-      def verify(credit_card, options = {})
+      def verify(payment_method, options = {})
+        amount = eligible_for_0_auth?(payment_method, options) ? 0 : 100
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { authorize(amount, payment_method, options) }
+          r.process(:ignore_result) { void(r.authorization, options) } unless eligible_for_0_auth?(payment_method, options)
         end
       end
 
@@ -302,6 +303,10 @@ module ActiveMerchant # :nodoc:
         post[:b3] = format(payment_method.month, :two_digits)
       end
 
+      def eligible_for_0_auth?(payment_method, options = {})
+        payment_method.is_a?(CreditCard) && %w(visa master).include?(payment_method.brand) && options[:zero_dollar_auth]
+      end
+
       def add_network_tokenization_card(post, payment_method, options)
         post[:b21] = NETWORK_TOKENIZATION_CARD_SOURCE[payment_method.source.to_s]
         post[:token_eci] = post[:b21] == 'vts_mdes_token' ? '07' : nil
@@ -330,12 +335,12 @@ module ActiveMerchant # :nodoc:
       def add_customer_data(post, options)
         post[:d1] = options[:ip] || '127.0.0.1'
         if (billing_address = options[:billing_address])
-          post[:c5]   = billing_address[:address1]  if billing_address[:address1]
-          post[:c7]   = billing_address[:city]      if billing_address[:city]
-          post[:c10]  = billing_address[:zip]       if billing_address[:zip]
-          post[:c8]   = billing_address[:state]     if billing_address[:state]
-          post[:c9]   = billing_address[:country]   if billing_address[:country]
-          post[:c2]   = billing_address[:phone]     if billing_address[:phone]
+          post[:c5]   = billing_address[:address1]      if billing_address[:address1]
+          post[:c7]   = billing_address[:city]          if billing_address[:city]
+          post[:c10]  = billing_address[:zip]           if billing_address[:zip]
+          post[:c8]   = billing_address[:state]         if billing_address[:state]
+          post[:c9]   = billing_address[:country]       if billing_address[:country]
+          post[:c2]   = billing_address[:phone] if billing_address[:phone]
         end
       end
 
@@ -473,7 +478,9 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_transaction_type(post, options)
-        post[:a9] = options[:transaction_type] if options[:transaction_type]
+        a9 = options[:zero_dollar_auth] ? '5' : options[:transaction_type]
+
+        post[:a9] = a9 if a9
         post[:a2] = '3' if options.dig(:metadata, :manual_entry)
       end
 
