@@ -149,6 +149,7 @@
 * CyberSource: Add the optional merchant reference code on capture [yunnydang] #5453
 * Orbital: Update authorization string [almalee24] #5458
 * Braintree: Update gem to 4.26.0 [almalee24] #5440
+* StripePaymentIntents: Add inquire capability [adarsh-spreedly] #5456
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
