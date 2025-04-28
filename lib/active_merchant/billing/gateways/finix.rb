@@ -4,6 +4,15 @@ module ActiveMerchant #:nodoc:
       include Empty
 
       SUCCESS_CODES = [200, 201].freeze
+
+      SOFT_DECLINE_CODES = %w[
+        INSUFFICIENT_FUNDS
+        EXCEEDS_APPROVAL_LIMIT
+        CARD_VELOCITY_EXCEEDED
+        PROCESSOR_TIMEOUT
+        TRANSACTION_NOT_ALLOWED
+      ].freeze
+
       COUNTRY_CODE  = { 'US' => 'USA', 'CA' => 'CAN' }.freeze
 
       self.test_url = 'https://finix.sandbox-payments-api.com'
@@ -279,22 +288,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(succeeded, response)
-        return 'Succeeded' if succeeded
+        state = response["state"]
 
-        embedded_errors = response.dig('_embedded', 'errors')
-        if embedded_errors.present? && embedded_errors.first['message'].present?
-          return embedded_errors.first['message']
+        case state
+        when "FAILED"
+          response['failure_message']
+        when "PENDING", "SUCCEEDED", "CANCELED"
+          state.capitalize
+        else
+          response.dig('_embedded', 'errors', 0, 'message')
         end
-
-        response['state']&.capitalize || 'Failed'
       end
-
 
       def error_code_from(succeeded, response)
         return nil if succeeded
 
-        error_code = response.dig('_embedded', 'errors', 0, 'code')
-        error_code || 'UNKNOWN_ERROR'
+        if response['_embedded'] && response['_embedded']['errors']
+          response['_embedded']['errors'].first['code']
+        else
+          response['failure_code']
+        end
       end
 
       def authorization_from(response)
@@ -316,6 +329,11 @@ module ActiveMerchant #:nodoc:
 
       def extract_last_name(name)
         name.to_s.split[1..]&.join(' ')
+      end
+
+      def handle_response(response)
+        @response_http_code = response.code.to_i
+        response.body
       end
     end
   end
