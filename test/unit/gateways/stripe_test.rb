@@ -34,6 +34,14 @@ class StripeTest < Test::Unit::TestCase
     })
   end
 
+  def test_endpoint
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, validate: false)
+    end.check_request do |_method, _endpoint, _data, headers|
+      assert_match('2020-08-27', headers['Stripe-Version'])
+    end.respond_with(successful_new_customer_response)
+  end
+
   def test_successful_new_customer_with_card
     @gateway.expects(:ssl_request).returns(successful_new_customer_response)
     @gateway.expects(:add_creditcard)

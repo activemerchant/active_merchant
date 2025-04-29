@@ -5,12 +5,13 @@ module ActiveMerchant # :nodoc:
     # This gateway uses the current Stripe {Payment Intents API}[https://stripe.com/docs/api/payment_intents].
     # For the legacy API, see the Stripe gateway
     class StripePaymentIntentsGateway < StripeGateway
+      version '2020-08-27'
+
       ALLOWED_METHOD_STATES = %w[automatic manual].freeze
       ALLOWED_CANCELLATION_REASONS = %w[duplicate fraudulent requested_by_customer abandoned].freeze
       CREATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email save_payment_method]
       CONFIRM_INTENT_ATTRIBUTES = %i[receipt_email return_url save_payment_method setup_future_usage off_session]
       UPDATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email setup_future_usage]
-      DEFAULT_API_VERSION = '2020-08-27'
       DIGITAL_WALLETS = {
         apple_pay: 'apple_pay',
         google_pay: 'google_pay_dpan'

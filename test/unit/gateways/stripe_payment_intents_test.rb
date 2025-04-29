@@ -63,6 +63,14 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     @network_transaction_id = '1098510912210968'
   end
 
+  def test_endpoint
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.create_intent(@amount, @visa_token, {})
+    end.check_request do |_method, _endpoint, _data, headers|
+      assert_match('2020-08-27', headers['Stripe-Version'])
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_successful_create_and_confirm_intent
     @gateway.expects(:ssl_request).times(3).returns(successful_create_3ds2_payment_method, successful_create_3ds2_intent_response, successful_confirm_3ds2_intent_response)
 
