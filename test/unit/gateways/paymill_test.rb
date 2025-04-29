@@ -237,6 +237,16 @@ class PaymillTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_url
+    assert_equal 'https://api.paymill.com/v2/', @gateway.live_url
+
+    # Test save card URL
+    assert_equal 'https://test-token.paymill.com', @gateway.send(:save_card_url)
+
+    @gateway = PaymillGateway.new(public_key: 'PUBLIC', private_key: 'PRIVATE', test: false)
+    assert_equal 'https://token-v2.paymill.de', @gateway.send(:save_card_url)
+  end
+
   private
 
   def store_endpoint_url(credit_card, currency, amount)

@@ -1,6 +1,8 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class PaymillGateway < Gateway
+      version 'v2'
+
       self.supported_countries = %w(AD AT BE BG CH CY CZ DE DK EE ES FI FO FR GB
                                     GI GR HR HU IE IL IM IS IT LI LT LU LV MC MT
                                     NL NO PL PT RO SE SI SK TR VA)
@@ -10,7 +12,7 @@ module ActiveMerchant # :nodoc:
       self.display_name = 'PAYMILL'
       self.money_format = :cents
       self.default_currency = 'EUR'
-      self.live_url = 'https://api.paymill.com/v2/'
+      self.live_url = "https://api.paymill.com/#{fetch_version}/"
 
       def initialize(options = {})
         requires!(options, :public_key, :private_key)
@@ -192,7 +194,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def save_card_url
-        (test? ? 'https://test-token.paymill.com' : 'https://token-v2.paymill.de')
+        (test? ? 'https://test-token.paymill.com' : "https://token-#{fetch_version}.paymill.de")
       end
 
       def post_data(params)

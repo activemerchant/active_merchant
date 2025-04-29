@@ -538,6 +538,12 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed_network_token), post_scrubbed_network_token
   end
 
+  def test_url
+    assert_equal 'https://api.payeezy.com/v1', @gateway.live_url
+    assert_equal 'https://api-cert.payeezy.com/v1', @gateway.test_url
+    assert_equal 'https://api-cat.payeezy.com/v1', @gateway.integration_url
+  end
+
   private
 
   def pre_scrubbed
