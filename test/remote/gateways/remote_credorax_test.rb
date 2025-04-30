@@ -349,6 +349,15 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_authorize_with_crypto_currency_type
+    options_with_auth_details = @options.merge({ crypto_currency_type: '7', transaction_type: '6' })
+    response = @gateway.authorize(@amount, @credit_card, options_with_auth_details)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '6', response.params['A9']
+    assert response.authorization
+  end
+
   def test_successful_zero_authorize_with_name_inquiry_match
     extra_options = @options.merge({ account_name_inquiry: true, first_name: 'Art', last_name: 'Vandelay' })
     response = @gateway.authorize(0, @inquiry_match_card, extra_options)

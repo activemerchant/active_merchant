@@ -150,6 +150,7 @@ module ActiveMerchant # :nodoc:
         add_submerchant_id(post, options)
         add_stored_credential(post, options)
         add_processor(post, options)
+        add_crypto_currency_type(post, options)
 
         if options[:aft]
           add_recipient(post, options)
@@ -173,6 +174,7 @@ module ActiveMerchant # :nodoc:
         add_account_name_inquiry(post, options)
         add_processor(post, options)
         add_authorization_details(post, options)
+        add_crypto_currency_type(post, options)
 
         if options[:aft]
           add_recipient(post, options)
@@ -190,6 +192,8 @@ module ActiveMerchant # :nodoc:
         add_echo(post, options)
         add_submerchant_id(post, options)
         add_processor(post, options)
+        add_crypto_currency_type(post, options)
+        add_transaction_type(post, options)
 
         commit(:capture, post)
       end
@@ -202,6 +206,8 @@ module ActiveMerchant # :nodoc:
         add_submerchant_id(post, options)
         post[:a1] = generate_unique_id
         add_processor(post, options)
+        add_crypto_currency_type(post, options)
+        add_transaction_type(post, options)
 
         commit(:void, post, reference_action)
       end
@@ -216,6 +222,8 @@ module ActiveMerchant # :nodoc:
         add_processor(post, options)
         add_email(post, options)
         add_recipient(post, options)
+        add_crypto_currency_type(post, options)
+        add_transaction_type(post, options)
 
         if options[:referral_cft]
           add_customer_name(post, options)
@@ -236,6 +244,7 @@ module ActiveMerchant # :nodoc:
         add_transaction_type(post, options)
         add_processor(post, options)
         add_customer_name(post, options)
+        add_crypto_currency_type(post, options)
 
         commit(:credit, post)
       end
@@ -492,6 +501,10 @@ module ActiveMerchant # :nodoc:
       def add_authorization_details(post, options)
         post[:a10] = options[:authorization_type] if options[:authorization_type]
         post[:a11] = options[:multiple_capture_count] if options[:multiple_capture_count]
+      end
+
+      def add_crypto_currency_type(post, options)
+        post[:crypto_currency_type] = options[:crypto_currency_type] if options[:crypto_currency_type]
       end
 
       ACTIONS = {

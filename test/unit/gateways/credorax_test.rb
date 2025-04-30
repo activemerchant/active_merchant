@@ -631,6 +631,16 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_purchase_adds_crypto_currency_type
+    options_with_crypto_details = @options.merge({ crypto_currency_type: '7', transaction_type: '6' })
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_crypto_details)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/crypto_currency_type=7/, data)
+      assert_match(/a9=6/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_adds_moto_a2_field
     @options[:metadata] = { manual_entry: true }
     stub_comms do

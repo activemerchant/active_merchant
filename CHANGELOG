@@ -153,6 +153,7 @@
 * Payeezy: Update authorization when extra space [almalee24] #5446
 * Worldpay: Update inquire success_criteria [almalee24] #5445
 * Credorax: Support zero dollar verify [yunnydang] #5457
+* Credorax: Add optional crypto currency type field [yunnydang] #5460
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
