@@ -1041,6 +1041,10 @@ pxpay:
   login: LOGIN
   password: PASSWORD
 
+qualpay:
+  merchant_id:
+  security_key:
+
 quantum:
   login: X
   password: Y
