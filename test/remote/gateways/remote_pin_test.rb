@@ -9,6 +9,26 @@ class RemotePinTest < Test::Unit::TestCase
     @visa_credit_card = credit_card('4200000000000000', year: Time.now.year + 3)
     @declined_card = credit_card('4100000000000001')
 
+    @apple_pay_card = network_tokenization_credit_card(
+      '4200000000000000',
+      month: 12,
+      year: Time.now.year + 2,
+      source: 'apple_pay',
+      eci: '05',
+      brand: 'visa',
+      payment_cryptogram: 'AABBCCDDEEFFGGHH'
+    )
+
+    @google_pay_card = network_tokenization_credit_card(
+      '4200000000000000',
+      month: 12,
+      year: Time.now.year + 2,
+      source: 'google_pay',
+      eci: '05',
+      brand: 'visa',
+      payment_cryptogram: 'AABBCCDDEEFFGGHH'
+    )
+
     @options = {
       email: 'roland@pinpayments.com',
       ip: '203.59.39.62',
@@ -128,6 +148,18 @@ class RemotePinTest < Test::Unit::TestCase
     @options.delete(:description)
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
+  end
+
+  def test_successful_purchase_with_apple_pay
+    response = @gateway.purchase(@amount, @apple_pay_card, @options)
+    assert_success response
+    assert_equal true, response.params['response']['captured']
+  end
+
+  def test_successful_purchase_with_google_pay
+    response = @gateway.purchase(@amount, @google_pay_card, @options)
+    assert_success response
+    assert_equal true, response.params['response']['captured']
   end
 
   def test_unsuccessful_purchase

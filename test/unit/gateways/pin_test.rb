@@ -73,7 +73,7 @@ class PinTest < Test::Unit::TestCase
     @gateway.expects(:add_amount).with(instance_of(Hash), @amount, @options)
     @gateway.expects(:add_customer_data).with(instance_of(Hash), @options)
     @gateway.expects(:add_invoice).with(instance_of(Hash), @options)
-    @gateway.expects(:add_creditcard).with(instance_of(Hash), @credit_card)
+    @gateway.expects(:add_payment_method).with(instance_of(Hash), @credit_card)
     @gateway.expects(:add_address).with(instance_of(Hash), @credit_card, @options)
     @gateway.expects(:add_capture).with(instance_of(Hash), @options)
 
@@ -89,6 +89,58 @@ class PinTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/charges', post_data, headers).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'ch_Kw_JxmVqMeSOQU19_krRdw', response.authorization
+    assert_equal JSON.parse(successful_purchase_response), response.params
+    assert response.test?
+  end
+
+  def test_successful_apple_pay_purchase
+    apple_pay_card = NetworkTokenizationCreditCard.new(
+      number: '4007000000027',
+      month: '09',
+      year: '2025',
+      verification_value: '123',
+      first_name: 'Longbob',
+      last_name: 'Longsen',
+      eci: '05',
+      payment_cryptogram: 'AABBCCDD',
+      source: :apple_pay
+    )
+
+    post_data = {}
+    headers = {}
+    @gateway.stubs(:headers).returns(headers)
+    @gateway.stubs(:post_data).returns(post_data)
+    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/charges', post_data, headers).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, apple_pay_card, @options)
+    assert_success response
+    assert_equal 'ch_Kw_JxmVqMeSOQU19_krRdw', response.authorization
+    assert_equal JSON.parse(successful_purchase_response), response.params
+    assert response.test?
+  end
+
+  def test_successful_google_pay_purchase
+    google_pay_card = NetworkTokenizationCreditCard.new(
+      number: '5200828282828210',
+      month: '12',
+      year: '2026',
+      verification_value: '456',
+      first_name: 'Jane',
+      last_name: 'Doe',
+      eci: '05',
+      payment_cryptogram: 'EEFFGGHH',
+      source: :google_pay
+    )
+
+    post_data = {}
+    headers = {}
+    @gateway.stubs(:headers).returns(headers)
+    @gateway.stubs(:post_data).returns(post_data)
+    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/charges', post_data, headers).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, google_pay_card, @options)
     assert_success response
     assert_equal 'ch_Kw_JxmVqMeSOQU19_krRdw', response.authorization
     assert_equal JSON.parse(successful_purchase_response), response.params
@@ -259,14 +311,14 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_store_parameters
-    @gateway.expects(:add_creditcard).with(instance_of(Hash), @credit_card)
+    @gateway.expects(:add_payment_method).with(instance_of(Hash), @credit_card)
     @gateway.expects(:add_address).with(instance_of(Hash), @credit_card, @options)
     @gateway.expects(:ssl_request).returns(successful_store_response)
     assert_success @gateway.store(@credit_card, @options)
   end
 
   def test_update_parameters
-    @gateway.expects(:add_creditcard).with(instance_of(Hash), @credit_card)
+    @gateway.expects(:add_payment_method).with(instance_of(Hash), @credit_card)
     @gateway.expects(:add_address).with(instance_of(Hash), @credit_card, @options)
     @gateway.expects(:ssl_request).returns(successful_store_response)
     assert_success @gateway.update('cus_XZg1ULpWaROQCOT5PdwLkQ', @credit_card, @options)
@@ -348,9 +400,9 @@ class PinTest < Test::Unit::TestCase
     assert_equal post[:capture], false
   end
 
-  def test_add_creditcard
+  def test_add_payment_method
     post = {}
-    @gateway.send(:add_creditcard, post, @credit_card)
+    @gateway.send(:add_payment_method, post, @credit_card)
 
     assert_equal @credit_card.number, post[:card][:number]
     assert_equal @credit_card.month, post[:card][:expiry_month]
@@ -359,16 +411,16 @@ class PinTest < Test::Unit::TestCase
     assert_equal @credit_card.name, post[:card][:name]
   end
 
-  def test_add_creditcard_with_card_token
+  def test_add_payment_method_with_card_token
     post = {}
-    @gateway.send(:add_creditcard, post, 'card_nytGw7koRg23EEp9NTmz9w')
+    @gateway.send(:add_payment_method, post, 'card_nytGw7koRg23EEp9NTmz9w')
     assert_equal 'card_nytGw7koRg23EEp9NTmz9w', post[:card_token]
     assert_false post.has_key?(:card)
   end
 
-  def test_add_creditcard_with_customer_token
+  def test_add_payment_method_with_customer_token
     post = {}
-    @gateway.send(:add_creditcard, post, 'cus_XZg1ULpWaROQCOT5PdwLkQ')
+    @gateway.send(:add_payment_method, post, 'cus_XZg1ULpWaROQCOT5PdwLkQ')
     assert_equal 'cus_XZg1ULpWaROQCOT5PdwLkQ', post[:customer_token]
     assert_false post.has_key?(:card)
   end
@@ -401,7 +453,7 @@ class PinTest < Test::Unit::TestCase
 
   def test_post_data
     post = {}
-    @gateway.send(:add_creditcard, post, @credit_card)
+    @gateway.send(:add_payment_method, post, @credit_card)
     assert_equal post.to_json, @gateway.send(:post_data, post)
   end
 
