@@ -15,6 +15,10 @@ module ActiveMerchant #:nodoc:
 
       COUNTRY_CODE  = { 'US' => 'USA', 'CA' => 'CAN' }.freeze
 
+      API_VERSION = '2018-01-01'.freeze
+      BASIC_AUTH_PREFIX = 'Basic '.freeze
+      CONTENT_TYPE = 'application/json'.freeze
+
       self.test_url = 'https://finix.sandbox-payments-api.com'
       self.live_url = 'https://www.finixpayments.com'
       self.supported_countries = %w[US CA]
@@ -144,11 +148,13 @@ module ActiveMerchant #:nodoc:
 
       def add_identity_data(post, options)
         billing               = options[:billing_address] || {}
+        first_name, last_name = split_names(billing[:name])
+
         post[:type]           = 'BUSINESS'
         post[:identity_roles] = ['BUYER']
         post[:entity]         = {
-                                  first_name: extract_first_name(billing[:name]),
-                                  last_name: extract_last_name(billing[:name]),
+                                  first_name: first_name,
+                                  last_name: last_name,
                                   email: options[:email],
                                   phone: billing[:phone],
                                   personal_address: build_address(billing)
@@ -258,10 +264,14 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Content-Type'  => 'application/json',
-          'Authorization' => "Basic #{Base64.strict_encode64("#{@username}:#{@password}")}",
-          'Finix-Version' => '2018-01-01'
+          'Content-Type'  => CONTENT_TYPE,
+          'Authorization' => basic_auth_header,
+          'Finix-Version' => API_VERSION
         }
+      end
+
+      def basic_auth_header
+        BASIC_AUTH_PREFIX + Base64.strict_encode64("#{@username}:#{@password}")
       end
 
       def url
@@ -323,12 +333,11 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def extract_first_name(name)
-        name.to_s.split.first
-      end
-
-      def extract_last_name(name)
-        name.to_s.split[1..]&.join(' ')
+      def split_names(name)
+        name_parts = name.to_s.split
+        first_name = name_parts.first || ''
+        last_name  = name_parts[1..]&.join(' ') || ''
+        [first_name, last_name]
       end
 
       def handle_response(response)
@@ -338,8 +347,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
-
-
-
-
