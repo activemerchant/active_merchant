@@ -155,6 +155,7 @@
 * Credorax: Support zero dollar verify [yunnydang] #5457
 * Credorax: Add optional crypto currency type field [yunnydang] #5460
 * CommerceHub: Map ecommerce_indicator value based on three_d_secure.eci [mjdonga] #5461
+* StripePI: Add the optional kana and kanji descriptor suffix fields [yunnydang] #5466
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
