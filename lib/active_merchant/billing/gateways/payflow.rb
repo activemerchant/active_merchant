@@ -211,11 +211,11 @@ module ActiveMerchant # :nodoc:
 
         eci = three_d_secure_options[:eci]
         cavv = three_d_secure_options[:cavv]
-        xid = three_d_secure_options[:xid]
         version = three_d_secure_options[:version]
 
         # 3DS2 only
         ds_transaction_id = three_d_secure_options[:ds_transaction_id] if version_2_or_newer?(three_d_secure_options)
+        xid = three_d_secure_options[:xid].presence || ds_transaction_id
 
         xml.tag!('ExtData', 'Name' => 'AUTHENTICATION_ID', 'Value' => authentication_id) unless authentication_id.blank?
         xml.tag!('ExtData', 'Name' => 'AUTHENTICATION_STATUS', 'Value' => authentication_status) unless authentication_status.blank?
@@ -341,6 +341,9 @@ module ActiveMerchant # :nodoc:
       def add_three_d_secure(options, xml)
         if options[:three_d_secure]
           three_d_secure = options[:three_d_secure]
+          ds_transaction_id = three_d_secure[:ds_transaction_id]
+          xid = three_d_secure[:xid].presence || ds_transaction_id
+
           xml.tag! 'BuyerAuthResult' do
             authentication_status(three_d_secure, xml)
             xml.tag! 'AuthenticationId', three_d_secure[:authentication_id] unless three_d_secure[:authentication_id].blank?
@@ -348,9 +351,9 @@ module ActiveMerchant # :nodoc:
             xml.tag! 'ACSUrl', three_d_secure[:acs_url] unless three_d_secure[:acs_url].blank?
             xml.tag! 'ECI', three_d_secure[:eci] unless three_d_secure[:eci].blank?
             xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
-            xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
+            xml.tag! 'XID', xid unless xid.blank?
             xml.tag! 'ThreeDSVersion', three_d_secure[:version] unless three_d_secure[:version].blank?
-            xml.tag! 'DSTransactionID', three_d_secure[:ds_transaction_id] unless three_d_secure[:ds_transaction_id].blank?
+            xml.tag! 'DSTransactionID', ds_transaction_id unless ds_transaction_id.blank?
           end
         end
       end
