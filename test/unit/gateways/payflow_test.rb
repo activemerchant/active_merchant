@@ -694,6 +694,7 @@ class PayflowTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(threeds_options))
     end.check_request do |_endpoint, data, _headers|
       assert_match %r(<ExtData Name=\"XID\" Value=\"#{ds_transaction_id}\"/>), data
+      assert_match %r(<XID>#{ds_transaction_id}</XID>), data
     end.respond_with(successful_purchase_with_3ds_mpi)
   end
 
@@ -710,6 +711,7 @@ class PayflowTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(threeds_options))
     end.check_request do |_endpoint, data, _headers|
       assert_match %r(<ExtData Name="XID" Value="this-is-an-xid"/>), data
+      assert_match %r(<XID>this-is-an-xid</XID>), data
     end.respond_with(successful_purchase_with_3ds_mpi)
   end
 
