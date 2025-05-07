@@ -178,4 +178,10 @@ class GatewayTest < Test::Unit::TestCase
     expected_output_with_accent = 'Cafe'
     assert_equal expected_output_with_accent, @gateway.send(:clean_emoji_emoticons_and_accent, input_with_accent)
   end
+
+  def test_clean_emoji_emoticons_and_accent_with_nil_input
+    input = nil
+    expected_output = nil
+    assert_equal expected_output, @gateway.send(:clean_emoji_emoticons_and_accent, input)
+  end
 end
