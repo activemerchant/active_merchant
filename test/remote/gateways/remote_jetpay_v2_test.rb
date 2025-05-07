@@ -98,13 +98,14 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
     assert_equal 'APPROVED', auth.message
     assert_not_nil auth.authorization
     assert_not_nil auth.params['approval']
-
     assert void = @gateway.void(auth.authorization, @options)
     assert_success void
   end
 
   def test_failed_void
-    assert void = @gateway.void('bogus', @options)
+    assert response = @gateway.authorize(@amount_approved, @credit_card, @options)
+    @gateway.void(response.authorization, @options)
+    assert void = @gateway.void(response.authorization, @options)
     assert_failure void
   end
 
@@ -141,7 +142,8 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    assert refund = @gateway.refund(@amount_approved, 'bogus', @options)
+    response = @gateway.purchase(@amount_approved, @credit_card, @options)
+    assert refund = @gateway.refund(-1000, response.authorization, @options)
     assert_failure refund
   end
 
@@ -185,10 +187,14 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
 
   def test_missing_login
     gateway = JetpayV2Gateway.new(login: '')
-    assert response = gateway.purchase(@amount_approved, @credit_card, @options)
-    assert_failure response
 
-    assert_equal 'No response returned (missing credentials?).', response.message
+    # Expect the gateway to raise an ActiveMerchant::ResponseError for a 400 Bad Request
+    error = assert_raises(ActiveMerchant::ResponseError) do
+      gateway.purchase(@amount_approved, @credit_card, @options)
+    end
+
+    # Verify that the error message indicates a 400 Bad Request
+    assert_match(/400 Bad Request/, error.message)
   end
 
   def test_transcript_scrubbing

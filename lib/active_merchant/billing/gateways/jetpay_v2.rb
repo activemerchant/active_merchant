@@ -12,7 +12,8 @@ module ActiveMerchant # :nodoc:
       self.homepage_url = 'http://www.jetpay.com'
       self.display_name = 'JetPay'
 
-      API_VERSION = '2.2'
+      # Define the API version using the Versionable module
+      version '2.2'
 
       ACTION_CODE_MESSAGES = {
         '000' =>  'Approved.',
@@ -203,7 +204,7 @@ module ActiveMerchant # :nodoc:
 
       def build_xml_request(transaction_type, options = {}, transaction_id = nil, &block)
         xml = Builder::XmlMarkup.new
-        xml.tag! 'JetPay', 'Version' => API_VERSION do
+        xml.tag! 'JetPay', 'Version' => fetch_version do # Use normalized version
           # Basic values needed for any request
           xml.tag! 'TerminalID', @options[:login]
           xml.tag! 'TransactionType', transaction_type
