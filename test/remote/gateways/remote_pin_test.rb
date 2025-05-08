@@ -13,7 +13,7 @@ class RemotePinTest < Test::Unit::TestCase
       '4200000000000000',
       month: 12,
       year: Time.now.year + 2,
-      source: 'apple_pay',
+      source: :apple_pay,
       eci: '05',
       brand: 'visa',
       payment_cryptogram: 'AABBCCDDEEFFGGHH'
@@ -23,7 +23,7 @@ class RemotePinTest < Test::Unit::TestCase
       '4200000000000000',
       month: 12,
       year: Time.now.year + 2,
-      source: 'google_pay',
+      source: :google_pay,
       eci: '05',
       brand: 'visa',
       payment_cryptogram: 'AABBCCDDEEFFGGHH'

@@ -27,7 +27,7 @@ module ActiveMerchant # :nodoc:
         add_customer_data(post, options)
         add_invoice(post, options)
         add_payment_method(post, payment_method)
-        add_address(post, payment_method, options)
+        add_address(post, payment_method, options) unless payment_method.kind_of?(NetworkTokenizationCreditCard)
         add_capture(post, options)
         add_metadata(post, options)
         add_3ds(post, options)
@@ -154,17 +154,8 @@ module ActiveMerchant # :nodoc:
 
         case payment_method
         when NetworkTokenizationCreditCard
-          post[:card] ||= {}
-          post[:card].merge!(
-            number: payment_method.number,
-            expiry_month: payment_method.month,
-            expiry_year: payment_method.year,
-            network_type: payment_method.source.to_s.gsub('_', ''),
-            cryptogram: payment_method.payment_cryptogram,
-            eci: payment_method.eci,
-            cvc: payment_method.verification_value,
-            name: payment_method.name
-          )
+          token = get_single_use_token(payment_method, options)
+          post[:payment_source_token] = token
         when CreditCard
           post[:card] ||= {}
           post[:card].merge!(
@@ -182,6 +173,32 @@ module ActiveMerchant # :nodoc:
           end
         else
           raise ArgumentError, "Invalid payment method type: #{payment_method.class}"
+        end
+      end
+
+      # Get a single use token from Pin for NT based payment methods
+      # This is used to create a charge using a network tokenized card
+      def get_single_use_token(payment_method, options)
+        return unless payment_method.is_a?(NetworkTokenizationCreditCard)
+
+        # binding.pry
+        post = {
+          type: 'network_token',
+          source: {
+            number: payment_method.number,
+            expiry_month: payment_method.month,
+            expiry_year: payment_method.year,
+            network_type: payment_method.source.to_s.gsub('_', ''),
+            cryptogram: payment_method.payment_cryptogram,
+            eci: payment_method.eci
+          }
+        }
+        begin
+          result = commit(:post, 'payment_sources', post, options)
+          return result.params.dig('response', 'token') if result.success?
+        rescue ResponseError => e
+          body = parse(e.response.body)
+          return error_response(body)
         end
       end
 
