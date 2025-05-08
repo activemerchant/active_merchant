@@ -5,6 +5,29 @@ class PinTest < Test::Unit::TestCase
     @gateway = PinGateway.new(api_key: 'I_THISISNOTAREALAPIKEY')
 
     @credit_card = credit_card
+
+    @google_pay_card = NetworkTokenizationCreditCard.new(
+      number: '5200828282828210',
+      month: '12',
+      year: DateTime.now.year + 1,
+      first_name: 'Jane',
+      last_name: 'Doe',
+      eci: '05',
+      payment_cryptogram: 'EEFFGGHH',
+      source: :google_pay
+    )
+
+    @apple_pay_card = NetworkTokenizationCreditCard.new(
+      number: '4007000000027',
+      month: '09',
+      year: DateTime.now.year + 1,
+      first_name: 'Longbob',
+      last_name: 'Longsen',
+      eci: '05',
+      payment_cryptogram: 'AABBCCDD',
+      source: :apple_pay
+    )
+
     @amount = 100
 
     @options = {
@@ -96,54 +119,32 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_successful_apple_pay_purchase
-    apple_pay_card = NetworkTokenizationCreditCard.new(
-      number: '4007000000027',
-      month: '09',
-      year: '2025',
-      verification_value: '123',
-      first_name: 'Longbob',
-      last_name: 'Longsen',
-      eci: '05',
-      payment_cryptogram: 'AABBCCDD',
-      source: :apple_pay
-    )
-
     post_data = {}
     headers = {}
     @gateway.stubs(:headers).returns(headers)
     @gateway.stubs(:post_data).returns(post_data)
-    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/charges', post_data, headers).returns(successful_purchase_response)
+    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/payment_sources', post_data, headers).returns(successful_payment_token_response_with_apple_pay)
+    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/charges', post_data, headers).returns(successful_purchase_response_with_apple_pay)
 
-    assert response = @gateway.purchase(@amount, apple_pay_card, @options)
+    assert response = @gateway.purchase(@amount, @apple_pay_card, @options)
     assert_success response
-    assert_equal 'ch_Kw_JxmVqMeSOQU19_krRdw', response.authorization
-    assert_equal JSON.parse(successful_purchase_response), response.params
+    assert_equal 'ch_KpX2EKVlZlcjjaAu1gJ_Vg', response.authorization
+    assert_equal JSON.parse(successful_purchase_response_with_apple_pay), response.params
     assert response.test?
   end
 
   def test_successful_google_pay_purchase
-    google_pay_card = NetworkTokenizationCreditCard.new(
-      number: '5200828282828210',
-      month: '12',
-      year: '2026',
-      verification_value: '456',
-      first_name: 'Jane',
-      last_name: 'Doe',
-      eci: '05',
-      payment_cryptogram: 'EEFFGGHH',
-      source: :google_pay
-    )
-
     post_data = {}
     headers = {}
     @gateway.stubs(:headers).returns(headers)
     @gateway.stubs(:post_data).returns(post_data)
-    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/charges', post_data, headers).returns(successful_purchase_response)
+    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/payment_sources', post_data, headers).returns(successful_payment_token_response_with_google_pay)
+    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/charges', post_data, headers).returns(successful_purchase_response_with_google_pay)
 
-    assert response = @gateway.purchase(@amount, google_pay_card, @options)
+    assert response = @gateway.purchase(@amount, @google_pay_card, @options)
     assert_success response
-    assert_equal 'ch_Kw_JxmVqMeSOQU19_krRdw', response.authorization
-    assert_equal JSON.parse(successful_purchase_response), response.params
+    assert_equal 'ch_4C1Avej4rgK9rBWFnbMMEg', response.authorization
+    assert_equal JSON.parse(successful_purchase_response_with_google_pay), response.params
     assert response.test?
   end
 
@@ -514,6 +515,120 @@ class PinTest < Test::Unit::TestCase
     }'
   end
 
+  def successful_purchase_response_with_apple_pay
+    '{
+      "response": {
+        "token": "ch_KpX2EKVlZlcjjaAu1gJ_Vg",
+        "success": true,
+        "amount": 100,
+        "currency": "AUD",
+        "description": "Store Purchase 1746727811",
+        "email": "roland@pinpayments.com",
+        "ip_address": "203.59.39.62",
+        "created_at": "2025-05-08T18:10:14Z",
+        "status_message": "Success",
+        "error_message": null,
+        "card": {
+          "token": "card_VH8Sto6E6Lc35k8DR8-f6A",
+          "scheme": "visa",
+          "display_number": "XXXX-XXXX-XXXX-0000",
+          "issuing_country": "AU",
+          "expiry_month": 12,
+          "expiry_year": 2027,
+          "name": null,
+          "address_line1": null,
+          "address_line2": null,
+          "address_city": null,
+          "address_postcode": null,
+          "address_state": null,
+          "address_country": null,
+          "customer_token": null,
+          "primary": null,
+          "network_type": "applepay",
+          "network_format": null
+        },
+        "transfer": [
+
+        ],
+        "amount_refunded": 0,
+        "total_fees": 32,
+        "merchant_entitlement": 68,
+        "refund_pending": false,
+        "authorisation_token": null,
+        "authorisation_expired": false,
+        "authorisation_voided": false,
+        "captured": true,
+        "captured_at": "2025-05-08T18:10:14Z",
+        "settlement_currency": "AUD",
+        "active_chargebacks": false,
+        "metadata": {
+        },
+        "platform_fees": 0,
+        "platform_adjustment": {
+          "amount": 0,
+          "currency": "AUD"
+        }
+      }
+    }'
+  end
+
+  def successful_purchase_response_with_google_pay
+    '{
+      "response": {
+        "token": "ch_4C1Avej4rgK9rBWFnbMMEg",
+        "success": true,
+        "amount": 100,
+        "currency": "AUD",
+        "description": "Store Purchase 1746732792",
+        "email": "roland@pinpayments.com",
+        "ip_address": "203.59.39.62",
+        "created_at": "2025-05-08T19:33:20Z",
+        "status_message": "Success",
+        "error_message": null,
+        "card": {
+          "token": "card__xu9lnQiWzRiZZevyrc3rA",
+          "scheme": "visa",
+          "display_number": "XXXX-XXXX-XXXX-0000",
+          "issuing_country": "AU",
+          "expiry_month": 12,
+          "expiry_year": 2027,
+          "name": null,
+          "address_line1": null,
+          "address_line2": null,
+          "address_city": null,
+          "address_postcode": null,
+          "address_state": null,
+          "address_country": null,
+          "customer_token": null,
+          "primary": null,
+          "network_type": "googlepay",
+          "network_format": "cryptogram_3ds"
+        },
+        "transfer": [
+
+        ],
+        "amount_refunded": 0,
+        "total_fees": 32,
+        "merchant_entitlement": 68,
+        "refund_pending": false,
+        "authorisation_token": null,
+        "authorisation_expired": false,
+        "authorisation_voided": false,
+        "captured": true,
+        "captured_at": "2025-05-08T19:33:20Z",
+        "settlement_currency": "AUD",
+        "active_chargebacks": false,
+        "metadata": {
+        },
+        "platform_fees": 0,
+        "platform_adjustment": {
+          "amount": 0,
+          "currency": "AUD"
+        }
+      }
+    }'
+  end
+
   def failed_purchase_response
     '{
       "error":"invalid_resource",
@@ -664,6 +779,64 @@ class PinTest < Test::Unit::TestCase
         "merchant_entitlement":338,
         "refund_pending":false
       }
+    }'
+  end
+
+  def successful_payment_token_response_with_apple_pay
+    '{
+      "response": {
+        "token": "ps_ww1kVvBgfAVLOCy-lNBy_Q",
+        "type": "network_token",
+        "source": {
+          "token": "card_VH8Sto6E6Lc35k8DR8-f6A",
+          "scheme": "visa",
+          "display_number": "XXXX-XXXX-XXXX-0000",
+          "issuing_country": "AU",
+          "expiry_month": 12,
+          "expiry_year": 2027,
+          "name": null,
+          "address_line1": null,
+          "address_line2": null,
+          "address_city": null,
+          "address_postcode": null,
+          "address_state": null,
+          "address_country": null,
+          "customer_token": null,
+          "primary": null,
+          "network_type": "applepay",
+          "network_format": null
+        }
+      },
+      "ip_address": "70.63.124.4"
+    }'
+  end
+
+  def successful_payment_token_response_with_google_pay
+    '{
+      "response": {
+        "token": "ps_5R56xSAmAAI9_f_P1PKgOg",
+        "type": "network_token",
+        "source": {
+          "token": "card__xu9lnQiWzRiZZevyrc3rA",
+          "scheme": "visa",
+          "display_number": "XXXX-XXXX-XXXX-0000",
+          "issuing_country": "AU",
+          "expiry_month": 12,
+          "expiry_year": 2027,
+          "name": null,
+          "address_line1": null,
+          "address_line2": null,
+          "address_city": null,
+          "address_postcode": null,
+          "address_state": null,
+          "address_country": null,
+          "customer_token": null,
+          "primary": null,
+          "network_type": "googlepay",
+          "network_format": "cryptogram_3ds"
+        }
+      },
+      "ip_address": "70.63.124.4"
     }'
   end
 
