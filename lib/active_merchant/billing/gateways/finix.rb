@@ -163,12 +163,8 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_source, options)
         billing                 = options[:billing_address] || {}
-        post[:type]             = 'PAYMENT_CARD'
-        post[:name]             = billing[:name]
-        post[:number]           = payment_source.number
-        post[:expiration_month] = payment_source.month
-        post[:expiration_year]  = payment_source.year
-        post[:security_code]    = payment_source.verification_value
+        post[:type]             = 'TOKEN'
+        post[:token]             = payment_source[:gateway_payment_profile_id]
       end
 
       def add_invoice(post, amount, options)
