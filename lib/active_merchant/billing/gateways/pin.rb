@@ -154,8 +154,8 @@ module ActiveMerchant # :nodoc:
 
         case payment_method
         when NetworkTokenizationCreditCard
-          token = get_single_use_token(payment_method, options)
-          post[:payment_source_token] = token
+          get_token = get_single_use_token(payment_method, options)
+          post[:payment_source_token] = get_token.params.dig('response', 'token')
         when CreditCard
           post[:card] ||= {}
           post[:card].merge!(
@@ -179,9 +179,6 @@ module ActiveMerchant # :nodoc:
       # Get a single use token from Pin for NT based payment methods
       # This is used to create a charge using a network tokenized card
       def get_single_use_token(payment_method, options)
-        return unless payment_method.is_a?(NetworkTokenizationCreditCard)
-
-        # binding.pry
         post = {
           type: 'network_token',
           source: {
@@ -193,13 +190,8 @@ module ActiveMerchant # :nodoc:
             eci: payment_method.eci
           }
         }
-        begin
-          result = commit(:post, 'payment_sources', post, options)
-          return result.params.dig('response', 'token') if result.success?
-        rescue ResponseError => e
-          body = parse(e.response.body)
-          return error_response(body)
-        end
+
+        commit(:post, 'payment_sources', post, options)
       end
 
       def get_customer_token(token)
