@@ -363,6 +363,21 @@ class CardStreamTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_custom_api_url_usage
+    custom_url = 'https://custom.gateway.url/direct/'
+    @gateway = CardStreamGateway.new(
+      login: 'login',
+      shared_secret: 'secret',
+      custom_api_url: custom_url
+    )
+
+    stub_comms do
+      @gateway.purchase(142, @visacreditcard, @visacredit_options)
+    end.check_request do |endpoint, _data, _headers|
+      assert_equal custom_url, endpoint
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def successful_authorization_response
