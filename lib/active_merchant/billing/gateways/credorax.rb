@@ -366,7 +366,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_sender(post, options)
-        return unless options[:sender_ref_number] || options[:sender_fund_source] || options[:sender_country_code] || options[:sender_street_address] || options[:sender_city] || options[:sender_state] || options[:sender_first_name] || options[:sender_last_name]
+        return unless options[:sender_ref_number] || options[:sender_fund_source] || options[:sender_country_code] || options[:sender_street_address] || options[:sender_city] || options[:sender_state] || options[:sender_first_name] || options[:sender_last_name] || options[:sender_birth_date]
 
         sender_country_code = options[:sender_country_code]&.length == 3 ? options[:sender_country_code] : Country.find(options[:sender_country_code]).code(:alpha3).value if options[:sender_country_code]
         post[:s15] = sender_country_code
@@ -377,6 +377,7 @@ module ActiveMerchant # :nodoc:
         post[:s12] = options[:sender_street_address] if options[:sender_street_address]
         post[:s13] = options[:sender_city] if options[:sender_city]
         post[:s14] = options[:sender_state] if options[:sender_state]
+        post[:s19] = options[:sender_birth_date] if options[:sender_birth_date]
       end
 
       def add_recipient(post, options)

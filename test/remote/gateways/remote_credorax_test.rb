@@ -6,7 +6,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
 
     @amount = 100
     @adviser_amount = 1000001
-    @credit_card = credit_card('4012001038443335', verification_value: '512', month: '12')
+    @credit_card = credit_card('4018810000100036', verification_value: '123', month: '12', year: 2034)
     @fully_auth_card = credit_card('5223450000000007', brand: 'mastercard', verification_value: '090', month: '12')
     @declined_card = credit_card('4176661000001111', verification_value: '681', month: '12')
     @three_ds_card = credit_card('5455330200000016', verification_value: '737', month: '10', year: Time.now.year + 2)
@@ -726,6 +726,33 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_equal 'Echo Parameter', response.params['D2']
+  end
+
+  def test_successful_aft_purchase_with_sender_birth_date
+    aft_options = @options.merge(
+      aft: true,
+      sender_ref_number: 'test',
+      sender_fund_source: '01',
+      sender_country_code: 'USA',
+      sender_street_address: 'sender street',
+      sender_city: 'city',
+      sender_state: 'NY',
+      sender_first_name: 'george',
+      sender_last_name: 'smith',
+      sender_birth_date: '12121212',
+      recipient_street_address: 'street',
+      recipient_postal_code: '12345',
+      recipient_city: 'chicago',
+      recipient_province_code: '312',
+      recipient_country_code: 'USA',
+      recipient_first_name: 'logan',
+      recipient_last_name: 'bill'
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, aft_options)
+    assert_success response
+    assert_equal '1', response.params['H9']
+    assert_equal 'Succeeded', response.message
   end
 
   # #########################################################################
