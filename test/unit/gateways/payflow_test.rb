@@ -681,6 +681,40 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed_check), post_scrubbed_check
   end
 
+  def test_adds_ds_transaction_id_as_xid_if_xid_is_not_present
+    ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    threeds_options = @options.merge(
+      three_d_secure: {
+        version: '2.0',
+        ds_transaction_id:
+      }
+    )
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(threeds_options))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<ExtData Name=\"XID\" Value=\"#{ds_transaction_id}\"/>), data
+      assert_match %r(<XID>#{ds_transaction_id}</XID>), data
+    end.respond_with(successful_purchase_with_3ds_mpi)
+  end
+
+  def test_does_not_add_ds_transaction_id_as_xid_if_xid_is_present
+    threeds_options = @options.merge(
+      three_d_secure: {
+        version: '2.0',
+        xid: 'this-is-an-xid',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+      }
+    )
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(threeds_options))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<ExtData Name="XID" Value="this-is-an-xid"/>), data
+      assert_match %r(<XID>this-is-an-xid</XID>), data
+    end.respond_with(successful_purchase_with_3ds_mpi)
+  end
+
   private
 
   def pre_scrubbed
