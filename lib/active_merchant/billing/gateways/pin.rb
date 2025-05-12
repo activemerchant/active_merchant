@@ -27,7 +27,7 @@ module ActiveMerchant # :nodoc:
         add_customer_data(post, options)
         add_invoice(post, options)
         add_payment_method(post, payment_method)
-        add_address(post, payment_method, options) unless payment_method.kind_of?(NetworkTokenizationCreditCard)
+        add_address(post, payment_method, options)
         add_capture(post, options)
         add_metadata(post, options)
         add_3ds(post, options)
@@ -123,7 +123,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_address(post, payment_method, options)
-        return if payment_method.kind_of?(String)
+        return if payment_method.kind_of?(String) || payment_method.kind_of?(NetworkTokenizationCreditCard)
 
         address = (options[:billing_address] || options[:address])
         return unless address
