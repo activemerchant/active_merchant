@@ -9,7 +9,7 @@ class RemoteRapydTest < Test::Unit::TestCase
     @declined_card = credit_card('4111111111111105')
     @check = check
     @options = {
-      pm_type: 'us_debit_visa_card',
+      pm_type: 'GI_visa_card',
       currency: 'USD',
       complete_payment_url: 'www.google.com',
       error_payment_url: 'www.google.com',
@@ -66,6 +66,12 @@ class RemoteRapydTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_without_address
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: { phone_number: '12125559999' }))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
