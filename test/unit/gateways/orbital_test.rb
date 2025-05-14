@@ -1176,7 +1176,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_successful_payment_request_with_token_stored
     stub_comms do
-      @gateway.purchase(50, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;2521002395820006;VI', @options.merge(card_brand: 'VI'))
+      @gateway.purchase(50, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;2521002395820006;VI', @options)
     end.check_request(skip_response: true) do |_endpoint, data, _headers|
       assert_match %{<CardBrand>VI</CardBrand>}, data
       assert_match %{<AccountNum>2521002395820006</AccountNum>}, data
@@ -1194,14 +1194,23 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_stored_token
-    @gateway.expects(:ssl_post).returns(successful_store_response)
-    assert store = @gateway.store(@credit_card, @options)
+    store = stub_comms do
+      @gateway.store(@credit_card, @options)
+    end.respond_with(successful_store_response)
     assert_instance_of Response, store
 
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert auth = @gateway.purchase(100, store.authorization, @options)
-    assert_instance_of Response, auth
+    _, _, account_number, card_brand, exp_date = @gateway.send(:split_authorization, store.authorization)
 
+    auth = stub_comms do
+      @gateway.purchase(100, store.authorization, @options.merge(pass_exp_date: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<CardBrand>#{card_brand}</CardBrand>}, data
+      assert_match %{<AccountNum>#{account_number}</AccountNum>}, data
+      assert_match %{<Exp>#{exp_date}</Exp>}, data
+      assert_match %{<Exp>#{@gateway.send(:expiry_date, @credit_card)}</Exp>}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_instance_of Response, auth
     assert_equal 'Approved', auth.message
   end
 

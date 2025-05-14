@@ -86,7 +86,7 @@ module ActiveMerchant # :nodoc:
         post[:expiration_month] = payment.month
         post[:expiration_year] = payment.year
         post[:cardholder] = {
-          name: payment.name,
+          name: clean_emoji_emoticons_and_accent(payment.name),
           identification: {
             type: options[:cardholder_identification_type],
             number: options[:cardholder_identification_number]
@@ -151,8 +151,8 @@ module ActiveMerchant # :nodoc:
       def add_customer_data(post, payment, options)
         post[:payer] = {
           email: options[:email],
-          first_name: payment.first_name,
-          last_name: payment.last_name
+          first_name: clean_emoji_emoticons_and_accent(payment.first_name),
+          last_name: clean_emoji_emoticons_and_accent(payment.last_name)
         }.merge(options[:payer] || {})
       end
 

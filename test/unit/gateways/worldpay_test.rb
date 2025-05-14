@@ -1882,6 +1882,78 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal 'R50704213207145707', response.authorization
   end
 
+  def test_successful_inquire_for_verify
+    verification = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_void_response)
+
+    response = stub_comms do
+      @gateway.inquire(verification.authorization, { original_request: 'verification' })
+    end.respond_with(successful_refund_inquiry_response('CANCELLED'))
+
+    assert_success response
+  end
+
+  def test_successful_inquire_for_purchase
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+
+    response = stub_comms do
+      @gateway.inquire(purchase.authorization, { original_request: 'purchase' })
+    end.respond_with(successful_refund_inquiry_response('SETTLED'))
+
+    assert_success response
+  end
+
+  def test_successful_inquire_for_authorize
+    purchase = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response)
+
+    response = stub_comms do
+      @gateway.inquire(purchase.authorization, { original_request: 'authorization' })
+    end.respond_with(successful_refund_inquiry_response('AUTHORISED'))
+
+    assert_success response
+  end
+
+  def test_failed_inquire_for_verify
+    verification = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_void_response)
+
+    response = stub_comms do
+      @gateway.inquire(verification.authorization, { original_request: 'verification' })
+    end.respond_with(successful_refund_inquiry_response('REFUSED'))
+
+    assert_failure response
+  end
+
+  def test_failed_inquire_for_purchase
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+
+    response = stub_comms do
+      @gateway.inquire(purchase.authorization, { original_request: 'purchase' })
+    end.respond_with(failed_void_response)
+
+    assert_failure response
+  end
+
+  def test_failed_inquire_for_authorize
+    authorize = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response)
+
+    response = stub_comms do
+      @gateway.inquire(authorize.authorization, { original_request: 'authorization' })
+    end.respond_with(successful_refund_inquiry_response('CANCELLED'))
+
+    assert_failure response
+  end
+
   private
 
   def assert_date_element(expected_date_hash, date_element)

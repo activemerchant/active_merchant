@@ -150,6 +150,7 @@ module ActiveMerchant # :nodoc:
         add_submerchant_id(post, options)
         add_stored_credential(post, options)
         add_processor(post, options)
+        add_crypto_currency_type(post, options)
 
         if options[:aft]
           add_recipient(post, options)
@@ -173,6 +174,7 @@ module ActiveMerchant # :nodoc:
         add_account_name_inquiry(post, options)
         add_processor(post, options)
         add_authorization_details(post, options)
+        add_crypto_currency_type(post, options)
 
         if options[:aft]
           add_recipient(post, options)
@@ -190,6 +192,8 @@ module ActiveMerchant # :nodoc:
         add_echo(post, options)
         add_submerchant_id(post, options)
         add_processor(post, options)
+        add_crypto_currency_type(post, options)
+        add_transaction_type(post, options)
 
         commit(:capture, post)
       end
@@ -202,6 +206,8 @@ module ActiveMerchant # :nodoc:
         add_submerchant_id(post, options)
         post[:a1] = generate_unique_id
         add_processor(post, options)
+        add_crypto_currency_type(post, options)
+        add_transaction_type(post, options)
 
         commit(:void, post, reference_action)
       end
@@ -216,6 +222,8 @@ module ActiveMerchant # :nodoc:
         add_processor(post, options)
         add_email(post, options)
         add_recipient(post, options)
+        add_crypto_currency_type(post, options)
+        add_transaction_type(post, options)
 
         if options[:referral_cft]
           add_customer_name(post, options)
@@ -236,14 +244,16 @@ module ActiveMerchant # :nodoc:
         add_transaction_type(post, options)
         add_processor(post, options)
         add_customer_name(post, options)
+        add_crypto_currency_type(post, options)
 
         commit(:credit, post)
       end
 
-      def verify(credit_card, options = {})
+      def verify(payment_method, options = {})
+        amount = eligible_for_0_auth?(payment_method, options) ? 0 : 100
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { authorize(amount, payment_method, options) }
+          r.process(:ignore_result) { void(r.authorization, options) } unless eligible_for_0_auth?(payment_method, options)
         end
       end
 
@@ -302,6 +312,10 @@ module ActiveMerchant # :nodoc:
         post[:b3] = format(payment_method.month, :two_digits)
       end
 
+      def eligible_for_0_auth?(payment_method, options = {})
+        payment_method.is_a?(CreditCard) && %w(visa master).include?(payment_method.brand) && options[:zero_dollar_auth]
+      end
+
       def add_network_tokenization_card(post, payment_method, options)
         post[:b21] = NETWORK_TOKENIZATION_CARD_SOURCE[payment_method.source.to_s]
         post[:token_eci] = post[:b21] == 'vts_mdes_token' ? '07' : nil
@@ -330,12 +344,12 @@ module ActiveMerchant # :nodoc:
       def add_customer_data(post, options)
         post[:d1] = options[:ip] || '127.0.0.1'
         if (billing_address = options[:billing_address])
-          post[:c5]   = billing_address[:address1]  if billing_address[:address1]
-          post[:c7]   = billing_address[:city]      if billing_address[:city]
-          post[:c10]  = billing_address[:zip]       if billing_address[:zip]
-          post[:c8]   = billing_address[:state]     if billing_address[:state]
-          post[:c9]   = billing_address[:country]   if billing_address[:country]
-          post[:c2]   = billing_address[:phone]     if billing_address[:phone]
+          post[:c5]   = billing_address[:address1]      if billing_address[:address1]
+          post[:c7]   = billing_address[:city]          if billing_address[:city]
+          post[:c10]  = billing_address[:zip]           if billing_address[:zip]
+          post[:c8]   = billing_address[:state]         if billing_address[:state]
+          post[:c9]   = billing_address[:country]       if billing_address[:country]
+          post[:c2]   = billing_address[:phone] if billing_address[:phone]
         end
       end
 
@@ -352,7 +366,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_sender(post, options)
-        return unless options[:sender_ref_number] || options[:sender_fund_source] || options[:sender_country_code] || options[:sender_street_address] || options[:sender_city] || options[:sender_state] || options[:sender_first_name] || options[:sender_last_name]
+        return unless options[:sender_ref_number] || options[:sender_fund_source] || options[:sender_country_code] || options[:sender_street_address] || options[:sender_city] || options[:sender_state] || options[:sender_first_name] || options[:sender_last_name] || options[:sender_birth_date]
 
         sender_country_code = options[:sender_country_code]&.length == 3 ? options[:sender_country_code] : Country.find(options[:sender_country_code]).code(:alpha3).value if options[:sender_country_code]
         post[:s15] = sender_country_code
@@ -363,6 +377,7 @@ module ActiveMerchant # :nodoc:
         post[:s12] = options[:sender_street_address] if options[:sender_street_address]
         post[:s13] = options[:sender_city] if options[:sender_city]
         post[:s14] = options[:sender_state] if options[:sender_state]
+        post[:s19] = options[:sender_birth_date] if options[:sender_birth_date]
       end
 
       def add_recipient(post, options)
@@ -473,7 +488,9 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_transaction_type(post, options)
-        post[:a9] = options[:transaction_type] if options[:transaction_type]
+        a9 = options[:zero_dollar_auth] ? '5' : options[:transaction_type]
+
+        post[:a9] = a9 if a9
         post[:a2] = '3' if options.dig(:metadata, :manual_entry)
       end
 
@@ -485,6 +502,10 @@ module ActiveMerchant # :nodoc:
       def add_authorization_details(post, options)
         post[:a10] = options[:authorization_type] if options[:authorization_type]
         post[:a11] = options[:multiple_capture_count] if options[:multiple_capture_count]
+      end
+
+      def add_crypto_currency_type(post, options)
+        post[:crypto_currency_type] = options[:crypto_currency_type] if options[:crypto_currency_type]
       end
 
       ACTIONS = {

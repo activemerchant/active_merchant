@@ -172,7 +172,7 @@ module ActiveMerchant # :nodoc:
 
         order = build_new_auth_purchase_order(AUTH_ONLY, money, payment_source, options)
 
-        commit(order, :authorize, options[:retry_logic], options[:trace_number])
+        commit(order, :authorize, options)
       end
 
       def verify(credit_card, options = {})
@@ -188,12 +188,12 @@ module ActiveMerchant # :nodoc:
         action = options[:force_capture] ? FORCE_AUTH_AND_CAPTURE : AUTH_AND_CAPTURE
         order = build_new_auth_purchase_order(action, money, payment_source, options)
 
-        commit(order, :purchase, options[:retry_logic], options[:trace_number])
+        commit(order, :purchase, options)
       end
 
       # MFC - Mark For Capture
       def capture(money, authorization, options = {})
-        commit(build_mark_for_capture_xml(money, authorization, options), :capture, options[:retry_logic], options[:trace_number])
+        commit(build_mark_for_capture_xml(money, authorization, options), :capture, options)
       end
 
       # R – Refund request
@@ -204,7 +204,7 @@ module ActiveMerchant # :nodoc:
           xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
 
-        commit(order, :refund, options[:retry_logic], options[:trace_number])
+        commit(order, :refund, options)
       end
 
       def credit(money, payment_method, options = {})
@@ -212,11 +212,13 @@ module ActiveMerchant # :nodoc:
           add_payment_source(xml, payment_method, options)
         end
 
-        commit(order, :refund, options[:retry_logic], options[:trace_number])
+        commit(order, :refund, options)
       end
 
       # Orbital save a payment method if the TokenTxnType is 'GT', that's why we use this as the default value for store
       def store(creditcard, options = {})
+        options[:exp_date] = expiry_date(creditcard) if creditcard.is_a?(CreditCard)
+
         authorize(0, creditcard, options.merge({ token_txn_type: GET_TOKEN }))
       end
 
@@ -228,7 +230,7 @@ module ActiveMerchant # :nodoc:
 
         order = build_void_request_xml(authorization, options)
 
-        commit(order, :void, options[:retry_logic], options[:trace_number])
+        commit(order, :void, options)
       end
 
       def default_verify_amount(credit_card)
@@ -347,8 +349,10 @@ module ActiveMerchant # :nodoc:
         xml.tag! :TxRefNum, split_authorization(authorization).first
       end
 
-      def authorization_string(*args)
-        args.compact.join(';')
+      def authorization_string(options, response)
+        authorization = [response[:tx_ref_num], response[:order_id], response[:safetech_token], response[:card_brand]]
+        authorization << options[:exp_date] if options[:exp_date] && options[:token_txn_type] == GET_TOKEN
+        authorization.compact.join(';')
       end
 
       def split_authorization(authorization)
@@ -538,7 +542,7 @@ module ActiveMerchant # :nodoc:
           elsif options[:billing_address] && options[:billing_address][:name].present?
             options[:billing_address][:name]
           end
-        name ? I18n.transliterate(name || '')[0..29] : nil
+        name ? clean_emoji_emoticons_and_accent(name)[0..29] : nil
       end
 
       def avs_supported?(address)
@@ -554,9 +558,10 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_safetech_token_data(xml, payment_source, options)
-        payment_source_token = split_authorization(payment_source).values_at(2).first
-        xml.tag! :CardBrand, options[:card_brand]
+        _, _, payment_source_token, card_brand, exp_date = split_authorization(payment_source)
+        xml.tag! :CardBrand, card_brand
         xml.tag! :AccountNum, payment_source_token
+        xml.tag! :Exp, exp_date if exp_date && options[:pass_exp_date]&.to_s == 'true'
       end
 
       #=====PAYMENT SOURCE FIELDS=====
@@ -577,7 +582,7 @@ module ActiveMerchant # :nodoc:
         add_bank_account_type(xml, check)
         xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method]
         xml.tag! :BankPmtDelv, options[:payment_delivery] || 'B'
-        xml.tag! :AVSname, (check&.name ? I18n.transliterate(check.name)[0..29] : nil) if get_address(options).blank?
+        xml.tag! :AVSname, (check&.name ? clean_emoji_emoticons_and_accent(check.name)[0..29] : nil) if get_address(options).blank?
       end
 
       def add_credit_card(xml, credit_card, options)
@@ -877,10 +882,10 @@ module ActiveMerchant # :nodoc:
 
       #=====REQUEST/RESPONSE METHODS=====
 
-      def commit(order, message_type, retry_logic = nil, trace_number = nil)
+      def commit(order, message_type, options = {})
         headers = POST_HEADERS.merge('Content-length' => order.size.to_s)
-        if (@options[:retry_logic] || retry_logic) && trace_number
-          headers['Trace-number'] = trace_number.to_s
+        if (@options[:retry_logic] || options[:retry_logic]) && options[:trace_number]
+          headers['Trace-number'] = options[:trace_number].to_s
           headers['Merchant-Id'] = @options[:merchant_id]
         end
         request = ->(url) { parse(ssl_post(url, order, headers)) }
@@ -895,14 +900,12 @@ module ActiveMerchant # :nodoc:
             request.call(remote_url(:secondary))
           end
 
-        authorization = authorization_string(response[:tx_ref_num], response[:order_id], response[:safetech_token], response[:card_brand])
-
         Response.new(
           success?(response, message_type),
           message_from(response),
           response,
           {
-            authorization:,
+            authorization: authorization_string(options, response),
             test: self.test?,
             avs_result: OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
             cvv_result: OrbitalGateway::CVVResult.new(response[:cvv2_resp_code])

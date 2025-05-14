@@ -722,7 +722,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response_with_apple_pay_and_billing_address)
   end
 
-  def test_authorize_with_with_request_extended_authorization
+  def test_authorize_with_request_extended_authorization
     options = {
       request_extended_authorization: 'if_available'
     }
@@ -731,6 +731,23 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match('payment_method_options[card][request_extended_authorization]=if_available', data)
       assert_match('capture_method=manual', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_authorize_with_kana_and_kanji_descriptor_suffix
+    # I think due to conversion, when we send the kanji or kana characters through the unit test, they become:
+    # 漢字サフィックス = %E6%BC%A2%E5%AD%97%E3%82%B5%E3%83%95%E3%82%A3%E3%83%83%E3%82%AF%E3%82%B9
+    # カナサフィックス = %E3%82%AB%E3%83%8A%E3%82%B5%E3%83%95%E3%82%A3%E3%83%83%E3%82%AF%E3%82%B9
+    # so we will assert that it's being processed.
+    options = {
+      statement_descriptor_suffix_kanji: '漢字サフィックス',
+      statement_descriptor_suffix_kana: 'カナサフィックス'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][statement_descriptor_suffix_kanji]=%E6%BC%A2%E5%AD%97%E3%82%B5%E3%83%95%E3%82%A3%E3%83%83%E3%82%AF%E3%82%B9', data)
+      assert_match('payment_method_options[card][statement_descriptor_suffix_kana]=%E3%82%AB%E3%83%8A%E3%82%B5%E3%83%95%E3%82%A3%E3%83%83%E3%82%AF%E3%82%B9', data)
     end.respond_with(successful_create_intent_response)
   end
 
@@ -1164,6 +1181,28 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
         assert_not_match(/card\[cryptogram\]/, data)
       end
     end.respond_with(successful_verify_response)
+  end
+
+  def test_successful_setup_intent_inquire
+    setup_intent = stub_comms(@gateway, :ssl_request) do
+      @gateway.create_setup_intent(@visa_token, @options)
+    end.respond_with(successful_verify_response)
+
+    @gateway.expects(:ssl_request).returns(successful_verify_response)
+    inquire_response = @gateway.inquire(setup_intent.authorization, {})
+    assert_success inquire_response
+    assert_equal setup_intent.params['id'], inquire_response.params['id']
+  end
+
+  def test_successful_payment_intent_inquire
+    payment_intent = stub_comms(@gateway, :ssl_request) do
+      @gateway.create_intent(@amount, @visa_token, @options)
+    end.respond_with(successful_create_intent_response)
+
+    @gateway.expects(:ssl_request).returns(successful_create_intent_response)
+    inquire_response = @gateway.inquire(payment_intent.authorization, {})
+    assert_success inquire_response
+    assert_equal payment_intent.params['id'], inquire_response.params['id']
   end
 
   private

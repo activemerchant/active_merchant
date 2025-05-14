@@ -6,7 +6,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
 
     @amount = 100
     @adviser_amount = 1000001
-    @credit_card = credit_card('4176661000001015', verification_value: '281', month: '12')
+    @credit_card = credit_card('4018810000100036', verification_value: '123', month: '12', year: 2034)
     @fully_auth_card = credit_card('5223450000000007', brand: 'mastercard', verification_value: '090', month: '12')
     @declined_card = credit_card('4176661000001111', verification_value: '681', month: '12')
     @three_ds_card = credit_card('5455330200000016', verification_value: '737', month: '10', year: Time.now.year + 2)
@@ -59,12 +59,12 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     }
 
     @apple_pay_card = network_tokenization_credit_card(
-      '4176661000001015',
-      month: 10,
+      '4012001038443335',
+      month: '12',
       year: Time.new.year + 2,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '737',
+      verification_value: '512',
       payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
       eci: '07',
       transaction_id: 'abc123',
@@ -72,20 +72,23 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     )
 
     @google_pay_card = network_tokenization_credit_card(
-      '4176661000001015',
+      '4012001038443335',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      month: '01',
+      month: '12',
       year: Time.new.year + 2,
       source: :google_pay,
       transaction_id: '123456789',
-      eci: '07'
+      eci: '07',
+      verification_value: 512
     )
 
     @nt_credit_card = network_tokenization_credit_card(
-      '4176661000001015',
+      '4012001038443335',
       brand: 'visa',
+      month: '12',
       source: :network_token,
-      payment_cryptogram: 'AgAAAAAAosVKVV7FplLgQRYAAAA='
+      payment_cryptogram: 'AgAAAAAAosVKVV7FplLgQRYAAAA=',
+      verification_value: 512
     )
   end
 
@@ -330,11 +333,28 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', capture.message
   end
 
+  def test_successful_authorize_with_transaction_type
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(transaction_type: '10'))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '1', response.params['H9']
+    assert_equal '10', response.params['A9']
+  end
+
   def test_successful_authorize_with_authorization_details
     options_with_auth_details = @options.merge({ authorization_type: '2', multiple_capture_count: '5' })
     response = @gateway.authorize(@amount, @credit_card, options_with_auth_details)
     assert_success response
     assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_authorize_with_crypto_currency_type
+    options_with_auth_details = @options.merge({ crypto_currency_type: '7', transaction_type: '6' })
+    response = @gateway.authorize(@amount, @credit_card, options_with_auth_details)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '6', response.params['A9']
     assert response.authorization
   end
 
@@ -564,6 +584,14 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_verify_with_0_auth
+    response = @gateway.verify(@credit_card, @options.merge(zero_dollar_auth: true))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '0', response.params['A4']
+    assert_equal '5', response.params['A9']
+  end
+
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
@@ -698,6 +726,33 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_equal 'Echo Parameter', response.params['D2']
+  end
+
+  def test_successful_aft_purchase_with_sender_birth_date
+    aft_options = @options.merge(
+      aft: true,
+      sender_ref_number: 'test',
+      sender_fund_source: '01',
+      sender_country_code: 'USA',
+      sender_street_address: 'sender street',
+      sender_city: 'city',
+      sender_state: 'NY',
+      sender_first_name: 'george',
+      sender_last_name: 'smith',
+      sender_birth_date: '12121212',
+      recipient_street_address: 'street',
+      recipient_postal_code: '12345',
+      recipient_city: 'chicago',
+      recipient_province_code: '312',
+      recipient_country_code: 'USA',
+      recipient_first_name: 'logan',
+      recipient_last_name: 'bill'
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, aft_options)
+    assert_success response
+    assert_equal '1', response.params['H9']
+    assert_equal 'Succeeded', response.message
   end
 
   # #########################################################################
