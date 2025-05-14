@@ -4,8 +4,10 @@ require 'digest'
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class PaymentezGateway < Gateway # :nodoc:
-      self.test_url = 'https://ccapi-stg.paymentez.com/v2/'
-      self.live_url = 'https://ccapi.paymentez.com/v2/'
+      version 'v2'
+
+      self.test_url = "https://ccapi-stg.paymentez.com/#{fetch_version}/"
+      self.live_url = "https://ccapi.paymentez.com/#{fetch_version}/"
 
       self.supported_countries = %w[MX EC CO BR CL PE]
       self.default_currency = 'USD'

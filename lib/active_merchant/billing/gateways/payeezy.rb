@@ -3,9 +3,11 @@ module ActiveMerchant
     class PayeezyGateway < Gateway
       class_attribute :integration_url
 
-      self.test_url = 'https://api-cert.payeezy.com/v1'
-      self.integration_url = 'https://api-cat.payeezy.com/v1'
-      self.live_url = 'https://api.payeezy.com/v1'
+      version 'v1'
+
+      self.test_url = "https://api-cert.payeezy.com/#{fetch_version}"
+      self.integration_url = "https://api-cat.payeezy.com/#{fetch_version}"
+      self.live_url = "https://api.payeezy.com/#{fetch_version}"
 
       self.default_currency = 'USD'
       self.money_format = :cents
