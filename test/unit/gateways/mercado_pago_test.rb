@@ -10,7 +10,7 @@ class MercadoPagoTest < Test::Unit::TestCase
       '5067268650517446',
       month: 10,
       year: 2020,
-      first_name: 'John',
+      first_name: 'John :)',
       last_name: 'Smith',
       verification_value: '737'
     )
@@ -27,7 +27,7 @@ class MercadoPagoTest < Test::Unit::TestCase
       month: 10,
       year: 2020,
       first_name: 'John',
-      last_name: 'Smith',
+      last_name: 'Smith😀',
       verification_value: '123'
     )
     @amount = 100

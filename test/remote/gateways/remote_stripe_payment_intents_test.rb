@@ -717,6 +717,31 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal suffix, response.params['statement_descriptor_suffix']
   end
 
+  def test_create_payment_intent_with_kana_and_kanji_descriptor_suffix
+    suffix = 'SUFFIX'
+
+    options = {
+      currency: 'USD',
+      customer: @customer,
+      description: 'ActiveMerchant Test Purchase',
+      receipt_email: 'test@example.com',
+      statement_descriptor: 'Statement Descriptor',
+      statement_descriptor_suffix: suffix,
+      statement_descriptor_suffix_kanji: '漢字サフィックス',
+      statement_descriptor_suffix_kana: 'カナサフィックス'
+    }
+
+    assert response = @gateway.create_intent(@amount, nil, options)
+    assert_success response
+
+    assert_equal 'ActiveMerchant Test Purchase', response.params['description']
+    assert_equal 'test@example.com', response.params['receipt_email']
+    assert_equal 'Statement Descriptor', response.params['statement_descriptor']
+    assert_equal suffix, response.params['statement_descriptor_suffix']
+    assert_equal '漢字サフィックス', response.params['payment_method_options']['card']['statement_descriptor_suffix_kanji']
+    assert_equal 'カナサフィックス', response.params['payment_method_options']['card']['statement_descriptor_suffix_kana']
+  end
+
   def test_create_payment_intent_that_saves_payment_method
     options = {
       currency: 'USD',
@@ -1407,6 +1432,26 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert update_response = @gateway.update_intent(update_amount, intent_id, nil, options.merge(payment_method_types: 'card'))
     assert_equal 2500, update_response.params['amount']
     assert_equal 'requires_confirmation', update_response.params['status']
+  end
+
+  def test_create_a_payment_intent_and_update_with_kana_and_kanji_descriptor_suffix
+    amount = 200000
+    update_amount = 250000
+    options = {
+      currency: 'XPF',
+      customer: @customer,
+      confirmation_method: 'manual',
+      capture_method: 'manual'
+    }
+    assert create_response = @gateway.create_intent(amount, @visa_payment_method, options)
+    intent_id = create_response.params['id']
+    assert_equal 2000, create_response.params['amount']
+
+    assert update_response = @gateway.update_intent(update_amount, intent_id, nil, options.merge(payment_method_types: 'card', statement_descriptor_suffix_kanji: '漢字サフィックス', statement_descriptor_suffix_kana: 'カナサフィックス'))
+    assert_equal 2500, update_response.params['amount']
+    assert_equal 'requires_confirmation', update_response.params['status']
+    assert_equal '漢字サフィックス', update_response.params['payment_method_options']['card']['statement_descriptor_suffix_kanji']
+    assert_equal 'カナサフィックス', update_response.params['payment_method_options']['card']['statement_descriptor_suffix_kana']
   end
 
   def test_create_a_payment_intent_and_confirm_with_different_payment_method

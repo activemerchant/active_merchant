@@ -316,6 +316,16 @@ module ActiveMerchant # :nodoc:
         [first_name, last_name]
       end
 
+      def clean_emoji_emoticons_and_accent(str = '')
+        return nil unless str.respond_to?(:force_encoding)
+
+        str = str.force_encoding('utf-8').encode
+        emoji_regex = /[\u{1f600}-\u{1f64f}\u{2702}-\u{27b0}\u{1f680}-\u{1f6ff}\u{24C2}-\u{1F251}\u{1f300}-\u{1f5ff}]/
+        emoticon_regex = /[:;=8xX]-?[)(DPpO3]/
+        str = str.gsub(emoji_regex, '').gsub(emoticon_regex, '').strip
+        I18n.transliterate(str)
+      end
+
       def split_address(full_address)
         address_parts = (full_address || '').split
         return [nil, nil] if address_parts.size == 0

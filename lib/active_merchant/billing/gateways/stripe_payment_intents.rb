@@ -57,6 +57,7 @@ module ActiveMerchant # :nodoc:
             add_aft_recipient_details(post, options)
             add_aft_sender_details(post, options)
             add_request_extended_authorization(post, options)
+            add_statement_descriptor_suffix_kanji_kana(post, options)
             post[:expand] = ['charges.data.balance_transaction']
 
             CREATE_INTENT_ATTRIBUTES.each do |attribute|
@@ -155,6 +156,7 @@ module ActiveMerchant # :nodoc:
         add_shipping_address(post, options)
         add_connected_account(post, options)
         add_fulfillment_date(post, options)
+        add_statement_descriptor_suffix_kanji_kana(post, options)
 
         UPDATE_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
@@ -399,6 +401,15 @@ module ActiveMerchant # :nodoc:
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
         post[:payment_method_options][:card][:request_extended_authorization] = options[:request_extended_authorization] if options[:request_extended_authorization]
+      end
+
+      def add_statement_descriptor_suffix_kanji_kana(post, options)
+        return unless options[:statement_descriptor_suffix_kanji] || options[:statement_descriptor_suffix_kana]
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:statement_descriptor_suffix_kanji] = options[:statement_descriptor_suffix_kanji] if options[:statement_descriptor_suffix_kanji]
+        post[:payment_method_options][:card][:statement_descriptor_suffix_kana] = options[:statement_descriptor_suffix_kana] if options[:statement_descriptor_suffix_kana]
       end
 
       def add_level_three(post, options = {})

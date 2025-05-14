@@ -310,12 +310,17 @@ class CommerceHubTest < Test::Unit::TestCase
     options[:data_entry_source] = 'MOBILE_WEB'
     options[:pos_entry_mode] = 'MANUAL'
     options[:pos_condition_code] = 'CARD_PRESENT'
+    options[:three_d_secure] = {
+      cavv: '12345678901234567890',
+      xid: '12345678901234567890',
+      eci: '05'
+    }
     response = stub_comms do
       @gateway.purchase(@amount, 'authorization123', options)
     end.check_request do |_endpoint, data, _headers|
       request = JSON.parse(data)
       assert_equal request['transactionInteraction']['origin'], 'ECOM'
-      assert_equal request['transactionInteraction']['eciIndicator'], 'CHANNEL_ENCRYPTED'
+      assert_equal request['transactionInteraction']['eciIndicator'], 'SECURE_ECOM'
       assert_equal request['transactionInteraction']['posConditionCode'], 'CARD_PRESENT'
       assert_equal request['transactionInteraction']['posEntryMode'], 'MANUAL'
       assert_equal request['transactionInteraction']['additionalPosInformation']['dataEntrySource'], 'MOBILE_WEB'
@@ -328,6 +333,11 @@ class CommerceHubTest < Test::Unit::TestCase
     options[:origin] = 'POS'
     options[:pos_entry_mode] = 'MANUAL'
     options[:data_entry_source] = 'MOBILE_WEB'
+    options[:three_d_secure] = {
+      cavv: '12345678901234567890',
+      xid: '12345678901234567890',
+      eci: '07'
+    }
     response = stub_comms do
       @gateway.purchase(@amount, 'authorization123', options)
     end.check_request do |_endpoint, data, _headers|

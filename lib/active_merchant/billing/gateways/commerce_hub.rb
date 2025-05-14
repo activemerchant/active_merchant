@@ -141,7 +141,7 @@ module ActiveMerchant # :nodoc:
       def add_transaction_interaction(post, options)
         post[:transactionInteraction] = {}
         post[:transactionInteraction][:origin] = options[:origin] || 'ECOM'
-        post[:transactionInteraction][:eciIndicator] = options[:eci_indicator] || 'CHANNEL_ENCRYPTED'
+        post[:transactionInteraction][:eciIndicator] = map_ecommerce_indicator(options)
         post[:transactionInteraction][:posConditionCode] = options[:pos_condition_code] || 'CARD_NOT_PRESENT_ECOM'
         post[:transactionInteraction][:posEntryMode] = (options[:pos_entry_mode] || 'MANUAL') unless options[:encryption_data].present?
         post[:transactionInteraction][:additionalPosInformation] = {}
@@ -429,6 +429,20 @@ module ActiveMerchant # :nodoc:
 
       def error_code_from(response, action)
         response.dig('error', 0, 'code') unless success_from(response, action)
+      end
+
+      def map_ecommerce_indicator(options)
+        return options[:eci_indicator] if options[:eci_indicator]
+        return 'CHANNEL_ENCRYPTED'     unless options[:three_d_secure]
+
+        case options[:three_d_secure][:eci]
+        when '2', '02', '5', '05'
+          'SECURE_ECOM'
+        when '01', '1', '06', '6'
+          'NON_AUTH_ECOM'
+        else
+          'CHANNEL_ENCRYPTED'
+        end
       end
     end
   end
