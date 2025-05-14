@@ -316,6 +316,15 @@ module ActiveMerchant # :nodoc:
         commit(:post, 'payment_intents', post, options)
       end
 
+      def inquire(authorization, options = {})
+        options.merge!({ request_type: :inquire })
+        if authorization.start_with?('pi_')
+          show_intent(authorization, options)
+        else
+          retrieve_setup_intent(authorization, options)
+        end
+      end
+
       def supports_network_tokenization?
         true
       end
@@ -839,9 +848,13 @@ module ActiveMerchant # :nodoc:
       end
 
       def success_from(response, options)
-        if response['status'] == 'requires_action' && !options[:execute_threed]
-          response['error'] = {}
-          response['error']['message'] = 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.'
+        if options[:request_type] != :inquire && response['status'] == 'requires_action' && !options[:execute_threed]
+          response['error'] = { 'message' => 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.' }
+          return false
+        end
+
+        if options[:request_type] == :inquire && (error = response['last_setup_error'] || response['last_payment_error'])
+          response['error'] = error
           return false
         end
 
