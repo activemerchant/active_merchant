@@ -147,6 +147,20 @@
 * Datatrans: Include additional scrub on store call [naashton] #5447
 * Decidir and DecicirPlus: Add the discover payment method ID [yunnydang] #5448
 * CyberSource: Add the optional merchant reference code on capture [yunnydang] #5453
+* Orbital: Update authorization string [almalee24] #5458
+* Braintree: Update gem to 4.26.0 [almalee24] #5440
+* CheckoutV2: Update Authorization from Basic to Bearer [sinourain] #5381
+* Payeezy: Update authorization when extra space [almalee24] #5446
+* Worldpay: Update inquire success_criteria [almalee24] #5445
+* Credorax: Support zero dollar verify [yunnydang] #5457
+* Credorax: Add optional crypto currency type field [yunnydang] #5460
+* CommerceHub: Map ecommerce_indicator value based on three_d_secure.eci [mjdonga] #5461
+* StripePI: Add the optional kana and kanji descriptor suffix fields [yunnydang] #5466
+* Credorax: Add sender birth date for AFT [adarsh-spreedly] #5469
+* StripePaymentIntents: Add inquire capability [adarsh-spreedly] #5456
+* Payflow: Send ds_trans_id as xid if xid is not present [adarsh-spreedly] #5465
+* Normalize the use of API_VERSION for some gateways (iVeri, JetypayV2 and Kushki) [ritesh-kapoor-spreedly] #5454
+* Normalize API versions for Payeezy, Paymentez, and Paymill [mjdonga] #5451
 * Normalize API Version for StripePaymentIntents, Simetrik, SecurePayAu [adarsh-spreedly] #5450
 
 == Version 1.137.0 (August 2, 2024)

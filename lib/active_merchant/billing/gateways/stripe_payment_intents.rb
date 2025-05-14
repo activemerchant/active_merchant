@@ -58,6 +58,7 @@ module ActiveMerchant # :nodoc:
             add_aft_recipient_details(post, options)
             add_aft_sender_details(post, options)
             add_request_extended_authorization(post, options)
+            add_statement_descriptor_suffix_kanji_kana(post, options)
             post[:expand] = ['charges.data.balance_transaction']
 
             CREATE_INTENT_ATTRIBUTES.each do |attribute|
@@ -156,6 +157,7 @@ module ActiveMerchant # :nodoc:
         add_shipping_address(post, options)
         add_connected_account(post, options)
         add_fulfillment_date(post, options)
+        add_statement_descriptor_suffix_kanji_kana(post, options)
 
         UPDATE_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
@@ -315,6 +317,15 @@ module ActiveMerchant # :nodoc:
         commit(:post, 'payment_intents', post, options)
       end
 
+      def inquire(authorization, options = {})
+        options.merge!({ request_type: :inquire })
+        if authorization.start_with?('pi_')
+          show_intent(authorization, options)
+        else
+          retrieve_setup_intent(authorization, options)
+        end
+      end
+
       def supports_network_tokenization?
         true
       end
@@ -391,6 +402,15 @@ module ActiveMerchant # :nodoc:
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
         post[:payment_method_options][:card][:request_extended_authorization] = options[:request_extended_authorization] if options[:request_extended_authorization]
+      end
+
+      def add_statement_descriptor_suffix_kanji_kana(post, options)
+        return unless options[:statement_descriptor_suffix_kanji] || options[:statement_descriptor_suffix_kana]
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:statement_descriptor_suffix_kanji] = options[:statement_descriptor_suffix_kanji] if options[:statement_descriptor_suffix_kanji]
+        post[:payment_method_options][:card][:statement_descriptor_suffix_kana] = options[:statement_descriptor_suffix_kana] if options[:statement_descriptor_suffix_kana]
       end
 
       def add_level_three(post, options = {})
@@ -829,9 +849,13 @@ module ActiveMerchant # :nodoc:
       end
 
       def success_from(response, options)
-        if response['status'] == 'requires_action' && !options[:execute_threed]
-          response['error'] = {}
-          response['error']['message'] = 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.'
+        if options[:request_type] != :inquire && response['status'] == 'requires_action' && !options[:execute_threed]
+          response['error'] = { 'message' => 'Received unexpected 3DS authentication response, but a 3DS initiation flag was not included in the request.' }
+          return false
+        end
+
+        if options[:request_type] == :inquire && (error = response['last_setup_error'] || response['last_payment_error'])
+          response['error'] = error
           return false
         end
 

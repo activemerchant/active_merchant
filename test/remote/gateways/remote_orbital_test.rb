@@ -746,7 +746,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_truncates_and_removes_accents_from_name
     truncated_name = 'Jose Maria Lopez Garc'
-    credit_card = credit_card('4556761029983886', first_name: 'José María', last_name: 'López García')
+    credit_card = credit_card('4556761029983886', first_name: ':-) José María', last_name: '😀López García')
 
     transcript = capture_transcript(@gateway) do
       response = @gateway.authorize(@amount, credit_card, @options)
@@ -758,7 +758,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_truncates_and_removes_accents_from_name_when_pm_is_a_check
     truncated_name = 'Jose Maria Lopez Garc'
-    check = check(name: 'José María López García')
+    check = check(name: ':) José María López García')
 
     transcript = capture_transcript(@echeck_gateway) do
       response = @echeck_gateway.authorize(@amount, check, @options)
@@ -866,13 +866,16 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_store
     response = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
     assert_success response
+    assert_equal response.authorization.split(';').last, @tpv_orbital_gateway.send(:expiry_date, @mastercard_card_tpv)
     assert_false response.params['safetech_token'].blank?
   end
 
   def test_successful_purchase_stored_token
     store = @tpv_orbital_gateway.store(@credit_card, @options)
     assert_success store
-    response = @tpv_orbital_gateway.purchase(@amount, store.authorization, @options.merge(card_brand: 'VI'))
+    assert_equal store.authorization.split(';').last, @tpv_orbital_gateway.send(:expiry_date, @credit_card)
+
+    response = @tpv_orbital_gateway.purchase(@amount, store.authorization, @options)
     assert_success response
     assert_equal response.params['card_brand'], 'VI'
   end
@@ -880,14 +883,16 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_authorize_stored_token
     store = @tpv_orbital_gateway.store(@credit_card, @options)
     assert_success store
-    auth = @tpv_orbital_gateway.authorize(29, store.authorization, @options.merge(card_brand: 'VI'))
+    auth = @tpv_orbital_gateway.authorize(29, store.authorization, @options)
     assert_success auth
   end
 
   def test_successful_authorize_stored_token_mastercard
     store = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
     assert_success store
-    response = @tpv_orbital_gateway.authorize(29, store.authorization, @options.merge(card_brand: 'MC'))
+    assert_equal store.authorization.split(';').last, @tpv_orbital_gateway.send(:expiry_date, @mastercard_card_tpv)
+
+    response = @tpv_orbital_gateway.authorize(29, store.authorization, @options)
     assert_success response
     assert_equal response.params['card_brand'], 'MC'
   end
@@ -896,7 +901,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     store = @tpv_orbital_gateway.store(@credit_card, @options)
     assert_success store
     authorization = store.authorization.split(';').values_at(2).first
-    response = @tpv_orbital_gateway.capture(39, authorization, @options.merge(card_brand: 'VI'))
+    response = @tpv_orbital_gateway.capture(39, authorization, @options)
     assert_failure response
     assert_equal response.params['status_msg'], "The LIDM you supplied (#{authorization}) does not match with any existing transaction"
   end
@@ -904,29 +909,31 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture_with_stored_token
     store = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
     assert_success store
-    auth = @tpv_orbital_gateway.authorize(28, store.authorization, @options.merge(card_brand: 'MC'))
+    assert_equal store.authorization.split(';').last, @tpv_orbital_gateway.send(:expiry_date, @mastercard_card_tpv)
+
+    auth = @tpv_orbital_gateway.authorize(28, store.authorization, @options)
     assert_success auth
     assert_equal auth.params['card_brand'], 'MC'
-    response = @tpv_orbital_gateway.capture(28, auth.authorization, @options.merge(card_brand: 'MC'))
+    response = @tpv_orbital_gateway.capture(28, auth.authorization, @options)
     assert_success response
   end
 
   def test_successful_authorize_with_stored_token_and_refund
     store = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
     assert_success store
-    auth = @tpv_orbital_gateway.authorize(38, store.authorization, @options.merge(card_brand: 'MC'))
+    auth = @tpv_orbital_gateway.authorize(38, store.authorization, @options)
     assert_success auth
-    response = @tpv_orbital_gateway.refund(38, auth.authorization, @options.merge(card_brand: 'MC'))
+    response = @tpv_orbital_gateway.refund(38, auth.authorization, @options)
     assert_success response
   end
 
   def test_failed_refund_wrong_token
     store = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
     assert_success store
-    auth = @tpv_orbital_gateway.authorize(38, store.authorization, @options.merge(card_brand: 'MC'))
+    auth = @tpv_orbital_gateway.authorize(38, store.authorization, @options)
     assert_success auth
     authorization = store.authorization.split(';').values_at(2).first
-    response = @tpv_orbital_gateway.refund(38, authorization, @options.merge(card_brand: 'MC'))
+    response = @tpv_orbital_gateway.refund(38, authorization, @options)
     assert_failure response
     assert_equal response.params['status_msg'], "The LIDM you supplied (#{authorization}) does not match with any existing transaction"
   end
@@ -934,9 +941,9 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_purchase_with_stored_token_and_refund
     store = @tpv_orbital_gateway.store(@mastercard_card_tpv, @options)
     assert_success store
-    purchase = @tpv_orbital_gateway.purchase(38, store.authorization, @options.merge(card_brand: 'MC'))
+    purchase = @tpv_orbital_gateway.purchase(38, store.authorization, @options)
     assert_success purchase
-    response = @tpv_orbital_gateway.refund(38, purchase.authorization, @options.merge(card_brand: 'MC'))
+    response = @tpv_orbital_gateway.refund(38, purchase.authorization, @options)
     assert_success response
   end
 
