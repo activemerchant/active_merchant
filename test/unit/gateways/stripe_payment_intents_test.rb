@@ -1183,6 +1183,28 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_verify_response)
   end
 
+  def test_successful_setup_intent_inquire
+    setup_intent = stub_comms(@gateway, :ssl_request) do
+      @gateway.create_setup_intent(@visa_token, @options)
+    end.respond_with(successful_verify_response)
+
+    @gateway.expects(:ssl_request).returns(successful_verify_response)
+    inquire_response = @gateway.inquire(setup_intent.authorization, {})
+    assert_success inquire_response
+    assert_equal setup_intent.params['id'], inquire_response.params['id']
+  end
+
+  def test_successful_payment_intent_inquire
+    payment_intent = stub_comms(@gateway, :ssl_request) do
+      @gateway.create_intent(@amount, @visa_token, @options)
+    end.respond_with(successful_create_intent_response)
+
+    @gateway.expects(:ssl_request).returns(successful_create_intent_response)
+    inquire_response = @gateway.inquire(payment_intent.authorization, {})
+    assert_success inquire_response
+    assert_equal payment_intent.params['id'], inquire_response.params['id']
+  end
+
   private
 
   def successful_setup_purchase

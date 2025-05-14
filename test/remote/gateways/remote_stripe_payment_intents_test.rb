@@ -1826,4 +1826,56 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'N', purchase.avs_result['postal_match']
     assert_equal 'N', purchase.avs_result['street_match']
   end
+
+  def test_successful_payment_intent_inquire
+    options = {
+      currency: 'USD',
+      customer: @customer,
+      confirm: true
+    }
+    response = @gateway.create_intent(@amount, @visa_card, options)
+    assert_success response
+    inquire_response = @gateway.inquire(response.authorization, {})
+    assert_success inquire_response
+    assert_equal inquire_response.params['id'], response.params['id']
+  end
+
+  def test_successful_setup_intent_inquire
+    response = @gateway.create_setup_intent(@visa_card_brand_choice, {
+      address: {
+        email: 'test@example.com',
+        name: 'John Doe',
+        line1: '1 Test Ln',
+        city: 'Durham',
+        tracking_number: '123456789'
+      },
+      currency: 'USD',
+      card_brand: 'cartes_bancaires',
+      confirm: true,
+      execute_threed: true,
+      return_url: 'https://example.com'
+    })
+    assert_success response
+    inquire_response = @gateway.inquire(response.authorization, {})
+    assert_success inquire_response
+    assert_equal inquire_response.params['id'], response.params['id']
+  end
+
+  def test_invalid_intent_id_failure
+    authorization = '123'
+    inquire_response = @gateway.inquire(authorization, {})
+    assert_failure inquire_response
+    error_params = inquire_response.params['error']
+    assert_equal 'resource_missing', error_params['code']
+    assert_equal "No such setupintent: '#{authorization}'", error_params['message']
+  end
+
+  def test_non_existent_payment_intent_failure
+    invalid_pi = 'pi_1234321232109'
+    inquire_response = @gateway.inquire(invalid_pi, {})
+    assert_failure inquire_response
+    error_params = inquire_response.params['error']
+    assert_equal 'resource_missing', error_params['code']
+    assert_equal "No such payment_intent: '#{invalid_pi}'", error_params['message']
+  end
 end

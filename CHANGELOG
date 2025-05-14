@@ -157,7 +157,8 @@
 * CommerceHub: Map ecommerce_indicator value based on three_d_secure.eci [mjdonga] #5461
 * StripePI: Add the optional kana and kanji descriptor suffix fields [yunnydang] #5466
 * Credorax: Add sender birth date for AFT [adarsh-spreedly] #5469
-* Payflow: Send ds_trans_id as xid if xid is not present #5465
+* StripePaymentIntents: Add inquire capability [adarsh-spreedly] #5456
+* Payflow: Send ds_trans_id as xid if xid is not present [adarsh-spreedly] #5465
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
