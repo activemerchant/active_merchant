@@ -334,7 +334,8 @@ module ActiveMerchant # :nodoc:
         # adds a signature to the post hash/array
         add_hmac(parameters)
 
-        response = parse(ssl_post(self.live_url, post_data(action, parameters)))
+        api_url = @options[:custom_api_url] || self.live_url
+        response = parse(ssl_post(api_url, post_data(action, parameters)))
 
         Response.new(
           response[:responseCode] == '0',

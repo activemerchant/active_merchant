@@ -289,6 +289,17 @@ class CredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_verify_with_0_auth
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options.merge(zero_dollar_auth: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/a9=5/, data)
+      assert_match(/a4=0/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_verify
     response = stub_comms do
       @gateway.verify(@credit_card)
@@ -617,6 +628,16 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/h3=12345/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_adds_crypto_currency_type
+    options_with_crypto_details = @options.merge({ crypto_currency_type: '7', transaction_type: '6' })
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_crypto_details)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/crypto_currency_type=7/, data)
+      assert_match(/a9=6/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1146,6 +1167,51 @@ class CredoraxTest < Test::Unit::TestCase
       assert_not_match(/token_crypto=/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
+  end
+
+  def test_purchase_adds_aft_fields_along_with_sender_birth_date
+    aft_options = @options.merge(
+      aft: true,
+      sender_ref_number: 'test',
+      sender_fund_source: '01',
+      sender_country_code: 'USA',
+      sender_street_address: 'sender street',
+      sender_city: 'city',
+      sender_state: 'NY',
+      sender_first_name: 'george',
+      sender_last_name: 'smith',
+      sender_birth_date: '12121212',
+      recipient_street_address: 'street',
+      recipient_city: 'chicago',
+      recipient_province_code: '312',
+      recipient_postal_code: '12345',
+      recipient_country_code: 'USA',
+      recipient_first_name: 'logan',
+      recipient_last_name: 'bill'
+    )
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, aft_options)
+    end.check_request do |_endpoint, data, _headers|
+      # recipient fields
+      assert_match(/j5=logan/, data)
+      assert_match(/j6=street/, data)
+      assert_match(/j7=chicago/, data)
+      assert_match(/j8=312/, data)
+      assert_match(/j9=USA/, data)
+      assert_match(/j13=bill/, data)
+      assert_match(/j12=12345/, data)
+      # sender fields
+      assert_match(/s10=george/, data)
+      assert_match(/s11=smith/, data)
+      assert_match(/s12=sender\+street/, data)
+      assert_match(/s13=city/, data)
+      assert_match(/s14=NY/, data)
+      assert_match(/s15=USA/, data)
+      assert_match(/s17=test/, data)
+      assert_match(/s18=01/, data)
+      assert_match(/s19=12121212/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   private

@@ -689,7 +689,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_optional_idempotency_key_header
+  def test_optional_idempotency_key_and_bearer_inclution_in_header
     stub_comms(@gateway, :ssl_request) do
       options = {
         idempotency_key: 'test123'
@@ -697,6 +697,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_method, _url, _data, headers|
       assert_equal 'test123', headers['Cko-Idempotency-Key']
+      assert_match 'Bearer', headers['Authorization']
     end.respond_with(successful_authorize_response)
   end
 
