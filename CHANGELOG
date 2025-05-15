@@ -161,6 +161,7 @@
 * Payflow: Send ds_trans_id as xid if xid is not present [adarsh-spreedly] #5465
 * Normalize the use of API_VERSION for some gateways (iVeri, JetypayV2 and Kushki) [ritesh-kapoor-spreedly] #5454
 * Normalize API versions for Payeezy, Paymentez, and Paymill [mjdonga] #5451
+* Pin Payments: Add support for Apple and Google payment method types [naashton] #5462
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
