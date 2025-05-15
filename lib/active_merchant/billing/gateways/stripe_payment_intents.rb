@@ -865,6 +865,10 @@ module ActiveMerchant # :nodoc:
       def add_currency(post, options, money)
         post[:currency] = options[:currency] || currency(money)
       end
+
+      def api_version(options)
+        options[:version] || @options[:version] || fetch_version
+      end
     end
   end
 end

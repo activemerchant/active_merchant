@@ -71,6 +71,16 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response)
   end
 
+  def test_endpoint_with_version
+    version = '2022-10-27'
+    @gateway.versions = { default_api: version }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.create_intent(@amount, @visa_token, {})
+    end.check_request do |_method, _endpoint, _data, headers|
+      assert_match(version, headers['Stripe-Version'])
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_successful_create_and_confirm_intent
     @gateway.expects(:ssl_request).times(3).returns(successful_create_3ds2_payment_method, successful_create_3ds2_intent_response, successful_confirm_3ds2_intent_response)
 
