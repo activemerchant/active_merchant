@@ -16,18 +16,18 @@ module ActiveMerchant # :nodoc:
         super
       end
 
-      # Create a charge using a credit card, card token or customer token
+      # Create a charge using a payment method, card token or customer token
       #
-      # To charge a credit card: purchase([money], [creditcard hash], ...)
+      # To charge a payment method: purchase([money], [payment_method hash], ...)
       # To charge a customer: purchase([money], [token], ...)
-      def purchase(money, creditcard, options = {})
+      def purchase(money, payment_method, options = {})
         post = {}
 
         add_amount(post, money, options)
         add_customer_data(post, options)
         add_invoice(post, options)
-        add_creditcard(post, creditcard)
-        add_address(post, creditcard, options)
+        add_payment_method(post, payment_method)
+        add_address(post, payment_method, options)
         add_capture(post, options)
         add_metadata(post, options)
         add_3ds(post, options)
@@ -36,18 +36,18 @@ module ActiveMerchant # :nodoc:
         commit(:post, 'charges', post, options)
       end
 
-      # Create a customer and associated credit card. The token that is returned
-      # can be used instead of a credit card parameter in the purchase method
-      def store(creditcard, options = {})
+      # Create a customer and associated payment method. The token that is returned
+      # can be used instead of a payment method parameter in the purchase method
+      def store(payment_method, options = {})
         post = {}
 
-        add_creditcard(post, creditcard)
+        add_payment_method(post, payment_method)
         add_customer_data(post, options)
-        add_address(post, creditcard, options)
+        add_address(post, payment_method, options)
         commit(:post, 'customers', post, options)
       end
 
-      # Unstore a customer and associated credit card.
+      # Unstore a customer and associated payment method.
       def unstore(token)
         customer_token =
           if /cus_/.match?(token)
@@ -63,12 +63,12 @@ module ActiveMerchant # :nodoc:
         commit(:post, "charges/#{CGI.escape(token)}/refunds", { amount: amount(money) }, options)
       end
 
-      # Authorize an amount on a credit card. Once authorized, you can later
+      # Authorize an amount on a payment method. Once authorized, you can later
       # capture this charge using the charge token that is returned.
-      def authorize(money, creditcard, options = {})
+      def authorize(money, payment_method, options = {})
         options[:capture] = false
 
-        purchase(money, creditcard, options)
+        purchase(money, payment_method, options)
       end
 
       # Captures a previously authorized charge. Capturing only part of the original
@@ -87,14 +87,14 @@ module ActiveMerchant # :nodoc:
         commit(:get, "/charges/verify?session_token=#{session_token}", nil, options)
       end
 
-      # Updates the credit card for the customer.
-      def update(token, creditcard, options = {})
+      # Updates the payment method for the customer.
+      def update(token, payment_method, options = {})
         post = {}
         token = get_customer_token(token)
 
-        add_creditcard(post, creditcard)
+        add_payment_method(post, payment_method)
         add_customer_data(post, options)
-        add_address(post, creditcard, options)
+        add_address(post, payment_method, options)
         commit(:put, "customers/#{CGI.escape(token)}", post, options)
       end
 
@@ -122,8 +122,8 @@ module ActiveMerchant # :nodoc:
         post[:ip_address] = options[:ip] if options[:ip]
       end
 
-      def add_address(post, creditcard, options)
-        return if creditcard.kind_of?(String)
+      def add_address(post, payment_method, options)
+        return if payment_method.kind_of?(String) || payment_method.kind_of?(NetworkTokenizationCreditCard)
 
         address = (options[:billing_address] || options[:address])
         return unless address
@@ -149,24 +149,49 @@ module ActiveMerchant # :nodoc:
         post[:capture] = capture != false
       end
 
-      def add_creditcard(post, creditcard)
-        if creditcard.respond_to?(:number)
-          post[:card] ||= {}
+      def add_payment_method(post, payment_method)
+        return unless payment_method
 
+        case payment_method
+        when NetworkTokenizationCreditCard
+          get_token = get_single_use_token(payment_method, options)
+          post[:payment_source_token] = get_token.params.dig('response', 'token')
+        when CreditCard
+          post[:card] ||= {}
           post[:card].merge!(
-            number: creditcard.number,
-            expiry_month: creditcard.month,
-            expiry_year: creditcard.year,
-            cvc: creditcard.verification_value,
-            name: creditcard.name
+            number: payment_method.number,
+            expiry_month: payment_method.month,
+            expiry_year: payment_method.year,
+            cvc: payment_method.verification_value,
+            name: payment_method.name
           )
-        elsif creditcard.kind_of?(String)
-          if /^card_/.match?(creditcard)
-            post[:card_token] = get_card_token(creditcard)
+        when String
+          if /^card_/.match?(payment_method)
+            post[:card_token] = get_card_token(payment_method)
           else
-            post[:customer_token] = creditcard
+            post[:customer_token] = payment_method
           end
+        else
+          raise ArgumentError, "Invalid payment method type: #{payment_method.class}"
         end
+      end
+
+      # Get a single use token from Pin for NT based payment methods
+      # This is used to create a charge using a network tokenized card
+      def get_single_use_token(payment_method, options)
+        post = {
+          type: 'network_token',
+          source: {
+            number: payment_method.number,
+            expiry_month: payment_method.month,
+            expiry_year: payment_method.year,
+            network_type: payment_method.source.to_s.gsub('_', ''),
+            cryptogram: payment_method.payment_cryptogram,
+            eci: payment_method.eci
+          }
+        }
+
+        commit(:post, 'payment_sources', post, options)
       end
 
       def get_customer_token(token)
