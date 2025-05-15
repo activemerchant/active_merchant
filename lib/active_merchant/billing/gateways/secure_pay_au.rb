@@ -3,8 +3,8 @@ require 'rexml/document'
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class SecurePayAuGateway < Gateway
-      API_VERSION = 'xml-4.2'
-      PERIODIC_API_VERSION = 'spxml-3.0'
+      version 'xml-4.2'
+      version 'spxml-3.0', :periodic_api
 
       class_attribute :test_periodic_url, :live_periodic_url
 
@@ -158,7 +158,7 @@ module ActiveMerchant # :nodoc:
             xml.tag! 'messageID', SecureRandom.hex(15)
             xml.tag! 'messageTimestamp', generate_timestamp
             xml.tag! 'timeoutValue', request_timeout
-            xml.tag! 'apiVersion', API_VERSION
+            xml.tag! 'apiVersion', fetch_version
           end
 
           xml.tag! 'MerchantInfo' do
@@ -221,7 +221,7 @@ module ActiveMerchant # :nodoc:
             xml.tag! 'messageID', SecureRandom.hex(15)
             xml.tag! 'messageTimestamp', generate_timestamp
             xml.tag! 'timeoutValue', request_timeout
-            xml.tag! 'apiVersion', PERIODIC_API_VERSION
+            xml.tag! 'apiVersion', fetch_version(:periodic_api)
           end
 
           xml.tag! 'MerchantInfo' do
