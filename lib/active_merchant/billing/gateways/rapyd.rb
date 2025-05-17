@@ -124,7 +124,8 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_address(post, creditcard, options)
-        return unless address = options[:billing_address]
+        address = options[:billing_address]
+        return unless valid_address?(address)
 
         post[:address] = {}
         # name and line_1 are required at the gateway
@@ -136,6 +137,15 @@ module ActiveMerchant # :nodoc:
         post[:address][:country] = address[:country] if address[:country]
         post[:address][:zip] = address[:zip] if address[:zip]
         post[:address][:phone_number] = address[:phone].gsub(/\D/, '') if address[:phone]
+      end
+
+      def valid_address?(address)
+        return false unless address
+
+        required_fields = %i[name address1 city state country zip]
+        missing_fields = required_fields.select { |field| address[field].nil? || address[field].to_s.strip.empty? }
+
+        missing_fields.any? ? false : true
       end
 
       def add_invoice(post, money, options)
@@ -283,12 +293,14 @@ module ActiveMerchant # :nodoc:
         customer_data = {}
         customer_data[:name] = "#{payment.first_name} #{payment.last_name}" unless payment.is_a?(String)
         customer_data[:email] = options[:email] unless payment.is_a?(String) && options[:customer_id].blank?
+        customer_data[:phone_number] = options.dig(:billing_address, :phone) || options.dig(:billing_address, :phone_number)
         customer_data[:addresses] = [customer_address] if customer_address
         customer_data
       end
 
       def address(options)
-        return unless address = options[:billing_address]
+        address = options[:billing_address]
+        return unless valid_address?(address)
 
         formatted_address = {}
 
