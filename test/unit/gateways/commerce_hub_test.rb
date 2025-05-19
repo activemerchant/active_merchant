@@ -390,12 +390,16 @@ class CommerceHubTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
+    @options[:order_id] = 'abc123'
+
     stub_comms do
       @gateway.verify(@credit_card, @options)
     end.check_request do |endpoint, data, _headers|
       request = JSON.parse(data)
       assert_match %r{verification}, endpoint
       assert_equal request['source']['sourceType'], 'PaymentCard'
+      assert_equal request['transactionDetails']['merchantOrderId'], @options[:order_id]
+      assert_equal request['transactionDetails']['merchantInvoiceNumber'], @options[:order_id]
     end.respond_with(successful_authorize_response)
   end
 
