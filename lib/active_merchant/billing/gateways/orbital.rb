@@ -587,7 +587,7 @@ module ActiveMerchant # :nodoc:
 
       def add_credit_card(xml, credit_card, options)
         xml.tag! :AccountNum, credit_card.number if credit_card.is_a?(CreditCard)
-        xml.tag! :Exp, expiry_date(credit_card) if credit_card.is_a?(CreditCard)
+        xml.tag! :Exp, options[:override_exp_date] || expiry_date(credit_card) if credit_card.is_a?(CreditCard)
         add_currency_fields(xml, options[:currency])
         add_verification_value(xml, credit_card) if credit_card.is_a?(CreditCard)
       end
