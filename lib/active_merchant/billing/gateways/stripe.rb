@@ -5,6 +5,8 @@ module ActiveMerchant # :nodoc:
     # This gateway uses an older version of the Stripe API.
     # To utilize the updated {Payment Intents API}[https://stripe.com/docs/api/payment_intents], integrate with the StripePaymentIntents gateway
     class StripeGateway < Gateway
+      version '2020-08-27'
+
       self.live_url = 'https://api.stripe.com/v1/'
 
       # Docs on AVS codes: https://en.wikipedia.org/w/index.php?title=Address_verification_service&_ga=2.97570079.1027215965.1655989706-2008268124.1655989706#AVS_response_codes
@@ -24,8 +26,6 @@ module ActiveMerchant # :nodoc:
         'fail' => 'N',
         'unchecked' => 'P'
       }
-
-      DEFAULT_API_VERSION = '2020-08-27'
 
       self.supported_countries = %w(AE AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK HU IE IN IT JP LT LU LV MT MX MY NL NO NZ PL PT RO SE SG SI SK US)
       self.default_currency = 'USD'
@@ -664,7 +664,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def api_version(options)
-        options[:version] || @options[:version] || self.class::DEFAULT_API_VERSION
+        options[:version] || @options[:version] || fetch_version
       end
 
       def api_request(method, endpoint, parameters = nil, options = {})
