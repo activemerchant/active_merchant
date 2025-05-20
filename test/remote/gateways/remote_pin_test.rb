@@ -296,4 +296,15 @@ class RemotePinTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end
+
+  def test_transcript_scrubbing_with_apple_pay
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @apple_pay_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@apple_pay_card.number, clean_transcript)
+    assert_scrubbed(@apple_pay_card.verification_value.to_s, clean_transcript)
+    assert_scrubbed(@apple_pay_card.payment_cryptogram, clean_transcript)
+  end
 end
