@@ -74,7 +74,7 @@ module ActiveMerchant
       def refund(money, authorization, options = {})
         post = { relatedTransactionId: authorization }
 
-        build_post_data(post)
+        build_post_data(post, options)
         add_amount(post, money, options)
 
         commit(:refund, post)
@@ -102,7 +102,7 @@ module ActiveMerchant
       def credit(money, payment, options = {})
         post = { userTokenId: options[:user_token_id] }
         payment_key = payment.is_a?(NetworkTokenizationCreditCard) ? :userPaymentOption : :cardData
-        build_post_data(post)
+        build_post_data(post, options)
         add_amount(post, money, options)
         options[:is_payout] ? send_payout_transaction(payment_key, post, payment, options) : send_unreferenced_refund_transaction(post, payment, options)
       end
