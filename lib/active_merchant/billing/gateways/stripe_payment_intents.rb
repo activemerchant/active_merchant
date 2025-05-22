@@ -213,16 +213,22 @@ module ActiveMerchant # :nodoc:
       end
 
       def capture(money, intent_id, options = {})
-        post = {}
-        currency = options[:currency] || currency(money)
-        post[:amount_to_capture] = localized_amount(money, currency)
-        if options[:transfer_amount]
-          post[:transfer_data] = {}
-          post[:transfer_data][:amount] = options[:transfer_amount]
+        if intent_id.include?('pi_')
+          post = {}
+          currency = options[:currency] || currency(money)
+          post[:amount_to_capture] = localized_amount(money, currency)
+          if options[:transfer_amount]
+            post[:transfer_data] = {}
+            post[:transfer_data][:amount] = options[:transfer_amount]
+          end
+          post[:application_fee_amount] = options[:application_fee] if options[:application_fee]
+          options = format_idempotency_key(options, 'capture')
+          commit(:post, "payment_intents/#{intent_id}/capture", post, options)
+        else
+          error_message = "No associated charge for #{intent_id}"
+          error_message << '; payment_intent reference is not valid for capture'
+          return Response.new(false, error_message)
         end
-        post[:application_fee_amount] = options[:application_fee] if options[:application_fee]
-        options = format_idempotency_key(options, 'capture')
-        commit(:post, "payment_intents/#{intent_id}/capture", post, options)
       end
 
       def void(intent_id, options = {})
