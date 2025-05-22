@@ -1276,4 +1276,16 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway.purchase(1500, @credit_card, options)
     assert_success response
   end
+
+  def test_successful_purchase_with_stored_credentials_payment_type_as_unscheduled_and_initiator_as_cardholder
+    stored_options = @options.merge(
+      stored_credential: {
+        initiator: 'cardholder',
+        reason_type: 'unscheduled'
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, stored_options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
 end
