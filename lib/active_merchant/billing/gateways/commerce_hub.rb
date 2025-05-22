@@ -101,6 +101,7 @@ module ActiveMerchant # :nodoc:
         post = {}
         add_payment(post, credit_card, options)
         add_billing_address(post, credit_card, options)
+        add_transaction_details(post, options, 'verify')
 
         commit('verify', post, options)
       end
@@ -155,7 +156,7 @@ module ActiveMerchant # :nodoc:
           physicalGoodsIndicator: [true, 'true'].include?(options[:physical_goods_indicator])
         }
 
-        if action == 'sale'
+        if %w(sale verify).include?(action)
           details[:merchantOrderId] = options[:order_id]
           details[:merchantTransactionId] = rand.to_s[2..13]
         end
