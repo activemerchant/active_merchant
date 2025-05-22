@@ -415,6 +415,7 @@ module ActiveMerchant # :nodoc:
         return unless options[:stored_credential]
 
         post[:payment_type] = options[:stored_credential][:reason_type]&.capitalize
+        post[:payment_type] = 'Regular' if options[:stored_credential][:initiator] == 'cardholder' && post[:payment_type] == 'Unscheduled'
 
         if options[:merchant_initiated_transaction_id]
           merchant_initiated_override(post, options)
