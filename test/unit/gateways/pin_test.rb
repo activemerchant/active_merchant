@@ -478,6 +478,10 @@ class PinTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_transcript_scrubbing_with_apple_pay
+    assert_equal scrubbed_transcript_with_apple_pay, @gateway.scrub(transcript_with_apple_pay)
+  end
+
   private
 
   def successful_purchase_response
@@ -838,6 +842,128 @@ class PinTest < Test::Unit::TestCase
       },
       "ip_address": "70.63.124.4"
     }'
+  end
+
+  def transcript_with_apple_pay
+    <<~PRE_SCRUBBED
+      opening connection to test-api.pinpayments.com:443...
+      opened
+      starting SSL for test-api.pinpayments.com:443...
+      SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256
+      <- "POST /1/payment_sources HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic SV9tbzlCVVVVWEl3WEYtYXZjczNMQTo=\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: test-api.pinpayments.com\r\nContent-Length: 169\r\n\r\n"
+      <- "{\"type\":\"network_token\",\"source\":{\"number\":\"4200000000000000\",\"expiry_month\":12,\"expiry_year\":2027,\"network_type\":\"applepay\",\"cryptogram\":\"AABBCCDDEEFFGGHH\",\"eci\":\"05\"}}"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Date: Thu, 15 May 2025 20:57:55 GMT\r\n"
+      -> "Content-Type: application/json; charset=utf-8\r\n"
+      -> "Content-Length: 493\r\n"
+      -> "Connection: close\r\n"
+      -> "Server: nginx\r\n"
+      -> "X-Requested-From: 136.47.159.68\r\n"
+      -> "ETag: W/\"3ef88495866aa108ac519690cc869360\"\r\n"
+      -> "Cache-Control: max-age=0, private, must-revalidate\r\n"
+      -> "X-Request-Id: 4c47d1ad-4713-4e75-85fb-a1412c14d023\r\n"
+      -> "X-Runtime: 0.109418\r\n"
+      -> "Strict-Transport-Security: max-age=252455616; includeSubdomains; preload\r\n"
+      -> "X-Content-Type-Options: nosniff\r\n"
+      -> "X-Download-Options: noopen\r\n"
+      -> "X-Frame-Options: DENY\r\n"
+      -> "X-Permitted-Cross-Domain-Policies: none\r\n"
+      -> "X-XSS-Protection: 1; mode=block\r\n"
+      -> "vary: Origin\r\n"
+      -> "\r\n"
+      reading 493 bytes...
+      -> "{\"response\":{\"token\":\"ps_nUti6Z3fA5vZvqYRC0JVwg\",\"type\":\"network_token\",\"source\":{\"token\":\"card_PfKzV2Jbnr0btgESVclTMg\",\"scheme\":\"visa\",\"display_number\":\"XXXX-XXXX-XXXX-0000\",\"issuing_country\":\"AU\",\"expiry_month\":12,\"expiry_year\":2027,\"name\":null,\"address_line1\":null,\"address_line2\":null,\"address_city\":null,\"address_postcode\":null,\"address_state\":null,\"address_country\":null,\"customer_token\":null,\"primary\":null,\"network_type\":\"applepay\",\"network_format\":null}},\"ip_address\":\"136.47.159.68\"}"
+      read 493 bytes
+      Conn close
+      opening connection to test-api.pinpayments.com:443...
+      opened
+      starting SSL for test-api.pinpayments.com:443...
+      SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256
+      <- "POST /1/charges HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic SV9tbzlCVVVVWEl3WEYtYXZjczNMQTo=\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: test-api.pinpayments.com\r\nContent-Length: 202\r\n\r\n"
+      <- "{\"amount\":\"100\",\"currency\":\"AUD\",\"email\":\"roland@pinpayments.com\",\"ip_address\":\"203.59.39.62\",\"description\":\"Store Purchase 1747342674\",\"payment_source_token\":\"ps_nUti6Z3fA5vZvqYRC0JVwg\",\"capture\":true}"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Date: Thu, 15 May 2025 20:57:56 GMT\r\n"
+      -> "Content-Type: application/json; charset=utf-8\r\n"
+      -> "Content-Length: 1048\r\n"
+      -> "Connection: close\r\n"
+      -> "Server: nginx\r\n"
+      -> "ETag: W/\"5a611709ad78bb7e794589e38ce6143b\"\r\n"
+      -> "Cache-Control: max-age=0, private, must-revalidate\r\n"
+      -> "X-Request-Id: 5d0053bd-083a-450b-98b4-1ae10bdc4dd7\r\n"
+      -> "X-Runtime: 0.317112\r\n"
+      -> "Strict-Transport-Security: max-age=252455616; includeSubdomains; preload\r\n"
+      -> "X-Content-Type-Options: nosniff\r\n"
+      -> "X-Download-Options: noopen\r\n"
+      -> "X-Frame-Options: DENY\r\n"
+      -> "X-Permitted-Cross-Domain-Policies: none\r\n"
+      -> "X-XSS-Protection: 1; mode=block\r\n"
+      -> "\r\n"
+      reading 1048 bytes...
+      -> "{\"response\":{\"token\":\"ch_FPA0knR3Hg99NUKxzfUcAA\",\"success\":true,\"amount\":100,\"currency\":\"AUD\",\"description\":\"Store Purchase 1747342674\",\"email\":\"roland@pinpayments.com\",\"ip_address\":\"203.59.39.62\",\"created_at\":\"2025-05-15T20:57:56Z\",\"status_message\":\"Success\",\"error_message\":null,\"card\":{\"token\":\"card_PfKzV2Jbnr0btgESVclTMg\",\"scheme\":\"visa\",\"display_number\":\"XXXX-XXXX-XXXX-0000\",\"issuing_country\":\"AU\",\"expiry_month\":12,\"expiry_year\":2027,\"name\":null,\"address_line1\":null,\"address_line2\":null,\"address_city\":null,\"address_postcode\":null,\"address_state\":null,\"address_country\":null,\"customer_token\":null,\"primary\":null,\"network_type\":\"applepay\",\"network_format\":null},\"transfer\":[],\"amount_refunded\":0,\"total_fees\":32,\"merchant_entitlement\":68,\"refund_pending\":false,\"authorisation_token\":null,\"authorisation_expired\":false,\"authorisation_voided\":false,\"captured\":true,\"captured_at\":\"2025-05-15T20:57:56Z\",\"settlement_currency\":\"AUD\",\"active_chargebacks\":false,\"metadata\":{},\"platform_fees\":0,\"platform_adjustment\":{\"amount\":0,\"currency\":\"AUD\"}}}"
+      read 1048 bytes
+      Conn close
+    PRE_SCRUBBED
+  end
+
+  def scrubbed_transcript_with_apple_pay
+    <<~SCRUBBED
+      opening connection to test-api.pinpayments.com:443...
+      opened
+      starting SSL for test-api.pinpayments.com:443...
+      SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256
+      <- "POST /1/payment_sources HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]=\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: test-api.pinpayments.com\r\nContent-Length: 169\r\n\r\n"
+      <- "{\"type\":\"network_token\",\"source\":{\"number\":\"[FILTERED]\",\"expiry_month\":12,\"expiry_year\":2027,\"network_type\":\"applepay\",\"cryptogram\":\"[FILTERED]\",\"eci\":\"05\"}}"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Date: Thu, 15 May 2025 20:57:55 GMT\r\n"
+      -> "Content-Type: application/json; charset=utf-8\r\n"
+      -> "Content-Length: 493\r\n"
+      -> "Connection: close\r\n"
+      -> "Server: nginx\r\n"
+      -> "X-Requested-From: 136.47.159.68\r\n"
+      -> "ETag: W/\"3ef88495866aa108ac519690cc869360\"\r\n"
+      -> "Cache-Control: max-age=0, private, must-revalidate\r\n"
+      -> "X-Request-Id: 4c47d1ad-4713-4e75-85fb-a1412c14d023\r\n"
+      -> "X-Runtime: 0.109418\r\n"
+      -> "Strict-Transport-Security: max-age=252455616; includeSubdomains; preload\r\n"
+      -> "X-Content-Type-Options: nosniff\r\n"
+      -> "X-Download-Options: noopen\r\n"
+      -> "X-Frame-Options: DENY\r\n"
+      -> "X-Permitted-Cross-Domain-Policies: none\r\n"
+      -> "X-XSS-Protection: 1; mode=block\r\n"
+      -> "vary: Origin\r\n"
+      -> "\r\n"
+      reading 493 bytes...
+      -> "{\"response\":{\"token\":\"ps_nUti6Z3fA5vZvqYRC0JVwg\",\"type\":\"network_token\",\"source\":{\"token\":\"card_PfKzV2Jbnr0btgESVclTMg\",\"scheme\":\"visa\",\"display_number\":\"[FILTERED]XXXX-XXXX-XXXX-0000\",\"issuing_country\":\"AU\",\"expiry_month\":12,\"expiry_year\":2027,\"name\":null,\"address_line1\":null,\"address_line2\":null,\"address_city\":null,\"address_postcode\":null,\"address_state\":null,\"address_country\":null,\"customer_token\":null,\"primary\":null,\"network_type\":\"applepay\",\"network_format\":null}},\"ip_address\":\"136.47.159.68\"}"
+      read 493 bytes
+      Conn close
+      opening connection to test-api.pinpayments.com:443...
+      opened
+      starting SSL for test-api.pinpayments.com:443...
+      SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256
+      <- "POST /1/charges HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]=\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: test-api.pinpayments.com\r\nContent-Length: 202\r\n\r\n"
+      <- "{\"amount\":\"100\",\"currency\":\"AUD\",\"email\":\"roland@pinpayments.com\",\"ip_address\":\"203.59.39.62\",\"description\":\"Store Purchase 1747342674\",\"payment_source_token\":\"ps_nUti6Z3fA5vZvqYRC0JVwg\",\"capture\":true}"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Date: Thu, 15 May 2025 20:57:56 GMT\r\n"
+      -> "Content-Type: application/json; charset=utf-8\r\n"
+      -> "Content-Length: 1048\r\n"
+      -> "Connection: close\r\n"
+      -> "Server: nginx\r\n"
+      -> "ETag: W/\"5a611709ad78bb7e794589e38ce6143b\"\r\n"
+      -> "Cache-Control: max-age=0, private, must-revalidate\r\n"
+      -> "X-Request-Id: 5d0053bd-083a-450b-98b4-1ae10bdc4dd7\r\n"
+      -> "X-Runtime: 0.317112\r\n"
+      -> "Strict-Transport-Security: max-age=252455616; includeSubdomains; preload\r\n"
+      -> "X-Content-Type-Options: nosniff\r\n"
+      -> "X-Download-Options: noopen\r\n"
+      -> "X-Frame-Options: DENY\r\n"
+      -> "X-Permitted-Cross-Domain-Policies: none\r\n"
+      -> "X-XSS-Protection: 1; mode=block\r\n"
+      -> "\r\n"
+      reading 1048 bytes...
+      -> "{\"response\":{\"token\":\"ch_FPA0knR3Hg99NUKxzfUcAA\",\"success\":true,\"amount\":100,\"currency\":\"AUD\",\"description\":\"Store Purchase 1747342674\",\"email\":\"roland@pinpayments.com\",\"ip_address\":\"203.59.39.62\",\"created_at\":\"2025-05-15T20:57:56Z\",\"status_message\":\"Success\",\"error_message\":null,\"card\":{\"token\":\"card_PfKzV2Jbnr0btgESVclTMg\",\"scheme\":\"visa\",\"display_number\":\"[FILTERED]XXXX-XXXX-XXXX-0000\",\"issuing_country\":\"AU\",\"expiry_month\":12,\"expiry_year\":2027,\"name\":null,\"address_line1\":null,\"address_line2\":null,\"address_city\":null,\"address_postcode\":null,\"address_state\":null,\"address_country\":null,\"customer_token\":null,\"primary\":null,\"network_type\":\"applepay\",\"network_format\":null},\"transfer\":[],\"amount_refunded\":0,\"total_fees\":32,\"merchant_entitlement\":68,\"refund_pending\":false,\"authorisation_token\":null,\"authorisation_expired\":false,\"authorisation_voided\":false,\"captured\":true,\"captured_at\":\"2025-05-15T20:57:56Z\",\"settlement_currency\":\"AUD\",\"active_chargebacks\":false,\"metadata\":{},\"platform_fees\":0,\"platform_adjustment\":{\"amount\":0,\"currency\":\"AUD\"}}}"
+      read 1048 bytes
+      Conn close
+    SCRUBBED
   end
 
   def transcript
