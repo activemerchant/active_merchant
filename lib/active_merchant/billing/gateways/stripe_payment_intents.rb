@@ -214,6 +214,8 @@ module ActiveMerchant # :nodoc:
       end
 
       def capture(money, intent_id, options = {})
+        return Response.new(false, 'Only Authorizations performed via the Payment Intent API are capturable') unless intent_id.include?('pi_')
+
         post = {}
         currency = options[:currency] || currency(money)
         post[:amount_to_capture] = localized_amount(money, currency)
