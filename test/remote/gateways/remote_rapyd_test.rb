@@ -70,6 +70,12 @@ class RemoteRapydTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_purchase_without_address
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: { phone_number: '12125559999' }))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
   def test_successful_purchase_for_idempotent_requests
     response = @gateway.purchase(@amount, @credit_card, @options.merge(idempotency_key: '1234567890'))
     assert_success response
