@@ -1328,6 +1328,34 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_payment_type_is_regular_when_reason_type_is_unscheduled_and_initiator_is_cardholder
+    stub_comms(@gateway, :ssl_request) do
+      initial_options = {
+        stored_credential: {
+          initiator: 'cardholder',
+          reason_type: 'unscheduled'
+        }
+      }
+      @gateway.purchase(@amount, @credit_card, initial_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"payment_type":"Regular"}, data)
+    end.respond_with(successful_purchase_initial_stored_credential_response)
+  end
+
+  def test_payment_type_is_not_changed_when_reason_type_is_unscheduled_and_initiator_is_merchant
+    stub_comms(@gateway, :ssl_request) do
+      initial_options = {
+        stored_credential: {
+          initiator: 'merchant',
+          reason_type: 'unscheduled'
+        }
+      }
+      @gateway.purchase(@amount, @credit_card, initial_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"payment_type":"Unscheduled"}, data)
+    end.respond_with(successful_purchase_initial_stored_credential_response)
+  end
+
   private
 
   def pre_scrubbed
