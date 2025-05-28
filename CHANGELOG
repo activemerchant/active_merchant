@@ -198,6 +198,7 @@
 * Stripe and Stripe PI: Add header fields to response body [yunnydang] #5185
 * Nuvei: Add support for Stored Credentials [javierpedrozaing] #5186
 * Addition of shopper ip address when a network token transaction occurs [rubenmarindev] #5262
+* LoanPaymentPro: Add new gateway adapter for the Loanpaymentpro gateway [heavyblade] #5470
 
 == Version 1.136.0 (June 3, 2024)
 * Shift4V2: Add new gateway based on SecurionPay adapter [heavyblade] #4860

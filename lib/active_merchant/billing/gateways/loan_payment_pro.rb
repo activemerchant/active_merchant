@@ -59,6 +59,8 @@ module ActiveMerchant # :nodoc:
       end
 
       def purchase(money, payment, options = {})
+        return delegate_to_ach(:purchase, money, payment, options) if use_ach_gateway?(payment)
+
         post = {}
 
         add_invoice(post, money, options)
@@ -69,6 +71,8 @@ module ActiveMerchant # :nodoc:
       end
 
       def authorize(money, payment, options = {})
+        return delegate_to_ach(:authorize, money, payment, options) if use_ach_gateway?(payment)
+
         options[:action] = :authorize
         purchase(money, payment, options)
       end
@@ -78,6 +82,8 @@ module ActiveMerchant # :nodoc:
       end
 
       def refund(money, authorization, options = {})
+        return delegate_to_ach(:refund, money, authorization, options) if use_ach_gateway?(authorization)
+
         transaction_id, invoice_id = authorization.split('|')
         post = { Amount: amount(money), InvoiceId: invoice_id }
 
@@ -85,6 +91,8 @@ module ActiveMerchant # :nodoc:
       end
 
       def void(authorization, options = {})
+        return delegate_to_ach(:void, authorization, options) if use_ach_gateway?(authorization)
+
         commit(path(:void, authorization), {})
       end
 
@@ -241,6 +249,18 @@ module ActiveMerchant # :nodoc:
 
       def error_code_from(response)
         RESPONSE_CODE_MAPPING[response[:ResponseCode].to_i] unless success_from(response)
+      end
+
+      def ach_gateway
+        @ach_gateway ||= LoanPaymentProAchGateway.new(@options)
+      end
+
+      def use_ach_gateway?(payment_or_auth)
+        payment_or_auth.is_a?(Check) || (payment_or_auth.is_a?(String) && payment_or_auth.include?('|ach'))
+      end
+
+      def delegate_to_ach(method, *args)
+        ach_gateway.public_send(method, *args)
       end
     end
   end
