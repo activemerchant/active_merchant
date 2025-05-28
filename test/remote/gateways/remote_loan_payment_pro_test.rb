@@ -7,6 +7,7 @@ class RemoteLoanPaymentProTest < Test::Unit::TestCase
     @amount = 500
     @credit_card = credit_card('4000100011112224', month: 9, year: 2025, verification_value: '123')
     @declined_card = credit_card('4000100011112385')
+    @bank_account = check(routing_number: '122187238', account_number: '123456', name: 'Ted Tester')
     @options = {
       billing_address: address,
       description: 'Store Purchase',
@@ -24,6 +25,32 @@ class RemoteLoanPaymentProTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'Invalid Test Payment Instrument', response.message
+  end
+
+  def test_successful_purchase_ach
+    response = @gateway.purchase(@amount, @bank_account, @options)
+    assert_success response
+    assert_equal 'Transaction processed.', response.message
+  end
+
+  def test_successful_void_ach
+    auth = @gateway.purchase(@amount, @bank_account, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal 'Transaction Cancelled.', void.message
+  end
+
+  def test_successful_refund_ach
+    omit "Status is 'Accepted', but only 'Funded' or 'Refunded' transactions may be refunded."
+
+    sale = @gateway.purchase(@amount, @bank_account, @options)
+    assert_success sale
+
+    assert refund = @gateway.refund(@amount, sale.authorization)
+    assert_success refund
+    assert_equal 'Transaction Cancelled.', refund.message
   end
 
   def test_successful_authorize
