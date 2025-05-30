@@ -27,6 +27,22 @@ class SecurePayAuTest < Test::Unit::TestCase
     assert_equal %i[visa master american_express diners_club jcb], SecurePayAuGateway.supported_cardtypes
   end
 
+  def test_endpoint
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<apiVersion>xml-4.2<\/apiVersion>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_periodic_endpoint
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, '100', @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<apiVersion>spxml-3.0<\/apiVersion>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_purchase_with_live_data
     @gateway.expects(:ssl_post).returns(successful_live_purchase_response)
 
