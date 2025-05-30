@@ -172,9 +172,29 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, order_id: '1')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<Exp>#{@gateway.send('expiry_date', credit_card)}</Exp>}, data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_purchase_response)
 
-    assert response = @gateway.purchase(50, credit_card, order_id: '1')
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', response.authorization
+  end
+
+  def test_successful_purchase_with_override
+    options = { order_id: '1', override_exp_date: '0429' }
+
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<Exp>#{options[:override_exp_date]}</Exp>}, data
+      assert_not_match %{<Exp>#{@gateway.send('expiry_date', credit_card)}</Exp>}, data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_purchase_response)
+
     assert_instance_of Response, response
     assert_success response
     assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1;VI', response.authorization
