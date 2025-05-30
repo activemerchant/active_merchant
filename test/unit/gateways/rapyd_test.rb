@@ -72,6 +72,19 @@ class RapydTest < Test::Unit::TestCase
     assert_equal 'payment_716ce0efc63aa8d91579e873d29d9d5e', response.authorization.split('|')[0]
   end
 
+  def test_successful_purchase_without_address
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: { phone_number: '12125559999' }))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_equal JSON.parse(data)['phone_number'], '12125559999'
+      assert_nil JSON.parse(data)['address']
+      assert_nil JSON.parse(data)['customer']['addresses']
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'payment_716ce0efc63aa8d91579e873d29d9d5e', response.authorization.split('|')[0]
+  end
+
   def test_send_month_and_year_with_two_digits
     credit_card = credit_card('4242424242424242', month: '9', year: '30')
     stub_comms(@gateway, :ssl_request) do
