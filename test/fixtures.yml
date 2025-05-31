@@ -581,6 +581,8 @@ litle:
 
 loan_payment_pro:
   transaction_key: SOMECREDENTIAL
+  login: demo
+  password: demo
 
 # Working test credentials, no need to replace
 maxipago:
