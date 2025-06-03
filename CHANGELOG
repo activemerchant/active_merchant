@@ -168,7 +168,8 @@
 * Orbital: Pass override_exp_date if provided [almalee24] #5476
 * Normalize API Version for StripePaymentIntents, Simetrik, SecurePayAu [adarsh-spreedly] #5450
 * StripePI: validate capture reference [jherrera] #5479
-* Cenpos: Add purchase_order_number field [yunnydang] #5481 
+* Cenpos: Add purchase_order_number field [yunnydang] #5481
+* Rapyd: Fix error on billing address [jherrera] #5472
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
