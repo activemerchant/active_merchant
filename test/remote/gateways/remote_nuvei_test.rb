@@ -245,6 +245,17 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_match 'APPROVED', refund_response.message
   end
 
+  def test_successful_refund_with_order_id
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    refund_response = @gateway.refund(@amount, response.authorization, options = { order_id: response.params['clientUniqueId'] })
+    assert_success refund_response
+    assert_equal response.params['clientUniqueId'], options[:order_id]
+    assert_match 'SUCCESS', refund_response.params['status']
+    assert_match 'APPROVED', refund_response.message
+  end
+
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response

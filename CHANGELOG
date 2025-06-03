@@ -170,6 +170,7 @@
 * StripePI: validate capture reference [jherrera] #5479
 * Cenpos: Add purchase_order_number field [yunnydang] #5481
 * Rapyd: Fix error on billing address [jherrera] #5472
+* Nuvei: Map order_id to clientUniqueId field on refund/credit [jherrera] #5477
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
