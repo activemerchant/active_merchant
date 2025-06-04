@@ -164,6 +164,13 @@
 * Pin Payments: Add support for Apple and Google payment method types [naashton] #5462
 * Pin Payments: Scrub sensitive data from transcript [naashton] #5473
 * CheckoutV2: Send payment type as Regular instead of unscheduled if initiator is cardholder [adarsh-spreedly] #5471
+* CommerceHub: Pass order_id for Verify [almalee24] #5475
+* Orbital: Pass override_exp_date if provided [almalee24] #5476
+* Normalize API Version for StripePaymentIntents, Simetrik, SecurePayAu [adarsh-spreedly] #5450
+* StripePI: validate capture reference [jherrera] #5479
+* Cenpos: Add purchase_order_number field [yunnydang] #5481
+* Rapyd: Fix error on billing address [jherrera] #5472
+* Nuvei: Map order_id to clientUniqueId field on refund/credit [jherrera] #5477
 * Credorax: Fixed request signature [mjdonga] #5463
 
 == Version 1.137.0 (August 2, 2024)

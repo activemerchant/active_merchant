@@ -137,6 +137,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_override
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(override_exp_date: '0429'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_soft_descriptor_hash
     options = @options.merge(
       soft_descriptors: {

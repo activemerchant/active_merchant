@@ -1311,6 +1311,21 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'Payment complete.', capture_response.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
   end
 
+  def test_manual_capture_with_invalid_intent
+    options = {
+      currency: 'GBP',
+      customer: @customer,
+      confirmation_method: 'manual',
+      capture_method: 'manual',
+      confirm: true
+    }
+
+    intent_id = 'seti_3RRZi6AWOtgoysog1kgqnyV7'
+    assert capture_response = @gateway.capture(@amount, intent_id, options)
+    assert_failure capture_response
+    assert_match 'Only Authorizations performed via the Payment Intent API are capturable', capture_response.message
+  end
+
   def test_create_a_payment_intent_and_manually_capture_with_network_token
     options = {
       currency: 'GBP',

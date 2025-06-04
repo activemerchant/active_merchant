@@ -5,12 +5,13 @@ module ActiveMerchant # :nodoc:
     # This gateway uses the current Stripe {Payment Intents API}[https://stripe.com/docs/api/payment_intents].
     # For the legacy API, see the Stripe gateway
     class StripePaymentIntentsGateway < StripeGateway
+      version '2020-08-27'
+
       ALLOWED_METHOD_STATES = %w[automatic manual].freeze
       ALLOWED_CANCELLATION_REASONS = %w[duplicate fraudulent requested_by_customer abandoned].freeze
       CREATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email save_payment_method]
       CONFIRM_INTENT_ATTRIBUTES = %i[receipt_email return_url save_payment_method setup_future_usage off_session]
       UPDATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email setup_future_usage]
-      DEFAULT_API_VERSION = '2020-08-27'
       DIGITAL_WALLETS = {
         apple_pay: 'apple_pay',
         google_pay: 'google_pay_dpan'
@@ -213,6 +214,8 @@ module ActiveMerchant # :nodoc:
       end
 
       def capture(money, intent_id, options = {})
+        return Response.new(false, 'Only Authorizations performed via the Payment Intent API are capturable') unless intent_id.include?('pi_')
+
         post = {}
         currency = options[:currency] || currency(money)
         post[:amount_to_capture] = localized_amount(money, currency)
@@ -863,6 +866,10 @@ module ActiveMerchant # :nodoc:
 
       def add_currency(post, options, money)
         post[:currency] = options[:currency] || currency(money)
+      end
+
+      def api_version(options)
+        options[:version] || @options[:version] || fetch_version
       end
     end
   end
