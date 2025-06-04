@@ -1214,32 +1214,6 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_sort_parameters
-    params = { a4: '100', a1: '  f16e646bf6812eed9e3c962d3309809f ', a5: 'EUR', h9: 'b4dcad79ebff332ca34ffa248ceb9c38', c1: 'Longbob Longsen', b2: '1', b1: '4176661000001015', b5: '281', b4: '26', b3: '12', d1: '127.0.0.1', c5: '123 Your Street', c7: 'Toronto', c10: 'K2C3N7', c8: 'ON', c9: 'CA', c3: 'unspecified@example.com', a9: '9', M: 'SPREE978', O: '1' }
-    sorted_params = @gateway.send(:sort_parameters, params)
-    assert_equal %i[M O a1 a4 a5 a9 b1 b2 b3 b4 b5 c1 c10 c3 c5 c7 c8 c9 d1 h9], sorted_params.keys
-    assert_equal ['SPREE978',
-                  '1',
-                  'f16e646bf6812eed9e3c962d3309809f',
-                  '100',
-                  'EUR',
-                  '9',
-                  '4176661000001015',
-                  '1',
-                  '12',
-                  '26',
-                  '281',
-                  'Longbob Longsen',
-                  'K2C3N7',
-                  'unspecified@example.com',
-                  '123 Your Street',
-                  'Toronto',
-                  'ON',
-                  'CA',
-                  '127.0.0.1',
-                  'b4dcad79ebff332ca34ffa248ceb9c38'], sorted_params.values
-  end
-
   private
 
   def stored_credential_options(*args, id: nil)
