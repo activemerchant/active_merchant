@@ -678,6 +678,13 @@ money_movers:
   login: demo
   password: password
 
+multi_pay:
+  company: 'company_id'
+  branch: 'branch_id'
+  pos: 'pos_id'
+  user: 'username'
+  password: 'password'
+
 mundipagg:
   api_key: api_key
   gateway_affiliation_id: gateway_affiliation_id
