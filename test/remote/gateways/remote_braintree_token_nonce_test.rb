@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class RemoteBraintreeTokenNonceTest < Test::Unit::TestCase
+  prepend VCRRemote
+
   def setup
     @gateway = BraintreeGateway.new(fixtures(:braintree_blue))
     @braintree_backend = @gateway.instance_eval { @braintree_gateway }
