@@ -542,7 +542,7 @@ module ActiveMerchant # :nodoc:
           elsif options[:billing_address] && options[:billing_address][:name].present?
             options[:billing_address][:name]
           end
-        name ? clean_emoji_emoticons_and_accent(name)[0..29] : nil
+        name ? format_name(name)[0..29] : nil
       end
 
       def avs_supported?(address)
@@ -582,7 +582,7 @@ module ActiveMerchant # :nodoc:
         add_bank_account_type(xml, check)
         xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method]
         xml.tag! :BankPmtDelv, options[:payment_delivery] || 'B'
-        xml.tag! :AVSname, (check&.name ? clean_emoji_emoticons_and_accent(check.name)[0..29] : nil) if get_address(options).blank?
+        xml.tag! :AVSname, (check&.name ? format_name(check.name)[0..29] : nil) if get_address(options).blank?
       end
 
       def add_credit_card(xml, credit_card, options)

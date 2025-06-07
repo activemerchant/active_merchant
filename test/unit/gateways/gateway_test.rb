@@ -169,19 +169,19 @@ class GatewayTest < Test::Unit::TestCase
     assert_false post.key?(:do_not_add)
   end
 
-  def test_clean_emoji_emoticons_and_accent
+  def test_format_name
     input = 'Hello😊 World! :D'
-    expected_output = 'Hello World!'
-    assert_equal expected_output, @gateway.send(:clean_emoji_emoticons_and_accent, input)
+    expected_output = 'Hello World'
+    assert_equal expected_output, @gateway.send(:format_name, input)
 
     input_with_accent = 'Café 😊'
     expected_output_with_accent = 'Cafe'
-    assert_equal expected_output_with_accent, @gateway.send(:clean_emoji_emoticons_and_accent, input_with_accent)
+    assert_equal expected_output_with_accent, @gateway.send(:format_name, input_with_accent)
   end
 
-  def test_clean_emoji_emoticons_and_accent_with_nil_input
+  def test_format_name_with_nil_input
     input = nil
     expected_output = nil
-    assert_equal expected_output, @gateway.send(:clean_emoji_emoticons_and_accent, input)
+    assert_equal expected_output, @gateway.send(:format_name, input)
   end
 end
