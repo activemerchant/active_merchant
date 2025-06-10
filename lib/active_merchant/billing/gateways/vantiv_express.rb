@@ -150,6 +150,24 @@ module ActiveMerchant # :nodoc:
         'ECommerce' => 6
       }
 
+      DISCOUNT_CODE = {
+        'NotSupported' => 0,
+        'AmountIsDiscounted' => 1,
+        'AmountIsNotDiscounted' => 2
+      }
+
+      NET_GROSS_CODE = {
+        'NotSupported' => 0,
+        'ItemAmountIncludesTaxAmount' => 1,
+        'ItemAmountDoesNotIncludeTaxAmount' => 2
+      }
+
+      DEBIT_CREDIT_CODE = {
+        'NotSupported' => 0,
+        'ExtendedItemAmountIsCredit' => 1,
+        'ExtendedItemAmountIsDebit' => 2
+      }
+
       def initialize(options = {})
         requires!(options, :account_id, :account_token, :application_id, :acceptor_id, :application_name, :application_version)
         super
@@ -166,7 +184,7 @@ module ActiveMerchant # :nodoc:
             add_transaction(xml, money, options, eci)
             add_terminal(xml, options, eci)
             add_address(xml, options)
-            add_lodging(xml, options)
+            add_extended_parameters(xml, options)
           end
         end
 
@@ -183,7 +201,7 @@ module ActiveMerchant # :nodoc:
             add_transaction(xml, money, options, eci)
             add_terminal(xml, options, eci)
             add_address(xml, options)
-            add_lodging(xml, options)
+            add_extended_parameters(xml, options)
           end
         end
 
@@ -199,6 +217,7 @@ module ActiveMerchant # :nodoc:
             add_credentials(xml)
             add_transaction(xml, money, options, eci)
             add_terminal(xml, options, eci)
+            add_extended_parameters(xml, options)
           end
         end
 
@@ -344,6 +363,8 @@ module ActiveMerchant # :nodoc:
           xml.PaymentType PAYMENT_TYPE[options[:payment_type]] || options[:payment_type] if options[:payment_type]
           xml.SubmissionType SUBMISSION_TYPE[options[:submission_type]] || options[:submission_type] if options[:submission_type]
           xml.DuplicateCheckDisableFlag 1 if options[:duplicate_check_disable_flag].to_s == 'true' || options[:duplicate_override_flag].to_s == 'true'
+          xml.SalesTaxAmount options[:sales_tax_amount] if options[:sales_tax_amount]
+          xml.CommercialCardCustomerCode options[:commercial_card_customer_code] if options[:commercial_card_customer_code]
         end
       end
 
@@ -364,27 +385,25 @@ module ActiveMerchant # :nodoc:
         MARKET_CODE[options[:market_code]] || options[:market_code] || 0
       end
 
-      def add_lodging(xml, options)
-        if options[:lodging]
-          lodging = parse_lodging(options[:lodging])
-          xml.ExtendedParameters do
-            xml.Lodging do
-              xml.LodgingAgreementNumber lodging[:agreement_number] if lodging[:agreement_number]
-              xml.LodgingCheckInDate lodging[:check_in_date] if lodging[:check_in_date]
-              xml.LodgingCheckOutDate lodging[:check_out_date] if lodging[:check_out_date]
-              xml.LodgingRoomAmount lodging[:room_amount] if lodging[:room_amount]
-              xml.LodgingRoomTax lodging[:room_tax] if lodging[:room_tax]
-              xml.LodgingNoShowIndicator lodging[:no_show_indicator] if lodging[:no_show_indicator]
-              xml.LodgingDuration lodging[:duration] if lodging[:duration]
-              xml.LodgingCustomerName lodging[:customer_name] if lodging[:customer_name]
-              xml.LodgingClientCode lodging[:client_code] if lodging[:client_code]
-              xml.LodgingExtraChargesDetail lodging[:extra_charges_detail] if lodging[:extra_charges_detail]
-              xml.LodgingExtraChargesAmounts lodging[:extra_charges_amounts] if lodging[:extra_charges_amounts]
-              xml.LodgingPrestigiousPropertyCode lodging[:prestigious_property_code] if lodging[:prestigious_property_code]
-              xml.LodgingSpecialProgramCode lodging[:special_program_code] if lodging[:special_program_code]
-              xml.LodgingChargeType lodging[:charge_type] if lodging[:charge_type]
-            end
-          end
+      def add_lodging(xml, lodging)
+        return unless lodging
+
+        lodging = parse_lodging(lodging)
+        xml.Lodging do
+          xml.LodgingAgreementNumber lodging[:agreement_number] if lodging[:agreement_number]
+          xml.LodgingCheckInDate lodging[:check_in_date] if lodging[:check_in_date]
+          xml.LodgingCheckOutDate lodging[:check_out_date] if lodging[:check_out_date]
+          xml.LodgingRoomAmount lodging[:room_amount] if lodging[:room_amount]
+          xml.LodgingRoomTax lodging[:room_tax] if lodging[:room_tax]
+          xml.LodgingNoShowIndicator lodging[:no_show_indicator] if lodging[:no_show_indicator]
+          xml.LodgingDuration lodging[:duration] if lodging[:duration]
+          xml.LodgingCustomerName lodging[:customer_name] if lodging[:customer_name]
+          xml.LodgingClientCode lodging[:client_code] if lodging[:client_code]
+          xml.LodgingExtraChargesDetail lodging[:extra_charges_detail] if lodging[:extra_charges_detail]
+          xml.LodgingExtraChargesAmounts lodging[:extra_charges_amounts] if lodging[:extra_charges_amounts]
+          xml.LodgingPrestigiousPropertyCode lodging[:prestigious_property_code] if lodging[:prestigious_property_code]
+          xml.LodgingSpecialProgramCode lodging[:special_program_code] if lodging[:special_program_code]
+          xml.LodgingChargeType lodging[:charge_type] if lodging[:charge_type]
         end
       end
 
@@ -450,6 +469,7 @@ module ActiveMerchant # :nodoc:
               xml.BillingZipcode address[:zip] if address[:zip]
               xml.BillingEmail address[:email] if address[:email]
               xml.BillingPhone address[:phone_number] if address[:phone_number]
+              xml.BillingName address[:name] if address[:name]
             end
 
             if shipping_address
@@ -460,6 +480,73 @@ module ActiveMerchant # :nodoc:
               xml.ShippingZipcode shipping_address[:zip] if shipping_address[:zip]
               xml.ShippingEmail shipping_address[:email] if shipping_address[:email]
               xml.ShippingPhone shipping_address[:phone_number] if shipping_address[:phone_number]
+            end
+          end
+        end
+      end
+
+      def add_extended_parameters(xml, options)
+        lodging = options[:lodging]
+        level_3_data = options[:level_3_data]
+        return if lodging.blank? && level_3_data.blank?
+
+        xml.ExtendedParameters do
+          add_lodging(xml, lodging) if lodging
+          add_level_3_data(xml, level_3_data) if level_3_data
+        end
+      end
+
+      # Add Enhanced Level III data to transaction requests
+      def add_level_3_data(xml, level_3)
+        return unless level_3
+
+        xml.EnhancedData do
+          # Header-level fields
+          xml.MerchantVATRegistrationNumber level_3[:merchant_vat_registration_number] if level_3[:merchant_vat_registration_number]
+          xml.CustomerVATRegistrationNumber level_3[:customer_vat_registration_number] if level_3[:customer_vat_registration_number]
+          xml.SummaryCommodityCode level_3[:summary_commodity_code] if level_3[:summary_commodity_code]
+          xml.DiscountAmount level_3[:discount_amount] if level_3[:discount_amount]
+          xml.FreightAmount level_3[:freight_amount] if level_3[:freight_amount]
+          xml.DutyAmount level_3[:duty_amount] if level_3[:duty_amount]
+          xml.DestinationZIPCode level_3[:destination_postal_code] if level_3[:destination_postal_code]
+          xml.ShipFromZIPCode level_3[:ship_from_postal_code] if level_3[:ship_from_postal_code]
+          xml.DestinationCountryCode level_3[:destination_country_code] if level_3[:destination_country_code]
+          xml.UniqueVATInvoiceReferenceNumber level_3[:unique_vat_invoice_reference_number] if level_3[:unique_vat_invoice_reference_number]
+          xml.OrderDate level_3[:order_date] if level_3[:order_date]
+          xml.VATAmount level_3[:vat_amount] if level_3[:vat_amount]
+          xml.VATRate level_3[:vat_rate] if level_3[:vat_rate]
+          xml.LineItemCount level_3[:line_items].size if level_3[:line_items]&.any?
+          xml.AlternateTaxAmount level_3[:alternate_tax_amount] if level_3[:alternate_tax_amount]
+          xml.NationalTaxAmount level_3[:national_tax_amount] if level_3[:national_tax_amount]
+
+          # Line item details
+          add_line_items(xml, level_3[:line_items]) if level_3[:line_items]&.any?
+        end
+      end
+
+      def add_line_items(xml, line_items)
+        return unless line_items
+
+        xml.LineItemDetail do
+          line_items.each do |item|
+            xml.LineItem do
+              xml.ItemCommodityCode item[:commodity_code] if item[:commodity_code]
+              xml.ItemDescription item[:description] if item[:description]
+              xml.ProductCode item[:product_code] if item[:product_code]
+              xml.Quantity item[:quantity] if item[:quantity]
+              xml.UnitOfMeasure item[:unit_measure] if item[:unit_measure]
+              xml.UnitCost item[:unit_price] if item[:unit_price]
+              xml.LineItemVATAmount item[:tax_amount] if item[:tax_amount]
+              xml.LineItemVATRate item[:tax_rate] if item[:tax_rate]
+              xml.LineItemDiscountAmount item[:discount_amount] if item[:discount_amount]
+              xml.LineItemTotalAmount item[:total_amount] if item[:total_amount]
+              xml.AlternateTaxIdentifier item[:alternate_tax_id] if item[:alternate_tax_id]
+              xml.VATType item[:vat_type] if item[:vat_type]
+              xml.DiscountCode DISCOUNT_CODE[item[:discount_code]] || item[:discount_code] if item[:discount_code]
+              xml.NetGrossCode NET_GROSS_CODE[item[:net_gross_code]] || item[:net_gross_code] if item[:net_gross_code]
+              xml.ExtendedItemAmount item[:extended_item_amount] if item[:extended_item_amount]
+              xml.DebitCreditCode DEBIT_CREDIT_CODE[item[:debit_credit_code]] || item[:debit_credit_code] if item[:debit_credit_code]
+              xml.ItemDiscountRate item[:item_discount_rate] if item[:item_discount_rate]
             end
           end
         end
