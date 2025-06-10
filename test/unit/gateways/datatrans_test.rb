@@ -272,6 +272,26 @@ class DatatransTest < Test::Unit::TestCase
     assert_equal DatatransGateway.supported_countries, %w[CH GR US]
   end
 
+  def test_endpoint
+    assert_equal 'https://api.sandbox.datatrans.com', @gateway.test_url
+    assert_equal 'https://api.datatrans.com', @gateway.live_url
+  end
+
+  def test_endpoint_with_default_version
+    action = 'authorize'
+    assert_equal "https://api.sandbox.datatrans.com/v1/transactions/#{action}", @gateway.send(:url, action)
+  end
+
+  def test_endpoint_with_version
+    version = 'v2'
+    @gateway.versions = { default_api: version }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_action, endpoint, _data, _headers|
+      assert_match("/#{version}/", endpoint)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_support_scrubbing_flag_enabled
     assert @gateway.supports_scrubbing?
   end
@@ -311,7 +331,7 @@ class DatatransTest < Test::Unit::TestCase
 
   def test_url_generation_from_action
     action = 'test'
-    assert_equal "#{@gateway.test_url}transactions/#{action}", @gateway.send(:url, action)
+    assert_equal "#{@gateway.test_url}/v1/transactions/#{action}", @gateway.send(:url, action)
   end
 
   def test_scrub
@@ -336,7 +356,7 @@ class DatatransTest < Test::Unit::TestCase
 
     assert_equal @gateway.send(:parse,
                                '{"transactionId":"240418170233899207",acquirerAuthorizationCode":"170233"}'),
-                 { 'successful' => false,
+                                  { 'successful' => false,
                    'response' => {},
                    'errors' =>
                     ['Invalid JSON response received from Datatrans. Please contact them for support if you continue to receive this message.  (The raw response returned by the API was "{\\"transactionId\\":\\"240418170233899207\\",acquirerAuthorizationCode\\":\\"170233\\"}")'] }

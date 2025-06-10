@@ -1,5 +1,6 @@
 require 'test_helper'
 
+
 class FlexChargeTest < Test::Unit::TestCase
   include CommStub
 
@@ -110,18 +111,35 @@ class FlexChargeTest < Test::Unit::TestCase
 
   def test_build_request_url_for_purchase
     action = :purchase
-    assert_equal @gateway.send(:url, action), "#{@gateway.test_url}evaluate"
+    assert_equal @gateway.send(:url, action), "#{@gateway.test_url}/v1/evaluate"
   end
 
   def test_build_request_url_with_id_param
     action = :refund
     id = 123
-    assert_equal @gateway.send(:url, action, id), "#{@gateway.test_url}orders/123/refund"
+    assert_equal @gateway.send(:url, action, id), "#{@gateway.test_url}/v1/orders/123/refund"
   end
 
   def test_build_request_url_for_store
     action = :store
-    assert_equal @gateway.send(:url, action), "#{@gateway.test_url}tokenize"
+    assert_equal @gateway.send(:url, action), "#{@gateway.test_url}/v1/tokenize"
+  end
+
+  def test_endpoint
+    assert_equal 'https://api-sandbox.flex-charge.com', @gateway.test_url
+    assert_equal 'https://api.flex-charge.com', @gateway.live_url
+  end
+
+  def test_endpoint_with_default_version
+    action = :purchase
+    assert_equal "https://api-sandbox.flex-charge.com/v1/evaluate", @gateway.send(:url, action)
+  end
+
+  def test_endpoint_with_version
+    version = 'v2'
+    @gateway.versions = { default_api: version }
+    action = :purchase
+    assert_equal "https://api-sandbox.flex-charge.com/#{version}/evaluate", @gateway.send(:url, action)
   end
 
   def test_invalid_instance

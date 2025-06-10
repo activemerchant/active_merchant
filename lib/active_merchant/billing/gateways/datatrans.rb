@@ -1,8 +1,10 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class DatatransGateway < Gateway
-      self.test_url = 'https://api.sandbox.datatrans.com/v1/'
-      self.live_url = 'https://api.datatrans.com/v1/'
+      version 'v1'
+
+      self.test_url = 'https://api.sandbox.datatrans.com'
+      self.live_url = 'https://api.datatrans.com'
 
       self.supported_countries = %w(CH GR US) # to confirm the countries supported.
       self.default_currency = 'CHF'
@@ -225,13 +227,13 @@ module ActiveMerchant # :nodoc:
       def url(endpoint, options = {})
         case endpoint
         when 'settle', 'credit', 'cancel'
-          "#{test? ? test_url : live_url}transactions/#{options[:transaction_id]}/#{endpoint}"
+          "#{test? ? test_url : live_url}/#{fetch_version}/transactions/#{options[:transaction_id]}/#{endpoint}"
         when 'tokenize'
-          "#{test? ? test_url : live_url}aliases/#{endpoint}"
+          "#{test? ? test_url : live_url}/#{fetch_version}/aliases/#{endpoint}"
         when 'delete_alias'
-          "#{test? ? test_url : live_url}aliases/#{options[:alias_id]}"
+          "#{test? ? test_url : live_url}/#{fetch_version}/aliases/#{options[:alias_id]}"
         else
-          "#{test? ? test_url : live_url}transactions/#{endpoint}"
+          "#{test? ? test_url : live_url}/#{fetch_version}/transactions/#{endpoint}"
         end
       end
 

@@ -1,8 +1,10 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class FlexChargeGateway < Gateway
-      self.test_url = 'https://api-sandbox.flex-charge.com/v1/'
-      self.live_url = 'https://api.flex-charge.com/v1/'
+      version 'v1'
+
+      self.test_url = 'https://api-sandbox.flex-charge.com'
+      self.live_url = 'https://api.flex-charge.com'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -265,7 +267,9 @@ module ActiveMerchant # :nodoc:
       end
 
       def url(action, id = nil)
-        "#{test? ? test_url : live_url}#{ENDPOINTS_MAPPING[action] % id}"
+        endpoint = ENDPOINTS_MAPPING[action]
+        endpoint = endpoint % id if endpoint.include?('%') && id
+        "#{test? ? test_url : live_url}/#{fetch_version}/#{endpoint}"
       end
 
       def headers
