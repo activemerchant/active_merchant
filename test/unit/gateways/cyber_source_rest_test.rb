@@ -345,6 +345,23 @@ class CyberSourceRestTest < Test::Unit::TestCase
     assert_equal "#{@gateway.class.test_url}/pts/v2/action", @gateway.send(:url, 'action')
   end
 
+  def test_endpoint_with_version
+    version = 'v3'
+    @gateway.versions = { default_api: version }
+    assert_equal "#{@gateway.class.test_url}/pts/#{version}/payments", @gateway.send(:url, 'payments')
+  end
+
+  def test_http_signature_with_custom_version
+    version = 'v3'
+    @gateway.versions = { default_api: version }
+    signature = @gateway.send :get_http_signature, 'payments', @digest, 'post', @gmt_time
+
+    parsed = parse_signature(signature)
+    assert_equal 'def345', parsed['keyid']
+    assert_equal 'HmacSHA256', parsed['algorithm']
+    assert_equal 'host date request-target digest v-c-merchant-id', parsed['headers']
+  end
+
   def test_stored_credential_cit_initial
     @options[:stored_credential] = stored_credential(:cardholder, :internet, :initial)
     response = stub_comms do
