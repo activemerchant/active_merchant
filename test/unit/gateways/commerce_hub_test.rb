@@ -65,6 +65,10 @@ class CommerceHubTest < Test::Unit::TestCase
     @post = {}
   end
 
+  def test_api_version
+    assert_equal 'v1', @gateway.fetch_version
+  end
+
   def test_successful_authorize_with_full_headers
     @options.merge!(
       headers_identifiers: {
@@ -522,6 +526,14 @@ class CommerceHubTest < Test::Unit::TestCase
       uuid_v4_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
       assert_match uuid_v4_regex, client_request_id, 'Client-Request-Id is not a valid UUIDv4'
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_endpoints
+    assert_equal '/payments/v1/charges', CommerceHubGateway::ENDPOINTS['sale']
+    assert_equal '/payments/v1/cancels', CommerceHubGateway::ENDPOINTS['void']
+    assert_equal '/payments/v1/refunds', CommerceHubGateway::ENDPOINTS['refund']
+    assert_equal '/payments-vas/v1/tokens', CommerceHubGateway::ENDPOINTS['vault']
+    assert_equal '/payments-vas/v1/accounts/verification', CommerceHubGateway::ENDPOINTS['verify']
   end
 
   private

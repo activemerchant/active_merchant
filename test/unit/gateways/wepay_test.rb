@@ -18,6 +18,10 @@ class WepayTest < Test::Unit::TestCase
     }
   end
 
+  def test_api_version
+    assert_equal 'v2', @gateway.fetch_version
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).at_most(3).returns(successful_capture_response)
 
@@ -176,6 +180,11 @@ class WepayTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_url
+    assert_equal 'https://wepayapi.com/v2', @gateway.live_url
+    assert_equal 'https://stage.wepayapi.com/v2', @gateway.test_url
   end
 
   private
