@@ -546,11 +546,16 @@ module ActiveMerchant # :nodoc:
         Digest::MD5.hexdigest(values.join + @options[:cipher_key])
       end
 
+      def sign_request_with_sha256(params)
+        sorted_params = sort_parameters(params)
+        Digest::SHA256.hexdigest(sorted_params.values.join + @options[:cipher_key])
+      end
+
       def post_data(action, params, reference_action)
         params.keys.each { |key| params[key] = params[key].to_s }
         params[:M] = @options[:merchant_id]
         params[:O] = request_action(action, reference_action)
-        params[:K] = sign_request(params)
+        params[:K] = @options[:use_sha256_signing] ? sign_request_with_sha256(params) : sign_request(params)
         params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
@@ -577,6 +582,32 @@ module ActiveMerchant # :nodoc:
           'Succeeded'
         else
           RESPONSE_MESSAGES[response['Z6']] || response['Z3'] || 'Unable to read error message'
+        end
+      end
+
+      def sort_parameters(parameters)
+        # Character type lookup hash for faster classification
+        char_type_lookup = {}.tap do |lookup|
+          ('0'..'9').each { |c| lookup[c] = 0 }  # Digits
+          ('A'..'Z').each { |c| lookup[c] = 1 }  # Uppercase letters
+          # All other chars default to 2
+        end
+
+        # Memoize sort keys to avoid recalculating for the same string
+        sort_key_cache = {}
+        generate_sort_key = lambda do |str|
+          str = str.to_s
+          sort_key_cache[str] ||= str.chars.map { |char| [char_type_lookup[char] || 2, char] }
+        end
+
+        sanitize_regex = /[<>"'()\\]/
+
+        # Sort keys and build output in one pass
+        parameters.keys.
+          sort_by(&generate_sort_key).
+          each_with_object({}) do |key, sorted_params|
+          value = parameters[key]
+          sorted_params[key] = value.is_a?(String) ? value.gsub(sanitize_regex, ' ').strip : value
         end
       end
     end
