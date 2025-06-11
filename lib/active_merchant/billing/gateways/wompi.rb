@@ -1,8 +1,10 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class WompiGateway < Gateway
-      self.test_url = 'https://sync.sandbox.wompi.co/v1'
-      self.live_url = 'https://sync.production.wompi.co/v1'
+      version 'v1'
+
+      self.test_url = "https://sync.sandbox.wompi.co/#{fetch_version}"
+      self.live_url = "https://sync.production.wompi.co/#{fetch_version}"
 
       self.supported_countries = ['CO']
       self.default_currency = 'COP'
