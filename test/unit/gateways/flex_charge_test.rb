@@ -1,6 +1,5 @@
 require 'test_helper'
 
-
 class FlexChargeTest < Test::Unit::TestCase
   include CommStub
 
@@ -132,7 +131,7 @@ class FlexChargeTest < Test::Unit::TestCase
 
   def test_endpoint_with_default_version
     action = :purchase
-    assert_equal "https://api-sandbox.flex-charge.com/v1/evaluate", @gateway.send(:url, action)
+    assert_equal 'https://api-sandbox.flex-charge.com/v1/evaluate', @gateway.send(:url, action)
   end
 
   def test_endpoint_with_version

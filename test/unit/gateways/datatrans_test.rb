@@ -356,7 +356,7 @@ class DatatransTest < Test::Unit::TestCase
 
     assert_equal @gateway.send(:parse,
                                '{"transactionId":"240418170233899207",acquirerAuthorizationCode":"170233"}'),
-                                  { 'successful' => false,
+                 { 'successful' => false,
                    'response' => {},
                    'errors' =>
                     ['Invalid JSON response received from Datatrans. Please contact them for support if you continue to receive this message.  (The raw response returned by the API was "{\\"transactionId\\":\\"240418170233899207\\",acquirerAuthorizationCode\\":\\"170233\\"}")'] }
