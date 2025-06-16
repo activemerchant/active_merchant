@@ -1893,4 +1893,45 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'resource_missing', error_params['code']
     assert_equal "No such payment_intent: '#{invalid_pi}'", error_params['message']
   end
+
+  def test_successful_multicapture
+    amount = 100_00
+    options = {
+      request_multicapture: 'if_available'
+    }
+    response = @gateway.authorize(amount, @visa_card, options)
+    assert_success response
+    assert_equal amount, response.params['amount']
+    assert_equal amount, response.params['amount_capturable']
+    assert_equal 'if_available', response.params.dig('payment_method_options', 'card', 'request_multicapture')
+    assert_equal 'requires_capture', response.params['status']
+    assert_equal 'available', response.params.dig('charges', 'data', 0, 'payment_method_details', 'card', 'multicapture', 'status')
+
+    capture_response = @gateway.capture(20_00, response.authorization, { final_capture: 'false' })
+    assert_success capture_response
+    assert_equal 'requires_capture', capture_response.params['status']
+    assert_equal 'succeeded', capture_response.params.dig('charges', 'data', 0, 'status')
+    assert_equal 'available', capture_response.params.dig('charges', 'data', 0, 'payment_method_details', 'card', 'multicapture', 'status')
+    assert_equal 100_00, capture_response.params['amount']
+    assert_equal 80_00, capture_response.params['amount_capturable']
+    assert_equal 20_00, capture_response.params['amount_received']
+
+    capture_response = @gateway.capture(50_00, response.authorization, { final_capture: 'true' })
+    assert_success capture_response
+    assert_equal 'succeeded', capture_response.params['status']
+    assert_equal 'succeeded', capture_response.params.dig('charges', 'data', 0, 'status')
+    assert_equal 'available', capture_response.params.dig('charges', 'data', 0, 'payment_method_details', 'card', 'multicapture', 'status')
+    assert_equal 100_00, capture_response.params['amount']
+    assert_equal 70_00, capture_response.params['amount_received']
+    assert_equal 0, capture_response.params['amount_capturable']
+  end
+
+  def test_multicapture_with_invalid_options
+    options = {
+      request_multicapture: 'invalid'
+    }
+    response = @gateway.authorize(@amount, @google_pay, options)
+    assert_success response
+    assert_equal 'unavailable', response.params.dig('charges', 'data', 0, 'payment_method_details', 'card', 'multicapture', 'status')
+  end
 end
