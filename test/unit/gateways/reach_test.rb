@@ -23,6 +23,10 @@ class ReachTest < Test::Unit::TestCase
     }
   end
 
+  def test_api_version
+    assert_equal 'v2.22', @gateway.fetch_version
+  end
+
   def test_required_merchant_id_and_secret
     error = assert_raises(ArgumentError) { ReachGateway.new }
     assert_equal 'Missing required parameter: merchant_id', error.message

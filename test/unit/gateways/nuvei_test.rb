@@ -101,6 +101,10 @@ class NuveiTest < Test::Unit::TestCase
     )
   end
 
+  def test_api_version
+    assert_equal 'v1', @gateway.fetch_version
+  end
+
   def test_calculate_checksum_authenticate
     expected_checksum = Digest::SHA256.hexdigest('test_merchant_idtest_merchant_site_idtest_client_request_idtest_time_stampSOMECREDENTIAL')
     assert_equal expected_checksum, @gateway.send(:calculate_checksum, @post, :authenticate)
@@ -586,6 +590,11 @@ class NuveiTest < Test::Unit::TestCase
         assert_equal 'Longsen', @credit_card.last_name
       end
     end.respond_with(successful_authorize_response)
+  end
+
+  def test_url
+    assert_equal 'https://secure.safecharge.com/ppp/api/v1', @gateway.live_url
+    assert_equal 'https://ppp-test.nuvei.com/ppp/api/v1', @gateway.test_url
   end
 
   private
