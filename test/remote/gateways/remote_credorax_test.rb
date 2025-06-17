@@ -714,7 +714,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert good_response = @gateway.purchase(@amount, @credit_card, @options.merge(processor: 'CREDORAX'))
     assert_success good_response
     assert_equal 'Succeeded', good_response.message
-    assert_equal 'CREDORAX', good_response.params['Z33']
+    assert_equal 'Shift4', good_response.params['Z33']
 
     # returns a failed response when an invalid processor parameter is sent
     assert bad_response = @gateway.purchase(@amount, @credit_card, @options.merge(processor: 'invalid'))
