@@ -1,6 +1,7 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class QuickbooksGateway < Gateway
+      version 'v4'
       self.test_url = 'https://sandbox.api.intuit.com'
       self.live_url = 'https://api.intuit.com'
 
@@ -10,9 +11,17 @@ module ActiveMerchant # :nodoc:
 
       self.homepage_url = 'http://payments.intuit.com'
       self.display_name = 'QuickBooks Payments'
-      BASE = '/quickbooks/v4/payments'
-      ENDPOINT = "#{BASE}/charges"
-      VOID_ENDPOINT = "#{BASE}/txn-requests"
+      def base_path
+        "/quickbooks/#{fetch_version}/payments"
+      end
+
+      def endpoint
+        "#{base_path}/charges"
+      end
+
+      def void_endpoint
+        "#{base_path}/txn-requests"
+      end
       REFRESH_URI = 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer'
 
       # https://developer.intuit.com/docs/0150_payments/0300_developer_guides/error_handling
@@ -67,8 +76,8 @@ module ActiveMerchant # :nodoc:
         add_charge_data(post, payment, options)
         post[:capture] = 'true'
 
-        response = commit(ENDPOINT, post)
-        check_token_response(response, ENDPOINT, post, options)
+        response = commit(endpoint, post)
+        check_token_response(response, endpoint, post, options)
       end
 
       def authorize(money, payment, options = {})
@@ -77,8 +86,8 @@ module ActiveMerchant # :nodoc:
         add_charge_data(post, payment, options)
         post[:capture] = 'false'
 
-        response = commit(ENDPOINT, post)
-        check_token_response(response, ENDPOINT, post, options)
+        response = commit(endpoint, post)
+        check_token_response(response, endpoint, post, options)
       end
 
       def capture(money, authorization, options = {})
@@ -363,15 +372,15 @@ module ActiveMerchant # :nodoc:
       end
 
       def refund_uri(authorization)
-        "#{ENDPOINT}/#{CGI.escape(authorization.to_s)}/refunds"
+        "#{endpoint}/#{CGI.escape(authorization.to_s)}/refunds"
       end
 
       def capture_uri(authorization)
-        "#{ENDPOINT}/#{CGI.escape(authorization.to_s)}/capture"
+        "#{endpoint}/#{CGI.escape(authorization.to_s)}/capture"
       end
 
       def void_uri(request_id)
-        "#{VOID_ENDPOINT}/#{CGI.escape(request_id.to_s)}/void"
+        "#{void_endpoint}/#{CGI.escape(request_id.to_s)}/void"
       end
     end
   end
