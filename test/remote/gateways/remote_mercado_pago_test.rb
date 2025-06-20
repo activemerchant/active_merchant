@@ -7,14 +7,14 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     @argentina_gateway = MercadoPagoGateway.new(fixtures(:mercado_pago_argentina))
     @colombian_gateway = MercadoPagoGateway.new(fixtures(:mercado_pago_colombia))
 
-    @amount = 500
-    @credit_card = credit_card('5031433215406351')
-    @colombian_card = credit_card('4013540682746260')
+    @amount = 2900
+    @credit_card = credit_card('4509953566233704', first_name: 'APRO')
+    @colombian_card = credit_card('4013540682746260', first_name: 'APRO')
     @elo_credit_card = credit_card(
       '5067268650517446',
       month: 10,
       year: exp_year,
-      first_name: 'John',
+      first_name: 'APRO',
       last_name: 'Smith',
       verification_value: '737'
     )
@@ -22,7 +22,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
       '6035227716427021',
       month: 10,
       year: exp_year,
-      first_name: 'John',
+      first_name: 'APRO',
       last_name: 'Smith',
       verification_value: '737'
     )
@@ -30,7 +30,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
       '5895627823453005',
       month: 10,
       year: exp_year,
-      first_name: 'John',
+      first_name: 'APRO',
       last_name: 'Smith',
       verification_value: '123'
     )
@@ -38,7 +38,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     @options = {
       billing_address: address,
       shipping_address: address,
-      email: 'test_user_1390220683@testuser.com',
+      email: 'test_user@email.com',
       description: 'Store Purchase'
     }
     @processing_options = {
@@ -97,7 +97,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_american_express
-    amex_card = credit_card('375365153556885', brand: 'american_express', verification_value: '1234')
+    amex_card = credit_card('375365153556885', brand: 'american_express', verification_value: '1234', first_name: 'APRO')
 
     response = @gateway.purchase(@amount, amex_card, @options)
     assert_success response
@@ -113,6 +113,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     tax_amount = amount * 0.19
     @options[:net_amount] = (amount - tax_amount) / 100
     @options[:taxes] = [{ value: tax_amount / 100, type: 'IVA' }]
+    @options[:email] = 'test_user_1390220683@testuser.com'
 
     response = @colombian_gateway.purchase(amount, @colombian_card, @options)
     assert_success response
@@ -126,7 +127,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_idempotency_key
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(idempotency_key: '0d5020ed-1af6-469c-ae06-c3bec19954bb'))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(idempotency_key: SecureRandom.uuid))
     assert_success response
     assert_equal 'accredited', response.message
   end
@@ -140,6 +141,13 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   def test_truncates_and_removes_accents_from_name
     formated_name = 'Jose Maria Lopez Garcia'
     credit_card = credit_card('5031433215406351', first_name: ':-) José María', last_name: '😀López García')
+    response = @gateway.purchase(@amount, credit_card, @options.merge({ payer: @payer }))
+    assert_equal response.responses.first.params['cardholder']['name'], formated_name
+  end
+
+  def test__removes_special_characters_from_name
+    formated_name = 'Jose Maria  SEYSES'
+    credit_card = credit_card('5031433215406351', first_name: 'José María |', last_name: '?SEYSES')
     response = @gateway.purchase(@amount, credit_card, @options.merge({ payer: @payer }))
     assert_equal response.responses.first.params['cardholder']['name'], formated_name
   end
@@ -171,9 +179,9 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_idempotency_key
-    response = @gateway.authorize(@amount, @credit_card, @options.merge(idempotency_key: '0d5020ed-1af6-469c-ae06-c3bec19954bb'))
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(idempotency_key: SecureRandom.uuid))
     assert_success response
-    assert_equal 'accredited', response.message
+    assert_equal 'pending_capture', response.message
   end
 
   def test_successful_authorize_and_capture_with_elo
@@ -280,7 +288,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_equal 'Not Found', response.message
+    assert_equal 'Si quieres conocer los recursos de la API que se encuentran disponibles visita el Sitio de Desarrolladores de MercadoLibre (https://developers.mercadopago.com)', response.message
   end
 
   def test_successful_void
@@ -326,26 +334,25 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = @gateway.verify(@credit_card, @options)
+    response = @gateway.verify(@credit_card, @options.merge(amount: @amount))
     assert_success response
     assert_match %r{pending_capture}, response.message
   end
 
   def test_successful_verify_with_idempotency_key
-    response = @gateway.verify(@credit_card, @options.merge(idempotency_key: '0d5020ed-1af6-469c-ae06-c3bec19954bb'))
+    response = @gateway.verify(@credit_card, @options.merge({ idempotency_key: SecureRandom.uuid, amount: @amount }))
     assert_success response
     assert_match %r{pending_capture}, response.message
   end
 
   def test_successful_verify_with_amount
-    @options[:amount] = 200
-    response = @gateway.verify(@credit_card, @options)
+    response = @gateway.verify(@credit_card, @options.merge!(amount: @amount))
     assert_success response
     assert_match %r{pending_capture}, response.message
   end
 
   def test_failed_verify
-    response = @gateway.verify(@declined_card, @options)
+    response = @gateway.verify(@declined_card, @options.merge!(amount: @amount))
     assert_failure response
     assert_match %r{cc_rejected_other_reason}, response.message
   end
@@ -393,7 +400,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     three_ds_cc = credit_card('5483928164574623', verification_value: '123', month: 11, year: 2025)
     @options[:execute_threed] = true
 
-    response = @gateway.purchase(290, three_ds_cc, @options)
+    response = @gateway.purchase(@amount, three_ds_cc, @options)
 
     assert_success response
     assert_equal 'pending_challenge', response.message
@@ -407,7 +414,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     @options[:execute_threed] = true
     @options[:three_ds_mode] = 'mandatory'
 
-    response = @gateway.purchase(290, three_ds_cc, @options)
+    response = @gateway.purchase(@amount, three_ds_cc, @options)
 
     assert_success response
     assert_equal 'pending_challenge', response.message

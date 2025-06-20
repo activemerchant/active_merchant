@@ -142,7 +142,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, card, order_id: 1, billing_address: address)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/Jose Garcia-Lopez de la Santa/, data)
+      assert_match(/Jose GarciaLopez de la Santa/, data)
       assert_no_match(/José/, data)
       assert_no_match(/García/, data)
     end.respond_with(successful_purchase_response)
@@ -160,7 +160,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, check, order_id: 1, billing_address: address)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/Jose Garcia-Lopez de la Santa/, data)
+      assert_match(/Jose GarciaLopez de la Santa/, data)
       assert_no_match(/José/, data)
       assert_no_match(/García/, data)
     end.respond_with(successful_purchase_response)
