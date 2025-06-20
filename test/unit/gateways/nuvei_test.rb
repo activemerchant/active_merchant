@@ -597,6 +597,16 @@ class NuveiTest < Test::Unit::TestCase
     assert_equal 'https://ppp-test.nuvei.com/ppp/api/v1', @gateway.test_url
   end
 
+  def test_capture_passes_order_id_as_client_unique_id
+    options = { order_id: '2233512890' }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.capture(@amount, 'some_auth', options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      assert_equal '2233512890', json_data['clientUniqueId']
+    end
+  end
+
   private
 
   def three_ds_assertions(payment_option_card)

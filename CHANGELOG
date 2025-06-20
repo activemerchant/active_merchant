@@ -178,6 +178,7 @@
 * Xpay/Sumup/Quickbooks: Normalize API_VERSION usage [aaqibrashidmir] #5495
 * Ebanx: Fix NoMethodError for address [almalee24] #5500
 * Vpos: Check for response under refund.response_code [almalee24] #5501
+* Nuvei: Map order_id to clientUniqueId field on capture transactions [aaqibrashidmir] #5498
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
