@@ -1,0 +1,72 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.sandbox.braintreegateway.com/merchants/X/client_token
+    body:
+      encoding: UTF-8
+      string: |
+        <?xml version="1.0" encoding="UTF-8"?>
+        <client-token>
+          <version type="integer">2</version>
+        </client-token>
+    headers:
+      Accept-Encoding:
+      - gzip
+      Accept:
+      - application/xml
+      User-Agent:
+      - Braintree Ruby Gem 4.22.0 (ActiveMerchant 1.137.0)
+      X-Apiversion:
+      - '6'
+      Content-Type:
+      - application/xml
+      Authorization:
+      - Basic <AUTH_DATA>
+  response:
+    status:
+      code: 201
+      message: Created
+    headers:
+      Date:
+      - Wed, 19 Mar 2025 16:34:14 GMT
+      Content-Type:
+      - application/xml
+      Content-Length:
+      - '1537'
+      Connection:
+      - keep-alive
+      Braintree-Version:
+      - '2016-10-07'
+      Vary:
+      - Braintree-Version
+      Cache-Control:
+      - no-cache, no-store
+      Pragma:
+      - no-cache
+      Content-Encoding:
+      - gzip
+      Strict-Transport-Security:
+      - max-age=63072000; includeSubdomains; preload
+      X-Frame-Options:
+      - DENY
+      X-Content-Type-Options:
+      - nosniff
+      Paypal-Debug-Id:
+      - f609632933124
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=GHGnwWanaAcTp8iK9O.EtCLUK6m1SW4CTg9k.6174Vc-1742402054-1.0.1.1-xQYGmxxVopXKiVgVKHqLnPDg9gkM_YLvYskBBrMlLUnWhYCasEDJ9i3HN1iZS1Z7Pi55ieNhtsWrLzpsTj_50b5mnYHb76jRM3mbE05LFZ8;
+        path=/; expires=Wed, 19-Mar-25 17:04:14 GMT; domain=.sandbox.braintreegateway.com;
+        HttpOnly; Secure; SameSite=None
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 922e604639dc31f8-MIA
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        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
+  recorded_at: Wed, 19 Mar 2025 16:34:14 GMT
+recorded_with: VCR 6.3.1
