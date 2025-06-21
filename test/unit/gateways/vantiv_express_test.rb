@@ -480,6 +480,68 @@ class VantivExpressTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_successful_purchase_with_level_2_data_fields
+    level_ii_options = {
+      sales_tax_amount: 850,
+      commercial_card_customer_code: 'PO123456',
+      ticket_number: 'INV789'
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(level_ii_options))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match "<SalesTaxAmount>#{level_ii_options[:sales_tax_amount]}</SalesTaxAmount>", data
+      assert_match "<CommercialCardCustomerCode>#{level_ii_options[:commercial_card_customer_code]}</CommercialCardCustomerCode>", data
+      assert_match "<TicketNumber>#{level_ii_options[:ticket_number]}</TicketNumber>", data
+      assert_match "<BillingName>#{@options[:billing_address][:name]}", data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_level_3_data_fields
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(level_3_data: level_3_data_fields))
+    end.check_request do |_endpoint, data, _headers|
+      # Header-level fields
+      assert_match "<MerchantVATRegistrationNumber>#{level_3_data_fields[:merchant_vat_registration_number]}</MerchantVATRegistrationNumber>", data
+      assert_match "<CustomerVATRegistrationNumber>#{level_3_data_fields[:customer_vat_registration_number]}</CustomerVATRegistrationNumber>", data
+      assert_match "<SummaryCommodityCode>#{level_3_data_fields[:summary_commodity_code]}</SummaryCommodityCode>", data
+      assert_match "<DiscountAmount>#{level_3_data_fields[:discount_amount]}</DiscountAmount>", data
+      assert_match "<FreightAmount>#{level_3_data_fields[:freight_amount]}</FreightAmount>", data
+      assert_match "<DutyAmount>#{level_3_data_fields[:duty_amount]}</DutyAmount>", data
+      assert_match "<DestinationZIPCode>#{level_3_data_fields[:destination_postal_code]}</DestinationZIPCode>", data
+      assert_match "<ShipFromZIPCode>#{level_3_data_fields[:ship_from_postal_code]}</ShipFromZIPCode>", data
+      assert_match "<DestinationCountryCode>#{level_3_data_fields[:destination_country_code]}</DestinationCountryCode>", data
+      assert_match "<UniqueVATInvoiceReferenceNumber>#{level_3_data_fields[:unique_vat_invoice_reference_number]}</UniqueVATInvoiceReferenceNumber>", data
+      assert_match "<OrderDate>#{level_3_data_fields[:order_date]}</OrderDate>", data
+      assert_match "<VATAmount>#{level_3_data_fields[:vat_amount]}</VATAmount>", data
+      assert_match "<VATRate>#{level_3_data_fields[:vat_rate]}</VATRate>", data
+      assert_match "<LineItemCount>#{level_3_data_fields[:line_items].size}</LineItemCount>", data
+      assert_match "<AlternateTaxAmount>#{level_3_data_fields[:alternate_tax_amount]}</AlternateTaxAmount>", data
+      assert_match "<NationalTaxAmount>#{level_3_data_fields[:national_tax_amount]}</NationalTaxAmount>", data
+
+      # Line item fields
+      level_3_data_fields[:line_items].each do |item|
+        assert_match "<ItemCommodityCode>#{item[:commodity_code]}</ItemCommodityCode>", data
+        assert_match "<ItemDescription>#{item[:description]}</ItemDescription>", data
+        assert_match "<ProductCode>#{item[:product_code]}</ProductCode>", data
+        assert_match "<Quantity>#{item[:quantity]}</Quantity>", data
+        assert_match "<UnitOfMeasure>#{item[:unit_measure]}</UnitOfMeasure>", data
+        assert_match "<UnitCost>#{item[:unit_price]}</UnitCost>", data
+        assert_match "<LineItemVATAmount>#{item[:tax_amount]}</LineItemVATAmount>", data
+        assert_match "<LineItemVATRate>#{item[:tax_rate]}</LineItemVATRate>", data
+        assert_match "<LineItemDiscountAmount>#{item[:discount_amount]}</LineItemDiscountAmount>", data
+        assert_match "<LineItemTotalAmount>#{item[:total_amount]}</LineItemTotalAmount>", data
+        assert_match "<AlternateTaxIdentifier>#{item[:alternate_tax_id]}</AlternateTaxIdentifier>", data
+        assert_match "<VATType>#{item[:vat_type]}</VATType>", data
+        assert_match '<DiscountCode>0</DiscountCode>', data
+        assert_match '<NetGrossCode>1</NetGrossCode>', data
+        assert_match '<DebitCreditCode>2</DebitCreditCode>', data
+        assert_match "<ExtendedItemAmount>#{item[:extended_item_amount]}</ExtendedItemAmount>", data
+        assert_match "<ItemDiscountRate>#{item[:item_discount_rate]}</ItemDiscountRate>", data
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def lodging_fields
@@ -506,6 +568,47 @@ class VantivExpressTest < Test::Unit::TestCase
       prestigious_property_code: 1,
       special_program_code: 3,
       charge_type: 1
+    }
+  end
+
+  def level_3_data_fields
+    {
+      merchant_vat_registration_number: '12345678',
+      customer_vat_registration_number: '0987654',
+      summary_commodity_code: '1234',
+      discount_amount: '12',
+      freight_amount: 500, # $5.00 shipping
+      duty_amount: 0,
+      destination_postal_code: '12345',
+      ship_from_postal_code: '54321',
+      destination_country_code: 'US',
+      unique_vat_invoice_reference_number: '098765345',
+      order_date: 20250910,
+      vat_amount: '12',
+      vat_rate: '12',
+      alternate_tax_amount: '234',
+      national_tax_amount: 850,
+      line_items: [
+        {
+          commodity_code: '1234567890',
+          product_code: 'WIDGET001',
+          description: 'Widget A',
+          quantity: 2,
+          unit_price: 4000,
+          unit_measure: '2',
+          total_amount: 8000,
+          tax_amount: 640,
+          tax_rate: '2',
+          discount_amount: '6',
+          alternate_tax_id: '1123',
+          vat_type: '1',
+          discount_code: 'NotSupported',
+          net_gross_code: 'ItemAmountIncludesTaxAmount',
+          extended_item_amount: '8',
+          debit_credit_code: 'ExtendedItemAmountIsDebit',
+          item_discount_rate: '1'
+        }
+      ]
     }
   end
 
