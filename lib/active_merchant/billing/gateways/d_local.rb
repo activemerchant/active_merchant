@@ -171,6 +171,7 @@ module ActiveMerchant # :nodoc:
           post[:card][:network_token] = card.number
           post[:card][:cryptogram] = card.payment_cryptogram
           post[:card][:eci] = card.eci
+          post[:card][:bin] = options[:issuer_identification_number] if options[:issuer_identification_number]
         else
           post[:card][:number] = card.number
           post[:card][:cvv] = card.verification_value
