@@ -523,6 +523,17 @@ class DLocalTest < Test::Unit::TestCase
     assert_equal 'U', @gateway.send('formatted_enrollment', 'U')
   end
 
+  def test_passes_issuer_identification_number_in_card_object
+    issuer_identification_number = 424242
+    credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    @options[:issuer_identification_number] = issuer_identification_number
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal issuer_identification_number, JSON.parse(data)['card']['bin']
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def pre_scrubbed
