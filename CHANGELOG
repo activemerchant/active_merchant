@@ -172,6 +172,8 @@
 * Rapyd: Fix error on billing address [jherrera] #5472
 * Nuvei: Map order_id to clientUniqueId field on refund/credit [jherrera] #5477
 * Update clean_emoji_emoticons_and_accent method [almalee24] #5485
+* Payflow: Send CAVV as xid if xid is not present [adarsh-spreedly] #5496
+* Credorax: Fixed request signature [mjdonga] #5486
 * Nuvei/Reach/Shift4: Normalize API_VERSION usage [sumit-sharmas] #5493
 
 == Version 1.137.0 (August 2, 2024)
