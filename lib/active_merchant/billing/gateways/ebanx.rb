@@ -201,8 +201,10 @@ module ActiveMerchant # :nodoc:
 
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
-          post[:payment][:address] = address[:address1].split[1..-1].join(' ') if address[:address1]
-          post[:payment][:street_number] = address[:address1].split.first if address[:address1]
+          if address[:address1].present?
+            post[:payment][:address] = address[:address1].split[1..-1].join(' ')
+            post[:payment][:street_number] = address[:address1].split.first
+          end
           post[:payment][:city] = address[:city]
           post[:payment][:state] = address[:state]
           post[:payment][:zipcode] = address[:zip]

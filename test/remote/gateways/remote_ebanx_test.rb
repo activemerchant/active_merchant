@@ -47,6 +47,17 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_equal 'Accepted', response.message
   end
 
+  def test_successful_purchase_with_nil_address
+    @options[:billing_address][:address1] = ''
+    @options[:billing_address][:city] = ''
+    @options[:billing_address][:state] = ''
+    @options[:billing_address][:zip] = ''
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Field payment.zipcode is required', response.message
+  end
+
   def test_successful_purchase_hipercard
     response = @gateway.purchase(@amount, @hiper_card, @options)
     assert_success response
