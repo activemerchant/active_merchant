@@ -63,6 +63,31 @@ class RemotePaysafeTest < Test::Unit::TestCase
         version: '1.0.2'
       }
     }
+
+    @google_pay = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'AgAAAAAABk4DWZ4C28yUQAAAAAA=',
+      source: :google_pay,
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    )
+
+    @apple_pay = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'AMwBRjPWDnAgAA7Rls7mAoABFA==',
+      source: :apple_pay,
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    )
+
     @airline_details = {
       airline_travel_details: {
         passenger_name: 'Joe Smith',
@@ -108,6 +133,22 @@ class RemotePaysafeTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+    assert_equal 0, response.params['availableToSettle']
+    assert_not_nil response.params['authCode']
+  end
+
+  def test_successful_purchase_with_google_pay
+    response = @gateway.purchase(@amount, @google_pay, @options)
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+    assert_equal 0, response.params['availableToSettle']
+    assert_not_nil response.params['authCode']
+  end
+
+  def test_successful_purchase_with_apple_pay
+    response = @gateway.purchase(@amount, @apple_pay, @options)
     assert_success response
     assert_equal 'COMPLETED', response.message
     assert_equal 0, response.params['availableToSettle']

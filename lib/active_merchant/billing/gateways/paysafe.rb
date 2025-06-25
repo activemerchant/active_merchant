@@ -12,6 +12,12 @@ module ActiveMerchant # :nodoc:
       self.homepage_url = 'https://www.paysafe.com/'
       self.display_name = 'Paysafe'
 
+      NETWORK_TOKENIZATION_CARD_SOURCE = {
+        'apple_pay' => 'APPLE_PAY',
+        'google_pay' => 'GOOGLE_PAY',
+        'network_token' => 'NETWORK_TOKEN'
+      }
+
       def initialize(options = {})
         requires!(options, :username, :password, :account_id)
         super
@@ -59,7 +65,7 @@ module ActiveMerchant # :nodoc:
       def credit(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
-        add_payment(post, payment)
+        add_payment_method(post, payment)
         add_customer_data(post, payment, options) unless payment.is_a?(String)
         add_merchant_details(post, options)
         add_billing_address(post, options)
@@ -70,7 +76,7 @@ module ActiveMerchant # :nodoc:
       # This is a '$0 auth' done at a specific verification endpoint at the gateway
       def verify(payment, options = {})
         post = {}
-        add_payment(post, payment)
+        add_payment_method(post, payment)
         add_billing_address(post, options)
         add_customer_data(post, payment, options) unless payment.is_a?(String)
 
@@ -92,7 +98,12 @@ module ActiveMerchant # :nodoc:
           post[:billingAddressId] = options[:billing_address_id] if options[:billing_address_id]
           post[:defaultCardIndicator] = normalize(options[:default_card_indicator]) if options[:default_card_indicator]
         else
-          add_payment(post, payment)
+          if payment.is_a?(NetworkTokenizationCreditCard)
+            add_card_details(post, payment)
+          else
+            add_payment_method(post, payment)
+          end
+
           add_address_for_vaulting(post, options)
           add_profile_data(post, payment, options)
           add_store_data(post, payment, options)
@@ -122,7 +133,7 @@ module ActiveMerchant # :nodoc:
 
       def add_auth_purchase_params(post, money, payment, options)
         add_invoice(post, money, options)
-        add_payment(post, payment)
+        add_payment_method(post, payment)
         add_billing_address(post, options)
         add_merchant_details(post, options)
         add_customer_data(post, payment, options) unless payment.is_a?(String)
@@ -198,17 +209,32 @@ module ActiveMerchant # :nodoc:
         post[:amount] = money
       end
 
-      def add_payment(post, payment)
-        if payment.is_a?(String)
-          post[:card] = {}
-          post[:card][:paymentToken] = get_pm_from_store_auth(payment)
-        else
-          post[:card] = { cardExpiry: {} }
-          post[:card][:cardNum] = payment.number
-          post[:card][:cardExpiry][:month] = payment.month
-          post[:card][:cardExpiry][:year] = payment.year
-          post[:card][:cvv] = payment.verification_value
+      def add_payment_method(post, payment_method)
+        post[:card] = {}
+        case payment_method
+        when NetworkTokenizationCreditCard
+          post[:card][:tokenType] = NETWORK_TOKENIZATION_CARD_SOURCE[payment_method.source.to_s]
+          post[:card][:networkToken] = {
+            token: payment_method.number,
+            cryptogram: payment_method.payment_cryptogram,
+            expiry: {
+              month: payment_method.month,
+              year: payment_method.year
+            }
+          }
+        when String
+          post[:card][:paymentToken] = get_pm_from_store_auth(payment_method)
+        when CreditCard
+          add_card_details(post, payment_method)
         end
+      end
+
+      def add_card_details(post, payment_method)
+        post[:card] = { cardExpiry: {} }
+        post[:card][:cardNum] = payment_method.number
+        post[:card][:cardExpiry][:month] = payment_method.month
+        post[:card][:cardExpiry][:year] = payment_method.year
+        post[:card][:cvv] = payment_method.verification_value
       end
 
       def add_merchant_details(post, options)
