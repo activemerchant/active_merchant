@@ -9,6 +9,28 @@ class PaysafeTest < Test::Unit::TestCase
     @mastercard = credit_card('5454545454545454', brand: 'master')
     @amount = 100
 
+    @google_pay_card = NetworkTokenizationCreditCard.new(
+      number: '5200828282828210',
+      month: '12',
+      year: DateTime.now.year + 1,
+      first_name: 'Jane',
+      last_name: 'Doe',
+      eci: '05',
+      payment_cryptogram: 'EEFFGGHH',
+      source: :google_pay
+    )
+
+    @apple_pay_card = NetworkTokenizationCreditCard.new(
+      number: '4007000000027',
+      month: '09',
+      year: DateTime.now.year + 1,
+      first_name: 'Longbob',
+      last_name: 'Longsen',
+      eci: '05',
+      payment_cryptogram: 'AABBCCDD',
+      source: :apple_pay
+    )
+
     @options = {
       billing_address: address,
       merchant_descriptor: {
@@ -336,6 +358,46 @@ class PaysafeTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
+  end
+
+  def test_purchase_with_google_pay
+    options = {
+      billing_address: {
+        address1: 'Test Address 1',
+        address2: 'Test Address 2',
+        city: 'New York',
+        state: 'NY',
+        zip: '10001'
+      }
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @google_pay_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"tokenType":"GOOGLE_PAY"/, data)
+      assert_match(/"token":"#{@google_pay_card.number}"/, data)
+      assert_match(/"cryptogram":"#{@google_pay_card.payment_cryptogram}"/, data)
+      assert_match(/"expiry":{"month":#{@google_pay_card.month},"year":#{@google_pay_card.year}}/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_apple_pay
+    options = {
+      billing_address: {
+        address1: 'Test Address 1',
+        address2: 'Test Address 2',
+        city: 'New York',
+        state: 'NY',
+        zip: '10001'
+      }
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @apple_pay_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"tokenType":"APPLE_PAY"/, data)
+      assert_match(/"token":"#{@apple_pay_card.number}"/, data)
+      assert_match(/"cryptogram":"#{@apple_pay_card.payment_cryptogram}"/, data)
+      assert_match(/"expiry":{"month":#{@apple_pay_card.month},"year":#{@apple_pay_card.year}}/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_scrub
