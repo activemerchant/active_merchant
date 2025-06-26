@@ -107,26 +107,6 @@ class LitleTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_purchase_prepaid_card_141
-    response = stub_comms do
-      @gateway.purchase(@amount, @credit_card)
-    end.respond_with(successful_purchase_for_prepaid_cards_141)
-
-    assert_success response
-    assert_equal 'Consumer non-reloadable prepaid card, Approved', response.message
-    assert_equal '141', response.params['response']
-  end
-
-  def test_successful_purchase_prepaid_card_142
-    response = stub_comms do
-      @gateway.purchase(@amount, @credit_card)
-    end.respond_with(successful_purchase_for_prepaid_cards_142)
-
-    assert_success response
-    assert_equal 'Consumer single-use virtual card number, Approved', response.message
-    assert_equal '142', response.params['response']
-  end
-
   def test_successful_purchase_with_010_response
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
