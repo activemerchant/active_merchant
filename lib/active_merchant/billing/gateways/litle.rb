@@ -561,7 +561,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def success_from(kind, parsed)
-        return %w(000 001 010 136 141 142 470 473).any?(parsed[:response]) unless kind == :registerToken
+        return %w(000 001 010 136 470 473).any?(parsed[:response]) unless kind == :registerToken
 
         %w(000 801 802).include?(parsed[:response])
       end
