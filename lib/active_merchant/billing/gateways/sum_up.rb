@@ -1,7 +1,8 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class SumUpGateway < Gateway
-      self.live_url = 'https://api.sumup.com/v0.1/'
+      version 'v0.1'
+      self.live_url = "https://api.sumup.com/#{fetch_version}/"
 
       self.supported_countries = %w(AT BE BG BR CH CL CO CY CZ DE DK EE ES FI FR
                                     GB GR HR HU IE IT LT LU LV MT NL NO PL PT RO

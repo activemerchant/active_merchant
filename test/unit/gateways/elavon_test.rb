@@ -289,6 +289,15 @@ class ElavonTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_verify_with_ssl_email
+    response = stub_comms do
+                 @gateway.verify(@credit_card, @options.merge(email: 'abc@example.com'))
+               end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_email>abc%40example.com<\/ssl_email>/, data)
+    end.respond_with(successful_authorization_response)
+    assert_success response
+  end
+
   def test_unsuccessful_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
