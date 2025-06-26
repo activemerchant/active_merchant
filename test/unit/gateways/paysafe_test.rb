@@ -263,6 +263,28 @@ class PaysafeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_store_with_customer_id
+    options = {
+      profile_id: '123456',
+      account_id: 'account_id',
+      nickname: 'nickname',
+      billing_address_id: '3456',
+      default_card_indicator: 'true'
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"cardNum":"#{@credit_card.number}"/, data)
+      assert_match(/"accountId":"#{options[:account_id]}"/, data)
+      assert_match(/"nickName":"#{options[:nickname]}"/, data)
+      assert_match(/"holderName":"#{@credit_card.name}"/, data)
+      assert_match(/"billingAddressId":"#{options[:billing_address_id]}"/, data)
+      assert_match(/"defaultCardIndicator":#{options[:default_card_indicator]}/, data)
+    end.respond_with(successful_store_response)
+
+    assert_success response
+  end
+
   def test_successful_credit
     stub_comms(@gateway, :ssl_request) do
       @gateway.credit(100, @credit_card, @options.merge({ email: 'profile@memail.com', customer_id: SecureRandom.hex(16) }))
