@@ -12,6 +12,7 @@ module ActiveMerchant # :nodoc:
       CREATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email save_payment_method]
       CONFIRM_INTENT_ATTRIBUTES = %i[receipt_email return_url save_payment_method setup_future_usage off_session]
       UPDATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email setup_future_usage]
+      ALLOWED_MULTICAPTURE_OPTIONS = %w[if_available never].freeze
       DIGITAL_WALLETS = {
         apple_pay: 'apple_pay',
         google_pay: 'google_pay_dpan'
@@ -59,6 +60,7 @@ module ActiveMerchant # :nodoc:
             add_aft_sender_details(post, options)
             add_request_extended_authorization(post, options)
             add_statement_descriptor_suffix_kanji_kana(post, options)
+            add_request_multicapture(post, options)
             post[:expand] = ['charges.data.balance_transaction']
 
             CREATE_INTENT_ATTRIBUTES.each do |attribute|
@@ -224,6 +226,7 @@ module ActiveMerchant # :nodoc:
           post[:transfer_data][:amount] = options[:transfer_amount]
         end
         post[:application_fee_amount] = options[:application_fee] if options[:application_fee]
+        post[:final_capture] = normalize(options[:final_capture]) unless options[:final_capture].nil?
         options = format_idempotency_key(options, 'capture')
         commit(:post, "payment_intents/#{intent_id}/capture", post, options)
       end
@@ -413,6 +416,15 @@ module ActiveMerchant # :nodoc:
         post[:payment_method_options][:card] ||= {}
         post[:payment_method_options][:card][:statement_descriptor_suffix_kanji] = options[:statement_descriptor_suffix_kanji] if options[:statement_descriptor_suffix_kanji]
         post[:payment_method_options][:card][:statement_descriptor_suffix_kana] = options[:statement_descriptor_suffix_kana] if options[:statement_descriptor_suffix_kana]
+      end
+
+      def add_request_multicapture(post, options)
+        request_multicapture = options[:request_multicapture]
+        return unless ALLOWED_MULTICAPTURE_OPTIONS.include?(request_multicapture)
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:request_multicapture] = request_multicapture
       end
 
       def add_level_three(post, options = {})

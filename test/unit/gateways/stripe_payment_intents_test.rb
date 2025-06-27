@@ -110,6 +110,22 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal 'Payment complete.', capture.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
   end
 
+  def test_successful_create_and_capture_intent_with_multicapture
+    options = @options.merge(request_multicapture: 'if_available')
+    @gateway.expects(:ssl_request).twice.returns(successful_create_intent_response_with_multicapture_available, successful_capture_with_multicapture)
+    assert create = @gateway.create_intent(@amount, @visa_token, options)
+    assert_success create
+    assert_equal 'requires_capture', create.params['status']
+
+    options = @options.merge(final_capture: 'true')
+    assert capture = @gateway.capture(@amount, create.params['id'], options)
+    assert_success capture
+    assert_equal 'succeeded', capture.params['status']
+    assert_equal 'Payment complete.', capture.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
+    assert_equal 'available', capture.params.dig('charges', 'data')[0].dig('payment_method_details', 'card', 'multicapture', 'status')
+    assert_equal 0, capture.params['amount_capturable']
+  end
+
   def test_successful_create_and_capture_intent_with_network_token
     options = @options.merge(capture_method: 'manual', confirm: true)
     @gateway.expects(:ssl_request).twice.returns(successful_create_intent_manual_capture_response_with_network_token_fields, successful_manual_capture_of_payment_intent_response_with_network_token_fields)
@@ -738,6 +754,50 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
       assert_match('payment_method_options[card][network_token][electronic_commerce_indicator]=05', data)
       assert_match('payment_method_data[billing_details][address][line1]=456+My+Street', data)
     end.respond_with(successful_create_intent_response_with_apple_pay_and_billing_address)
+  end
+
+  def test_authorize_with_request_multicapture
+    options = {
+      request_multicapture: 'if_available'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][request_multicapture]=if_available', data)
+    end.respond_with(successful_authorize_with_multicapture)
+  end
+
+  def test_purchase_with_request_multicapture
+    options = {
+      request_multicapture: 'if_available'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_method_options[card][request_multicapture]=if_available', data)
+    end.respond_with(successful_purchase_with_multicapture)
+  end
+
+  def test_capture_with_final_capture_true
+    options = {
+      final_capture: 'true'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.capture(@amount, 'pi_1234567890', options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('final_capture=true', data)
+    end.respond_with(successful_capture_with_multicapture)
+  end
+
+  def test_capture_with_final_capture_false
+    options = {
+      final_capture: 'false'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.capture(@amount, 'pi_1234567890', options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('final_capture=false', data)
+    end.respond_with(successful_capture_with_multicapture)
   end
 
   def test_authorize_with_request_extended_authorization
@@ -2577,6 +2637,465 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
           "card"
         ],
         "status": "succeeded"
+      }
+    RESPONSE
+  end
+
+  def successful_create_intent_response_with_multicapture_available
+    <<-RESPONSE
+      {
+        "id": "pi_3Rb1nsAWOtgoysog0dvaUwZM",
+        "object": "payment_intent",
+        "amount": 10000,
+        "amount_capturable": 10000,
+        "amount_details": {
+          "tip": {}
+        },
+        "amount_received": 0,
+        "application": null,
+        "application_fee_amount": null,
+        "automatic_payment_methods": null,
+        "canceled_at": null,
+        "cancellation_reason": null,
+        "capture_method": "manual",
+        "charges": {
+          "object": "list",
+          "data": [
+            {
+              "id": "ch_3Rb1nsAWOtgoysog08CilrdM",
+              "object": "charge",
+              "amount": 10000,
+              "amount_captured": 0,
+              "amount_refunded": 0,
+              "application": null,
+              "application_fee": null,
+              "application_fee_amount": null,
+              "balance_transaction": null,
+              "billing_details": {
+                "address": {
+                  "city": null,
+                  "country": null,
+                  "line1": null,
+                  "line2": null,
+                  "postal_code": null,
+                  "state": null
+                },
+                "email": null,
+                "name": "Longbob Longsen",
+                "phone": null,
+                "tax_id": null
+              },
+              "paid": true,
+              "payment_intent": "pi_3Rb1nsAWOtgoysog0dvaUwZM",
+              "payment_method": "pm_1Rb1nqAWOtgoysoge0bkN5Zw",
+              "payment_method_details": {
+                "card": {
+                  "amount_authorized": 10000,
+                  "incremental_authorization": {
+                    "status": "unavailable"
+                  },
+                  "installments": null,
+                  "last4": "4242",
+                  "mandate": null,
+                  "moto": null,
+                  "multicapture": {
+                    "status": "available"
+                  },
+                  "network": "visa",
+                  "network_token": {
+                    "used": false
+                  },
+                  "network_transaction_id": "104102978678771",
+                  "overcapture": {
+                    "maximum_amount_capturable": 10000,
+                    "status": "unavailable"
+                  },
+                  "regulated_status": "unregulated",
+                  "three_d_secure": null,
+                  "wallet": null
+                },
+                "type": "card"
+              },
+              "review": null,
+              "shipping": null,
+              "source": null,
+              "source_transfer": null,
+              "statement_descriptor": null,
+              "statement_descriptor_suffix": null,
+              "status": "succeeded",
+              "transfer_data": null,
+              "transfer_group": null
+            }
+          ],
+          "has_more": false,
+          "total_count": 1,
+          "url": "/v1/charges?payment_intent=pi_3Rb1nsAWOtgoysog0dvaUwZM"
+        },
+        "payment_method_types": [
+          "card"
+        ],
+        "processing": null,
+        "receipt_email": null,
+        "review": null,
+        "setup_future_usage": null,
+        "shipping": null,
+        "source": null,
+        "statement_descriptor": null,
+        "statement_descriptor_suffix": null,
+        "status": "requires_capture",
+        "transfer_data": null,
+        "transfer_group": null
+      }
+    RESPONSE
+  end
+
+  def successful_authorize_with_multicapture
+    <<-RESPONSE
+      {
+        "id": "pi_3Rb1VwAWOtgoysog2481pBrD",
+        "object": "payment_intent",
+        "amount": 10000,
+        "amount_capturable": 10000,
+        "amount_details": {
+          "tip": {}
+        },
+        "amount_received": 0,
+        "application": null,
+        "application_fee_amount": null,
+        "automatic_payment_methods": null,
+        "canceled_at": null,
+        "cancellation_reason": null,
+        "capture_method": "manual",
+        "charges": {
+          "object": "list",
+          "data": [
+            {
+              "id": "ch_3Rb1VwAWOtgoysog2Ep4rmpY",
+              "object": "charge",
+              "amount": 10000,
+              "amount_captured": 0,
+              "amount_refunded": 0,
+              "application": null,
+              "application_fee": null,
+              "application_fee_amount": null,
+              "balance_transaction": null,
+              "outcome": {
+                "advice_code": null,
+                "network_advice_code": null,
+                "network_decline_code": null,
+                "network_status": "approved_by_network",
+                "reason": null,
+                "risk_level": "normal",
+                "risk_score": 55,
+                "seller_message": "Payment complete.",
+                "type": "authorized"
+              },
+              "paid": true,
+              "payment_intent": "pi_3Rb1VwAWOtgoysog2481pBrD",
+              "payment_method": "pm_1Rb1VvAWOtgoysog2AOdUGem",
+              "payment_method_details": {
+                "card": {
+                  "amount_authorized": 10000,
+                  "authorization_code": "003166",
+                  "brand": "visa",
+                  "capture_before": 1750779212,
+                  "checks": {
+                    "address_line1_check": null,
+                    "address_postal_code_check": null,
+                    "cvc_check": "pass"
+                  },
+                  "country": "US",
+                  "ds_transaction_id": null,
+                  "exp_month": 10,
+                  "exp_year": 2028,
+                  "extended_authorization": {
+                    "status": "disabled"
+                  },
+                  "fingerprint": "hfaVNMiXc0dYSiC5",
+                  "funding": "credit",
+                  "funding_transaction": {
+                    "status": "disabled"
+                  },
+                  "incremental_authorization": {
+                    "status": "unavailable"
+                  },
+                  "installments": null,
+                  "last4": "4242",
+                  "mandate": null,
+                  "moto": null,
+                  "multicapture": {
+                    "status": "available"
+                  },
+                  "network": "visa",
+                  "network_token": {
+                    "used": false
+                  },
+                  "network_transaction_id": "104102978678771",
+                  "overcapture": {
+                    "maximum_amount_capturable": 10000,
+                    "status": "unavailable"
+                  },
+                  "regulated_status": "unregulated",
+                  "three_d_secure": null,
+                  "wallet": null
+                },
+                "type": "card"
+              },
+              "radar_options": {},
+              "receipt_email": null,
+              "receipt_number": null,
+              "receipt_url": "https://pay.stripe.com/receipts/payment/CAcaFwoVYWNjdF8xNjBEWDZBV090Z295c29nKMyVxsIGMgZ1PBe7O-A6LBYEzhCejk8CZJK57UfReT_Zmu1VQDShC5Mrp1UobT9NE30uyZJMpbNt2_J5",
+              "refunded": false,
+              "refunds": {
+                "object": "list",
+                "data": [],
+                "has_more": false,
+                "total_count": 0,
+                "url": "/v1/charges/ch_3Rb1VwAWOtgoysog2Ep4rmpY/refunds"
+              },
+            }
+          ],
+        },
+        "payment_method": "pm_1Rb1VvAWOtgoysog2AOdUGem",
+        "payment_method_configuration_details": null,
+        "payment_method_options": {
+          "card": {
+            "installments": null,
+            "mandate_options": null,
+            "network": null,
+            "request_multicapture": "if_available",
+            "request_three_d_secure": "automatic"
+          }
+        },
+        "payment_method_types": [
+          "card"
+        ]
+      }
+    RESPONSE
+  end
+
+  def successful_purchase_with_multicapture
+    <<-RESPONSE
+      {
+        "id": "pi_3Rb1loAWOtgoysog02rdsVcU",
+        "object": "payment_intent",
+        "amount": 10000,
+        "amount_capturable": 0,
+        "amount_details": {
+          "tip": {}
+        },
+        "amount_received": 10000,
+        "application": null,
+        "application_fee_amount": null,
+        "automatic_payment_methods": null,
+        "canceled_at": null,
+        "cancellation_reason": null,
+        "capture_method": "automatic",
+        "charges": {
+          "object": "list",
+          "data": [
+            {
+              "id": "ch_3Rb1loAWOtgoysog0bmLUJIk",
+              "object": "charge",
+              "amount": 10000,
+              "amount_captured": 10000,
+              "amount_refunded": 0,
+              "application": null,
+              "application_fee": null,
+              "application_fee_amount": null,
+              "balance_transaction": {
+                "fee_details": [
+                  {
+                    "amount": 320,
+                    "application": null,
+                    "currency": "usd",
+                    "description": "Stripe processing fees",
+                    "type": "stripe_fee"
+                  }
+                ],
+                "net": 9680,
+                "reporting_category": "charge",
+                "source": "ch_3Rb1loAWOtgoysog0bmLUJIk",
+                "status": "pending",
+                "type": "charge"
+              },
+              "billing_details": {
+                "address": {
+                  "city": null,
+                  "country": null,
+                  "line1": null,
+                  "line2": null,
+                  "postal_code": null,
+                  "state": null
+                },
+                "email": null,
+                "name": "Longbob Longsen",
+                "phone": null,
+                "tax_id": null
+              },
+              "outcome": {
+                "advice_code": null,
+                "network_advice_code": null,
+                "network_decline_code": null,
+                "network_status": "approved_by_network",
+                "reason": null,
+                "risk_level": "normal",
+                "risk_score": 28,
+                "seller_message": "Payment complete.",
+                "type": "authorized"
+              },
+              "paid": true,
+              "payment_intent": "pi_3Rb1loAWOtgoysog02rdsVcU",
+              "payment_method": "pm_1Rb1lmAWOtgoysogAHW5pwnb",
+              "payment_method_details": {
+                "card": {
+                  "amount_authorized": 10000,
+                  "authorization_code": "868748",
+                  "last4": "4242",
+                  "multicapture": {
+                    "status": "available"
+                  },
+                  "network": "visa",
+                  "network_token": {
+                    "used": false
+                  },
+                  "network_transaction_id": "104102978678771",
+                  "overcapture": {
+                    "maximum_amount_capturable": 10000,
+                    "status": "unavailable"
+                  },
+                  "regulated_status": "unregulated",
+                  "three_d_secure": null,
+                  "wallet": null
+                },
+                "type": "card"
+              },
+            }
+          ],
+          "has_more": false,
+          "total_count": 1,
+          "url": "/v1/charges?payment_intent=pi_3Rb1loAWOtgoysog02rdsVcU"
+        },
+        "payment_method_types": [
+          "card"
+        ],
+        "processing": null,
+        "receipt_email": null,
+        "review": null,
+        "setup_future_usage": null,
+        "shipping": null,
+        "source": null,
+        "statement_descriptor": null,
+        "statement_descriptor_suffix": null,
+        "status": "succeeded",
+        "transfer_data": null,
+        "transfer_group": null
+      }
+    RESPONSE
+  end
+
+  def successful_capture_with_multicapture
+    <<-RESPONSE
+      {
+        "id": "pi_3Rb1nsAWOtgoysog0dvaUwZM",
+        "object": "payment_intent",
+        "amount": 10000,
+        "amount_capturable": 0,
+        "amount_details": {
+          "tip": {}
+        },
+        "amount_received": 7000,
+        "application": null,
+        "application_fee_amount": null,
+        "automatic_payment_methods": null,
+        "canceled_at": null,
+        "cancellation_reason": null,
+        "capture_method": "manual",
+        "charges": {
+          "object": "list",
+          "data": [
+            {
+              "id": "ch_3Rb1nsAWOtgoysog08CilrdM",
+              "object": "charge",
+              "amount": 10000,
+              "amount_captured": 7000,
+              "amount_refunded": 0,
+              "application": null,
+              "application_fee": null,
+              "application_fee_amount": null,
+              "balance_transaction": "txn_1Rb1nwAWOtgoysogjpraTxI5",
+              "billing_details": {
+                "address": {
+                  "city": null,
+                  "country": null,
+                  "line1": null,
+                  "line2": null,
+                  "postal_code": null,
+                  "state": null
+                },
+                "email": null,
+                "name": "Longbob Longsen",
+                "phone": null,
+                "tax_id": null
+              },
+              "calculated_statement_descriptor": "SPREEDLY",
+              "captured": true,
+              "outcome": {
+                "advice_code": null,
+                "network_advice_code": null,
+                "network_decline_code": null,
+                "network_status": "approved_by_network",
+                "reason": null,
+                "risk_level": "normal",
+                "risk_score": 11,
+                "seller_message": "Payment complete.",
+                "type": "authorized"
+              },
+              "paid": true,
+              "payment_intent": "pi_3Rb1nsAWOtgoysog0dvaUwZM",
+              "payment_method": "pm_1Rb1nqAWOtgoysoge0bkN5Zw",
+              "payment_method_details": {
+                "card": {
+                  "amount_authorized": 10000,
+                  "multicapture": {
+                    "status": "available"
+                  },
+                  "network": "visa",
+                  "network_token": {
+                    "used": false
+                  },
+                  "network_transaction_id": "104102978678771",
+                  "overcapture": {
+                    "maximum_amount_capturable": 10000,
+                    "status": "unavailable"
+                  },
+                  "regulated_status": "unregulated",
+                  "three_d_secure": null,
+                  "wallet": null
+                },
+                "type": "card"
+              },
+              "status": "succeeded",
+              "transfer_data": null,
+              "transfer_group": null
+            }
+          ],
+          "has_more": false,
+          "total_count": 1,
+          "url": "/v1/charges?payment_intent=pi_3Rb1nsAWOtgoysog0dvaUwZM"
+        },
+        "payment_method_options": {
+          "card": {
+            "installments": null,
+            "mandate_options": null,
+            "network": null,
+            "request_multicapture": "if_available",
+            "request_three_d_secure": "automatic"
+          }
+        },
+        "status": "succeeded",
+        "transfer_data": null,
+        "transfer_group": null
       }
     RESPONSE
   end
