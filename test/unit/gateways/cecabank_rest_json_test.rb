@@ -320,6 +320,51 @@ class CecabankJsonTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_finrec_formatting_with_and_without_recurring_end_date_json
+    amount = 100
+    credit_card = credit_card('4507670001000009', { month: 12, year: 2025, verification_value: '989' })
+    options = {
+      order_id: '1',
+      recurring_end_date: '20251231',
+      recurring_frequency: '1',
+      stored_credential: {
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(amount, credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      json = JSON.parse(data)
+      params = JSON.parse(Base64.decode64(json['parametros']))
+      assert_equal '20251231', params['finRec'], 'finRec should match provided yyyymmdd recurring_end_date'
+    end.respond_with(successful_json_purchase_response)
+
+    card = credit_card('4507670001000009', { month: 2, year: 2024, verification_value: '989' })
+    expected_finrec = '20240229'
+    options = {
+      order_id: '1',
+      recurring_frequency: '1',
+      stored_credential: {
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(amount, card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      json = JSON.parse(data)
+      params = JSON.parse(Base64.decode64(json['parametros']))
+      assert_equal expected_finrec, params['finRec'], 'finRec should be card expiry as yyyymmdd last day'
+    end.respond_with(successful_json_purchase_response)
+  end
+
+  def successful_json_purchase_response
+    {
+      'parametros' => Base64.strict_encode64({ codAut: '123', numAut: '456', referencia: '789' }.to_json)
+    }.to_json
+  end
+
   private
 
   def decrypt_sensitive_fields(options, data)
