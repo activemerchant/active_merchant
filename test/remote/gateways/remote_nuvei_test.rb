@@ -508,6 +508,16 @@ class RemoteNuveiTest < Test::Unit::TestCase
     assert_match 'APPROVED', response.message
   end
 
+  def test_capture_sends_order_id_as_client_unique_id
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    capture_response = @gateway.capture(@amount, response.authorization, @options.merge(order_id: '2233512890'))
+    assert_success capture_response
+    assert_equal '2233512890', capture_response.params['clientUniqueId']
+    assert_success capture_response
+    assert_match 'APPROVED', capture_response.message
+  end
+
   def round_down(value, decimals = 1)
     value = value.to_f / 2
     factor = 10**decimals
