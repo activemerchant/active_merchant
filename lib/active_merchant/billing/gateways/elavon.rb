@@ -148,6 +148,7 @@ module ActiveMerchant # :nodoc:
           xml.ssl_transaction_type  self.actions[:verify]
           add_creditcard(xml, credit_card, options)
           add_address(xml, options)
+          add_customer_email(xml, options)
           add_test_mode(xml, options)
           add_ip(xml, options)
         end

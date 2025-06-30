@@ -56,8 +56,8 @@ class RemoteVposTest < Test::Unit::TestCase
     authorization = purchase.authorization
 
     assert refund = @gateway.refund(@amount, authorization, @options.merge(shop_process_id:))
-    assert_success refund
-    assert_equal 'Transaccion aprobada', refund.message
+    assert_failure refund
+    assert_equal 'Transaccion denegada', refund.message
   end
 
   def test_successful_refund_using_shop_process_id
@@ -67,8 +67,8 @@ class RemoteVposTest < Test::Unit::TestCase
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, nil, original_shop_process_id: shop_process_id) # 315300749110268, 21611732218038
-    assert_success refund
-    assert_equal 'Transaccion aprobada', refund.message
+    assert_failure refund
+    assert_equal 'Transaccion denegada', refund.message
   end
 
   def test_successful_credit
@@ -113,7 +113,7 @@ class RemoteVposTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('abc#123')
     assert_failure response
-    assert_equal 'BuyNotFoundError:Business Error', response.message
+    assert_equal 'BuyNotFoundError:Buy not found with shop_process_id=123.', response.message
   end
 
   def test_invalid_login

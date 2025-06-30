@@ -171,6 +171,14 @@
 * Cenpos: Add purchase_order_number field [yunnydang] #5481
 * Rapyd: Fix error on billing address [jherrera] #5472
 * Nuvei: Map order_id to clientUniqueId field on refund/credit [jherrera] #5477
+* Update clean_emoji_emoticons_and_accent method [almalee24] #5485
+* Payflow: Send CAVV as xid if xid is not present [adarsh-spreedly] #5496
+* Credorax: Fixed request signature [mjdonga] #5486
+* Nuvei/Reach/Shift4: Normalize API_VERSION usage [sumit-sharmas] #5493
+* Xpay/Sumup/Quickbooks: Normalize API_VERSION usage [aaqibrashidmir] #5495
+* Ebanx: Fix NoMethodError for address [almalee24] #5500
+* Vpos: Check for response under refund.response_code [almalee24] #5501
+* Ebanx: Fix field nesting cof_info, device_id, and notification_url [yunnydang] #5494
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
@@ -862,6 +870,7 @@
 * CyberSource: Add `line_items` for purchase [ajawadmirza] #4282
 * Payflow Pro: Add `stored_credential` fields [ajawadmirza] #4277
 * Decidir Plus: Add `fraud_detection` fields [naashton] #4289
+* Elavon: Pass through ssl_email for verify transactions [ankurspreedly] #5502
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147

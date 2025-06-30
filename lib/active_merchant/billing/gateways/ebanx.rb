@@ -180,7 +180,7 @@ module ActiveMerchant # :nodoc:
       def add_stored_credentials(post, options)
         return unless (stored_creds = options[:stored_credential])
 
-        post[:cof_info] = {
+        post[:payment][:cof_info] = {
           cof_type: stored_creds[:initial_transaction] ? 'initial' : 'stored',
           initiator: stored_creds[:initiator] == 'cardholder' ? 'CIT' : 'MIT',
           trans_type: add_trans_type(stored_creds),
@@ -201,8 +201,10 @@ module ActiveMerchant # :nodoc:
 
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
-          post[:payment][:address] = address[:address1].split[1..-1].join(' ') if address[:address1]
-          post[:payment][:street_number] = address[:address1].split.first if address[:address1]
+          if address[:address1].present?
+            post[:payment][:address] = address[:address1].split[1..-1].join(' ')
+            post[:payment][:street_number] = address[:address1].split.first
+          end
           post[:payment][:city] = address[:city]
           post[:payment][:state] = address[:state]
           post[:payment][:zipcode] = address[:zip]
@@ -256,12 +258,12 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_additional_data(post, options)
-        post[:device_id] = options[:device_id] if options[:device_id]
+        post[:payment][:device_id] = options[:device_id] if options[:device_id]
         post[:metadata] = options[:metadata] if options[:metadata]
         post[:metadata] = {} if post[:metadata].nil?
         post[:metadata][:merchant_payment_code] = order_id_override(options)
         post[:payment][:tags] = TAGS
-        post[:notification_url] = options[:notification_url] if options[:notification_url]
+        post[:payment][:notification_url] = options[:notification_url] if options[:notification_url]
       end
 
       def parse(body)
