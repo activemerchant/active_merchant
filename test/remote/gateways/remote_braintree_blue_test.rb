@@ -1519,6 +1519,18 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'must be personal or business', response.message[:account_holder_type].first
   end
 
+  def test_successful_purchase_has_nil_additional_processor_response
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.params['braintree_transaction']['additional_processor_response']
+  end
+
+  def test_failed_purchase_includes_additional_processor_response
+    assert response = @gateway.purchase(204700, @credit_card)
+    assert_failure response
+    assert_equal '2047 : Call Issuer. Pick Up Card.', response.params['braintree_transaction']['additional_processor_response']
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)

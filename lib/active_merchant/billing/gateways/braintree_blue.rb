@@ -637,8 +637,7 @@ module ActiveMerchant # :nodoc:
 
         transaction = result.transaction
         if transaction.vault_customer
-          vault_customer = {
-          }
+          vault_customer = {}
           vault_customer['credit_cards'] = transaction.vault_customer.credit_cards.map do |cc|
             {
               'bin' => cc.bin
@@ -724,6 +723,7 @@ module ActiveMerchant # :nodoc:
           'risk_data'                    => risk_data,
           'network_transaction_id'       => transaction.network_transaction_id || nil,
           'processor_response_code'      => response_code_from_result(result),
+          'additional_processor_response' => nil,
           'processor_authorization_code' => transaction.processor_authorization_code,
           'recurring'                    => transaction.recurring,
           'payment_receipt'              => payment_receipt,

@@ -1712,6 +1712,27 @@ class BraintreeBlueTest < Test::Unit::TestCase
     }
   end
 
+  def test_successful_transaction_has_nil_additional_processor_response
+    result = Braintree::SuccessfulResult.new(transaction: Braintree::Transaction._new(nil, { id: 'transaction_id', status: 'authorized' }))
+    response = Response.new(true, 'Message', {}, {})
+    response.instance_variable_set('@params', { braintree_transaction: @gateway.send(:transaction_hash, result) })
+
+    assert_nil response.params['braintree_transaction']['additional_processor_response']
+  end
+
+  def test_failed_transaction_includes_additional_processor_response
+    transaction = Braintree::Transaction._new(nil, {
+      id: 'transaction_id',
+      status: 'processor_declined',
+      additional_processor_response: '2047 : Call Issuer. Pick Up Card.'
+    })
+    result = Braintree::ErrorResult.new(@internal_gateway, { transaction: })
+    response = Response.new(false, 'Message', {}, {})
+    response.instance_variable_set('@params', { braintree_transaction: @gateway.send(:transaction_hash, result) })
+
+    assert_equal '2047 : Call Issuer. Pick Up Card.', response.params['braintree_transaction']['additional_processor_response']
+  end
+
   def success_create_token_nonce
     <<-RESPONSE
       [Braintree] <payment-method>
