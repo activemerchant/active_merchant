@@ -181,6 +181,7 @@
 * Ebanx: Fix field nesting cof_info, device_id, and notification_url [yunnydang] #5494
 * MultiPay: Add Base Gateway adapter [Heavblade] #5497
 * Cecabank: Fix finRec field formatting for Cecabank Gateway [aaqibrashidmir] #5506
+* Nuvei: Map order_id to clientUniqueId field on capture transactions [aaqibrashidmir] #5498
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
