@@ -217,6 +217,32 @@ class RemoteCecabankTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
   end
 
+  def test_finrec_formatting_with_and_without_recurring_end_date
+    next_year = Time.now.year + 1
+    options_with_date = @options.merge(
+      recurring_end_date: "#{next_year}1231",
+      recurring_frequency: '1',
+      stored_credential: {
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card_purchase, options_with_date)
+    assert_success response
+    assert_equal 'OK', response.message
+
+    options_without_date = @options.merge(
+      recurring_frequency: '1',
+      stored_credential: {
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card_purchase, options_without_date)
+    assert_success response
+    assert_equal 'OK', response.message
+  end
+
   private
 
   def get_response_params(transcript)
