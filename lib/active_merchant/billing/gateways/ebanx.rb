@@ -52,7 +52,6 @@ module ActiveMerchant # :nodoc:
         add_customer_responsible_person(post, payment, options)
         add_additional_data(post, options)
         add_stored_credentials(post, options)
-        add_payment_taxes_iva_co(post, options)
 
         commit(:purchase, post, options)
       end
@@ -68,7 +67,6 @@ module ActiveMerchant # :nodoc:
         add_customer_responsible_person(post, payment, options)
         add_additional_data(post, options)
         add_stored_credentials(post, options)
-        add_payment_taxes_iva_co(post, options)
         post[:payment][:creditcard][:auto_capture] = false
 
         commit(:authorize, post, options)
@@ -149,12 +147,6 @@ module ActiveMerchant # :nodoc:
       end
 
       private
-
-      def add_payment_taxes_iva_co(post, options)
-        post[:payment][:taxes] = {
-          iva_co: options[:payment_taxes_iva_co]
-        }
-      end
 
       def add_integration_key(post)
         post[:integration_key] = @options[:integration_key].to_s
@@ -272,6 +264,9 @@ module ActiveMerchant # :nodoc:
         post[:metadata][:merchant_payment_code] = order_id_override(options)
         post[:payment][:tags] = TAGS
         post[:payment][:notification_url] = options[:notification_url] if options[:notification_url]
+        post[:payment][:taxes] = {
+          iva_co: options[:payment_taxes_iva_co]
+        }
       end
 
       def parse(body)
