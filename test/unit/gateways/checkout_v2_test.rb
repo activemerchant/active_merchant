@@ -127,6 +127,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       request_data = JSON.parse(data)
       assert_equal(request_data['processing_channel_id'], '123456abcde')
+      assert_equal(request_data['metadata']['udf5'], 'ActiveMerchant')
     end.respond_with(successful_purchase_response)
   end
 
@@ -142,14 +143,16 @@ class CheckoutV2Test < Test::Unit::TestCase
       request = JSON.parse(data)['risk']
       assert_equal request['enabled'], true
       assert_equal request['device_session_id'], '12345-abcd'
+      assert_equal JSON.parse(data)['metadata']['udf5'], 'ActiveMerchant'
     end.respond_with(successful_purchase_response)
   end
 
   def test_successful_passing_incremental_authorization
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, { incremental_authorization: 'abcd1234' })
-    end.check_request do |_method, endpoint, _data, _headers|
+    end.check_request do |_method, endpoint, data, _headers|
       assert_include endpoint, 'abcd1234'
+      assert_equal JSON.parse(data)['metadata']['udf5'], 'ActiveMerchant'
     end.respond_with(successful_incremental_authorize_response)
 
     assert_success response
@@ -180,6 +183,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       request_data = JSON.parse(data)
       assert_equal(request_data['capture_type'], 'NonFinal')
+      assert_equal(request_data['metadata']['udf5'], 'ActiveMerchant')
     end.respond_with(successful_capture_response)
   end
 
@@ -220,6 +224,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       assert_equal(request_data['source']['token_type'], 'mdes')
       assert_equal(request_data['source']['eci'], nil)
       assert_equal(request_data['source']['cryptogram'], network_token.payment_cryptogram)
+      assert_equal(request_data['metadata']['udf5'], 'ActiveMerchant')
     end.respond_with(successful_purchase_with_network_token_response)
 
     assert_success response
@@ -242,6 +247,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       assert_equal(request_data['source']['token_type'], 'applepay')
       assert_equal(request_data['source']['eci'], '05')
       assert_equal(request_data['source']['cryptogram'], network_token.payment_cryptogram)
+      assert_equal(request_data['metadata']['udf5'], 'ActiveMerchant')
     end.respond_with(successful_purchase_with_network_token_response)
 
     assert_success response
@@ -264,6 +270,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       assert_equal(request_data['source']['token_type'], 'googlepay')
       assert_equal(request_data['source']['eci'], '05')
       assert_equal(request_data['source']['cryptogram'], network_token.payment_cryptogram)
+      assert_equal(request_data['metadata']['udf5'], 'ActiveMerchant')
     end.respond_with(successful_purchase_with_network_token_response)
 
     assert_success response
@@ -286,6 +293,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       assert_equal(request_data['source']['token_type'], 'googlepay')
       assert_equal(request_data['source']['eci'], '05')
       assert_equal(request_data['source']['cryptogram'], network_token.payment_cryptogram)
+      assert_equal(request_data['metadata']['udf5'], 'ActiveMerchant')
     end.respond_with(successful_purchase_with_network_token_response)
 
     assert_success response
@@ -308,6 +316,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       assert_equal(request_data['source']['token_type'], 'googlepay')
       assert_equal(request_data['source']['eci'], nil)
       assert_equal(request_data['source']['cryptogram'], nil)
+      assert_equal(request_data['metadata']['udf5'], 'ActiveMerchant')
     end.respond_with(successful_purchase_with_network_token_response)
 
     assert_success response
@@ -327,6 +336,7 @@ class CheckoutV2Test < Test::Unit::TestCase
         request = JSON.parse(data)
         assert_equal headers['Authorization'], 'Bearer 12345678'
         assert_equal request['processing_channel_id'], processing_channel_id
+        assert_equal request['metadata']['udf5'], 'ActiveMerchant'
       end
     end.respond_with(successful_access_token_response, successful_purchase_response)
     assert_success response
@@ -538,6 +548,8 @@ class CheckoutV2Test < Test::Unit::TestCase
 
     capture = stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, response.authorization)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"metadata":{"udf5":"ActiveMerchant"}}, data)
     end.respond_with(successful_capture_response)
 
     assert_success capture
@@ -720,6 +732,8 @@ class CheckoutV2Test < Test::Unit::TestCase
 
     capture = stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, response.authorization)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"metadata":{"udf5":"ActiveMerchant"}}, data)
     end.respond_with(successful_capture_response)
 
     assert_success capture
@@ -750,6 +764,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(%r{"success_url"}, data)
       assert_match(%r{"failure_url"}, data)
+      assert_match(%r{"metadata":{"udf5":"ActiveMerchant"}}, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -852,6 +867,8 @@ class CheckoutV2Test < Test::Unit::TestCase
   def test_successful_void
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"metadata":{"udf5":"ActiveMerchant"}}, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -859,6 +876,8 @@ class CheckoutV2Test < Test::Unit::TestCase
 
     void = stub_comms(@gateway, :ssl_request) do
       @gateway.void(response.authorization)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"metadata":{"udf5":"ActiveMerchant"}}, data)
     end.respond_with(successful_void_response)
 
     assert_success void
@@ -883,6 +902,8 @@ class CheckoutV2Test < Test::Unit::TestCase
 
     void = stub_comms(@gateway, :ssl_request) do
       @gateway.void(response.authorization)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"metadata":{"udf5":"ActiveMerchant"}}, data)
     end.respond_with(successful_void_response)
 
     assert_success void
@@ -891,6 +912,8 @@ class CheckoutV2Test < Test::Unit::TestCase
   def test_failed_void
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.void('5d53a33d960c46d00f5dc061947d998c')
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"metadata":{"udf5":"ActiveMerchant"}}, data)
     end.respond_with(failed_void_response)
     assert_failure response
   end
@@ -914,6 +937,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       assert_equal request['destination']['account_holder']['first_name'], @credit_card.first_name
       assert_equal request['destination']['account_holder']['last_name'], @credit_card.last_name
       assert_equal request['metadata']['transaction_token'], '123'
+      assert_match request['metadata']['udf5'], 'ActiveMerchant'
     end.respond_with(successful_credit_response)
     assert_success response
   end
@@ -997,6 +1021,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       assert_equal request['sender']['address']['zip'], '12345'
       assert_equal request['sender']['date_of_birth'], '2004-10-27'
       assert_equal request['sender']['nationality'], 'US'
+      assert_match request['metadata']['udf5'], 'ActiveMerchant'
     end.respond_with(successful_credit_response)
     assert_success response
   end
@@ -1065,6 +1090,8 @@ class CheckoutV2Test < Test::Unit::TestCase
 
     refund = stub_comms(@gateway, :ssl_request) do
       @gateway.refund(@amount, response.authorization)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"metadata":{"udf5":"ActiveMerchant"}}, data)
     end.respond_with(successful_refund_response)
 
     assert_success refund
@@ -1082,6 +1109,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(%r{"coupon_code":"NY2018"}, data)
       assert_match(%r{"partner_id":"123989"}, data)
+      assert_match(%r{"udf5":"ActiveMerchant"}, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -1089,6 +1117,8 @@ class CheckoutV2Test < Test::Unit::TestCase
 
     refund = stub_comms(@gateway, :ssl_request) do
       @gateway.refund(@amount, response.authorization)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"metadata":{"udf5":"ActiveMerchant"}}, data)
     end.respond_with(successful_refund_response)
 
     assert_success refund
@@ -1130,6 +1160,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       elsif /instruments/.match?(endpoint)
         assert_match(%r{"type":"token"}, data)
         assert_match(%r{"token":"tok_}, data)
+        assert_match(%r{"metadata":{"udf5":"ActiveMerchant"}}, data)
       end
     end.respond_with(succesful_token_response, succesful_store_response)
   end
@@ -1207,6 +1238,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       assert_equal request['shipping']['address']['state'], options[:shipping_address][:state]
       assert_equal request['shipping']['address']['country'], options[:shipping_address][:country]
       assert_equal request['shipping']['address']['zip'], options[:shipping_address][:zip]
+      assert_equal request['metadata']['udf5'], 'ActiveMerchant'
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -1257,6 +1289,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       assert_equal request.dig('processing', 'shipping_amount'), 20
       assert_equal request.dig('processing', 'duty_amount'), 5
       assert_equal request.dig('shipping', 'from_address_zip'), 12345
+      assert_equal request['metadata']['udf5'], 'ActiveMerchant'
 
       item_one = request['items'][0]
       item_two = request['items'][1]

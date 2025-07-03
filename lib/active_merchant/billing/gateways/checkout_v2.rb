@@ -63,7 +63,7 @@ module ActiveMerchant # :nodoc:
         commit(:credit, post, options)
       end
 
-      def void(authorization, _options = {})
+      def void(authorization, options = {})
         post = {}
         add_metadata(post, options)
 
@@ -124,6 +124,7 @@ module ActiveMerchant # :nodoc:
             post.merge!(post.delete(:source))
             add_customer_data(post, options)
             add_shipping_address(post, options)
+            add_metadata(post, options)
             r.process { commit(:store, post, options) }
           end
         end
@@ -167,8 +168,6 @@ module ActiveMerchant # :nodoc:
           post[:billing_descriptor][:name] = options[:descriptor_name] if options[:descriptor_name]
           post[:billing_descriptor][:city] = options[:descriptor_city] if options[:descriptor_city]
         end
-        post[:metadata] = {}
-        post[:metadata][:udf5] = application_id || 'ActiveMerchant'
       end
 
       def truncate_amex_reference_id(post, options, payment_method)
@@ -284,6 +283,7 @@ module ActiveMerchant # :nodoc:
         post[:metadata] = {} unless post[:metadata]
         post[:metadata].merge!(options[:metadata]) if options[:metadata]
         post[:metadata][:udf1] = 'mada' if payment_method.try(:brand) == 'mada'
+        post[:metadata][:udf5] = application_id || 'ActiveMerchant'
       end
 
       def add_payment_method(post, payment_method, options, key = :source)
