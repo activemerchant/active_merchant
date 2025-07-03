@@ -183,6 +183,34 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_aft_fields_and_sha256_signing
+    aft_options = @options.merge(
+      aft: true,
+      three_ds_transtype: '10',
+      three_ds_initiate: '03',
+      sender_street_address: "10'th ICENI\/ CLOSE",
+      sender_ref_number: '93347692',
+      sender_last_name: 'test(1)',
+      sender_fund_source: '02',
+      sender_first_name: 'joshua<2>',
+      sender_country_code: 'GB',
+      sender_city: 'SAFFRON WALDEN',
+      recipient_street_address: '10 ICENI CLOSE',
+      recipient_postal_code: 'CB10 1FS',
+      recipient_last_name: 'test',
+      recipient_first_name: 'joshua',
+      recipient_country_code: 'GB',
+      recipient_city: 'SAFFRON WALDEN',
+      mpi_purchase_desc: 'Abc501',
+      billing_descriptor: 'Abc501.com*Abc501UK'
+    )
+
+    @gateway = CredoraxGateway.new(fixtures(:credorax).merge(use_sha256_signing: true))
+    response = @gateway.purchase(@amount, @credit_card, aft_options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_auth_data_via_3ds1_fields
     options = @options.merge(
       eci: '02',

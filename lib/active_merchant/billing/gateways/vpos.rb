@@ -175,7 +175,7 @@ module ActiveMerchant # :nodoc:
         end
 
         Response.new(
-          success_from(response),
+          success_from(response, action),
           message_from(response),
           response,
           authorization: authorization_from(response),
@@ -186,8 +186,10 @@ module ActiveMerchant # :nodoc:
         )
       end
 
-      def success_from(response)
-        if code = response.dig('confirmation', 'response_code')
+      def success_from(response, action = nil)
+        if action == :refund && (code = response.dig('refund', 'response_code'))
+          code == '00'
+        elsif code = response.dig('confirmation', 'response_code')
           code == '00'
         else
           response['status'] == 'success'
