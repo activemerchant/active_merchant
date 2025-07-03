@@ -67,7 +67,7 @@ module ActiveMerchant
       def capture(money, authorization, options = {})
         post = { relatedTransactionId: authorization }
 
-        build_post_data(post)
+        build_post_data(post, options)
         add_amount(post, money, options)
 
         commit(:capture, post)

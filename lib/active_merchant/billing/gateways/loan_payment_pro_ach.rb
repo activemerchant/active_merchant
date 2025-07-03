@@ -4,7 +4,7 @@ module ActiveMerchant # :nodoc:
       self.live_url = 'https://www.checkcommerce.com/EpnPublic/ACH.aspx'
       self.test_url = 'https://sandbox.checkcommerce.com/EpnPublic/ACH.aspx'
 
-      API_VERSION = '1.4.2.35'.freeze
+      API_VERSION = '1.4.2.36'.freeze
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -51,8 +51,7 @@ module ActiveMerchant # :nodoc:
         post.merge!({
           Login: @options[:login],
           Password: @options[:password],
-          Version: API_VERSION,
-          Test: test? ? 'True' : 'False'
+          Version: API_VERSION
         })
       end
 
