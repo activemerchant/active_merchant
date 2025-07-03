@@ -817,6 +817,43 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_authorize_and_capture_with_descriptor_options
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, {
+        descriptor_name: 'Name', descriptor_phone: 'Phone'
+      })
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<customBilling>.*<descriptor>Name<)m, data)
+      assert_match(%r(<customBilling>.*<phone>Phone<)m, data)
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.capture(@amount, response.authorization, {
+        descriptor_name: 'Name', descriptor_phone: 'Phone'
+      })
+    end.check_request do |_endpoint, data, _headers|
+      assert_not_match(%r(<customBilling>), data)
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_purchase_and_echeck_refund_with_descriptor_options
+    response = stub_comms do
+      @gateway.purchase(@amount, @check, {
+        descriptor_name: 'Name', descriptor_phone: 'Phone'
+      })
+    end.check_request do |_endpoint, data, _headers|
+      assert_not_match(%r(<customBilling>), data)
+    end.respond_with(successful_purchase_with_echeck_response)
+
+    stub_comms do
+      @gateway.refund(@amount, response.authorization, {
+        descriptor_name: 'Name', descriptor_phone: 'Phone'
+      })
+    end.check_request do |_endpoint, data, _headers|
+      assert_not_match(%r(<customBilling>), data)
+    end.respond_with(successful_refund_response)
+  end
+
   private
 
   def network_transaction_id
