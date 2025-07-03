@@ -182,6 +182,7 @@
 * MultiPay: Add Base Gateway adapter [Heavblade] #5497
 * Cecabank: Fix finRec field formatting for Cecabank Gateway [aaqibrashidmir] #5506
 * Nuvei: Map order_id to clientUniqueId field on capture transactions [aaqibrashidmir] #5498
+* Normalize API Version for CyberSourceRest, Datatrans, and FlexCharge [aaqibrashidmir] #5489
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

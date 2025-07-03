@@ -1,8 +1,10 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class DatatransGateway < Gateway
-      self.test_url = 'https://api.sandbox.datatrans.com/v1/'
-      self.live_url = 'https://api.datatrans.com/v1/'
+      version 'v1'
+
+      self.test_url = "https://api.sandbox.datatrans.com/#{fetch_version}/"
+      self.live_url = "https://api.datatrans.com/#{fetch_version}/"
 
       self.supported_countries = %w(CH GR US) # to confirm the countries supported.
       self.default_currency = 'CHF'

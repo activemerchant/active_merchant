@@ -378,6 +378,17 @@ class FlexChargeTest < Test::Unit::TestCase
     assert_equal 5, post[:idempotencyKey].split('-').size
   end
 
+  def test_base_urls_include_version
+    assert_includes @gateway.test_url, '/v1/'
+    assert_includes @gateway.live_url, '/v1/'
+  end
+
+  def test_default_version_in_endpoint_url
+    action = :purchase
+    url = @gateway.send(:url, action)
+    assert_match(%r{/v1/evaluate\z}, url)
+  end
+
   private
 
   def pre_scrubbed

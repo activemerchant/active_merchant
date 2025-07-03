@@ -1,8 +1,10 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class FlexChargeGateway < Gateway
-      self.test_url = 'https://api-sandbox.flex-charge.com/v1/'
-      self.live_url = 'https://api.flex-charge.com/v1/'
+      version 'v1'
+
+      self.test_url = "https://api-sandbox.flex-charge.com/#{fetch_version}/"
+      self.live_url = "https://api.flex-charge.com/#{fetch_version}/"
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
