@@ -366,6 +366,10 @@ module ActiveMerchant # :nodoc:
           if options[:cancel_or_refund]
             # Worldpay docs claim amount must be passed. This causes an error.
             xml.cancelOrRefund # { add_amount(xml, money, options.merge(debit_credit_indicator: 'credit')) }
+          elsif options[:refund_reference]
+            xml.refund(reference: options[:refund_reference]) do
+              add_amount(xml, money, options.merge(debit_credit_indicator: 'credit'))
+            end
           else
             xml.refund do
               add_amount(xml, money, options.merge(debit_credit_indicator: 'credit'))
