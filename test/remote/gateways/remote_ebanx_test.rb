@@ -137,6 +137,28 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_equal 'Accepted', response.message
   end
 
+  def test_successful_purchase_as_colombian_with_iva_taxes
+    options = @options.merge({
+      order_id: generate_unique_id,
+      ip: '127.0.0.1',
+      email: 'jose@example.com.co',
+      birth_date: '10/11/1980',
+      payment_taxes_iva_co: '0.19',
+      billing_address: address({
+        address1: '1040 Rua E',
+        city: 'Medellín',
+        state: 'AN',
+        zip: '29269',
+        country: 'CO',
+        phone_number: '8522847035'
+      })
+    })
+
+    response = @gateway.purchase(500, @credit_card, options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
