@@ -165,10 +165,7 @@ module ActiveMerchant
         address_details = {
           firstName: payment.first_name,
           lastName: payment.last_name,
-          country: options.dig(:billing_address, :country),
-          address: options.dig(:billing_address, :address1),
-          city: options.dig(:billing_address, :city),
-          state: options.dig(:billing_address, :state)
+          country: options.dig(:billing_address, :country)
         }.compact
 
         post[:billingAddress] ||= {}
@@ -367,7 +364,11 @@ module ActiveMerchant
           country: address[:country],
           phone: options[:phone] || address[:phone],
           firstName: first_name,
-          lastName: last_name
+          lastName: last_name,
+          address: options.dig(:billing_address, :address1),
+          city: options.dig(:billing_address, :city),
+          state: options.dig(:billing_address, :state),
+          zip: options.dig(:billing_address, :zip)
         }.compact
       end
 
