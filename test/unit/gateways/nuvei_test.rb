@@ -541,6 +541,21 @@ class NuveiTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_billing_address_details_for_non_account_funding_transactions
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(is_aft: false))
+    end.check_request do |_method, endpoint, data, _headers|
+      if /payment/.match?(endpoint)
+        json_data = JSON.parse(data)
+        assert_match(@options[:billing_address][:address1], json_data['billingAddress']['address'])
+        assert_match(@options[:billing_address][:city], json_data['billingAddress']['city'])
+        assert_match(@options[:billing_address][:state], json_data['billingAddress']['state'])
+        assert_match(@options[:billing_address][:country], json_data['billingAddress']['country'])
+        assert_match(@options[:billing_address][:zip], json_data['billingAddress']['zip'])
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_account_funding_transactions_with_user_details
     @user_details_options[:user_details][:date_of_birth] = '1990-09-01'
     stub_comms(@gateway, :ssl_request) do
