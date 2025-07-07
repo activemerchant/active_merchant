@@ -183,6 +183,7 @@
 * Cecabank: Fix finRec field formatting for Cecabank Gateway [aaqibrashidmir] #5506
 * Nuvei: Map order_id to clientUniqueId field on capture transactions [aaqibrashidmir] #5498
 * Ebanx: Added new GSF payment.taxes.iva_co [ritesh-spreedly] #5509
+* Litle: Remove 141 & 142 [almalee24] #5505
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
