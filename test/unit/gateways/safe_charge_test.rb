@@ -420,6 +420,29 @@ class SafeChargeTest < Test::Unit::TestCase
     assert_equal 'APPROVED', purchase.params['status']
   end
 
+  def test_version_functionality
+    # Test that version is set correctly
+    assert_equal '4.1.0', @gateway.fetch_version
+
+    # Test that version is included in transaction data
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_Version=4\.1\.0/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success purchase
+
+    # Test that version is also included in other transaction types
+    authorize = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_Version=4\.1\.0/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success authorize
+  end
+
   private
 
   def pre_scrubbed
