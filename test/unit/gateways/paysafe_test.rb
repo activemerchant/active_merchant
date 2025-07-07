@@ -321,6 +321,15 @@ class PaysafeTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_urls_for_test_and_live_mode
+    assert_equal 'https://api.test.paysafe.com/customervault/v1/profiles', @gateway.send(:url, 'profiles')
+    assert_equal 'https://api.test.paysafe.com/cardpayments/v1/accounts/account_id/auths', @gateway.send(:url, 'auths')
+
+    @gateway.expects(:test?).returns(false).twice
+    assert_equal 'https://api.paysafe.com/customervault/v1/profiles', @gateway.send(:url, 'profiles')
+    assert_equal 'https://api.paysafe.com/cardpayments/v1/accounts/account_id/auths', @gateway.send(:url, 'auths')
+  end
+
   private
 
   def pre_scrubbed

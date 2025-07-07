@@ -6,6 +6,8 @@ require 'active_merchant/billing/gateways/paypal_express_common'
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class PaypalExpressGateway < Gateway
+      version '2.0'
+
       include PaypalCommonAPI
       include PaypalExpressCommon
       include PaypalRecurringApi
