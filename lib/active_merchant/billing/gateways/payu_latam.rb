@@ -3,11 +3,13 @@ require 'digest/md5'
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class PayuLatamGateway < Gateway
+      version '4.0'
+
       self.display_name = 'PayU Latam'
       self.homepage_url = 'http://www.payulatam.com'
 
-      self.test_url = 'https://sandbox.api.payulatam.com/payments-api/4.0/service.cgi'
-      self.live_url = 'https://api.payulatam.com/payments-api/4.0/service.cgi'
+      self.test_url = "https://sandbox.api.payulatam.com/payments-api/#{fetch_version}/service.cgi"
+      self.live_url = "https://api.payulatam.com/payments-api/#{fetch_version}/service.cgi"
 
       self.supported_countries = %w[AR BR CL CO MX PA PE]
       self.default_currency = 'USD'

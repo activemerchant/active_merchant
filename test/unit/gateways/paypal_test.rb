@@ -294,7 +294,7 @@ class PaypalTest < Test::Unit::TestCase
       password: 'test',
       pem: 'PEM'
     )
-    assert_equal PaypalGateway::URLS[:test][:certificate], gateway.send(:endpoint_url)
+    assert_equal 'https://api.sandbox.paypal.com/2.0/', gateway.send(:endpoint_url)
   end
 
   def test_should_use_live_certificate_endpoint
@@ -305,7 +305,7 @@ class PaypalTest < Test::Unit::TestCase
     )
     gateway.expects(:test?).returns(false)
 
-    assert_equal PaypalGateway::URLS[:live][:certificate], gateway.send(:endpoint_url)
+    assert_equal 'https://api.paypal.com/2.0/', gateway.send(:endpoint_url)
   end
 
   def test_should_use_test_signature_endpoint
@@ -315,7 +315,7 @@ class PaypalTest < Test::Unit::TestCase
       signature: 'SIG'
     )
 
-    assert_equal PaypalGateway::URLS[:test][:signature], gateway.send(:endpoint_url)
+    assert_equal 'https://api-3t.sandbox.paypal.com/2.0/', gateway.send(:endpoint_url)
   end
 
   def test_should_use_live_signature_endpoint
@@ -326,7 +326,7 @@ class PaypalTest < Test::Unit::TestCase
     )
     gateway.expects(:test?).returns(false)
 
-    assert_equal PaypalGateway::URLS[:live][:signature], gateway.send(:endpoint_url)
+    assert_equal 'https://api-3t.paypal.com/2.0/', gateway.send(:endpoint_url)
   end
 
   def test_should_raise_argument_when_credentials_not_present
