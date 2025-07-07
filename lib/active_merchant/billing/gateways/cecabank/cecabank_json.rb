@@ -206,7 +206,7 @@ module ActiveMerchant
         params[:inicioRec] = initiator
         if initiator == :S
           requires!(options, :recurring_frequency)
-          params[:finRec] = options[:recurring_end_date] || strftime_yyyymm(creditcard)
+          params[:finRec] = options[:recurring_end_date] || strftime_yyyymmdd_last_day(creditcard)
           params[:frecRec] = options[:recurring_frequency]
         end
 

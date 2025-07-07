@@ -458,6 +458,16 @@ class EbanxTest < Test::Unit::TestCase
     assert_equal expected_encoded_email, post[:payment][:email]
   end
 
+  def test_successful_purchase_with_payment_taxes_iva_co
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(payment_taxes_iva_co: '0.19'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"taxes\":\{\"iva_co\":\"0.19\"\}}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   private
 
   def pre_scrubbed
