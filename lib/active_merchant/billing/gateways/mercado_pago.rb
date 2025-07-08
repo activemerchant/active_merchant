@@ -1,7 +1,9 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class MercadoPagoGateway < Gateway
-      self.live_url = self.test_url = 'https://api.mercadopago.com/v1'
+      version 'v1'
+
+      self.live_url = self.test_url = "https://api.mercadopago.com/#{fetch_version}"
 
       self.supported_countries = %w[AR BR CL CO MX PE UY]
       self.supported_cardtypes = %i[visa master american_express elo cabal naranja creditel patagonia_365 tarjeta_sol]
