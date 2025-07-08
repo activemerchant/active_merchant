@@ -1,8 +1,10 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class PlexoGateway < Gateway
-      self.test_url = 'https://api.testing.plexo.com.uy/v1/payments'
-      self.live_url = 'https://api.plexo.com.uy/v1/payments'
+      version 'v1'
+
+      self.test_url = "https://api.testing.plexo.com.uy/#{fetch_version}/payments"
+      self.live_url = "https://api.plexo.com.uy/#{fetch_version}/payments"
 
       self.supported_countries = ['UY']
       self.default_currency = 'UYU'
