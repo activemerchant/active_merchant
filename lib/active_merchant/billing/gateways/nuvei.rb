@@ -365,10 +365,10 @@ module ActiveMerchant
           phone: options[:phone] || address[:phone],
           firstName: first_name,
           lastName: last_name,
-          address: options.dig(:billing_address, :address1),
-          city: options.dig(:billing_address, :city),
-          state: options.dig(:billing_address, :state),
-          zip: options.dig(:billing_address, :zip)
+          address: address.dig(:address1),
+          city: address.dig(:city),
+          state: address.dig(:state),
+          zip: address.dig(:zip)
         }.compact
       end
 
