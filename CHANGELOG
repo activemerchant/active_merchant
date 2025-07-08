@@ -184,6 +184,7 @@
 * Nuvei: Map order_id to clientUniqueId field on capture transactions [aaqibrashidmir] #5498
 * Ebanx: Added new GSF payment.taxes.iva_co [ritesh-spreedly] #5509
 * Litle: Remove 141 & 142 [almalee24] #5505
+* VantivExpress: Add support of level 2 and 3 data [adarsh-spreedly] #5487
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
@@ -875,7 +876,6 @@
 * CyberSource: Add `line_items` for purchase [ajawadmirza] #4282
 * Payflow Pro: Add `stored_credential` fields [ajawadmirza] #4277
 * Decidir Plus: Add `fraud_detection` fields [naashton] #4289
-* Elavon: Pass through ssl_email for verify transactions [ankurspreedly] #5502
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
