@@ -44,6 +44,25 @@ class EbanxTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_nil_address1
+    @options[:billing_address][:address1] = ''
+    @options[:billing_address][:city] = ''
+    @options[:billing_address][:state] = ''
+    @options[:billing_address][:zip] = ''
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(processing_type: 'local'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"zipcode\":\"\"}, data
+      assert_match %r{"city\":\"\"}, data
+      assert_match %r{"state\":\"\"}, data
+      assert_not_match %r{"address\":\"\"}, data
+      assert_not_match %r{"street_number\":\"\"}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_soft_descriptor
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge(soft_descriptor: 'ActiveMerchant'))
@@ -437,6 +456,16 @@ class EbanxTest < Test::Unit::TestCase
 
     expected_encoded_email = URI.encode_www_form_component('john+test@example.com')
     assert_equal expected_encoded_email, post[:payment][:email]
+  end
+
+  def test_successful_purchase_with_payment_taxes_iva_co
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(payment_taxes_iva_co: '0.19'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match %r{"taxes\":\{\"iva_co\":\"0.19\"\}}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   private

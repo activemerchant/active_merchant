@@ -19,7 +19,7 @@ module ActiveMerchant # :nodoc:
       self.display_name = 'Reach'
       self.currencies_without_fractions = %w(BIF BYR CLF CLP CVE DJF GNF ISK JPY KMF KRW PYG RWF UGX UYI VND VUV XAF XOF XPF IDR MGA MRO)
 
-      API_VERSION = 'v2.22'.freeze
+      version 'v2.22'
       STANDARD_ERROR_CODE_MAPPING = {}
       PAYMENT_METHOD_MAP = {
         american_express: 'AMEX',
@@ -277,7 +277,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def url(action)
-        "#{test? ? test_url : live_url}#{API_VERSION}/#{action}"
+        "#{test? ? test_url : live_url}#{fetch_version}/#{action}"
       end
     end
   end

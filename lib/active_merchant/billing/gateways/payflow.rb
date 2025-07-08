@@ -215,7 +215,7 @@ module ActiveMerchant # :nodoc:
 
         # 3DS2 only
         ds_transaction_id = three_d_secure_options[:ds_transaction_id] if version_2_or_newer?(three_d_secure_options)
-        xid = three_d_secure_options[:xid].presence || ds_transaction_id
+        xid = three_d_secure_options[:xid].presence || cavv
 
         xml.tag!('ExtData', 'Name' => 'AUTHENTICATION_ID', 'Value' => authentication_id) unless authentication_id.blank?
         xml.tag!('ExtData', 'Name' => 'AUTHENTICATION_STATUS', 'Value' => authentication_status) unless authentication_status.blank?
@@ -342,7 +342,7 @@ module ActiveMerchant # :nodoc:
         if options[:three_d_secure]
           three_d_secure = options[:three_d_secure]
           ds_transaction_id = three_d_secure[:ds_transaction_id]
-          xid = three_d_secure[:xid].presence || ds_transaction_id
+          xid = three_d_secure[:xid].presence || three_d_secure[:cavv]
 
           xml.tag! 'BuyerAuthResult' do
             authentication_status(three_d_secure, xml)

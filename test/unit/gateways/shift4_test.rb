@@ -24,6 +24,10 @@ class Shift4Test < Test::Unit::TestCase
     }
   end
 
+  def test_api_version
+    assert_equal 'v1', @gateway.fetch_version
+  end
+
   def test_successful_capture
     response = stub_comms do
       @gateway.capture(@amount, '1111g66gw3ryke06', @options)
@@ -429,6 +433,11 @@ class Shift4Test < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(sucess_auth_response)
 
     assert_equal 'abc123', @gateway.setup_access_token
+  end
+
+  def test_url
+    assert_equal 'https://utg.shift4api.net/api/rest/v1/', @gateway.live_url
+    assert_equal 'https://utgapi.shift4test.com/api/rest/v1/', @gateway.test_url
   end
 
   private

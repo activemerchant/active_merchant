@@ -1,8 +1,10 @@
 module ActiveMerchant
   module Billing
     class NuveiGateway < Gateway
-      self.test_url = 'https://ppp-test.nuvei.com/ppp/api/v1'
-      self.live_url = 'https://secure.safecharge.com/ppp/api/v1'
+      version 'v1'
+
+      self.test_url = "https://ppp-test.nuvei.com/ppp/api/#{fetch_version}"
+      self.live_url = "https://secure.safecharge.com/ppp/api/#{fetch_version}"
 
       self.supported_countries = %w[US CA IN NZ GB AU US]
       self.default_currency = 'USD'
@@ -65,7 +67,7 @@ module ActiveMerchant
       def capture(money, authorization, options = {})
         post = { relatedTransactionId: authorization }
 
-        build_post_data(post)
+        build_post_data(post, options)
         add_amount(post, money, options)
 
         commit(:capture, post)
@@ -163,10 +165,7 @@ module ActiveMerchant
         address_details = {
           firstName: payment.first_name,
           lastName: payment.last_name,
-          country: options.dig(:billing_address, :country),
-          address: options.dig(:billing_address, :address1),
-          city: options.dig(:billing_address, :city),
-          state: options.dig(:billing_address, :state)
+          country: options.dig(:billing_address, :country)
         }.compact
 
         post[:billingAddress] ||= {}
@@ -365,7 +364,11 @@ module ActiveMerchant
           country: address[:country],
           phone: options[:phone] || address[:phone],
           firstName: first_name,
-          lastName: last_name
+          lastName: last_name,
+          address: address.dig(:address1),
+          city: address.dig(:city),
+          state: address.dig(:state),
+          zip: address.dig(:zip)
         }.compact
       end
 

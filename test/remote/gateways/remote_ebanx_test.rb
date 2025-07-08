@@ -47,6 +47,17 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_equal 'Accepted', response.message
   end
 
+  def test_successful_purchase_with_nil_address
+    @options[:billing_address][:address1] = ''
+    @options[:billing_address][:city] = ''
+    @options[:billing_address][:state] = ''
+    @options[:billing_address][:zip] = ''
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Field payment.zipcode is required', response.message
+  end
+
   def test_successful_purchase_hipercard
     response = @gateway.purchase(@amount, @hiper_card, @options)
     assert_success response
@@ -111,6 +122,28 @@ class RemoteEbanxTest < Test::Unit::TestCase
       ip: '127.0.0.1',
       email: 'jose@example.com.co',
       birth_date: '10/11/1980',
+      billing_address: address({
+        address1: '1040 Rua E',
+        city: 'Medellín',
+        state: 'AN',
+        zip: '29269',
+        country: 'CO',
+        phone_number: '8522847035'
+      })
+    })
+
+    response = @gateway.purchase(500, @credit_card, options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_successful_purchase_as_colombian_with_iva_taxes
+    options = @options.merge({
+      order_id: generate_unique_id,
+      ip: '127.0.0.1',
+      email: 'jose@example.com.co',
+      birth_date: '10/11/1980',
+      payment_taxes_iva_co: '0.19',
       billing_address: address({
         address1: '1040 Rua E',
         city: 'Medellín',
