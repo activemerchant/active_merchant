@@ -268,6 +268,15 @@ class FatZebraTest < Test::Unit::TestCase
     assert_equal 'U', @gateway.send('formatted_enrollment', 'U')
   end
 
+  def test_api_version
+    assert_equal 'v1.0', @gateway.fetch_version
+  end
+
+  def test_urls_for_test_and_live_mode
+    assert_equal 'https://gateway.sandbox.fatzebra.com.au/v1.0', @gateway.test_url
+    assert_equal 'https://gateway.fatzebra.com.au/v1.0', @gateway.live_url
+  end
+
   private
 
   def pre_scrubbed
