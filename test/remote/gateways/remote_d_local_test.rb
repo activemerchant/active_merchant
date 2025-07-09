@@ -362,7 +362,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match %r{Invalid parameter}, response.message
+    assert_match %r{non valid values}, response.message
   end
 
   def test_transcript_scrubbing
@@ -402,5 +402,15 @@ class RemoteDLocalTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_match 'The payment was authorized', auth.message
+  end
+
+  def test_passes_issuer_identification_number_in_card_object
+    issuer_identification_number = 424242
+    credit_card = network_tokenization_credit_card('4242424242424242', payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=')
+    @options[:issuer_identification_number] = issuer_identification_number
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, credit_card, @options)
+    end
+    assert_match %r{bin.*#{issuer_identification_number}}, transcript
   end
 end
