@@ -189,6 +189,7 @@
 * CheckoutV2: Pass udf5 field in metadata [mjdonga] #5507
 * DLocal: Add issuer_identification_number as bin in Card object [adarsh-spreedly] #5499
 * Normalize API Versions for litle, mercado_pago and mundipagg [mjdonga] #5518
+* Normalize API Versions for Barclay card Smart pay, Fat Zebra and Forte gateways [mjdonga] #5519
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
