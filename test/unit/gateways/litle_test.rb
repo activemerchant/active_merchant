@@ -805,6 +805,18 @@ class LitleTest < Test::Unit::TestCase
     assert @gateway.supports_scrubbing?
   end
 
+  def test_schema_version
+    assert_equal '9.14', @gateway.fetch_version
+  end
+
+  def test_schema_version_in_xml_request
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, order_source: 'recurring')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<litleOnlineRequest xmlns="http://www.litle.com/schema" merchantId="merchant_id" version="9.14">), data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def network_transaction_id
