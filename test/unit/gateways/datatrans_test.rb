@@ -342,6 +342,17 @@ class DatatransTest < Test::Unit::TestCase
                     ['Invalid JSON response received from Datatrans. Please contact them for support if you continue to receive this message.  (The raw response returned by the API was "{\\"transactionId\\":\\"240418170233899207\\",acquirerAuthorizationCode\\":\\"170233\\"}")'] }
   end
 
+  def test_base_urls_include_version
+    assert_includes @gateway.test_url, '/v1/'
+    assert_includes @gateway.live_url, '/v1/'
+  end
+
+  def test_default_version_in_endpoint_url
+    action = :authorize
+    url = @gateway.send(:url, action)
+    assert_match(%r{/v1/transactions/authorize\z}, url)
+  end
+
   private
 
   def successful_authorize_response

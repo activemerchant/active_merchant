@@ -1,8 +1,10 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class Shift4Gateway < Gateway
-      self.test_url = 'https://utgapi.shift4test.com/api/rest/v1/'
-      self.live_url = 'https://utg.shift4api.net/api/rest/v1/'
+      version 'v1'
+
+      self.test_url = "https://utgapi.shift4test.com/api/rest/#{fetch_version}/"
+      self.live_url = "https://utg.shift4api.net/api/rest/#{fetch_version}/"
 
       self.supported_countries = %w(US CA CU HT DO PR JM TT GP MQ BS BB LC CW AW VC VI GD AG DM KY KN SX TC MF VG BQ AI BL MS)
       self.default_currency = 'USD'

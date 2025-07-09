@@ -107,6 +107,16 @@ class SumUpTest < Test::Unit::TestCase
     assert_equal 'CHECKOUT_SESSION_IS_EXPIRED', error_code_from
   end
 
+  def test_base_url_includes_version
+    assert_includes @gateway.live_url, '/v0.1/'
+  end
+
+  def test_default_version_in_endpoint_url
+    action = 'checkouts'
+    url = @gateway.live_url + action
+    assert_match(%r{/v0.1/checkouts\z}, url)
+  end
+
   private
 
   def pre_scrubbed

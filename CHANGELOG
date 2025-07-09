@@ -174,6 +174,19 @@
 * Update clean_emoji_emoticons_and_accent method [almalee24] #5485
 * Payflow: Send CAVV as xid if xid is not present [adarsh-spreedly] #5496
 * Credorax: Fixed request signature [mjdonga] #5486
+* Nuvei/Reach/Shift4: Normalize API_VERSION usage [sumit-sharmas] #5493
+* Xpay/Sumup/Quickbooks: Normalize API_VERSION usage [aaqibrashidmir] #5495
+* Ebanx: Fix NoMethodError for address [almalee24] #5500
+* Vpos: Check for response under refund.response_code [almalee24] #5501
+* Ebanx: Fix field nesting cof_info, device_id, and notification_url [yunnydang] #5494
+* MultiPay: Add Base Gateway adapter [Heavblade] #5497
+* Cecabank: Fix finRec field formatting for Cecabank Gateway [aaqibrashidmir] #5506
+* Nuvei: Map order_id to clientUniqueId field on capture transactions [aaqibrashidmir] #5498
+* Ebanx: Added new GSF payment.taxes.iva_co [ritesh-spreedly] #5509
+* Litle: Remove 141 & 142 [almalee24] #5505
+* Normalize API Version for CyberSourceRest, Datatrans, and FlexCharge [aaqibrashidmir] #5489
+* Wepay/Wompi/CommerceHub: Normalize API_VERSION usage [sumit-sharmas] #5490
+* CheckoutV2: Pass udf5 field in metadata [mjdonga] #5507
 * DLocal: Add issuer_identification_number as bin in Card object [adarsh-spreedly] #5499
 
 == Version 1.137.0 (August 2, 2024)
@@ -866,6 +879,8 @@
 * CyberSource: Add `line_items` for purchase [ajawadmirza] #4282
 * Payflow Pro: Add `stored_credential` fields [ajawadmirza] #4277
 * Decidir Plus: Add `fraud_detection` fields [naashton] #4289
+* Elavon: Pass through ssl_email for verify transactions [ankurspreedly] #5502
+* Nuvei: Add address compoenents for all transactions [ankurspreedly] #5511
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
