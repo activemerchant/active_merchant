@@ -18,6 +18,20 @@ class HpsTest < Test::Unit::TestCase
     }
   end
 
+  def test_api_version
+    assert_equal '1.0', @gateway.fetch_version
+  end
+
+  def test_api_version_in_xml
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<hps:Ver1.0>/, data)
+    end.respond_with(successful_charge_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_charge_response)
 
