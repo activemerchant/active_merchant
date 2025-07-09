@@ -166,6 +166,17 @@ class QuickpayV10Test < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_test_url_and_version
+    gateway = ActiveMerchant::Billing::QuickpayV10Gateway.new(api_key: 'APIKEY')
+    assert_equal 'https://api.quickpay.net', gateway.class.test_url
+    assert_equal '10', gateway.class.fetch_version
+  end
+
+  def test_api_normalization_v10
+    gateway = ActiveMerchant::Billing::QuickpayV10Gateway.new(api_key: 'APIKEY')
+    assert_instance_of ActiveMerchant::Billing::QuickpayV10Gateway, gateway
+  end
+
   private
 
   def successful_payment_response
