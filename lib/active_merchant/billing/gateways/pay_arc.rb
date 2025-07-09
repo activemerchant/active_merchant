@@ -1,8 +1,10 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class PayArcGateway < Gateway
-      self.test_url = 'https://testapi.payarc.net/v1'
-      self.live_url = 'https://api.payarc.net/v1'
+      version 'v1'
+
+      self.test_url = "https://testapi.payarc.net/#{fetch_version}"
+      self.live_url = "https://api.payarc.net/#{fetch_version}"
 
       self.supported_countries = ['US']
       self.default_currency = 'usd'

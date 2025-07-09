@@ -3,6 +3,8 @@ require 'nokogiri'
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class HpsGateway < Gateway
+      version '1.0'
+
       self.live_url = 'https://api2.heartlandportico.com/hps.exchange.posgateway/posgatewayservice.asmx'
       self.test_url = 'https://cert.api2.heartlandportico.com/Hps.Exchange.PosGateway/PosGatewayService.asmx'
 
@@ -321,7 +323,7 @@ module ActiveMerchant # :nodoc:
         } do
           xml.SOAP :Body do
             xml.hps :PosRequest do
-              xml.hps :'Ver1.0' do
+              xml.hps :"Ver#{fetch_version}" do
                 xml.hps :Header do
                   xml.hps :SecretAPIKey, @options[:secret_api_key]
                   xml.hps :DeveloperID, @options[:developer_id] if @options[:developer_id]
