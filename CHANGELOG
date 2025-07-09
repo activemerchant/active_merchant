@@ -191,6 +191,7 @@
 * Normalize API Versions for litle, mercado_pago and mundipagg [mjdonga] #5518
 * Normalize API Versions for Barclay card Smart pay, Fat Zebra and Forte gateways [mjdonga] #5519
 * Worldpay: Add refund reference field [yunnydang] #5531
+* Paysafe: Save cards to exisiting profiles [almalee24] #5504
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).
