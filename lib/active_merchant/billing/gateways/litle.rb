@@ -3,7 +3,7 @@ require 'nokogiri'
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class LitleGateway < Gateway
-      SCHEMA_VERSION = '9.14'
+      version '9.14'
 
       class_attribute :postlive_url, :prelive_url
 
@@ -598,7 +598,7 @@ module ActiveMerchant # :nodoc:
       def root_attributes
         {
           merchantId: @options[:merchant_id],
-          version: SCHEMA_VERSION,
+          version: fetch_version,
           xmlns: 'http://www.litle.com/schema'
         }
       end
