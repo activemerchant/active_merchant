@@ -1,8 +1,10 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class OptimalPaymentGateway < Gateway
-      self.test_url = 'https://webservices.test.optimalpayments.com/creditcardWS/CreditCardServlet/v1'
-      self.live_url = 'https://webservices.optimalpayments.com/creditcardWS/CreditCardServlet/v1'
+      version 'v1'
+
+      self.test_url = "https://webservices.test.optimalpayments.com/creditcardWS/CreditCardServlet/#{fetch_version}"
+      self.live_url = "https://webservices.optimalpayments.com/creditcardWS/CreditCardServlet/#{fetch_version}"
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = %w[CA US GB AU AT BE BG HR CY CZ DK
