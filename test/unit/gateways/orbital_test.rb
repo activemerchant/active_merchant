@@ -140,7 +140,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_method, _endpoint, _data, headers|
-      assert_match(/application\/PTI95/, headers["Content-Type"])
+      assert_match(/application\/PTI95/, headers['Content-Type'])
     end.respond_with(successful_purchase_response)
   end
 
@@ -2143,7 +2143,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def schema_file
-    assert_equal @schema_version, @gateway.class::fetch_version
+    assert_equal @schema_version, @gateway.class.fetch_version
     @schema_file ||= File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI#{@schema_version.delete('.')}.xsd")
   end
 end
