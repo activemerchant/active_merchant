@@ -18,6 +18,10 @@ class TnsTest < Test::Unit::TestCase
     }
   end
 
+  def test_api_version
+    assert_equal '52', @gateway.fetch_version
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_request).twice.returns(successful_authorize_response).then.returns(successful_capture_response)
 
@@ -176,6 +180,13 @@ class TnsTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_url
+    assert_equal 'https://secure.na.tnspayments.com/api/rest/version/52/', @gateway.live_na_url
+    assert_equal 'https://secure.ap.tnspayments.com/api/rest/version/52/', @gateway.live_ap_url
+    assert_equal 'https://secure.eu.tnspayments.com/api/rest/version/52/', @gateway.live_eu_url
+    assert_equal 'https://secure.uat.tnspayments.com/api/rest/version/52/', @gateway.test_url
   end
 
   private

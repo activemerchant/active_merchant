@@ -62,7 +62,7 @@ module ActiveMerchant # :nodoc:
     # * {USA ePay Developer Login}[https://www.usaepay.com/developer/login]
     #
     class UsaEpayAdvancedGateway < Gateway
-      API_VERSION = '1.4'
+      version '1.4'
 
       TEST_URL_BASE = 'https://sandbox.usaepay.com/soap/gate/' # :nodoc:
       LIVE_URL_BASE = 'https://www.usaepay.com/soap/gate/' # :nodoc:
