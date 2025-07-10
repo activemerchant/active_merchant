@@ -1,7 +1,9 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class MundipaggGateway < Gateway
-      self.live_url = 'https://api.mundipagg.com/core/v1'
+      version 'v1'
+
+      self.live_url = "https://api.mundipagg.com/core/#{fetch_version}"
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'

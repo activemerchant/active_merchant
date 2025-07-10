@@ -1433,6 +1433,25 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert @cftgateway.refund(@amount, response.authorization, authorization_validated: true)
   end
 
+  def test_successful_refund_with_refund_reference_field
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert response.authorization
+
+    # There is a delay for a transaction to be recorded by Worldpay. Inquiring
+    # too soon will result in an error "Order not ready"
+    sleep 40
+
+    refund = @gateway.refund(@amount, response.authorization, @options.merge(refund_reference: 12233, authorization_validated: true))
+
+    if refund.message == 'Order not ready'
+      sleep 40
+
+      assert_equal 'SUCCESS', refund.message
+    end
+  end
+
   def test_failed_refund_synchronous_response
     auth = @cftgateway.authorize(@amount, @credit_card, @options)
     assert_success auth

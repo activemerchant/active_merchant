@@ -321,7 +321,7 @@ module ActiveMerchant # :nodoc:
 
       def inquire(authorization, options = {})
         options.merge!({ request_type: :inquire })
-        if authorization.start_with?('pi_')
+        if authorization&.start_with?('pi_')
           show_intent(authorization, options)
         else
           retrieve_setup_intent(authorization, options)
