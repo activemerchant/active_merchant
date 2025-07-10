@@ -3,18 +3,20 @@ require 'nokogiri'
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class TransFirstTransactionExpressGateway < Gateway
+      version 'v1'
+
       self.display_name = 'TransFirst Transaction Express'
       self.homepage_url = 'http://transactionexpress.com/'
 
-      self.test_url = 'https://ws.cert.transactionexpress.com/portal/merchantframework/MerchantWebServices-v1?wsdl'
-      self.live_url = 'https://ws.transactionexpress.com/portal/merchantframework/MerchantWebServices-v1?wsdl'
+      self.test_url = "https://ws.cert.transactionexpress.com/portal/merchantframework/MerchantWebServices-#{fetch_version}?wsdl"
+      self.live_url = "https://ws.transactionexpress.com/portal/merchantframework/MerchantWebServices-#{fetch_version}?wsdl"
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = %i[visa master american_express discover diners_club]
 
-      V1_NAMESPACE = 'http://postilion/realtime/merchantframework/xsd/v1/'
+      V1_NAMESPACE = "http://postilion/realtime/merchantframework/xsd/#{fetch_version}/"
       SOAPENV_NAMESPACE = 'http://schemas.xmlsoap.org/soap/envelope/'
       AUTHORIZATION_FIELD_SEPARATOR = '|'
 
@@ -295,10 +297,10 @@ module ActiveMerchant # :nodoc:
           customer_id = r.params['custId']
 
           store_payment_method_request = build_xml_payment_storage_request do |doc|
-            doc['v1'].cust do
+            doc[fetch_version].cust do
               add_customer_id(doc, customer_id)
-              doc['v1'].pmt do
-                doc['v1'].type 0 # add
+              doc[fetch_version].pmt do
+                doc[fetch_version].type 0 # add
                 add_credit_card(doc, payment_method)
               end
             end
@@ -459,7 +461,7 @@ module ActiveMerchant # :nodoc:
         Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
           xml['soapenv'].Envelope('xmlns:soapenv' => SOAPENV_NAMESPACE) do
             xml['soapenv'].Body do
-              xml['v1'].send(wrapper, 'xmlns:v1' => V1_NAMESPACE) do
+              xml[fetch_version].send(wrapper, "xmlns:#{fetch_version}" => V1_NAMESPACE) do
                 add_merchant(xml)
                 yield(xml)
               end
@@ -473,44 +475,44 @@ module ActiveMerchant # :nodoc:
         return request if action == :store
 
         doc = Nokogiri::XML::Document.parse(request)
-        merc_nodeset = doc.xpath('//v1:merc', 'v1' => V1_NAMESPACE)
-        merc_nodeset.after "<v1:tranCode>#{TRANSACTION_CODES[action]}</v1:tranCode>"
+        merc_nodeset = doc.xpath("//#{fetch_version}:merc", fetch_version => V1_NAMESPACE)
+        merc_nodeset.after "<#{fetch_version}:tranCode>#{TRANSACTION_CODES[action]}</#{fetch_version}:tranCode>"
         doc.root.to_xml
       end
 
       def add_merchant(doc, product_type = nil)
-        doc['v1'].merc do
-          doc['v1'].id @options[:gateway_id]
-          doc['v1'].regKey @options[:reg_key]
-          doc['v1'].inType '1'
-          doc['v1'].prodType product_type if product_type
+        doc[fetch_version].merc do
+          doc[fetch_version].id @options[:gateway_id]
+          doc[fetch_version].regKey @options[:reg_key]
+          doc[fetch_version].inType '1'
+          doc[fetch_version].prodType product_type if product_type
         end
       end
 
       def add_amount(doc, money)
-        doc['v1'].reqAmt amount(money)
+        doc[fetch_version].reqAmt amount(money)
       end
 
       def add_order_number(doc, options)
         return unless options[:order_id]
 
-        doc['v1'].authReq {
-          doc['v1'].ordNr options[:order_id]
+        doc[fetch_version].authReq {
+          doc[fetch_version].ordNr options[:order_id]
         }
       end
 
       def add_credit_card(doc, payment_method)
-        doc['v1'].card {
-          doc['v1'].pan payment_method.number
-          doc['v1'].sec payment_method.verification_value if payment_method.verification_value?
-          doc['v1'].xprDt expiration_date(payment_method)
+        doc[fetch_version].card {
+          doc[fetch_version].pan payment_method.number
+          doc[fetch_version].sec payment_method.verification_value if payment_method.verification_value?
+          doc[fetch_version].xprDt expiration_date(payment_method)
         }
       end
 
       def add_echeck(doc, payment_method)
-        doc['v1'].achEcheck {
-          doc['v1'].bankRtNr payment_method.routing_number
-          doc['v1'].acctNr payment_method.account_number
+        doc[fetch_version].achEcheck {
+          doc[fetch_version].bankRtNr payment_method.routing_number
+          doc[fetch_version].acctNr payment_method.account_number
         }
       end
 
@@ -521,60 +523,60 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_pan(doc, payment_method)
-        doc['v1'].card do
-          doc['v1'].pan payment_method.number
+        doc[fetch_version].card do
+          doc[fetch_version].pan payment_method.number
         end
       end
 
       def add_contact(doc, fullname, options)
-        doc['v1'].contact do
-          doc['v1'].fullName fullname unless fullname.blank?
-          doc['v1'].coName options[:company_name] if options[:company_name]
-          doc['v1'].title options[:title] if options[:title]
+        doc[fetch_version].contact do
+          doc[fetch_version].fullName fullname unless fullname.blank?
+          doc[fetch_version].coName options[:company_name] if options[:company_name]
+          doc[fetch_version].title options[:title] if options[:title]
 
           if (billing_address = options[:billing_address])
             if billing_address[:phone]
-              doc['v1'].phone do
-                doc['v1'].type(options[:phone_number_type] || '4')
-                doc['v1'].nr billing_address[:phone].gsub(/\D/, '')
+              doc[fetch_version].phone do
+                doc[fetch_version].type(options[:phone_number_type] || '4')
+                doc[fetch_version].nr billing_address[:phone].gsub(/\D/, '')
               end
             end
-            doc['v1'].addrLn1 billing_address[:address1] if billing_address[:address1]
-            doc['v1'].addrLn2 billing_address[:address2] unless billing_address[:address2].blank?
-            doc['v1'].city billing_address[:city] if billing_address[:city]
-            doc['v1'].state billing_address[:state] if billing_address[:state]
-            doc['v1'].zipCode billing_address[:zip].delete('-') if billing_address[:zip]
-            doc['v1'].ctry 'US'
+            doc[fetch_version].addrLn1 billing_address[:address1] if billing_address[:address1]
+            doc[fetch_version].addrLn2 billing_address[:address2] unless billing_address[:address2].blank?
+            doc[fetch_version].city billing_address[:city] if billing_address[:city]
+            doc[fetch_version].state billing_address[:state] if billing_address[:state]
+            doc[fetch_version].zipCode billing_address[:zip].delete('-') if billing_address[:zip]
+            doc[fetch_version].ctry 'US'
           end
 
-          doc['v1'].email options[:email] if options[:email]
-          doc['v1'].type options[:contact_type] if options[:contact_type]
-          doc['v1'].stat options[:contact_stat] if options[:contact_stat]
+          doc[fetch_version].email options[:email] if options[:email]
+          doc[fetch_version].type options[:contact_type] if options[:contact_type]
+          doc[fetch_version].stat options[:contact_stat] if options[:contact_stat]
 
           if (shipping_address = options[:shipping_address])
-            doc['v1'].ship do
-              doc['v1'].fullName fullname unless fullname.blank?
-              doc['v1'].addrLn1 shipping_address[:address1] if shipping_address[:address1]
-              doc['v1'].addrLn2 shipping_address[:address2] unless shipping_address[:address2].blank?
-              doc['v1'].city shipping_address[:city] if shipping_address[:city]
-              doc['v1'].state shipping_address[:state] if shipping_address[:state]
-              doc['v1'].zipCode shipping_address[:zip].delete('-') if shipping_address[:zip]
-              doc['v1'].phone shipping_address[:phone].gsub(/\D/, '') if shipping_address[:phone]
-              doc['v1'].email shipping_address[:email] if shipping_address[:email]
+            doc[fetch_version].ship do
+              doc[fetch_version].fullName fullname unless fullname.blank?
+              doc[fetch_version].addrLn1 shipping_address[:address1] if shipping_address[:address1]
+              doc[fetch_version].addrLn2 shipping_address[:address2] unless shipping_address[:address2].blank?
+              doc[fetch_version].city shipping_address[:city] if shipping_address[:city]
+              doc[fetch_version].state shipping_address[:state] if shipping_address[:state]
+              doc[fetch_version].zipCode shipping_address[:zip].delete('-') if shipping_address[:zip]
+              doc[fetch_version].phone shipping_address[:phone].gsub(/\D/, '') if shipping_address[:phone]
+              doc[fetch_version].email shipping_address[:email] if shipping_address[:email]
             end
           end
         end
       end
 
       def add_name(doc, payment_method)
-        doc['v1'].contact do
-          doc['v1'].fullName payment_method.name unless payment_method.name.blank?
+        doc[fetch_version].contact do
+          doc[fetch_version].fullName payment_method.name unless payment_method.name.blank?
         end
       end
 
       def add_original_transaction_data(doc, authorization)
-        doc['v1'].origTranData do
-          doc['v1'].tranNr authorization
+        doc[fetch_version].origTranData do
+          doc[fetch_version].tranNr authorization
         end
       end
 
@@ -582,21 +584,21 @@ module ActiveMerchant # :nodoc:
         options[:contact_type] = 1 # recurring
         options[:contact_stat] = 1 # active
 
-        doc['v1'].cust do
-          doc['v1'].type 0 # add
+        doc[fetch_version].cust do
+          doc[fetch_version].type 0 # add
           add_contact(doc, fullname, options)
         end
       end
 
       def add_customer_id(doc, customer_id)
-        doc['v1'].contact do
-          doc['v1'].id customer_id
+        doc[fetch_version].contact do
+          doc[fetch_version].id customer_id
         end
       end
 
       def add_wallet_id(doc, wallet_id)
-        doc['v1'].recurMan do
-          doc['v1'].id wallet_id
+        doc[fetch_version].recurMan do
+          doc[fetch_version].id wallet_id
         end
       end
     end
