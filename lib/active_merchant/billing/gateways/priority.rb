@@ -3,7 +3,6 @@ module ActiveMerchant # :nodoc:
     class PriorityGateway < Gateway
       version 'v3'
       version 'v1', :verify_card_api
-      version 'v3', :batch_status_api
       version 'v1', :jwt_api
 
       # Sandbox and Production
@@ -17,8 +16,8 @@ module ActiveMerchant # :nodoc:
       self.live_url_verify = "https://api2.mxmerchant.com/merchant/#{fetch_version(:verify_card_api)}/bin"
 
       # Sandbox and Production - check batch status
-      self.test_url_batch = "https://sandbox.api.mxmerchant.com/checkout/#{fetch_version(:batch_status_api)}/batch"
-      self.live_url_batch = "https://api.mxmerchant.com/checkout/#{fetch_version(:batch_status_api)}/batch"
+      self.test_url_batch = "https://sandbox.api.mxmerchant.com/checkout/#{fetch_version}/batch"
+      self.live_url_batch = "https://api.mxmerchant.com/checkout/#{fetch_version}/batch"
 
       # Sandbox and Production - generate jwt for verify card url
       self.test_url_jwt = "https://sandbox-api2.mxmerchant.com/security/#{fetch_version(:jwt_api)}/application/merchantId"
