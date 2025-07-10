@@ -28,6 +28,10 @@ class PayArcTest < Test::Unit::TestCase
     }
   end
 
+  def test_api_version
+    assert_equal 'v1', @gateway.fetch_version
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).times(2).returns(
       successful_token_response
@@ -152,6 +156,11 @@ class PayArcTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_equal transcript, post_scrubbed
+  end
+
+  def test_url
+    assert_equal 'https://api.payarc.net/v1', @gateway.live_url
+    assert_equal 'https://testapi.payarc.net/v1', @gateway.test_url
   end
 
   private
