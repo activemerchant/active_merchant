@@ -136,6 +136,14 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     )
   end
 
+  def test_endpoint
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, _data, headers|
+      assert_match(/application\/PTI95/, headers['Content-Type'])
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_truncates_and_removes_accents_from_name
     card = credit_card('4242424242424242', first_name: 'José', last_name: 'García-López de la Santa María')
 
@@ -2135,7 +2143,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def schema_file
-    assert_equal @schema_version, @gateway.class::API_VERSION
+    assert_equal @schema_version, @gateway.class.fetch_version
     @schema_file ||= File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI#{@schema_version.delete('.')}.xsd")
   end
 end
