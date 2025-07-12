@@ -568,10 +568,10 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_successful_apple_pay_purchase_subsequent_auth_discover
     @gateway.expects(:ssl_post).with do |_host, request_body|
-      assert_match %r'<cavv>', request_body
+      assert_match %r'<networkTokenCryptogram>', request_body
       assert_match %r'<commerceIndicator>dipb</commerceIndicator>', request_body
       true
-    end.returns(successful_purchase_response)
+    end.returns(successful_apple_pay_purchase_response)
 
     options = @options.merge(enable_cybs_discover_apple_pay: true)
 
@@ -2028,17 +2028,17 @@ class CyberSourceTest < Test::Unit::TestCase
   end
 
   def test_able_to_properly_handle_40bytes_cryptogram
-    long_cryptogram = "NZwc40C4eTDWHVDXPekFaKkNYGk26w+GYDZmU50cATbjqOpNxR/eYA==\n"
+    long_cryptogram = 'NZwc40C4eTDWHVDXPekFaKkNYGk26+GYDZmU50cATbjqOpNxR/eYA=='
     credit_card = network_tokenization_credit_card('4111111111111111', brand: 'american_express', payment_cryptogram: long_cryptogram)
 
     stub_comms do
       @gateway.authorize(@amount, credit_card, @options)
     end.check_request(skip_response: true) do |_endpoint, body, _headers|
       assert_xml_valid_to_xsd(body)
-      first_half = Base64.encode64(Base64.decode64(long_cryptogram)[0...20])
-      second_half = Base64.encode64(Base64.decode64(long_cryptogram)[20...40])
-      assert_match %r{<cavv>#{first_half}</cavv>}, body
-      assert_match %r{<xid>#{second_half}</xid>}, body
+      # Remove all whitespace between tags for easier matching
+      normalized_body = body.gsub(/>\s+</, '><')
+      assert_match %r{<networkTokenCryptogram>#{Regexp.escape(long_cryptogram)}</networkTokenCryptogram>}, normalized_body
+      assert_not_match %r{<xid>}, normalized_body
     end
   end
 
@@ -2049,7 +2049,7 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.authorize(@amount, credit_card, @options)
     end.check_request(skip_response: true) do |_endpoint, body, _headers|
       assert_xml_valid_to_xsd(body)
-      assert_match %r{<cavv>#{credit_card.payment_cryptogram}\n</cavv>}, body
+      assert_match %r{<networkTokenCryptogram>#{credit_card.payment_cryptogram}</networkTokenCryptogram>}, body
       assert_not_match %r{<xid>}, body
     end
   end
@@ -2355,6 +2355,14 @@ class CyberSourceTest < Test::Unit::TestCase
     read 1572 bytes
     Conn close
     POST_SCRUBBED
+  end
+
+  def successful_apple_pay_purchase_response
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+      <soap:Header>
+      <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"><wsu:Timestamp wsu:Id="TS-0d8c7fab-dab5-4618-8d0f-2e422f1cb7d8"><wsu:Created>2025-05-22T20:22:35.397Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.201"><c:merchantReferenceCode>da65765883e484aeb97ac49f591ebe64</c:merchantReferenceCode><c:requestID>7479453550786771804606</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Axj//wSTlXZE8JjnneG+ABsOxcs2zhmxT35bQOnsBT35bQOnvSA+RQWhk0ky3SA7ek8MCcnKuyJ4THPO8N8AMUi0</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>1.00</c:amount><c:authorizationCode>831000</c:authorizationCode><c:avsCode>Y</c:avsCode><c:avsCodeRaw>Y</c:avsCodeRaw><c:authorizedDateTime>2025-05-22T20:22:35Z</c:authorizedDateTime><c:processorResponse>00</c:processorResponse><c:reconciliationID>IOAW7AXL92Z9</c:reconciliationID><c:authRecord>0110322000000E1000020000000000000001000522202235007223494F41573741584C39325A393833313030303030000159004400223134573031363135303730333830323039344730363400103232415050524F56414C0006564943524320</c:authRecord><c:paymentNetworkTransactionID>016150703802094</c:paymentNetworkTransactionID></c:ccAuthReply><c:ccCaptureReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2025-05-22T20:22:35Z</c:requestDateTime><c:amount>1.00</c:amount><c:reconciliationID>1936831</c:reconciliationID></c:ccCaptureReply><c:card><c:cardType>001</c:cardType></c:card><c:acquirerMerchantNumber>000123456789012</c:acquirerMerchantNumber><c:pos><c:terminalID>01234567</c:terminalID></c:pos></c:replyMessage></soap:Body></soap:Envelope>
+    XML
   end
 
   def successful_authorization_certificate_response
