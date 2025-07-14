@@ -1,6 +1,8 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class PaysafeGateway < Gateway
+      version 'v1'
+
       self.test_url = 'https://api.test.paysafe.com'
       self.live_url = 'https://api.paysafe.com'
 
@@ -385,9 +387,9 @@ module ActiveMerchant # :nodoc:
         base_url = (test? ? test_url : live_url)
 
         if action.include? 'profiles'
-          "#{base_url}/customervault/v1/#{action}"
+          "#{base_url}/customervault/#{fetch_version}/#{action}"
         else
-          "#{base_url}/cardpayments/v1/accounts/#{@options[:account_id]}/#{action}"
+          "#{base_url}/cardpayments/#{fetch_version}/accounts/#{@options[:account_id]}/#{action}"
         end
       end
 

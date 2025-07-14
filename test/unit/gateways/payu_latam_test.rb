@@ -486,6 +486,17 @@ class PayuLatamTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_urls_for_test_and_live_mode
+    assert_equal 'https://sandbox.api.payulatam.com/payments-api/4.0/service.cgi', @gateway.send(:url)
+
+    @gateway.expects(:test?).returns(false)
+    assert_equal 'https://api.payulatam.com/payments-api/4.0/service.cgi', @gateway.send(:url)
+  end
+
+  def test_api_version
+    assert_equal '4.0', @gateway.fetch_version
+  end
+
   private
 
   def pre_scrubbed
