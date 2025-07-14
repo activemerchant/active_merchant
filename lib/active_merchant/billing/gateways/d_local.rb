@@ -243,7 +243,7 @@ module ActiveMerchant # :nodoc:
       # Since we aren't handling async notifications of eventual success,
       # we count 100 as a success.
       def success_from(action, response)
-        return false unless response['status_code']
+        return false if response['status_code'].blank? || response['status'] == 'REJECTED'
 
         if action == 'void'
           response['status_code'].to_s == '400' && response['status'] == 'CANCELLED'

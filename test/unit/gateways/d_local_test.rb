@@ -534,6 +534,14 @@ class DLocalTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_success_from_to_return_false_if_status_code_is_success_but_status_is_rejected
+    refute @gateway.send(:success_from, 'purchase', { 'status_code' => 100, 'status' => 'REJECTED' })
+  end
+
+  def test_success_from_to_return_true_if_status_code_is_success_and_status_is_pending
+    assert @gateway.send(:success_from, 'purchase', { 'status_code' => 100, 'status' => 'PENDING' })
+  end
+
   private
 
   def pre_scrubbed
