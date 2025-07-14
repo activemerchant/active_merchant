@@ -17,6 +17,10 @@ class WompiTest < Test::Unit::TestCase
     }
   end
 
+  def test_api_version
+    assert_equal 'v1', @gateway.fetch_version
+  end
+
   def test_ambidextrous_gateway_behaves_accordingly
     response = stub_comms(@ambidextrous_gateway) do
       @ambidextrous_gateway.purchase(@amount, @credit_card)
@@ -165,6 +169,11 @@ class WompiTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_url
+    assert_equal 'https://sync.production.wompi.co/v1', @gateway.live_url
+    assert_equal 'https://sync.sandbox.wompi.co/v1', @gateway.test_url
   end
 
   private

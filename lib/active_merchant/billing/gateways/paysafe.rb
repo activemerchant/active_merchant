@@ -79,12 +79,28 @@ module ActiveMerchant # :nodoc:
 
       def store(payment, options = {})
         post = {}
-        add_payment(post, payment)
-        add_address_for_vaulting(post, options)
-        add_profile_data(post, payment, options)
-        add_store_data(post, payment, options)
 
-        commit(:post, 'profiles', post, options)
+        if options[:profile_id]
+          post[:cardNum] = payment.number
+          post[:cardExpiry] = {
+            month: payment.month,
+            year: payment.year
+          }
+          post[:accountId] = options[:account_id] if options[:account_id]
+          post[:nickName] = options[:nickname] if options[:nickname]
+          post[:holderName] = payment.name
+          post[:billingAddressId] = options[:billing_address_id] if options[:billing_address_id]
+          post[:defaultCardIndicator] = normalize(options[:default_card_indicator]) if options[:default_card_indicator]
+        else
+          add_payment(post, payment)
+          add_address_for_vaulting(post, options)
+          add_profile_data(post, payment, options)
+          add_store_data(post, payment, options)
+        end
+
+        endpoint = options[:profile_id] ? "profiles/#{options[:profile_id]}/cards" : 'profiles'
+
+        commit(:post, endpoint, post, options)
       end
 
       def unstore(pm_profile_id)
@@ -391,7 +407,7 @@ module ActiveMerchant # :nodoc:
 
       def authorization_from(action, response)
         if action == 'profiles'
-          pm = response['cards'].first['paymentToken']
+          pm = response['cards']&.first&.dig('paymentToken')
           "#{pm}|#{response['id']}"
         else
           response['id']
