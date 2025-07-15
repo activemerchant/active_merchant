@@ -18,6 +18,22 @@ class NabTransactTest < Test::Unit::TestCase
     }
   end
 
+  def test_endpoint
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<apiVersion>xml-4.2<\/apiVersion>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_periodic_endpoint
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<apiVersion>spxml-4.2<\/apiVersion>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).with(&check_transaction_type(:purchase)).returns(successful_purchase_response)
 

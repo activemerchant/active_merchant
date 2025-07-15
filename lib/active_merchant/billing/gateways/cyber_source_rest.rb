@@ -5,6 +5,8 @@ module ActiveMerchant # :nodoc:
     class CyberSourceRestGateway < Gateway
       include ActiveMerchant::Billing::CyberSourceCommon
 
+      version 'v2'
+
       self.test_url = 'https://apitest.cybersource.com'
       self.live_url = 'https://api.cybersource.com'
 
@@ -386,7 +388,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def url(action)
-        "#{test? ? test_url : live_url}/pts/v2/#{action}"
+        "#{test? ? test_url : live_url}/pts/#{fetch_version}/#{action}"
       end
 
       def host
@@ -446,7 +448,7 @@ module ActiveMerchant # :nodoc:
         string_to_sign = {
           host:,
           date: gmtdatetime,
-          'request-target': "#{http_method} /pts/v2/#{resource}",
+          'request-target': "#{http_method} /pts/#{fetch_version}/#{resource}",
           digest:,
           'v-c-merchant-id': @options[:merchant_id]
         }.map { |k, v| "#{k}: #{v}" }.join("\n").force_encoding(Encoding::UTF_8)

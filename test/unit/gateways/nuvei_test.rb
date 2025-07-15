@@ -541,6 +541,21 @@ class NuveiTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_billing_address_details_for_non_account_funding_transactions
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(is_aft: false))
+    end.check_request do |_method, endpoint, data, _headers|
+      if /payment/.match?(endpoint)
+        json_data = JSON.parse(data)
+        assert_match(@options[:billing_address][:address1], json_data['billingAddress']['address'])
+        assert_match(@options[:billing_address][:city], json_data['billingAddress']['city'])
+        assert_match(@options[:billing_address][:state], json_data['billingAddress']['state'])
+        assert_match(@options[:billing_address][:country], json_data['billingAddress']['country'])
+        assert_match(@options[:billing_address][:zip], json_data['billingAddress']['zip'])
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_account_funding_transactions_with_user_details
     @user_details_options[:user_details][:date_of_birth] = '1990-09-01'
     stub_comms(@gateway, :ssl_request) do
@@ -595,6 +610,16 @@ class NuveiTest < Test::Unit::TestCase
   def test_url
     assert_equal 'https://secure.safecharge.com/ppp/api/v1', @gateway.live_url
     assert_equal 'https://ppp-test.nuvei.com/ppp/api/v1', @gateway.test_url
+  end
+
+  def test_capture_passes_order_id_as_client_unique_id
+    options = { order_id: '2233512890' }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.capture(@amount, 'some_auth', options)
+    end.check_request(skip_response: true) do |_method, _endpoint, data, _headers|
+      json_data = JSON.parse(data)
+      assert_equal '2233512890', json_data['clientUniqueId']
+    end
   end
 
   private

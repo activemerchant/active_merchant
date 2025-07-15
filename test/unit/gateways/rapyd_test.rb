@@ -668,6 +668,30 @@ class RapydTest < Test::Unit::TestCase
     assert_equal 'ERROR_PAYMENT_METHODS_GET', response.error_code
   end
 
+  def test_version_functionality
+    # Test that version is set correctly
+    assert_equal 'v1', @gateway.fetch_version
+
+    # Test that URLs are built with correct version
+    assert_equal 'https://sandboxapi.rapyd.net/v1/', @gateway.test_url
+    assert_equal 'https://api.rapyd.net/v1/', @gateway.live_url
+    assert_equal 'https://sandboxpayment-redirect.rapyd.net/v1/', @gateway.payment_redirect_test
+    assert_equal 'https://payment-redirect.rapyd.net/v1/', @gateway.payment_redirect_live
+
+    # Test that commit method uses version in relative path
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, endpoint, _data, _headers|
+      # Verify the request was made to the correct versioned URL
+      assert_match %r{/v1/payments$}, endpoint
+    end.respond_with(successful_purchase_response)
+
+    # Test that headers method receives correct versioned relative path
+    rel_path = @gateway.send(:headers, 'post/v1/payments', '{}')
+    assert rel_path.has_key?('signature')
+    assert rel_path.has_key?('access_key')
+  end
+
   private
 
   def response_500

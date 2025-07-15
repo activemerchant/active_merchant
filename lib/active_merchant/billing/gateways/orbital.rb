@@ -32,11 +32,11 @@ module ActiveMerchant # :nodoc:
       include OrbitalCodes
       include Empty
 
-      API_VERSION = '9.5'
+      version '9.5'
 
       POST_HEADERS = {
         'MIME-Version' => '1.1',
-        'Content-Type' => "application/PTI#{API_VERSION.delete('.')}",
+        'Content-Type' => "application/PTI#{fetch_version.delete('.')}",
         'Content-transfer-encoding' => 'text',
         'Request-number' => '1',
         'Document-type' => 'Request',

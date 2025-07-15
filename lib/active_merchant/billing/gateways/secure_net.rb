@@ -1,7 +1,7 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class SecureNetGateway < Gateway
-      API_VERSION = '4.0'
+      version '4.0'
 
       TRANSACTIONS = {
         auth_only:            '0000',

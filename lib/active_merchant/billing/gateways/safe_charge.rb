@@ -13,7 +13,8 @@ module ActiveMerchant # :nodoc:
       self.homepage_url = 'https://www.safecharge.com'
       self.display_name = 'SafeCharge'
 
-      VERSION = '4.1.0'
+      # Define the API version using the Versionable module
+      version '4.1.0'
 
       def initialize(options = {})
         requires!(options, :client_login_id, :client_password)
@@ -133,7 +134,7 @@ module ActiveMerchant # :nodoc:
         post[:sg_ClientLoginID] = @options[:client_login_id]
         post[:sg_ClientPassword] = @options[:client_password]
         post[:sg_ResponseFormat] = '4'
-        post[:sg_Version] = VERSION
+        post[:sg_Version] = fetch_version
         post[:sg_ClientUniqueID] = options[:order_id] if options[:order_id]
         post[:sg_UserID] = options[:user_id] if options[:user_id]
         post[:sg_AuthType] = options[:auth_type] if options[:auth_type]
