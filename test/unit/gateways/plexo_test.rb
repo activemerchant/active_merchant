@@ -48,6 +48,11 @@ class PlexoTest < Test::Unit::TestCase
     }
   end
 
+  def test_endpoint
+    assert_equal 'https://api.testing.plexo.com.uy/v1/payments', @gateway.test_url
+    assert_equal 'https://api.plexo.com.uy/v1/payments', @gateway.live_url
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 

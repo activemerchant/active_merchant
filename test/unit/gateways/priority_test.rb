@@ -46,6 +46,26 @@ class PriorityTest < Test::Unit::TestCase
     }
   end
 
+  def test_endpoint
+    assert_equal 'https://sandbox.api.mxmerchant.com/checkout/v3/payment', @gateway.test_url
+    assert_equal 'https://api.mxmerchant.com/checkout/v3/payment', @gateway.live_url
+  end
+
+  def test_verify_card_endpoint
+    assert_equal 'https://sandbox-api2.mxmerchant.com/merchant/v1/bin', @gateway.test_url_verify
+    assert_equal 'https://api2.mxmerchant.com/merchant/v1/bin', @gateway.live_url_verify
+  end
+
+  def test_batch_status_endpoint
+    assert_equal 'https://sandbox.api.mxmerchant.com/checkout/v3/batch', @gateway.test_url_batch
+    assert_equal 'https://api.mxmerchant.com/checkout/v3/batch', @gateway.live_url_batch
+  end
+
+  def test_jwt_endpoint
+    assert_equal 'https://sandbox-api2.mxmerchant.com/security/v1/application/merchantId', @gateway.test_url_jwt
+    assert_equal 'https://api2.mxmerchant.com/security/v1/application/merchantId', @gateway.live_url_jwt
+  end
+
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
