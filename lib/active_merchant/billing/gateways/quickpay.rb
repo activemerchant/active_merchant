@@ -9,6 +9,8 @@ module ActiveMerchant # :nodoc:
     class QuickpayGateway < Gateway
       self.abstract_class = true
 
+      version '10'
+
       def self.new(options = {})
         options.fetch(:login) { raise ArgumentError.new('Missing required parameter: login') }
 
