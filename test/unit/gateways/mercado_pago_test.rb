@@ -555,6 +555,15 @@ class MercadoPagoTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_api_version
+    assert_equal 'v1', @gateway.fetch_version
+  end
+
+  def test_test_and_live_urls
+    assert_equal 'https://api.mercadopago.com/v1', @gateway.test_url
+    assert_equal 'https://api.mercadopago.com/v1', @gateway.live_url
+  end
+
   private
 
   def pre_scrubbed

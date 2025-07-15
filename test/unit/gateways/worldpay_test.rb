@@ -820,6 +820,16 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal '924e810350efc21a989e0ac7727ce43b', response.params['cancel_received_order_code']
   end
 
+  def test_successful_refund_with_refund_reference_field
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options.merge(refund_reference: 12233, authorization_validated: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<refund reference=\"12233\">/, data)
+    end.respond_with(successful_refund_response)
+
+    assert_success response
+  end
+
   def test_successful_refund_for_captured_payment
     response = stub_comms do
       @gateway.refund(@amount, @options[:order_id], @options)

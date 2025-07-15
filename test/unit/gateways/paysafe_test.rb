@@ -263,6 +263,28 @@ class PaysafeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_store_with_customer_id
+    options = {
+      profile_id: '123456',
+      account_id: 'account_id',
+      nickname: 'nickname',
+      billing_address_id: '3456',
+      default_card_indicator: 'true'
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"cardNum":"#{@credit_card.number}"/, data)
+      assert_match(/"accountId":"#{options[:account_id]}"/, data)
+      assert_match(/"nickName":"#{options[:nickname]}"/, data)
+      assert_match(/"holderName":"#{@credit_card.name}"/, data)
+      assert_match(/"billingAddressId":"#{options[:billing_address_id]}"/, data)
+      assert_match(/"defaultCardIndicator":#{options[:default_card_indicator]}/, data)
+    end.respond_with(successful_store_response)
+
+    assert_success response
+  end
+
   def test_successful_credit
     stub_comms(@gateway, :ssl_request) do
       @gateway.credit(100, @credit_card, @options.merge({ email: 'profile@memail.com', customer_id: SecureRandom.hex(16) }))
@@ -319,6 +341,19 @@ class PaysafeTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_urls_for_test_and_live_mode
+    assert_equal 'https://api.test.paysafe.com/customervault/v1/profiles', @gateway.send(:url, 'profiles')
+    assert_equal 'https://api.test.paysafe.com/cardpayments/v1/accounts/account_id/auths', @gateway.send(:url, 'auths')
+
+    @gateway.expects(:test?).returns(false).twice
+    assert_equal 'https://api.paysafe.com/customervault/v1/profiles', @gateway.send(:url, 'profiles')
+    assert_equal 'https://api.paysafe.com/cardpayments/v1/accounts/account_id/auths', @gateway.send(:url, 'auths')
+  end
+
+  def test_api_version
+    assert_equal 'v1', @gateway.fetch_version
   end
 
   private

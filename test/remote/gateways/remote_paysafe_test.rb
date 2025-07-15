@@ -269,9 +269,9 @@ class RemotePaysafeTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_incorrect_funding_transaction_type
-    response = @gateway.purchase(@amount, @credit_card, @options.merge({ funding_transaction: 'PERSON_TO_PERSON' }))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ funding_transaction: 'PERSON_TO_ACCOUNT' }))
     assert_failure response
-    assert_equal 'Error(s)- code:3068, message:You submitted a funding transaction that is not correct for the merchant account.', response.message
+    assert_equal 'Error(s)- code:5068, message:Field Error(s)', response.message
   end
 
   def test_failed_purchase
@@ -398,6 +398,41 @@ class RemotePaysafeTest < Test::Unit::TestCase
 
   # Not including a test_failed_verify since the only way to force a failure on this
   # gateway is with a specific dollar amount
+
+  def test_successful_store
+    @profile_options[:customer_id] = SecureRandom.uuid
+    store = @gateway.store(credit_card('4111111111111111'), @profile_options)
+    assert_success store
+
+    @profile_options[:profile_id] = store.authorization.split('|').last
+    second_store = @gateway.store(credit_card('4037111111000000'), @profile_options)
+    assert_success second_store
+  end
+
+  def test_successful_unsuccessful_store_with_duplicate_card
+    @profile_options[:customer_id] = SecureRandom.uuid
+    store = @gateway.store(credit_card('4111111111111111'), @profile_options)
+    assert_success store
+
+    @profile_options[:profile_id] = store.authorization.split('|').last
+    second_store = @gateway.store(credit_card('4111111111111111'), @profile_options)
+    message = "Error(s)- code:7503, message:Card number already in use - #{store.params['cards'].first['id']}"
+
+    assert_failure second_store
+    assert_equal message, second_store.message
+  end
+
+  def test_successful_unsuccessful_store_for_duplicate_customer_id
+    @profile_options[:customer_id] = SecureRandom.uuid
+    store = @gateway.store(credit_card('4111111111111111'), @profile_options)
+    assert_success store
+
+    second_store = @gateway.store(credit_card('4111111111111111'), @profile_options)
+    message = "Error(s)- code:7505, message:The merchantCustomerId provided for this profile has already been used for another profile - #{store.authorization.split('|').last}"
+
+    assert_failure second_store
+    assert_equal message, second_store.message
+  end
 
   def test_successful_store_and_unstore
     unstore = @gateway.unstore(@pm_token)

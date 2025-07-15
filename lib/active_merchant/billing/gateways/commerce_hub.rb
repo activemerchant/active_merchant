@@ -1,6 +1,8 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class CommerceHubGateway < Gateway
+      version 'v1'
+
       self.test_url = 'https://connect-cert.fiservapps.com/ch'
       self.live_url = 'https://connect.fiservapis.com/ch'
 
@@ -15,11 +17,11 @@ module ActiveMerchant # :nodoc:
 
       SCHEDULED_REASON_TYPES = %w(recurring installment)
       ENDPOINTS = {
-        'sale' => '/payments/v1/charges',
-        'void' => '/payments/v1/cancels',
-        'refund' => '/payments/v1/refunds',
-        'vault' => '/payments-vas/v1/tokens',
-        'verify' => '/payments-vas/v1/accounts/verification'
+        'sale' => "/payments/#{fetch_version}/charges",
+        'void' => "/payments/#{fetch_version}/cancels",
+        'refund' => "/payments/#{fetch_version}/refunds",
+        'vault' => "/payments-vas/#{fetch_version}/tokens",
+        'verify' => "/payments-vas/#{fetch_version}/accounts/verification"
       }
 
       def initialize(options = {})

@@ -26,6 +26,11 @@ class OptimalPaymentTest < Test::Unit::TestCase
     }
   end
 
+  def test_endpoint
+    assert_equal 'https://webservices.test.optimalpayments.com/creditcardWS/CreditCardServlet/v1', @gateway.test_url
+    assert_equal 'https://webservices.optimalpayments.com/creditcardWS/CreditCardServlet/v1', @gateway.live_url
+  end
+
   def test_full_request
     @gateway.instance_variable_set('@credit_card', @credit_card)
     assert_match full_request, @gateway.cc_auth_request(@amount, @options)

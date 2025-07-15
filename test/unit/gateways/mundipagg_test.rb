@@ -389,6 +389,14 @@ class MundipaggTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_api_version
+    assert_equal 'v1', @gateway.fetch_version
+  end
+
+  def test_url_for
+    assert_equal 'https://api.mundipagg.com/core/v1/charges/', @gateway.send(:url_for, 'sale')
+  end
+
   private
 
   def test_successful_purchase_with(card)

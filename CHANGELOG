@@ -184,6 +184,21 @@
 * Nuvei: Map order_id to clientUniqueId field on capture transactions [aaqibrashidmir] #5498
 * Ebanx: Added new GSF payment.taxes.iva_co [ritesh-spreedly] #5509
 * Litle: Remove 141 & 142 [almalee24] #5505
+* Normalize API Version for CyberSourceRest, Datatrans, and FlexCharge [aaqibrashidmir] #5489
+* Wepay/Wompi/CommerceHub: Normalize API_VERSION usage [sumit-sharmas] #5490
+* CheckoutV2: Pass udf5 field in metadata [mjdonga] #5507
+* DLocal: Add issuer_identification_number as bin in Card object [adarsh-spreedly] #5499
+* Normalize API Versions for litle, mercado_pago and mundipagg [mjdonga] #5518
+* Normalize API Versions for Barclay card Smart pay, Fat Zebra and Forte gateways [mjdonga] #5519
+* Worldpay: Add refund reference field [yunnydang] #5531
+* Paysafe: Save cards to exisiting profiles [almalee24] #5504
+* Credorax: Spec fix for updated processor name [adarsh-spreedly] #5492
+* Normalize API for Rapyd, SafeCharge and SecureNet [ritesh-kapoor-spreedly] #5514
+* Normalize API Version for Orbital, OptimalPayment, NabTransact [adarsh-spreedly] #5523
+* PayArc/PayConex/HPS: Normalize API_VERSION usage [sumit-sharmas] #5521
+* VantivExpress: Add support of level 2 and 3 data [adarsh-spreedly] #5487
+* Normalize API versions for paypal, paysafe, and payu_latam [mjdonga] #5515
+* StripePI: Add support for multicapture [mjdonga] #5491
 * Normalize API Version for Plexo, Pin, Priority [adarsh-spreedly] #5517
 
 == Version 1.137.0 (August 2, 2024)
@@ -877,6 +892,7 @@
 * Payflow Pro: Add `stored_credential` fields [ajawadmirza] #4277
 * Decidir Plus: Add `fraud_detection` fields [naashton] #4289
 * Elavon: Pass through ssl_email for verify transactions [ankurspreedly] #5502
+* Nuvei: Add address compoenents for all transactions [ankurspreedly] #5511
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
