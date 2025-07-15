@@ -160,6 +160,22 @@ class QuickpayV4to7Test < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
   end
 
+  def test_class_level_version_and_test_url
+    klass = @gateway.class
+    assert_equal 7, klass.fetch_version, 'Default class version should be 7'
+    assert_equal 'https://secure.quickpay.dk/api', klass.test_url, 'test_url should match expected endpoint'
+  end
+
+  def test_instance_protocol_matches_version_option
+    gateway = QuickpayGateway.new(login: merchant_id, password: 'PASSWORD', version: 6)
+    assert_equal 6, gateway.instance_variable_get(:@protocol), 'Protocol should match version option'
+  end
+
+  def test_instance_protocol_defaults_to_class_version
+    gateway = QuickpayGateway.new(login: merchant_id, password: 'PASSWORD')
+    assert_equal 7, gateway.instance_variable_get(:@protocol), 'Protocol should default to class version (7)'
+  end
+
   private
 
   def error_response

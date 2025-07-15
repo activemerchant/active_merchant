@@ -201,6 +201,7 @@
 * StripePI: Add support for multicapture [mjdonga] #5491
 * Normalize API Version for Plexo, Pin, Priority [adarsh-spreedly] #5517
 * Stripe PI: Update API version [almalee24] #5360
+* Vpos/VisanetPeru/QuickPay: Normalize the use of API_VERSION [aaqibrashidmir] #5520
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

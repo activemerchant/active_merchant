@@ -95,6 +95,13 @@ class VposTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_api_version_in_test_and_live_url
+    test_gateway = VposGateway.new(public_key: 'test_key', private_key: 'test_private_key', test: true)
+    live_gateway = VposGateway.new(public_key: 'live_key', private_key: 'live_private_key', test: false)
+    assert_match %r{^https://vpos\.infonet\.com\.py:8888/vpos/api/0\.3/}, test_gateway.send(:build_request_url, :pci_encryption_key)
+    assert_match %r{^https://vpos\.infonet\.com\.py/vpos/api/0\.3/}, live_gateway.send(:build_request_url, :pci_encryption_key)
+  end
+
   private
 
   def pre_scrubbed

@@ -166,6 +166,21 @@ class QuickpayV10Test < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_test_url_and_version
+    stub_comms do
+      response = @gateway.purchase(@amount, @credit_card, @options)
+      assert_success response
+    end.check_request do |_endpoint, _data, headers|
+      assert_equal 'https://api.quickpay.net', @gateway.class.test_url
+      assert_equal 'v10', headers['Accept-Version']
+    end.respond_with(successful_payment_response, successful_authorization_response)
+  end
+
+  def test_api_normalization_v10
+    assert_equal 'https://api.quickpay.net', @gateway.class.test_url
+    assert_instance_of ActiveMerchant::Billing::QuickpayV10Gateway, @gateway
+  end
+
   private
 
   def successful_payment_response

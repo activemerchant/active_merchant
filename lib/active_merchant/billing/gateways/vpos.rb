@@ -4,6 +4,7 @@ require 'jwe'
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class VposGateway < Gateway
+      version '0.3'
       self.test_url = 'https://vpos.infonet.com.py:8888'
       self.live_url = 'https://vpos.infonet.com.py'
 
@@ -17,11 +18,11 @@ module ActiveMerchant # :nodoc:
       self.money_format = :dollars
 
       ENDPOINTS = {
-        pci_encryption_key: '/vpos/api/0.3/application/encryption-key',
-        pay_pci_buy_encrypted: '/vpos/api/0.3/pci/encrypted',
-        pci_buy_rollback: '/vpos/api/0.3/pci_buy/rollback',
-        refund: '/vpos/api/0.3/refunds',
-        inquire: '/vpos/api/0.3/pci_buy/confirmations'
+        pci_encryption_key: "/vpos/api/#{fetch_version}/application/encryption-key",
+        pay_pci_buy_encrypted: "/vpos/api/#{fetch_version}/pci/encrypted",
+        pci_buy_rollback: "/vpos/api/#{fetch_version}/pci_buy/rollback",
+        refund: "/vpos/api/#{fetch_version}/refunds",
+        inquire: "/vpos/api/#{fetch_version}/pci_buy/confirmations"
       }
 
       def initialize(options = {})

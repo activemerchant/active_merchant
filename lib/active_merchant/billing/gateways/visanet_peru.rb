@@ -2,11 +2,12 @@ module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class VisanetPeruGateway < Gateway
       include Empty
+      version 'v2'
       self.display_name = 'VisaNet Peru Gateway'
       self.homepage_url = 'http://www.visanet.com.pe'
 
-      self.test_url = 'https://devapi.vnforapps.com/api.tokenization/api/v2/merchant'
-      self.live_url = 'https://api.vnforapps.com/api.tokenization/api/v2/merchant'
+      self.test_url = "https://devapi.vnforapps.com/api.tokenization/api/#{fetch_version}/merchant"
+      self.live_url = "https://api.vnforapps.com/api.tokenization/api/#{fetch_version}/merchant"
 
       self.supported_countries = %w[US PE]
       self.default_currency = 'PEN'

@@ -205,6 +205,28 @@ class VisanetPeruTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_api_version_is_set_and_included_in_urls
+    assert_equal 'v2', VisanetPeruGateway.fetch_version
+    endpoints = [
+      ['authorize', {}, {}],
+      ['refund', {}, { transaction_id: '12345' }],
+      ['deposit', { purchaseNumber: '999999999999' }, {}]
+    ]
+    endpoints.each do |action, params, options|
+      url = @gateway.send(:url, action, params, options)
+      assert_match %r{/v2/}, url, "Version v2 not found in URL for #{action}"
+    end
+  end
+
+  def test_api_version_in_test_and_live_url
+    test_gateway = VisanetPeruGateway.new(access_key_id: 'test', secret_access_key: 'test', merchant_id: 'test', test: true)
+    live_gateway = VisanetPeruGateway.new(access_key_id: 'live', secret_access_key: 'live', merchant_id: 'live', test: false)
+    test_url = test_gateway.send(:url, 'authorize', {}, {})
+    live_url = live_gateway.send(:url, 'authorize', {}, {})
+    assert_match %r{^https://devapi\.vnforapps\.com/api\.tokenization/api/v2/merchant/}, test_url
+    assert_match %r{^https://api\.vnforapps\.com/api\.tokenization/api/v2/merchant/}, live_url
+  end
+
   private
 
   def pre_scrubbed
