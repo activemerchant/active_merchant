@@ -6,6 +6,7 @@ module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class QuickpayV4to7Gateway < Gateway
       include QuickpayCommon
+      version '7'
       self.live_url = self.test_url = 'https://secure.quickpay.dk/api'
       APPROVED = '000'
 
@@ -15,7 +16,7 @@ module ActiveMerchant # :nodoc:
       # Using the API-key, requires that you use version 4+. Specify :version => 4/5/6/7 in options.
       def initialize(options = {})
         requires!(options, :login, :password)
-        @protocol = options.delete(:version) || 7 # default to protocol version 7
+        @protocol = (options.delete(:version) || self.class.fetch_version).to_i
         super
       end
 

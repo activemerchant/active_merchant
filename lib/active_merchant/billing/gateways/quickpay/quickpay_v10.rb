@@ -5,7 +5,8 @@ module ActiveMerchant
   module Billing
     class QuickpayV10Gateway < Gateway
       include QuickpayCommon
-      API_VERSION = 10
+
+      version '10'
 
       self.live_url = self.test_url = 'https://api.quickpay.net'
 
@@ -200,7 +201,7 @@ module ActiveMerchant
       end
 
       def add_additional_params(action, post, options = {})
-        MD5_CHECK_FIELDS[API_VERSION][action].each do |key|
+        MD5_CHECK_FIELDS[fetch_version.to_i][action].each do |key|
           key       = key.to_sym
           post[key] = options[key] if options[key]
         end
@@ -273,9 +274,9 @@ module ActiveMerchant
         auth = Base64.strict_encode64(":#{@options[:api_key]}")
         {
           'Authorization'  => 'Basic ' + auth,
-          'User-Agent'     => "Quickpay-v#{API_VERSION} ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'User-Agent'     => "Quickpay-v#{fetch_version} ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Accept'         => 'application/json',
-          'Accept-Version' => "v#{API_VERSION}",
+          'Accept-Version' => "v#{fetch_version}",
           'Content-Type'   => 'application/json'
         }
       end
