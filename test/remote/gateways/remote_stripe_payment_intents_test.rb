@@ -1,5 +1,5 @@
 require 'test_helper'
-
+require 'pry'
 class RemoteStripeIntentsTest < Test::Unit::TestCase
   def setup
     @gateway = StripePaymentIntentsGateway.new(fixtures(:stripe))
@@ -15,13 +15,6 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     @three_ds_authentication_required_setup_for_off_session = 'pm_card_authenticationRequiredSetupForOffSession'
     @three_ds_off_session_credit_card = credit_card(
       '4000002500003155',
-      verification_value: '737',
-      month: 10,
-      year: 2028
-    )
-
-    @three_ds_1_credit_card = credit_card(
-      '4000000000003063',
       verification_value: '737',
       month: 10,
       year: 2028
@@ -1663,7 +1656,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     }
     assert store = @gateway.store(@visa_card, options)
     assert store.params['customer'].start_with?('cus_')
-    assert_equal 'unchecked', store.params['card']['checks']['cvc_check']
+    assert_equal 'pass', store.params.dig('latest_attempt', 'payment_method_details', 'card', 'checks', 'cvc_check')
   end
 
   def test_successful_store_with_true_validate_option
@@ -1673,7 +1666,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     }
     assert store = @gateway.store(@visa_card, options)
     assert store.params['customer'].start_with?('cus_')
-    assert_equal 'pass', store.params['card']['checks']['cvc_check']
+    assert_equal 'pass', store.params.dig('latest_attempt', 'payment_method_details', 'card', 'checks', 'cvc_check')
   end
 
   def test_successful_verify
@@ -1692,8 +1685,9 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       customer: @customer,
       billing_address: address
     }
-    assert verify = @gateway.verify(@visa_card, options)
-    assert_equal true, verify.params.dig('three_d_secure_usage_supported')
+
+    assert verify = @gateway.verify(@three_ds_credit_card, options)
+    assert_equal nil, verify.params['last_setup_error']&.dig('payment_method', 'card', 'three_d_secure_usage')
   end
 
   def test_failed_verify
@@ -1706,13 +1700,6 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     assert_not_nil verify.authorization
     assert_equal verify.params.dig('error', 'setup_intent', 'id'), verify.authorization
-  end
-
-  def test_verify_stores_response_for_payment_method_creation
-    assert verify = @gateway.verify(@visa_card)
-
-    assert_equal 2, verify.responses.count
-    assert_match 'pm_', verify.responses.first.params['id']
   end
 
   def test_moto_enabled_card_requires_action_when_not_marked

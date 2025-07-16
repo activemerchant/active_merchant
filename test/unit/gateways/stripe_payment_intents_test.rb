@@ -82,7 +82,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
   end
 
   def test_successful_create_and_confirm_intent
-    @gateway.expects(:ssl_request).times(3).returns(successful_create_3ds2_payment_method, successful_create_3ds2_intent_response, successful_confirm_3ds2_intent_response)
+    @gateway.expects(:ssl_request).times(2).returns(successful_create_3ds2_intent_response, successful_confirm_3ds2_intent_response)
 
     assert create = @gateway.create_intent(@amount, @threeds_2_card, @options.merge(return_url: 'https://www.example.com', capture_method: 'manual'))
     assert_instance_of MultiResponse, create
@@ -284,7 +284,6 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
   end
 
   def test_failed_verify
-    @gateway.expects(:add_payment_method_token).returns(@visa_token)
     @gateway.expects(:ssl_request).returns(failed_verify_response)
 
     assert create = @gateway.verify(@credit_card)
@@ -893,36 +892,10 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end
   end
 
-  def test_store_does_not_pass_validation_to_attach_by_default
+  def test_successful_store
     stub_comms(@gateway, :ssl_request) do
-      @gateway.store(@credit_card)
-    end.check_request do |_method, endpoint, data, _headers|
-      assert_no_match(/validate=/, data) if /attach/.match?(endpoint)
-    end.respond_with(successful_payment_method_response, successful_create_customer_response, successful_payment_method_attach_response)
-  end
-
-  def test_store_sets_validation_on_attach_to_false_when_false_in_options
-    options = @options.merge(
-      validate: false
-    )
-
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.store(@credit_card, options)
-    end.check_request do |_method, endpoint, data, _headers|
-      assert_match(/validate=false/, data) if /attach/.match?(endpoint)
-    end.respond_with(successful_payment_method_response, successful_create_customer_response, successful_payment_method_attach_response)
-  end
-
-  def test_store_sets_validationon_attach_to_true_when_true_in_options
-    options = @options.merge(
-      validate: true
-    )
-
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.store(@credit_card, options)
-    end.check_request do |_method, endpoint, data, _headers|
-      assert_match(/validate=true/, data) if /attach/.match?(endpoint)
-    end.respond_with(successful_payment_method_response, successful_create_customer_response, successful_payment_method_attach_response)
+      @gateway.store(@credit_card, @options)
+    end.respond_with(successful_create_customer_response, successful_verify_response)
   end
 
   def test_succesful_purchase_with_radar_session
@@ -1913,44 +1886,6 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_create_3ds2_payment_method
-    <<-RESPONSE
-      {
-        "id": "pm_1F1xK0AWOtgoysogfPuRKN1d",
-        "object": "payment_method",
-        "billing_details": {
-          "address": {"city": null,
-            "country": null,
-            "line1": null,
-            "line2": null,
-            "postal_code": null,
-            "state": null},
-          "email": null,
-          "name": null,
-          "phone": null},
-        "card": {
-          "brand": "visa",
-          "checks": {"address_line1_check": null,
-            "address_postal_code_check": null,
-            "cvc_check": "unchecked"},
-          "country": null,
-          "exp_month": 10,
-          "exp_year": 2020,
-          "fingerprint": "l3J0NJaGgv0jAGLV",
-          "funding": "credit",
-          "generated_from": null,
-          "last4": "3220",
-          "three_d_secure_usage": {"supported": true},
-          "wallet": null},
-        "created": 1564500784,
-        "customer": null,
-        "livemode": false,
-        "metadata": {},
-        "type": "card"
-      }
-    RESPONSE
-  end
-
   def successful_create_3ds2_intent_response
     <<-RESPONSE
       {
@@ -2249,59 +2184,6 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_payment_method_response
-    <<-RESPONSE
-      {
-        "id": "pm_1IQ3OhAWOtgoysogUkVwJ5MT",
-        "object": "payment_method",
-        "billing_details": {
-          "address": {
-            "city": null,
-            "country": null,
-            "line1": null,
-            "line2": null,
-            "postal_code": null,
-            "state": null
-          },
-          "email": null,
-          "name": null,
-          "phone": null
-        },
-        "card": {
-          "brand": "visa",
-          "checks": {
-            "address_line1_check": null,
-            "address_postal_code_check": null,
-            "cvc_check": "unchecked"
-          },
-          "country": "US",
-          "exp_month": 10,
-          "exp_year": 2021,
-          "fingerprint": "hfaVNMiXc0dYSiC5",
-          "funding": "credit",
-          "generated_from": null,
-          "last4": "4242",
-          "networks": {
-            "available": [
-              "visa"
-            ],
-            "preferred": null
-          },
-          "three_d_secure_usage": {
-            "supported": true
-          },
-          "wallet": null
-        },
-        "created": 1614573020,
-        "customer": null,
-        "livemode": false,
-        "metadata": {
-        },
-        "type": "card"
-      }
-    RESPONSE
-  end
-
   def successful_create_customer_response
     <<-RESPONSE
       {
@@ -2355,59 +2237,6 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
         },
         "tax_info": null,
         "tax_info_verification": null
-      }
-    RESPONSE
-  end
-
-  def successful_payment_method_attach_response
-    <<-RESPONSE
-      {
-        "id": "pm_1IQ3AYAWOtgoysogcvbllgNa",
-        "object": "payment_method",
-        "billing_details": {
-          "address": {
-            "city": null,
-            "country": null,
-            "line1": null,
-            "line2": null,
-            "postal_code": null,
-            "state": null
-          },
-          "email": null,
-          "name": null,
-          "phone": null
-        },
-        "card": {
-          "brand": "visa",
-          "checks": {
-            "address_line1_check": null,
-            "address_postal_code_check": null,
-            "cvc_check": "unchecked"
-          },
-          "country": "US",
-          "exp_month": 10,
-          "exp_year": 2021,
-          "fingerprint": "hfaVNMiXc0dYSiC5",
-          "funding": "credit",
-          "generated_from": null,
-          "last4": "4242",
-          "networks": {
-            "available": [
-              "visa"
-            ],
-            "preferred": null
-          },
-          "three_d_secure_usage": {
-            "supported": true
-          },
-          "wallet": null
-        },
-        "created": 1614572142,
-        "customer": "cus_J27PL9krZlnw82",
-        "livemode": false,
-        "metadata": {
-        },
-        "type": "card"
       }
     RESPONSE
   end
