@@ -5,7 +5,7 @@ module ActiveMerchant # :nodoc:
     # This gateway uses the current Stripe {Payment Intents API}[https://stripe.com/docs/api/payment_intents].
     # For the legacy API, see the Stripe gateway
     class StripePaymentIntentsGateway < StripeGateway
-      version '2020-08-27'
+      version '2022-11-15'
 
       ALLOWED_METHOD_STATES = %w[automatic manual].freeze
       ALLOWED_CANCELLATION_REASONS = %w[duplicate fraudulent requested_by_customer abandoned].freeze
@@ -61,7 +61,6 @@ module ActiveMerchant # :nodoc:
             add_request_extended_authorization(post, options)
             add_statement_descriptor_suffix_kanji_kana(post, options)
             add_request_multicapture(post, options)
-            post[:expand] = ['charges.data.balance_transaction']
 
             CREATE_INTENT_ATTRIBUTES.each do |attribute|
               add_whitelisted_attribute(post, options, attribute)
@@ -72,7 +71,7 @@ module ActiveMerchant # :nodoc:
       end
 
       def show_intent(intent_id, options)
-        commit(:get, "payment_intents/#{intent_id}", nil, options)
+        commit(:get, "payment_intents/#{intent_id}?expand[]=latest_charge.balance_transaction", nil, options)
       end
 
       def create_test_customer
@@ -191,7 +190,6 @@ module ActiveMerchant # :nodoc:
             post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
             post[:usage] = options[:usage] if %w(on_session off_session).include?(options[:usage])
             post[:description] = options[:description] if options[:description]
-            post[:expand] = ['latest_attempt']
 
             commit(:post, 'setup_intents', post, options)
           end
@@ -199,11 +197,6 @@ module ActiveMerchant # :nodoc:
       end
 
       def retrieve_setup_intent(setup_intent_id, options = {})
-        # Retrieving a setup_intent passing 'expand[]=latest_attempt' allows the caller to
-        # check for a network_transaction_id and ds_transaction_id
-        # eg (latest_attempt -> payment_method_details -> card -> network_transaction_id)
-        #
-        # Being able to retrieve these fields enables payment flows that rely on MIT exemptions, e.g: off_session
         commit(:get, "setup_intents/#{setup_intent_id}?expand[]=latest_attempt", nil, options)
       end
 
@@ -239,11 +232,11 @@ module ActiveMerchant # :nodoc:
 
       def refund(money, intent_id, options = {})
         if intent_id.include?('pi_')
-          intent = api_request(:get, "payment_intents/#{intent_id}", nil, options)
+          intent = api_request(:get, "payment_intents/#{intent_id}?expand[]=latest_charge.balance_transaction", nil, options)
 
           return Response.new(false, intent['error']['message'], intent) if intent['error']
 
-          charge_id = intent.try(:[], 'charges').try(:[], 'data').try(:[], 0).try(:[], 'id')
+          charge_id = intent.try(:[], 'latest_charge').try(:[], 'id')
 
           if charge_id.nil?
             error_message = "No associated charge for #{intent['id']}"
@@ -336,6 +329,35 @@ module ActiveMerchant # :nodoc:
       end
 
       private
+
+      def card_from_response(response)
+        extract_payment_intent_details(response) || extract_setup_intent_details(response) || super
+      end
+
+      def extract_payment_intent_details(response)
+        return nil if response['latest_charge'].nil? || response['latest_charge']&.is_a?(String)
+
+        response.dig('latest_charge', 'payment_method_details', 'card', 'checks')
+      end
+
+      def extract_setup_intent_details(response)
+        return nil if response['latest_attempt'].nil? || response['latest_attempt']&.is_a?(String)
+
+        response.dig('latest_attempt', 'payment_method_details', 'card', 'checks')
+      end
+
+      def add_expand_parameters(post, options, method, url)
+        post[:expand] ||= []
+        post[:expand].concat(Array.wrap(options[:expand]).map(&:to_sym)).uniq!
+
+        return if method == :get
+
+        if url.include?('payment_intents')
+          post[:expand].concat(['latest_charge', 'latest_charge.balance_transaction'])
+        elsif url.include?('setup_intents')
+          post[:expand] << 'latest_attempt'
+        end
+      end
 
       def error_id(response, url)
         if url.end_with?('payment_intents')
