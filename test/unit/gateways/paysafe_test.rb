@@ -27,6 +27,24 @@ class PaysafeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_purchase_with_pending_settlement
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    assert response.pending
+  end
+
+  def test_purchase_with_completed_settlements
+    @gateway.expects(:ssl_request).returns(purchase_response_with_completed_settlements)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    assert !response.pending
+  end
+
   def test_successful_purchase_with_mastercard_3ds2
     mc_three_d_secure_2_options = {
       currency: 'EUR',
@@ -452,5 +470,9 @@ class PaysafeTest < Test::Unit::TestCase
 
   def successful_credit_response
     '{"id":"b40c327e-92d7-4026-a043-be1f1b03c08a","merchantRefNum":"b0ca10f1ab6b782e6bf8a43e17ff41f8","txnTime":"2024-10-02T19:00:27Z","status":"PENDING","gatewayReconciliationId":"2309329680","amount":100,"card":{"type":"VI", "lastDigits":"0000", "cardExpiry":{"month":9, "year":2025}, "issuingCountry":"US"},"profile":{"firstName":"Longbob", "lastName":"Longsen", "email":"profile@memail.com"},"billingDetails":{"street":"456 My Street","street2":"Apt 1","city":"Ottawa","state":"ON","country":"CA","zip":"K1C2N6","phone":"(555)555-5555"},"currencyCode":"USD","merchantDescriptor":{"dynamicDescriptor":"Store Purchase"},"links":[{"rel":"self","href":"https://api.test.paysafe.com/cardpayments/v1/accounts/1002179730/standalonecredits/b40c327e-92d7-4026-a043-be1f1b03c08a"}]}'
+  end
+
+  def purchase_response_with_completed_settlements
+    '{"id":"cddbd29d-4983-4719-983a-c6a862895781","merchantRefNum":"c9b2ad852a1a37c1cc5c39b741be7484","txnTime":"2021-08-10T18:25:40Z","status":"COMPLETED","amount":100,"settleWithAuth":true,"preAuth":false,"availableToSettle":0,"card":{"type":"VI","lastDigits":"3670","cardExpiry":{"month":9,"year":2022}},"authCode":"544454","profile":{"firstName":"Longbob","lastName":"Longsen"},"billingDetails":{"street":"999 This Way Lane","city":"Hereville","state":"NC","country":"FR","zip":"98989","phone":"999-9999999"},"merchantDescriptor":{"dynamicDescriptor":"Store Purchase","phone":"999-8887777"},"visaAdditionalAuthData":{},"currencyCode":"EUR","avsResponse":"MATCH","cvvVerification":"MATCH","settlements":[{"id":"cddbd29d-4983-4719-983a-c6a862895781","merchantRefNum":"c9b2ad852a1a37c1cc5c39b741be7484","txnTime":"2021-08-10T18:25:40Z","status":"COMPLETED","amount":100,"availableToRefund":100,"links":[{"rel":"self","href":"https://api.test.paysafe.com/cardpayments/v1/accounts/1002158490/settlements/cddbd29d-4983-4719-983a-c6a862895781"}]}],"links":[{"rel":"settlement","href":"https://api.test.paysafe.com/cardpayments/v1/accounts/1002158490/settlements/cddbd29d-4983-4719-983a-c6a862895781"},{"rel":"self","href":"https://api.test.paysafe.com/cardpayments/v1/accounts/1002158490/auths/cddbd29d-4983-4719-983a-c6a862895781"}]}'
   end
 end
