@@ -97,6 +97,47 @@ class PaysafeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_lodging_details
+    lodging_options = {
+      lodging_details: {
+        hotel_folio_number: 'Customer Folio Number',
+        check_in_date: '2026-11-30',
+        check_out_date: '2026-12-01',
+        customer_service_phone: '9998887777',
+        property_local_phone: '9998887777',
+        extra_charges: %w[
+          RESTAURANT
+          GIFT_SHOP
+          MINI_BAR
+          TELEPHONE
+          LAUNDRY
+          OTHER
+        ],
+        room_rate: 100,
+        program_code: 'LODGING',
+        number_of_nights: 1,
+        is_fire_safety_act_compliant: true
+      }
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, lodging_options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"lodgingDetails"/, data)
+      assert_match(/"hotelFolioNumber":"Customer Folio Number"/, data)
+      assert_match(/"checkInDate":"2026-11-30"/, data)
+      assert_match(/"checkOutDate":"2026-12-01"/, data)
+      assert_match(/"customerServicePhone":"9998887777"/, data)
+      assert_match(/"propertyLocalPhone":"9998887777"/, data)
+      assert_match(/"extraCharges":\["RESTAURANT","GIFT_SHOP","MINI_BAR","TELEPHONE","LAUNDRY","OTHER"\]/, data)
+      assert_match(/"roomRate":100/, data)
+      assert_match(/"programCode":"LODGING"/, data)
+      assert_match(/"numberOfNights":1/, data)
+      assert_match(/"isFireSafetyActCompliant":true/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_stored_credentials
     stored_credential_options = {
       stored_credential: {
