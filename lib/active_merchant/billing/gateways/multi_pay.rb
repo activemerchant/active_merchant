@@ -18,7 +18,7 @@ module ActiveMerchant
 
       self.money_format = :cents
 
-      ERROR_MAPPING = {
+      STANDARD_ERROR_CODE_MAPPING = {
         1 => 'Call Issuer',
         2  => 'Call Ref.',
         3  => 'Invalid business-03',
@@ -131,6 +131,8 @@ module ActiveMerchant
       def build_security_data(options)
         return unless options[:three_d_secure]
 
+        data_object = build_3ds_data_object(options)
+
         [{
           Type: '3DSecure',
           Values: [
@@ -140,12 +142,56 @@ module ActiveMerchant
             },
             {
               Name: 'Data',
-              Value: {
-                AuthenticationECI: options.dig(:three_d_secure, :eci) || '07'
-              }.compact
+              Value: data_object
             }
           ]
         }]
+      end
+
+      def build_3ds_data_object(options)
+        three_d_secure_options = options[:three_d_secure]
+        return { AuthenticationECI: three_d_secure_options[:eci] || '07' } unless three_d_secure_options[:data]
+
+        data = three_d_secure_options[:data]
+        {
+          'TransactionStatus' => data[:transaction_status] || 'SuccessfullyAuthenticated',
+          'AuthenticationECI' => data[:eci] || '05',
+          'DSTransactionId' => data[:ds_transaction_id],
+          'IsChallengeMandated' => data[:is_challenge_mandated] || false,
+          'ChallengeRequest' => data[:challenge_request],
+          'ChallengeCancellationIndicator' => data[:challenge_cancellation_indicator],
+          'TransactionStatusReason' => data[:transaction_status_reason] || 'NotSet',
+          'AuthenticationValue' => data[:authentication_value],
+          'ACSTransactionId' => data[:acs_transaction_id],
+          'AuthenticationType' => data[:authentication_type] || 'Dynamic',
+          'CardholderInformationText' => data[:cardholder_information_text],
+          'DSReferenceNumber' => data[:ds_reference_number],
+          'ErrorCode' => data[:error_code],
+          'ErrorDetail' => data[:error_detail],
+          'ErrorDescription' => data[:error_description],
+          'AcsUrl' => data[:acs_url],
+          'MerchantId' => data[:merchant_id],
+          'MessageCategory' => data[:message_category] || 'Payment',
+          'ProtocolVersion' => data[:protocol_version] || 'v2_2_0',
+          'ServerTransactionId' => data[:server_transaction_id],
+          'WhiteListStatus' => data[:white_list_status] || 'IsNotWhiteListed',
+          'TokenResult' => data[:token_result] || '',
+          'Protocol1' => data[:protocol1],
+          'SCARequired' => data[:sca_required] || false,
+          'ReasonForNotHonoringExemption' => data[:reason_for_not_honoring_exemption] || '',
+          'ExemptionControl' => data[:exemption_control] || 'NotSet',
+          'SDKResponseInfo' => data[:sdk_response_info] || {
+            'ACSOperatorId' => nil,
+            'ACSRenderingType' => { 'Interface' => 'NotSet', 'UITemplate' => 'NotSet' },
+            'ACSSignedContent' => nil, 'AppId' => nil, 'MaxTimeout' => 0, 'TransactionId' => nil
+          },
+          'AuthenticationTimestamp' => data[:authentication_timestamp] || Time.now.utc.iso8601,
+          'AuthenticationMethod' => data[:authentication_method] || 'FLOW',
+          'ServerReferenceNumber' => data[:server_reference_number],
+          'BroadcastInfo' => data[:broadcast_info] || '{}',
+          'AcsReferenceNumber' => data[:acs_reference_number],
+          'ProcessedAsDataOnly' => data[:processed_as_data_only] || false
+        }.compact
       end
 
       def expdate(payment)
@@ -222,7 +268,7 @@ module ActiveMerchant
       end
 
       def error_code_from(response, action)
-        ERROR_MAPPING[response.dig(action, :AuthResultCode)]
+        STANDARD_ERROR_CODE_MAPPING[response.dig(action, :AuthResultCode)]
       end
 
       def base_url
