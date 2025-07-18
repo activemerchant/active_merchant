@@ -940,49 +940,22 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_auth_network_tokenization(xml, payment_method, options)
-        brand = card_brand(payment_method)
-        return if payment_method.mobile_wallet? && brand == 'discover' && !options[:enable_cybs_discover_apple_pay]
+        brand = card_brand(payment_method)&.to_sym
+        return if payment_method.mobile_wallet? && brand == :discover && !options[:enable_cybs_discover_apple_pay]
 
-        if payment_method.network_token?
-          xml.tag!('networkTokenCryptogram', payment_method.payment_cryptogram)
-          xml.tag!('commerceIndicator', stored_credential_commerce_indicator(options) || 'internet')
-        elsif send_only_commerce_indicator(payment_method, options)
-          commerce_indicator = if brand == 'discover'
-                                 'dipb'
-                               elsif subsequent_wallet_auth(payment_method, options)
-                                 'internet'
-                               else
-                                 ECI_BRAND_MAPPING[brand.to_sym]
-                               end
-
-          xml.commerceIndicator(commerce_indicator)
-        else
-          default_wallet_values(xml, payment_method)
-        end
-      end
-
-      def send_only_commerce_indicator(payment_method, options)
-        brand = card_brand(payment_method)
-
-        return false if brand == 'american_express'
-
-        brand == 'master' || subsequent_wallet_auth(payment_method, options)
-      end
-
-      def default_wallet_values(xml, payment_method)
-        brand = card_brand(payment_method).to_sym
-        commerce_indicator = brand == :discover ? 'dipb' : ECI_BRAND_MAPPING[brand]
-        cryptogram = brand == :american_express ? Base64.decode64(payment_method.payment_cryptogram) : payment_method.payment_cryptogram
-        cavv = xid = cryptogram
-
-        if brand == :american_express
-          cavv = Base64.encode64(cavv[0...20])
-          xid = xid.bytes.count > 20 ? Base64.encode64(xid[20...40]) : nil
+        xml.tag!('networkTokenCryptogram', payment_method.payment_cryptogram)
+        commerce_indicator = stored_credential_commerce_indicator(options)
+        unless commerce_indicator
+          if payment_method.network_token?
+            commerce_indicator = 'internet'
+          elsif brand == :discover
+            commerce_indicator = 'dipb'
+          else
+            commerce_indicator = ECI_BRAND_MAPPING[brand]
+          end
         end
 
-        xml.tag! 'cavv', cavv
-        xml.tag! 'commerceIndicator', commerce_indicator
-        xml.tag! 'xid', xid if xid
+        xml.tag!('commerceIndicator', commerce_indicator)
       end
 
       def add_mastercard_network_tokenization_ucaf_data(xml, payment_method, options)
