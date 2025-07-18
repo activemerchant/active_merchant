@@ -201,6 +201,7 @@
 * StripePI: Add support for multicapture [mjdonga] #5491
 * Normalize API Version for Plexo, Pin, Priority [adarsh-spreedly] #5517
 * Stripe PI: Update API version [almalee24] #5360
+* CheckoutV2 : MIT should not send the IP address to checkout [aaqibrashidmir] #5529
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

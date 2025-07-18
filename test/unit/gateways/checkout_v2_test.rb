@@ -1389,6 +1389,23 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_initial_stored_credential_response)
   end
 
+  def test_merchant_initiated_transaction_does_not_send_ip
+    stub_comms(@gateway, :ssl_request) do
+      options = {
+        ip: '203.0.113.1',
+        stored_credential: {
+          initiator: 'merchant',
+          initial_transaction: false,
+          reason_type: 'recurring',
+          network_transaction_id: 'pay_12345'
+        }
+      }
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      refute_match(/payment_ip/, data, 'payment_ip should not be present for merchant initiated transaction')
+    end.respond_with(successful_purchase_using_stored_credential_response)
+  end
+
   private
 
   def pre_scrubbed
