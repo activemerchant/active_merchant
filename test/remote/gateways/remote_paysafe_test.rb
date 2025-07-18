@@ -445,6 +445,12 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert_match 'PENDING', response.message
   end
 
+  def test_purchase_with_pending_settlement
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.pending
+  end
+
   def test_invalid_login
     gateway = PaysafeGateway.new(username: 'badbunny', password: 'carrotsrock', account_id: 'rejectstew')
 
