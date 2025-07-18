@@ -21,6 +21,7 @@ module ActiveMerchant # :nodoc:
         post = {}
         add_auth_purchase_params(post, money, payment, options)
         add_airline_travel_details(post, options)
+        add_lodging_details(post, options)
         add_split_pay_details(post, options)
         post[:settleWithAuth] = true
 
@@ -290,6 +291,22 @@ module ActiveMerchant # :nodoc:
         details[:flight] = {}
         details[:flight][:carrierCode] = leg[:flight][:carrier_code] if leg[:flight][:carrier_code]
         details[:flight][:flightNumber] = leg[:flight][:flight_number] if leg[:flight][:flight_number]
+      end
+
+      def add_lodging_details(post, options)
+        return unless options[:lodging_details]
+
+        post[:lodgingDetails] = {}
+        post[:lodgingDetails][:hotelFolioNumber] = options[:lodging_details][:hotel_folio_number] if options[:lodging_details][:hotel_folio_number]
+        post[:lodgingDetails][:checkInDate] = options[:lodging_details][:check_in_date] if options[:lodging_details][:check_in_date]
+        post[:lodgingDetails][:checkOutDate] = options[:lodging_details][:check_out_date] if options[:lodging_details][:check_out_date]
+        post[:lodgingDetails][:customerServicePhone] = options[:lodging_details][:customer_service_phone] if options[:lodging_details][:customer_service_phone]
+        post[:lodgingDetails][:propertyLocalPhone] = options[:lodging_details][:property_local_phone] if options[:lodging_details][:property_local_phone]
+        post[:lodgingDetails][:extraCharges] = options[:lodging_details][:extra_charges] if options[:lodging_details][:extra_charges]
+        post[:lodgingDetails][:roomRate] = options[:lodging_details][:room_rate].to_i if options[:lodging_details][:room_rate]
+        post[:lodgingDetails][:programCode] = options[:lodging_details][:program_code] if options[:lodging_details][:program_code]
+        post[:lodgingDetails][:numberOfNights] = options[:lodging_details][:number_of_nights].to_i if options[:lodging_details][:number_of_nights]
+        post[:lodgingDetails][:isFireSafetyActCompliant] = options[:lodging_details][:is_fire_safety_act_compliant] if options[:lodging_details][:is_fire_safety_act_compliant]
       end
 
       def add_split_pay_details(post, options)
