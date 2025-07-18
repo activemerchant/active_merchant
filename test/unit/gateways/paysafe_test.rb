@@ -297,6 +297,24 @@ class PaysafeTest < Test::Unit::TestCase
     end.respond_with(successful_credit_response)
   end
 
+  def test_credit_with_pending_status
+    @gateway.expects(:ssl_request).returns(successful_credit_response)
+
+    response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+
+    assert response.pending
+  end
+
+  def test_credit_with_completed_status
+    @gateway.expects(:ssl_request).returns(credit_response_with_completed_status)
+
+    response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+
+    assert !response.pending
+  end
+
   def test_merchant_ref_num_and_order_id
     options = @options.merge({ order_id: '12345678' })
     response = stub_comms(@gateway, :ssl_request) do
@@ -452,5 +470,9 @@ class PaysafeTest < Test::Unit::TestCase
 
   def successful_credit_response
     '{"id":"b40c327e-92d7-4026-a043-be1f1b03c08a","merchantRefNum":"b0ca10f1ab6b782e6bf8a43e17ff41f8","txnTime":"2024-10-02T19:00:27Z","status":"PENDING","gatewayReconciliationId":"2309329680","amount":100,"card":{"type":"VI", "lastDigits":"0000", "cardExpiry":{"month":9, "year":2025}, "issuingCountry":"US"},"profile":{"firstName":"Longbob", "lastName":"Longsen", "email":"profile@memail.com"},"billingDetails":{"street":"456 My Street","street2":"Apt 1","city":"Ottawa","state":"ON","country":"CA","zip":"K1C2N6","phone":"(555)555-5555"},"currencyCode":"USD","merchantDescriptor":{"dynamicDescriptor":"Store Purchase"},"links":[{"rel":"self","href":"https://api.test.paysafe.com/cardpayments/v1/accounts/1002179730/standalonecredits/b40c327e-92d7-4026-a043-be1f1b03c08a"}]}'
+  end
+
+  def credit_response_with_completed_status
+    '{"id":"b40c327e-92d7-4026-a043-be1f1b03c08a","merchantRefNum":"b0ca10f1ab6b782e6bf8a43e17ff41f8","txnTime":"2024-10-02T19:00:27Z","status":"COMPLETED","gatewayReconciliationId":"2309329680","amount":100,"card":{"type":"VI", "lastDigits":"0000", "cardExpiry":{"month":9, "year":2025}, "issuingCountry":"US"},"profile":{"firstName":"Longbob", "lastName":"Longsen", "email":"profile@memail.com"},"billingDetails":{"street":"456 My Street","street2":"Apt 1","city":"Ottawa","state":"ON","country":"CA","zip":"K1C2N6","phone":"(555)555-5555"},"currencyCode":"USD","merchantDescriptor":{"dynamicDescriptor":"Store Purchase"},"links":[{"rel":"self","href":"https://api.test.paysafe.com/cardpayments/v1/accounts/1002179730/standalonecredits/b40c327e-92d7-4026-a043-be1f1b03c08a"}]}'
   end
 end

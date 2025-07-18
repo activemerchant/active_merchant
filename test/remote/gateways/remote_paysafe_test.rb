@@ -443,6 +443,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
     response = @gateway.credit(100, @credit_card, @options)
     assert_success response
     assert_match 'PENDING', response.message
+    assert response.pending
   end
 
   def test_invalid_login
