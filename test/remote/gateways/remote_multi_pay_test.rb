@@ -62,6 +62,24 @@ class RemoteMultiPayTest < Test::Unit::TestCase
     assert_match(/401/, error.message)
   end
 
+  def test_successful_purchase_with_3d_secure
+    @options[:three_d_secure] = {
+      data: {
+        ds_transaction_id: '0039cc67-2a7a-4dde-807f-935edb6c44a5',
+        authentication_value: 'AgAAAAAAAIR8CQrXSohbQAAAAAA=',
+        acs_transaction_id: '98e94050-61c9-4dc9-9280-0322be501970',
+        ds_reference_number: 'd6c703c2-a42e-4e9c-a2aa-d33d852b',
+        server_transaction_id: '45ec66e7-536e-43dd-827c-24fa3f8cfed1',
+        server_reference_number: '3DS_LOA_SER_PPFU_020100_00008',
+        acs_reference_number: '3DS_LOA_ACS_PPFU_020100_00009'
+      }
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'APROBADA (00)', response.message
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
