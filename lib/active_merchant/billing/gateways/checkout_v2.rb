@@ -352,7 +352,7 @@ module ActiveMerchant # :nodoc:
       def add_customer_data(post, options)
         post[:customer] = {}
         post[:customer][:email] = options[:email] || nil
-        post[:payment_ip] = options[:ip] if options[:ip]
+        post[:payment_ip] = options[:ip] if options[:ip] && options.dig(:stored_credential, :initiator) != 'merchant'
         address = options[:billing_address]
         if address && post[:source]
           post[:source][:billing_address] = {}
