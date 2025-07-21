@@ -235,16 +235,23 @@ module ActiveMerchant # :nodoc:
       end
 
       def add_order(post, options)
-        return unless shipping_address = options[:shipping_address]
+        return unless options[:shipping_address] || options[:products]
 
-        physical_address = build_shipping_address(shipping_address)
-        first_name, last_name = split_names(shipping_address[:name])
-        shipping = {}
-        shipping[:first_name] = first_name if first_name
-        shipping[:last_name] = last_name if last_name
-        shipping[:phone_number] = shipping_address[:phone_number] if shipping_address[:phone_number]
-        shipping[:address] = physical_address
-        post[:order] = { shipping: }
+        if shipping_address = options[:shipping_address]
+          physical_address = build_shipping_address(shipping_address)
+          first_name, last_name = split_names(shipping_address[:name])
+          shipping = {}
+          shipping[:first_name] = first_name if first_name
+          shipping[:last_name] = last_name if last_name
+          shipping[:phone_number] = shipping_address[:phone_number] if shipping_address[:phone_number]
+          shipping[:address] = physical_address
+        end
+
+        order = {}
+        order[:shipping] = shipping if shipping
+        order[:products] = options[:products] if options[:products]
+
+        post[:order] = order
       end
 
       def build_shipping_address(shipping_address)

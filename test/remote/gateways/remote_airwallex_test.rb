@@ -34,6 +34,62 @@ class RemoteAirwallexTest < Test::Unit::TestCase
     assert_equal 'AUTHORIZED', response.message
   end
 
+  def test_successful_purchase_with_order_products_and_shipping_address
+    products = [
+      {
+        'category' => 'test',
+        'code' => '12345',
+        'desc' => 'product description',
+        'effective_end_at' => '2025-02-01T10:30:00Z',
+        'effective_start_at' => '2025-01-01T10:30:00Z',
+        'image_url' => 'www.test.com',
+        'name' => 'test name',
+        'quantity' => 1,
+        'seller' => {
+          'identifier' => 'identity',
+          'name' => 'name'
+        },
+        'sku' => '12345test',
+        'type' => 'intangible_good',
+        'unit_price' => 2,
+        'url' => 'www.123test.com'
+      }
+    ]
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(shipping_address: address, products:))
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+    assert_not_nil response.params['order']['products']
+    assert_not_nil response.authorization
+  end
+
+  def test_successful_purchase_with_order_products_without_shipping_address
+    products = [
+      {
+        'category' => 'test',
+        'code' => '12345',
+        'desc' => 'product description',
+        'effective_end_at' => '2025-02-01T10:30:00Z',
+        'effective_start_at' => '2025-01-01T10:30:00Z',
+        'image_url' => 'www.test.com',
+        'name' => 'test name',
+        'quantity' => 1,
+        'seller' => {
+          'identifier' => 'identity',
+          'name' => 'name'
+        },
+        'sku' => '12345test',
+        'type' => 'intangible_good',
+        'unit_price' => 2,
+        'url' => 'www.123test.com'
+      }
+    ]
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(products:))
+    assert_success response
+    assert_equal 'AUTHORIZED', response.message
+    assert_not_nil response.params['order']['products']
+    assert_not_nil response.authorization
+  end
+
   def test_successful_purchase_with_address
     response = @gateway.purchase(@amount, @credit_card, @options.merge(address))
     assert_success response

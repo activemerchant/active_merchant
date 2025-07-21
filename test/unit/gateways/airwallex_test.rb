@@ -41,6 +41,59 @@ class AirwallexTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_order_products
+    options = {
+      billing_address: address,
+      shipping_address: address,
+      products: [
+        {
+          'category' => 'test',
+          'code' => '12345',
+          'desc' => 'product description',
+          'effective_end_at' => '2025-02-01T10:30:00Z',
+          'effective_start_at' => '2025-01-01T10:30:00Z',
+          'image_url' => 'www.test.com',
+          'name' => 'test name',
+          'quantity' => '1',
+          'seller' => {
+            'identifier' => 'identity',
+            'name' => 'name'
+          },
+          'sku' => '12345test',
+          'type' => 'intangible_good',
+          'unit_price' => '2',
+          'url' => 'www.123test.com'
+        }
+      ]
+    }
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      if data.include?('_setup')
+        data = JSON.parse(data)['order']['products'][0]
+        assert_match(data['category'], 'test')
+        assert_match(data['code'], '12345')
+        assert_match(data['desc'], 'product description')
+        assert_match(data['effective_end_at'], '2025-02-01T10:30:00Z')
+        assert_match(data['effective_start_at'], '2025-01-01T10:30:00Z')
+        assert_match(data['image_url'], 'www.test.com')
+        assert_match(data['name'], 'test name')
+        assert_equal(data['quantity'], '1')
+        assert_match(data['seller']['identifier'], 'identity')
+        assert_match(data['seller']['name'], 'name')
+        assert_match(data['sku'], '12345test')
+        assert_match(data['type'], 'intangible_good')
+        assert_match(data['unit_price'], '2')
+        assert_match(data['url'], 'www.123test.com')
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'AUTHORIZED', response.message
+  end
+
   def test_failed_purchase_with_declined_card
     @gateway.expects(:ssl_post).times(2).returns(successful_payment_intent_response, failed_purchase_response)
 
