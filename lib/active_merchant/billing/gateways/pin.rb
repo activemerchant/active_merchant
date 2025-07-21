@@ -1,8 +1,10 @@
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class PinGateway < Gateway
-      self.test_url = 'https://test-api.pinpayments.com/1'
-      self.live_url = 'https://api.pinpayments.com/1'
+      version '1'
+
+      self.test_url = "https://test-api.pinpayments.com/#{fetch_version}"
+      self.live_url = "https://api.pinpayments.com/#{fetch_version}"
 
       self.default_currency = 'AUD'
       self.money_format = :cents

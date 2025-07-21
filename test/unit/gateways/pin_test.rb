@@ -58,6 +58,11 @@ class PinTest < Test::Unit::TestCase
     }
   end
 
+  def test_endpoint
+    assert_equal 'https://test-api.pinpayments.com/1', @gateway.test_url
+    assert_equal 'https://api.pinpayments.com/1', @gateway.live_url
+  end
+
   def test_required_api_key_on_initialization
     assert_raises ArgumentError do
       PinGateway.new

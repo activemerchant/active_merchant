@@ -198,6 +198,9 @@
 * PayArc/PayConex/HPS: Normalize API_VERSION usage [sumit-sharmas] #5521
 * VantivExpress: Add support of level 2 and 3 data [adarsh-spreedly] #5487
 * Normalize API versions for paypal, paysafe, and payu_latam [mjdonga] #5515
+* StripePI: Add support for multicapture [mjdonga] #5491
+* Normalize API Version for Plexo, Pin, Priority [adarsh-spreedly] #5517
+* Stripe PI: Update API version [almalee24] #5360
 * TNS/TransFirstTransactionExpress/USA EPAY: Normalize API_VERSION usage [sumit-sharmas] #5516
 
 == Version 1.137.0 (August 2, 2024)
