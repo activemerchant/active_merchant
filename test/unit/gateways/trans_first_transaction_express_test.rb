@@ -15,6 +15,10 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     @declined_amount = 21
   end
 
+  def test_api_version
+    assert_equal 'v1', @gateway.fetch_version
+  end
+
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
@@ -272,6 +276,11 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def test_account_number_scrubbing
     assert_equal post_scrubbed_account_number, @gateway.scrub(pre_scrubbed_account_number)
+  end
+
+  def test_url
+    assert_equal 'https://ws.cert.transactionexpress.com/portal/merchantframework/MerchantWebServices-v1?wsdl', @gateway.test_url
+    assert_equal 'https://ws.transactionexpress.com/portal/merchantframework/MerchantWebServices-v1?wsdl', @gateway.live_url
   end
 
   private

@@ -201,6 +201,7 @@
 * StripePI: Add support for multicapture [mjdonga] #5491
 * Normalize API Version for Plexo, Pin, Priority [adarsh-spreedly] #5517
 * Stripe PI: Update API version [almalee24] #5360
+* TNS/TransFirstTransactionExpress/USA EPAY: Normalize API_VERSION usage [sumit-sharmas] #5516
 
 == Version 1.137.0 (August 2, 2024)
 * Unlock dependency on `rexml` to allow fixing a CVE (#5181).

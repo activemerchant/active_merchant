@@ -3,18 +3,20 @@ require 'nokogiri'
 module ActiveMerchant # :nodoc:
   module Billing # :nodoc:
     class TransFirstTransactionExpressGateway < Gateway
+      version 'v1'
+
       self.display_name = 'TransFirst Transaction Express'
       self.homepage_url = 'http://transactionexpress.com/'
 
-      self.test_url = 'https://ws.cert.transactionexpress.com/portal/merchantframework/MerchantWebServices-v1?wsdl'
-      self.live_url = 'https://ws.transactionexpress.com/portal/merchantframework/MerchantWebServices-v1?wsdl'
+      self.test_url = "https://ws.cert.transactionexpress.com/portal/merchantframework/MerchantWebServices-#{fetch_version}?wsdl"
+      self.live_url = "https://ws.transactionexpress.com/portal/merchantframework/MerchantWebServices-#{fetch_version}?wsdl"
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = %i[visa master american_express discover diners_club]
 
-      V1_NAMESPACE = 'http://postilion/realtime/merchantframework/xsd/v1/'
+      V1_NAMESPACE = "http://postilion/realtime/merchantframework/xsd/#{fetch_version}/"
       SOAPENV_NAMESPACE = 'http://schemas.xmlsoap.org/soap/envelope/'
       AUTHORIZATION_FIELD_SEPARATOR = '|'
 

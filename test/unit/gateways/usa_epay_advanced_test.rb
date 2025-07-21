@@ -103,6 +103,10 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   # Standard Gateway ==================================================
 
+  def test_api_version
+    assert_equal '1.4', @gateway.fetch_version
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(1234, @credit_card, @options)
