@@ -54,7 +54,7 @@ module ActiveMerchant # :nodoc:
             add_error_on_requires_action(post, options)
             add_fulfillment_date(post, options)
             request_three_d_secure(post, options)
-            add_level_three(post, options)
+            options[:version] == '2025-04-30.preview' ? add_level_3_payment_line_item_fields(post, options) : add_level_three(post, options)
             add_card_brand(post, options)
             add_aft_recipient_details(post, options)
             add_aft_sender_details(post, options)
@@ -449,6 +449,8 @@ module ActiveMerchant # :nodoc:
         post[:payment_method_options][:card][:request_multicapture] = request_multicapture
       end
 
+      # stripe's newer API is depracting the level3 field. It still works now but
+      # we will open up the new amount_details field for level 3 data as well
       def add_level_three(post, options = {})
         level_three = {}
 
@@ -460,6 +462,18 @@ module ActiveMerchant # :nodoc:
         level_three[:line_items] = options[:line_items] if options[:line_items]
 
         post[:level3] = level_three unless level_three.empty?
+      end
+
+      def add_level_3_payment_line_item_fields(post, options)
+        post[:amount_details] ||= {}
+        post[:payment_details] ||= {}
+
+        post[:payment_details][:customer_reference] = options[:customer_reference] if options[:customer_reference]
+        post[:payment_details][:order_reference] = options[:order_reference] if options[:order_reference]
+
+        post[:amount_details][:discount_amount] = options[:discount_amount] if options[:discount_amount]
+        post[:amount_details][:shipping] = options[:level_3_shipping] if options[:level_3_shipping]
+        post[:amount_details][:line_items] = options[:line_items] if options[:line_items]
       end
 
       def add_aft_recipient_details(post, options)
