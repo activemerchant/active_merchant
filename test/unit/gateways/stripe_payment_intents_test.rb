@@ -467,6 +467,54 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response)
   end
 
+  def test_successful_purchase_with_payment_line_items
+    @options[:version] = '2025-04-30.preview'
+    @options[:customer_reference] = 456
+    @options[:return_url] = 'https://example.com'
+    @options[:order_reference] = 123345
+    @options[:level_3_shipping] = {
+      'from_postal_code' => 1234,
+      'to_postal_code' => 4321,
+      'amount' => 5
+    }
+    @options[:line_items] = [
+      {
+        'product_code' => 1234,
+        'product_name' => 'An item',
+        'unit_cost' => 15,
+        'quantity' => 2,
+        'discount_amount' => 1,
+        'tax' => {
+          'total_tax_amount' => 0
+        },
+        'unit_of_measure' => 'feet'
+      },
+      {
+        'product_code' => 999,
+        'product_name' => 'A totes different item',
+        'discount_amount' => 1,
+        'quantity' => 1,
+        'tax' => {
+          'total_tax_amount' => 0
+        },
+        'unit_cost' => 50,
+        'unit_of_measure' => 'feet'
+      }
+    ]
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match('payment_details[order_reference]=123345', data)
+      assert_match('payment_details[customer_reference]=456', data)
+      assert_match('amount_details[shipping][from_postal_code]=1234', data)
+      assert_match('amount_details[shipping][to_postal_code]=4321', data)
+      assert_match('amount_details[shipping][amount]=5', data)
+      assert_match('amount_details[line_items][0][product_code]=1234', data)
+      assert_match('amount_details[line_items][1][tax][total_tax_amount]=0', data)
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_successful_purchase_with_card_brand
     @options[:card_brand] = 'cartes_bancaires'
 

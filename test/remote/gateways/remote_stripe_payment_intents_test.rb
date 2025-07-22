@@ -204,6 +204,50 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert response.params.dig('latest_charge')['captured']
   end
 
+  def test_successful_purchase_with_new_level_3_and_api_version
+    options = {
+      currency: 'USD',
+      customer: @customer,
+      version: '2025-04-30.preview',
+      return_url: 'https://example.com',
+      customer_reference: 456,
+      order_reference: 123345,
+      level_3_shipping: {
+        'from_postal_code' => 1234,
+        'to_postal_code' => 4321,
+        'amount' => 5
+      },
+      line_items: [
+        {
+          'product_code' => 1234,
+          'product_name' => 'An item',
+          'unit_cost' => 15,
+          'quantity' => 2,
+          'discount_amount' => 1,
+          'tax' => {
+            'total_tax_amount' => 0
+          },
+          'unit_of_measure' => 'feet'
+        },
+        {
+          'product_code' => 999,
+          'product_name' => 'A totes different item',
+          'discount_amount' => 1,
+          'quantity' => 1,
+          'tax' => {
+            'total_tax_amount' => 0
+          },
+          'unit_cost' => 50,
+          'unit_of_measure' => 'feet'
+        }
+      ]
+    }
+
+    assert response = @gateway.purchase(83, @visa_card, options)
+    assert_success response
+    assert_equal 'succeeded', response.params['status']
+  end
+
   def test_unsuccessful_purchase_google_pay_with_invalid_card_number
     options = {
       currency: 'GBP',
@@ -619,7 +663,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert authorize = @gateway.authorize(@amount, @visa_payment_method, options)
     assert_equal 'requires_capture', authorize.params['status']
 
-    card_details = authorize.params['charges']['data'][0]['payment_method_details']['card']
+    card_details = authorize.params['latest_charge']['payment_method_details']['card']
     assert_equal 'disabled', card_details['extended_authorization']['status']
     assert_not_nil card_details['capture_before']
   end
