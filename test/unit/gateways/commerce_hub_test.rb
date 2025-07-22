@@ -115,6 +115,33 @@ class CommerceHubTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_merchant_partner_details
+    @options[:order_id] = 'abc123'
+    @options[:merchant_partner_details] = {
+      'legacyTppId' => 'CSP002',
+      'name' => 'Spreedly',
+      'productName' => 'Spreedly',
+      'type' => 'GATEWAY',
+      'integrator' => '',
+      'versionNumber' => '1.0',
+      'id' => 'CSP002'
+    }
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal request['transactionDetails']['captureFlag'], true
+      assert_equal request['transactionDetails']['createToken'], false
+      assert_equal request['transactionDetails']['merchantOrderId'], 'abc123'
+      assert_equal request['merchantDetails']['terminalId'], @gateway.options[:terminal_id]
+      assert_equal request['merchantDetails']['merchantId'], @gateway.options[:merchant_id]
+      assert_equal request['merchantDetails']['merchantPartner'], @gateway.options[:merchant_partner_details]
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_google_pay
     response = stub_comms do
       @gateway.purchase(@amount, @google_pay, @options)

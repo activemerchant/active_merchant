@@ -160,6 +160,21 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_merchant_details
+    @options[:merchant_partner_details] = {
+      'legacyTppId' => 'CSP002',
+      'name' => 'Spreedly',
+      'productName' => 'Spreedly',
+      'type' => 'GATEWAY',
+      'integrator' => '',
+      'versionNumber' => '1.0',
+      'id' => 'CSP002'
+    }
+    response = @gateway.purchase(@amount, @master_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_failed_avs_cvv_response_codes
     @options[:billing_address] = {
       address1: '112 Main St.',
