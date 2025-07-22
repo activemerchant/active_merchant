@@ -97,6 +97,70 @@ class PaysafeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_cruiseline_details
+    cruiseline_details = {
+      cruiseline_travel_details: {
+        cruise_ship_name: 'CruiseShip',
+        passenger_name: 'Joe Smith',
+        departure_date: '2026-11-30',
+        return_date: '2026-12-30',
+        country: 'US',
+        state: 'CA',
+        origin_city: 'SXF',
+        room_rate: 1200,
+        travel_package_application: 'CAR_RENTAL_RESERVATION',
+        ticket: {
+          ticket_number: 9876789,
+          is_restricted_ticket: false
+        },
+        passengers: {
+          passenger1: {
+            ticket_number: '12J13J1',
+            first_name: 'Joe',
+            last_name: 'Smith',
+            phone_number: '8888994222',
+            passenger_code: 'INF',
+            gender: 'M'
+          },
+          passenger2: {
+            ticket_number: '12J12J1',
+            first_name: 'Jane',
+            last_name: 'Smith',
+            phone_number: '8888994223',
+            passenger_code: 'INF',
+            gender: 'F'
+          }
+        },
+        trip_legs: {
+          leg1: {
+            service_class: 'F',
+            departure_city: 'DOM',
+            destination_city: 'BDS',
+            fare: 10,
+            departure_date: '2026-11-30'
+          },
+          leg2: {
+            service_class: 'F',
+            departure_city: 'DOM',
+            destination_city: 'BDS',
+            fare: 10,
+            departure_date: '2026-11-30'
+          }
+        }
+      }
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, cruiseline_details)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"cruiselineTravelDetails"/, data)
+      assert_match(/"cruiseShipName":"CruiseShip"/, data)
+      assert_match(/"tripLegs":{"leg1":{"serviceClass":"F"/, data)
+      assert_match(/"passengers":{"passenger1":{"ticketNumber":"12J13J1"/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_stored_credentials
     stored_credential_options = {
       stored_credential: {
