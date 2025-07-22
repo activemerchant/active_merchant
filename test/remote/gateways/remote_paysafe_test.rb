@@ -104,6 +104,27 @@ class RemotePaysafeTest < Test::Unit::TestCase
         }
       }
     }
+    @lodging_options = {
+      lodging_details: {
+        hotel_folio_number: 'Customer Folio Number',
+        check_in_date: '2026-11-30',
+        check_out_date: '2026-12-01',
+        customer_service_phone: '9998887777',
+        property_local_phone: '9998887777',
+        extra_charges: %w[
+          RESTAURANT
+          GIFT_SHOP
+          MINI_BAR
+          TELEPHONE
+          LAUNDRY
+          OTHER
+        ],
+        room_rate: 100,
+        program_code: 'LODGING',
+        number_of_nights: 1,
+        is_fire_safety_act_compliant: true
+      }
+    }
   end
 
   def test_successful_purchase
@@ -148,6 +169,12 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert_equal 'COMPLETED', response.message
     assert_equal 'LH', response.params['airlineTravelDetails']['tripLegs']['leg1']['flight']['carrierCode']
     assert_equal 'F', response.params['airlineTravelDetails']['tripLegs']['leg2']['serviceClass']
+  end
+
+  def test_successful_purchase_with_lodging_details
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(@lodging_options))
+    assert_success response
+    assert_equal 'COMPLETED', response.message
   end
 
   def test_successful_purchase_with_truncated_address
