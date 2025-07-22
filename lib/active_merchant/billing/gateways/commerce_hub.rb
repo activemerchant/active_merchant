@@ -367,7 +367,7 @@ module ActiveMerchant # :nodoc:
         post[:merchantDetails] = {}
         post[:merchantDetails][:terminalId] = @options[:terminal_id]
         post[:merchantDetails][:merchantId] = @options[:merchant_id]
-        post[:merchantDetails][:merchantPartner] = @options[:merchant_partner_details]
+        post[:merchantDetails][:merchantPartner] = @options[:merchant_partner_details] if @options[:merchant_partner_details]
       end
 
       def commit(action, parameters, options)
