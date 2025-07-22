@@ -16,6 +16,13 @@ module ActiveMerchant # :nodoc:
         format(year, :four_digits) + format(month, :two_digits) + format(last_day, :two_digits)
       end
 
+      def strftime_yymmdd_last_day(credit_card)
+        year = credit_card.year.to_i
+        month = credit_card.month.to_i
+        last_day = Date.civil(year, month, -1).day
+        format(year, :two_digits) + format(month, :two_digits) + format(last_day, :two_digits)
+      end
+
       # This method is used to format numerical information pertaining to credit cards.
       #
       #   format(2005, :two_digits)  # => "05"

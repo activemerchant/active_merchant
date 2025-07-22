@@ -368,16 +368,26 @@ class PaysafeTest < Test::Unit::TestCase
         city: 'New York',
         state: 'NY',
         zip: '10001'
+      },
+      google_pay: {
+        transaction_id: '1234567890',
+        message_expiration: '1534877068627',
+        auth_method: 'CRYPTOGRAM_3DS',
+        payment_method: 'TOKENIZED_CARD'
       }
     }
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @google_pay_card, options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"tokenType":"GOOGLE_PAY"/, data)
-      assert_match(/"token":"#{@google_pay_card.number}"/, data)
-      assert_match(/"cryptogram":"#{@google_pay_card.payment_cryptogram}"/, data)
-      assert_match(/"expiry":{"month":#{@google_pay_card.month},"year":#{@google_pay_card.year}}/, data)
-    end.respond_with(successful_purchase_response)
+    end.check_request do |_method, endpoint, data, _headers|
+      if endpoint =~ /googlepaysingleusetokens/
+        assert_match(/"paymentMethod":"TOKENIZED_CARD"/, data)
+        assert_match(/"apiVersionMinor":0,"apiVersion":2/, data)
+        assert_match(/"expirationMonth":#{@google_pay_card.month},"expirationYear":#{@google_pay_card.year}/, data)
+        assert_match(/"cryptogram":"#{@google_pay_card.payment_cryptogram}","eciIndicator":"#{@google_pay_card.eci}"/, data)
+      elsif endpoint =~ /auths/
+        assert_match(/"card":{"paymentToken":"GBn9RfGfJoMBbpg"}/, data)
+      end
+    end.respond_with(successful_google_pay_single_use_token_response, successful_purchase_response)
   end
 
   def test_purchase_with_apple_pay
@@ -388,16 +398,24 @@ class PaysafeTest < Test::Unit::TestCase
         city: 'New York',
         state: 'NY',
         zip: '10001'
+      },
+      apple_pay: {
+        currency_code: '978',
+        transaction_amount: 100,
+        device_manufacturer_identifier: '040010030270',
+        payment_data_type: '3DSecure'
       }
     }
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @apple_pay_card, options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"tokenType":"APPLE_PAY"/, data)
-      assert_match(/"token":"#{@apple_pay_card.number}"/, data)
-      assert_match(/"cryptogram":"#{@apple_pay_card.payment_cryptogram}"/, data)
-      assert_match(/"expiry":{"month":#{@apple_pay_card.month},"year":#{@apple_pay_card.year}}/, data)
-    end.respond_with(successful_purchase_response)
+    end.check_request do |_method, endpoint, data, _headers|
+      if endpoint =~ /applepaysingleusetokens/
+        assert_match(/"paymentDataType":"3DSecure"/, data)
+        assert_match(/"paymentMethod":{"displayName":"Visa 0027","network":"visa"}/, data)
+      elsif endpoint =~ /auths/
+        assert_match(/"card":{"paymentToken":"AmOdpcBbBGZ9opN"}/, data)
+      end
+    end.respond_with(successful_apple_pay_single_use_token_response, successful_purchase_response)
   end
 
   def test_scrub
@@ -466,6 +484,14 @@ class PaysafeTest < Test::Unit::TestCase
 
   def successful_purchase_response
     '{"id":"cddbd29d-4983-4719-983a-c6a862895781","merchantRefNum":"c9b2ad852a1a37c1cc5c39b741be7484","txnTime":"2021-08-10T18:25:40Z","status":"COMPLETED","amount":100,"settleWithAuth":true,"preAuth":false,"availableToSettle":0,"card":{"type":"VI","lastDigits":"3670","cardExpiry":{"month":9,"year":2022}},"authCode":"544454","profile":{"firstName":"Longbob","lastName":"Longsen"},"billingDetails":{"street":"999 This Way Lane","city":"Hereville","state":"NC","country":"FR","zip":"98989","phone":"999-9999999"},"merchantDescriptor":{"dynamicDescriptor":"Store Purchase","phone":"999-8887777"},"visaAdditionalAuthData":{},"currencyCode":"EUR","avsResponse":"MATCH","cvvVerification":"MATCH","settlements":[{"id":"cddbd29d-4983-4719-983a-c6a862895781","merchantRefNum":"c9b2ad852a1a37c1cc5c39b741be7484","txnTime":"2021-08-10T18:25:40Z","status":"PENDING","amount":100,"availableToRefund":100,"links":[{"rel":"self","href":"https://api.test.paysafe.com/cardpayments/v1/accounts/1002158490/settlements/cddbd29d-4983-4719-983a-c6a862895781"}]}],"links":[{"rel":"settlement","href":"https://api.test.paysafe.com/cardpayments/v1/accounts/1002158490/settlements/cddbd29d-4983-4719-983a-c6a862895781"},{"rel":"self","href":"https://api.test.paysafe.com/cardpayments/v1/accounts/1002158490/auths/cddbd29d-4983-4719-983a-c6a862895781"}]}'
+  end
+
+  def successful_apple_pay_single_use_token_response
+    '{"id":"4df2f4ca-6647-4251-b15f-b07d2d626b52","paymentToken":"AmOdpcBbBGZ9opN","timeToLiveSeconds":899,"isFromMultiUseToken":false,"transaction":{"amount":100,"currencyCode":"EUR"},"applePayPaymentToken":{"decryptedData":{"paymentData":{"eciIndicator":"05","blank":false},"blank":false},"billingContact":{"addressLines":["456 My Street","Apt 1"],"countryCode":"CA","locality":"Ottawa","postalCode":"K1C2N6"},"token":{"paymentData":{"header":{}},"paymentMethod":{"displayName":"Visa 4242","network":"visa"}}},"card":{"status":"ACTIVE","lastDigits":"4242","holderName":"Longbob Longsen","cardCategory":"CREDIT","issuingCountry":"GB","tokenType":"APPLE_PAY","applePay":{"lastDigits":"4242","expiry":{"year":2030,"month":9},"subtype":"DEVICE"}},"authentication":{"eci":"05"}}'
+  end
+
+  def successful_google_pay_single_use_token_response
+    '{"id":"8569b1a1-a9e3-415b-bbf1-1e37822fa1b8","paymentToken":"GBn9RfGfJoMBbpg","timeToLiveSeconds":899,"isFromMultiUseToken":false,"googlePayPaymentToken":{"authMethod":"CRYPTOGRAM_3DS","tdsCryptogram":"AgAAAAAABk4DWZ4C28yUQAAAAAA=","tdsEciIndicator":"05","paymentMethod":"TOKENIZED_CARD","messageId":"1234567890","messageExpiration":"1534877068627","paymentMethodData":{"info":{"cardNetwork":"VISA","cardDetails":"4242","billingAddress":{"phoneNumber":"(555)555-5555","address2":"Apt 1","countryCode":"CA","address1":"456 My Street","postalCode":"K1C2N6","name":"Longbob Longsen","locality":"Ottawa"}}}},"card":{"status":"ACTIVE","cardBin":"424242","lastDigits":"4242","holderName":"Longbob Longsen","cardType":"VI","cardCategory":"CREDIT","issuingCountry":"GB","tokenType":"GOOGLE_PAY","googlePay":{"lastDigits":"4242","expiry":{"year":2030,"month":9}}},"authentication":{"eci":"05"}}'
   end
 
   def failed_purchase_response
