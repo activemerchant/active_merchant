@@ -449,8 +449,8 @@ module ActiveMerchant # :nodoc:
         post[:payment_method_options][:card][:request_multicapture] = request_multicapture
       end
 
-      # stripe's newer API is depracting the level3 field. It still works now but
-      # we will open up the new amount_details field for level 3 data as well
+      # stripe's newer API is depracting the level3 field. It still works now but we will open
+      # up the new amount_details field for level 3 data as well if an override is included.
       def add_level_three(post, options = {})
         level_three = {}
 
