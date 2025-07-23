@@ -372,7 +372,8 @@ module ActiveMerchant # :nodoc:
           avs_result: AVSResult.new(code: response['avsResponse']),
           cvv_result: CVVResult.new(response['cvvVerification']),
           test: test?,
-          error_code: success ? nil : error_code_from(response)
+          error_code: success ? nil : error_code_from(response),
+          pending: pending_from(response, action)
         )
       end
 
@@ -391,6 +392,10 @@ module ActiveMerchant # :nodoc:
         else
           "#{base_url}/cardpayments/#{fetch_version}/accounts/#{@options[:account_id]}/#{action}"
         end
+      end
+
+      def pending_from(response, action)
+        response['status'] == 'PENDING' if action == 'standalonecredits'
       end
 
       def success_from(response)
