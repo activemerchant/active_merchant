@@ -160,6 +160,21 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_merchant_details
+    @options[:merchant_partner_details] = {
+      'legacyTppId' => 'testLegacyID',
+      'name' => 'TestName',
+      'productName' => 'TestName',
+      'type' => 'GATEWAY',
+      'integrator' => '',
+      'versionNumber' => '1.0',
+      'id' => 'testID'
+    }
+    response = @gateway.purchase(@amount, @master_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_failed_avs_cvv_response_codes
     @options[:billing_address] = {
       address1: '112 Main St.',
