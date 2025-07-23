@@ -363,16 +363,16 @@ module ActiveMerchant # :nodoc:
         }.merge!(custom_headers)
       end
 
-      def add_merchant_details(post)
+      def add_merchant_details(post, options)
         post[:merchantDetails] = {}
         post[:merchantDetails][:terminalId] = @options[:terminal_id]
         post[:merchantDetails][:merchantId] = @options[:merchant_id]
-        post[:merchantDetails][:merchantPartner] = @options[:merchant_partner_details] if @options[:merchant_partner_details]
+        post[:merchantDetails][:merchantPartner] = options[:merchant_partner_details] if options[:merchant_partner_details]
       end
 
       def commit(action, parameters, options)
         url = (test? ? test_url : live_url) + ENDPOINTS[action]
-        add_merchant_details(parameters)
+        add_merchant_details(parameters, options)
         response = parse(ssl_post(url, parameters.to_json, headers(parameters.to_json, options)))
 
         Response.new(

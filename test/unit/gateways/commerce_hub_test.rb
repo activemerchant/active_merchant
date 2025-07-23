@@ -118,13 +118,13 @@ class CommerceHubTest < Test::Unit::TestCase
   def test_successful_purchase_with_merchant_partner_details
     @options[:order_id] = 'abc123'
     @options[:merchant_partner_details] = {
-      'legacyTppId' => 'CSP002',
-      'name' => 'Spreedly',
-      'productName' => 'Spreedly',
+      'legacyTppId' => 'TestlegacyId',
+      'name' => 'Test123',
+      'productName' => 'Test123',
       'type' => 'GATEWAY',
       'integrator' => '',
       'versionNumber' => '1.0',
-      'id' => 'CSP002'
+      'id' => 'testID'
     }
 
     response = stub_comms do
@@ -136,7 +136,7 @@ class CommerceHubTest < Test::Unit::TestCase
       assert_equal request['transactionDetails']['merchantOrderId'], 'abc123'
       assert_equal request['merchantDetails']['terminalId'], @gateway.options[:terminal_id]
       assert_equal request['merchantDetails']['merchantId'], @gateway.options[:merchant_id]
-      assert_equal request['merchantDetails']['merchantPartner'], @gateway.options[:merchant_partner_details]
+      assert_equal request['merchantDetails']['merchantPartner'], @options[:merchant_partner_details]
     end.respond_with(successful_purchase_response)
 
     assert_success response
