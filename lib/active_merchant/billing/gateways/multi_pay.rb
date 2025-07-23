@@ -170,7 +170,7 @@ module ActiveMerchant
           'ErrorDetail' => data[:error_detail],
           'ErrorDescription' => data[:error_description],
           'AcsUrl' => data[:acs_url],
-          'MerchantId' => data[:merchant_id],
+          'MerchantId' => data[:merchant_id] || 123456,
           'MessageCategory' => data[:message_category] || 'Payment',
           'ProtocolVersion' => data[:protocol_version] || 'v2_2_0',
           'ServerTransactionId' => data[:server_transaction_id],

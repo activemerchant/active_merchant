@@ -5,7 +5,26 @@ class RemoteMultiPayTest < Test::Unit::TestCase
     @gateway = MultiPayGateway.new(fixtures(:multi_pay))
 
     @amount = 100
-    @credit_card = credit_card('5413330089020516', month: 1, year: 2030, verification_value: '111')
+    # @credit_card = credit_card('5413330089020516', month: 1, year: 2030, verification_value: '111')
+    # @credit_card = credit_card
+    # @credit_card = credit_card(
+    #   '5413330089020516',
+    #   month: 3,
+    #   year: 2030,
+    #   first_name: 'Spreed',
+    #   last_name: 'Ling',
+    #   verification_value: '737',
+    #   brand: 'mastercard'
+    # )
+    @credit_card = credit_card(
+      '5404771022805078',
+      month: 3,
+      year: 2030,
+      first_name: 'Spreed',
+      last_name: 'Ling',
+      verification_value: '737',
+      brand: 'visa'
+    )
     @declined_card = credit_card('4000000000000002')
     @options = {
       order_id: SecureRandom.hex(16),
@@ -66,12 +85,13 @@ class RemoteMultiPayTest < Test::Unit::TestCase
     @options[:three_d_secure] = {
       data: {
         ds_transaction_id: '0039cc67-2a7a-4dde-807f-935edb6c44a5',
-        authentication_value: 'AgAAAAAAAIR8CQrXSohbQAAAAAA=',
+        authentication_value: 'kPMZTZ+1B0BvXgu4I6J9XJeBkKyP',
         acs_transaction_id: '98e94050-61c9-4dc9-9280-0322be501970',
         ds_reference_number: 'd6c703c2-a42e-4e9c-a2aa-d33d852b',
         server_transaction_id: '45ec66e7-536e-43dd-827c-24fa3f8cfed1',
         server_reference_number: '3DS_LOA_SER_PPFU_020100_00008',
-        acs_reference_number: '3DS_LOA_ACS_PPFU_020100_00009'
+        acs_reference_number: '3DS_LOA_ACS_PPFU_020100_00009',
+        eci: '05'
       }
     }
     response = @gateway.purchase(@amount, @credit_card, @options)
