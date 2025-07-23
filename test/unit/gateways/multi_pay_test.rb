@@ -143,6 +143,47 @@ class MultiPayTest < Test::Unit::TestCase
     end
   end
 
+  def test_authorize_with_3ds_eci
+    @options[:three_d_secure] = { eci: '06' }
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |endpoint, data, _headers|
+      next if endpoint.include?('token')
+
+      data = JSON.parse(data)
+      security_data = data.dig('AuthorizeSale', 'Security')
+      assert security_data
+      assert_equal '3DSecure', security_data.first['Type']
+      assert_equal '3DS-SNAP', security_data.first['Values'].first['Value']
+      assert_equal({ 'AuthenticationECI' => '06' }, security_data.first['Values'].last['Value'])
+    end
+  end
+
+  def test_purchase_with_full_3ds_data
+    @options[:three_d_secure] = {
+      data: {
+        ds_transaction_id: 'ds_trans_id_123',
+        authentication_value: 'auth_value_abc'
+      }
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request(skip_response: true) do |endpoint, data, _headers|
+      next if endpoint.include?('token')
+
+      data = JSON.parse(data)
+      security_data = data.dig('Sale', 'Security')
+      assert security_data
+      assert_equal '3DSecure', security_data.first['Type']
+
+      three_ds_data_value = security_data.first['Values'].find { |v| v['Name'] == 'Data' }['Value']
+      assert_equal 'ds_trans_id_123', three_ds_data_value['DSTransactionId']
+      assert_equal 'auth_value_abc', three_ds_data_value['AuthenticationValue']
+      assert_equal 'SuccessfullyAuthenticated', three_ds_data_value['TransactionStatus'] # default value
+      assert three_ds_data_value['AuthenticationTimestamp']
+    end
+  end
+
   private
 
   def successful_access_token_response
