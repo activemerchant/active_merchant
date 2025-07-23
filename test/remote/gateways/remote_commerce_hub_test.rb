@@ -162,13 +162,13 @@ class RemoteCommerceHubTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_merchant_details
     @options[:merchant_partner_details] = {
-      'legacyTppId' => 'CSP002',
-      'name' => 'Spreedly',
-      'productName' => 'Spreedly',
+      'legacyTppId' => 'testLegacyID',
+      'name' => 'TestName',
+      'productName' => 'TestName',
       'type' => 'GATEWAY',
       'integrator' => '',
       'versionNumber' => '1.0',
-      'id' => 'CSP002'
+      'id' => 'testID'
     }
     response = @gateway.purchase(@amount, @master_card, @options)
     assert_success response
