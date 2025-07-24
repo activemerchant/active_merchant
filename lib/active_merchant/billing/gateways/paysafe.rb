@@ -59,7 +59,7 @@ module ActiveMerchant # :nodoc:
       def credit(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
-        add_payment(post, payment)
+        add_payment_method(post, payment)
         add_customer_data(post, payment, options) unless payment.is_a?(String)
         add_merchant_details(post, options)
         add_billing_address(post, options)
@@ -70,7 +70,7 @@ module ActiveMerchant # :nodoc:
       # This is a '$0 auth' done at a specific verification endpoint at the gateway
       def verify(payment, options = {})
         post = {}
-        add_payment(post, payment)
+        add_payment_method(post, payment)
         add_billing_address(post, options)
         add_customer_data(post, payment, options) unless payment.is_a?(String)
 
@@ -92,7 +92,12 @@ module ActiveMerchant # :nodoc:
           post[:billingAddressId] = options[:billing_address_id] if options[:billing_address_id]
           post[:defaultCardIndicator] = normalize(options[:default_card_indicator]) if options[:default_card_indicator]
         else
-          add_payment(post, payment)
+          if payment.is_a?(NetworkTokenizationCreditCard)
+            add_card_details(post, payment)
+          else
+            add_payment_method(post, payment)
+          end
+
           add_address_for_vaulting(post, options)
           add_profile_data(post, payment, options)
           add_store_data(post, payment, options)
@@ -120,15 +125,25 @@ module ActiveMerchant # :nodoc:
 
       private
 
-      def add_auth_purchase_params(post, money, payment, options)
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_billing_address(post, options)
-        add_merchant_details(post, options)
-        add_customer_data(post, payment, options) unless payment.is_a?(String)
-        add_three_d_secure(post, payment, options) if options[:three_d_secure]
-        add_stored_credential(post, options) if options[:stored_credential]
-        add_funding_transaction(post, options)
+      def add_auth_purchase_params(post, money, payment_method, options)
+        MultiResponse.run do |r|
+          if payment_method.is_a?(NetworkTokenizationCreditCard) && digital_wallet_payment_method?(payment_method)
+            r.process do
+              tokenize_apple_google_pay(money, payment_method, options)
+            end
+            payment_method = (r.params['token']['paymentToken']) if r.success?
+          end
+          r.process do
+            add_invoice(post, money, options)
+            add_payment_method(post, payment_method)
+            add_billing_address(post, options)
+            add_merchant_details(post, options)
+            add_customer_data(post, payment_method, options) unless payment_method.is_a?(String)
+            add_three_d_secure(post, payment_method, options) if options[:three_d_secure]
+            add_stored_credential(post, options) if options[:stored_credential]
+            add_funding_transaction(post, options)
+          end
+        end
       end
 
       # Customer data can be included in transactions where the payment method is a credit card
@@ -198,17 +213,22 @@ module ActiveMerchant # :nodoc:
         post[:amount] = money
       end
 
-      def add_payment(post, payment)
-        if payment.is_a?(String)
-          post[:card] = {}
-          post[:card][:paymentToken] = get_pm_from_store_auth(payment)
-        else
-          post[:card] = { cardExpiry: {} }
-          post[:card][:cardNum] = payment.number
-          post[:card][:cardExpiry][:month] = payment.month
-          post[:card][:cardExpiry][:year] = payment.year
-          post[:card][:cvv] = payment.verification_value
+      def add_payment_method(post, payment_method)
+        post[:card] = {}
+        case payment_method
+        when String
+          post[:card][:paymentToken] = get_pm_from_store_auth(payment_method)
+        when CreditCard
+          add_card_details(post, payment_method)
         end
+      end
+
+      def add_card_details(post, payment_method)
+        post[:card] = { cardExpiry: {} }
+        post[:card][:cardNum] = payment_method.number
+        post[:card][:cardExpiry][:month] = payment_method.month
+        post[:card][:cardExpiry][:year] = payment_method.year
+        post[:card][:cvv] = payment_method.verification_value
       end
 
       def add_merchant_details(post, options)
@@ -352,6 +372,127 @@ module ActiveMerchant # :nodoc:
         payment.brand == 'master'
       end
 
+      def digital_wallet_payment_method?(payment_method)
+        payment_method.source == :google_pay || payment_method.source == :apple_pay
+      end
+
+      def tokenize_apple_google_pay(money, payment_method, options = {})
+        post = {}
+
+        if payment_method.source == :google_pay
+          add_google_pay_details(post, payment_method, options)
+          url = url('googlepaysingleusetokens')
+        else
+          add_apple_pay_details(post, payment_method, options)
+          url = url('applepaysingleusetokens')
+        end
+
+        raw_response = ssl_request(:post, url, post.to_json, headers)
+        token_response = parse(raw_response)
+
+        success = token_response['fieldErrors'].nil?
+        if success && token_response['id']
+          Response.new(success, nil, token: token_response)
+        elsif token_response['message']
+          Response.new(false, "The tokenization process fails. #{token_response['message']}")
+        else
+          Response.new(false, "The tokenization process fails. #{token_response}")
+        end
+      end
+
+      def add_apple_pay_details(post, payment_method, options)
+        address = options[:billing_address] || options[:address]
+        apple_pay_options = options[:apple_pay]
+
+        post[:applePayPaymentToken] = {
+          billingContact: {
+            addressLines: [
+              address[:address1],
+              address[:address2]
+            ],
+            countryCode: address[:country],
+            givenName: payment_method.first_name,
+            familyName: payment_method.last_name,
+            locality: address[:city],
+            postalCode: address[:zip]
+          },
+          token: {
+            paymentData: {
+              decryptedData: {
+                applicationPrimaryAccountNumber: payment_method.number,
+                applicationExpirationDate: strftime_yymmdd_last_day(payment_method),
+                currencyCode: apple_pay_options[:currency_code],
+                transactionAmount: apple_pay_options[:transaction_amount].to_s,
+                cardholderName: payment_method.name,
+                deviceManufacturerIdentifier: apple_pay_options[:device_manufacturer_identifier],
+                paymentDataType: apple_pay_options[:payment_data_type],
+                paymentData: {
+                  onlinePaymentCryptogram: payment_method.payment_cryptogram,
+                  eciIndicator: payment_method.eci
+                }
+              }
+            },
+            paymentMethod: {
+              displayName: card_display_name(payment_method),
+              network: payment_method.brand
+            }
+          }
+        }
+      end
+
+      def add_google_pay_details(post, payment_method, options)
+        address = options[:billing_address] || options[:address]
+        google_pay_options = options[:google_pay]
+
+        post[:googlePayPaymentToken] = {
+          apiVersionMinor: 0,
+          apiVersion: 2,
+          paymentMethodData: {
+            description: card_display_name(payment_method),
+            tokenizationData: {
+              type: 'DIRECT',
+              decryptedToken: {
+                paymentMethod: google_pay_options[:payment_method],
+                paymentMethodDetails: {
+                  authMethod: google_pay_options[:auth_method],
+                  pan: payment_method.number,
+                  expirationMonth: payment_method.month,
+                  expirationYear: payment_method.year,
+                  cryptogram: payment_method.payment_cryptogram,
+                  eciIndicator: payment_method.eci
+                },
+                messageId: google_pay_options[:transaction_id],
+                messageExpiration: google_pay_options[:message_expiration]
+              }
+            },
+            type: 'CARD',
+            info: {
+              billingAddress: {
+                address1: address[:address1],
+                address2: address[:address2],
+                countryCode: address[:country],
+                locality: address[:city],
+                name: payment_method.name,
+                phoneNumber: address[:phone],
+                postalCode: address[:zip]
+              },
+              cardDetails: payment_method.last_digits,
+              cardNetwork: payment_method.brand.upcase
+            }
+          }
+        }
+      end
+
+      def application_expiration_date(payment_method)
+        year = payment_method.year.to_s
+        month = payment_method.month.to_s.rjust(2, '0')
+        "#{year}#{month}"
+      end
+
+      def card_display_name(payment_method)
+        "#{payment_method.brand.capitalize} #{payment_method.number.slice(-4..)}"
+      end
+
       def parse(body)
         return {} if body.empty?
 
@@ -386,7 +527,7 @@ module ActiveMerchant # :nodoc:
       def url(action, options = {})
         base_url = (test? ? test_url : live_url)
 
-        if action.include? 'profiles'
+        if action.include?('profiles') || action.include?('singleusetokens')
           "#{base_url}/customervault/#{fetch_version}/#{action}"
         else
           "#{base_url}/cardpayments/#{fetch_version}/accounts/#{@options[:account_id]}/#{action}"

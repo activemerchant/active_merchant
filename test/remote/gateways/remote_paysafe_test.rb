@@ -16,6 +16,22 @@ class RemotePaysafeTest < Test::Unit::TestCase
       email: 'profile@memail.com',
       customer_id: SecureRandom.hex(16)
     }
+    @apple_pay_options = @options.merge({
+      apple_pay: {
+        currency_code: '978',
+        transaction_amount: @amount,
+        device_manufacturer_identifier: '040010030270',
+        payment_data_type: '3DSecure'
+      }
+    })
+    @google_pay_options = @options.merge({
+      google_pay: {
+        transaction_id: '1234567890',
+        message_expiration: '1534877068627',
+        auth_method: 'CRYPTOGRAM_3DS',
+        payment_method: 'TOKENIZED_CARD'
+      }
+    })
     @profile_options = {
       date_of_birth: {
         year: 1979,
@@ -63,6 +79,31 @@ class RemotePaysafeTest < Test::Unit::TestCase
         version: '1.0.2'
       }
     }
+
+    @google_pay = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'AgAAAAAABk4DWZ4C28yUQAAAAAA=',
+      source: :google_pay,
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    )
+
+    @apple_pay = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'AMwBRjPWDnAgAA7Rls7mAoABFA==',
+      source: :apple_pay,
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    )
+
     @airline_details = {
       airline_travel_details: {
         passenger_name: 'Joe Smith',
@@ -112,6 +153,54 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert_equal 'COMPLETED', response.message
     assert_equal 0, response.params['availableToSettle']
     assert_not_nil response.params['authCode']
+  end
+
+  def test_successful_purchase_with_google_pay
+    response = @gateway.purchase(@amount, @google_pay, @google_pay_options)
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+    assert_equal 0, response.params['availableToSettle']
+    assert_not_nil response.params['authCode']
+  end
+
+  def test_successful_purchase_with_apple_pay
+    response = @gateway.purchase(@amount, @apple_pay, @apple_pay_options)
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+    assert_equal 0, response.params['availableToSettle']
+    assert_not_nil response.params['authCode']
+  end
+
+  def test_successful_authorize_with_google_pay
+    response = @gateway.authorize(@amount, @google_pay, @google_pay_options)
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+    assert_equal @amount, response.params['availableToSettle']
+    assert_not_nil response.params['authCode']
+  end
+
+  def test_successful_authorize_with_apple_pay
+    response = @gateway.authorize(@amount, @apple_pay, @apple_pay_options)
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+    assert_equal @amount, response.params['availableToSettle']
+    assert_not_nil response.params['authCode']
+  end
+
+  def test_successful_purchase_with_airline_details_and_google_pay
+    response = @gateway.purchase(@amount, @google_pay, @google_pay_options.merge(@airline_details))
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+    assert_equal 'LH', response.params['airlineTravelDetails']['tripLegs']['leg1']['flight']['carrierCode']
+    assert_equal 'F', response.params['airlineTravelDetails']['tripLegs']['leg2']['serviceClass']
+  end
+
+  def test_successful_purchase_with_airline_details_and_apple_pay
+    response = @gateway.purchase(@amount, @apple_pay, @apple_pay_options.merge(@airline_details))
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+    assert_equal 'LH', response.params['airlineTravelDetails']['tripLegs']['leg1']['flight']['carrierCode']
+    assert_equal 'F', response.params['airlineTravelDetails']['tripLegs']['leg2']['serviceClass']
   end
 
   def test_successful_purchase_with_more_options
